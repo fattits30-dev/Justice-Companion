@@ -58,7 +58,7 @@ export function MessageList({
         ))}
 
         {/* Streaming assistant response */}
-        {isStreaming && streamingContent && (
+        {isStreaming && streamingContent.length > 0 && (
           <MessageBubble
             message={{
               role: 'assistant',

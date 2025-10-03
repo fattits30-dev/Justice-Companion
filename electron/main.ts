@@ -251,6 +251,7 @@ function setupIpcHandlers() {
         const streamId = Date.now().toString(); // Unique stream ID
 
         // Start streaming in background
+        let tokensSent = 0;
         aiService
           .streamChat(
             {
@@ -260,10 +261,15 @@ function setupIpcHandlers() {
             },
             // onToken callback - send to renderer
             (token: string) => {
+              tokensSent++;
               event.sender.send(IPC_CHANNELS.AI_STREAM_TOKEN, token);
             },
             // onComplete callback
             () => {
+              errorLogger.logError('Stream complete, tokens sent to renderer', {
+                type: 'info',
+                tokensSent,
+              });
               event.sender.send(IPC_CHANNELS.AI_STREAM_COMPLETE);
             },
             // onError callback
@@ -296,33 +302,57 @@ function setupIpcHandlers() {
   errorLogger.logError('IPC handlers registered successfully (cases + AI)', { type: 'info' });
 }
 
-app.whenReady().then(() => {
-  // Setup global error handlers for uncaught exceptions/rejections
-  setupGlobalErrorHandlers();
+// Prevent multiple instances - request single instance lock
+const gotTheLock = app.requestSingleInstanceLock();
 
-  // Initialize database and run migrations
-  try {
-    databaseManager.getDatabase();
-    runMigrations();
-    errorLogger.logError('Database initialized and migrations complete', {
+if (!gotTheLock) {
+  // Another instance is already running, quit this one
+  errorLogger.logError('Another instance is already running, quitting', {
+    type: 'info',
+  });
+  app.quit();
+} else {
+  // We got the lock, listen for second instance attempts
+  app.on('second-instance', (event, commandLine, workingDirectory) => {
+    // Someone tried to run a second instance, focus our window
+    errorLogger.logError('Second instance attempted, focusing main window', {
       type: 'info',
     });
-  } catch (error) {
-    errorLogger.logError(error as Error, { context: 'database-initialization' });
-    // Continue anyway - will show error in UI
-  }
 
-  // Setup IPC handlers after database is ready
-  setupIpcHandlers();
-
-  createWindow();
-
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow();
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.focus();
     }
   });
-});
+
+  app.whenReady().then(() => {
+    // Setup global error handlers for uncaught exceptions/rejections
+    setupGlobalErrorHandlers();
+
+    // Initialize database and run migrations
+    try {
+      databaseManager.getDatabase();
+      runMigrations();
+      errorLogger.logError('Database initialized and migrations complete', {
+        type: 'info',
+      });
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'database-initialization' });
+      // Continue anyway - will show error in UI
+    }
+
+    // Setup IPC handlers after database is ready
+    setupIpcHandlers();
+
+    createWindow();
+
+    app.on('activate', () => {
+      if (BrowserWindow.getAllWindows().length === 0) {
+        createWindow();
+      }
+    });
+  });
+}
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {

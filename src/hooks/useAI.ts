@@ -86,21 +86,32 @@ export function useAI(): UseAIReturn {
 
   // Set up streaming event listeners
   useEffect(() => {
+    console.log('[useAI] Setting up event listeners');
+
     /**
      * Handle incoming token from AI stream
      */
     const handleToken = (token: string): void => {
-      if (!isMountedRef.current) return;
+      console.log('[useAI] handleToken called, token:', token, 'isMounted:', isMountedRef.current);
+      if (!isMountedRef.current) {
+        console.error('[useAI] Component unmounted, ignoring token');
+        return;
+      }
 
-      // First token? Switch to streaming state
+      console.log('[useAI] Setting loadingState to streaming');
       setLoadingState('streaming');
-      setStreamingContent((prev) => prev + token);
+      setStreamingContent((prev) => {
+        const newContent = prev + token;
+        console.log('[useAI] Updated streamingContent length:', newContent.length);
+        return newContent;
+      });
     };
 
     /**
      * Handle stream completion
      */
     const handleComplete = (): void => {
+      console.log('[useAI] handleComplete called, content length:', streamingContentRef.current.length);
       if (!isMountedRef.current) return;
 
       // Add complete assistant message to history
@@ -110,6 +121,7 @@ export function useAI(): UseAIReturn {
         timestamp: new Date().toISOString(),
       };
 
+      console.log('[useAI] Adding message to history');
       setMessages((prev) => [...prev, assistantMessage]);
       setStreamingContent('');
       setLoadingState('idle');
@@ -121,6 +133,7 @@ export function useAI(): UseAIReturn {
      * Handle stream error
      */
     const handleError = (errorMsg: string): void => {
+      console.error('[useAI] Stream error:', errorMsg);
       if (!isMountedRef.current) return;
 
       setError(`AI Error: ${errorMsg}`);
@@ -129,16 +142,20 @@ export function useAI(): UseAIReturn {
       setIsStreaming(false);
     };
 
-    // Register event listeners
-    window.justiceAPI.onAIStreamToken(handleToken);
-    window.justiceAPI.onAIStreamComplete(handleComplete);
-    window.justiceAPI.onAIStreamError(handleError);
+    // Register event listeners and get cleanup functions
+    const removeTokenListener = window.justiceAPI.onAIStreamToken(handleToken);
+    const removeCompleteListener = window.justiceAPI.onAIStreamComplete(handleComplete);
+    const removeErrorListener = window.justiceAPI.onAIStreamError(handleError);
+
+    console.log('[useAI] Event listeners registered');
 
     // Cleanup on unmount
     return (): void => {
+      console.log('[useAI] Cleaning up event listeners');
       isMountedRef.current = false;
-      // Note: preload.ts doesn't expose removeListener, so we rely on isMountedRef
-      // to prevent state updates after unmount
+      removeTokenListener();
+      removeCompleteListener();
+      removeErrorListener();
     };
   }, []);
 

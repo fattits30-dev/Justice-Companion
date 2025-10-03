@@ -289,16 +289,22 @@ export class AIService {
 
       const decoder = new TextDecoder();
       let buffer = '';
+      let tokenCount = 0;
 
       while (true) {
         const { done, value } = await reader.read();
 
         if (done) {
+          errorLogger.logError('Stream reading complete', {
+            type: 'info',
+            tokenCount,
+          });
           break;
         }
 
         // Decode chunk
-        buffer += decoder.decode(value, { stream: true });
+        const chunk = decoder.decode(value, { stream: true });
+        buffer += chunk;
 
         // Process complete lines (SSE format: "data: {...}\n\n")
         const lines = buffer.split('\n');
@@ -317,7 +323,15 @@ export class AIService {
               const token = data.choices?.[0]?.delta?.content;
 
               if (token) {
+                tokenCount++;
                 onToken(token);
+              } else {
+                // Log why no token
+                errorLogger.logError('SSE chunk has no content', {
+                  type: 'info',
+                  delta: data.choices?.[0]?.delta,
+                  fullData: data,
+                });
               }
             } catch (parseError) {
               errorLogger.logError('Failed to parse SSE data', {

@@ -164,9 +164,10 @@ export interface JusticeCompanionAPI {
   aiChat(request: AIChatRequest): Promise<IPCResponse<AIChatResponse>>;
   aiStreamStart(request: AIStreamStartRequest): Promise<IPCResponse<AIStreamStartResponse>>;
   // AI streaming events (one-way: main -> renderer)
-  onAIStreamToken(callback: (token: string) => void): void;
-  onAIStreamComplete(callback: () => void): void;
-  onAIStreamError(callback: (error: string) => void): void;
+  // Returns cleanup function to remove listener
+  onAIStreamToken(callback: (token: string) => void): () => void;
+  onAIStreamComplete(callback: () => void): () => void;
+  onAIStreamError(callback: (error: string) => void): () => void;
 }
 
 // Extend Window interface for TypeScript

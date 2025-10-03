@@ -63,17 +63,30 @@ const aiAPI = {
 
   // Listen for streaming tokens
   onAIStreamToken: (callback: (token: string) => void) => {
-    ipcRenderer.on(IPC_CHANNELS.AI_STREAM_TOKEN, (_, token) => callback(token));
+    const handler = (_: any, token: string) => {
+      console.log('[preload] Token received from main:', token);
+      callback(token);
+    };
+    ipcRenderer.on(IPC_CHANNELS.AI_STREAM_TOKEN, handler);
+    console.log('[preload] Registered token listener');
+    return () => {
+      console.log('[preload] Removing token listener');
+      ipcRenderer.removeListener(IPC_CHANNELS.AI_STREAM_TOKEN, handler);
+    };
   },
 
   // Listen for stream completion
   onAIStreamComplete: (callback: () => void) => {
-    ipcRenderer.on(IPC_CHANNELS.AI_STREAM_COMPLETE, () => callback());
+    const handler = () => callback();
+    ipcRenderer.on(IPC_CHANNELS.AI_STREAM_COMPLETE, handler);
+    return () => ipcRenderer.removeListener(IPC_CHANNELS.AI_STREAM_COMPLETE, handler);
   },
 
   // Listen for stream errors
   onAIStreamError: (callback: (error: string) => void) => {
-    ipcRenderer.on(IPC_CHANNELS.AI_STREAM_ERROR, (_, error) => callback(error));
+    const handler = (_: any, error: string) => callback(error);
+    ipcRenderer.on(IPC_CHANNELS.AI_STREAM_ERROR, handler);
+    return () => ipcRenderer.removeListener(IPC_CHANNELS.AI_STREAM_ERROR, handler);
   },
 };
 

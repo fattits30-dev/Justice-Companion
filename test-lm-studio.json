@@ -1,0 +1,11 @@
+{
+  "model": "qwen/qwen3-8b",
+  "messages": [
+    {
+      "role": "user",
+      "content": "Say 'Hello' in exactly one word"
+    }
+  ],
+  "max_tokens": 10,
+  "temperature": 0.7
+}
