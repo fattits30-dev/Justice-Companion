@@ -47,7 +47,9 @@
       "Bash(npm run build:*)",
       "Bash(npm run lint)",
       "Bash(npx tsx:*)",
-      "Bash(del /F nul)"
+      "Bash(del /F nul)",
+      "Bash(dir:*)",
+      "mcp__memory__create_relations"
     ],
     "deny": [],
     "ask": []
