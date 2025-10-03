@@ -1,0 +1,81 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(echo $APPDATA)",
+      "Bash(ls:*)",
+      "Read(//c/Users/sava6/AppData/Roaming/Cursor/User/**)",
+      "Bash(powershell.exe:*)",
+      "Bash(test:*)",
+      "Read(//c/Users/sava6/AppData/Roaming/Claude/**)",
+      "Read(//c/Users/sava6/Documents/WindowsPowerShell/**)",
+      "Bash(tsc:*)",
+      "Read(//c/Users/sava6/**)",
+      "Read(//c/DevTemplates/electron-react-ts/**)",
+      "Read(//c/DevTemplates/**)",
+      "Bash(git --version)",
+      "Bash(cmd /c copy:*)",
+      "Bash(node:*)",
+      "Bash(claude doctor)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "mcp__sequential-thinking__sequentialthinking",
+      "mcp__memory__read_graph",
+      "mcp__filesystem__directory_tree",
+      "WebFetch(domain:mcp.context7.com)",
+      "mcp__context7__resolve-library-id",
+      "mcp__memory__create_entities",
+      "Bash(npm install)",
+      "Bash(npm run type-check:*)",
+      "mcp__memory__add_observations",
+      "Bash(cat:*)",
+      "Bash(\"C:\\Users\\sava6\\Desktop\\Justice Companion\\.claude\\test-hook.bat\")",
+      "Bash(cmd /c:*)",
+      "Bash(git init:*)",
+      "Bash(git reset:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(npm test:*)",
+      "Bash(npx vitest run:*)",
+      "Bash(npm run dev:*)",
+      "mcp__context7__get-library-docs",
+      "Bash(npm install:*)",
+      "Bash(npx electron-rebuild:*)",
+      "mcp__memory__search_nodes",
+      "WebFetch(domain:medianeth.dev)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run lint)",
+      "Bash(npx tsx:*)",
+      "Bash(del /F nul)"
+    ],
+    "deny": [],
+    "ask": []
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "sequential-thinking",
+    "memory",
+    "filesystem",
+    "github",
+    "sqlite",
+    "playwright",
+    "brave-search",
+    "context7"
+  ],
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r"
+          }
+        ]
+      }
+    ]
+  },
+  "disableAllHooks": false,
+  "outputStyle": "tactical"
+}
