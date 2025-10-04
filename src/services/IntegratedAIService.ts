@@ -106,9 +106,10 @@ export class IntegratedAIService {
       // For 16GB+ VRAM: Can use 90% of model's max (29,491 for 32K models)
       const modelMaxContext = this.model._trainContextSize || 32768;
 
-      // Conservative context for 8GB VRAM (most consumer GPUs)
+      // Conservative context for 8GB VRAM (tested on AMD RX 6600 8GB)
       // This ensures model + KV cache fit comfortably in VRAM
-      const safeContextFor8GB = 16384; // 16K tokens = ~12,000 words (still impressive!)
+      // Tested: 16K failed (VRAM overflow), 12K works perfectly
+      const safeContextFor8GB = 12288; // 12K tokens = ~9,000 words (ideal for legal documents)
       const optimalContext = Math.min(safeContextFor8GB, Math.floor(modelMaxContext * 0.9));
       const contextSize = this.config.contextSize || optimalContext;
 

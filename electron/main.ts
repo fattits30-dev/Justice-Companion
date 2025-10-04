@@ -797,6 +797,12 @@ if (!gotTheLock) {
   });
 */
 
+// Enable remote debugging for Playwright automation (dev only)
+if (process.env.NODE_ENV !== 'production') {
+  app.commandLine.appendSwitch('remote-debugging-port', '9222');
+  errorLogger.logError('Remote debugging enabled on port 9222', { type: 'info' });
+}
+
 app.whenReady().then(() => {
     // Setup global error handlers for uncaught exceptions/rejections
     setupGlobalErrorHandlers();
