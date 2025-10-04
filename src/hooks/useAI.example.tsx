@@ -109,8 +109,14 @@ export function AIChatExample(): JSX.Element {
             Connecting to LM Studio...
           </div>
         )}
-        {loadingState === 'thinking' && (
-          <div className="text-gray-500 text-center">AI is thinking...</div>
+        {loadingState === 'Analyzing your question...' && (
+          <div className="text-gray-500 text-center">Analyzing your question...</div>
+        )}
+        {loadingState === 'Searching UK legislation...' && (
+          <div className="text-gray-500 text-center">Searching UK legislation...</div>
+        )}
+        {loadingState === 'Generating response...' && (
+          <div className="text-gray-500 text-center">Generating response...</div>
         )}
 
         {/* Auto-scroll anchor */}

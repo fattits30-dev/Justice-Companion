@@ -33,6 +33,7 @@ export const IPC_CHANNELS = {
   AI_STREAM_SOURCES: 'ai:stream:sources', // Event (main -> renderer) - Legal source citations
   AI_STREAM_COMPLETE: 'ai:stream:complete', // Event (main -> renderer)
   AI_STREAM_ERROR: 'ai:stream:error', // Event (main -> renderer)
+  AI_STATUS_UPDATE: 'ai:status:update', // Event (main -> renderer) - Progress updates
 
   // Model Download Operations
   MODEL_GET_AVAILABLE: 'model:getAvailable',
@@ -380,6 +381,7 @@ export interface JusticeCompanionAPI {
   onAIStreamSources(callback: (sources: string[]) => void): () => void;
   onAIStreamComplete(callback: () => void): () => void;
   onAIStreamError(callback: (error: string) => void): () => void;
+  onAIStatusUpdate(callback: (status: string) => void): () => void;
 
   // File operations
   selectFile(request?: FileSelectRequest): Promise<IPCResponse<FileSelectResponse>>;

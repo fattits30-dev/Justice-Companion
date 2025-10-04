@@ -37,12 +37,16 @@ export function StreamingIndicator({ loadingState, thinkingContent }: StreamingI
     switch (loadingState) {
       case 'connecting':
         return 'Connecting to AI...';
-      case 'thinking':
-        return 'Thinking...';
+      case 'Analyzing your question...':
+        return 'Analyzing your question...';
+      case 'Searching UK legislation...':
+        return 'Searching UK legislation...';
+      case 'Generating response...':
+        return 'Generating response...';
       case 'streaming':
         return 'Writing response...';
       default:
-        return '';
+        return 'Processing...';
     }
   };
 
@@ -77,8 +81,10 @@ export function StreamingIndicator({ loadingState, thinkingContent }: StreamingI
               <span className="capitalize">{loadingState}</span>
             </div>
             <div className="text-gray-500">
-              {loadingState === 'connecting' && '⏳ Establishing connection to LM Studio...'}
-              {loadingState === 'thinking' && '🧠 AI is processing your question...'}
+              {loadingState === 'connecting' && '⏳ Establishing connection to AI...'}
+              {loadingState === 'Analyzing your question...' && '🧠 Classifying question and preparing search...'}
+              {loadingState === 'Searching UK legislation...' && '📚 Querying legislation.gov.uk and case law databases...'}
+              {loadingState === 'Generating response...' && '✨ Preparing AI response with legal context...'}
               {loadingState === 'streaming' && '✍️ AI is generating response in real-time...'}
             </div>
           </div>

@@ -8,6 +8,7 @@ import { caseService } from '../src/services/CaseService';
 import { caseRepository } from '../src/repositories/CaseRepository';
 import { aiServiceFactory } from '../src/services/AIServiceFactory';
 import { ragService } from '../src/services/RAGService';
+import { legalAPIService } from '../src/services/LegalAPIService';
 import { chatConversationService } from '../src/services/ChatConversationService';
 import { userProfileService } from '../src/services/UserProfileService';
 import { modelDownloadService } from '../src/services/ModelDownloadService';
@@ -285,38 +286,60 @@ function setupIpcHandlers() {
           console.log('[RAG DEBUG] Last message:', lastMessage);
 
           if (lastMessage.role === 'user' && lastMessage.content) {
-            console.log('[RAG DEBUG] Valid user message found, fetching RAG context...');
-            try {
-              // Fetch legal context from UK Legal APIs
-              errorLogger.logError('Fetching RAG context for question', {
+            // INTELLIGENT FILTERING: Only fetch RAG if question is about legal topics
+            const questionCategory = legalAPIService.classifyQuestion(lastMessage.content);
+            const isLegalQuestion = questionCategory !== 'general';
+
+            // Emit status: Analyzing question
+            event.sender.send(IPC_CHANNELS.AI_STATUS_UPDATE, 'Analyzing your question...');
+
+            console.log('[RAG DEBUG] Question classification:', questionCategory);
+            console.log('[RAG DEBUG] Is legal question:', isLegalQuestion);
+
+            if (isLegalQuestion) {
+              console.log('[RAG DEBUG] Legal question detected, fetching RAG context...');
+              try {
+                // Emit status: Searching legislation
+                event.sender.send(IPC_CHANNELS.AI_STATUS_UPDATE, 'Searching UK legislation...');
+
+                // Fetch legal context from UK Legal APIs
+                errorLogger.logError('Fetching RAG context for legal question', {
+                  type: 'info',
+                  question: lastMessage.content,
+                  category: questionCategory,
+                });
+
+                const legalContext = await ragService.fetchContextForQuestion(
+                  lastMessage.content
+                );
+
+                console.log('[RAG DEBUG] Legal context fetched:', legalContext);
+
+                // Merge RAG context with existing context
+                ragContext = {
+                  ...ragContext,
+                  ...legalContext,
+                };
+
+                console.log('[RAG DEBUG] RAG context merged successfully');
+                errorLogger.logError('RAG context fetched successfully', {
+                  type: 'info',
+                  legislationCount: legalContext.legislation?.length || 0,
+                  caseLawCount: legalContext.caseLaw?.length || 0,
+                  knowledgeBaseCount: legalContext.knowledgeBase?.length || 0,
+                });
+              } catch (ragError) {
+                // Log error but continue - don't block streaming on RAG failure
+                console.error('[RAG DEBUG] RAG fetch error:', ragError);
+                errorLogger.logError(ragError as Error, {
+                  context: 'RAG context fetch failed, continuing without legal data',
+                });
+              }
+            } else {
+              console.log('[RAG DEBUG] Non-legal question, skipping RAG fetch');
+              errorLogger.logError('Skipping RAG for non-legal question', {
                 type: 'info',
                 question: lastMessage.content,
-              });
-
-              const legalContext = await ragService.fetchContextForQuestion(
-                lastMessage.content
-              );
-
-              console.log('[RAG DEBUG] Legal context fetched:', legalContext);
-
-              // Merge RAG context with existing context
-              ragContext = {
-                ...ragContext,
-                ...legalContext,
-              };
-
-              console.log('[RAG DEBUG] RAG context merged successfully');
-              errorLogger.logError('RAG context fetched successfully', {
-                type: 'info',
-                legislationCount: legalContext.legislation?.length || 0,
-                caseLawCount: legalContext.caseLaw?.length || 0,
-                knowledgeBaseCount: legalContext.knowledgeBase?.length || 0,
-              });
-            } catch (ragError) {
-              // Log error but continue - don't block streaming on RAG failure
-              console.error('[RAG DEBUG] RAG fetch error:', ragError);
-              errorLogger.logError(ragError as Error, {
-                context: 'RAG context fetch failed, continuing without legal data',
               });
             }
           } else {
@@ -325,6 +348,9 @@ function setupIpcHandlers() {
         } else {
           console.log('[RAG DEBUG] No messages in request or empty array');
         }
+
+        // Emit status: Generating response
+        event.sender.send(IPC_CHANNELS.AI_STATUS_UPDATE, 'Generating response...');
 
         // Start streaming in background
         console.log('[DEBUG] About to call aiServiceFactory.streamChat()');
@@ -810,3 +836,4 @@ app.on('quit', () => {
   // Close database connection
   databaseManager.close();
 });
+

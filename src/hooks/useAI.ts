@@ -5,8 +5,15 @@ import { logger } from '../utils/logger';
 
 /**
  * Loading states for AI chat operations
+ * Now includes detailed RAG pipeline stages for progress visibility
  */
-export type AILoadingState = 'idle' | 'connecting' | 'thinking' | 'streaming';
+export type AILoadingState =
+  | 'idle'
+  | 'connecting'
+  | 'Analyzing your question...'
+  | 'Searching UK legislation...'
+  | 'Generating response...'
+  | 'streaming';
 
 /**
  * Return type for useAI hook
@@ -198,13 +205,24 @@ export function useAI(initialMessages: ChatMessage[] = []): UseAIReturn {
     };
 
     // Register event listeners and get cleanup functions
+    /**
+     * Handle status updates from main process (RAG progress)
+     */
+    const handleStatusUpdate = (status: string): void => {
+      logger.info('useAI', 'Status update received', { status });
+      if (!isMountedRef.current) return;
+      // Cast string to AILoadingState (main process only sends valid values)
+      setLoadingState(status as AILoadingState);
+    };
+
     const removeTokenListener = window.justiceAPI.onAIStreamToken(handleToken);
     const removeThinkTokenListener = window.justiceAPI.onAIStreamThinkToken(handleThinkToken);
     const removeSourcesListener = window.justiceAPI.onAIStreamSources(handleSources);
+    const removeStatusListener = window.justiceAPI.onAIStatusUpdate(handleStatusUpdate);
     const removeCompleteListener = window.justiceAPI.onAIStreamComplete(handleComplete);
     const removeErrorListener = window.justiceAPI.onAIStreamError(handleError);
 
-    logger.info('useAI', 'Event listeners registered (tokens, thinking, sources)');
+    logger.info('useAI', 'Event listeners registered (tokens, thinking, sources, status)');
 
     // Cleanup on unmount
     return (): void => {
@@ -213,6 +231,7 @@ export function useAI(initialMessages: ChatMessage[] = []): UseAIReturn {
       removeTokenListener();
       removeThinkTokenListener();
       removeSourcesListener();
+      removeStatusListener();
       removeCompleteListener();
       removeErrorListener();
     };
@@ -279,8 +298,8 @@ export function useAI(initialMessages: ChatMessage[] = []): UseAIReturn {
           return;
         }
 
-        // Successfully started stream, now waiting for tokens
-        setLoadingState('thinking');
+        // Successfully started stream, status updates will come from main process
+        // (No need to set 'thinking' - main will emit 'Analyzing your question...')
       } catch (err) {
         const errorMsg =
           err instanceof Error

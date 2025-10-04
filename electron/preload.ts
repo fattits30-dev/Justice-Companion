@@ -116,6 +116,20 @@ const aiAPI = {
     ipcRenderer.on(IPC_CHANNELS.AI_STREAM_ERROR, handler);
     return () => ipcRenderer.removeListener(IPC_CHANNELS.AI_STREAM_ERROR, handler);
   },
+
+  // Listen for status updates (RAG progress)
+  onAIStatusUpdate: (callback: (status: string) => void) => {
+    const handler = (_: any, status: string) => {
+      console.log('[preload] Status update received:', status);
+      callback(status);
+    };
+    ipcRenderer.on(IPC_CHANNELS.AI_STATUS_UPDATE, handler);
+    console.log('[preload] Registered status update listener');
+    return () => {
+      console.log('[preload] Removing status update listener');
+      ipcRenderer.removeListener(IPC_CHANNELS.AI_STATUS_UPDATE, handler);
+    };
+  },
 };
 
 // Model API methods

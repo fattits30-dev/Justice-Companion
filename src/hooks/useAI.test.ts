@@ -11,8 +11,15 @@ import type { ChatMessage } from '../types/ai';
 
 describe('useAI types', () => {
   test('AILoadingState has correct values', () => {
-    const states: AILoadingState[] = ['idle', 'connecting', 'thinking', 'streaming'];
-    expect(states).toHaveLength(4);
+    const states: AILoadingState[] = [
+      'idle',
+      'connecting',
+      'Analyzing your question...',
+      'Searching UK legislation...',
+      'Generating response...',
+      'streaming'
+    ];
+    expect(states).toHaveLength(6);
   });
 
   test('UseAIReturn has correct shape', () => {
@@ -52,14 +59,16 @@ describe('useAI types', () => {
   });
 
   test('Loading states transition correctly', () => {
-    const transitions: Record<AILoadingState, AILoadingState[]> = {
+    const transitions: Partial<Record<AILoadingState, AILoadingState[]>> = {
       idle: ['connecting'],
-      connecting: ['thinking', 'idle'],
-      thinking: ['streaming', 'idle'],
+      connecting: ['Analyzing your question...', 'idle'],
+      'Analyzing your question...': ['Searching UK legislation...', 'Generating response...', 'idle'],
+      'Searching UK legislation...': ['Generating response...', 'idle'],
+      'Generating response...': ['streaming', 'idle'],
       streaming: ['idle'],
     };
 
-    expect(Object.keys(transitions)).toHaveLength(4);
+    expect(Object.keys(transitions)).toHaveLength(6);
   });
 });
 
