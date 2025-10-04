@@ -14,9 +14,9 @@ describe('useAI types', () => {
     const states: AILoadingState[] = [
       'idle',
       'connecting',
-      'Analyzing your question...',
-      'Searching UK legislation...',
-      'Generating response...',
+      '🤔 Thinking...',
+      '🔍 Researching...',
+      '✍️ Writing...',
       'streaming'
     ];
     expect(states).toHaveLength(6);
@@ -63,10 +63,10 @@ describe('useAI types', () => {
   test('Loading states transition correctly', () => {
     const transitions: Partial<Record<AILoadingState, AILoadingState[]>> = {
       idle: ['connecting'],
-      connecting: ['Analyzing your question...', 'idle'],
-      'Analyzing your question...': ['Searching UK legislation...', 'Generating response...', 'idle'],
-      'Searching UK legislation...': ['Generating response...', 'idle'],
-      'Generating response...': ['streaming', 'idle'],
+      connecting: ['🤔 Thinking...', 'idle'],
+      '🤔 Thinking...': ['🔍 Researching...', '✍️ Writing...', 'idle'],
+      '🔍 Researching...': ['✍️ Writing...', 'idle'],
+      '✍️ Writing...': ['streaming', 'idle'],
       streaming: ['idle'],
     };
 

@@ -5,14 +5,14 @@ import { logger } from '../utils/logger';
 
 /**
  * Loading states for AI chat operations
- * Now includes detailed RAG pipeline stages for progress visibility
+ * Action-oriented status updates with emojis for modern UX
  */
 export type AILoadingState =
   | 'idle'
   | 'connecting'
-  | 'Analyzing your question...'
-  | 'Searching UK legislation...'
-  | 'Generating response...'
+  | '🤔 Thinking...'
+  | '🔍 Researching...'
+  | '✍️ Writing...'
   | 'streaming';
 
 /**

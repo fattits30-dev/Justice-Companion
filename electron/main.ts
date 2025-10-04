@@ -291,7 +291,7 @@ function setupIpcHandlers() {
             const isLegalQuestion = questionCategory !== 'general';
 
             // Emit status: Analyzing question
-            event.sender.send(IPC_CHANNELS.AI_STATUS_UPDATE, 'Analyzing your question...');
+            event.sender.send(IPC_CHANNELS.AI_STATUS_UPDATE, '🤔 Thinking...');
 
             console.log('[RAG DEBUG] Question classification:', questionCategory);
             console.log('[RAG DEBUG] Is legal question:', isLegalQuestion);
@@ -300,7 +300,7 @@ function setupIpcHandlers() {
               console.log('[RAG DEBUG] Legal question detected, fetching RAG context...');
               try {
                 // Emit status: Searching legislation
-                event.sender.send(IPC_CHANNELS.AI_STATUS_UPDATE, 'Searching UK legislation...');
+                event.sender.send(IPC_CHANNELS.AI_STATUS_UPDATE, '🔍 Researching...');
 
                 // Fetch legal context from UK Legal APIs
                 errorLogger.logError('Fetching RAG context for legal question', {
@@ -350,7 +350,7 @@ function setupIpcHandlers() {
         }
 
         // Emit status: Generating response
-        event.sender.send(IPC_CHANNELS.AI_STATUS_UPDATE, 'Generating response...');
+        event.sender.send(IPC_CHANNELS.AI_STATUS_UPDATE, '✍️ Writing...');
 
         // Start streaming in background
         console.log('[DEBUG] About to call aiServiceFactory.streamChat()');
