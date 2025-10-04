@@ -327,6 +327,10 @@ function setupIpcHandlers() {
         }
 
         // Start streaming in background
+        console.log('[DEBUG] About to call aiServiceFactory.streamChat()');
+        console.log('[DEBUG] aiServiceFactory:', aiServiceFactory);
+        console.log('[DEBUG] typeof aiServiceFactory:', typeof aiServiceFactory);
+
         let tokensSent = 0;
         let thinkTokensSent = 0;
         aiServiceFactory

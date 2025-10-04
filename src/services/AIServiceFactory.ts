@@ -233,9 +233,14 @@ export class AIServiceFactory {
     onThinkToken?: (token: string) => void,
     onSources?: (sources: string[]) => void
   ): Promise<void> {
+    console.log('[AIServiceFactory] streamChat() called, activeService:', this.activeService);
+    console.log('[AIServiceFactory] Model available:', this.isModelAvailable());
+
     let hasStartedStreaming = false; // Track if any tokens have been sent
 
     if (this.activeService === 'integrated') {
+      console.log('[AIServiceFactory] Using Integrated AI (Qwen 3)');
+
       // Try integrated first
       await this.integratedService.streamChat(
         request,
@@ -271,6 +276,8 @@ export class AIServiceFactory {
         onSources
       );
     } else {
+      console.log('[AIServiceFactory] Using External AI (HTTP)');
+
       // Try external first
       await this.externalService.streamChat(
         request,

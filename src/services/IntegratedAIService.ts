@@ -82,19 +82,19 @@ export class IntegratedAIService {
         modelPath: this.modelPath,
       });
 
-      // Load model with AMD GPU acceleration
+      // Load model with AMD GPU acceleration (28/37 layers for 5.86GB VRAM)
       this.model = await this.llama.loadModel({
         modelPath: this.modelPath,
-        gpuLayers: 'max', // Offload all layers to AMD GPU via Vulkan
+        gpuLayers: 28, // Optimized for AMD RX 6600 (5.86GB VRAM)
       });
 
-      errorLogger.logError('Creating context (4096 tokens)', {
+      errorLogger.logError('Creating context (3072 tokens)', {
         type: 'info',
       });
 
       // Create context for legal document analysis
       this.context = await this.model.createContext({
-        contextSize: 4096, // Sufficient for legal documents
+        contextSize: 3072, // Optimized for 5.86GB VRAM
       });
 
       errorLogger.logError('IntegratedAIService fully initialized', {
@@ -242,13 +242,22 @@ Format for legal citations:
     onThinkToken?: (token: string) => void,
     onSources?: (sources: string[]) => void
   ): Promise<void> {
+    console.log('[IntegratedAIService] streamChat() called');
+    console.log('[IntegratedAIService] isInitialized:', this.isInitialized);
+
     try {
       // Ensure initialized
+      console.log('[IntegratedAIService] Checking connection...');
       const status = await this.checkConnection();
+      console.log('[IntegratedAIService] Connection status:', status);
+
       if (!status.connected) {
+        console.error('[IntegratedAIService] Not connected, error:', status.error);
         onError(`Integrated AI not ready: ${status.error}`);
         return;
       }
+
+      console.log('[IntegratedAIService] Connection successful, starting streaming...');
 
       // Import session class
       const { LlamaChatSession } = await import('node-llama-cpp');
