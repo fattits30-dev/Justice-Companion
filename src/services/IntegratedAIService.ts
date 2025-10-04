@@ -290,12 +290,17 @@ Format for legal citations:
       let accumulatedContent = '';
       let insideThinkTag = false;
       let thinkBuffer = '';
+      let tokenCount = 0;
+      const startTime = Date.now();
+
+      console.log('[IntegratedAIService] Starting Qwen 3 inference...');
 
       // Stream tokens
       await chatSession.prompt(userPrompt.trim(), {
         temperature: request.config?.temperature ?? this.config.temperature,
         maxTokens: request.config?.maxTokens ?? this.config.maxTokens,
         onTextChunk: (chunk: string) => {
+          tokenCount++;
           // Process chunk for <think> tag filtering
           thinkBuffer += chunk;
 
@@ -335,6 +340,18 @@ Format for legal citations:
         },
       });
 
+      // Calculate performance stats
+      const endTime = Date.now();
+      const durationSeconds = (endTime - startTime) / 1000;
+      const tokensPerSecond = tokenCount / durationSeconds;
+
+      console.log('[IntegratedAIService] === STREAMING COMPLETE ===');
+      console.log(`[IntegratedAIService] Tokens generated: ${tokenCount}`);
+      console.log(`[IntegratedAIService] Duration: ${durationSeconds.toFixed(2)}s`);
+      console.log(`[IntegratedAIService] Speed: ${tokensPerSecond.toFixed(2)} tokens/sec`);
+      console.log(`[IntegratedAIService] GPU Layers: 28/37`);
+      console.log(`[IntegratedAIService] Response length: ${accumulatedContent.length} chars`);
+
       // Extract sources after completion
       if (request.context && onSources && accumulatedContent) {
         const sources = extractSources(accumulatedContent, request.context);
@@ -345,7 +362,12 @@ Format for legal citations:
         onSources(sources);
       }
 
-      errorLogger.logError('Qwen 3 8B streaming complete', { type: 'info' });
+      errorLogger.logError('Qwen 3 8B streaming complete', {
+        type: 'info',
+        tokenCount,
+        durationSeconds: durationSeconds.toFixed(2),
+        tokensPerSecond: tokensPerSecond.toFixed(2),
+      });
       onComplete();
     } catch (error) {
       const errorMessage =
