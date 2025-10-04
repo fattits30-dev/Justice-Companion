@@ -223,7 +223,7 @@ export class AIServiceFactory {
   }
 
   /**
-   * Streaming chat (uses active service)
+   * Streaming chat (uses active service with automatic fallback)
    */
   async streamChat(
     request: AIChatRequest,
@@ -233,21 +233,75 @@ export class AIServiceFactory {
     onThinkToken?: (token: string) => void,
     onSources?: (sources: string[]) => void
   ): Promise<void> {
+    let hasStartedStreaming = false; // Track if any tokens have been sent
+
     if (this.activeService === 'integrated') {
-      return this.integratedService.streamChat(
+      // Try integrated first
+      await this.integratedService.streamChat(
         request,
-        onToken,
+        (token) => {
+          hasStartedStreaming = true;
+          onToken(token);
+        },
         onComplete,
-        onError,
+        async (error) => {
+          // Only fallback if streaming hasn't started yet
+          if (!hasStartedStreaming && this.isModelAvailable()) {
+            errorLogger.logError('Integrated AI failed before streaming, trying external fallback', {
+              type: 'info',
+              error,
+            });
+
+            this.activeService = 'external'; // Auto-switch
+
+            return await this.externalService.streamChat(
+              request,
+              onToken,
+              onComplete,
+              onError,
+              onThinkToken,
+              onSources
+            );
+          } else {
+            // Can't fallback mid-stream or no external available
+            onError(error);
+          }
+        },
         onThinkToken,
         onSources
       );
     } else {
-      return this.externalService.streamChat(
+      // Try external first
+      await this.externalService.streamChat(
         request,
-        onToken,
+        (token) => {
+          hasStartedStreaming = true;
+          onToken(token);
+        },
         onComplete,
-        onError,
+        async (error) => {
+          // Only fallback if streaming hasn't started yet
+          if (!hasStartedStreaming && this.isModelAvailable()) {
+            errorLogger.logError('External AI failed before streaming, trying integrated fallback', {
+              type: 'info',
+              error,
+            });
+
+            this.activeService = 'integrated'; // Auto-switch
+
+            return await this.integratedService.streamChat(
+              request,
+              onToken,
+              onComplete,
+              onError,
+              onThinkToken,
+              onSources
+            );
+          } else {
+            // Can't fallback mid-stream or no integrated available
+            onError(error);
+          }
+        },
         onThinkToken,
         onSources
       );
