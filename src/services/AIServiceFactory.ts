@@ -36,7 +36,7 @@ export class AIServiceFactory {
     this.modelPath = path.join(
       userDataPath,
       'models',
-      'Qwen3-8B-Q4_K_M.gguf'
+      'Qwen_Qwen3-8B-Q4_K_M.gguf'
     );
 
     errorLogger.logError('AIServiceFactory initialized', {

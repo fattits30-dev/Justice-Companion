@@ -45,8 +45,8 @@ export class ModelDownloadService {
     {
       id: 'qwen3-8b-q4',
       name: 'Qwen 3 8B (Q4_K_M)',
-      fileName: 'Qwen3-8B-Q4_K_M.gguf',
-      url: 'https://huggingface.co/bartowski/Qwen_Qwen3-8B-GGUF/resolve/main/Qwen3-8B-Q4_K_M.gguf',
+      fileName: 'Qwen_Qwen3-8B-Q4_K_M.gguf',
+      url: 'https://huggingface.co/bartowski/Qwen_Qwen3-8B-GGUF/resolve/main/Qwen_Qwen3-8B-Q4_K_M.gguf',
       size: 5030000000, // ~5.03 GB
       description: 'Recommended for AMD Radeon RX 6600 (5.86GB VRAM available)',
       recommended: true,
@@ -54,8 +54,8 @@ export class ModelDownloadService {
     {
       id: 'qwen3-8b-q5',
       name: 'Qwen 3 8B (Q5_K_M)',
-      fileName: 'Qwen3-8B-Q5_K_M.gguf',
-      url: 'https://huggingface.co/bartowski/Qwen_Qwen3-8B-GGUF/resolve/main/Qwen3-8B-Q5_K_M.gguf',
+      fileName: 'Qwen_Qwen3-8B-Q5_K_M.gguf',
+      url: 'https://huggingface.co/bartowski/Qwen_Qwen3-8B-GGUF/resolve/main/Qwen_Qwen3-8B-Q5_K_M.gguf',
       size: 5850000000, // ~5.85 GB
       description: 'Higher quality, uses all available VRAM',
       recommended: false,
@@ -63,8 +63,8 @@ export class ModelDownloadService {
     {
       id: 'qwen3-8b-iq4',
       name: 'Qwen 3 8B (IQ4_XS)',
-      fileName: 'Qwen3-8B-IQ4_XS.gguf',
-      url: 'https://huggingface.co/bartowski/Qwen_Qwen3-8B-GGUF/resolve/main/Qwen3-8B-IQ4_XS.gguf',
+      fileName: 'Qwen_Qwen3-8B-IQ4_XS.gguf',
+      url: 'https://huggingface.co/bartowski/Qwen_Qwen3-8B-GGUF/resolve/main/Qwen_Qwen3-8B-IQ4_XS.gguf',
       size: 4560000000, // ~4.56 GB
       description: 'Smaller, faster, decent quality',
       recommended: false,

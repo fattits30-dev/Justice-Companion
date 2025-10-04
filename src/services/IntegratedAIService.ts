@@ -25,7 +25,7 @@ export class IntegratedAIService {
   private model: any = null;
   private context: any = null;
   private isInitialized = false;
-  private modelFileName = 'Qwen3-8B-Q4_K_M.gguf';
+  private modelFileName = 'Qwen_Qwen3-8B-Q4_K_M.gguf';
   private modelPath: string;
 
   constructor(config?: Partial<AIConfig>) {
