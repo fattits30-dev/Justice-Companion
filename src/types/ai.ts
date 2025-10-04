@@ -1,6 +1,6 @@
 /**
  * AI System Types
- * Types for LM Studio integration, RAG, and legal information chat
+ * Types for AI integration, RAG, and legal information chat
  */
 
 // Chat message roles
@@ -16,7 +16,7 @@ export interface ChatMessage {
 
 // AI model configuration
 export interface AIConfig {
-  endpoint: string; // LM Studio endpoint (default: http://localhost:1234/v1)
+  endpoint: string; // External endpoint (deprecated - using integrated AI)
   model: string; // Model name
   temperature: number; // 0-1, lower = more focused
   maxTokens: number; // Max response length
@@ -28,8 +28,8 @@ export interface AIConfig {
 
 // Default AI configuration
 export const DEFAULT_AI_CONFIG: AIConfig = {
-  endpoint: 'http://localhost:1234/v1',
-  model: 'local-model', // LM Studio uses currently loaded model
+  endpoint: '', // Deprecated - using integrated AI
+  model: 'local-model',
   temperature: 0.3, // Low temperature for factual legal information
   maxTokens: 2000,
   stream: false,

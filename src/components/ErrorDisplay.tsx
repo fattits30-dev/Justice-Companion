@@ -2,7 +2,7 @@
  * ErrorDisplay Component
  *
  * Displays user-friendly error messages for various failure scenarios:
- * - LM Studio offline
+ * - AI service errors
  * - Connection timeout
  * - Streaming errors
  * - Validation errors
@@ -21,9 +21,9 @@ export function ErrorDisplay({ error, onDismiss }: ErrorDisplayProps): JSX.Eleme
   }
 
   // Parse error type for better messaging
-  const isConnectionError = error.toLowerCase().includes('lm studio') ||
-                           error.toLowerCase().includes('connect');
-  const isOfflineError = error.toLowerCase().includes('running') ||
+  const isConnectionError = error.toLowerCase().includes('connect') ||
+                           error.toLowerCase().includes('initialization');
+  const isOfflineError = error.toLowerCase().includes('failed') ||
                         error.toLowerCase().includes('offline');
 
   return (
@@ -31,23 +31,9 @@ export function ErrorDisplay({ error, onDismiss }: ErrorDisplayProps): JSX.Eleme
       <BiError className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
       <div className="flex-1">
         <h3 className="text-sm font-semibold text-red-800 mb-1">
-          {isConnectionError ? 'Connection Error' : isOfflineError ? 'AI Offline' : 'Error'}
+          {isConnectionError ? 'Connection Error' : isOfflineError ? 'AI Error' : 'Error'}
         </h3>
         <p className="text-sm text-red-700">{error}</p>
-        {isOfflineError && (
-          <p className="text-xs text-red-600 mt-2">
-            Make sure LM Studio is running at{' '}
-            <a
-              href="http://localhost:1234"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline hover:text-red-800"
-            >
-              http://localhost:1234
-            </a>
-            {' '}and a model is loaded.
-          </p>
-        )}
       </div>
       {onDismiss && (
         <button

@@ -106,7 +106,7 @@ export function AIChatExample(): JSX.Element {
         {/* Loading State Indicator */}
         {loadingState === 'connecting' && (
           <div className="text-gray-500 text-center">
-            Connecting to LM Studio...
+            Connecting to AI...
           </div>
         )}
         {loadingState === '🤔 Thinking...' && (

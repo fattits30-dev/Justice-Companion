@@ -1,6 +1,6 @@
 import { errorLogger } from '../utils/error-logger';
 import { legalAPIService } from './LegalAPIService';
-import { aiService } from './AIService';
+import { aiServiceFactory } from './AIServiceFactory';
 import type {
   LegalContext,
   LegislationResult,
@@ -88,7 +88,7 @@ export class RAGService {
         caseId,
       };
 
-      const aiResponse = await aiService.chat(aiRequest);
+      const aiResponse = await aiServiceFactory.chat(aiRequest);
 
       // PHASE 5: Safety Validation
       if (aiResponse.success) {

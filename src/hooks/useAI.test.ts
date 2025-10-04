@@ -124,11 +124,11 @@ describe('useAI hook contract', () => {
 });
 
 describe('useAI error handling', () => {
-  test('LM Studio offline error message is user-friendly', () => {
+  test('AI initialization error message is user-friendly', () => {
     const errorMessage =
-      'LM Studio is not running. Please start LM Studio at http://localhost:1234 and load a model.';
-    expect(errorMessage).toContain('LM Studio');
-    expect(errorMessage).toContain('http://localhost:1234');
+      'AI initialization failed. Please check model availability.';
+    expect(errorMessage).toContain('initialization');
+    expect(errorMessage).toContain('model availability');
   });
 
   test('Stream error is prefixed with "AI Error:"', () => {

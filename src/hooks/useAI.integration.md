@@ -27,15 +27,15 @@
 ### 3. Loading States
 - `loadingState: 'idle' | 'connecting' | 'thinking' | 'streaming'`
 - **idle**: No operation in progress
-- **connecting**: Connecting to LM Studio
+- **connecting**: Connecting to AI service
 - **thinking**: Waiting for first token
 - **streaming**: Receiving tokens in real-time
 
 ### 4. Error States
-- LM Studio offline detection on mount
+- AI service detection on mount
 - User-friendly error messages:
-  - "LM Studio is not running. Please start LM Studio at http://localhost:1234 and load a model."
-  - "Cannot connect to LM Studio. Please install and run LM Studio from https://lmstudio.ai"
+  - "AI initialization failed. Please check model availability."
+  - "AI service initialization error. Please ensure the AI model is properly configured."
   - "AI Error: {specific error}"
 - Empty message validation
 - Concurrent send prevention
@@ -184,7 +184,7 @@ See `useAI.example.tsx` for full implementation with Tailwind CSS styling.
 ## Edge Cases Handled
 
 ✅ **Empty messages** - Validation shows error: "Message cannot be empty"
-✅ **LM Studio offline** - Checked on mount, user-friendly error
+✅ **AI service offline** - Checked on mount, user-friendly error
 ✅ **Rapid successive sends** - `isStreaming` guard prevents double-send
 ✅ **Stream interrupted** - `streamingContent` preserved until error/complete
 ✅ **Component unmount during stream** - `isMountedRef` prevents state updates
@@ -217,7 +217,7 @@ The hook is production-ready and can be integrated into the Justice Companion UI
 3. Connect input field to `sendMessage()`
 4. Attach `messagesEndRef` to scroll anchor element
 5. Style loading states and error messages
-6. Test with LM Studio running
+6. Test with AI service running
 
 ---
 

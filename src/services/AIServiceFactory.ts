@@ -1,5 +1,4 @@
 import { errorLogger } from '../utils/error-logger';
-import { AIService } from './AIService';
 import { IntegratedAIService } from './IntegratedAIService';
 import type {
   AIConfig,
@@ -12,24 +11,18 @@ import path from 'path';
 import { app } from 'electron';
 
 /**
- * AIServiceFactory - Intelligent fallback between Integrated and External AI
+ * AIServiceFactory - Integrated AI Service Manager
  *
- * Priority:
- * 1. IntegratedAIService (Qwen 3 8B with AMD GPU) - Sovereign AI
- * 2. AIService (HTTP to LMStudio/Ollama) - Fallback if model not available
- *
- * This provides seamless transition as users download models.
+ * Uses IntegratedAIService (Qwen 3 8B with node-llama-cpp) as the sole AI provider.
+ * No external dependencies or fallbacks.
  */
 export class AIServiceFactory {
   private static instance: AIServiceFactory | null = null;
   private integratedService: IntegratedAIService;
-  private externalService: AIService;
-  private activeService: 'integrated' | 'external' = 'external';
   private modelPath: string;
 
   private constructor() {
     this.integratedService = new IntegratedAIService();
-    this.externalService = new AIService();
 
     // Check model availability
     const userDataPath = app.getPath('userData');
@@ -43,9 +36,6 @@ export class AIServiceFactory {
       type: 'info',
       modelPath: this.modelPath,
     });
-
-    // Auto-detect which service to use
-    this.detectActiveService();
   }
 
   /**
@@ -59,32 +49,9 @@ export class AIServiceFactory {
   }
 
   /**
-   * Detect which AI service should be active
+   * Initialize integrated AI service (after model download)
    */
-  private detectActiveService(): void {
-    // Check if Qwen 3 model exists
-    if (fs.existsSync(this.modelPath)) {
-      this.activeService = 'integrated';
-      errorLogger.logError('Using Integrated AI (Qwen 3 8B found)', {
-        type: 'info',
-        modelPath: this.modelPath,
-      });
-    } else {
-      this.activeService = 'external';
-      errorLogger.logError(
-        'Using External AI (Qwen 3 model not found, falling back to HTTP)',
-        {
-          type: 'info',
-          modelPath: this.modelPath,
-        }
-      );
-    }
-  }
-
-  /**
-   * Force switch to integrated AI (after model download)
-   */
-  async switchToIntegrated(): Promise<boolean> {
+  async initialize(): Promise<boolean> {
     try {
       // Verify model exists
       if (!fs.existsSync(this.modelPath)) {
@@ -94,33 +61,16 @@ export class AIServiceFactory {
       // Try to initialize
       await this.integratedService.initialize();
 
-      this.activeService = 'integrated';
-
-      errorLogger.logError('Switched to Integrated AI', { type: 'info' });
+      errorLogger.logError('Integrated AI initialized successfully', { type: 'info' });
 
       return true;
     } catch (error) {
       errorLogger.logError(error as Error, {
-        context: 'AIServiceFactory.switchToIntegrated',
+        context: 'AIServiceFactory.initialize',
       });
 
       return false;
     }
-  }
-
-  /**
-   * Force switch to external AI (HTTP)
-   */
-  switchToExternal(): void {
-    this.activeService = 'external';
-    errorLogger.logError('Switched to External AI (HTTP)', { type: 'info' });
-  }
-
-  /**
-   * Get current active service type
-   */
-  getActiveServiceType(): 'integrated' | 'external' {
-    return this.activeService;
   }
 
   /**
@@ -138,66 +88,20 @@ export class AIServiceFactory {
   }
 
   /**
-   * Check AI connection (tries active service, falls back if needed)
+   * Check AI connection status
    */
   async checkConnection(): Promise<AIStatus> {
     try {
-      if (this.activeService === 'integrated') {
-        // Try integrated first
-        const status = await this.integratedService.checkConnection();
+      const status = await this.integratedService.checkConnection();
 
-        if (status.connected) {
-          return status;
-        }
-
-        // Integrated failed, try external fallback
-        errorLogger.logError('Integrated AI check failed, trying external', {
+      if (!status.connected) {
+        errorLogger.logError('Integrated AI connection check failed', {
           type: 'info',
           error: status.error,
         });
-
-        const externalStatus = await this.externalService.checkConnection();
-
-        if (externalStatus.connected) {
-          // Auto-switch to external
-          this.activeService = 'external';
-          return externalStatus;
-        }
-
-        // Both failed
-        return {
-          connected: false,
-          endpoint: 'All AI services unavailable',
-          error: `Integrated: ${status.error}, External: ${externalStatus.error}`,
-        };
-      } else {
-        // Try external
-        const status = await this.externalService.checkConnection();
-
-        if (status.connected) {
-          return status;
-        }
-
-        // External failed, try integrated fallback (if model exists)
-        if (this.isModelAvailable()) {
-          errorLogger.logError('External AI check failed, trying integrated', {
-            type: 'info',
-            error: status.error,
-          });
-
-          const integratedStatus =
-            await this.integratedService.checkConnection();
-
-          if (integratedStatus.connected) {
-            // Auto-switch to integrated
-            this.activeService = 'integrated';
-            return integratedStatus;
-          }
-        }
-
-        // External failed and no integrated fallback
-        return status;
       }
+
+      return status;
     } catch (error) {
       errorLogger.logError(error as Error, {
         context: 'AIServiceFactory.checkConnection',
@@ -205,25 +109,21 @@ export class AIServiceFactory {
 
       return {
         connected: false,
-        endpoint: 'Error checking AI services',
+        endpoint: 'Error checking AI service',
         error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }
 
   /**
-   * Non-streaming chat (uses active service)
+   * Non-streaming chat
    */
   async chat(request: AIChatRequest): Promise<AIResponse> {
-    if (this.activeService === 'integrated') {
-      return this.integratedService.chat(request);
-    } else {
-      return this.externalService.chat(request);
-    }
+    return this.integratedService.chat(request);
   }
 
   /**
-   * Streaming chat (uses active service with automatic fallback)
+   * Streaming chat
    */
   async streamChat(
     request: AIChatRequest,
@@ -233,96 +133,26 @@ export class AIServiceFactory {
     onThinkToken?: (token: string) => void,
     onSources?: (sources: string[]) => void
   ): Promise<void> {
-    console.log('[AIServiceFactory] streamChat() called, activeService:', this.activeService);
+    console.log('[AIServiceFactory] streamChat() called');
     console.log('[AIServiceFactory] Model available:', this.isModelAvailable());
 
-    let hasStartedStreaming = false; // Track if any tokens have been sent
-
-    if (this.activeService === 'integrated') {
-      console.log('[AIServiceFactory] Using Integrated AI (Qwen 3)');
-
-      // Try integrated first
-      await this.integratedService.streamChat(
-        request,
-        (token) => {
-          hasStartedStreaming = true;
-          onToken(token);
-        },
-        onComplete,
-        async (error) => {
-          // Only fallback if streaming hasn't started yet
-          if (!hasStartedStreaming && this.isModelAvailable()) {
-            errorLogger.logError('Integrated AI failed before streaming, trying external fallback', {
-              type: 'info',
-              error,
-            });
-
-            this.activeService = 'external'; // Auto-switch
-
-            return await this.externalService.streamChat(
-              request,
-              onToken,
-              onComplete,
-              onError,
-              onThinkToken,
-              onSources
-            );
-          } else {
-            // Can't fallback mid-stream or no external available
-            onError(error);
-          }
-        },
-        onThinkToken,
-        onSources
-      );
-    } else {
-      console.log('[AIServiceFactory] Using External AI (HTTP)');
-
-      // Try external first
-      await this.externalService.streamChat(
-        request,
-        (token) => {
-          hasStartedStreaming = true;
-          onToken(token);
-        },
-        onComplete,
-        async (error) => {
-          // Only fallback if streaming hasn't started yet
-          if (!hasStartedStreaming && this.isModelAvailable()) {
-            errorLogger.logError('External AI failed before streaming, trying integrated fallback', {
-              type: 'info',
-              error,
-            });
-
-            this.activeService = 'integrated'; // Auto-switch
-
-            return await this.integratedService.streamChat(
-              request,
-              onToken,
-              onComplete,
-              onError,
-              onThinkToken,
-              onSources
-            );
-          } else {
-            // Can't fallback mid-stream or no integrated available
-            onError(error);
-          }
-        },
-        onThinkToken,
-        onSources
-      );
-    }
+    await this.integratedService.streamChat(
+      request,
+      onToken,
+      onComplete,
+      onError,
+      onThinkToken,
+      onSources
+    );
   }
 
   /**
-   * Update configuration (applies to both services)
+   * Update configuration
    */
   updateConfig(config: Partial<AIConfig>): void {
     this.integratedService.updateConfig(config);
-    this.externalService.updateConfig(config);
 
-    errorLogger.logError('AI configuration updated (both services)', {
+    errorLogger.logError('AI configuration updated', {
       type: 'info',
       config,
     });
@@ -332,11 +162,7 @@ export class AIServiceFactory {
    * Get current configuration
    */
   getConfig(): AIConfig {
-    if (this.activeService === 'integrated') {
-      return this.integratedService.getConfig();
-    } else {
-      return this.externalService.getConfig();
-    }
+    return this.integratedService.getConfig();
   }
 
   /**

@@ -55,7 +55,7 @@ export interface UseAIReturn {
  * - Message history management
  * - Streaming token handling (real-time display)
  * - Loading states (connecting, thinking, streaming)
- * - Error states (offline, timeout, LM Studio not running)
+ * - Error states (offline, timeout, AI service errors)
  * - Auto-scroll to latest message
  * - Event listener cleanup (no memory leaks)
  *
@@ -107,12 +107,12 @@ export function useAI(initialMessages: ChatMessage[] = []): UseAIReturn {
 
         if (!response.connected) {
           setError(
-            'LM Studio is not running. Please start LM Studio at http://localhost:1234 and load a model.'
+            'AI initialization failed. Please check model availability.'
           );
         }
       } catch (err) {
         setError(
-          'Cannot connect to LM Studio. Please install and run LM Studio from https://lmstudio.ai'
+          'AI service initialization error. Please ensure the AI model is properly configured.'
         );
       }
     };
@@ -342,7 +342,7 @@ export function useAI(initialMessages: ChatMessage[] = []): UseAIReturn {
         const errorMsg =
           err instanceof Error
             ? err.message
-            : 'Failed to connect to LM Studio. Is it running?';
+            : 'AI inference failed. Please check the AI service status.';
         setError(errorMsg);
         setLoadingState('idle');
         setIsStreaming(false);
