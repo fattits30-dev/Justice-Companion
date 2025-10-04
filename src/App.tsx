@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
-import { DisclaimerBanner } from './components/DisclaimerBanner';
 import { ChatWindow } from './components/ChatWindow';
+import { DebugProvider } from './contexts/DebugContext';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 function App() {
   // Global keyboard shortcuts
@@ -20,10 +21,11 @@ function App() {
   }, []);
 
   return (
-    <div className="h-screen flex flex-col">
-      <DisclaimerBanner />
-      <ChatWindow />
-    </div>
+    <ErrorBoundary>
+      <DebugProvider>
+        <ChatWindow />
+      </DebugProvider>
+    </ErrorBoundary>
   );
 }
 

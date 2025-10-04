@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import type { ChatMessage } from '../types/ai';
 import type { IPCResponse, AICheckStatusResponse, AIStreamStartResponse } from '../types/ipc';
+import { logger } from '../utils/logger';
 
 /**
  * Loading states for AI chat operations
@@ -17,10 +18,13 @@ export interface UseAIReturn {
   error: string | null;
   isStreaming: boolean;
   streamingContent: string;
+  thinkingContent: string; // AI reasoning content from <think> tags
+  currentSources: string[]; // Legal source citations for current AI response
 
   // Actions
   sendMessage: (content: string) => Promise<void>;
   clearMessages: () => void;
+  loadMessages: (messages: ChatMessage[]) => void;
 
   // Refs for auto-scroll
   messagesEndRef: React.RefObject<HTMLDivElement>;
@@ -37,29 +41,42 @@ export interface UseAIReturn {
  * - Auto-scroll to latest message
  * - Event listener cleanup (no memory leaks)
  *
+ * @param initialMessages - Optional array of messages to pre-populate chat history
  * @returns {UseAIReturn} AI chat state and actions
  */
-export function useAI(): UseAIReturn {
+export function useAI(initialMessages: ChatMessage[] = []): UseAIReturn {
   // State management
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [loadingState, setLoadingState] = useState<AILoadingState>('idle');
   const [error, setError] = useState<string | null>(null);
   const [isStreaming, setIsStreaming] = useState<boolean>(false);
   const [streamingContent, setStreamingContent] = useState<string>('');
+  const [thinkingContent, setThinkingContent] = useState<string>(''); // NEW: AI reasoning
+  const [currentSources, setCurrentSources] = useState<string[]>([]); // NEW: Legal source citations
 
   // Refs for cleanup and avoiding closure issues
   const isMountedRef = useRef<boolean>(true);
   const streamingContentRef = useRef<string>('');
+  const thinkingContentRef = useRef<string>(''); // NEW: Ref for thinking content
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Sync streamingContent to ref for event handlers
+  // Sync streamingContent and thinkingContent to refs for event handlers
   useEffect(() => {
     streamingContentRef.current = streamingContent;
   }, [streamingContent]);
 
+  useEffect(() => {
+    thinkingContentRef.current = thinkingContent;
+  }, [thinkingContent]);
+
   // Check AI status on mount
   useEffect(() => {
     const checkStatus = async (): Promise<void> => {
+      if (!window.justiceAPI) {
+        logger.warn('useAI', 'window.justiceAPI not available during status check');
+        return;
+      }
+
       try {
         const response: IPCResponse<AICheckStatusResponse> =
           await window.justiceAPI.checkAIStatus();
@@ -86,44 +103,82 @@ export function useAI(): UseAIReturn {
 
   // Set up streaming event listeners
   useEffect(() => {
-    console.log('[useAI] Setting up event listeners');
+    // Safety check: ensure window.justiceAPI is available
+    if (!window.justiceAPI) {
+      logger.error('useAI', 'window.justiceAPI is not available. Preload script may not have executed.');
+      setError('Application initialization error. Please reload the app.');
+      return;
+    }
+
+    isMountedRef.current = true; // Reset to true on mount (fixes React Strict Mode unmount issue)
+    logger.info('useAI', 'Setting up event listeners');
 
     /**
      * Handle incoming token from AI stream
      */
     const handleToken = (token: string): void => {
-      console.log('[useAI] handleToken called, token:', token, 'isMounted:', isMountedRef.current);
+      logger.debug('useAI', 'handleToken called', { token, isMounted: isMountedRef.current });
       if (!isMountedRef.current) {
-        console.error('[useAI] Component unmounted, ignoring token');
+        logger.warn('useAI', 'Component unmounted, ignoring token');
         return;
       }
 
-      console.log('[useAI] Setting loadingState to streaming');
+      logger.info('useAI', 'Setting loadingState to streaming');
       setLoadingState('streaming');
       setStreamingContent((prev) => {
         const newContent = prev + token;
-        console.log('[useAI] Updated streamingContent length:', newContent.length);
+        logger.debug('useAI', 'Updated streamingContent', { length: newContent.length });
         return newContent;
       });
+    };
+
+    /**
+     * Handle incoming think token from AI stream (reasoning content)
+     */
+    const handleThinkToken = (token: string): void => {
+      logger.debug('useAI', 'handleThinkToken called', { token });
+      if (!isMountedRef.current) return;
+
+      setThinkingContent((prev) => {
+        const newContent = prev + token;
+        logger.debug('useAI', 'Updated thinkingContent', { length: newContent.length });
+        return newContent;
+      });
+    };
+
+    /**
+     * Handle incoming legal sources from AI stream
+     */
+    const handleSources = (sources: string[]): void => {
+      logger.debug('useAI', 'handleSources called', { sourcesCount: sources.length });
+      if (!isMountedRef.current) return;
+
+      setCurrentSources(sources);
+      logger.info('useAI', 'Legal sources received', { sourcesCount: sources.length });
     };
 
     /**
      * Handle stream completion
      */
     const handleComplete = (): void => {
-      console.log('[useAI] handleComplete called, content length:', streamingContentRef.current.length);
+      logger.info('useAI', 'handleComplete called', {
+        contentLength: streamingContentRef.current.length,
+        thinkingLength: thinkingContentRef.current.length
+      });
       if (!isMountedRef.current) return;
 
-      // Add complete assistant message to history
+      // Add complete assistant message to history with thinking content
       const assistantMessage: ChatMessage = {
         role: 'assistant',
         content: streamingContentRef.current,
         timestamp: new Date().toISOString(),
+        thinkingContent: thinkingContentRef.current || undefined, // Store AI reasoning
       };
 
-      console.log('[useAI] Adding message to history');
+      logger.info('useAI', 'Adding message to history with thinking content');
       setMessages((prev) => [...prev, assistantMessage]);
       setStreamingContent('');
+      setThinkingContent(''); // Clear thinking content for next message
       setLoadingState('idle');
       setIsStreaming(false);
       setError(null);
@@ -133,7 +188,7 @@ export function useAI(): UseAIReturn {
      * Handle stream error
      */
     const handleError = (errorMsg: string): void => {
-      console.error('[useAI] Stream error:', errorMsg);
+      logger.error('useAI', 'Stream error', { error: errorMsg });
       if (!isMountedRef.current) return;
 
       setError(`AI Error: ${errorMsg}`);
@@ -144,16 +199,20 @@ export function useAI(): UseAIReturn {
 
     // Register event listeners and get cleanup functions
     const removeTokenListener = window.justiceAPI.onAIStreamToken(handleToken);
+    const removeThinkTokenListener = window.justiceAPI.onAIStreamThinkToken(handleThinkToken);
+    const removeSourcesListener = window.justiceAPI.onAIStreamSources(handleSources);
     const removeCompleteListener = window.justiceAPI.onAIStreamComplete(handleComplete);
     const removeErrorListener = window.justiceAPI.onAIStreamError(handleError);
 
-    console.log('[useAI] Event listeners registered');
+    logger.info('useAI', 'Event listeners registered (tokens, thinking, sources)');
 
     // Cleanup on unmount
     return (): void => {
-      console.log('[useAI] Cleaning up event listeners');
+      logger.info('useAI', 'Cleaning up event listeners');
       isMountedRef.current = false;
       removeTokenListener();
+      removeThinkTokenListener();
+      removeSourcesListener();
       removeCompleteListener();
       removeErrorListener();
     };
@@ -171,6 +230,12 @@ export function useAI(): UseAIReturn {
    */
   const sendMessage = useCallback(
     async (content: string): Promise<void> => {
+      // Safety check
+      if (!window.justiceAPI) {
+        setError('Application not ready. Please reload the app.');
+        return;
+      }
+
       // Validation
       if (!content.trim()) {
         setError('Message cannot be empty');
@@ -198,6 +263,8 @@ export function useAI(): UseAIReturn {
       setLoadingState('connecting');
       setIsStreaming(true);
       setStreamingContent('');
+      setThinkingContent(''); // Clear previous thinking content
+      setCurrentSources([]); // Clear previous sources
 
       try {
         const response: IPCResponse<AIStreamStartResponse> =
@@ -233,6 +300,21 @@ export function useAI(): UseAIReturn {
   const clearMessages = useCallback((): void => {
     setMessages([]);
     setStreamingContent('');
+    setThinkingContent('');
+    setCurrentSources([]);
+    setError(null);
+    setLoadingState('idle');
+    setIsStreaming(false);
+  }, []);
+
+  /**
+   * Load messages into chat history (e.g., from a saved conversation)
+   */
+  const loadMessages = useCallback((newMessages: ChatMessage[]): void => {
+    setMessages(newMessages);
+    setStreamingContent('');
+    setThinkingContent('');
+    setCurrentSources([]);
     setError(null);
     setLoadingState('idle');
     setIsStreaming(false);
@@ -245,10 +327,13 @@ export function useAI(): UseAIReturn {
     error,
     isStreaming,
     streamingContent,
+    thinkingContent, // NEW: Expose thinking content
+    currentSources, // NEW: Expose legal sources
 
     // Actions
     sendMessage,
     clearMessages,
+    loadMessages,
 
     // Refs
     messagesEndRef,

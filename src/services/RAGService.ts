@@ -151,6 +151,15 @@ export class RAGService {
   }
 
   /**
+   * PUBLIC: Fetch legal context for a question (for streaming integration)
+   */
+  async fetchContextForQuestion(question: string): Promise<LegalContext> {
+    const keywords = await this.extractAndAnalyzeQuestion(question);
+    const category = legalAPIService.classifyQuestion(question);
+    return this.fetchLegalContext(keywords, category);
+  }
+
+  /**
    * Fetch legal context from all sources in parallel
    */
   private async fetchLegalContext(

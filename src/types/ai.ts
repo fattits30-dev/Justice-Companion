@@ -11,6 +11,7 @@ export interface ChatMessage {
   role: MessageRole;
   content: string;
   timestamp?: string;
+  thinkingContent?: string | null; // AI's internal reasoning process (from <think> tags) - matches database schema
 }
 
 // AI model configuration
@@ -172,19 +173,21 @@ export function buildSystemPrompt(context: LegalContext): string {
 }
 
 // Extract sources from AI response for citation display
+// NOTE: Returns ALL sources from context for transparency, not just cited ones
+// This is important for legal apps - users should see what was searched
 export function extractSources(response: string, context: LegalContext): string[] {
   const sources: string[] = [];
 
-  // Extract legislation sources
+  // Add ALL legislation sources (with valid URLs)
   context.legislation.forEach((law) => {
-    if (response.includes(law.title) || (law.section && response.includes(law.section))) {
+    if (law.url) {
       sources.push(`${law.title}${law.section ? ` ${law.section}` : ''} - ${law.url}`);
     }
   });
 
-  // Extract case law sources
+  // Add ALL case law sources (with valid URLs)
   context.caseLaw.forEach((caseItem) => {
-    if (response.includes(caseItem.citation)) {
+    if (caseItem.url) {
       sources.push(`${caseItem.citation} - ${caseItem.url}`);
     }
   });

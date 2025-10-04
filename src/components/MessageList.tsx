@@ -1,6 +1,8 @@
 import type { RefObject } from 'react';
 import type { ChatMessage } from '../types/ai';
+import type { AILoadingState } from '../hooks/useAI';
 import { MessageBubble } from './MessageBubble';
+import { StreamingIndicator } from './StreamingIndicator';
 
 /**
  * Props for MessageList component
@@ -9,6 +11,9 @@ export interface MessageListProps {
   messages: ChatMessage[];
   streamingContent: string;
   isStreaming: boolean;
+  loadingState: AILoadingState;
+  thinkingContent: string;
+  currentSources: string[]; // Legal source citations
   messagesEndRef: RefObject<HTMLDivElement>;
 }
 
@@ -31,11 +36,14 @@ export function MessageList({
   messages,
   streamingContent,
   isStreaming,
+  loadingState,
+  thinkingContent,
+  currentSources,
   messagesEndRef,
 }: MessageListProps): JSX.Element {
   return (
-    <div className="flex-1 overflow-y-auto bg-slate-50 p-4">
-      <div className="mx-auto max-w-4xl space-y-4">
+    <div className="flex-1 overflow-y-auto p-4">
+      <div className="mx-auto space-y-4">
         {/* Empty state */}
         {messages.length === 0 && !isStreaming && (
           <div className="flex h-full items-center justify-center text-center">
@@ -57,6 +65,14 @@ export function MessageList({
           />
         ))}
 
+        {/* Inline StreamingIndicator - appears right where AI response will be */}
+        {isStreaming && (
+          <StreamingIndicator
+            loadingState={loadingState}
+            thinkingContent={thinkingContent}
+          />
+        )}
+
         {/* Streaming assistant response */}
         {isStreaming && streamingContent.length > 0 && (
           <MessageBubble
@@ -67,6 +83,34 @@ export function MessageList({
             }}
             isStreaming={true}
           />
+        )}
+
+        {/* Legal Sources - Show after streaming completes */}
+        {!isStreaming && currentSources.length > 0 && (
+          <div className="ml-12 mt-2 p-4 bg-blue-950/30 border border-blue-800/30 rounded-lg">
+            <h4 className="text-sm font-semibold text-blue-300 mb-2 flex items-center gap-2">
+              <span>📚</span>
+              Legal Sources Referenced
+            </h4>
+            <ul className="space-y-1">
+              {currentSources.map((source, index) => (
+                <li key={index} className="text-xs text-blue-200">
+                  {source.includes('http') ? (
+                    <a
+                      href={source.split(' - ')[1]}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:text-blue-100 hover:underline transition-colors"
+                    >
+                      {source.split(' - ')[0]}
+                    </a>
+                  ) : (
+                    source
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
 
         {/* Auto-scroll anchor */}

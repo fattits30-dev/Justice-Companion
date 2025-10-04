@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "windows-control": {
+      "command": "mcp-control",
+      "args": [],
+      "env": {}
+    }
+  }
+}

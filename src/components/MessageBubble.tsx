@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { ChatMessage } from '../types/ai';
@@ -21,6 +22,7 @@ export interface MessageBubbleProps {
  * - Timestamp display
  * - Markdown rendering with react-markdown + remark-gfm
  * - Source citations for assistant messages
+ * - AI Reasoning dropdown for assistant messages (when available)
  * - Per-message disclaimer for assistant messages
  *
  * @param props - MessageBubbleProps
@@ -29,6 +31,7 @@ export interface MessageBubbleProps {
 export function MessageBubble({ message, sources = [], isStreaming = false }: MessageBubbleProps) {
   const isUser = message.role === 'user';
   const isAssistant = message.role === 'assistant';
+  const [isReasoningExpanded, setIsReasoningExpanded] = useState(false);
 
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
@@ -77,10 +80,43 @@ export function MessageBubble({ message, sources = [], isStreaming = false }: Me
           </div>
         )}
 
+        {/* AI Reasoning Dropdown (only for assistant messages with thinking content) */}
+        {isAssistant && message.thinkingContent && message.thinkingContent.length > 0 && (
+          <div className="mt-2 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200 overflow-hidden">
+            <button
+              onClick={() => setIsReasoningExpanded(!isReasoningExpanded)}
+              className="w-full px-4 py-2.5 flex items-center justify-between hover:bg-blue-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset"
+              aria-label={isReasoningExpanded ? 'Collapse AI reasoning process' : 'Expand AI reasoning process'}
+              aria-expanded={isReasoningExpanded}
+            >
+              <span className="text-sm font-medium text-blue-900 flex items-center gap-2">
+                <span className="text-lg">🧠</span>
+                AI Reasoning Process
+              </span>
+              <span
+                className="text-blue-600 transition-transform duration-200"
+                style={{ transform: isReasoningExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }}
+              >
+                ▶
+              </span>
+            </button>
+            {isReasoningExpanded && (
+              <div className="px-4 py-3 bg-slate-50 border-t border-blue-100">
+                <pre className="font-mono text-xs text-gray-800 whitespace-pre-wrap leading-relaxed max-h-64 overflow-y-auto">
+                  {message.thinkingContent}
+                </pre>
+                <div className="mt-2 pt-2 border-t border-slate-300 text-xs text-gray-600">
+                  <span className="italic">💡 This shows the AI's internal reasoning process before generating the response</span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Per-message disclaimer (only for assistant messages) */}
         {isAssistant && !isStreaming && (
-          <div className="mt-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded text-xs text-amber-900">
-            This is general information only. For advice specific to your situation, consult a qualified solicitor.
+          <div className="mt-2 text-xs text-gray-500 italic">
+            ⚖️ General information only - consult a solicitor for legal advice
           </div>
         )}
       </div>

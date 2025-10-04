@@ -217,12 +217,16 @@ export class AIService {
   /**
    * Send streaming chat completion request to LM Studio
    * Calls onToken for each generated token
+   * Calls onThinkToken for tokens inside <think> tags (optional)
+   * Calls onSources after completion with extracted legal citations
    */
   async streamChat(
     request: AIChatRequest,
     onToken: (token: string) => void,
     onComplete: () => void,
-    onError: (error: string) => void
+    onError: (error: string) => void,
+    onThinkToken?: (token: string) => void,
+    onSources?: (sources: string[]) => void
   ): Promise<void> {
     try {
       // Check connection first
@@ -290,6 +294,9 @@ export class AIService {
       const decoder = new TextDecoder();
       let buffer = '';
       let tokenCount = 0;
+      let insideThinkTag = false; // Track if we're inside <think> tags
+      let thinkBuffer = ''; // Buffer to detect <think> opening/closing
+      let accumulatedContent = ''; // Track full response for source extraction
 
       while (true) {
         const { done, value } = await reader.read();
@@ -323,8 +330,44 @@ export class AIService {
               const token = data.choices?.[0]?.delta?.content;
 
               if (token) {
-                tokenCount++;
-                onToken(token);
+                // Simple <think> tag filtering: accumulate in buffer to detect tags
+                thinkBuffer += token;
+
+                // Check for tag transitions
+                if (thinkBuffer.includes('<think>')) {
+                  insideThinkTag = true;
+                  // Extract content before tag and send it
+                  const beforeTag = thinkBuffer.split('<think>')[0];
+                  if (beforeTag) {
+                    tokenCount++;
+                    onToken(beforeTag);
+                  }
+                  // Keep content after tag for next iteration
+                  thinkBuffer = thinkBuffer.split('<think>').pop() || '';
+                }
+
+                if (thinkBuffer.includes('</think>')) {
+                  insideThinkTag = false;
+                  // Extract content after closing tag
+                  const afterTag = thinkBuffer.split('</think>').pop() || '';
+                  thinkBuffer = afterTag;
+                  // Don't send yet - will send in next iteration if more content
+                }
+
+                // Send token immediately based on context
+                if (insideThinkTag) {
+                  // Send think content to onThinkToken callback if provided
+                  if (thinkBuffer && onThinkToken) {
+                    onThinkToken(thinkBuffer);
+                    thinkBuffer = '';
+                  }
+                } else if (thinkBuffer) {
+                  // Send display content to onToken callback
+                  tokenCount++;
+                  onToken(thinkBuffer);
+                  accumulatedContent += thinkBuffer; // Track full response
+                  thinkBuffer = '';
+                }
               } else {
                 // Log why no token
                 errorLogger.logError('SSE chunk has no content', {
@@ -341,6 +384,16 @@ export class AIService {
             }
           }
         }
+      }
+
+      // Extract sources after streaming completes
+      if (request.context && onSources && accumulatedContent) {
+        const sources = extractSources(accumulatedContent, request.context);
+        errorLogger.logError('Sources extracted from response', {
+          type: 'info',
+          sourcesCount: sources.length,
+        });
+        onSources(sources);
       }
 
       errorLogger.logError('Streaming chat completed', { type: 'info' });

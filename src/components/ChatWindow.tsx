@@ -1,10 +1,19 @@
+import { useState } from 'react';
 import { useAI } from '../hooks/useAI';
 import { MessageList } from './MessageList';
-import { ChatInput } from './ChatInput';
+import { FloatingChatInput } from './FloatingChatInput';
 import { ErrorDisplay } from './ErrorDisplay';
-import { StreamingIndicator } from './StreamingIndicator';
+import { Sidebar } from './Sidebar';
+import { ConfirmDialog } from './ConfirmDialog';
+import { DashboardView } from './views/DashboardView';
+import { CasesView } from './views/CasesView';
+import { DocumentsView } from './views/DocumentsView';
+import { SettingsView } from './views/SettingsView';
 import { exportChatToPDF } from '../utils/exportToPDF';
 import { BiDownload } from 'react-icons/bi';
+import { Trash2 } from 'lucide-react';
+
+type ViewType = 'dashboard' | 'cases' | 'documents' | 'settings' | 'chat';
 
 /**
  * Main chat window component
@@ -27,86 +36,201 @@ import { BiDownload } from 'react-icons/bi';
  * @returns {JSX.Element} Chat window component
  */
 export function ChatWindow(): JSX.Element {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [clearChatConfirmOpen, setClearChatConfirmOpen] = useState(false);
+  const [activeView, setActiveView] = useState<ViewType>('chat');
+
   const {
     messages,
     loadingState,
     error,
     isStreaming,
     streamingContent,
+    thinkingContent, // NEW: AI reasoning content
+    currentSources, // NEW: Legal source citations
     messagesEndRef,
     sendMessage,
+    loadMessages,
+    clearMessages,
   } = useAI();
 
   const handleExportPDF = (): void => {
     exportChatToPDF(messages, []);
   };
 
+  /**
+   * Handle conversation selection from Sidebar
+   * Loads the full conversation with messages from database
+   */
+  const handleConversationLoad = async (conversationId: number): Promise<void> => {
+    try {
+      const result = await window.justiceAPI.loadConversationWithMessages(conversationId);
+
+      if (!result.success) {
+        console.error('Failed to load conversation:', result.error);
+        return;
+      }
+
+      if (result.data) {
+        loadMessages(result.data.messages);
+      } else {
+        console.error('Conversation data is null');
+      }
+    } catch (error) {
+      console.error('Error loading conversation:', error);
+    }
+  };
+
+  const handleViewChange = (view: 'dashboard' | 'cases' | 'documents' | 'settings') => {
+    setActiveView(view);
+    setIsSidebarOpen(false); // Auto-close sidebar on desktop
+  };
+
   return (
-    <div className="flex h-screen flex-col bg-slate-50">
-      {/* Header */}
-      <header className="border-b border-gray-200 bg-white px-6 py-4 shadow-sm">
-        <div className="mx-auto max-w-4xl flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold text-gray-900">Justice Companion</h1>
-            <p className="mt-1 text-sm text-gray-600">
-              UK Legal Information Assistant - Information Only, Not Advice
-            </p>
+    <div className="flex h-screen overflow-hidden bg-gradient-to-br from-slate-800 via-blue-900 to-indigo-900">
+      {/* Sidebar */}
+      <Sidebar
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        onConversationLoad={handleConversationLoad}
+        activeView={activeView === 'chat' ? 'dashboard' : activeView}
+        onViewChange={handleViewChange}
+      />
+
+      {/* Main Content - shifts when sidebar opens */}
+      <div className={`flex flex-col flex-1 h-screen transition-all duration-300 ${
+        isSidebarOpen ? 'ml-80' : 'ml-0'
+      }`}>
+        {/* Conditional Rendering: Chat View vs Other Views */}
+        {activeView !== 'chat' ? (
+          /* Other Views (Dashboard, Cases, Documents, Settings) */
+          <>
+            {/* Header for views */}
+            <header className="border-b border-blue-800/30 bg-gradient-to-r from-slate-900 to-blue-900 px-6 py-4 shadow-lg backdrop-blur-sm">
+              <div className="mx-auto flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  {/* Hamburger Menu */}
+                  {!isSidebarOpen && (
+                    <button
+                      onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                      className="p-2 hover:bg-blue-800/50 rounded-lg transition-colors"
+                      aria-label="Open menu"
+                    >
+                      <svg className="w-6 h-6 text-blue-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                      </svg>
+                    </button>
+                  )}
+                  <div>
+                    <h1 className="text-2xl font-bold text-white tracking-tight">Justice Companion</h1>
+                    <p className="mt-1 text-sm text-blue-200">
+                      Your UK Legal Information Assistant • Free • Confidential
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setActiveView('chat')}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                >
+                  Back to Chat
+                </button>
+              </div>
+            </header>
+
+            {/* View Content */}
+            <div className="flex-1 overflow-hidden">
+              {activeView === 'dashboard' && <DashboardView />}
+              {activeView === 'cases' && <CasesView />}
+              {activeView === 'documents' && <DocumentsView />}
+              {activeView === 'settings' && <SettingsView />}
+            </div>
+          </>
+        ) : (
+          /* Chat View (Original) */
+          <>
+        {/* Header - Professional UK Legal theme */}
+        <header className="border-b border-blue-800/30 bg-gradient-to-r from-slate-900 to-blue-900 px-6 py-4 shadow-lg backdrop-blur-sm">
+        <div className="mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            {/* Hamburger Menu - hidden when sidebar is open */}
+            {!isSidebarOpen && (
+              <button
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                className="p-2 hover:bg-blue-800/50 rounded-lg transition-colors"
+                aria-label="Open menu"
+              >
+                <svg className="w-6 h-6 text-blue-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+            )}
+            <div>
+              <h1 className="text-2xl font-bold text-white tracking-tight">Justice Companion</h1>
+              <p className="mt-1 text-sm text-blue-200">
+                Your UK Legal Information Assistant • Free • Confidential
+              </p>
+            </div>
           </div>
+
           {messages.length > 0 && (
-            <button
-              onClick={handleExportPDF}
-              disabled={isStreaming}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-              aria-label="Export to PDF"
-            >
-              <BiDownload className="w-5 h-5" />
-              <span className="text-sm font-medium">Export PDF</span>
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setClearChatConfirmOpen(true)}
+                disabled={isStreaming}
+                className="flex items-center gap-2 px-4 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2"
+                aria-label="Clear chat"
+                title="Clear current chat messages"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span className="text-sm font-medium">Clear</span>
+              </button>
+              <button
+                onClick={handleExportPDF}
+                disabled={isStreaming}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                aria-label="Export to PDF"
+              >
+                <BiDownload className="w-5 h-5" />
+                <span className="text-sm font-medium">Export PDF</span>
+              </button>
+            </div>
           )}
         </div>
       </header>
 
-      {/* Legal Disclaimer Banner */}
-      <div className="border-b border-yellow-400 bg-yellow-50 px-6 py-3">
-        <div className="mx-auto flex max-w-4xl items-center gap-2 text-sm text-yellow-800">
-          <svg
-            className="h-5 w-5 flex-shrink-0"
-            fill="currentColor"
-            viewBox="0 0 20 20"
-          >
-            <path
-              fillRule="evenodd"
-              d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-              clipRule="evenodd"
-            />
-          </svg>
-          <span className="font-medium">
-            This tool provides general legal information only. It is not a substitute for
-            professional legal advice. Always consult a qualified solicitor for advice specific
-            to your situation.
-          </span>
-        </div>
-      </div>
-
       {/* Error Display */}
       <ErrorDisplay error={error} />
 
-      {/* Streaming Indicator */}
-      <StreamingIndicator loadingState={loadingState} />
-
-      {/* Message List */}
+      {/* Message List - StreamingIndicator now renders inline */}
       <MessageList
         messages={messages}
         streamingContent={streamingContent}
         isStreaming={isStreaming}
+        loadingState={loadingState}
+        thinkingContent={thinkingContent}
+        currentSources={currentSources}
         messagesEndRef={messagesEndRef}
       />
 
-      {/* Chat Input */}
-      <div className="border-t border-gray-200 bg-white">
-        <div className="mx-auto max-w-4xl">
-          <ChatInput onSend={sendMessage} disabled={isStreaming} />
-        </div>
+        {/* Floating Chat Input - positioned absolutely */}
+        <FloatingChatInput onSend={sendMessage} disabled={isStreaming} isSidebarOpen={isSidebarOpen} />
+
+        {/* Clear Chat Confirmation Dialog */}
+        <ConfirmDialog
+          isOpen={clearChatConfirmOpen}
+          title="Clear Chat"
+          message="Are you sure you want to clear all messages in the current chat? This will only clear the display, not delete saved conversations."
+          confirmText="Clear"
+          cancelText="Cancel"
+          variant="danger"
+          onConfirm={() => {
+            clearMessages();
+            setClearChatConfirmOpen(false);
+          }}
+          onCancel={() => setClearChatConfirmOpen(false)}
+        />
+        </>
+      )}
       </div>
     </div>
   );

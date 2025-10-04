@@ -1,4 +1,5 @@
 import { errorLogger } from '../utils/error-logger.js';
+import { XMLParser } from 'fast-xml-parser';
 import type {
   LegislationResult,
   CaseResult,
@@ -415,24 +416,29 @@ export class LegalAPIService {
   async searchLegislation(keywords: string[]): Promise<LegislationResult[]> {
     try {
       const query = keywords.join(' ');
-      const url = `${API_CONFIG.LEGISLATION_BASE_URL}/search?q=${encodeURIComponent(query)}`;
+      // Use Atom feed endpoint for UK Public General Acts
+      const url = `${API_CONFIG.LEGISLATION_BASE_URL}/ukpga/data.feed?title=${encodeURIComponent(query)}`;
 
+      console.log('[LEGAL API] Searching legislation.gov.uk Atom feed:', url);
       errorLogger.logError('Searching legislation.gov.uk', {
         url,
         keywords,
       });
 
       const response = await this.fetchWithRetry(url);
+      console.log('[LEGAL API] Legislation API response status:', response.status);
 
       if (!response.ok) {
         throw new Error(`Legislation API returned ${response.status}`);
       }
 
-      const data = await response.text();
+      const xmlText = await response.text();
+      console.log('[LEGAL API] Legislation Atom XML response length:', xmlText.length);
 
-      // Parse response
-      return this.parseLegislationResponse(data, query);
+      // Parse Atom XML response
+      return this.parseAtomFeedToLegislation(xmlText, query);
     } catch (error) {
+      console.error('[LEGAL API] Legislation search error:', error);
       errorLogger.logError(error as Error, {
         context: 'searchLegislation',
         keywords,
@@ -449,24 +455,29 @@ export class LegalAPIService {
   async searchCaseLaw(keywords: string[]): Promise<CaseResult[]> {
     try {
       const query = keywords.join(' ');
-      const url = `${API_CONFIG.CASELAW_BASE_URL}/search?query=${encodeURIComponent(query)}`;
+      // Use Atom XML feed endpoint
+      const url = `${API_CONFIG.CASELAW_BASE_URL}/atom.xml?query=${encodeURIComponent(query)}`;
 
+      console.log('[LEGAL API] Searching Find Case Law Atom feed:', url);
       errorLogger.logError('Searching Find Case Law', {
         url,
         keywords,
       });
 
       const response = await this.fetchWithRetry(url);
+      console.log('[LEGAL API] Case Law API response status:', response.status);
 
       if (!response.ok) {
         throw new Error(`Case Law API returned ${response.status}`);
       }
 
-      const data = await response.json();
+      const xmlText = await response.text();
+      console.log('[LEGAL API] Case Law Atom XML response length:', xmlText.length);
 
-      // Parse response
-      return this.parseCaseResponse(data, query);
+      // Parse Atom XML response
+      return this.parseAtomFeedToCaseLaw(xmlText, query);
     } catch (error) {
+      console.error('[LEGAL API] Case Law search error:', error);
       errorLogger.logError(error as Error, {
         context: 'searchCaseLaw',
         keywords,
@@ -637,6 +648,155 @@ export class LegalAPIService {
       });
       return [];
     }
+  }
+
+  /**
+   * Parse Atom XML feed to legislation results
+   * Atom format: <feed><entry><title>, <link>, <summary>, etc.
+   */
+  private parseAtomFeedToLegislation(xmlText: string, query: string): LegislationResult[] {
+    try {
+      console.log('[LEGAL API] Parsing legislation Atom feed...');
+
+      const parser = new XMLParser({
+        ignoreAttributes: false,
+        attributeNamePrefix: '@_',
+      });
+
+      const xmlDoc = parser.parse(xmlText);
+
+      // Handle feed structure: feed.entry can be array or single object
+      let entries = xmlDoc?.feed?.entry || [];
+      if (!Array.isArray(entries)) {
+        entries = [entries];
+      }
+
+      const results: LegislationResult[] = [];
+
+      for (let i = 0; i < Math.min(entries.length, 5); i++) { // Limit to 5 results
+        const entry = entries[i];
+
+        // Extract text from potentially nested objects
+        const title = this.getTextContent(entry?.title) || 'Unknown';
+        const summary = this.getTextContent(entry?.summary) || this.getTextContent(entry?.content) || 'No summary available';
+
+        // Extract link href - handle both single link and array of links
+        let link = '';
+        if (entry?.link) {
+          if (Array.isArray(entry.link)) {
+            // Find first alternate link or use first link
+            const alternateLink = entry.link.find((l: any) => l?.['@_rel'] === 'alternate') || entry.link[0];
+            link = alternateLink?.['@_href'] || '';
+          } else {
+            link = entry.link?.['@_href'] || '';
+          }
+        }
+
+        // Extract section from title if present (e.g., "Employment Rights Act 1996 Section 94")
+        const sectionMatch = title.match(/Section (\d+[A-Z]?)/i);
+        const section = sectionMatch ? sectionMatch[0] : undefined;
+
+        results.push({
+          title: title.trim(),
+          section,
+          content: summary.trim().substring(0, 500), // Limit content length
+          url: link,
+          relevance: 1.0 - (i * 0.1), // Simple relevance scoring
+        });
+      }
+
+      console.log('[LEGAL API] Parsed', results.length, 'legislation results');
+      return results;
+    } catch (error) {
+      console.error('[LEGAL API] Atom feed parse error:', error);
+      errorLogger.logError(error as Error, {
+        context: 'parseAtomFeedToLegislation',
+      });
+      return [];
+    }
+  }
+
+  /**
+   * Parse Atom XML feed to case law results
+   * Atom format: <feed><entry><title>, <link>, <summary>, etc.
+   */
+  private parseAtomFeedToCaseLaw(xmlText: string, query: string): CaseResult[] {
+    try {
+      console.log('[LEGAL API] Parsing case law Atom feed...');
+
+      const parser = new XMLParser({
+        ignoreAttributes: false,
+        attributeNamePrefix: '@_',
+      });
+
+      const xmlDoc = parser.parse(xmlText);
+
+      // Handle feed structure: feed.entry can be array or single object
+      let entries = xmlDoc?.feed?.entry || [];
+      if (!Array.isArray(entries)) {
+        entries = [entries];
+      }
+
+      const results: CaseResult[] = [];
+
+      for (let i = 0; i < Math.min(entries.length, 5); i++) { // Limit to 5 results
+        const entry = entries[i];
+
+        // Extract text from potentially nested objects
+        const title = this.getTextContent(entry?.title) || 'Unknown Case';
+        const summary = this.getTextContent(entry?.summary) || this.getTextContent(entry?.content) || 'No summary available';
+        const dateStr = this.getTextContent(entry?.updated) || this.getTextContent(entry?.published) || new Date().toISOString();
+
+        // Extract link href - handle both single link and array of links
+        let link = '';
+        if (entry?.link) {
+          if (Array.isArray(entry.link)) {
+            // Find first alternate link or use first link
+            const alternateLink = entry.link.find((l: any) => l?.['@_rel'] === 'alternate') || entry.link[0];
+            link = alternateLink?.['@_href'] || '';
+          } else {
+            link = entry.link?.['@_href'] || '';
+          }
+        }
+
+        // Extract court from title or use default
+        const courtMatch = title.match(/\[(.*?)\]/);
+        const court = courtMatch ? courtMatch[1] : 'UK Court';
+
+        results.push({
+          citation: title.trim(),
+          court,
+          date: dateStr.split('T')[0], // ISO date format
+          summary: summary.trim().substring(0, 500), // Limit summary length
+          outcome: undefined, // Not typically in atom feed
+          url: link,
+          relevance: 1.0 - (i * 0.1), // Simple relevance scoring
+        });
+      }
+
+      console.log('[LEGAL API] Parsed', results.length, 'case law results');
+      return results;
+    } catch (error) {
+      console.error('[LEGAL API] Atom feed parse error:', error);
+      errorLogger.logError(error as Error, {
+        context: 'parseAtomFeedToCaseLaw',
+      });
+      return [];
+    }
+  }
+
+  /**
+   * Helper: Extract text content from XML parser result
+   * Handles both simple strings and objects with #text property
+   */
+  private getTextContent(value: unknown): string {
+    if (typeof value === 'string') {
+      return value;
+    }
+    if (value && typeof value === 'object' && '#text' in value) {
+      return String((value as any)['#text']);
+    }
+    return '';
   }
 
   // ==========================================================================

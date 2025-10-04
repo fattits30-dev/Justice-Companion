@@ -23,8 +23,11 @@ describe('useAI types', () => {
       error: null,
       isStreaming: false,
       streamingContent: '',
+      thinkingContent: '', // NEW: AI reasoning content
+      currentSources: [], // NEW: Legal source citations
       sendMessage: async () => {},
       clearMessages: () => {},
+      loadMessages: () => {}, // NEW: Load conversation messages
       messagesEndRef: { current: null },
     };
 
@@ -33,6 +36,7 @@ describe('useAI types', () => {
     expect(mockReturn.error).toBeNull();
     expect(mockReturn.isStreaming).toBe(false);
     expect(mockReturn.streamingContent).toBe('');
+    expect(mockReturn.thinkingContent).toBe('');
   });
 
   test('ChatMessage has correct structure', () => {
