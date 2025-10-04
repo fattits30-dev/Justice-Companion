@@ -101,10 +101,16 @@ export class IntegratedAIService {
         defaultContextFlashAttention: true, // Flash Attention for memory efficiency
       });
 
-      const contextSize = this.config.contextSize || 4096;
+      // Auto-detect context size from model capabilities
+      // Use 90% of model's max context (leave 10% headroom for system stability)
+      const modelMaxContext = this.model._trainContextSize || 32768;
+      const optimalContext = Math.floor(modelMaxContext * 0.9);
+      const contextSize = this.config.contextSize || optimalContext;
 
       errorLogger.logError(`Creating context (${contextSize} tokens with Flash Attention)`, {
         type: 'info',
+        modelMaxContext,
+        optimalContext,
         contextSize,
         flashAttention: true,
         batchSize: this.config.batchSize || 'auto',
@@ -112,7 +118,7 @@ export class IntegratedAIService {
 
       // Create context for legal document analysis with Flash Attention
       this.context = await this.model.createContext({
-        contextSize, // Use configured context size (13,415 by default)
+        contextSize, // Auto-detected from model (90% of 32,768 = 29,491 tokens)
         ...(this.config.batchSize && { batchSize: this.config.batchSize }), // Optional batch size optimization
       });
 

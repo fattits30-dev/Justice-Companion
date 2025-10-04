@@ -33,7 +33,7 @@ export const DEFAULT_AI_CONFIG: AIConfig = {
   temperature: 0.3, // Low temperature for factual legal information
   maxTokens: 2000,
   stream: false,
-  contextSize: 13415, // Use user's configured context size (32K max for Qwen3 8B)
+  contextSize: undefined, // Auto-detect from model (90% of max, e.g., 29,491 for 32K models)
   threads: undefined, // Auto-detect CPU threads for parallel processing
   batchSize: undefined, // Use library default for batch size
 };
