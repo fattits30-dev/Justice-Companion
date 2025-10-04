@@ -82,19 +82,19 @@ export class IntegratedAIService {
         modelPath: this.modelPath,
       });
 
-      // Load model with AMD GPU acceleration (28/37 layers for 5.86GB VRAM)
+      // Load model with AMD GPU acceleration (20/37 layers for 5.86GB VRAM)
       this.model = await this.llama.loadModel({
         modelPath: this.modelPath,
-        gpuLayers: 28, // Optimized for AMD RX 6600 (5.86GB VRAM)
+        gpuLayers: 20, // Very conservative for AMD RX 6600 (max VRAM headroom)
       });
 
-      errorLogger.logError('Creating context (3072 tokens)', {
+      errorLogger.logError('Creating context (2048 tokens)', {
         type: 'info',
       });
 
       // Create context for legal document analysis
       this.context = await this.model.createContext({
-        contextSize: 3072, // Optimized for 5.86GB VRAM
+        contextSize: 2048, // Very conservative for 5.86GB VRAM with max headroom
       });
 
       errorLogger.logError('IntegratedAIService fully initialized', {
@@ -292,6 +292,7 @@ Format for legal citations:
       let thinkBuffer = '';
       let tokenCount = 0;
       const startTime = Date.now();
+      let firstTokenTime: number | null = null;
 
       console.log('[IntegratedAIService] Starting Qwen 3 inference...');
 
@@ -300,6 +301,13 @@ Format for legal citations:
         temperature: request.config?.temperature ?? this.config.temperature,
         maxTokens: request.config?.maxTokens ?? this.config.maxTokens,
         onTextChunk: (chunk: string) => {
+          // Record time of first token (after prompt processing)
+          if (firstTokenTime === null) {
+            firstTokenTime = Date.now();
+            const promptProcessingTime = (firstTokenTime - startTime) / 1000;
+            console.log(`[IntegratedAIService] Prompt processed in ${promptProcessingTime.toFixed(2)}s`);
+          }
+
           tokenCount++;
           // Process chunk for <think> tag filtering
           thinkBuffer += chunk;
@@ -342,14 +350,19 @@ Format for legal citations:
 
       // Calculate performance stats
       const endTime = Date.now();
-      const durationSeconds = (endTime - startTime) / 1000;
-      const tokensPerSecond = tokenCount / durationSeconds;
+      const totalDuration = (endTime - startTime) / 1000;
+      const promptProcessingTime = firstTokenTime ? (firstTokenTime - startTime) / 1000 : 0;
+      const generationTime = firstTokenTime ? (endTime - firstTokenTime) / 1000 : totalDuration;
+      const generationSpeed = generationTime > 0 ? tokenCount / generationTime : 0;
+      const overallSpeed = tokenCount / totalDuration;
 
       console.log('[IntegratedAIService] === STREAMING COMPLETE ===');
       console.log(`[IntegratedAIService] Tokens generated: ${tokenCount}`);
-      console.log(`[IntegratedAIService] Duration: ${durationSeconds.toFixed(2)}s`);
-      console.log(`[IntegratedAIService] Speed: ${tokensPerSecond.toFixed(2)} tokens/sec`);
-      console.log(`[IntegratedAIService] GPU Layers: 28/37`);
+      console.log(`[IntegratedAIService] Prompt processing: ${promptProcessingTime.toFixed(2)}s`);
+      console.log(`[IntegratedAIService] Token generation: ${generationTime.toFixed(2)}s`);
+      console.log(`[IntegratedAIService] Generation speed: ${generationSpeed.toFixed(2)} tokens/sec`);
+      console.log(`[IntegratedAIService] Total duration: ${totalDuration.toFixed(2)}s (${overallSpeed.toFixed(2)} t/s overall)`);
+      console.log(`[IntegratedAIService] GPU Layers: 20/37`);
       console.log(`[IntegratedAIService] Response length: ${accumulatedContent.length} chars`);
 
       // Extract sources after completion
