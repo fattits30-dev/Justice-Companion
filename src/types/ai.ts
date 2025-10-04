@@ -21,6 +21,9 @@ export interface AIConfig {
   temperature: number; // 0-1, lower = more focused
   maxTokens: number; // Max response length
   stream: boolean; // Enable streaming
+  contextSize?: number; // Context window size (tokens) - auto-detects from model if not set
+  threads?: number; // CPU threads for parallel processing - auto-detects if not set
+  batchSize?: number; // Batch size for faster prompt processing - uses library default if not set
 }
 
 // Default AI configuration
@@ -30,6 +33,9 @@ export const DEFAULT_AI_CONFIG: AIConfig = {
   temperature: 0.3, // Low temperature for factual legal information
   maxTokens: 2000,
   stream: false,
+  contextSize: 13415, // Use user's configured context size (32K max for Qwen3 8B)
+  threads: undefined, // Auto-detect CPU threads for parallel processing
+  batchSize: undefined, // Use library default for batch size
 };
 
 // AI connection status

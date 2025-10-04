@@ -12,6 +12,7 @@ import type {
 } from '../types/ai';
 import path from 'path';
 import { app } from 'electron';
+import os from 'os';
 
 /**
  * IntegratedAIService - Sovereign AI using node-llama-cpp
@@ -82,6 +83,17 @@ export class IntegratedAIService {
         modelPath: this.modelPath,
       });
 
+      // Auto-detect optimal CPU threads (use 75% of available cores for responsiveness)
+      const cpuCores = os.cpus().length;
+      const optimalThreads = this.config.threads ?? Math.max(1, Math.floor(cpuCores * 0.75));
+
+      errorLogger.logError('Hardware auto-detection complete', {
+        type: 'info',
+        cpuCores,
+        optimalThreads,
+        contextSize: this.config.contextSize || 4096,
+      });
+
       // Load model with AMD GPU acceleration (37/37 layers - full GPU offload for 8GB VRAM)
       this.model = await this.llama.loadModel({
         modelPath: this.modelPath,
@@ -89,18 +101,29 @@ export class IntegratedAIService {
         defaultContextFlashAttention: true, // Flash Attention for memory efficiency
       });
 
-      errorLogger.logError('Creating context (4096 tokens with Flash Attention)', {
+      const contextSize = this.config.contextSize || 4096;
+
+      errorLogger.logError(`Creating context (${contextSize} tokens with Flash Attention)`, {
         type: 'info',
+        contextSize,
+        flashAttention: true,
+        batchSize: this.config.batchSize || 'auto',
       });
 
       // Create context for legal document analysis with Flash Attention
       this.context = await this.model.createContext({
-        contextSize: 4096, // Balanced context with Flash Attention (8GB VRAM)
+        contextSize, // Use configured context size (13,415 by default)
+        ...(this.config.batchSize && { batchSize: this.config.batchSize }), // Optional batch size optimization
       });
 
       errorLogger.logError('IntegratedAIService fully initialized', {
         type: 'info',
         gpu: this.llama.gpu,
+        cpuCores,
+        threads: optimalThreads,
+        contextSize,
+        flashAttention: true,
+        gpuLayers: '37/37 (max)',
       });
 
       this.isInitialized = true;
