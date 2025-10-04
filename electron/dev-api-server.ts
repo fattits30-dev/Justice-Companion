@@ -1,9 +1,14 @@
 import express from "express";
-import { ipcMain } from "electron";
+
+/**
+ * Type for IPC handler functions
+ */
+type IPCHandler = (event: any, ...args: any[]) => Promise<any> | any;
 
 export class DevAPIServer {
   private app: express.Application;
   private server: any;
+  private handlers: Map<string, IPCHandler> = new Map();
 
   constructor(private port: number = 5555) {
     this.app = express();
@@ -11,10 +16,25 @@ export class DevAPIServer {
     this.setupRoutes();
   }
 
+  /**
+   * Register an IPC handler that can be invoked via HTTP
+   */
+  registerHandler(channel: string, handler: IPCHandler): void {
+    this.handlers.set(channel, handler);
+  }
+
   private setupRoutes(): void {
     // Health check
     this.app.get("/dev-api/health", (req, res) => {
       res.json({ status: "ok", timestamp: new Date().toISOString() });
+    });
+
+    // List registered handlers
+    this.app.get("/dev-api/handlers", (req, res) => {
+      res.json({
+        handlers: Array.from(this.handlers.keys()),
+        count: this.handlers.size
+      });
     });
 
     // IPC proxy endpoint
@@ -31,21 +51,17 @@ export class DevAPIServer {
   }
 
   private async invokeIPC(channel: string, args: any[]): Promise<any> {
-    return new Promise((resolve, reject) => {
-      const handlers = (ipcMain as any)._events?.[channel];
+    const handler = this.handlers.get(channel);
 
-      if (!handlers) {
-        reject(new Error(`No IPC handler registered for channel: ${channel}`));
-        return;
-      }
+    if (!handler) {
+      throw new Error(
+        `No IPC handler registered for channel: ${channel}. ` +
+        `Available: ${Array.from(this.handlers.keys()).join(', ')}`
+      );
+    }
 
-      const handler = Array.isArray(handlers) ? handlers[0] : handlers;
-      const mockEvent = { sender: null };
-
-      Promise.resolve(handler(mockEvent, ...args))
-        .then(resolve)
-        .catch(reject);
-    });
+    const mockEvent = { sender: null };
+    return await Promise.resolve(handler(mockEvent, ...args));
   }
 
   start(): void {

@@ -17,9 +17,9 @@ export class CaseTools {
               description: "Case title (max 200 chars)",
               maxLength: 200,
             },
-            type: {
+            caseType: {
               type: "string",
-              enum: ["employment", "housing", "consumer", "civil"],
+              enum: ["employment", "housing", "consumer", "family", "debt", "other"],
               description: "Type of legal case",
             },
             description: {
@@ -33,7 +33,7 @@ export class CaseTools {
               description: "Case status (default: active)",
             },
           },
-          required: ["title", "type"],
+          required: ["title", "caseType"],
         },
       },
       {
@@ -58,7 +58,7 @@ export class CaseTools {
           properties: {
             type: {
               type: "string",
-              enum: ["employment", "housing", "consumer", "civil"],
+              enum: ["employment", "housing", "consumer", "family", "debt", "other"],
               description: "Filter by case type",
             },
             status: {
@@ -117,7 +117,7 @@ export class CaseTools {
           properties: {
             caseType: {
               type: "string",
-              enum: ["employment", "housing", "consumer", "civil"],
+              enum: ["employment", "housing", "consumer", "family", "debt", "other"],
               description: "Type of case to create",
             },
             includeDocuments: {
@@ -184,9 +184,9 @@ export class CaseTools {
       throw new Error("Invalid title: must be 1-200 characters");
     }
 
-    const validTypes = ["employment", "housing", "consumer", "civil"];
-    if (!validTypes.includes(args.type)) {
-      throw new Error(`Invalid type: must be one of ${validTypes.join(", ")}`);
+    const validTypes = ["employment", "housing", "consumer", "family", "debt", "other"];
+    if (!validTypes.includes(args.caseType)) {
+      throw new Error(`Invalid caseType: must be one of ${validTypes.join(", ")}`);
     }
 
     const result = await this.ipcClient.invoke("dev-api:cases:create", args);
@@ -270,7 +270,7 @@ export class CaseTools {
   }
 
   private async createTestFixture(args: any): Promise<{ content: Array<{ type: "text"; text: string }> }> {
-    const validTypes = ["employment", "housing", "consumer", "civil"];
+    const validTypes = ["employment", "housing", "consumer", "family", "debt", "other"];
     if (!validTypes.includes(args.caseType)) {
       throw new Error(`Invalid caseType: must be one of ${validTypes.join(", ")}`);
     }
