@@ -82,19 +82,20 @@ export class IntegratedAIService {
         modelPath: this.modelPath,
       });
 
-      // Load model with AMD GPU acceleration (20/37 layers for 5.86GB VRAM)
+      // Load model with AMD GPU acceleration (37/37 layers - full GPU offload for 8GB VRAM)
       this.model = await this.llama.loadModel({
         modelPath: this.modelPath,
-        gpuLayers: 20, // Very conservative for AMD RX 6600 (max VRAM headroom)
+        gpuLayers: 'max', // All layers on GPU (8GB VRAM available)
+        defaultContextFlashAttention: true, // Flash Attention for memory efficiency
       });
 
-      errorLogger.logError('Creating context (2048 tokens)', {
+      errorLogger.logError('Creating context (8192 tokens with Flash Attention)', {
         type: 'info',
       });
 
-      // Create context for legal document analysis
+      // Create context for legal document analysis with Flash Attention
       this.context = await this.model.createContext({
-        contextSize: 2048, // Very conservative for 5.86GB VRAM with max headroom
+        contextSize: 8192, // Large context enabled by Flash Attention (8GB VRAM)
       });
 
       errorLogger.logError('IntegratedAIService fully initialized', {
@@ -362,7 +363,7 @@ Format for legal citations:
       console.log(`[IntegratedAIService] Token generation: ${generationTime.toFixed(2)}s`);
       console.log(`[IntegratedAIService] Generation speed: ${generationSpeed.toFixed(2)} tokens/sec`);
       console.log(`[IntegratedAIService] Total duration: ${totalDuration.toFixed(2)}s (${overallSpeed.toFixed(2)} t/s overall)`);
-      console.log(`[IntegratedAIService] GPU Layers: 20/37`);
+      console.log(`[IntegratedAIService] GPU Layers: 37/37 (full GPU offload)`);
       console.log(`[IntegratedAIService] Response length: ${accumulatedContent.length} chars`);
 
       // Extract sources after completion
