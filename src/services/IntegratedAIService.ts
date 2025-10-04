@@ -89,13 +89,13 @@ export class IntegratedAIService {
         defaultContextFlashAttention: true, // Flash Attention for memory efficiency
       });
 
-      errorLogger.logError('Creating context (8192 tokens with Flash Attention)', {
+      errorLogger.logError('Creating context (4096 tokens with Flash Attention)', {
         type: 'info',
       });
 
       // Create context for legal document analysis with Flash Attention
       this.context = await this.model.createContext({
-        contextSize: 8192, // Large context enabled by Flash Attention (8GB VRAM)
+        contextSize: 4096, // Balanced context with Flash Attention (8GB VRAM)
       });
 
       errorLogger.logError('IntegratedAIService fully initialized', {
@@ -131,12 +131,26 @@ export class IntegratedAIService {
     // Default legal assistant prompt
     return `You are a professional UK legal assistant powered by Qwen 3. Your role is to help users understand UK law.
 
+REASONING INSTRUCTIONS:
+- For complex questions, use <think>your reasoning here</think> tags to show your thought process
+- Inside <think>: analyze the question, consider relevant laws, plan your response
+- After </think>: provide your clear, helpful answer
+- Example: <think>The user is asking about X. The relevant law is Y. I should explain Z.</think> [your response]
+- The user will NOT see <think> content - it's for your internal reasoning only
+
 IMPORTANT GUIDELINES:
 - You provide legal information, NOT legal advice
-- Always cite sources when discussing specific laws or cases
-- Use <think> tags for complex legal reasoning (hidden from user)
-- Be clear, professional, and precise
-- If uncertain, acknowledge limitations
+- Always cite sources when discussing specific laws or cases (e.g., "Employment Rights Act 1996", "Equality Act 2010")
+- Be clear, professional, helpful, and conversational
+- If you need more context to answer well, ASK CLARIFYING QUESTIONS
+- Guide users to provide specific details (which act, which section, their specific situation)
+- NEVER give blunt "I don't have information" responses - be helpful and guide them
+
+BE CONVERSATIONAL:
+- Acknowledge their question positively
+- Explain what laws typically cover their topic
+- Ask what specific aspect they need help with
+- Suggest how they can refine their question for better answers
 
 Format for legal citations:
 - Legislation: "Section X of the [Act Name] [Year]"
@@ -246,6 +260,8 @@ Format for legal citations:
     console.log('[IntegratedAIService] streamChat() called');
     console.log('[IntegratedAIService] isInitialized:', this.isInitialized);
 
+    let contextSequence: any = null; // Declare at function scope for cleanup in catch
+
     try {
       // Ensure initialized
       console.log('[IntegratedAIService] Checking connection...');
@@ -266,21 +282,26 @@ Format for legal citations:
       // Build system prompt
       const systemPrompt = this.getQwen3SystemPrompt(request.context);
 
-      // Create chat session
+      // Create FRESH sequence that will be disposed after use
+      // This prevents KV cache accumulation and VRAM overflow
+      contextSequence = this.context.getSequence();
+
+      // Create chat session with fresh sequence
       const chatSession = new LlamaChatSession({
-        contextSequence: this.context.getSequence(),
+        contextSequence,
         systemPrompt,
       });
 
-      // Build user message from history
-      let userPrompt = '';
-      for (const msg of request.messages) {
-        if (msg.role === 'user') {
-          userPrompt += msg.content + '\n';
-        } else if (msg.role === 'assistant') {
-          // For multi-turn, we'd need to call chatSession.prompt() for each turn
-          // For now, simplified to single-turn
-        }
+      // Get ONLY the most recent user message (not full history)
+      // UI maintains conversation history - we just process latest question
+      // This keeps context size constant: system prompt + latest question
+      const lastUserMessage = [...request.messages]
+        .reverse()
+        .find((msg) => msg.role === 'user');
+      const userPrompt = lastUserMessage?.content || '';
+
+      if (!userPrompt) {
+        throw new Error('No user message found in request');
       }
 
       errorLogger.logError('Starting Qwen 3 8B streaming inference', {
@@ -379,9 +400,14 @@ Format for legal citations:
       errorLogger.logError('Qwen 3 8B streaming complete', {
         type: 'info',
         tokenCount,
-        durationSeconds: durationSeconds.toFixed(2),
-        tokensPerSecond: tokensPerSecond.toFixed(2),
+        totalDuration: totalDuration.toFixed(2),
+        generationSpeed: generationSpeed.toFixed(2),
       });
+
+      // CRITICAL: Dispose sequence to clear KV cache and prevent VRAM accumulation
+      await contextSequence.dispose();
+      console.log('[IntegratedAIService] Sequence disposed - KV cache cleared');
+
       onComplete();
     } catch (error) {
       const errorMessage =
@@ -390,6 +416,16 @@ Format for legal citations:
       errorLogger.logError(error as Error, {
         context: 'IntegratedAIService.streamChat',
       });
+
+      // Clean up sequence even on error (if it was created)
+      if (contextSequence) {
+        try {
+          await contextSequence.dispose();
+          console.log('[IntegratedAIService] Sequence disposed after error');
+        } catch (disposeError) {
+          console.error('[IntegratedAIService] Failed to dispose sequence:', disposeError);
+        }
+      }
 
       onError(errorMessage);
     }

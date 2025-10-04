@@ -139,6 +139,45 @@ const LEGAL_TERMS_DICTIONARY = {
 } as const;
 
 /**
+ * Map legal categories to relevant court/tribunal codes for better case law filtering
+ * Based on Find Case Law API court codes
+ */
+const CATEGORY_TO_COURT_MAP: Record<string, string[]> = {
+  employment: [
+    'eat', // Employment Appeal Tribunal
+    'ukeat', // UK Employment Appeal Tribunal (alternative code)
+  ],
+  discrimination: [
+    'eat', // Employment Appeal Tribunal (handles many discrimination cases)
+    'uksc', // Supreme Court (landmark discrimination cases)
+    'ewca', // Court of Appeal
+  ],
+  housing: [
+    'ukut', // Upper Tribunal (housing cases)
+    'ewca', // Court of Appeal
+  ],
+  family: [
+    'ewfc', // Family Court
+    'ewca', // Court of Appeal (Family Division)
+    'uksc', // Supreme Court (landmark family law)
+  ],
+  consumer: [
+    'ewca', // Court of Appeal
+    'ewhc', // High Court
+  ],
+  criminal: [
+    'uksc', // Supreme Court
+    'ewca', // Court of Appeal (Criminal Division)
+    'ewhc', // High Court
+  ],
+  civil: [
+    'ewca', // Court of Appeal (Civil Division)
+    'ewhc', // High Court
+    'uksc', // Supreme Court
+  ],
+};
+
+/**
  * Common English stop words to filter out
  */
 const STOP_WORDS = new Set([
@@ -264,13 +303,20 @@ export class LegalAPIService {
       // Extract keywords from question
       const keywords = await this.extractKeywords(question);
 
+      // Classify question to determine relevant courts
+      const category = this.classifyQuestion(question);
+
       errorLogger.logError('Legal API search initiated', {
         question,
         keywords: keywords.all,
+        category,
       });
 
       // Check cache first
-      const cacheKey = this.generateCacheKey('search', keywords.all);
+      const cacheKey = this.generateCacheKey('search', [
+        ...keywords.all,
+        category,
+      ]);
       const cached = this.getCached<LegalSearchResults>(cacheKey);
 
       if (cached) {
@@ -281,7 +327,7 @@ export class LegalAPIService {
       // Fetch from APIs in parallel
       const [legislation, cases, knowledgeBase] = await Promise.all([
         this.searchLegislation(keywords.all),
-        this.searchCaseLaw(keywords.all),
+        this.searchCaseLaw(keywords.all, category), // Pass category for court filtering
         this.searchKnowledgeBase(keywords.all),
       ]);
 
@@ -305,6 +351,7 @@ export class LegalAPIService {
         legislationCount: legislation.length,
         casesCount: cases.length,
         knowledgeBaseCount: knowledgeBase.length,
+        category,
       });
 
       return results;
@@ -350,7 +397,8 @@ export class LegalAPIService {
       }
     }
 
-    return 'civil';
+    // No legal terms found - this is a general conversation
+    return 'general';
   }
 
   // ==========================================================================
@@ -450,18 +498,44 @@ export class LegalAPIService {
 
   /**
    * Search Find Case Law API
-   * Queries tribunal decisions, court judgments, and precedents
+   * Queries tribunal decisions, court judgments, and precedents with intelligent court filtering
    */
-  async searchCaseLaw(keywords: string[]): Promise<CaseResult[]> {
+  async searchCaseLaw(
+    keywords: string[],
+    category: string = 'general'
+  ): Promise<CaseResult[]> {
     try {
-      const query = keywords.join(' ');
-      // Use Atom XML feed endpoint
-      const url = `${API_CONFIG.CASELAW_BASE_URL}/atom.xml?query=${encodeURIComponent(query)}`;
+      // Build improved query with quoted phrases for multi-word terms
+      const queryTerms = keywords.map((term) => {
+        // Quote multi-word terms for exact phrase matching
+        return term.includes(' ') ? `"${term}"` : term;
+      });
+      const query = queryTerms.join(' ');
+
+      // Build URL with court filtering if category matches
+      let url = `${API_CONFIG.CASELAW_BASE_URL}/atom.xml?query=${encodeURIComponent(query)}`;
+
+      // Add court filtering based on question category
+      const relevantCourts = CATEGORY_TO_COURT_MAP[category];
+      if (relevantCourts && relevantCourts.length > 0) {
+        // API supports multiple court parameters
+        const courtParams = relevantCourts
+          .map((court) => `court=${court}`)
+          .join('&');
+        url += `&${courtParams}`;
+
+        console.log(
+          `[LEGAL API] Filtering Case Law by courts for category "${category}":`,
+          relevantCourts
+        );
+      }
 
       console.log('[LEGAL API] Searching Find Case Law Atom feed:', url);
       errorLogger.logError('Searching Find Case Law', {
         url,
         keywords,
+        category,
+        courts: relevantCourts,
       });
 
       const response = await this.fetchWithRetry(url);
@@ -481,6 +555,7 @@ export class LegalAPIService {
       errorLogger.logError(error as Error, {
         context: 'searchCaseLaw',
         keywords,
+        category,
         isOffline: isNetworkError(error),
       });
       return [];
@@ -562,99 +637,10 @@ export class LegalAPIService {
   // ==========================================================================
 
   /**
-   * Parse legislation.gov.uk response
-   * NOTE: This is a basic implementation. The actual API may return XML or HTML.
-   * This parser handles common scenarios but may need refinement based on actual API responses.
-   */
-  private parseLegislationResponse(
-    data: string,
-    query: string
-  ): LegislationResult[] {
-    try {
-      // Check if response is empty or error page
-      if (!data || data.length === 0 || data.includes('404') || data.includes('Error')) {
-        return [];
-      }
-
-      // Attempt to parse as JSON first
-      try {
-        const jsonData = JSON.parse(data);
-        if (Array.isArray(jsonData)) {
-          return jsonData.map((item) => ({
-            title: item.title || 'Unknown Legislation',
-            url: item.url || `${API_CONFIG.LEGISLATION_BASE_URL}/search?q=${encodeURIComponent(query)}`,
-            section: item.section,
-            content: item.content || item.summary || '',
-          }));
-        }
-      } catch {
-        // Not JSON, likely HTML/XML - will need custom parser
-        // For now, return empty array
-        errorLogger.logError('Legislation API returned non-JSON data', {
-          dataLength: data.length,
-          dataPreview: data.substring(0, 200),
-        });
-      }
-
-      return [];
-    } catch (error) {
-      errorLogger.logError(error as Error, {
-        context: 'parseLegislationResponse',
-      });
-      return [];
-    }
-  }
-
-  /**
-   * Parse Find Case Law API response
-   */
-  private parseCaseResponse(data: unknown, query: string): CaseResult[] {
-    try {
-      if (!data || typeof data !== 'object') {
-        return [];
-      }
-
-      // Handle different response formats
-      const dataObj = data as Record<string, unknown>;
-
-      // Check for results array
-      if (Array.isArray(dataObj.results)) {
-        return dataObj.results.map((item: Record<string, unknown>) => ({
-          citation: String(item.citation || item.name || 'Unknown Case'),
-          court: String(item.court || 'Unknown Court'),
-          date: String(item.date || item.judgment_date || new Date().toISOString()),
-          url: String(item.url || item.uri || `${API_CONFIG.CASELAW_BASE_URL}/search?query=${encodeURIComponent(query)}`),
-          summary: String(item.summary || item.snippet || ''),
-          relevance: typeof item.relevance === 'number' ? item.relevance : undefined,
-        }));
-      }
-
-      // Handle single result
-      if (dataObj.citation || dataObj.name) {
-        return [{
-          citation: String(dataObj.citation || dataObj.name || 'Unknown Case'),
-          court: String(dataObj.court || 'Unknown Court'),
-          date: String(dataObj.date || dataObj.judgment_date || new Date().toISOString()),
-          url: String(dataObj.url || dataObj.uri || `${API_CONFIG.CASELAW_BASE_URL}/search?query=${encodeURIComponent(query)}`),
-          summary: String(dataObj.summary || dataObj.snippet || ''),
-          relevance: typeof dataObj.relevance === 'number' ? dataObj.relevance : undefined,
-        }];
-      }
-
-      return [];
-    } catch (error) {
-      errorLogger.logError(error as Error, {
-        context: 'parseCaseResponse',
-      });
-      return [];
-    }
-  }
-
-  /**
    * Parse Atom XML feed to legislation results
    * Atom format: <feed><entry><title>, <link>, <summary>, etc.
    */
-  private parseAtomFeedToLegislation(xmlText: string, query: string): LegislationResult[] {
+  private parseAtomFeedToLegislation(xmlText: string, _query: string): LegislationResult[] {
     try {
       console.log('[LEGAL API] Parsing legislation Atom feed...');
 
@@ -720,7 +706,7 @@ export class LegalAPIService {
    * Parse Atom XML feed to case law results
    * Atom format: <feed><entry><title>, <link>, <summary>, etc.
    */
-  private parseAtomFeedToCaseLaw(xmlText: string, query: string): CaseResult[] {
+  private parseAtomFeedToCaseLaw(xmlText: string, _query: string): CaseResult[] {
     try {
       console.log('[LEGAL API] Parsing case law Atom feed...');
 
