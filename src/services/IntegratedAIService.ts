@@ -101,10 +101,15 @@ export class IntegratedAIService {
         defaultContextFlashAttention: true, // Flash Attention for memory efficiency
       });
 
-      // Auto-detect context size from model capabilities
-      // Use 90% of model's max context (leave 10% headroom for system stability)
+      // Auto-detect context size from model capabilities with VRAM awareness
+      // For 8GB VRAM: Model (~4.5GB) + KV cache + overhead = safe limit ~16K tokens
+      // For 16GB+ VRAM: Can use 90% of model's max (29,491 for 32K models)
       const modelMaxContext = this.model._trainContextSize || 32768;
-      const optimalContext = Math.floor(modelMaxContext * 0.9);
+
+      // Conservative context for 8GB VRAM (most consumer GPUs)
+      // This ensures model + KV cache fit comfortably in VRAM
+      const safeContextFor8GB = 16384; // 16K tokens = ~12,000 words (still impressive!)
+      const optimalContext = Math.min(safeContextFor8GB, Math.floor(modelMaxContext * 0.9));
       const contextSize = this.config.contextSize || optimalContext;
 
       errorLogger.logError(`Creating context (${contextSize} tokens with Flash Attention)`, {
