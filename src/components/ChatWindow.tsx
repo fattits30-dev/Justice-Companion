@@ -48,6 +48,7 @@ export function ChatWindow(): JSX.Element {
     streamingContent,
     thinkingContent, // NEW: AI reasoning content
     currentSources, // NEW: Legal source citations
+    progressStages, // NEW: Cumulative progress timeline
     messagesEndRef,
     sendMessage,
     loadMessages,
@@ -209,6 +210,7 @@ export function ChatWindow(): JSX.Element {
         loadingState={loadingState}
         thinkingContent={thinkingContent}
         currentSources={currentSources}
+        progressStages={progressStages}
         messagesEndRef={messagesEndRef}
       />
 

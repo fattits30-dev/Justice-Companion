@@ -1,58 +1,80 @@
 /**
  * StreamingIndicator Component
  *
- * Displays a collapsible typing animation when AI is generating a response.
- * Shows different states: connecting, thinking, streaming.
- * Can be expanded to show detailed status information.
+ * Displays cumulative progress timeline when AI is generating a response.
+ * Shows all stages as they complete: ✓ (completed) or ⏳ (in-progress)
+ * Can be expanded to show detailed timestamps and stage information.
  * Auto-collapses when state changes.
  */
 
 import { useState, useEffect } from 'react';
-import { AILoadingState } from '../hooks/useAI';
+import { AILoadingState, ProgressStage } from '../hooks/useAI';
 import { logger } from '../utils/logger';
 
 interface StreamingIndicatorProps {
   loadingState: AILoadingState;
-  thinkingContent?: string; // NEW: AI reasoning content (Phase 3 will implement display)
+  progressStages: ProgressStage[]; // NEW: Cumulative progress timeline
+  thinkingContent?: string; // AI reasoning content (displayed in expanded section)
 }
 
-export function StreamingIndicator({ loadingState, thinkingContent }: StreamingIndicatorProps): JSX.Element | null {
+export function StreamingIndicator({ loadingState, progressStages, thinkingContent }: StreamingIndicatorProps): JSX.Element | null {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isReasoningExpanded, setIsReasoningExpanded] = useState(false);
 
-  // Debug: Log when loadingState changes
+  // Debug: Log when loadingState or stages change
   useEffect(() => {
-    logger.info('StreamingIndicator', 'loadingState changed', { state: loadingState });
+    logger.info('StreamingIndicator', 'State changed', {
+      state: loadingState,
+      stagesCount: progressStages.length
+    });
     setIsExpanded(false);
-  }, [loadingState]);
+  }, [loadingState, progressStages.length]);
 
-  if (loadingState === 'idle') {
-    logger.debug('StreamingIndicator', 'Returning null (idle state)');
+  if (loadingState === 'idle' && progressStages.length === 0) {
+    logger.debug('StreamingIndicator', 'Returning null (idle state, no stages)');
     return null;
   }
 
-  logger.debug('StreamingIndicator', 'Rendering', { state: loadingState });
+  logger.debug('StreamingIndicator', 'Rendering', {
+    state: loadingState,
+    stages: progressStages
+  });
 
-  const getMessage = (): string => {
-    switch (loadingState) {
-      case 'connecting':
-        return 'Connecting to AI...';
-      case 'Analyzing your question...':
-        return 'Analyzing your question...';
-      case 'Searching UK legislation...':
-        return 'Searching UK legislation...';
-      case 'Generating response...':
-        return 'Generating response...';
-      case 'streaming':
-        return 'Writing response...';
-      default:
-        return 'Processing...';
-    }
+  /**
+   * Get icon for stage based on completion status
+   */
+  const getStageIcon = (stage: ProgressStage): string => {
+    return stage.completed ? '✓' : '⏳';
+  };
+
+  /**
+   * Get color class for stage
+   */
+  const getStageColor = (stage: ProgressStage): string => {
+    return stage.completed ? 'text-green-600' : 'text-blue-600';
+  };
+
+  /**
+   * Format timestamp for display
+   */
+  const formatTime = (timestamp: string): string => {
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    });
   };
 
   const getIcon = (): string => {
     return isExpanded ? '▼' : '▶';
   };
+
+  // Current status message (last stage or default)
+  const currentMessage =
+    progressStages.length > 0
+      ? progressStages[progressStages.length - 1].stage
+      : 'Processing...';
 
   return (
     <div className="border-b border-gray-200 bg-blue-50">
@@ -61,31 +83,53 @@ export function StreamingIndicator({ loadingState, thinkingContent }: StreamingI
         onClick={() => setIsExpanded(!isExpanded)}
         className="flex w-full items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:bg-blue-100 transition-colors focus:outline-none"
         aria-expanded={isExpanded}
-        aria-label={isExpanded ? 'Collapse status' : 'Expand status'}
+        aria-label={isExpanded ? 'Collapse progress timeline' : 'Expand progress timeline'}
       >
         <span className="text-gray-400 text-xs">{getIcon()}</span>
-        <div className="flex gap-1">
-          <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
-          <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
-          <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
-        </div>
-        <span className="font-medium">{getMessage()}</span>
+        {loadingState !== 'idle' && (
+          <div className="flex gap-1">
+            <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+            <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+            <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+          </div>
+        )}
+        <span className="font-medium">{currentMessage}</span>
+        {progressStages.length > 1 && (
+          <span className="text-xs text-gray-500 ml-auto">
+            ({progressStages.filter((s) => s.completed).length}/{progressStages.length} stages)
+          </span>
+        )}
       </button>
 
-      {/* Expanded details - collapsible */}
-      {isExpanded && (
+      {/* Expanded progress timeline - collapsible */}
+      {isExpanded && progressStages.length > 0 && (
         <div className="px-4 py-3 text-xs text-gray-600 bg-white border-t border-gray-200">
-          <div className="mx-auto max-w-4xl space-y-2">
-            <div className="flex items-center gap-2">
-              <span className="font-semibold">Status:</span>
-              <span className="capitalize">{loadingState}</span>
-            </div>
-            <div className="text-gray-500">
-              {loadingState === 'connecting' && '⏳ Establishing connection to AI...'}
-              {loadingState === 'Analyzing your question...' && '🧠 Classifying question and preparing search...'}
-              {loadingState === 'Searching UK legislation...' && '📚 Querying legislation.gov.uk and case law databases...'}
-              {loadingState === 'Generating response...' && '✨ Preparing AI response with legal context...'}
-              {loadingState === 'streaming' && '✍️ AI is generating response in real-time...'}
+          <div className="mx-auto max-w-4xl">
+            <h3 className="font-semibold mb-2 text-sm">AI Pipeline Progress</h3>
+            <div className="space-y-2">
+              {progressStages.map((stage, index) => (
+                <div key={index} className="flex items-start gap-2">
+                  <span className={`font-bold text-lg ${getStageColor(stage)}`}>
+                    {getStageIcon(stage)}
+                  </span>
+                  <div className="flex-1">
+                    <div className="font-medium">{stage.stage}</div>
+                    <div className="text-gray-500 text-xs">
+                      {formatTime(stage.timestamp)}
+                    </div>
+                  </div>
+                  {stage.completed && (
+                    <span className="text-green-600 text-xs font-semibold">
+                      Complete
+                    </span>
+                  )}
+                  {!stage.completed && (
+                    <span className="text-blue-600 text-xs font-semibold animate-pulse">
+                      In Progress...
+                    </span>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         </div>

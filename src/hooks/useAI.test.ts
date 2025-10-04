@@ -32,6 +32,7 @@ describe('useAI types', () => {
       streamingContent: '',
       thinkingContent: '', // NEW: AI reasoning content
       currentSources: [], // NEW: Legal source citations
+      progressStages: [], // NEW: Cumulative progress timeline
       sendMessage: async () => {},
       clearMessages: () => {},
       loadMessages: () => {}, // NEW: Load conversation messages
@@ -44,6 +45,7 @@ describe('useAI types', () => {
     expect(mockReturn.isStreaming).toBe(false);
     expect(mockReturn.streamingContent).toBe('');
     expect(mockReturn.thinkingContent).toBe('');
+    expect(mockReturn.progressStages).toEqual([]);
   });
 
   test('ChatMessage has correct structure', () => {

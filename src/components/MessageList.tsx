@@ -1,6 +1,6 @@
 import type { RefObject } from 'react';
 import type { ChatMessage } from '../types/ai';
-import type { AILoadingState } from '../hooks/useAI';
+import type { AILoadingState, ProgressStage } from '../hooks/useAI';
 import { MessageBubble } from './MessageBubble';
 import { StreamingIndicator } from './StreamingIndicator';
 
@@ -14,6 +14,7 @@ export interface MessageListProps {
   loadingState: AILoadingState;
   thinkingContent: string;
   currentSources: string[]; // Legal source citations
+  progressStages: ProgressStage[]; // NEW: Cumulative progress timeline
   messagesEndRef: RefObject<HTMLDivElement>;
 }
 
@@ -39,11 +40,12 @@ export function MessageList({
   loadingState,
   thinkingContent,
   currentSources,
+  progressStages,
   messagesEndRef,
 }: MessageListProps): JSX.Element {
   return (
     <div className="flex-1 overflow-y-auto p-4">
-      <div className="mx-auto space-y-4">
+      <div className="mx-auto space-y-4 pb-32">
         {/* Empty state */}
         {messages.length === 0 && !isStreaming && (
           <div className="flex h-full items-center justify-center text-center">
@@ -69,6 +71,7 @@ export function MessageList({
         {isStreaming && (
           <StreamingIndicator
             loadingState={loadingState}
+            progressStages={progressStages}
             thinkingContent={thinkingContent}
           />
         )}

@@ -16,6 +16,16 @@ export type AILoadingState =
   | 'streaming';
 
 /**
+ * Progress stage for tracking AI pipeline execution
+ * Builds a cumulative timeline of what the AI is doing
+ */
+export interface ProgressStage {
+  stage: string; // Human-readable stage name (e.g., "Analyzing your question...")
+  timestamp: string; // ISO timestamp when stage started
+  completed: boolean; // Whether this stage is finished
+}
+
+/**
  * Return type for useAI hook
  */
 export interface UseAIReturn {
@@ -27,6 +37,7 @@ export interface UseAIReturn {
   streamingContent: string;
   thinkingContent: string; // AI reasoning content from <think> tags
   currentSources: string[]; // Legal source citations for current AI response
+  progressStages: ProgressStage[]; // NEW: Cumulative timeline of AI pipeline stages
 
   // Actions
   sendMessage: (content: string) => Promise<void>;
@@ -60,6 +71,7 @@ export function useAI(initialMessages: ChatMessage[] = []): UseAIReturn {
   const [streamingContent, setStreamingContent] = useState<string>('');
   const [thinkingContent, setThinkingContent] = useState<string>(''); // NEW: AI reasoning
   const [currentSources, setCurrentSources] = useState<string[]>([]); // NEW: Legal source citations
+  const [progressStages, setProgressStages] = useState<ProgressStage[]>([]); // NEW: Cumulative progress timeline
 
   // Refs for cleanup and avoiding closure issues
   const isMountedRef = useRef<boolean>(true);
@@ -174,6 +186,11 @@ export function useAI(initialMessages: ChatMessage[] = []): UseAIReturn {
       });
       if (!isMountedRef.current) return;
 
+      // Mark all stages as completed
+      setProgressStages((prev) =>
+        prev.map((stage) => ({ ...stage, completed: true }))
+      );
+
       // Add complete assistant message to history with thinking content
       const assistantMessage: ChatMessage = {
         role: 'assistant',
@@ -207,12 +224,32 @@ export function useAI(initialMessages: ChatMessage[] = []): UseAIReturn {
     // Register event listeners and get cleanup functions
     /**
      * Handle status updates from main process (RAG progress)
+     * Accumulates stages into a timeline for full visibility
      */
     const handleStatusUpdate = (status: string): void => {
       logger.info('useAI', 'Status update received', { status });
       if (!isMountedRef.current) return;
-      // Cast string to AILoadingState (main process only sends valid values)
+
+      // Update loading state (backward compatibility)
       setLoadingState(status as AILoadingState);
+
+      // Mark previous stage as completed and add new stage
+      setProgressStages((prev) => {
+        // Mark the last stage as completed
+        const updatedPrev = prev.map((stage, index) =>
+          index === prev.length - 1 ? { ...stage, completed: true } : stage
+        );
+
+        // Add new stage as in-progress
+        return [
+          ...updatedPrev,
+          {
+            stage: status,
+            timestamp: new Date().toISOString(),
+            completed: false,
+          },
+        ];
+      });
     };
 
     const removeTokenListener = window.justiceAPI.onAIStreamToken(handleToken);
@@ -284,6 +321,7 @@ export function useAI(initialMessages: ChatMessage[] = []): UseAIReturn {
       setStreamingContent('');
       setThinkingContent(''); // Clear previous thinking content
       setCurrentSources([]); // Clear previous sources
+      setProgressStages([]); // Reset progress timeline for new message
 
       try {
         const response: IPCResponse<AIStreamStartResponse> =
@@ -321,6 +359,7 @@ export function useAI(initialMessages: ChatMessage[] = []): UseAIReturn {
     setStreamingContent('');
     setThinkingContent('');
     setCurrentSources([]);
+    setProgressStages([]);
     setError(null);
     setLoadingState('idle');
     setIsStreaming(false);
@@ -334,6 +373,7 @@ export function useAI(initialMessages: ChatMessage[] = []): UseAIReturn {
     setStreamingContent('');
     setThinkingContent('');
     setCurrentSources([]);
+    setProgressStages([]);
     setError(null);
     setLoadingState('idle');
     setIsStreaming(false);
@@ -348,6 +388,7 @@ export function useAI(initialMessages: ChatMessage[] = []): UseAIReturn {
     streamingContent,
     thinkingContent, // NEW: Expose thinking content
     currentSources, // NEW: Expose legal sources
+    progressStages, // NEW: Expose cumulative progress timeline
 
     // Actions
     sendMessage,
