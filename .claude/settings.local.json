@@ -119,7 +119,8 @@
       "WebFetch(domain:github.com)",
       "WebFetch(domain:legislation.github.io)",
       "WebFetch(domain:caselaw.nationalarchives.gov.uk)",
-      "WebFetch(domain:api.caselaw.nationalarchives.gov.uk)"
+      "WebFetch(domain:api.caselaw.nationalarchives.gov.uk)",
+      "WebFetch(domain:localhost)"
     ],
     "deny": [],
     "ask": []

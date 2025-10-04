@@ -13,7 +13,7 @@ export default defineConfig({
         vite: {
           build: {
             rollupOptions: {
-              external: ['better-sqlite3', 'node-llama-cpp'],
+              external: ['better-sqlite3', 'node-llama-cpp', 'express'],
             },
           },
         },

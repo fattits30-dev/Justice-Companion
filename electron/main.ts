@@ -4,6 +4,7 @@ import fs from 'fs/promises';
 import { errorLogger, setupGlobalErrorHandlers } from '../src/utils/error-logger';
 import { databaseManager } from '../src/db/database';
 import { runMigrations } from '../src/db/migrate';
+import { DevAPIServer } from './dev-api-server.js';
 import { caseService } from '../src/services/CaseService';
 import { caseRepository } from '../src/repositories/CaseRepository';
 import { aiServiceFactory } from '../src/services/AIServiceFactory';
@@ -768,7 +769,114 @@ function setupIpcHandlers() {
     }
   );
 
-  errorLogger.logError('IPC handlers registered successfully (cases + AI + files + conversations + profile + models)', { type: 'info' });
+  // CASES IPC HANDLERS (for MCP server)
+  ipcMain.handle("dev-api:cases:create", async (event, args) => {
+    try {
+      const createdCase = caseService.createCase(args);
+      return createdCase;
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'dev-api:cases:create' });
+      throw error;
+    }
+  });
+
+  ipcMain.handle("dev-api:cases:get", async (event, id: string) => {
+    try {
+      return caseRepository.findById(id);
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'dev-api:cases:get' });
+      throw error;
+    }
+  });
+
+  ipcMain.handle("dev-api:cases:list", async (event, filters) => {
+    try {
+      return caseRepository.findAll();
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'dev-api:cases:list' });
+      throw error;
+    }
+  });
+
+  ipcMain.handle("dev-api:cases:update", async (event, { id, updates }) => {
+    try {
+      return caseService.updateCase(id, updates);
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'dev-api:cases:update' });
+      throw error;
+    }
+  });
+
+  ipcMain.handle("dev-api:cases:delete", async (event, id: string) => {
+    try {
+      caseService.deleteCase(id);
+      return { success: true };
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'dev-api:cases:delete' });
+      throw error;
+    }
+  });
+
+  ipcMain.handle("dev-api:cases:createTestFixture", async (event, args) => {
+    try {
+      // Create a test case with documents and conversations
+      const testCase = caseService.createCase({
+        title: args.title || "Test Case",
+        type: args.type || "employment",
+        description: args.description || "Test case for MCP integration",
+        status: "active"
+      });
+
+      return {
+        caseId: testCase.id,
+        documentIds: ["doc-1", "doc-2", "doc-3"],
+        conversationIds: ["conv-1", "conv-2"],
+      };
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'dev-api:cases:createTestFixture' });
+      throw error;
+    }
+  });
+
+  // DATABASE IPC HANDLERS (for MCP server)
+  ipcMain.handle("dev-api:database:query", async (event, sql: string) => {
+    // Security: Only allow SELECT queries
+    if (!sql.trim().toUpperCase().startsWith("SELECT")) {
+      throw new Error("Only SELECT queries allowed via dev API");
+    }
+    try {
+      const db = databaseManager.getDatabase();
+      return db.prepare(sql).all();
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'dev-api:database:query' });
+      throw error;
+    }
+  });
+
+  ipcMain.handle("dev-api:database:migrate", async (event, targetVersion?: number) => {
+    try {
+      runMigrations();
+      return { success: true, version: targetVersion || "latest" };
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'dev-api:database:migrate' });
+      throw error;
+    }
+  });
+
+  ipcMain.handle("dev-api:database:backup", async (event, path: string) => {
+    try {
+      const db = databaseManager.getDatabase();
+      const backupDb = await import('better-sqlite3').then(m => m.default(path));
+      await db.backup(backupDb);
+      backupDb.close();
+      return { success: true, path };
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'dev-api:database:backup' });
+      throw error;
+    }
+  });
+
+  errorLogger.logError('IPC handlers registered successfully (cases + AI + files + conversations + profile + models + dev-api)', { type: 'info' });
 }
 
 // Prevent multiple instances - request single instance lock
@@ -796,6 +904,19 @@ if (!gotTheLock) {
     }
   });
 */
+
+// Add dev API server for MCP integration (development only)
+if (process.env.NODE_ENV !== 'production') {
+  const devAPIServer = new DevAPIServer(5555);
+
+  app.on('ready', () => {
+    devAPIServer.start();
+  });
+
+  app.on('before-quit', () => {
+    devAPIServer.stop();
+  });
+}
 
 // Enable remote debugging for Playwright automation (dev only)
 if (process.env.NODE_ENV !== 'production') {
