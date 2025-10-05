@@ -1,0 +1,72 @@
+export type AuditEventType =
+  // Case operations
+  | 'case.create'
+  | 'case.read'
+  | 'case.update'
+  | 'case.delete'
+  | 'case.pii_access'
+  // Evidence operations
+  | 'evidence.create'
+  | 'evidence.read'
+  | 'evidence.update'
+  | 'evidence.delete'
+  | 'evidence.content_access'
+  | 'evidence.export'
+  // Security operations
+  | 'encryption.key_loaded'
+  | 'encryption.decrypt'
+  // System operations
+  | 'database.backup'
+  | 'database.restore'
+  | 'database.migrate'
+  | 'config.change';
+
+export interface AuditLogEntry {
+  id: string;
+  timestamp: string;
+  eventType: AuditEventType;
+  userId?: string;
+  resourceType: string;
+  resourceId: string;
+  action: 'create' | 'read' | 'update' | 'delete' | 'export' | 'decrypt';
+  details?: Record<string, unknown>;
+  ipAddress?: string;
+  userAgent?: string;
+  success: boolean;
+  errorMessage?: string;
+  integrityHash: string;
+  previousLogHash: string | null;
+  createdAt: string;
+}
+
+export interface AuditEvent {
+  eventType: AuditEventType;
+  userId?: string;
+  resourceType: string;
+  resourceId: string;
+  action: 'create' | 'read' | 'update' | 'delete' | 'export' | 'decrypt';
+  details?: Record<string, unknown>;
+  ipAddress?: string;
+  userAgent?: string;
+  success?: boolean;
+  errorMessage?: string;
+}
+
+export interface AuditQueryFilters {
+  startDate?: string;
+  endDate?: string;
+  resourceType?: string;
+  resourceId?: string;
+  eventType?: AuditEventType;
+  userId?: string;
+  success?: boolean;
+  limit?: number;
+}
+
+export interface IntegrityReport {
+  valid: boolean;
+  totalLogs: number;
+  brokenAt?: number;
+  brokenLog?: AuditLogEntry;
+  error?: string;
+}

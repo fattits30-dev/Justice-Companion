@@ -1,48 +1,80 @@
 import { getDb } from '../db/database';
 import type { Evidence, CreateEvidenceInput, UpdateEvidenceInput } from '../models/Evidence';
 import { EncryptionService, type EncryptedData } from '../services/EncryptionService.js';
+import type { AuditLogger } from '../services/AuditLogger.js';
 
 /**
  * Repository for managing evidence (documents, photos, emails, recordings, notes)
  * with built-in encryption for sensitive content
  */
 export class EvidenceRepository {
-  constructor(private encryptionService?: EncryptionService) {}
+  constructor(
+    private encryptionService?: EncryptionService,
+    private auditLogger?: AuditLogger
+  ) {}
 
   /**
    * Create new evidence with encrypted content
    */
   create(input: CreateEvidenceInput): Evidence {
-    const db = getDb();
+    try {
+      const db = getDb();
 
-    // Encrypt content before INSERT (if provided)
-    const encryptedContent = input.content
-      ? this.encryptionService?.encrypt(input.content)
-      : null;
+      // Encrypt content before INSERT (if provided)
+      const encryptedContent = input.content
+        ? this.encryptionService?.encrypt(input.content)
+        : null;
 
-    const contentToStore = encryptedContent
-      ? JSON.stringify(encryptedContent)
-      : null;
+      const contentToStore = encryptedContent
+        ? JSON.stringify(encryptedContent)
+        : null;
 
-    const stmt = db.prepare(`
-      INSERT INTO evidence (
-        case_id, title, file_path, content, evidence_type, obtained_date
-      )
-      VALUES (
-        @caseId, @title, @filePath, @content, @evidenceType, @obtainedDate
-      )
-    `);
+      const stmt = db.prepare(`
+        INSERT INTO evidence (
+          case_id, title, file_path, content, evidence_type, obtained_date
+        )
+        VALUES (
+          @caseId, @title, @filePath, @content, @evidenceType, @obtainedDate
+        )
+      `);
 
-    const result = stmt.run({
-      caseId: input.caseId,
-      title: input.title,
-      filePath: input.filePath ?? null,
-      content: contentToStore,
-      evidenceType: input.evidenceType,
-      obtainedDate: input.obtainedDate ?? null,
-    });
+      const result = stmt.run({
+        caseId: input.caseId,
+        title: input.title,
+        filePath: input.filePath ?? null,
+        content: contentToStore,
+        evidenceType: input.evidenceType,
+        obtainedDate: input.obtainedDate ?? null,
+      });
 
-    return this.findById(result.lastInsertRowid as number)!;
+      const createdEvidence = this.findById(result.lastInsertRowid as number)!;
+
+      // Audit: Evidence created
+      this.auditLogger?.log({
+        eventType: 'evidence.create',
+        resourceType: 'evidence',
+        resourceId: createdEvidence.id.toString(),
+        action: 'create',
+        details: {
+          caseId: createdEvidence.caseId,
+          evidenceType: createdEvidence.evidenceType,
+        },
+        success: true,
+      });
+
+      return createdEvidence;
+    } catch (error) {
+      // Audit: Failed evidence creation
+      this.auditLogger?.log({
+        eventType: 'evidence.create',
+        resourceType: 'evidence',
+        resourceId: 'unknown',
+        action: 'create',
+        success: false,
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+      });
+      throw error;
+    }
   }
 
   /**
@@ -68,7 +100,25 @@ export class EvidenceRepository {
 
     if (row) {
       // Decrypt content after SELECT
+      const originalContent = row.content;
       row.content = this.decryptContent(row.content);
+
+      // Audit: PII/content accessed (encrypted content field)
+      if (originalContent && row.content !== originalContent) {
+        this.auditLogger?.log({
+          eventType: 'evidence.content_access',
+          resourceType: 'evidence',
+          resourceId: id.toString(),
+          action: 'read',
+          details: {
+            caseId: row.caseId,
+            evidenceType: row.evidenceType,
+            field: 'content',
+            encrypted: true,
+          },
+          success: true,
+        });
+      }
     }
 
     return row;
@@ -143,61 +193,117 @@ export class EvidenceRepository {
    * Update evidence with encrypted content
    */
   update(id: number, input: UpdateEvidenceInput): Evidence | null {
-    const db = getDb();
+    try {
+      const db = getDb();
 
-    const updates: string[] = [];
-    const params: Record<string, unknown> = { id };
+      const updates: string[] = [];
+      const params: Record<string, unknown> = { id };
 
-    if (input.title !== undefined) {
-      updates.push('title = @title');
-      params.title = input.title;
-    }
-    if (input.filePath !== undefined) {
-      updates.push('file_path = @filePath');
-      params.filePath = input.filePath;
-    }
-    if (input.content !== undefined) {
-      updates.push('content = @content');
-      // Encrypt content before UPDATE
-      const encryptedContent = input.content
-        ? this.encryptionService?.encrypt(input.content)
-        : null;
+      if (input.title !== undefined) {
+        updates.push('title = @title');
+        params.title = input.title;
+      }
+      if (input.filePath !== undefined) {
+        updates.push('file_path = @filePath');
+        params.filePath = input.filePath;
+      }
+      if (input.content !== undefined) {
+        updates.push('content = @content');
+        // Encrypt content before UPDATE
+        const encryptedContent = input.content
+          ? this.encryptionService?.encrypt(input.content)
+          : null;
 
-      params.content = encryptedContent
-        ? JSON.stringify(encryptedContent)
-        : null;
-    }
-    if (input.evidenceType !== undefined) {
-      updates.push('evidence_type = @evidenceType');
-      params.evidenceType = input.evidenceType;
-    }
-    if (input.obtainedDate !== undefined) {
-      updates.push('obtained_date = @obtainedDate');
-      params.obtainedDate = input.obtainedDate;
-    }
+        params.content = encryptedContent
+          ? JSON.stringify(encryptedContent)
+          : null;
+      }
+      if (input.evidenceType !== undefined) {
+        updates.push('evidence_type = @evidenceType');
+        params.evidenceType = input.evidenceType;
+      }
+      if (input.obtainedDate !== undefined) {
+        updates.push('obtained_date = @obtainedDate');
+        params.obtainedDate = input.obtainedDate;
+      }
 
-    if (updates.length === 0) {
-      return this.findById(id);
+      if (updates.length === 0) {
+        return this.findById(id);
+      }
+
+      const stmt = db.prepare(`
+        UPDATE evidence
+        SET ${updates.join(', ')}
+        WHERE id = @id
+      `);
+
+      stmt.run(params);
+
+      const updatedEvidence = this.findById(id);
+
+      // Audit: Evidence updated
+      if (updatedEvidence) {
+        this.auditLogger?.log({
+          eventType: 'evidence.update',
+          resourceType: 'evidence',
+          resourceId: id.toString(),
+          action: 'update',
+          details: {
+            fieldsUpdated: Object.keys(input),
+            caseId: updatedEvidence.caseId,
+            evidenceType: updatedEvidence.evidenceType,
+          },
+          success: true,
+        });
+      }
+
+      return updatedEvidence;
+    } catch (error) {
+      // Audit: Failed update
+      this.auditLogger?.log({
+        eventType: 'evidence.update',
+        resourceType: 'evidence',
+        resourceId: id.toString(),
+        action: 'update',
+        success: false,
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+      });
+      throw error;
     }
-
-    const stmt = db.prepare(`
-      UPDATE evidence
-      SET ${updates.join(', ')}
-      WHERE id = @id
-    `);
-
-    stmt.run(params);
-    return this.findById(id);
   }
 
   /**
    * Delete evidence
    */
   delete(id: number): boolean {
-    const db = getDb();
-    const stmt = db.prepare('DELETE FROM evidence WHERE id = ?');
-    const result = stmt.run(id);
-    return result.changes > 0;
+    try {
+      const db = getDb();
+      const stmt = db.prepare('DELETE FROM evidence WHERE id = ?');
+      const result = stmt.run(id);
+      const success = result.changes > 0;
+
+      // Audit: Evidence deleted
+      this.auditLogger?.log({
+        eventType: 'evidence.delete',
+        resourceType: 'evidence',
+        resourceId: id.toString(),
+        action: 'delete',
+        success,
+      });
+
+      return success;
+    } catch (error) {
+      // Audit: Failed deletion
+      this.auditLogger?.log({
+        eventType: 'evidence.delete',
+        resourceType: 'evidence',
+        resourceId: id.toString(),
+        action: 'delete',
+        success: false,
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+      });
+      throw error;
+    }
   }
 
   /**
@@ -289,6 +395,13 @@ export class EvidenceRepository {
    */
   setEncryptionService(service: EncryptionService): void {
     this.encryptionService = service;
+  }
+
+  /**
+   * Set audit logger (for dependency injection)
+   */
+  setAuditLogger(logger: AuditLogger): void {
+    this.auditLogger = logger;
   }
 }
 

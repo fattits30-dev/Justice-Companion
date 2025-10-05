@@ -10,6 +10,7 @@ import { caseService } from '../src/services/CaseService';
 import { caseRepository } from '../src/repositories/CaseRepository';
 import { evidenceRepository } from '../src/repositories/EvidenceRepository';
 import { EncryptionService } from '../src/services/EncryptionService';
+import { AuditLogger } from '../src/services/AuditLogger';
 import { aiServiceFactory } from '../src/services/AIServiceFactory';
 import { ragService } from '../src/services/RAGService';
 import { legalAPIService } from '../src/services/LegalAPIService';
@@ -995,6 +996,28 @@ app.whenReady().then(() => {
     } catch (error) {
       errorLogger.logError(error as Error, { context: 'encryption-initialization' });
       errorLogger.logError('⚠️  WARNING: Encryption initialization failed - sensitive data will not be encrypted!', {
+        type: 'error',
+      });
+    }
+
+    // CRITICAL SECURITY: Initialize audit logger for immutable audit trail
+    try {
+      const db = databaseManager.getDatabase();
+      const auditLogger = new AuditLogger(db);
+
+      // Inject audit logger into repositories for automatic audit logging
+      caseRepository.setAuditLogger(auditLogger);
+      evidenceRepository.setAuditLogger(auditLogger);
+
+      errorLogger.logError('✅ Audit logger initialized successfully', {
+        type: 'info',
+      });
+      errorLogger.logError('📝 All case and evidence operations will be logged to immutable audit trail', {
+        type: 'info',
+      });
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'audit-logger-initialization' });
+      errorLogger.logError('⚠️  WARNING: Audit logger initialization failed - operations will not be audited!', {
         type: 'error',
       });
     }

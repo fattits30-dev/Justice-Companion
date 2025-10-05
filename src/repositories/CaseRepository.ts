@@ -1,36 +1,68 @@
 import { getDb } from '../db/database';
 import type { Case, CreateCaseInput, UpdateCaseInput, CaseStatus } from '../models/Case';
 import { EncryptionService, type EncryptedData } from '../services/EncryptionService.js';
+import type { AuditLogger } from '../services/AuditLogger.js';
 
 export class CaseRepository {
-  constructor(private encryptionService?: EncryptionService) {}
+  constructor(
+    private encryptionService?: EncryptionService,
+    private auditLogger?: AuditLogger
+  ) {}
   /**
    * Create a new case
    */
   create(input: CreateCaseInput): Case {
-    const db = getDb();
+    try {
+      const db = getDb();
 
-    // Encrypt description before INSERT
-    const encryptedDescription = input.description
-      ? this.encryptionService?.encrypt(input.description)
-      : null;
+      // Encrypt description before INSERT
+      const encryptedDescription = input.description
+        ? this.encryptionService?.encrypt(input.description)
+        : null;
 
-    const descriptionToStore = encryptedDescription
-      ? JSON.stringify(encryptedDescription)
-      : null;
+      const descriptionToStore = encryptedDescription
+        ? JSON.stringify(encryptedDescription)
+        : null;
 
-    const stmt = db.prepare(`
-      INSERT INTO cases (title, description, case_type, status)
-      VALUES (@title, @description, @caseType, 'active')
-    `);
+      const stmt = db.prepare(`
+        INSERT INTO cases (title, description, case_type, status)
+        VALUES (@title, @description, @caseType, 'active')
+      `);
 
-    const result = stmt.run({
-      title: input.title,
-      description: descriptionToStore,
-      caseType: input.caseType,
-    });
+      const result = stmt.run({
+        title: input.title,
+        description: descriptionToStore,
+        caseType: input.caseType,
+      });
 
-    return this.findById(result.lastInsertRowid as number)!;
+      const createdCase = this.findById(result.lastInsertRowid as number)!;
+
+      // Audit: Case created
+      this.auditLogger?.log({
+        eventType: 'case.create',
+        resourceType: 'case',
+        resourceId: createdCase.id.toString(),
+        action: 'create',
+        details: {
+          title: createdCase.title,
+          caseType: createdCase.caseType,
+        },
+        success: true,
+      });
+
+      return createdCase;
+    } catch (error) {
+      // Audit: Failed case creation
+      this.auditLogger?.log({
+        eventType: 'case.create',
+        resourceType: 'case',
+        resourceId: 'unknown',
+        action: 'create',
+        success: false,
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+      });
+      throw error;
+    }
   }
 
   /**
@@ -55,7 +87,20 @@ export class CaseRepository {
 
     if (row) {
       // Decrypt description after SELECT
+      const originalDescription = row.description;
       row.description = this.decryptDescription(row.description);
+
+      // Audit: PII accessed (encrypted description field)
+      if (originalDescription && row.description !== originalDescription) {
+        this.auditLogger?.log({
+          eventType: 'case.pii_access',
+          resourceType: 'case',
+          resourceId: id.toString(),
+          action: 'read',
+          details: { field: 'description', encrypted: true },
+          success: true,
+        });
+      }
     }
 
     return row;
@@ -99,57 +144,109 @@ export class CaseRepository {
    * Update case
    */
   update(id: number, input: UpdateCaseInput): Case | null {
-    const db = getDb();
+    try {
+      const db = getDb();
 
-    const updates: string[] = [];
-    const params: Record<string, unknown> = { id };
+      const updates: string[] = [];
+      const params: Record<string, unknown> = { id };
 
-    if (input.title !== undefined) {
-      updates.push('title = @title');
-      params.title = input.title;
+      if (input.title !== undefined) {
+        updates.push('title = @title');
+        params.title = input.title;
+      }
+      if (input.description !== undefined) {
+        updates.push('description = @description');
+        // Encrypt description before UPDATE
+        const encryptedDescription = input.description
+          ? this.encryptionService?.encrypt(input.description)
+          : null;
+
+        params.description = encryptedDescription
+          ? JSON.stringify(encryptedDescription)
+          : null;
+      }
+      if (input.caseType !== undefined) {
+        updates.push('case_type = @caseType');
+        params.caseType = input.caseType;
+      }
+      if (input.status !== undefined) {
+        updates.push('status = @status');
+        params.status = input.status;
+      }
+
+      if (updates.length === 0) {
+        return this.findById(id);
+      }
+
+      const stmt = db.prepare(`
+        UPDATE cases
+        SET ${updates.join(', ')}
+        WHERE id = @id
+      `);
+
+      stmt.run(params);
+
+      const updatedCase = this.findById(id);
+
+      // Audit: Case updated
+      this.auditLogger?.log({
+        eventType: 'case.update',
+        resourceType: 'case',
+        resourceId: id.toString(),
+        action: 'update',
+        details: {
+          fieldsUpdated: Object.keys(input),
+        },
+        success: true,
+      });
+
+      return updatedCase;
+    } catch (error) {
+      // Audit: Failed update
+      this.auditLogger?.log({
+        eventType: 'case.update',
+        resourceType: 'case',
+        resourceId: id.toString(),
+        action: 'update',
+        success: false,
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+      });
+      throw error;
     }
-    if (input.description !== undefined) {
-      updates.push('description = @description');
-      // Encrypt description before UPDATE
-      const encryptedDescription = input.description
-        ? this.encryptionService?.encrypt(input.description)
-        : null;
-
-      params.description = encryptedDescription
-        ? JSON.stringify(encryptedDescription)
-        : null;
-    }
-    if (input.caseType !== undefined) {
-      updates.push('case_type = @caseType');
-      params.caseType = input.caseType;
-    }
-    if (input.status !== undefined) {
-      updates.push('status = @status');
-      params.status = input.status;
-    }
-
-    if (updates.length === 0) {
-      return this.findById(id);
-    }
-
-    const stmt = db.prepare(`
-      UPDATE cases
-      SET ${updates.join(', ')}
-      WHERE id = @id
-    `);
-
-    stmt.run(params);
-    return this.findById(id);
   }
 
   /**
    * Delete case (cascades to related records via foreign keys)
    */
   delete(id: number): boolean {
-    const db = getDb();
-    const stmt = db.prepare('DELETE FROM cases WHERE id = ?');
-    const result = stmt.run(id);
-    return result.changes > 0;
+    try {
+      const db = getDb();
+      const stmt = db.prepare('DELETE FROM cases WHERE id = ?');
+      const result = stmt.run(id);
+      const success = result.changes > 0;
+
+      // Audit: Case deleted
+      this.auditLogger?.log({
+        eventType: 'case.delete',
+        resourceType: 'case',
+        resourceId: id.toString(),
+        action: 'delete',
+        success,
+      });
+
+      return success;
+    } catch (error) {
+      // Audit: Failed deletion
+      this.auditLogger?.log({
+        eventType: 'case.delete',
+        resourceType: 'case',
+        resourceId: id.toString(),
+        action: 'delete',
+        success: false,
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+      });
+      throw error;
+    }
   }
 
   /**
@@ -235,6 +332,13 @@ export class CaseRepository {
    */
   setEncryptionService(service: EncryptionService): void {
     this.encryptionService = service;
+  }
+
+  /**
+   * Set audit logger (for dependency injection)
+   */
+  setAuditLogger(logger: AuditLogger): void {
+    this.auditLogger = logger;
   }
 }
 
