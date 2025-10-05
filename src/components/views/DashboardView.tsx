@@ -2,6 +2,7 @@ import { MessageSquare, Scale, FileText, TrendingUp } from 'lucide-react';
 import { useCases } from '../../hooks/useCases';
 import { useMemo } from 'react';
 import { DashboardEmptyState } from '../ui/DashboardEmptyState';
+import { Skeleton } from '../ui/Skeleton';
 
 interface DashboardViewProps {
   onViewChange: (view: 'dashboard' | 'chat' | 'cases' | 'documents' | 'settings') => void;
@@ -59,34 +60,56 @@ export function DashboardView({ onViewChange }: DashboardViewProps): JSX.Element
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <StatCard
-            icon={MessageSquare}
-            label="Total Chats"
-            value={loading ? '...' : stats.sessionsCount.toString()}
-            trend="+0 this week"
-            color="blue"
-          />
-          <StatCard
-            icon={Scale}
-            label="Active Cases"
-            value={loading ? '...' : stats.activeCases.toString()}
-            trend={`${stats.totalCases} total`}
-            color="indigo"
-          />
-          <StatCard
-            icon={FileText}
-            label="Documents"
-            value={loading ? '...' : stats.documentsUploaded.toString()}
-            trend="+0 uploaded"
-            color="purple"
-          />
-          <StatCard
-            icon={TrendingUp}
-            label="Sessions"
-            value={loading ? '...' : stats.sessionsCount.toString()}
-            trend="+0 this week"
-            color="cyan"
-          />
+          {loading ? (
+            <>
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="bg-gradient-to-br from-slate-900/50 to-blue-950/50 rounded-xl p-6 shadow-lg"
+                  role="status"
+                  aria-label="Loading statistics"
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <Skeleton className="w-8 h-8 rounded-lg" />
+                  </div>
+                  <Skeleton className="h-8 w-16 mb-2" />
+                  <Skeleton className="h-4 w-24 mb-2" />
+                  <Skeleton className="h-3 w-20" />
+                </div>
+              ))}
+            </>
+          ) : (
+            <>
+              <StatCard
+                icon={MessageSquare}
+                label="Total Chats"
+                value={stats.sessionsCount.toString()}
+                trend="+0 this week"
+                color="blue"
+              />
+              <StatCard
+                icon={Scale}
+                label="Active Cases"
+                value={stats.activeCases.toString()}
+                trend={`${stats.totalCases} total`}
+                color="indigo"
+              />
+              <StatCard
+                icon={FileText}
+                label="Documents"
+                value={stats.documentsUploaded.toString()}
+                trend="+0 uploaded"
+                color="purple"
+              />
+              <StatCard
+                icon={TrendingUp}
+                label="Sessions"
+                value={stats.sessionsCount.toString()}
+                trend="+0 this week"
+                color="cyan"
+              />
+            </>
+          )}
         </div>
 
         {/* Quick Actions */}

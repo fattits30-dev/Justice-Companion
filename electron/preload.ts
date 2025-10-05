@@ -328,7 +328,15 @@ const gdprAPI = {
   },
 };
 
-// Combine case, AI, model, file, conversation, profile, facts, and GDPR APIs
+// UI Error Logging API
+const errorLoggingAPI = {
+  // Log UI errors to main process for audit logging
+  logUIError: (errorData: any) => {
+    return ipcRenderer.invoke(IPC_CHANNELS.LOG_UI_ERROR, { errorData });
+  },
+};
+
+// Combine case, AI, model, file, conversation, profile, facts, GDPR, and error logging APIs
 const fullAPI = {
   ...justiceAPI,
   ...aiAPI,
@@ -338,6 +346,7 @@ const fullAPI = {
   ...profileAPI,
   ...factsAPI,
   ...gdprAPI,
+  ...errorLoggingAPI,
 };
 
 // Expose combined API to window object with type safety

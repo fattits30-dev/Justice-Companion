@@ -50,13 +50,41 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       errorStack: error.stack,
     });
 
-    // TODO: Send to main process via IPC for persistent logging
+    // Send to main process via IPC for persistent logging
+    this.logErrorToMainProcess(error, errorInfo);
 
     // Update state with error details
     this.setState({
       error,
       errorInfo,
     });
+  }
+
+  /**
+   * Log error to main process via IPC for audit logging
+   */
+  private logErrorToMainProcess(error: Error, errorInfo: ErrorInfo): void {
+    try {
+      // Check if justiceAPI is available
+      if (typeof window !== 'undefined' && window.justiceAPI && window.justiceAPI.logUIError) {
+        window.justiceAPI.logUIError({
+          error: error.message || 'Unknown error',
+          errorInfo: error.stack || 'No stack trace available',
+          componentStack: errorInfo.componentStack || 'No component stack available',
+          timestamp: new Date().toISOString(),
+          url: window.location.href,
+          userAgent: navigator.userAgent,
+        }).catch((logError) => {
+          // Silently fail if logging fails - we don't want to crash from logging
+          console.error('[ErrorBoundary] Failed to log error to main process:', logError);
+        });
+      } else {
+        console.warn('[ErrorBoundary] justiceAPI.logUIError not available');
+      }
+    } catch (logError) {
+      // Silently fail if logging fails
+      console.error('[ErrorBoundary] Exception while logging error:', logError);
+    }
   }
 
   handleReload = (): void => {
@@ -77,7 +105,12 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     if (this.state.hasError) {
       return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-red-50 px-4">
-          <div className="w-full max-w-2xl rounded-lg bg-white p-8 shadow-lg">
+          <div
+            className="w-full max-w-2xl rounded-lg bg-white p-8 shadow-lg"
+            role="alert"
+            aria-live="assertive"
+            aria-atomic="true"
+          >
             {/* Error Icon */}
             <div className="mb-6 flex items-center gap-3">
               <svg

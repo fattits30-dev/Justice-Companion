@@ -1702,7 +1702,62 @@ function setupIpcHandlers() {
     }
   );
 
-  errorLogger.logError('IPC handlers registered successfully (cases + evidence + AI + files + conversations + profile + models + facts + GDPR)', { type: 'info' });
+  // UI Error Logging
+  ipcMain.handle(
+    IPC_CHANNELS.LOG_UI_ERROR,
+    async (_, request: { errorData: any }) => {
+      try {
+        const { errorData } = request;
+        const db = databaseManager.getDatabase();
+        const auditLogger = new AuditLogger(db);
+
+        // Log UI error to audit trail
+        auditLogger.log({
+          eventType: 'ui.error',
+          userId: 'local-user',
+          resourceType: 'ui',
+          resourceId: 'renderer',
+          action: 'error',
+          details: {
+            error: errorData.error,
+            errorInfo: errorData.errorInfo,
+            componentStack: errorData.componentStack,
+            timestamp: errorData.timestamp,
+            url: errorData.url,
+            userAgent: errorData.userAgent,
+          },
+          success: false,
+        });
+
+        // Also log to console for development
+        console.error('[UI Error]', {
+          error: errorData.error,
+          componentStack: errorData.componentStack,
+          timestamp: errorData.timestamp,
+        });
+
+        // Log to error logger file
+        errorLogger.logError(new Error(errorData.error), {
+          context: 'ui:renderer',
+          componentStack: errorData.componentStack,
+          timestamp: errorData.timestamp,
+        });
+
+        return {
+          success: true,
+          logged: true,
+        };
+      } catch (error) {
+        errorLogger.logError(error as Error, { context: 'ipc:log-ui-error' });
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Failed to log UI error',
+        };
+      }
+    }
+  );
+
+  errorLogger.logError('IPC handlers registered successfully (cases + evidence + AI + files + conversations + profile + models + facts + GDPR + UI errors)', { type: 'info' });
 }
 
 // Prevent multiple instances - request single instance lock

@@ -7,6 +7,7 @@ import { DocumentsView } from './components/views/DocumentsView';
 import { SettingsView } from './components/views/SettingsView';
 import { DebugProvider } from './contexts/DebugContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { ViewErrorBoundary } from './components/ViewErrorBoundary';
 import { ThemeProvider } from './components/ThemeProvider';
 import { Toaster } from './components/ui/sonner';
 
@@ -42,21 +43,45 @@ function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [sidebarExpanded]);
 
-  // Render the appropriate view
+  // Render the appropriate view wrapped in ViewErrorBoundary
   const renderView = () => {
     switch (activeView) {
       case 'dashboard':
-        return <DashboardView onViewChange={setActiveView} />;
+        return (
+          <ViewErrorBoundary viewName="Dashboard" onNavigateToDashboard={() => setActiveView('dashboard')}>
+            <DashboardView onViewChange={setActiveView} />
+          </ViewErrorBoundary>
+        );
       case 'chat':
-        return <ChatWindow sidebarExpanded={sidebarExpanded} caseId={activeCaseId} />;
+        return (
+          <ViewErrorBoundary viewName="Chat" onNavigateToDashboard={() => setActiveView('dashboard')}>
+            <ChatWindow sidebarExpanded={sidebarExpanded} caseId={activeCaseId} />
+          </ViewErrorBoundary>
+        );
       case 'cases':
-        return <CasesView />;
+        return (
+          <ViewErrorBoundary viewName="Cases" onNavigateToDashboard={() => setActiveView('dashboard')}>
+            <CasesView />
+          </ViewErrorBoundary>
+        );
       case 'documents':
-        return <DocumentsView />;
+        return (
+          <ViewErrorBoundary viewName="Documents" onNavigateToDashboard={() => setActiveView('dashboard')}>
+            <DocumentsView />
+          </ViewErrorBoundary>
+        );
       case 'settings':
-        return <SettingsView />;
+        return (
+          <ViewErrorBoundary viewName="Settings" onNavigateToDashboard={() => setActiveView('dashboard')}>
+            <SettingsView />
+          </ViewErrorBoundary>
+        );
       default:
-        return <DashboardView onViewChange={setActiveView} />;
+        return (
+          <ViewErrorBoundary viewName="Dashboard" onNavigateToDashboard={() => setActiveView('dashboard')}>
+            <DashboardView onViewChange={setActiveView} />
+          </ViewErrorBoundary>
+        );
     }
   };
 

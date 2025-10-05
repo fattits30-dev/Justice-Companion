@@ -76,6 +76,9 @@ export const IPC_CHANNELS = {
   // GDPR Operations
   GDPR_EXPORT_USER_DATA: 'gdpr:exportUserData',
   GDPR_DELETE_USER_DATA: 'gdpr:deleteUserData',
+
+  // UI Error Logging
+  LOG_UI_ERROR: 'ui:logError',
 } as const;
 
 // IPC Request/Response types
@@ -505,6 +508,25 @@ export interface GDPRDeleteUserDataResponse {
   };
 }
 
+// UI Error Logging types
+export interface UIErrorData {
+  error: string;
+  errorInfo: string;
+  componentStack: string;
+  timestamp: string;
+  url?: string;
+  userAgent?: string;
+}
+
+export interface LogUIErrorRequest {
+  errorData: UIErrorData;
+}
+
+export interface LogUIErrorResponse {
+  success: true;
+  logged: boolean;
+}
+
 /**
  * Type-safe IPC API exposed to renderer process
  */
@@ -585,6 +607,9 @@ export interface JusticeCompanionAPI {
   // GDPR operations
   exportUserData(): Promise<IPCResponse<GDPRExportUserDataResponse>>;
   deleteUserData(confirmation: string): Promise<IPCResponse<GDPRDeleteUserDataResponse>>;
+
+  // UI Error Logging
+  logUIError(errorData: UIErrorData): Promise<IPCResponse<LogUIErrorResponse>>;
 }
 
 // Extend Window interface for TypeScript

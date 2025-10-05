@@ -2,6 +2,9 @@ import { useState } from 'react';
 import { FileText, Download, Printer, Eye, CheckCircle, AlertCircle, XCircle, Filter, Mail, Upload } from 'lucide-react';
 import { useEvidence } from '../../hooks/useEvidence';
 import { useCases } from '../../hooks/useCases';
+import { SkeletonCard } from '../ui/Skeleton';
+import { FileUploadModal } from '../FileUploadModal';
+import { toast } from 'sonner';
 import type { Evidence } from '../../models/Evidence';
 
 interface Document {
@@ -49,10 +52,14 @@ export function DocumentsView(): JSX.Element {
   const [filterCase, setFilterCase] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [selectedDocs, setSelectedDocs] = useState<Set<string>>(new Set());
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
   // Hooks for evidence and case data
-  const { evidence, loading, error } = useEvidence();
+  const { evidence, loading, error, fetchEvidence } = useEvidence();
   const { cases } = useCases();
+
+  // Get the first case ID for upload modal (or default to 1)
+  const defaultCaseId = cases.length > 0 ? cases[0].id : 1;
 
   // Map evidence to documents with case names
   const documents: Document[] = evidence.map((ev) => {
@@ -107,8 +114,8 @@ export function DocumentsView(): JSX.Element {
     return type.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
   };
 
-  // Show loading state
-  if (loading && documents.length === 0) {
+  // Show loading state with skeleton cards
+  if (loading) {
     return (
       <div className="flex-1 flex flex-col overflow-hidden bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950">
         {/* Legal Disclaimer Banner */}
@@ -124,12 +131,24 @@ export function DocumentsView(): JSX.Element {
           </div>
         </div>
 
-        {/* Loading State */}
-        <div className="flex-1 flex items-center justify-center p-8">
-          <div className="max-w-md text-center">
-            <div className="w-16 h-16 border-4 border-blue-600/30 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-blue-200">Loading documents...</p>
+        {/* Filter Bar Skeleton */}
+        <div className="bg-slate-900/50 border-b border-blue-800/30 px-4 py-2">
+          <div className="max-w-7xl mx-auto flex items-center gap-3 h-10" />
+        </div>
+
+        {/* Loading State with Skeleton Cards */}
+        <div
+          className="flex-1 overflow-y-auto p-6"
+          role="status"
+          aria-live="polite"
+          aria-busy="true"
+        >
+          <div className="w-full max-w-full px-4">
+            <div className="grid grid-cols-4 gap-6 w-full transition-opacity duration-300">
+              <SkeletonCard count={8} />
+            </div>
           </div>
+          <span className="sr-only">Loading documents...</span>
         </div>
       </div>
     );
@@ -199,7 +218,10 @@ export function DocumentsView(): JSX.Element {
             <p className="text-blue-200 mb-6">
               Upload evidence, contracts, witness statements, or other legal documents to get started organizing your case files.
             </p>
-            <button className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all font-medium">
+            <button
+              onClick={() => setIsUploadModalOpen(true)}
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all font-medium"
+            >
               Upload Your First Document
             </button>
             <p className="text-gray-400 text-sm mt-4">
@@ -253,6 +275,16 @@ export function DocumentsView(): JSX.Element {
           </select>
 
           <div className="flex-1" />
+
+          {/* Upload Evidence Button */}
+          <button
+            onClick={() => setIsUploadModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-all text-sm font-medium"
+            title="Upload Evidence"
+          >
+            <Upload className="w-4 h-4" />
+            <span>Upload Evidence</span>
+          </button>
 
           {selectedDocs.size > 0 ? (
             <div className="flex items-center gap-3">
@@ -416,6 +448,17 @@ export function DocumentsView(): JSX.Element {
           </div>
         </div>
       </div>
+
+      {/* File Upload Modal */}
+      <FileUploadModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        caseId={defaultCaseId}
+        onUploadComplete={() => {
+          fetchEvidence();
+          toast.success('Evidence uploaded successfully!');
+        }}
+      />
     </div>
   );
 }

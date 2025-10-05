@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { ChevronDown, FileText } from 'lucide-react';
 import { useCases } from '../../hooks/useCases';
+import { SkeletonTree } from '../ui/Skeleton';
 import type { Case } from '../../models/Case';
 
 interface TimelineEvent {
@@ -120,7 +121,7 @@ function transformCaseToTreeData(caseItem: Case): CaseData {
 }
 
 export function CasesView(): JSX.Element {
-  const { cases /* loading, error */ } = useCases();
+  const { cases, loading, error } = useCases();
   const [selectedCaseId, setSelectedCaseId] = useState<number | null>(null);
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
 
@@ -301,6 +302,70 @@ export function CasesView(): JSX.Element {
 
     return elements;
   };
+
+  // Show loading state with skeleton tree
+  if (loading) {
+    return (
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Case Selector Skeleton */}
+        <div className="h-20 bg-slate-900/50 border-b border-blue-800/30 flex items-center px-6">
+          <div className="w-64 h-10 bg-slate-800/50 rounded-lg animate-pulse" />
+        </div>
+
+        {/* Timeline Skeleton */}
+        <div className="h-28 bg-gradient-to-b from-slate-900/30 to-transparent border-b border-blue-800/20 px-6 py-4">
+          <div className="max-w-5xl mx-auto">
+            <div className="relative h-full flex items-center">
+              <div className="absolute left-0 right-0 h-1 bg-slate-700/50 rounded-full" style={{ top: '40px' }} />
+              <div className="relative w-full flex justify-between">
+                {Array.from({ length: 3 }).map((_, index) => (
+                  <div key={index} className="flex flex-col items-center" style={{ flex: 1 }}>
+                    <div className="w-4 h-4 rounded-full bg-slate-600/50 animate-pulse" />
+                    <div className="mt-3 space-y-1">
+                      <div className="h-3 w-20 bg-slate-700/50 rounded animate-pulse" />
+                      <div className="h-2 w-16 bg-slate-700/30 rounded animate-pulse" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Tree Skeleton */}
+        <div
+          className="flex-1 overflow-auto bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950"
+          role="status"
+          aria-live="polite"
+          aria-busy="true"
+        >
+          <SkeletonTree />
+          <span className="sr-only">Loading case tree...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 p-8">
+        <div className="max-w-md text-center">
+          <div className="w-24 h-24 bg-red-600/20 rounded-full flex items-center justify-center mx-auto mb-6">
+            <FileText className="w-12 h-12 text-red-400" />
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-3">Error Loading Cases</h2>
+          <p className="text-red-200 mb-6">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all font-medium"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // Show empty state when no cases
   if (!selectedCase) {

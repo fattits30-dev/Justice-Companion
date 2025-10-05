@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { User, Bell, Lock, Database, Info, Brain, Briefcase } from 'lucide-react';
 import { ConfirmDialog } from '../ConfirmDialog';
 import { useToast } from '../../hooks/useToast';
+import { SkeletonText } from '../ui/Skeleton';
+import { LoadingSpinner } from '../ui/LoadingSpinner';
 import type { UserProfile } from '../../models/UserProfile';
 
 export function SettingsView(): JSX.Element {
@@ -13,6 +15,8 @@ export function SettingsView(): JSX.Element {
   const [editedName, setEditedName] = useState('');
   const [editedEmail, setEditedEmail] = useState('');
   const [showSaveSuccess, setShowSaveSuccess] = useState(false);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
 
   // RAG toggle state - persisted in localStorage
   const [ragEnabled, setRagEnabled] = useState(() => {
@@ -130,9 +134,11 @@ export function SettingsView(): JSX.Element {
   useEffect(() => {
     const loadProfile = async () => {
       if (!window.justiceAPI) {
+        setIsLoadingProfile(false);
         return;
       }
 
+      setIsLoadingProfile(true);
       try {
         const result = await window.justiceAPI.getUserProfile();
         if (result.success && result.data) {
@@ -142,6 +148,8 @@ export function SettingsView(): JSX.Element {
         }
       } catch (error) {
         console.error('Failed to load user profile:', error);
+      } finally {
+        setIsLoadingProfile(false);
       }
     };
 
@@ -242,6 +250,7 @@ export function SettingsView(): JSX.Element {
       return;
     }
 
+    setIsSavingProfile(true);
     try {
       const result = await window.justiceAPI.updateUserProfile({
         name: editedName,
@@ -256,6 +265,9 @@ export function SettingsView(): JSX.Element {
       }
     } catch (error) {
       console.error('Failed to update profile:', error);
+      toast.error('Failed to update profile. Please try again.');
+    } finally {
+      setIsSavingProfile(false);
     }
   };
 
@@ -324,7 +336,12 @@ export function SettingsView(): JSX.Element {
             title="Profile"
             description="Manage your personal information"
           >
-            {isEditingProfile ? (
+            {isLoadingProfile ? (
+              <div className="space-y-3" role="status" aria-live="polite" aria-busy="true">
+                <SkeletonText lines={2} />
+                <span className="sr-only">Loading profile...</span>
+              </div>
+            ) : isEditingProfile ? (
               <div className="space-y-3">
                 <div>
                   <label className="block text-xs font-medium text-white mb-1">Name</label>
@@ -334,6 +351,7 @@ export function SettingsView(): JSX.Element {
                     onChange={(e) => setEditedName(e.target.value)}
                     className="w-full px-3 py-1.5 text-xs bg-slate-800/50 border border-blue-700/30 rounded-lg text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
                     placeholder="Enter your name"
+                    disabled={isSavingProfile}
                   />
                 </div>
                 <div>
@@ -344,14 +362,23 @@ export function SettingsView(): JSX.Element {
                     onChange={(e) => setEditedEmail(e.target.value)}
                     className="w-full px-3 py-1.5 text-xs bg-slate-800/50 border border-blue-700/30 rounded-lg text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
                     placeholder="Enter your email"
+                    disabled={isSavingProfile}
                   />
                 </div>
                 <div className="flex gap-2">
                   <button
                     onClick={handleSaveProfile}
-                    className="flex-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs font-medium"
+                    disabled={isSavingProfile}
+                    className="flex-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
-                    Save
+                    {isSavingProfile ? (
+                      <>
+                        <LoadingSpinner size="sm" color="white" />
+                        <span>Saving...</span>
+                      </>
+                    ) : (
+                      'Save'
+                    )}
                   </button>
                   <button
                     onClick={() => {
@@ -359,7 +386,8 @@ export function SettingsView(): JSX.Element {
                       setEditedName(userProfile?.name || '');
                       setEditedEmail(userProfile?.email || '');
                     }}
-                    className="flex-1 px-3 py-1.5 bg-slate-700 text-white rounded-lg hover:bg-slate-600 transition-colors text-xs font-medium"
+                    disabled={isSavingProfile}
+                    className="flex-1 px-3 py-1.5 bg-slate-700 text-white rounded-lg hover:bg-slate-600 transition-colors text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Cancel
                   </button>
