@@ -29,7 +29,8 @@ async function callIPC(channel: string, args: any[]) {
     throw new Error(`IPC call failed: ${response.statusText}`);
   }
 
-  return response.json();
+  const data = await response.json();
+  return data.result; // Extract result from wrapper
 }
 
 async function createCase(input: CreateCaseInput) {
