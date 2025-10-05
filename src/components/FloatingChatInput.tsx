@@ -157,8 +157,8 @@ export function FloatingChatInput({
   };
 
   return (
-    <div className={`fixed bottom-6 w-full ${isSidebarOpen ? 'max-w-3xl' : 'max-w-5xl'} px-6 z-50 animate-slide-up transition-all duration-300 ${
-      isSidebarOpen ? 'left-[calc(50%+160px)] -translate-x-1/2' : 'left-1/2 -translate-x-1/2'
+    <div className={`fixed bottom-6 w-full max-w-4xl px-6 z-50 animate-slide-up transition-all duration-300 ${
+      isSidebarOpen ? 'left-[calc(50%+160px)] -translate-x-1/2' : 'left-[calc(50%+32px)] -translate-x-1/2'
     }`}>
       <div className="bg-white rounded-2xl shadow-2xl border border-gray-200">
         {/* File Preview (if file uploaded) */}

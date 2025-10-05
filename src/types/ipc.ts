@@ -7,6 +7,7 @@ import type {
   ConversationWithMessages,
 } from '../models/ChatConversation';
 import type { UserProfile, UpdateUserProfileInput } from '../models/UserProfile';
+import type { Evidence, CreateEvidenceInput, UpdateEvidenceInput } from '../models/Evidence';
 
 /**
  * IPC Channel definitions for type-safe communication
@@ -23,6 +24,14 @@ export const IPC_CHANNELS = {
   CASE_DELETE: 'case:delete',
   CASE_CLOSE: 'case:close',
   CASE_GET_STATISTICS: 'case:getStatistics',
+
+  // Evidence Management
+  EVIDENCE_CREATE: 'evidence:create',
+  EVIDENCE_GET_BY_ID: 'evidence:getById',
+  EVIDENCE_GET_ALL: 'evidence:getAll',
+  EVIDENCE_GET_BY_CASE: 'evidence:getByCaseId',
+  EVIDENCE_UPDATE: 'evidence:update',
+  EVIDENCE_DELETE: 'evidence:delete',
 
   // AI Operations
   AI_CHECK_STATUS: 'ai:checkStatus',
@@ -46,6 +55,10 @@ export const IPC_CHANNELS = {
   // File Operations
   FILE_SELECT: 'file:select',
   FILE_UPLOAD: 'file:upload',
+  FILE_VIEW: 'file:view',
+  FILE_DOWNLOAD: 'file:download',
+  FILE_PRINT: 'file:print',
+  FILE_EMAIL: 'file:email',
 
   // Chat Conversation Operations
   CONVERSATION_CREATE: 'conversation:create',
@@ -126,6 +139,61 @@ export interface CaseGetStatisticsResponse {
     totalCases: number;
     statusCounts: Record<CaseStatus, number>;
   };
+}
+
+// Evidence IPC Request/Response types
+export interface EvidenceCreateRequest {
+  input: CreateEvidenceInput;
+}
+
+export interface EvidenceCreateResponse {
+  success: true;
+  data: Evidence;
+}
+
+export interface EvidenceGetByIdRequest {
+  id: number;
+}
+
+export interface EvidenceGetByIdResponse {
+  success: true;
+  data: Evidence | null;
+}
+
+export interface EvidenceGetAllRequest {
+  evidenceType?: string;
+}
+
+export interface EvidenceGetAllResponse {
+  success: true;
+  data: Evidence[];
+}
+
+export interface EvidenceGetByCaseRequest {
+  caseId: number;
+}
+
+export interface EvidenceGetByCaseResponse {
+  success: true;
+  data: Evidence[];
+}
+
+export interface EvidenceUpdateRequest {
+  id: number;
+  input: UpdateEvidenceInput;
+}
+
+export interface EvidenceUpdateResponse {
+  success: true;
+  data: Evidence | null;
+}
+
+export interface EvidenceDeleteRequest {
+  id: number;
+}
+
+export interface EvidenceDeleteResponse {
+  success: true;
 }
 
 // Error response (used when IPC handler fails)
@@ -271,6 +339,42 @@ export interface FileUploadResponse {
   error?: string;
 }
 
+export interface FileViewRequest {
+  filePath: string;
+}
+
+export interface FileViewResponse {
+  success: true;
+}
+
+export interface FileDownloadRequest {
+  filePath: string;
+  fileName?: string;
+}
+
+export interface FileDownloadResponse {
+  success: true;
+  savedPath: string;
+}
+
+export interface FilePrintRequest {
+  filePath: string;
+}
+
+export interface FilePrintResponse {
+  success: true;
+}
+
+export interface FileEmailRequest {
+  filePaths: string[];
+  subject?: string;
+  body?: string;
+}
+
+export interface FileEmailResponse {
+  success: true;
+}
+
 // Chat Conversation IPC Request/Response types
 export interface ConversationCreateRequest {
   input: CreateConversationInput;
@@ -383,9 +487,24 @@ export interface JusticeCompanionAPI {
   onAIStreamError(callback: (error: string) => void): () => void;
   onAIStatusUpdate(callback: (status: string) => void): () => void;
 
+  // Evidence operations
+  createEvidence(input: CreateEvidenceInput): Promise<IPCResponse<EvidenceCreateResponse>>;
+  getEvidenceById(id: number): Promise<IPCResponse<EvidenceGetByIdResponse>>;
+  getAllEvidence(evidenceType?: string): Promise<IPCResponse<EvidenceGetAllResponse>>;
+  getEvidenceByCaseId(caseId: number): Promise<IPCResponse<EvidenceGetByCaseResponse>>;
+  updateEvidence(
+    id: number,
+    input: UpdateEvidenceInput
+  ): Promise<IPCResponse<EvidenceUpdateResponse>>;
+  deleteEvidence(id: number): Promise<IPCResponse<EvidenceDeleteResponse>>;
+
   // File operations
   selectFile(request?: FileSelectRequest): Promise<IPCResponse<FileSelectResponse>>;
   uploadFile(filePath: string): Promise<IPCResponse<FileUploadResponse>>;
+  viewFile(filePath: string): Promise<IPCResponse<FileViewResponse>>;
+  downloadFile(filePath: string, fileName?: string): Promise<IPCResponse<FileDownloadResponse>>;
+  printFile(filePath: string): Promise<IPCResponse<FilePrintResponse>>;
+  emailFiles(filePaths: string[], subject?: string, body?: string): Promise<IPCResponse<FileEmailResponse>>;
 
   // Chat Conversation operations
   createConversation(input: CreateConversationInput): Promise<IPCResponse<ConversationCreateResponse>>;

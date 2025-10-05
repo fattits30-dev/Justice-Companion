@@ -1,13 +1,13 @@
 import React from 'react';
-import { LayoutDashboard, Briefcase, FileText, Settings, LucideIcon } from 'lucide-react';
+import { LayoutDashboard, MessageSquare, Briefcase, FileText, Settings, LucideIcon } from 'lucide-react';
 
 interface SidebarNavigationProps {
-  activeView: 'dashboard' | 'cases' | 'documents' | 'settings';
-  onViewChange: (view: 'dashboard' | 'cases' | 'documents' | 'settings') => void;
+  activeView: 'dashboard' | 'chat' | 'cases' | 'documents' | 'settings';
+  onViewChange: (view: 'dashboard' | 'chat' | 'cases' | 'documents' | 'settings') => void;
 }
 
 interface NavigationItem {
-  id: 'dashboard' | 'cases' | 'documents' | 'settings';
+  id: 'dashboard' | 'chat' | 'cases' | 'documents' | 'settings';
   label: string;
   icon: LucideIcon;
 }
@@ -17,6 +17,11 @@ const navigationItems: NavigationItem[] = [
     id: 'dashboard',
     label: 'Dashboard',
     icon: LayoutDashboard,
+  },
+  {
+    id: 'chat',
+    label: 'Chat',
+    icon: MessageSquare,
   },
   {
     id: 'cases',

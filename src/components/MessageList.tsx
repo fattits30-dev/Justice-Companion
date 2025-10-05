@@ -3,6 +3,7 @@ import type { ChatMessage } from '../types/ai';
 import type { AILoadingState, ProgressStage } from '../hooks/useAI';
 import { MessageBubble } from './MessageBubble';
 import { StreamingIndicator } from './StreamingIndicator';
+import { ChatPostItNotes } from './ChatPostItNotes';
 
 /**
  * Props for MessageList component
@@ -46,6 +47,9 @@ export function MessageList({
   return (
     <div className="flex-1 overflow-y-auto p-4">
       <div className="mx-auto space-y-4 pb-32">
+        {/* Post-it Notes - Persistent at top */}
+        <ChatPostItNotes />
+
         {/* Empty state */}
         {messages.length === 0 && !isStreaming && (
           <div className="flex h-full items-center justify-center text-center">

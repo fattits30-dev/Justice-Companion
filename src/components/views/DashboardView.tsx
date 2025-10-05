@@ -1,6 +1,46 @@
 import { MessageSquare, Scale, FileText, TrendingUp } from 'lucide-react';
+import { useCases } from '../../hooks/useCases';
+import { useMemo } from 'react';
+import { DashboardEmptyState } from '../ui/DashboardEmptyState';
 
-export function DashboardView(): JSX.Element {
+interface DashboardViewProps {
+  onViewChange: (view: 'dashboard' | 'chat' | 'cases' | 'documents' | 'settings') => void;
+}
+
+export function DashboardView({ onViewChange }: DashboardViewProps): JSX.Element {
+  const { cases, loading, error } = useCases();
+
+  const stats = useMemo(() => {
+    if (!cases || cases.length === 0) {
+      return {
+        totalCases: 0,
+        activeCases: 0,
+        documentsUploaded: 0,
+        sessionsCount: 0,
+      };
+    }
+
+    return {
+      totalCases: cases.length,
+      activeCases: cases.filter(c => c.status === 'active').length,
+      documentsUploaded: 0,
+      sessionsCount: 0,
+    };
+  }, [cases]);
+
+  // Show empty state when no cases exist (and not loading)
+  if (!loading && cases && cases.length === 0) {
+    return (
+      <div className="flex-1 flex flex-col overflow-hidden bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950">
+        <DashboardEmptyState
+          onCreateCase={() => onViewChange('cases')}
+          onStartChat={() => onViewChange('chat')}
+          onUploadDocument={() => onViewChange('documents')}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 overflow-y-auto p-8">
       <div className="max-w-6xl mx-auto">
@@ -10,33 +50,40 @@ export function DashboardView(): JSX.Element {
           <p className="text-blue-200">Your legal information companion overview</p>
         </div>
 
+        {/* Error State */}
+        {error && (
+          <div className="mb-6 bg-red-900/30 border border-red-700/50 rounded-lg p-4 text-red-200">
+            Failed to load dashboard data: {error}
+          </div>
+        )}
+
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <StatCard
             icon={MessageSquare}
             label="Total Chats"
-            value="0"
+            value={loading ? '...' : stats.sessionsCount.toString()}
             trend="+0 this week"
             color="blue"
           />
           <StatCard
             icon={Scale}
             label="Active Cases"
-            value="0"
-            trend="+0 this month"
+            value={loading ? '...' : stats.activeCases.toString()}
+            trend={`${stats.totalCases} total`}
             color="indigo"
           />
           <StatCard
             icon={FileText}
             label="Documents"
-            value="0"
+            value={loading ? '...' : stats.documentsUploaded.toString()}
             trend="+0 uploaded"
             color="purple"
           />
           <StatCard
             icon={TrendingUp}
             label="Sessions"
-            value="0"
+            value={loading ? '...' : stats.sessionsCount.toString()}
             trend="+0 this week"
             color="cyan"
           />
@@ -50,16 +97,19 @@ export function DashboardView(): JSX.Element {
               icon={MessageSquare}
               label="Start New Chat"
               description="Get instant legal information"
+              onClick={() => onViewChange('chat')}
             />
             <QuickActionButton
               icon={Scale}
               label="Create Case"
               description="Track your legal matter"
+              onClick={() => onViewChange('cases')}
             />
             <QuickActionButton
               icon={FileText}
               label="Upload Document"
               description="Analyze legal documents"
+              onClick={() => onViewChange('documents')}
             />
           </div>
         </div>
@@ -106,11 +156,15 @@ interface QuickActionButtonProps {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   description: string;
+  onClick: () => void;
 }
 
-function QuickActionButton({ icon: Icon, label, description }: QuickActionButtonProps): JSX.Element {
+function QuickActionButton({ icon: Icon, label, description, onClick }: QuickActionButtonProps): JSX.Element {
   return (
-    <button className="flex items-start gap-4 p-4 bg-blue-900/30 hover:bg-blue-800/40 border border-blue-700/30 rounded-lg transition-all text-left group">
+    <button
+      onClick={onClick}
+      className="flex items-start gap-4 p-4 bg-blue-900/30 hover:bg-blue-800/40 border border-blue-700/30 rounded-lg transition-all text-left group"
+    >
       <div className="p-3 bg-blue-600/20 rounded-lg group-hover:bg-blue-600/30 transition-colors">
         <Icon className="w-6 h-6 text-blue-300" />
       </div>

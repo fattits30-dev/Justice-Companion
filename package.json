@@ -22,7 +22,8 @@
     "db:migrate:status": "tsx scripts/migration-status.ts",
     "db:migrate:rollback": "tsx scripts/rollback-migration.ts",
     "db:backup": "tsx scripts/backup-database.ts",
-    "db:backup:list": "tsx scripts/list-backups.ts"
+    "db:backup:list": "tsx scripts/list-backups.ts",
+    "test-data": "tsx scripts/generate-test-data.ts"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.56.0",

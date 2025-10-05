@@ -1,22 +1,27 @@
 import { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
-import { SidebarNavigation } from './SidebarNavigation';
+import { LayoutDashboard, MessageSquare, Briefcase, FileText, Settings, Menu, ChevronLeft } from 'lucide-react';
 import SidebarCaseContext from './SidebarCaseContext';
-import { SidebarProfile } from './SidebarProfile';
 import { ConfirmDialog } from './ConfirmDialog';
 import type { ChatConversation } from '../models/ChatConversation';
 import type { UserProfile } from '../models/UserProfile';
 
 interface SidebarProps {
-  isOpen: boolean;
-  onClose: () => void;
+  isExpanded: boolean;
+  onToggle: () => void;
   onConversationLoad: (conversationId: number) => Promise<void>;
-  activeView: 'dashboard' | 'cases' | 'documents' | 'settings';
-  onViewChange: (view: 'dashboard' | 'cases' | 'documents' | 'settings') => void;
+  activeView: 'dashboard' | 'chat' | 'cases' | 'documents' | 'settings';
+  onViewChange: (view: 'dashboard' | 'chat' | 'cases' | 'documents' | 'settings') => void;
 }
 
-export function Sidebar({ isOpen, onClose, onConversationLoad, activeView, onViewChange }: SidebarProps): JSX.Element | null {
-  // State management
+const navigationItems = [
+  { id: 'dashboard' as const, label: 'Dashboard', icon: LayoutDashboard },
+  { id: 'chat' as const, label: 'Chat', icon: MessageSquare },
+  { id: 'cases' as const, label: 'Cases', icon: Briefcase },
+  { id: 'documents' as const, label: 'Documents', icon: FileText },
+  { id: 'settings' as const, label: 'Settings', icon: Settings },
+];
+
+export function Sidebar({ isExpanded, onToggle, onConversationLoad, activeView, onViewChange }: SidebarProps): JSX.Element {
   const [activeCaseId, setActiveCaseId] = useState<number | null>(null);
   const [activeConversationId, setActiveConversationId] = useState<number | null>(null);
   const [recentChats, setRecentChats] = useState<ChatConversation[]>([]);
@@ -24,23 +29,20 @@ export function Sidebar({ isOpen, onClose, onConversationLoad, activeView, onVie
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [conversationToDelete, setConversationToDelete] = useState<number | null>(null);
 
-  // Data loading on mount
+  // Data loading when expanded
   useEffect(() => {
     const loadInitialData = async () => {
-      // Safety check: ensure window.justiceAPI is available
       if (!window.justiceAPI) {
         console.error('window.justiceAPI is not available');
         return;
       }
 
       try {
-        // Fetch user profile
         const profileResult = await window.justiceAPI.getUserProfile();
         if (profileResult.success) {
           setUserProfile(profileResult.data);
         }
 
-        // Fetch recent conversations (general chat, no case filter)
         const conversationsResult = await window.justiceAPI.getRecentConversations(null, 10);
         if (conversationsResult.success) {
           setRecentChats(conversationsResult.data);
@@ -50,23 +52,16 @@ export function Sidebar({ isOpen, onClose, onConversationLoad, activeView, onVie
       }
     };
 
-    if (isOpen) {
+    if (isExpanded) {
       loadInitialData();
     }
-  }, [isOpen]);
-
-  // Event handlers - removed local handleViewChange, use prop instead
+  }, [isExpanded]);
 
   const handleCaseChange = async (caseId: number | null) => {
     setActiveCaseId(caseId);
-
-    if (!window.justiceAPI) {
-      console.error('window.justiceAPI is not available');
-      return;
-    }
+    if (!window.justiceAPI) return;
 
     try {
-      // Fetch recent chats for the selected case
       const result = await window.justiceAPI.getRecentConversations(caseId, 10);
       if (result.success) {
         setRecentChats(result.data);
@@ -78,15 +73,11 @@ export function Sidebar({ isOpen, onClose, onConversationLoad, activeView, onVie
 
   const handleConversationSelect = async (conversationId: number) => {
     setActiveConversationId(conversationId);
-    // Load conversation messages in the main chat window
     await onConversationLoad(conversationId);
   };
 
   const handleNewChat = async () => {
-    if (!window.justiceAPI) {
-      console.error('window.justiceAPI is not available');
-      return;
-    }
+    if (!window.justiceAPI) return;
 
     try {
       const result = await window.justiceAPI.createConversation({
@@ -95,18 +86,12 @@ export function Sidebar({ isOpen, onClose, onConversationLoad, activeView, onVie
       });
 
       if (result.success) {
-        // Add to recent chats at the top
         setRecentChats(prev => [result.data, ...prev]);
         setActiveConversationId(result.data.id);
       }
     } catch (error) {
       console.error('Failed to create new chat:', error);
     }
-  };
-
-  const handleProfileClick = () => {
-    // TODO: Open profile modal/settings
-    console.log('Profile clicked - future: open profile modal');
   };
 
   const handleDeleteConversation = (conversationId: number) => {
@@ -116,7 +101,6 @@ export function Sidebar({ isOpen, onClose, onConversationLoad, activeView, onVie
 
   const confirmDelete = async () => {
     if (!window.justiceAPI || conversationToDelete === null) {
-      console.error('window.justiceAPI is not available or no conversation selected');
       setDeleteConfirmOpen(false);
       setConversationToDelete(null);
       return;
@@ -125,15 +109,10 @@ export function Sidebar({ isOpen, onClose, onConversationLoad, activeView, onVie
     try {
       const result = await window.justiceAPI.deleteConversation(conversationToDelete);
       if (result.success) {
-        // Remove from recent chats
         setRecentChats(prev => prev.filter(chat => chat.id !== conversationToDelete));
-
-        // Clear active conversation if it was deleted
         if (activeConversationId === conversationToDelete) {
           setActiveConversationId(null);
         }
-      } else {
-        console.error('Failed to delete conversation');
       }
     } catch (error) {
       console.error('Error deleting conversation:', error);
@@ -144,17 +123,10 @@ export function Sidebar({ isOpen, onClose, onConversationLoad, activeView, onVie
   };
 
   const handleRenameConversation = async (conversationId: number, newTitle: string) => {
-    if (!window.justiceAPI || !newTitle.trim()) {
-      console.error('window.justiceAPI is not available or title is empty');
-      return;
-    }
+    if (!window.justiceAPI || !newTitle.trim()) return;
 
     try {
-      // Update conversation title via IPC
-      // Note: Need to add updateConversation IPC handler
       console.log(`Rename conversation ${conversationId} to "${newTitle}"`);
-
-      // Optimistically update UI
       setRecentChats(prev =>
         prev.map(chat =>
           chat.id === conversationId ? { ...chat, title: newTitle } : chat
@@ -165,53 +137,121 @@ export function Sidebar({ isOpen, onClose, onConversationLoad, activeView, onVie
     }
   };
 
-  if (!isOpen) {
-    return null;
-  }
+  // Get user initials
+  const getUserInitials = () => {
+    if (!userProfile?.name) return 'U';
+    return userProfile.name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   return (
-    <div className="fixed inset-y-0 left-0 w-80 bg-gradient-to-b from-slate-900 via-blue-950 to-slate-900 border-r border-blue-800/30 flex flex-col z-50 shadow-2xl">
-      {/* Header with logo and close button */}
-      <div className="p-4 border-b border-blue-800/30 flex items-center justify-between bg-slate-900/50">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg ring-2 ring-blue-400/20">
-            <span className="text-white font-bold text-base">⚖️</span>
-          </div>
-          <div>
-            <h1 className="text-base font-bold text-white tracking-tight">Justice Companion</h1>
-            <p className="text-xs text-blue-300">Here to help</p>
-          </div>
+    <>
+      {/* Sidebar - always visible, width changes based on isExpanded */}
+      <div className={`fixed inset-y-0 left-0 bg-gradient-to-b from-slate-900 via-blue-950 to-slate-900 border-r border-blue-800/30 flex flex-col z-50 shadow-2xl transition-all duration-300 ${
+        isExpanded ? 'w-80' : 'w-16'
+      }`}>
+        {/* Logo - always visible at top */}
+        <div className="p-3 border-b border-blue-800/30 bg-slate-900/50 flex items-center justify-center">
+          {isExpanded ? (
+            <div className="flex items-center space-x-3 w-full">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg ring-2 ring-blue-400/20">
+                <span className="text-white font-bold text-base">⚖️</span>
+              </div>
+              <div className="flex-1">
+                <h1 className="text-base font-bold text-white tracking-tight">Justice Companion</h1>
+                <p className="text-xs text-blue-300">Here to help</p>
+              </div>
+            </div>
+          ) : (
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg ring-2 ring-blue-400/20">
+              <span className="text-white font-bold text-base">⚖️</span>
+            </div>
+          )}
         </div>
-        <button
-          onClick={onClose}
-          className="p-2 hover:bg-blue-800/30 rounded-lg transition-colors"
-          aria-label="Close menu"
-        >
-          <X className="w-5 h-5 text-blue-200" />
-        </button>
-      </div>
 
-      {/* Navigation */}
-      <div className="border-b border-blue-800/30 p-4">
-        <SidebarNavigation activeView={activeView} onViewChange={onViewChange} />
-      </div>
+        {/* Navigation */}
+        <nav className="flex-1 p-2 overflow-y-auto">
+          {/* Toggle Button - First Item */}
+          <button
+            onClick={onToggle}
+            className="w-full flex items-center gap-3 py-3 px-3 rounded-lg transition-all mb-2 text-blue-100 hover:bg-blue-800/30 border-b border-blue-800/20 pb-3"
+            title={isExpanded ? 'Minimize sidebar' : 'Expand sidebar'}
+          >
+            {isExpanded ? (
+              <>
+                <ChevronLeft size={20} className="flex-shrink-0" />
+                <span className="font-medium">Minimize</span>
+              </>
+            ) : (
+              <Menu size={20} className="flex-shrink-0" />
+            )}
+          </button>
 
-      {/* Scrollable Middle Section - Case Context & Recent Chats */}
-      <div className="flex-1 overflow-y-auto">
-        <SidebarCaseContext
-          activeCaseId={activeCaseId}
-          activeConversationId={activeConversationId}
-          recentChats={recentChats}
-          onCaseChange={handleCaseChange}
-          onConversationSelect={handleConversationSelect}
-          onNewChat={handleNewChat}
-          onDeleteConversation={handleDeleteConversation}
-          onRenameConversation={handleRenameConversation}
-        />
-      </div>
+          {/* Navigation Items */}
+          {navigationItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeView === item.id;
 
-      {/* Profile at bottom (sticky handled in component) */}
-      <SidebarProfile profile={userProfile} onProfileClick={handleProfileClick} />
+            return (
+              <button
+                key={item.id}
+                onClick={() => onViewChange(item.id)}
+                className={`w-full flex items-center gap-3 py-3 px-3 rounded-lg transition-all mb-1 ${
+                  isActive
+                    ? 'bg-blue-600/20 text-blue-300 shadow-lg'
+                    : 'text-blue-100 hover:bg-blue-800/30'
+                }`}
+                title={isExpanded ? undefined : item.label}
+              >
+                <Icon size={20} className="flex-shrink-0" />
+                {isExpanded && <span className="font-medium">{item.label}</span>}
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* Case Context - only when expanded */}
+        {isExpanded && (
+          <div className="border-t border-blue-800/30 overflow-y-auto max-h-64">
+            <SidebarCaseContext
+              activeCaseId={activeCaseId}
+              activeConversationId={activeConversationId}
+              recentChats={recentChats}
+              onCaseChange={handleCaseChange}
+              onConversationSelect={handleConversationSelect}
+              onNewChat={handleNewChat}
+              onDeleteConversation={handleDeleteConversation}
+              onRenameConversation={handleRenameConversation}
+            />
+          </div>
+        )}
+
+        {/* Profile - always visible */}
+        <div className="border-t border-blue-800/30 p-3 bg-slate-900/50">
+          <button
+            onClick={onToggle}
+            className={`w-full flex items-center gap-3 hover:bg-blue-800/30 rounded-lg transition-colors p-2 ${
+              !isExpanded && 'justify-center'
+            }`}
+            title={isExpanded ? undefined : userProfile?.name || 'User Profile'}
+          >
+            {/* Profile Picture/Initials */}
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold shadow-lg">
+              {getUserInitials()}
+            </div>
+            {isExpanded && (
+              <div className="flex-1 text-left">
+                <div className="text-sm font-medium text-white">{userProfile?.name || 'User'}</div>
+                <div className="text-xs text-blue-300">{userProfile?.email || 'user@example.com'}</div>
+              </div>
+            )}
+          </button>
+        </div>
+      </div>
 
       {/* Delete Confirmation Dialog */}
       <ConfirmDialog
@@ -227,6 +267,6 @@ export function Sidebar({ isOpen, onClose, onConversationLoad, activeView, onVie
           setConversationToDelete(null);
         }}
       />
-    </div>
+    </>
   );
 }
