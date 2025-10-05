@@ -502,7 +502,7 @@ export class LegalAPIService {
    */
   async searchCaseLaw(
     keywords: string[],
-    category: string = 'general'
+    category: string = 'general',
   ): Promise<CaseResult[]> {
     try {
       // Build improved query with quoted phrases for multi-word terms
@@ -526,7 +526,7 @@ export class LegalAPIService {
 
         console.log(
           `[LEGAL API] Filtering Case Law by courts for category "${category}":`,
-          relevantCourts
+          relevantCourts,
         );
       }
 
@@ -594,12 +594,12 @@ export class LegalAPIService {
   private async fetchWithRetry(
     url: string,
     options: RequestInit = {},
-    attempt: number = 0
+    attempt: number = 0,
   ): Promise<Response> {
     const controller = new AbortController();
     const timeoutId = setTimeout(
       () => controller.abort(),
-      API_CONFIG.TIMEOUT_MS
+      API_CONFIG.TIMEOUT_MS,
     );
 
     try {

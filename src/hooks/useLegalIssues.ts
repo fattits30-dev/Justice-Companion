@@ -43,7 +43,7 @@ export function useLegalIssues(caseId: number) {
       const result = await window.electron.legalIssues.update(id, input);
       if (result.success && result.data) {
         setLegalIssues((prev) =>
-          prev.map((issue) => (issue.id === id ? result.data! : issue))
+          prev.map((issue) => (issue.id === id ? result.data! : issue)),
         );
         return result.data;
       } else {

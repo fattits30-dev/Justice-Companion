@@ -18,7 +18,7 @@ export class ErrorLogger {
     logDir: string = 'logs',
     fileName: string = 'errors.log',
     maxFileSizeKB: number = 500, // 500KB max per file
-    maxBackups: number = 3 // Keep 3 backup files
+    maxBackups: number = 3, // Keep 3 backup files
   ) {
     // Ensure logs directory exists
     if (!fs.existsSync(logDir)) {

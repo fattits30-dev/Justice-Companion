@@ -65,7 +65,9 @@ export class TestDatabaseHelper {
    * Clear all data from tables (useful for test isolation)
    */
   clearAllTables(): void {
-    if (!this.db) return;
+    if (!this.db) {
+      return;
+    }
 
     // Delete in reverse foreign key order to avoid constraint violations
     const tables = [

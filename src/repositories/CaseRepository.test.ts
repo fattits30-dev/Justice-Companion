@@ -174,7 +174,7 @@ describe('CaseRepository with Encryption', () => {
       const result = db
         .prepare(
           `INSERT INTO cases (title, case_type, description, status)
-         VALUES (?, ?, ?, ?)`
+         VALUES (?, ?, ?, ?)`,
         )
         .run('Legacy Case', 'consumer', 'This is plaintext from old version', 'active');
 

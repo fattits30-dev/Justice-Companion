@@ -60,8 +60,8 @@ function transformCaseToTreeData(caseItem: Case): CaseData {
             type: 'item',
             label: 'No evidence yet',
             date: createdDate,
-          }
-        ]
+          },
+        ],
       },
       {
         id: `docs-${caseItem.id}`,
@@ -73,8 +73,8 @@ function transformCaseToTreeData(caseItem: Case): CaseData {
             type: 'item',
             label: 'No documents yet',
             date: createdDate,
-          }
-        ]
+          },
+        ],
       },
       {
         id: `people-${caseItem.id}`,
@@ -85,8 +85,8 @@ function transformCaseToTreeData(caseItem: Case): CaseData {
             id: `person-placeholder-${caseItem.id}`,
             type: 'item',
             label: 'No people yet',
-          }
-        ]
+          },
+        ],
       },
       {
         id: `events-${caseItem.id}`,
@@ -104,10 +104,10 @@ function transformCaseToTreeData(caseItem: Case): CaseData {
             type: 'item',
             label: 'Last Updated',
             date: updatedDate,
-          }
-        ]
-      }
-    ]
+          },
+        ],
+      },
+    ],
   };
 
   return {
@@ -125,13 +125,19 @@ export function CasesView(): JSX.Element {
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
 
   const transformedCases = useMemo(() => {
-    if (!cases || cases.length === 0) return [];
+    if (!cases || cases.length === 0) {
+      return [];
+    }
     return cases.map(transformCaseToTreeData);
   }, [cases]);
 
   const selectedCase = useMemo(() => {
-    if (transformedCases.length === 0) return null;
-    if (selectedCaseId === null) return transformedCases[0];
+    if (transformedCases.length === 0) {
+      return null;
+    }
+    if (selectedCaseId === null) {
+      return transformedCases[0];
+    }
     return transformedCases.find(c => c.id === selectedCaseId) || transformedCases[0];
   }, [transformedCases, selectedCaseId]);
 
@@ -179,19 +185,19 @@ export function CasesView(): JSX.Element {
           strokeLinecap="round"
           className="transition-all duration-300"
           style={{
-            filter: hoveredNodeId === node.id ? 'brightness(1.3)' : 'none'
+            filter: hoveredNodeId === node.id ? 'brightness(1.3)' : 'none',
           }}
-        />
+        />,
       );
     }
 
     // Box colors based on type
     const boxColor = node.type === 'case' ? '#8B4513' :
-                      node.type === 'category' ? '#A0522D' :
-                      '#1e40af'; // Dark blue for items
+      node.type === 'category' ? '#A0522D' :
+        '#1e40af'; // Dark blue for items
     const borderColor = node.type === 'case' ? '#654321' :
-                        node.type === 'category' ? '#8B4513' :
-                        '#3b82f6'; // Blue border for items
+      node.type === 'category' ? '#8B4513' :
+        '#3b82f6'; // Blue border for items
 
     // Render strength stars (if item)
     const renderStars = (strength: number): string => {
@@ -215,7 +221,7 @@ export function CasesView(): JSX.Element {
           style={{
             filter: hoveredNodeId === node.id ?
               'brightness(1.3) drop-shadow(0 0 12px rgba(59, 130, 246, 0.8))' :
-              'drop-shadow(0 4px 6px rgba(0,0,0,0.4))'
+              'drop-shadow(0 4px 6px rgba(0,0,0,0.4))',
           }}
           onMouseEnter={() => setHoveredNodeId(node.id)}
           onMouseLeave={() => setHoveredNodeId(null)}
@@ -270,7 +276,7 @@ export function CasesView(): JSX.Element {
             {node.date}
           </text>
         )}
-      </g>
+      </g>,
     );
 
     // Recursively draw children with proper spacing
@@ -354,8 +360,8 @@ export function CasesView(): JSX.Element {
                       <div
                         className={`w-4 h-4 rounded-full border-4 transition-all duration-300 ${
                           isCompleted ? 'bg-gray-400 border-gray-300' :
-                          isCurrent ? 'bg-blue-500 border-blue-400 animate-pulse' :
-                          'bg-slate-600 border-slate-500'
+                            isCurrent ? 'bg-blue-500 border-blue-400 animate-pulse' :
+                              'bg-slate-600 border-slate-500'
                         }`}
                       />
                       {isCurrent && (
@@ -367,8 +373,8 @@ export function CasesView(): JSX.Element {
                     <div className="mt-3 text-center">
                       <div className={`text-xs font-medium ${
                         isCompleted ? 'text-gray-400' :
-                        isCurrent ? 'text-blue-300' :
-                        'text-slate-400'
+                          isCurrent ? 'text-blue-300' :
+                            'text-slate-400'
                       }`}>
                         {event.label}
                       </div>

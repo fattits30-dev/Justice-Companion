@@ -15,7 +15,7 @@ import type { AuditLogger } from '../services/AuditLogger.js';
 export class NotesRepository {
   constructor(
     private encryptionService?: EncryptionService,
-    private auditLogger?: AuditLogger
+    private auditLogger?: AuditLogger,
   ) {}
 
   /**

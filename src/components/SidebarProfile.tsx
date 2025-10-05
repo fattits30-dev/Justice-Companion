@@ -9,7 +9,7 @@ interface SidebarProfileProps {
 
 export const SidebarProfile: React.FC<SidebarProfileProps> = ({
   profile,
-  onProfileClick
+  onProfileClick,
 }) => {
   const getInitials = (name: string): string => {
     return name

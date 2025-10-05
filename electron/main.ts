@@ -41,6 +41,12 @@ import type {
   CaseDeleteRequest,
   CaseCloseRequest,
   CaseGetStatisticsRequest,
+  EvidenceCreateRequest,
+  EvidenceGetByIdRequest,
+  EvidenceGetAllRequest,
+  EvidenceGetByCaseRequest,
+  EvidenceUpdateRequest,
+  EvidenceDeleteRequest,
   AICheckStatusRequest,
   AIChatRequest,
   AIStreamStartRequest,
@@ -60,6 +66,8 @@ import type {
   ModelIsDownloadedRequest,
   ModelDownloadStartRequest,
   ModelDeleteRequest,
+  GDPRExportUserDataRequest,
+  GDPRDeleteUserDataRequest,
 } from '../src/types/ipc';
 
 let mainWindow: BrowserWindow | null = null;
@@ -375,6 +383,255 @@ function setupIpcHandlers() {
     }
   );
 
+  /**
+   * Create new evidence.
+   *
+   * @param {EvidenceCreateRequest} request - Evidence creation request
+   * @param {CreateEvidenceInput} request.input - Evidence data
+   * @param {number} request.input.caseId - Case ID (required)
+   * @param {string} request.input.title - Evidence title (required)
+   * @param {string} [request.input.content] - Evidence content (optional, encrypted)
+   * @param {string} request.input.evidenceType - Evidence type (required)
+   * @param {string} [request.input.filePath] - File path (optional)
+   * @param {string} [request.input.obtainedDate] - Date obtained (optional)
+   *
+   * @returns {Promise<EvidenceCreateResponse | IPCErrorResponse>} Created evidence or error
+   *
+   * @security
+   * - Content field is encrypted with AES-256-GCM before storage
+   * - Evidence creation is logged to audit trail (event: evidence.create)
+   * - Failed attempts are also audited with error details
+   *
+   * @example
+   * ```typescript
+   * const result = await window.justiceAPI.createEvidence({
+   *   caseId: 123,
+   *   title: "Employment Contract",
+   *   evidenceType: "document",
+   *   content: "Contract details..."
+   * });
+   * ```
+   */
+  // Evidence: Create
+  ipcMain.handle(
+    IPC_CHANNELS.EVIDENCE_CREATE,
+    async (_, request: EvidenceCreateRequest) => {
+      try {
+        const createdEvidence = evidenceRepository.create(request.input);
+        return { success: true, data: createdEvidence };
+      } catch (error) {
+        errorLogger.logError(error as Error, { context: 'ipc:evidence:create' });
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Failed to create evidence',
+        };
+      }
+    }
+  );
+
+  /**
+   * Get evidence by ID.
+   *
+   * @param {EvidenceGetByIdRequest} request - Request with evidence ID
+   * @param {number} request.id - Evidence ID to retrieve
+   *
+   * @returns {Promise<EvidenceGetByIdResponse | IPCErrorResponse>} Evidence data or error
+   *
+   * @security
+   * - Content field is automatically decrypted
+   * - PII/content access is logged to audit trail if content was encrypted (event: evidence.content_access)
+   * - Audit log includes metadata only (no sensitive data)
+   *
+   * @example
+   * ```typescript
+   * const result = await window.justiceAPI.getEvidenceById(456);
+   * if (result.success && result.data) {
+   *   console.log(result.data.title, result.data.content);
+   * }
+   * ```
+   */
+  // Evidence: Get by ID
+  ipcMain.handle(
+    IPC_CHANNELS.EVIDENCE_GET_BY_ID,
+    async (_, request: EvidenceGetByIdRequest) => {
+      try {
+        const evidence = evidenceRepository.findById(request.id);
+        return { success: true, data: evidence };
+      } catch (error) {
+        errorLogger.logError(error as Error, { context: 'ipc:evidence:getById' });
+        return {
+          success: false,
+          error:
+            error instanceof Error ? error.message : 'Failed to get evidence by ID',
+        };
+      }
+    }
+  );
+
+  /**
+   * Get all evidence with optional type filter.
+   *
+   * @param {EvidenceGetAllRequest} request - Request with optional filter
+   * @param {string} [request.evidenceType] - Optional evidence type filter
+   *
+   * @returns {Promise<EvidenceGetAllResponse | IPCErrorResponse>} Array of evidence or error
+   *
+   * @security
+   * - All content fields are automatically decrypted
+   * - No audit logging for bulk operations (performance)
+   * - Content access only logged on individual getById calls
+   *
+   * @example
+   * ```typescript
+   * const result = await window.justiceAPI.getAllEvidence("document");
+   * if (result.success) {
+   *   console.log(`Found ${result.data.length} documents`);
+   * }
+   * ```
+   */
+  // Evidence: Get all
+  ipcMain.handle(
+    IPC_CHANNELS.EVIDENCE_GET_ALL,
+    async (_, request: EvidenceGetAllRequest) => {
+      try {
+        const allEvidence = evidenceRepository.findAll(request.evidenceType);
+        return { success: true, data: allEvidence };
+      } catch (error) {
+        errorLogger.logError(error as Error, { context: 'ipc:evidence:getAll' });
+        return {
+          success: false,
+          error:
+            error instanceof Error ? error.message : 'Failed to get all evidence',
+        };
+      }
+    }
+  );
+
+  /**
+   * Get all evidence for a specific case.
+   *
+   * @param {EvidenceGetByCaseRequest} request - Request with case ID
+   * @param {number} request.caseId - Case ID to retrieve evidence for
+   *
+   * @returns {Promise<EvidenceGetByCaseResponse | IPCErrorResponse>} Array of evidence or error
+   *
+   * @security
+   * - All content fields are automatically decrypted
+   * - No audit logging for bulk operations (performance)
+   * - Sorted by creation date (newest first)
+   *
+   * @example
+   * ```typescript
+   * const result = await window.justiceAPI.getEvidenceByCaseId(123);
+   * if (result.success) {
+   *   console.log(`Found ${result.data.length} evidence items for case`);
+   * }
+   * ```
+   */
+  // Evidence: Get by case ID
+  ipcMain.handle(
+    IPC_CHANNELS.EVIDENCE_GET_BY_CASE,
+    async (_, request: EvidenceGetByCaseRequest) => {
+      try {
+        const caseEvidence = evidenceRepository.findByCaseId(request.caseId);
+        return { success: true, data: caseEvidence };
+      } catch (error) {
+        errorLogger.logError(error as Error, { context: 'ipc:evidence:getByCaseId' });
+        return {
+          success: false,
+          error:
+            error instanceof Error ? error.message : 'Failed to get evidence for case',
+        };
+      }
+    }
+  );
+
+  /**
+   * Update existing evidence.
+   *
+   * @param {EvidenceUpdateRequest} request - Update request
+   * @param {number} request.id - Evidence ID to update
+   * @param {UpdateEvidenceInput} request.input - Fields to update
+   * @param {string} [request.input.title] - New title
+   * @param {string} [request.input.content] - New content (encrypted)
+   * @param {string} [request.input.evidenceType] - New evidence type
+   * @param {string} [request.input.filePath] - New file path
+   * @param {string} [request.input.obtainedDate] - New obtained date
+   *
+   * @returns {Promise<EvidenceUpdateResponse | IPCErrorResponse>} Updated evidence or error
+   *
+   * @security
+   * - Content field is encrypted before UPDATE
+   * - Update operation logged to audit trail (event: evidence.update)
+   * - Audit log includes list of fields updated (not values)
+   * - Failed updates are also audited
+   *
+   * @example
+   * ```typescript
+   * const result = await window.justiceAPI.updateEvidence(456, {
+   *   title: "Updated Employment Contract",
+   *   content: "New content..."
+   * });
+   * ```
+   */
+  // Evidence: Update
+  ipcMain.handle(
+    IPC_CHANNELS.EVIDENCE_UPDATE,
+    async (_, request: EvidenceUpdateRequest) => {
+      try {
+        const updatedEvidence = evidenceRepository.update(request.id, request.input);
+        return { success: true, data: updatedEvidence };
+      } catch (error) {
+        errorLogger.logError(error as Error, { context: 'ipc:evidence:update' });
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Failed to update evidence',
+        };
+      }
+    }
+  );
+
+  /**
+   * Delete evidence (hard delete).
+   *
+   * @param {EvidenceDeleteRequest} request - Delete request
+   * @param {number} request.id - Evidence ID to delete
+   *
+   * @returns {Promise<EvidenceDeleteResponse | IPCErrorResponse>} Success or error
+   *
+   * @security
+   * - Hard delete (not soft delete)
+   * - Foreign key constraints prevent orphaned evidence
+   * - Deletion logged to audit trail (event: evidence.delete)
+   * - Failed deletions are also audited
+   *
+   * @warning This operation is irreversible!
+   *
+   * @example
+   * ```typescript
+   * const result = await window.justiceAPI.deleteEvidence(456);
+   * if (result.success) {
+   *   console.log("Evidence deleted successfully");
+   * }
+   * ```
+   */
+  // Evidence: Delete
+  ipcMain.handle(
+    IPC_CHANNELS.EVIDENCE_DELETE,
+    async (_, request: EvidenceDeleteRequest) => {
+      try {
+        evidenceRepository.delete(request.id);
+        return { success: true };
+      } catch (error) {
+        errorLogger.logError(error as Error, { context: 'ipc:evidence:delete' });
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Failed to delete evidence',
+        };
+      }
+    }
+  );
+
   // AI: Check Status
   ipcMain.handle(
     IPC_CHANNELS.AI_CHECK_STATUS,
@@ -562,7 +819,7 @@ function setupIpcHandlers() {
 
         let tokensSent = 0;
         let thinkTokensSent = 0;
-        let functionCallCount = 0;
+        const functionCallCount = 0;
 
         if (useFunctionCalling) {
           // Use streamChatWithFunctions for case-specific conversations
@@ -1136,7 +1393,316 @@ function setupIpcHandlers() {
     }
   );
 
-  errorLogger.logError('IPC handlers registered successfully (cases + AI + files + conversations + profile + models + facts)', { type: 'info' });
+  /**
+   * GDPR: Export all user data
+   *
+   * Exports all user data to a JSON file in the user's Documents folder.
+   * This implements the GDPR "Right to Data Portability" (Article 20).
+   *
+   * @param {GDPRExportUserDataRequest} request - Empty request
+   *
+   * @returns {Promise<GDPRExportUserDataResponse | IPCErrorResponse>} Export path and summary or error
+   *
+   * @security
+   * - All encrypted data is decrypted before export
+   * - Export is logged to audit trail (event: gdpr.export)
+   * - Export file contains metadata about format and version
+   *
+   * @compliance GDPR Article 20 - Right to Data Portability
+   *
+   * @example
+   * ```typescript
+   * const result = await window.justiceAPI.exportUserData();
+   * if (result.success) {
+   *   console.log("Data exported to:", result.exportPath);
+   *   console.log("Summary:", result.summary);
+   * }
+   * ```
+   */
+  // GDPR: Export User Data
+  ipcMain.handle(
+    IPC_CHANNELS.GDPR_EXPORT_USER_DATA,
+    async (_, request: GDPRExportUserDataRequest) => {
+      try {
+        const db = databaseManager.getDatabase();
+        const exportDate = new Date().toISOString();
+        const timestamp = exportDate.replace(/[:.]/g, '-').slice(0, 19);
+
+        // Gather all user data from database
+        const cases = caseRepository.findAll();
+        const evidence = evidenceRepository.findAll();
+        const profile = userProfileService.getProfile();
+        const conversations = chatConversationService.getAllConversations();
+
+        // Gather case-related data by iterating through cases
+        const notes: any[] = [];
+        const legalIssues: any[] = [];
+        const timelineEvents: any[] = [];
+        const userFacts: any[] = [];
+        const caseFacts: any[] = [];
+
+        for (const c of cases) {
+          notes.push(...notesRepository.findByCaseId(c.id));
+          legalIssues.push(...legalIssuesRepository.findByCaseId(c.id));
+          timelineEvents.push(...timelineRepository.findByCaseId(c.id));
+          userFacts.push(...userFactsRepository.findByCaseId(c.id));
+          caseFacts.push(...caseFactsRepository.findByCaseId(c.id));
+        }
+
+        // Get all messages for all conversations
+        const allMessages: any[] = [];
+        for (const conv of conversations) {
+          const convWithMessages = chatConversationService.loadConversation(conv.id);
+          if (convWithMessages && convWithMessages.messages) {
+            allMessages.push(...convWithMessages.messages);
+          }
+        }
+
+        // Create export data structure
+        const exportData = {
+          metadata: {
+            exportDate,
+            version: '1.0.0',
+            application: 'Justice Companion',
+            format: 'JSON',
+            disclaimer: 'This export contains all your personal data stored in Justice Companion. All encrypted fields have been decrypted for portability.',
+          },
+          profile,
+          cases,
+          evidence,
+          notes,
+          legalIssues,
+          timelineEvents,
+          conversations,
+          messages: allMessages,
+          userFacts,
+          caseFacts,
+          summary: {
+            casesCount: cases.length,
+            evidenceCount: evidence.length,
+            notesCount: notes.length,
+            legalIssuesCount: legalIssues.length,
+            timelineEventsCount: timelineEvents.length,
+            conversationsCount: conversations.length,
+            messagesCount: allMessages.length,
+            userFactsCount: userFacts.length,
+            caseFactsCount: caseFacts.length,
+          },
+        };
+
+        // Save to Documents folder
+        const documentsPath = app.getPath('documents');
+        const exportFileName = `justice-companion-data-export-${timestamp}.json`;
+        const exportPath = path.join(documentsPath, exportFileName);
+
+        await fs.writeFile(exportPath, JSON.stringify(exportData, null, 2), 'utf-8');
+
+        // Audit log the export
+        const auditLogger = new AuditLogger(db);
+        auditLogger.log({
+          eventType: 'gdpr.export',
+          userId: 'local-user',
+          resourceType: 'user_data',
+          resourceId: 'all',
+          action: 'export',
+          details: {
+            exportPath,
+            recordsExported: exportData.summary,
+          },
+          success: true,
+        });
+
+        errorLogger.logError('GDPR data export completed', {
+          type: 'info',
+          exportPath,
+          summary: exportData.summary,
+        });
+
+        return {
+          success: true,
+          exportPath,
+          exportDate,
+          summary: exportData.summary,
+        };
+      } catch (error) {
+        errorLogger.logError(error as Error, { context: 'ipc:gdpr:export' });
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Failed to export user data',
+        };
+      }
+    }
+  );
+
+  /**
+   * GDPR: Delete all user data
+   *
+   * Permanently deletes all user data from the database.
+   * This implements the GDPR "Right to Erasure" (Article 17).
+   *
+   * @param {GDPRDeleteUserDataRequest} request - Request with confirmation string
+   * @param {string} request.confirmation - Must be "DELETE_ALL_MY_DATA" for safety
+   *
+   * @returns {Promise<GDPRDeleteUserDataResponse | IPCErrorResponse>} Deletion summary or error
+   *
+   * @security
+   * - Requires explicit confirmation string to prevent accidental deletion
+   * - Deletion is logged to audit trail BEFORE deletion (event: gdpr.delete)
+   * - Uses CASCADE deletion via foreign key constraints
+   * - Operation is irreversible!
+   *
+   * @compliance GDPR Article 17 - Right to Erasure ("Right to be Forgotten")
+   *
+   * @warning THIS OPERATION CANNOT BE UNDONE!
+   *
+   * @example
+   * ```typescript
+   * const result = await window.justiceAPI.deleteUserData("DELETE_ALL_MY_DATA");
+   * if (result.success) {
+   *   console.log("All data deleted:", result.summary);
+   * }
+   * ```
+   */
+  // GDPR: Delete User Data
+  ipcMain.handle(
+    IPC_CHANNELS.GDPR_DELETE_USER_DATA,
+    async (_, request: GDPRDeleteUserDataRequest) => {
+      try {
+        // Safety check: require explicit confirmation
+        if (request.confirmation !== 'DELETE_ALL_MY_DATA') {
+          return {
+            success: false,
+            error: 'Invalid confirmation string. Must be "DELETE_ALL_MY_DATA".',
+          };
+        }
+
+        const db = databaseManager.getDatabase();
+        const deletedAt = new Date().toISOString();
+
+        // Count records before deletion for summary
+        const cases = caseRepository.findAll();
+        const casesCount = cases.length;
+        const evidenceCount = evidenceRepository.findAll().length;
+        const conversationsCount = chatConversationService.getAllConversations().length;
+
+        // Count case-related records
+        let notesCount = 0;
+        let legalIssuesCount = 0;
+        let timelineEventsCount = 0;
+        let userFactsCount = 0;
+        let caseFactsCount = 0;
+
+        for (const c of cases) {
+          notesCount += notesRepository.findByCaseId(c.id).length;
+          legalIssuesCount += legalIssuesRepository.findByCaseId(c.id).length;
+          timelineEventsCount += timelineRepository.findByCaseId(c.id).length;
+          userFactsCount += userFactsRepository.findByCaseId(c.id).length;
+          caseFactsCount += caseFactsRepository.findByCaseId(c.id).length;
+        }
+
+        // Count messages
+        let messagesCount = 0;
+        const conversations = chatConversationService.getAllConversations();
+        for (const conv of conversations) {
+          const convWithMessages = chatConversationService.loadConversation(conv.id);
+          if (convWithMessages && convWithMessages.messages) {
+            messagesCount += convWithMessages.messages.length;
+          }
+        }
+
+        // Audit log the deletion BEFORE deleting (so the log survives)
+        const auditLogger = new AuditLogger(db);
+        auditLogger.log({
+          eventType: 'gdpr.delete',
+          userId: 'local-user',
+          resourceType: 'user_data',
+          resourceId: 'all',
+          action: 'delete',
+          details: {
+            deletedAt,
+            recordsToDelete: {
+              casesCount,
+              evidenceCount,
+              notesCount,
+              legalIssuesCount,
+              timelineEventsCount,
+              conversationsCount,
+              messagesCount,
+              userFactsCount,
+              caseFactsCount,
+            },
+          },
+          success: true,
+        });
+
+        // Delete all data using CASCADE constraints
+        // Start transaction for atomicity
+        const deleteAllData = db.transaction(() => {
+          // Delete all cases (CASCADE will delete evidence, notes, legal issues, timeline events, user facts, case facts)
+          db.prepare('DELETE FROM cases').run();
+
+          // Delete all conversations (CASCADE will delete messages)
+          db.prepare('DELETE FROM chat_conversations').run();
+
+          // Reset user profile (keep table, just clear data)
+          db.prepare('UPDATE user_profile SET name = ?, email = ?, avatar_url = ? WHERE id = 1').run(
+            'Legal User',
+            null,
+            null
+          );
+
+          // Note: We don't delete audit logs - they are kept for compliance
+        });
+
+        deleteAllData();
+
+        // Count audit logs for summary
+        const auditLogsCount = db.prepare('SELECT COUNT(*) as count FROM audit_logs').get() as { count: number };
+
+        errorLogger.logError('GDPR data deletion completed', {
+          type: 'info',
+          deletedAt,
+          summary: {
+            casesDeleted: casesCount,
+            evidenceDeleted: evidenceCount,
+            notesDeleted: notesCount,
+            legalIssuesDeleted: legalIssuesCount,
+            timelineEventsDeleted: timelineEventsCount,
+            conversationsDeleted: conversationsCount,
+            messagesDeleted: messagesCount,
+            userFactsDeleted: userFactsCount,
+            caseFactsDeleted: caseFactsCount,
+            auditLogsDeleted: 0, // Audit logs are kept for compliance
+          },
+        });
+
+        return {
+          success: true,
+          deletedAt,
+          summary: {
+            casesDeleted: casesCount,
+            evidenceDeleted: evidenceCount,
+            notesDeleted: notesCount,
+            legalIssuesDeleted: legalIssuesCount,
+            timelineEventsDeleted: timelineEventsCount,
+            conversationsDeleted: conversationsCount,
+            messagesDeleted: messagesCount,
+            userFactsDeleted: userFactsCount,
+            caseFactsDeleted: caseFactsCount,
+            auditLogsDeleted: 0, // Audit logs are kept for compliance
+          },
+        };
+      } catch (error) {
+        errorLogger.logError(error as Error, { context: 'ipc:gdpr:delete' });
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Failed to delete user data',
+        };
+      }
+    }
+  );
+
+  errorLogger.logError('IPC handlers registered successfully (cases + evidence + AI + files + conversations + profile + models + facts + GDPR)', { type: 'info' });
 }
 
 // Prevent multiple instances - request single instance lock

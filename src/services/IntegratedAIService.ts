@@ -304,7 +304,7 @@ Use these facts as your memory. Reference them in your responses.`;
         undefined, // No think tokens needed for non-streaming
         (extractedSources) => {
           sources.push(...extractedSources);
-        }
+        },
       );
 
       return {
@@ -342,7 +342,7 @@ Use these facts as your memory. Reference them in your responses.`;
     onComplete: () => void,
     onError: (error: string) => void,
     onThinkToken?: (token: string) => void,
-    onSources?: (sources: string[]) => void
+    onSources?: (sources: string[]) => void,
   ): Promise<void> {
     console.log('[IntegratedAIService] streamChat() called');
     console.log('[IntegratedAIService] isInitialized:', this.isInitialized);
@@ -536,7 +536,7 @@ Use these facts as your memory. Reference them in your responses.`;
     caseId: number | undefined,
     onToken: (token: string) => void,
     onComplete: () => void,
-    onError: (error: string) => void
+    onError: (error: string) => void,
   ): Promise<void> {
     console.log('[IntegratedAIService] streamChatWithFunctions() called with caseId:', caseId);
 

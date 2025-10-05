@@ -5,6 +5,6 @@ import './index.css';
 ReactDOM.createRoot(document.getElementById('root')!).render(
   // StrictMode disabled temporarily - causes IPC listener issues during double-mount
   // <React.StrictMode>
-    <App />
+  <App />,
   // </React.StrictMode>
 );

@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer } from 'electron';
 import { IPC_CHANNELS } from '../src/types/ipc';
 import type { JusticeCompanionAPI } from '../src/types/ipc';
 import type { CreateCaseInput, UpdateCaseInput } from '../src/models/Case';
+import type { CreateEvidenceInput, UpdateEvidenceInput } from '../src/models/Evidence';
 
 /**
  * Expose Justice Companion API to renderer process via contextBridge
@@ -41,6 +42,36 @@ const justiceAPI: JusticeCompanionAPI = {
   // Get case statistics
   getCaseStatistics: () => {
     return ipcRenderer.invoke(IPC_CHANNELS.CASE_GET_STATISTICS, {});
+  },
+
+  // Create evidence
+  createEvidence: (input: CreateEvidenceInput) => {
+    return ipcRenderer.invoke(IPC_CHANNELS.EVIDENCE_CREATE, { input });
+  },
+
+  // Get evidence by ID
+  getEvidenceById: (id: number) => {
+    return ipcRenderer.invoke(IPC_CHANNELS.EVIDENCE_GET_BY_ID, { id });
+  },
+
+  // Get all evidence
+  getAllEvidence: (evidenceType?: string) => {
+    return ipcRenderer.invoke(IPC_CHANNELS.EVIDENCE_GET_ALL, { evidenceType });
+  },
+
+  // Get evidence by case ID
+  getEvidenceByCaseId: (caseId: number) => {
+    return ipcRenderer.invoke(IPC_CHANNELS.EVIDENCE_GET_BY_CASE, { caseId });
+  },
+
+  // Update evidence
+  updateEvidence: (id: number, input: UpdateEvidenceInput) => {
+    return ipcRenderer.invoke(IPC_CHANNELS.EVIDENCE_UPDATE, { id, input });
+  },
+
+  // Delete evidence
+  deleteEvidence: (id: number) => {
+    return ipcRenderer.invoke(IPC_CHANNELS.EVIDENCE_DELETE, { id });
   },
 };
 
@@ -178,6 +209,26 @@ const fileAPI = {
   uploadFile: (filePath: string) => {
     return ipcRenderer.invoke(IPC_CHANNELS.FILE_UPLOAD, { filePath });
   },
+
+  // View a file
+  viewFile: (filePath: string) => {
+    return ipcRenderer.invoke(IPC_CHANNELS.FILE_VIEW, { filePath });
+  },
+
+  // Download a file
+  downloadFile: (filePath: string, fileName?: string) => {
+    return ipcRenderer.invoke(IPC_CHANNELS.FILE_DOWNLOAD, { filePath, fileName });
+  },
+
+  // Print a file
+  printFile: (filePath: string) => {
+    return ipcRenderer.invoke(IPC_CHANNELS.FILE_PRINT, { filePath });
+  },
+
+  // Email files
+  emailFiles: (filePaths: string[], subject?: string, body?: string) => {
+    return ipcRenderer.invoke(IPC_CHANNELS.FILE_EMAIL, { filePaths, subject, body });
+  },
 };
 
 // Chat Conversation API methods
@@ -231,7 +282,53 @@ const profileAPI = {
   },
 };
 
-// Combine case, AI, model, file, conversation, and profile APIs
+// Facts API methods
+const factsAPI = {
+  // Store a case fact (supports both old format and new format)
+  storeFact: (params: {
+    caseId: number;
+    factContent?: string;      // NEW: Direct fact content
+    factCategory?: string;     // NEW: Timeline/evidence/witness/location/communication/other
+    importance?: string;       // NEW: Low/medium/high/critical
+    factType?: string;         // OLD: For backwards compatibility
+    factKey?: string;          // OLD: For backwards compatibility
+    factValue?: string;        // OLD: For backwards compatibility
+    source?: string;
+    confidence?: number;
+  }) => {
+    return ipcRenderer.invoke('facts:store', params);
+  },
+
+  // Get facts for a case (alias for getCaseFacts)
+  getFacts: (caseId: number, factType?: string) => {
+    return ipcRenderer.invoke('facts:get', caseId, factType);
+  },
+
+  // Get facts for a case (preferred name for AI functions)
+  getCaseFacts: (caseId: number, factCategory?: string) => {
+    return ipcRenderer.invoke('facts:get', caseId, factCategory);
+  },
+
+  // Get fact count for a case
+  getFactCount: (caseId: number) => {
+    return ipcRenderer.invoke('facts:count', caseId);
+  },
+};
+
+// GDPR API methods
+const gdprAPI = {
+  // Export all user data to JSON file
+  exportUserData: () => {
+    return ipcRenderer.invoke(IPC_CHANNELS.GDPR_EXPORT_USER_DATA, {});
+  },
+
+  // Delete all user data (requires confirmation)
+  deleteUserData: (confirmation: string) => {
+    return ipcRenderer.invoke(IPC_CHANNELS.GDPR_DELETE_USER_DATA, { confirmation });
+  },
+};
+
+// Combine case, AI, model, file, conversation, profile, facts, and GDPR APIs
 const fullAPI = {
   ...justiceAPI,
   ...aiAPI,
@@ -239,6 +336,8 @@ const fullAPI = {
   ...fileAPI,
   ...conversationAPI,
   ...profileAPI,
+  ...factsAPI,
+  ...gdprAPI,
 };
 
 // Expose combined API to window object with type safety

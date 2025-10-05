@@ -43,7 +43,7 @@ export function useTimeline(caseId: number) {
       const result = await window.electron.timeline.update(id, input);
       if (result.success && result.data) {
         setTimelineEvents((prev) =>
-          prev.map((event) => (event.id === id ? result.data! : event))
+          prev.map((event) => (event.id === id ? result.data! : event)),
         );
         return result.data;
       } else {

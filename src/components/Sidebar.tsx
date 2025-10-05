@@ -11,6 +11,8 @@ interface SidebarProps {
   onConversationLoad: (conversationId: number) => Promise<void>;
   activeView: 'dashboard' | 'chat' | 'cases' | 'documents' | 'settings';
   onViewChange: (view: 'dashboard' | 'chat' | 'cases' | 'documents' | 'settings') => void;
+  activeCaseId: number | null;
+  onActiveCaseIdChange: (caseId: number | null) => void;
 }
 
 const navigationItems = [
@@ -21,8 +23,7 @@ const navigationItems = [
   { id: 'settings' as const, label: 'Settings', icon: Settings },
 ];
 
-export function Sidebar({ isExpanded, onToggle, onConversationLoad, activeView, onViewChange }: SidebarProps): JSX.Element {
-  const [activeCaseId, setActiveCaseId] = useState<number | null>(null);
+export function Sidebar({ isExpanded, onToggle, onConversationLoad, activeView, onViewChange, activeCaseId, onActiveCaseIdChange }: SidebarProps): JSX.Element {
   const [activeConversationId, setActiveConversationId] = useState<number | null>(null);
   const [recentChats, setRecentChats] = useState<ChatConversation[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -58,8 +59,10 @@ export function Sidebar({ isExpanded, onToggle, onConversationLoad, activeView, 
   }, [isExpanded]);
 
   const handleCaseChange = async (caseId: number | null) => {
-    setActiveCaseId(caseId);
-    if (!window.justiceAPI) return;
+    onActiveCaseIdChange(caseId);
+    if (!window.justiceAPI) {
+      return;
+    }
 
     try {
       const result = await window.justiceAPI.getRecentConversations(caseId, 10);
@@ -77,7 +80,9 @@ export function Sidebar({ isExpanded, onToggle, onConversationLoad, activeView, 
   };
 
   const handleNewChat = async () => {
-    if (!window.justiceAPI) return;
+    if (!window.justiceAPI) {
+      return;
+    }
 
     try {
       const result = await window.justiceAPI.createConversation({
@@ -123,14 +128,16 @@ export function Sidebar({ isExpanded, onToggle, onConversationLoad, activeView, 
   };
 
   const handleRenameConversation = async (conversationId: number, newTitle: string) => {
-    if (!window.justiceAPI || !newTitle.trim()) return;
+    if (!window.justiceAPI || !newTitle.trim()) {
+      return;
+    }
 
     try {
       console.log(`Rename conversation ${conversationId} to "${newTitle}"`);
       setRecentChats(prev =>
         prev.map(chat =>
-          chat.id === conversationId ? { ...chat, title: newTitle } : chat
-        )
+          chat.id === conversationId ? { ...chat, title: newTitle } : chat,
+        ),
       );
     } catch (error) {
       console.error('Error renaming conversation:', error);
@@ -139,7 +146,9 @@ export function Sidebar({ isExpanded, onToggle, onConversationLoad, activeView, 
 
   // Get user initials
   const getUserInitials = () => {
-    if (!userProfile?.name) return 'U';
+    if (!userProfile?.name) {
+      return 'U';
+    }
     return userProfile.name
       .split(' ')
       .map(n => n[0])
@@ -212,23 +221,23 @@ export function Sidebar({ isExpanded, onToggle, onConversationLoad, activeView, 
               </button>
             );
           })}
-        </nav>
 
-        {/* Case Context - only when expanded */}
-        {isExpanded && (
-          <div className="border-t border-blue-800/30 overflow-y-auto max-h-64">
-            <SidebarCaseContext
-              activeCaseId={activeCaseId}
-              activeConversationId={activeConversationId}
-              recentChats={recentChats}
-              onCaseChange={handleCaseChange}
-              onConversationSelect={handleConversationSelect}
-              onNewChat={handleNewChat}
-              onDeleteConversation={handleDeleteConversation}
-              onRenameConversation={handleRenameConversation}
-            />
-          </div>
-        )}
+          {/* Case Context - only when expanded */}
+          {isExpanded && (
+            <div className="mt-2">
+              <SidebarCaseContext
+                activeCaseId={activeCaseId}
+                activeConversationId={activeConversationId}
+                recentChats={recentChats}
+                onCaseChange={handleCaseChange}
+                onConversationSelect={handleConversationSelect}
+                onNewChat={handleNewChat}
+                onDeleteConversation={handleDeleteConversation}
+                onRenameConversation={handleRenameConversation}
+              />
+            </div>
+          )}
+        </nav>
 
         {/* Profile - always visible */}
         <div className="border-t border-blue-800/30 p-3 bg-slate-900/50">

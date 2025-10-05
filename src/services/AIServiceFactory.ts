@@ -32,7 +32,7 @@ export class AIServiceFactory {
     this.modelPath = path.join(
       userDataPath,
       'models',
-      'Qwen_Qwen3-8B-Q4_K_M.gguf'
+      'Qwen_Qwen3-8B-Q4_K_M.gguf',
     );
 
     errorLogger.logError('AIServiceFactory initialized', {
@@ -143,7 +143,7 @@ export class AIServiceFactory {
     onComplete: () => void,
     onError: (error: string) => void,
     onThinkToken?: (token: string) => void,
-    onSources?: (sources: string[]) => void
+    onSources?: (sources: string[]) => void,
   ): Promise<void> {
     console.log('[AIServiceFactory] streamChat() called');
     console.log('[AIServiceFactory] Model available:', this.isModelAvailable());
@@ -154,7 +154,7 @@ export class AIServiceFactory {
       onComplete,
       onError,
       onThinkToken,
-      onSources
+      onSources,
     );
   }
 
@@ -176,7 +176,7 @@ export class AIServiceFactory {
     caseId: number | undefined,
     onToken: (token: string) => void,
     onComplete: () => void,
-    onError: (error: string) => void
+    onError: (error: string) => void,
   ): Promise<void> {
     console.log('[AIServiceFactory] streamChatWithFunctions() called with caseId:', caseId);
     console.log('[AIServiceFactory] Model available:', this.isModelAvailable());
@@ -186,7 +186,7 @@ export class AIServiceFactory {
       caseId,
       onToken,
       onComplete,
-      onError
+      onError,
     );
   }
 

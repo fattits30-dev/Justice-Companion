@@ -21,7 +21,9 @@ export function ConfirmDialog({
   onCancel,
   variant = 'default',
 }: ConfirmDialogProps): JSX.Element | null {
-  if (!isOpen) return null;
+  if (!isOpen) {
+    return null;
+  }
 
   const confirmButtonClass =
     variant === 'danger'

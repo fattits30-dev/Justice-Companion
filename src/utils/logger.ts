@@ -54,7 +54,7 @@ class Logger {
     level: LogLevel,
     component: string,
     message: string,
-    data?: any
+    data?: any,
   ): string {
     const timestamp = new Date().toISOString();
     const dataStr = data ? ` ${JSON.stringify(data, null, 2)}` : '';
@@ -116,7 +116,9 @@ class Logger {
    */
   info(component: string, message: string, data?: any): void {
     // Skip in production
-    if (this.isProduction) return;
+    if (this.isProduction) {
+      return;
+    }
 
     const formattedMessage = this.formatMessage('info', component, message, data);
     console.info(formattedMessage);
@@ -136,7 +138,9 @@ class Logger {
    */
   debug(component: string, message: string, data?: any): void {
     // Skip in production
-    if (this.isProduction) return;
+    if (this.isProduction) {
+      return;
+    }
 
     const formattedMessage = this.formatMessage('debug', component, message, data);
     console.debug(formattedMessage);
@@ -157,13 +161,17 @@ class Logger {
   private timers = new Map<string, number>();
 
   startTimer(label: string): void {
-    if (this.isProduction) return;
+    if (this.isProduction) {
+      return;
+    }
     this.timers.set(label, performance.now());
     this.debug('Performance', `Timer started: ${label}`);
   }
 
   endTimer(label: string): void {
-    if (this.isProduction) return;
+    if (this.isProduction) {
+      return;
+    }
 
     const startTime = this.timers.get(label);
     if (startTime === undefined) {

@@ -41,7 +41,7 @@ export function FloatingChatInput({
   onSend,
   disabled = false,
   placeholder = 'Ask a legal question...',
-  isSidebarOpen = false
+  isSidebarOpen = false,
 }: FloatingChatInputProps) {
   const [value, setValue] = useState<string>('');
   const [uploadedFile, setUploadedFile] = useState<UploadedFile | null>(null);
@@ -149,7 +149,9 @@ export function FloatingChatInput({
   const isButtonDisabled = disabled || (!value.trim() && !uploadedFile);
 
   const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return '0 Bytes';
+    if (bytes === 0) {
+      return '0 Bytes';
+    }
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
@@ -233,10 +235,10 @@ export function FloatingChatInput({
                 focus:outline-none focus:ring-0
                 transition-colors bg-transparent
                 ${
-                  disabled
-                    ? 'text-gray-400 cursor-not-allowed'
-                    : 'text-gray-900'
-                }
+    disabled
+      ? 'text-gray-400 cursor-not-allowed'
+      : 'text-gray-900'
+    }
               `}
               rows={1}
               style={{ minHeight: '40px', maxHeight: `${MAX_HEIGHT}px` }}
@@ -259,10 +261,10 @@ export function FloatingChatInput({
               p-2.5 rounded-lg transition-all
               focus:outline-none focus:ring-2 focus:ring-blue-500
               ${
-                isButtonDisabled
-                  ? 'text-gray-400 cursor-not-allowed'
-                  : 'text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800'
-              }
+    isButtonDisabled
+      ? 'text-gray-400 cursor-not-allowed'
+      : 'text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800'
+    }
             `}
           >
             <BiSend className="w-5 h-5" />

@@ -17,7 +17,7 @@ describe('useAI types', () => {
       '🤔 Thinking...',
       '🔍 Researching...',
       '✍️ Writing...',
-      'streaming'
+      'streaming',
     ];
     expect(states).toHaveLength(6);
   });

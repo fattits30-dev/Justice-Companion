@@ -72,7 +72,7 @@ export function useCases() {
         setLoading(false);
       }
     },
-    [fetchCases]
+    [fetchCases],
   );
 
   /**
@@ -131,7 +131,7 @@ export function useCases() {
         setLoading(false);
       }
     },
-    [fetchCases]
+    [fetchCases],
   );
 
   /**
@@ -163,7 +163,7 @@ export function useCases() {
         setLoading(false);
       }
     },
-    [fetchCases]
+    [fetchCases],
   );
 
   /**
@@ -195,7 +195,7 @@ export function useCases() {
         setLoading(false);
       }
     },
-    [fetchCases]
+    [fetchCases],
   );
 
   /**

@@ -135,7 +135,7 @@ export class ModelDownloadService {
    */
   async downloadModel(
     modelId: string,
-    onProgress: (progress: DownloadProgress) => void
+    onProgress: (progress: DownloadProgress) => void,
   ): Promise<boolean> {
     const model = this.availableModels.find((m) => m.id === modelId);
     if (!model) {
@@ -196,7 +196,7 @@ export class ModelDownloadService {
         const hash = await this.calculateSHA256(tempPath);
         if (hash !== model.sha256) {
           throw new Error(
-            `Checksum verification failed. Expected: ${model.sha256}, Got: ${hash}`
+            `Checksum verification failed. Expected: ${model.sha256}, Got: ${hash}`,
           );
         }
 
@@ -262,7 +262,7 @@ export class ModelDownloadService {
     url: string,
     destPath: string,
     totalSize: number,
-    onProgress: (progress: DownloadProgress) => void
+    onProgress: (progress: DownloadProgress) => void,
   ): Promise<void> {
     return new Promise((resolve, reject) => {
       const file = fs.createWriteStream(destPath);
@@ -274,7 +274,7 @@ export class ModelDownloadService {
         .get(url, (response) => {
           if (response.statusCode !== 200) {
             reject(
-              new Error(`HTTP ${response.statusCode}: ${response.statusMessage}`)
+              new Error(`HTTP ${response.statusCode}: ${response.statusMessage}`),
             );
             return;
           }
@@ -383,7 +383,7 @@ export class ModelDownloadService {
    */
   getDownloadedModels(): ModelInfo[] {
     return this.availableModels.filter((model) =>
-      this.isModelDownloaded(model.id)
+      this.isModelDownloaded(model.id),
     );
   }
 }

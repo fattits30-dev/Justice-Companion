@@ -227,7 +227,7 @@ export function CaseFactsPanel({ caseId }: CaseFactsPanelProps) {
 
             {Object.entries(importanceLabels).map(([importance, label]) => {
               const count = caseFacts.filter(
-                (f: CaseFact) => f.importance === importance
+                (f: CaseFact) => f.importance === importance,
               ).length;
               return (
                 <button
@@ -279,7 +279,7 @@ export function CaseFactsPanel({ caseId }: CaseFactsPanelProps) {
                       | 'witness'
                       | 'location'
                       | 'communication'
-                      | 'other'
+                      | 'other',
                   )
                 }
                 style={{
@@ -313,7 +313,7 @@ export function CaseFactsPanel({ caseId }: CaseFactsPanelProps) {
                 value={newFactImportance}
                 onChange={(e) =>
                   setNewFactImportance(
-                    e.target.value as 'low' | 'medium' | 'high' | 'critical'
+                    e.target.value as 'low' | 'medium' | 'high' | 'critical',
                   )
                 }
                 style={{
@@ -386,10 +386,10 @@ export function CaseFactsPanel({ caseId }: CaseFactsPanelProps) {
                     fact.importance === 'critical'
                       ? '#d32f2f'
                       : fact.importance === 'high'
-                      ? '#f57c00'
-                      : fact.importance === 'medium'
-                      ? '#fbc02d'
-                      : '#9e9e9e',
+                        ? '#f57c00'
+                        : fact.importance === 'medium'
+                          ? '#fbc02d'
+                          : '#9e9e9e',
                   color: 'white',
                   borderRadius: '12px',
                   fontSize: '11px',

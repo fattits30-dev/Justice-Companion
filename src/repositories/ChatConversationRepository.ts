@@ -138,7 +138,9 @@ class ChatConversationRepository {
 
     try {
       const conversation = this.findById(conversationId);
-      if (!conversation) return null;
+      if (!conversation) {
+        return null;
+      }
 
       const stmt = db.prepare(`
         SELECT id, conversation_id as conversationId, role, content,
@@ -236,7 +238,7 @@ class ChatConversationRepository {
         input.role,
         contentToStore,
         thinkingContentToStore,
-        input.tokenCount ?? null
+        input.tokenCount ?? null,
       );
 
       // Get the inserted message

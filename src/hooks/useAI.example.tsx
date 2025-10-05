@@ -23,7 +23,9 @@ export function AIChatExample(): JSX.Element {
   const [inputValue, setInputValue] = useState('');
 
   const handleSend = async (): Promise<void> => {
-    if (!inputValue.trim() || isStreaming) return;
+    if (!inputValue.trim() || isStreaming) {
+      return;
+    }
 
     await sendMessage(inputValue);
     setInputValue('');

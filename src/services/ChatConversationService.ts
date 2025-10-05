@@ -117,7 +117,7 @@ class ChatConversationService {
    */
   startNewConversation(
     caseId: number | null,
-    firstMessage: { role: 'user' | 'assistant'; content: string; thinkingContent?: string }
+    firstMessage: { role: 'user' | 'assistant'; content: string; thinkingContent?: string },
   ): ConversationWithMessages {
     try {
       // Generate title from first user message (truncate at 50 chars)

@@ -37,7 +37,7 @@ export function ChatNotesPanel() {
 
   const updateNote = (id: number, content: string) => {
     setNotes(notes.map(note =>
-      note.id === id ? { ...note, content } : note
+      note.id === id ? { ...note, content } : note,
     ));
   };
 

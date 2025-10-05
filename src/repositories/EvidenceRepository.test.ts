@@ -181,7 +181,7 @@ describe('EvidenceRepository with Encryption', () => {
         evidenceRepo.create({
           caseId: testCaseId,
           ...e,
-        }).id
+        }).id,
       );
 
       const allEvidence = evidenceRepo.findByCaseId(testCaseId);
@@ -241,7 +241,7 @@ describe('EvidenceRepository with Encryption', () => {
       const result = db
         .prepare(
           `INSERT INTO evidence (case_id, title, evidence_type, content)
-         VALUES (?, ?, ?, ?)`
+         VALUES (?, ?, ?, ?)`,
         )
         .run(testCaseId, 'Legacy Evidence', 'note', 'This is plaintext from old version');
 

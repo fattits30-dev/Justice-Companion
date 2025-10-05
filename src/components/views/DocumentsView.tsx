@@ -1,5 +1,8 @@
 import { useState } from 'react';
 import { FileText, Download, Printer, Eye, CheckCircle, AlertCircle, XCircle, Filter, Mail, Upload } from 'lucide-react';
+import { useEvidence } from '../../hooks/useEvidence';
+import { useCases } from '../../hooks/useCases';
+import type { Evidence } from '../../models/Evidence';
 
 interface Document {
   id: string;
@@ -19,13 +22,44 @@ interface Document {
   };
 }
 
+/**
+ * Map Evidence to Document for UI display
+ */
+function mapEvidenceToDocument(evidence: Evidence, caseName: string): Document {
+  return {
+    id: evidence.id.toString(),
+    title: evidence.title,
+    type: 'evidence', // Map from evidence.evidenceType if needed
+    status: evidence.filePath ? 'complete' : evidence.content ? 'needs_review' : 'incomplete',
+    fileName: evidence.filePath?.split('/').pop() || evidence.filePath?.split('\\').pop() || 'Unknown',
+    fileType: evidence.filePath?.endsWith('.pdf') ? 'PDF' : 'DOCX',
+    uploadDate: new Date(evidence.createdAt).toLocaleDateString(),
+    fileSize: 'Unknown', // Evidence model doesn't track file size yet
+    associatedCase: caseName,
+    priority: 'supporting', // Could be enhanced based on evidence metadata
+    checklist: {
+      signed: false,
+      dated: !!evidence.obtainedDate,
+      witnessed: false,
+    },
+  };
+}
+
 export function DocumentsView(): JSX.Element {
   const [filterCase, setFilterCase] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [selectedDocs, setSelectedDocs] = useState<Set<string>>(new Set());
 
-  // TODO: Replace with useEvidence() hook when evidence management is implemented
-  const documents: Document[] = [];
+  // Hooks for evidence and case data
+  const { evidence, loading, error } = useEvidence();
+  const { cases } = useCases();
+
+  // Map evidence to documents with case names
+  const documents: Document[] = evidence.map((ev) => {
+    const caseObj = cases.find((c) => c.id === ev.caseId);
+    const caseName = caseObj?.title || `Case #${ev.caseId}`;
+    return mapEvidenceToDocument(ev, caseName);
+  });
 
   const filteredDocuments = documents.filter(doc => {
     const caseMatch = filterCase === 'all' || doc.associatedCase === filterCase;
@@ -72,6 +106,71 @@ export function DocumentsView(): JSX.Element {
   const getTypeLabel = (type: string) => {
     return type.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
   };
+
+  // Show loading state
+  if (loading && documents.length === 0) {
+    return (
+      <div className="flex-1 flex flex-col overflow-hidden bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950">
+        {/* Legal Disclaimer Banner */}
+        <div className="bg-gradient-to-r from-amber-600/20 to-orange-600/20 border-b border-amber-600/30 px-4 py-2">
+          <div className="flex items-center gap-2 max-w-7xl mx-auto">
+            <div className="text-amber-400 text-lg">⚖️</div>
+            <div className="flex-1">
+              <p className="text-amber-200 text-xs">
+                <strong>Legal Notice:</strong> This tool assists with document organization only. You have the right to self-represent.
+                <span className="text-amber-100"> However, licensed legal counsel is strongly advised regardless of your intentions.</span>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Loading State */}
+        <div className="flex-1 flex items-center justify-center p-8">
+          <div className="max-w-md text-center">
+            <div className="w-16 h-16 border-4 border-blue-600/30 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-blue-200">Loading documents...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="flex-1 flex flex-col overflow-hidden bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950">
+        {/* Legal Disclaimer Banner */}
+        <div className="bg-gradient-to-r from-amber-600/20 to-orange-600/20 border-b border-amber-600/30 px-4 py-2">
+          <div className="flex items-center gap-2 max-w-7xl mx-auto">
+            <div className="text-amber-400 text-lg">⚖️</div>
+            <div className="flex-1">
+              <p className="text-amber-200 text-xs">
+                <strong>Legal Notice:</strong> This tool assists with document organization only. You have the right to self-represent.
+                <span className="text-amber-100"> However, licensed legal counsel is strongly advised regardless of your intentions.</span>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Error State */}
+        <div className="flex-1 flex items-center justify-center p-8">
+          <div className="max-w-md text-center">
+            <div className="w-24 h-24 bg-red-600/20 rounded-full flex items-center justify-center mx-auto mb-6">
+              <XCircle className="w-12 h-12 text-red-400" />
+            </div>
+            <h2 className="text-2xl font-bold text-white mb-3">Error Loading Documents</h2>
+            <p className="text-red-200 mb-6">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all font-medium"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Show empty state when no documents exist
   if (filteredDocuments.length === 0 && documents.length === 0) {
@@ -277,28 +376,36 @@ export function DocumentsView(): JSX.Element {
                 <div className="grid grid-cols-4 gap-2">
                   <button
                     className="flex items-center justify-center gap-1 px-3 py-2 bg-blue-600/20 text-blue-300 rounded-lg hover:bg-blue-600/30 transition-all text-xs font-medium"
-                    onClick={(e) => { e.stopPropagation(); }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                    }}
                     title="View"
                   >
                     <Eye className="w-4 h-4" />
                   </button>
                   <button
                     className="flex items-center justify-center gap-1 px-3 py-2 bg-slate-800/50 text-gray-300 rounded-lg hover:bg-slate-700/50 transition-all text-xs"
-                    onClick={(e) => { e.stopPropagation(); }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                    }}
                     title="Download"
                   >
                     <Download className="w-4 h-4" />
                   </button>
                   <button
                     className="flex items-center justify-center gap-1 px-3 py-2 bg-slate-800/50 text-gray-300 rounded-lg hover:bg-slate-700/50 transition-all text-xs"
-                    onClick={(e) => { e.stopPropagation(); }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                    }}
                     title="Print"
                   >
                     <Printer className="w-4 h-4" />
                   </button>
                   <button
                     className="flex items-center justify-center gap-1 px-3 py-2 bg-slate-800/50 text-gray-300 rounded-lg hover:bg-slate-700/50 transition-all text-xs"
-                    onClick={(e) => { e.stopPropagation(); }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                    }}
                     title="Email"
                   >
                     <Mail className="w-4 h-4" />

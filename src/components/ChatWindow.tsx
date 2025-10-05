@@ -55,7 +55,9 @@ export function ChatWindow({ sidebarExpanded = false, caseId }: ChatWindowProps)
   // First-time user welcome flow
   useEffect(() => {
     const checkFirstTimeUser = async () => {
-      if (!window.justiceAPI || welcomeMessageSent || messages.length > 0) return;
+      if (!window.justiceAPI || welcomeMessageSent || messages.length > 0) {
+        return;
+      }
 
       try {
         // Check if user has any conversations

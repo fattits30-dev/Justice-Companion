@@ -57,10 +57,10 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
             className={`
               flex items-center py-3 px-4 transition-all duration-200 rounded-lg
               ${
-                isActive
-                  ? 'bg-blue-600/20 text-blue-300 border-l-4 border-blue-400 shadow-lg'
-                  : 'text-blue-100 hover:bg-blue-800/30 border-l-4 border-transparent'
-              }
+          isActive
+            ? 'bg-blue-600/20 text-blue-300 border-l-4 border-blue-400 shadow-lg'
+            : 'text-blue-100 hover:bg-blue-800/30 border-l-4 border-transparent'
+          }
             `}
             aria-current={isActive ? 'page' : undefined}
             aria-label={item.label}

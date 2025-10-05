@@ -194,7 +194,7 @@ export function UserFactsPanel({ caseId }: UserFactsPanelProps) {
                     | 'financial'
                     | 'contact'
                     | 'medical'
-                    | 'other'
+                    | 'other',
                 )
               }
               style={{

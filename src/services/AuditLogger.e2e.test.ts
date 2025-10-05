@@ -783,7 +783,7 @@ describe('AuditLogger E2E', () => {
           eventType: l.eventType,
           timestamp: l.timestamp,
           integrityHash: l.integrityHash.slice(0, 16) + '...',
-          previousLogHash: l.previousLogHash ? l.previousLogHash.slice(0, 16) + '...' : null
+          previousLogHash: l.previousLogHash ? l.previousLogHash.slice(0, 16) + '...' : null,
         })), null, 2));
       }
 
@@ -1179,7 +1179,7 @@ describe('AuditLogger E2E', () => {
 
       db.prepare('UPDATE audit_logs SET event_type = ? WHERE id = ?').run(
         'evidence.delete',
-        logs[0].id
+        logs[0].id,
       );
 
       // Verify tampering is detected

@@ -14,7 +14,7 @@ import type { AuditLogger } from '../services/AuditLogger.js';
 export class TimelineRepository {
   constructor(
     private encryptionService?: EncryptionService,
-    private auditLogger?: AuditLogger
+    private auditLogger?: AuditLogger,
   ) {}
 
   /**

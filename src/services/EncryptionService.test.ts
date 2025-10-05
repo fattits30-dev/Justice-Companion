@@ -16,7 +16,7 @@ describe('EncryptionService', () => {
       const encrypted = service.encrypt(plaintext);
       expect(encrypted).not.toBeNull();
 
-      const decrypted = service.decrypt(encrypted!);
+      const decrypted = service.decrypt(encrypted);
       expect(decrypted).toBe(plaintext);
     });
 
@@ -38,7 +38,7 @@ describe('EncryptionService', () => {
 
       expect(encrypted).not.toBeNull();
 
-      const decrypted = service.decrypt(encrypted!);
+      const decrypted = service.decrypt(encrypted);
       expect(decrypted).toBe(plaintext);
       expect(decrypted?.length).toBe(plaintext.length);
     });
@@ -82,8 +82,8 @@ describe('EncryptionService', () => {
       expect(encrypted1!.ciphertext).not.toBe(encrypted2!.ciphertext);
 
       // But both should decrypt to same plaintext
-      expect(service.decrypt(encrypted1!)).toBe(text);
-      expect(service.decrypt(encrypted2!)).toBe(text);
+      expect(service.decrypt(encrypted1)).toBe(text);
+      expect(service.decrypt(encrypted2)).toBe(text);
     });
 
     it('should include non-empty authentication tag', () => {
@@ -257,7 +257,7 @@ describe('EncryptionService', () => {
       expect(reEncrypted!.ciphertext).not.toBe(encrypted.ciphertext); // New ciphertext
 
       // New service should be able to decrypt
-      const decrypted = newService.decrypt(reEncrypted!);
+      const decrypted = newService.decrypt(reEncrypted);
       expect(decrypted).toBe(plaintext);
     });
 
@@ -273,7 +273,7 @@ describe('EncryptionService', () => {
       const reEncrypted = service.rotateKey(encrypted, newService);
 
       // Old service should NOT be able to decrypt new encrypted data
-      expect(() => service.decrypt(reEncrypted!)).toThrow();
+      expect(() => service.decrypt(reEncrypted)).toThrow();
     });
   });
 
@@ -338,7 +338,7 @@ describe('EncryptionService', () => {
 
       expect(encrypted).not.toBeNull();
 
-      const decrypted = service.decrypt(encrypted!);
+      const decrypted = service.decrypt(encrypted);
       expect(decrypted).toBe(plaintext);
       expect(decrypted?.length).toBe(1024);
     });
@@ -350,7 +350,7 @@ describe('EncryptionService', () => {
 
       expect(encrypted).not.toBeNull();
 
-      const decrypted = service.decrypt(encrypted!);
+      const decrypted = service.decrypt(encrypted);
       expect(decrypted).toBe(plaintext);
       expect(decrypted?.length).toBe(100 * 1024);
     });
@@ -362,7 +362,7 @@ describe('EncryptionService', () => {
 
       expect(encrypted).not.toBeNull();
 
-      const decrypted = service.decrypt(encrypted!);
+      const decrypted = service.decrypt(encrypted);
       expect(decrypted).toBe(plaintext);
       expect(decrypted?.length).toBe(1024 * 1024);
     });
@@ -377,7 +377,7 @@ describe('EncryptionService', () => {
       const service = new EncryptionService(key);
       const plaintext = 'Test';
       const encrypted = service.encrypt(plaintext);
-      expect(service.decrypt(encrypted!)).toBe(plaintext);
+      expect(service.decrypt(encrypted)).toBe(plaintext);
     });
 
     it('should accept base64 string key in constructor', () => {
@@ -389,7 +389,7 @@ describe('EncryptionService', () => {
       const service = new EncryptionService(base64Key);
       const plaintext = 'Test';
       const encrypted = service.encrypt(plaintext);
-      expect(service.decrypt(encrypted!)).toBe(plaintext);
+      expect(service.decrypt(encrypted)).toBe(plaintext);
     });
 
     it('should create equivalent services from Buffer and base64 string', () => {
@@ -414,7 +414,7 @@ describe('EncryptionService', () => {
 
       expect(encrypted).not.toBeNull();
 
-      const decrypted = service.decrypt(encrypted!);
+      const decrypted = service.decrypt(encrypted);
       expect(decrypted).toBe(plaintext);
     });
 
@@ -424,7 +424,7 @@ describe('EncryptionService', () => {
 
       expect(encrypted).not.toBeNull();
 
-      const decrypted = service.decrypt(encrypted!);
+      const decrypted = service.decrypt(encrypted);
       expect(decrypted).toBe(plaintext);
     });
 
@@ -434,7 +434,7 @@ describe('EncryptionService', () => {
 
       expect(encrypted).not.toBeNull();
 
-      const decrypted = service.decrypt(encrypted!);
+      const decrypted = service.decrypt(encrypted);
       expect(decrypted).toBe(plaintext);
     });
 
@@ -444,7 +444,7 @@ describe('EncryptionService', () => {
 
       expect(encrypted).not.toBeNull();
 
-      const decrypted = service.decrypt(encrypted!);
+      const decrypted = service.decrypt(encrypted);
       expect(decrypted).toBe(plaintext);
     });
   });
@@ -475,7 +475,7 @@ describe('EncryptionService', () => {
         service.isEncrypted({
           algorithm: 'aes-256-gcm',
           ciphertext: 'test',
-        })
+        }),
       ).toBe(false);
     });
 
@@ -487,7 +487,7 @@ describe('EncryptionService', () => {
           iv: 'test',
           authTag: 123, // Should be string
           version: 1,
-        })
+        }),
       ).toBe(false);
     });
   });

@@ -125,7 +125,7 @@ export function runMigrations(): void {
           errorLogger.logError(
             `WARNING: Migration ${file} has been modified after being applied! ` +
             `Original checksum: ${applied.checksum}, Current: ${currentChecksum}`,
-            { type: 'warn' }
+            { type: 'warn' },
           );
         }
       }
@@ -203,7 +203,7 @@ export function getMigrationStatus(): {
   applied: MigrationRecord[];
   pending: string[];
   rolledBack: MigrationRecord[];
-} {
+  } {
   const db = getDb();
   const migrationsDir = path.join(__dirname, 'migrations');
 

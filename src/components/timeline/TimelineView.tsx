@@ -79,7 +79,7 @@ export function TimelineView({ caseId }: TimelineViewProps) {
 
   // Sort events by date (most recent first)
   const sortedEvents = [...timelineEvents].sort(
-    (a, b) => new Date(b.eventDate).getTime() - new Date(a.eventDate).getTime()
+    (a, b) => new Date(b.eventDate).getTime() - new Date(a.eventDate).getTime(),
   );
 
   return (

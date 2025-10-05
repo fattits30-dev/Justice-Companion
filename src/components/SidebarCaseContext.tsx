@@ -60,7 +60,9 @@ const SidebarCaseContext: React.FC<SidebarCaseContextProps> = ({
   // Load cases from database
   useEffect(() => {
     const loadCases = async () => {
-      if (!window.justiceAPI) return;
+      if (!window.justiceAPI) {
+        return;
+      }
 
       try {
         const response = await window.justiceAPI.getAllCases();

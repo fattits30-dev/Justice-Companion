@@ -77,7 +77,7 @@ export function useCaseFacts(caseId: number) {
       const result = await window.electron.caseFacts.update(id, input);
       if (result.success && result.data) {
         setCaseFacts((prev) =>
-          prev.map((fact) => (fact.id === id ? result.data! : fact))
+          prev.map((fact) => (fact.id === id ? result.data! : fact)),
         );
         return result.data;
       } else {

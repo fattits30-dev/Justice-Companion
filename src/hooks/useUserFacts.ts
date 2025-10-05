@@ -60,7 +60,7 @@ export function useUserFacts(caseId: number) {
       const result = await window.electron.userFacts.update(id, input);
       if (result.success && result.data) {
         setUserFacts((prev) =>
-          prev.map((fact) => (fact.id === id ? result.data! : fact))
+          prev.map((fact) => (fact.id === id ? result.data! : fact)),
         );
         return result.data;
       } else {

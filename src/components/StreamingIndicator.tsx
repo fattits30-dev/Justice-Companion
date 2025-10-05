@@ -25,7 +25,7 @@ export function StreamingIndicator({ loadingState, progressStages, thinkingConte
   useEffect(() => {
     logger.info('StreamingIndicator', 'State changed', {
       state: loadingState,
-      stagesCount: progressStages.length
+      stagesCount: progressStages.length,
     });
     setIsExpanded(false);
   }, [loadingState, progressStages.length]);
@@ -37,7 +37,7 @@ export function StreamingIndicator({ loadingState, progressStages, thinkingConte
 
   logger.debug('StreamingIndicator', 'Rendering', {
     state: loadingState,
-    stages: progressStages
+    stages: progressStages,
   });
 
   /**

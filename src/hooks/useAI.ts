@@ -58,11 +58,13 @@ export interface UseAIReturn {
  * - Error states (offline, timeout, AI service errors)
  * - Auto-scroll to latest message
  * - Event listener cleanup (no memory leaks)
+ * - Case-specific memory (function calling for fact-gathering)
  *
+ * @param caseId - Optional case ID for function calling (enables fact-gathering)
  * @param initialMessages - Optional array of messages to pre-populate chat history
  * @returns {UseAIReturn} AI chat state and actions
  */
-export function useAI(initialMessages: ChatMessage[] = []): UseAIReturn {
+export function useAI(caseId?: number, initialMessages: ChatMessage[] = []): UseAIReturn {
   // State management
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [loadingState, setLoadingState] = useState<AILoadingState>('idle');
@@ -107,12 +109,12 @@ export function useAI(initialMessages: ChatMessage[] = []): UseAIReturn {
 
         if (!response.connected) {
           setError(
-            'AI initialization failed. Please check model availability.'
+            'AI initialization failed. Please check model availability.',
           );
         }
       } catch (err) {
         setError(
-          'AI service initialization error. Please ensure the AI model is properly configured.'
+          'AI service initialization error. Please ensure the AI model is properly configured.',
         );
       }
     };
@@ -156,7 +158,9 @@ export function useAI(initialMessages: ChatMessage[] = []): UseAIReturn {
      */
     const handleThinkToken = (token: string): void => {
       logger.debug('useAI', 'handleThinkToken called', { token });
-      if (!isMountedRef.current) return;
+      if (!isMountedRef.current) {
+        return;
+      }
 
       setThinkingContent((prev) => {
         const newContent = prev + token;
@@ -170,7 +174,9 @@ export function useAI(initialMessages: ChatMessage[] = []): UseAIReturn {
      */
     const handleSources = (sources: string[]): void => {
       logger.debug('useAI', 'handleSources called', { sourcesCount: sources.length });
-      if (!isMountedRef.current) return;
+      if (!isMountedRef.current) {
+        return;
+      }
 
       setCurrentSources(sources);
       logger.info('useAI', 'Legal sources received', { sourcesCount: sources.length });
@@ -182,13 +188,15 @@ export function useAI(initialMessages: ChatMessage[] = []): UseAIReturn {
     const handleComplete = (): void => {
       logger.info('useAI', 'handleComplete called', {
         contentLength: streamingContentRef.current.length,
-        thinkingLength: thinkingContentRef.current.length
+        thinkingLength: thinkingContentRef.current.length,
       });
-      if (!isMountedRef.current) return;
+      if (!isMountedRef.current) {
+        return;
+      }
 
       // Mark all stages as completed
       setProgressStages((prev) =>
-        prev.map((stage) => ({ ...stage, completed: true }))
+        prev.map((stage) => ({ ...stage, completed: true })),
       );
 
       // Add complete assistant message to history with thinking content
@@ -213,7 +221,9 @@ export function useAI(initialMessages: ChatMessage[] = []): UseAIReturn {
      */
     const handleError = (errorMsg: string): void => {
       logger.error('useAI', 'Stream error', { error: errorMsg });
-      if (!isMountedRef.current) return;
+      if (!isMountedRef.current) {
+        return;
+      }
 
       setError(`AI Error: ${errorMsg}`);
       setStreamingContent('');
@@ -228,7 +238,9 @@ export function useAI(initialMessages: ChatMessage[] = []): UseAIReturn {
      */
     const handleStatusUpdate = (status: string): void => {
       logger.info('useAI', 'Status update received', { status });
-      if (!isMountedRef.current) return;
+      if (!isMountedRef.current) {
+        return;
+      }
 
       // Update loading state (backward compatibility)
       setLoadingState(status as AILoadingState);
@@ -237,7 +249,7 @@ export function useAI(initialMessages: ChatMessage[] = []): UseAIReturn {
       setProgressStages((prev) => {
         // Mark the last stage as completed
         const updatedPrev = prev.map((stage, index) =>
-          index === prev.length - 1 ? { ...stage, completed: true } : stage
+          index === prev.length - 1 ? { ...stage, completed: true } : stage,
         );
 
         // Add new stage as in-progress
@@ -327,6 +339,7 @@ export function useAI(initialMessages: ChatMessage[] = []): UseAIReturn {
         const response: IPCResponse<AIStreamStartResponse> =
           await window.justiceAPI.aiStreamStart({
             messages: [...messages, userMessage],
+            caseId: caseId,
           });
 
         if (!response.success) {
@@ -348,7 +361,7 @@ export function useAI(initialMessages: ChatMessage[] = []): UseAIReturn {
         setIsStreaming(false);
       }
     },
-    [messages, isStreaming]
+    [messages, isStreaming, caseId],
   );
 
   /**

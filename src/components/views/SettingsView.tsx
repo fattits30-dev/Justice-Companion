@@ -129,7 +129,9 @@ export function SettingsView(): JSX.Element {
   // Load user profile on mount
   useEffect(() => {
     const loadProfile = async () => {
-      if (!window.justiceAPI) return;
+      if (!window.justiceAPI) {
+        return;
+      }
 
       try {
         const result = await window.justiceAPI.getUserProfile();
@@ -236,7 +238,9 @@ export function SettingsView(): JSX.Element {
   }, [caseNumberFormat]);
 
   const handleSaveProfile = async () => {
-    if (!window.justiceAPI) return;
+    if (!window.justiceAPI) {
+      return;
+    }
 
     try {
       const result = await window.justiceAPI.updateUserProfile({

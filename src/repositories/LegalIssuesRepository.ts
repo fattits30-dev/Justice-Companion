@@ -14,7 +14,7 @@ import type { AuditLogger } from '../services/AuditLogger.js';
 export class LegalIssuesRepository {
   constructor(
     private encryptionService?: EncryptionService,
-    private auditLogger?: AuditLogger
+    private auditLogger?: AuditLogger,
   ) {}
 
   /**

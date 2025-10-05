@@ -274,7 +274,7 @@ describe('AuditLogger', () => {
 
       // Tamper with first log's hash
       db.prepare(
-        'UPDATE audit_logs SET integrity_hash = ? WHERE id = (SELECT id FROM audit_logs ORDER BY timestamp LIMIT 1)'
+        'UPDATE audit_logs SET integrity_hash = ? WHERE id = (SELECT id FROM audit_logs ORDER BY timestamp LIMIT 1)',
       ).run('TAMPERED_HASH_1234567890123456789012345678901234567890123456789012');
 
       const report = auditLogger.verifyIntegrity();
@@ -295,7 +295,7 @@ describe('AuditLogger', () => {
 
       // Break the chain by modifying previous_log_hash
       db.prepare(
-        'UPDATE audit_logs SET previous_log_hash = ? WHERE id = (SELECT id FROM audit_logs ORDER BY timestamp DESC LIMIT 1 OFFSET 1)'
+        'UPDATE audit_logs SET previous_log_hash = ? WHERE id = (SELECT id FROM audit_logs ORDER BY timestamp DESC LIMIT 1 OFFSET 1)',
       ).run('BROKEN_LINK_1234567890123456789012345678901234567890123456789012');
 
       const report = auditLogger.verifyIntegrity();
@@ -312,7 +312,7 @@ describe('AuditLogger', () => {
 
       // Tamper with event type (hash will no longer match)
       db.prepare(
-        'UPDATE audit_logs SET event_type = ? WHERE id = (SELECT id FROM audit_logs ORDER BY timestamp LIMIT 1)'
+        'UPDATE audit_logs SET event_type = ? WHERE id = (SELECT id FROM audit_logs ORDER BY timestamp LIMIT 1)',
       ).run('case.delete');
 
       const report = auditLogger.verifyIntegrity();
@@ -896,7 +896,7 @@ describe('AuditLogger', () => {
 
       db.prepare('UPDATE audit_logs SET integrity_hash = ? WHERE id = ?').run(
         'TAMPERED_HASH_1234567890123456789012345678901234567890123456789012',
-        middleLog.id
+        middleLog.id,
       );
 
       const report = auditLogger.verifyIntegrity();

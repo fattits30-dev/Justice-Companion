@@ -17,6 +17,7 @@ export interface MessageListProps {
   currentSources: string[]; // Legal source citations
   progressStages: ProgressStage[]; // NEW: Cumulative progress timeline
   messagesEndRef: RefObject<HTMLDivElement>;
+  caseId?: number | null; // Optional case ID for fact display
 }
 
 /**
@@ -43,12 +44,13 @@ export function MessageList({
   currentSources,
   progressStages,
   messagesEndRef,
+  caseId,
 }: MessageListProps): JSX.Element {
   return (
     <div className="flex-1 overflow-y-auto p-4">
       <div className="mx-auto space-y-4 pb-32">
         {/* Post-it Notes - Persistent at top */}
-        <ChatPostItNotes />
+        <ChatPostItNotes caseId={caseId} />
 
         {/* Empty state */}
         {messages.length === 0 && !isStreaming && (

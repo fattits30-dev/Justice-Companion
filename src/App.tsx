@@ -15,6 +15,7 @@ type ViewType = 'dashboard' | 'chat' | 'cases' | 'documents' | 'settings';
 function App() {
   const [activeView, setActiveView] = useState<ViewType>('dashboard');
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
+  const [activeCaseId, setActiveCaseId] = useState<number | null>(null);
 
   // Dummy conversation load handler (ChatWindow will handle its own state)
   const handleConversationLoad = async (_conversationId: number): Promise<void> => {
@@ -47,7 +48,7 @@ function App() {
       case 'dashboard':
         return <DashboardView onViewChange={setActiveView} />;
       case 'chat':
-        return <ChatWindow sidebarExpanded={sidebarExpanded} />;
+        return <ChatWindow sidebarExpanded={sidebarExpanded} caseId={activeCaseId} />;
       case 'cases':
         return <CasesView />;
       case 'documents':
@@ -74,6 +75,8 @@ function App() {
                 setActiveView(view);
                 setSidebarExpanded(false); // Minimize sidebar after navigation
               }}
+              activeCaseId={activeCaseId}
+              onActiveCaseIdChange={setActiveCaseId}
             />
 
             {/* Main Content Area */}

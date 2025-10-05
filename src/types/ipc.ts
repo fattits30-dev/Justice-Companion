@@ -72,6 +72,10 @@ export const IPC_CHANNELS = {
   // User Profile Operations
   PROFILE_GET: 'profile:get',
   PROFILE_UPDATE: 'profile:update',
+
+  // GDPR Operations
+  GDPR_EXPORT_USER_DATA: 'gdpr:exportUserData',
+  GDPR_DELETE_USER_DATA: 'gdpr:deleteUserData',
 } as const;
 
 // IPC Request/Response types
@@ -458,6 +462,49 @@ export interface ProfileUpdateResponse {
   data: UserProfile;
 }
 
+// GDPR IPC Request/Response types
+export interface GDPRExportUserDataRequest {
+  // Empty - exports all user data
+}
+
+export interface GDPRExportUserDataResponse {
+  success: true;
+  exportPath: string;
+  exportDate: string;
+  summary: {
+    casesCount: number;
+    evidenceCount: number;
+    notesCount: number;
+    legalIssuesCount: number;
+    timelineEventsCount: number;
+    conversationsCount: number;
+    messagesCount: number;
+    userFactsCount: number;
+    caseFactsCount: number;
+  };
+}
+
+export interface GDPRDeleteUserDataRequest {
+  confirmation: string; // Must be "DELETE_ALL_MY_DATA" for safety
+}
+
+export interface GDPRDeleteUserDataResponse {
+  success: true;
+  deletedAt: string;
+  summary: {
+    casesDeleted: number;
+    evidenceDeleted: number;
+    notesDeleted: number;
+    legalIssuesDeleted: number;
+    timelineEventsDeleted: number;
+    conversationsDeleted: number;
+    messagesDeleted: number;
+    userFactsDeleted: number;
+    caseFactsDeleted: number;
+    auditLogsDeleted: number;
+  };
+}
+
 /**
  * Type-safe IPC API exposed to renderer process
  */
@@ -518,6 +565,26 @@ export interface JusticeCompanionAPI {
   // User Profile operations
   getUserProfile(): Promise<IPCResponse<ProfileGetResponse>>;
   updateUserProfile(input: UpdateUserProfileInput): Promise<IPCResponse<ProfileUpdateResponse>>;
+
+  // Case Facts operations (Memory for AI)
+  storeFact(params: {
+    caseId: number;
+    factContent?: string;
+    factCategory?: string;
+    importance?: string;
+    factType?: string;
+    factKey?: string;
+    factValue?: string;
+    source?: string;
+    confidence?: number;
+  }): Promise<IPCResponse<any>>;
+  getFacts(caseId: number, factType?: string): Promise<IPCResponse<any>>;
+  getCaseFacts(caseId: number, factCategory?: string): Promise<IPCResponse<any>>;
+  getFactCount(caseId: number): Promise<IPCResponse<{ data: number }>>;
+
+  // GDPR operations
+  exportUserData(): Promise<IPCResponse<GDPRExportUserDataResponse>>;
+  deleteUserData(confirmation: string): Promise<IPCResponse<GDPRDeleteUserDataResponse>>;
 }
 
 // Extend Window interface for TypeScript

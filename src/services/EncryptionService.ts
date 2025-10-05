@@ -45,7 +45,7 @@ export class EncryptionService {
     // CRITICAL: Verify key length (256 bits = 32 bytes)
     if (this.key.length !== 32) {
       throw new Error(
-        `Encryption key must be exactly 32 bytes (256 bits), got ${this.key.length} bytes`
+        `Encryption key must be exactly 32 bytes (256 bits), got ${this.key.length} bytes`,
       );
     }
   }
