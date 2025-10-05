@@ -28,12 +28,15 @@ export class IntegratedAIService {
   private isInitialized = false;
   private modelFileName = 'Qwen_Qwen3-8B-Q4_K_M.gguf';
   private modelPath: string;
+  private caseFactsRepository: any = null; // Optional dependency for fact loading
 
-  constructor(config?: Partial<AIConfig>) {
+  constructor(config?: Partial<AIConfig>, caseFactsRepository?: any) {
     this.config = {
       ...DEFAULT_AI_CONFIG,
       ...config,
     } as AIConfig;
+
+    this.caseFactsRepository = caseFactsRepository || null;
 
     // Model storage: app.getPath('userData')/models/
     const userDataPath = app.getPath('userData');
@@ -154,53 +157,91 @@ export class IntegratedAIService {
   }
 
   /**
-   * Get Qwen 3 optimized system prompt
-   * Qwen 3 supports <think> tags for reasoning
+   * Get Qwen 3 optimized system prompt with fact-gathering rules
+   * Qwen 3 supports <think> tags for reasoning and [[call: function()]] for tool use
    */
-  private getQwen3SystemPrompt(context?: any): string {
-    if (context) {
-      // RAG-enhanced prompt with UK legal data
-      return buildSystemPrompt(context);
-    }
+  private getQwen3SystemPrompt(context?: any, facts?: any[]): string {
+    // Build base prompt with fact-gathering rules
+    const basePrompt = `You are a UK legal information assistant with ADMINISTRATIVE POWERS.
 
-    // Default legal assistant prompt
-    return `You are a supportive UK legal information assistant powered by Qwen 3. Think of yourself as a knowledgeable friend helping someone navigate confusing legal matters.
+🔒 HARD-CODED RULES (NEVER BREAK):
+
+RULE 0: FIRST-TIME USER ONBOARDING (HIGHEST PRIORITY)
+- If user responds to welcome questions with personal info or their issue:
+  ✓ Extract name/email and call update_user_profile immediately
+  ✓ Extract issue description and store as case fact using store_case_fact
+  ✓ Thank them warmly for sharing their situation
+  ✓ Ask 2-3 specific follow-up questions to gather MORE details about their case
+- Example: User says "My name is John and I was unfairly dismissed"
+  → Call: update_user_profile({name: "John"})
+  → Call: store_case_fact({factType: "issue", factKey: "case_type", factValue: "unfair dismissal", confidence: 1.0})
+  → Respond: "Thank you for sharing, John. I'm here to help with your dismissal case. Can you tell me: when did this happen, who was your employer, and did you receive any written notice?"
+
+RULE 1: FACT-GATHERING IS MANDATORY
+- When working on a case with <3 stored facts, you are in FACT-GATHERING MODE
+- You MUST gather these facts BEFORE providing legal information:
+  ✓ Party names (employee, employer, witnesses)
+  ✓ Key dates (employment start, dismissal date, deadlines)
+  ✓ Event sequence (what happened, when, why)
+  ✓ Evidence available (contracts, emails, witnesses)
+
+RULE 2: STORE FACTS IMMEDIATELY
+- As user provides information, extract facts and store them using store_case_fact
+- Format: [[call: store_case_fact({caseId: 42, factType: "timeline", factKey: "dismissal_date", factValue: "2024-01-15", confidence: 1.0})]]
+- Store facts for: parties (witness), dates (timeline), events (timeline), evidence (evidence), locations (location), communications (communication)
+
+RULE 3: FACTS ARE YOUR ANCHOR
+- Before EVERY response about a case, load facts using get_case_facts
+- Format: [[call: get_case_facts({caseId: 42})]]
+- Reference specific stored facts in your response to show you remember
 
 REASONING INSTRUCTIONS:
-- For complex questions, use <think>your reasoning here</think> tags to show your thought process
-- Inside <think>: analyze the question, consider relevant laws, plan your response
-- After </think>: provide your clear, warm, helpful answer
-- Example: <think>The user is asking about X. They sound concerned. The relevant law is Y. I should acknowledge their worry, then explain Z supportively.</think> [your response]
-- The user will NOT see <think> content - it's for your internal reasoning only
+- Use <think>reasoning</think> tags for complex analysis
+- Inside <think>: analyze question, check facts, plan response
+- User will NOT see <think> content
 
 EMPATHETIC COMMUNICATION:
-- Start by acknowledging their situation warmly - show you understand this matters to them
-- Use supportive phrases like "I understand this must be...", "That's a great question...", "It's natural to wonder..."
-- Be conversational and warm, not robotic or clinical
-- Show you care about helping them understand, not just reciting law
-- Validate their concerns before explaining the legal position
+- Acknowledge their situation warmly
+- Use supportive phrases: "I understand this must be...", "That's a great question..."
+- Be conversational, not clinical
+- Validate concerns before explaining law
 
-STAY PROFESSIONAL & ACCURATE:
-- You provide legal information, NOT legal advice
-- Always cite sources precisely (e.g., "Employment Rights Act 1996 Section 94", "Equality Act 2010")
-- Remain factually accurate - don't be overly casual or use slang
-- Never cross into giving advice - you're informing, not recommending
-- If you need more context to answer well, ASK CLARIFYING QUESTIONS warmly
-- Guide users supportively to provide specific details (which act, which section, their situation)
-- NEVER give blunt "I don't have information" - guide them warmly to refine their question
+PROFESSIONAL STANDARDS:
+- Provide legal INFORMATION, NOT legal advice
+- Cite sources precisely (e.g., "Employment Rights Act 1996 Section 94")
+- Ask clarifying questions if needed
+- Never give blunt "I don't have information"
 
 TONE EXAMPLES:
-✓ "I understand this must be stressful for you. Let me explain what the law says about unfair dismissal..."
-✓ "That's a really important question - many people aren't sure about their rights in this area. The Employment Rights Act 1996 states..."
-✓ "I can see why you're concerned. Here's what typically happens in situations like yours..."
-✗ "Your query is processed. Employment Rights Act 1996 Section 94 states..."
+✓ "I understand this is stressful. Let me explain unfair dismissal law..."
+✓ "Great question. The Employment Rights Act 1996 states..."
+✗ "Query processed. ERA 1996 S94 states..."
 ✗ "I don't have that information."
 
-Format for legal citations:
+Format for citations:
 - Legislation: "Section X of the [Act Name] [Year]"
-- Case law: "[Case Name] [Year] [Court]"
+- Case law: "[Case Name] [Year] [Court]"`;
 
-Remember: You're a supportive friend who happens to know the law - warm, accurate, never directive.`;
+    // If we have stored facts, append them to the prompt
+    if (facts && facts.length > 0) {
+      const factsSection = `
+
+📋 STORED FACTS FOR THIS CASE:
+${facts.map((f: any) => `- ${f.factContent} [${f.factCategory}, ${f.importance} importance]`).join('\n')}
+
+Use these facts as your memory. Reference them in your responses.`;
+
+      return basePrompt + factsSection;
+    }
+
+    // If we have RAG context, use buildSystemPrompt but inject fact-gathering rules
+    if (context) {
+      const ragPrompt = buildSystemPrompt(context);
+      // Prepend fact-gathering rules to RAG prompt
+      return basePrompt + '\n\n--- RAG CONTEXT ---\n' + ragPrompt;
+    }
+
+    return basePrompt;
   }
 
   /**
@@ -468,6 +509,129 @@ Remember: You're a supportive friend who happens to know the law - warm, accurat
         try {
           await contextSequence.dispose();
           console.log('[IntegratedAIService] Sequence disposed after error');
+        } catch (disposeError) {
+          console.error('[IntegratedAIService] Failed to dispose sequence:', disposeError);
+        }
+      }
+
+      onError(errorMessage);
+    }
+  }
+
+  /**
+   * Streaming chat with Qwen 3 8B + Function Calling
+   *
+   * This method enables AI to call functions like store_case_fact and get_case_facts.
+   * Uses node-llama-cpp's built-in function calling with LlamaChatSession.
+   * Functions are automatically executed when AI uses [[call: function()]] syntax.
+   *
+   * @param request - Chat request with messages and context
+   * @param caseId - Optional case ID for fact loading/storing
+   * @param onToken - Callback for each token generated
+   * @param onComplete - Callback when streaming completes
+   * @param onError - Callback for errors
+   */
+  async streamChatWithFunctions(
+    request: AIChatRequest,
+    caseId: number | undefined,
+    onToken: (token: string) => void,
+    onComplete: () => void,
+    onError: (error: string) => void
+  ): Promise<void> {
+    console.log('[IntegratedAIService] streamChatWithFunctions() called with caseId:', caseId);
+
+    let contextSequence: any = null;
+
+    try {
+      // Ensure initialized
+      const status = await this.checkConnection();
+      if (!status.connected) {
+        onError(`Integrated AI not ready: ${status.error}`);
+        return;
+      }
+
+      // Load facts if caseId provided (for system prompt injection)
+      let facts: any[] = [];
+      if (caseId && this.caseFactsRepository) {
+        try {
+          facts = this.caseFactsRepository.findByCaseId(caseId);
+          console.log(`[IntegratedAIService] Loaded ${facts.length} fact(s) for case ${caseId}`);
+        } catch (error) {
+          console.error('[IntegratedAIService] Failed to load facts:', error);
+          // Continue with empty facts - don't fail the entire request
+        }
+      }
+
+      // Import required classes
+      const { LlamaChatSession } = await import('node-llama-cpp');
+      const { aiFunctions } = await import('./ai-functions.js');
+
+      // Build system prompt with facts
+      const systemPrompt = this.getQwen3SystemPrompt(request.context, facts);
+
+      // Create fresh sequence
+      contextSequence = this.context.getSequence();
+
+      // Create chat session with function calling enabled
+      const chatSession = new LlamaChatSession({
+        contextSequence,
+        systemPrompt,
+      });
+
+      // Get only the most recent user message
+      const lastUserMessage = [...request.messages]
+        .reverse()
+        .find((msg) => msg.role === 'user');
+      const userPrompt = lastUserMessage?.content || '';
+
+      if (!userPrompt) {
+        throw new Error('No user message found in request');
+      }
+
+      console.log('[IntegratedAIService] Starting inference with function calling enabled');
+
+      let tokenCount = 0;
+      const startTime = Date.now();
+      let firstTokenTime: number | null = null;
+
+      // Stream with function calling enabled
+      // Note: node-llama-cpp automatically executes functions when AI uses [[call: function()]] syntax
+      // Function results are automatically sent back to AI as [[result: {...}]]
+      await chatSession.prompt(userPrompt.trim(), {
+        temperature: request.config?.temperature ?? this.config.temperature,
+        maxTokens: request.config?.maxTokens ?? this.config.maxTokens,
+        functions: aiFunctions, // 🔥 Enable function calling (auto-executed)
+        onTextChunk: (chunk: string) => {
+          if (firstTokenTime === null) {
+            firstTokenTime = Date.now();
+          }
+          tokenCount++;
+          onToken(chunk);
+        },
+      });
+
+      // Performance stats
+      const endTime = Date.now();
+      const totalDuration = (endTime - startTime) / 1000;
+      console.log('[IntegratedAIService] === STREAMING COMPLETE ===');
+      console.log(`[IntegratedAIService] Tokens: ${tokenCount}, Duration: ${totalDuration.toFixed(2)}s`);
+
+      // Dispose sequence
+      await contextSequence.dispose();
+      console.log('[IntegratedAIService] Sequence disposed');
+
+      onComplete();
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
+      errorLogger.logError(error as Error, {
+        context: 'IntegratedAIService.streamChatWithFunctions',
+      });
+
+      // Clean up sequence on error
+      if (contextSequence) {
+        try {
+          await contextSequence.dispose();
         } catch (disposeError) {
           console.error('[IntegratedAIService] Failed to dispose sequence:', disposeError);
         }

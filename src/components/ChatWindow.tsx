@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAI } from '../hooks/useAI';
 import { MessageList } from './MessageList';
 import { FloatingChatInput } from './FloatingChatInput';
@@ -10,6 +10,7 @@ import { Trash2 } from 'lucide-react';
 
 interface ChatWindowProps {
   sidebarExpanded?: boolean;
+  caseId?: number | null;
 }
 
 /**
@@ -32,8 +33,9 @@ interface ChatWindowProps {
  *
  * @returns {JSX.Element} Chat window component
  */
-export function ChatWindow({ sidebarExpanded = false }: ChatWindowProps): JSX.Element {
+export function ChatWindow({ sidebarExpanded = false, caseId }: ChatWindowProps): JSX.Element {
   const [clearChatConfirmOpen, setClearChatConfirmOpen] = useState(false);
+  const [welcomeMessageSent, setWelcomeMessageSent] = useState(false);
 
   const {
     messages,
@@ -47,7 +49,56 @@ export function ChatWindow({ sidebarExpanded = false }: ChatWindowProps): JSX.El
     messagesEndRef,
     sendMessage,
     clearMessages,
-  } = useAI();
+    loadMessages,
+  } = useAI(caseId || undefined);
+
+  // First-time user welcome flow
+  useEffect(() => {
+    const checkFirstTimeUser = async () => {
+      if (!window.justiceAPI || welcomeMessageSent || messages.length > 0) return;
+
+      try {
+        // Check if user has any conversations
+        const conversationsResult = await window.justiceAPI.getAllConversations();
+        const hasConversations = conversationsResult.success && conversationsResult.data && conversationsResult.data.length > 0;
+
+        // Check if user profile is empty
+        const profileResult = await window.justiceAPI.getUserProfile();
+        const hasProfile = profileResult.success && profileResult.data && profileResult.data.name;
+
+        // First-time user: no conversations and no profile
+        if (!hasConversations && !hasProfile) {
+          // Auto-inject welcome message
+          const welcomeMessage = {
+            role: 'assistant' as const,
+            content: `Welcome to Justice Companion! 👋
+
+I'm here to help you navigate your legal situation with care and precision.
+
+Before we dive into the specifics of your case, I'd like to get to know you a bit better so I can provide the most relevant assistance.
+
+**Let's start with a few quick questions:**
+
+1. **What's your name?**
+
+2. **What's your email address?** (optional, but helpful for records)
+
+3. **In a nutshell, what brings you here today?** (e.g., "I was unfairly dismissed from my job" or "I'm having issues with my landlord")
+
+Take your time - I'm here to listen and help you work through this step by step. 🤝`,
+            timestamp: new Date().toISOString(),
+          };
+
+          loadMessages([welcomeMessage]);
+          setWelcomeMessageSent(true);
+        }
+      } catch (error) {
+        console.error('Failed to check first-time user:', error);
+      }
+    };
+
+    checkFirstTimeUser();
+  }, [messages.length, welcomeMessageSent, loadMessages]);
 
   const handleExportPDF = (): void => {
     exportChatToPDF(messages, []);
@@ -93,6 +144,7 @@ export function ChatWindow({ sidebarExpanded = false }: ChatWindowProps): JSX.El
         currentSources={currentSources}
         progressStages={progressStages}
         messagesEndRef={messagesEndRef}
+        caseId={caseId}
       />
 
       {/* Floating Chat Input - centered to chat content */}
