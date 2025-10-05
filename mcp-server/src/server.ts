@@ -81,5 +81,13 @@ export class JusticeCompanionMCPServer {
     await this.server.connect(transport);
 
     console.error("✅ MCP Server ready and listening on stdio");
+
+    // CRITICAL: Keep process alive by preventing function from returning
+    // The stdio transport keeps the event loop active as long as stdin is open
+    // This prevents the Node.js process from exiting
+    await new Promise(() => {
+      // Never resolves - keeps the server running indefinitely
+      // Process will exit when stdin closes (e.g., parent process terminates)
+    });
   }
 }
