@@ -1,12 +1,15 @@
 import { app, BrowserWindow, ipcMain, dialog } from 'electron';
 import path from 'path';
 import fs from 'fs/promises';
+import dotenv from 'dotenv';
 import { errorLogger, setupGlobalErrorHandlers } from '../src/utils/error-logger';
 import { databaseManager } from '../src/db/database';
 import { runMigrations } from '../src/db/migrate';
 import { DevAPIServer } from './dev-api-server.js';
 import { caseService } from '../src/services/CaseService';
 import { caseRepository } from '../src/repositories/CaseRepository';
+import { evidenceRepository } from '../src/repositories/EvidenceRepository';
+import { EncryptionService } from '../src/services/EncryptionService';
 import { aiServiceFactory } from '../src/services/AIServiceFactory';
 import { ragService } from '../src/services/RAGService';
 import { legalAPIService } from '../src/services/LegalAPIService';
@@ -14,6 +17,10 @@ import { chatConversationService } from '../src/services/ChatConversationService
 import { userProfileService } from '../src/services/UserProfileService';
 import { modelDownloadService } from '../src/services/ModelDownloadService';
 import { IPC_CHANNELS } from '../src/types/ipc';
+
+// CRITICAL: Load environment variables FIRST (before any other initialization)
+// This loads .env file containing encryption keys and other config
+dotenv.config();
 import type {
   CaseCreateRequest,
   CaseGetByIdRequest,
@@ -956,6 +963,40 @@ app.whenReady().then(() => {
     } catch (error) {
       errorLogger.logError(error as Error, { context: 'database-initialization' });
       // Continue anyway - will show error in UI
+    }
+
+    // CRITICAL SECURITY: Initialize encryption service for PII/sensitive data
+    try {
+      const encryptionKeyBase64 = process.env.ENCRYPTION_KEY_BASE64;
+
+      if (!encryptionKeyBase64) {
+        errorLogger.logError('ENCRYPTION_KEY_BASE64 not found in environment variables', {
+          type: 'error',
+          context: 'encryption-initialization',
+        });
+        errorLogger.logError('⚠️  WARNING: Encryption service not initialized - sensitive data will not be encrypted!', {
+          type: 'warn',
+        });
+      } else {
+        // Initialize encryption service with key from .env
+        const encryptionService = new EncryptionService(encryptionKeyBase64);
+
+        // Inject encryption service into repositories that handle sensitive data
+        caseRepository.setEncryptionService(encryptionService);
+        evidenceRepository.setEncryptionService(encryptionService);
+
+        errorLogger.logError('✅ Encryption service initialized successfully', {
+          type: 'info',
+        });
+        errorLogger.logError('🔐 Case descriptions and evidence content will be encrypted at rest', {
+          type: 'info',
+        });
+      }
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'encryption-initialization' });
+      errorLogger.logError('⚠️  WARNING: Encryption initialization failed - sensitive data will not be encrypted!', {
+        type: 'error',
+      });
     }
 
     // Setup IPC handlers after database is ready
