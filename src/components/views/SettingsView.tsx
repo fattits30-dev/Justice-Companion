@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
 import { User, Bell, Lock, Database, Info, Brain, Briefcase } from 'lucide-react';
 import { ConfirmDialog } from '../ConfirmDialog';
+import { useToast } from '../../hooks/useToast';
 import type { UserProfile } from '../../models/UserProfile';
 
 export function SettingsView(): JSX.Element {
+  const toast = useToast();
+
   // User Profile
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -253,9 +256,43 @@ export function SettingsView(): JSX.Element {
   };
 
   const handleClearAllData = async () => {
-    // TODO: Implement clear all data functionality
-    console.log('Clear all data confirmed');
-    setClearDataConfirmOpen(false);
+    try {
+      toast.info('Clearing all data...');
+
+      // Get all cases
+      const casesResponse = await window.justiceAPI.getAllCases();
+      if (casesResponse.success && casesResponse.data.length > 0) {
+        // Delete each case (should cascade delete evidence)
+        for (const caseItem of casesResponse.data) {
+          await window.justiceAPI.deleteCase(caseItem.id);
+        }
+      }
+
+      // Get all conversations
+      const conversationsResponse = await window.justiceAPI.getAllConversations();
+      if (conversationsResponse.success && conversationsResponse.data.length > 0) {
+        // Delete each conversation
+        for (const conversation of conversationsResponse.data) {
+          await window.justiceAPI.deleteConversation(conversation.id);
+        }
+      }
+
+      // Clear localStorage settings (except RAG and notification preferences)
+      // We keep user preferences but clear application data
+      localStorage.removeItem('recentSearches');
+      localStorage.removeItem('draftMessages');
+
+      toast.success('All data cleared successfully!');
+      setClearDataConfirmOpen(false);
+
+      // Reload page to reset all state
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    } catch (error) {
+      console.error('Failed to clear data:', error);
+      toast.error('Failed to clear all data. Please try again.');
+    }
   };
 
   return (
