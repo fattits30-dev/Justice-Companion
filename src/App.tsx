@@ -7,6 +7,8 @@ import { DocumentsView } from './components/views/DocumentsView';
 import { SettingsView } from './components/views/SettingsView';
 import { DebugProvider } from './contexts/DebugContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { ThemeProvider } from './components/ThemeProvider';
+import { Toaster } from './components/ui/sonner';
 
 type ViewType = 'dashboard' | 'chat' | 'cases' | 'documents' | 'settings';
 
@@ -58,38 +60,42 @@ function App() {
   };
 
   return (
-    <ErrorBoundary>
-      <DebugProvider>
-        <div className="flex h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950">
-          {/* Sidebar */}
-          <Sidebar
-            isExpanded={sidebarExpanded}
-            onToggle={() => setSidebarExpanded(!sidebarExpanded)}
-            onConversationLoad={handleConversationLoad}
-            activeView={activeView}
-            onViewChange={(view) => {
-              setActiveView(view);
-              setSidebarExpanded(false); // Minimize sidebar after navigation
-            }}
-          />
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+      <ErrorBoundary>
+        <DebugProvider>
+          <div className="flex h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950">
+            {/* Sidebar */}
+            <Sidebar
+              isExpanded={sidebarExpanded}
+              onToggle={() => setSidebarExpanded(!sidebarExpanded)}
+              onConversationLoad={handleConversationLoad}
+              activeView={activeView}
+              onViewChange={(view) => {
+                setActiveView(view);
+                setSidebarExpanded(false); // Minimize sidebar after navigation
+              }}
+            />
 
-          {/* Main Content Area */}
-          <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ${sidebarExpanded ? 'ml-80' : 'ml-16'}`}>
-            {/* Top bar - no menu button, just title */}
-            <div className="h-14 bg-slate-900/50 border-b border-blue-800/30 flex items-center px-4 gap-3">
-              <div className="flex items-center gap-2">
-                <span className="text-blue-300 font-medium capitalize">{activeView}</span>
+            {/* Main Content Area */}
+            <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ${sidebarExpanded ? 'ml-80' : 'ml-16'}`}>
+              {/* Top bar - no menu button, just title */}
+              <div className="h-14 bg-slate-900/50 border-b border-blue-800/30 flex items-center px-4 gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-blue-300 font-medium capitalize">{activeView}</span>
+                </div>
+              </div>
+
+              {/* View Content */}
+              <div className="flex-1 overflow-hidden">
+                {renderView()}
               </div>
             </div>
-
-            {/* View Content */}
-            <div className="flex-1 overflow-hidden">
-              {renderView()}
-            </div>
           </div>
-        </div>
-      </DebugProvider>
-    </ErrorBoundary>
+          {/* Global Toast Notifications */}
+          <Toaster />
+        </DebugProvider>
+      </ErrorBoundary>
+    </ThemeProvider>
   );
 }
 

@@ -120,7 +120,7 @@ function transformCaseToTreeData(caseItem: Case): CaseData {
 }
 
 export function CasesView(): JSX.Element {
-  const { cases, loading, error } = useCases();
+  const { cases /* loading, error */ } = useCases();
   const [selectedCaseId, setSelectedCaseId] = useState<number | null>(null);
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
 
