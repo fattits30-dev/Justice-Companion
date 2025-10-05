@@ -12,6 +12,25 @@ export type AuditEventType =
   | 'evidence.delete'
   | 'evidence.content_access'
   | 'evidence.export'
+  // Note operations (Phase 3)
+  | 'note.create'
+  | 'note.update'
+  | 'note.delete'
+  | 'note.content_access'
+  // Legal issue operations (Phase 3)
+  | 'legal_issue.create'
+  | 'legal_issue.update'
+  | 'legal_issue.delete'
+  // Timeline event operations (Phase 3)
+  | 'timeline_event.create'
+  | 'timeline_event.update'
+  | 'timeline_event.delete'
+  // Chat message operations (Phase 3)
+  | 'message.create'
+  | 'message.content_access'
+  // User profile operations (Phase 3)
+  | 'profile.update'
+  | 'profile.pii_access'
   // Security operations
   | 'encryption.key_loaded'
   | 'encryption.decrypt'

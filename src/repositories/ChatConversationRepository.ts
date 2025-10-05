@@ -6,9 +6,22 @@ import type {
   CreateMessageInput,
   ConversationWithMessages,
 } from '../models/ChatConversation';
+import { EncryptionService, type EncryptedData } from '../services/EncryptionService.js';
+import type { AuditLogger } from '../services/AuditLogger.js';
 import { errorLogger } from '../utils/error-logger';
 
+/**
+ * Repository for managing chat conversations with encryption for message content
+ *
+ * Security:
+ * - content and thinking_content fields encrypted using AES-256-GCM
+ * - Audit logging for message creation and access
+ * - PII protection for chat history
+ * - Backward compatibility with legacy plaintext messages
+ */
 class ChatConversationRepository {
+  private encryptionService?: EncryptionService;
+  private auditLogger?: AuditLogger;
   /**
    * Create a new conversation
    */
@@ -137,9 +150,31 @@ class ChatConversationRepository {
 
       const messages = stmt.all(conversationId) as ChatMessage[];
 
+      // Decrypt all message content and thinking content
+      const decryptedMessages = messages.map((msg) => ({
+        ...msg,
+        content: this.decryptField(msg.content),
+        thinkingContent: this.decryptField(msg.thinkingContent),
+      }));
+
+      // Audit: PII accessed (encrypted message content)
+      if (decryptedMessages.length > 0) {
+        this.auditLogger?.log({
+          eventType: 'message.content_access',
+          resourceType: 'chat_message',
+          resourceId: conversationId.toString(),
+          action: 'read',
+          details: {
+            messageCount: decryptedMessages.length,
+            encrypted: true,
+          },
+          success: true,
+        });
+      }
+
       return {
         ...conversation,
-        messages,
+        messages: decryptedMessages as unknown as ChatMessage[],
       };
     } catch (error) {
       errorLogger.logError(error as Error, {
@@ -173,6 +208,24 @@ class ChatConversationRepository {
     const db = getDb();
 
     try {
+      // Encrypt content before INSERT (P0 priority field)
+      const encryptedContent = input.content
+        ? this.encryptionService?.encrypt(input.content)
+        : null;
+
+      const contentToStore = encryptedContent
+        ? JSON.stringify(encryptedContent)
+        : null;
+
+      // Encrypt thinking_content before INSERT (P1 priority field)
+      const encryptedThinkingContent = input.thinkingContent
+        ? this.encryptionService?.encrypt(input.thinkingContent)
+        : null;
+
+      const thinkingContentToStore = encryptedThinkingContent
+        ? JSON.stringify(encryptedThinkingContent)
+        : null;
+
       const stmt = db.prepare(`
         INSERT INTO chat_messages (conversation_id, role, content, thinking_content, token_count)
         VALUES (?, ?, ?, ?, ?)
@@ -181,8 +234,8 @@ class ChatConversationRepository {
       const result = stmt.run(
         input.conversationId,
         input.role,
-        input.content,
-        input.thinkingContent ?? null,
+        contentToStore,
+        thinkingContentToStore,
         input.tokenCount ?? null
       );
 
@@ -194,13 +247,89 @@ class ChatConversationRepository {
         WHERE id = ?
       `);
 
-      return msgStmt.get(result.lastInsertRowid) as ChatMessage;
+      const message = msgStmt.get(result.lastInsertRowid) as ChatMessage;
+
+      // Decrypt before returning
+      message.content = this.decryptField(message.content);
+      message.thinkingContent = this.decryptField(message.thinkingContent);
+
+      // Audit: Message created
+      this.auditLogger?.log({
+        eventType: 'message.create',
+        resourceType: 'chat_message',
+        resourceId: message.id.toString(),
+        action: 'create',
+        details: {
+          conversationId: input.conversationId,
+          role: input.role,
+          contentLength: input.content?.length || 0,
+        },
+        success: true,
+      });
+
+      return message;
     } catch (error) {
+      // Audit: Failed message creation
+      this.auditLogger?.log({
+        eventType: 'message.create',
+        resourceType: 'chat_message',
+        resourceId: 'unknown',
+        action: 'create',
+        success: false,
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+      });
+
       errorLogger.logError(error as Error, {
         context: 'ChatConversationRepository.addMessage',
       });
       throw error;
     }
+  }
+
+  /**
+   * Decrypt field with backward compatibility
+   * @param storedValue - Encrypted JSON string or legacy plaintext
+   * @returns Decrypted plaintext or null
+   */
+  private decryptField(storedValue: string | null | undefined): string | null {
+    if (!storedValue) {
+      return null;
+    }
+
+    // If no encryption service, return as-is (backward compatibility)
+    if (!this.encryptionService) {
+      return storedValue;
+    }
+
+    try {
+      // Try to parse as encrypted data
+      const encryptedData = JSON.parse(storedValue) as EncryptedData;
+
+      // Verify it's actually encrypted data format
+      if (this.encryptionService.isEncrypted(encryptedData)) {
+        return this.encryptionService.decrypt(encryptedData);
+      }
+
+      // If it's not encrypted format, treat as legacy plaintext
+      return storedValue;
+    } catch (error) {
+      // JSON parse failed - likely legacy plaintext data
+      return storedValue;
+    }
+  }
+
+  /**
+   * Set encryption service (for dependency injection)
+   */
+  setEncryptionService(service: EncryptionService): void {
+    this.encryptionService = service;
+  }
+
+  /**
+   * Set audit logger (for dependency injection)
+   */
+  setAuditLogger(logger: AuditLogger): void {
+    this.auditLogger = logger;
   }
 }
 

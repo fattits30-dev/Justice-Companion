@@ -1,8 +1,22 @@
 import { getDb } from '../db/database';
 import type { UserProfile, UpdateUserProfileInput } from '../models/UserProfile';
+import { EncryptionService, type EncryptedData } from '../services/EncryptionService.js';
+import type { AuditLogger } from '../services/AuditLogger.js';
 import { errorLogger } from '../utils/error-logger';
 
-class UserProfileRepository {
+/**
+ * Repository for managing user profile with encryption for PII
+ *
+ * Security:
+ * - name and email fields encrypted using AES-256-GCM (P0 priority)
+ * - Audit logging for profile access and updates
+ * - GDPR Article 32 compliance for personal data
+ * - Backward compatibility with legacy plaintext data
+ */
+export class UserProfileRepository {
+  private encryptionService?: EncryptionService;
+  private auditLogger?: AuditLogger;
+
   /**
    * Get the user profile (always ID = 1)
    */
@@ -24,6 +38,31 @@ class UserProfileRepository {
         throw new Error('User profile not found');
       }
 
+      // Decrypt PII fields after SELECT
+      const originalName = profile.name;
+      const originalEmail = profile.email;
+
+      profile.name = this.decryptField(profile.name) || 'Legal User';
+      profile.email = this.decryptField(profile.email);
+
+      // Audit: PII accessed (encrypted name/email fields)
+      const piiAccessed = (originalName && profile.name !== originalName) ||
+                          (originalEmail && profile.email !== originalEmail);
+
+      if (piiAccessed) {
+        this.auditLogger?.log({
+          eventType: 'profile.pii_access',
+          resourceType: 'profile',
+          resourceId: '1',
+          action: 'read',
+          details: {
+            fieldsAccessed: ['name', 'email'],
+            encrypted: true,
+          },
+          success: true,
+        });
+      }
+
       return profile;
     } catch (error) {
       errorLogger.logError(error as Error, {
@@ -41,21 +80,29 @@ class UserProfileRepository {
 
     try {
       const updates: string[] = [];
-      const values: any[] = [];
+      const params: Record<string, unknown> = {};
 
       if (input.name !== undefined) {
-        updates.push('name = ?');
-        values.push(input.name);
+        updates.push('name = @name');
+        // Encrypt name before UPDATE (P0 priority PII)
+        const encryptedName = input.name
+          ? this.encryptionService?.encrypt(input.name)
+          : null;
+        params.name = encryptedName ? JSON.stringify(encryptedName) : null;
       }
 
       if (input.email !== undefined) {
-        updates.push('email = ?');
-        values.push(input.email);
+        updates.push('email = @email');
+        // Encrypt email before UPDATE (P0 priority PII)
+        const encryptedEmail = input.email
+          ? this.encryptionService?.encrypt(input.email)
+          : null;
+        params.email = encryptedEmail ? JSON.stringify(encryptedEmail) : null;
       }
 
       if (input.avatarUrl !== undefined) {
-        updates.push('avatar_url = ?');
-        values.push(input.avatarUrl);
+        updates.push('avatar_url = @avatarUrl');
+        params.avatarUrl = input.avatarUrl;
       }
 
       if (updates.length === 0) {
@@ -68,15 +115,83 @@ class UserProfileRepository {
         WHERE id = 1
       `);
 
-      stmt.run(...values);
+      stmt.run(params);
+
+      // Audit: Profile updated
+      this.auditLogger?.log({
+        eventType: 'profile.update',
+        resourceType: 'profile',
+        resourceId: '1',
+        action: 'update',
+        details: {
+          fieldsUpdated: Object.keys(input),
+        },
+        success: true,
+      });
 
       return this.get();
     } catch (error) {
+      // Audit: Failed update
+      this.auditLogger?.log({
+        eventType: 'profile.update',
+        resourceType: 'profile',
+        resourceId: '1',
+        action: 'update',
+        success: false,
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+      });
+
       errorLogger.logError(error as Error, {
         context: 'UserProfileRepository.update',
       });
       throw error;
     }
+  }
+
+  /**
+   * Decrypt field with backward compatibility
+   * @param storedValue - Encrypted JSON string or legacy plaintext
+   * @returns Decrypted plaintext or null
+   */
+  private decryptField(storedValue: string | null | undefined): string | null {
+    if (!storedValue) {
+      return null;
+    }
+
+    // If no encryption service, return as-is (backward compatibility)
+    if (!this.encryptionService) {
+      return storedValue;
+    }
+
+    try {
+      // Try to parse as encrypted data
+      const encryptedData = JSON.parse(storedValue) as EncryptedData;
+
+      // Verify it's actually encrypted data format
+      if (this.encryptionService.isEncrypted(encryptedData)) {
+        return this.encryptionService.decrypt(encryptedData);
+      }
+
+      // If it's not encrypted format, treat as legacy plaintext
+      return storedValue;
+    } catch (error) {
+      // JSON parse failed - likely legacy plaintext data
+      return storedValue;
+    }
+  }
+
+  /**
+   * Set encryption service (for dependency injection)
+   */
+  setEncryptionService(service: EncryptionService): void {
+    this.encryptionService = service;
+  }
+
+  /**
+   * Set audit logger (for dependency injection)
+   */
+  setAuditLogger(logger: AuditLogger): void {
+    this.auditLogger = logger;
   }
 }
 

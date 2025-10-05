@@ -17,7 +17,12 @@
     "lint": "eslint src --ext .ts,.tsx",
     "test": "vitest",
     "electron:dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
-    "electron:build": "vite build && node scripts/copy-migrations.js && electron-builder"
+    "electron:build": "vite build && node scripts/copy-migrations.js && electron-builder",
+    "db:migrate": "tsx src/db/migrate.ts",
+    "db:migrate:status": "tsx scripts/migration-status.ts",
+    "db:migrate:rollback": "tsx scripts/rollback-migration.ts",
+    "db:backup": "tsx scripts/backup-database.ts",
+    "db:backup:list": "tsx scripts/list-backups.ts"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.56.0",
