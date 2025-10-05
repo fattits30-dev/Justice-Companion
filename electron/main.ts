@@ -9,6 +9,7 @@ import { DevAPIServer } from './dev-api-server.js';
 import { caseService } from '../src/services/CaseService';
 import { caseRepository } from '../src/repositories/CaseRepository';
 import { evidenceRepository } from '../src/repositories/EvidenceRepository';
+import type { CreateEvidenceInput } from '../src/models/Evidence';
 import { notesRepository } from '../src/repositories/NotesRepository';
 import { legalIssuesRepository } from '../src/repositories/LegalIssuesRepository';
 import { timelineRepository } from '../src/repositories/TimelineRepository';
@@ -125,7 +126,7 @@ function createWindow() {
  * - User Profile: get, update
  * - Model Management: list, download, delete
  *
- * @see {@link C:\Users\sava6\Desktop\Justice Companion\IPC_API_REFERENCE.md} for complete API documentation
+ * @see {@link C:\Users\sava6\Desktop\Justice Companion\docs\api\IPC_API_REFERENCE.md} for complete API documentation
  * @see {@link C:\Users\sava6\Desktop\Justice Companion\src\types\ipc.ts} for type definitions
  */
 function setupIpcHandlers() {
@@ -554,60 +555,104 @@ function setupIpcHandlers() {
         event.sender.send(IPC_CHANNELS.AI_STATUS_UPDATE, '✍️ Writing...');
 
         // Start streaming in background
-        console.log('[DEBUG] About to call aiServiceFactory.streamChat()');
-        console.log('[DEBUG] aiServiceFactory:', aiServiceFactory);
-        console.log('[DEBUG] typeof aiServiceFactory:', typeof aiServiceFactory);
+        // Use streamChatWithFunctions if caseId is provided (enables fact-gathering)
+        const useFunctionCalling = !!request.caseId;
+        console.log('[DEBUG] Using function calling:', useFunctionCalling);
+        console.log('[DEBUG] Case ID:', request.caseId);
 
         let tokensSent = 0;
         let thinkTokensSent = 0;
-        aiServiceFactory
-          .streamChat(
-            {
-              messages: request.messages as any,
-              context: ragContext, // Pass RAG-enhanced context
-              caseId: request.caseId,
-            },
-            // onToken callback - send display tokens to renderer
-            (token: string) => {
-              tokensSent++;
-              event.sender.send(IPC_CHANNELS.AI_STREAM_TOKEN, token);
-            },
-            // onComplete callback
-            () => {
-              errorLogger.logError('Stream complete, tokens sent to renderer', {
-                type: 'info',
-                tokensSent,
-                thinkTokensSent,
+        let functionCallCount = 0;
+
+        if (useFunctionCalling) {
+          // Use streamChatWithFunctions for case-specific conversations
+          aiServiceFactory
+            .streamChatWithFunctions(
+              {
+                messages: request.messages as any,
+                context: ragContext,
+                caseId: request.caseId,
+              },
+              request.caseId,
+              // onToken callback
+              (token: string) => {
+                tokensSent++;
+                event.sender.send(IPC_CHANNELS.AI_STREAM_TOKEN, token);
+              },
+              // onComplete callback
+              () => {
+                errorLogger.logError('Stream with functions complete', {
+                  type: 'info',
+                  tokensSent,
+                  functionCallCount,
+                });
+                event.sender.send(IPC_CHANNELS.AI_STREAM_COMPLETE);
+              },
+              // onError callback
+              (error: string) => {
+                event.sender.send(IPC_CHANNELS.AI_STREAM_ERROR, error);
+              }
+            )
+            .catch((error) => {
+              errorLogger.logError(error as Error, {
+                context: 'ipc:ai:stream:functions:background',
               });
-              event.sender.send(IPC_CHANNELS.AI_STREAM_COMPLETE);
-            },
-            // onError callback
-            (error: string) => {
-              event.sender.send(IPC_CHANNELS.AI_STREAM_ERROR, error);
-            },
-            // onThinkToken callback - send reasoning tokens to renderer
-            (thinkToken: string) => {
-              thinkTokensSent++;
-              event.sender.send(IPC_CHANNELS.AI_STREAM_THINK_TOKEN, thinkToken);
-            },
-            // onSources callback - send legal source citations to renderer
-            (sources: string[]) => {
-              errorLogger.logError('Sending sources to renderer', {
-                type: 'info',
-                sourcesCount: sources.length,
-              });
-              event.sender.send(IPC_CHANNELS.AI_STREAM_SOURCES, sources);
-            }
-          )
-          .catch((error) => {
-            errorLogger.logError(error as Error, {
-              context: 'ipc:ai:stream:background',
+              event.sender.send(
+                IPC_CHANNELS.AI_STREAM_ERROR,
+                error instanceof Error ? error.message : 'Stream with functions failed'
+              );
             });
-            event.sender.send(
-              IPC_CHANNELS.AI_STREAM_ERROR,
-              error instanceof Error ? error.message : 'Stream failed'
-            );
-          });
+        } else {
+          // Use regular streamChat for general conversations
+          aiServiceFactory
+            .streamChat(
+              {
+                messages: request.messages as any,
+                context: ragContext, // Pass RAG-enhanced context
+                caseId: request.caseId,
+              },
+              // onToken callback - send display tokens to renderer
+              (token: string) => {
+                tokensSent++;
+                event.sender.send(IPC_CHANNELS.AI_STREAM_TOKEN, token);
+              },
+              // onComplete callback
+              () => {
+                errorLogger.logError('Stream complete, tokens sent to renderer', {
+                  type: 'info',
+                  tokensSent,
+                  thinkTokensSent,
+                });
+                event.sender.send(IPC_CHANNELS.AI_STREAM_COMPLETE);
+              },
+              // onError callback
+              (error: string) => {
+                event.sender.send(IPC_CHANNELS.AI_STREAM_ERROR, error);
+              },
+              // onThinkToken callback - send reasoning tokens to renderer
+              (thinkToken: string) => {
+                thinkTokensSent++;
+                event.sender.send(IPC_CHANNELS.AI_STREAM_THINK_TOKEN, thinkToken);
+              },
+              // onSources callback - send legal source citations to renderer
+              (sources: string[]) => {
+                errorLogger.logError('Sending sources to renderer', {
+                  type: 'info',
+                  sourcesCount: sources.length,
+                });
+                event.sender.send(IPC_CHANNELS.AI_STREAM_SOURCES, sources);
+              }
+            )
+            .catch((error) => {
+              errorLogger.logError(error as Error, {
+                context: 'ipc:ai:stream:background',
+              });
+              event.sender.send(
+                IPC_CHANNELS.AI_STREAM_ERROR,
+                error instanceof Error ? error.message : 'Stream failed'
+              );
+            });
+        }
 
         return { success: true, streamId };
       } catch (error) {
@@ -1000,7 +1045,98 @@ function setupIpcHandlers() {
     }
   );
 
-  errorLogger.logError('IPC handlers registered successfully (cases + AI + files + conversations + profile + models)', { type: 'info' });
+  // Facts: Store a case fact (supports both old & new formats)
+  ipcMain.handle(
+    'facts:store',
+    async (_, params: any) => {
+      try {
+        let factContent: string;
+        let factCategory: string;
+        let importance: 'low' | 'medium' | 'high' | 'critical';
+
+        // NEW format (from AIFunctionDefinitions): factContent + factCategory + importance
+        if (params.factContent) {
+          factContent = params.factContent;
+          factCategory = params.factCategory || 'other';
+          importance = params.importance || 'medium';
+        }
+        // OLD format (backwards compat): factType + factKey + factValue + confidence
+        else {
+          factContent = `${params.factKey}: ${params.factValue}`;
+          factCategory = params.factType || 'other';
+
+          // Map confidence to importance
+          if (params.confidence !== undefined) {
+            if (params.confidence >= 0.9) importance = 'critical';
+            else if (params.confidence >= 0.7) importance = 'high';
+            else if (params.confidence >= 0.5) importance = 'medium';
+            else importance = 'low';
+          } else {
+            importance = 'medium';
+          }
+        }
+
+        const fact = caseFactsRepository.create({
+          caseId: params.caseId,
+          factContent,
+          factCategory: factCategory as any,
+          importance,
+        });
+
+        return { success: true, data: fact };
+      } catch (error) {
+        errorLogger.logError(error as Error, { context: 'ipc:facts:store' });
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Failed to store fact',
+        };
+      }
+    }
+  );
+
+  // Facts: Get facts for a case
+  ipcMain.handle(
+    'facts:get',
+    async (_, caseId: number, factType?: string) => {
+      try {
+        let facts;
+        if (factType) {
+          // Get facts filtered by category (factType maps to factCategory)
+          facts = caseFactsRepository.findByCategory(caseId, factType);
+        } else {
+          // Get all facts for case
+          facts = caseFactsRepository.findByCaseId(caseId);
+        }
+        return { success: true, data: facts };
+      } catch (error) {
+        errorLogger.logError(error as Error, { context: 'ipc:facts:get' });
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Failed to get facts',
+        };
+      }
+    }
+  );
+
+  // Facts: Get fact count for a case
+  ipcMain.handle(
+    'facts:count',
+    async (_, caseId: number) => {
+      try {
+        const facts = caseFactsRepository.findByCaseId(caseId);
+        const count = facts.length;
+        return { success: true, data: count };
+      } catch (error) {
+        errorLogger.logError(error as Error, { context: 'ipc:facts:count' });
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Failed to get fact count',
+        };
+      }
+    }
+  );
+
+  errorLogger.logError('IPC handlers registered successfully (cases + AI + files + conversations + profile + models + facts)', { type: 'info' });
 }
 
 // Prevent multiple instances - request single instance lock
@@ -1113,6 +1249,19 @@ if (process.env.NODE_ENV !== 'production') {
   };
   ipcMain.handle("dev-api:cases:createTestFixture", casesCreateTestFixtureHandler);
   devAPIServer.registerHandler("dev-api:cases:createTestFixture", casesCreateTestFixtureHandler);
+
+  // Evidence handlers
+  const evidenceCreateHandler = async (event: any, input: CreateEvidenceInput) => {
+    try {
+      const createdEvidence = evidenceRepository.create(input);
+      return createdEvidence;
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'dev-api:evidence:create' });
+      throw error;
+    }
+  };
+  ipcMain.handle("dev-api:evidence:create", evidenceCreateHandler);
+  devAPIServer.registerHandler("dev-api:evidence:create", evidenceCreateHandler);
 
   // Database handlers
   const databaseQueryHandler = async (event: any, sql: string) => {
@@ -1252,6 +1401,22 @@ app.whenReady().then(() => {
       errorLogger.logError(error as Error, { context: 'audit-logger-initialization' });
       errorLogger.logError('⚠️  WARNING: Audit logger initialization failed - operations will not be audited!', {
         type: 'error',
+      });
+    }
+
+    // Inject CaseFactRepository into AIServiceFactory for fact loading
+    try {
+      aiServiceFactory.setCaseFactsRepository(caseFactsRepository);
+      errorLogger.logError('✅ CaseFactRepository injected into AI Service Factory', {
+        type: 'info',
+      });
+      errorLogger.logError('🧠 AI can now load and reference stored case facts', {
+        type: 'info',
+      });
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'ai-service-factory-injection' });
+      errorLogger.logError('⚠️  WARNING: Failed to inject repository - AI won\'t have access to stored facts!', {
+        type: 'warn',
       });
     }
 
