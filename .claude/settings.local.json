@@ -112,6 +112,15 @@
       "mcp__puppeteer__puppeteer_select",
       "mcp__puppeteer__puppeteer_hover",
       "mcp__puppeteer__puppeteer_evaluate",
+      "mcp__justice-companion__cases:create",
+      "mcp__justice-companion__cases:get",
+      "mcp__justice-companion__cases:list",
+      "mcp__justice-companion__cases:update",
+      "mcp__justice-companion__cases:delete",
+      "mcp__justice-companion__cases:createTestFixture",
+      "mcp__justice-companion__database:query",
+      "mcp__justice-companion__database:migrate",
+      "mcp__justice-companion__database:backup",
       "ListMcpResourcesTool",
       "ReadMcpResourceTool",
       "WebFetch(domain:nationalarchives.github.io)",
@@ -134,7 +143,8 @@
     "sqlite",
     "playwright",
     "brave-search",
-    "context7"
+    "context7",
+    "justice-companion"
   ],
   "hooks": {
     "SessionStart": []

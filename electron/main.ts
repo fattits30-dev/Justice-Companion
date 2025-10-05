@@ -96,9 +96,56 @@ function createWindow() {
 }
 
 /**
- * Setup IPC handlers for communication with renderer process
+ * Setup IPC handlers for communication with renderer process.
+ *
+ * Registers all IPC handlers for type-safe communication between the
+ * Electron main process and the renderer process (React frontend).
+ *
+ * **Security Features**:
+ * - All sensitive data (case descriptions, evidence content) is encrypted with AES-256-GCM
+ * - All CRUD operations are logged to the immutable audit trail
+ * - Input validation on all parameters
+ * - Parameterized SQL queries to prevent injection
+ *
+ * **Handler Categories**:
+ * - Case Management: create, read, update, delete, close, statistics
+ * - AI Operations: status check, chat, streaming
+ * - File Operations: select, upload/extract
+ * - Conversation Management: create, read, update, delete, messages
+ * - User Profile: get, update
+ * - Model Management: list, download, delete
+ *
+ * @see {@link C:\Users\sava6\Desktop\Justice Companion\IPC_API_REFERENCE.md} for complete API documentation
+ * @see {@link C:\Users\sava6\Desktop\Justice Companion\src\types\ipc.ts} for type definitions
  */
 function setupIpcHandlers() {
+  /**
+   * Create a new legal case.
+   *
+   * @param {CaseCreateRequest} request - Case creation request
+   * @param {CreateCaseInput} request.input - Case data
+   * @param {string} request.input.title - Case title (required)
+   * @param {string} [request.input.description] - Case description (optional, encrypted)
+   * @param {CaseType} request.input.caseType - Case type (required)
+   *
+   * @returns {Promise<CaseCreateResponse | IPCErrorResponse>} Created case or error
+   *
+   * @throws {Error} If validation fails or database error occurs
+   *
+   * @security
+   * - Description field is encrypted with AES-256-GCM before storage
+   * - Case creation is logged to audit trail (event: case.create)
+   * - Failed attempts are also audited with error details
+   *
+   * @example
+   * ```typescript
+   * const result = await window.justiceAPI.createCase({
+   *   title: "Unfair Dismissal Claim",
+   *   caseType: "employment",
+   *   description: "Client dismissed without proper procedure"
+   * });
+   * ```
+   */
   // Case: Create
   ipcMain.handle(
     IPC_CHANNELS.CASE_CREATE,
@@ -116,6 +163,27 @@ function setupIpcHandlers() {
     }
   );
 
+  /**
+   * Get a case by its ID.
+   *
+   * @param {CaseGetByIdRequest} request - Request with case ID
+   * @param {number} request.id - Case ID to retrieve
+   *
+   * @returns {Promise<CaseGetByIdResponse | IPCErrorResponse>} Case data or error
+   *
+   * @security
+   * - Description field is automatically decrypted
+   * - PII access is logged to audit trail if description was encrypted (event: case.pii_access)
+   * - Audit log includes metadata only (no sensitive data)
+   *
+   * @example
+   * ```typescript
+   * const result = await window.justiceAPI.getCaseById(123);
+   * if (result.success && result.data) {
+   *   console.log(result.data.title, result.data.description);
+   * }
+   * ```
+   */
   // Case: Get by ID
   ipcMain.handle(
     IPC_CHANNELS.CASE_GET_BY_ID,
@@ -134,6 +202,26 @@ function setupIpcHandlers() {
     }
   );
 
+  /**
+   * Get all cases.
+   *
+   * @param {CaseGetAllRequest} request - Empty request object (future: pagination/filtering)
+   *
+   * @returns {Promise<CaseGetAllResponse | IPCErrorResponse>} Array of cases or error
+   *
+   * @security
+   * - All description fields are automatically decrypted
+   * - No audit logging for bulk operations (performance)
+   * - PII access only logged on individual getById calls
+   *
+   * @example
+   * ```typescript
+   * const result = await window.justiceAPI.getAllCases();
+   * if (result.success) {
+   *   console.log(`Found ${result.data.length} cases`);
+   * }
+   * ```
+   */
   // Case: Get all
   ipcMain.handle(
     IPC_CHANNELS.CASE_GET_ALL,
@@ -152,6 +240,33 @@ function setupIpcHandlers() {
     }
   );
 
+  /**
+   * Update an existing case.
+   *
+   * @param {CaseUpdateRequest} request - Update request
+   * @param {number} request.id - Case ID to update
+   * @param {UpdateCaseInput} request.input - Fields to update
+   * @param {string} [request.input.title] - New title
+   * @param {string} [request.input.description] - New description (encrypted)
+   * @param {CaseType} [request.input.caseType] - New case type
+   * @param {CaseStatus} [request.input.status] - New status
+   *
+   * @returns {Promise<CaseUpdateResponse | IPCErrorResponse>} Updated case or error
+   *
+   * @security
+   * - Description field is encrypted before UPDATE
+   * - Update operation logged to audit trail (event: case.update)
+   * - Audit log includes list of fields updated (not values)
+   * - Failed updates are also audited
+   *
+   * @example
+   * ```typescript
+   * const result = await window.justiceAPI.updateCase(123, {
+   *   status: "closed",
+   *   description: "Case resolved via settlement"
+   * });
+   * ```
+   */
   // Case: Update
   ipcMain.handle(
     IPC_CHANNELS.CASE_UPDATE,
@@ -169,6 +284,30 @@ function setupIpcHandlers() {
     }
   );
 
+  /**
+   * Delete a case (hard delete with cascading).
+   *
+   * @param {CaseDeleteRequest} request - Delete request
+   * @param {number} request.id - Case ID to delete
+   *
+   * @returns {Promise<CaseDeleteResponse | IPCErrorResponse>} Success or error
+   *
+   * @security
+   * - Hard delete (not soft delete)
+   * - Cascades to evidence, conversations, messages via FK constraints
+   * - Deletion logged to audit trail (event: case.delete)
+   * - Failed deletions are also audited
+   *
+   * @warning This operation is irreversible!
+   *
+   * @example
+   * ```typescript
+   * const result = await window.justiceAPI.deleteCase(123);
+   * if (result.success) {
+   *   console.log("Case deleted successfully");
+   * }
+   * ```
+   */
   // Case: Delete
   ipcMain.handle(
     IPC_CHANNELS.CASE_DELETE,
@@ -274,6 +413,49 @@ function setupIpcHandlers() {
     }
   );
 
+  /**
+   * Start a streaming AI chat session with RAG integration.
+   *
+   * Initiates a streaming chat session with the AI service. Responses are sent
+   * as events to the renderer process in real-time. Automatically fetches legal
+   * context from UK Legal APIs (RAG) if the question is legal-related.
+   *
+   * @param {AIStreamStartRequest} request - Stream request
+   * @param {Array<{role: string, content: string}>} request.messages - Conversation history
+   * @param {any} [request.context] - Optional legal context (merged with RAG data)
+   * @param {number} [request.caseId] - Optional case ID for context
+   *
+   * @returns {Promise<AIStreamStartResponse | IPCErrorResponse>} Stream ID or error
+   *
+   * @fires AI_STREAM_TOKEN - Display token received (string)
+   * @fires AI_STREAM_THINK_TOKEN - Reasoning token from <think> blocks (string)
+   * @fires AI_STREAM_SOURCES - Legal source citations (string[])
+   * @fires AI_STATUS_UPDATE - Progress updates (string: "Thinking...", "Researching...", "Writing...")
+   * @fires AI_STREAM_COMPLETE - Stream finished successfully
+   * @fires AI_STREAM_ERROR - Stream error (string)
+   *
+   * @security
+   * - RAG data is fetched only for legal questions (intelligent filtering)
+   * - Classification determines if UK legal APIs are called
+   * - Streaming continues even if RAG fetch fails
+   *
+   * @example
+   * ```typescript
+   * // Set up listeners
+   * const unsubToken = window.justiceAPI.onAIStreamToken(token => {
+   *   appendToChat(token);
+   * });
+   * const unsubComplete = window.justiceAPI.onAIStreamComplete(() => {
+   *   unsubToken();
+   *   unsubComplete();
+   * });
+   *
+   * // Start stream
+   * const result = await window.justiceAPI.aiStreamStart({
+   *   messages: [{ role: "user", content: "Explain unfair dismissal law" }]
+   * });
+   * ```
+   */
   // AI: Stream Start
   ipcMain.handle(
     IPC_CHANNELS.AI_STREAM_START,
@@ -465,6 +647,37 @@ function setupIpcHandlers() {
     }
   );
 
+  /**
+   * Upload a file and extract text content.
+   *
+   * Processes an uploaded file and extracts text based on file type:
+   * - PDF: Extracts text via pdf-parse
+   * - DOCX: Extracts text via mammoth
+   * - TXT: Reads as UTF-8 text
+   * - Images (JPG, PNG): No text extraction
+   *
+   * @param {FileUploadRequest} request - Upload request
+   * @param {string} request.filePath - Absolute path to file
+   *
+   * @returns {Promise<FileUploadResponse | IPCErrorResponse>} File metadata and text or error
+   *
+   * @throws {Error} If file size exceeds 50MB or file processing fails
+   *
+   * @security
+   * - Max file size: 50MB (enforced)
+   * - File type validation via MIME type
+   * - No sensitive data logged
+   *
+   * @example
+   * ```typescript
+   * const result = await window.justiceAPI.uploadFile("/path/to/document.pdf");
+   * if (result.success) {
+   *   console.log("File:", result.fileName);
+   *   console.log("Size:", result.fileSize);
+   *   console.log("Text:", result.extractedText);
+   * }
+   * ```
+   */
   // File: Upload (process and extract text)
   ipcMain.handle(
     IPC_CHANNELS.FILE_UPLOAD,

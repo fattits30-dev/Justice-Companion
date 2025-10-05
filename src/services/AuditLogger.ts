@@ -113,7 +113,8 @@ export class AuditLogger {
     if (conditions.length > 0) {
       sql += ' WHERE ' + conditions.join(' AND ');
     }
-    sql += ' ORDER BY timestamp ASC, id ASC';
+    // Use ROWID for deterministic ordering (auto-increments with each INSERT)
+    sql += ' ORDER BY ROWID ASC';
 
     if (filters.limit) {
       sql += ' LIMIT @limit';
@@ -150,10 +151,10 @@ export class AuditLogger {
    */
   verifyIntegrity(): IntegrityReport {
     try {
-      // Fetch all logs in chronological order
+      // Fetch all logs in insertion order (ROWID auto-increments with each INSERT)
       const stmt = this.db.prepare(`
         SELECT * FROM audit_logs
-        ORDER BY timestamp ASC, id ASC
+        ORDER BY ROWID ASC
       `);
 
       const rows = stmt.all() as Array<{

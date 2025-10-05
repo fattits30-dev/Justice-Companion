@@ -1,0 +1,122 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                          AUDIT_LOGS TABLE SCHEMA                             ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║                                                                              ║
+║  TABLE: audit_logs                                                           ║
+║  Purpose: Immutable audit trail with blockchain-style integrity             ║
+║                                                                              ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║  COLUMNS                                                                     ║
+╠═══════════════════════╦══════════╦═════════════╦═══════════════════════════╣
+║ Column Name           ║ Type     ║ Constraints ║ Description               ║
+╠═══════════════════════╬══════════╬═════════════╬═══════════════════════════╣
+║ id                    ║ TEXT     ║ PK          ║ UUID identifier           ║
+║ timestamp             ║ TEXT     ║ NOT NULL    ║ ISO 8601 w/ milliseconds  ║
+║ event_type            ║ TEXT     ║ NOT NULL    ║ Event identifier          ║
+║ user_id               ║ TEXT     ║ nullable    ║ Future: user tracking     ║
+║ resource_type         ║ TEXT     ║ NOT NULL    ║ case, evidence, etc.      ║
+║ resource_id           ║ TEXT     ║ NOT NULL    ║ Affected resource ID      ║
+║ action                ║ TEXT     ║ NOT NULL    ║ create/read/update/etc.   ║
+║                       ║          ║ CHECK(...)  ║ 6 allowed values          ║
+║ details               ║ TEXT     ║ nullable    ║ JSON event details        ║
+║ ip_address            ║ TEXT     ║ nullable    ║ Request IP                ║
+║ user_agent            ║ TEXT     ║ nullable    ║ Client user agent         ║
+║ success               ║ INTEGER  ║ NOT NULL    ║ 1=success, 0=failure      ║
+║                       ║          ║ DEFAULT 1   ║                           ║
+║                       ║          ║ CHECK(0,1)  ║                           ║
+║ error_message         ║ TEXT     ║ nullable    ║ Error if success=0        ║
+║ integrity_hash        ║ TEXT     ║ NOT NULL    ║ SHA-256 (64 hex chars)    ║
+║ previous_log_hash     ║ TEXT     ║ nullable    ║ Chain link (null=first)   ║
+║ created_at            ║ TEXT     ║ NOT NULL    ║ DB timestamp              ║
+║                       ║          ║ DEFAULT now ║                           ║
+╠═══════════════════════╩══════════╩═════════════╩═══════════════════════════╣
+║                                                                              ║
+║  INDEXES (5 total)                                                           ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║                                                                              ║
+║  1. idx_audit_logs_timestamp                                                 ║
+║     ON audit_logs(timestamp)                                                 ║
+║     Purpose: Chronological queries (e.g., last 24 hours)                    ║
+║                                                                              ║
+║  2. idx_audit_logs_resource                                                  ║
+║     ON audit_logs(resource_type, resource_id)                                ║
+║     Purpose: Resource-specific audit trails                                 ║
+║                                                                              ║
+║  3. idx_audit_logs_event_type                                                ║
+║     ON audit_logs(event_type)                                                ║
+║     Purpose: Event filtering (e.g., all decryptions)                        ║
+║                                                                              ║
+║  4. idx_audit_logs_user_id (PARTIAL INDEX)                                   ║
+║     ON audit_logs(user_id) WHERE user_id IS NOT NULL                         ║
+║     Purpose: User activity tracking (space-efficient)                       ║
+║                                                                              ║
+║  5. idx_audit_logs_chain                                                     ║
+║     ON audit_logs(timestamp ASC, id ASC)                                     ║
+║     Purpose: Chain integrity verification                                   ║
+║                                                                              ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║                                                                              ║
+║  INTEGRITY CHAIN EXAMPLE                                                     ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║                                                                              ║
+║  Log #1 (First)                                                              ║
+║  ┌────────────────────────────────────────────────┐                         ║
+║  │ id: uuid-001                                   │                         ║
+║  │ previous_log_hash: NULL                        │ ◄─── No previous log   ║
+║  │ integrity_hash: abc123...                      │                         ║
+║  └────────────────────────────────────────────────┘                         ║
+║                          │                                                   ║
+║                          │ Chain link                                       ║
+║                          ▼                                                   ║
+║  Log #2                                                                      ║
+║  ┌────────────────────────────────────────────────┐                         ║
+║  │ id: uuid-002                                   │                         ║
+║  │ previous_log_hash: abc123... (from Log #1)     │ ◄─── Links to #1       ║
+║  │ integrity_hash: def456...                      │                         ║
+║  └────────────────────────────────────────────────┘                         ║
+║                          │                                                   ║
+║                          │ Chain link                                       ║
+║                          ▼                                                   ║
+║  Log #3                                                                      ║
+║  ┌────────────────────────────────────────────────┐                         ║
+║  │ id: uuid-003                                   │                         ║
+║  │ previous_log_hash: def456... (from Log #2)     │ ◄─── Links to #2       ║
+║  │ integrity_hash: ghi789...                      │                         ║
+║  └────────────────────────────────────────────────┘                         ║
+║                                                                              ║
+║  If any log is modified, the chain breaks!                                  ║
+║  Verification: current.previous_log_hash === previous.integrity_hash        ║
+║                                                                              ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║                                                                              ║
+║  ALLOWED ACTIONS (CHECK constraint)                                          ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║                                                                              ║
+║  ✓ create    - Resource created                                             ║
+║  ✓ read      - Resource accessed/viewed                                     ║
+║  ✓ update    - Resource modified                                            ║
+║  ✓ delete    - Resource removed                                             ║
+║  ✓ export    - Resource exported/downloaded                                 ║
+║  ✓ decrypt   - Encrypted resource decrypted                                 ║
+║                                                                              ║
+║  Any other value will be REJECTED by database                               ║
+║                                                                              ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║                                                                              ║
+║  IMMUTABILITY DESIGN                                                         ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║                                                                              ║
+║  ✓ INSERT-ONLY at application layer                                         ║
+║  ✓ No UPDATE triggers (intentional)                                         ║
+║  ✓ No DELETE triggers (intentional)                                         ║
+║  ✓ Blockchain-style hash chaining                                           ║
+║  ✓ Any tampering breaks integrity chain                                     ║
+║                                                                              ║
+║  Note: Database technically allows UPDATE/DELETE,                           ║
+║        but application code will NEVER use them.                            ║
+║                                                                              ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+MIGRATION FILE: src/db/migrations/003_audit_logs.sql
+STATUS: Ready to deploy
+COMPATIBILITY: SQLite 3.x, better-sqlite3
