@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Scale, MessageSquarePlus, ChevronDown, Trash2, Edit2 } from 'lucide-react';
 import type { ChatConversation } from '../models/ChatConversation';
+import type { Case } from '../models/Case';
 
 interface SidebarCaseContextProps {
   activeCaseId: number | null;
@@ -27,6 +28,7 @@ const SidebarCaseContext: React.FC<SidebarCaseContextProps> = ({
   const [hoveredChatId, setHoveredChatId] = useState<number | null>(null);
   const [editingChatId, setEditingChatId] = useState<number | null>(null);
   const [editTitle, setEditTitle] = useState('');
+  const [cases, setCases] = useState<Case[]>([]);
 
   const formatTimestamp = (timestamp: string): string => {
     const date = new Date(timestamp);
@@ -55,7 +57,27 @@ const SidebarCaseContext: React.FC<SidebarCaseContextProps> = ({
     return title.length > maxLength ? `${title.substring(0, maxLength)}...` : title;
   };
 
-  const activeCaseTitle = activeCaseId ? `Case: ${activeCaseId}` : 'General Chat';
+  // Load cases from database
+  useEffect(() => {
+    const loadCases = async () => {
+      if (!window.justiceAPI) return;
+
+      try {
+        const response = await window.justiceAPI.getAllCases();
+        if (response.success && response.data) {
+          setCases(response.data);
+        }
+      } catch (error) {
+        console.error('Failed to load cases:', error);
+      }
+    };
+
+    loadCases();
+  }, []);
+
+  const activeCaseTitle = activeCaseId
+    ? cases.find(c => c.id === activeCaseId)?.title || `Case #${activeCaseId}`
+    : 'General Chat';
 
   return (
     <div className="border-b border-blue-800/30 p-4">
@@ -83,19 +105,36 @@ const SidebarCaseContext: React.FC<SidebarCaseContextProps> = ({
           </button>
 
           {isDropdownOpen && (
-            <div className="absolute top-full left-0 right-0 mt-1 bg-slate-900 border border-blue-700/50 rounded-lg shadow-2xl z-10 backdrop-blur-sm">
+            <div className="absolute top-full left-0 right-0 mt-1 bg-slate-900 border border-blue-700/50 rounded-lg shadow-2xl z-50 backdrop-blur-sm max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-slate-800">
               <button
                 onClick={() => {
                   onCaseChange(null);
                   setIsDropdownOpen(false);
                 }}
-                className={`w-full text-left px-3 py-2 text-sm hover:bg-blue-800/30 transition-colors rounded-lg ${
+                className={`w-full text-left px-3 py-2 text-sm hover:bg-blue-800/30 transition-colors rounded-t-lg ${
                   activeCaseId === null ? 'bg-blue-700/30 text-blue-200' : 'text-blue-100'
                 }`}
               >
                 General Chat
               </button>
-              {/* Additional cases would be mapped here from a cases list */}
+              {/* Display loaded cases */}
+              {cases.map((caseItem) => (
+                <button
+                  key={caseItem.id}
+                  onClick={() => {
+                    onCaseChange(caseItem.id);
+                    setIsDropdownOpen(false);
+                  }}
+                  className={`w-full text-left px-3 py-2 text-sm hover:bg-blue-800/30 transition-colors ${
+                    activeCaseId === caseItem.id ? 'bg-blue-700/30 text-blue-200' : 'text-blue-100'
+                  }`}
+                >
+                  <div className="flex flex-col">
+                    <span className="font-medium">{truncateTitle(caseItem.title, 30)}</span>
+                    <span className="text-xs text-blue-400/70">Case #{caseItem.id} • {caseItem.caseType}</span>
+                  </div>
+                </button>
+              ))}
             </div>
           )}
         </div>

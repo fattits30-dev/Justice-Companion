@@ -9,6 +9,7 @@ import type {
 import fs from 'fs';
 import path from 'path';
 import { app } from 'electron';
+import type { CaseFactsRepository } from '../repositories/CaseFactsRepository.js';
 
 /**
  * AIServiceFactory - Integrated AI Service Manager
@@ -22,6 +23,8 @@ export class AIServiceFactory {
   private modelPath: string;
 
   private constructor() {
+    // IntegratedService created without repository initially
+    // Will be set via setCaseFactsRepository() after main.ts initializes
     this.integratedService = new IntegratedAIService();
 
     // Check model availability
@@ -46,6 +49,15 @@ export class AIServiceFactory {
       AIServiceFactory.instance = new AIServiceFactory();
     }
     return AIServiceFactory.instance;
+  }
+
+  /**
+   * Set CaseFactsRepository dependency (called from main.ts after repository initialization)
+   */
+  setCaseFactsRepository(repository: CaseFactsRepository): void {
+    // Recreate IntegratedAIService with repository
+    this.integratedService = new IntegratedAIService(undefined, repository);
+    errorLogger.logError('CaseFactRepository injected into AIServiceFactory', { type: 'info' });
   }
 
   /**
@@ -143,6 +155,38 @@ export class AIServiceFactory {
       onError,
       onThinkToken,
       onSources
+    );
+  }
+
+  /**
+   * Streaming chat with function calling (for fact-gathering)
+   *
+   * Enables AI to call store_case_fact and get_case_facts functions.
+   * Functions are automatically executed when AI uses [[call: function()]] syntax.
+   * Used when working on specific cases that require persistent memory.
+   *
+   * @param request - Chat request with messages and context
+   * @param caseId - Case ID for fact loading/storing
+   * @param onToken - Callback for each token generated
+   * @param onComplete - Callback when streaming completes
+   * @param onError - Callback for errors
+   */
+  async streamChatWithFunctions(
+    request: AIChatRequest,
+    caseId: number | undefined,
+    onToken: (token: string) => void,
+    onComplete: () => void,
+    onError: (error: string) => void
+  ): Promise<void> {
+    console.log('[AIServiceFactory] streamChatWithFunctions() called with caseId:', caseId);
+    console.log('[AIServiceFactory] Model available:', this.isModelAvailable());
+
+    await this.integratedService.streamChatWithFunctions(
+      request,
+      caseId,
+      onToken,
+      onComplete,
+      onError
     );
   }
 
