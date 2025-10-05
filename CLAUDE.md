@@ -51,14 +51,14 @@
 **Goal**: Extend encryption to all sensitive PII fields
 
 **Achievements**:
-- ✅ Encryption expanded from 2 fields to 9 fields (450% increase)
+- ✅ Encryption expanded from 2 fields to 9 fields (450% increase) - **Phase 3.5 adds 2 more → 11 total (550% increase)**
 - ✅ Created 3 new repositories with encryption (Notes, LegalIssues, Timeline)
 - ✅ Updated 2 repositories with encryption (UserProfile, ChatConversation)
 - ✅ Migration 004: encryption_metadata table for field documentation
 - ✅ Comprehensive test coverage (NotesRepository.test.ts, Phase3Repositories.test.ts)
 - ✅ GDPR Article 32 compliance for all PII
 
-**Encrypted Fields (P0/P1 Priority)**:
+**Encrypted Fields in Phase 3 (P0/P1 Priority)**:
 - `cases.description` (P0 - Phase 1)
 - `evidence.content` (P0 - Phase 1)
 - `notes.content` (P0 - Phase 3)
@@ -69,6 +69,8 @@
 - `legal_issues.description` (P1 - Phase 3)
 - `timeline_events.description` (P1 - Phase 3)
 
+**Total Encrypted Fields Across All Phases: 11** (9 from Phase 3 + 2 from Phase 3.5)
+
 **New Files**:
 - `src/repositories/NotesRepository.ts` (265 lines)
 - `src/repositories/LegalIssuesRepository.ts` (260 lines)
@@ -78,6 +80,44 @@
 - `src/db/migrations/004_encryption_expansion.sql`
 - `ENCRYPTION_COVERAGE_REPORT.md` (comprehensive audit)
 - `ENCRYPTION_IMPLEMENTATION.md` (v2.0 - complete documentation)
+
+### ✅ Phase 3.5: User Facts & Case Facts Feature (COMPLETE)
+**Status**: COMPLETE (2025-10-05)
+**Goal**: Quick-reference fact tracking with encryption for faster access
+
+**Achievements**:
+- ✅ Created user_facts table (P0 encryption - direct PII)
+- ✅ Created case_facts table (P1 encryption - may contain PII)
+- ✅ Migration 005: Two new tables with indexes, triggers, and encryption metadata
+- ✅ UserFactsRepository with 7 methods and full encryption support
+- ✅ CaseFactsRepository with 9 methods and full encryption support
+- ✅ 8 new audit event types (user_fact.*, case_fact.*)
+- ✅ Comprehensive test suite (66+ tests, 1,888 lines)
+- ✅ Complete feature documentation
+
+**Encrypted Fields (P0/P1 Priority)**:
+- `user_facts.fact_content` (P0 - Phase 3.5) - Personal details, employment history, financial info
+- `case_facts.fact_content` (P1 - Phase 3.5) - Timeline facts, evidence, witnesses, locations
+
+**Fact Types & Categories**:
+- User Facts: personal, employment, financial, contact, medical, other
+- Case Facts: timeline, evidence, witness, location, communication, other
+- Importance Levels: low, medium, high, critical
+
+**New Files**:
+- `src/db/migrations/005_user_and_case_facts.sql` (92 lines)
+- `src/models/UserFact.ts` (17 lines)
+- `src/models/CaseFact.ts` (20 lines)
+- `src/repositories/UserFactsRepository.ts` (337 lines)
+- `src/repositories/CaseFactsRepository.ts` (385 lines)
+- `src/repositories/UserFactsRepository.test.ts` (570 lines)
+- `src/repositories/CaseFactsRepository.test.ts` (682 lines)
+- `src/repositories/FactsRepositories.test.ts` (636 lines)
+- `FACTS_FEATURE_IMPLEMENTATION.md` (700+ lines)
+
+**Updated Files**:
+- `src/models/AuditLog.ts` - Added 8 event types
+- `src/models/index.ts` - Added exports
 
 ### ✅ Phase 4: Migration System (COMPLETE)
 **Status**: COMPLETE (2025-10-05)
@@ -116,11 +156,12 @@
 **Goal**: Integrate new repositories into IPC handlers and UI
 
 **Tasks**:
-- [ ] Add IPC handlers for notes, legal issues, timeline events
+- [ ] Add IPC handlers for notes, legal issues, timeline events, user facts, case facts
 - [ ] Update UI components to use new encrypted repositories
+- [ ] Implement post-it note UI for facts display
 - [ ] Run comprehensive E2E tests across all repositories
-- [ ] Apply migration 004 to production database
-- [ ] Verify audit logging for all new event types
+- [ ] Apply migrations 004 and 005 to production database
+- [ ] Verify audit logging for all new event types (42 total event types now)
 - [ ] Performance testing for encryption overhead
 
 ---
@@ -269,11 +310,14 @@ justice-companion/
 
 ## 🚀 Next Session Priorities
 
-1. **Phase 3**: Finalize database schema with encryption fields
-2. **Phase 4**: Create comprehensive migration system
-3. ~~**Fix**: Rebuild better-sqlite3 for Node v22.20.0~~ ✅ **COMPLETE** (v11.3.0 → v12.4.1)
-4. ~~**Test**: End-to-end audit logging verification~~ ✅ **COMPLETE** (31 E2E tests, 25 passing)
-5. ~~**Document**: API documentation for IPC handlers~~ ✅ **COMPLETE** (27 handlers documented)
+1. ~~**Phase 3**: Finalize database schema with encryption fields~~ ✅ **COMPLETE** (9 fields encrypted)
+2. ~~**Phase 3.5**: User Facts & Case Facts feature~~ ✅ **COMPLETE** (2 more fields encrypted, 11 total)
+3. ~~**Phase 4**: Create comprehensive migration system~~ ✅ **COMPLETE** (UP/DOWN migrations, rollback support)
+4. ~~**Fix**: Rebuild better-sqlite3 for Node v22.20.0~~ ✅ **COMPLETE** (v11.3.0 → v12.4.1)
+5. ~~**Test**: End-to-end audit logging verification~~ ✅ **COMPLETE** (31 E2E tests, 25 passing)
+6. ~~**Document**: API documentation for IPC handlers~~ ✅ **COMPLETE** (27 handlers documented)
+7. **Phase 5**: IPC handlers for facts, notes, legal issues, timeline events
+8. **Phase 6**: UI implementation with post-it note components for facts
 
 ---
 
@@ -290,6 +334,7 @@ justice-companion/
 ### Architecture & Implementation
 - **Tactical Protocol**: `JUSTICE_COMPANION_TACTICAL_PROTOCOL_v2.md`
 - **Encryption Docs**: `ENCRYPTION_SERVICE_IMPLEMENTATION.md`
+- **Facts Feature**: `FACTS_FEATURE_IMPLEMENTATION.md` - User facts & case facts complete guide
 - **Audit Logs Docs**: `AUDIT_LOGS_*.md` (4 files)
 - **MCP Docs**: `mcp-server/*.md` (3 files)
 

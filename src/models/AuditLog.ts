@@ -31,6 +31,16 @@ export type AuditEventType =
   // User profile operations (Phase 3)
   | 'profile.update'
   | 'profile.pii_access'
+  // User fact operations
+  | 'user_fact.create'
+  | 'user_fact.update'
+  | 'user_fact.delete'
+  | 'user_fact.content_access'
+  // Case fact operations
+  | 'case_fact.create'
+  | 'case_fact.update'
+  | 'case_fact.delete'
+  | 'case_fact.content_access'
   // Security operations
   | 'encryption.key_loaded'
   | 'encryption.decrypt'
