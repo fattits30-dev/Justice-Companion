@@ -153,7 +153,7 @@ class ChatConversationRepository {
       // Decrypt all message content and thinking content
       const decryptedMessages = messages.map((msg) => ({
         ...msg,
-        content: this.decryptField(msg.content),
+        content: this.decryptField(msg.content) || msg.content,
         thinkingContent: this.decryptField(msg.thinkingContent),
       }));
 
@@ -250,7 +250,7 @@ class ChatConversationRepository {
       const message = msgStmt.get(result.lastInsertRowid) as ChatMessage;
 
       // Decrypt before returning
-      message.content = this.decryptField(message.content);
+      message.content = this.decryptField(message.content) || message.content;
       message.thinkingContent = this.decryptField(message.thinkingContent);
 
       // Audit: Message created

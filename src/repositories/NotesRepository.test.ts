@@ -65,7 +65,6 @@ describe('NotesRepository', () => {
     repository = new NotesRepository(encryptionService, auditLogger);
 
     // Override getDb to use test database
-    const originalGetDb = require('../db/database').getDb;
     require('../db/database').getDb = () => db;
   });
 

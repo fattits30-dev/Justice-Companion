@@ -84,6 +84,10 @@ export class TimelineService {
 
       const timelineEvent = timelineRepository.update(id, input);
 
+      if (!timelineEvent) {
+        throw new Error('Timeline event not found');
+      }
+
       errorLogger.logError('Timeline event updated successfully', {
         type: 'info',
         timelineEventId: id,

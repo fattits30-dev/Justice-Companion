@@ -85,6 +85,10 @@ export class UserFactsService {
 
       const userFact = userFactsRepository.update(id, input);
 
+      if (!userFact) {
+        throw new Error('User fact not found');
+      }
+
       errorLogger.logError('User fact updated successfully', {
         type: 'info',
         userFactId: id,

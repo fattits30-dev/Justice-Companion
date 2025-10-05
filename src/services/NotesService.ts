@@ -17,7 +17,7 @@ export class NotesService {
         throw new Error('Note content must be 10000 characters or less');
       }
 
-      const note = notesRepository.create(caseId, content);
+      const note = notesRepository.create({ caseId, content });
 
       errorLogger.logError('Note created successfully', {
         type: 'info',
@@ -59,6 +59,10 @@ export class NotesService {
       }
 
       const note = notesRepository.update(id, { content });
+
+      if (!note) {
+        throw new Error('Note not found');
+      }
 
       errorLogger.logError('Note updated successfully', {
         type: 'info',

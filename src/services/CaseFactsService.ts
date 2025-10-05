@@ -98,6 +98,10 @@ export class CaseFactsService {
 
       const caseFact = caseFactsRepository.update(id, input);
 
+      if (!caseFact) {
+        throw new Error('Case fact not found');
+      }
+
       errorLogger.logError('Case fact updated successfully', {
         type: 'info',
         caseFactId: id,

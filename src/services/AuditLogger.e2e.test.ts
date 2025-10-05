@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterAll, beforeAll, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterAll, beforeAll } from 'vitest';
 import { AuditLogger } from './AuditLogger.js';
 import { EncryptionService, type EncryptedData } from './EncryptionService.js';
 import Database from 'better-sqlite3';
@@ -82,7 +82,6 @@ describe('AuditLogger E2E', () => {
     const row = stmt.get(id) as Case | null;
 
     if (row && row.description) {
-      const originalDescription = row.description;
       try {
         const encryptedData = JSON.parse(row.description) as EncryptedData;
         if (encryptionService.isEncrypted(encryptedData)) {
@@ -239,7 +238,6 @@ describe('AuditLogger E2E', () => {
     const row = stmt.get(id) as Evidence | null;
 
     if (row && row.content) {
-      const originalContent = row.content;
       try {
         const encryptedData = JSON.parse(row.content) as EncryptedData;
         if (encryptionService.isEncrypted(encryptedData)) {

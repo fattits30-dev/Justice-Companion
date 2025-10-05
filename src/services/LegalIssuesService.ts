@@ -80,6 +80,10 @@ export class LegalIssuesService {
 
       const legalIssue = legalIssuesRepository.update(id, input);
 
+      if (!legalIssue) {
+        throw new Error('Legal issue not found');
+      }
+
       errorLogger.logError('Legal issue updated successfully', {
         type: 'info',
         legalIssueId: id,
