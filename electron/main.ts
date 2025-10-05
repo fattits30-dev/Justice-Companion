@@ -9,6 +9,16 @@ import { DevAPIServer } from './dev-api-server.js';
 import { caseService } from '../src/services/CaseService';
 import { caseRepository } from '../src/repositories/CaseRepository';
 import { evidenceRepository } from '../src/repositories/EvidenceRepository';
+import { notesRepository } from '../src/repositories/NotesRepository';
+import { legalIssuesRepository } from '../src/repositories/LegalIssuesRepository';
+import { timelineRepository } from '../src/repositories/TimelineRepository';
+import { userFactsRepository } from '../src/repositories/UserFactsRepository';
+import { caseFactsRepository } from '../src/repositories/CaseFactsRepository';
+import { notesService } from '../src/services/NotesService';
+import { legalIssuesService } from '../src/services/LegalIssuesService';
+import { timelineService } from '../src/services/TimelineService';
+import { userFactsService } from '../src/services/UserFactsService';
+import { caseFactsService } from '../src/services/CaseFactsService';
 import { EncryptionService } from '../src/services/EncryptionService';
 import { AuditLogger } from '../src/services/AuditLogger';
 import { aiServiceFactory } from '../src/services/AIServiceFactory';
@@ -1198,11 +1208,16 @@ app.whenReady().then(() => {
         // Inject encryption service into repositories that handle sensitive data
         caseRepository.setEncryptionService(encryptionService);
         evidenceRepository.setEncryptionService(encryptionService);
+        notesRepository.setEncryptionService(encryptionService);
+        legalIssuesRepository.setEncryptionService(encryptionService);
+        timelineRepository.setEncryptionService(encryptionService);
+        userFactsRepository.setEncryptionService(encryptionService);
+        caseFactsRepository.setEncryptionService(encryptionService);
 
         errorLogger.logError('✅ Encryption service initialized successfully', {
           type: 'info',
         });
-        errorLogger.logError('🔐 Case descriptions and evidence content will be encrypted at rest', {
+        errorLogger.logError('🔐 11 sensitive fields will be encrypted at rest (cases, evidence, notes, legal issues, timeline, user facts, case facts)', {
           type: 'info',
         });
       }
@@ -1221,11 +1236,16 @@ app.whenReady().then(() => {
       // Inject audit logger into repositories for automatic audit logging
       caseRepository.setAuditLogger(auditLogger);
       evidenceRepository.setAuditLogger(auditLogger);
+      notesRepository.setAuditLogger(auditLogger);
+      legalIssuesRepository.setAuditLogger(auditLogger);
+      timelineRepository.setAuditLogger(auditLogger);
+      userFactsRepository.setAuditLogger(auditLogger);
+      caseFactsRepository.setAuditLogger(auditLogger);
 
       errorLogger.logError('✅ Audit logger initialized successfully', {
         type: 'info',
       });
-      errorLogger.logError('📝 All case and evidence operations will be logged to immutable audit trail', {
+      errorLogger.logError('📝 All operations (cases, evidence, notes, legal issues, timeline, facts) logged to immutable audit trail', {
         type: 'info',
       });
     } catch (error) {
