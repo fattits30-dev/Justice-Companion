@@ -25,7 +25,7 @@ export class LegalIssuesRepository {
       const db = getDb();
 
       let descriptionToStore: string | null;
-      if (input.description == null) {
+      if (input.description === null || input.description === undefined) {
         descriptionToStore = null;
       } else if (this.encryptionService) {
         // Encrypt description before INSERT (P1 priority field)
@@ -150,7 +150,7 @@ export class LegalIssuesRepository {
         params.title = input.title;
       }
 
-      if (input.description != null) {
+      if (input.description !== null && input.description !== undefined) {
         updates.push('description = @description');
         params.description = this.encryptionService
           ? JSON.stringify(this.encryptionService.encrypt(input.description))
@@ -268,7 +268,7 @@ export class LegalIssuesRepository {
 
       // If it's not encrypted format, treat as legacy plaintext
       return storedValue;
-    } catch (error) {
+    } catch (_error) {
       // JSON parse failed - likely legacy plaintext data
       return storedValue;
     }

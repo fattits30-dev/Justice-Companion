@@ -4,7 +4,12 @@ dist-electron
 release
 build
 coverage
+backups
+automation/dist
 *.min.js
 *.db
+*.log
+lint-output.txt
+lint-violations-summary.txt
 .git
 .vscode

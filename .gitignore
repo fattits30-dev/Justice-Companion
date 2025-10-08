@@ -37,6 +37,8 @@ yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 lint-report.json
+lint-output.txt
+lint-violations-summary.txt
 
 # OS
 Thumbs.db
@@ -50,6 +52,10 @@ Thumbs.db
 *.db
 *.db-shm
 *.db-wal
+
+# Backups and stray artifacts
+backups/
+=3.13.0
 
 # Sensitive data
 keys/
@@ -66,11 +72,10 @@ legal-docs/
 .mcp.json
 .pytest_cache/
 automation/archives/
+automation/dist/
 automation/results/
 automation/state/
 tmp/
-C:adb-tools/
-C:*/
 
 # Build artifacts
 *.tsbuildinfo

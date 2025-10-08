@@ -9,6 +9,7 @@ import { LegalIssuesRepository } from './LegalIssuesRepository';
 import { TimelineRepository } from './TimelineRepository';
 import { EncryptionService } from '../services/EncryptionService.js';
 import { AuditLogger } from '../services/AuditLogger.js';
+import * as databaseModule from '../db/database';
 
 let db: Database.Database;
 let encryptionService: EncryptionService;
@@ -94,7 +95,7 @@ function setupDatabase(): void {
   auditLogger = new AuditLogger(db);
 
   // Override getDb
-  require('../db/database').getDb = () => db;
+  databaseModule.getDb = () => db;
 }
 
 describe('UserProfileRepository', () => {

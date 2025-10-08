@@ -3,6 +3,7 @@ import Database from 'better-sqlite3';
 import { NotesRepository } from './NotesRepository';
 import { EncryptionService } from '../services/EncryptionService.js';
 import { AuditLogger } from '../services/AuditLogger.js';
+import * as databaseModule from '../db/database';
 
 describe('NotesRepository', () => {
   let db: Database.Database;
@@ -75,7 +76,7 @@ describe('NotesRepository', () => {
     repository = new NotesRepository(encryptionService, auditLogger);
 
     // Override getDb to use test database
-    require('../db/database').getDb = () => db;
+    databaseModule.getDb = () => db;
   });
 
   afterEach(() => {
@@ -297,7 +298,7 @@ describe('NotesRepository', () => {
       const repoNoEncryption = new NotesRepository();
 
       // Override getDb
-      require('../db/database').getDb = () => db;
+      databaseModule.getDb = () => db;
 
       const note = repoNoEncryption.create({
         caseId: 1,

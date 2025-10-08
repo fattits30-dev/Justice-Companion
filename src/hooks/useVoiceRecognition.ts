@@ -180,7 +180,7 @@ export function useVoiceRecognition(): VoiceRecognitionResult {
       setInterimTranscript('');
       recognitionRef.current.start();
       setIsListening(true);
-    } catch (err) {
+    } catch (_err) {
       setError('Failed to start voice recognition');
       setIsListening(false);
     }

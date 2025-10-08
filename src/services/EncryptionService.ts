@@ -137,7 +137,7 @@ export class EncryptionService {
       plaintext += decipher.final('utf8');
 
       return plaintext;
-    } catch (error) {
+    } catch (_error) {
       // CRITICAL: Don't leak plaintext, key material, or detailed errors
       // Authentication tag verification failures will throw here
       throw new Error('Decryption failed: data may be corrupted or tampered with');

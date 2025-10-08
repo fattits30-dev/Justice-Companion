@@ -35,9 +35,9 @@ interface CaseFact {
 
 export class IntegratedAIService {
   private config: AIConfig;
-  private llama: any | null = null; // node-llama-cpp Llama instance
-  private model: any | null = null; // node-llama-cpp LlamaModel
-  private context: any | null = null; // node-llama-cpp LlamaContext
+  private llama: any = null; // node-llama-cpp Llama instance
+  private model: any = null; // node-llama-cpp LlamaModel
+  private context: any = null; // node-llama-cpp LlamaContext
   private isInitialized = false;
   private modelFileName = 'Qwen_Qwen3-8B-Q4_K_M.gguf';
   private modelPath: string;
@@ -578,7 +578,7 @@ Use these facts as your memory. Reference them in your responses.`;
         throw new Error('No user message found in request');
       }
 
-      let tokenCount = 0;
+      let _tokenCount = 0;
       let firstTokenTime: number | null = null;
 
       // Stream with function calling enabled
@@ -592,7 +592,7 @@ Use these facts as your memory. Reference them in your responses.`;
           if (firstTokenTime === null) {
             firstTokenTime = Date.now();
           }
-          tokenCount++;
+          _tokenCount++;
           onToken(chunk);
         },
       });

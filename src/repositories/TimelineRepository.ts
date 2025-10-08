@@ -263,7 +263,7 @@ export class TimelineRepository {
 
       // If it's not encrypted format, treat as legacy plaintext
       return storedValue;
-    } catch (error) {
+    } catch (_error) {
       // JSON parse failed - likely legacy plaintext data
       return storedValue;
     }
