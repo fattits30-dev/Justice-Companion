@@ -6,7 +6,7 @@ import { errorLogger, setupGlobalErrorHandlers } from '../src/utils/error-logger
 import { databaseManager } from '../src/db/database';
 import { runMigrations } from '../src/db/migrate';
 import { DevAPIServer } from './dev-api-server.js';
-import { caseService } from '../src/services/CaseService';
+import { caseService } from '../src/features/cases/services/CaseService';
 import { caseRepository } from '../src/repositories/CaseRepository';
 import { evidenceRepository } from '../src/repositories/EvidenceRepository';
 import type { CreateEvidenceInput } from '../src/models/Evidence';
