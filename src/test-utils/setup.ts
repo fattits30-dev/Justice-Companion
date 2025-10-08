@@ -33,18 +33,18 @@ Object.defineProperty(window, 'matchMedia', {
 });
 
 // Mock IntersectionObserver (used by some UI libraries)
-class IntersectionObserverMock implements IntersectionObserver {
+class IntersectionObserverMock {
   readonly root: Element | Document | null = null;
   readonly rootMargin = '';
   readonly thresholds: ReadonlyArray<number> = [];
 
-  constructor(_callback: IntersectionObserverCallback, _options?: IntersectionObserverInit) {}
+  constructor(_callback: unknown, _options?: unknown) {}
 
   disconnect(): void {}
 
   observe(): void {}
 
-  takeRecords(): IntersectionObserverEntry[] {
+  takeRecords(): unknown[] {
     return [];
   }
 
@@ -54,8 +54,8 @@ class IntersectionObserverMock implements IntersectionObserver {
 global.IntersectionObserver = IntersectionObserverMock as unknown as typeof IntersectionObserver;
 
 // Mock ResizeObserver (used by some UI libraries)
-class ResizeObserverMock implements ResizeObserver {
-  constructor(_callback: ResizeObserverCallback) {}
+class ResizeObserverMock {
+  constructor(_callback: unknown) {}
 
   disconnect(): void {}
 

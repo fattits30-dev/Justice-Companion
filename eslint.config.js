@@ -47,7 +47,7 @@ export default [
         ecmaFeatures: {
           jsx: true,
         },
-        project: './tsconfig.json',
+        project: ['./tsconfig.json', './tsconfig.test.json'],
       },
       globals: {
         ...globals.browser,
@@ -167,6 +167,45 @@ export default [
     },
   },
 
+  // Test utilities (non type-aware configuration)
+  {
+    files: ['src/test-utils/**/*.ts', 'src/test-utils/**/*.tsx'],
+    languageOptions: {
+      parser: tsparser,
+      parserOptions: {
+        ecmaVersion: 2020,
+        sourceType: 'module',
+        ecmaFeatures: {
+          jsx: true,
+        },
+      },
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+        ...globals.es2020,
+        React: 'readonly',
+        JSX: 'readonly',
+      },
+    },
+    plugins: {
+      '@typescript-eslint': tseslint,
+    },
+    rules: {
+      ...tseslint.configs.recommended.rules,
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/explicit-function-return-type': 'off',
+      '@typescript-eslint/explicit-module-boundary-types': 'off',
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+        },
+      ],
+    },
+  },
+
   // Electron main process files (without type-aware rules)
   {
     files: ['electron/**/*.ts'],
@@ -237,7 +276,7 @@ export default [
 
   // Test files configuration
   {
-    files: ['src/**/*.test.ts', 'src/**/*.test.tsx', 'src/**/*.spec.ts', 'src/**/*.spec.tsx', 'src/test-utils/**/*.ts', 'src/test-utils/**/*.tsx', 'tests/**/*.ts', 'tests/**/*.tsx'],
+    files: ['src/**/*.test.ts', 'src/**/*.test.tsx', 'src/**/*.spec.ts', 'src/**/*.spec.tsx', 'tests/**/*.ts', 'tests/**/*.tsx'],
     languageOptions: {
       parser: tsparser,
       parserOptions: {
