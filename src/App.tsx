@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { ChatWindow } from '@/features/chat';
 import { CasesView, CaseDetailView } from '@/features/cases';
+import { DocumentsView } from '@/features/documents';
 import { Sidebar } from './components/Sidebar';
-import { DashboardView } from './components/views/DashboardView';
-import { DocumentsView } from './components/views/DocumentsView';
-import { SettingsView } from './components/views/SettingsView';
+import { DashboardView } from '@/features/dashboard';
+import { SettingsView } from '@/features/settings';
 import { DebugProvider } from './contexts/DebugContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ViewErrorBoundary } from './components/ViewErrorBoundary';

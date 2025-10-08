@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, FileText, Calendar, User, Scale, StickyNote, Briefcase } from 'lucide-react';
 import { useCases } from '../hooks/useCases';
-import { TimelineView } from '../../../components/timeline/TimelineView';
-import { UserFactsPanel } from '../../../components/facts/UserFactsPanel';
-import { CaseFactsPanel } from '../../../components/facts/CaseFactsPanel';
-import { NotesPanel } from '../../../components/notes/NotesPanel';
-import { LegalIssuesPanel } from '../../../components/legal/LegalIssuesPanel';
-import { useEvidence } from '../../../hooks/useEvidence';
+import { TimelineView } from '@/features/timeline';
+import { UserFactsPanel, CaseFactsPanel } from '../../facts';
+import { NotesPanel } from '@/features/notes';
+import { LegalIssuesPanel } from '@/features/legal';
+import { useEvidence } from '@/features/documents';
 import type { Case } from '../../../models/Case';
 
 interface CaseDetailViewProps {
