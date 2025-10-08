@@ -1,0 +1,9 @@
+{
+  "event_type": "file_changed",
+  "agent_id": "file_monitor",
+  "timestamp": "2025-10-06T22:39:18.531920+00:00",
+  "files": [
+    "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\NotesService.ts"
+  ],
+  "count": 1
+}

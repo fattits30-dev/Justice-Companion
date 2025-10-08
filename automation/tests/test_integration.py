@@ -82,7 +82,7 @@ def test_subtract():
 
     def test_complete_workflow_file_to_fix(self, orchestrator, test_project):
         """
-        Test complete workflow: file change → detection → fix → verification.
+        Test complete workflow: file change --> detection --> fix --> verification.
 
         Scenario:
         1. File is changed (simulated)
@@ -140,7 +140,7 @@ The tests should now pass.
         state = orchestrator.state_manager.read()
         assert len(state['queues']['pending']) == 1
         task = state['queues']['pending'][0]
-        print(f"[Test] ✓ Task created: {task['id']}")
+        print(f"[Test] [OK] Task created: {task['id']}")
 
         # Step 2: Process the task
         print("[Test] Step 2: Processing task...")
@@ -154,18 +154,18 @@ The tests should now pass.
         completed_task = state['queues']['completed'][0]
         assert completed_task['id'] == task['id']
         assert completed_task['status'] == 'completed'
-        print(f"[Test] ✓ Task completed: {completed_task['id']}")
+        print(f"[Test] [OK] Task completed: {completed_task['id']}")
 
         # Verify statistics
         assert orchestrator.stats['tasks_processed'] == 1
         assert orchestrator.stats['tasks_succeeded'] == 1
         assert orchestrator.stats['tasks_failed'] == 0
-        print("[Test] ✓ Statistics tracked correctly")
+        print("[Test] [OK] Statistics tracked correctly")
 
         # Verify Claude instances were called
         orchestrator.claude_interactive.send_message.assert_called_once()
         orchestrator.auto_fixer.fix_with_retry.assert_called_once()
-        print("[Test] ✓ Claude instances called correctly")
+        print("[Test] [OK] Claude instances called correctly")
 
     def test_workflow_with_fix_failure(self, orchestrator, test_project):
         """

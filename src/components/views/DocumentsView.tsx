@@ -84,6 +84,167 @@ export function DocumentsView(): JSX.Element {
     setSelectedDocs(newSelection);
   };
 
+  // Handler functions for file operations
+  const handleViewFile = (doc: Document) => {
+    const evidence = findEvidenceById(doc.id);
+    if (!evidence?.filePath) {
+      toast.error('File path not found for this document');
+      return;
+    }
+
+    void window.justiceAPI.viewFile(evidence.filePath).then(result => {
+      if (!result.success) {
+        toast.error(`Failed to open file: ${result.error}`);
+      }
+    });
+  };
+
+  const handleDownloadFile = (doc: Document) => {
+    const evidence = findEvidenceById(doc.id);
+    if (!evidence?.filePath) {
+      toast.error('File path not found for this document');
+      return;
+    }
+
+    void window.justiceAPI.downloadFile(evidence.filePath, doc.fileName).then(result => {
+      if (result.success) {
+        toast.success(`File saved to: ${result.savedPath}`);
+      } else {
+        toast.error(`Failed to download file: ${result.error}`);
+      }
+    });
+  };
+
+  const handlePrintFile = (doc: Document) => {
+    const evidence = findEvidenceById(doc.id);
+    if (!evidence?.filePath) {
+      toast.error('File path not found for this document');
+      return;
+    }
+
+    void window.justiceAPI.printFile(evidence.filePath).then(result => {
+      if (result.success) {
+        toast.success('File opened for printing');
+      } else {
+        toast.error(`Failed to print file: ${result.error}`);
+      }
+    });
+  };
+
+  const handleEmailFile = (doc: Document) => {
+    const evidence = findEvidenceById(doc.id);
+    if (!evidence?.filePath) {
+      toast.error('File path not found for this document');
+      return;
+    }
+
+    void window.justiceAPI.emailFiles(
+      [evidence.filePath],
+      `${doc.title} - ${doc.associatedCase}`,
+      `Attached: ${doc.fileName}`,
+    ).then(result => {
+      if (result.success) {
+        toast.success('Email client opened');
+      } else {
+        toast.error(`Failed to open email: ${result.error}`);
+      }
+    });
+  };
+
+  // Bundle operations (multiple files)
+  const handleDownloadBundle = () => {
+    const docs = selectedDocs.size > 0
+      ? filteredDocuments.filter(d => selectedDocs.has(d.id))
+      : filteredDocuments;
+
+    if (docs.length === 0) {
+      toast.error('No documents to download');
+      return;
+    }
+
+    void (async () => {
+      let successCount = 0;
+      for (const doc of docs) {
+        const evidence = findEvidenceById(doc.id);
+        if (evidence?.filePath) {
+          const result = await window.justiceAPI.downloadFile(evidence.filePath, doc.fileName);
+          if (result.success) {
+            successCount++;
+          }
+        }
+      }
+
+      toast.success(`Downloaded ${successCount} of ${docs.length} files`);
+    })();
+  };
+
+  const handlePrintBundle = () => {
+    const docs = selectedDocs.size > 0
+      ? filteredDocuments.filter(d => selectedDocs.has(d.id))
+      : filteredDocuments;
+
+    if (docs.length === 0) {
+      toast.error('No documents to print');
+      return;
+    }
+
+    void (async () => {
+      let successCount = 0;
+      for (const doc of docs) {
+        const evidence = findEvidenceById(doc.id);
+        if (evidence?.filePath) {
+          const result = await window.justiceAPI.printFile(evidence.filePath);
+          if (result.success) {
+            successCount++;
+          }
+        }
+      }
+
+      toast.success(`Opened ${successCount} of ${docs.length} files for printing`);
+    })();
+  };
+
+  const handleEmailBundle = () => {
+    const docs = selectedDocs.size > 0
+      ? filteredDocuments.filter(d => selectedDocs.has(d.id))
+      : filteredDocuments;
+
+    if (docs.length === 0) {
+      toast.error('No documents to email');
+      return;
+    }
+
+    const filePaths: string[] = [];
+    for (const doc of docs) {
+      const evidence = findEvidenceById(doc.id);
+      if (evidence?.filePath) {
+        filePaths.push(evidence.filePath);
+      }
+    }
+
+    if (filePaths.length === 0) {
+      toast.error('No valid file paths found');
+      return;
+    }
+
+    void window.justiceAPI.emailFiles(
+      filePaths,
+      `Case Bundle: ${filePaths.length} documents`,
+      'Please find attached case documents.',
+    ).then(result => {
+      if (result.success) {
+        toast.success('Email client opened with documents');
+      } else {
+        toast.error(`Failed to open email: ${result.error}`);
+      }
+    });
+  };
+
+  // Helper function to find evidence by document ID
+  const findEvidenceById = (docId: string) => {
+    return evidence.find(ev => ev.id.toString() === docId);
+  };
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'complete':
@@ -291,6 +452,7 @@ export function DocumentsView(): JSX.Element {
               <span className="text-blue-300 text-sm font-medium">{selectedDocs.size} selected</span>
               <div className="flex gap-2">
                 <button
+                  onClick={() => void handleDownloadBundle()}
                   className="flex items-center gap-2 px-3 py-2 bg-blue-600/20 text-blue-300 rounded-lg hover:bg-blue-600/30 transition-all text-sm"
                   title="Download Bundle"
                 >
@@ -298,6 +460,7 @@ export function DocumentsView(): JSX.Element {
                   <span>Download</span>
                 </button>
                 <button
+                  onClick={() => void handlePrintBundle()}
                   className="flex items-center gap-2 px-3 py-2 bg-slate-800/50 text-gray-300 rounded-lg hover:bg-slate-700/50 transition-all text-sm"
                   title="Print Bundle"
                 >
@@ -305,6 +468,7 @@ export function DocumentsView(): JSX.Element {
                   <span>Print</span>
                 </button>
                 <button
+                  onClick={() => void handleEmailBundle()}
                   className="flex items-center gap-2 px-3 py-2 bg-slate-800/50 text-gray-300 rounded-lg hover:bg-slate-700/50 transition-all text-sm"
                   title="Email Bundle"
                 >
@@ -318,6 +482,7 @@ export function DocumentsView(): JSX.Element {
               <span className="text-blue-300 text-sm font-medium">Full Case Bundle:</span>
               <div className="flex gap-2">
                 <button
+                  onClick={() => void handleDownloadBundle()}
                   className="flex items-center gap-2 px-3 py-2 bg-blue-600/20 text-blue-300 rounded-lg hover:bg-blue-600/30 transition-all text-sm"
                   title="Download All"
                 >
@@ -325,6 +490,7 @@ export function DocumentsView(): JSX.Element {
                   <span>Download</span>
                 </button>
                 <button
+                  onClick={() => void handlePrintBundle()}
                   className="flex items-center gap-2 px-3 py-2 bg-slate-800/50 text-gray-300 rounded-lg hover:bg-slate-700/50 transition-all text-sm"
                   title="Print All"
                 >
@@ -332,6 +498,7 @@ export function DocumentsView(): JSX.Element {
                   <span>Print</span>
                 </button>
                 <button
+                  onClick={() => void handleEmailBundle()}
                   className="flex items-center gap-2 px-3 py-2 bg-slate-800/50 text-gray-300 rounded-lg hover:bg-slate-700/50 transition-all text-sm"
                   title="Email All"
                 >
@@ -410,6 +577,7 @@ export function DocumentsView(): JSX.Element {
                     className="flex items-center justify-center gap-1 px-3 py-2 bg-blue-600/20 text-blue-300 rounded-lg hover:bg-blue-600/30 transition-all text-xs font-medium"
                     onClick={(e) => {
                       e.stopPropagation();
+                      void handleViewFile(doc);
                     }}
                     title="View"
                   >
@@ -419,6 +587,7 @@ export function DocumentsView(): JSX.Element {
                     className="flex items-center justify-center gap-1 px-3 py-2 bg-slate-800/50 text-gray-300 rounded-lg hover:bg-slate-700/50 transition-all text-xs"
                     onClick={(e) => {
                       e.stopPropagation();
+                      void handleDownloadFile(doc);
                     }}
                     title="Download"
                   >
@@ -428,6 +597,7 @@ export function DocumentsView(): JSX.Element {
                     className="flex items-center justify-center gap-1 px-3 py-2 bg-slate-800/50 text-gray-300 rounded-lg hover:bg-slate-700/50 transition-all text-xs"
                     onClick={(e) => {
                       e.stopPropagation();
+                      void handlePrintFile(doc);
                     }}
                     title="Print"
                   >
@@ -437,6 +607,7 @@ export function DocumentsView(): JSX.Element {
                     className="flex items-center justify-center gap-1 px-3 py-2 bg-slate-800/50 text-gray-300 rounded-lg hover:bg-slate-700/50 transition-all text-xs"
                     onClick={(e) => {
                       e.stopPropagation();
+                      void handleEmailFile(doc);
                     }}
                     title="Email"
                   >
@@ -455,7 +626,7 @@ export function DocumentsView(): JSX.Element {
         onClose={() => setIsUploadModalOpen(false)}
         caseId={defaultCaseId}
         onUploadComplete={() => {
-          fetchEvidence();
+          void fetchEvidence();
           toast.success('Evidence uploaded successfully!');
         }}
       />

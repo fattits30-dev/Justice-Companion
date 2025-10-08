@@ -6,6 +6,7 @@ export interface LegalIssue {
   relevantLaw: string | null;
   guidance: string | null;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface CreateLegalIssueInput {
@@ -14,6 +15,7 @@ export interface CreateLegalIssueInput {
   description?: string;
   relevantLaw?: string;
   guidance?: string;
+  updatedAt?: string;
 }
 
 export interface UpdateLegalIssueInput {
@@ -21,4 +23,5 @@ export interface UpdateLegalIssueInput {
   description?: string;
   relevantLaw?: string;
   guidance?: string;
+  updatedAt?: string;
 }

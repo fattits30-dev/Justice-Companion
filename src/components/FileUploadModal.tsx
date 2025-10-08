@@ -20,7 +20,9 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
 const ALLOWED_EXTENSIONS = ['pdf', 'png', 'jpg', 'jpeg'];
 
 function formatFileSize(bytes: number): string {
-  if (bytes === 0) return '0 Bytes';
+  if (bytes === 0) {
+    return '0 Bytes';
+  }
   const k = 1024;
   const sizes = ['Bytes', 'KB', 'MB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
@@ -29,6 +31,23 @@ function formatFileSize(bytes: number): string {
 
 function getFileExtension(filename: string): string {
   return filename.split('.').pop()?.toLowerCase() || '';
+}
+
+function getErrorMessage(error: unknown): string | null {
+  if (!error) {
+    return null;
+  }
+
+  if (typeof error === 'string') {
+    return error;
+  }
+
+  if (typeof error === 'object' && 'message' in error) {
+    const message = (error as { message?: unknown }).message;
+    return typeof message === 'string' ? message : null;
+  }
+
+  return null;
 }
 
 export function FileUploadModal({
@@ -100,7 +119,7 @@ export function FileUploadModal({
         }
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to select file');
+      setError(getErrorMessage(err) ?? 'Failed to select file');
     }
   };
 
@@ -133,7 +152,7 @@ export function FileUploadModal({
         handleClose();
       }, 1500);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to upload evidence');
+      setError(getErrorMessage(err) ?? 'Failed to upload evidence');
       setIsUploading(false);
     }
   };

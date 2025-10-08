@@ -25,6 +25,7 @@ export async function exportChatToPDF(
   sources: string[] = [],
 ): Promise<void> {
   if (messages.length === 0) {
+    // eslint-disable-next-line no-alert
     alert('No messages to export');
     return;
   }
@@ -45,6 +46,7 @@ export async function exportChatToPDF(
     await html2pdf().set(options).from(html).save();
   } catch (error) {
     console.error('PDF export failed:', error);
+    // eslint-disable-next-line no-alert
     alert('Failed to export PDF. Please try again.');
   }
 }

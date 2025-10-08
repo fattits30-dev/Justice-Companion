@@ -44,7 +44,7 @@ export function LoadingSpinner({
         className={cn(
           'rounded-full animate-spin',
           sizeClasses[size],
-          colorClasses[color]
+          colorClasses[color],
         )}
       >
         <span className="sr-only">{text || 'Loading...'}</span>

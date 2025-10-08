@@ -1,0 +1,3100 @@
+{
+  "version": "1.0.0",
+  "timestamp": "2025-10-06T22:28:10.886517Z",
+  "processes": {
+    "interactive": {
+      "status": "stopped",
+      "pid": null,
+      "last_heartbeat": null
+    },
+    "headless": {
+      "status": "stopped",
+      "pid": null,
+      "last_heartbeat": null
+    },
+    "orchestrator": {
+      "status": "stopped",
+      "pid": 26312,
+      "last_heartbeat": "2025-10-06T21:51:09.536633Z"
+    }
+  },
+  "queues": {
+    "pending": [],
+    "in_progress": [],
+    "completed": [],
+    "failed": [
+      {
+        "id": "task_fcaeecdb",
+        "type": "file_change",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\UserFactsPanel.test.tsx",
+        "description": "Process changes in UserFactsPanel.test.tsx",
+        "created_at": "2025-10-06T01:14:36.032371Z",
+        "status": "failed",
+        "retry_count": 0,
+        "auto_fix": true,
+        "started_at": "2025-10-06T01:14:36.073479Z",
+        "failed_at": "2025-10-06T01:14:38.416847Z",
+        "failure_reason": "Circuit breaker active for C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\UserFactsPanel.test.tsx"
+      },
+      {
+        "id": "task_db51357a",
+        "type": "file_change",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\CaseFactsPanel.test.tsx",
+        "description": "Process changes in CaseFactsPanel.test.tsx",
+        "created_at": "2025-10-06T01:14:45.472809Z",
+        "status": "failed",
+        "retry_count": 0,
+        "auto_fix": true,
+        "started_at": "2025-10-06T01:14:45.531273Z",
+        "failed_at": "2025-10-06T01:14:47.824882Z",
+        "failure_reason": "Circuit breaker active for C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\CaseFactsPanel.test.tsx"
+      },
+      {
+        "id": "task_c7ca798f",
+        "type": "file_change",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\CaseFactsPanel.test.tsx",
+        "description": "Process changes in CaseFactsPanel.test.tsx",
+        "created_at": "2025-10-06T01:14:55.569065Z",
+        "status": "failed",
+        "retry_count": 0,
+        "auto_fix": true,
+        "started_at": "2025-10-06T01:14:55.956489Z",
+        "failed_at": "2025-10-06T01:14:58.239272Z",
+        "failure_reason": "Circuit breaker active for C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\CaseFactsPanel.test.tsx"
+      },
+      {
+        "id": "task_adc8053b",
+        "type": "file_change",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\UserFactsPanel.test.tsx",
+        "description": "Process changes in UserFactsPanel.test.tsx",
+        "created_at": "2025-10-06T01:15:03.520635Z",
+        "status": "failed",
+        "retry_count": 0,
+        "auto_fix": true,
+        "started_at": "2025-10-06T01:15:04.346062Z",
+        "failed_at": "2025-10-06T01:15:06.706888Z",
+        "failure_reason": "Circuit breaker active for C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\UserFactsPanel.test.tsx"
+      },
+      {
+        "id": "task_18b8c099",
+        "type": "file_change",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\UserFactsPanel.test.tsx",
+        "description": "Process changes in UserFactsPanel.test.tsx",
+        "created_at": "2025-10-06T01:15:45.264099Z",
+        "status": "failed",
+        "retry_count": 0,
+        "auto_fix": true,
+        "started_at": "2025-10-06T01:15:45.314687Z",
+        "failed_at": "2025-10-06T01:15:47.564391Z",
+        "failure_reason": "Circuit breaker active for C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\UserFactsPanel.test.tsx"
+      },
+      {
+        "id": "task_179139d0",
+        "type": "file_change",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\CaseFactsPanel.test.tsx",
+        "description": "Process changes in CaseFactsPanel.test.tsx",
+        "created_at": "2025-10-06T01:15:55.541609Z",
+        "status": "failed",
+        "retry_count": 0,
+        "auto_fix": true,
+        "started_at": "2025-10-06T01:15:55.699253Z",
+        "failed_at": "2025-10-06T01:15:58.046786Z",
+        "failure_reason": "Circuit breaker active for C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\CaseFactsPanel.test.tsx"
+      },
+      {
+        "id": "task_af8dd8cd",
+        "type": "file_change",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\UserFactsPanel.test.tsx",
+        "description": "Process changes in UserFactsPanel.test.tsx",
+        "created_at": "2025-10-06T01:17:07.045401Z",
+        "status": "failed",
+        "retry_count": 0,
+        "auto_fix": true,
+        "started_at": "2025-10-06T01:17:07.147751Z",
+        "failed_at": "2025-10-06T01:17:09.455189Z",
+        "failure_reason": "Circuit breaker active for C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\UserFactsPanel.test.tsx"
+      },
+      {
+        "id": "task_638420d9",
+        "type": "file_change",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\CaseFactsPanel.test.tsx",
+        "description": "Process changes in CaseFactsPanel.test.tsx",
+        "created_at": "2025-10-06T01:17:21.401816Z",
+        "status": "failed",
+        "retry_count": 0,
+        "auto_fix": true,
+        "started_at": "2025-10-06T01:17:21.665195Z",
+        "failed_at": "2025-10-06T01:17:24.025714Z",
+        "failure_reason": "Circuit breaker active for C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\CaseFactsPanel.test.tsx"
+      },
+      {
+        "id": "task_d3f9eccf",
+        "type": "file_change",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\UserFactsPanel.test.tsx",
+        "description": "Process changes in UserFactsPanel.test.tsx",
+        "created_at": "2025-10-06T01:18:27.124734Z",
+        "status": "failed",
+        "retry_count": 0,
+        "auto_fix": true,
+        "started_at": "2025-10-06T01:18:28.102263Z",
+        "failed_at": "2025-10-06T01:18:30.380128Z",
+        "failure_reason": "Circuit breaker active for C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\UserFactsPanel.test.tsx"
+      },
+      {
+        "id": "task_e5567b0e",
+        "type": "file_change",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\CaseFactsPanel.test.tsx",
+        "description": "Process changes in CaseFactsPanel.test.tsx",
+        "created_at": "2025-10-06T01:18:39.880943Z",
+        "status": "failed",
+        "retry_count": 0,
+        "auto_fix": true,
+        "started_at": "2025-10-06T01:18:40.550360Z",
+        "failed_at": "2025-10-06T01:18:42.954939Z",
+        "failure_reason": "Circuit breaker active for C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\CaseFactsPanel.test.tsx"
+      },
+      {
+        "id": "task_2fe890e5",
+        "type": "file_change",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\CaseFactsPanel.test.tsx",
+        "description": "Process changes in CaseFactsPanel.test.tsx",
+        "created_at": "2025-10-06T01:20:09.250393Z",
+        "status": "failed",
+        "retry_count": 0,
+        "auto_fix": true,
+        "started_at": "2025-10-06T01:20:09.356384Z",
+        "failed_at": "2025-10-06T01:20:11.767849Z",
+        "failure_reason": "Circuit breaker active for C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\CaseFactsPanel.test.tsx"
+      },
+      {
+        "id": "task_0b78711f",
+        "type": "file_change",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\CaseFactsPanel.tsx",
+        "description": "Process changes in CaseFactsPanel.tsx",
+        "created_at": "2025-10-06T01:20:19.804306Z",
+        "status": "failed",
+        "retry_count": 0,
+        "auto_fix": true,
+        "started_at": "2025-10-06T01:20:19.936951Z",
+        "failed_at": "2025-10-06T01:20:32.604634Z",
+        "failure_reason": "Max retries exhausted"
+      },
+      {
+        "id": "task_628d31dc",
+        "type": "file_change",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\UserFactsPanel.tsx",
+        "description": "Process changes in UserFactsPanel.tsx",
+        "created_at": "2025-10-06T01:20:19.804306Z",
+        "status": "failed",
+        "retry_count": 0,
+        "auto_fix": true,
+        "started_at": "2025-10-06T01:20:32.619625Z",
+        "failed_at": "2025-10-06T01:20:45.667428Z",
+        "failure_reason": "Max retries exhausted"
+      },
+      {
+        "id": "task_64cf67a7",
+        "type": "file_change",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\notes\\NotesPanel.tsx",
+        "description": "Process changes in NotesPanel.tsx",
+        "created_at": "2025-10-06T01:20:19.804306Z",
+        "status": "failed",
+        "retry_count": 0,
+        "auto_fix": true,
+        "started_at": "2025-10-06T01:20:45.684244Z",
+        "failed_at": "2025-10-06T01:20:58.388909Z",
+        "failure_reason": "Max retries exhausted"
+      },
+      {
+        "id": "task_17d700d3",
+        "type": "file_change",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\hooks\\useCaseFacts.ts",
+        "description": "Process changes in useCaseFacts.ts",
+        "created_at": "2025-10-06T01:20:19.804306Z",
+        "status": "failed",
+        "retry_count": 0,
+        "auto_fix": true,
+        "started_at": "2025-10-06T01:20:58.404856Z",
+        "failed_at": "2025-10-06T01:21:11.501371Z",
+        "failure_reason": "Max retries exhausted"
+      },
+      {
+        "id": "task_c4a06d41",
+        "type": "file_change",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\hooks\\useNotes.ts",
+        "description": "Process changes in useNotes.ts",
+        "created_at": "2025-10-06T01:20:19.804306Z",
+        "status": "failed",
+        "retry_count": 0,
+        "auto_fix": true,
+        "started_at": "2025-10-06T01:21:11.522376Z",
+        "failed_at": "2025-10-06T01:21:24.223496Z",
+        "failure_reason": "Max retries exhausted"
+      },
+      {
+        "id": "task_10ad43a5",
+        "type": "file_change",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\hooks\\useUserFacts.ts",
+        "description": "Process changes in useUserFacts.ts",
+        "created_at": "2025-10-06T01:20:19.804306Z",
+        "status": "failed",
+        "retry_count": 0,
+        "auto_fix": true,
+        "started_at": "2025-10-06T01:21:24.242388Z",
+        "failed_at": "2025-10-06T01:21:36.581821Z",
+        "failure_reason": "Max retries exhausted"
+      },
+      {
+        "id": "task_3ab31173",
+        "type": "file_change",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\test-utils\\setup.ts",
+        "description": "Process changes in setup.ts",
+        "created_at": "2025-10-06T01:20:44.630786Z",
+        "status": "failed",
+        "retry_count": 0,
+        "auto_fix": true,
+        "started_at": "2025-10-06T01:21:36.597606Z",
+        "failed_at": "2025-10-06T01:21:48.804228Z",
+        "failure_reason": "Max retries exhausted"
+      },
+      {
+        "id": "task_b1cd0253",
+        "type": "file_change",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\hooks\\useLegalIssues.ts",
+        "description": "Process changes in useLegalIssues.ts",
+        "created_at": "2025-10-06T01:22:30.040376Z",
+        "status": "failed",
+        "retry_count": 0,
+        "auto_fix": true,
+        "started_at": "2025-10-06T01:22:30.529481Z",
+        "failed_at": "2025-10-06T01:22:42.964221Z",
+        "failure_reason": "Max retries exhausted"
+      },
+      {
+        "id": "task_5615a186",
+        "type": "file_change",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\hooks\\useTimeline.ts",
+        "description": "Process changes in useTimeline.ts",
+        "created_at": "2025-10-06T01:22:30.040376Z",
+        "status": "failed",
+        "retry_count": 0,
+        "auto_fix": true,
+        "started_at": "2025-10-06T01:22:42.980625Z",
+        "failed_at": "2025-10-06T01:22:55.417863Z",
+        "failure_reason": "Max retries exhausted"
+      },
+      {
+        "id": "task_6f3d302c",
+        "type": "file_change",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\models\\LegalIssue.ts",
+        "description": "Process changes in LegalIssue.ts",
+        "created_at": "2025-10-06T01:22:48.901256Z",
+        "status": "failed",
+        "retry_count": 0,
+        "auto_fix": true,
+        "started_at": "2025-10-06T01:22:55.436037Z",
+        "failed_at": "2025-10-06T01:23:07.786872Z",
+        "failure_reason": "Max retries exhausted"
+      },
+      {
+        "id": "task_5f163445",
+        "type": "file_change",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\models\\Note.ts",
+        "description": "Process changes in Note.ts",
+        "created_at": "2025-10-06T01:22:48.901256Z",
+        "status": "failed",
+        "retry_count": 0,
+        "auto_fix": true,
+        "started_at": "2025-10-06T01:23:07.803166Z",
+        "failed_at": "2025-10-06T01:23:20.199427Z",
+        "failure_reason": "Max retries exhausted"
+      },
+      {
+        "id": "task_379d93f6",
+        "type": "file_change",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\models\\UserFact.ts",
+        "description": "Process changes in UserFact.ts",
+        "created_at": "2025-10-06T01:22:48.901256Z",
+        "status": "failed",
+        "retry_count": 0,
+        "auto_fix": true,
+        "started_at": "2025-10-06T01:23:20.216280Z",
+        "failed_at": "2025-10-06T01:23:32.541963Z",
+        "failure_reason": "Max retries exhausted"
+      },
+      {
+        "id": "task_87c33b60",
+        "type": "file_change",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\models\\CaseFact.ts",
+        "description": "Process changes in CaseFact.ts",
+        "created_at": "2025-10-06T01:22:55.108934Z",
+        "status": "failed",
+        "retry_count": 0,
+        "auto_fix": true,
+        "started_at": "2025-10-06T01:23:32.559472Z",
+        "failed_at": "2025-10-06T01:23:44.807676Z",
+        "failure_reason": "Max retries exhausted"
+      },
+      {
+        "id": "task_4391ede2",
+        "type": "file_change",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\models\\TimelineEvent.ts",
+        "description": "Process changes in TimelineEvent.ts",
+        "created_at": "2025-10-06T01:22:55.108934Z",
+        "status": "failed",
+        "retry_count": 0,
+        "auto_fix": true,
+        "started_at": "2025-10-06T01:23:44.825837Z",
+        "failed_at": "2025-10-06T01:23:57.012730Z",
+        "failure_reason": "Max retries exhausted"
+      },
+      {
+        "id": "task_87ff7e62",
+        "type": "file_change",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\hooks\\useAI.test.ts",
+        "description": "Process changes in useAI.test.ts",
+        "created_at": "2025-10-06T01:29:16.389230Z",
+        "status": "failed",
+        "retry_count": 0,
+        "auto_fix": true,
+        "started_at": "2025-10-06T01:29:16.950465Z",
+        "failed_at": "2025-10-06T01:29:29.308504Z",
+        "failure_reason": "Max retries exhausted"
+      },
+      {
+        "id": "task_a57edf7a",
+        "type": "file_change",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\hooks\\useNotes.test.ts",
+        "description": "Process changes in useNotes.test.ts",
+        "created_at": "2025-10-06T01:30:38.168943Z",
+        "status": "failed",
+        "retry_count": 0,
+        "auto_fix": true,
+        "started_at": "2025-10-06T01:30:38.593060Z",
+        "failed_at": "2025-10-06T01:30:51.026405Z",
+        "failure_reason": "Max retries exhausted"
+      },
+      {
+        "id": "task_332c10b2",
+        "type": "file_change",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.test.ts",
+        "description": "Process changes in AuditLogger.test.ts",
+        "created_at": "2025-10-06T01:32:10.338031Z",
+        "status": "failed",
+        "retry_count": 0,
+        "auto_fix": true,
+        "started_at": "2025-10-06T01:32:10.563312Z",
+        "failed_at": "2025-10-06T01:32:23.055254Z",
+        "failure_reason": "Max retries exhausted"
+      },
+      {
+        "id": "task_83d64e48",
+        "type": "file_change",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.ts",
+        "description": "Process changes in AuditLogger.ts",
+        "created_at": "2025-10-06T01:32:21.283979Z",
+        "status": "failed",
+        "retry_count": 0,
+        "auto_fix": true,
+        "started_at": "2025-10-06T01:32:23.073050Z",
+        "failed_at": "2025-10-06T01:32:35.532226Z",
+        "failure_reason": "Max retries exhausted"
+      },
+      {
+        "id": "task_6913d0e6",
+        "type": "file_change",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\models\\Action.ts",
+        "description": "Process changes in Action.ts",
+        "created_at": "2025-10-06T01:32:40.261300Z",
+        "status": "failed",
+        "retry_count": 0,
+        "auto_fix": true,
+        "started_at": "2025-10-06T01:32:40.646266Z",
+        "failed_at": "2025-10-06T01:32:52.908623Z",
+        "failure_reason": "Max retries exhausted"
+      },
+      {
+        "id": "task_a3a80c07",
+        "type": "file_change",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\models\\AuditLog.ts",
+        "description": "Process changes in AuditLog.ts",
+        "created_at": "2025-10-06T01:32:40.261300Z",
+        "status": "failed",
+        "retry_count": 0,
+        "auto_fix": true,
+        "started_at": "2025-10-06T01:32:52.927719Z",
+        "failed_at": "2025-10-06T01:33:05.677634Z",
+        "failure_reason": "Max retries exhausted"
+      },
+      {
+        "id": "task_afeb9f61",
+        "type": "file_change",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\models\\Case.ts",
+        "description": "Process changes in Case.ts",
+        "created_at": "2025-10-06T01:32:40.261300Z",
+        "status": "failed",
+        "retry_count": 0,
+        "auto_fix": true,
+        "started_at": "2025-10-06T01:33:05.698896Z",
+        "failed_at": "2025-10-06T01:33:18.158165Z",
+        "failure_reason": "Max retries exhausted"
+      },
+      {
+        "id": "task_0150b8e3",
+        "type": "file_change",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\models\\ChatConversation.ts",
+        "description": "Process changes in ChatConversation.ts",
+        "created_at": "2025-10-06T01:32:40.261300Z",
+        "status": "failed",
+        "retry_count": 0,
+        "auto_fix": true,
+        "started_at": "2025-10-06T01:33:18.177031Z",
+        "failed_at": "2025-10-06T01:33:30.362832Z",
+        "failure_reason": "Max retries exhausted"
+      },
+      {
+        "id": "task_1c916064",
+        "type": "file_change",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\models\\Evidence.ts",
+        "description": "Process changes in Evidence.ts",
+        "created_at": "2025-10-06T01:32:40.261300Z",
+        "status": "failed",
+        "retry_count": 0,
+        "auto_fix": true,
+        "started_at": "2025-10-06T01:33:30.381563Z",
+        "failed_at": "2025-10-06T01:33:42.643422Z",
+        "failure_reason": "Max retries exhausted"
+      },
+      {
+        "id": "task_43e2646a",
+        "type": "file_change",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\models\\UserProfile.ts",
+        "description": "Process changes in UserProfile.ts",
+        "created_at": "2025-10-06T01:32:40.261300Z",
+        "status": "failed",
+        "retry_count": 0,
+        "auto_fix": true,
+        "started_at": "2025-10-06T01:33:42.662911Z",
+        "failed_at": "2025-10-06T01:33:55.155674Z",
+        "failure_reason": "Max retries exhausted"
+      },
+      {
+        "id": "task_f22471e8",
+        "type": "file_change",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\models\\index.ts",
+        "description": "Process changes in index.ts",
+        "created_at": "2025-10-06T01:32:40.261300Z",
+        "status": "failed",
+        "retry_count": 0,
+        "auto_fix": true,
+        "started_at": "2025-10-06T01:33:55.176016Z",
+        "failed_at": "2025-10-06T01:34:07.401620Z",
+        "failure_reason": "Max retries exhausted"
+      },
+      {
+        "id": "task_2b7ab4d2",
+        "type": "file_change",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.test.ts",
+        "description": "Process changes in AuditLogger.test.ts",
+        "created_at": "2025-10-06T01:33:04.379349Z",
+        "status": "failed",
+        "retry_count": 0,
+        "auto_fix": true,
+        "started_at": "2025-10-06T01:34:07.420354Z",
+        "failed_at": "2025-10-06T01:34:09.736747Z",
+        "failure_reason": "Circuit breaker active for C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.test.ts"
+      },
+      {
+        "id": "task_cc7eb737",
+        "type": "file_change",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.ts",
+        "description": "Process changes in AuditLogger.ts",
+        "created_at": "2025-10-06T01:33:04.379349Z",
+        "status": "failed",
+        "retry_count": 0,
+        "auto_fix": true,
+        "started_at": "2025-10-06T01:34:09.760856Z",
+        "failed_at": "2025-10-06T01:34:22.033146Z",
+        "failure_reason": "Max retries exhausted"
+      },
+      {
+        "id": "task_6104b65e",
+        "type": "file_change",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\test-utils\\database-test-helper.ts",
+        "description": "Process changes in database-test-helper.ts",
+        "created_at": "2025-10-06T01:33:10.727307Z",
+        "status": "failed",
+        "retry_count": 0,
+        "auto_fix": true,
+        "started_at": "2025-10-06T01:34:22.052322Z",
+        "failed_at": "2025-10-06T01:34:34.220536Z",
+        "failure_reason": "Max retries exhausted"
+      },
+      {
+        "id": "task_e8cf58c1",
+        "type": "file_change",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\test-utils\\database-test-helper.ts",
+        "description": "Process changes in database-test-helper.ts",
+        "created_at": "2025-10-06T01:37:08.108131Z",
+        "status": "failed",
+        "retry_count": 0,
+        "auto_fix": true,
+        "started_at": "2025-10-06T01:37:08.419986Z",
+        "failed_at": "2025-10-06T01:37:21.135726Z",
+        "failure_reason": "Max retries exhausted"
+      },
+      {
+        "id": "task_6e8b46cc",
+        "type": "file_change",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\test-utils\\database-test-helper.ts",
+        "description": "Process changes in database-test-helper.ts",
+        "created_at": "2025-10-06T01:37:36.342927Z",
+        "status": "failed",
+        "retry_count": 0,
+        "auto_fix": true,
+        "started_at": "2025-10-06T01:37:36.468307Z",
+        "failed_at": "2025-10-06T01:37:49.543161Z",
+        "failure_reason": "Max retries exhausted"
+      },
+      {
+        "id": "task_d38ad84c",
+        "type": "file_change",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.test.ts",
+        "description": "Process changes in AuditLogger.test.ts",
+        "created_at": "2025-10-06T01:39:18.601344Z",
+        "status": "failed",
+        "retry_count": 0,
+        "auto_fix": true,
+        "started_at": "2025-10-06T01:39:19.443364Z",
+        "failed_at": "2025-10-06T01:39:21.985869Z",
+        "failure_reason": "Circuit breaker active for C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.test.ts"
+      },
+      {
+        "id": "task_2517db0a",
+        "type": "file_change",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.test.ts",
+        "description": "Process changes in AuditLogger.test.ts",
+        "created_at": "2025-10-06T01:40:11.089606Z",
+        "status": "failed",
+        "retry_count": 0,
+        "auto_fix": true,
+        "started_at": "2025-10-06T01:40:11.156191Z",
+        "failed_at": "2025-10-06T01:40:13.791287Z",
+        "failure_reason": "Circuit breaker active for C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.test.ts"
+      },
+      {
+        "id": "task_da0d2ce4",
+        "type": "file_change",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.test.ts",
+        "description": "Process changes in AuditLogger.test.ts",
+        "created_at": "2025-10-06T01:40:59.918821Z",
+        "status": "failed",
+        "retry_count": 0,
+        "auto_fix": true,
+        "started_at": "2025-10-06T01:41:00.851369Z",
+        "failed_at": "2025-10-06T01:41:03.350643Z",
+        "failure_reason": "Circuit breaker active for C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.test.ts"
+      },
+      {
+        "id": "task_19647476",
+        "type": "file_change",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.test.ts",
+        "description": "Process changes in AuditLogger.test.ts",
+        "created_at": "2025-10-06T01:42:09.668050Z",
+        "status": "failed",
+        "retry_count": 0,
+        "auto_fix": true,
+        "started_at": "2025-10-06T01:42:09.750444Z",
+        "failed_at": "2025-10-06T01:42:12.116725Z",
+        "failure_reason": "Circuit breaker active for C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.test.ts"
+      },
+      {
+        "id": "task_9e277a82",
+        "type": "file_change",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.test.ts",
+        "description": "Process changes in AuditLogger.test.ts",
+        "created_at": "2025-10-06T19:17:21.212100Z",
+        "status": "failed",
+        "retry_count": 0,
+        "auto_fix": true,
+        "started_at": "2025-10-06T19:17:21.526993Z",
+        "failed_at": "2025-10-06T19:17:34.166407Z",
+        "failure_reason": "Max retries exhausted"
+      },
+      {
+        "id": "task_2f0e8988",
+        "type": "file_change",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.ts",
+        "description": "Process changes in AuditLogger.ts",
+        "created_at": "2025-10-06T19:17:21.212100Z",
+        "status": "failed",
+        "retry_count": 0,
+        "auto_fix": true,
+        "started_at": "2025-10-06T19:17:34.187113Z",
+        "failed_at": "2025-10-06T19:17:46.878468Z",
+        "failure_reason": "Max retries exhausted"
+      },
+      {
+        "id": "task_51ff3d5a",
+        "type": "file_change",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\NotesService.test.ts",
+        "description": "Process changes in NotesService.test.ts",
+        "created_at": "2025-10-06T19:17:21.212100Z",
+        "status": "failed",
+        "retry_count": 0,
+        "auto_fix": true,
+        "started_at": "2025-10-06T19:17:46.901346Z",
+        "failed_at": "2025-10-06T19:17:59.760417Z",
+        "failure_reason": "Max retries exhausted"
+      },
+      {
+        "id": "task_e7fb1a72",
+        "type": "file_change",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\test-utils\\database-test-helper.ts",
+        "description": "Process changes in database-test-helper.ts",
+        "created_at": "2025-10-06T19:17:21.212100Z",
+        "status": "failed",
+        "retry_count": 0,
+        "auto_fix": true,
+        "started_at": "2025-10-06T19:17:59.780999Z",
+        "failed_at": "2025-10-06T19:18:12.726048Z",
+        "failure_reason": "Max retries exhausted"
+      },
+      {
+        "id": "task_d8e5a5d8",
+        "type": "file_change",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\NotesService.ts",
+        "description": "Process changes in NotesService.ts",
+        "created_at": "2025-10-06T21:50:58.761976Z",
+        "status": "failed",
+        "retry_count": 0,
+        "auto_fix": true,
+        "started_at": "2025-10-06T21:50:59.085207Z",
+        "failed_at": "2025-10-06T21:51:09.514200Z",
+        "failure_reason": "Max retries exhausted"
+      }
+    ]
+  },
+  "conversation_history": [
+    {
+      "timestamp": "2025-10-06T01:03:52.351987Z",
+      "type": "task_created",
+      "task_id": "task_74a20d86",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\test-utils\\test-utils.tsx",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:04:04.817447Z",
+      "type": "task_failed",
+      "task_id": "task_74a20d86",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\test-utils\\test-utils.tsx",
+      "reason": "Max retries exhausted"
+    },
+    {
+      "timestamp": "2025-10-06T01:08:54.297427Z",
+      "type": "task_created",
+      "task_id": "task_155c6aba",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\PostItNote.tsx",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:09:06.900195Z",
+      "type": "task_failed",
+      "task_id": "task_155c6aba",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\PostItNote.tsx",
+      "reason": "Max retries exhausted"
+    },
+    {
+      "timestamp": "2025-10-06T01:10:06.622588Z",
+      "type": "task_created",
+      "task_id": "task_1618af30",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\PostItNote.test.tsx",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:10:09.192560Z",
+      "type": "task_failed",
+      "task_id": "task_1618af30",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\PostItNote.test.tsx",
+      "reason": "Circuit breaker active for C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\PostItNote.test.tsx"
+    },
+    {
+      "timestamp": "2025-10-06T01:10:33.602309Z",
+      "type": "task_created",
+      "task_id": "task_bf9c7ec9",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\UserFactsPanel.test.tsx",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:10:46.877282Z",
+      "type": "task_failed",
+      "task_id": "task_bf9c7ec9",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\UserFactsPanel.test.tsx",
+      "reason": "Max retries exhausted"
+    },
+    {
+      "timestamp": "2025-10-06T01:10:56.159126Z",
+      "type": "task_created",
+      "task_id": "task_e8a0ac22",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\UserFactsPanel.test.tsx",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:10:59.372557Z",
+      "type": "task_failed",
+      "task_id": "task_e8a0ac22",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\UserFactsPanel.test.tsx",
+      "reason": "Circuit breaker active for C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\UserFactsPanel.test.tsx"
+    },
+    {
+      "timestamp": "2025-10-06T01:11:22.767435Z",
+      "type": "task_created",
+      "task_id": "task_9a0b1c7c",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\CaseFactsPanel.test.tsx",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:11:37.081277Z",
+      "type": "task_failed",
+      "task_id": "task_9a0b1c7c",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\CaseFactsPanel.test.tsx",
+      "reason": "Max retries exhausted"
+    },
+    {
+      "timestamp": "2025-10-06T01:12:05.318819Z",
+      "type": "task_created",
+      "task_id": "task_cc5b3862",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\UserFactsPanel.test.tsx",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:12:07.871281Z",
+      "type": "task_failed",
+      "task_id": "task_cc5b3862",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\UserFactsPanel.test.tsx",
+      "reason": "Circuit breaker active for C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\UserFactsPanel.test.tsx"
+    },
+    {
+      "timestamp": "2025-10-06T01:12:27.968075Z",
+      "type": "task_created",
+      "task_id": "task_26b10667",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\CaseFactsPanel.test.tsx",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:12:30.503240Z",
+      "type": "task_failed",
+      "task_id": "task_26b10667",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\CaseFactsPanel.test.tsx",
+      "reason": "Circuit breaker active for C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\CaseFactsPanel.test.tsx"
+    },
+    {
+      "timestamp": "2025-10-06T01:13:34.995928Z",
+      "type": "task_created",
+      "task_id": "task_8bd27e33",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\UserFactsPanel.test.tsx",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:13:37.815501Z",
+      "type": "task_failed",
+      "task_id": "task_8bd27e33",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\UserFactsPanel.test.tsx",
+      "reason": "Circuit breaker active for C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\UserFactsPanel.test.tsx"
+    },
+    {
+      "timestamp": "2025-10-06T01:13:55.933782Z",
+      "type": "task_created",
+      "task_id": "task_36d9bfa0",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\CaseFactsPanel.test.tsx",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:13:58.480842Z",
+      "type": "task_failed",
+      "task_id": "task_36d9bfa0",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\CaseFactsPanel.test.tsx",
+      "reason": "Circuit breaker active for C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\CaseFactsPanel.test.tsx"
+    },
+    {
+      "timestamp": "2025-10-06T01:14:36.032371Z",
+      "type": "task_created",
+      "task_id": "task_fcaeecdb",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\UserFactsPanel.test.tsx",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:14:38.416847Z",
+      "type": "task_failed",
+      "task_id": "task_fcaeecdb",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\UserFactsPanel.test.tsx",
+      "reason": "Circuit breaker active for C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\UserFactsPanel.test.tsx"
+    },
+    {
+      "timestamp": "2025-10-06T01:14:45.472809Z",
+      "type": "task_created",
+      "task_id": "task_db51357a",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\CaseFactsPanel.test.tsx",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:14:47.824882Z",
+      "type": "task_failed",
+      "task_id": "task_db51357a",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\CaseFactsPanel.test.tsx",
+      "reason": "Circuit breaker active for C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\CaseFactsPanel.test.tsx"
+    },
+    {
+      "timestamp": "2025-10-06T01:14:55.569065Z",
+      "type": "task_created",
+      "task_id": "task_c7ca798f",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\CaseFactsPanel.test.tsx",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:14:58.239272Z",
+      "type": "task_failed",
+      "task_id": "task_c7ca798f",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\CaseFactsPanel.test.tsx",
+      "reason": "Circuit breaker active for C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\CaseFactsPanel.test.tsx"
+    },
+    {
+      "timestamp": "2025-10-06T01:15:03.520635Z",
+      "type": "task_created",
+      "task_id": "task_adc8053b",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\UserFactsPanel.test.tsx",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:15:06.706888Z",
+      "type": "task_failed",
+      "task_id": "task_adc8053b",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\UserFactsPanel.test.tsx",
+      "reason": "Circuit breaker active for C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\UserFactsPanel.test.tsx"
+    },
+    {
+      "timestamp": "2025-10-06T01:15:45.264099Z",
+      "type": "task_created",
+      "task_id": "task_18b8c099",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\UserFactsPanel.test.tsx",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:15:47.564391Z",
+      "type": "task_failed",
+      "task_id": "task_18b8c099",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\UserFactsPanel.test.tsx",
+      "reason": "Circuit breaker active for C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\UserFactsPanel.test.tsx"
+    },
+    {
+      "timestamp": "2025-10-06T01:15:55.541609Z",
+      "type": "task_created",
+      "task_id": "task_179139d0",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\CaseFactsPanel.test.tsx",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:15:58.046786Z",
+      "type": "task_failed",
+      "task_id": "task_179139d0",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\CaseFactsPanel.test.tsx",
+      "reason": "Circuit breaker active for C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\CaseFactsPanel.test.tsx"
+    },
+    {
+      "timestamp": "2025-10-06T01:17:07.045401Z",
+      "type": "task_created",
+      "task_id": "task_af8dd8cd",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\UserFactsPanel.test.tsx",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:17:09.455189Z",
+      "type": "task_failed",
+      "task_id": "task_af8dd8cd",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\UserFactsPanel.test.tsx",
+      "reason": "Circuit breaker active for C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\UserFactsPanel.test.tsx"
+    },
+    {
+      "timestamp": "2025-10-06T01:17:21.401816Z",
+      "type": "task_created",
+      "task_id": "task_638420d9",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\CaseFactsPanel.test.tsx",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:17:24.025714Z",
+      "type": "task_failed",
+      "task_id": "task_638420d9",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\CaseFactsPanel.test.tsx",
+      "reason": "Circuit breaker active for C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\CaseFactsPanel.test.tsx"
+    },
+    {
+      "timestamp": "2025-10-06T01:18:27.124734Z",
+      "type": "task_created",
+      "task_id": "task_d3f9eccf",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\UserFactsPanel.test.tsx",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:18:30.380128Z",
+      "type": "task_failed",
+      "task_id": "task_d3f9eccf",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\UserFactsPanel.test.tsx",
+      "reason": "Circuit breaker active for C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\UserFactsPanel.test.tsx"
+    },
+    {
+      "timestamp": "2025-10-06T01:18:39.880943Z",
+      "type": "task_created",
+      "task_id": "task_e5567b0e",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\CaseFactsPanel.test.tsx",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:18:42.954939Z",
+      "type": "task_failed",
+      "task_id": "task_e5567b0e",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\CaseFactsPanel.test.tsx",
+      "reason": "Circuit breaker active for C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\CaseFactsPanel.test.tsx"
+    },
+    {
+      "timestamp": "2025-10-06T01:20:09.250393Z",
+      "type": "task_created",
+      "task_id": "task_2fe890e5",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\CaseFactsPanel.test.tsx",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:20:11.767849Z",
+      "type": "task_failed",
+      "task_id": "task_2fe890e5",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\CaseFactsPanel.test.tsx",
+      "reason": "Circuit breaker active for C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\CaseFactsPanel.test.tsx"
+    },
+    {
+      "timestamp": "2025-10-06T01:20:19.804306Z",
+      "type": "task_created",
+      "task_id": "task_0b78711f",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\CaseFactsPanel.tsx",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:20:19.804306Z",
+      "type": "task_created",
+      "task_id": "task_628d31dc",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\UserFactsPanel.tsx",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:20:19.804306Z",
+      "type": "task_created",
+      "task_id": "task_64cf67a7",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\notes\\NotesPanel.tsx",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:20:19.804306Z",
+      "type": "task_created",
+      "task_id": "task_17d700d3",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\hooks\\useCaseFacts.ts",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:20:19.804306Z",
+      "type": "task_created",
+      "task_id": "task_c4a06d41",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\hooks\\useNotes.ts",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:20:19.804306Z",
+      "type": "task_created",
+      "task_id": "task_10ad43a5",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\hooks\\useUserFacts.ts",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:20:32.604634Z",
+      "type": "task_failed",
+      "task_id": "task_0b78711f",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\CaseFactsPanel.tsx",
+      "reason": "Max retries exhausted"
+    },
+    {
+      "timestamp": "2025-10-06T01:20:44.630786Z",
+      "type": "task_created",
+      "task_id": "task_3ab31173",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\test-utils\\setup.ts",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:20:45.667428Z",
+      "type": "task_failed",
+      "task_id": "task_628d31dc",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\UserFactsPanel.tsx",
+      "reason": "Max retries exhausted"
+    },
+    {
+      "timestamp": "2025-10-06T01:20:58.388909Z",
+      "type": "task_failed",
+      "task_id": "task_64cf67a7",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\notes\\NotesPanel.tsx",
+      "reason": "Max retries exhausted"
+    },
+    {
+      "timestamp": "2025-10-06T01:21:11.501371Z",
+      "type": "task_failed",
+      "task_id": "task_17d700d3",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\hooks\\useCaseFacts.ts",
+      "reason": "Max retries exhausted"
+    },
+    {
+      "timestamp": "2025-10-06T01:21:24.223496Z",
+      "type": "task_failed",
+      "task_id": "task_c4a06d41",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\hooks\\useNotes.ts",
+      "reason": "Max retries exhausted"
+    },
+    {
+      "timestamp": "2025-10-06T01:21:36.581821Z",
+      "type": "task_failed",
+      "task_id": "task_10ad43a5",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\hooks\\useUserFacts.ts",
+      "reason": "Max retries exhausted"
+    },
+    {
+      "timestamp": "2025-10-06T01:21:48.804228Z",
+      "type": "task_failed",
+      "task_id": "task_3ab31173",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\test-utils\\setup.ts",
+      "reason": "Max retries exhausted"
+    },
+    {
+      "timestamp": "2025-10-06T01:22:30.040376Z",
+      "type": "task_created",
+      "task_id": "task_b1cd0253",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\hooks\\useLegalIssues.ts",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:22:30.040376Z",
+      "type": "task_created",
+      "task_id": "task_5615a186",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\hooks\\useTimeline.ts",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:22:42.964221Z",
+      "type": "task_failed",
+      "task_id": "task_b1cd0253",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\hooks\\useLegalIssues.ts",
+      "reason": "Max retries exhausted"
+    },
+    {
+      "timestamp": "2025-10-06T01:22:48.901256Z",
+      "type": "task_created",
+      "task_id": "task_6f3d302c",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\models\\LegalIssue.ts",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:22:48.901256Z",
+      "type": "task_created",
+      "task_id": "task_5f163445",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\models\\Note.ts",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:22:48.901256Z",
+      "type": "task_created",
+      "task_id": "task_379d93f6",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\models\\UserFact.ts",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:22:55.108934Z",
+      "type": "task_created",
+      "task_id": "task_87c33b60",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\models\\CaseFact.ts",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:22:55.108934Z",
+      "type": "task_created",
+      "task_id": "task_4391ede2",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\models\\TimelineEvent.ts",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:22:55.417863Z",
+      "type": "task_failed",
+      "task_id": "task_5615a186",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\hooks\\useTimeline.ts",
+      "reason": "Max retries exhausted"
+    },
+    {
+      "timestamp": "2025-10-06T01:23:07.786872Z",
+      "type": "task_failed",
+      "task_id": "task_6f3d302c",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\models\\LegalIssue.ts",
+      "reason": "Max retries exhausted"
+    },
+    {
+      "timestamp": "2025-10-06T01:23:20.199427Z",
+      "type": "task_failed",
+      "task_id": "task_5f163445",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\models\\Note.ts",
+      "reason": "Max retries exhausted"
+    },
+    {
+      "timestamp": "2025-10-06T01:23:32.541963Z",
+      "type": "task_failed",
+      "task_id": "task_379d93f6",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\models\\UserFact.ts",
+      "reason": "Max retries exhausted"
+    },
+    {
+      "timestamp": "2025-10-06T01:23:44.807676Z",
+      "type": "task_failed",
+      "task_id": "task_87c33b60",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\models\\CaseFact.ts",
+      "reason": "Max retries exhausted"
+    },
+    {
+      "timestamp": "2025-10-06T01:23:57.012730Z",
+      "type": "task_failed",
+      "task_id": "task_4391ede2",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\models\\TimelineEvent.ts",
+      "reason": "Max retries exhausted"
+    },
+    {
+      "timestamp": "2025-10-06T01:29:16.389230Z",
+      "type": "task_created",
+      "task_id": "task_87ff7e62",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\hooks\\useAI.test.ts",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:29:29.308504Z",
+      "type": "task_failed",
+      "task_id": "task_87ff7e62",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\hooks\\useAI.test.ts",
+      "reason": "Max retries exhausted"
+    },
+    {
+      "timestamp": "2025-10-06T01:30:38.168943Z",
+      "type": "task_created",
+      "task_id": "task_a57edf7a",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\hooks\\useNotes.test.ts",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:30:51.026405Z",
+      "type": "task_failed",
+      "task_id": "task_a57edf7a",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\hooks\\useNotes.test.ts",
+      "reason": "Max retries exhausted"
+    },
+    {
+      "timestamp": "2025-10-06T01:32:10.338031Z",
+      "type": "task_created",
+      "task_id": "task_332c10b2",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.test.ts",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:32:21.283979Z",
+      "type": "task_created",
+      "task_id": "task_83d64e48",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.ts",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:32:23.055254Z",
+      "type": "task_failed",
+      "task_id": "task_332c10b2",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.test.ts",
+      "reason": "Max retries exhausted"
+    },
+    {
+      "timestamp": "2025-10-06T01:32:35.532226Z",
+      "type": "task_failed",
+      "task_id": "task_83d64e48",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.ts",
+      "reason": "Max retries exhausted"
+    },
+    {
+      "timestamp": "2025-10-06T01:32:40.261300Z",
+      "type": "task_created",
+      "task_id": "task_6913d0e6",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\models\\Action.ts",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:32:40.261300Z",
+      "type": "task_created",
+      "task_id": "task_a3a80c07",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\models\\AuditLog.ts",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:32:40.261300Z",
+      "type": "task_created",
+      "task_id": "task_afeb9f61",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\models\\Case.ts",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:32:40.261300Z",
+      "type": "task_created",
+      "task_id": "task_0150b8e3",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\models\\ChatConversation.ts",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:32:40.261300Z",
+      "type": "task_created",
+      "task_id": "task_1c916064",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\models\\Evidence.ts",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:32:40.261300Z",
+      "type": "task_created",
+      "task_id": "task_43e2646a",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\models\\UserProfile.ts",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:32:40.261300Z",
+      "type": "task_created",
+      "task_id": "task_f22471e8",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\models\\index.ts",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:32:52.908623Z",
+      "type": "task_failed",
+      "task_id": "task_6913d0e6",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\models\\Action.ts",
+      "reason": "Max retries exhausted"
+    },
+    {
+      "timestamp": "2025-10-06T01:33:04.379349Z",
+      "type": "task_created",
+      "task_id": "task_2b7ab4d2",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.test.ts",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:33:04.379349Z",
+      "type": "task_created",
+      "task_id": "task_cc7eb737",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.ts",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:33:05.677634Z",
+      "type": "task_failed",
+      "task_id": "task_a3a80c07",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\models\\AuditLog.ts",
+      "reason": "Max retries exhausted"
+    },
+    {
+      "timestamp": "2025-10-06T01:33:10.727307Z",
+      "type": "task_created",
+      "task_id": "task_6104b65e",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\test-utils\\database-test-helper.ts",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:33:18.158165Z",
+      "type": "task_failed",
+      "task_id": "task_afeb9f61",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\models\\Case.ts",
+      "reason": "Max retries exhausted"
+    },
+    {
+      "timestamp": "2025-10-06T01:33:30.362832Z",
+      "type": "task_failed",
+      "task_id": "task_0150b8e3",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\models\\ChatConversation.ts",
+      "reason": "Max retries exhausted"
+    },
+    {
+      "timestamp": "2025-10-06T01:33:42.643422Z",
+      "type": "task_failed",
+      "task_id": "task_1c916064",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\models\\Evidence.ts",
+      "reason": "Max retries exhausted"
+    },
+    {
+      "timestamp": "2025-10-06T01:33:55.155674Z",
+      "type": "task_failed",
+      "task_id": "task_43e2646a",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\models\\UserProfile.ts",
+      "reason": "Max retries exhausted"
+    },
+    {
+      "timestamp": "2025-10-06T01:34:07.401620Z",
+      "type": "task_failed",
+      "task_id": "task_f22471e8",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\models\\index.ts",
+      "reason": "Max retries exhausted"
+    },
+    {
+      "timestamp": "2025-10-06T01:34:09.736747Z",
+      "type": "task_failed",
+      "task_id": "task_2b7ab4d2",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.test.ts",
+      "reason": "Circuit breaker active for C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.test.ts"
+    },
+    {
+      "timestamp": "2025-10-06T01:34:22.033146Z",
+      "type": "task_failed",
+      "task_id": "task_cc7eb737",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.ts",
+      "reason": "Max retries exhausted"
+    },
+    {
+      "timestamp": "2025-10-06T01:34:34.220536Z",
+      "type": "task_failed",
+      "task_id": "task_6104b65e",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\test-utils\\database-test-helper.ts",
+      "reason": "Max retries exhausted"
+    },
+    {
+      "timestamp": "2025-10-06T01:37:08.108131Z",
+      "type": "task_created",
+      "task_id": "task_e8cf58c1",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\test-utils\\database-test-helper.ts",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:37:21.135726Z",
+      "type": "task_failed",
+      "task_id": "task_e8cf58c1",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\test-utils\\database-test-helper.ts",
+      "reason": "Max retries exhausted"
+    },
+    {
+      "timestamp": "2025-10-06T01:37:36.342927Z",
+      "type": "task_created",
+      "task_id": "task_6e8b46cc",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\test-utils\\database-test-helper.ts",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:37:49.543161Z",
+      "type": "task_failed",
+      "task_id": "task_6e8b46cc",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\test-utils\\database-test-helper.ts",
+      "reason": "Max retries exhausted"
+    },
+    {
+      "timestamp": "2025-10-06T01:39:18.601344Z",
+      "type": "task_created",
+      "task_id": "task_d38ad84c",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.test.ts",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:39:21.985869Z",
+      "type": "task_failed",
+      "task_id": "task_d38ad84c",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.test.ts",
+      "reason": "Circuit breaker active for C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.test.ts"
+    },
+    {
+      "timestamp": "2025-10-06T01:40:11.089606Z",
+      "type": "task_created",
+      "task_id": "task_2517db0a",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.test.ts",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:40:13.791287Z",
+      "type": "task_failed",
+      "task_id": "task_2517db0a",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.test.ts",
+      "reason": "Circuit breaker active for C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.test.ts"
+    },
+    {
+      "timestamp": "2025-10-06T01:40:59.918821Z",
+      "type": "task_created",
+      "task_id": "task_da0d2ce4",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.test.ts",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:41:03.350643Z",
+      "type": "task_failed",
+      "task_id": "task_da0d2ce4",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.test.ts",
+      "reason": "Circuit breaker active for C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.test.ts"
+    },
+    {
+      "timestamp": "2025-10-06T01:42:09.668050Z",
+      "type": "task_created",
+      "task_id": "task_19647476",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.test.ts",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T01:42:12.116725Z",
+      "type": "task_failed",
+      "task_id": "task_19647476",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.test.ts",
+      "reason": "Circuit breaker active for C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.test.ts"
+    },
+    {
+      "timestamp": "2025-10-06T19:17:21.212100Z",
+      "type": "task_created",
+      "task_id": "task_9e277a82",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.test.ts",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T19:17:21.212100Z",
+      "type": "task_created",
+      "task_id": "task_2f0e8988",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.ts",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T19:17:21.212100Z",
+      "type": "task_created",
+      "task_id": "task_51ff3d5a",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\NotesService.test.ts",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T19:17:21.212100Z",
+      "type": "task_created",
+      "task_id": "task_e7fb1a72",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\test-utils\\database-test-helper.ts",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T19:17:34.166407Z",
+      "type": "task_failed",
+      "task_id": "task_9e277a82",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.test.ts",
+      "reason": "Max retries exhausted"
+    },
+    {
+      "timestamp": "2025-10-06T19:17:46.878468Z",
+      "type": "task_failed",
+      "task_id": "task_2f0e8988",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.ts",
+      "reason": "Max retries exhausted"
+    },
+    {
+      "timestamp": "2025-10-06T19:17:59.760417Z",
+      "type": "task_failed",
+      "task_id": "task_51ff3d5a",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\NotesService.test.ts",
+      "reason": "Max retries exhausted"
+    },
+    {
+      "timestamp": "2025-10-06T19:18:12.726048Z",
+      "type": "task_failed",
+      "task_id": "task_e7fb1a72",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\test-utils\\database-test-helper.ts",
+      "reason": "Max retries exhausted"
+    },
+    {
+      "timestamp": "2025-10-06T21:50:58.761976Z",
+      "type": "task_created",
+      "task_id": "task_d8e5a5d8",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\NotesService.ts",
+      "auto_fix": true
+    },
+    {
+      "timestamp": "2025-10-06T21:51:09.514200Z",
+      "type": "task_failed",
+      "task_id": "task_d8e5a5d8",
+      "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\NotesService.ts",
+      "reason": "Max retries exhausted"
+    }
+  ],
+  "test_results": [],
+  "code_diffs": [],
+  "errors": [
+    {
+      "timestamp": "2025-10-06T01:04:04.803358Z",
+      "task_id": "task_74a20d86",
+      "level": 1,
+      "failure_count": 3,
+      "description": "Process changes in test-utils.tsx"
+    },
+    {
+      "timestamp": "2025-10-06T01:09:06.886879Z",
+      "task_id": "task_155c6aba",
+      "level": 1,
+      "failure_count": 3,
+      "description": "Process changes in PostItNote.tsx"
+    },
+    {
+      "timestamp": "2025-10-06T01:10:46.865061Z",
+      "task_id": "task_bf9c7ec9",
+      "level": 1,
+      "failure_count": 3,
+      "description": "Process changes in UserFactsPanel.test.tsx"
+    },
+    {
+      "timestamp": "2025-10-06T01:11:37.062234Z",
+      "task_id": "task_9a0b1c7c",
+      "level": 1,
+      "failure_count": 3,
+      "description": "Process changes in CaseFactsPanel.test.tsx"
+    },
+    {
+      "timestamp": "2025-10-06T01:20:32.590091Z",
+      "task_id": "task_0b78711f",
+      "level": 1,
+      "failure_count": 3,
+      "description": "Process changes in CaseFactsPanel.tsx"
+    },
+    {
+      "timestamp": "2025-10-06T01:20:45.650905Z",
+      "task_id": "task_628d31dc",
+      "level": 1,
+      "failure_count": 3,
+      "description": "Process changes in UserFactsPanel.tsx"
+    },
+    {
+      "timestamp": "2025-10-06T01:20:58.371851Z",
+      "task_id": "task_64cf67a7",
+      "level": 1,
+      "failure_count": 3,
+      "description": "Process changes in NotesPanel.tsx"
+    },
+    {
+      "timestamp": "2025-10-06T01:21:11.480504Z",
+      "task_id": "task_17d700d3",
+      "level": 1,
+      "failure_count": 3,
+      "description": "Process changes in useCaseFacts.ts"
+    },
+    {
+      "timestamp": "2025-10-06T01:21:24.204362Z",
+      "task_id": "task_c4a06d41",
+      "level": 1,
+      "failure_count": 3,
+      "description": "Process changes in useNotes.ts"
+    },
+    {
+      "timestamp": "2025-10-06T01:21:36.565870Z",
+      "task_id": "task_10ad43a5",
+      "level": 1,
+      "failure_count": 3,
+      "description": "Process changes in useUserFacts.ts"
+    },
+    {
+      "timestamp": "2025-10-06T01:21:48.787963Z",
+      "task_id": "task_3ab31173",
+      "level": 1,
+      "failure_count": 3,
+      "description": "Process changes in setup.ts"
+    },
+    {
+      "timestamp": "2025-10-06T01:22:42.947637Z",
+      "task_id": "task_b1cd0253",
+      "level": 1,
+      "failure_count": 3,
+      "description": "Process changes in useLegalIssues.ts"
+    },
+    {
+      "timestamp": "2025-10-06T01:22:55.400273Z",
+      "task_id": "task_5615a186",
+      "level": 1,
+      "failure_count": 3,
+      "description": "Process changes in useTimeline.ts"
+    },
+    {
+      "timestamp": "2025-10-06T01:23:07.769502Z",
+      "task_id": "task_6f3d302c",
+      "level": 1,
+      "failure_count": 3,
+      "description": "Process changes in LegalIssue.ts"
+    },
+    {
+      "timestamp": "2025-10-06T01:23:20.182175Z",
+      "task_id": "task_5f163445",
+      "level": 1,
+      "failure_count": 3,
+      "description": "Process changes in Note.ts"
+    },
+    {
+      "timestamp": "2025-10-06T01:23:32.524680Z",
+      "task_id": "task_379d93f6",
+      "level": 1,
+      "failure_count": 3,
+      "description": "Process changes in UserFact.ts"
+    },
+    {
+      "timestamp": "2025-10-06T01:23:44.789950Z",
+      "task_id": "task_87c33b60",
+      "level": 1,
+      "failure_count": 3,
+      "description": "Process changes in CaseFact.ts"
+    },
+    {
+      "timestamp": "2025-10-06T01:23:56.994649Z",
+      "task_id": "task_4391ede2",
+      "level": 1,
+      "failure_count": 3,
+      "description": "Process changes in TimelineEvent.ts"
+    },
+    {
+      "timestamp": "2025-10-06T01:29:29.291335Z",
+      "task_id": "task_87ff7e62",
+      "level": 1,
+      "failure_count": 3,
+      "description": "Process changes in useAI.test.ts"
+    },
+    {
+      "timestamp": "2025-10-06T01:30:51.006221Z",
+      "task_id": "task_a57edf7a",
+      "level": 1,
+      "failure_count": 3,
+      "description": "Process changes in useNotes.test.ts"
+    },
+    {
+      "timestamp": "2025-10-06T01:32:23.037497Z",
+      "task_id": "task_332c10b2",
+      "level": 1,
+      "failure_count": 3,
+      "description": "Process changes in AuditLogger.test.ts"
+    },
+    {
+      "timestamp": "2025-10-06T01:32:35.513630Z",
+      "task_id": "task_83d64e48",
+      "level": 1,
+      "failure_count": 3,
+      "description": "Process changes in AuditLogger.ts"
+    },
+    {
+      "timestamp": "2025-10-06T01:32:52.889988Z",
+      "task_id": "task_6913d0e6",
+      "level": 1,
+      "failure_count": 3,
+      "description": "Process changes in Action.ts"
+    },
+    {
+      "timestamp": "2025-10-06T01:33:05.657309Z",
+      "task_id": "task_a3a80c07",
+      "level": 1,
+      "failure_count": 3,
+      "description": "Process changes in AuditLog.ts"
+    },
+    {
+      "timestamp": "2025-10-06T01:33:18.139631Z",
+      "task_id": "task_afeb9f61",
+      "level": 1,
+      "failure_count": 3,
+      "description": "Process changes in Case.ts"
+    },
+    {
+      "timestamp": "2025-10-06T01:33:30.344172Z",
+      "task_id": "task_0150b8e3",
+      "level": 1,
+      "failure_count": 3,
+      "description": "Process changes in ChatConversation.ts"
+    },
+    {
+      "timestamp": "2025-10-06T01:33:42.624299Z",
+      "task_id": "task_1c916064",
+      "level": 1,
+      "failure_count": 3,
+      "description": "Process changes in Evidence.ts"
+    },
+    {
+      "timestamp": "2025-10-06T01:33:55.134954Z",
+      "task_id": "task_43e2646a",
+      "level": 1,
+      "failure_count": 3,
+      "description": "Process changes in UserProfile.ts"
+    },
+    {
+      "timestamp": "2025-10-06T01:34:07.382850Z",
+      "task_id": "task_f22471e8",
+      "level": 1,
+      "failure_count": 3,
+      "description": "Process changes in index.ts"
+    },
+    {
+      "timestamp": "2025-10-06T01:34:22.013723Z",
+      "task_id": "task_cc7eb737",
+      "level": 1,
+      "failure_count": 3,
+      "description": "Process changes in AuditLogger.ts"
+    },
+    {
+      "timestamp": "2025-10-06T01:34:34.200530Z",
+      "task_id": "task_6104b65e",
+      "level": 1,
+      "failure_count": 3,
+      "description": "Process changes in database-test-helper.ts"
+    },
+    {
+      "timestamp": "2025-10-06T01:37:21.115270Z",
+      "task_id": "task_e8cf58c1",
+      "level": 1,
+      "failure_count": 3,
+      "description": "Process changes in database-test-helper.ts"
+    },
+    {
+      "timestamp": "2025-10-06T01:37:49.520594Z",
+      "task_id": "task_6e8b46cc",
+      "level": 1,
+      "failure_count": 3,
+      "description": "Process changes in database-test-helper.ts"
+    },
+    {
+      "timestamp": "2025-10-06T19:17:34.145332Z",
+      "task_id": "task_9e277a82",
+      "level": 1,
+      "failure_count": 3,
+      "description": "Process changes in AuditLogger.test.ts"
+    },
+    {
+      "timestamp": "2025-10-06T19:17:46.857370Z",
+      "task_id": "task_2f0e8988",
+      "level": 1,
+      "failure_count": 3,
+      "description": "Process changes in AuditLogger.ts"
+    },
+    {
+      "timestamp": "2025-10-06T19:17:59.740015Z",
+      "task_id": "task_51ff3d5a",
+      "level": 1,
+      "failure_count": 3,
+      "description": "Process changes in NotesService.test.ts"
+    },
+    {
+      "timestamp": "2025-10-06T19:18:12.705541Z",
+      "task_id": "task_e7fb1a72",
+      "level": 1,
+      "failure_count": 3,
+      "description": "Process changes in database-test-helper.ts"
+    },
+    {
+      "timestamp": "2025-10-06T21:51:09.491613Z",
+      "task_id": "task_d8e5a5d8",
+      "level": 1,
+      "failure_count": 3,
+      "description": "Process changes in NotesService.ts"
+    }
+  ],
+  "fix_attempts": {
+    "task_74a20d86": [
+      {
+        "attempt_num": 1,
+        "success": false,
+        "timestamp": "2025-10-06T01:03:57.212174Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 2,
+        "success": false,
+        "timestamp": "2025-10-06T01:04:00.508536Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 3,
+        "success": false,
+        "timestamp": "2025-10-06T01:04:04.786914Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      }
+    ],
+    "task_155c6aba": [
+      {
+        "attempt_num": 1,
+        "success": false,
+        "timestamp": "2025-10-06T01:08:59.357927Z",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\PostItNote.test.tsx",
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 2,
+        "success": false,
+        "timestamp": "2025-10-06T01:09:02.606075Z",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\PostItNote.test.tsx",
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 3,
+        "success": false,
+        "timestamp": "2025-10-06T01:09:06.870066Z",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\PostItNote.test.tsx",
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      }
+    ],
+    "task_bf9c7ec9": [
+      {
+        "attempt_num": 1,
+        "success": false,
+        "timestamp": "2025-10-06T01:10:39.165529Z",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\UserFactsPanel.test.tsx",
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 2,
+        "success": false,
+        "timestamp": "2025-10-06T01:10:42.587078Z",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\UserFactsPanel.test.tsx",
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 3,
+        "success": false,
+        "timestamp": "2025-10-06T01:10:46.848041Z",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\UserFactsPanel.test.tsx",
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      }
+    ],
+    "task_9a0b1c7c": [
+      {
+        "attempt_num": 1,
+        "success": false,
+        "timestamp": "2025-10-06T01:11:28.864150Z",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\CaseFactsPanel.test.tsx",
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 2,
+        "success": false,
+        "timestamp": "2025-10-06T01:11:32.421166Z",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\CaseFactsPanel.test.tsx",
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 3,
+        "success": false,
+        "timestamp": "2025-10-06T01:11:37.039933Z",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\CaseFactsPanel.test.tsx",
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      }
+    ],
+    "task_0b78711f": [
+      {
+        "attempt_num": 1,
+        "success": false,
+        "timestamp": "2025-10-06T01:20:24.862104Z",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\CaseFactsPanel.test.tsx",
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 2,
+        "success": false,
+        "timestamp": "2025-10-06T01:20:28.254608Z",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\CaseFactsPanel.test.tsx",
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 3,
+        "success": false,
+        "timestamp": "2025-10-06T01:20:32.573082Z",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\CaseFactsPanel.test.tsx",
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      }
+    ],
+    "task_628d31dc": [
+      {
+        "attempt_num": 1,
+        "success": false,
+        "timestamp": "2025-10-06T01:20:37.379851Z",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\UserFactsPanel.test.tsx",
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 2,
+        "success": false,
+        "timestamp": "2025-10-06T01:20:41.091983Z",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\UserFactsPanel.test.tsx",
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 3,
+        "success": false,
+        "timestamp": "2025-10-06T01:20:45.630808Z",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\facts\\UserFactsPanel.test.tsx",
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      }
+    ],
+    "task_64cf67a7": [
+      {
+        "attempt_num": 1,
+        "success": false,
+        "timestamp": "2025-10-06T01:20:50.627156Z",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\notes\\NotesPanel.test.tsx",
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 2,
+        "success": false,
+        "timestamp": "2025-10-06T01:20:54.037942Z",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\notes\\NotesPanel.test.tsx",
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 3,
+        "success": false,
+        "timestamp": "2025-10-06T01:20:58.352311Z",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\notes\\NotesPanel.test.tsx",
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      }
+    ],
+    "task_17d700d3": [
+      {
+        "attempt_num": 1,
+        "success": false,
+        "timestamp": "2025-10-06T01:21:03.092684Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 2,
+        "success": false,
+        "timestamp": "2025-10-06T01:21:06.903490Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 3,
+        "success": false,
+        "timestamp": "2025-10-06T01:21:11.453048Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      }
+    ],
+    "task_c4a06d41": [
+      {
+        "attempt_num": 1,
+        "success": false,
+        "timestamp": "2025-10-06T01:21:16.391293Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 2,
+        "success": false,
+        "timestamp": "2025-10-06T01:21:19.833429Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 3,
+        "success": false,
+        "timestamp": "2025-10-06T01:21:24.183099Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      }
+    ],
+    "task_10ad43a5": [
+      {
+        "attempt_num": 1,
+        "success": false,
+        "timestamp": "2025-10-06T01:21:28.891520Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 2,
+        "success": false,
+        "timestamp": "2025-10-06T01:21:32.232733Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 3,
+        "success": false,
+        "timestamp": "2025-10-06T01:21:36.548272Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      }
+    ],
+    "task_3ab31173": [
+      {
+        "attempt_num": 1,
+        "success": false,
+        "timestamp": "2025-10-06T01:21:41.193802Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 2,
+        "success": false,
+        "timestamp": "2025-10-06T01:21:44.500573Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 3,
+        "success": false,
+        "timestamp": "2025-10-06T01:21:48.768587Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      }
+    ],
+    "task_b1cd0253": [
+      {
+        "attempt_num": 1,
+        "success": false,
+        "timestamp": "2025-10-06T01:22:35.226845Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 2,
+        "success": false,
+        "timestamp": "2025-10-06T01:22:38.557114Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 3,
+        "success": false,
+        "timestamp": "2025-10-06T01:22:42.928649Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      }
+    ],
+    "task_5615a186": [
+      {
+        "attempt_num": 1,
+        "success": false,
+        "timestamp": "2025-10-06T01:22:47.609497Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 2,
+        "success": false,
+        "timestamp": "2025-10-06T01:22:51.073601Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 3,
+        "success": false,
+        "timestamp": "2025-10-06T01:22:55.379824Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      }
+    ],
+    "task_6f3d302c": [
+      {
+        "attempt_num": 1,
+        "success": false,
+        "timestamp": "2025-10-06T01:23:00.114716Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 2,
+        "success": false,
+        "timestamp": "2025-10-06T01:23:03.419239Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 3,
+        "success": false,
+        "timestamp": "2025-10-06T01:23:07.749853Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      }
+    ],
+    "task_5f163445": [
+      {
+        "attempt_num": 1,
+        "success": false,
+        "timestamp": "2025-10-06T01:23:12.435333Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 2,
+        "success": false,
+        "timestamp": "2025-10-06T01:23:15.889010Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 3,
+        "success": false,
+        "timestamp": "2025-10-06T01:23:20.161275Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      }
+    ],
+    "task_379d93f6": [
+      {
+        "attempt_num": 1,
+        "success": false,
+        "timestamp": "2025-10-06T01:23:24.896795Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 2,
+        "success": false,
+        "timestamp": "2025-10-06T01:23:28.229695Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 3,
+        "success": false,
+        "timestamp": "2025-10-06T01:23:32.505201Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      }
+    ],
+    "task_87c33b60": [
+      {
+        "attempt_num": 1,
+        "success": false,
+        "timestamp": "2025-10-06T01:23:37.154324Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 2,
+        "success": false,
+        "timestamp": "2025-10-06T01:23:40.438283Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 3,
+        "success": false,
+        "timestamp": "2025-10-06T01:23:44.764095Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      }
+    ],
+    "task_4391ede2": [
+      {
+        "attempt_num": 1,
+        "success": false,
+        "timestamp": "2025-10-06T01:23:49.405109Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 2,
+        "success": false,
+        "timestamp": "2025-10-06T01:23:52.698257Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 3,
+        "success": false,
+        "timestamp": "2025-10-06T01:23:56.971785Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      }
+    ],
+    "task_87ff7e62": [
+      {
+        "attempt_num": 1,
+        "success": false,
+        "timestamp": "2025-10-06T01:29:21.686389Z",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\hooks\\useAI.test.ts",
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 2,
+        "success": false,
+        "timestamp": "2025-10-06T01:29:24.954243Z",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\hooks\\useAI.test.ts",
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 3,
+        "success": false,
+        "timestamp": "2025-10-06T01:29:29.271343Z",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\hooks\\useAI.test.ts",
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      }
+    ],
+    "task_a57edf7a": [
+      {
+        "attempt_num": 1,
+        "success": false,
+        "timestamp": "2025-10-06T01:30:43.348792Z",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\hooks\\useNotes.test.ts",
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 2,
+        "success": false,
+        "timestamp": "2025-10-06T01:30:46.669547Z",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\hooks\\useNotes.test.ts",
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 3,
+        "success": false,
+        "timestamp": "2025-10-06T01:30:50.979027Z",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\hooks\\useNotes.test.ts",
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      }
+    ],
+    "task_332c10b2": [
+      {
+        "attempt_num": 1,
+        "success": false,
+        "timestamp": "2025-10-06T01:32:15.200597Z",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.test.ts",
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 2,
+        "success": false,
+        "timestamp": "2025-10-06T01:32:18.708176Z",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.test.ts",
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 3,
+        "success": false,
+        "timestamp": "2025-10-06T01:32:23.012886Z",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.test.ts",
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      }
+    ],
+    "task_83d64e48": [
+      {
+        "attempt_num": 1,
+        "success": false,
+        "timestamp": "2025-10-06T01:32:27.861750Z",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.test.ts",
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 2,
+        "success": false,
+        "timestamp": "2025-10-06T01:32:31.150452Z",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.test.ts",
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 3,
+        "success": false,
+        "timestamp": "2025-10-06T01:32:35.492631Z",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.test.ts",
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      }
+    ],
+    "task_6913d0e6": [
+      {
+        "attempt_num": 1,
+        "success": false,
+        "timestamp": "2025-10-06T01:32:45.289506Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 2,
+        "success": false,
+        "timestamp": "2025-10-06T01:32:48.585280Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 3,
+        "success": false,
+        "timestamp": "2025-10-06T01:32:52.866689Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      }
+    ],
+    "task_a3a80c07": [
+      {
+        "attempt_num": 1,
+        "success": false,
+        "timestamp": "2025-10-06T01:32:57.524194Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 2,
+        "success": false,
+        "timestamp": "2025-10-06T01:33:00.951867Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 3,
+        "success": false,
+        "timestamp": "2025-10-06T01:33:05.634440Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      }
+    ],
+    "task_afeb9f61": [
+      {
+        "attempt_num": 1,
+        "success": false,
+        "timestamp": "2025-10-06T01:33:10.541923Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 2,
+        "success": false,
+        "timestamp": "2025-10-06T01:33:13.827893Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 3,
+        "success": false,
+        "timestamp": "2025-10-06T01:33:18.116849Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      }
+    ],
+    "task_0150b8e3": [
+      {
+        "attempt_num": 1,
+        "success": false,
+        "timestamp": "2025-10-06T01:33:22.746004Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 2,
+        "success": false,
+        "timestamp": "2025-10-06T01:33:26.017584Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 3,
+        "success": false,
+        "timestamp": "2025-10-06T01:33:30.322893Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      }
+    ],
+    "task_1c916064": [
+      {
+        "attempt_num": 1,
+        "success": false,
+        "timestamp": "2025-10-06T01:33:34.975999Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 2,
+        "success": false,
+        "timestamp": "2025-10-06T01:33:38.273508Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 3,
+        "success": false,
+        "timestamp": "2025-10-06T01:33:42.601936Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      }
+    ],
+    "task_43e2646a": [
+      {
+        "attempt_num": 1,
+        "success": false,
+        "timestamp": "2025-10-06T01:33:47.445905Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 2,
+        "success": false,
+        "timestamp": "2025-10-06T01:33:50.842362Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 3,
+        "success": false,
+        "timestamp": "2025-10-06T01:33:55.111548Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      }
+    ],
+    "task_f22471e8": [
+      {
+        "attempt_num": 1,
+        "success": false,
+        "timestamp": "2025-10-06T01:33:59.757451Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 2,
+        "success": false,
+        "timestamp": "2025-10-06T01:34:03.066215Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 3,
+        "success": false,
+        "timestamp": "2025-10-06T01:34:07.361055Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      }
+    ],
+    "task_cc7eb737": [
+      {
+        "attempt_num": 1,
+        "success": false,
+        "timestamp": "2025-10-06T01:34:14.454004Z",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.test.ts",
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 2,
+        "success": false,
+        "timestamp": "2025-10-06T01:34:17.707518Z",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.test.ts",
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 3,
+        "success": false,
+        "timestamp": "2025-10-06T01:34:21.989647Z",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.test.ts",
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      }
+    ],
+    "task_6104b65e": [
+      {
+        "attempt_num": 1,
+        "success": false,
+        "timestamp": "2025-10-06T01:34:26.589694Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 2,
+        "success": false,
+        "timestamp": "2025-10-06T01:34:29.871130Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 3,
+        "success": false,
+        "timestamp": "2025-10-06T01:34:34.177526Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      }
+    ],
+    "task_e8cf58c1": [
+      {
+        "attempt_num": 1,
+        "success": false,
+        "timestamp": "2025-10-06T01:37:13.496453Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 2,
+        "success": false,
+        "timestamp": "2025-10-06T01:37:16.766232Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 3,
+        "success": false,
+        "timestamp": "2025-10-06T01:37:21.091805Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      }
+    ],
+    "task_6e8b46cc": [
+      {
+        "attempt_num": 1,
+        "success": false,
+        "timestamp": "2025-10-06T01:37:41.665576Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 2,
+        "success": false,
+        "timestamp": "2025-10-06T01:37:45.164352Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 3,
+        "success": false,
+        "timestamp": "2025-10-06T01:37:49.495493Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      }
+    ],
+    "task_9e277a82": [
+      {
+        "attempt_num": 1,
+        "success": false,
+        "timestamp": "2025-10-06T19:17:26.332787Z",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.test.ts",
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 2,
+        "success": false,
+        "timestamp": "2025-10-06T19:17:29.692355Z",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.test.ts",
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 3,
+        "success": false,
+        "timestamp": "2025-10-06T19:17:34.121953Z",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.test.ts",
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      }
+    ],
+    "task_2f0e8988": [
+      {
+        "attempt_num": 1,
+        "success": false,
+        "timestamp": "2025-10-06T19:17:39.046178Z",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.test.ts",
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 2,
+        "success": false,
+        "timestamp": "2025-10-06T19:17:42.490931Z",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.test.ts",
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 3,
+        "success": false,
+        "timestamp": "2025-10-06T19:17:46.829999Z",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.test.ts",
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      }
+    ],
+    "task_51ff3d5a": [
+      {
+        "attempt_num": 1,
+        "success": false,
+        "timestamp": "2025-10-06T19:17:51.830261Z",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\NotesService.test.ts",
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 2,
+        "success": false,
+        "timestamp": "2025-10-06T19:17:55.357655Z",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\NotesService.test.ts",
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 3,
+        "success": false,
+        "timestamp": "2025-10-06T19:17:59.717009Z",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\NotesService.test.ts",
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      }
+    ],
+    "task_e7fb1a72": [
+      {
+        "attempt_num": 1,
+        "success": false,
+        "timestamp": "2025-10-06T19:18:04.926824Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 2,
+        "success": false,
+        "timestamp": "2025-10-06T19:18:08.325612Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      },
+      {
+        "attempt_num": 3,
+        "success": false,
+        "timestamp": "2025-10-06T19:18:12.681806Z",
+        "file_path": null,
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      }
+    ],
+    "task_d8e5a5d8": [
+      {
+        "attempt_num": 1,
+        "success": false,
+        "timestamp": "2025-10-06T21:51:03.955088Z",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\NotesService.test.ts",
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Test execution failed: [WinError 2] The system cannot find the file specified"
+      },
+      {
+        "attempt_num": 2,
+        "success": false,
+        "timestamp": "2025-10-06T21:51:05.076374Z",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\NotesService.test.ts",
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: ^C"
+      },
+      {
+        "attempt_num": 3,
+        "success": false,
+        "timestamp": "2025-10-06T21:51:09.462801Z",
+        "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\NotesService.test.ts",
+        "test_passed": false,
+        "test_duration": 0,
+        "error_summary": "Error calling Claude CLI: Claude CLI failed: Invalid API key \u00c2\u00b7 Fix external API key\n"
+      }
+    ]
+  },
+  "paused_tasks": {
+    "task_74a20d86": {
+      "paused_at": "2025-10-06T01:04:04.803342Z",
+      "reason": "Level 1 escalation - 3 failures",
+      "resume_after": 3600
+    },
+    "task_155c6aba": {
+      "paused_at": "2025-10-06T01:09:06.886860Z",
+      "reason": "Level 1 escalation - 3 failures",
+      "resume_after": 3600
+    },
+    "task_bf9c7ec9": {
+      "paused_at": "2025-10-06T01:10:46.865050Z",
+      "reason": "Level 1 escalation - 3 failures",
+      "resume_after": 3600
+    },
+    "task_9a0b1c7c": {
+      "paused_at": "2025-10-06T01:11:37.062219Z",
+      "reason": "Level 1 escalation - 3 failures",
+      "resume_after": 3600
+    },
+    "task_0b78711f": {
+      "paused_at": "2025-10-06T01:20:32.590080Z",
+      "reason": "Level 1 escalation - 3 failures",
+      "resume_after": 3600
+    },
+    "task_628d31dc": {
+      "paused_at": "2025-10-06T01:20:45.650892Z",
+      "reason": "Level 1 escalation - 3 failures",
+      "resume_after": 3600
+    },
+    "task_64cf67a7": {
+      "paused_at": "2025-10-06T01:20:58.371839Z",
+      "reason": "Level 1 escalation - 3 failures",
+      "resume_after": 3600
+    },
+    "task_17d700d3": {
+      "paused_at": "2025-10-06T01:21:11.480488Z",
+      "reason": "Level 1 escalation - 3 failures",
+      "resume_after": 3600
+    },
+    "task_c4a06d41": {
+      "paused_at": "2025-10-06T01:21:24.204344Z",
+      "reason": "Level 1 escalation - 3 failures",
+      "resume_after": 3600
+    },
+    "task_10ad43a5": {
+      "paused_at": "2025-10-06T01:21:36.565859Z",
+      "reason": "Level 1 escalation - 3 failures",
+      "resume_after": 3600
+    },
+    "task_3ab31173": {
+      "paused_at": "2025-10-06T01:21:48.787952Z",
+      "reason": "Level 1 escalation - 3 failures",
+      "resume_after": 3600
+    },
+    "task_b1cd0253": {
+      "paused_at": "2025-10-06T01:22:42.947625Z",
+      "reason": "Level 1 escalation - 3 failures",
+      "resume_after": 3600
+    },
+    "task_5615a186": {
+      "paused_at": "2025-10-06T01:22:55.400261Z",
+      "reason": "Level 1 escalation - 3 failures",
+      "resume_after": 3600
+    },
+    "task_6f3d302c": {
+      "paused_at": "2025-10-06T01:23:07.769491Z",
+      "reason": "Level 1 escalation - 3 failures",
+      "resume_after": 3600
+    },
+    "task_5f163445": {
+      "paused_at": "2025-10-06T01:23:20.182164Z",
+      "reason": "Level 1 escalation - 3 failures",
+      "resume_after": 3600
+    },
+    "task_379d93f6": {
+      "paused_at": "2025-10-06T01:23:32.524668Z",
+      "reason": "Level 1 escalation - 3 failures",
+      "resume_after": 3600
+    },
+    "task_87c33b60": {
+      "paused_at": "2025-10-06T01:23:44.789937Z",
+      "reason": "Level 1 escalation - 3 failures",
+      "resume_after": 3600
+    },
+    "task_4391ede2": {
+      "paused_at": "2025-10-06T01:23:56.994637Z",
+      "reason": "Level 1 escalation - 3 failures",
+      "resume_after": 3600
+    },
+    "task_87ff7e62": {
+      "paused_at": "2025-10-06T01:29:29.291323Z",
+      "reason": "Level 1 escalation - 3 failures",
+      "resume_after": 3600
+    },
+    "task_a57edf7a": {
+      "paused_at": "2025-10-06T01:30:51.006207Z",
+      "reason": "Level 1 escalation - 3 failures",
+      "resume_after": 3600
+    },
+    "task_332c10b2": {
+      "paused_at": "2025-10-06T01:32:23.037486Z",
+      "reason": "Level 1 escalation - 3 failures",
+      "resume_after": 3600
+    },
+    "task_83d64e48": {
+      "paused_at": "2025-10-06T01:32:35.513617Z",
+      "reason": "Level 1 escalation - 3 failures",
+      "resume_after": 3600
+    },
+    "task_6913d0e6": {
+      "paused_at": "2025-10-06T01:32:52.889974Z",
+      "reason": "Level 1 escalation - 3 failures",
+      "resume_after": 3600
+    },
+    "task_a3a80c07": {
+      "paused_at": "2025-10-06T01:33:05.657298Z",
+      "reason": "Level 1 escalation - 3 failures",
+      "resume_after": 3600
+    },
+    "task_afeb9f61": {
+      "paused_at": "2025-10-06T01:33:18.139619Z",
+      "reason": "Level 1 escalation - 3 failures",
+      "resume_after": 3600
+    },
+    "task_0150b8e3": {
+      "paused_at": "2025-10-06T01:33:30.344161Z",
+      "reason": "Level 1 escalation - 3 failures",
+      "resume_after": 3600
+    },
+    "task_1c916064": {
+      "paused_at": "2025-10-06T01:33:42.624287Z",
+      "reason": "Level 1 escalation - 3 failures",
+      "resume_after": 3600
+    },
+    "task_43e2646a": {
+      "paused_at": "2025-10-06T01:33:55.134940Z",
+      "reason": "Level 1 escalation - 3 failures",
+      "resume_after": 3600
+    },
+    "task_f22471e8": {
+      "paused_at": "2025-10-06T01:34:07.382839Z",
+      "reason": "Level 1 escalation - 3 failures",
+      "resume_after": 3600
+    },
+    "task_cc7eb737": {
+      "paused_at": "2025-10-06T01:34:22.013711Z",
+      "reason": "Level 1 escalation - 3 failures",
+      "resume_after": 3600
+    },
+    "task_6104b65e": {
+      "paused_at": "2025-10-06T01:34:34.200518Z",
+      "reason": "Level 1 escalation - 3 failures",
+      "resume_after": 3600
+    },
+    "task_e8cf58c1": {
+      "paused_at": "2025-10-06T01:37:21.115258Z",
+      "reason": "Level 1 escalation - 3 failures",
+      "resume_after": 3600
+    },
+    "task_6e8b46cc": {
+      "paused_at": "2025-10-06T01:37:49.520576Z",
+      "reason": "Level 1 escalation - 3 failures",
+      "resume_after": 3600
+    },
+    "task_9e277a82": {
+      "paused_at": "2025-10-06T19:17:34.145320Z",
+      "reason": "Level 1 escalation - 3 failures",
+      "resume_after": 3600
+    },
+    "task_2f0e8988": {
+      "paused_at": "2025-10-06T19:17:46.857353Z",
+      "reason": "Level 1 escalation - 3 failures",
+      "resume_after": 3600
+    },
+    "task_51ff3d5a": {
+      "paused_at": "2025-10-06T19:17:59.740003Z",
+      "reason": "Level 1 escalation - 3 failures",
+      "resume_after": 3600
+    },
+    "task_e7fb1a72": {
+      "paused_at": "2025-10-06T19:18:12.705529Z",
+      "reason": "Level 1 escalation - 3 failures",
+      "resume_after": 3600
+    },
+    "task_d8e5a5d8": {
+      "paused_at": "2025-10-06T21:51:09.491599Z",
+      "reason": "Level 1 escalation - 3 failures",
+      "resume_after": 3600
+    }
+  },
+  "agents": {
+    "file_monitor": {
+      "status": "running",
+      "last_heartbeat": "2025-10-06T21:55:27.313701+00:00"
+    },
+    "test_runner": {
+      "status": "running",
+      "last_heartbeat": "2025-10-06T21:55:29.343846+00:00"
+    },
+    "fix_suggester": {
+      "status": "running",
+      "last_heartbeat": "2025-10-06T22:28:10.886503+00:00"
+    }
+  }
+}

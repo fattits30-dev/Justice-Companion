@@ -467,26 +467,23 @@ export class LegalAPIService {
       // Use Atom feed endpoint for UK Public General Acts
       const url = `${API_CONFIG.LEGISLATION_BASE_URL}/ukpga/data.feed?title=${encodeURIComponent(query)}`;
 
-      console.log('[LEGAL API] Searching legislation.gov.uk Atom feed:', url);
       errorLogger.logError('Searching legislation.gov.uk', {
+        type: 'info',
         url,
         keywords,
       });
 
       const response = await this.fetchWithRetry(url);
-      console.log('[LEGAL API] Legislation API response status:', response.status);
 
       if (!response.ok) {
         throw new Error(`Legislation API returned ${response.status}`);
       }
 
       const xmlText = await response.text();
-      console.log('[LEGAL API] Legislation Atom XML response length:', xmlText.length);
 
       // Parse Atom XML response
       return this.parseAtomFeedToLegislation(xmlText, query);
     } catch (error) {
-      console.error('[LEGAL API] Legislation search error:', error);
       errorLogger.logError(error as Error, {
         context: 'searchLegislation',
         keywords,
@@ -523,15 +520,10 @@ export class LegalAPIService {
           .map((court) => `court=${court}`)
           .join('&');
         url += `&${courtParams}`;
-
-        console.log(
-          `[LEGAL API] Filtering Case Law by courts for category "${category}":`,
-          relevantCourts,
-        );
       }
 
-      console.log('[LEGAL API] Searching Find Case Law Atom feed:', url);
       errorLogger.logError('Searching Find Case Law', {
+        type: 'info',
         url,
         keywords,
         category,
@@ -539,19 +531,16 @@ export class LegalAPIService {
       });
 
       const response = await this.fetchWithRetry(url);
-      console.log('[LEGAL API] Case Law API response status:', response.status);
 
       if (!response.ok) {
         throw new Error(`Case Law API returned ${response.status}`);
       }
 
       const xmlText = await response.text();
-      console.log('[LEGAL API] Case Law Atom XML response length:', xmlText.length);
 
       // Parse Atom XML response
       return this.parseAtomFeedToCaseLaw(xmlText, query);
     } catch (error) {
-      console.error('[LEGAL API] Case Law search error:', error);
       errorLogger.logError(error as Error, {
         context: 'searchCaseLaw',
         keywords,
@@ -642,8 +631,6 @@ export class LegalAPIService {
    */
   private parseAtomFeedToLegislation(xmlText: string, _query: string): LegislationResult[] {
     try {
-      console.log('[LEGAL API] Parsing legislation Atom feed...');
-
       const parser = new XMLParser({
         ignoreAttributes: false,
         attributeNamePrefix: '@_',
@@ -691,10 +678,8 @@ export class LegalAPIService {
         });
       }
 
-      console.log('[LEGAL API] Parsed', results.length, 'legislation results');
       return results;
     } catch (error) {
-      console.error('[LEGAL API] Atom feed parse error:', error);
       errorLogger.logError(error as Error, {
         context: 'parseAtomFeedToLegislation',
       });
@@ -708,8 +693,6 @@ export class LegalAPIService {
    */
   private parseAtomFeedToCaseLaw(xmlText: string, _query: string): CaseResult[] {
     try {
-      console.log('[LEGAL API] Parsing case law Atom feed...');
-
       const parser = new XMLParser({
         ignoreAttributes: false,
         attributeNamePrefix: '@_',
@@ -760,10 +743,8 @@ export class LegalAPIService {
         });
       }
 
-      console.log('[LEGAL API] Parsed', results.length, 'case law results');
       return results;
     } catch (error) {
-      console.error('[LEGAL API] Atom feed parse error:', error);
       errorLogger.logError(error as Error, {
         context: 'parseAtomFeedToCaseLaw',
       });

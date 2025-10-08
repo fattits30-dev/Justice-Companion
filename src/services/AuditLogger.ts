@@ -37,15 +37,15 @@ export class AuditLogger {
         id: randomUUID(),
         timestamp: new Date().toISOString(),
         eventType: event.eventType,
-        userId: event.userId,
+        userId: event.userId ?? null,
         resourceType: event.resourceType,
         resourceId: event.resourceId,
         action: event.action,
-        details: event.details,
-        ipAddress: event.ipAddress,
-        userAgent: event.userAgent,
+        details: event.details ?? null,
+        ipAddress: event.ipAddress ?? null,
+        userAgent: event.userAgent ?? null,
         success: event.success ?? true,
-        errorMessage: event.errorMessage,
+        errorMessage: event.errorMessage ?? null,
         previousLogHash: previousHash,
         integrityHash: '', // Calculate next
         createdAt: new Date().toISOString(),
@@ -113,12 +113,17 @@ export class AuditLogger {
     if (conditions.length > 0) {
       sql += ' WHERE ' + conditions.join(' AND ');
     }
-    // Use ROWID for deterministic ordering (auto-increments with each INSERT)
-    sql += ' ORDER BY ROWID ASC';
+    // Use ROWID for deterministic ordering (most recent first)
+    sql += ' ORDER BY ROWID DESC';
 
     if (filters.limit) {
       sql += ' LIMIT @limit';
       params.limit = filters.limit;
+    }
+
+    if (filters.offset) {
+      sql += ' OFFSET @offset';
+      params.offset = filters.offset;
     }
 
     const stmt = this.db.prepare(sql);
@@ -151,7 +156,7 @@ export class AuditLogger {
    */
   verifyIntegrity(): IntegrityReport {
     try {
-      // Fetch all logs in insertion order (ROWID auto-increments with each INSERT)
+      // Fetch all logs in chain order (insertion order via ROWID)
       const stmt = this.db.prepare(`
         SELECT * FROM audit_logs
         ORDER BY ROWID ASC
@@ -330,7 +335,7 @@ export class AuditLogger {
     const stmt = this.db.prepare(`
       SELECT integrity_hash
       FROM audit_logs
-      ORDER BY timestamp DESC, id DESC
+      ORDER BY ROWID DESC
       LIMIT 1
     `);
 
@@ -413,15 +418,15 @@ export class AuditLogger {
       id: row.id,
       timestamp: row.timestamp,
       eventType: row.event_type as AuditLogEntry['eventType'],
-      userId: row.user_id ?? undefined,
+      userId: row.user_id,
       resourceType: row.resource_type,
       resourceId: row.resource_id,
       action: row.action as AuditLogEntry['action'],
-      details: parsedDetails,
-      ipAddress: row.ip_address ?? undefined,
-      userAgent: row.user_agent ?? undefined,
+      details: parsedDetails ?? null,
+      ipAddress: row.ip_address,
+      userAgent: row.user_agent,
       success: row.success === 1,
-      errorMessage: row.error_message ?? undefined,
+      errorMessage: row.error_message,
       integrityHash: row.integrity_hash,
       previousLogHash: row.previous_log_hash,
       createdAt: row.created_at,

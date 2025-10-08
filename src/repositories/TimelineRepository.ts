@@ -70,7 +70,7 @@ export class TimelineRepository {
         resourceId: 'unknown',
         action: 'create',
         success: false,
-        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        errorMessage: this.getErrorMessage(error),
       });
       throw error;
     }
@@ -197,7 +197,7 @@ export class TimelineRepository {
         resourceId: id.toString(),
         action: 'update',
         success: false,
-        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        errorMessage: this.getErrorMessage(error),
       });
       throw error;
     }
@@ -231,7 +231,7 @@ export class TimelineRepository {
         resourceId: id.toString(),
         action: 'delete',
         success: false,
-        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        errorMessage: this.getErrorMessage(error),
       });
       throw error;
     }
@@ -267,6 +267,24 @@ export class TimelineRepository {
       // JSON parse failed - likely legacy plaintext data
       return storedValue;
     }
+  }
+
+  /**
+   * Normalize unknown error values into a message for logging
+   */
+  private getErrorMessage(error: unknown): string {
+    if (typeof error === 'string' && error.length > 0) {
+      return error;
+    }
+
+    if (error && typeof error === 'object' && 'message' in error) {
+      const message = (error as { message?: unknown }).message;
+      if (typeof message === 'string' && message.length > 0) {
+        return message;
+      }
+    }
+
+    return 'Unknown error';
   }
 
   /**

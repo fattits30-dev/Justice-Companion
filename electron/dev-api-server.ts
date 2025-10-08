@@ -1,13 +1,13 @@
-import express from "express";
+import express, { Request, Response } from "express";
 
 /**
  * Type for IPC handler functions
  */
-type IPCHandler = (event: any, ...args: any[]) => Promise<any> | any;
+type IPCHandler = (event: unknown, ...args: unknown[]) => Promise<unknown> | unknown;
 
 export class DevAPIServer {
   private app: express.Application;
-  private server: any;
+  private server: ReturnType<express.Application['listen']> | null = null;
   private handlers: Map<string, IPCHandler> = new Map();
 
   constructor(private port: number = 5555) {
@@ -25,12 +25,12 @@ export class DevAPIServer {
 
   private setupRoutes(): void {
     // Health check
-    this.app.get("/dev-api/health", (req, res) => {
+    this.app.get("/dev-api/health", (_req: Request, res: Response) => {
       res.json({ status: "ok", timestamp: new Date().toISOString() });
     });
 
     // List registered handlers
-    this.app.get("/dev-api/handlers", (req, res) => {
+    this.app.get("/dev-api/handlers", (_req: Request, res: Response) => {
       res.json({
         handlers: Array.from(this.handlers.keys()),
         count: this.handlers.size
@@ -38,19 +38,20 @@ export class DevAPIServer {
     });
 
     // IPC proxy endpoint
-    this.app.post("/dev-api/ipc", async (req, res) => {
-      const { channel, args } = req.body;
+    this.app.post("/dev-api/ipc", async (req: Request, res: Response) => {
+      const { channel, args } = req.body as { channel: string; args: unknown[] };
 
       try {
         const result = await this.invokeIPC(channel, args);
         res.json({ result });
-      } catch (error: any) {
-        res.status(500).json({ error: error.message });
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        res.status(500).json({ error: errorMessage });
       }
     });
   }
 
-  private async invokeIPC(channel: string, args: any[]): Promise<any> {
+  private async invokeIPC(channel: string, args: unknown[]): Promise<unknown> {
     const handler = this.handlers.get(channel);
 
     if (!handler) {

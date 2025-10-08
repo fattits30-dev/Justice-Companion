@@ -8,13 +8,98 @@ to avoid overwhelming the system with rapid change notifications.
 """
 
 import os
+import platform
 import time
 import threading
+import fnmatch
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import List, Set, Callable, Optional, Dict, Any
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler, FileSystemEvent
+
+
+def should_ignore_file(file_path: str, ignore_patterns: List[str]) -> bool:
+    """
+    Check if file should be ignored based on patterns.
+
+    Args:
+        file_path: Path to file
+        ignore_patterns: List of glob patterns to ignore
+
+    Returns:
+        True if file should be ignored
+    """
+    path = Path(file_path)
+    path_str = str(path).replace('\\', '/')  # Normalize path separators
+
+    # Check each pattern
+    for pattern in ignore_patterns:
+        pattern = pattern.replace('\\', '/')  # Normalize pattern separators
+
+        # Handle directory patterns (ends with /)
+        if pattern.endswith('/'):
+            dir_pattern = pattern.rstrip('/')
+            # Check if path starts with this directory
+            if path_str.startswith(dir_pattern + '/') or dir_pattern in path.parts:
+                return True
+
+        # Handle extension patterns (*.ext)
+        elif pattern.startswith('*.'):
+            if path.suffix == pattern[1:]:
+                return True
+
+        # Handle path-based patterns (contains /)
+        elif '/' in pattern:
+            # Check if pattern matches as a path prefix or glob
+            if fnmatch.fnmatch(path_str, pattern) or fnmatch.fnmatch(path_str, pattern + '/*'):
+                return True
+            # Also check if the path starts with the pattern
+            if path_str.startswith(pattern + '/') or path_str == pattern:
+                return True
+
+        # Handle glob patterns and filename matches
+        elif fnmatch.fnmatch(str(path), pattern) or fnmatch.fnmatch(path.name, pattern):
+            return True
+
+        # Handle exact directory/file name matches
+        elif pattern in path.parts or pattern == path.name:
+            return True
+
+    return False
+
+
+def load_orchestrator_ignore() -> List[str]:
+    """
+    Load patterns from .orchestratorignore file.
+
+    Returns:
+        List of ignore patterns
+    """
+    # Try multiple possible locations
+    possible_paths = [
+        Path('automation/.orchestratorignore'),  # From project root
+        Path(__file__).parent.parent / '.orchestratorignore',  # Relative to this file
+        Path('.orchestratorignore')  # Current directory
+    ]
+
+    for ignore_file in possible_paths:
+        if ignore_file.exists():
+            patterns = []
+            try:
+                with open(ignore_file, 'r') as f:
+                    for line in f:
+                        line = line.strip()
+                        # Skip empty lines and comments
+                        if line and not line.startswith('#'):
+                            patterns.append(line)
+                return patterns
+            except Exception as e:
+                print(f"Warning: Error reading {ignore_file}: {e}")
+                continue
+
+    # No .orchestratorignore file found
+    return []
 
 
 class FileWatcher:
@@ -101,7 +186,7 @@ class FileWatcher:
             )
 
             # Create and configure observer
-            self._observer = Observer()
+            self._observer = self._create_observer()
             for path in self.paths_to_watch:
                 self._observer.schedule(
                     self._event_handler,
@@ -150,6 +235,53 @@ class FileWatcher:
         """Context manager exit."""
         self.stop()
         return False
+
+    def _create_observer(self) -> Observer:
+        """
+        Create the appropriate watchdog observer.
+
+        On WSL (Linux kernel with Microsoft release string) + DrvFS paths (/mnt/*),
+        the inotify-based observer misses events. We fall back to the polling
+        implementation in that scenario to ensure reliability.
+        """
+        if _should_use_polling(self.paths_to_watch):
+            try:
+                from watchdog.observers.polling import PollingObserver
+                # Poll slightly faster than the debounce interval so we don't lag.
+                timeout = max(0.25, min(1.0, self.debounce_seconds / 2))
+                return PollingObserver(timeout=timeout)
+            except ImportError:
+                # If polling observer isn't available, fall through to default.
+                print("Warning: PollingObserver unavailable; using standard Observer.")
+
+        return Observer()
+
+
+def _running_in_wsl() -> bool:
+    """Detect whether the current environment is WSL."""
+    try:
+        return "microsoft" in platform.uname().release.lower()
+    except Exception:
+        return False
+
+
+def _should_use_polling(paths: List[Path]) -> bool:
+    """
+    Determine if we should prefer the polling observer for the provided paths.
+
+    Watchdog's inotify backend can't see file changes on DrvFS mounts (e.g. /mnt/c)
+    inside WSL. We therefore opt-in to polling when running under WSL and any
+    watch path lives on /mnt.
+    """
+    if not _running_in_wsl():
+        return False
+
+    for path in paths:
+        path_str = str(path.as_posix()).lower()
+        if path_str.startswith("/mnt/"):
+            return True
+
+    return False
 
 
 class _DebouncedEventHandler(FileSystemEventHandler):

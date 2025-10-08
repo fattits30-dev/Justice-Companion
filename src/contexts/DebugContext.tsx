@@ -23,7 +23,7 @@ interface DebugContextValue {
   isDebugMode: boolean;
   enableDebug: () => void;
   disableDebug: () => void;
-  log: (level: LogLevel, component: string, message: string, data?: any) => void;
+  log: (level: LogLevel, component: string, message: string, data?: unknown) => void;
   startTimer: (label: string) => void;
   endTimer: (label: string) => void;
 }
@@ -54,7 +54,7 @@ export function DebugProvider({ children }: DebugProviderProps): JSX.Element {
   }, []);
 
   const log = useCallback(
-    (level: LogLevel, component: string, message: string, data?: any) => {
+    (level: LogLevel, component: string, message: string, data?: unknown) => {
       // Always log errors, even if debug mode is off
       if (!isDebugMode && level !== 'error') {
         return;
@@ -62,9 +62,19 @@ export function DebugProvider({ children }: DebugProviderProps): JSX.Element {
 
       const timestamp = new Date().toISOString();
       const logPrefix = `[${level.toUpperCase()}][${component}]`;
-      const logMessage = data
-        ? `${logPrefix} ${message} ${JSON.stringify(data, null, 2)}`
-        : `${logPrefix} ${message}`;
+
+      // Safely stringify data - handle circular references and errors
+      let dataString = '';
+      if (data !== undefined) {
+        try {
+          dataString = ` ${JSON.stringify(data, null, 2)}`;
+        } catch {
+          // Fallback for circular references or non-serializable objects
+          dataString = ` ${String(data)}`;
+        }
+      }
+
+      const logMessage = `${logPrefix} ${message}${dataString}`;
 
       // Console output with appropriate styling
       switch (level) {
@@ -148,7 +158,14 @@ export function useDebug(): DebugContextValue {
  * - window.debug.disable()
  */
 if (typeof window !== 'undefined') {
-  (window as any).debug = {
+  interface WindowWithDebug extends Window {
+    debug?: {
+      enable: () => void;
+      disable: () => void;
+    };
+  }
+
+  (window as WindowWithDebug).debug = {
     enable: () => {
       console.log('Debug mode enabled via window.debug.enable()');
     },

@@ -1,8 +1,10 @@
 import { useState, useMemo } from 'react';
 import { ChevronDown, FileText } from 'lucide-react';
 import { useCases } from '../../hooks/useCases';
+import { useEvidence } from '../../hooks/useEvidence';
 import { SkeletonTree } from '../ui/Skeleton';
 import type { Case } from '../../models/Case';
+import type { Evidence } from '../../models/Evidence';
 
 interface TimelineEvent {
   date: string;
@@ -30,8 +32,9 @@ interface CaseData {
 
 /**
  * Convert backend Case data to UI CaseData format with tree structure
+ * Accepts evidence array to populate real evidence nodes
  */
-function transformCaseToTreeData(caseItem: Case): CaseData {
+function transformCaseToTreeData(caseItem: Case, caseEvidence: Evidence[]): CaseData {
   const createdDate = caseItem.createdAt.split('T')[0];
   const updatedDate = caseItem.updatedAt.split('T')[0];
 
@@ -46,6 +49,101 @@ function transformCaseToTreeData(caseItem: Case): CaseData {
     timeline.push({ date: '(TBD)', label: 'Expected Resolution', status: 'future' });
   }
 
+  // Group evidence by type
+  const documents = caseEvidence.filter(e => e.evidenceType === 'document');
+  const photos = caseEvidence.filter(e => e.evidenceType === 'photo');
+  const emails = caseEvidence.filter(e => e.evidenceType === 'email');
+  const recordings = caseEvidence.filter(e => e.evidenceType === 'recording');
+  const notes = caseEvidence.filter(e => e.evidenceType === 'note');
+
+  // Build evidence nodes
+  const evidenceChildren: TreeNode[] = [];
+
+  if (documents.length > 0) {
+    evidenceChildren.push({
+      id: `docs-category-${caseItem.id}`,
+      type: 'category',
+      label: `Documents (${documents.length})`,
+      children: documents.map(doc => ({
+        id: `evidence-${doc.id}`,
+        type: 'item',
+        label: doc.title,
+        date: doc.obtainedDate || doc.createdAt.split('T')[0],
+        strength: 3, // Default strength - could be enhanced later
+      })),
+    });
+  }
+
+  if (photos.length > 0) {
+    evidenceChildren.push({
+      id: `photos-category-${caseItem.id}`,
+      type: 'category',
+      label: `Photos (${photos.length})`,
+      children: photos.map(photo => ({
+        id: `evidence-${photo.id}`,
+        type: 'item',
+        label: photo.title,
+        date: photo.obtainedDate || photo.createdAt.split('T')[0],
+        strength: 3,
+      })),
+    });
+  }
+
+  if (emails.length > 0) {
+    evidenceChildren.push({
+      id: `emails-category-${caseItem.id}`,
+      type: 'category',
+      label: `Emails (${emails.length})`,
+      children: emails.map(email => ({
+        id: `evidence-${email.id}`,
+        type: 'item',
+        label: email.title,
+        date: email.obtainedDate || email.createdAt.split('T')[0],
+        strength: 3,
+      })),
+    });
+  }
+
+  if (recordings.length > 0) {
+    evidenceChildren.push({
+      id: `recordings-category-${caseItem.id}`,
+      type: 'category',
+      label: `Recordings (${recordings.length})`,
+      children: recordings.map(rec => ({
+        id: `evidence-${rec.id}`,
+        type: 'item',
+        label: rec.title,
+        date: rec.obtainedDate || rec.createdAt.split('T')[0],
+        strength: 3,
+      })),
+    });
+  }
+
+  if (notes.length > 0) {
+    evidenceChildren.push({
+      id: `notes-category-${caseItem.id}`,
+      type: 'category',
+      label: `Notes (${notes.length})`,
+      children: notes.map(note => ({
+        id: `evidence-${note.id}`,
+        type: 'item',
+        label: note.title,
+        date: note.obtainedDate || note.createdAt.split('T')[0],
+        strength: 2, // Notes typically have lower evidentiary weight
+      })),
+    });
+  }
+
+  // If no evidence at all, show placeholder
+  if (evidenceChildren.length === 0) {
+    evidenceChildren.push({
+      id: `evidence-placeholder-${caseItem.id}`,
+      type: 'item',
+      label: 'No evidence yet',
+      date: createdDate,
+    });
+  }
+
   const tree: TreeNode = {
     id: `case-${caseItem.id}`,
     type: 'case',
@@ -54,28 +152,8 @@ function transformCaseToTreeData(caseItem: Case): CaseData {
       {
         id: `evidence-${caseItem.id}`,
         type: 'category',
-        label: 'Evidence',
-        children: [
-          {
-            id: `ev-placeholder-${caseItem.id}`,
-            type: 'item',
-            label: 'No evidence yet',
-            date: createdDate,
-          },
-        ],
-      },
-      {
-        id: `docs-${caseItem.id}`,
-        type: 'category',
-        label: 'Documents',
-        children: [
-          {
-            id: `doc-placeholder-${caseItem.id}`,
-            type: 'item',
-            label: 'No documents yet',
-            date: createdDate,
-          },
-        ],
+        label: `Evidence (${caseEvidence.length} items)`,
+        children: evidenceChildren,
       },
       {
         id: `people-${caseItem.id}`,
@@ -120,8 +198,13 @@ function transformCaseToTreeData(caseItem: Case): CaseData {
   };
 }
 
-export function CasesView(): JSX.Element {
-  const { cases, loading, error } = useCases();
+interface CasesViewProps {
+  onCaseSelect?: (caseId: number) => void;
+}
+
+export function CasesView({ onCaseSelect }: CasesViewProps): JSX.Element {
+  const { cases, loading: casesLoading, error: casesError } = useCases();
+  const { evidence, loading: evidenceLoading, error: evidenceError } = useEvidence();
   const [selectedCaseId, setSelectedCaseId] = useState<number | null>(null);
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
 
@@ -129,8 +212,18 @@ export function CasesView(): JSX.Element {
     if (!cases || cases.length === 0) {
       return [];
     }
-    return cases.map(transformCaseToTreeData);
-  }, [cases]);
+    return cases.map(caseItem => {
+      // Filter evidence for this specific case
+      const caseEvidence = evidence.filter(ev => ev.caseId === caseItem.id);
+      return transformCaseToTreeData(caseItem, caseEvidence);
+    });
+  }, [cases, evidence]);
+
+  // Combine loading states
+  const loading = casesLoading || evidenceLoading;
+
+  // Combine error states
+  const error = casesError || evidenceError;
 
   const selectedCase = useMemo(() => {
     if (transformedCases.length === 0) {
@@ -226,6 +319,15 @@ export function CasesView(): JSX.Element {
           }}
           onMouseEnter={() => setHoveredNodeId(node.id)}
           onMouseLeave={() => setHoveredNodeId(null)}
+          onClick={() => {
+            // If this is a case node, navigate to detail
+            if (node.type === 'case' && node.id.startsWith('case-')) {
+              const caseId = parseInt(node.id.replace('case-', ''));
+              if (onCaseSelect && !isNaN(caseId)) {
+                void onCaseSelect(caseId);
+              }
+            }
+          }}
         />
 
         {/* Title */}

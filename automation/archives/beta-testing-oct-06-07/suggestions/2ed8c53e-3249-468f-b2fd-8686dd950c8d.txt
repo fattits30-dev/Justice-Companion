@@ -1,0 +1,61 @@
+======================================================================
+JUSTICE COMPANION - FIX SUGGESTION (AUTO-GENERATED)
+======================================================================
+
+Suggestion ID: 2ed8c53e...
+Created:       2025-10-07T18:00:07.572576+00:00
+Source:        Pattern-based analysis
+
+======================================================================
+FILES AFFECTED
+======================================================================
+
+
+
+======================================================================
+ANALYSIS & SUGGESTED FIX
+======================================================================
+
+**Error Category:** Invalid instanceof
+
+**Matched Error:**
+Right-hand side of 'instanceof' is not an object
+
+**Diagnosis:**
+Using instanceof with non-constructor value
+
+**Suggested Fix:**
+Ensure right-hand side is a class/constructor function
+
+**Example:**
+Use typeof for primitives, instanceof only for classes
+
+**Files Affected:**
+
+
+**Recommended Actions:**
+1. Review the file(s) listed above
+2. Locate the error in the code
+3. Apply the suggested fix pattern
+4. Re-run tests to verify the fix
+
+**Full Error Output (truncated to 500 chars):**
+
+> justice-companion@1.0.0 test
+> vitest --run
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mC:/Users/sava6/Desktop/Justice Companion[39m
+
+ [2m[90m↓[39m[22m src/services/AuditLogger.e2e.test.ts[2m > [22mAuditLogger E2E[2m > [22mEvent Type Coverage (18 Event Types)[2m > [22mCase Operations (5 event types)[2m > [22mlogs case.create event
+ [2m[90m↓[39m[22m src/services/AuditLogger.e2e.test.ts[2m > [22mAuditLogger E2E[2m > [22mEvent Type Coverage (18 Event Types)[2m > [22mC...
+
+
+======================================================================
+AUTO-GENERATED SUGGESTION
+======================================================================
+
+This suggestion was automatically generated using error pattern matching
+and TypeScript/React best practices. Review carefully before applying.
+
+======================================================================

@@ -1,6 +1,6 @@
+import React, { useMemo } from 'react';
 import { MessageSquare, Scale, FileText, TrendingUp } from 'lucide-react';
 import { useCases } from '../../hooks/useCases';
-import { useMemo } from 'react';
 import { DashboardEmptyState } from '../ui/DashboardEmptyState';
 import { Skeleton } from '../ui/Skeleton';
 
@@ -45,10 +45,69 @@ export function DashboardView({ onViewChange }: DashboardViewProps): JSX.Element
   return (
     <div className="flex-1 overflow-y-auto p-8">
       <div className="max-w-6xl mx-auto">
-        {/* Header */}
+        {/* Welcome Section */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Dashboard</h1>
-          <p className="text-blue-200">Your legal information companion overview</p>
+          <div className="bg-gradient-to-br from-blue-950/50 to-indigo-950/50 border border-blue-800/30 rounded-xl p-8 mb-8">
+            <div className="flex items-start gap-4 mb-6">
+              <div className="p-3 bg-blue-600/20 rounded-lg">
+                <Scale className="w-8 h-8 text-blue-300" />
+              </div>
+              <div className="flex-1">
+                <h1 className="text-3xl font-bold text-white mb-2">Welcome to Justice Companion</h1>
+                <p className="text-lg text-blue-200">Your personal legal information assistant</p>
+              </div>
+            </div>
+
+            <div className="space-y-4 text-blue-100 leading-relaxed">
+              <p>
+                Justice Companion helps you organize legal information, track case details, and understand your legal matters better.
+                Use this tool to keep notes, manage documents, and stay informed about your situation.
+              </p>
+
+              <div className="bg-yellow-900/20 border-2 border-yellow-600/50 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0">
+                    <svg className="w-6 h-6 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-bold text-yellow-200 mb-2">Important Legal Disclaimer</h3>
+                    <p className="text-sm text-yellow-100/90 leading-relaxed">
+                      <strong>This app provides information only, not legal advice.</strong> Justice Companion is designed to help you
+                      organize and understand legal information, but it cannot replace professional legal counsel. For legal advice
+                      tailored to your specific situation, please consult a qualified attorney. Nothing in this application creates
+                      an attorney-client relationship.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+                <div className="flex items-start gap-3">
+                  <div className="text-green-400 mt-1">✓</div>
+                  <div>
+                    <h4 className="font-semibold text-white">Track Your Cases</h4>
+                    <p className="text-sm text-blue-300">Organize facts, documents, and timelines</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="text-green-400 mt-1">✓</div>
+                  <div>
+                    <h4 className="font-semibold text-white">Stay Informed</h4>
+                    <p className="text-sm text-blue-300">Access legal information resources</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="text-green-400 mt-1">✓</div>
+                  <div>
+                    <h4 className="font-semibold text-white">Manage Documents</h4>
+                    <p className="text-sm text-blue-300">Keep important files organized</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Error State */}

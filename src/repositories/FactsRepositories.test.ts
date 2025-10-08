@@ -51,18 +51,28 @@ describe('Facts Repositories Integration Tests', () => {
       );
 
       CREATE TABLE audit_logs (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id TEXT PRIMARY KEY,
+        timestamp TEXT NOT NULL,
         event_type TEXT NOT NULL,
+        user_id TEXT,
         resource_type TEXT NOT NULL,
         resource_id TEXT NOT NULL,
-        action TEXT NOT NULL,
+        action TEXT NOT NULL CHECK(action IN ('create', 'read', 'update', 'delete', 'export', 'decrypt')),
         details TEXT,
-        success INTEGER NOT NULL DEFAULT 1,
+        ip_address TEXT,
+        user_agent TEXT,
+        success INTEGER NOT NULL DEFAULT 1 CHECK(success IN (0, 1)),
         error_message TEXT,
-        timestamp TEXT NOT NULL DEFAULT (datetime('now')),
-        previous_hash TEXT,
-        current_hash TEXT NOT NULL
+        integrity_hash TEXT NOT NULL,
+        previous_log_hash TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
       );
+
+      CREATE INDEX idx_audit_logs_timestamp ON audit_logs(timestamp);
+      CREATE INDEX idx_audit_logs_resource ON audit_logs(resource_type, resource_id);
+      CREATE INDEX idx_audit_logs_event_type ON audit_logs(event_type);
+      CREATE INDEX idx_audit_logs_user_id ON audit_logs(user_id) WHERE user_id IS NOT NULL;
+      CREATE INDEX idx_audit_logs_chain ON audit_logs(timestamp ASC, id ASC);
     `);
 
     // Create test case

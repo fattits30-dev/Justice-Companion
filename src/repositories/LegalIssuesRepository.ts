@@ -24,14 +24,17 @@ export class LegalIssuesRepository {
     try {
       const db = getDb();
 
-      // Encrypt description before INSERT (P1 priority field)
-      const encryptedDescription = input.description
-        ? this.encryptionService?.encrypt(input.description)
-        : null;
-
-      const descriptionToStore = encryptedDescription
-        ? JSON.stringify(encryptedDescription)
-        : null;
+      let descriptionToStore: string | null;
+      if (input.description == null) {
+        descriptionToStore = null;
+      } else if (this.encryptionService) {
+        // Encrypt description before INSERT (P1 priority field)
+        const encryptedDescription = this.encryptionService.encrypt(input.description);
+        descriptionToStore = JSON.stringify(encryptedDescription);
+      } else {
+        // Store plaintext when no encryption service is available
+        descriptionToStore = input.description;
+      }
 
       const stmt = db.prepare(`
         INSERT INTO legal_issues (case_id, title, description, relevant_law, guidance)
@@ -147,16 +150,11 @@ export class LegalIssuesRepository {
         params.title = input.title;
       }
 
-      if (input.description !== undefined) {
+      if (input.description != null) {
         updates.push('description = @description');
-        // Encrypt description before UPDATE
-        const encryptedDescription = input.description
-          ? this.encryptionService?.encrypt(input.description)
-          : null;
-
-        params.description = encryptedDescription
-          ? JSON.stringify(encryptedDescription)
-          : null;
+        params.description = this.encryptionService
+          ? JSON.stringify(this.encryptionService.encrypt(input.description))
+          : input.description;
       }
 
       if (input.relevantLaw !== undefined) {

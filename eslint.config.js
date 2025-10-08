@@ -223,8 +223,40 @@ export default [
 
   // Test files configuration
   {
-    files: ['src/**/*.test.ts', 'src/**/*.test.tsx', 'src/**/*.spec.ts', 'src/**/*.spec.tsx'],
+    files: ['src/**/*.test.ts', 'src/**/*.test.tsx', 'src/**/*.spec.ts', 'src/**/*.spec.tsx', 'src/test-utils/**/*.ts', 'src/test-utils/**/*.tsx', 'tests/**/*.ts', 'tests/**/*.tsx'],
+    languageOptions: {
+      parser: tsparser,
+      parserOptions: {
+        ecmaVersion: 2020,
+        sourceType: 'module',
+        ecmaFeatures: {
+          jsx: true,
+        },
+        project: './tsconfig.test.json',
+      },
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+        ...globals.es2020,
+        JSX: 'readonly',
+        // Vitest globals
+        describe: 'readonly',
+        test: 'readonly',
+        it: 'readonly',
+        expect: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        beforeAll: 'readonly',
+        afterAll: 'readonly',
+        vi: 'readonly',
+      },
+    },
+    plugins: {
+      '@typescript-eslint': tseslint,
+    },
     rules: {
+      // TypeScript recommended rules (relaxed for tests)
+      ...tseslint.configs.recommended.rules,
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-non-null-assertion': 'off',
       '@typescript-eslint/no-unsafe-assignment': 'off',
@@ -232,7 +264,27 @@ export default [
       '@typescript-eslint/no-unsafe-call': 'off',
       '@typescript-eslint/no-unsafe-return': 'off',
       '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/explicit-function-return-type': 'off',
+      '@typescript-eslint/explicit-module-boundary-types': 'off',
+      '@typescript-eslint/no-floating-promises': 'warn',
+      '@typescript-eslint/no-unused-vars': 'off', // Allow unused vars in tests
       'no-console': 'off',
+      'no-undef': 'off', // Vitest globals are typed, no need for undef check
+    },
+  },
+
+  // Automation JavaScript files (Node environment)
+  {
+    files: ['automation/**/*.js'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+        ...globals.es2020,
+      },
+    },
+    rules: {
+      'no-console': 'off',
+      'no-undef': 'off', // JS files may not have all type definitions
     },
   },
 ];

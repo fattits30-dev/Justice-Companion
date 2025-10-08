@@ -1,5 +1,5 @@
 import { errorLogger } from '../utils/error-logger';
-import { IntegratedAIService } from './IntegratedAIService';
+import { IntegratedAIService } from '../features/chat/services/IntegratedAIService';
 import type {
   AIConfig,
   AIStatus,
@@ -145,9 +145,6 @@ export class AIServiceFactory {
     onThinkToken?: (token: string) => void,
     onSources?: (sources: string[]) => void,
   ): Promise<void> {
-    console.log('[AIServiceFactory] streamChat() called');
-    console.log('[AIServiceFactory] Model available:', this.isModelAvailable());
-
     await this.integratedService.streamChat(
       request,
       onToken,
@@ -178,9 +175,6 @@ export class AIServiceFactory {
     onComplete: () => void,
     onError: (error: string) => void,
   ): Promise<void> {
-    console.log('[AIServiceFactory] streamChatWithFunctions() called with caseId:', caseId);
-    console.log('[AIServiceFactory] Model available:', this.isModelAvailable());
-
     await this.integratedService.streamChatWithFunctions(
       request,
       caseId,

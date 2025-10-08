@@ -24,7 +24,7 @@ interface LogEntry {
   level: LogLevel;
   component: string;
   message: string;
-  data?: any;
+  data?: unknown;
 }
 
 class Logger {
@@ -38,13 +38,15 @@ class Logger {
     // PROD mode: PROD = true, DEV = false
     this.isProduction = import.meta.env.PROD;
 
-    // DIAGNOSTIC: Always log to verify logger is working
+    // Logger initialized - console allowed for initialization diagnostics
+    /* eslint-disable no-console */
     console.log('[LOGGER INIT]', {
       'import.meta.env.PROD': import.meta.env.PROD,
       'import.meta.env.DEV': import.meta.env.DEV,
       'import.meta.env.MODE': import.meta.env.MODE,
       'isProduction': this.isProduction,
     });
+    /* eslint-enable no-console */
   }
 
   /**
@@ -54,7 +56,7 @@ class Logger {
     level: LogLevel,
     component: string,
     message: string,
-    data?: any,
+    data?: unknown,
   ): string {
     const timestamp = new Date().toISOString();
     const dataStr = data ? ` ${JSON.stringify(data, null, 2)}` : '';
@@ -76,18 +78,19 @@ class Logger {
   /**
    * Log error message
    */
-  error(component: string, message: string, data?: any): void {
+  error(component: string, message: string, data?: unknown): void {
     const formattedMessage = this.formatMessage('error', component, message, data);
     console.error(formattedMessage);
 
     // Buffer for analysis
-    this.bufferLog({
+    const entry: LogEntry = {
       timestamp: new Date().toISOString(),
       level: 'error',
       component,
       message,
       data,
-    });
+    };
+    this.bufferLog(entry);
 
     // TODO: Send to main process via IPC for persistent logging
   }
@@ -95,18 +98,19 @@ class Logger {
   /**
    * Log warning message
    */
-  warn(component: string, message: string, data?: any): void {
+  warn(component: string, message: string, data?: unknown): void {
     const formattedMessage = this.formatMessage('warn', component, message, data);
     console.warn(formattedMessage);
 
     // Buffer for analysis
-    this.bufferLog({
+    const entry: LogEntry = {
       timestamp: new Date().toISOString(),
       level: 'warn',
       component,
       message,
       data,
-    });
+    };
+    this.bufferLog(entry);
 
     // TODO: Send to main process via IPC for persistent logging
   }
@@ -114,45 +118,49 @@ class Logger {
   /**
    * Log info message
    */
-  info(component: string, message: string, data?: any): void {
+  info(component: string, message: string, data?: unknown): void {
     // Skip in production
     if (this.isProduction) {
       return;
     }
 
     const formattedMessage = this.formatMessage('info', component, message, data);
+    /* eslint-disable-next-line no-console */
     console.info(formattedMessage);
 
     // Buffer for analysis
-    this.bufferLog({
+    const entry: LogEntry = {
       timestamp: new Date().toISOString(),
       level: 'info',
       component,
       message,
       data,
-    });
+    };
+    this.bufferLog(entry);
   }
 
   /**
    * Log debug message
    */
-  debug(component: string, message: string, data?: any): void {
+  debug(component: string, message: string, data?: unknown): void {
     // Skip in production
     if (this.isProduction) {
       return;
     }
 
     const formattedMessage = this.formatMessage('debug', component, message, data);
+    /* eslint-disable-next-line no-console */
     console.debug(formattedMessage);
 
     // Buffer for analysis
-    this.bufferLog({
+    const entry: LogEntry = {
       timestamp: new Date().toISOString(),
       level: 'debug',
       component,
       message,
       data,
-    });
+    };
+    this.bufferLog(entry);
   }
 
   /**
@@ -233,6 +241,12 @@ export const logger = new Logger();
  * - window.logger.getLogsByComponent('StreamingIndicator')
  * - window.logger.exportLogs()
  */
+declare global {
+  interface Window {
+    logger: Logger;
+  }
+}
+
 if (typeof window !== 'undefined') {
-  (window as any).logger = logger;
+  window.logger = logger;
 }

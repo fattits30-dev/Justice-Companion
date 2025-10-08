@@ -1,0 +1,24 @@
+{
+  "event_type": "file_changed",
+  "agent_id": "file_monitor",
+  "timestamp": "2025-10-07T18:01:24.351580+00:00",
+  "files": [
+    "C:\\Users\\sava6\\Desktop\\Justice Companion\\electron\\dev-api-server.ts",
+    "C:\\Users\\sava6\\Desktop\\Justice Companion\\electron\\main.ts",
+    "C:\\Users\\sava6\\Desktop\\Justice Companion\\electron\\preload.ts",
+    "C:\\Users\\sava6\\Desktop\\Justice Companion\\electron\\utils\\path-security.ts",
+    "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\db\\migrate.ts",
+    "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\repositories\\ChatConversationRepository.ts",
+    "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AIServiceFactory.ts",
+    "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\CaseService.ts",
+    "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\ChatConversationService.ts",
+    "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\IntegratedAIService.ts",
+    "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\ModelDownloadService.ts",
+    "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\RAGService.ts",
+    "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\UserProfileService.ts",
+    "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\ai-functions.ts",
+    "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\types\\ai.ts",
+    "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\types\\ipc.ts"
+  ],
+  "count": 16
+}

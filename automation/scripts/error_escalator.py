@@ -169,7 +169,7 @@ class ErrorEscalator:
         print("[ErrorEscalator] Level 2: Creating GitHub issue")
 
         if not self.github_token:
-            print("[ErrorEscalator] ⚠ GitHub token not configured, skipping issue creation")
+            print("[ErrorEscalator] [WARNING] GitHub token not configured, skipping issue creation")
             return EscalationResult(
                 level=2,
                 action_taken="github_issue_skipped",
@@ -250,7 +250,7 @@ class ErrorEscalator:
                 details=f"Notifications sent via: {', '.join(notifications_sent)}"
             )
         else:
-            print("[ErrorEscalator] ⚠ No notification channels configured")
+            print("[ErrorEscalator] [WARNING] No notification channels configured")
             return EscalationResult(
                 level=3,
                 action_taken="notifications_skipped",
@@ -304,18 +304,18 @@ class ErrorEscalator:
             if response.status_code == 201:
                 issue_data = response.json()
                 issue_url = issue_data.get('html_url', '')
-                print(f"[ErrorEscalator] ✓ Created issue: {issue_url}")
+                print(f"[ErrorEscalator] [OK] Created issue: {issue_url}")
                 return issue_url
             else:
-                print(f"[ErrorEscalator] ✗ Failed to create issue: {response.status_code}")
+                print(f"[ErrorEscalator] [X] Failed to create issue: {response.status_code}")
                 print(f"[ErrorEscalator]   Response: {response.text[:200]}")
                 return None
 
         except requests.RequestException as e:
-            print(f"[ErrorEscalator] ✗ GitHub API request failed: {e}")
+            print(f"[ErrorEscalator] [X] GitHub API request failed: {e}")
             return None
         except Exception as e:
-            print(f"[ErrorEscalator] ✗ Unexpected error creating issue: {e}")
+            print(f"[ErrorEscalator] [X] Unexpected error creating issue: {e}")
             return None
 
     def _build_github_issue_body(
@@ -452,14 +452,14 @@ Manual intervention required.
             )
 
             if response.status_code in [200, 201, 204]:
-                print(f"[ErrorEscalator] ✓ Sent {channel} notification")
+                print(f"[ErrorEscalator] [OK] Sent {channel} notification")
                 return True
             else:
-                print(f"[ErrorEscalator] ✗ {channel} notification failed: {response.status_code}")
+                print(f"[ErrorEscalator] [X] {channel} notification failed: {response.status_code}")
                 return False
 
         except requests.RequestException as e:
-            print(f"[ErrorEscalator] ✗ {channel} notification error: {e}")
+            print(f"[ErrorEscalator] [X] {channel} notification error: {e}")
             return False
 
 

@@ -153,7 +153,7 @@ export function SettingsView(): JSX.Element {
       }
     };
 
-    loadProfile();
+    void loadProfile();
   }, []);
 
   // Persist RAG setting to localStorage

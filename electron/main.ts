@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, dialog } from 'electron';
+import { app, BrowserWindow, ipcMain, dialog, shell } from 'electron';
 import path from 'path';
 import fs from 'fs/promises';
 import dotenv from 'dotenv';
@@ -15,11 +15,6 @@ import { legalIssuesRepository } from '../src/repositories/LegalIssuesRepository
 import { timelineRepository } from '../src/repositories/TimelineRepository';
 import { userFactsRepository } from '../src/repositories/UserFactsRepository';
 import { caseFactsRepository } from '../src/repositories/CaseFactsRepository';
-import { notesService } from '../src/services/NotesService';
-import { legalIssuesService } from '../src/services/LegalIssuesService';
-import { timelineService } from '../src/services/TimelineService';
-import { userFactsService } from '../src/services/UserFactsService';
-import { caseFactsService } from '../src/services/CaseFactsService';
 import { EncryptionService } from '../src/services/EncryptionService';
 import { AuditLogger } from '../src/services/AuditLogger';
 import { aiServiceFactory } from '../src/services/AIServiceFactory';
@@ -69,6 +64,26 @@ import type {
   GDPRExportUserDataRequest,
   GDPRDeleteUserDataRequest,
 } from '../src/types/ipc';
+
+// File operation types
+interface FileViewRequest {
+  filePath: string;
+}
+
+interface FileDownloadRequest {
+  filePath: string;
+  fileName?: string;
+}
+
+interface FilePrintRequest {
+  filePath: string;
+}
+
+interface FileEmailRequest {
+  filePaths: string[];
+  subject?: string;
+  body?: string;
+}
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -244,7 +259,7 @@ function setupIpcHandlers() {
   // Case: Get all
   ipcMain.handle(
     IPC_CHANNELS.CASE_GET_ALL,
-    async (_, request: CaseGetAllRequest) => {
+    async (_event, _request: CaseGetAllRequest) => {
       try {
         const allCases = caseRepository.findAll();
         return { success: true, data: allCases };
@@ -364,7 +379,7 @@ function setupIpcHandlers() {
   // Case: Get statistics
   ipcMain.handle(
     IPC_CHANNELS.CASE_GET_STATISTICS,
-    async (_, request: CaseGetStatisticsRequest) => {
+    async (_event, _request: CaseGetStatisticsRequest) => {
       try {
         const stats = caseRepository.getStatistics();
         return { success: true, data: stats };
@@ -635,7 +650,7 @@ function setupIpcHandlers() {
   // AI: Check Status
   ipcMain.handle(
     IPC_CHANNELS.AI_CHECK_STATUS,
-    async (_, request: AICheckStatusRequest) => {
+    async (_event, _request: AICheckStatusRequest) => {
       try {
         const status = await aiServiceFactory.checkConnection();
         return {
@@ -658,10 +673,10 @@ function setupIpcHandlers() {
   // AI: Chat (non-streaming)
   ipcMain.handle(
     IPC_CHANNELS.AI_CHAT,
-    async (_, request: AIChatRequest) => {
+    async (_event, request: AIChatRequest) => {
       try {
         const response = await aiServiceFactory.chat({
-          messages: request.messages as any, // Type conversion
+          messages: request.messages as unknown[], // Type conversion
           context: request.context,
           caseId: request.caseId,
         });
@@ -734,15 +749,9 @@ function setupIpcHandlers() {
         // PHASE 5.1: Fetch RAG context from UK Legal APIs
         let ragContext = request.context; // Start with provided context
 
-        console.log('[RAG DEBUG] Starting RAG context fetch');
-        console.log('[RAG DEBUG] Request messages:', request.messages);
-        console.log('[RAG DEBUG] Request context:', request.context);
-
         // Extract user's question (last message in conversation)
         if (request.messages && request.messages.length > 0) {
-          console.log('[RAG DEBUG] Messages array exists, length:', request.messages.length);
           const lastMessage = request.messages[request.messages.length - 1];
-          console.log('[RAG DEBUG] Last message:', lastMessage);
 
           if (lastMessage.role === 'user' && lastMessage.content) {
             // INTELLIGENT FILTERING: Only fetch RAG if question is about legal topics
@@ -752,60 +761,29 @@ function setupIpcHandlers() {
             // Emit status: Analyzing question
             event.sender.send(IPC_CHANNELS.AI_STATUS_UPDATE, '🤔 Thinking...');
 
-            console.log('[RAG DEBUG] Question classification:', questionCategory);
-            console.log('[RAG DEBUG] Is legal question:', isLegalQuestion);
-
             if (isLegalQuestion) {
-              console.log('[RAG DEBUG] Legal question detected, fetching RAG context...');
               try {
                 // Emit status: Searching legislation
                 event.sender.send(IPC_CHANNELS.AI_STATUS_UPDATE, '🔍 Researching...');
 
                 // Fetch legal context from UK Legal APIs
-                errorLogger.logError('Fetching RAG context for legal question', {
-                  type: 'info',
-                  question: lastMessage.content,
-                  category: questionCategory,
-                });
-
                 const legalContext = await ragService.fetchContextForQuestion(
                   lastMessage.content
                 );
-
-                console.log('[RAG DEBUG] Legal context fetched:', legalContext);
 
                 // Merge RAG context with existing context
                 ragContext = {
                   ...ragContext,
                   ...legalContext,
                 };
-
-                console.log('[RAG DEBUG] RAG context merged successfully');
-                errorLogger.logError('RAG context fetched successfully', {
-                  type: 'info',
-                  legislationCount: legalContext.legislation?.length || 0,
-                  caseLawCount: legalContext.caseLaw?.length || 0,
-                  knowledgeBaseCount: legalContext.knowledgeBase?.length || 0,
-                });
               } catch (ragError) {
                 // Log error but continue - don't block streaming on RAG failure
-                console.error('[RAG DEBUG] RAG fetch error:', ragError);
                 errorLogger.logError(ragError as Error, {
                   context: 'RAG context fetch failed, continuing without legal data',
                 });
               }
-            } else {
-              console.log('[RAG DEBUG] Non-legal question, skipping RAG fetch');
-              errorLogger.logError('Skipping RAG for non-legal question', {
-                type: 'info',
-                question: lastMessage.content,
-              });
             }
-          } else {
-            console.log('[RAG DEBUG] Last message is not a valid user message. Role:', lastMessage?.role, 'Has content:', !!lastMessage?.content);
           }
-        } else {
-          console.log('[RAG DEBUG] No messages in request or empty array');
         }
 
         // Emit status: Generating response
@@ -814,19 +792,16 @@ function setupIpcHandlers() {
         // Start streaming in background
         // Use streamChatWithFunctions if caseId is provided (enables fact-gathering)
         const useFunctionCalling = !!request.caseId;
-        console.log('[DEBUG] Using function calling:', useFunctionCalling);
-        console.log('[DEBUG] Case ID:', request.caseId);
 
         let tokensSent = 0;
         let thinkTokensSent = 0;
-        const functionCallCount = 0;
 
         if (useFunctionCalling) {
           // Use streamChatWithFunctions for case-specific conversations
           aiServiceFactory
             .streamChatWithFunctions(
               {
-                messages: request.messages as any,
+                messages: request.messages as unknown[],
                 context: ragContext,
                 caseId: request.caseId,
               },
@@ -841,7 +816,6 @@ function setupIpcHandlers() {
                 errorLogger.logError('Stream with functions complete', {
                   type: 'info',
                   tokensSent,
-                  functionCallCount,
                 });
                 event.sender.send(IPC_CHANNELS.AI_STREAM_COMPLETE);
               },
@@ -864,7 +838,7 @@ function setupIpcHandlers() {
           aiServiceFactory
             .streamChat(
               {
-                messages: request.messages as any,
+                messages: request.messages as unknown[],
                 context: ragContext, // Pass RAG-enhanced context
                 caseId: request.caseId,
               },
@@ -926,7 +900,7 @@ function setupIpcHandlers() {
   // File: Select
   ipcMain.handle(
     IPC_CHANNELS.FILE_SELECT,
-    async (_, request: FileSelectRequest = {}) => {
+    async (_event, request: FileSelectRequest = {}) => {
       try {
         if (!mainWindow) {
           return {
@@ -1053,6 +1027,188 @@ function setupIpcHandlers() {
     }
   );
 
+  /**
+   * View/open a file in the system's default application.
+   *
+   * @param {FileViewRequest} request - Request with file path
+   * @param {string} request.filePath - Absolute path to file to open
+   *
+   * @returns {Promise<FileViewResponse | IPCErrorResponse>} Success or error
+   *
+   * @example
+   * ```typescript
+   * const result = await window.justiceAPI.viewFile("/path/to/document.pdf");
+   * if (result.success) {
+   *   console.log("File opened in default viewer");
+   * }
+   * ```
+   */
+  // File: View/Open
+  ipcMain.handle(
+    IPC_CHANNELS.FILE_VIEW,
+    async (_, request: FileViewRequest) => {
+      try {
+        const result = await shell.openPath(request.filePath);
+        if (result) {
+          // openPath returns empty string on success, error message on failure
+          return {
+            success: false,
+            error: result,
+          };
+        }
+        return { success: true };
+      } catch (error) {
+        errorLogger.logError(error as Error, { context: 'ipc:file:view' });
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Failed to open file',
+        };
+      }
+    }
+  );
+
+  /**
+   * Download/save a file to user-selected location.
+   *
+   * @param {FileDownloadRequest} request - Download request
+   * @param {string} request.filePath - Source file path
+   * @param {string} [request.fileName] - Suggested file name
+   *
+   * @returns {Promise<FileDownloadResponse | IPCErrorResponse>} Saved path or error
+   *
+   * @example
+   * ```typescript
+   * const result = await window.justiceAPI.downloadFile("/path/to/evidence.pdf", "Evidence_1.pdf");
+   * if (result.success) {
+   *   console.log("Saved to:", result.savedPath);
+   * }
+   * ```
+   */
+  // File: Download/Save
+  ipcMain.handle(
+    IPC_CHANNELS.FILE_DOWNLOAD,
+    async (_, request: FileDownloadRequest) => {
+      try {
+        const fileName = request.fileName || path.basename(request.filePath);
+        const result = await dialog.showSaveDialog({
+          title: 'Save File',
+          defaultPath: path.join(app.getPath('downloads'), fileName),
+          filters: [
+            { name: 'All Files', extensions: ['*'] },
+          ],
+        });
+
+        if (result.canceled || !result.filePath) {
+          return {
+            success: false,
+            error: 'Download canceled by user',
+          };
+        }
+
+        await fs.copyFile(request.filePath, result.filePath);
+        return { success: true, savedPath: result.filePath };
+      } catch (error) {
+        errorLogger.logError(error as Error, { context: 'ipc:file:download' });
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Failed to download file',
+        };
+      }
+    }
+  );
+
+  /**
+   * Print a file using system print dialog.
+   *
+   * @param {FilePrintRequest} request - Print request
+   * @param {string} request.filePath - File path to print
+   *
+   * @returns {Promise<FilePrintResponse | IPCErrorResponse>} Success or error
+   *
+   * @example
+   * ```typescript
+   * const result = await window.justiceAPI.printFile("/path/to/document.pdf");
+   * if (result.success) {
+   *   console.log("File sent to printer");
+   * }
+   * ```
+   */
+  // File: Print
+  ipcMain.handle(
+    IPC_CHANNELS.FILE_PRINT,
+    async (_, request: FilePrintRequest) => {
+      try {
+        // Open the file in default application which typically has print capability
+        const result = await shell.openPath(request.filePath);
+        if (result) {
+          return {
+            success: false,
+            error: `Cannot open file for printing: ${result}`,
+          };
+        }
+        // Note: User must manually select Print from the opened application
+        return { success: true };
+      } catch (error) {
+        errorLogger.logError(error as Error, { context: 'ipc:file:print' });
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Failed to open file for printing',
+        };
+      }
+    }
+  );
+
+  /**
+   * Compose email with file attachments.
+   *
+   * @param {FileEmailRequest} request - Email request
+   * @param {string[]} request.filePaths - Array of file paths to attach
+   * @param {string} [request.subject] - Email subject
+   * @param {string} [request.body] - Email body
+   *
+   * @returns {Promise<FileEmailResponse | IPCErrorResponse>} Success or error
+   *
+   * @example
+   * ```typescript
+   * const result = await window.justiceAPI.emailFiles(
+   *   ["/path/to/doc1.pdf", "/path/to/doc2.pdf"],
+   *   "Case Evidence",
+   *   "Please find attached evidence documents."
+   * );
+   * ```
+   */
+  // File: Email
+  ipcMain.handle(
+    IPC_CHANNELS.FILE_EMAIL,
+    async (_event, request: FileEmailRequest) => {
+      try {
+        // Note: mailto: protocol has limited attachment support across email clients
+
+        const subject = encodeURIComponent(request.subject || 'Documents from Justice Companion');
+        const body = encodeURIComponent(request.body || 'Please find attached documents.');
+
+        // Note: mailto: protocol has limited attachment support
+        // On Windows, this will open default email client
+        // Some email clients may not support file:// attachments via mailto:
+        let mailtoUrl = `mailto:?subject=${subject}&body=${body}`;
+
+        // For better compatibility, just open email client and let user attach files
+        // We'll include a note about attachments in the body
+        const attachmentNote = `\n\nNote: Please manually attach the following files:\n${request.filePaths.map(p => `- ${path.basename(p)}`).join('\n')}`;
+        mailtoUrl = `mailto:?subject=${subject}&body=${encodeURIComponent((request.body || '') + attachmentNote)}`;
+
+        await shell.openExternal(mailtoUrl);
+        return { success: true };
+      } catch (error) {
+        errorLogger.logError(error as Error, { context: 'ipc:file:email' });
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Failed to open email client',
+        };
+      }
+    }
+  );
+
   // Conversation: Create
   ipcMain.handle(
     IPC_CHANNELS.CONVERSATION_CREATE,
@@ -1161,9 +1317,9 @@ function setupIpcHandlers() {
   // Message: Add to conversation
   ipcMain.handle(
     IPC_CHANNELS.MESSAGE_ADD,
-    async (_, request: MessageAddRequest) => {
+    async (_event, request: MessageAddRequest) => {
       try {
-        const message = chatConversationService.addMessage(request.input);
+        chatConversationService.addMessage(request.input);
         // Return updated conversation
         const conversation = chatConversationService.getConversation(request.input.conversationId)!;
         return { success: true, data: conversation };
@@ -1180,7 +1336,7 @@ function setupIpcHandlers() {
   // Profile: Get
   ipcMain.handle(
     IPC_CHANNELS.PROFILE_GET,
-    async (_, request: ProfileGetRequest) => {
+    async (_event, _request: ProfileGetRequest) => {
       try {
         const profile = userProfileService.getProfile();
         return { success: true, data: profile };
@@ -1214,7 +1370,7 @@ function setupIpcHandlers() {
   // Model: Get Available Models
   ipcMain.handle(
     IPC_CHANNELS.MODEL_GET_AVAILABLE,
-    async (_, request: ModelGetAvailableRequest) => {
+    async (_event, _request: ModelGetAvailableRequest) => {
       try {
         const models = modelDownloadService.availableModels;
         return { success: true, models };
@@ -1231,7 +1387,7 @@ function setupIpcHandlers() {
   // Model: Get Downloaded Models
   ipcMain.handle(
     IPC_CHANNELS.MODEL_GET_DOWNLOADED,
-    async (_, request: ModelGetDownloadedRequest) => {
+    async (_event, _request: ModelGetDownloadedRequest) => {
       try {
         const models = modelDownloadService.getDownloadedModels();
         return { success: true, models };
@@ -1305,28 +1461,30 @@ function setupIpcHandlers() {
   // Facts: Store a case fact (supports both old & new formats)
   ipcMain.handle(
     'facts:store',
-    async (_, params: any) => {
+    async (_event, params: unknown) => {
       try {
+        const p = params as Record<string, unknown>;
         let factContent: string;
         let factCategory: string;
         let importance: 'low' | 'medium' | 'high' | 'critical';
 
         // NEW format (from AIFunctionDefinitions): factContent + factCategory + importance
-        if (params.factContent) {
-          factContent = params.factContent;
-          factCategory = params.factCategory || 'other';
-          importance = params.importance || 'medium';
+        if (p.factContent) {
+          factContent = p.factContent as string;
+          factCategory = (p.factCategory as string) || 'other';
+          importance = (p.importance as 'low' | 'medium' | 'high' | 'critical') || 'medium';
         }
         // OLD format (backwards compat): factType + factKey + factValue + confidence
         else {
-          factContent = `${params.factKey}: ${params.factValue}`;
-          factCategory = params.factType || 'other';
+          factContent = `${p.factKey}: ${p.factValue}`;
+          factCategory = (p.factType as string) || 'other';
 
           // Map confidence to importance
-          if (params.confidence !== undefined) {
-            if (params.confidence >= 0.9) importance = 'critical';
-            else if (params.confidence >= 0.7) importance = 'high';
-            else if (params.confidence >= 0.5) importance = 'medium';
+          if (p.confidence !== undefined) {
+            const conf = p.confidence as number;
+            if (conf >= 0.9) importance = 'critical';
+            else if (conf >= 0.7) importance = 'high';
+            else if (conf >= 0.5) importance = 'medium';
             else importance = 'low';
           } else {
             importance = 'medium';
@@ -1334,9 +1492,9 @@ function setupIpcHandlers() {
         }
 
         const fact = caseFactsRepository.create({
-          caseId: params.caseId,
+          caseId: p.caseId as number,
           factContent,
-          factCategory: factCategory as any,
+          factCategory: factCategory as 'timeline' | 'evidence' | 'witness' | 'location' | 'communication' | 'other',
           importance,
         });
 
@@ -1354,7 +1512,7 @@ function setupIpcHandlers() {
   // Facts: Get facts for a case
   ipcMain.handle(
     'facts:get',
-    async (_, caseId: number, factType?: string) => {
+    async (_event, caseId: number, factType?: string) => {
       try {
         let facts;
         if (factType) {
@@ -1378,7 +1536,7 @@ function setupIpcHandlers() {
   // Facts: Get fact count for a case
   ipcMain.handle(
     'facts:count',
-    async (_, caseId: number) => {
+    async (_event, caseId: number) => {
       try {
         const facts = caseFactsRepository.findByCaseId(caseId);
         const count = facts.length;
@@ -1422,7 +1580,7 @@ function setupIpcHandlers() {
   // GDPR: Export User Data
   ipcMain.handle(
     IPC_CHANNELS.GDPR_EXPORT_USER_DATA,
-    async (_, request: GDPRExportUserDataRequest) => {
+    async (_event, _request: GDPRExportUserDataRequest) => {
       try {
         const db = databaseManager.getDatabase();
         const exportDate = new Date().toISOString();
@@ -1435,11 +1593,11 @@ function setupIpcHandlers() {
         const conversations = chatConversationService.getAllConversations();
 
         // Gather case-related data by iterating through cases
-        const notes: any[] = [];
-        const legalIssues: any[] = [];
-        const timelineEvents: any[] = [];
-        const userFacts: any[] = [];
-        const caseFacts: any[] = [];
+        const notes: unknown[] = [];
+        const legalIssues: unknown[] = [];
+        const timelineEvents: unknown[] = [];
+        const userFacts: unknown[] = [];
+        const caseFacts: unknown[] = [];
 
         for (const c of cases) {
           notes.push(...notesRepository.findByCaseId(c.id));
@@ -1450,7 +1608,7 @@ function setupIpcHandlers() {
         }
 
         // Get all messages for all conversations
-        const allMessages: any[] = [];
+        const allMessages: unknown[] = [];
         for (const conv of conversations) {
           const convWithMessages = chatConversationService.loadConversation(conv.id);
           if (convWithMessages && convWithMessages.messages) {
@@ -1566,7 +1724,7 @@ function setupIpcHandlers() {
   // GDPR: Delete User Data
   ipcMain.handle(
     IPC_CHANNELS.GDPR_DELETE_USER_DATA,
-    async (_, request: GDPRDeleteUserDataRequest) => {
+    async (_event, request: GDPRDeleteUserDataRequest) => {
       try {
         // Safety check: require explicit confirmation
         if (request.confirmation !== 'DELETE_ALL_MY_DATA') {
@@ -1656,8 +1814,7 @@ function setupIpcHandlers() {
 
         deleteAllData();
 
-        // Count audit logs for summary
-        const auditLogsCount = db.prepare('SELECT COUNT(*) as count FROM audit_logs').get() as { count: number };
+        // Note: Audit logs are kept for compliance and not deleted
 
         errorLogger.logError('GDPR data deletion completed', {
           type: 'info',
@@ -1705,7 +1862,7 @@ function setupIpcHandlers() {
   // UI Error Logging
   ipcMain.handle(
     IPC_CHANNELS.LOG_UI_ERROR,
-    async (_, request: { errorData: any }) => {
+    async (_event, request: { errorData: Record<string, unknown> }) => {
       try {
         const { errorData } = request;
         const db = databaseManager.getDatabase();
@@ -1794,7 +1951,7 @@ if (process.env.NODE_ENV !== 'production') {
 
   // Register all IPC handlers with dev API server
   // Cases handlers
-  const casesCreateHandler = async (event: any, args: any) => {
+  const casesCreateHandler = async (_event: unknown, args: unknown) => {
     try {
       const createdCase = caseService.createCase(args);
       return createdCase;
@@ -1806,7 +1963,7 @@ if (process.env.NODE_ENV !== 'production') {
   ipcMain.handle("dev-api:cases:create", casesCreateHandler);
   devAPIServer.registerHandler("dev-api:cases:create", casesCreateHandler);
 
-  const casesGetHandler = async (event: any, id: string) => {
+  const casesGetHandler = async (_event: unknown, id: string) => {
     try {
       return caseRepository.findById(id);
     } catch (error) {
@@ -1817,7 +1974,7 @@ if (process.env.NODE_ENV !== 'production') {
   ipcMain.handle("dev-api:cases:get", casesGetHandler);
   devAPIServer.registerHandler("dev-api:cases:get", casesGetHandler);
 
-  const casesListHandler = async (event: any, filters: any) => {
+  const casesListHandler = async (_event: unknown, _filters: unknown) => {
     try {
       return caseRepository.findAll();
     } catch (error) {
@@ -1828,7 +1985,7 @@ if (process.env.NODE_ENV !== 'production') {
   ipcMain.handle("dev-api:cases:list", casesListHandler);
   devAPIServer.registerHandler("dev-api:cases:list", casesListHandler);
 
-  const casesUpdateHandler = async (event: any, { id, updates }: any) => {
+  const casesUpdateHandler = async (_event: unknown, { id, updates }: { id: string; updates: unknown }) => {
     try {
       return caseService.updateCase(id, updates);
     } catch (error) {
@@ -1839,7 +1996,7 @@ if (process.env.NODE_ENV !== 'production') {
   ipcMain.handle("dev-api:cases:update", casesUpdateHandler);
   devAPIServer.registerHandler("dev-api:cases:update", casesUpdateHandler);
 
-  const casesDeleteHandler = async (event: any, id: string) => {
+  const casesDeleteHandler = async (_event: unknown, id: string) => {
     try {
       caseService.deleteCase(id);
       return { success: true };
@@ -1851,12 +2008,12 @@ if (process.env.NODE_ENV !== 'production') {
   ipcMain.handle("dev-api:cases:delete", casesDeleteHandler);
   devAPIServer.registerHandler("dev-api:cases:delete", casesDeleteHandler);
 
-  const casesCreateTestFixtureHandler = async (event: any, args: any) => {
+  const casesCreateTestFixtureHandler = async (_event: unknown, args: Record<string, unknown>) => {
     try {
       const testCase = caseService.createCase({
-        title: args.title || "Test Case",
-        caseType: args.caseType || "employment",
-        description: args.description || "Test case for MCP integration"
+        title: (args.title as string) || "Test Case",
+        caseType: (args.caseType as 'employment' | 'housing' | 'consumer' | 'family' | 'debt' | 'other') || "employment",
+        description: (args.description as string) || "Test case for MCP integration"
       });
       return {
         caseId: testCase.id,
@@ -1872,7 +2029,7 @@ if (process.env.NODE_ENV !== 'production') {
   devAPIServer.registerHandler("dev-api:cases:createTestFixture", casesCreateTestFixtureHandler);
 
   // Evidence handlers
-  const evidenceCreateHandler = async (event: any, input: CreateEvidenceInput) => {
+  const evidenceCreateHandler = async (_event: unknown, input: CreateEvidenceInput) => {
     try {
       const createdEvidence = evidenceRepository.create(input);
       return createdEvidence;
@@ -1885,7 +2042,7 @@ if (process.env.NODE_ENV !== 'production') {
   devAPIServer.registerHandler("dev-api:evidence:create", evidenceCreateHandler);
 
   // Database handlers
-  const databaseQueryHandler = async (event: any, sql: string) => {
+  const databaseQueryHandler = async (_event: unknown, sql: string) => {
     // Security: Only allow SELECT queries
     if (!sql.trim().toUpperCase().startsWith("SELECT")) {
       throw new Error("Only SELECT queries allowed via dev API");
@@ -1901,7 +2058,7 @@ if (process.env.NODE_ENV !== 'production') {
   ipcMain.handle("dev-api:database:query", databaseQueryHandler);
   devAPIServer.registerHandler("dev-api:database:query", databaseQueryHandler);
 
-  const databaseMigrateHandler = async (event: any, targetVersion?: number) => {
+  const databaseMigrateHandler = async (_event: unknown, targetVersion?: number) => {
     try {
       runMigrations();
       return { success: true, version: targetVersion || "latest" };
@@ -1913,7 +2070,11 @@ if (process.env.NODE_ENV !== 'production') {
   ipcMain.handle("dev-api:database:migrate", databaseMigrateHandler);
   devAPIServer.registerHandler("dev-api:database:migrate", databaseMigrateHandler);
 
-  const databaseBackupHandler = async (event: any, path: string) => {
+  const databaseBackupHandler = async (_event: unknown, path: string) => {
+    // Security: Validate path is in allowed directories
+    const { validatePathOrThrow } = await import('./utils/path-security');
+    validatePathOrThrow(path);
+
     try {
       const db = databaseManager.getDatabase();
       const backupDb = await import('better-sqlite3').then(m => m.default(path));

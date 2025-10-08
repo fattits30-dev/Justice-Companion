@@ -211,22 +211,16 @@ class ChatConversationRepository {
 
     try {
       // Encrypt content before INSERT (P0 priority field)
-      const encryptedContent = input.content
-        ? this.encryptionService?.encrypt(input.content)
-        : null;
-
-      const contentToStore = encryptedContent
-        ? JSON.stringify(encryptedContent)
-        : null;
+      const contentToStore = this.encryptionService
+        ? JSON.stringify(this.encryptionService.encrypt(input.content))
+        : input.content;
 
       // Encrypt thinking_content before INSERT (P1 priority field)
-      const encryptedThinkingContent = input.thinkingContent
-        ? this.encryptionService?.encrypt(input.thinkingContent)
-        : null;
-
-      const thinkingContentToStore = encryptedThinkingContent
-        ? JSON.stringify(encryptedThinkingContent)
-        : null;
+      const thinkingContentToStore = input.thinkingContent == null
+        ? null
+        : this.encryptionService
+          ? JSON.stringify(this.encryptionService.encrypt(input.thinkingContent))
+          : input.thinkingContent;
 
       const stmt = db.prepare(`
         INSERT INTO chat_messages (conversation_id, role, content, thinking_content, token_count)

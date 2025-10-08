@@ -3,7 +3,8 @@ import { AuditLogger } from './AuditLogger.js';
 import { createTestDatabase, type TestDatabaseHelper } from '../test-utils/database-test-helper.js';
 import type Database from 'better-sqlite3';
 
-describe('AuditLogger', () => {
+// Force tests to run sequentially to avoid database conflicts
+describe.sequential('AuditLogger', () => {
   let auditLogger: AuditLogger;
   let testDb: TestDatabaseHelper;
   let db: Database.Database;
@@ -41,9 +42,35 @@ describe('AuditLogger', () => {
   });
 
   beforeEach(() => {
+    // Drop and recreate table to ensure clean state
+    db.exec('DROP TABLE IF EXISTS audit_logs');
+    db.exec(`
+      CREATE TABLE audit_logs (
+        id TEXT PRIMARY KEY,
+        timestamp TEXT NOT NULL,
+        event_type TEXT NOT NULL,
+        user_id TEXT,
+        resource_type TEXT NOT NULL,
+        resource_id TEXT NOT NULL,
+        action TEXT NOT NULL CHECK(action IN ('create', 'read', 'update', 'delete', 'export', 'decrypt')),
+        details TEXT,
+        ip_address TEXT,
+        user_agent TEXT,
+        success INTEGER NOT NULL DEFAULT 1 CHECK(success IN (0, 1)),
+        error_message TEXT,
+        integrity_hash TEXT NOT NULL,
+        previous_log_hash TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_audit_logs_timestamp ON audit_logs(timestamp);
+      CREATE INDEX IF NOT EXISTS idx_audit_logs_resource ON audit_logs(resource_type, resource_id);
+      CREATE INDEX IF NOT EXISTS idx_audit_logs_event_type ON audit_logs(event_type);
+      CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON audit_logs(user_id) WHERE user_id IS NOT NULL;
+      CREATE INDEX IF NOT EXISTS idx_audit_logs_chain ON audit_logs(timestamp ASC, id ASC);
+    `);
+
     auditLogger = new AuditLogger(db);
-    // Clear audit logs before each test
-    db.prepare('DELETE FROM audit_logs').run();
   });
 
   afterAll(() => {
@@ -64,7 +91,7 @@ describe('AuditLogger', () => {
       const logs = auditLogger.query();
       expect(logs).toHaveLength(1);
       expect(logs[0].eventType).toBe('case.create');
-      expect(logs[0].success).toBe(1);
+      expect(logs[0].success).toBe(true);
     });
 
     it('generates unique IDs for each log entry', () => {
@@ -122,7 +149,7 @@ describe('AuditLogger', () => {
       expect(logs[0].action).toBe('update');
       expect(logs[0].ipAddress).toBe('192.168.1.1');
       expect(logs[0].userAgent).toBe('Mozilla/5.0');
-      expect(logs[0].success).toBe(1);
+      expect(logs[0].success).toBe(true);
     });
 
     it('defaults success to true when not provided', () => {
@@ -134,7 +161,7 @@ describe('AuditLogger', () => {
       });
 
       const logs = auditLogger.query();
-      expect(logs[0].success).toBe(1);
+      expect(logs[0].success).toBe(true);
     });
   });
 
@@ -236,7 +263,8 @@ describe('AuditLogger', () => {
       });
 
       const logs = auditLogger.query();
-      expect(logs[1].previousLogHash).toBe(logs[0].integrityHash);
+      // logs[0] is most recent (update), logs[1] is oldest (create)
+      expect(logs[0].previousLogHash).toBe(logs[1].integrityHash);
     });
 
     it('verifies intact chain successfully', () => {
@@ -371,7 +399,7 @@ describe('AuditLogger', () => {
     it('filters by success status', () => {
       const logs = auditLogger.query({ success: false });
       expect(logs).toHaveLength(1);
-      expect(logs[0].success).toBe(0);
+      expect(logs[0].success).toBe(false);
       expect(logs[0].errorMessage).toBe('Test error');
     });
 
@@ -402,14 +430,45 @@ describe('AuditLogger', () => {
       expect(logs).toHaveLength(2);
     });
 
-    it.skip('supports offset pagination', () => {
-      // Offset not supported in current spec
-      const page1 = auditLogger.query({ limit: 2 });
-      const page2 = auditLogger.query({ limit: 2 });
+    it('supports offset pagination', () => {
+      // Clear existing logs from beforeEach
+      db.prepare('DELETE FROM audit_logs').run();
+
+      // Create 5 logs for pagination testing
+      for (let i = 1; i <= 5; i++) {
+        auditLogger.log({
+          eventType: 'case.read',
+          resourceType: 'case',
+          resourceId: i.toString(),
+          action: 'read',
+        });
+      }
+
+      // Verify total count
+      const allLogs = auditLogger.query({});
+      expect(allLogs).toHaveLength(5);
+
+      // Get page 1 (first 2 logs)
+      const page1 = auditLogger.query({ limit: 2, offset: 0 });
+      // Get page 2 (next 2 logs)
+      const page2 = auditLogger.query({ limit: 2, offset: 2 });
+      // Get page 3 (last log)
+      const page3 = auditLogger.query({ limit: 2, offset: 4 });
 
       expect(page1).toHaveLength(2);
       expect(page2).toHaveLength(2);
-      expect(page1[0].id).toBe(page2[0].id);
+      expect(page3).toHaveLength(1);
+
+      // Ensure pages don't overlap
+      expect(page1[0].id).not.toBe(page2[0].id);
+      expect(page2[0].id).not.toBe(page3[0].id);
+
+      // Verify order (resourceId should be in DESC order - newest first)
+      expect(page1[0].resourceId).toBe('5');
+      expect(page1[1].resourceId).toBe('4');
+      expect(page2[0].resourceId).toBe('3');
+      expect(page2[1].resourceId).toBe('2');
+      expect(page3[0].resourceId).toBe('1');
     });
 
     it('combines multiple filters', () => {
@@ -421,7 +480,7 @@ describe('AuditLogger', () => {
 
       expect(logs).toHaveLength(1);
       expect(logs[0].resourceType).toBe('case');
-      expect(logs[0].success).toBe(1);
+      expect(logs[0].success).toBe(true);
     });
 
     it('returns empty array when no matches found', () => {
@@ -529,7 +588,7 @@ describe('AuditLogger', () => {
       expect(parsed[0].userId).toBe('user456');
       expect(parsed[0].ipAddress).toBe('10.0.0.1');
       expect(parsed[0].userAgent).toBe('TestAgent/1.0');
-      expect(parsed[0].success).toBe(0);
+      expect(parsed[0].success).toBe(false);
       expect(parsed[0].errorMessage).toBe('Permission denied');
     });
   });
@@ -543,6 +602,9 @@ describe('AuditLogger', () => {
       // Create new logger with closed DB
       const failLogger = new AuditLogger(closedDb);
 
+      // Suppress console.error to avoid polluting test output
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
       // Should not throw
       expect(() => {
         failLogger.log({
@@ -552,6 +614,15 @@ describe('AuditLogger', () => {
           action: 'create',
         });
       }).not.toThrow();
+
+      // Verify error was logged (but suppressed from output)
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        '❌ Audit logging failed:',
+        expect.any(Error),
+      );
+
+      // Restore console.error
+      consoleErrorSpy.mockRestore();
 
       // Recreate database for remaining tests
       testDb = createTestDatabase();
@@ -623,7 +694,7 @@ describe('AuditLogger', () => {
       });
 
       const logs = auditLogger.query();
-      expect(logs[0].details).toBeUndefined();
+      expect(logs[0].details).toBeNull();
     });
 
     it('handles empty details object', () => {
@@ -769,7 +840,7 @@ describe('AuditLogger', () => {
       });
 
       const logs = auditLogger.query();
-      expect(logs[0].success).toBe(1);
+      expect(logs[0].success).toBe(true);
       expect(logs[0].errorMessage).toBeNull();
     });
 
@@ -784,7 +855,7 @@ describe('AuditLogger', () => {
       });
 
       const logs = auditLogger.query();
-      expect(logs[0].success).toBe(0);
+      expect(logs[0].success).toBe(false);
       expect(logs[0].errorMessage).toBe('Permission denied');
     });
 
@@ -807,7 +878,7 @@ describe('AuditLogger', () => {
 
       const successLogs = auditLogger.query({ success: true });
       expect(successLogs).toHaveLength(1);
-      expect(successLogs[0].success).toBe(1);
+      expect(successLogs[0].success).toBe(true);
     });
 
     it('filters failed operations only', () => {
@@ -830,7 +901,7 @@ describe('AuditLogger', () => {
 
       const failedLogs = auditLogger.query({ success: false });
       expect(failedLogs).toHaveLength(1);
-      expect(failedLogs[0].success).toBe(0);
+      expect(failedLogs[0].success).toBe(false);
       expect(failedLogs[0].errorMessage).toBe('Validation failed');
     });
   });

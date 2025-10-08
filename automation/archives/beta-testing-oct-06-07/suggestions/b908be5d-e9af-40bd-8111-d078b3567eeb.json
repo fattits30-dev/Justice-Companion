@@ -1,0 +1,13 @@
+{
+  "suggestion_id": "b908be5d-e9af-40bd-8111-d078b3567eeb",
+  "task_id": "b908be5d-e9af-40bd-8111-d078b3567eeb",
+  "created_at": "2025-10-07T00:57:31.322924+00:00",
+  "files": [
+    "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\NotesService.ts"
+  ],
+  "error": "\n> justice-companion@1.0.0 test\n> vitest --run\n\n\n\u001b[1m\u001b[7m\u001b[36m RUN \u001b[39m\u001b[27m\u001b[22m \u001b[36mv2.1.9 \u001b[39m\u001b[90mC:/Users/sava6/Desktop/Justice Companion\u001b[39m\n\n",
+  "analysis": "**Error Category:** Unknown Pattern\n\n**Full Error Output:**\n\n> justice-companion@1.0.0 test\n> vitest --run\n\n\n\u001b[1m\u001b[7m\u001b[36m RUN \u001b[39m\u001b[27m\u001b[22m \u001b[36mv2.1.9 \u001b[39m\u001b[90mC:/Users/sava6/Desktop/Justice Companion\u001b[39m\n\n\n\n**Generic Troubleshooting Steps:**\n1. Read the error message carefully\n2. Check for typos in variable/function names\n3. Verify all imports are correct\n4. Check type annotations match actual usage\n5. Look for null/undefined safety issues\n6. Review test expectations vs implementation\n\n**Files Affected:**\n  - C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\NotesService.ts\n\n**Recommended Actions:**\n- Use TypeScript strict mode to catch type errors\n- Add null checks where objects might be undefined\n- Ensure all required function parameters are provided\n- Verify return types match function signatures\n",
+  "status": "auto_suggested",
+  "approved": false,
+  "source": "pattern_matcher"
+}

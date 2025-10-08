@@ -1,5 +1,9 @@
 {
   "mcpServers": {
+    "justice-companion": {
+      "command": "node",
+      "args": ["C:\\Users\\sava6\\MCPs\\justice-companion\\dist\\index.js"]
+    },
     "sequential-thinking": {
       "command": "cmd",
       "args": ["/c", "npx", "-y", "@modelcontextprotocol/server-sequential-thinking"]
@@ -22,10 +26,7 @@
     },
     "github": {
       "command": "cmd",
-      "args": ["/c", "npx", "-y", "@modelcontextprotocol/server-github"],
-      "env": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": ""
-      }
+      "args": ["/c", "npx", "-y", "@modelcontextprotocol/server-github"]
     },
     "sqlite": {
       "command": "uvx",
@@ -47,7 +48,7 @@
       "command": "cmd",
       "args": ["/c", "npx", "-y", "@upstash/context7-mcp"],
       "env": {
-        "CONTEXT7_API_KEY": "ctx7sk-c9a46423-e222-40b6-914d-63523ebd0736"
+        "CONTEXT7_API_KEY": "ctx7sk-3768263b-80ba-4796-8feb-1bdf5d3343f3"
       }
     }
   }

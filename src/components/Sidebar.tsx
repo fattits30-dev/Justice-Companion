@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { LayoutDashboard, MessageSquare, Briefcase, FileText, Settings, Menu, ChevronLeft } from 'lucide-react';
-import SidebarCaseContext from './SidebarCaseContext';
+import SidebarCaseContext from '../features/chat/components/SidebarCaseContext';
 import { ConfirmDialog } from './ConfirmDialog';
 import type { ChatConversation } from '../models/ChatConversation';
 import type { UserProfile } from '../models/UserProfile';
@@ -9,8 +9,8 @@ interface SidebarProps {
   isExpanded: boolean;
   onToggle: () => void;
   onConversationLoad: (conversationId: number) => Promise<void>;
-  activeView: 'dashboard' | 'chat' | 'cases' | 'documents' | 'settings';
-  onViewChange: (view: 'dashboard' | 'chat' | 'cases' | 'documents' | 'settings') => void;
+  activeView: 'dashboard' | 'chat' | 'cases' | 'case-detail' | 'documents' | 'settings';
+  onViewChange: (view: 'dashboard' | 'chat' | 'cases' | 'case-detail' | 'documents' | 'settings') => void;
   activeCaseId: number | null;
   onActiveCaseIdChange: (caseId: number | null) => void;
 }
@@ -54,7 +54,7 @@ export function Sidebar({ isExpanded, onToggle, onConversationLoad, activeView, 
     };
 
     if (isExpanded) {
-      loadInitialData();
+      void loadInitialData();
     }
   }, [isExpanded]);
 
@@ -74,9 +74,9 @@ export function Sidebar({ isExpanded, onToggle, onConversationLoad, activeView, 
     }
   };
 
-  const handleConversationSelect = async (conversationId: number) => {
+  const handleConversationSelect = (conversationId: number) => {
     setActiveConversationId(conversationId);
-    await onConversationLoad(conversationId);
+    void onConversationLoad(conversationId);
   };
 
   const handleNewChat = async () => {

@@ -54,12 +54,28 @@ class TestRunner:
             }
         """
         start_time = datetime.utcnow()
-        
-        # Build command
-        cmd = ['npm', 'test']
+
+        # Build command with full path to npm on Windows
+        import os
+        import platform
+
+        # Find npm executable
+        if platform.system() == 'Windows':
+            # Try common Windows npm locations
+            npm_paths = [
+                r'C:\Program Files\nodejs\npm.cmd',
+                os.path.expanduser(r'~\AppData\Roaming\npm\npm.cmd'),
+            ]
+            npm_executable = next((p for p in npm_paths if os.path.exists(p)), 'npm')
+            shell_needed = True  # Required for .cmd files on Windows
+        else:
+            npm_executable = 'npm'
+            shell_needed = False
+
+        cmd = [npm_executable, 'test', '--', '--run']  # --run = CI mode (exit after tests)
         if test_path:
             cmd.append(test_path)
-        
+
         # Run tests
         try:
             result = subprocess.run(
@@ -67,7 +83,10 @@ class TestRunner:
                 cwd=self.project_root,
                 capture_output=True,
                 text=True,
-                timeout=timeout
+                encoding='utf-8',
+                errors='replace',  # Replace invalid characters instead of crashing
+                timeout=timeout,
+                shell=shell_needed
             )
             
             end_time = datetime.utcnow()
@@ -165,7 +184,7 @@ class TestRunner:
         
         for line in test_output.split('\n'):
             # Look for common failure patterns
-            if any(marker in line for marker in ['FAIL', 'Error:', 'Failed:', '✗', '×']):
+            if any(marker in line for marker in ['FAIL', 'Error:', 'Failed:', '[ERROR]', '×']):
                 failures.append({
                     'line': line.strip(),
                     'type': 'test_failure',
@@ -190,7 +209,7 @@ class TestRunner:
             failures = self.parse_test_failures(
                 results['stdout'] + results['stderr']
             )
-            return f"✗ Tests failed ({len(failures)} issues) in {results['duration']:.2f}s"
+            return f"[ERROR] Tests failed ({len(failures)} issues) in {results['duration']:.2f}s"
 
 
 # Example usage

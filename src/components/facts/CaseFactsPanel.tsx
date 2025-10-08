@@ -74,7 +74,7 @@ export function CaseFactsPanel({ caseId }: CaseFactsPanelProps) {
 
   if (loading) {
     return (
-      <div style={{ padding: '24px', textAlign: 'center', color: '#666' }}>
+      <div className="p-6 text-center text-blue-300">
         Loading case facts...
       </div>
     );
@@ -82,88 +82,43 @@ export function CaseFactsPanel({ caseId }: CaseFactsPanelProps) {
 
   if (error) {
     return (
-      <div
-        style={{
-          padding: '24px',
-          textAlign: 'center',
-          color: '#d32f2f',
-          background: '#ffebee',
-          borderRadius: '4px',
-        }}
-      >
+      <div className="p-6 text-center text-red-300 bg-red-900/30 rounded-lg">
         Error: {error}
       </div>
     );
   }
 
   return (
-    <div style={{ padding: '24px' }}>
+    <div className="p-6">
       {/* Header */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '24px',
-        }}
-      >
-        <h2 style={{ margin: 0, color: '#333', fontSize: '24px' }}>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-white">
           Case Facts ({filteredFacts.length})
         </h2>
 
         <button
           onClick={() => setIsCreating(true)}
-          style={{
-            padding: '10px 20px',
-            background: '#388e3c',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            fontSize: '14px',
-            fontWeight: 'bold',
-            cursor: 'pointer',
-            transition: 'background 0.2s ease',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = '#2e7d32';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = '#388e3c';
-          }}
+          className="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-bold transition-all duration-200"
         >
           + Add Case Fact
         </button>
       </div>
 
       {/* Filter Bar */}
-      <div style={{ marginBottom: '24px' }}>
+      <div className="mb-6 space-y-4">
         {/* Category Filters */}
-        <div style={{ marginBottom: '12px' }}>
-          <label
-            style={{
-              display: 'block',
-              marginBottom: '8px',
-              fontWeight: 'bold',
-              color: '#333',
-              fontSize: '14px',
-            }}
-          >
+        <div>
+          <label className="block mb-2 font-bold text-white text-sm">
             Category:
           </label>
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          <div className="flex gap-3 flex-wrap">
             <button
               onClick={() => setFilterCategory('all')}
-              style={{
-                padding: '8px 16px',
-                background: filterCategory === 'all' ? '#388e3c' : '#e0e0e0',
-                color: filterCategory === 'all' ? 'white' : '#666',
-                border: 'none',
-                borderRadius: '20px',
-                fontSize: '13px',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-              }}
+              className={`px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 ${
+                filterCategory === 'all'
+                  ? 'bg-green-600 text-white'
+                  : 'bg-slate-700/50 text-blue-300 hover:bg-slate-600/50'
+              }`}
             >
               All ({caseFacts.length})
             </button>
@@ -174,18 +129,11 @@ export function CaseFactsPanel({ caseId }: CaseFactsPanelProps) {
                 <button
                   key={category}
                   onClick={() => setFilterCategory(category)}
-                  style={{
-                    padding: '8px 16px',
-                    background:
-                      filterCategory === category ? '#388e3c' : '#e0e0e0',
-                    color: filterCategory === category ? 'white' : '#666',
-                    border: 'none',
-                    borderRadius: '20px',
-                    fontSize: '13px',
-                    fontWeight: 'bold',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                  }}
+                  className={`px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 ${
+                    filterCategory === category
+                      ? 'bg-green-600 text-white'
+                      : 'bg-slate-700/50 text-blue-300 hover:bg-slate-600/50'
+                  }`}
                 >
                   {label} ({count})
                 </button>
@@ -196,31 +144,17 @@ export function CaseFactsPanel({ caseId }: CaseFactsPanelProps) {
 
         {/* Importance Filters */}
         <div>
-          <label
-            style={{
-              display: 'block',
-              marginBottom: '8px',
-              fontWeight: 'bold',
-              color: '#333',
-              fontSize: '14px',
-            }}
-          >
+          <label className="block mb-2 font-bold text-white text-sm">
             Importance:
           </label>
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          <div className="flex gap-3 flex-wrap">
             <button
               onClick={() => setFilterImportance('all')}
-              style={{
-                padding: '8px 16px',
-                background: filterImportance === 'all' ? '#388e3c' : '#e0e0e0',
-                color: filterImportance === 'all' ? 'white' : '#666',
-                border: 'none',
-                borderRadius: '20px',
-                fontSize: '13px',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-              }}
+              className={`px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 ${
+                filterImportance === 'all'
+                  ? 'bg-green-600 text-white'
+                  : 'bg-slate-700/50 text-blue-300 hover:bg-slate-600/50'
+              }`}
             >
               All
             </button>
@@ -233,18 +167,11 @@ export function CaseFactsPanel({ caseId }: CaseFactsPanelProps) {
                 <button
                   key={importance}
                   onClick={() => setFilterImportance(importance)}
-                  style={{
-                    padding: '8px 16px',
-                    background:
-                      filterImportance === importance ? '#388e3c' : '#e0e0e0',
-                    color: filterImportance === importance ? 'white' : '#666',
-                    border: 'none',
-                    borderRadius: '20px',
-                    fontSize: '13px',
-                    fontWeight: 'bold',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                  }}
+                  className={`px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 ${
+                    filterImportance === importance
+                      ? 'bg-green-600 text-white'
+                      : 'bg-slate-700/50 text-blue-300 hover:bg-slate-600/50'
+                  }`}
                 >
                   {label} ({count})
                 </button>
@@ -256,17 +183,10 @@ export function CaseFactsPanel({ caseId }: CaseFactsPanelProps) {
 
       {/* New Fact Creator */}
       {isCreating && (
-        <div style={{ marginBottom: '24px' }}>
-          <div style={{ display: 'flex', gap: '16px', marginBottom: '12px' }}>
-            <div style={{ flex: 1 }}>
-              <label
-                style={{
-                  display: 'block',
-                  marginBottom: '8px',
-                  fontWeight: 'bold',
-                  color: '#333',
-                }}
-              >
+        <div className="mb-6">
+          <div className="flex gap-4 mb-3">
+            <div className="flex-1">
+              <label className="block mb-2 font-bold text-white text-sm">
                 Category:
               </label>
               <select
@@ -282,13 +202,7 @@ export function CaseFactsPanel({ caseId }: CaseFactsPanelProps) {
                       | 'other',
                   )
                 }
-                style={{
-                  width: '100%',
-                  padding: '8px 12px',
-                  border: '1px solid #ccc',
-                  borderRadius: '4px',
-                  fontSize: '14px',
-                }}
+                className="w-full px-3 py-2 border border-blue-700/30 bg-slate-800/50 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-green-500"
               >
                 {Object.entries(categoryLabels).map(([category, label]) => (
                   <option key={category} value={category}>
@@ -298,15 +212,8 @@ export function CaseFactsPanel({ caseId }: CaseFactsPanelProps) {
               </select>
             </div>
 
-            <div style={{ flex: 1 }}>
-              <label
-                style={{
-                  display: 'block',
-                  marginBottom: '8px',
-                  fontWeight: 'bold',
-                  color: '#333',
-                }}
-              >
+            <div className="flex-1">
+              <label className="block mb-2 font-bold text-white text-sm">
                 Importance:
               </label>
               <select
@@ -316,13 +223,7 @@ export function CaseFactsPanel({ caseId }: CaseFactsPanelProps) {
                     e.target.value as 'low' | 'medium' | 'high' | 'critical',
                   )
                 }
-                style={{
-                  width: '100%',
-                  padding: '8px 12px',
-                  border: '1px solid #ccc',
-                  borderRadius: '4px',
-                  fontSize: '14px',
-                }}
+                className="w-full px-3 py-2 border border-blue-700/30 bg-slate-800/50 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-green-500"
               >
                 {Object.entries(importanceLabels).map(([importance, label]) => (
                   <option key={importance} value={importance}>
@@ -345,27 +246,13 @@ export function CaseFactsPanel({ caseId }: CaseFactsPanelProps) {
 
       {/* Facts Grid */}
       {filteredFacts.length === 0 ? (
-        <div
-          style={{
-            padding: '48px',
-            textAlign: 'center',
-            color: '#999',
-            background: '#f5f5f5',
-            borderRadius: '8px',
-          }}
-        >
+        <div className="p-12 text-center text-blue-400 bg-slate-800/30 rounded-lg">
           No case facts match the current filters.
         </div>
       ) : (
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-            gap: '24px',
-          }}
-        >
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredFacts.map((fact: CaseFact) => (
-            <div key={fact.id} style={{ position: 'relative' }}>
+            <div key={fact.id} className="relative">
               <PostItNote
                 id={fact.id}
                 content={fact.factContent}
@@ -377,25 +264,15 @@ export function CaseFactsPanel({ caseId }: CaseFactsPanelProps) {
               />
               {/* Importance badge */}
               <div
-                style={{
-                  position: 'absolute',
-                  top: '-8px',
-                  left: '-8px',
-                  padding: '4px 8px',
-                  background:
-                    fact.importance === 'critical'
-                      ? '#d32f2f'
-                      : fact.importance === 'high'
-                        ? '#f57c00'
-                        : fact.importance === 'medium'
-                          ? '#fbc02d'
-                          : '#9e9e9e',
-                  color: 'white',
-                  borderRadius: '12px',
-                  fontSize: '11px',
-                  fontWeight: 'bold',
-                  boxShadow: '2px 2px 6px rgba(0,0,0,0.2)',
-                }}
+                className={`absolute -top-2 -left-2 px-2 py-1 text-white rounded-xl text-xs font-bold shadow-lg ${
+                  fact.importance === 'critical'
+                    ? 'bg-red-600'
+                    : fact.importance === 'high'
+                      ? 'bg-orange-600'
+                      : fact.importance === 'medium'
+                        ? 'bg-yellow-600'
+                        : 'bg-gray-500'
+                }`}
               >
                 {importanceLabels[fact.importance]}
               </div>

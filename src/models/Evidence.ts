@@ -1,4 +1,4 @@
-export type EvidenceType = 'document' | 'photo' | 'email' | 'recording' | 'note';
+export type EvidenceType = 'document' | 'photo' | 'email' | 'recording' | 'note' | 'witness';
 
 export interface Evidence {
   id: number;
@@ -9,6 +9,7 @@ export interface Evidence {
   evidenceType: EvidenceType;
   obtainedDate: string | null;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface CreateEvidenceInput {
@@ -18,6 +19,7 @@ export interface CreateEvidenceInput {
   content?: string;
   evidenceType: EvidenceType;
   obtainedDate?: string;
+  updatedAt?: string;
 }
 
 export interface UpdateEvidenceInput {
@@ -26,4 +28,5 @@ export interface UpdateEvidenceInput {
   content?: string;
   evidenceType?: EvidenceType;
   obtainedDate?: string;
+  updatedAt?: string;
 }

@@ -1,0 +1,31 @@
+{
+  "version": "1.0.0",
+  "timestamp": "2025-10-05T20:05:14.506406Z",
+  "processes": {
+    "interactive": {
+      "status": "stopped",
+      "pid": null,
+      "last_heartbeat": null
+    },
+    "headless": {
+      "status": "stopped",
+      "pid": null,
+      "last_heartbeat": null
+    },
+    "orchestrator": {
+      "status": "running",
+      "pid": 14344,
+      "last_heartbeat": "2025-10-05T20:05:12.530878Z"
+    }
+  },
+  "queues": {
+    "pending": [],
+    "in_progress": [],
+    "completed": [],
+    "failed": []
+  },
+  "conversation_history": [],
+  "test_results": [],
+  "code_diffs": [],
+  "errors": []
+}

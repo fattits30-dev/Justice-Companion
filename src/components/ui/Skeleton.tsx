@@ -1,3 +1,4 @@
+import React from 'react';
 import { cn } from '@/lib/utils';
 
 function Skeleton({
@@ -26,7 +27,7 @@ function SkeletonCard({ count = 1, className }: SkeletonCardProps): JSX.Element 
           className={cn(
             'bg-slate-900/50 border border-blue-800/30 rounded-lg p-5',
             'transition-opacity duration-300',
-            className
+            className,
           )}
           role="status"
           aria-label="Loading document card"
@@ -115,7 +116,7 @@ function SkeletonText({ lines = 3, className }: SkeletonTextProps): JSX.Element 
           key={index}
           className={cn(
             'h-4',
-            index === lines - 1 ? 'w-2/3' : 'w-full'
+            index === lines - 1 ? 'w-2/3' : 'w-full',
           )}
         />
       ))}

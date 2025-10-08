@@ -54,15 +54,15 @@ export interface AuditLogEntry {
   id: string;
   timestamp: string;
   eventType: AuditEventType;
-  userId?: string;
+  userId: string | null;
   resourceType: string;
   resourceId: string;
   action: 'create' | 'read' | 'update' | 'delete' | 'export' | 'decrypt';
-  details?: Record<string, unknown>;
-  ipAddress?: string;
-  userAgent?: string;
+  details: Record<string, unknown> | null;
+  ipAddress: string | null;
+  userAgent: string | null;
   success: boolean;
-  errorMessage?: string;
+  errorMessage: string | null;
   integrityHash: string;
   previousLogHash: string | null;
   createdAt: string;
@@ -90,6 +90,7 @@ export interface AuditQueryFilters {
   userId?: string;
   success?: boolean;
   limit?: number;
+  offset?: number;
 }
 
 export interface IntegrityReport {

@@ -23,20 +23,9 @@ export class TestDatabaseHelper {
     const schemaPath = path.join(__dirname, '../../src/db/migrations/001_initial_schema.sql');
     const schema = readFileSync(schemaPath, 'utf-8');
 
-    // Split by semicolon and execute each statement
-    const statements = schema
-      .split(';')
-      .map((s) => s.trim())
-      .filter((s) => s.length > 0 && !s.startsWith('--'));
-
-    for (const statement of statements) {
-      try {
-        this.db.exec(statement);
-      } catch (error) {
-        console.error('Failed to execute statement:', statement);
-        throw error;
-      }
-    }
+    // Execute the entire schema (db.exec can handle multiple statements)
+    // Note: We don't need to split by semicolons because exec() handles that
+    this.db.exec(schema);
 
     return this.db;
   }
@@ -88,7 +77,7 @@ export class TestDatabaseHelper {
     for (const table of tables) {
       try {
         this.db.prepare(`DELETE FROM ${table}`).run();
-      } catch (error) {
+      } catch (_error) {
         // Table might not exist yet, ignore
       }
     }

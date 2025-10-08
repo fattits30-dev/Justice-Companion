@@ -8,6 +8,7 @@ import type {
 } from '../models/ChatConversation';
 import type { UserProfile, UpdateUserProfileInput } from '../models/UserProfile';
 import type { Evidence, CreateEvidenceInput, UpdateEvidenceInput } from '../models/Evidence';
+import type { LegalContext } from './ai';
 
 /**
  * IPC Channel definitions for type-safe communication
@@ -100,9 +101,8 @@ export interface CaseGetByIdResponse {
   data: Case | null;
 }
 
-export interface CaseGetAllRequest {
-  // Future: add pagination, filtering
-}
+// No request parameters needed - handler takes no input
+export type CaseGetAllRequest = void;
 
 export interface CaseGetAllResponse {
   success: true;
@@ -136,9 +136,8 @@ export interface CaseCloseResponse {
   data: Case | null;
 }
 
-export interface CaseGetStatisticsRequest {
-  // Empty for now
-}
+// No request parameters needed - handler returns statistics
+export type CaseGetStatisticsRequest = void;
 
 export interface CaseGetStatisticsResponse {
   success: true;
@@ -213,9 +212,8 @@ export interface IPCErrorResponse {
 export type IPCResponse<T> = T | IPCErrorResponse;
 
 // AI IPC Request/Response types
-export interface AICheckStatusRequest {
-  // Empty - just checks connection
-}
+// No request parameters needed - handler checks AI service status
+export type AICheckStatusRequest = void;
 
 export interface AICheckStatusResponse {
   success: true;
@@ -227,7 +225,7 @@ export interface AICheckStatusResponse {
 
 export interface AIChatRequest {
   messages: Array<{ role: string; content: string }>;
-  context?: any; // LegalContext (avoiding circular import)
+  context?: LegalContext;
   caseId?: number;
 }
 
@@ -244,7 +242,7 @@ export interface AIChatResponse {
 
 export interface AIStreamStartRequest {
   messages: Array<{ role: string; content: string }>;
-  context?: any; // LegalContext
+  context?: LegalContext;
   caseId?: number;
 }
 
@@ -275,18 +273,16 @@ export interface DownloadProgress {
   error?: string;
 }
 
-export interface ModelGetAvailableRequest {
-  // Empty - just returns catalog
-}
+// No request parameters needed - handler returns available models
+export type ModelGetAvailableRequest = void;
 
 export interface ModelGetAvailableResponse {
   success: true;
   models: ModelInfo[];
 }
 
-export interface ModelGetDownloadedRequest {
-  // Empty - returns downloaded models
-}
+// No request parameters needed - handler returns downloaded models
+export type ModelGetDownloadedRequest = void;
 
 export interface ModelGetDownloadedResponse {
   success: true;
@@ -447,9 +443,8 @@ export interface MessageAddResponse {
 }
 
 // User Profile IPC Request/Response types
-export interface ProfileGetRequest {
-  // Empty
-}
+// No request parameters needed - handler returns current user's profile
+export type ProfileGetRequest = void;
 
 export interface ProfileGetResponse {
   success: true;
@@ -466,9 +461,8 @@ export interface ProfileUpdateResponse {
 }
 
 // GDPR IPC Request/Response types
-export interface GDPRExportUserDataRequest {
-  // Empty - exports all user data
-}
+// No request parameters needed - handler exports all user data
+export type GDPRExportUserDataRequest = void;
 
 export interface GDPRExportUserDataResponse {
   success: true;

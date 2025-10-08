@@ -1,0 +1,84 @@
+# Documentation
+*.md
+*.txt
+docs/
+*.pdf
+
+# Config files
+.env
+.env.*
+*.config.js
+*.config.ts
+tsconfig.json
+vite.config.ts
+vitest.config.ts
+package-lock.json
+package.json
+
+# Build outputs
+dist/
+dist-electron/
+release/
+build/
+*.tsbuildinfo
+
+# Dependencies
+node_modules/
+.pnp/
+.pnp.js
+
+# Testing
+coverage/
+.nyc_output/
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Archives
+*.zip
+*.tar
+*.gz
+*.rar
+
+# Python
+*.py
+*.pyc
+__pycache__/
+.pytest_cache/
+*.py[cod]
+
+# Git
+.git/
+.gitignore
+
+# Backups
+*.backup
+*.bak
+*.old
+
+# Temporary files
+*.tmp
+*.temp
+.tmp/
+
+# Automation state
+automation/state/
+automation/logs/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+backups/
+
+# Lock files
+*.lock

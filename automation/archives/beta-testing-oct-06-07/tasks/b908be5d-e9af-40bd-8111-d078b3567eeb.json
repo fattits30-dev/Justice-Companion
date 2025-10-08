@@ -1,0 +1,20 @@
+{
+  "id": "b908be5d-e9af-40bd-8111-d078b3567eeb",
+  "type": "test_failure",
+  "status": "pending",
+  "created_at": "2025-10-06T22:40:18.590085+00:00",
+  "created_by": "test_runner",
+  "files": [
+    "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\NotesService.ts"
+  ],
+  "test_result": {
+    "passed": false,
+    "returncode": 143,
+    "stdout": "\n> justice-companion@1.0.0 test\n> vitest --run\n\n\n\u001b[1m\u001b[7m\u001b[36m RUN \u001b[39m\u001b[27m\u001b[22m \u001b[36mv2.1.9 \u001b[39m\u001b[90mC:/Users/sava6/Desktop/Justice Companion\u001b[39m\n\n",
+    "stderr": "\u001b[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.\u001b[39m\n",
+    "timestamp": "2025-10-06T22:40:13.935918Z",
+    "duration": 4.654093,
+    "test_path": null
+  },
+  "description": "Fix test failures in C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\NotesService.ts"
+}

@@ -1,6 +1,6 @@
 {
   "description": "Claude Code Security Hooks - Justice Companion",
-  "inputPrefix": "# 🔥 JUSTICE COMPANION: TACTICAL EXECUTION PROTOCOL\n**Version**: 1.0 COMBAT-READY  \n**Status**: MANDATORY FOR ALL OPERATIONS\n\n## MISSION CRITICAL: EXECUTION FRAMEWORK\n\nEvery single operation on Justice Companion follows this protocol. No exceptions. No shortcuts. Lives depend on this code.\n\n### PHASE 0: RECONNAISSANCE & MEMORY CHECK\n```\nBEFORE touching ANY code:\n1. Query Memory MCP for existing context\n2. Check Sequential-Thinking for previous analysis\n3. Review Filesystem for current state\n4. Understand the battlefield COMPLETELY\n```\n\n### PHASE 1: STRATEGIC PLANNING\n```\nUse Sequential-Thinking MCP to:\n- Break down the mission into discrete phases\n- Identify dependencies and risk points\n- Estimate complexity (simple/medium/complex)\n- Map MCP tools to each phase\n- Create parallel execution opportunities\n\nOUTPUT: Battle plan with clear phases, tools, and success criteria\n```\n\n### PHASE 2: PLAN VERIFICATION\n```\nBefore execution, verify:\n✓ Security implications identified\n✓ TypeScript types defined\n✓ Audit logging included\n✓ Error handling planned\n✓ Test strategy defined\n✓ No conflicts with existing code\n✓ Legal compliance maintained\n\nIF verification fails → REVISE PLAN\nIF verification passes → PROCEED TO EXECUTION\n```\n\n### PHASE 3: PHASED EXECUTION\n\n**For SIMPLE tasks (1-2 files, <200 lines):**\n- Execute directly\n- Single-phase completion\n- Immediate verification\n\n**For MEDIUM tasks (3-5 files, 200-800 lines):**\n```\nPhase 3.1: Core implementation\nPhase 3.2: Integration & wiring\nPhase 3.3: Testing & validation\n```\n\n**For COMPLEX tasks (6+ files, 800+ lines, multiple systems):**\n```\nPhase 3.1: Foundation (types, interfaces, domain models)\nPhase 3.2: Infrastructure (repos, services, utilities)\nPhase 3.3: Business logic (core features)\nPhase 3.4: Integration (IPC, MCP, UI)\nPhase 3.5: Security & compliance\nPhase 3.6: Testing & documentation\n\nPARALLEL EXECUTION where possible:\n- Agent 1: Backend implementation\n- Agent 2: Frontend components\n- Agent 3: Test suite\n- Agent 4: Documentation\n```\n\n### PHASE 4: CONTINUOUS VERIFICATION\n\n**After EACH phase:**\n```typescript\n1. Type check: `npm run type-check`\n2. Lint: `npm run lint`\n3. Unit tests: `npm test`\n4. Security scan: Check for vulnerabilities\n5. Code review: Context7 MCP analysis\n6. Integration test: Playwright/Puppeteer if UI involved\n```\n\n**Verification checklist:**\n- [ ] TypeScript compiles without errors\n- [ ] All tests passing\n- [ ] Security audit clean\n- [ ] Audit logging present\n- [ ] Error handling comprehensive\n- [ ] Types fully defined (no `any`)\n- [ ] Documentation updated\n\n**IF VERIFICATION FAILS:**\n```\nDO NOT PROCEED. \n1. Use Sequential-Thinking to diagnose issue\n2. Use Context7 to identify best practices violated\n3. Fix immediately\n4. Re-verify\n5. Only proceed when GREEN across all checks\n```\n\n**IF VERIFICATION PASSES:**\n```\nCOMMIT & PROCEED:\n1. Store context in Memory MCP\n2. Commit to GitHub MCP with detailed message\n3. Update audit logs\n4. Proceed to next phase\n```\n\n### PHASE 5: FINAL INTEGRATION & HANDOFF\n\n```\n1. Full integration test\n2. E2E testing with Playwright\n3. Performance check\n4. Security final scan\n5. Documentation complete\n6. Memory MCP updated with lessons learned\n7. GitHub commit with comprehensive summary\n```\n\n---\n\n## 🎯 MCP TOOL USAGE MATRIX\n\n**Sequential-Thinking**: Complex analysis, multi-step reasoning, plan verification  \n**Memory**: Store case context, retain lessons, track patterns  \n**Filesystem**: Read/write code, configs, documents  \n**GitHub**: Version control, collaboration, backup  \n**Context7**: Code quality, best practices, improvements  \n**Playwright/Puppeteer**: UI testing, form validation, automation  \n**SQLite**: Database operations (when setup complete)\n\n---\n\n## ⚔️ PARALLEL EXECUTION PROTOCOL\n\n**When task complexity > MEDIUM:**\n\n```\nSpawn parallel agents:\n\nAGENT ALPHA (Backend):\n- Domain models\n- Services\n- Repositories\n- Security layer\n\nAGENT BRAVO (Frontend):\n- React components\n- UI state management\n- Form validation\n- Accessibility\n\nAGENT CHARLIE (Integration):\n- IPC handlers\n- MCP wiring\n- API connections\n- Error boundaries\n\nAGENT DELTA (Quality):\n- Test suite\n- Documentation\n- Security audit\n- Performance profiling\n\nSYNC POINTS every 2-3 phases for integration checks\n```\n\n---\n\n## 🚨 NON-NEGOTIABLES\n\n1. **ALWAYS** use TypeScript strict mode\n2. **ALWAYS** audit log legal operations\n3. **ALWAYS** encrypt sensitive data\n4. **ALWAYS** handle errors gracefully\n5. **ALWAYS** verify before proceeding\n6. **NEVER** skip security checks\n7. **NEVER** commit sensitive data\n8. **NEVER** use `any` without justification\n\n---\n\n## 💪 EXECUTION MANTRA\n\n> \"Plan like you're defusing a bomb.  \n> Execute like you're on the battlefield.  \n> Verify like lives depend on it.  \n> Because they fucking do.\"\n\nEvery feature, every fix, every line of code could be the difference between justice served and justice denied. Build with that weight on your shoulders.\n\n---\n\n**USER REQUEST:**\n",
+"inputPrefix": "# Justice Companion Development Protocol\n\n## Core Expectations\n- Respect the safeguarded paths listed in `rules.protectedPaths`.\n- Keep work focused: plan briefly, then implement and verify.\n- Default to deterministic tooling; call AI tools only when automation or static analysis cannot complete the task.\n\n## Guarded Workflow\nWhenever you modify application code:\n1. Run the lightweight guard pipeline: `npm run guard` (continuous) or `npm run guard:once` (single pass).\n2. Confirm TypeScript, ESLint, and `npm test -- --run` all succeed before shipping changes.\n3. Capture the commands you executed and their outcomes in your handoff notes.\n\n## Planning Checklist\nBefore editing:\n- Review related files and recent changes in the same module.\n- Identify data flow, error handling, and security touch points.\n- Note required updates to docs, configuration, and tests.\n\n## Implementation Checklist\n- Preserve TypeScript strictness (no `any`, `unknown` only with justification).\n- Keep functions small and observable with clear logging where appropriate.\n- Prefer existing utilities/hooks/services before introducing new abstractions.\n- Ensure new configuration toggles default to safe, off, or backward-compatible values.\n\n## Verification Checklist\n- Type check, lint, and test via the guard pipeline.\n- For UI work, exercise critical flows manually or via Playwright where feasible.\n- For database changes, run migrations in a fresh environment and document rollback steps.\n- Update documentation (`AGENTS.md`, `docs/`, README files) when behavior or setup changes.\n\n## Collaboration Notes\n- Summaries must include: scope, commands run, outstanding risks, next steps.\n- If a task spans multiple agents, clearly state ownership and dependencies.\n- Escalate blocking issues with precise error output and the command that triggered them.\n\n**USER REQUEST:**\n",
   "rules": {
     "protectedPaths": [
       "legal-docs/",
@@ -16,7 +16,7 @@
       "secrets/"
     ],
     "autoFormat": true,
-    "requireTests": false,
+    "requireTests": true,
     "securityFirst": true
   },
   "hooks": {
@@ -54,6 +54,20 @@
         "tabWidth": 2,
         "trailingComma": "es5"
       }
+    },
+    "json": {
+      "enabled": true,
+      "tool": "prettier",
+      "options": {
+        "tabWidth": 2
+      }
+    },
+    "markdown": {
+      "enabled": true,
+      "tool": "prettier",
+      "options": {
+        "proseWrap": "always"
+      }
     }
   },
   "security": {
@@ -79,16 +93,16 @@
   },
   "reminders": {
     "beforeEdit": [
-      "Ensure changes follow TypeScript strict mode",
-      "Validate input on all boundaries",
-      "Add tests for new functionality",
-      "Never log sensitive data"
+      "Confirm TypeScript strictness plan (no untyped values)",
+      "Note which guard steps (type-check/lint/tests) must pass",
+      "Identify required documentation or config updates",
+      "Review sensitive-data handling for the affected feature"
     ],
     "beforeCommit": [
-      "Run tests: npm test",
-      "Run linter: npm run lint",
-      "Check for console.log statements",
-      "Verify no secrets in code"
+      "Run `npm run guard:once` and confirm all stages pass",
+      "Verify there are no stray console/log statements or TODOs",
+      "Ensure documentation and configuration changes are included",
+      "Double-check that no secrets or tokens are present"
     ]
   }
 }

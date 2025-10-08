@@ -468,7 +468,7 @@ export function TimelineView({ caseId }: TimelineViewProps) {
                           <button
                             onClick={() => {
                               if (window.confirm('Delete this event?')) {
-                                deleteTimelineEvent(event.id);
+                                void deleteTimelineEvent(event.id);
                               }
                             }}
                             style={{

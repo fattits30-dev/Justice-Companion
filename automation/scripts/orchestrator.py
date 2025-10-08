@@ -18,11 +18,25 @@ from typing import Dict, Optional, List
 from uuid import uuid4
 
 from state_manager import StateManager
-from file_watcher import FileWatcher
+from file_watcher import FileWatcher, should_ignore_file, load_orchestrator_ignore
 from auto_fixer import AutoFixer
 from error_escalator import ErrorEscalator
 from claude_instance import ClaudeInstance
 from test_runner import TestRunner
+
+
+def safe_print(message: str) -> None:
+    """
+    Print message safely, handling Unicode encoding errors on Windows.
+
+    Replaces unencodable characters with '?' to avoid UnicodeEncodeError.
+    """
+    try:
+        print(message)
+    except UnicodeEncodeError:
+        # Encode to ASCII, replacing unencodable characters with '?'
+        safe_message = message.encode('ascii', errors='replace').decode('ascii')
+        print(safe_message)
 
 
 class Orchestrator:
@@ -53,6 +67,26 @@ class Orchestrator:
         self.heartbeat_interval = 30  # seconds
         self.health_check_interval = 300  # 5 minutes
 
+        # File watching configuration
+        self.watch_extensions = config.get('WATCH_EXTENSIONS', '').split(',')
+        self.watch_extensions = [ext.strip() for ext in self.watch_extensions if ext.strip()]
+
+        self.ignore_patterns = config.get('IGNORE_PATTERNS', '').split(',')
+        self.ignore_patterns = [p.strip() for p in self.ignore_patterns if p.strip()]
+
+        # Load .orchestratorignore patterns
+        self.ignore_patterns.extend(load_orchestrator_ignore())
+
+        # Batch processing configuration
+        self.max_batch_size = int(config.get('MAX_BATCH_SIZE', 10))
+
+        # Auto-fix file type filtering
+        self.auto_fix_file_types = config.get('AUTO_FIX_FILE_TYPES', '').split(',')
+        self.auto_fix_file_types = [ft.strip() for ft in self.auto_fix_file_types if ft.strip()]
+
+        self.auto_fix_exclude = config.get('AUTO_FIX_EXCLUDE', '').split(',')
+        self.auto_fix_exclude = [ex.strip() for ex in self.auto_fix_exclude if ex.strip()]
+
         # State management
         state_file = Path(config.get('STATE_FILE', 'automation/state/app_state.json'))
         lock_file = Path(config.get('LOCK_FILE', 'automation/state/app_state.lock'))
@@ -81,7 +115,21 @@ class Orchestrator:
 
         # File watcher (initialized in start())
         self.file_watcher: Optional[FileWatcher] = None
-        self.watch_paths = config.get('WATCH_PATHS', [str(self.project_root)])
+
+        # Parse WATCH_PATHS (can be string or list)
+        watch_paths_config = config.get('WATCH_PATHS', str(self.project_root))
+        if isinstance(watch_paths_config, str):
+            # Convert comma-separated string to list of absolute paths
+            watch_paths_list = [p.strip() for p in watch_paths_config.split(',') if p.strip()]
+            self.watch_paths = []
+            for p in watch_paths_list:
+                path = Path(p)
+                if not path.is_absolute():
+                    # Relative to project root
+                    path = self.project_root / path
+                self.watch_paths.append(str(path))
+        else:
+            self.watch_paths = watch_paths_config
 
         # Runtime state
         self._running = False
@@ -111,7 +159,7 @@ class Orchestrator:
             if self._running:
                 raise RuntimeError("Orchestrator is already running")
 
-            print("[Orchestrator] Starting Dual Claude Orchestration System...")
+            safe_print("[Orchestrator] Starting Dual Claude Orchestration System...")
 
             # Register signal handlers
             signal.signal(signal.SIGTERM, self._signal_handler)
@@ -124,7 +172,7 @@ class Orchestrator:
             self.stats['uptime_start'] = datetime.now(timezone.utc)
 
             # Start file watcher
-            print("[Orchestrator] Starting FileWatcher...")
+            safe_print("[Orchestrator] Starting FileWatcher...")
             self.file_watcher = FileWatcher(
                 paths_to_watch=self.watch_paths,
                 debounce_seconds=float(
@@ -135,7 +183,7 @@ class Orchestrator:
             self.file_watcher.start()
 
             # Start event loop thread
-            print("[Orchestrator] Starting event loop...")
+            safe_print("[Orchestrator] Starting event loop...")
             self._running = True
             self._event_loop_thread = threading.Thread(
                 target=self._event_loop,
@@ -145,7 +193,7 @@ class Orchestrator:
             self._event_loop_thread.start()
 
             # Start heartbeat thread
-            print("[Orchestrator] Starting heartbeat...")
+            safe_print("[Orchestrator] Starting heartbeat...")
             self._heartbeat_thread = threading.Thread(
                 target=self._heartbeat_loop,
                 daemon=True,
@@ -154,7 +202,7 @@ class Orchestrator:
             self._heartbeat_thread.start()
 
             # Start health check thread
-            print("[Orchestrator] Starting health checks...")
+            safe_print("[Orchestrator] Starting health checks...")
             self._health_check_thread = threading.Thread(
                 target=self._health_check_loop,
                 daemon=True,
@@ -162,9 +210,9 @@ class Orchestrator:
             )
             self._health_check_thread.start()
 
-            print("[Orchestrator] ✓ All systems operational")
-            print(f"[Orchestrator] Watching: {', '.join(self.watch_paths)}")
-            print(f"[Orchestrator] Auto-fix: {'enabled' if self.auto_fix_enabled else 'disabled'}")
+            safe_print("[Orchestrator] [OK] All systems operational")
+            safe_print(f"[Orchestrator] Watching: {', '.join(self.watch_paths)}")
+            safe_print(f"[Orchestrator] Auto-fix: {'enabled' if self.auto_fix_enabled else 'disabled'}")
 
     def stop(self) -> None:
         """
@@ -172,22 +220,22 @@ class Orchestrator:
 
         Waits for current task to complete and saves state.
         """
-        print("\n[Orchestrator] Initiating graceful shutdown...")
+        safe_print("\n[Orchestrator] Initiating graceful shutdown...")
 
         with self._lock:
             if not self._running:
-                print("[Orchestrator] Not running, nothing to stop")
+                safe_print("[Orchestrator] Not running, nothing to stop")
                 return
 
             self._shutdown_requested = True
 
         # Stop file watcher first (no new tasks)
         if self.file_watcher:
-            print("[Orchestrator] Stopping FileWatcher...")
+            safe_print("[Orchestrator] Stopping FileWatcher...")
             self.file_watcher.stop()
 
         # Wait for event loop to finish current task
-        print("[Orchestrator] Waiting for event loop to finish...")
+        safe_print("[Orchestrator] Waiting for event loop to finish...")
         if self._event_loop_thread:
             self._event_loop_thread.join(timeout=30.0)
 
@@ -200,13 +248,13 @@ class Orchestrator:
         # Print final statistics
         self._print_statistics()
 
-        print("[Orchestrator] ✓ Shutdown complete")
+        safe_print("[Orchestrator] [OK] Shutdown complete")
 
     def process_file_change(self, event_data: Dict) -> None:
         """
         Handle file change event from FileWatcher.
 
-        Creates a task and adds it to pending queue.
+        Creates tasks for changed files after filtering and batching.
 
         Args:
             event_data: Event data from FileWatcher with 'files' and 'timestamp'
@@ -217,10 +265,58 @@ class Orchestrator:
         if not files:
             return
 
-        print(f"\n[Orchestrator] File change detected: {len(files)} file(s)")
+        safe_print(f"\n[Orchestrator] File change detected: {len(files)} file(s)")
 
-        # Create task for each changed file
+        # Step 1: Filter files by ignore patterns
+        filtered_files = []
         for file_path in files:
+            if should_ignore_file(file_path, self.ignore_patterns):
+                safe_print(f"[Orchestrator] Ignoring file: {Path(file_path).name}")
+                continue
+            filtered_files.append(file_path)
+
+        # Step 2: Filter by extension (if configured)
+        if self.watch_extensions:
+            extension_filtered = []
+            for file_path in filtered_files:
+                file_ext = Path(file_path).suffix
+                if file_ext in self.watch_extensions:
+                    extension_filtered.append(file_path)
+                else:
+                    safe_print(f"[Orchestrator] Skipping {Path(file_path).name} (extension {file_ext} not watched)")
+            filtered_files = extension_filtered
+
+        if not filtered_files:
+            safe_print("[Orchestrator] No relevant files after filtering")
+            return
+
+        safe_print(f"[Orchestrator] Processing {len(filtered_files)} file(s) after filtering")
+
+        # Step 3: Batch processing (max MAX_BATCH_SIZE files at a time)
+        if len(filtered_files) > self.max_batch_size:
+            safe_print(f"[Orchestrator] Batching: Processing first {self.max_batch_size} files, "
+                      f"queueing {len(filtered_files) - self.max_batch_size} for later")
+            batch = filtered_files[:self.max_batch_size]
+            # TODO: Queue remaining files for later processing
+        else:
+            batch = filtered_files
+
+        # Step 4: Create tasks for batched files
+        for file_path in batch:
+            # Check if file should be auto-fixed (if auto-fix is enabled)
+            should_auto_fix = self.auto_fix_enabled
+            if should_auto_fix and self.auto_fix_file_types:
+                file_ext = Path(file_path).suffix
+                if file_ext not in self.auto_fix_file_types:
+                    should_auto_fix = False
+                    safe_print(f"[Orchestrator] Auto-fix disabled for {Path(file_path).name} (type: {file_ext})")
+
+            # Check auto-fix exclusions
+            if should_auto_fix and self.auto_fix_exclude:
+                if should_ignore_file(file_path, self.auto_fix_exclude):
+                    should_auto_fix = False
+                    safe_print(f"[Orchestrator] Auto-fix excluded for {Path(file_path).name}")
+
             task = {
                 'id': f"task_{uuid4().hex[:8]}",
                 'type': 'file_change',
@@ -228,7 +324,8 @@ class Orchestrator:
                 'description': f"Process changes in {Path(file_path).name}",
                 'created_at': timestamp,
                 'status': 'pending',
-                'retry_count': 0
+                'retry_count': 0,
+                'auto_fix': should_auto_fix
             }
 
             # Add to pending queue
@@ -251,14 +348,16 @@ class Orchestrator:
                     'timestamp': timestamp,
                     'type': 'task_created',
                     'task_id': task['id'],
-                    'file_path': file_path
+                    'file_path': file_path,
+                    'auto_fix': should_auto_fix
                 })
 
                 return state
 
             self.state_manager.update(add_to_pending)
 
-            print(f"[Orchestrator] Created task {task['id']} for {file_path}")
+            fix_status = "with auto-fix" if should_auto_fix else "without auto-fix"
+            safe_print(f"[Orchestrator] Created task {task['id']} for {Path(file_path).name} ({fix_status})")
 
     def _event_loop(self) -> None:
         """
@@ -266,7 +365,7 @@ class Orchestrator:
 
         Runs continuously until shutdown is requested.
         """
-        print("[Orchestrator] Event loop started")
+        safe_print("[Orchestrator] Event loop started")
 
         while not self._shutdown_requested:
             try:
@@ -281,12 +380,12 @@ class Orchestrator:
                     time.sleep(1)
 
             except Exception as e:
-                print(f"[Orchestrator] Error in event loop: {e}")
+                safe_print(f"[Orchestrator] Error in event loop: {e}")
                 import traceback
                 traceback.print_exc()
                 time.sleep(5)  # Back off on error
 
-        print("[Orchestrator] Event loop stopped")
+        safe_print("[Orchestrator] Event loop stopped")
 
     def _get_next_pending_task(self) -> Optional[Dict]:
         """
@@ -340,47 +439,50 @@ class Orchestrator:
         task_id = task['id']
         file_path = task['file_path']
 
-        print(f"\n[Orchestrator] Processing task {task_id}")
-        print(f"[Orchestrator] File: {file_path}")
+        safe_print(f"\n[Orchestrator] Processing task {task_id}")
+        safe_print(f"[Orchestrator] File: {file_path}")
 
         self.stats['tasks_processed'] += 1
 
         try:
+            # Check if this task should be auto-fixed
+            should_auto_fix = task.get('auto_fix', self.auto_fix_enabled)
+
             # Step 1: Get strategy from interactive Claude
-            if self.auto_fix_enabled:
-                print("[Orchestrator] Step 1: Getting fix strategy from Interactive Claude...")
+            if should_auto_fix:
+                safe_print("[Orchestrator] Step 1: Getting fix strategy from Interactive Claude...")
                 plan = self._get_interactive_plan(task)
 
                 # Step 2: Execute fix with headless Claude
-                print("[Orchestrator] Step 2: Executing fix with Headless Claude...")
+                safe_print("[Orchestrator] Step 2: Executing fix with Headless Claude...")
                 fix_result = self._execute_headless_fix(plan, task)
 
                 # Step 3: Verify fix with tests
-                print("[Orchestrator] Step 3: Verifying fix...")
+                safe_print("[Orchestrator] Step 3: Verifying fix...")
                 if fix_result.success:
                     verified = self._verify_fix(task)
 
                     if verified:
                         # Success!
-                        print(f"[Orchestrator] ✓ Task {task_id} completed successfully")
+                        safe_print(f"[Orchestrator] [OK] Task {task_id} completed successfully")
                         self._mark_task_completed(task)
                         self.stats['tasks_succeeded'] += 1
                     else:
                         # Tests failed after fix
-                        print(f"[Orchestrator] ✗ Fix verification failed for {task_id}")
+                        safe_print(f"[Orchestrator] [X] Fix verification failed for {task_id}")
                         self._handle_fix_failure(task, fix_result)
                 else:
                     # Fix failed
-                    print(f"[Orchestrator] ✗ Fix failed for {task_id}")
+                    safe_print(f"[Orchestrator] [X] Fix failed for {task_id}")
                     self._handle_fix_failure(task, fix_result)
             else:
-                # Auto-fix disabled, just log and complete
-                print("[Orchestrator] Auto-fix disabled, marking as completed")
+                # Auto-fix disabled for this task, just log and complete
+                safe_print("[Orchestrator] Auto-fix disabled for this task, marking as completed")
                 self._mark_task_completed(task)
                 self.stats['tasks_succeeded'] += 1
 
         except Exception as e:
-            print(f"[Orchestrator] ✗ Exception processing task {task_id}: {e}")
+            safe_print(f"[Orchestrator] [X] Exception processing task {task_id}: {e}")
             import traceback
             traceback.print_exc()
 
@@ -424,7 +526,7 @@ Keep it concise and actionable."""
             }
 
         except Exception as e:
-            print(f"[Orchestrator] Warning: Interactive Claude error: {e}")
+            safe_print(f"[Orchestrator] Warning: Interactive Claude error: {e}")
             # Return basic fallback plan
             return {
                 'strategy': f"Run tests for {file_path} and fix any failures",
@@ -466,7 +568,7 @@ Keep it concise and actionable."""
         """
         test_path = self._determine_test_path(task)
 
-        print(f"[Orchestrator] Running tests: {test_path or 'all tests'}")
+        safe_print(f"[Orchestrator] Running tests: {test_path or 'all tests'}")
 
         test_result = self.test_runner.run_tests(test_path=test_path)
 
@@ -509,11 +611,11 @@ Keep it concise and actionable."""
 
         # Check if we should escalate
         if len(fix_attempts) >= self.max_retries:
-            print(f"[Orchestrator] Max retries reached, escalating {task_id}")
+            safe_print(f"[Orchestrator] Max retries reached, escalating {task_id}")
 
             escalation_result = self.error_escalator.escalate(task, fix_attempts)
 
-            print(f"[Orchestrator] Escalation: Level {escalation_result.level}, "
+            safe_print(f"[Orchestrator] Escalation: Level {escalation_result.level}, "
                   f"Action: {escalation_result.action_taken}")
 
             self.stats['tasks_escalated'] += 1
@@ -660,21 +762,21 @@ Keep it concise and actionable."""
         try:
             self.state_manager.update(update)
         except Exception as e:
-            print(f"[Orchestrator] Warning: Heartbeat update failed: {e}")
+            safe_print(f"[Orchestrator] Warning: Heartbeat update failed: {e}")
 
     def _heartbeat_loop(self) -> None:
         """Heartbeat loop running in background thread."""
-        print("[Orchestrator] Heartbeat loop started")
+        safe_print("[Orchestrator] Heartbeat loop started")
 
         while not self._shutdown_requested:
             self._update_heartbeat()
             time.sleep(self.heartbeat_interval)
 
-        print("[Orchestrator] Heartbeat loop stopped")
+        safe_print("[Orchestrator] Heartbeat loop stopped")
 
     def _health_check(self) -> None:
         """Perform health check on system components."""
-        print("\n[Orchestrator] Running health check...")
+        safe_print("\n[Orchestrator] Running health check...")
 
         checks = {
             'state_manager': False,
@@ -688,20 +790,20 @@ Keep it concise and actionable."""
             state = self.state_manager.read()
             checks['state_manager'] = 'queues' in state
         except Exception as e:
-            print(f"[Orchestrator] ✗ State manager check failed: {e}")
+            safe_print(f"[Orchestrator] [X] State manager check failed: {e}")
 
         # Check file watcher
         try:
             if self.file_watcher:
                 checks['file_watcher'] = self.file_watcher.is_running()
         except Exception as e:
-            print(f"[Orchestrator] ✗ File watcher check failed: {e}")
+            safe_print(f"[Orchestrator] [X] File watcher check failed: {e}")
 
         # Check test runner
         try:
             checks['test_runner'] = (self.project_root / 'package.json').exists()
         except Exception as e:
-            print(f"[Orchestrator] ✗ Test runner check failed: {e}")
+            safe_print(f"[Orchestrator] [X] Test runner check failed: {e}")
 
         # Check Claude instances
         try:
@@ -710,27 +812,27 @@ Keep it concise and actionable."""
                 self.claude_headless is not None
             )
         except Exception as e:
-            print(f"[Orchestrator] ✗ Claude instances check failed: {e}")
+            safe_print(f"[Orchestrator] [X] Claude instances check failed: {e}")
 
         # Print results
         all_healthy = all(checks.values())
-        status = "✓ HEALTHY" if all_healthy else "✗ DEGRADED"
+        status = "[OK] HEALTHY" if all_healthy else "[X] DEGRADED"
 
-        print(f"[Orchestrator] Health check: {status}")
+        safe_print(f"[Orchestrator] Health check: {status}")
         for component, healthy in checks.items():
-            symbol = "✓" if healthy else "✗"
-            print(f"[Orchestrator]   {symbol} {component}")
+            symbol = "[OK]" if healthy else "[X]"
+            safe_print(f"[Orchestrator]   {symbol} {component}")
 
     def _health_check_loop(self) -> None:
         """Health check loop running in background thread."""
-        print("[Orchestrator] Health check loop started")
+        safe_print("[Orchestrator] Health check loop started")
 
         while not self._shutdown_requested:
             time.sleep(self.health_check_interval)
             if not self._shutdown_requested:
                 self._health_check()
 
-        print("[Orchestrator] Health check loop stopped")
+        safe_print("[Orchestrator] Health check loop stopped")
 
     def _update_orchestrator_status(self, status: str) -> None:
         """
@@ -764,7 +866,7 @@ Keep it concise and actionable."""
             frame: Current stack frame
         """
         signal_name = signal.Signals(signum).name
-        print(f"\n[Orchestrator] Received {signal_name}, initiating shutdown...")
+        safe_print(f"\n[Orchestrator] Received {signal_name}, initiating shutdown...")
 
         self.stop()
         sys.exit(0)
@@ -775,27 +877,32 @@ Keep it concise and actionable."""
         if self.stats['uptime_start']:
             uptime = datetime.now(timezone.utc) - self.stats['uptime_start']
 
-        print("\n[Orchestrator] Session Statistics:")
-        print(f"  Uptime: {uptime or 'N/A'}")
-        print(f"  Tasks processed: {self.stats['tasks_processed']}")
-        print(f"  Tasks succeeded: {self.stats['tasks_succeeded']}")
-        print(f"  Tasks failed: {self.stats['tasks_failed']}")
-        print(f"  Tasks escalated: {self.stats['tasks_escalated']}")
+        safe_print("\n[Orchestrator] Session Statistics:")
+        safe_print(f"  Uptime: {uptime or 'N/A'}")
+        safe_print(f"  Tasks processed: {self.stats['tasks_processed']}")
+        safe_print(f"  Tasks succeeded: {self.stats['tasks_succeeded']}")
+        safe_print(f"  Tasks failed: {self.stats['tasks_failed']}")
+        safe_print(f"  Tasks escalated: {self.stats['tasks_escalated']}")
 
         if self.stats['tasks_processed'] > 0:
             success_rate = (self.stats['tasks_succeeded'] / self.stats['tasks_processed']) * 100
-            print(f"  Success rate: {success_rate:.1f}%")
+            safe_print(f"  Success rate: {success_rate:.1f}%")
 
 
 # Main entry point
 if __name__ == '__main__':
+    safe_print("[DEBUG] Starting main()")
     from dotenv import load_dotenv
+    safe_print("[DEBUG] Imported dotenv")
 
     # Load environment
     env_path = Path(__file__).parent.parent / '.env'
+    safe_print(f"[DEBUG] Loading env from: {env_path}")
     load_dotenv(env_path)
+    safe_print("[DEBUG] Loaded .env")
 
     # Build configuration
+    safe_print("[DEBUG] Building config")
     config = {
         'ANTHROPIC_API_KEY': os.getenv('ANTHROPIC_API_KEY'),
         'PROJECT_ROOT': os.getenv('PROJECT_ROOT', str(Path.cwd())),
@@ -803,23 +910,27 @@ if __name__ == '__main__':
         'LOCK_FILE': os.getenv('LOCK_FILE', 'automation/state/app_state.lock'),
         'MAX_RETRIES': os.getenv('MAX_RETRIES', '5'),
         'AUTO_FIX_ENABLED': os.getenv('AUTO_FIX_ENABLED', 'true'),
-        'FILE_WATCH_DEBOUNCE_SECONDS': os.getenv('FILE_WATCH_DEBOUNCE_SECONDS', '2'),
+        'FILE_WATCH_DEBOUNCE_SECONDS': os.getenv('FILE_WATCH_DEBOUNCE_SECONDS', '5.0'),
         'GITHUB_TOKEN': os.getenv('GITHUB_TOKEN'),
-        'WATCH_PATHS': [
-            os.getenv('PROJECT_ROOT', str(Path.cwd()))
-        ]
+        'WATCH_PATHS': os.getenv('WATCH_PATHS', str(Path.cwd())),
+        'WATCH_EXTENSIONS': os.getenv('WATCH_EXTENSIONS', ''),
+        'IGNORE_PATTERNS': os.getenv('IGNORE_PATTERNS', ''),
+        'BATCH_WINDOW_SECONDS': os.getenv('BATCH_WINDOW_SECONDS', '10.0'),
+        'MAX_BATCH_SIZE': os.getenv('MAX_BATCH_SIZE', '10'),
+        'AUTO_FIX_FILE_TYPES': os.getenv('AUTO_FIX_FILE_TYPES', ''),
+        'AUTO_FIX_EXCLUDE': os.getenv('AUTO_FIX_EXCLUDE', '')
     }
 
     # Validate required config
     if not config['ANTHROPIC_API_KEY']:
-        print("Error: ANTHROPIC_API_KEY not set in environment")
+        safe_print("Error: ANTHROPIC_API_KEY not set in environment")
         sys.exit(1)
 
     # Create and start orchestrator
-    print("=" * 60)
-    print("Dual Claude Code Orchestration System")
-    print("Justice Companion Automation Framework")
-    print("=" * 60)
+    safe_print("=" * 60)
+    safe_print("Dual Claude Code Orchestration System")
+    safe_print("Justice Companion Automation Framework")
+    safe_print("=" * 60)
 
     orchestrator = Orchestrator(config)
 
@@ -831,10 +942,10 @@ if __name__ == '__main__':
             time.sleep(1)
 
     except KeyboardInterrupt:
-        print("\n[Main] Keyboard interrupt received")
+        safe_print("\n[Main] Keyboard interrupt received")
         orchestrator.stop()
     except Exception as e:
-        print(f"\n[Main] Fatal error: {e}")
+        safe_print(f"\n[Main] Fatal error: {e}")
         import traceback
         traceback.print_exc()
         orchestrator.stop()

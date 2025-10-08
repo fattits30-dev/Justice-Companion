@@ -81,7 +81,11 @@ export function runMigrations(): void {
     const appliedMigrations = db
       .prepare('SELECT name, checksum FROM migrations WHERE status = ?')
       .all('applied')
-      .map((row: any) => ({ name: row.name, checksum: row.checksum }));
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .map((row: any) => ({
+        name: row.name as string,
+        checksum: row.checksum as string
+      }));
 
     const appliedNames = appliedMigrations.map((m) => m.name);
 

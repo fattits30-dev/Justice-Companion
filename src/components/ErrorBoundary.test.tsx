@@ -11,7 +11,7 @@
  * These tests verify error handling behavior and user recovery options.
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, userEvent } from '@/test-utils/test-utils';
 import { ErrorBoundary } from './ErrorBoundary';
 
@@ -41,7 +41,7 @@ describe('ErrorBoundary', () => {
       render(
         <ErrorBoundary>
           <div>Child component</div>
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       expect(screen.getByText('Child component')).toBeInTheDocument();
@@ -51,7 +51,7 @@ describe('ErrorBoundary', () => {
       render(
         <ErrorBoundary>
           <div>Child component</div>
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       // Error UI should not be present
@@ -65,7 +65,7 @@ describe('ErrorBoundary', () => {
       render(
         <ErrorBoundary>
           <ThrowError shouldError={true} />
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       // Error UI should be displayed
@@ -76,7 +76,7 @@ describe('ErrorBoundary', () => {
       render(
         <ErrorBoundary>
           <ThrowError shouldError={true} />
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       // Error message should be visible
@@ -87,7 +87,7 @@ describe('ErrorBoundary', () => {
       render(
         <ErrorBoundary>
           <ThrowError shouldError={true} />
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       expect(screen.getByText('Error Details:')).toBeInTheDocument();
@@ -97,7 +97,7 @@ describe('ErrorBoundary', () => {
       render(
         <ErrorBoundary>
           <ThrowError shouldError={true} />
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       // Verify console.error was called
@@ -108,7 +108,7 @@ describe('ErrorBoundary', () => {
       render(
         <ErrorBoundary>
           <ThrowError shouldError={true} />
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       // Verify console.error was called (React logs errors + our logging)
@@ -116,7 +116,7 @@ describe('ErrorBoundary', () => {
       // Check that at least one call contains our logging prefix
       const calls = (console.error as any).mock.calls;
       const hasErrorBoundaryLog = calls.some((call: any[]) =>
-        call.some((arg) => typeof arg === 'string' && arg.includes('[ErrorBoundary]'))
+        call.some((arg) => typeof arg === 'string' && arg.includes('[ErrorBoundary]')),
       );
       expect(hasErrorBoundaryLog).toBe(true);
     });
@@ -127,7 +127,7 @@ describe('ErrorBoundary', () => {
       render(
         <ErrorBoundary>
           <ThrowError shouldError={true} />
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       // SVG icon should be present
@@ -140,7 +140,7 @@ describe('ErrorBoundary', () => {
       render(
         <ErrorBoundary>
           <ThrowError shouldError={true} />
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       const heading = screen.getByRole('heading', { name: 'Something went wrong' });
@@ -151,7 +151,7 @@ describe('ErrorBoundary', () => {
       render(
         <ErrorBoundary>
           <ThrowError shouldError={true} />
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       const reloadButton = screen.getByRole('button', { name: 'Reload Application' });
@@ -162,7 +162,7 @@ describe('ErrorBoundary', () => {
       render(
         <ErrorBoundary>
           <ThrowError shouldError={true} />
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       const continueButton = screen.getByRole('button', { name: 'Try to Continue' });
@@ -173,7 +173,7 @@ describe('ErrorBoundary', () => {
       render(
         <ErrorBoundary>
           <ThrowError shouldError={true} />
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       expect(screen.getByText(/If this problem persists/i)).toBeInTheDocument();
@@ -194,7 +194,7 @@ describe('ErrorBoundary', () => {
       render(
         <ErrorBoundary>
           <ThrowError shouldError={true} />
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       // Component stack details should be present
@@ -207,7 +207,7 @@ describe('ErrorBoundary', () => {
       render(
         <ErrorBoundary>
           <ThrowError shouldError={true} />
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       // Error stack details should be present
@@ -220,7 +220,7 @@ describe('ErrorBoundary', () => {
       render(
         <ErrorBoundary>
           <ThrowError shouldError={true} />
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       // Component stack should not be visible
@@ -233,7 +233,7 @@ describe('ErrorBoundary', () => {
       render(
         <ErrorBoundary>
           <ThrowError shouldError={true} />
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       // Error stack should not be visible
@@ -255,7 +255,7 @@ describe('ErrorBoundary', () => {
       render(
         <ErrorBoundary>
           <ThrowError shouldError={true} />
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       const reloadButton = screen.getByRole('button', { name: 'Reload Application' });
@@ -271,7 +271,7 @@ describe('ErrorBoundary', () => {
       render(
         <ErrorBoundary>
           <ThrowError shouldError={true} />
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       // Error UI should be visible
@@ -299,7 +299,7 @@ describe('ErrorBoundary', () => {
       render(
         <ErrorBoundary>
           <CustomError />
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       expect(screen.getByText('Custom error message')).toBeInTheDocument();
@@ -315,7 +315,7 @@ describe('ErrorBoundary', () => {
       render(
         <ErrorBoundary>
           <NoMessageError />
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       expect(screen.getByText('An unexpected error occurred')).toBeInTheDocument();
@@ -327,7 +327,7 @@ describe('ErrorBoundary', () => {
       render(
         <ErrorBoundary>
           <ThrowError shouldError={true} />
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       // Outer container should have red background
@@ -339,7 +339,7 @@ describe('ErrorBoundary', () => {
       render(
         <ErrorBoundary>
           <ThrowError shouldError={true} />
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       // Inner card should have white background
@@ -351,7 +351,7 @@ describe('ErrorBoundary', () => {
       render(
         <ErrorBoundary>
           <ThrowError shouldError={true} />
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       const reloadButton = screen.getByRole('button', { name: 'Reload Application' });
@@ -362,7 +362,7 @@ describe('ErrorBoundary', () => {
       render(
         <ErrorBoundary>
           <ThrowError shouldError={true} />
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       const continueButton = screen.getByRole('button', { name: 'Try to Continue' });
@@ -375,7 +375,7 @@ describe('ErrorBoundary', () => {
       render(
         <ErrorBoundary>
           <ThrowError shouldError={true} />
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       // Main heading should be h1
@@ -391,7 +391,7 @@ describe('ErrorBoundary', () => {
       render(
         <ErrorBoundary>
           <ThrowError shouldError={true} />
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       const reloadButton = screen.getByRole('button', { name: 'Reload Application' });
@@ -405,7 +405,7 @@ describe('ErrorBoundary', () => {
       render(
         <ErrorBoundary>
           <ThrowError shouldError={true} />
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       const reloadButton = screen.getByRole('button', { name: 'Reload Application' });
@@ -424,7 +424,7 @@ describe('ErrorBoundary', () => {
       render(
         <ErrorBoundary>
           <ErrorWithStack />
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       expect(screen.getByText('Error with stack')).toBeInTheDocument();
@@ -436,7 +436,7 @@ describe('ErrorBoundary', () => {
       render(
         <ErrorBoundary>
           <ThrowError shouldError={true} />
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       // Should show some error message
@@ -447,7 +447,7 @@ describe('ErrorBoundary', () => {
       const { rerender } = render(
         <ErrorBoundary>
           <ThrowError shouldError={true} />
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       // Error UI should be visible
@@ -457,7 +457,7 @@ describe('ErrorBoundary', () => {
       rerender(
         <ErrorBoundary>
           <ThrowError shouldError={true} />
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       expect(screen.getByText('Something went wrong')).toBeInTheDocument();

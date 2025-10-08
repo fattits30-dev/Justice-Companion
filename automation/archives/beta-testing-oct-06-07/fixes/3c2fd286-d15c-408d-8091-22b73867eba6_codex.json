@@ -1,0 +1,8 @@
+{
+  "task_id": "3c2fd286-d15c-408d-8091-22b73867eba6",
+  "tier": "tier2_codex",
+  "timestamp": "2025-10-07T18:46:08.381269+00:00",
+  "file_path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\FileUploadModal.tsx",
+  "codex_output": "Error handling in the evidence upload modal now normalizes unknown errors without relying on `instanceof`, preventing the vitest crash you hit.\n\n- `src/components/FileUploadModal.tsx:31` Added `getErrorMessage` to safely read a message from any thrown value.\n- `src/components/FileUploadModal.tsx:117` and `src/components/FileUploadModal.tsx:150` Updated the catch blocks to use the helper while preserving existing fallback text.\n- No other modal behavior changed (file validation, auto-title, reset on close all remain intact).\n\nVerification: `npm test -- src/hooks/useCaseFacts.test.ts` (stopped in this sandbox because Node exits early with the MODULE_TYPELESS_PACKAGE_JSON warning\u00e2\u20ac\u201dplease rerun locally).\n\nNext steps:\n1. Re-run the targeted vitest command on your machine to confirm.\n2. If green, run your broader suite (lint/type-check/tests) before committing.\n",
+  "success": true
+}

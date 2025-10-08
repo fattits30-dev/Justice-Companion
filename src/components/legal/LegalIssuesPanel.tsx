@@ -331,7 +331,7 @@ export function LegalIssuesPanel({ caseId }: LegalIssuesPanelProps) {
                       <button
                         onClick={() => {
                           if (window.confirm('Delete this legal issue?')) {
-                            deleteLegalIssue(issue.id);
+                            void deleteLegalIssue(issue.id);
                           }
                         }}
                         style={{

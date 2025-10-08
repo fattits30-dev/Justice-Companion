@@ -21,9 +21,19 @@
     "types": ["node", "vite/client", "vitest/globals"],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@/features/*": ["./src/features/*"],
+      "@/components/*": ["./src/components/*"],
+      "@/hooks/*": ["./src/hooks/*"],
+      "@/services/*": ["./src/services/*"],
+      "@/utils/*": ["./src/utils/*"],
+      "@/types/*": ["./src/types/*"],
+      "@/models/*": ["./src/models/*"],
+      "@/db/*": ["./src/db/*"],
+      "@/repositories/*": ["./src/repositories/*"]
     }
   },
   "include": ["src"],
+  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx", "src/**/*.spec.ts", "src/**/*.spec.tsx"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

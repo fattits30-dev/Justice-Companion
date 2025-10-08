@@ -6,7 +6,7 @@
  */
 
 import React, { useState } from 'react';
-import { useAI } from './useAI';
+import { useAI } from '../features/chat/hooks/useAI';
 
 export function AIChatExample(): JSX.Element {
   const {

@@ -8,7 +8,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { AILoadingState, ProgressStage } from '../hooks/useAI';
+import { AILoadingState, ProgressStage } from '../features/chat/hooks/useAI';
 import { logger } from '../utils/logger';
 
 interface StreamingIndicatorProps {

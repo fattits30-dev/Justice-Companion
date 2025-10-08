@@ -1,0 +1,12 @@
+{
+  "event_type": "file_changed",
+  "agent_id": "file_monitor",
+  "timestamp": "2025-10-07T01:11:53.637636+00:00",
+  "files": [
+    "C:\\Users\\sava6\\Desktop\\Justice Companion\\electron\\dev-api-server.ts",
+    "C:\\Users\\sava6\\Desktop\\Justice Companion\\electron\\main.ts",
+    "C:\\Users\\sava6\\Desktop\\Justice Companion\\electron\\preload.ts",
+    "C:\\Users\\sava6\\Desktop\\Justice Companion\\electron\\utils\\path-security.ts"
+  ],
+  "count": 4
+}

@@ -33,12 +33,21 @@ export interface DownloadProgress {
 }
 
 /**
+ * Active download state for tracking in-progress downloads
+ */
+interface ActiveDownload {
+  modelId: string;
+  startTime: number;
+  lastProgress: number;
+}
+
+/**
  * ModelDownloadService - Handles downloading AI models from HuggingFace
  */
 export class ModelDownloadService {
   private static instance: ModelDownloadService | null = null;
   private modelsDir: string;
-  private activeDownloads: Map<string, any> = new Map();
+  private activeDownloads: Map<string, ActiveDownload> = new Map();
 
   // Available models catalog
   public readonly availableModels: ModelInfo[] = [

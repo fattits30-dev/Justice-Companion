@@ -33,7 +33,7 @@ export function NotesPanel({ caseId }: NotesPanelProps) {
 
   if (loading) {
     return (
-      <div style={{ padding: '24px', textAlign: 'center', color: '#666' }}>
+      <div className="p-6 text-center text-blue-300">
         Loading notes...
       </div>
     );
@@ -41,54 +41,23 @@ export function NotesPanel({ caseId }: NotesPanelProps) {
 
   if (error) {
     return (
-      <div
-        style={{
-          padding: '24px',
-          textAlign: 'center',
-          color: '#d32f2f',
-          background: '#ffebee',
-          borderRadius: '4px',
-        }}
-      >
+      <div className="p-6 text-center text-red-300 bg-red-900/30 rounded-lg">
         Error: {error}
       </div>
     );
   }
 
   return (
-    <div style={{ padding: '24px' }}>
+    <div className="p-6">
       {/* Header */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '24px',
-        }}
-      >
-        <h2 style={{ margin: 0, color: '#333', fontSize: '24px' }}>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-white">
           Notes ({notes.length})
         </h2>
 
         <button
           onClick={() => setIsCreating(true)}
-          style={{
-            padding: '10px 20px',
-            background: '#f9a825',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            fontSize: '14px',
-            fontWeight: 'bold',
-            cursor: 'pointer',
-            transition: 'background 0.2s ease',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = '#f57f17';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = '#f9a825';
-          }}
+          className="px-5 py-2.5 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg text-sm font-bold transition-all duration-200"
         >
           + Add Note
         </button>
@@ -96,44 +65,18 @@ export function NotesPanel({ caseId }: NotesPanelProps) {
 
       {/* New Note Creator */}
       {isCreating && (
-        <div
-          style={{
-            marginBottom: '16px',
-            padding: '16px',
-            background: '#fff9c4',
-            border: '2px solid #f9a825',
-            borderRadius: '8px',
-          }}
-        >
+        <div className="mb-4 p-4 bg-yellow-900/20 border-2 border-yellow-600/50 rounded-lg">
           <textarea
             value={newNoteContent}
             onChange={(e) => setNewNoteContent(e.target.value)}
             placeholder="Enter note content..."
-            style={{
-              width: '100%',
-              minHeight: '100px',
-              padding: '12px',
-              border: '1px solid #ccc',
-              borderRadius: '4px',
-              fontSize: '14px',
-              fontFamily: 'inherit',
-              resize: 'vertical',
-            }}
+            className="w-full min-h-[100px] p-3 border border-blue-700/30 bg-slate-800/50 rounded-lg text-sm text-white placeholder-blue-400/50 focus:outline-none focus:ring-2 focus:ring-yellow-500 resize-y"
             autoFocus
           />
-          <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
+          <div className="flex gap-3 mt-3">
             <button
               onClick={handleCreate}
-              style={{
-                padding: '8px 16px',
-                background: '#388e3c',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                fontSize: '14px',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-              }}
+              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-bold transition-all duration-200"
             >
               Save
             </button>
@@ -142,16 +85,7 @@ export function NotesPanel({ caseId }: NotesPanelProps) {
                 setIsCreating(false);
                 setNewNoteContent('');
               }}
-              style={{
-                padding: '8px 16px',
-                background: '#757575',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                fontSize: '14px',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-              }}
+              className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg text-sm font-bold transition-all duration-200"
             >
               Cancel
             </button>
@@ -161,62 +95,28 @@ export function NotesPanel({ caseId }: NotesPanelProps) {
 
       {/* Notes List */}
       {notes.length === 0 ? (
-        <div
-          style={{
-            padding: '48px',
-            textAlign: 'center',
-            color: '#999',
-            background: '#f5f5f5',
-            borderRadius: '8px',
-          }}
-        >
+        <div className="p-12 text-center text-blue-400 bg-slate-800/30 rounded-lg">
           No notes yet. Click "Add Note" to create one.
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div className="flex flex-col gap-3">
           {notes.map((note: Note) => (
             <div
               key={note.id}
-              style={{
-                padding: '16px',
-                background: 'white',
-                border: '1px solid #e0e0e0',
-                borderRadius: '8px',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-              }}
+              className="p-4 bg-slate-900/50 border border-blue-800/30 rounded-lg shadow-lg"
             >
               {editingId === note.id ? (
                 <div>
                   <textarea
                     value={editContent}
                     onChange={(e) => setEditContent(e.target.value)}
-                    style={{
-                      width: '100%',
-                      minHeight: '100px',
-                      padding: '12px',
-                      border: '1px solid #ccc',
-                      borderRadius: '4px',
-                      fontSize: '14px',
-                      fontFamily: 'inherit',
-                      resize: 'vertical',
-                    }}
+                    className="w-full min-h-[100px] p-3 border border-blue-700/30 bg-slate-800/50 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
                     autoFocus
                   />
-                  <div
-                    style={{ display: 'flex', gap: '12px', marginTop: '12px' }}
-                  >
+                  <div className="flex gap-3 mt-3">
                     <button
                       onClick={() => handleUpdate(note.id)}
-                      style={{
-                        padding: '8px 16px',
-                        background: '#388e3c',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        fontSize: '14px',
-                        fontWeight: 'bold',
-                        cursor: 'pointer',
-                      }}
+                      className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-bold transition-all duration-200"
                     >
                       Save
                     </button>
@@ -225,16 +125,7 @@ export function NotesPanel({ caseId }: NotesPanelProps) {
                         setEditingId(null);
                         setEditContent('');
                       }}
-                      style={{
-                        padding: '8px 16px',
-                        background: '#757575',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        fontSize: '14px',
-                        fontWeight: 'bold',
-                        cursor: 'pointer',
-                      }}
+                      className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg text-sm font-bold transition-all duration-200"
                     >
                       Cancel
                     </button>
@@ -242,63 +133,30 @@ export function NotesPanel({ caseId }: NotesPanelProps) {
                 </div>
               ) : (
                 <div>
-                  <div
-                    style={{
-                      whiteSpace: 'pre-wrap',
-                      wordBreak: 'break-word',
-                      color: '#333',
-                      fontSize: '14px',
-                      lineHeight: '1.6',
-                      marginBottom: '12px',
-                    }}
-                  >
+                  <div className="whitespace-pre-wrap break-words text-blue-100 text-sm leading-relaxed mb-3">
                     {note.content}
                   </div>
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                    }}
-                  >
-                    <div style={{ fontSize: '12px', color: '#999' }}>
+                  <div className="flex justify-between items-center">
+                    <div className="text-xs text-blue-400/70">
                       {new Date(note.updatedAt).toLocaleString()}
                     </div>
-                    <div style={{ display: 'flex', gap: '8px' }}>
+                    <div className="flex gap-2">
                       <button
                         onClick={() => {
                           setEditingId(note.id);
                           setEditContent(note.content);
                         }}
-                        style={{
-                          padding: '6px 12px',
-                          background: '#1976d2',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '4px',
-                          fontSize: '12px',
-                          fontWeight: 'bold',
-                          cursor: 'pointer',
-                        }}
+                        className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-bold transition-all duration-200"
                       >
                         Edit
                       </button>
                       <button
                         onClick={() => {
                           if (window.confirm('Delete this note?')) {
-                            deleteNote(note.id);
+                            void deleteNote(note.id);
                           }
                         }}
-                        style={{
-                          padding: '6px 12px',
-                          background: '#d32f2f',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '4px',
-                          fontSize: '12px',
-                          fontWeight: 'bold',
-                          cursor: 'pointer',
-                        }}
+                        className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-bold transition-all duration-200"
                       >
                         Delete
                       </button>

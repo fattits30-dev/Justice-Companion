@@ -118,7 +118,7 @@ class AutoFixer:
 
             if success:
                 duration = time.time() - start_time
-                print(f"[AutoFixer] ✓ Fix succeeded on attempt {attempt}")
+                print(f"[AutoFixer] [OK] Fix succeeded on attempt {attempt}")
                 return FixResult(
                     success=True,
                     attempts=attempt,
@@ -129,7 +129,7 @@ class AutoFixer:
 
             # Failed - analyze and decide whether to retry
             failure_analysis = self._analyze_failure(test_result)
-            print(f"[AutoFixer] ✗ Attempt {attempt} failed: {failure_analysis.get('summary', 'unknown error')}")
+            print(f"[AutoFixer] [X] Attempt {attempt} failed: {failure_analysis.get('summary', 'unknown error')}")
 
             # If not last attempt, wait with exponential backoff
             if attempt < max_retries:
@@ -139,7 +139,7 @@ class AutoFixer:
 
         # All retries exhausted
         duration = time.time() - start_time
-        print(f"[AutoFixer] ✗ All {max_retries} attempts failed for task {task_id}")
+        print(f"[AutoFixer] [X] All {max_retries} attempts failed for task {task_id}")
 
         return FixResult(
             success=False,
@@ -302,7 +302,7 @@ Format your response with code blocks that can be automatically applied."""
 
         # Check if circuit breaker should activate
         if len(recent_failures) >= self.circuit_breaker_threshold:
-            print(f"[AutoFixer] ⚠ Circuit breaker active for {file_path}")
+            print(f"[AutoFixer] [WARNING] Circuit breaker active for {file_path}")
             print(f"[AutoFixer]   {len(recent_failures)} failures in last {self.circuit_breaker_window}s")
             return False
 

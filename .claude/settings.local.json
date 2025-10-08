@@ -129,7 +129,10 @@
       "WebFetch(domain:legislation.github.io)",
       "WebFetch(domain:caselaw.nationalarchives.gov.uk)",
       "WebFetch(domain:api.caselaw.nationalarchives.gov.uk)",
-      "WebFetch(domain:localhost)"
+      "WebFetch(domain:localhost)",
+      "WebFetch(domain:gist.github.com)",
+      "WebFetch(domain:payton.codes)",
+      "WebFetch(domain:timmousk.com)"
     ],
     "deny": [],
     "ask": []
@@ -142,13 +145,12 @@
     "github",
     "sqlite",
     "playwright",
-    "brave-search",
-    "context7",
-    "justice-companion"
+    "puppeteer",
+    "context7"
   ],
   "hooks": {
     "SessionStart": []
   },
   "disableAllHooks": false,
-  "outputStyle": "justice-tactical"
+  "outputStyle": "agents-operations"
 }

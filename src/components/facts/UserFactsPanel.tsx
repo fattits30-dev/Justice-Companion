@@ -59,7 +59,7 @@ export function UserFactsPanel({ caseId }: UserFactsPanelProps) {
 
   if (loading) {
     return (
-      <div style={{ padding: '24px', textAlign: 'center', color: '#666' }}>
+      <div className="p-6 text-center text-blue-300">
         Loading user facts...
       </div>
     );
@@ -67,81 +67,37 @@ export function UserFactsPanel({ caseId }: UserFactsPanelProps) {
 
   if (error) {
     return (
-      <div
-        style={{
-          padding: '24px',
-          textAlign: 'center',
-          color: '#d32f2f',
-          background: '#ffebee',
-          borderRadius: '4px',
-        }}
-      >
+      <div className="p-6 text-center text-red-300 bg-red-900/30 rounded-lg">
         Error: {error}
       </div>
     );
   }
 
   return (
-    <div style={{ padding: '24px' }}>
+    <div className="p-6">
       {/* Header */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '24px',
-        }}
-      >
-        <h2 style={{ margin: 0, color: '#333', fontSize: '24px' }}>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-white">
           User Facts ({filteredFacts.length})
         </h2>
 
         <button
           onClick={() => setIsCreating(true)}
-          style={{
-            padding: '10px 20px',
-            background: '#1976d2',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            fontSize: '14px',
-            fontWeight: 'bold',
-            cursor: 'pointer',
-            transition: 'background 0.2s ease',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = '#1565c0';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = '#1976d2';
-          }}
+          className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold transition-all duration-200"
         >
           + Add User Fact
         </button>
       </div>
 
       {/* Filter Bar */}
-      <div
-        style={{
-          display: 'flex',
-          gap: '12px',
-          marginBottom: '24px',
-          flexWrap: 'wrap',
-        }}
-      >
+      <div className="flex gap-3 mb-6 flex-wrap">
         <button
           onClick={() => setSelectedType('all')}
-          style={{
-            padding: '8px 16px',
-            background: selectedType === 'all' ? '#1976d2' : '#e0e0e0',
-            color: selectedType === 'all' ? 'white' : '#666',
-            border: 'none',
-            borderRadius: '20px',
-            fontSize: '13px',
-            fontWeight: 'bold',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease',
-          }}
+          className={`px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 ${
+            selectedType === 'all'
+              ? 'bg-blue-600 text-white'
+              : 'bg-slate-700/50 text-blue-300 hover:bg-slate-600/50'
+          }`}
         >
           All ({userFacts.length})
         </button>
@@ -152,17 +108,11 @@ export function UserFactsPanel({ caseId }: UserFactsPanelProps) {
             <button
               key={type}
               onClick={() => setSelectedType(type)}
-              style={{
-                padding: '8px 16px',
-                background: selectedType === type ? '#1976d2' : '#e0e0e0',
-                color: selectedType === type ? 'white' : '#666',
-                border: 'none',
-                borderRadius: '20px',
-                fontSize: '13px',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-              }}
+              className={`px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 ${
+                selectedType === type
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-slate-700/50 text-blue-300 hover:bg-slate-600/50'
+              }`}
             >
               {label} ({count})
             </button>
@@ -172,16 +122,9 @@ export function UserFactsPanel({ caseId }: UserFactsPanelProps) {
 
       {/* New Fact Creator */}
       {isCreating && (
-        <div style={{ marginBottom: '24px' }}>
-          <div style={{ marginBottom: '12px' }}>
-            <label
-              style={{
-                display: 'block',
-                marginBottom: '8px',
-                fontWeight: 'bold',
-                color: '#333',
-              }}
-            >
+        <div className="mb-6">
+          <div className="mb-3">
+            <label className="block mb-2 font-bold text-white text-sm">
               Fact Type:
             </label>
             <select
@@ -197,12 +140,7 @@ export function UserFactsPanel({ caseId }: UserFactsPanelProps) {
                     | 'other',
                 )
               }
-              style={{
-                padding: '8px 12px',
-                border: '1px solid #ccc',
-                borderRadius: '4px',
-                fontSize: '14px',
-              }}
+              className="px-3 py-2 border border-blue-700/30 bg-slate-800/50 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               {Object.entries(factTypeLabels).map(([type, label]) => (
                 <option key={type} value={type}>
@@ -224,25 +162,11 @@ export function UserFactsPanel({ caseId }: UserFactsPanelProps) {
 
       {/* Facts Grid */}
       {filteredFacts.length === 0 ? (
-        <div
-          style={{
-            padding: '48px',
-            textAlign: 'center',
-            color: '#999',
-            background: '#f5f5f5',
-            borderRadius: '8px',
-          }}
-        >
+        <div className="p-12 text-center text-blue-400 bg-slate-800/30 rounded-lg">
           No user facts yet. Click "Add User Fact" to create one.
         </div>
       ) : (
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-            gap: '24px',
-          }}
-        >
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredFacts.map((fact: UserFact) => (
             <PostItNote
               key={fact.id}

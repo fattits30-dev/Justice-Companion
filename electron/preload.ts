@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from 'electron';
+import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
 import { IPC_CHANNELS } from '../src/types/ipc';
 import type { JusticeCompanionAPI } from '../src/types/ipc';
 import type { CreateCaseInput, UpdateCaseInput } from '../src/models/Case';
@@ -83,18 +83,18 @@ const aiAPI = {
   },
 
   // Send chat message (non-streaming)
-  aiChat: (request: any) => {
+  aiChat: (request: Record<string, unknown>) => {
     return ipcRenderer.invoke(IPC_CHANNELS.AI_CHAT, request);
   },
 
   // Start streaming chat
-  aiStreamStart: (request: any) => {
+  aiStreamStart: (request: Record<string, unknown>) => {
     return ipcRenderer.invoke(IPC_CHANNELS.AI_STREAM_START, request);
   },
 
   // Listen for streaming tokens
   onAIStreamToken: (callback: (token: string) => void) => {
-    const handler = (_: any, token: string) => {
+    const handler = (_event: IpcRendererEvent, token: string) => {
       console.log('[preload] Token received from main:', token);
       callback(token);
     };
@@ -108,7 +108,7 @@ const aiAPI = {
 
   // Listen for streaming think tokens (AI reasoning content)
   onAIStreamThinkToken: (callback: (token: string) => void) => {
-    const handler = (_: any, token: string) => {
+    const handler = (_event: IpcRendererEvent, token: string) => {
       console.log('[preload] Think token received from main:', token);
       callback(token);
     };
@@ -122,7 +122,7 @@ const aiAPI = {
 
   // Listen for source citations (legal references)
   onAIStreamSources: (callback: (sources: string[]) => void) => {
-    const handler = (_: any, sources: string[]) => {
+    const handler = (_event: IpcRendererEvent, sources: string[]) => {
       console.log('[preload] Received sources:', sources);
       callback(sources);
     };
@@ -143,14 +143,14 @@ const aiAPI = {
 
   // Listen for stream errors
   onAIStreamError: (callback: (error: string) => void) => {
-    const handler = (_: any, error: string) => callback(error);
+    const handler = (_event: IpcRendererEvent, error: string) => callback(error);
     ipcRenderer.on(IPC_CHANNELS.AI_STREAM_ERROR, handler);
     return () => ipcRenderer.removeListener(IPC_CHANNELS.AI_STREAM_ERROR, handler);
   },
 
   // Listen for status updates (RAG progress)
   onAIStatusUpdate: (callback: (status: string) => void) => {
-    const handler = (_: any, status: string) => {
+    const handler = (_event: IpcRendererEvent, status: string) => {
       console.log('[preload] Status update received:', status);
       callback(status);
     };
@@ -186,8 +186,8 @@ const modelAPI = {
   },
 
   // Listen for download progress
-  onDownloadProgress: (callback: (progress: any) => void) => {
-    const handler = (_: any, progress: any) => callback(progress);
+  onDownloadProgress: (callback: (progress: unknown) => void) => {
+    const handler = (_event: IpcRendererEvent, progress: unknown) => callback(progress);
     ipcRenderer.on(IPC_CHANNELS.MODEL_DOWNLOAD_PROGRESS, handler);
     return () => ipcRenderer.removeListener(IPC_CHANNELS.MODEL_DOWNLOAD_PROGRESS, handler);
   },
@@ -201,7 +201,7 @@ const modelAPI = {
 // File API methods
 const fileAPI = {
   // Select a file using native file picker
-  selectFile: (request?: any) => {
+  selectFile: (request?: Record<string, unknown>) => {
     return ipcRenderer.invoke(IPC_CHANNELS.FILE_SELECT, request);
   },
 
@@ -234,7 +234,7 @@ const fileAPI = {
 // Chat Conversation API methods
 const conversationAPI = {
   // Create a new conversation
-  createConversation: (input: any) => {
+  createConversation: (input: Record<string, unknown>) => {
     return ipcRenderer.invoke(IPC_CHANNELS.CONVERSATION_CREATE, { input });
   },
 
@@ -264,7 +264,7 @@ const conversationAPI = {
   },
 
   // Add a message to a conversation
-  addMessage: (input: any) => {
+  addMessage: (input: Record<string, unknown>) => {
     return ipcRenderer.invoke(IPC_CHANNELS.MESSAGE_ADD, { input });
   },
 };
@@ -277,7 +277,7 @@ const profileAPI = {
   },
 
   // Update user profile
-  updateUserProfile: (input: any) => {
+  updateUserProfile: (input: Record<string, unknown>) => {
     return ipcRenderer.invoke(IPC_CHANNELS.PROFILE_UPDATE, { input });
   },
 };
@@ -331,7 +331,7 @@ const gdprAPI = {
 // UI Error Logging API
 const errorLoggingAPI = {
   // Log UI errors to main process for audit logging
-  logUIError: (errorData: any) => {
+  logUIError: (errorData: Record<string, unknown>) => {
     return ipcRenderer.invoke(IPC_CHANNELS.LOG_UI_ERROR, { errorData });
   },
 };

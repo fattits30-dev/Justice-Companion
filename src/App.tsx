@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { ChatWindow } from './components/ChatWindow';
+import { ChatWindow } from '@/features/chat';
 import { Sidebar } from './components/Sidebar';
 import { DashboardView } from './components/views/DashboardView';
 import { CasesView } from './components/views/CasesView';
+import { CaseDetailView } from './components/views/CaseDetailView';
 import { DocumentsView } from './components/views/DocumentsView';
 import { SettingsView } from './components/views/SettingsView';
 import { DebugProvider } from './contexts/DebugContext';
@@ -11,12 +12,13 @@ import { ViewErrorBoundary } from './components/ViewErrorBoundary';
 import { ThemeProvider } from './components/ThemeProvider';
 import { Toaster } from './components/ui/sonner';
 
-type ViewType = 'dashboard' | 'chat' | 'cases' | 'documents' | 'settings';
+type ViewType = 'dashboard' | 'chat' | 'cases' | 'case-detail' | 'documents' | 'settings';
 
 function App() {
   const [activeView, setActiveView] = useState<ViewType>('dashboard');
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [activeCaseId, setActiveCaseId] = useState<number | null>(null);
+  const [selectedCaseForDetail, setSelectedCaseForDetail] = useState<number | null>(null);
 
   // Dummy conversation load handler (ChatWindow will handle its own state)
   const handleConversationLoad = async (_conversationId: number): Promise<void> => {
@@ -61,7 +63,33 @@ function App() {
       case 'cases':
         return (
           <ViewErrorBoundary viewName="Cases" onNavigateToDashboard={() => setActiveView('dashboard')}>
-            <CasesView />
+            <CasesView
+              onCaseSelect={(caseId) => {
+                setSelectedCaseForDetail(caseId);
+                setActiveView('case-detail');
+              }}
+            />
+          </ViewErrorBoundary>
+        );
+      case 'case-detail':
+        return selectedCaseForDetail ? (
+          <ViewErrorBoundary viewName="Case Detail" onNavigateToDashboard={() => setActiveView('dashboard')}>
+            <CaseDetailView
+              caseId={selectedCaseForDetail}
+              onBack={() => {
+                setActiveView('cases');
+                setSelectedCaseForDetail(null);
+              }}
+            />
+          </ViewErrorBoundary>
+        ) : (
+          <ViewErrorBoundary viewName="Cases" onNavigateToDashboard={() => setActiveView('dashboard')}>
+            <CasesView
+              onCaseSelect={(caseId) => {
+                setSelectedCaseForDetail(caseId);
+                setActiveView('case-detail');
+              }}
+            />
           </ViewErrorBoundary>
         );
       case 'documents':

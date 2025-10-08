@@ -5,6 +5,7 @@ export interface TimelineEvent {
   title: string;
   description: string | null;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface CreateTimelineEventInput {
@@ -18,4 +19,5 @@ export interface UpdateTimelineEventInput {
   eventDate?: string;
   title?: string;
   description?: string;
+  updatedAt?: string;
 }

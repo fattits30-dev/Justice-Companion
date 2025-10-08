@@ -96,24 +96,26 @@ export class CaseFactsRepository {
       WHERE id = ?
     `);
 
-    const row = stmt.get(id) as CaseFact | null;
+    const row = stmt.get(id) as CaseFact | undefined;
 
-    if (row) {
-      // Decrypt fact_content after SELECT
-      const originalContent = row.factContent;
-      row.factContent = this.decryptField(row.factContent);
+    if (!row) {
+      return null;
+    }
 
-      // Audit: PII accessed (encrypted fact_content field)
-      if (originalContent && row.factContent !== originalContent) {
-        this.auditLogger?.log({
-          eventType: 'case_fact.content_access',
-          resourceType: 'case_fact',
-          resourceId: id.toString(),
-          action: 'read',
-          details: { field: 'fact_content', encrypted: true },
-          success: true,
-        });
-      }
+    // Decrypt fact_content after SELECT
+    const originalContent = row.factContent;
+    row.factContent = this.decryptField(row.factContent);
+
+    // Audit: PII accessed (encrypted fact_content field)
+    if (originalContent && row.factContent !== originalContent) {
+      this.auditLogger?.log({
+        eventType: 'case_fact.content_access',
+        resourceType: 'case_fact',
+        resourceId: id.toString(),
+        action: 'read',
+        details: { field: 'fact_content', encrypted: true },
+        success: true,
+      });
     }
 
     return row;
@@ -135,7 +137,15 @@ export class CaseFactsRepository {
         updated_at as updatedAt
       FROM case_facts
       WHERE case_id = ?
-      ORDER BY importance DESC, created_at DESC
+      ORDER BY
+        CASE importance
+          WHEN 'critical' THEN 1
+          WHEN 'high' THEN 2
+          WHEN 'medium' THEN 3
+          WHEN 'low' THEN 4
+          ELSE 5
+        END ASC,
+        created_at DESC
     `);
 
     const rows = stmt.all(caseId) as CaseFact[];
@@ -181,7 +191,15 @@ export class CaseFactsRepository {
         updated_at as updatedAt
       FROM case_facts
       WHERE case_id = ? AND fact_category = ?
-      ORDER BY importance DESC, created_at DESC
+      ORDER BY
+        CASE importance
+          WHEN 'critical' THEN 1
+          WHEN 'high' THEN 2
+          WHEN 'medium' THEN 3
+          WHEN 'low' THEN 4
+          ELSE 5
+        END ASC,
+        created_at DESC
     `);
 
     const rows = stmt.all(caseId, category) as CaseFact[];

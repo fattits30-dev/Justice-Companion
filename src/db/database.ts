@@ -1,7 +1,27 @@
 import Database from 'better-sqlite3';
+import fs from 'fs';
 import path from 'path';
 import { app } from 'electron';
 import { errorLogger } from '../utils/error-logger';
+
+const resolveDatabasePath = (): string => {
+  if (process.env.JUSTICE_DB_PATH) {
+    return process.env.JUSTICE_DB_PATH;
+  }
+
+  if (process.versions?.electron && app && typeof app.getPath === 'function') {
+    try {
+      return path.join(app.getPath('userData'), 'justice.db');
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'database-path-resolution' });
+    }
+  }
+
+  const fallbackDir = path.join(process.cwd(), '.justice-companion');
+  fs.mkdirSync(fallbackDir, { recursive: true });
+
+  return path.join(fallbackDir, 'justice.db');
+};
 
 class DatabaseManager {
   private static instance: DatabaseManager;
@@ -19,7 +39,7 @@ class DatabaseManager {
   public getDatabase(): Database.Database {
     if (!this.db) {
       try {
-        const dbPath = path.join(app.getPath('userData'), 'justice.db');
+        const dbPath = resolveDatabasePath();
         this.db = new Database(dbPath);
 
         // Enable foreign keys
