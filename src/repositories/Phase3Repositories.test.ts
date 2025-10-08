@@ -2,7 +2,7 @@
  * Comprehensive tests for Phase 3 repositories with encryption
  * Tests: UserProfileRepository, LegalIssuesRepository, TimelineRepository
  */
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import Database from 'better-sqlite3';
 import { UserProfileRepository } from './UserProfileRepository';
 import { LegalIssuesRepository } from './LegalIssuesRepository';
@@ -95,7 +95,7 @@ function setupDatabase(): void {
   auditLogger = new AuditLogger(db);
 
   // Override getDb
-  databaseModule.getDb = () => db;
+  vi.spyOn(databaseModule, 'getDb').mockReturnValue(db);
 }
 
 describe('UserProfileRepository', () => {

@@ -40,7 +40,7 @@ const createCaseFunction = defineChatSessionFunction({
   handler: async (params) => {
     const input: CreateCaseInput = {
       title: params.title,
-      caseType: params.caseType as any,
+      caseType: params.caseType as 'employment' | 'housing' | 'consumer' | 'family' | 'debt' | 'other',
       description: params.description,
     };
 
@@ -186,7 +186,7 @@ const updateCaseFunction = defineChatSessionFunction({
       input.title = params.title;
     }
     if (params.caseType !== undefined) {
-      input.caseType = params.caseType as any;
+      input.caseType = params.caseType as 'employment' | 'housing' | 'consumer' | 'family' | 'debt' | 'other';
     }
     if (params.description !== undefined) {
       input.description = params.description;

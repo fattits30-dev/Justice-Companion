@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import Database from 'better-sqlite3';
 import { NotesRepository } from './NotesRepository';
 import { EncryptionService } from '../services/EncryptionService.js';
@@ -76,7 +76,7 @@ describe('NotesRepository', () => {
     repository = new NotesRepository(encryptionService, auditLogger);
 
     // Override getDb to use test database
-    databaseModule.getDb = () => db;
+    vi.spyOn(databaseModule, 'getDb').mockReturnValue(db);
   });
 
   afterEach(() => {
@@ -298,7 +298,7 @@ describe('NotesRepository', () => {
       const repoNoEncryption = new NotesRepository();
 
       // Override getDb
-      databaseModule.getDb = () => db;
+      vi.spyOn(databaseModule, 'getDb').mockReturnValue(db);
 
       const note = repoNoEncryption.create({
         caseId: 1,

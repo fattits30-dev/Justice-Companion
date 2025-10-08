@@ -9,6 +9,7 @@ import type {
 import type { UserProfile, UpdateUserProfileInput } from '../models/UserProfile';
 import type { Evidence, CreateEvidenceInput, UpdateEvidenceInput } from '../models/Evidence';
 import type { LegalContext } from './ai';
+import type { CaseFact } from '../models/CaseFact';
 
 /**
  * IPC Channel definitions for type-safe communication
@@ -593,9 +594,9 @@ export interface JusticeCompanionAPI {
     factValue?: string;
     source?: string;
     confidence?: number;
-  }): Promise<IPCResponse<any>>;
-  getFacts(caseId: number, factType?: string): Promise<IPCResponse<any>>;
-  getCaseFacts(caseId: number, factCategory?: string): Promise<IPCResponse<any>>;
+  }): Promise<IPCResponse<CaseFact>>;
+  getFacts(caseId: number, factType?: string): Promise<IPCResponse<CaseFact[]>>;
+  getCaseFacts(caseId: number, factCategory?: string): Promise<IPCResponse<CaseFact[]>>;
   getFactCount(caseId: number): Promise<IPCResponse<{ data: number }>>;
 
   // GDPR operations
