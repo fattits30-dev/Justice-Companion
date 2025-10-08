@@ -416,6 +416,17 @@ justice-companion/
 ### Testing & Quality Assurance
 - **Audit Logger E2E Report**: `AUDIT_LOGGER_E2E_TEST_REPORT.md` - Comprehensive test coverage report
 
+### Development & Comprehensive Audits (2025-10-08)
+- **Audit Completion Summary**: `AUDIT_COMPLETION_SUMMARY.md` - Full audit report with actionable recommendations (19KB)
+- **Audit Summary**: `docs/reports/AUDIT_SUMMARY_2025-10-08.md` - Executive summary of comprehensive scan
+- **Frontend Structure Audit**: `docs/reports/FRONTEND_STRUCTURE_AUDIT_2025-10-08.md` - Complete frontend analysis (33KB)
+- **Automation & Docs Audit**: `docs/reports/AUTOMATION_DOCS_SCRIPTS_AUDIT_2025-10-08.md` - Scripts, docs, and tooling review (28KB)
+- **Dev Quality Agents**: `docs/automation/dev-quality-agents.md` - Agent workflow for quality assurance
+
+### Build & Deployment
+- **Master Build Guide**: `MASTER_BUILD_GUIDE.md` - Comprehensive build documentation (58KB)
+- **Build Quick Reference**: `BUILD_QUICK_REFERENCE.md` - Quick reference for common build tasks (6.6KB)
+
 ### Architecture & Implementation
 - **Tactical Protocol**: `JUSTICE_COMPANION_TACTICAL_PROTOCOL_v2.md`
 - **Encryption Docs**: `ENCRYPTION_SERVICE_IMPLEMENTATION.md`

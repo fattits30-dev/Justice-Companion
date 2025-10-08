@@ -788,11 +788,11 @@ export class LegalAPIService {
     if (!this.isRecord(xmlDoc)) {
       return [];
     }
-    const feed = (xmlDoc as Record<string, unknown>).feed;
+    const feed = (xmlDoc).feed;
     if (!this.isRecord(feed)) {
       return [];
     }
-    return (feed as Record<string, unknown>).entry ?? [];
+    return (feed).entry ?? [];
   }
 
   private extractLinkHref(linkValue: unknown): string {

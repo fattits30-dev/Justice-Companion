@@ -19,13 +19,26 @@ export class TestDatabaseHelper {
     // Enable foreign keys
     this.db.pragma('foreign_keys = ON');
 
-    // Load and execute schema
-    const schemaPath = path.join(__dirname, '../../src/db/migrations/001_initial_schema.sql');
-    const schema = readFileSync(schemaPath, 'utf-8');
+    // Load ALL migrations in order (not just 001)
+    const migrations = [
+      '001_initial_schema.sql',
+      '002_chat_history_and_profile.sql',
+      '003_audit_logs.sql',
+      '004_encryption_expansion.sql',
+      '005_user_and_case_facts.sql',
+    ];
 
-    // Execute the entire schema (db.exec can handle multiple statements)
-    // Note: We don't need to split by semicolons because exec() handles that
-    this.db.exec(schema);
+    for (const migration of migrations) {
+      const migrationPath = path.join(__dirname, '../../src/db/migrations', migration);
+      const migrationSQL = readFileSync(migrationPath, 'utf-8');
+
+      // Extract UP section only (ignore DOWN for tests)
+      // Migrations have "-- UP" and "-- DOWN" sections
+      const upSection = migrationSQL.split('-- DOWN')[0];
+
+      // Execute the UP migration
+      this.db.exec(upSection);
+    }
 
     return this.db;
   }
@@ -60,8 +73,10 @@ export class TestDatabaseHelper {
 
     // Delete in reverse foreign key order to avoid constraint violations
     const tables = [
-      'messages',
+      'chat_messages',
       'chat_conversations',
+      'case_facts',
+      'user_facts',
       'actions',
       'timeline_events',
       'notes',
@@ -69,6 +84,7 @@ export class TestDatabaseHelper {
       'legal_issues',
       'cases',
       'user_profile',
+      'audit_logs',
       'error_logs',
     ];
 

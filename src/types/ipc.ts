@@ -210,6 +210,7 @@ export interface IPCErrorResponse {
 }
 
 // Union type for all responses
+// Note: T is already a success response type (e.g., CaseGetAllResponse)
 export type IPCResponse<T> = T | IPCErrorResponse;
 
 // AI IPC Request/Response types
@@ -522,6 +523,22 @@ export interface LogUIErrorResponse {
   logged: boolean;
 }
 
+// Facts Response types
+export interface FactsStoreResponse {
+  success: true;
+  data: CaseFact;
+}
+
+export interface FactsGetResponse {
+  success: true;
+  data: CaseFact[];
+}
+
+export interface FactsCountResponse {
+  success: true;
+  data: { data: number };
+}
+
 /**
  * Type-safe IPC API exposed to renderer process
  */
@@ -594,10 +611,10 @@ export interface JusticeCompanionAPI {
     factValue?: string;
     source?: string;
     confidence?: number;
-  }): Promise<IPCResponse<CaseFact>>;
-  getFacts(caseId: number, factType?: string): Promise<IPCResponse<CaseFact[]>>;
-  getCaseFacts(caseId: number, factCategory?: string): Promise<IPCResponse<CaseFact[]>>;
-  getFactCount(caseId: number): Promise<IPCResponse<{ data: number }>>;
+  }): Promise<IPCResponse<FactsStoreResponse>>;
+  getFacts(caseId: number, factType?: string): Promise<IPCResponse<FactsGetResponse>>;
+  getCaseFacts(caseId: number, factCategory?: string): Promise<IPCResponse<FactsGetResponse>>;
+  getFactCount(caseId: number): Promise<IPCResponse<FactsCountResponse>>;
 
   // GDPR operations
   exportUserData(): Promise<IPCResponse<GDPRExportUserDataResponse>>;

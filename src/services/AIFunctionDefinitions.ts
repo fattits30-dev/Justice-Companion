@@ -9,7 +9,7 @@
  */
 
 import { defineChatSessionFunction } from 'node-llama-cpp';
-import type { CreateCaseInput, UpdateCaseInput, CaseStatus } from '../models/Case.js';
+import type { CaseStatus, CreateCaseInput, UpdateCaseInput } from '../models/Case.js';
 import type { CreateEvidenceInput, EvidenceType } from '../models/Evidence.js';
 
 /**
@@ -23,7 +23,8 @@ const createCaseFunction = defineChatSessionFunction({
     properties: {
       title: {
         type: 'string',
-        description: 'Brief, descriptive case title (e.g., "Unfair Dismissal - ABC Company Ltd", "Housing Disrepair - 123 Main St")',
+        description:
+          'Brief, descriptive case title (e.g., "Unfair Dismissal - ABC Company Ltd", "Housing Disrepair - 123 Main St")',
       },
       caseType: {
         type: 'string',
@@ -32,7 +33,8 @@ const createCaseFunction = defineChatSessionFunction({
       },
       description: {
         type: 'string',
-        description: 'Detailed description of the case, including key facts, dates, and parties involved',
+        description:
+          'Detailed description of the case, including key facts, dates, and parties involved',
       },
     },
     required: ['title', 'caseType', 'description'],
@@ -40,7 +42,14 @@ const createCaseFunction = defineChatSessionFunction({
   handler: async (params) => {
     const input: CreateCaseInput = {
       title: params.title,
-      caseType: params.caseType as 'employment' | 'housing' | 'consumer' | 'family' | 'debt' | 'other',
+      caseType: (params.caseType as
+        | 'employment'
+        | 'housing'
+        | 'consumer'
+        | 'family'
+        | 'debt'
+        | 'other'
+        | undefined) ?? 'other',
       description: params.description,
     };
 
@@ -66,7 +75,8 @@ const createCaseFunction = defineChatSessionFunction({
  * Retrieves a specific case by ID
  */
 const getCaseFunction = defineChatSessionFunction({
-  description: 'Get details of a specific case by ID. Use when user references a case number or asks about a specific case.',
+  description:
+    'Get details of a specific case by ID. Use when user references a case number or asks about a specific case.',
   params: {
     type: 'object',
     properties: {
@@ -104,14 +114,16 @@ const getCaseFunction = defineChatSessionFunction({
  * Lists all cases, optionally filtered by status
  */
 const listCasesFunction = defineChatSessionFunction({
-  description: 'List all cases. Use when user asks to see all cases, active cases, or closed cases.',
+  description:
+    'List all cases. Use when user asks to see all cases, active cases, or closed cases.',
   params: {
     type: 'object',
     properties: {
       filterStatus: {
         type: 'string',
         enum: ['all', 'active', 'closed', 'pending'],
-        description: 'Filter cases by status. Use "all" to retrieve all cases, or specify a status to filter.',
+        description:
+          'Filter cases by status. Use "all" to retrieve all cases, or specify a status to filter.',
       },
     },
     required: [],
@@ -150,7 +162,8 @@ const listCasesFunction = defineChatSessionFunction({
  * Updates an existing case
  */
 const updateCaseFunction = defineChatSessionFunction({
-  description: 'Update an existing case. Use when user wants to modify case details, change status, or add information.',
+  description:
+    'Update an existing case. Use when user wants to modify case details, change status, or add information.',
   params: {
     type: 'object',
     properties: {
@@ -186,7 +199,13 @@ const updateCaseFunction = defineChatSessionFunction({
       input.title = params.title;
     }
     if (params.caseType !== undefined) {
-      input.caseType = params.caseType as 'employment' | 'housing' | 'consumer' | 'family' | 'debt' | 'other';
+      input.caseType = params.caseType as
+        | 'employment'
+        | 'housing'
+        | 'consumer'
+        | 'family'
+        | 'debt'
+        | 'other';
     }
     if (params.description !== undefined) {
       input.description = params.description;
@@ -221,7 +240,8 @@ const updateCaseFunction = defineChatSessionFunction({
  * Creates a new evidence item for a case
  */
 const createEvidenceFunction = defineChatSessionFunction({
-  description: 'Create a new evidence item for a case. Use when user wants to add documents, photos, emails, recordings, or notes to a case.',
+  description:
+    'Create a new evidence item for a case. Use when user wants to add documents, photos, emails, recordings, or notes to a case.',
   params: {
     type: 'object',
     properties: {
@@ -231,7 +251,8 @@ const createEvidenceFunction = defineChatSessionFunction({
       },
       title: {
         type: 'string',
-        description: 'Brief title describing the evidence (e.g., "Employment Contract", "Email from Manager", "Photo of Defect")',
+        description:
+          'Brief title describing the evidence (e.g., "Employment Contract", "Email from Manager", "Photo of Defect")',
       },
       evidenceType: {
         type: 'string',
@@ -240,11 +261,13 @@ const createEvidenceFunction = defineChatSessionFunction({
       },
       content: {
         type: 'string',
-        description: 'Text content of the evidence (e.g., email body, notes, transcripts). Optional for files.',
+        description:
+          'Text content of the evidence (e.g., email body, notes, transcripts). Optional for files.',
       },
       filePath: {
         type: 'string',
-        description: 'Path to the evidence file (for documents, photos, recordings). Optional for text notes.',
+        description:
+          'Path to the evidence file (for documents, photos, recordings). Optional for text notes.',
       },
       obtainedDate: {
         type: 'string',
@@ -298,7 +321,8 @@ const createEvidenceFunction = defineChatSessionFunction({
  * Lists all evidence for a specific case
  */
 const listEvidenceFunction = defineChatSessionFunction({
-  description: 'List all evidence items for a specific case. Use when user asks to see evidence, documents, or attachments for a case.',
+  description:
+    'List all evidence items for a specific case. Use when user asks to see evidence, documents, or attachments for a case.',
   params: {
     type: 'object',
     properties: {
@@ -342,7 +366,8 @@ const listEvidenceFunction = defineChatSessionFunction({
  * AI calls this to remember user-provided information
  */
 const storeCaseFactFunction = defineChatSessionFunction({
-  description: 'Store a fact about a case for memory. Use IMMEDIATELY when user provides names, dates, events, evidence.',
+  description:
+    'Store a fact about a case for memory. Use IMMEDIATELY when user provides names, dates, events, evidence.',
   params: {
     type: 'object',
     properties: {
@@ -365,8 +390,15 @@ const storeCaseFactFunction = defineChatSessionFunction({
     const response = await window.justiceAPI.storeFact({
       caseId: params.caseId,
       factContent: params.factContent,
-      factCategory: params.factCategory as 'timeline' | 'evidence' | 'witness' | 'location' | 'communication' | 'other',
-      importance: (params.importance as 'low' | 'medium' | 'high' | 'critical') || 'medium',
+      factCategory: (params.factCategory as
+        | 'timeline'
+        | 'evidence'
+        | 'witness'
+        | 'location'
+        | 'communication'
+        | 'other'
+        | undefined) ?? 'other',
+      importance: (params.importance as 'low' | 'medium' | 'high' | 'critical' | undefined) ?? 'medium',
     });
     if (response.success) {
       return { success: true, factId: response.data.id, message: 'Fact stored' };
@@ -412,7 +444,8 @@ const getCaseFactsFunction = defineChatSessionFunction({
  * Search UK legislation
  */
 const searchLegislationFunction = defineChatSessionFunction({
-  description: 'Search UK legislation (Acts, regulations). Use when user asks about laws or rights.',
+  description:
+    'Search UK legislation (Acts, regulations). Use when user asks about laws or rights.',
   params: {
     type: 'object',
     properties: { query: { type: 'string', description: 'Search query' } },
@@ -437,7 +470,16 @@ const searchCaseLawFunction = defineChatSessionFunction({
       query: { type: 'string', description: 'Search query' },
       category: {
         type: 'string',
-        enum: ['employment', 'discrimination', 'housing', 'family', 'consumer', 'criminal', 'civil', 'general'],
+        enum: [
+          'employment',
+          'discrimination',
+          'housing',
+          'family',
+          'consumer',
+          'criminal',
+          'civil',
+          'general',
+        ],
         description: 'Legal category (optional)',
       },
     },

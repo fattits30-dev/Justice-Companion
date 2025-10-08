@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import type { CaseFact } from '../../../models/CaseFact';
 
 interface ChatPostItNotesProps {
@@ -28,7 +28,9 @@ export function ChatPostItNotes({ caseId }: ChatPostItNotesProps) {
       if (!caseId || !window.justiceAPI) {
         // No case selected - show empty state
         setUserFacts('👤 No user facts yet\n\nSelect a case and chat with the AI to gather facts.');
-        setCaseFacts('⚖️ No case facts yet\n\nThe AI will automatically store important information here.');
+        setCaseFacts(
+          '⚖️ No case facts yet\n\nThe AI will automatically store important information here.',
+        );
         return;
       }
 
@@ -38,8 +40,8 @@ export function ChatPostItNotes({ caseId }: ChatPostItNotesProps) {
         // Fetch all facts for this case
         const response = await window.justiceAPI.getFacts(caseId);
 
-        if (!response.success || !response.data) {
-          throw new Error(response.error || 'Failed to load facts');
+        if (!response.success) {
+          throw new Error(response.error);
         }
 
         const facts: CaseFact[] = response.data;
@@ -48,26 +50,26 @@ export function ChatPostItNotes({ caseId }: ChatPostItNotesProps) {
         const userCategories = ['witness', 'other']; // User-related facts
         const caseCategories = ['timeline', 'evidence', 'location', 'communication']; // Case-related facts
 
-        const userFactsList = facts.filter(f => userCategories.includes(f.factCategory));
-        const caseFactsList = facts.filter(f => caseCategories.includes(f.factCategory));
+        const userFactsList = facts.filter((f) => userCategories.includes(f.factCategory));
+        const caseFactsList = facts.filter((f) => caseCategories.includes(f.factCategory));
 
         // Format user facts
         if (userFactsList.length === 0) {
-          setUserFacts('👤 No user facts yet\n\nThe AI will gather information about parties and witnesses here.');
+          setUserFacts(
+            '👤 No user facts yet\n\nThe AI will gather information about parties and witnesses here.',
+          );
         } else {
-          const formatted = userFactsList
-            .map((f, i) => `${i + 1}. ${f.factContent}`)
-            .join('\n\n');
+          const formatted = userFactsList.map((f, i) => `${i + 1}. ${f.factContent}`).join('\n\n');
           setUserFacts(`👤 User Facts (${userFactsList.length})\n\n${formatted}`);
         }
 
         // Format case facts
         if (caseFactsList.length === 0) {
-          setCaseFacts('⚖️ No case facts yet\n\nThe AI will gather timeline, evidence, and location information here.');
+          setCaseFacts(
+            '⚖️ No case facts yet\n\nThe AI will gather timeline, evidence, and location information here.',
+          );
         } else {
-          const formatted = caseFactsList
-            .map((f, i) => `${i + 1}. ${f.factContent}`)
-            .join('\n\n');
+          const formatted = caseFactsList.map((f, i) => `${i + 1}. ${f.factContent}`).join('\n\n');
           setCaseFacts(`⚖️ Case Facts (${caseFactsList.length})\n\n${formatted}`);
         }
       } catch (error) {

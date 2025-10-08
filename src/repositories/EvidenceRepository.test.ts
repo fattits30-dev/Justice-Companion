@@ -6,27 +6,28 @@ import { createTestDatabase, type TestDatabaseHelper } from '../test-utils/datab
 import type { CreateEvidenceInput } from '../models/Evidence';
 import type Database from 'better-sqlite3';
 
+// Create test database instance at module level
+const testDb = createTestDatabase();
+let db: Database.Database;
+
+// Mock the database module at module level (hoisted by Vitest)
+vi.mock('../db/database', () => ({
+  databaseManager: {
+    getDatabase: () => db,
+  },
+  getDb: () => db,
+}));
+
 describe('EvidenceRepository with Encryption', () => {
   let evidenceRepo: EvidenceRepository;
   let caseRepo: CaseRepository;
   let encryptionService: EncryptionService;
   let testKey: Buffer;
   let testCaseId: number;
-  let testDb: TestDatabaseHelper;
-  let db: Database.Database;
 
   beforeAll(() => {
-    // Create test database with schema
-    testDb = createTestDatabase();
+    // Initialize test database with all migrations
     db = testDb.initialize();
-
-    // Mock the database module to return our test database
-    vi.mock('../db/database', () => ({
-      databaseManager: {
-        getDatabase: () => db,
-      },
-      getDb: () => db,
-    }));
   });
 
   afterAll(() => {

@@ -30,6 +30,7 @@
     "db:migrate:rollback": "tsx scripts/rollback-migration.ts",
     "db:backup": "tsx scripts/backup-database.ts",
     "db:backup:list": "tsx scripts/list-backups.ts",
+    "db:validate": "tsx scripts/validate-database-schema.ts",
     "test-data": "tsx scripts/generate-test-data.ts",
     "guard:build": "tsc -p automation/tsconfig.json",
     "guard": "npm run guard:build && node automation/dist/simple-orchestrator.js",
