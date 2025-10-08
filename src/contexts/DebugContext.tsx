@@ -70,7 +70,7 @@ export function DebugProvider({ children }: DebugProviderProps): JSX.Element {
           dataString = ` ${JSON.stringify(data, null, 2)}`;
         } catch {
           // Fallback for circular references or non-serializable objects
-          dataString = ` ${String(data)}`;
+          dataString = ' [Unserializable data]';
         }
       }
 

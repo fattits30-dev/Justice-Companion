@@ -51,7 +51,7 @@ export function isPathAllowed(filePath: string): boolean {
       return absolutePath === normalizedAllowedDir ||
              absolutePath.startsWith(normalizedAllowedDir + sep);
     });
-  } catch (_error) {
+  } catch {
     // If path resolution fails, deny access
     return false;
   }

@@ -194,7 +194,7 @@ export function useEvidence() {
 
   // Fetch evidence on mount
   useEffect(() => {
-    fetchEvidence();
+    void fetchEvidence();
   }, [fetchEvidence]);
 
   return {

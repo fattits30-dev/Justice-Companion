@@ -14,39 +14,39 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen } from '@/test-utils/test-utils';
 import userEvent from '@testing-library/user-event';
 import { CaseDetailView } from './CaseDetailView';
-import type { Case } from '../../models/Case';
-import type { Evidence } from '../../models/Evidence';
+import type { Case } from '../../../models/Case';
+import type { Evidence } from '../../../models/Evidence';
 
 // Mock hooks
 const mockUseCases = vi.fn();
 const mockUseEvidence = vi.fn();
 
-vi.mock('../../hooks/useCases', () => ({
+vi.mock('../hooks/useCases', () => ({
   useCases: () => mockUseCases(),
 }));
 
-vi.mock('../../hooks/useEvidence', () => ({
+vi.mock('../../../hooks/useEvidence', () => ({
   useEvidence: () => mockUseEvidence(),
 }));
 
 // Mock sub-components
-vi.mock('../timeline/TimelineView', () => ({
+vi.mock('../../../components/timeline/TimelineView', () => ({
   TimelineView: ({ caseId }: any) => <div data-testid="timeline-view">Timeline for case {caseId}</div>,
 }));
 
-vi.mock('../facts/UserFactsPanel', () => ({
+vi.mock('../../../components/facts/UserFactsPanel', () => ({
   UserFactsPanel: ({ caseId }: any) => <div data-testid="user-facts-panel">User Facts for case {caseId}</div>,
 }));
 
-vi.mock('../facts/CaseFactsPanel', () => ({
+vi.mock('../../../components/facts/CaseFactsPanel', () => ({
   CaseFactsPanel: ({ caseId }: any) => <div data-testid="case-facts-panel">Case Facts for case {caseId}</div>,
 }));
 
-vi.mock('../notes/NotesPanel', () => ({
+vi.mock('../../../components/notes/NotesPanel', () => ({
   NotesPanel: ({ caseId }: any) => <div data-testid="notes-panel">Notes for case {caseId}</div>,
 }));
 
-vi.mock('../legal/LegalIssuesPanel', () => ({
+vi.mock('../../../components/legal/LegalIssuesPanel', () => ({
   LegalIssuesPanel: ({ caseId }: any) => <div data-testid="legal-issues-panel">Legal Issues for case {caseId}</div>,
 }));
 

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { FileText, Download, Printer, Eye, CheckCircle, AlertCircle, XCircle, Filter, Mail, Upload } from 'lucide-react';
 import { useEvidence } from '../../hooks/useEvidence';
-import { useCases } from '../../hooks/useCases';
+import { useCases } from '@/features/cases';
 import { SkeletonCard } from '../ui/Skeleton';
 import { FileUploadModal } from '../FileUploadModal';
 import { toast } from 'sonner';

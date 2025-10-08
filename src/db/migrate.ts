@@ -84,7 +84,7 @@ export function runMigrations(): void {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .map((row: any) => ({
         name: row.name as string,
-        checksum: row.checksum as string
+        checksum: row.checksum as string,
       }));
 
     const appliedNames = appliedMigrations.map((m) => m.name);

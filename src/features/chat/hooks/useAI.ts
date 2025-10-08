@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, type RefObject } from 'react';
 import type { ChatMessage } from '../../../types/ai';
 import type { IPCResponse, AICheckStatusResponse, AIStreamStartResponse } from '../../../types/ipc';
 import { logger } from '../../../utils/logger';
@@ -45,7 +45,7 @@ export interface UseAIReturn {
   loadMessages: (messages: ChatMessage[]) => void;
 
   // Refs for auto-scroll
-  messagesEndRef: React.RefObject<HTMLDivElement>;
+  messagesEndRef: RefObject<HTMLDivElement>;
 }
 
 /**
@@ -113,13 +113,14 @@ export function useAI(caseId?: number, initialMessages: ChatMessage[] = []): Use
           );
         }
       } catch (err) {
+        logger.error('useAI', 'AI status check failed', { err });
         setError(
           'AI service initialization error. Please ensure the AI model is properly configured.',
         );
       }
     };
 
-    checkStatus();
+    void checkStatus();
   }, []);
 
   // Set up streaming event listeners

@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import { ChatWindow } from '@/features/chat';
+import { CasesView, CaseDetailView } from '@/features/cases';
 import { Sidebar } from './components/Sidebar';
 import { DashboardView } from './components/views/DashboardView';
-import { CasesView } from './components/views/CasesView';
-import { CaseDetailView } from './components/views/CaseDetailView';
 import { DocumentsView } from './components/views/DocumentsView';
 import { SettingsView } from './components/views/SettingsView';
 import { DebugProvider } from './contexts/DebugContext';

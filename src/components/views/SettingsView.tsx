@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type ComponentType, type ReactNode } from 'react';
 import { User, Bell, Lock, Database, Info, Brain, Briefcase } from 'lucide-react';
 import { ConfirmDialog } from '../ConfirmDialog';
 import { useToast } from '../../hooks/useToast';
@@ -710,10 +710,10 @@ export function SettingsView(): JSX.Element {
 }
 
 interface SettingsSectionProps {
-  icon: React.ComponentType<{ className?: string }>;
+  icon: ComponentType<{ className?: string }>;
   title: string;
   description: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 function SettingsSection({ icon: Icon, title, description, children }: SettingsSectionProps): JSX.Element {

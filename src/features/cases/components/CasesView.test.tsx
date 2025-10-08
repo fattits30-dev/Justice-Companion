@@ -16,18 +16,18 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen } from '@/test-utils/test-utils';
 import userEvent from '@testing-library/user-event';
 import { CasesView } from './CasesView';
-import type { Case } from '../../models/Case';
-import type { Evidence } from '../../models/Evidence';
+import type { Case } from '../../../models/Case';
+import type { Evidence } from '../../../models/Evidence';
 
 // Mock hooks
 const mockUseCases = vi.fn();
 const mockUseEvidence = vi.fn();
 
-vi.mock('../../hooks/useCases', () => ({
+vi.mock('../hooks/useCases', () => ({
   useCases: () => mockUseCases(),
 }));
 
-vi.mock('../../hooks/useEvidence', () => ({
+vi.mock('../../../hooks/useEvidence', () => ({
   useEvidence: () => mockUseEvidence(),
 }));
 

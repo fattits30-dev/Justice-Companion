@@ -1,10 +1,10 @@
 import { useState, useMemo } from 'react';
 import { ChevronDown, FileText } from 'lucide-react';
-import { useCases } from '../../hooks/useCases';
-import { useEvidence } from '../../hooks/useEvidence';
-import { SkeletonTree } from '../ui/Skeleton';
-import type { Case } from '../../models/Case';
-import type { Evidence } from '../../models/Evidence';
+import { useCases } from '../hooks/useCases';
+import { useEvidence } from '../../../hooks/useEvidence';
+import { SkeletonTree } from '../../../components/ui/Skeleton';
+import type { Case } from '../../../models/Case';
+import type { Evidence } from '../../../models/Evidence';
 
 interface TimelineEvent {
   date: string;

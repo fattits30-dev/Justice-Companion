@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { MessageSquare, Scale, FileText, TrendingUp } from 'lucide-react';
-import { useCases } from '../../hooks/useCases';
+import { useCases } from '@/features/cases';
 import { DashboardEmptyState } from '../ui/DashboardEmptyState';
 import { Skeleton } from '../ui/Skeleton';
 

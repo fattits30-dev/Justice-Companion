@@ -87,7 +87,7 @@ export function useUserFacts(caseId: number) {
   };
 
   useEffect(() => {
-    loadUserFacts();
+    void loadUserFacts();
   }, [caseId]);
 
   return {

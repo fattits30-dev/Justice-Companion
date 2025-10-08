@@ -1,6 +1,6 @@
-import { caseRepository } from '../repositories/CaseRepository';
-import type { Case, CreateCaseInput, UpdateCaseInput, CaseStatus } from '../models/Case';
-import { errorLogger } from '../utils/error-logger';
+import { caseRepository } from '../../../repositories/CaseRepository';
+import type { Case, CreateCaseInput, UpdateCaseInput, CaseStatus } from '../../../models/Case';
+import { errorLogger } from '../../../utils/error-logger';
 
 export class CaseService {
   /**

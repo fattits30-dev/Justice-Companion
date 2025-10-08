@@ -70,7 +70,7 @@ export function useLegalIssues(caseId: number) {
   };
 
   useEffect(() => {
-    loadLegalIssues();
+    void loadLegalIssues();
   }, [caseId]);
 
   return {

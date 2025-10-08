@@ -29,6 +29,16 @@ export default [
   // Main src/ TypeScript files configuration
   {
     files: ['src/**/*.ts', 'src/**/*.tsx'],
+    ignores: [
+      'src/**/*.test.ts',
+      'src/**/*.test.tsx',
+      'src/**/*.spec.ts',
+      'src/**/*.spec.tsx',
+      'src/test-utils/**/*.ts',
+      'src/test-utils/**/*.tsx',
+      'tests/**/*.ts',
+      'tests/**/*.tsx',
+    ],
     languageOptions: {
       parser: tsparser,
       parserOptions: {
@@ -43,6 +53,7 @@ export default [
         ...globals.browser,
         ...globals.node,
         ...globals.es2020,
+        React: 'readonly',
         JSX: 'readonly',
       },
     },
@@ -238,6 +249,7 @@ export default [
         ...globals.browser,
         ...globals.node,
         ...globals.es2020,
+        React: 'readonly',
         JSX: 'readonly',
         // Vitest globals
         describe: 'readonly',
@@ -267,6 +279,7 @@ export default [
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
       '@typescript-eslint/no-floating-promises': 'warn',
+      '@typescript-eslint/unbound-method': 'off',
       '@typescript-eslint/no-unused-vars': 'off', // Allow unused vars in tests
       'no-console': 'off',
       'no-undef': 'off', // Vitest globals are typed, no need for undef check

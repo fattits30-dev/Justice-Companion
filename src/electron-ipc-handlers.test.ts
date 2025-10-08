@@ -14,6 +14,7 @@
  * - Test response format
  * - Test integration between handlers
  */
+/* eslint-disable no-unreachable */
 
 import { describe, it, expect, beforeEach, afterEach, vi, type Mock } from 'vitest';
 import { IPC_CHANNELS } from '../src/types/ipc';

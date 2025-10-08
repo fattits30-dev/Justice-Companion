@@ -68,7 +68,7 @@ export function useNotes(caseId: number) {
   };
 
   useEffect(() => {
-    loadNotes();
+    void loadNotes();
   }, [caseId]);
 
   return {

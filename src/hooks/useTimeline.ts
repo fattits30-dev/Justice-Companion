@@ -70,7 +70,7 @@ export function useTimeline(caseId: number) {
   };
 
   useEffect(() => {
-    loadTimelineEvents();
+    void loadTimelineEvents();
   }, [caseId]);
 
   return {

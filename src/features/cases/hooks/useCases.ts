@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import type { Case, CreateCaseInput, UpdateCaseInput } from '../models/Case';
+import type { Case, CreateCaseInput, UpdateCaseInput } from '../../../models/Case';
 import type {
   IPCResponse,
   CaseCreateResponse,
@@ -9,7 +9,7 @@ import type {
   CaseDeleteResponse,
   CaseCloseResponse,
   CaseGetStatisticsResponse,
-} from '../types/ipc';
+} from '../../../types/ipc';
 
 /**
  * React hook for case management operations
@@ -227,7 +227,7 @@ export function useCases() {
 
   // Fetch cases on mount
   useEffect(() => {
-    fetchCases();
+    void fetchCases();
   }, [fetchCases]);
 
   return {

@@ -104,7 +104,7 @@ export function useCaseFacts(caseId: number) {
   };
 
   useEffect(() => {
-    loadCaseFacts();
+    void loadCaseFacts();
   }, [caseId]);
 
   return {
