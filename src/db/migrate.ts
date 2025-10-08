@@ -66,7 +66,18 @@ export function parseMigration(content: string): { up: string; down: string } {
  */
 export function runMigrations(): void {
   const db = getDb();
-  const migrationsDir = path.join(__dirname, 'migrations');
+  // Handle both development (src/db) and production (dist-electron) paths
+  let migrationsDir = path.join(__dirname, 'migrations');
+
+  // If migrations folder doesn't exist, try looking in src/db/migrations (development)
+  if (!fs.existsSync(migrationsDir)) {
+    migrationsDir = path.join(process.cwd(), 'src', 'db', 'migrations');
+  }
+
+  // If still not found, try looking relative to the executable (production)
+  if (!fs.existsSync(migrationsDir)) {
+    migrationsDir = path.join(process.resourcesPath || '', 'migrations');
+  }
 
   try {
     ensureMigrationsTable();
