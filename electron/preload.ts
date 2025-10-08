@@ -3,6 +3,7 @@ import { IPC_CHANNELS } from '../src/types/ipc';
 import type { JusticeCompanionAPI } from '../src/types/ipc';
 import type { CreateCaseInput, UpdateCaseInput } from '../src/models/Case';
 import type { CreateEvidenceInput, UpdateEvidenceInput } from '../src/models/Evidence';
+import type { ConsentType } from '../src/models/Consent';
 
 /**
  * Expose Justice Companion API to renderer process via contextBridge
@@ -328,6 +329,57 @@ const gdprAPI = {
   },
 };
 
+// Authentication API methods
+const authAPI = {
+  // Register a new user
+  registerUser: (username: string, password: string, email: string) => {
+    return ipcRenderer.invoke(IPC_CHANNELS.AUTH_REGISTER, { username, password, email });
+  },
+
+  // Login user
+  loginUser: (username: string, password: string) => {
+    return ipcRenderer.invoke(IPC_CHANNELS.AUTH_LOGIN, { username, password });
+  },
+
+  // Logout current user
+  logoutUser: () => {
+    return ipcRenderer.invoke(IPC_CHANNELS.AUTH_LOGOUT, {});
+  },
+
+  // Get current logged-in user
+  getCurrentUser: () => {
+    return ipcRenderer.invoke(IPC_CHANNELS.AUTH_GET_CURRENT_USER, {});
+  },
+
+  // Change user password
+  changePassword: (oldPassword: string, newPassword: string) => {
+    return ipcRenderer.invoke(IPC_CHANNELS.AUTH_CHANGE_PASSWORD, { oldPassword, newPassword });
+  },
+};
+
+// Consent API methods (GDPR)
+const consentAPI = {
+  // Grant consent
+  grantConsent: (consentType: ConsentType) => {
+    return ipcRenderer.invoke(IPC_CHANNELS.CONSENT_GRANT, { consentType });
+  },
+
+  // Revoke consent
+  revokeConsent: (consentType: ConsentType) => {
+    return ipcRenderer.invoke(IPC_CHANNELS.CONSENT_REVOKE, { consentType });
+  },
+
+  // Check if user has consent
+  hasConsent: (consentType: ConsentType) => {
+    return ipcRenderer.invoke(IPC_CHANNELS.CONSENT_HAS_CONSENT, { consentType });
+  },
+
+  // Get all user consents
+  getUserConsents: () => {
+    return ipcRenderer.invoke(IPC_CHANNELS.CONSENT_GET_USER_CONSENTS, {});
+  },
+};
+
 // UI Error Logging API
 const errorLoggingAPI = {
   // Log UI errors to main process for audit logging
@@ -336,7 +388,7 @@ const errorLoggingAPI = {
   },
 };
 
-// Combine case, AI, model, file, conversation, profile, facts, GDPR, and error logging APIs
+// Combine case, AI, model, file, conversation, profile, facts, GDPR, authentication, consent, and error logging APIs
 const fullAPI = {
   ...justiceAPI,
   ...aiAPI,
@@ -346,6 +398,8 @@ const fullAPI = {
   ...profileAPI,
   ...factsAPI,
   ...gdprAPI,
+  ...authAPI,
+  ...consentAPI,
   ...errorLoggingAPI,
 };
 

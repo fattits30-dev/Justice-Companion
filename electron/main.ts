@@ -23,6 +23,12 @@ import { legalAPIService } from '../src/services/LegalAPIService';
 import { chatConversationService } from '../src/services/ChatConversationService';
 import { userProfileService } from '../src/services/UserProfileService';
 import { modelDownloadService } from '../src/services/ModelDownloadService';
+import { UserRepository } from '../src/repositories/UserRepository';
+import { SessionRepository } from '../src/repositories/SessionRepository';
+import { ConsentRepository } from '../src/repositories/ConsentRepository';
+import { AuthenticationService } from '../src/services/AuthenticationService';
+import { ConsentService } from '../src/services/ConsentService';
+import { AuthorizationMiddleware } from '../src/middleware/AuthorizationMiddleware';
 import { IPC_CHANNELS } from '../src/types/ipc';
 
 // CRITICAL: Load environment variables FIRST (before any other initialization)
@@ -63,6 +69,15 @@ import type {
   ModelDeleteRequest,
   GDPRExportUserDataRequest,
   GDPRDeleteUserDataRequest,
+  AuthRegisterRequest,
+  AuthLoginRequest,
+  AuthLogoutRequest,
+  AuthGetCurrentUserRequest,
+  AuthChangePasswordRequest,
+  ConsentGrantRequest,
+  ConsentRevokeRequest,
+  ConsentHasConsentRequest,
+  ConsentGetUserConsentsRequest,
 } from '../src/types/ipc';
 
 // File operation types
@@ -86,6 +101,17 @@ interface FileEmailRequest {
 }
 
 let mainWindow: BrowserWindow | null = null;
+
+// Authentication state (session management)
+let currentSessionId: string | null = null;
+
+// Authentication services (initialized in app.whenReady)
+let userRepository: UserRepository;
+let sessionRepository: SessionRepository;
+let consentRepository: ConsentRepository;
+let authenticationService: AuthenticationService;
+let consentService: ConsentService;
+let authorizationMiddleware: AuthorizationMiddleware;
 
 function createWindow() {
   try {
@@ -1859,6 +1885,283 @@ function setupIpcHandlers() {
     }
   );
 
+  // Authentication: Register
+  ipcMain.handle(
+    IPC_CHANNELS.AUTH_REGISTER,
+    async (_, request: AuthRegisterRequest) => {
+      try {
+        const user = await authenticationService.register(
+          request.username,
+          request.password,
+          request.email
+        );
+        return { success: true, data: user };
+      } catch (error) {
+        errorLogger.logError(error as Error, { context: 'ipc:auth:register' });
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Failed to register user',
+        };
+      }
+    }
+  );
+
+  // Authentication: Login
+  ipcMain.handle(
+    IPC_CHANNELS.AUTH_LOGIN,
+    async (_, request: AuthLoginRequest) => {
+      try {
+        const { user, session } = await authenticationService.login(
+          request.username,
+          request.password
+        );
+
+        // Store session ID for auth state management
+        currentSessionId = session.id;
+
+        return {
+          success: true,
+          data: {
+            user,
+            sessionId: session.id,
+          },
+        };
+      } catch (error) {
+        errorLogger.logError(error as Error, { context: 'ipc:auth:login' });
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Failed to login',
+        };
+      }
+    }
+  );
+
+  // Authentication: Logout
+  ipcMain.handle(
+    IPC_CHANNELS.AUTH_LOGOUT,
+    async (_event, _request: AuthLogoutRequest) => {
+      try {
+        if (currentSessionId) {
+          await authenticationService.logout(currentSessionId);
+          currentSessionId = null;
+        }
+        return { success: true };
+      } catch (error) {
+        errorLogger.logError(error as Error, { context: 'ipc:auth:logout' });
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Failed to logout',
+        };
+      }
+    }
+  );
+
+  // Authentication: Get Current User
+  ipcMain.handle(
+    IPC_CHANNELS.AUTH_GET_CURRENT_USER,
+    async (_event, _request: AuthGetCurrentUserRequest) => {
+      try {
+        if (!currentSessionId) {
+          return { success: true, data: null };
+        }
+
+        const user = authenticationService.validateSession(currentSessionId);
+
+        if (!user) {
+          // Session expired or invalid
+          currentSessionId = null;
+          return { success: true, data: null };
+        }
+
+        return { success: true, data: user };
+      } catch (error) {
+        errorLogger.logError(error as Error, { context: 'ipc:auth:getCurrentUser' });
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Failed to get current user',
+        };
+      }
+    }
+  );
+
+  // Authentication: Change Password
+  ipcMain.handle(
+    IPC_CHANNELS.AUTH_CHANGE_PASSWORD,
+    async (_, request: AuthChangePasswordRequest) => {
+      try {
+        if (!currentSessionId) {
+          return {
+            success: false,
+            error: 'Not authenticated',
+          };
+        }
+
+        const user = authenticationService.validateSession(currentSessionId);
+
+        if (!user) {
+          currentSessionId = null;
+          return {
+            success: false,
+            error: 'Session expired',
+          };
+        }
+
+        await authenticationService.changePassword(
+          user.id,
+          request.oldPassword,
+          request.newPassword
+        );
+
+        // Session was invalidated by password change
+        currentSessionId = null;
+
+        return { success: true };
+      } catch (error) {
+        errorLogger.logError(error as Error, { context: 'ipc:auth:changePassword' });
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Failed to change password',
+        };
+      }
+    }
+  );
+
+  // Consent: Grant
+  ipcMain.handle(
+    IPC_CHANNELS.CONSENT_GRANT,
+    async (_, request: ConsentGrantRequest) => {
+      try {
+        if (!currentSessionId) {
+          return {
+            success: false,
+            error: 'Not authenticated',
+          };
+        }
+
+        const user = authenticationService.validateSession(currentSessionId);
+
+        if (!user) {
+          currentSessionId = null;
+          return {
+            success: false,
+            error: 'Session expired',
+          };
+        }
+
+        const consent = consentService.grantConsent(user.id, request.consentType);
+        return { success: true, data: consent };
+      } catch (error) {
+        errorLogger.logError(error as Error, { context: 'ipc:consent:grant' });
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Failed to grant consent',
+        };
+      }
+    }
+  );
+
+  // Consent: Revoke
+  ipcMain.handle(
+    IPC_CHANNELS.CONSENT_REVOKE,
+    async (_, request: ConsentRevokeRequest) => {
+      try {
+        if (!currentSessionId) {
+          return {
+            success: false,
+            error: 'Not authenticated',
+          };
+        }
+
+        const user = authenticationService.validateSession(currentSessionId);
+
+        if (!user) {
+          currentSessionId = null;
+          return {
+            success: false,
+            error: 'Session expired',
+          };
+        }
+
+        consentService.revokeConsent(user.id, request.consentType);
+        return { success: true };
+      } catch (error) {
+        errorLogger.logError(error as Error, { context: 'ipc:consent:revoke' });
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Failed to revoke consent',
+        };
+      }
+    }
+  );
+
+  // Consent: Has Consent
+  ipcMain.handle(
+    IPC_CHANNELS.CONSENT_HAS_CONSENT,
+    async (_, request: ConsentHasConsentRequest) => {
+      try {
+        if (!currentSessionId) {
+          return {
+            success: false,
+            error: 'Not authenticated',
+          };
+        }
+
+        const user = authenticationService.validateSession(currentSessionId);
+
+        if (!user) {
+          currentSessionId = null;
+          return {
+            success: false,
+            error: 'Session expired',
+          };
+        }
+
+        const hasConsent = consentService.hasConsent(user.id, request.consentType);
+        return { success: true, data: hasConsent };
+      } catch (error) {
+        errorLogger.logError(error as Error, { context: 'ipc:consent:hasConsent' });
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Failed to check consent',
+        };
+      }
+    }
+  );
+
+  // Consent: Get User Consents
+  ipcMain.handle(
+    IPC_CHANNELS.CONSENT_GET_USER_CONSENTS,
+    async (_event, _request: ConsentGetUserConsentsRequest) => {
+      try {
+        if (!currentSessionId) {
+          return {
+            success: false,
+            error: 'Not authenticated',
+          };
+        }
+
+        const user = authenticationService.validateSession(currentSessionId);
+
+        if (!user) {
+          currentSessionId = null;
+          return {
+            success: false,
+            error: 'Session expired',
+          };
+        }
+
+        const consents = consentService.getUserConsents(user.id);
+        return { success: true, data: consents };
+      } catch (error) {
+        errorLogger.logError(error as Error, { context: 'ipc:consent:getUserConsents' });
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Failed to get consents',
+        };
+      }
+    }
+  );
+
   // UI Error Logging
   ipcMain.handle(
     IPC_CHANNELS.LOG_UI_ERROR,
@@ -1914,7 +2217,7 @@ function setupIpcHandlers() {
     }
   );
 
-  errorLogger.logError('IPC handlers registered successfully (cases + evidence + AI + files + conversations + profile + models + facts + GDPR + UI errors)', { type: 'info' });
+  errorLogger.logError('IPC handlers registered successfully (cases + evidence + AI + files + conversations + profile + models + facts + GDPR + authentication + consent + UI errors)', { type: 'info' });
 }
 
 // Prevent multiple instances - request single instance lock
@@ -2199,6 +2502,47 @@ app.whenReady().then(() => {
       errorLogger.logError(error as Error, { context: 'ai-service-factory-injection' });
       errorLogger.logError('⚠️  WARNING: Failed to inject repository - AI won\'t have access to stored facts!', {
         type: 'warn',
+      });
+    }
+
+    // CRITICAL SECURITY: Initialize authentication services
+    try {
+      const db = databaseManager.getDatabase();
+      const auditLogger = new AuditLogger(db);
+
+      // Initialize repositories
+      userRepository = new UserRepository(auditLogger);
+      sessionRepository = new SessionRepository();
+      consentRepository = new ConsentRepository();
+
+      // Initialize services
+      authenticationService = new AuthenticationService(
+        userRepository,
+        sessionRepository,
+        auditLogger
+      );
+      consentService = new ConsentService(
+        consentRepository,
+        auditLogger
+      );
+      authorizationMiddleware = new AuthorizationMiddleware(
+        caseRepository,
+        auditLogger
+      );
+
+      errorLogger.logError('✅ Authentication services initialized successfully', {
+        type: 'info',
+      });
+      errorLogger.logError('🔐 Local user authentication ready (scrypt password hashing, 24-hour sessions)', {
+        type: 'info',
+      });
+      errorLogger.logError('📋 GDPR consent management ready (4 consent types)', {
+        type: 'info',
+      });
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'authentication-initialization' });
+      errorLogger.logError('⚠️  WARNING: Authentication initialization failed - auth features will not work!', {
+        type: 'error',
       });
     }
 
