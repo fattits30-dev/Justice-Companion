@@ -26,6 +26,9 @@ export class TestDatabaseHelper {
       '003_audit_logs.sql',
       '004_encryption_expansion.sql',
       '005_user_and_case_facts.sql',
+      '010_authentication_system.sql',
+      '011_add_user_ownership.sql',
+      '012_consent_management.sql',
     ];
 
     for (const migration of migrations) {
@@ -83,9 +86,13 @@ export class TestDatabaseHelper {
       'evidence',
       'legal_issues',
       'cases',
+      'consents',          // Phase 1
+      'sessions',          // Phase 1
       'user_profile',
       'audit_logs',
       'error_logs',
+      // Note: users table deleted last (has foreign keys from many tables)
+      'users',             // Phase 1
     ];
 
     this.db.exec('PRAGMA foreign_keys = OFF');

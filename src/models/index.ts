@@ -7,3 +7,6 @@ export * from './Note';
 export * from './UserFact';
 export * from './CaseFact';
 export * from './AuditLog';
+export * from './User';
+export * from './Session';
+export * from './Consent';

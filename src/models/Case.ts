@@ -7,6 +7,7 @@ export interface Case {
   description: string | null;
   caseType: CaseType;
   status: CaseStatus;
+  userId: number | null;  // Owner of the case (added in migration 011)
   createdAt: string;
   updatedAt: string;
 }

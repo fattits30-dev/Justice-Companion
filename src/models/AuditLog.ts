@@ -44,6 +44,25 @@ export type AuditEventType =
   // Security operations
   | 'encryption.key_loaded'
   | 'encryption.decrypt'
+  // User authentication operations (Phase 1)
+  | 'user.create'
+  | 'user.update'
+  | 'user.delete'
+  | 'user.register'
+  | 'user.login'
+  | 'user.logout'
+  | 'user.password_change'
+  | 'user.login_timestamp'
+  // Session operations (Phase 1)
+  | 'session.cleanup'
+  // Authorization operations (Phase 1)
+  | 'authorization.denied'
+  // Consent operations (Phase 1)
+  | 'consent.granted'
+  | 'consent.revoked'
+  // GDPR operations
+  | 'gdpr.export'
+  | 'gdpr.deletion_request'
   // System operations
   | 'database.backup'
   | 'database.restore'

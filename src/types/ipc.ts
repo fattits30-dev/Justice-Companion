@@ -10,6 +10,8 @@ import type { UserProfile, UpdateUserProfileInput } from '../models/UserProfile'
 import type { Evidence, CreateEvidenceInput, UpdateEvidenceInput } from '../models/Evidence';
 import type { LegalContext } from './ai';
 import type { CaseFact } from '../models/CaseFact';
+import type { User } from '../models/User';
+import type { Consent, ConsentType } from '../models/Consent';
 
 /**
  * IPC Channel definitions for type-safe communication
@@ -78,6 +80,19 @@ export const IPC_CHANNELS = {
   // GDPR Operations
   GDPR_EXPORT_USER_DATA: 'gdpr:exportUserData',
   GDPR_DELETE_USER_DATA: 'gdpr:deleteUserData',
+
+  // Authentication Operations (Phase 1)
+  AUTH_REGISTER: 'auth:register',
+  AUTH_LOGIN: 'auth:login',
+  AUTH_LOGOUT: 'auth:logout',
+  AUTH_GET_CURRENT_USER: 'auth:getCurrentUser',
+  AUTH_CHANGE_PASSWORD: 'auth:changePassword',
+
+  // Consent Operations (Phase 1)
+  CONSENT_GRANT: 'consent:grant',
+  CONSENT_REVOKE: 'consent:revoke',
+  CONSENT_HAS_CONSENT: 'consent:hasConsent',
+  CONSENT_GET_USER_CONSENTS: 'consent:getUserConsents',
 
   // UI Error Logging
   LOG_UI_ERROR: 'ui:logError',
@@ -462,6 +477,90 @@ export interface ProfileUpdateResponse {
   data: UserProfile;
 }
 
+// Authentication IPC Request/Response types (Phase 1)
+export interface AuthRegisterRequest {
+  username: string;
+  password: string;
+  email: string;
+}
+
+export interface AuthRegisterResponse {
+  success: true;
+  data: User;
+}
+
+export interface AuthLoginRequest {
+  username: string;
+  password: string;
+}
+
+export interface AuthLoginResponse {
+  success: true;
+  data: {
+    user: User;
+    sessionId: string;
+  };
+}
+
+// No request parameters needed - logout uses current session
+export type AuthLogoutRequest = void;
+
+export interface AuthLogoutResponse {
+  success: true;
+}
+
+// No request parameters needed - returns current authenticated user
+export type AuthGetCurrentUserRequest = void;
+
+export interface AuthGetCurrentUserResponse {
+  success: true;
+  data: User | null;
+}
+
+export interface AuthChangePasswordRequest {
+  oldPassword: string;
+  newPassword: string;
+}
+
+export interface AuthChangePasswordResponse {
+  success: true;
+}
+
+// Consent IPC Request/Response types (Phase 1)
+export interface ConsentGrantRequest {
+  consentType: ConsentType;
+}
+
+export interface ConsentGrantResponse {
+  success: true;
+  data: Consent;
+}
+
+export interface ConsentRevokeRequest {
+  consentType: ConsentType;
+}
+
+export interface ConsentRevokeResponse {
+  success: true;
+}
+
+export interface ConsentHasConsentRequest {
+  consentType: ConsentType;
+}
+
+export interface ConsentHasConsentResponse {
+  success: true;
+  data: boolean;
+}
+
+// No request parameters needed - returns all consents for current user
+export type ConsentGetUserConsentsRequest = void;
+
+export interface ConsentGetUserConsentsResponse {
+  success: true;
+  data: Consent[];
+}
+
 // GDPR IPC Request/Response types
 // No request parameters needed - handler exports all user data
 export type GDPRExportUserDataRequest = void;
@@ -619,6 +718,19 @@ export interface JusticeCompanionAPI {
   // GDPR operations
   exportUserData(): Promise<IPCResponse<GDPRExportUserDataResponse>>;
   deleteUserData(confirmation: string): Promise<IPCResponse<GDPRDeleteUserDataResponse>>;
+
+  // Authentication operations (Phase 1)
+  registerUser(username: string, password: string, email: string): Promise<IPCResponse<AuthRegisterResponse>>;
+  loginUser(username: string, password: string): Promise<IPCResponse<AuthLoginResponse>>;
+  logoutUser(): Promise<IPCResponse<AuthLogoutResponse>>;
+  getCurrentUser(): Promise<IPCResponse<AuthGetCurrentUserResponse>>;
+  changePassword(oldPassword: string, newPassword: string): Promise<IPCResponse<AuthChangePasswordResponse>>;
+
+  // Consent operations (Phase 1)
+  grantConsent(consentType: ConsentType): Promise<IPCResponse<ConsentGrantResponse>>;
+  revokeConsent(consentType: ConsentType): Promise<IPCResponse<ConsentRevokeResponse>>;
+  hasConsent(consentType: ConsentType): Promise<IPCResponse<ConsentHasConsentResponse>>;
+  getUserConsents(): Promise<IPCResponse<ConsentGetUserConsentsResponse>>;
 
   // UI Error Logging
   logUIError(errorData: UIErrorData): Promise<IPCResponse<LogUIErrorResponse>>;
