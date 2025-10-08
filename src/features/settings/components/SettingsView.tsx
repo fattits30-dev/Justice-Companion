@@ -1,13 +1,16 @@
 import { useState, useEffect, type ComponentType, type ReactNode } from 'react';
-import { User, Bell, Lock, Database, Info, Brain, Briefcase } from 'lucide-react';
+import { User, Bell, Lock, Database, Info, Brain, Briefcase, Shield, CheckCircle2, XCircle } from 'lucide-react';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { useToast } from '@/hooks/useToast';
+import { useAuth } from '@/contexts/AuthContext';
 import { SkeletonText } from '@/components/ui/Skeleton';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import type { UserProfile } from '@/models/UserProfile';
+import type { Consent, ConsentType } from '@/models/Consent';
 
 export function SettingsView(): JSX.Element {
   const toast = useToast();
+  const { user } = useAuth();
 
   // User Profile
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -17,6 +20,18 @@ export function SettingsView(): JSX.Element {
   const [showSaveSuccess, setShowSaveSuccess] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
+
+  // Password Change
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [isSubmittingPassword, setIsSubmittingPassword] = useState(false);
+
+  // Consent Management
+  const [consents, setConsents] = useState<Consent[]>([]);
+  const [isLoadingConsents, setIsLoadingConsents] = useState(false);
 
   // RAG toggle state - persisted in localStorage
   const [ragEnabled, setRagEnabled] = useState(() => {
@@ -130,7 +145,7 @@ export function SettingsView(): JSX.Element {
   // Clear data confirmation
   const [clearDataConfirmOpen, setClearDataConfirmOpen] = useState(false);
 
-  // Load user profile on mount
+  // Load user profile and consents on mount
   useEffect(() => {
     const loadProfile = async () => {
       if (!window.justiceAPI) {
@@ -154,6 +169,7 @@ export function SettingsView(): JSX.Element {
     };
 
     void loadProfile();
+    void loadConsents();
   }, []);
 
   // Persist RAG setting to localStorage
@@ -268,6 +284,109 @@ export function SettingsView(): JSX.Element {
       toast.error('Failed to update profile. Please try again.');
     } finally {
       setIsSavingProfile(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    setPasswordError(null);
+
+    // Validation
+    if (!oldPassword) {
+      setPasswordError('Current password is required');
+      return;
+    }
+
+    if (newPassword.length < 12) {
+      setPasswordError('New password must be at least 12 characters');
+      return;
+    }
+
+    if (!/[A-Z]/.test(newPassword)) {
+      setPasswordError('Password must contain at least one uppercase letter');
+      return;
+    }
+
+    if (!/[a-z]/.test(newPassword)) {
+      setPasswordError('Password must contain at least one lowercase letter');
+      return;
+    }
+
+    if (!/[0-9]/.test(newPassword)) {
+      setPasswordError('Password must contain at least one number');
+      return;
+    }
+
+    if (newPassword !== confirmNewPassword) {
+      setPasswordError('New passwords do not match');
+      return;
+    }
+
+    setIsSubmittingPassword(true);
+
+    try {
+      const result = await window.justiceAPI.changePassword(oldPassword, newPassword);
+
+      if (result.success) {
+        toast.success('Password changed successfully! Please login again.');
+        // Reset form
+        setOldPassword('');
+        setNewPassword('');
+        setConfirmNewPassword('');
+        setIsChangingPassword(false);
+        // User will be logged out automatically
+      } else {
+        setPasswordError(result.error || 'Failed to change password');
+      }
+    } catch (error) {
+      console.error('Password change error:', error);
+      setPasswordError('Failed to change password. Please try again.');
+    } finally {
+      setIsSubmittingPassword(false);
+    }
+  };
+
+  const loadConsents = async () => {
+    setIsLoadingConsents(true);
+    try {
+      const result = await window.justiceAPI.getUserConsents();
+      if (result.success) {
+        setConsents(result.data);
+      }
+    } catch (error) {
+      console.error('Failed to load consents:', error);
+      toast.error('Failed to load consents');
+    } finally {
+      setIsLoadingConsents(false);
+    }
+  };
+
+  const handleRevokeConsent = async (consentType: ConsentType) => {
+    try {
+      const result = await window.justiceAPI.revokeConsent(consentType);
+      if (result.success) {
+        toast.success('Consent revoked successfully');
+        await loadConsents(); // Reload consents
+      } else {
+        toast.error('Failed to revoke consent');
+      }
+    } catch (error) {
+      console.error('Failed to revoke consent:', error);
+      toast.error('Failed to revoke consent');
+    }
+  };
+
+  const handleGrantConsent = async (consentType: ConsentType) => {
+    try {
+      const result = await window.justiceAPI.grantConsent(consentType);
+      if (result.success) {
+        toast.success('Consent granted successfully');
+        await loadConsents(); // Reload consents
+      } else {
+        toast.error('Failed to grant consent');
+      }
+    } catch (error) {
+      console.error('Failed to grant consent:', error);
+      toast.error('Failed to grant consent');
     }
   };
 
@@ -455,6 +574,172 @@ export function SettingsView(): JSX.Element {
               enabled={documentAnalysisNotif}
               onChange={setDocumentAnalysisNotif}
             />
+          </SettingsSection>
+
+          {/* Account Security */}
+          <SettingsSection
+            icon={Shield}
+            title="Account Security"
+            description="Manage your account password"
+          >
+            {user && (
+              <SettingItem
+                label="Username"
+                value={user.username}
+                info
+              />
+            )}
+            {!isChangingPassword ? (
+              <button
+                onClick={() => setIsChangingPassword(true)}
+                className="w-full px-3 py-2 bg-blue-600/20 border border-blue-500/30 text-blue-300 rounded-lg hover:bg-blue-600/30 transition-all text-xs font-medium"
+              >
+                Change Password
+              </button>
+            ) : (
+              <div className="space-y-3">
+                {passwordError && (
+                  <div className="px-3 py-2 bg-red-900/30 border border-red-500/50 text-red-200 rounded-lg text-xs">
+                    {passwordError}
+                  </div>
+                )}
+                <div>
+                  <label className="block text-xs font-medium text-white mb-1">Current Password</label>
+                  <input
+                    type="password"
+                    value={oldPassword}
+                    onChange={(e) => setOldPassword(e.target.value)}
+                    className="w-full px-3 py-1.5 text-xs bg-slate-800/50 border border-blue-700/30 rounded-lg text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    placeholder="Enter current password"
+                    disabled={isSubmittingPassword}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-white mb-1">New Password</label>
+                  <input
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="w-full px-3 py-1.5 text-xs bg-slate-800/50 border border-blue-700/30 rounded-lg text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    placeholder="At least 12 characters"
+                    disabled={isSubmittingPassword}
+                  />
+                  <p className="text-xs text-slate-400 mt-1">12+ chars, uppercase, lowercase, number</p>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-white mb-1">Confirm New Password</label>
+                  <input
+                    type="password"
+                    value={confirmNewPassword}
+                    onChange={(e) => setConfirmNewPassword(e.target.value)}
+                    className="w-full px-3 py-1.5 text-xs bg-slate-800/50 border border-blue-700/30 rounded-lg text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    placeholder="Re-enter new password"
+                    disabled={isSubmittingPassword}
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleChangePassword}
+                    disabled={isSubmittingPassword}
+                    className="flex-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {isSubmittingPassword ? (
+                      <>
+                        <LoadingSpinner size="sm" color="white" />
+                        <span>Changing...</span>
+                      </>
+                    ) : (
+                      'Change Password'
+                    )}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsChangingPassword(false);
+                      setOldPassword('');
+                      setNewPassword('');
+                      setConfirmNewPassword('');
+                      setPasswordError(null);
+                    }}
+                    disabled={isSubmittingPassword}
+                    className="flex-1 px-3 py-1.5 bg-slate-700 text-white rounded-lg hover:bg-slate-600 transition-colors text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+          </SettingsSection>
+
+          {/* Consent Management */}
+          <SettingsSection
+            icon={CheckCircle2}
+            title="Consent Management"
+            description="Manage your GDPR data processing consents"
+          >
+            {isLoadingConsents ? (
+              <div className="space-y-3">
+                <SkeletonText lines={3} />
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {['data_processing', 'encryption', 'ai_processing', 'marketing'].map((type) => {
+                  const consentType = type as ConsentType;
+                  const consent = consents.find((c) => c.consentType === consentType && !c.revokedAt);
+                  const isRequired = consentType === 'data_processing';
+
+                  return (
+                    <div key={consentType} className="flex items-center justify-between py-2 border-b border-blue-800/20 last:border-0">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <div className="text-xs font-medium text-white capitalize">
+                            {consentType.replace('_', ' ')}
+                          </div>
+                          {isRequired && (
+                            <span className="text-xs bg-blue-900/50 text-blue-200 px-2 py-0.5 rounded">
+                              Required
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-xs text-slate-400 mt-0.5">
+                          {consent ? (
+                            <span className="flex items-center gap-1 text-green-400">
+                              <CheckCircle2 size={12} />
+                              Granted
+                            </span>
+                          ) : (
+                            <span className="flex items-center gap-1 text-slate-500">
+                              <XCircle size={12} />
+                              Not granted
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      {consent ? (
+                        <button
+                          onClick={() => handleRevokeConsent(consentType)}
+                          disabled={isRequired}
+                          className="px-3 py-1.5 text-xs text-red-300 hover:text-red-200 font-medium transition-colors flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isRequired ? 'Cannot revoke' : 'Revoke'}
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleGrantConsent(consentType)}
+                          className="px-3 py-1.5 text-xs text-green-300 hover:text-green-200 font-medium transition-colors flex-shrink-0"
+                        >
+                          Grant
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+                <div className="bg-blue-900/20 border border-blue-700/30 rounded-lg p-3">
+                  <p className="text-xs text-blue-200">
+                    <strong>Your Rights (GDPR):</strong> You can withdraw consent at any time except for required consents. Revoking data processing consent will prevent the app from functioning.
+                  </p>
+                </div>
+              </div>
+            )}
           </SettingsSection>
 
           {/* Privacy & Security */}

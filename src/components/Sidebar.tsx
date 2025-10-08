@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, MessageSquare, Briefcase, FileText, Settings, Menu, ChevronLeft } from 'lucide-react';
+import { LayoutDashboard, MessageSquare, Briefcase, FileText, Settings, Menu, ChevronLeft, LogOut, User } from 'lucide-react';
 import SidebarCaseContext from '../features/chat/components/SidebarCaseContext';
 import { ConfirmDialog } from './ConfirmDialog';
+import { useAuth } from '../contexts/AuthContext';
 import type { ChatConversation } from '../models/ChatConversation';
 import type { UserProfile } from '../models/UserProfile';
 
@@ -24,11 +25,13 @@ const navigationItems = [
 ];
 
 export function Sidebar({ isExpanded, onToggle, onConversationLoad, activeView, onViewChange, activeCaseId, onActiveCaseIdChange }: SidebarProps): JSX.Element {
+  const { user, logout } = useAuth();
   const [activeConversationId, setActiveConversationId] = useState<number | null>(null);
   const [recentChats, setRecentChats] = useState<ChatConversation[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [conversationToDelete, setConversationToDelete] = useState<number | null>(null);
+  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
 
   // Data loading when expanded
   useEffect(() => {
@@ -144,17 +147,32 @@ export function Sidebar({ isExpanded, onToggle, onConversationLoad, activeView, 
     }
   };
 
-  // Get user initials
+  // Get user initials from auth user or profile
   const getUserInitials = () => {
-    if (!userProfile?.name) {
-      return 'U';
+    if (user?.username) {
+      return user.username.slice(0, 2).toUpperCase();
     }
-    return userProfile.name
-      .split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
+    if (userProfile?.name) {
+      return userProfile.name
+        .split(' ')
+        .map(n => n[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2);
+    }
+    return 'U';
+  };
+
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      await logout();
+      // App will automatically redirect to login screen via AuthContext
+    } catch (error) {
+      console.error('Logout failed:', error);
+    } finally {
+      setLogoutConfirmOpen(false);
+    }
   };
 
   return (
@@ -241,24 +259,47 @@ export function Sidebar({ isExpanded, onToggle, onConversationLoad, activeView, 
 
         {/* Profile - always visible */}
         <div className="border-t border-blue-800/30 p-3 bg-slate-900/50">
-          <button
-            onClick={onToggle}
-            className={`w-full flex items-center gap-3 hover:bg-blue-800/30 rounded-lg transition-colors p-2 ${
-              !isExpanded && 'justify-center'
-            }`}
-            title={isExpanded ? undefined : userProfile?.name || 'User Profile'}
-          >
-            {/* Profile Picture/Initials */}
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold shadow-lg">
-              {getUserInitials()}
+          {isExpanded ? (
+            <div className="space-y-2">
+              {/* User Info */}
+              <button
+                onClick={() => onViewChange('settings')}
+                className="w-full flex items-center gap-3 hover:bg-blue-800/30 rounded-lg transition-colors p-2"
+                title="Open Settings"
+              >
+                {/* Profile Picture/Initials */}
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold shadow-lg">
+                  {getUserInitials()}
+                </div>
+                <div className="flex-1 text-left">
+                  <div className="text-sm font-medium text-white">{user?.username || 'User'}</div>
+                  <div className="text-xs text-blue-300">{user?.email || userProfile?.email || 'user@example.com'}</div>
+                </div>
+                <User size={16} className="text-blue-300" />
+              </button>
+
+              {/* Logout Button */}
+              <button
+                onClick={() => setLogoutConfirmOpen(true)}
+                className="w-full flex items-center gap-3 hover:bg-red-800/30 rounded-lg transition-colors p-2 text-red-300"
+                title="Logout"
+              >
+                <LogOut size={18} className="flex-shrink-0" />
+                <span className="text-sm font-medium">Logout</span>
+              </button>
             </div>
-            {isExpanded && (
-              <div className="flex-1 text-left">
-                <div className="text-sm font-medium text-white">{userProfile?.name || 'User'}</div>
-                <div className="text-xs text-blue-300">{userProfile?.email || 'user@example.com'}</div>
+          ) : (
+            <button
+              onClick={onToggle}
+              className="w-full flex items-center justify-center hover:bg-blue-800/30 rounded-lg transition-colors p-2"
+              title={user?.username || 'User Profile'}
+            >
+              {/* Profile Picture/Initials */}
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold shadow-lg">
+                {getUserInitials()}
               </div>
-            )}
-          </button>
+            </button>
+          )}
         </div>
       </div>
 
@@ -275,6 +316,18 @@ export function Sidebar({ isExpanded, onToggle, onConversationLoad, activeView, 
           setDeleteConfirmOpen(false);
           setConversationToDelete(null);
         }}
+      />
+
+      {/* Logout Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={logoutConfirmOpen}
+        title="Logout"
+        message="Are you sure you want to logout? Any unsaved work will be lost."
+        confirmText="Logout"
+        cancelText="Cancel"
+        variant="danger"
+        onConfirm={handleLogout}
+        onCancel={() => setLogoutConfirmOpen(false)}
       />
     </>
   );
