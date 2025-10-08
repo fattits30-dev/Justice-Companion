@@ -23,8 +23,7 @@ export { SidebarProfile } from './components/SidebarProfile';
 export { useAI } from './hooks/useAI';
 export type { UseAIReturn, AILoadingState, ProgressStage } from './hooks/useAI';
 
-// Services
-export { IntegratedAIService } from './services/IntegratedAIService';
+// IntegratedAIService removed - backend only (uses error-logger with fs/path)
 
 // Re-export component prop types for external consumers
 export type { MessageBubbleProps } from './components/MessageBubble';

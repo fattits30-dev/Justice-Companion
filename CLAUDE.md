@@ -1,5 +1,27 @@
 # Justice Companion - Development Guide
 
+## ⚡ Essential References - START HERE
+
+**Critical Documentation** (read these first):
+1. **[MASTER_BUILD_GUIDE.md](MASTER_BUILD_GUIDE.md)** - Comprehensive 8-phase build roadmap (58KB, 13,000+ words)
+   - Complete architecture, security, testing, and deployment guide
+   - Blocks production: Weeks 2-4 (Security), Weeks 9-10 (Testing)
+
+2. **[BUILD_QUICK_REFERENCE.md](BUILD_QUICK_REFERENCE.md)** - Critical path summary (6.6KB, 1-page)
+   - Quick command reference and priority checklist
+   - Essential for day-to-day development
+
+3. **[AUDIT_COMPLETION_SUMMARY.md](AUDIT_COMPLETION_SUMMARY.md)** - Full audit report (19KB)
+   - Actionable recommendations across all domains
+   - Database, backend, frontend, integration, testing, security findings
+
+**When to Use Each**:
+- **Starting a new task?** → Check `BUILD_QUICK_REFERENCE.md` for commands and priorities
+- **Planning a phase?** → Read relevant section in `MASTER_BUILD_GUIDE.md`
+- **Need context on existing code?** → Review `AUDIT_COMPLETION_SUMMARY.md` findings
+
+---
+
 ## 🎯 Current Implementation Status (2025-10-08)
 
 ### ✅ Phase 0.5: MCP Server (COMPLETE)
@@ -78,8 +100,8 @@
 - `src/repositories/NotesRepository.test.ts` (285 lines)
 - `src/repositories/Phase3Repositories.test.ts` (420 lines)
 - `src/db/migrations/004_encryption_expansion.sql`
-- `ENCRYPTION_COVERAGE_REPORT.md` (comprehensive audit)
-- `ENCRYPTION_IMPLEMENTATION.md` (v2.0 - complete documentation)
+- `docs/implementation/ENCRYPTION_COVERAGE_REPORT.md` (comprehensive audit)
+- `docs/implementation/ENCRYPTION_IMPLEMENTATION.md` (v2.0 - complete documentation)
 
 ### ✅ Phase 3.5: User Facts & Case Facts Feature (COMPLETE)
 **Status**: COMPLETE (2025-10-05)
@@ -113,7 +135,7 @@
 - `src/repositories/UserFactsRepository.test.ts` (570 lines)
 - `src/repositories/CaseFactsRepository.test.ts` (682 lines)
 - `src/repositories/FactsRepositories.test.ts` (636 lines)
-- `FACTS_FEATURE_IMPLEMENTATION.md` (700+ lines)
+- `docs/implementation/FACTS_FEATURE_IMPLEMENTATION.md` (700+ lines)
 
 **Updated Files**:
 - `src/models/AuditLog.ts` - Added 8 event types
@@ -146,7 +168,7 @@
 **New Files**:
 - `src/db/migrate.ts` (enhanced with 267 lines)
 - `src/db/backup.ts` (150 lines)
-- `MIGRATION_SYSTEM_GUIDE.md` (650+ lines - comprehensive guide)
+- `docs/architecture/MIGRATION_SYSTEM_GUIDE.md` (650+ lines - comprehensive guide)
 
 **Updated**:
 - `package.json` - Added npm scripts: `db:migrate`, `db:migrate:status`, `db:migrate:rollback`, `db:backup`, `db:backup:list`
@@ -340,6 +362,70 @@ User Input → Validation → Encryption → Database → Audit Log
 
 ---
 
+## 🤖 Agent Operations & Coordination
+
+**Output Style**: `agents-operations`
+
+Use this coordination framework when managing multi-agent workflows. This style provides a centralized dashboard for directing specialized agents, enforcing quality guardrails, and capturing institutional memory.
+
+### Manager Directives
+- Assign work by citing the agent's file path (`.claude/agents/`) and scope summary
+- Require every agent to log commands executed (including `npm run guard`) and attach transcripts to handoffs
+- Demand `npm run guard` (or `npm run guard:once`) passes before signing off on any task
+- Capture durable lessons in Memory MCP (`mcp__memory__add_observations`) for future context inheritance
+
+### Agent Directory & Responsibilities
+| Role | File Path | Core Scope | Key MCP Tools | Memory Focus |
+| --- | --- | --- | --- | --- |
+| Backend API Specialist | `.claude/agents/backend-api-specialist.md` | Legal API clients, caching, backend services | filesystem, sqlite, context7 | API schemas, rate limits, caching policies |
+| Frontend React Specialist | `.claude/agents/frontend-react-specialist.md` | React hooks, streaming UX, state management | filesystem, playwright, context7 | UI interaction patterns, accessibility findings |
+| Integration Specialist | `.claude/agents/integration-rag-specialist.md` | RAG orchestration, cross-service wiring, prompt enforcement | filesystem, sqlite, context7 | Data flow diagrams, prompt templates, service contracts |
+| UI/UX Specialist | `.claude/agents/ui-ux-specialist.md` | Chat surfaces, layout polish, visual behaviour | filesystem, playwright | Component hierarchy, animation rules, UX decisions |
+| Component Library Specialist | `.claude/agents/component-library-specialist.md` | Shared UI primitives, inputs, feedback widgets | filesystem, playwright | Reusable component API notes, accessibility shortcuts |
+| Integration & Polish Specialist | `.claude/agents/integration-polish-specialist.md` | End-to-end wiring, PDF export, release readiness | filesystem, playwright, context7 | Release checklists, integration gotchas, shortcut keys |
+| Database Migration Specialist | `.claude/agents/database-migration-specialist.md` | Schema design, migrations, query tuning, backups | sqlite, filesystem | Migration timelines, index strategies, rollback notes |
+| Documentation Specialist | `.claude/agents/documentation-specialist.md` | Docs, changelog, onboarding, API references | filesystem, context7 | Style guidelines, doc structure, terminology |
+| Security Compliance Auditor | `.claude/agents/security-compliance-auditor.md` | Threat review, dependency vetting, GDPR posture | filesystem, github, context7 | Risk registers, mitigations, encryption policies |
+| Testing & QA Specialist | `.claude/agents/testing-qa-specialist.md` | Unit/integration/E2E tests, performance, accessibility | filesystem, playwright, context7 | Test coverage maps, flaky test remedies, perf baselines |
+
+### MCP Playbook for Managers
+- **Sequential-Thinking MCP**: Validate multi-agent plans and surface dependencies before execution
+- **Memory MCP**: Create/update entities per agent so lessons are searchable (`mcp__memory__create_entities`, `mcp__memory__add_observations`)
+- **Filesystem MCP**: Authorize write scope explicitly; keep aligned with `.mcp.json` allowed directories
+- **GitHub MCP**: Gate usage behind manager approval; ensure PAT is injected via environment variables
+- **SQLite MCP**: Delegate to Database Specialist only when migrations or data audits required
+- **Playwright/Puppeteer MCP**: Assign to UI/QA specialists for scripted validation; capture artifacts in Memory MCP
+- **Context7 MCP**: Provide research briefs to specialists; persist best-practice summaries
+- **Justice Companion MCP**: Use custom IPC tools for case management operations (see `docs/api/IPC_API_REFERENCE.md`)
+
+### Manager Checklist per Assignment
+1. Reference the agent's file and restate the objective in your own words to ensure alignment
+2. Specify which MCP servers the agent is authorized to use for the task
+3. Require a Memory MCP update summarizing outcomes and new insights
+4. Verify `npm run guard` output plus any additional scripts before approving completion
+5. Archive relevant logs or diffs under `automation/results/<agent>/<date>` for auditability
+
+### Quality Enforcement
+- **TypeScript**: Must pass `npm run type-check` with 0 errors
+- **Linting**: Must pass `npm run lint` with 0 errors
+- **Tests**: Target 95%+ pass rate (current: 80.6%, see Phase 0 results)
+- **Security**: All PII must be encrypted (see `docs/implementation/ENCRYPTION_IMPLEMENTATION.md`)
+- **Audit**: All CRUD operations must be logged (see `src/services/AuditLogger.ts`)
+- **Documentation**: Update relevant docs in `docs/` or root-level `.md` files
+
+### Project Documentation Reference
+- **Build Process**: `MASTER_BUILD_GUIDE.md`, `BUILD_QUICK_REFERENCE.md`
+- **Security**: `docs/implementation/ENCRYPTION_IMPLEMENTATION.md`, `AUTHENTICATION_IMPLEMENTATION_SUMMARY.md`
+- **APIs**: `docs/api/IPC_API_REFERENCE.md`, `docs/api/IPC_QUICK_REFERENCE.md`, `docs/api/IPC_DOCUMENTATION_SUMMARY.md`
+- **Testing**: `docs/implementation/AUDIT_LOGGER_E2E_TEST_REPORT.md`
+- **Audits**: `docs/reports/AUDIT_SUMMARY_2025-10-08.md`, `AUDIT_COMPLETION_SUMMARY.md`
+- **Features**: `docs/implementation/FACTS_FEATURE_IMPLEMENTATION.md`
+- **Migrations**: `docs/architecture/MIGRATION_SYSTEM_GUIDE.md`
+
+**Consistency across agents keeps Justice Companion stable. Use this dashboard to drive disciplined execution.**
+
+---
+
 ## 🛠️ Build & Test Commands
 
 ```sh
@@ -501,12 +587,12 @@ justice-companion/
 ## 📚 Key Resources
 
 ### API Documentation
-- **IPC API Reference**: `IPC_API_REFERENCE.md` - Complete IPC handler documentation (27 handlers)
-- **IPC Quick Reference**: `IPC_QUICK_REFERENCE.md` - Developer cheat sheet with examples
-- **IPC Documentation Summary**: `IPC_DOCUMENTATION_SUMMARY.md` - Coverage report
+- **IPC API Reference**: `docs/api/IPC_API_REFERENCE.md` - Complete IPC handler documentation (27 handlers)
+- **IPC Quick Reference**: `docs/api/IPC_QUICK_REFERENCE.md` - Developer cheat sheet with examples
+- **IPC Documentation Summary**: `docs/api/IPC_DOCUMENTATION_SUMMARY.md` - Coverage report
 
 ### Testing & Quality Assurance
-- **Audit Logger E2E Report**: `AUDIT_LOGGER_E2E_TEST_REPORT.md` - Comprehensive test coverage report
+- **Audit Logger E2E Report**: `docs/implementation/AUDIT_LOGGER_E2E_TEST_REPORT.md` - Comprehensive test coverage report
 
 ### Development & Comprehensive Audits (2025-10-08)
 - **Audit Completion Summary**: `AUDIT_COMPLETION_SUMMARY.md` - Full audit report with actionable recommendations (19KB)
@@ -521,9 +607,9 @@ justice-companion/
 
 ### Architecture & Implementation
 - **Tactical Protocol**: `JUSTICE_COMPANION_TACTICAL_PROTOCOL_v2.md`
-- **Encryption Docs**: `ENCRYPTION_SERVICE_IMPLEMENTATION.md`
-- **Facts Feature**: `FACTS_FEATURE_IMPLEMENTATION.md` - User facts & case facts complete guide
-- **Audit Logs Docs**: `AUDIT_LOGS_*.md` (4 files)
+- **Encryption Docs**: `docs/implementation/ENCRYPTION_IMPLEMENTATION.md`
+- **Facts Feature**: `docs/implementation/FACTS_FEATURE_IMPLEMENTATION.md` - User facts & case facts complete guide
+- **Migration System**: `docs/architecture/MIGRATION_SYSTEM_GUIDE.md` - Complete migration & rollback guide
 - **MCP Docs**: `mcp-server/*.md` (3 files)
 
 ---

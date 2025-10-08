@@ -7,5 +7,4 @@ export { CaseDetailView } from './components/CaseDetailView';
 // Hooks
 export { useCases } from './hooks/useCases';
 
-// Services
-export { CaseService, caseService } from './services/CaseService';
+// CaseService removed - backend only (uses error-logger with fs/path)

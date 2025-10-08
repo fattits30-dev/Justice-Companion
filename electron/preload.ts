@@ -405,3 +405,5 @@ const fullAPI = {
 
 // Expose combined API to window object with type safety
 contextBridge.exposeInMainWorld('justiceAPI', fullAPI);
+
+console.log('[Preload] justiceAPI exposed successfully with methods:', Object.keys(fullAPI));

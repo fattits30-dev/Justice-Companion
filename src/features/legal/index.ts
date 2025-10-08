@@ -2,4 +2,4 @@
 export { LegalIssuesPanel } from './components/LegalIssuesPanel';
 export type { LegalIssuesPanelProps } from './components/LegalIssuesPanel';
 export { useLegalIssues } from './hooks/useLegalIssues';
-export { LegalIssuesService, legalIssuesService } from './services/LegalIssuesService';
+// LegalIssuesService removed - backend only (uses error-logger with fs/path)

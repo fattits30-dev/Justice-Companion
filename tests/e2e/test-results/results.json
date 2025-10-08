@@ -1,0 +1,1539 @@
+{
+  "config": {
+    "configFile": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\playwright.config.ts",
+    "rootDir": "C:/Users/sava6/Desktop/Justice Companion/tests/e2e/specs",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\global-setup.ts",
+    "globalTeardown": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\global-teardown.ts",
+    "globalTimeout": 600000,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "html",
+        {
+          "outputFolder": "test-results/html-report"
+        }
+      ],
+      [
+        "json",
+        {
+          "outputFile": "test-results/results.json"
+        }
+      ],
+      [
+        "junit",
+        {
+          "outputFile": "test-results/junit.xml"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "C:/Users/sava6/Desktop/Justice Companion/tests/e2e/test-results/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "electron",
+        "name": "electron",
+        "testDir": "C:/Users/sava6/Desktop/Justice Companion/tests/e2e/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "3way",
+    "version": "1.56.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "ai-chat.e2e.test.ts",
+      "file": "ai-chat.e2e.test.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "AI Chat E2E",
+          "file": "ai-chat.e2e.test.ts",
+          "line": 17,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should send chat message and receive response",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "electron",
+                  "projectName": "electron",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 88,
+                      "error": {
+                        "message": "SqliteError: table cases has no column named case_number",
+                        "stack": "SqliteError: table cases has no column named case_number\n    at Database.exec (C:\\Users\\sava6\\Desktop\\Justice Companion\\node_modules\\better-sqlite3\\lib\\methods\\wrappers.js:9:14)\n    at seedTestData (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:88:8)\n    at setupTestDatabase (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:48:11)\n    at launchElectronApp (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts:30:18)\n    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\ai-chat.e2e.test.ts:10:13",
+                        "location": {
+                          "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts",
+                          "column": 8,
+                          "line": 88
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39m..\\setup\\test-database.ts:88\n\n\u001b[0m \u001b[90m 86 |\u001b[39m   \u001b[36mtry\u001b[39m {\n \u001b[90m 87 |\u001b[39m     \u001b[90m// Insert sample case\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 88 |\u001b[39m     db\u001b[33m.\u001b[39mexec(\u001b[32m`\u001b[39m\n \u001b[90m    |\u001b[39m        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 89 |\u001b[39m \u001b[32m      INSERT INTO cases (id, case_number, title, case_type, description, status, created_at, updated_at)\u001b[39m\n \u001b[90m 90 |\u001b[39m \u001b[32m      VALUES (\u001b[39m\n \u001b[90m 91 |\u001b[39m \u001b[32m        1,\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts",
+                            "column": 8,
+                            "line": 88
+                          },
+                          "message": "SqliteError: table cases has no column named case_number\n\n\u001b[90m   at \u001b[39m..\\setup\\test-database.ts:88\n\n\u001b[0m \u001b[90m 86 |\u001b[39m   \u001b[36mtry\u001b[39m {\n \u001b[90m 87 |\u001b[39m     \u001b[90m// Insert sample case\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 88 |\u001b[39m     db\u001b[33m.\u001b[39mexec(\u001b[32m`\u001b[39m\n \u001b[90m    |\u001b[39m        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 89 |\u001b[39m \u001b[32m      INSERT INTO cases (id, case_number, title, case_type, description, status, created_at, updated_at)\u001b[39m\n \u001b[90m 90 |\u001b[39m \u001b[32m      VALUES (\u001b[39m\n \u001b[90m 91 |\u001b[39m \u001b[32m        1,\u001b[39m\u001b[0m\n\u001b[2m    at Database.exec (C:\\Users\\sava6\\Desktop\\Justice Companion\\node_modules\\better-sqlite3\\lib\\methods\\wrappers.js:9:14)\u001b[22m\n\u001b[2m    at seedTestData (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:88:8)\u001b[22m\n\u001b[2m    at setupTestDatabase (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:48:11)\u001b[22m\n\u001b[2m    at launchElectronApp (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts:30:18)\u001b[22m\n\u001b[2m    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\ai-chat.e2e.test.ts:10:13\u001b[22m"
+                        },
+                        {
+                          "location": {
+                            "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts",
+                            "column": 11,
+                            "line": 85
+                          },
+                          "message": "TypeError: Cannot destructure property 'app' of 'testApp' as it is undefined.\n\n\u001b[90m   at \u001b[39m..\\setup\\electron-setup.ts:85\n\n\u001b[0m \u001b[90m 83 |\u001b[39m \u001b[90m */\u001b[39m\n \u001b[90m 84 |\u001b[39m \u001b[36mexport\u001b[39m \u001b[36masync\u001b[39m \u001b[36mfunction\u001b[39m closeElectronApp(testApp\u001b[33m:\u001b[39m \u001b[33mElectronTestApp\u001b[39m)\u001b[33m:\u001b[39m \u001b[33mPromise\u001b[39m\u001b[33m<\u001b[39m\u001b[36mvoid\u001b[39m\u001b[33m>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 85 |\u001b[39m   \u001b[36mconst\u001b[39m { app\u001b[33m,\u001b[39m dbPath } \u001b[33m=\u001b[39m testApp\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m           \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 86 |\u001b[39m\n \u001b[90m 87 |\u001b[39m   \u001b[36mtry\u001b[39m {\n \u001b[90m 88 |\u001b[39m     \u001b[90m// Close Electron app\u001b[39m\u001b[0m\n\u001b[2m    at closeElectronApp (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts:85:11)\u001b[22m\n\u001b[2m    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\ai-chat.e2e.test.ts:14:25\u001b[22m"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "Test database created at: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759956605849.db\n"
+                        }
+                      ],
+                      "stderr": [
+                        {
+                          "text": "Failed to seed test data: SqliteError: table cases has no column named case_number\n    at Database.exec \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mbetter-sqlite3\u001b[24m\\lib\\methods\\wrappers.js:9:14\u001b[90m)\u001b[39m\n    at seedTestData \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mtests\\e2e\\setup\\test-database.ts:88:8\u001b[90m)\u001b[39m\n    at setupTestDatabase \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mtests\\e2e\\setup\\test-database.ts:48:11\u001b[90m)\u001b[39m\n    at launchElectronApp \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mtests\\e2e\\setup\\electron-setup.ts:30:18\u001b[90m)\u001b[39m\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mtests\\e2e\\specs\\ai-chat.e2e.test.ts:10:13\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\testInfo.js:305:11\n    at TimeoutManager.withRunnable \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\timeoutManager.js:67:14\u001b[90m)\u001b[39m\n    at TestInfoImpl._runWithTimeout \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\testInfo.js:303:7\u001b[90m)\u001b[39m\n    at FixtureRunner.resolveParametersAndRunFunction \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\fixtureRunner.js:228:5\u001b[90m)\u001b[39m\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:469:11\n    at TestInfoImpl._runAsStep \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\testInfo.js:294:7\u001b[90m)\u001b[39m\n    at WorkerMain._runEachHooksForSuites \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:468:9\u001b[90m)\u001b[39m\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:302:9\n    at TestInfoImpl._runAsStep \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\testInfo.js:294:7\u001b[90m)\u001b[39m\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:298:7\n    at WorkerMain._runTest \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:283:5\u001b[90m)\u001b[39m\n    at WorkerMain.runTestGroup \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:198:11\u001b[90m)\u001b[39m\n    at process.<anonymous> \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\common\\process.js:65:22\u001b[90m)\u001b[39m {\n  code: \u001b[32m'SQLITE_ERROR'\u001b[39m\n}\n"
+                        }
+                      ],
+                      "retry": 0,
+                      "startTime": "2025-10-08T20:50:05.810Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\test-results\\artifacts\\ai-chat.e2e-AI-Chat-E2E-sh-d38de-essage-and-receive-response-electron\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts",
+                        "column": 8,
+                        "line": 88
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "d35d720ecd316057fe0d-2e51eb4131860037713f",
+              "file": "ai-chat.e2e.test.ts",
+              "line": 18,
+              "column": 7
+            },
+            {
+              "title": "should display conversation history",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "electron",
+                  "projectName": "electron",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 74,
+                      "error": {
+                        "message": "SqliteError: table cases has no column named case_number",
+                        "stack": "SqliteError: table cases has no column named case_number\n    at Database.exec (C:\\Users\\sava6\\Desktop\\Justice Companion\\node_modules\\better-sqlite3\\lib\\methods\\wrappers.js:9:14)\n    at seedTestData (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:88:8)\n    at setupTestDatabase (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:48:11)\n    at launchElectronApp (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts:30:18)\n    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\ai-chat.e2e.test.ts:10:13",
+                        "location": {
+                          "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts",
+                          "column": 8,
+                          "line": 88
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39m..\\setup\\test-database.ts:88\n\n\u001b[0m \u001b[90m 86 |\u001b[39m   \u001b[36mtry\u001b[39m {\n \u001b[90m 87 |\u001b[39m     \u001b[90m// Insert sample case\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 88 |\u001b[39m     db\u001b[33m.\u001b[39mexec(\u001b[32m`\u001b[39m\n \u001b[90m    |\u001b[39m        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 89 |\u001b[39m \u001b[32m      INSERT INTO cases (id, case_number, title, case_type, description, status, created_at, updated_at)\u001b[39m\n \u001b[90m 90 |\u001b[39m \u001b[32m      VALUES (\u001b[39m\n \u001b[90m 91 |\u001b[39m \u001b[32m        1,\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts",
+                            "column": 8,
+                            "line": 88
+                          },
+                          "message": "SqliteError: table cases has no column named case_number\n\n\u001b[90m   at \u001b[39m..\\setup\\test-database.ts:88\n\n\u001b[0m \u001b[90m 86 |\u001b[39m   \u001b[36mtry\u001b[39m {\n \u001b[90m 87 |\u001b[39m     \u001b[90m// Insert sample case\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 88 |\u001b[39m     db\u001b[33m.\u001b[39mexec(\u001b[32m`\u001b[39m\n \u001b[90m    |\u001b[39m        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 89 |\u001b[39m \u001b[32m      INSERT INTO cases (id, case_number, title, case_type, description, status, created_at, updated_at)\u001b[39m\n \u001b[90m 90 |\u001b[39m \u001b[32m      VALUES (\u001b[39m\n \u001b[90m 91 |\u001b[39m \u001b[32m        1,\u001b[39m\u001b[0m\n\u001b[2m    at Database.exec (C:\\Users\\sava6\\Desktop\\Justice Companion\\node_modules\\better-sqlite3\\lib\\methods\\wrappers.js:9:14)\u001b[22m\n\u001b[2m    at seedTestData (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:88:8)\u001b[22m\n\u001b[2m    at setupTestDatabase (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:48:11)\u001b[22m\n\u001b[2m    at launchElectronApp (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts:30:18)\u001b[22m\n\u001b[2m    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\ai-chat.e2e.test.ts:10:13\u001b[22m"
+                        },
+                        {
+                          "location": {
+                            "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts",
+                            "column": 11,
+                            "line": 85
+                          },
+                          "message": "TypeError: Cannot destructure property 'app' of 'testApp' as it is undefined.\n\n\u001b[90m   at \u001b[39m..\\setup\\electron-setup.ts:85\n\n\u001b[0m \u001b[90m 83 |\u001b[39m \u001b[90m */\u001b[39m\n \u001b[90m 84 |\u001b[39m \u001b[36mexport\u001b[39m \u001b[36masync\u001b[39m \u001b[36mfunction\u001b[39m closeElectronApp(testApp\u001b[33m:\u001b[39m \u001b[33mElectronTestApp\u001b[39m)\u001b[33m:\u001b[39m \u001b[33mPromise\u001b[39m\u001b[33m<\u001b[39m\u001b[36mvoid\u001b[39m\u001b[33m>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 85 |\u001b[39m   \u001b[36mconst\u001b[39m { app\u001b[33m,\u001b[39m dbPath } \u001b[33m=\u001b[39m testApp\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m           \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 86 |\u001b[39m\n \u001b[90m 87 |\u001b[39m   \u001b[36mtry\u001b[39m {\n \u001b[90m 88 |\u001b[39m     \u001b[90m// Close Electron app\u001b[39m\u001b[0m\n\u001b[2m    at closeElectronApp (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts:85:11)\u001b[22m\n\u001b[2m    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\ai-chat.e2e.test.ts:14:25\u001b[22m"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "Test database created at: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759956607670.db\n"
+                        }
+                      ],
+                      "stderr": [
+                        {
+                          "text": "Failed to seed test data: SqliteError: table cases has no column named case_number\n    at Database.exec \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mbetter-sqlite3\u001b[24m\\lib\\methods\\wrappers.js:9:14\u001b[90m)\u001b[39m\n    at seedTestData \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mtests\\e2e\\setup\\test-database.ts:88:8\u001b[90m)\u001b[39m\n    at setupTestDatabase \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mtests\\e2e\\setup\\test-database.ts:48:11\u001b[90m)\u001b[39m\n    at launchElectronApp \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mtests\\e2e\\setup\\electron-setup.ts:30:18\u001b[90m)\u001b[39m\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mtests\\e2e\\specs\\ai-chat.e2e.test.ts:10:13\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\testInfo.js:305:11\n    at TimeoutManager.withRunnable \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\timeoutManager.js:67:14\u001b[90m)\u001b[39m\n    at TestInfoImpl._runWithTimeout \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\testInfo.js:303:7\u001b[90m)\u001b[39m\n    at FixtureRunner.resolveParametersAndRunFunction \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\fixtureRunner.js:228:5\u001b[90m)\u001b[39m\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:469:11\n    at TestInfoImpl._runAsStep \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\testInfo.js:294:7\u001b[90m)\u001b[39m\n    at WorkerMain._runEachHooksForSuites \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:468:9\u001b[90m)\u001b[39m\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:302:9\n    at TestInfoImpl._runAsStep \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\testInfo.js:294:7\u001b[90m)\u001b[39m\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:298:7\n    at WorkerMain._runTest \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:283:5\u001b[90m)\u001b[39m\n    at WorkerMain.runTestGroup \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:198:11\u001b[90m)\u001b[39m\n    at process.<anonymous> \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\common\\process.js:65:22\u001b[90m)\u001b[39m {\n  code: \u001b[32m'SQLITE_ERROR'\u001b[39m\n}\n"
+                        }
+                      ],
+                      "retry": 0,
+                      "startTime": "2025-10-08T20:50:07.631Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\test-results\\artifacts\\ai-chat.e2e-AI-Chat-E2E-should-display-conversation-history-electron\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts",
+                        "column": 8,
+                        "line": 88
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "d35d720ecd316057fe0d-c23c3d7278978ab72943",
+              "file": "ai-chat.e2e.test.ts",
+              "line": 73,
+              "column": 7
+            },
+            {
+              "title": "should create new conversation",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "electron",
+                  "projectName": "electron",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 132,
+                      "error": {
+                        "message": "SqliteError: table cases has no column named case_number",
+                        "stack": "SqliteError: table cases has no column named case_number\n    at Database.exec (C:\\Users\\sava6\\Desktop\\Justice Companion\\node_modules\\better-sqlite3\\lib\\methods\\wrappers.js:9:14)\n    at seedTestData (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:88:8)\n    at setupTestDatabase (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:48:11)\n    at launchElectronApp (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts:30:18)\n    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\ai-chat.e2e.test.ts:10:13",
+                        "location": {
+                          "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts",
+                          "column": 8,
+                          "line": 88
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39m..\\setup\\test-database.ts:88\n\n\u001b[0m \u001b[90m 86 |\u001b[39m   \u001b[36mtry\u001b[39m {\n \u001b[90m 87 |\u001b[39m     \u001b[90m// Insert sample case\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 88 |\u001b[39m     db\u001b[33m.\u001b[39mexec(\u001b[32m`\u001b[39m\n \u001b[90m    |\u001b[39m        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 89 |\u001b[39m \u001b[32m      INSERT INTO cases (id, case_number, title, case_type, description, status, created_at, updated_at)\u001b[39m\n \u001b[90m 90 |\u001b[39m \u001b[32m      VALUES (\u001b[39m\n \u001b[90m 91 |\u001b[39m \u001b[32m        1,\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts",
+                            "column": 8,
+                            "line": 88
+                          },
+                          "message": "SqliteError: table cases has no column named case_number\n\n\u001b[90m   at \u001b[39m..\\setup\\test-database.ts:88\n\n\u001b[0m \u001b[90m 86 |\u001b[39m   \u001b[36mtry\u001b[39m {\n \u001b[90m 87 |\u001b[39m     \u001b[90m// Insert sample case\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 88 |\u001b[39m     db\u001b[33m.\u001b[39mexec(\u001b[32m`\u001b[39m\n \u001b[90m    |\u001b[39m        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 89 |\u001b[39m \u001b[32m      INSERT INTO cases (id, case_number, title, case_type, description, status, created_at, updated_at)\u001b[39m\n \u001b[90m 90 |\u001b[39m \u001b[32m      VALUES (\u001b[39m\n \u001b[90m 91 |\u001b[39m \u001b[32m        1,\u001b[39m\u001b[0m\n\u001b[2m    at Database.exec (C:\\Users\\sava6\\Desktop\\Justice Companion\\node_modules\\better-sqlite3\\lib\\methods\\wrappers.js:9:14)\u001b[22m\n\u001b[2m    at seedTestData (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:88:8)\u001b[22m\n\u001b[2m    at setupTestDatabase (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:48:11)\u001b[22m\n\u001b[2m    at launchElectronApp (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts:30:18)\u001b[22m\n\u001b[2m    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\ai-chat.e2e.test.ts:10:13\u001b[22m"
+                        },
+                        {
+                          "location": {
+                            "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts",
+                            "column": 11,
+                            "line": 85
+                          },
+                          "message": "TypeError: Cannot destructure property 'app' of 'testApp' as it is undefined.\n\n\u001b[90m   at \u001b[39m..\\setup\\electron-setup.ts:85\n\n\u001b[0m \u001b[90m 83 |\u001b[39m \u001b[90m */\u001b[39m\n \u001b[90m 84 |\u001b[39m \u001b[36mexport\u001b[39m \u001b[36masync\u001b[39m \u001b[36mfunction\u001b[39m closeElectronApp(testApp\u001b[33m:\u001b[39m \u001b[33mElectronTestApp\u001b[39m)\u001b[33m:\u001b[39m \u001b[33mPromise\u001b[39m\u001b[33m<\u001b[39m\u001b[36mvoid\u001b[39m\u001b[33m>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 85 |\u001b[39m   \u001b[36mconst\u001b[39m { app\u001b[33m,\u001b[39m dbPath } \u001b[33m=\u001b[39m testApp\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m           \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 86 |\u001b[39m\n \u001b[90m 87 |\u001b[39m   \u001b[36mtry\u001b[39m {\n \u001b[90m 88 |\u001b[39m     \u001b[90m// Close Electron app\u001b[39m\u001b[0m\n\u001b[2m    at closeElectronApp (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts:85:11)\u001b[22m\n\u001b[2m    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\ai-chat.e2e.test.ts:14:25\u001b[22m"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "Test database created at: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759956609517.db\n"
+                        }
+                      ],
+                      "stderr": [
+                        {
+                          "text": "Failed to seed test data: SqliteError: table cases has no column named case_number\n    at Database.exec \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mbetter-sqlite3\u001b[24m\\lib\\methods\\wrappers.js:9:14\u001b[90m)\u001b[39m\n    at seedTestData \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mtests\\e2e\\setup\\test-database.ts:88:8\u001b[90m)\u001b[39m\n    at setupTestDatabase \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mtests\\e2e\\setup\\test-database.ts:48:11\u001b[90m)\u001b[39m\n    at launchElectronApp \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mtests\\e2e\\setup\\electron-setup.ts:30:18\u001b[90m)\u001b[39m\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mtests\\e2e\\specs\\ai-chat.e2e.test.ts:10:13\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\testInfo.js:305:11\n    at TimeoutManager.withRunnable \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\timeoutManager.js:67:14\u001b[90m)\u001b[39m\n    at TestInfoImpl._runWithTimeout \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\testInfo.js:303:7\u001b[90m)\u001b[39m\n    at FixtureRunner.resolveParametersAndRunFunction \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\fixtureRunner.js:228:5\u001b[90m)\u001b[39m\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:469:11\n    at TestInfoImpl._runAsStep \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\testInfo.js:294:7\u001b[90m)\u001b[39m\n    at WorkerMain._runEachHooksForSuites \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:468:9\u001b[90m)\u001b[39m\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:302:9\n    at TestInfoImpl._runAsStep \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\testInfo.js:294:7\u001b[90m)\u001b[39m\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:298:7\n    at WorkerMain._runTest \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:283:5\u001b[90m)\u001b[39m\n    at WorkerMain.runTestGroup \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:198:11\u001b[90m)\u001b[39m\n    at process.<anonymous> \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\common\\process.js:65:22\u001b[90m)\u001b[39m {\n  code: \u001b[32m'SQLITE_ERROR'\u001b[39m\n}\n"
+                        }
+                      ],
+                      "retry": 0,
+                      "startTime": "2025-10-08T20:50:09.440Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\test-results\\artifacts\\ai-chat.e2e-AI-Chat-E2E-should-create-new-conversation-electron\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts",
+                        "column": 8,
+                        "line": 88
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "d35d720ecd316057fe0d-4816788f32ea3a87b78d",
+              "file": "ai-chat.e2e.test.ts",
+              "line": 109,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "case-management.e2e.test.ts",
+      "file": "case-management.e2e.test.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Case Management E2E",
+          "file": "case-management.e2e.test.ts",
+          "line": 18,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should create new case and persist to database",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "electron",
+                  "projectName": "electron",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "timedOut",
+                      "duration": 30006,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\case-management.e2e.test.ts:8:6",
+                        "location": {
+                          "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\case-management.e2e.test.ts",
+                          "column": 6,
+                          "line": 8
+                        },
+                        "snippet": "\u001b[0m \u001b[90m  6 |\u001b[39m \u001b[36mlet\u001b[39m testApp\u001b[33m:\u001b[39m \u001b[33mElectronTestApp\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m  7 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  8 |\u001b[39m test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m () \u001b[33m=>\u001b[39m {\n \u001b[90m    |\u001b[39m      \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m  9 |\u001b[39m   \u001b[90m// Launch app with clean database (no seed data)\u001b[39m\n \u001b[90m 10 |\u001b[39m   testApp \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m launchElectronApp({ seedData\u001b[33m:\u001b[39m \u001b[36mfalse\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 11 |\u001b[39m })\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\case-management.e2e.test.ts",
+                            "column": 6,
+                            "line": 8
+                          },
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n\n\u001b[0m \u001b[90m  6 |\u001b[39m \u001b[36mlet\u001b[39m testApp\u001b[33m:\u001b[39m \u001b[33mElectronTestApp\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m  7 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  8 |\u001b[39m test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m () \u001b[33m=>\u001b[39m {\n \u001b[90m    |\u001b[39m      \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m  9 |\u001b[39m   \u001b[90m// Launch app with clean database (no seed data)\u001b[39m\n \u001b[90m 10 |\u001b[39m   testApp \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m launchElectronApp({ seedData\u001b[33m:\u001b[39m \u001b[36mfalse\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 11 |\u001b[39m })\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\case-management.e2e.test.ts:8:6\u001b[22m"
+                        },
+                        {
+                          "location": {
+                            "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts",
+                            "column": 11,
+                            "line": 85
+                          },
+                          "message": "TypeError: Cannot destructure property 'app' of 'testApp' as it is undefined.\n\n\u001b[90m   at \u001b[39m..\\setup\\electron-setup.ts:85\n\n\u001b[0m \u001b[90m 83 |\u001b[39m \u001b[90m */\u001b[39m\n \u001b[90m 84 |\u001b[39m \u001b[36mexport\u001b[39m \u001b[36masync\u001b[39m \u001b[36mfunction\u001b[39m closeElectronApp(testApp\u001b[33m:\u001b[39m \u001b[33mElectronTestApp\u001b[39m)\u001b[33m:\u001b[39m \u001b[33mPromise\u001b[39m\u001b[33m<\u001b[39m\u001b[36mvoid\u001b[39m\u001b[33m>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 85 |\u001b[39m   \u001b[36mconst\u001b[39m { app\u001b[33m,\u001b[39m dbPath } \u001b[33m=\u001b[39m testApp\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m           \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 86 |\u001b[39m\n \u001b[90m 87 |\u001b[39m   \u001b[36mtry\u001b[39m {\n \u001b[90m 88 |\u001b[39m     \u001b[90m// Close Electron app\u001b[39m\u001b[0m\n\u001b[2m    at closeElectronApp (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts:85:11)\u001b[22m\n\u001b[2m    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\case-management.e2e.test.ts:15:25\u001b[22m"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "Test database created at: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759956611351.db\n"
+                        },
+                        {
+                          "text": "Launching Electron from: C:\\Users\\sava6\\Desktop\\Justice Companion\\electron\\main.ts\n"
+                        },
+                        {
+                          "text": "Using test database: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759956611351.db\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-08T20:50:11.311Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\test-results\\artifacts\\case-management.e2e-Case-M-91d6a-ase-and-persist-to-database-electron\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\case-management.e2e.test.ts",
+                        "column": 6,
+                        "line": 8
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "163b8b55be1e9c33a90e-813c45ba85029262dcfe",
+              "file": "case-management.e2e.test.ts",
+              "line": 19,
+              "column": 7
+            },
+            {
+              "title": "should view case details",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "electron",
+                  "projectName": "electron",
+                  "results": [
+                    {
+                      "workerIndex": 4,
+                      "parallelIndex": 0,
+                      "status": "timedOut",
+                      "duration": 30017,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\case-management.e2e.test.ts:8:6",
+                        "location": {
+                          "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\case-management.e2e.test.ts",
+                          "column": 6,
+                          "line": 8
+                        },
+                        "snippet": "\u001b[0m \u001b[90m  6 |\u001b[39m \u001b[36mlet\u001b[39m testApp\u001b[33m:\u001b[39m \u001b[33mElectronTestApp\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m  7 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  8 |\u001b[39m test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m () \u001b[33m=>\u001b[39m {\n \u001b[90m    |\u001b[39m      \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m  9 |\u001b[39m   \u001b[90m// Launch app with clean database (no seed data)\u001b[39m\n \u001b[90m 10 |\u001b[39m   testApp \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m launchElectronApp({ seedData\u001b[33m:\u001b[39m \u001b[36mfalse\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 11 |\u001b[39m })\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\case-management.e2e.test.ts",
+                            "column": 6,
+                            "line": 8
+                          },
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n\n\u001b[0m \u001b[90m  6 |\u001b[39m \u001b[36mlet\u001b[39m testApp\u001b[33m:\u001b[39m \u001b[33mElectronTestApp\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m  7 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  8 |\u001b[39m test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m () \u001b[33m=>\u001b[39m {\n \u001b[90m    |\u001b[39m      \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m  9 |\u001b[39m   \u001b[90m// Launch app with clean database (no seed data)\u001b[39m\n \u001b[90m 10 |\u001b[39m   testApp \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m launchElectronApp({ seedData\u001b[33m:\u001b[39m \u001b[36mfalse\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 11 |\u001b[39m })\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\case-management.e2e.test.ts:8:6\u001b[22m"
+                        },
+                        {
+                          "location": {
+                            "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts",
+                            "column": 11,
+                            "line": 85
+                          },
+                          "message": "TypeError: Cannot destructure property 'app' of 'testApp' as it is undefined.\n\n\u001b[90m   at \u001b[39m..\\setup\\electron-setup.ts:85\n\n\u001b[0m \u001b[90m 83 |\u001b[39m \u001b[90m */\u001b[39m\n \u001b[90m 84 |\u001b[39m \u001b[36mexport\u001b[39m \u001b[36masync\u001b[39m \u001b[36mfunction\u001b[39m closeElectronApp(testApp\u001b[33m:\u001b[39m \u001b[33mElectronTestApp\u001b[39m)\u001b[33m:\u001b[39m \u001b[33mPromise\u001b[39m\u001b[33m<\u001b[39m\u001b[36mvoid\u001b[39m\u001b[33m>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 85 |\u001b[39m   \u001b[36mconst\u001b[39m { app\u001b[33m,\u001b[39m dbPath } \u001b[33m=\u001b[39m testApp\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m           \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 86 |\u001b[39m\n \u001b[90m 87 |\u001b[39m   \u001b[36mtry\u001b[39m {\n \u001b[90m 88 |\u001b[39m     \u001b[90m// Close Electron app\u001b[39m\u001b[0m\n\u001b[2m    at closeElectronApp (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts:85:11)\u001b[22m\n\u001b[2m    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\case-management.e2e.test.ts:15:25\u001b[22m"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "Test database created at: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759956642392.db\n"
+                        },
+                        {
+                          "text": "Launching Electron from: C:\\Users\\sava6\\Desktop\\Justice Companion\\electron\\main.ts\n"
+                        },
+                        {
+                          "text": "Using test database: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759956642392.db\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-08T20:50:42.370Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\test-results\\artifacts\\case-management.e2e-Case-M-745a4-2E-should-view-case-details-electron\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\case-management.e2e.test.ts",
+                        "column": 6,
+                        "line": 8
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "163b8b55be1e9c33a90e-95d506faed860c182196",
+              "file": "case-management.e2e.test.ts",
+              "line": 70,
+              "column": 7
+            },
+            {
+              "title": "should update case information",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "electron",
+                  "projectName": "electron",
+                  "results": [
+                    {
+                      "workerIndex": 5,
+                      "parallelIndex": 0,
+                      "status": "timedOut",
+                      "duration": 30007,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\case-management.e2e.test.ts:8:6",
+                        "location": {
+                          "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\case-management.e2e.test.ts",
+                          "column": 6,
+                          "line": 8
+                        },
+                        "snippet": "\u001b[0m \u001b[90m  6 |\u001b[39m \u001b[36mlet\u001b[39m testApp\u001b[33m:\u001b[39m \u001b[33mElectronTestApp\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m  7 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  8 |\u001b[39m test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m () \u001b[33m=>\u001b[39m {\n \u001b[90m    |\u001b[39m      \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m  9 |\u001b[39m   \u001b[90m// Launch app with clean database (no seed data)\u001b[39m\n \u001b[90m 10 |\u001b[39m   testApp \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m launchElectronApp({ seedData\u001b[33m:\u001b[39m \u001b[36mfalse\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 11 |\u001b[39m })\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\case-management.e2e.test.ts",
+                            "column": 6,
+                            "line": 8
+                          },
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n\n\u001b[0m \u001b[90m  6 |\u001b[39m \u001b[36mlet\u001b[39m testApp\u001b[33m:\u001b[39m \u001b[33mElectronTestApp\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m  7 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  8 |\u001b[39m test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m () \u001b[33m=>\u001b[39m {\n \u001b[90m    |\u001b[39m      \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m  9 |\u001b[39m   \u001b[90m// Launch app with clean database (no seed data)\u001b[39m\n \u001b[90m 10 |\u001b[39m   testApp \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m launchElectronApp({ seedData\u001b[33m:\u001b[39m \u001b[36mfalse\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 11 |\u001b[39m })\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\case-management.e2e.test.ts:8:6\u001b[22m"
+                        },
+                        {
+                          "location": {
+                            "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts",
+                            "column": 11,
+                            "line": 85
+                          },
+                          "message": "TypeError: Cannot destructure property 'app' of 'testApp' as it is undefined.\n\n\u001b[90m   at \u001b[39m..\\setup\\electron-setup.ts:85\n\n\u001b[0m \u001b[90m 83 |\u001b[39m \u001b[90m */\u001b[39m\n \u001b[90m 84 |\u001b[39m \u001b[36mexport\u001b[39m \u001b[36masync\u001b[39m \u001b[36mfunction\u001b[39m closeElectronApp(testApp\u001b[33m:\u001b[39m \u001b[33mElectronTestApp\u001b[39m)\u001b[33m:\u001b[39m \u001b[33mPromise\u001b[39m\u001b[33m<\u001b[39m\u001b[36mvoid\u001b[39m\u001b[33m>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 85 |\u001b[39m   \u001b[36mconst\u001b[39m { app\u001b[33m,\u001b[39m dbPath } \u001b[33m=\u001b[39m testApp\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m           \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 86 |\u001b[39m\n \u001b[90m 87 |\u001b[39m   \u001b[36mtry\u001b[39m {\n \u001b[90m 88 |\u001b[39m     \u001b[90m// Close Electron app\u001b[39m\u001b[0m\n\u001b[2m    at closeElectronApp (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts:85:11)\u001b[22m\n\u001b[2m    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\case-management.e2e.test.ts:15:25\u001b[22m"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "Test database created at: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759956673679.db\n"
+                        },
+                        {
+                          "text": "Launching Electron from: C:\\Users\\sava6\\Desktop\\Justice Companion\\electron\\main.ts\n"
+                        },
+                        {
+                          "text": "Using test database: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759956673679.db\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-08T20:51:13.657Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\test-results\\artifacts\\case-management.e2e-Case-M-88e06-uld-update-case-information-electron\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\case-management.e2e.test.ts",
+                        "column": 6,
+                        "line": 8
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "163b8b55be1e9c33a90e-d0bd462f62c7e37cc617",
+              "file": "case-management.e2e.test.ts",
+              "line": 102,
+              "column": 7
+            },
+            {
+              "title": "should delete case",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "electron",
+                  "projectName": "electron",
+                  "results": [
+                    {
+                      "workerIndex": 6,
+                      "parallelIndex": 0,
+                      "status": "timedOut",
+                      "duration": 30013,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\case-management.e2e.test.ts:8:6",
+                        "location": {
+                          "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\case-management.e2e.test.ts",
+                          "column": 6,
+                          "line": 8
+                        },
+                        "snippet": "\u001b[0m \u001b[90m  6 |\u001b[39m \u001b[36mlet\u001b[39m testApp\u001b[33m:\u001b[39m \u001b[33mElectronTestApp\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m  7 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  8 |\u001b[39m test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m () \u001b[33m=>\u001b[39m {\n \u001b[90m    |\u001b[39m      \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m  9 |\u001b[39m   \u001b[90m// Launch app with clean database (no seed data)\u001b[39m\n \u001b[90m 10 |\u001b[39m   testApp \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m launchElectronApp({ seedData\u001b[33m:\u001b[39m \u001b[36mfalse\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 11 |\u001b[39m })\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\case-management.e2e.test.ts",
+                            "column": 6,
+                            "line": 8
+                          },
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n\n\u001b[0m \u001b[90m  6 |\u001b[39m \u001b[36mlet\u001b[39m testApp\u001b[33m:\u001b[39m \u001b[33mElectronTestApp\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m  7 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  8 |\u001b[39m test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m () \u001b[33m=>\u001b[39m {\n \u001b[90m    |\u001b[39m      \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m  9 |\u001b[39m   \u001b[90m// Launch app with clean database (no seed data)\u001b[39m\n \u001b[90m 10 |\u001b[39m   testApp \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m launchElectronApp({ seedData\u001b[33m:\u001b[39m \u001b[36mfalse\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 11 |\u001b[39m })\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\case-management.e2e.test.ts:8:6\u001b[22m"
+                        },
+                        {
+                          "location": {
+                            "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts",
+                            "column": 11,
+                            "line": 85
+                          },
+                          "message": "TypeError: Cannot destructure property 'app' of 'testApp' as it is undefined.\n\n\u001b[90m   at \u001b[39m..\\setup\\electron-setup.ts:85\n\n\u001b[0m \u001b[90m 83 |\u001b[39m \u001b[90m */\u001b[39m\n \u001b[90m 84 |\u001b[39m \u001b[36mexport\u001b[39m \u001b[36masync\u001b[39m \u001b[36mfunction\u001b[39m closeElectronApp(testApp\u001b[33m:\u001b[39m \u001b[33mElectronTestApp\u001b[39m)\u001b[33m:\u001b[39m \u001b[33mPromise\u001b[39m\u001b[33m<\u001b[39m\u001b[36mvoid\u001b[39m\u001b[33m>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 85 |\u001b[39m   \u001b[36mconst\u001b[39m { app\u001b[33m,\u001b[39m dbPath } \u001b[33m=\u001b[39m testApp\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m           \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 86 |\u001b[39m\n \u001b[90m 87 |\u001b[39m   \u001b[36mtry\u001b[39m {\n \u001b[90m 88 |\u001b[39m     \u001b[90m// Close Electron app\u001b[39m\u001b[0m\n\u001b[2m    at closeElectronApp (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts:85:11)\u001b[22m\n\u001b[2m    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\case-management.e2e.test.ts:15:25\u001b[22m"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "Test database created at: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759956705048.db\n"
+                        },
+                        {
+                          "text": "Launching Electron from: C:\\Users\\sava6\\Desktop\\Justice Companion\\electron\\main.ts\n"
+                        },
+                        {
+                          "text": "Using test database: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759956705048.db\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-08T20:51:45.012Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\test-results\\artifacts\\case-management.e2e-Case-Management-E2E-should-delete-case-electron\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\case-management.e2e.test.ts",
+                        "column": 6,
+                        "line": 8
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "163b8b55be1e9c33a90e-9d9ded8004f787c37437",
+              "file": "case-management.e2e.test.ts",
+              "line": 152,
+              "column": 7
+            },
+            {
+              "title": "should verify case persistence across app restarts",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "electron",
+                  "projectName": "electron",
+                  "results": [
+                    {
+                      "workerIndex": 7,
+                      "parallelIndex": 0,
+                      "status": "timedOut",
+                      "duration": 30014,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\case-management.e2e.test.ts:8:6",
+                        "location": {
+                          "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\case-management.e2e.test.ts",
+                          "column": 6,
+                          "line": 8
+                        },
+                        "snippet": "\u001b[0m \u001b[90m  6 |\u001b[39m \u001b[36mlet\u001b[39m testApp\u001b[33m:\u001b[39m \u001b[33mElectronTestApp\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m  7 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  8 |\u001b[39m test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m () \u001b[33m=>\u001b[39m {\n \u001b[90m    |\u001b[39m      \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m  9 |\u001b[39m   \u001b[90m// Launch app with clean database (no seed data)\u001b[39m\n \u001b[90m 10 |\u001b[39m   testApp \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m launchElectronApp({ seedData\u001b[33m:\u001b[39m \u001b[36mfalse\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 11 |\u001b[39m })\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\case-management.e2e.test.ts",
+                            "column": 6,
+                            "line": 8
+                          },
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n\n\u001b[0m \u001b[90m  6 |\u001b[39m \u001b[36mlet\u001b[39m testApp\u001b[33m:\u001b[39m \u001b[33mElectronTestApp\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m  7 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  8 |\u001b[39m test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m () \u001b[33m=>\u001b[39m {\n \u001b[90m    |\u001b[39m      \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m  9 |\u001b[39m   \u001b[90m// Launch app with clean database (no seed data)\u001b[39m\n \u001b[90m 10 |\u001b[39m   testApp \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m launchElectronApp({ seedData\u001b[33m:\u001b[39m \u001b[36mfalse\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 11 |\u001b[39m })\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\case-management.e2e.test.ts:8:6\u001b[22m"
+                        },
+                        {
+                          "location": {
+                            "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts",
+                            "column": 11,
+                            "line": 85
+                          },
+                          "message": "TypeError: Cannot destructure property 'app' of 'testApp' as it is undefined.\n\n\u001b[90m   at \u001b[39m..\\setup\\electron-setup.ts:85\n\n\u001b[0m \u001b[90m 83 |\u001b[39m \u001b[90m */\u001b[39m\n \u001b[90m 84 |\u001b[39m \u001b[36mexport\u001b[39m \u001b[36masync\u001b[39m \u001b[36mfunction\u001b[39m closeElectronApp(testApp\u001b[33m:\u001b[39m \u001b[33mElectronTestApp\u001b[39m)\u001b[33m:\u001b[39m \u001b[33mPromise\u001b[39m\u001b[33m<\u001b[39m\u001b[36mvoid\u001b[39m\u001b[33m>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 85 |\u001b[39m   \u001b[36mconst\u001b[39m { app\u001b[33m,\u001b[39m dbPath } \u001b[33m=\u001b[39m testApp\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m           \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 86 |\u001b[39m\n \u001b[90m 87 |\u001b[39m   \u001b[36mtry\u001b[39m {\n \u001b[90m 88 |\u001b[39m     \u001b[90m// Close Electron app\u001b[39m\u001b[0m\n\u001b[2m    at closeElectronApp (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts:85:11)\u001b[22m\n\u001b[2m    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\case-management.e2e.test.ts:15:25\u001b[22m"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "Test database created at: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759956736140.db\n"
+                        },
+                        {
+                          "text": "Launching Electron from: C:\\Users\\sava6\\Desktop\\Justice Companion\\electron\\main.ts\n"
+                        },
+                        {
+                          "text": "Using test database: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759956736140.db\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-08T20:52:16.118Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\test-results\\artifacts\\case-management.e2e-Case-M-b0bfd-istence-across-app-restarts-electron\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\case-management.e2e.test.ts",
+                        "column": 6,
+                        "line": 8
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "163b8b55be1e9c33a90e-1a8ba19b0dcf7c1b9300",
+              "file": "case-management.e2e.test.ts",
+              "line": 201,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "evidence-upload.e2e.test.ts",
+      "file": "evidence-upload.e2e.test.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Evidence Upload E2E",
+          "file": "evidence-upload.e2e.test.ts",
+          "line": 20,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should upload document evidence",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "electron",
+                  "projectName": "electron",
+                  "results": [
+                    {
+                      "workerIndex": 8,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 47,
+                      "error": {
+                        "message": "SqliteError: table cases has no column named case_number",
+                        "stack": "SqliteError: table cases has no column named case_number\n    at Database.exec (C:\\Users\\sava6\\Desktop\\Justice Companion\\node_modules\\better-sqlite3\\lib\\methods\\wrappers.js:9:14)\n    at seedTestData (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:88:8)\n    at setupTestDatabase (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:48:11)\n    at launchElectronApp (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts:30:18)\n    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\evidence-upload.e2e.test.ts:10:13",
+                        "location": {
+                          "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts",
+                          "column": 8,
+                          "line": 88
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39m..\\setup\\test-database.ts:88\n\n\u001b[0m \u001b[90m 86 |\u001b[39m   \u001b[36mtry\u001b[39m {\n \u001b[90m 87 |\u001b[39m     \u001b[90m// Insert sample case\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 88 |\u001b[39m     db\u001b[33m.\u001b[39mexec(\u001b[32m`\u001b[39m\n \u001b[90m    |\u001b[39m        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 89 |\u001b[39m \u001b[32m      INSERT INTO cases (id, case_number, title, case_type, description, status, created_at, updated_at)\u001b[39m\n \u001b[90m 90 |\u001b[39m \u001b[32m      VALUES (\u001b[39m\n \u001b[90m 91 |\u001b[39m \u001b[32m        1,\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts",
+                            "column": 8,
+                            "line": 88
+                          },
+                          "message": "SqliteError: table cases has no column named case_number\n\n\u001b[90m   at \u001b[39m..\\setup\\test-database.ts:88\n\n\u001b[0m \u001b[90m 86 |\u001b[39m   \u001b[36mtry\u001b[39m {\n \u001b[90m 87 |\u001b[39m     \u001b[90m// Insert sample case\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 88 |\u001b[39m     db\u001b[33m.\u001b[39mexec(\u001b[32m`\u001b[39m\n \u001b[90m    |\u001b[39m        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 89 |\u001b[39m \u001b[32m      INSERT INTO cases (id, case_number, title, case_type, description, status, created_at, updated_at)\u001b[39m\n \u001b[90m 90 |\u001b[39m \u001b[32m      VALUES (\u001b[39m\n \u001b[90m 91 |\u001b[39m \u001b[32m        1,\u001b[39m\u001b[0m\n\u001b[2m    at Database.exec (C:\\Users\\sava6\\Desktop\\Justice Companion\\node_modules\\better-sqlite3\\lib\\methods\\wrappers.js:9:14)\u001b[22m\n\u001b[2m    at seedTestData (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:88:8)\u001b[22m\n\u001b[2m    at setupTestDatabase (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:48:11)\u001b[22m\n\u001b[2m    at launchElectronApp (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts:30:18)\u001b[22m\n\u001b[2m    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\evidence-upload.e2e.test.ts:10:13\u001b[22m"
+                        },
+                        {
+                          "location": {
+                            "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts",
+                            "column": 11,
+                            "line": 85
+                          },
+                          "message": "TypeError: Cannot destructure property 'app' of 'testApp' as it is undefined.\n\n\u001b[90m   at \u001b[39m..\\setup\\electron-setup.ts:85\n\n\u001b[0m \u001b[90m 83 |\u001b[39m \u001b[90m */\u001b[39m\n \u001b[90m 84 |\u001b[39m \u001b[36mexport\u001b[39m \u001b[36masync\u001b[39m \u001b[36mfunction\u001b[39m closeElectronApp(testApp\u001b[33m:\u001b[39m \u001b[33mElectronTestApp\u001b[39m)\u001b[33m:\u001b[39m \u001b[33mPromise\u001b[39m\u001b[33m<\u001b[39m\u001b[36mvoid\u001b[39m\u001b[33m>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 85 |\u001b[39m   \u001b[36mconst\u001b[39m { app\u001b[33m,\u001b[39m dbPath } \u001b[33m=\u001b[39m testApp\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m           \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 86 |\u001b[39m\n \u001b[90m 87 |\u001b[39m   \u001b[36mtry\u001b[39m {\n \u001b[90m 88 |\u001b[39m     \u001b[90m// Close Electron app\u001b[39m\u001b[0m\n\u001b[2m    at closeElectronApp (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts:85:11)\u001b[22m\n\u001b[2m    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\evidence-upload.e2e.test.ts:17:25\u001b[22m"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "Test database created at: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759956767202.db\n"
+                        }
+                      ],
+                      "stderr": [
+                        {
+                          "text": "Failed to seed test data: SqliteError: table cases has no column named case_number\n    at Database.exec \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mbetter-sqlite3\u001b[24m\\lib\\methods\\wrappers.js:9:14\u001b[90m)\u001b[39m\n    at seedTestData \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mtests\\e2e\\setup\\test-database.ts:88:8\u001b[90m)\u001b[39m\n    at setupTestDatabase \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mtests\\e2e\\setup\\test-database.ts:48:11\u001b[90m)\u001b[39m\n    at launchElectronApp \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mtests\\e2e\\setup\\electron-setup.ts:30:18\u001b[90m)\u001b[39m\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mtests\\e2e\\specs\\evidence-upload.e2e.test.ts:10:13\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\testInfo.js:305:11\n    at TimeoutManager.withRunnable \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\timeoutManager.js:67:14\u001b[90m)\u001b[39m\n    at TestInfoImpl._runWithTimeout \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\testInfo.js:303:7\u001b[90m)\u001b[39m\n    at FixtureRunner.resolveParametersAndRunFunction \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\fixtureRunner.js:228:5\u001b[90m)\u001b[39m\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:469:11\n    at TestInfoImpl._runAsStep \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\testInfo.js:294:7\u001b[90m)\u001b[39m\n    at WorkerMain._runEachHooksForSuites \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:468:9\u001b[90m)\u001b[39m\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:302:9\n    at TestInfoImpl._runAsStep \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\testInfo.js:294:7\u001b[90m)\u001b[39m\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:298:7\n    at WorkerMain._runTest \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:283:5\u001b[90m)\u001b[39m\n    at WorkerMain.runTestGroup \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:198:11\u001b[90m)\u001b[39m\n    at process.<anonymous> \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\common\\process.js:65:22\u001b[90m)\u001b[39m {\n  code: \u001b[32m'SQLITE_ERROR'\u001b[39m\n}\n"
+                        }
+                      ],
+                      "retry": 0,
+                      "startTime": "2025-10-08T20:52:47.179Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\test-results\\artifacts\\evidence-upload.e2e-Eviden-31859-ld-upload-document-evidence-electron\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts",
+                        "column": 8,
+                        "line": 88
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "986c1a3ea115e8a89d3c-2a44a3eed318cd22a6ef",
+              "file": "evidence-upload.e2e.test.ts",
+              "line": 21,
+              "column": 7
+            },
+            {
+              "title": "should upload photo evidence",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "electron",
+                  "projectName": "electron",
+                  "results": [
+                    {
+                      "workerIndex": 9,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 47,
+                      "error": {
+                        "message": "SqliteError: table cases has no column named case_number",
+                        "stack": "SqliteError: table cases has no column named case_number\n    at Database.exec (C:\\Users\\sava6\\Desktop\\Justice Companion\\node_modules\\better-sqlite3\\lib\\methods\\wrappers.js:9:14)\n    at seedTestData (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:88:8)\n    at setupTestDatabase (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:48:11)\n    at launchElectronApp (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts:30:18)\n    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\evidence-upload.e2e.test.ts:10:13",
+                        "location": {
+                          "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts",
+                          "column": 8,
+                          "line": 88
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39m..\\setup\\test-database.ts:88\n\n\u001b[0m \u001b[90m 86 |\u001b[39m   \u001b[36mtry\u001b[39m {\n \u001b[90m 87 |\u001b[39m     \u001b[90m// Insert sample case\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 88 |\u001b[39m     db\u001b[33m.\u001b[39mexec(\u001b[32m`\u001b[39m\n \u001b[90m    |\u001b[39m        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 89 |\u001b[39m \u001b[32m      INSERT INTO cases (id, case_number, title, case_type, description, status, created_at, updated_at)\u001b[39m\n \u001b[90m 90 |\u001b[39m \u001b[32m      VALUES (\u001b[39m\n \u001b[90m 91 |\u001b[39m \u001b[32m        1,\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts",
+                            "column": 8,
+                            "line": 88
+                          },
+                          "message": "SqliteError: table cases has no column named case_number\n\n\u001b[90m   at \u001b[39m..\\setup\\test-database.ts:88\n\n\u001b[0m \u001b[90m 86 |\u001b[39m   \u001b[36mtry\u001b[39m {\n \u001b[90m 87 |\u001b[39m     \u001b[90m// Insert sample case\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 88 |\u001b[39m     db\u001b[33m.\u001b[39mexec(\u001b[32m`\u001b[39m\n \u001b[90m    |\u001b[39m        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 89 |\u001b[39m \u001b[32m      INSERT INTO cases (id, case_number, title, case_type, description, status, created_at, updated_at)\u001b[39m\n \u001b[90m 90 |\u001b[39m \u001b[32m      VALUES (\u001b[39m\n \u001b[90m 91 |\u001b[39m \u001b[32m        1,\u001b[39m\u001b[0m\n\u001b[2m    at Database.exec (C:\\Users\\sava6\\Desktop\\Justice Companion\\node_modules\\better-sqlite3\\lib\\methods\\wrappers.js:9:14)\u001b[22m\n\u001b[2m    at seedTestData (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:88:8)\u001b[22m\n\u001b[2m    at setupTestDatabase (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:48:11)\u001b[22m\n\u001b[2m    at launchElectronApp (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts:30:18)\u001b[22m\n\u001b[2m    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\evidence-upload.e2e.test.ts:10:13\u001b[22m"
+                        },
+                        {
+                          "location": {
+                            "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts",
+                            "column": 11,
+                            "line": 85
+                          },
+                          "message": "TypeError: Cannot destructure property 'app' of 'testApp' as it is undefined.\n\n\u001b[90m   at \u001b[39m..\\setup\\electron-setup.ts:85\n\n\u001b[0m \u001b[90m 83 |\u001b[39m \u001b[90m */\u001b[39m\n \u001b[90m 84 |\u001b[39m \u001b[36mexport\u001b[39m \u001b[36masync\u001b[39m \u001b[36mfunction\u001b[39m closeElectronApp(testApp\u001b[33m:\u001b[39m \u001b[33mElectronTestApp\u001b[39m)\u001b[33m:\u001b[39m \u001b[33mPromise\u001b[39m\u001b[33m<\u001b[39m\u001b[36mvoid\u001b[39m\u001b[33m>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 85 |\u001b[39m   \u001b[36mconst\u001b[39m { app\u001b[33m,\u001b[39m dbPath } \u001b[33m=\u001b[39m testApp\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m           \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 86 |\u001b[39m\n \u001b[90m 87 |\u001b[39m   \u001b[36mtry\u001b[39m {\n \u001b[90m 88 |\u001b[39m     \u001b[90m// Close Electron app\u001b[39m\u001b[0m\n\u001b[2m    at closeElectronApp (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts:85:11)\u001b[22m\n\u001b[2m    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\evidence-upload.e2e.test.ts:17:25\u001b[22m"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "Test database created at: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759956768246.db\n"
+                        }
+                      ],
+                      "stderr": [
+                        {
+                          "text": "Failed to seed test data: SqliteError: table cases has no column named case_number\n    at Database.exec \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mbetter-sqlite3\u001b[24m\\lib\\methods\\wrappers.js:9:14\u001b[90m)\u001b[39m\n    at seedTestData \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mtests\\e2e\\setup\\test-database.ts:88:8\u001b[90m)\u001b[39m\n    at setupTestDatabase \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mtests\\e2e\\setup\\test-database.ts:48:11\u001b[90m)\u001b[39m\n    at launchElectronApp \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mtests\\e2e\\setup\\electron-setup.ts:30:18\u001b[90m)\u001b[39m\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mtests\\e2e\\specs\\evidence-upload.e2e.test.ts:10:13\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\testInfo.js:305:11\n    at TimeoutManager.withRunnable \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\timeoutManager.js:67:14\u001b[90m)\u001b[39m\n    at TestInfoImpl._runWithTimeout \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\testInfo.js:303:7\u001b[90m)\u001b[39m\n    at FixtureRunner.resolveParametersAndRunFunction \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\fixtureRunner.js:228:5\u001b[90m)\u001b[39m\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:469:11\n    at TestInfoImpl._runAsStep \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\testInfo.js:294:7\u001b[90m)\u001b[39m\n    at WorkerMain._runEachHooksForSuites \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:468:9\u001b[90m)\u001b[39m\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:302:9\n    at TestInfoImpl._runAsStep \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\testInfo.js:294:7\u001b[90m)\u001b[39m\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:298:7\n    at WorkerMain._runTest \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:283:5\u001b[90m)\u001b[39m\n    at WorkerMain.runTestGroup \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:198:11\u001b[90m)\u001b[39m\n    at process.<anonymous> \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\common\\process.js:65:22\u001b[90m)\u001b[39m {\n  code: \u001b[32m'SQLITE_ERROR'\u001b[39m\n}\n"
+                        }
+                      ],
+                      "retry": 0,
+                      "startTime": "2025-10-08T20:52:48.225Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\test-results\\artifacts\\evidence-upload.e2e-Eviden-a5615-hould-upload-photo-evidence-electron\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts",
+                        "column": 8,
+                        "line": 88
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "986c1a3ea115e8a89d3c-451f5a8a9ea02a50f640",
+              "file": "evidence-upload.e2e.test.ts",
+              "line": 86,
+              "column": 7
+            },
+            {
+              "title": "should view uploaded evidence",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "electron",
+                  "projectName": "electron",
+                  "results": [
+                    {
+                      "workerIndex": 10,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 46,
+                      "error": {
+                        "message": "SqliteError: table cases has no column named case_number",
+                        "stack": "SqliteError: table cases has no column named case_number\n    at Database.exec (C:\\Users\\sava6\\Desktop\\Justice Companion\\node_modules\\better-sqlite3\\lib\\methods\\wrappers.js:9:14)\n    at seedTestData (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:88:8)\n    at setupTestDatabase (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:48:11)\n    at launchElectronApp (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts:30:18)\n    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\evidence-upload.e2e.test.ts:10:13",
+                        "location": {
+                          "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts",
+                          "column": 8,
+                          "line": 88
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39m..\\setup\\test-database.ts:88\n\n\u001b[0m \u001b[90m 86 |\u001b[39m   \u001b[36mtry\u001b[39m {\n \u001b[90m 87 |\u001b[39m     \u001b[90m// Insert sample case\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 88 |\u001b[39m     db\u001b[33m.\u001b[39mexec(\u001b[32m`\u001b[39m\n \u001b[90m    |\u001b[39m        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 89 |\u001b[39m \u001b[32m      INSERT INTO cases (id, case_number, title, case_type, description, status, created_at, updated_at)\u001b[39m\n \u001b[90m 90 |\u001b[39m \u001b[32m      VALUES (\u001b[39m\n \u001b[90m 91 |\u001b[39m \u001b[32m        1,\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts",
+                            "column": 8,
+                            "line": 88
+                          },
+                          "message": "SqliteError: table cases has no column named case_number\n\n\u001b[90m   at \u001b[39m..\\setup\\test-database.ts:88\n\n\u001b[0m \u001b[90m 86 |\u001b[39m   \u001b[36mtry\u001b[39m {\n \u001b[90m 87 |\u001b[39m     \u001b[90m// Insert sample case\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 88 |\u001b[39m     db\u001b[33m.\u001b[39mexec(\u001b[32m`\u001b[39m\n \u001b[90m    |\u001b[39m        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 89 |\u001b[39m \u001b[32m      INSERT INTO cases (id, case_number, title, case_type, description, status, created_at, updated_at)\u001b[39m\n \u001b[90m 90 |\u001b[39m \u001b[32m      VALUES (\u001b[39m\n \u001b[90m 91 |\u001b[39m \u001b[32m        1,\u001b[39m\u001b[0m\n\u001b[2m    at Database.exec (C:\\Users\\sava6\\Desktop\\Justice Companion\\node_modules\\better-sqlite3\\lib\\methods\\wrappers.js:9:14)\u001b[22m\n\u001b[2m    at seedTestData (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:88:8)\u001b[22m\n\u001b[2m    at setupTestDatabase (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:48:11)\u001b[22m\n\u001b[2m    at launchElectronApp (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts:30:18)\u001b[22m\n\u001b[2m    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\evidence-upload.e2e.test.ts:10:13\u001b[22m"
+                        },
+                        {
+                          "location": {
+                            "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts",
+                            "column": 11,
+                            "line": 85
+                          },
+                          "message": "TypeError: Cannot destructure property 'app' of 'testApp' as it is undefined.\n\n\u001b[90m   at \u001b[39m..\\setup\\electron-setup.ts:85\n\n\u001b[0m \u001b[90m 83 |\u001b[39m \u001b[90m */\u001b[39m\n \u001b[90m 84 |\u001b[39m \u001b[36mexport\u001b[39m \u001b[36masync\u001b[39m \u001b[36mfunction\u001b[39m closeElectronApp(testApp\u001b[33m:\u001b[39m \u001b[33mElectronTestApp\u001b[39m)\u001b[33m:\u001b[39m \u001b[33mPromise\u001b[39m\u001b[33m<\u001b[39m\u001b[36mvoid\u001b[39m\u001b[33m>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 85 |\u001b[39m   \u001b[36mconst\u001b[39m { app\u001b[33m,\u001b[39m dbPath } \u001b[33m=\u001b[39m testApp\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m           \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 86 |\u001b[39m\n \u001b[90m 87 |\u001b[39m   \u001b[36mtry\u001b[39m {\n \u001b[90m 88 |\u001b[39m     \u001b[90m// Close Electron app\u001b[39m\u001b[0m\n\u001b[2m    at closeElectronApp (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts:85:11)\u001b[22m\n\u001b[2m    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\evidence-upload.e2e.test.ts:17:25\u001b[22m"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "Test database created at: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759956769276.db\n"
+                        }
+                      ],
+                      "stderr": [
+                        {
+                          "text": "Failed to seed test data: SqliteError: table cases has no column named case_number\n    at Database.exec \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mbetter-sqlite3\u001b[24m\\lib\\methods\\wrappers.js:9:14\u001b[90m)\u001b[39m\n    at seedTestData \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mtests\\e2e\\setup\\test-database.ts:88:8\u001b[90m)\u001b[39m\n    at setupTestDatabase \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mtests\\e2e\\setup\\test-database.ts:48:11\u001b[90m)\u001b[39m\n    at launchElectronApp \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mtests\\e2e\\setup\\electron-setup.ts:30:18\u001b[90m)\u001b[39m\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mtests\\e2e\\specs\\evidence-upload.e2e.test.ts:10:13\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\testInfo.js:305:11\n    at TimeoutManager.withRunnable \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\timeoutManager.js:67:14\u001b[90m)\u001b[39m\n    at TestInfoImpl._runWithTimeout \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\testInfo.js:303:7\u001b[90m)\u001b[39m\n    at FixtureRunner.resolveParametersAndRunFunction \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\fixtureRunner.js:228:5\u001b[90m)\u001b[39m\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:469:11\n    at TestInfoImpl._runAsStep \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\testInfo.js:294:7\u001b[90m)\u001b[39m\n    at WorkerMain._runEachHooksForSuites \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:468:9\u001b[90m)\u001b[39m\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:302:9\n    at TestInfoImpl._runAsStep \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\testInfo.js:294:7\u001b[90m)\u001b[39m\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:298:7\n    at WorkerMain._runTest \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:283:5\u001b[90m)\u001b[39m\n    at WorkerMain.runTestGroup \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:198:11\u001b[90m)\u001b[39m\n    at process.<anonymous> \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\common\\process.js:65:22\u001b[90m)\u001b[39m {\n  code: \u001b[32m'SQLITE_ERROR'\u001b[39m\n}\n"
+                        }
+                      ],
+                      "retry": 0,
+                      "startTime": "2025-10-08T20:52:49.253Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\test-results\\artifacts\\evidence-upload.e2e-Eviden-16422-ould-view-uploaded-evidence-electron\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts",
+                        "column": 8,
+                        "line": 88
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "986c1a3ea115e8a89d3c-def8b00d91543d1707d0",
+              "file": "evidence-upload.e2e.test.ts",
+              "line": 134,
+              "column": 7
+            },
+            {
+              "title": "should delete evidence",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "electron",
+                  "projectName": "electron",
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 56,
+                      "error": {
+                        "message": "SqliteError: table cases has no column named case_number",
+                        "stack": "SqliteError: table cases has no column named case_number\n    at Database.exec (C:\\Users\\sava6\\Desktop\\Justice Companion\\node_modules\\better-sqlite3\\lib\\methods\\wrappers.js:9:14)\n    at seedTestData (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:88:8)\n    at setupTestDatabase (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:48:11)\n    at launchElectronApp (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts:30:18)\n    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\evidence-upload.e2e.test.ts:10:13",
+                        "location": {
+                          "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts",
+                          "column": 8,
+                          "line": 88
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39m..\\setup\\test-database.ts:88\n\n\u001b[0m \u001b[90m 86 |\u001b[39m   \u001b[36mtry\u001b[39m {\n \u001b[90m 87 |\u001b[39m     \u001b[90m// Insert sample case\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 88 |\u001b[39m     db\u001b[33m.\u001b[39mexec(\u001b[32m`\u001b[39m\n \u001b[90m    |\u001b[39m        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 89 |\u001b[39m \u001b[32m      INSERT INTO cases (id, case_number, title, case_type, description, status, created_at, updated_at)\u001b[39m\n \u001b[90m 90 |\u001b[39m \u001b[32m      VALUES (\u001b[39m\n \u001b[90m 91 |\u001b[39m \u001b[32m        1,\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts",
+                            "column": 8,
+                            "line": 88
+                          },
+                          "message": "SqliteError: table cases has no column named case_number\n\n\u001b[90m   at \u001b[39m..\\setup\\test-database.ts:88\n\n\u001b[0m \u001b[90m 86 |\u001b[39m   \u001b[36mtry\u001b[39m {\n \u001b[90m 87 |\u001b[39m     \u001b[90m// Insert sample case\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 88 |\u001b[39m     db\u001b[33m.\u001b[39mexec(\u001b[32m`\u001b[39m\n \u001b[90m    |\u001b[39m        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 89 |\u001b[39m \u001b[32m      INSERT INTO cases (id, case_number, title, case_type, description, status, created_at, updated_at)\u001b[39m\n \u001b[90m 90 |\u001b[39m \u001b[32m      VALUES (\u001b[39m\n \u001b[90m 91 |\u001b[39m \u001b[32m        1,\u001b[39m\u001b[0m\n\u001b[2m    at Database.exec (C:\\Users\\sava6\\Desktop\\Justice Companion\\node_modules\\better-sqlite3\\lib\\methods\\wrappers.js:9:14)\u001b[22m\n\u001b[2m    at seedTestData (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:88:8)\u001b[22m\n\u001b[2m    at setupTestDatabase (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:48:11)\u001b[22m\n\u001b[2m    at launchElectronApp (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts:30:18)\u001b[22m\n\u001b[2m    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\evidence-upload.e2e.test.ts:10:13\u001b[22m"
+                        },
+                        {
+                          "location": {
+                            "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts",
+                            "column": 11,
+                            "line": 85
+                          },
+                          "message": "TypeError: Cannot destructure property 'app' of 'testApp' as it is undefined.\n\n\u001b[90m   at \u001b[39m..\\setup\\electron-setup.ts:85\n\n\u001b[0m \u001b[90m 83 |\u001b[39m \u001b[90m */\u001b[39m\n \u001b[90m 84 |\u001b[39m \u001b[36mexport\u001b[39m \u001b[36masync\u001b[39m \u001b[36mfunction\u001b[39m closeElectronApp(testApp\u001b[33m:\u001b[39m \u001b[33mElectronTestApp\u001b[39m)\u001b[33m:\u001b[39m \u001b[33mPromise\u001b[39m\u001b[33m<\u001b[39m\u001b[36mvoid\u001b[39m\u001b[33m>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 85 |\u001b[39m   \u001b[36mconst\u001b[39m { app\u001b[33m,\u001b[39m dbPath } \u001b[33m=\u001b[39m testApp\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m           \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 86 |\u001b[39m\n \u001b[90m 87 |\u001b[39m   \u001b[36mtry\u001b[39m {\n \u001b[90m 88 |\u001b[39m     \u001b[90m// Close Electron app\u001b[39m\u001b[0m\n\u001b[2m    at closeElectronApp (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts:85:11)\u001b[22m\n\u001b[2m    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\evidence-upload.e2e.test.ts:17:25\u001b[22m"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "Test database created at: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759956770295.db\n"
+                        }
+                      ],
+                      "stderr": [
+                        {
+                          "text": "Failed to seed test data: SqliteError: table cases has no column named case_number\n    at Database.exec \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mbetter-sqlite3\u001b[24m\\lib\\methods\\wrappers.js:9:14\u001b[90m)\u001b[39m\n    at seedTestData \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mtests\\e2e\\setup\\test-database.ts:88:8\u001b[90m)\u001b[39m\n    at setupTestDatabase \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mtests\\e2e\\setup\\test-database.ts:48:11\u001b[90m)\u001b[39m\n    at launchElectronApp \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mtests\\e2e\\setup\\electron-setup.ts:30:18\u001b[90m)\u001b[39m\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mtests\\e2e\\specs\\evidence-upload.e2e.test.ts:10:13\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\testInfo.js:305:11\n    at TimeoutManager.withRunnable \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\timeoutManager.js:67:14\u001b[90m)\u001b[39m\n    at TestInfoImpl._runWithTimeout \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\testInfo.js:303:7\u001b[90m)\u001b[39m\n    at FixtureRunner.resolveParametersAndRunFunction \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\fixtureRunner.js:228:5\u001b[90m)\u001b[39m\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:469:11\n    at TestInfoImpl._runAsStep \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\testInfo.js:294:7\u001b[90m)\u001b[39m\n    at WorkerMain._runEachHooksForSuites \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:468:9\u001b[90m)\u001b[39m\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:302:9\n    at TestInfoImpl._runAsStep \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\testInfo.js:294:7\u001b[90m)\u001b[39m\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:298:7\n    at WorkerMain._runTest \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:283:5\u001b[90m)\u001b[39m\n    at WorkerMain.runTestGroup \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:198:11\u001b[90m)\u001b[39m\n    at process.<anonymous> \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\common\\process.js:65:22\u001b[90m)\u001b[39m {\n  code: \u001b[32m'SQLITE_ERROR'\u001b[39m\n}\n"
+                        }
+                      ],
+                      "retry": 0,
+                      "startTime": "2025-10-08T20:52:50.272Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\test-results\\artifacts\\evidence-upload.e2e-Eviden-dbfd5--E2E-should-delete-evidence-electron\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts",
+                        "column": 8,
+                        "line": 88
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "986c1a3ea115e8a89d3c-91bc3ed03572b6b3261c",
+              "file": "evidence-upload.e2e.test.ts",
+              "line": 167,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "facts-tracking.e2e.test.ts",
+      "file": "facts-tracking.e2e.test.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Facts Tracking E2E",
+          "file": "facts-tracking.e2e.test.ts",
+          "line": 16,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should create user fact",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "electron",
+                  "projectName": "electron",
+                  "results": [
+                    {
+                      "workerIndex": 12,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 50,
+                      "error": {
+                        "message": "SqliteError: table cases has no column named case_number",
+                        "stack": "SqliteError: table cases has no column named case_number\n    at Database.exec (C:\\Users\\sava6\\Desktop\\Justice Companion\\node_modules\\better-sqlite3\\lib\\methods\\wrappers.js:9:14)\n    at seedTestData (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:88:8)\n    at setupTestDatabase (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:48:11)\n    at launchElectronApp (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts:30:18)\n    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\facts-tracking.e2e.test.ts:9:13",
+                        "location": {
+                          "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts",
+                          "column": 8,
+                          "line": 88
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39m..\\setup\\test-database.ts:88\n\n\u001b[0m \u001b[90m 86 |\u001b[39m   \u001b[36mtry\u001b[39m {\n \u001b[90m 87 |\u001b[39m     \u001b[90m// Insert sample case\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 88 |\u001b[39m     db\u001b[33m.\u001b[39mexec(\u001b[32m`\u001b[39m\n \u001b[90m    |\u001b[39m        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 89 |\u001b[39m \u001b[32m      INSERT INTO cases (id, case_number, title, case_type, description, status, created_at, updated_at)\u001b[39m\n \u001b[90m 90 |\u001b[39m \u001b[32m      VALUES (\u001b[39m\n \u001b[90m 91 |\u001b[39m \u001b[32m        1,\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts",
+                            "column": 8,
+                            "line": 88
+                          },
+                          "message": "SqliteError: table cases has no column named case_number\n\n\u001b[90m   at \u001b[39m..\\setup\\test-database.ts:88\n\n\u001b[0m \u001b[90m 86 |\u001b[39m   \u001b[36mtry\u001b[39m {\n \u001b[90m 87 |\u001b[39m     \u001b[90m// Insert sample case\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 88 |\u001b[39m     db\u001b[33m.\u001b[39mexec(\u001b[32m`\u001b[39m\n \u001b[90m    |\u001b[39m        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 89 |\u001b[39m \u001b[32m      INSERT INTO cases (id, case_number, title, case_type, description, status, created_at, updated_at)\u001b[39m\n \u001b[90m 90 |\u001b[39m \u001b[32m      VALUES (\u001b[39m\n \u001b[90m 91 |\u001b[39m \u001b[32m        1,\u001b[39m\u001b[0m\n\u001b[2m    at Database.exec (C:\\Users\\sava6\\Desktop\\Justice Companion\\node_modules\\better-sqlite3\\lib\\methods\\wrappers.js:9:14)\u001b[22m\n\u001b[2m    at seedTestData (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:88:8)\u001b[22m\n\u001b[2m    at setupTestDatabase (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:48:11)\u001b[22m\n\u001b[2m    at launchElectronApp (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts:30:18)\u001b[22m\n\u001b[2m    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\facts-tracking.e2e.test.ts:9:13\u001b[22m"
+                        },
+                        {
+                          "location": {
+                            "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts",
+                            "column": 11,
+                            "line": 85
+                          },
+                          "message": "TypeError: Cannot destructure property 'app' of 'testApp' as it is undefined.\n\n\u001b[90m   at \u001b[39m..\\setup\\electron-setup.ts:85\n\n\u001b[0m \u001b[90m 83 |\u001b[39m \u001b[90m */\u001b[39m\n \u001b[90m 84 |\u001b[39m \u001b[36mexport\u001b[39m \u001b[36masync\u001b[39m \u001b[36mfunction\u001b[39m closeElectronApp(testApp\u001b[33m:\u001b[39m \u001b[33mElectronTestApp\u001b[39m)\u001b[33m:\u001b[39m \u001b[33mPromise\u001b[39m\u001b[33m<\u001b[39m\u001b[36mvoid\u001b[39m\u001b[33m>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 85 |\u001b[39m   \u001b[36mconst\u001b[39m { app\u001b[33m,\u001b[39m dbPath } \u001b[33m=\u001b[39m testApp\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m           \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 86 |\u001b[39m\n \u001b[90m 87 |\u001b[39m   \u001b[36mtry\u001b[39m {\n \u001b[90m 88 |\u001b[39m     \u001b[90m// Close Electron app\u001b[39m\u001b[0m\n\u001b[2m    at closeElectronApp (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts:85:11)\u001b[22m\n\u001b[2m    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\facts-tracking.e2e.test.ts:13:25\u001b[22m"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "Test database created at: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759956771334.db\n"
+                        }
+                      ],
+                      "stderr": [
+                        {
+                          "text": "Failed to seed test data: SqliteError: table cases has no column named case_number\n    at Database.exec \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mbetter-sqlite3\u001b[24m\\lib\\methods\\wrappers.js:9:14\u001b[90m)\u001b[39m\n    at seedTestData \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mtests\\e2e\\setup\\test-database.ts:88:8\u001b[90m)\u001b[39m\n    at setupTestDatabase \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mtests\\e2e\\setup\\test-database.ts:48:11\u001b[90m)\u001b[39m\n    at launchElectronApp \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mtests\\e2e\\setup\\electron-setup.ts:30:18\u001b[90m)\u001b[39m\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mtests\\e2e\\specs\\facts-tracking.e2e.test.ts:9:13\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\testInfo.js:305:11\n    at TimeoutManager.withRunnable \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\timeoutManager.js:67:14\u001b[90m)\u001b[39m\n    at TestInfoImpl._runWithTimeout \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\testInfo.js:303:7\u001b[90m)\u001b[39m\n    at FixtureRunner.resolveParametersAndRunFunction \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\fixtureRunner.js:228:5\u001b[90m)\u001b[39m\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:469:11\n    at TestInfoImpl._runAsStep \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\testInfo.js:294:7\u001b[90m)\u001b[39m\n    at WorkerMain._runEachHooksForSuites \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:468:9\u001b[90m)\u001b[39m\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:302:9\n    at TestInfoImpl._runAsStep \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\testInfo.js:294:7\u001b[90m)\u001b[39m\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:298:7\n    at WorkerMain._runTest \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:283:5\u001b[90m)\u001b[39m\n    at WorkerMain.runTestGroup \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:198:11\u001b[90m)\u001b[39m\n    at process.<anonymous> \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\common\\process.js:65:22\u001b[90m)\u001b[39m {\n  code: \u001b[32m'SQLITE_ERROR'\u001b[39m\n}\n"
+                        }
+                      ],
+                      "retry": 0,
+                      "startTime": "2025-10-08T20:52:51.311Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\test-results\\artifacts\\facts-tracking.e2e-Facts-T-70930-E2E-should-create-user-fact-electron\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts",
+                        "column": 8,
+                        "line": 88
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "ad2b960a29c0718fa558-65ae8d0a75ccca7319e5",
+              "file": "facts-tracking.e2e.test.ts",
+              "line": 17,
+              "column": 7
+            },
+            {
+              "title": "should create case fact",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "electron",
+                  "projectName": "electron",
+                  "results": [
+                    {
+                      "workerIndex": 13,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 46,
+                      "error": {
+                        "message": "SqliteError: table cases has no column named case_number",
+                        "stack": "SqliteError: table cases has no column named case_number\n    at Database.exec (C:\\Users\\sava6\\Desktop\\Justice Companion\\node_modules\\better-sqlite3\\lib\\methods\\wrappers.js:9:14)\n    at seedTestData (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:88:8)\n    at setupTestDatabase (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:48:11)\n    at launchElectronApp (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts:30:18)\n    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\facts-tracking.e2e.test.ts:9:13",
+                        "location": {
+                          "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts",
+                          "column": 8,
+                          "line": 88
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39m..\\setup\\test-database.ts:88\n\n\u001b[0m \u001b[90m 86 |\u001b[39m   \u001b[36mtry\u001b[39m {\n \u001b[90m 87 |\u001b[39m     \u001b[90m// Insert sample case\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 88 |\u001b[39m     db\u001b[33m.\u001b[39mexec(\u001b[32m`\u001b[39m\n \u001b[90m    |\u001b[39m        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 89 |\u001b[39m \u001b[32m      INSERT INTO cases (id, case_number, title, case_type, description, status, created_at, updated_at)\u001b[39m\n \u001b[90m 90 |\u001b[39m \u001b[32m      VALUES (\u001b[39m\n \u001b[90m 91 |\u001b[39m \u001b[32m        1,\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts",
+                            "column": 8,
+                            "line": 88
+                          },
+                          "message": "SqliteError: table cases has no column named case_number\n\n\u001b[90m   at \u001b[39m..\\setup\\test-database.ts:88\n\n\u001b[0m \u001b[90m 86 |\u001b[39m   \u001b[36mtry\u001b[39m {\n \u001b[90m 87 |\u001b[39m     \u001b[90m// Insert sample case\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 88 |\u001b[39m     db\u001b[33m.\u001b[39mexec(\u001b[32m`\u001b[39m\n \u001b[90m    |\u001b[39m        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 89 |\u001b[39m \u001b[32m      INSERT INTO cases (id, case_number, title, case_type, description, status, created_at, updated_at)\u001b[39m\n \u001b[90m 90 |\u001b[39m \u001b[32m      VALUES (\u001b[39m\n \u001b[90m 91 |\u001b[39m \u001b[32m        1,\u001b[39m\u001b[0m\n\u001b[2m    at Database.exec (C:\\Users\\sava6\\Desktop\\Justice Companion\\node_modules\\better-sqlite3\\lib\\methods\\wrappers.js:9:14)\u001b[22m\n\u001b[2m    at seedTestData (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:88:8)\u001b[22m\n\u001b[2m    at setupTestDatabase (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:48:11)\u001b[22m\n\u001b[2m    at launchElectronApp (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts:30:18)\u001b[22m\n\u001b[2m    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\facts-tracking.e2e.test.ts:9:13\u001b[22m"
+                        },
+                        {
+                          "location": {
+                            "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts",
+                            "column": 11,
+                            "line": 85
+                          },
+                          "message": "TypeError: Cannot destructure property 'app' of 'testApp' as it is undefined.\n\n\u001b[90m   at \u001b[39m..\\setup\\electron-setup.ts:85\n\n\u001b[0m \u001b[90m 83 |\u001b[39m \u001b[90m */\u001b[39m\n \u001b[90m 84 |\u001b[39m \u001b[36mexport\u001b[39m \u001b[36masync\u001b[39m \u001b[36mfunction\u001b[39m closeElectronApp(testApp\u001b[33m:\u001b[39m \u001b[33mElectronTestApp\u001b[39m)\u001b[33m:\u001b[39m \u001b[33mPromise\u001b[39m\u001b[33m<\u001b[39m\u001b[36mvoid\u001b[39m\u001b[33m>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 85 |\u001b[39m   \u001b[36mconst\u001b[39m { app\u001b[33m,\u001b[39m dbPath } \u001b[33m=\u001b[39m testApp\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m           \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 86 |\u001b[39m\n \u001b[90m 87 |\u001b[39m   \u001b[36mtry\u001b[39m {\n \u001b[90m 88 |\u001b[39m     \u001b[90m// Close Electron app\u001b[39m\u001b[0m\n\u001b[2m    at closeElectronApp (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts:85:11)\u001b[22m\n\u001b[2m    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\facts-tracking.e2e.test.ts:13:25\u001b[22m"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "Test database created at: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759956772367.db\n"
+                        }
+                      ],
+                      "stderr": [
+                        {
+                          "text": "Failed to seed test data: SqliteError: table cases has no column named case_number\n    at Database.exec \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mbetter-sqlite3\u001b[24m\\lib\\methods\\wrappers.js:9:14\u001b[90m)\u001b[39m\n    at seedTestData \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mtests\\e2e\\setup\\test-database.ts:88:8\u001b[90m)\u001b[39m\n    at setupTestDatabase \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mtests\\e2e\\setup\\test-database.ts:48:11\u001b[90m)\u001b[39m\n    at launchElectronApp \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mtests\\e2e\\setup\\electron-setup.ts:30:18\u001b[90m)\u001b[39m\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mtests\\e2e\\specs\\facts-tracking.e2e.test.ts:9:13\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\testInfo.js:305:11\n    at TimeoutManager.withRunnable \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\timeoutManager.js:67:14\u001b[90m)\u001b[39m\n    at TestInfoImpl._runWithTimeout \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\testInfo.js:303:7\u001b[90m)\u001b[39m\n    at FixtureRunner.resolveParametersAndRunFunction \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\fixtureRunner.js:228:5\u001b[90m)\u001b[39m\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:469:11\n    at TestInfoImpl._runAsStep \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\testInfo.js:294:7\u001b[90m)\u001b[39m\n    at WorkerMain._runEachHooksForSuites \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:468:9\u001b[90m)\u001b[39m\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:302:9\n    at TestInfoImpl._runAsStep \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\testInfo.js:294:7\u001b[90m)\u001b[39m\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:298:7\n    at WorkerMain._runTest \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:283:5\u001b[90m)\u001b[39m\n    at WorkerMain.runTestGroup \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:198:11\u001b[90m)\u001b[39m\n    at process.<anonymous> \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\common\\process.js:65:22\u001b[90m)\u001b[39m {\n  code: \u001b[32m'SQLITE_ERROR'\u001b[39m\n}\n"
+                        }
+                      ],
+                      "retry": 0,
+                      "startTime": "2025-10-08T20:52:52.345Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\test-results\\artifacts\\facts-tracking.e2e-Facts-T-deb0a-E2E-should-create-case-fact-electron\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts",
+                        "column": 8,
+                        "line": 88
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "ad2b960a29c0718fa558-4c4efc68207963bbd882",
+              "file": "facts-tracking.e2e.test.ts",
+              "line": 82,
+              "column": 7
+            },
+            {
+              "title": "should filter facts by category",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "electron",
+                  "projectName": "electron",
+                  "results": [
+                    {
+                      "workerIndex": 14,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 45,
+                      "error": {
+                        "message": "SqliteError: table cases has no column named case_number",
+                        "stack": "SqliteError: table cases has no column named case_number\n    at Database.exec (C:\\Users\\sava6\\Desktop\\Justice Companion\\node_modules\\better-sqlite3\\lib\\methods\\wrappers.js:9:14)\n    at seedTestData (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:88:8)\n    at setupTestDatabase (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:48:11)\n    at launchElectronApp (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts:30:18)\n    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\facts-tracking.e2e.test.ts:9:13",
+                        "location": {
+                          "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts",
+                          "column": 8,
+                          "line": 88
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39m..\\setup\\test-database.ts:88\n\n\u001b[0m \u001b[90m 86 |\u001b[39m   \u001b[36mtry\u001b[39m {\n \u001b[90m 87 |\u001b[39m     \u001b[90m// Insert sample case\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 88 |\u001b[39m     db\u001b[33m.\u001b[39mexec(\u001b[32m`\u001b[39m\n \u001b[90m    |\u001b[39m        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 89 |\u001b[39m \u001b[32m      INSERT INTO cases (id, case_number, title, case_type, description, status, created_at, updated_at)\u001b[39m\n \u001b[90m 90 |\u001b[39m \u001b[32m      VALUES (\u001b[39m\n \u001b[90m 91 |\u001b[39m \u001b[32m        1,\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts",
+                            "column": 8,
+                            "line": 88
+                          },
+                          "message": "SqliteError: table cases has no column named case_number\n\n\u001b[90m   at \u001b[39m..\\setup\\test-database.ts:88\n\n\u001b[0m \u001b[90m 86 |\u001b[39m   \u001b[36mtry\u001b[39m {\n \u001b[90m 87 |\u001b[39m     \u001b[90m// Insert sample case\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 88 |\u001b[39m     db\u001b[33m.\u001b[39mexec(\u001b[32m`\u001b[39m\n \u001b[90m    |\u001b[39m        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 89 |\u001b[39m \u001b[32m      INSERT INTO cases (id, case_number, title, case_type, description, status, created_at, updated_at)\u001b[39m\n \u001b[90m 90 |\u001b[39m \u001b[32m      VALUES (\u001b[39m\n \u001b[90m 91 |\u001b[39m \u001b[32m        1,\u001b[39m\u001b[0m\n\u001b[2m    at Database.exec (C:\\Users\\sava6\\Desktop\\Justice Companion\\node_modules\\better-sqlite3\\lib\\methods\\wrappers.js:9:14)\u001b[22m\n\u001b[2m    at seedTestData (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:88:8)\u001b[22m\n\u001b[2m    at setupTestDatabase (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:48:11)\u001b[22m\n\u001b[2m    at launchElectronApp (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts:30:18)\u001b[22m\n\u001b[2m    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\facts-tracking.e2e.test.ts:9:13\u001b[22m"
+                        },
+                        {
+                          "location": {
+                            "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts",
+                            "column": 11,
+                            "line": 85
+                          },
+                          "message": "TypeError: Cannot destructure property 'app' of 'testApp' as it is undefined.\n\n\u001b[90m   at \u001b[39m..\\setup\\electron-setup.ts:85\n\n\u001b[0m \u001b[90m 83 |\u001b[39m \u001b[90m */\u001b[39m\n \u001b[90m 84 |\u001b[39m \u001b[36mexport\u001b[39m \u001b[36masync\u001b[39m \u001b[36mfunction\u001b[39m closeElectronApp(testApp\u001b[33m:\u001b[39m \u001b[33mElectronTestApp\u001b[39m)\u001b[33m:\u001b[39m \u001b[33mPromise\u001b[39m\u001b[33m<\u001b[39m\u001b[36mvoid\u001b[39m\u001b[33m>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 85 |\u001b[39m   \u001b[36mconst\u001b[39m { app\u001b[33m,\u001b[39m dbPath } \u001b[33m=\u001b[39m testApp\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m           \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 86 |\u001b[39m\n \u001b[90m 87 |\u001b[39m   \u001b[36mtry\u001b[39m {\n \u001b[90m 88 |\u001b[39m     \u001b[90m// Close Electron app\u001b[39m\u001b[0m\n\u001b[2m    at closeElectronApp (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts:85:11)\u001b[22m\n\u001b[2m    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\facts-tracking.e2e.test.ts:13:25\u001b[22m"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "Test database created at: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759956773378.db\n"
+                        }
+                      ],
+                      "stderr": [
+                        {
+                          "text": "Failed to seed test data: SqliteError: table cases has no column named case_number\n    at Database.exec \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mbetter-sqlite3\u001b[24m\\lib\\methods\\wrappers.js:9:14\u001b[90m)\u001b[39m\n    at seedTestData \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mtests\\e2e\\setup\\test-database.ts:88:8\u001b[90m)\u001b[39m\n    at setupTestDatabase \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mtests\\e2e\\setup\\test-database.ts:48:11\u001b[90m)\u001b[39m\n    at launchElectronApp \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mtests\\e2e\\setup\\electron-setup.ts:30:18\u001b[90m)\u001b[39m\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mtests\\e2e\\specs\\facts-tracking.e2e.test.ts:9:13\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\testInfo.js:305:11\n    at TimeoutManager.withRunnable \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\timeoutManager.js:67:14\u001b[90m)\u001b[39m\n    at TestInfoImpl._runWithTimeout \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\testInfo.js:303:7\u001b[90m)\u001b[39m\n    at FixtureRunner.resolveParametersAndRunFunction \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\fixtureRunner.js:228:5\u001b[90m)\u001b[39m\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:469:11\n    at TestInfoImpl._runAsStep \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\testInfo.js:294:7\u001b[90m)\u001b[39m\n    at WorkerMain._runEachHooksForSuites \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:468:9\u001b[90m)\u001b[39m\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:302:9\n    at TestInfoImpl._runAsStep \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\testInfo.js:294:7\u001b[90m)\u001b[39m\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:298:7\n    at WorkerMain._runTest \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:283:5\u001b[90m)\u001b[39m\n    at WorkerMain.runTestGroup \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:198:11\u001b[90m)\u001b[39m\n    at process.<anonymous> \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\common\\process.js:65:22\u001b[90m)\u001b[39m {\n  code: \u001b[32m'SQLITE_ERROR'\u001b[39m\n}\n"
+                        }
+                      ],
+                      "retry": 0,
+                      "startTime": "2025-10-08T20:52:53.356Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\test-results\\artifacts\\facts-tracking.e2e-Facts-T-29419-ld-filter-facts-by-category-electron\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts",
+                        "column": 8,
+                        "line": 88
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "ad2b960a29c0718fa558-9e73c102fc94278b4df9",
+              "file": "facts-tracking.e2e.test.ts",
+              "line": 152,
+              "column": 7
+            },
+            {
+              "title": "should update and delete facts",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "electron",
+                  "projectName": "electron",
+                  "results": [
+                    {
+                      "workerIndex": 15,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 47,
+                      "error": {
+                        "message": "SqliteError: table cases has no column named case_number",
+                        "stack": "SqliteError: table cases has no column named case_number\n    at Database.exec (C:\\Users\\sava6\\Desktop\\Justice Companion\\node_modules\\better-sqlite3\\lib\\methods\\wrappers.js:9:14)\n    at seedTestData (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:88:8)\n    at setupTestDatabase (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:48:11)\n    at launchElectronApp (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts:30:18)\n    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\facts-tracking.e2e.test.ts:9:13",
+                        "location": {
+                          "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts",
+                          "column": 8,
+                          "line": 88
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39m..\\setup\\test-database.ts:88\n\n\u001b[0m \u001b[90m 86 |\u001b[39m   \u001b[36mtry\u001b[39m {\n \u001b[90m 87 |\u001b[39m     \u001b[90m// Insert sample case\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 88 |\u001b[39m     db\u001b[33m.\u001b[39mexec(\u001b[32m`\u001b[39m\n \u001b[90m    |\u001b[39m        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 89 |\u001b[39m \u001b[32m      INSERT INTO cases (id, case_number, title, case_type, description, status, created_at, updated_at)\u001b[39m\n \u001b[90m 90 |\u001b[39m \u001b[32m      VALUES (\u001b[39m\n \u001b[90m 91 |\u001b[39m \u001b[32m        1,\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts",
+                            "column": 8,
+                            "line": 88
+                          },
+                          "message": "SqliteError: table cases has no column named case_number\n\n\u001b[90m   at \u001b[39m..\\setup\\test-database.ts:88\n\n\u001b[0m \u001b[90m 86 |\u001b[39m   \u001b[36mtry\u001b[39m {\n \u001b[90m 87 |\u001b[39m     \u001b[90m// Insert sample case\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 88 |\u001b[39m     db\u001b[33m.\u001b[39mexec(\u001b[32m`\u001b[39m\n \u001b[90m    |\u001b[39m        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 89 |\u001b[39m \u001b[32m      INSERT INTO cases (id, case_number, title, case_type, description, status, created_at, updated_at)\u001b[39m\n \u001b[90m 90 |\u001b[39m \u001b[32m      VALUES (\u001b[39m\n \u001b[90m 91 |\u001b[39m \u001b[32m        1,\u001b[39m\u001b[0m\n\u001b[2m    at Database.exec (C:\\Users\\sava6\\Desktop\\Justice Companion\\node_modules\\better-sqlite3\\lib\\methods\\wrappers.js:9:14)\u001b[22m\n\u001b[2m    at seedTestData (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:88:8)\u001b[22m\n\u001b[2m    at setupTestDatabase (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:48:11)\u001b[22m\n\u001b[2m    at launchElectronApp (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts:30:18)\u001b[22m\n\u001b[2m    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\facts-tracking.e2e.test.ts:9:13\u001b[22m"
+                        },
+                        {
+                          "location": {
+                            "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts",
+                            "column": 11,
+                            "line": 85
+                          },
+                          "message": "TypeError: Cannot destructure property 'app' of 'testApp' as it is undefined.\n\n\u001b[90m   at \u001b[39m..\\setup\\electron-setup.ts:85\n\n\u001b[0m \u001b[90m 83 |\u001b[39m \u001b[90m */\u001b[39m\n \u001b[90m 84 |\u001b[39m \u001b[36mexport\u001b[39m \u001b[36masync\u001b[39m \u001b[36mfunction\u001b[39m closeElectronApp(testApp\u001b[33m:\u001b[39m \u001b[33mElectronTestApp\u001b[39m)\u001b[33m:\u001b[39m \u001b[33mPromise\u001b[39m\u001b[33m<\u001b[39m\u001b[36mvoid\u001b[39m\u001b[33m>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 85 |\u001b[39m   \u001b[36mconst\u001b[39m { app\u001b[33m,\u001b[39m dbPath } \u001b[33m=\u001b[39m testApp\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m           \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 86 |\u001b[39m\n \u001b[90m 87 |\u001b[39m   \u001b[36mtry\u001b[39m {\n \u001b[90m 88 |\u001b[39m     \u001b[90m// Close Electron app\u001b[39m\u001b[0m\n\u001b[2m    at closeElectronApp (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts:85:11)\u001b[22m\n\u001b[2m    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\facts-tracking.e2e.test.ts:13:25\u001b[22m"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "Test database created at: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759956774435.db\n"
+                        }
+                      ],
+                      "stderr": [
+                        {
+                          "text": "Failed to seed test data: SqliteError: table cases has no column named case_number\n    at Database.exec \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mbetter-sqlite3\u001b[24m\\lib\\methods\\wrappers.js:9:14\u001b[90m)\u001b[39m\n    at seedTestData \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mtests\\e2e\\setup\\test-database.ts:88:8\u001b[90m)\u001b[39m\n    at setupTestDatabase \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mtests\\e2e\\setup\\test-database.ts:48:11\u001b[90m)\u001b[39m\n    at launchElectronApp \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mtests\\e2e\\setup\\electron-setup.ts:30:18\u001b[90m)\u001b[39m\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mtests\\e2e\\specs\\facts-tracking.e2e.test.ts:9:13\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\testInfo.js:305:11\n    at TimeoutManager.withRunnable \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\timeoutManager.js:67:14\u001b[90m)\u001b[39m\n    at TestInfoImpl._runWithTimeout \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\testInfo.js:303:7\u001b[90m)\u001b[39m\n    at FixtureRunner.resolveParametersAndRunFunction \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\fixtureRunner.js:228:5\u001b[90m)\u001b[39m\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:469:11\n    at TestInfoImpl._runAsStep \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\testInfo.js:294:7\u001b[90m)\u001b[39m\n    at WorkerMain._runEachHooksForSuites \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:468:9\u001b[90m)\u001b[39m\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:302:9\n    at TestInfoImpl._runAsStep \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\testInfo.js:294:7\u001b[90m)\u001b[39m\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:298:7\n    at WorkerMain._runTest \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:283:5\u001b[90m)\u001b[39m\n    at WorkerMain.runTestGroup \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:198:11\u001b[90m)\u001b[39m\n    at process.<anonymous> \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\common\\process.js:65:22\u001b[90m)\u001b[39m {\n  code: \u001b[32m'SQLITE_ERROR'\u001b[39m\n}\n"
+                        }
+                      ],
+                      "retry": 0,
+                      "startTime": "2025-10-08T20:52:54.413Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\test-results\\artifacts\\facts-tracking.e2e-Facts-T-b1e66-uld-update-and-delete-facts-electron\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts",
+                        "column": 8,
+                        "line": 88
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "ad2b960a29c0718fa558-9befaefb87d1a028d4ef",
+              "file": "facts-tracking.e2e.test.ts",
+              "line": 194,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "user-journey.e2e.test.ts",
+      "file": "user-journey.e2e.test.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Complete User Journey E2E",
+          "file": "user-journey.e2e.test.ts",
+          "line": 17,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should complete full workflow: create case → add evidence → add facts → chat with AI → verify persistence",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "electron",
+                  "projectName": "electron",
+                  "results": [
+                    {
+                      "workerIndex": 16,
+                      "parallelIndex": 0,
+                      "status": "timedOut",
+                      "duration": 30009,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\user-journey.e2e.test.ts:8:6",
+                        "location": {
+                          "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\user-journey.e2e.test.ts",
+                          "column": 6,
+                          "line": 8
+                        },
+                        "snippet": "\u001b[0m \u001b[90m  6 |\u001b[39m \u001b[36mlet\u001b[39m testApp\u001b[33m:\u001b[39m \u001b[33mElectronTestApp\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m  7 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  8 |\u001b[39m test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m () \u001b[33m=>\u001b[39m {\n \u001b[90m    |\u001b[39m      \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m  9 |\u001b[39m   \u001b[90m// Start with clean database\u001b[39m\n \u001b[90m 10 |\u001b[39m   testApp \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m launchElectronApp({ seedData\u001b[33m:\u001b[39m \u001b[36mfalse\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 11 |\u001b[39m })\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\user-journey.e2e.test.ts",
+                            "column": 6,
+                            "line": 8
+                          },
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n\n\u001b[0m \u001b[90m  6 |\u001b[39m \u001b[36mlet\u001b[39m testApp\u001b[33m:\u001b[39m \u001b[33mElectronTestApp\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m  7 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  8 |\u001b[39m test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m () \u001b[33m=>\u001b[39m {\n \u001b[90m    |\u001b[39m      \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m  9 |\u001b[39m   \u001b[90m// Start with clean database\u001b[39m\n \u001b[90m 10 |\u001b[39m   testApp \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m launchElectronApp({ seedData\u001b[33m:\u001b[39m \u001b[36mfalse\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 11 |\u001b[39m })\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\user-journey.e2e.test.ts:8:6\u001b[22m"
+                        },
+                        {
+                          "location": {
+                            "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts",
+                            "column": 11,
+                            "line": 85
+                          },
+                          "message": "TypeError: Cannot destructure property 'app' of 'testApp' as it is undefined.\n\n\u001b[90m   at \u001b[39m..\\setup\\electron-setup.ts:85\n\n\u001b[0m \u001b[90m 83 |\u001b[39m \u001b[90m */\u001b[39m\n \u001b[90m 84 |\u001b[39m \u001b[36mexport\u001b[39m \u001b[36masync\u001b[39m \u001b[36mfunction\u001b[39m closeElectronApp(testApp\u001b[33m:\u001b[39m \u001b[33mElectronTestApp\u001b[39m)\u001b[33m:\u001b[39m \u001b[33mPromise\u001b[39m\u001b[33m<\u001b[39m\u001b[36mvoid\u001b[39m\u001b[33m>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 85 |\u001b[39m   \u001b[36mconst\u001b[39m { app\u001b[33m,\u001b[39m dbPath } \u001b[33m=\u001b[39m testApp\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m           \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 86 |\u001b[39m\n \u001b[90m 87 |\u001b[39m   \u001b[36mtry\u001b[39m {\n \u001b[90m 88 |\u001b[39m     \u001b[90m// Close Electron app\u001b[39m\u001b[0m\n\u001b[2m    at closeElectronApp (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts:85:11)\u001b[22m\n\u001b[2m    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\user-journey.e2e.test.ts:14:25\u001b[22m"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "Test database created at: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759956775459.db\n"
+                        },
+                        {
+                          "text": "Launching Electron from: C:\\Users\\sava6\\Desktop\\Justice Companion\\electron\\main.ts\n"
+                        },
+                        {
+                          "text": "Using test database: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759956775459.db\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-08T20:52:55.435Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\test-results\\artifacts\\user-journey.e2e-Complete--cb435-ith-AI-→-verify-persistence-electron\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\user-journey.e2e.test.ts",
+                        "column": 6,
+                        "line": 8
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "a0b04368faebbd2d000d-e34b3961092482e03cfc",
+              "file": "user-journey.e2e.test.ts",
+              "line": 18,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2025-10-08T20:50:01.893Z",
+    "duration": 203722.546,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 17,
+    "flaky": 0
+  }
+}
