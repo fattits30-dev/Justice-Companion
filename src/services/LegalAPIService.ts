@@ -138,6 +138,20 @@ const LEGAL_TERMS_DICTIONARY = {
   ],
 } as const;
 
+type AtomLink = {
+  '@_rel'?: string;
+  '@_href'?: string;
+};
+
+type AtomEntry = {
+  title?: unknown;
+  summary?: unknown;
+  content?: unknown;
+  updated?: unknown;
+  published?: unknown;
+  link?: unknown;
+};
+
 /**
  * Map legal categories to relevant court/tribunal codes for better case law filtering
  * Based on Find Case Law API court codes
@@ -636,34 +650,19 @@ export class LegalAPIService {
         attributeNamePrefix: '@_',
       });
 
-      const xmlDoc = parser.parse(xmlText);
+      const xmlDoc = parser.parse(xmlText) as unknown;
 
-      // Handle feed structure: feed.entry can be array or single object
-      let entries = xmlDoc?.feed?.entry || [];
-      if (!Array.isArray(entries)) {
-        entries = [entries];
-      }
-
+      const entries = this.normalizeAtomEntries(this.extractFeedEntries(xmlDoc));
       const results: LegislationResult[] = [];
 
-      for (let i = 0; i < Math.min(entries.length, 5); i++) { // Limit to 5 results
-        const entry = entries[i];
+      entries.slice(0, 5).forEach((entry, index) => {
+        const title = this.getTextContent(entry.title) || 'Unknown';
+        const summary =
+          this.getTextContent(entry.summary) ||
+          this.getTextContent(entry.content) ||
+          'No summary available';
 
-        // Extract text from potentially nested objects
-        const title = this.getTextContent(entry?.title) || 'Unknown';
-        const summary = this.getTextContent(entry?.summary) || this.getTextContent(entry?.content) || 'No summary available';
-
-        // Extract link href - handle both single link and array of links
-        let link = '';
-        if (entry?.link) {
-          if (Array.isArray(entry.link)) {
-            // Find first alternate link or use first link
-            const alternateLink = entry.link.find((l: any) => l?.['@_rel'] === 'alternate') || entry.link[0];
-            link = alternateLink?.['@_href'] || '';
-          } else {
-            link = entry.link?.['@_href'] || '';
-          }
-        }
+        const link = this.extractLinkHref(entry.link);
 
         // Extract section from title if present (e.g., "Employment Rights Act 1996 Section 94")
         const sectionMatch = title.match(/Section (\d+[A-Z]?)/i);
@@ -674,9 +673,9 @@ export class LegalAPIService {
           section,
           content: summary.trim().substring(0, 500), // Limit content length
           url: link,
-          relevance: 1.0 - (i * 0.1), // Simple relevance scoring
+          relevance: 1.0 - index * 0.1, // Simple relevance scoring
         });
-      }
+      });
 
       return results;
     } catch (error) {
@@ -698,35 +697,23 @@ export class LegalAPIService {
         attributeNamePrefix: '@_',
       });
 
-      const xmlDoc = parser.parse(xmlText);
+      const xmlDoc = parser.parse(xmlText) as unknown;
 
-      // Handle feed structure: feed.entry can be array or single object
-      let entries = xmlDoc?.feed?.entry || [];
-      if (!Array.isArray(entries)) {
-        entries = [entries];
-      }
-
+      const entries = this.normalizeAtomEntries(this.extractFeedEntries(xmlDoc));
       const results: CaseResult[] = [];
 
-      for (let i = 0; i < Math.min(entries.length, 5); i++) { // Limit to 5 results
-        const entry = entries[i];
+      entries.slice(0, 5).forEach((entry, index) => {
+        const title = this.getTextContent(entry.title) || 'Unknown Case';
+        const summary =
+          this.getTextContent(entry.summary) ||
+          this.getTextContent(entry.content) ||
+          'No summary available';
+        const dateStr =
+          this.getTextContent(entry.updated) ||
+          this.getTextContent(entry.published) ||
+          new Date().toISOString();
 
-        // Extract text from potentially nested objects
-        const title = this.getTextContent(entry?.title) || 'Unknown Case';
-        const summary = this.getTextContent(entry?.summary) || this.getTextContent(entry?.content) || 'No summary available';
-        const dateStr = this.getTextContent(entry?.updated) || this.getTextContent(entry?.published) || new Date().toISOString();
-
-        // Extract link href - handle both single link and array of links
-        let link = '';
-        if (entry?.link) {
-          if (Array.isArray(entry.link)) {
-            // Find first alternate link or use first link
-            const alternateLink = entry.link.find((l: any) => l?.['@_rel'] === 'alternate') || entry.link[0];
-            link = alternateLink?.['@_href'] || '';
-          } else {
-            link = entry.link?.['@_href'] || '';
-          }
-        }
+        const link = this.extractLinkHref(entry.link);
 
         // Extract court from title or use default
         const courtMatch = title.match(/\[(.*?)\]/);
@@ -739,9 +726,9 @@ export class LegalAPIService {
           summary: summary.trim().substring(0, 500), // Limit summary length
           outcome: undefined, // Not typically in atom feed
           url: link,
-          relevance: 1.0 - (i * 0.1), // Simple relevance scoring
+          relevance: 1.0 - index * 0.1, // Simple relevance scoring
         });
-      }
+      });
 
       return results;
     } catch (error) {
@@ -760,10 +747,82 @@ export class LegalAPIService {
     if (typeof value === 'string') {
       return value;
     }
-    if (value && typeof value === 'object' && '#text' in value) {
-      return String((value as any)['#text']);
+    if (this.isTextNode(value)) {
+      const textValue = value['#text'];
+      if (typeof textValue === 'string') {
+        return textValue;
+      }
+      if (typeof textValue === 'number' || typeof textValue === 'boolean') {
+        return textValue.toString();
+      }
     }
     return '';
+  }
+
+  private normalizeAtomEntries(rawEntries: unknown): AtomEntry[] {
+    if (Array.isArray(rawEntries)) {
+      return rawEntries
+        .filter((entry): entry is Record<string, unknown> => this.isRecord(entry))
+        .map((entry) => this.toAtomEntry(entry));
+    }
+
+    if (this.isRecord(rawEntries)) {
+      return [this.toAtomEntry(rawEntries)];
+    }
+
+    return [];
+  }
+
+  private toAtomEntry(entry: Record<string, unknown>): AtomEntry {
+    return {
+      title: entry.title,
+      summary: entry.summary,
+      content: entry.content,
+      updated: entry.updated,
+      published: entry.published,
+      link: entry.link,
+    };
+  }
+
+  private extractFeedEntries(xmlDoc: unknown): unknown {
+    if (!this.isRecord(xmlDoc)) {
+      return [];
+    }
+    const feed = (xmlDoc as Record<string, unknown>).feed;
+    if (!this.isRecord(feed)) {
+      return [];
+    }
+    return (feed as Record<string, unknown>).entry ?? [];
+  }
+
+  private extractLinkHref(linkValue: unknown): string {
+    if (Array.isArray(linkValue)) {
+      const typedLinks = linkValue.filter((item): item is AtomLink => this.isAtomLink(item));
+      if (typedLinks.length === 0) {
+        return '';
+      }
+      const preferred = typedLinks.find((item) => item['@_rel'] === 'alternate');
+      const target = preferred ?? typedLinks[0];
+      return target['@_href'] ?? '';
+    }
+
+    if (this.isAtomLink(linkValue)) {
+      return linkValue['@_href'] ?? '';
+    }
+
+    return '';
+  }
+
+  private isAtomLink(value: unknown): value is AtomLink {
+    return this.isRecord(value) && ('@_href' in value || '@_rel' in value);
+  }
+
+  private isTextNode(value: unknown): value is { '#text'?: unknown } & Record<string, unknown> {
+    return this.isRecord(value) && '#text' in value;
+  }
+
+  private isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === 'object' && value !== null;
   }
 
   // ==========================================================================

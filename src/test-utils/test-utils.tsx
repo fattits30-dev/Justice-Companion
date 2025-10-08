@@ -16,6 +16,8 @@
 import { render, RenderOptions } from '@testing-library/react';
 import { ReactElement, ReactNode } from 'react';
 import { BrowserRouter } from 'react-router-dom';
+import { vi } from 'vitest';
+import type { JusticeCompanionAPI } from '@/types/ipc';
 
 /**
  * All Providers Component
@@ -59,8 +61,10 @@ export { customRender as render };
  *   });
  * });
  */
-export function createMockJusticeAPI(overrides: Partial<any> = {}) {
-  return {
+export function createMockJusticeAPI(
+  overrides: Partial<JusticeCompanionAPI> = {}
+): JusticeCompanionAPI {
+  const baseApi: Partial<JusticeCompanionAPI> = {
     // Case operations
     createCase: vi.fn().mockResolvedValue({ success: true, data: { id: 1 } }),
     getCases: vi.fn().mockResolvedValue({ success: true, data: [] }),
@@ -78,8 +82,12 @@ export function createMockJusticeAPI(overrides: Partial<any> = {}) {
     askQuestion: vi.fn().mockResolvedValue({ success: true, data: { answer: 'Test answer' } }),
 
     // Override with custom implementations
-    ...overrides,
   };
+
+  return {
+    ...baseApi,
+    ...overrides,
+  } as JusticeCompanionAPI;
 }
 
 /**

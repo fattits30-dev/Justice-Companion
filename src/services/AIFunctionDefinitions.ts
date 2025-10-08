@@ -365,8 +365,8 @@ const storeCaseFactFunction = defineChatSessionFunction({
     const response = await window.justiceAPI.storeFact({
       caseId: params.caseId,
       factContent: params.factContent,
-      factCategory: params.factCategory as any,
-      importance: (params.importance as any) || 'medium',
+      factCategory: params.factCategory as 'timeline' | 'evidence' | 'witness' | 'location' | 'communication' | 'other',
+      importance: (params.importance as 'low' | 'medium' | 'high' | 'critical') || 'medium',
     });
     if (response.success) {
       return { success: true, factId: response.data.id, message: 'Fact stored' };
