@@ -1,0 +1,577 @@
+
+> justice-companion@1.0.0 lint
+> eslint .
+
+
+C:\Users\sava6\Desktop\Justice Companion\scripts\generate-test-data.ts
+  21:47  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\sava6\Desktop\Justice Companion\scripts\migration-status.ts
+  66:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  71:28  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\sava6\Desktop\Justice Companion\scripts\rollback-migration.ts
+  57:26  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  61:35  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  96:39  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\sava6\Desktop\Justice Companion\scripts\verify-case-16.ts
+  53:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  69:26  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\sava6\Desktop\Justice Companion\src\App.tsx
+  16:1   warning  Missing return type on function                                          @typescript-eslint/explicit-function-return-type
+  16:1   warning  Missing return type on function                                          @typescript-eslint/explicit-module-boundary-types
+  23:81  warning  Async arrow function 'handleConversationLoad' has no 'await' expression  @typescript-eslint/require-await
+  48:25  warning  Missing return type on function                                          @typescript-eslint/explicit-function-return-type
+
+C:\Users\sava6\Desktop\Justice Companion\src\components\ErrorBoundary.tsx
+   69:44  warning  Prefer using an optional chain expression instead, as it's more concise and easier to read                 @typescript-eslint/prefer-optional-chain
+   72:34  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+   73:52  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  141:46  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+
+C:\Users\sava6\Desktop\Justice Companion\src\components\ErrorTestButton.tsx
+  17:8  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  17:8  warning  Missing return type on function  @typescript-eslint/explicit-module-boundary-types
+
+C:\Users\sava6\Desktop\Justice Companion\src\components\PostItNote.tsx
+   40:8   warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+   40:8   warning  Missing return type on function  @typescript-eslint/explicit-module-boundary-types
+   64:25  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+   71:50  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  119:17  warning  Unexpected confirm               no-alert
+
+C:\Users\sava6\Desktop\Justice Companion\src\components\Sidebar.tsx
+   35:38  warning  Missing return type on function                                                                            @typescript-eslint/explicit-function-return-type
+   61:58  warning  Missing return type on function                                                                            @typescript-eslint/explicit-function-return-type
+   77:61  warning  Missing return type on function                                                                            @typescript-eslint/explicit-function-return-type
+   82:34  warning  Missing return type on function                                                                            @typescript-eslint/explicit-function-return-type
+  102:61  warning  Missing return type on function                                                                            @typescript-eslint/explicit-function-return-type
+  107:34  warning  Missing return type on function                                                                            @typescript-eslint/explicit-function-return-type
+  130:85  warning  Async arrow function 'handleRenameConversation' has no 'await' expression                                  @typescript-eslint/require-await
+  130:85  warning  Missing return type on function                                                                            @typescript-eslint/explicit-function-return-type
+  136:7   warning  Unexpected console statement. Only these console methods are allowed: warn, error                          no-console
+  148:30  warning  Missing return type on function                                                                            @typescript-eslint/explicit-function-return-type
+  232:30  warning  Promise-returning function provided to attribute where a void return was expected                          @typescript-eslint/no-misused-promises
+  234:27  warning  Promise-returning function provided to attribute where a void return was expected                          @typescript-eslint/no-misused-promises
+  236:38  warning  Promise-returning function provided to attribute where a void return was expected                          @typescript-eslint/no-misused-promises
+  249:63  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  257:84  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  258:76  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  273:19  warning  Promise-returning function provided to attribute where a void return was expected                          @typescript-eslint/no-misused-promises
+
+C:\Users\sava6\Desktop\Justice Companion\src\components\ThemeProvider.tsx
+  8:8  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  8:8  warning  Missing return type on function  @typescript-eslint/explicit-module-boundary-types
+
+C:\Users\sava6\Desktop\Justice Companion\src\components\ViewErrorBoundary.tsx
+  65:44  warning  Prefer using an optional chain expression instead, as it's more concise and easier to read                 @typescript-eslint/prefer-optional-chain
+  68:34  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  69:52  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+
+C:\Users\sava6\Desktop\Justice Companion\src\components\ui\DashboardEmptyState.tsx
+  127:15  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+
+C:\Users\sava6\Desktop\Justice Companion\src\components\ui\EmptyState.tsx
+  65:18  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+
+C:\Users\sava6\Desktop\Justice Companion\src\components\ui\LoadingSpinner.tsx
+  50:41  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+
+C:\Users\sava6\Desktop\Justice Companion\src\components\ui\Skeleton.tsx
+  4:1  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  4:1  warning  Missing return type on function  @typescript-eslint/explicit-module-boundary-types
+
+C:\Users\sava6\Desktop\Justice Companion\src\components\ui\dialog.tsx
+  56:42  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  56:42  warning  Missing return type on function  @typescript-eslint/explicit-module-boundary-types
+  70:42  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  70:42  warning  Missing return type on function  @typescript-eslint/explicit-module-boundary-types
+
+C:\Users\sava6\Desktop\Justice Companion\src\components\ui\sonner.tsx
+  7:46  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  7:46  warning  Missing return type on function  @typescript-eslint/explicit-module-boundary-types
+
+C:\Users\sava6\Desktop\Justice Companion\src\db\database.ts
+  94:25  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  94:25  warning  Missing return type on function  @typescript-eslint/explicit-module-boundary-types
+
+C:\Users\sava6\Desktop\Justice Companion\src\features\cases\components\CaseDetailView.tsx
+  51:31  warning  Missing return type on function                                                                            @typescript-eslint/explicit-function-return-type
+  96:39  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+
+C:\Users\sava6\Desktop\Justice Companion\src\features\cases\components\CasesView.tsx
+   71:32  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+   86:34  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  101:34  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  116:32  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  131:33  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  226:28  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  235:64  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+
+C:\Users\sava6\Desktop\Justice Companion\src\features\cases\hooks\useCases.ts
+  18:8  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  18:8  warning  Missing return type on function  @typescript-eslint/explicit-module-boundary-types
+
+C:\Users\sava6\Desktop\Justice Companion\src\features\chat\components\ChatInput.tsx
+  29:8  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  29:8  warning  Missing return type on function  @typescript-eslint/explicit-module-boundary-types
+
+C:\Users\sava6\Desktop\Justice Companion\src\features\chat\components\ChatNotesPanel.tsx
+  18:8   warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  18:8   warning  Missing return type on function  @typescript-eslint/explicit-module-boundary-types
+  23:22  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  38:52  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  44:35  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+
+C:\Users\sava6\Desktop\Justice Companion\src\features\chat\components\ChatPostItNotes.tsx
+  20:8   warning  Missing return type on function                                                                            @typescript-eslint/explicit-function-return-type
+  20:8   warning  Missing return type on function                                                                            @typescript-eslint/explicit-module-boundary-types
+  27:32  warning  Missing return type on function                                                                            @typescript-eslint/explicit-function-return-type
+  39:15  warning  Unsafe assignment of an `any` value                                                                        @typescript-eslint/no-unsafe-assignment
+  41:23  warning  Unsafe member access .success on an `any` value                                                            @typescript-eslint/no-unsafe-member-access
+  41:44  warning  Unsafe member access .data on an `any` value                                                               @typescript-eslint/no-unsafe-member-access
+  42:27  warning  Unsafe argument of type `any` assigned to a parameter of type `string | undefined`                         @typescript-eslint/no-unsafe-argument
+  42:36  warning  Unsafe member access .error on an `any` value                                                              @typescript-eslint/no-unsafe-member-access
+  42:42  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  45:15  warning  Unsafe assignment of an `any` value                                                                        @typescript-eslint/no-unsafe-assignment
+  45:44  warning  Unsafe member access .data on an `any` value                                                               @typescript-eslint/no-unsafe-member-access
+
+C:\Users\sava6\Desktop\Justice Companion\src\features\chat\components\ChatWindow.tsx
+   57:41  warning  Missing return type on function                                                             @typescript-eslint/explicit-function-return-type
+   69:53  warning  Prefer using an optional chain expression instead, as it's more concise and easier to read  @typescript-eslint/prefer-optional-chain
+  153:33  warning  Promise-returning function provided to attribute where a void return was expected           @typescript-eslint/no-misused-promises
+
+C:\Users\sava6\Desktop\Justice Companion\src\features\chat\components\FloatingChatInput.tsx
+   40:8   warning  Missing return type on function                                                    @typescript-eslint/explicit-function-return-type
+   40:8   warning  Missing return type on function                                                    @typescript-eslint/explicit-module-boundary-types
+  199:21  warning  Promise-returning function provided to attribute where a void return was expected  @typescript-eslint/no-misused-promises
+
+C:\Users\sava6\Desktop\Justice Companion\src\features\chat\components\MessageBubble.tsx
+  31:8  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  31:8  warning  Missing return type on function  @typescript-eslint/explicit-module-boundary-types
+
+C:\Users\sava6\Desktop\Justice Companion\src\features\chat\components\SidebarCaseContext.tsx
+  62:32  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+
+C:\Users\sava6\Desktop\Justice Companion\src\features\chat\components\SidebarProfile.tsx
+  22:27  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+
+C:\Users\sava6\Desktop\Justice Companion\src\features\chat\services\IntegratedAIService.ts
+   52:52  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator       @typescript-eslint/prefer-nullish-coalescing
+   91:13  warning  Unsafe assignment of an `any` value                                                                             @typescript-eslint/no-unsafe-assignment
+   91:30  warning  Unsafe member access .gpu on an `any` value                                                                     @typescript-eslint/no-unsafe-member-access
+   94:18  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator       @typescript-eslint/prefer-nullish-coalescing
+  110:46  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator       @typescript-eslint/prefer-nullish-coalescing
+  114:7   warning  Unsafe assignment of an `any` value                                                                             @typescript-eslint/no-unsafe-assignment
+  114:26  warning  Unsafe call of a(n) `any` typed value                                                                           @typescript-eslint/no-unsafe-call
+  114:37  warning  Unsafe member access .loadModel on an `any` value                                                               @typescript-eslint/no-unsafe-member-access
+  123:13  warning  Unsafe assignment of an `any` value                                                                             @typescript-eslint/no-unsafe-assignment
+  123:42  warning  Unsafe member access ._trainContextSize on an `any` value                                                       @typescript-eslint/no-unsafe-member-access
+  123:60  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator       @typescript-eslint/prefer-nullish-coalescing
+  130:51  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator       @typescript-eslint/prefer-nullish-coalescing
+  138:42  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator       @typescript-eslint/prefer-nullish-coalescing
+  142:7   warning  Unsafe assignment of an `any` value                                                                             @typescript-eslint/no-unsafe-assignment
+  142:28  warning  Unsafe call of a(n) `any` typed value                                                                           @typescript-eslint/no-unsafe-call
+  142:39  warning  Unsafe member access .createContext on an `any` value                                                           @typescript-eslint/no-unsafe-member-access
+  149:25  warning  Unsafe member access .gpu on an `any` value                                                                     @typescript-eslint/no-unsafe-member-access
+  252:43  warning  Unsafe argument of type `any` assigned to a parameter of type `LegalContext`                                    @typescript-eslint/no-unsafe-argument
+  379:7   warning  Unsafe assignment of an `any` value                                                                             @typescript-eslint/no-unsafe-assignment
+  379:25  warning  Unsafe call of a(n) `any` typed value                                                                           @typescript-eslint/no-unsafe-call
+  379:38  warning  Unsafe member access .getSequence on an `any` value                                                             @typescript-eslint/no-unsafe-member-access
+  383:9   warning  Unsafe assignment of an `any` value                                                                             @typescript-eslint/no-unsafe-assignment
+  393:51  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator       @typescript-eslint/prefer-nullish-coalescing
+  401:25  warning  Unsafe member access .gpu on an `any` value                                                                     @typescript-eslint/no-unsafe-member-access
+  417:11  warning  Prefer using nullish coalescing operator (`??=`) instead of an assignment expression, as it is simpler to read  @typescript-eslint/prefer-nullish-coalescing
+  435:62  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator       @typescript-eslint/prefer-nullish-coalescing
+  441:66  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator       @typescript-eslint/prefer-nullish-coalescing
+  485:13  warning  Unsafe call of a(n) `any` typed value                                                                           @typescript-eslint/no-unsafe-call
+  485:29  warning  Unsafe member access .dispose on an `any` value                                                                 @typescript-eslint/no-unsafe-member-access
+  499:17  warning  Unsafe call of a(n) `any` typed value                                                                           @typescript-eslint/no-unsafe-call
+  499:33  warning  Unsafe member access .dispose on an `any` value                                                                 @typescript-eslint/no-unsafe-member-access
+  563:7   warning  Unsafe assignment of an `any` value                                                                             @typescript-eslint/no-unsafe-assignment
+  563:25  warning  Unsafe call of a(n) `any` typed value                                                                           @typescript-eslint/no-unsafe-call
+  563:38  warning  Unsafe member access .getSequence on an `any` value                                                             @typescript-eslint/no-unsafe-member-access
+  567:9   warning  Unsafe assignment of an `any` value                                                                             @typescript-eslint/no-unsafe-assignment
+  575:51  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator       @typescript-eslint/prefer-nullish-coalescing
+  592:11  warning  Prefer using nullish coalescing operator (`??=`) instead of an assignment expression, as it is simpler to read  @typescript-eslint/prefer-nullish-coalescing
+  601:13  warning  Unsafe call of a(n) `any` typed value                                                                           @typescript-eslint/no-unsafe-call
+  601:29  warning  Unsafe member access .dispose on an `any` value                                                                 @typescript-eslint/no-unsafe-member-access
+  614:17  warning  Unsafe call of a(n) `any` typed value                                                                           @typescript-eslint/no-unsafe-call
+  614:33  warning  Unsafe member access .dispose on an `any` value                                                                 @typescript-eslint/no-unsafe-member-access
+  654:15  warning  Unsafe call of a(n) `any` typed value                                                                           @typescript-eslint/no-unsafe-call
+  654:28  warning  Unsafe member access .dispose on an `any` value                                                                 @typescript-eslint/no-unsafe-member-access
+  658:15  warning  Unsafe call of a(n) `any` typed value                                                                           @typescript-eslint/no-unsafe-call
+  658:26  warning  Unsafe member access .dispose on an `any` value                                                                 @typescript-eslint/no-unsafe-member-access
+  662:15  warning  Unsafe call of a(n) `any` typed value                                                                           @typescript-eslint/no-unsafe-call
+  662:26  warning  Unsafe member access .dispose on an `any` value                                                                 @typescript-eslint/no-unsafe-member-access
+
+C:\Users\sava6\Desktop\Justice Companion\src\features\documents\components\DocumentsView.tsx
+   77:46  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+   88:42  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  102:46  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  118:43  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  134:43  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  155:35  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  181:32  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  207:32  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  244:44  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  248:42  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  261:43  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  274:39  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+
+C:\Users\sava6\Desktop\Justice Companion\src\features\documents\components\FileUploadModal.tsx
+   33:51  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+   87:56  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  231:23  warning  Promise-returning function provided to attribute where a void return was expected                          @typescript-eslint/no-misused-promises
+  338:21  warning  Promise-returning function provided to attribute where a void return was expected                          @typescript-eslint/no-misused-promises
+
+C:\Users\sava6\Desktop\Justice Companion\src\features\documents\hooks\useEvidence.ts
+  17:8  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  17:8  warning  Missing return type on function  @typescript-eslint/explicit-module-boundary-types
+
+C:\Users\sava6\Desktop\Justice Companion\src\features\facts\components\CaseFactsPanel.tsx
+   35:8   warning  Missing return type on function                                                    @typescript-eslint/explicit-function-return-type
+   35:8   warning  Missing return type on function                                                    @typescript-eslint/explicit-module-boundary-types
+   63:48  warning  Missing return type on function                                                    @typescript-eslint/explicit-function-return-type
+  241:22  warning  Promise-returning function provided to attribute where a void return was expected  @typescript-eslint/no-misused-promises
+  260:26  warning  Promise-returning function provided to attribute where a void return was expected  @typescript-eslint/no-misused-promises
+  263:26  warning  Promise-returning function provided to attribute where a void return was expected  @typescript-eslint/no-misused-promises
+
+C:\Users\sava6\Desktop\Justice Companion\src\features\facts\components\UserFactsPanel.tsx
+   28:8   warning  Missing return type on function                                                    @typescript-eslint/explicit-function-return-type
+   28:8   warning  Missing return type on function                                                    @typescript-eslint/explicit-module-boundary-types
+   49:48  warning  Missing return type on function                                                    @typescript-eslint/explicit-function-return-type
+  157:22  warning  Promise-returning function provided to attribute where a void return was expected  @typescript-eslint/no-misused-promises
+  176:24  warning  Promise-returning function provided to attribute where a void return was expected  @typescript-eslint/no-misused-promises
+  179:24  warning  Promise-returning function provided to attribute where a void return was expected  @typescript-eslint/no-misused-promises
+
+C:\Users\sava6\Desktop\Justice Companion\src\features\facts\hooks\useCaseFacts.ts
+   4:8   warning  Missing return type on function                                                                            @typescript-eslint/explicit-function-return-type
+   4:8   warning  Missing return type on function                                                                            @typescript-eslint/explicit-module-boundary-types
+   9:34  warning  Missing return type on function                                                                            @typescript-eslint/explicit-function-return-type
+  15:34  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  17:31  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  26:60  warning  Missing return type on function                                                                            @typescript-eslint/explicit-function-return-type
+  32:34  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  34:31  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  43:60  warning  Missing return type on function                                                                            @typescript-eslint/explicit-function-return-type
+  49:34  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  51:31  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  60:61  warning  Missing return type on function                                                                            @typescript-eslint/explicit-function-return-type
+  67:38  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  75:73  warning  Missing return type on function                                                                            @typescript-eslint/explicit-function-return-type
+  84:38  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  92:45  warning  Missing return type on function                                                                            @typescript-eslint/explicit-function-return-type
+  98:38  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+
+C:\Users\sava6\Desktop\Justice Companion\src\features\facts\hooks\useUserFacts.ts
+   4:8   warning  Missing return type on function                                                                            @typescript-eslint/explicit-function-return-type
+   4:8   warning  Missing return type on function                                                                            @typescript-eslint/explicit-module-boundary-types
+   9:34  warning  Missing return type on function                                                                            @typescript-eslint/explicit-function-return-type
+  15:34  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  17:31  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  26:52  warning  Missing return type on function                                                                            @typescript-eslint/explicit-function-return-type
+  32:34  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  34:31  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  43:61  warning  Missing return type on function                                                                            @typescript-eslint/explicit-function-return-type
+  50:38  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  58:73  warning  Missing return type on function                                                                            @typescript-eslint/explicit-function-return-type
+  67:38  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  75:45  warning  Missing return type on function                                                                            @typescript-eslint/explicit-function-return-type
+  81:38  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+
+C:\Users\sava6\Desktop\Justice Companion\src\features\legal\components\LegalIssuesPanel.tsx
+   11:8   warning  Missing return type on function                                                    @typescript-eslint/explicit-function-return-type
+   11:8   warning  Missing return type on function                                                    @typescript-eslint/explicit-module-boundary-types
+   27:33  warning  Missing return type on function                                                    @typescript-eslint/explicit-function-return-type
+  174:23  warning  Promise-returning function provided to attribute where a void return was expected  @typescript-eslint/no-misused-promises
+  333:31  warning  Unexpected confirm                                                                 no-alert
+
+C:\Users\sava6\Desktop\Justice Companion\src\features\legal\hooks\useLegalIssues.ts
+   4:8   warning  Missing return type on function                                                                            @typescript-eslint/explicit-function-return-type
+   4:8   warning  Missing return type on function                                                                            @typescript-eslint/explicit-module-boundary-types
+   9:36  warning  Missing return type on function                                                                            @typescript-eslint/explicit-function-return-type
+  15:36  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  17:31  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  26:65  warning  Missing return type on function                                                                            @typescript-eslint/explicit-function-return-type
+  33:38  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  41:77  warning  Missing return type on function                                                                            @typescript-eslint/explicit-function-return-type
+  50:38  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  58:47  warning  Missing return type on function                                                                            @typescript-eslint/explicit-function-return-type
+  64:38  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+
+C:\Users\sava6\Desktop\Justice Companion\src\features\notes\components\NotesPanel.tsx
+    9:8   warning  Missing return type on function                                                    @typescript-eslint/explicit-function-return-type
+    9:8   warning  Missing return type on function                                                    @typescript-eslint/explicit-module-boundary-types
+   18:33  warning  Missing return type on function                                                    @typescript-eslint/explicit-function-return-type
+   26:43  warning  Missing return type on function                                                    @typescript-eslint/explicit-function-return-type
+   78:23  warning  Promise-returning function provided to attribute where a void return was expected  @typescript-eslint/no-misused-promises
+  118:31  warning  Promise-returning function provided to attribute where a void return was expected  @typescript-eslint/no-misused-promises
+  155:31  warning  Unexpected confirm                                                                 no-alert
+
+C:\Users\sava6\Desktop\Justice Companion\src\features\notes\hooks\useNotes.ts
+   4:8   warning  Missing return type on function                                                                            @typescript-eslint/explicit-function-return-type
+   4:8   warning  Missing return type on function                                                                            @typescript-eslint/explicit-module-boundary-types
+   9:30  warning  Missing return type on function                                                                            @typescript-eslint/explicit-function-return-type
+  15:30  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  17:31  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  26:46  warning  Missing return type on function                                                                            @typescript-eslint/explicit-function-return-type
+  33:38  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  41:58  warning  Missing return type on function                                                                            @typescript-eslint/explicit-function-return-type
+  48:38  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  56:41  warning  Missing return type on function                                                                            @typescript-eslint/explicit-function-return-type
+  62:38  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+
+C:\Users\sava6\Desktop\Justice Companion\src\features\settings\components\SettingsView.tsx
+   22:10  warning  Unsafe array destructuring of a tuple element with an `any` value                                          @typescript-eslint/no-unsafe-assignment
+   24:5   warning  Unsafe return of a value of type `any`                                                                     @typescript-eslint/no-unsafe-return
+   28:10  warning  Unsafe array destructuring of a tuple element with an `any` value                                          @typescript-eslint/no-unsafe-assignment
+   30:5   warning  Unsafe return of a value of type `any`                                                                     @typescript-eslint/no-unsafe-return
+   33:10  warning  Unsafe array destructuring of a tuple element with an `any` value                                          @typescript-eslint/no-unsafe-assignment
+   35:5   warning  Unsafe return of a value of type `any`                                                                     @typescript-eslint/no-unsafe-return
+   38:10  warning  Unsafe array destructuring of a tuple element with an `any` value                                          @typescript-eslint/no-unsafe-assignment
+   40:5   warning  Unsafe return of a value of type `any`                                                                     @typescript-eslint/no-unsafe-return
+   44:10  warning  Unsafe array destructuring of a tuple element with an `any` value                                          @typescript-eslint/no-unsafe-assignment
+   46:5   warning  Unsafe return of a value of type `any`                                                                     @typescript-eslint/no-unsafe-return
+   50:10  warning  Unsafe array destructuring of a tuple element with an `any` value                                          @typescript-eslint/no-unsafe-assignment
+   52:5   warning  Unsafe return of a value of type `any`                                                                     @typescript-eslint/no-unsafe-return
+   57:18  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+   63:18  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+   68:18  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+   71:10  warning  Unsafe array destructuring of a tuple element with an `any` value                                          @typescript-eslint/no-unsafe-assignment
+   73:5   warning  Unsafe return of a value of type `any`                                                                     @typescript-eslint/no-unsafe-return
+   79:18  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+   84:18  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+   88:10  warning  Unsafe array destructuring of a tuple element with an `any` value                                          @typescript-eslint/no-unsafe-assignment
+   90:5   warning  Unsafe return of a value of type `any`                                                                     @typescript-eslint/no-unsafe-return
+   93:10  warning  Unsafe array destructuring of a tuple element with an `any` value                                          @typescript-eslint/no-unsafe-assignment
+   95:5   warning  Unsafe return of a value of type `any`                                                                     @typescript-eslint/no-unsafe-return
+  101:18  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  106:18  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  111:18  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  117:18  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  122:18  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  127:18  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  135:34  warning  Missing return type on function                                                                            @typescript-eslint/explicit-function-return-type
+  147:44  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  248:38  warning  Missing return type on function                                                                            @typescript-eslint/explicit-function-return-type
+  274:39  warning  Missing return type on function                                                                            @typescript-eslint/explicit-function-return-type
+  370:29  warning  Promise-returning function provided to attribute where a void return was expected                          @typescript-eslint/no-misused-promises
+  386:55  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  387:57  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  400:44  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  406:45  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  422:24  warning  Unsafe assignment of an `any` value                                                                        @typescript-eslint/no-unsafe-assignment
+  445:24  warning  Unsafe assignment of an `any` value                                                                        @typescript-eslint/no-unsafe-assignment
+  450:24  warning  Unsafe assignment of an `any` value                                                                        @typescript-eslint/no-unsafe-assignment
+  455:24  warning  Unsafe assignment of an `any` value                                                                        @typescript-eslint/no-unsafe-assignment
+  473:24  warning  Unsafe assignment of an `any` value                                                                        @typescript-eslint/no-unsafe-assignment
+  516:24  warning  Unsafe assignment of an `any` value                                                                        @typescript-eslint/no-unsafe-assignment
+  557:24  warning  Unsafe assignment of an `any` value                                                                        @typescript-eslint/no-unsafe-assignment
+  585:30  warning  Unexpected console statement. Only these console methods are allowed: warn, error                          no-console
+  600:24  warning  Unsafe assignment of an `any` value                                                                        @typescript-eslint/no-unsafe-assignment
+  605:24  warning  Unsafe assignment of an `any` value                                                                        @typescript-eslint/no-unsafe-assignment
+  609:30  warning  Unexpected console statement. Only these console methods are allowed: warn, error                          no-console
+  705:19  warning  Promise-returning function provided to attribute where a void return was expected                          @typescript-eslint/no-misused-promises
+
+C:\Users\sava6\Desktop\Justice Companion\src\features\timeline\components\TimelineView.tsx
+    9:8   warning  Missing return type on function                                                                            @typescript-eslint/explicit-function-return-type
+    9:8   warning  Missing return type on function                                                                            @typescript-eslint/explicit-module-boundary-types
+   32:33  warning  Missing return type on function                                                                            @typescript-eslint/explicit-function-return-type
+   45:43  warning  Missing return type on function                                                                            @typescript-eslint/explicit-function-return-type
+  223:23  warning  Promise-returning function provided to attribute where a void return was expected                          @typescript-eslint/no-misused-promises
+  383:35  warning  Promise-returning function provided to attribute where a void return was expected                          @typescript-eslint/no-misused-promises
+  452:64  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  470:35  warning  Unexpected confirm                                                                                         no-alert
+
+C:\Users\sava6\Desktop\Justice Companion\src\features\timeline\hooks\useTimeline.ts
+   4:8   warning  Missing return type on function                                                                            @typescript-eslint/explicit-function-return-type
+   4:8   warning  Missing return type on function                                                                            @typescript-eslint/explicit-module-boundary-types
+   9:39  warning  Missing return type on function                                                                            @typescript-eslint/explicit-function-return-type
+  15:39  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  17:31  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  26:71  warning  Missing return type on function                                                                            @typescript-eslint/explicit-function-return-type
+  33:38  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  41:83  warning  Missing return type on function                                                                            @typescript-eslint/explicit-function-return-type
+  50:38  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  58:50  warning  Missing return type on function                                                                            @typescript-eslint/explicit-function-return-type
+  64:38  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+
+C:\Users\sava6\Desktop\Justice Companion\src\hooks\useAI.example.tsx
+   37:7   error    Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+  140:19  warning  Promise-returning function provided to attribute where a void return was expected                                                                                   @typescript-eslint/no-misused-promises
+
+C:\Users\sava6\Desktop\Justice Companion\src\hooks\useToast.ts
+  16:8  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  16:8  warning  Missing return type on function  @typescript-eslint/explicit-module-boundary-types
+
+C:\Users\sava6\Desktop\Justice Companion\src\hooks\useVoiceRecognition.ts
+   95:11  warning  Unsafe assignment of an `any` value                                                                        @typescript-eslint/no-unsafe-assignment
+   96:18  error    Unexpected any. Specify a different type                                                                   @typescript-eslint/no-explicit-any
+   96:23  warning  Unsafe member access .SpeechRecognition on an `any` value                                                  @typescript-eslint/no-unsafe-member-access
+   96:41  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+   96:55  error    Unexpected any. Specify a different type                                                                   @typescript-eslint/no-explicit-any
+   96:60  warning  Unsafe member access .webkitSpeechRecognition on an `any` value                                            @typescript-eslint/no-unsafe-member-access
+  104:11  warning  Unsafe assignment of an `any` value                                                                        @typescript-eslint/no-unsafe-assignment
+  104:25  warning  Unsafe construction of a(n) `any` typed value                                                              @typescript-eslint/no-unsafe-call
+  105:17  warning  Unsafe member access .continuous on an `any` value                                                         @typescript-eslint/no-unsafe-member-access
+  106:17  warning  Unsafe member access .interimResults on an `any` value                                                     @typescript-eslint/no-unsafe-member-access
+  107:17  warning  Unsafe member access .lang on an `any` value                                                               @typescript-eslint/no-unsafe-member-access
+  109:17  warning  Unsafe member access .onresult on an `any` value                                                           @typescript-eslint/no-unsafe-member-access
+  130:17  warning  Unsafe member access .onerror on an `any` value                                                            @typescript-eslint/no-unsafe-member-access
+  157:17  warning  Unsafe member access .onend on an `any` value                                                              @typescript-eslint/no-unsafe-member-access
+  162:5   warning  Unsafe assignment of an `any` value                                                                        @typescript-eslint/no-unsafe-assignment
+  171:29  warning  Missing return type on function                                                                            @typescript-eslint/explicit-function-return-type
+  189:28  warning  Missing return type on function                                                                            @typescript-eslint/explicit-function-return-type
+
+C:\Users\sava6\Desktop\Justice Companion\src\lib\utils.ts
+  8:8  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  8:8  warning  Missing return type on function  @typescript-eslint/explicit-module-boundary-types
+
+C:\Users\sava6\Desktop\Justice Companion\src\repositories\CaseFactsRepository.ts
+   46:38  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+   60:40  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  408:62  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+
+C:\Users\sava6\Desktop\Justice Companion\src\repositories\ChatConversationRepository.ts
+  158:49  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  249:60  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+
+C:\Users\sava6\Desktop\Justice Companion\src\repositories\NotesRepository.test.ts
+   79:5  error  The members of 'databaseModule' are read-only  no-import-assign
+  301:7  error  The members of 'databaseModule' are read-only  no-import-assign
+
+C:\Users\sava6\Desktop\Justice Companion\src\repositories\NotesRepository.ts
+  253:62  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+
+C:\Users\sava6\Desktop\Justice Companion\src\repositories\Phase3Repositories.test.ts
+  98:3  error  The members of 'databaseModule' are read-only  no-import-assign
+
+C:\Users\sava6\Desktop\Justice Companion\src\repositories\UserFactsRepository.ts
+  333:62  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+
+C:\Users\sava6\Desktop\Justice Companion\src\repositories\UserProfileRepository.ts
+  45:54  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+
+C:\Users\sava6\Desktop\Justice Companion\src\services\AIFunctionDefinitions.ts
+   43:7   warning  Unsafe assignment of an `any` value                                                                        @typescript-eslint/no-unsafe-assignment
+   43:36  error    Unexpected any. Specify a different type                                                                   @typescript-eslint/no-explicit-any
+  189:7   warning  Unsafe assignment of an `any` value                                                                        @typescript-eslint/no-unsafe-assignment
+  189:43  error    Unexpected any. Specify a different type                                                                   @typescript-eslint/no-explicit-any
+  365:11  warning  Unsafe assignment of an `any` value                                                                        @typescript-eslint/no-unsafe-assignment
+  368:7   warning  Unsafe assignment of an `any` value                                                                        @typescript-eslint/no-unsafe-assignment
+  368:44  error    Unexpected any. Specify a different type                                                                   @typescript-eslint/no-explicit-any
+  369:7   warning  Unsafe assignment of an `any` value                                                                        @typescript-eslint/no-unsafe-assignment
+  369:41  error    Unexpected any. Specify a different type                                                                   @typescript-eslint/no-explicit-any
+  369:46  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  371:18  warning  Unsafe member access .success on an `any` value                                                            @typescript-eslint/no-unsafe-member-access
+  372:31  warning  Unsafe assignment of an `any` value                                                                        @typescript-eslint/no-unsafe-assignment
+  372:48  warning  Unsafe member access .data on an `any` value                                                               @typescript-eslint/no-unsafe-member-access
+  374:23  warning  Unsafe argument of type `any` assigned to a parameter of type `string | undefined`                         @typescript-eslint/no-unsafe-argument
+  374:32  warning  Unsafe member access .error on an `any` value                                                              @typescript-eslint/no-unsafe-member-access
+  374:38  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  394:11  warning  Unsafe assignment of an `any` value                                                                        @typescript-eslint/no-unsafe-assignment
+  395:18  warning  Unsafe member access .success on an `any` value                                                            @typescript-eslint/no-unsafe-member-access
+  398:9   warning  Unsafe assignment of an `any` value                                                                        @typescript-eslint/no-unsafe-assignment
+  398:25  warning  Unsafe member access .data on an `any` value                                                               @typescript-eslint/no-unsafe-member-access
+  399:36  warning  Unsafe member access .data on an `any` value                                                               @typescript-eslint/no-unsafe-member-access
+  402:23  warning  Unsafe argument of type `any` assigned to a parameter of type `string | undefined`                         @typescript-eslint/no-unsafe-argument
+  402:32  warning  Unsafe member access .error on an `any` value                                                              @typescript-eslint/no-unsafe-member-access
+  402:38  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  449:38  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+
+C:\Users\sava6\Desktop\Justice Companion\src\services\AIServiceFactory.ts
+  48:5  warning  Prefer using nullish coalescing operator (`??=`) instead of an assignment expression, as it is simpler to read  @typescript-eslint/prefer-nullish-coalescing
+
+C:\Users\sava6\Desktop\Justice Companion\src\services\AuditLogger.ts
+  410:9  warning  Unsafe assignment of an `any` value  @typescript-eslint/no-unsafe-assignment
+
+C:\Users\sava6\Desktop\Justice Companion\src\services\EncryptionService.ts
+  122:51  error  Invalid type "never" of template literal expression  @typescript-eslint/restrict-template-expressions
+
+C:\Users\sava6\Desktop\Justice Companion\src\services\LegalAPIService.ts
+  412:3    warning  Async method 'extractKeywords' has no 'await' expression                                                                                @typescript-eslint/require-await
+  558:3    warning  Async method 'searchKnowledgeBase' has no 'await' expression                                                                            @typescript-eslint/require-await
+  639:13   warning  Unsafe assignment of an `any` value                                                                                                     @typescript-eslint/no-unsafe-assignment
+  642:11   warning  Unsafe assignment of an `any` value                                                                                                     @typescript-eslint/no-unsafe-assignment
+  642:29   warning  Unsafe member access .feed on an `any` value                                                                                            @typescript-eslint/no-unsafe-member-access
+  642:41   warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator                               @typescript-eslint/prefer-nullish-coalescing
+  649:36   warning  Unsafe argument of type `any` assigned to a parameter of type `number`                                                                  @typescript-eslint/no-unsafe-argument
+  649:44   warning  Unsafe member access .length on an `any` value                                                                                          @typescript-eslint/no-unsafe-member-access
+  650:15   warning  Unsafe assignment of an `any` value                                                                                                     @typescript-eslint/no-unsafe-assignment
+  650:31   warning  Unsafe member access [i] on an `any` value                                                                                              @typescript-eslint/no-unsafe-member-access
+  653:50   warning  Unsafe member access .title on an `any` value                                                                                           @typescript-eslint/no-unsafe-member-access
+  654:52   warning  Unsafe member access .summary on an `any` value                                                                                         @typescript-eslint/no-unsafe-member-access
+  654:91   warning  Unsafe member access .content on an `any` value                                                                                         @typescript-eslint/no-unsafe-member-access
+  658:20   warning  Unsafe member access .link on an `any` value                                                                                            @typescript-eslint/no-unsafe-member-access
+  659:35   warning  Unsafe member access .link on an `any` value                                                                                            @typescript-eslint/no-unsafe-member-access
+  661:19   warning  Unsafe assignment of an `any` value                                                                                                     @typescript-eslint/no-unsafe-assignment
+  661:35   warning  Unsafe call of a(n) `any` typed value                                                                                                   @typescript-eslint/no-unsafe-call
+  661:41   warning  Unsafe member access .link on an `any` value                                                                                            @typescript-eslint/no-unsafe-member-access
+  661:55   error    Unexpected any. Specify a different type                                                                                                @typescript-eslint/no-explicit-any
+  661:67   warning  Unsafe member access ['@_rel'] on an `any` value                                                                                        @typescript-eslint/no-unsafe-member-access
+  661:93   warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator                               @typescript-eslint/prefer-nullish-coalescing
+  661:102  warning  Unsafe member access .link on an `any` value                                                                                            @typescript-eslint/no-unsafe-member-access
+  662:13   warning  Unsafe assignment of an `any` value                                                                                                     @typescript-eslint/no-unsafe-assignment
+  662:36   warning  Unsafe member access ['@_href'] on an `any` value                                                                                       @typescript-eslint/no-unsafe-member-access
+  662:46   warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator                               @typescript-eslint/prefer-nullish-coalescing
+  664:13   warning  Unsafe assignment of an `any` value                                                                                                     @typescript-eslint/no-unsafe-assignment
+  664:26   warning  Unsafe member access .link on an `any` value                                                                                            @typescript-eslint/no-unsafe-member-access
+  664:43   warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator                               @typescript-eslint/prefer-nullish-coalescing
+  701:13   warning  Unsafe assignment of an `any` value                                                                                                     @typescript-eslint/no-unsafe-assignment
+  704:11   warning  Unsafe assignment of an `any` value                                                                                                     @typescript-eslint/no-unsafe-assignment
+  704:29   warning  Unsafe member access .feed on an `any` value                                                                                            @typescript-eslint/no-unsafe-member-access
+  704:41   warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator                               @typescript-eslint/prefer-nullish-coalescing
+  711:36   warning  Unsafe argument of type `any` assigned to a parameter of type `number`                                                                  @typescript-eslint/no-unsafe-argument
+  711:44   warning  Unsafe member access .length on an `any` value                                                                                          @typescript-eslint/no-unsafe-member-access
+  712:15   warning  Unsafe assignment of an `any` value                                                                                                     @typescript-eslint/no-unsafe-assignment
+  712:31   warning  Unsafe member access [i] on an `any` value                                                                                              @typescript-eslint/no-unsafe-member-access
+  715:50   warning  Unsafe member access .title on an `any` value                                                                                           @typescript-eslint/no-unsafe-member-access
+  716:52   warning  Unsafe member access .summary on an `any` value                                                                                         @typescript-eslint/no-unsafe-member-access
+  716:91   warning  Unsafe member access .content on an `any` value                                                                                         @typescript-eslint/no-unsafe-member-access
+  717:52   warning  Unsafe member access .updated on an `any` value                                                                                         @typescript-eslint/no-unsafe-member-access
+  717:91   warning  Unsafe member access .published on an `any` value                                                                                       @typescript-eslint/no-unsafe-member-access
+  721:20   warning  Unsafe member access .link on an `any` value                                                                                            @typescript-eslint/no-unsafe-member-access
+  722:35   warning  Unsafe member access .link on an `any` value                                                                                            @typescript-eslint/no-unsafe-member-access
+  724:19   warning  Unsafe assignment of an `any` value                                                                                                     @typescript-eslint/no-unsafe-assignment
+  724:35   warning  Unsafe call of a(n) `any` typed value                                                                                                   @typescript-eslint/no-unsafe-call
+  724:41   warning  Unsafe member access .link on an `any` value                                                                                            @typescript-eslint/no-unsafe-member-access
+  724:55   error    Unexpected any. Specify a different type                                                                                                @typescript-eslint/no-explicit-any
+  724:67   warning  Unsafe member access ['@_rel'] on an `any` value                                                                                        @typescript-eslint/no-unsafe-member-access
+  724:93   warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator                               @typescript-eslint/prefer-nullish-coalescing
+  724:102  warning  Unsafe member access .link on an `any` value                                                                                            @typescript-eslint/no-unsafe-member-access
+  725:13   warning  Unsafe assignment of an `any` value                                                                                                     @typescript-eslint/no-unsafe-assignment
+  725:36   warning  Unsafe member access ['@_href'] on an `any` value                                                                                       @typescript-eslint/no-unsafe-member-access
+  725:46   warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator                               @typescript-eslint/prefer-nullish-coalescing
+  727:13   warning  Unsafe assignment of an `any` value                                                                                                     @typescript-eslint/no-unsafe-assignment
+  727:26   warning  Unsafe member access .link on an `any` value                                                                                            @typescript-eslint/no-unsafe-member-access
+  727:43   warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator                               @typescript-eslint/prefer-nullish-coalescing
+  764:31   error    Unexpected any. Specify a different type                                                                                                @typescript-eslint/no-explicit-any
+  764:36   warning  Unsafe member access ['#text'] on an `any` value                                                                                        @typescript-eslint/no-unsafe-member-access
+  848:17   warning  Unsafe assignment of an `any` value                                                                                                     @typescript-eslint/no-unsafe-assignment
+  849:47   warning  Unsafe argument of type `any` assigned to a parameter of type `{ [s: string]: CacheEntry<unknown>; } | ArrayLike<CacheEntry<unknown>>`  @typescript-eslint/no-unsafe-argument
+
+C:\Users\sava6\Desktop\Justice Companion\src\services\ModelDownloadService.ts
+  103:5   warning  Prefer using nullish coalescing operator (`??=`) instead of an assignment expression, as it is simpler to read  @typescript-eslint/prefer-nullish-coalescing
+  292:38  warning  Unsafe member access .length on an `any` value                                                                  @typescript-eslint/no-unsafe-member-access
+  358:3   warning  Async method 'deleteModel' has no 'await' expression                                                            @typescript-eslint/require-await
+
+C:\Users\sava6\Desktop\Justice Companion\src\services\ai-functions.ts
+   78:3   warning  Async method 'handler' has no 'await' expression  @typescript-eslint/require-await
+  122:9   warning  Unsafe assignment of an `any` value               @typescript-eslint/no-unsafe-assignment
+  122:42  error    Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+  191:3   warning  Async method 'handler' has no 'await' expression  @typescript-eslint/require-await
+
+C:\Users\sava6\Desktop\Justice Companion\src\test-utils\test-utils.tsx
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): src\test-utils\test-utils.tsx
+
+C:\Users\sava6\Desktop\Justice Companion\src\types\ipc.ts
+  596:27  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  597:68  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  598:76  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+✖ 441 problems (19 errors, 422 warnings)
+
