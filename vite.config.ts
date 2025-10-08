@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react';
 import electron from 'vite-plugin-electron';
 import renderer from 'vite-plugin-electron-renderer';
 import path from 'path';
+import { builtinModules } from 'module';
 
 export default defineConfig({
   plugins: [
@@ -63,6 +64,9 @@ export default defineConfig({
     target: 'esnext', // Support top-level await
     rollupOptions: {
       external: [
+        'electron',
+        ...builtinModules,
+        ...builtinModules.map(m => `node:${m}`),
         'node-llama-cpp',
         /^@node-llama-cpp\//,
       ],
