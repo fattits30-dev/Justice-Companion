@@ -14,6 +14,7 @@ import sys
 import json
 import time
 import subprocess
+import threading
 from pathlib import Path
 from datetime import datetime, timezone
 from typing import Dict, List, Optional
@@ -48,6 +49,10 @@ class IntelligentFixerAgent:
         self.tasks_dir = self.project_root / 'automation' / 'tasks'
         self.fixes_dir = self.project_root / 'automation' / 'fixes'
         self.fixes_dir.mkdir(parents=True, exist_ok=True)
+
+        # Codex rate limiting
+        self._last_codex_call = 0.0
+        self._codex_lock = threading.Lock()
 
         # Statistics
         self.stats = {
@@ -189,54 +194,88 @@ class IntelligentFixerAgent:
 
         Invokes Codex CLI to analyze and fix the error.
         """
-        try:
-            # Prepare Codex command
-            project_path = str(self.project_root).replace('\\', '/')
-            wsl_path = f"/mnt/c/{project_path[3:]}"  # C:\foo\bar -> /mnt/c/foo/bar
+        MAX_ATTEMPTS = 3
+        BASE_BACKOFF_SECONDS = 10
+        MIN_INTERVAL_SECONDS = 15
+        MAX_ERROR_SNIPPET_CHARS = 300
 
-            # Codex command
-            command = [
-                'wsl', 'codex', 'exec',
-                '-C', wsl_path,
-                '--full-auto',
-                f'Fix this error in {file_path}: {error_output[:500]}'
-            ]
+        # Prepare Codex command inputs
+        project_path = str(self.project_root).replace('\\', '/')
+        wsl_path = f"/mnt/c/{project_path[3:]}"  # C:\foo\bar -> /mnt/c/foo/bar
 
-            print(f"[{self.agent_id}] [TIER 2] Invoking Codex...")
+        sanitized_error = (error_output or '').replace('\r', ' ').replace('\n', ' ')
+        error_snippet = sanitized_error[:MAX_ERROR_SNIPPET_CHARS]
+        prompt = f"Fix this error in {file_path}: {error_snippet}"
 
-            # Run Codex with 2 minute timeout
-            result = subprocess.run(
-                command,
-                capture_output=True,
-                text=True,
-                timeout=120  # 2 minutes
-            )
+        for attempt in range(1, MAX_ATTEMPTS + 1):
+            try:
+                self._respect_codex_rate_limit(MIN_INTERVAL_SECONDS)
 
-            if result.returncode == 0:
-                # Save Codex fix result
-                fix_result = {
-                    'task_id': task_id,
-                    'tier': 'tier2_codex',
-                    'timestamp': datetime.now(timezone.utc).isoformat(),
-                    'file_path': file_path,
-                    'codex_output': result.stdout,
-                    'success': True
-                }
+                command = [
+                    'wsl', 'codex', 'exec',
+                    '-C', wsl_path,
+                    '--full-auto',
+                    prompt,
+                ]
 
-                fix_file = self.fixes_dir / f"{task_id}_codex.json"
-                with open(fix_file, 'w') as f:
-                    json.dump(fix_result, f, indent=2)
+                print(f"[{self.agent_id}] [TIER 2] Invoking Codex (attempt {attempt})...")
 
-                return True
+                result = subprocess.run(
+                    command,
+                    capture_output=True,
+                    text=True,
+                    timeout=120  # 2 minutes
+                )
 
-            return False
+                with self._codex_lock:
+                    self._last_codex_call = time.time()
 
-        except subprocess.TimeoutExpired:
-            print(f"[{self.agent_id}] [TIER 2] Codex timeout (2 min)")
-            return False
-        except Exception as e:
-            print(f"[{self.agent_id}] [TIER 2] Codex error: {e}")
-            return False
+                if result.returncode == 0:
+                    fix_result = {
+                        'task_id': task_id,
+                        'tier': 'tier2_codex',
+                        'timestamp': datetime.now(timezone.utc).isoformat(),
+                        'file_path': file_path,
+                        'codex_output': result.stdout,
+                        'success': True
+                    }
+
+                    fix_file = self.fixes_dir / f"{task_id}_codex.json"
+                    with open(fix_file, 'w') as f:
+                        json.dump(fix_result, f, indent=2)
+
+                    return True
+
+                stderr = result.stderr or ''
+                if 'rate limit' in stderr.lower() or '429' in stderr:
+                    backoff = BASE_BACKOFF_SECONDS * attempt
+                    print(f"[{self.agent_id}] [TIER 2] Codex rate limit hit; backing off for {backoff}s")
+                    time.sleep(backoff)
+                    continue
+
+                print(f"[{self.agent_id}] [TIER 2] Codex failed (exit {result.returncode})")
+                return False
+
+            except subprocess.TimeoutExpired:
+                print(f"[{self.agent_id}] [TIER 2] Codex timeout (2 min)")
+                return False
+            except Exception as e:
+                print(f"[{self.agent_id}] [TIER 2] Codex error: {e}")
+                return False
+
+        return False
+
+    def _respect_codex_rate_limit(self, min_interval_seconds: int) -> None:
+        """
+        Ensure we leave enough time between Codex invocations to avoid rate limits.
+        """
+        with self._codex_lock:
+            elapsed = time.time() - self._last_codex_call
+
+        if elapsed < min_interval_seconds:
+            wait_time = min_interval_seconds - elapsed
+            print(f"[{self.agent_id}] [TIER 2] Waiting {wait_time:.1f}s to respect Codex rate limits")
+            time.sleep(wait_time)
 
     def _escalate_to_claude_code(self, task_id: str, file_path: str, error_output: str):
         """

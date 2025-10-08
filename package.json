@@ -8,6 +8,8 @@
   "private": true,
   "scripts": {
     "dev": "vite",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md,mdx}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,css,md,mdx}\"",
     "build": "tsc && vite build && node scripts/copy-migrations.js && electron-builder",
     "build:win": "npm run build -- --win",
     "build:mac": "npm run build -- --mac",
@@ -15,6 +17,7 @@
     "preview": "vite preview",
     "type-check": "tsc --noEmit",
     "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "test": "vitest",
     "test:components": "vitest --run src/components",
     "test:components:watch": "vitest src/components",
@@ -35,7 +38,9 @@
     "test:e2e:headed": "playwright test tests/e2e --headed",
     "test:e2e:debug": "playwright test tests/e2e --debug",
     "test:e2e:ui": "playwright test tests/e2e --ui",
-    "test:e2e:report": "playwright show-report test-results/html-report"
+    "test:e2e:report": "playwright show-report test-results/html-report",
+    "audit:dependencies": "npm audit --production --audit-level=high",
+    "best-practices": "npm run lint && npm run type-check && npm run audit:dependencies"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.65.0",

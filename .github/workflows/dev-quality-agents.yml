@@ -1,0 +1,162 @@
+name: Dev Quality Agents
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: 20
+
+jobs:
+  formatter_agent:
+    name: Formatter Agent
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Format check
+        if: github.event_name == 'pull_request'
+        run: npm run format:check
+
+      - name: Format auto-fix
+        if: github.event_name != 'pull_request'
+        run: npm run format
+
+      - name: Commit formatted changes
+        if: github.event_name != 'pull_request'
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: chore(format): apply formatter fixes
+          branch: ${{ github.ref_name }}
+          commit_user_name: github-actions
+          commit_user_email: actions@github.com
+
+  lint_agent:
+    name: Lint Agent
+    runs-on: ubuntu-latest
+    needs: formatter_agent
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint check
+        if: github.event_name == 'pull_request'
+        run: npm run lint
+
+      - name: Lint auto-fix
+        if: github.event_name != 'pull_request'
+        run: npm run lint:fix
+
+      - name: Commit lint fixes
+        if: github.event_name != 'pull_request'
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: chore(lint): apply ESLint fixes
+          branch: ${{ github.ref_name }}
+          commit_user_name: github-actions
+          commit_user_email: actions@github.com
+
+  typecheck_agent:
+    name: Type Check Agent
+    runs-on: ubuntu-latest
+    needs: lint_agent
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run type-check
+        run: npm run type-check
+
+  test_agent:
+    name: Unit Test Agent
+    runs-on: ubuntu-latest
+    needs: typecheck_agent
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run vitest suite
+        run: npm test -- --run
+
+  best_practices_agent:
+    name: Best Practices Agent
+    runs-on: ubuntu-latest
+    needs: test_agent
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run best practices suite
+        run: npm run best-practices
+
+      - name: Context7 MCP health check
+        if: secrets.CONTEXT7_API_KEY != ''
+        env:
+          CONTEXT7_API_KEY: ${{ secrets.CONTEXT7_API_KEY }}
+        run: |
+          npx -y @upstash/context7-mcp --transport http --port 3434 &
+          SERVER_PID=$!
+          sleep 5
+          curl -s http://127.0.0.1:3434/ping
+          kill $SERVER_PID

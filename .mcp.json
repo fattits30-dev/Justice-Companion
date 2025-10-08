@@ -14,15 +14,7 @@
     },
     "filesystem": {
       "command": "cmd",
-      "args": [
-        "/c",
-        "npx",
-        "-y",
-        "@modelcontextprotocol/server-filesystem",
-        "C:\\Users\\sava6\\Desktop\\Justice Companion",
-        "C:\\Users\\sava6\\Documents",
-        "C:\\Users\\sava6\\Desktop"
-      ]
+      "args": ["/c", "npx", "-y", "@modelcontextprotocol/server-filesystem", "C:\\Users\\sava6\\Desktop\\Justice Companion", "C:\\Users\\sava6\\Documents", "C:\\Users\\sava6\\Desktop"]
     },
     "github": {
       "command": "cmd",
@@ -30,11 +22,7 @@
     },
     "sqlite": {
       "command": "uvx",
-      "args": [
-        "mcp-server-sqlite",
-        "--db-path",
-        "C:\\Users\\sava6\\Desktop\\Justice Companion\\justice.db"
-      ]
+      "args": ["mcp-server-sqlite", "--db-path", "C:\\Users\\sava6\\Desktop\\Justice Companion\\justice.db"]
     },
     "playwright": {
       "command": "cmd",
@@ -46,10 +34,11 @@
     },
     "context7": {
       "command": "cmd",
-      "args": ["/c", "npx", "-y", "@upstash/context7-mcp"],
+      "args": ["/c", "npx", "-y", "@upstash/context7-mcp", "--transport", "http", "--port", "3434"],
       "env": {
-        "CONTEXT7_API_KEY": "ctx7sk-3768263b-80ba-4796-8feb-1bdf5d3343f3"
+        "CONTEXT7_API_KEY": "ctx7sk-b4c74c22-7128-4a77-ac64-7784c4a3c679"
       }
     }
   }
 }
+
