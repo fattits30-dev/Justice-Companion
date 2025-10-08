@@ -103,7 +103,7 @@ export class CaseRepository {
       }
     }
 
-    return row;
+    return row ?? null;
   }
 
   /**

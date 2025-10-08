@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TimelineService } from './TimelineService';
-import { timelineRepository } from '../repositories/TimelineRepository';
-import { errorLogger } from '../utils/error-logger';
-import type { TimelineEvent } from '../models/TimelineEvent';
+import { timelineRepository } from '../../../repositories/TimelineRepository';
+import { errorLogger } from '../../../utils/error-logger';
+import type { TimelineEvent } from '../../../models/TimelineEvent';
 
 // Mock dependencies
-vi.mock('../repositories/TimelineRepository', () => ({
+vi.mock('../../../repositories/TimelineRepository', () => ({
   timelineRepository: {
     create: vi.fn(),
     findById: vi.fn(),
@@ -15,7 +15,7 @@ vi.mock('../repositories/TimelineRepository', () => ({
   },
 }));
 
-vi.mock('../utils/error-logger', () => ({
+vi.mock('../../../utils/error-logger', () => ({
   errorLogger: {
     logError: vi.fn(),
   },

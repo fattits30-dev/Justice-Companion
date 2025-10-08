@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { LegalIssuesService } from './LegalIssuesService';
-import { legalIssuesRepository } from '../repositories/LegalIssuesRepository';
-import { errorLogger } from '../utils/error-logger';
-import type { LegalIssue } from '../models/LegalIssue';
+import { legalIssuesRepository } from '../../../repositories/LegalIssuesRepository';
+import { errorLogger } from '../../../utils/error-logger';
+import type { LegalIssue } from '../../../models/LegalIssue';
 
 // Mock dependencies
-vi.mock('../repositories/LegalIssuesRepository', () => ({
+vi.mock('../../../repositories/LegalIssuesRepository', () => ({
   legalIssuesRepository: {
     create: vi.fn(),
     findById: vi.fn(),
@@ -15,7 +15,7 @@ vi.mock('../repositories/LegalIssuesRepository', () => ({
   },
 }));
 
-vi.mock('../utils/error-logger', () => ({
+vi.mock('../../../utils/error-logger', () => ({
   errorLogger: {
     logError: vi.fn(),
   },

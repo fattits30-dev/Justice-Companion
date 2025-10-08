@@ -104,7 +104,7 @@ export class LegalIssuesRepository {
       row.description = this.decryptField(row.description);
     }
 
-    return row;
+    return row ?? null;
   }
 
   /**

@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeEach, afterAll, beforeAll, vi } from 'vitest';
 import { NotesService } from './NotesService';
-import { notesRepository } from '../repositories/NotesRepository';
-import { errorLogger } from '../utils/error-logger';
-import type { Note } from '../models/Note';
+import { notesRepository } from '../../../repositories/NotesRepository';
+import { errorLogger } from '../../../utils/error-logger';
+import type { Note } from '../../../models/Note';
 
 // Mock dependencies
-vi.mock('../repositories/NotesRepository', () => ({
+vi.mock('../../../repositories/NotesRepository', () => ({
   notesRepository: {
     create: vi.fn(),
     findByCaseId: vi.fn(),
@@ -14,7 +14,7 @@ vi.mock('../repositories/NotesRepository', () => ({
   },
 }));
 
-vi.mock('../utils/error-logger', () => ({
+vi.mock('../../../utils/error-logger', () => ({
   errorLogger: {
     logError: vi.fn(),
   },

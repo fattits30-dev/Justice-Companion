@@ -113,7 +113,7 @@ export class UserFactsRepository {
       }
     }
 
-    return row;
+    return row ?? null;
   }
 
   /**

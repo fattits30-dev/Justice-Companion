@@ -18,11 +18,11 @@ import { describe, it, expect, vi, beforeEach, Mock } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { NotesPanel } from './NotesPanel';
-import { useNotes } from '../../hooks/useNotes';
-import type { Note } from '../../models/Note';
+import { useNotes } from '../hooks/useNotes';
+import type { Note } from '../../../models/Note';
 
 // Mock the useNotes hook
-vi.mock('../../hooks/useNotes');
+vi.mock('../hooks/useNotes');
 
 describe('NotesPanel', () => {
   const mockCreateNote = vi.fn();

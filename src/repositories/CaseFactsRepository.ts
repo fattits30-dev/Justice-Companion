@@ -118,7 +118,7 @@ export class CaseFactsRepository {
       });
     }
 
-    return row;
+    return row ?? null;
   }
 
   /**

@@ -100,7 +100,7 @@ export class TimelineRepository {
       row.description = this.decryptField(row.description);
     }
 
-    return row;
+    return row ?? null;
   }
 
   /**

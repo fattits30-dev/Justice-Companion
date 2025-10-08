@@ -110,7 +110,7 @@ export class NotesRepository {
       }
     }
 
-    return row;
+    return row ?? null;
   }
 
   /**

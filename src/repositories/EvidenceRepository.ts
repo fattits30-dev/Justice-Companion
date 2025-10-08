@@ -121,7 +121,7 @@ export class EvidenceRepository {
       }
     }
 
-    return row;
+    return row ?? null;
   }
 
   /**
