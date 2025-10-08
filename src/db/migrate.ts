@@ -268,3 +268,16 @@ export function validateMigration(migrationName: string): {
 
   return { valid: errors.length === 0, errors };
 }
+
+// Run migrations when script is executed directly
+if (require.main === module) {
+  try {
+    console.log('🔄 Running database migrations...');
+    runMigrations();
+    console.log('✅ Migrations completed successfully!');
+    process.exit(0);
+  } catch (error) {
+    console.error('❌ Migration failed:', error);
+    process.exit(1);
+  }
+}
