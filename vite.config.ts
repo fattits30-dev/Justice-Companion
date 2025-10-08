@@ -13,7 +13,25 @@ export default defineConfig({
         vite: {
           build: {
             rollupOptions: {
-              external: ['better-sqlite3', 'node-llama-cpp', 'express'],
+              external: [
+                'better-sqlite3',
+                'node-llama-cpp',
+                'express',
+                // External all node-llama-cpp platform bindings
+                '@node-llama-cpp/linux-arm64',
+                '@node-llama-cpp/linux-armv7l',
+                '@node-llama-cpp/linux-x64',
+                '@node-llama-cpp/linux-x64-cuda',
+                '@node-llama-cpp/linux-x64-cuda-ext',
+                '@node-llama-cpp/linux-x64-vulkan',
+                '@node-llama-cpp/mac-arm64-metal',
+                '@node-llama-cpp/mac-x64',
+                '@node-llama-cpp/win-arm64',
+                '@node-llama-cpp/win-x64',
+                '@node-llama-cpp/win-x64-cuda',
+                '@node-llama-cpp/win-x64-cuda-ext',
+                '@node-llama-cpp/win-x64-vulkan',
+              ],
             },
           },
         },
@@ -40,6 +58,33 @@ export default defineConfig({
       '@/db': path.resolve(__dirname, './src/db'),
       '@/repositories': path.resolve(__dirname, './src/repositories'),
     },
+  },
+  build: {
+    target: 'esnext', // Support top-level await
+    rollupOptions: {
+      external: [
+        'node-llama-cpp',
+        /^@node-llama-cpp\//,
+      ],
+    },
+  },
+  optimizeDeps: {
+    exclude: [
+      'node-llama-cpp',
+      '@node-llama-cpp/linux-arm64',
+      '@node-llama-cpp/linux-armv7l',
+      '@node-llama-cpp/linux-x64',
+      '@node-llama-cpp/linux-x64-cuda',
+      '@node-llama-cpp/linux-x64-cuda-ext',
+      '@node-llama-cpp/linux-x64-vulkan',
+      '@node-llama-cpp/mac-arm64-metal',
+      '@node-llama-cpp/mac-x64',
+      '@node-llama-cpp/win-arm64',
+      '@node-llama-cpp/win-x64',
+      '@node-llama-cpp/win-x64-cuda',
+      '@node-llama-cpp/win-x64-cuda-ext',
+      '@node-llama-cpp/win-x64-vulkan',
+    ],
   },
   server: {
     port: 5173,
