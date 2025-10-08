@@ -35,6 +35,27 @@ export default defineConfig({
               ],
             },
           },
+          // Copy migrations to dist-electron so they're available at runtime
+          publicDir: false,
+        },
+        onstart(args) {
+          // Copy migrations folder after build
+          const fs = require('fs');
+          const path = require('path');
+          const src = path.join(__dirname, 'src', 'db', 'migrations');
+          const dest = path.join(__dirname, 'dist-electron', 'migrations');
+
+          if (!fs.existsSync(dest)) {
+            fs.mkdirSync(dest, { recursive: true });
+          }
+
+          fs.readdirSync(src).forEach(file => {
+            if (file.endsWith('.sql')) {
+              fs.copyFileSync(path.join(src, file), path.join(dest, file));
+            }
+          });
+
+          args.startup();
         },
       },
       {

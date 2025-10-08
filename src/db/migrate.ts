@@ -66,17 +66,24 @@ export function parseMigration(content: string): { up: string; down: string } {
  */
 export function runMigrations(): void {
   const db = getDb();
-  // Handle both development (src/db) and production (dist-electron) paths
-  let migrationsDir = path.join(__dirname, 'migrations');
+  // Try multiple paths to find migrations
+  const possiblePaths = [
+    path.join(__dirname, 'migrations'), // Bundled: dist-electron/migrations
+    path.join(process.cwd(), 'dist-electron', 'migrations'), // Development bundled
+    path.join(process.cwd(), 'src', 'db', 'migrations'), // Development source
+    path.join(process.resourcesPath || '', 'migrations'), // Production
+  ];
 
-  // If migrations folder doesn't exist, try looking in src/db/migrations (development)
-  if (!fs.existsSync(migrationsDir)) {
-    migrationsDir = path.join(process.cwd(), 'src', 'db', 'migrations');
+  let migrationsDir = '';
+  for (const dir of possiblePaths) {
+    if (fs.existsSync(dir)) {
+      migrationsDir = dir;
+      break;
+    }
   }
 
-  // If still not found, try looking relative to the executable (production)
-  if (!fs.existsSync(migrationsDir)) {
-    migrationsDir = path.join(process.resourcesPath || '', 'migrations');
+  if (!migrationsDir) {
+    throw new Error('Migrations directory not found! Searched paths: ' + possiblePaths.join(', '));
   }
 
   try {
