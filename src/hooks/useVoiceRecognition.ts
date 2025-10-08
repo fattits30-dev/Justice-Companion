@@ -93,7 +93,7 @@ export function useVoiceRecognition(): VoiceRecognitionResult {
   useEffect(() => {
     // Check for browser support
     const SpeechRecognition =
-      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      window.SpeechRecognition || window.webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
       setError('Voice recognition not supported in this browser');

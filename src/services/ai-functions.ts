@@ -119,7 +119,7 @@ This maps to importance in database: >=0.9=critical, >=0.7=high, >=0.5=medium, <
       const input: CreateCaseFactInput = {
         caseId: params.caseId,
         factContent,
-        factCategory: params.factType as any, // Validated above
+        factCategory: params.factType as 'timeline' | 'evidence' | 'witness' | 'location' | 'communication' | 'other', // Validated above
         importance: importance || 'medium', // Default to medium if undefined
       };
 

@@ -119,7 +119,7 @@ export class EncryptionService {
 
       // Check algorithm version
       if (encryptedData.algorithm !== this.algorithm) {
-        throw new Error(`Unsupported algorithm: ${encryptedData.algorithm}`);
+        throw new Error(`Unsupported algorithm: ${encryptedData.algorithm as string}`);
       }
 
       // Decode base64 components
