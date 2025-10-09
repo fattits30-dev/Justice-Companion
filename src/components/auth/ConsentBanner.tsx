@@ -36,7 +36,7 @@ export function ConsentBanner({ onComplete }: ConsentBannerProps) {
       }
     };
 
-    checkConsents();
+    void checkConsents(); // Async call in useEffect - errors handled internally
   }, [onComplete]);
 
   const handleSubmit = async () => {

@@ -62,7 +62,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
     };
 
-    checkAuth();
+    void checkAuth(); // Async call in useEffect - errors handled internally
   }, []);
 
   /**
@@ -109,7 +109,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const register = async (
     username: string,
     password: string,
-    email: string
+    email: string,
   ): Promise<void> => {
     setIsLoading(true);
     try {

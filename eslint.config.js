@@ -17,9 +17,12 @@ export default [
       '*.config.js',
       '*.config.mjs',
       'scripts/**/*.js',
+      'scripts/**/*.mjs',  // Ignore .mjs scripts (Node.js scripts)
       'mcp-server/**/*',  // MCP server has its own tsconfig
       'test-*.js',        // Test scripts
       'test-*.mjs',       // Test scripts
+      'tests/e2e/test-results/**',  // Generated Playwright test results
+      'playwright-report/**',  // Generated Playwright reports
     ],
   },
 

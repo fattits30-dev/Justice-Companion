@@ -111,7 +111,7 @@ let sessionRepository: SessionRepository;
 let consentRepository: ConsentRepository;
 let authenticationService: AuthenticationService;
 let consentService: ConsentService;
-let authorizationMiddleware: AuthorizationMiddleware;
+let _authorizationMiddleware: AuthorizationMiddleware; // Unused - will be used for future authorization checks
 
 function createWindow() {
   try {
@@ -2525,7 +2525,7 @@ app.whenReady().then(() => {
         consentRepository,
         auditLogger
       );
-      authorizationMiddleware = new AuthorizationMiddleware(
+      _authorizationMiddleware = new AuthorizationMiddleware(
         caseRepository,
         auditLogger
       );
