@@ -36,9 +36,24 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
+
+# Lint/test output files
 lint-report.json
 lint-output.txt
+lint-output.json
 lint-violations-summary.txt
+lint-errors.txt
+lint-result.txt
+lint-full-output.txt
+lint-report-final.txt
+lint-*.json
+guard-output.txt
+test-output.txt
+test-auth-startup.log
+electron-startup.log
+*-failures.txt
+*-test-results.txt
+files-with-nullish.txt
 
 # OS
 Thumbs.db
