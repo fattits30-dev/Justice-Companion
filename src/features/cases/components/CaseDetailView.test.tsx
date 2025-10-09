@@ -13,6 +13,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen } from '@/test-utils/test-utils';
 import userEvent from '@testing-library/user-event';
+import React from 'react';
 import { CaseDetailView } from './CaseDetailView';
 import type { Case } from '../../../models/Case';
 import type { Evidence } from '../../../models/Evidence';
@@ -29,24 +30,21 @@ vi.mock('../../../hooks/useEvidence', () => ({
   useEvidence: () => mockUseEvidence(),
 }));
 
-// Mock sub-components
-vi.mock('../../../components/timeline/TimelineView', () => ({
+// Mock sub-components - using correct import paths from CaseDetailView.tsx
+vi.mock('@/features/timeline', () => ({
   TimelineView: ({ caseId }: any) => <div data-testid="timeline-view">Timeline for case {caseId}</div>,
 }));
 
-vi.mock('../../../components/facts/UserFactsPanel', () => ({
+vi.mock('../../facts', () => ({
   UserFactsPanel: ({ caseId }: any) => <div data-testid="user-facts-panel">User Facts for case {caseId}</div>,
-}));
-
-vi.mock('../../../components/facts/CaseFactsPanel', () => ({
   CaseFactsPanel: ({ caseId }: any) => <div data-testid="case-facts-panel">Case Facts for case {caseId}</div>,
 }));
 
-vi.mock('../../../components/notes/NotesPanel', () => ({
+vi.mock('@/features/notes', () => ({
   NotesPanel: ({ caseId }: any) => <div data-testid="notes-panel">Notes for case {caseId}</div>,
 }));
 
-vi.mock('../../../components/legal/LegalIssuesPanel', () => ({
+vi.mock('@/features/legal', () => ({
   LegalIssuesPanel: ({ caseId }: any) => <div data-testid="legal-issues-panel">Legal Issues for case {caseId}</div>,
 }));
 
@@ -60,6 +58,7 @@ describe('CaseDetailView', () => {
       caseType: 'employment',
       description: 'This case involves unfair dismissal and wrongful termination',
       status: 'active',
+      userId: 1,
       createdAt: '2025-01-01T00:00:00.000Z',
       updatedAt: '2025-01-15T00:00:00.000Z',
     },
@@ -69,6 +68,7 @@ describe('CaseDetailView', () => {
       caseType: 'housing',
       description: null,
       status: 'closed',
+      userId: 1,
       createdAt: '2025-01-05T00:00:00.000Z',
       updatedAt: '2025-01-20T00:00:00.000Z',
     },
@@ -112,6 +112,43 @@ describe('CaseDetailView', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+
+    // Re-initialize window.electron mocks after clearAllMocks
+    global.window.electron = {
+      userFacts: {
+        list: vi.fn().mockResolvedValue({ success: true, data: [] }),
+        listByType: vi.fn().mockResolvedValue({ success: true, data: [] }),
+        create: vi.fn().mockResolvedValue({ success: true, data: {} }),
+        update: vi.fn().mockResolvedValue({ success: true, data: {} }),
+        delete: vi.fn().mockResolvedValue({ success: true }),
+      },
+      caseFacts: {
+        list: vi.fn().mockResolvedValue({ success: true, data: [] }),
+        listByCategory: vi.fn().mockResolvedValue({ success: true, data: [] }),
+        listByImportance: vi.fn().mockResolvedValue({ success: true, data: [] }),
+        create: vi.fn().mockResolvedValue({ success: true, data: {} }),
+        update: vi.fn().mockResolvedValue({ success: true, data: {} }),
+        delete: vi.fn().mockResolvedValue({ success: true }),
+      },
+      notes: {
+        list: vi.fn().mockResolvedValue({ success: true, data: [] }),
+        create: vi.fn().mockResolvedValue({ success: true, data: {} }),
+        update: vi.fn().mockResolvedValue({ success: true, data: {} }),
+        delete: vi.fn().mockResolvedValue({ success: true }),
+      },
+      legalIssues: {
+        list: vi.fn().mockResolvedValue({ success: true, data: [] }),
+        create: vi.fn().mockResolvedValue({ success: true, data: {} }),
+        update: vi.fn().mockResolvedValue({ success: true, data: {} }),
+        delete: vi.fn().mockResolvedValue({ success: true }),
+      },
+      timeline: {
+        list: vi.fn().mockResolvedValue({ success: true, data: [] }),
+        create: vi.fn().mockResolvedValue({ success: true, data: {} }),
+        update: vi.fn().mockResolvedValue({ success: true, data: {} }),
+        delete: vi.fn().mockResolvedValue({ success: true }),
+      },
+    } as any;
 
     mockUseCases.mockReturnValue({
       cases: mockCases,

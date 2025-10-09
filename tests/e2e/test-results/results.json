@@ -62,7 +62,7 @@
       }
     ],
     "shard": null,
-    "updateSnapshots": "missing",
+    "updateSnapshots": "all",
     "updateSourceMethod": "3way",
     "version": "1.56.0",
     "workers": 1,
@@ -95,10 +95,10 @@
                   "projectName": "electron",
                   "results": [
                     {
-                      "workerIndex": 0,
+                      "workerIndex": 17,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 88,
+                      "duration": 50,
                       "error": {
                         "message": "SqliteError: table cases has no column named case_number",
                         "stack": "SqliteError: table cases has no column named case_number\n    at Database.exec (C:\\Users\\sava6\\Desktop\\Justice Companion\\node_modules\\better-sqlite3\\lib\\methods\\wrappers.js:9:14)\n    at seedTestData (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:88:8)\n    at setupTestDatabase (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:48:11)\n    at launchElectronApp (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts:30:18)\n    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\ai-chat.e2e.test.ts:10:13",
@@ -129,7 +129,7 @@
                       ],
                       "stdout": [
                         {
-                          "text": "Test database created at: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759956605849.db\n"
+                          "text": "Test database created at: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759957674819.db\n"
                         }
                       ],
                       "stderr": [
@@ -138,7 +138,7 @@
                         }
                       ],
                       "retry": 0,
-                      "startTime": "2025-10-08T20:50:05.810Z",
+                      "startTime": "2025-10-08T21:07:54.795Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -175,10 +175,10 @@
                   "projectName": "electron",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 18,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 74,
+                      "duration": 50,
                       "error": {
                         "message": "SqliteError: table cases has no column named case_number",
                         "stack": "SqliteError: table cases has no column named case_number\n    at Database.exec (C:\\Users\\sava6\\Desktop\\Justice Companion\\node_modules\\better-sqlite3\\lib\\methods\\wrappers.js:9:14)\n    at seedTestData (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:88:8)\n    at setupTestDatabase (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:48:11)\n    at launchElectronApp (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts:30:18)\n    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\ai-chat.e2e.test.ts:10:13",
@@ -209,7 +209,7 @@
                       ],
                       "stdout": [
                         {
-                          "text": "Test database created at: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759956607670.db\n"
+                          "text": "Test database created at: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759957675932.db\n"
                         }
                       ],
                       "stderr": [
@@ -218,7 +218,7 @@
                         }
                       ],
                       "retry": 0,
-                      "startTime": "2025-10-08T20:50:07.631Z",
+                      "startTime": "2025-10-08T21:07:55.909Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -255,10 +255,10 @@
                   "projectName": "electron",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 19,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 132,
+                      "duration": 47,
                       "error": {
                         "message": "SqliteError: table cases has no column named case_number",
                         "stack": "SqliteError: table cases has no column named case_number\n    at Database.exec (C:\\Users\\sava6\\Desktop\\Justice Companion\\node_modules\\better-sqlite3\\lib\\methods\\wrappers.js:9:14)\n    at seedTestData (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:88:8)\n    at setupTestDatabase (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:48:11)\n    at launchElectronApp (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts:30:18)\n    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\ai-chat.e2e.test.ts:10:13",
@@ -289,7 +289,7 @@
                       ],
                       "stdout": [
                         {
-                          "text": "Test database created at: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759956609517.db\n"
+                          "text": "Test database created at: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759957676991.db\n"
                         }
                       ],
                       "stderr": [
@@ -298,7 +298,7 @@
                         }
                       ],
                       "retry": 0,
-                      "startTime": "2025-10-08T20:50:09.440Z",
+                      "startTime": "2025-10-08T21:07:56.968Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -352,10 +352,10 @@
                   "projectName": "electron",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 20,
                       "parallelIndex": 0,
                       "status": "timedOut",
-                      "duration": 30006,
+                      "duration": 30015,
                       "error": {
                         "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m",
                         "stack": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\case-management.e2e.test.ts:8:6",
@@ -386,18 +386,18 @@
                       ],
                       "stdout": [
                         {
-                          "text": "Test database created at: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759956611351.db\n"
+                          "text": "Test database created at: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759957678084.db\n"
                         },
                         {
                           "text": "Launching Electron from: C:\\Users\\sava6\\Desktop\\Justice Companion\\electron\\main.ts\n"
                         },
                         {
-                          "text": "Using test database: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759956611351.db\n"
+                          "text": "Using test database: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759957678084.db\n"
                         }
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-10-08T20:50:11.311Z",
+                      "startTime": "2025-10-08T21:07:58.061Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -434,10 +434,10 @@
                   "projectName": "electron",
                   "results": [
                     {
-                      "workerIndex": 4,
+                      "workerIndex": 21,
                       "parallelIndex": 0,
                       "status": "timedOut",
-                      "duration": 30017,
+                      "duration": 30009,
                       "error": {
                         "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m",
                         "stack": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\case-management.e2e.test.ts:8:6",
@@ -468,18 +468,18 @@
                       ],
                       "stdout": [
                         {
-                          "text": "Test database created at: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759956642392.db\n"
+                          "text": "Test database created at: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759957709179.db\n"
                         },
                         {
                           "text": "Launching Electron from: C:\\Users\\sava6\\Desktop\\Justice Companion\\electron\\main.ts\n"
                         },
                         {
-                          "text": "Using test database: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759956642392.db\n"
+                          "text": "Using test database: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759957709179.db\n"
                         }
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-10-08T20:50:42.370Z",
+                      "startTime": "2025-10-08T21:08:29.156Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -516,10 +516,10 @@
                   "projectName": "electron",
                   "results": [
                     {
-                      "workerIndex": 5,
+                      "workerIndex": 22,
                       "parallelIndex": 0,
                       "status": "timedOut",
-                      "duration": 30007,
+                      "duration": 30015,
                       "error": {
                         "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m",
                         "stack": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\case-management.e2e.test.ts:8:6",
@@ -546,22 +546,37 @@
                             "line": 85
                           },
                           "message": "TypeError: Cannot destructure property 'app' of 'testApp' as it is undefined.\n\n\u001b[90m   at \u001b[39m..\\setup\\electron-setup.ts:85\n\n\u001b[0m \u001b[90m 83 |\u001b[39m \u001b[90m */\u001b[39m\n \u001b[90m 84 |\u001b[39m \u001b[36mexport\u001b[39m \u001b[36masync\u001b[39m \u001b[36mfunction\u001b[39m closeElectronApp(testApp\u001b[33m:\u001b[39m \u001b[33mElectronTestApp\u001b[39m)\u001b[33m:\u001b[39m \u001b[33mPromise\u001b[39m\u001b[33m<\u001b[39m\u001b[36mvoid\u001b[39m\u001b[33m>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 85 |\u001b[39m   \u001b[36mconst\u001b[39m { app\u001b[33m,\u001b[39m dbPath } \u001b[33m=\u001b[39m testApp\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m           \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 86 |\u001b[39m\n \u001b[90m 87 |\u001b[39m   \u001b[36mtry\u001b[39m {\n \u001b[90m 88 |\u001b[39m     \u001b[90m// Close Electron app\u001b[39m\u001b[0m\n\u001b[2m    at closeElectronApp (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts:85:11)\u001b[22m\n\u001b[2m    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\case-management.e2e.test.ts:15:25\u001b[22m"
+                        },
+                        {
+                          "location": {
+                            "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts",
+                            "column": 17,
+                            "line": 45
+                          },
+                          "message": "TimeoutError: electron.launch: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - <launching> \"C:\\Users\\sava6\\Desktop\\Justice Companion\\node_modules\\electron\\dist\\electron.exe\" \"-r\" \"C:\\Users\\sava6\\Desktop\\Justice Companion\\node_modules\\playwright-core\\lib\\server\\electron\\loader.js\" \"--inspect=0\" \"--remote-debugging-port=0\" \"C:\\Users\\sava6\\Desktop\\Justice Companion\\electron\\main.ts\"\u001b[22m\n\u001b[2m  - <launched> pid=13172\u001b[22m\n\u001b[2m  - [pid=13172][out]\u001b[22m\n\u001b[2m  - [pid=13172][err] Debugger listening on ws://127.0.0.1:57528/701f7b16-5e02-4bfd-93ca-2f5a6a872871\u001b[22m\n\u001b[2m  - [pid=13172][err] For help, see: https://nodejs.org/en/docs/inspector\u001b[22m\n\u001b[2m  - <ws connecting> ws://127.0.0.1:57528/701f7b16-5e02-4bfd-93ca-2f5a6a872871\u001b[22m\n\u001b[2m  - <ws connected> ws://127.0.0.1:57528/701f7b16-5e02-4bfd-93ca-2f5a6a872871\u001b[22m\n\u001b[2m  - [pid=13172][err] Debugger attached.\u001b[22m\n\u001b[2m  - [pid=13172][err] App threw an error during load\u001b[22m\n\u001b[2m  - [pid=13172][err] Error [ERR_MODULE_NOT_FOUND]: Cannot find module 'C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\utils\\error-logger' imported from C:\\Users\\sava6\\Desktop\\Justice Companion\\electron\\main.ts\u001b[22m\n\u001b[2m  - [pid=13172][err]     at finalizeResolution (node:internal/modules/esm/resolve:278:11)\u001b[22m\n\u001b[2m  - [pid=13172][err]     at moduleResolve (node:internal/modules/esm/resolve:871:10)\u001b[22m\n\u001b[2m  - [pid=13172][err]     at defaultResolve (node:internal/modules/esm/resolve:995:11)\u001b[22m\n\u001b[2m  - [pid=13172][err]     at #cachedDefaultResolve (node:internal/modules/esm/loader:717:20)\u001b[22m\n\u001b[2m  - [pid=13172][err]     at ModuleLoader.resolve (node:internal/modules/esm/loader:694:38)\u001b[22m\n\u001b[2m  - [pid=13172][err]     at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:308:38)\u001b[22m\n\u001b[2m  - [pid=13172][err]     at ModuleJob._link (node:internal/modules/esm/module_job:183:49)\u001b[22m\n\u001b[2m  - [pid=13172][err]     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\u001b[22m\n\n\n\u001b[90m   at \u001b[39m..\\setup\\electron-setup.ts:45\n\n\u001b[0m \u001b[90m 43 |\u001b[39m   \u001b[36mtry\u001b[39m {\n \u001b[90m 44 |\u001b[39m     \u001b[90m// Launch Electron\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 45 |\u001b[39m     \u001b[36mconst\u001b[39m app \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m electron\u001b[33m.\u001b[39mlaunch({\n \u001b[90m    |\u001b[39m                 \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 46 |\u001b[39m       args\u001b[33m:\u001b[39m [mainPath]\u001b[33m,\u001b[39m\n \u001b[90m 47 |\u001b[39m       env\u001b[33m:\u001b[39m {\n \u001b[90m 48 |\u001b[39m         \u001b[33m...\u001b[39mprocess\u001b[33m.\u001b[39menv\u001b[33m,\u001b[39m\u001b[0m\n\u001b[2m    at launchElectronApp (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts:45:17)\u001b[22m\n\u001b[2m    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\case-management.e2e.test.ts:10:13\u001b[22m"
                         }
                       ],
                       "stdout": [
                         {
-                          "text": "Test database created at: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759956673679.db\n"
+                          "text": "Test database created at: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759957740274.db\n"
                         },
                         {
                           "text": "Launching Electron from: C:\\Users\\sava6\\Desktop\\Justice Companion\\electron\\main.ts\n"
                         },
                         {
-                          "text": "Using test database: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759956673679.db\n"
+                          "text": "Using test database: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759957740274.db\n"
                         }
                       ],
-                      "stderr": [],
+                      "stderr": [
+                        {
+                          "text": "Failed to launch Electron app: electron.launch: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - <launching> \"C:\\Users\\sava6\\Desktop\\Justice Companion\\node_modules\\electron\\dist\\electron.exe\" \"-r\" \"C:\\Users\\sava6\\Desktop\\Justice Companion\\node_modules\\playwright-core\\lib\\server\\electron\\loader.js\" \"--inspect=0\" \"--remote-debugging-port=0\" \"C:\\Users\\sava6\\Desktop\\Justice Companion\\electron\\main.ts\"\u001b[22m\n\u001b[2m  - <launched> pid=13172\u001b[22m\n\u001b[2m  - [pid=13172][out]\u001b[22m\n\u001b[2m  - [pid=13172][err] Debugger listening on ws://127.0.0.1:57528/701f7b16-5e02-4bfd-93ca-2f5a6a872871\u001b[22m\n\u001b[2m  - [pid=13172][err] For help, see: https://nodejs.org/en/docs/inspector\u001b[22m\n\u001b[2m  - <ws connecting> ws://127.0.0.1:57528/701f7b16-5e02-4bfd-93ca-2f5a6a872871\u001b[22m\n\u001b[2m  - <ws connected> ws://127.0.0.1:57528/701f7b16-5e02-4bfd-93ca-2f5a6a872871\u001b[22m\n\u001b[2m  - [pid=13172][err] Debugger attached.\u001b[22m\n\u001b[2m  - [pid=13172][err] App threw an error during load\u001b[22m\n\u001b[2m  - [pid=13172][err] Error [ERR_MODULE_NOT_FOUND]: Cannot find module 'C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\utils\\error-logger' imported from C:\\Users\\sava6\\Desktop\\Justice Companion\\electron\\main.ts\u001b[22m\n\u001b[2m  - [pid=13172][err]     at finalizeResolution (node:internal/modules/esm/resolve:278:11)\u001b[22m\n\u001b[2m  - [pid=13172][err]     at moduleResolve (node:internal/modules/esm/resolve:871:10)\u001b[22m\n\u001b[2m  - [pid=13172][err]     at defaultResolve (node:internal/modules/esm/resolve:995:11)\u001b[22m\n\u001b[2m  - [pid=13172][err]     at #cachedDefaultResolve (node:internal/modules/esm/loader:717:20)\u001b[22m\n\u001b[2m  - [pid=13172][err]     at ModuleLoader.resolve (node:internal/modules/esm/loader:694:38)\u001b[22m\n\u001b[2m  - [pid=13172][err]     at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:308:38)\u001b[22m\n\u001b[2m  - [pid=13172][err]     at ModuleJob._link (node:internal/modules/esm/module_job:183:49)\u001b[22m\n\u001b[2m  - [pid=13172][err]     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\u001b[22m\n\n    at launchElectronApp \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mtests\\e2e\\setup\\electron-setup.ts:45:17\u001b[90m)\u001b[39m\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mtests\\e2e\\specs\\case-management.e2e.test.ts:10:13 {\n  name: \u001b[32m'TimeoutError'\u001b[39m\n}\n"
+                        },
+                        {
+                          "text": "Failed to cleanup test database: Error: EBUSY: resource busy or locked, unlink 'C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759957740274.db'\n\u001b[90m    at Object.unlinkSync (node:fs:1952:11)\u001b[39m\n    at cleanupTestDatabase \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mtests\\e2e\\setup\\test-database.ts:65:10\u001b[90m)\u001b[39m\n    at launchElectronApp \u001b[90m(C:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mtests\\e2e\\setup\\electron-setup.ts:76:30\u001b[90m)\u001b[39m\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mtests\\e2e\\specs\\case-management.e2e.test.ts:10:13\n    at \u001b[90mC:\\Users\\sava6\\Desktop\\Justice Companion\\\u001b[39mnode_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\testInfo.js:305:11 {\n  errno: \u001b[33m-4082\u001b[39m,\n  code: \u001b[32m'EBUSY'\u001b[39m,\n  syscall: \u001b[32m'unlink'\u001b[39m,\n  path: \u001b[32m'C:\\\\Users\\\\sava6\\\\Desktop\\\\Justice Companion\\\\test-data\\\\test-1759957740274.db'\u001b[39m\n}\n"
+                        }
+                      ],
                       "retry": 0,
-                      "startTime": "2025-10-08T20:51:13.657Z",
+                      "startTime": "2025-10-08T21:09:00.246Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -598,10 +613,10 @@
                   "projectName": "electron",
                   "results": [
                     {
-                      "workerIndex": 6,
+                      "workerIndex": 23,
                       "parallelIndex": 0,
                       "status": "timedOut",
-                      "duration": 30013,
+                      "duration": 30004,
                       "error": {
                         "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m",
                         "stack": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\case-management.e2e.test.ts:8:6",
@@ -632,18 +647,18 @@
                       ],
                       "stdout": [
                         {
-                          "text": "Test database created at: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759956705048.db\n"
+                          "text": "Test database created at: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759957772782.db\n"
                         },
                         {
                           "text": "Launching Electron from: C:\\Users\\sava6\\Desktop\\Justice Companion\\electron\\main.ts\n"
                         },
                         {
-                          "text": "Using test database: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759956705048.db\n"
+                          "text": "Using test database: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759957772782.db\n"
                         }
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-10-08T20:51:45.012Z",
+                      "startTime": "2025-10-08T21:09:32.747Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -680,10 +695,10 @@
                   "projectName": "electron",
                   "results": [
                     {
-                      "workerIndex": 7,
+                      "workerIndex": 24,
                       "parallelIndex": 0,
                       "status": "timedOut",
-                      "duration": 30014,
+                      "duration": 30010,
                       "error": {
                         "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m",
                         "stack": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\case-management.e2e.test.ts:8:6",
@@ -714,18 +729,18 @@
                       ],
                       "stdout": [
                         {
-                          "text": "Test database created at: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759956736140.db\n"
+                          "text": "Test database created at: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759957803846.db\n"
                         },
                         {
                           "text": "Launching Electron from: C:\\Users\\sava6\\Desktop\\Justice Companion\\electron\\main.ts\n"
                         },
                         {
-                          "text": "Using test database: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759956736140.db\n"
+                          "text": "Using test database: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759957803846.db\n"
                         }
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-10-08T20:52:16.118Z",
+                      "startTime": "2025-10-08T21:10:03.822Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -779,10 +794,10 @@
                   "projectName": "electron",
                   "results": [
                     {
-                      "workerIndex": 8,
+                      "workerIndex": 25,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 47,
+                      "duration": 49,
                       "error": {
                         "message": "SqliteError: table cases has no column named case_number",
                         "stack": "SqliteError: table cases has no column named case_number\n    at Database.exec (C:\\Users\\sava6\\Desktop\\Justice Companion\\node_modules\\better-sqlite3\\lib\\methods\\wrappers.js:9:14)\n    at seedTestData (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:88:8)\n    at setupTestDatabase (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:48:11)\n    at launchElectronApp (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts:30:18)\n    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\evidence-upload.e2e.test.ts:10:13",
@@ -813,7 +828,7 @@
                       ],
                       "stdout": [
                         {
-                          "text": "Test database created at: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759956767202.db\n"
+                          "text": "Test database created at: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759957834872.db\n"
                         }
                       ],
                       "stderr": [
@@ -822,7 +837,7 @@
                         }
                       ],
                       "retry": 0,
-                      "startTime": "2025-10-08T20:52:47.179Z",
+                      "startTime": "2025-10-08T21:10:34.849Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -859,10 +874,10 @@
                   "projectName": "electron",
                   "results": [
                     {
-                      "workerIndex": 9,
+                      "workerIndex": 26,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 47,
+                      "duration": 46,
                       "error": {
                         "message": "SqliteError: table cases has no column named case_number",
                         "stack": "SqliteError: table cases has no column named case_number\n    at Database.exec (C:\\Users\\sava6\\Desktop\\Justice Companion\\node_modules\\better-sqlite3\\lib\\methods\\wrappers.js:9:14)\n    at seedTestData (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:88:8)\n    at setupTestDatabase (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:48:11)\n    at launchElectronApp (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts:30:18)\n    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\evidence-upload.e2e.test.ts:10:13",
@@ -893,7 +908,7 @@
                       ],
                       "stdout": [
                         {
-                          "text": "Test database created at: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759956768246.db\n"
+                          "text": "Test database created at: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759957835890.db\n"
                         }
                       ],
                       "stderr": [
@@ -902,7 +917,7 @@
                         }
                       ],
                       "retry": 0,
-                      "startTime": "2025-10-08T20:52:48.225Z",
+                      "startTime": "2025-10-08T21:10:35.868Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -939,7 +954,7 @@
                   "projectName": "electron",
                   "results": [
                     {
-                      "workerIndex": 10,
+                      "workerIndex": 27,
                       "parallelIndex": 0,
                       "status": "failed",
                       "duration": 46,
@@ -973,7 +988,7 @@
                       ],
                       "stdout": [
                         {
-                          "text": "Test database created at: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759956769276.db\n"
+                          "text": "Test database created at: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759957837004.db\n"
                         }
                       ],
                       "stderr": [
@@ -982,7 +997,7 @@
                         }
                       ],
                       "retry": 0,
-                      "startTime": "2025-10-08T20:52:49.253Z",
+                      "startTime": "2025-10-08T21:10:36.979Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -1019,10 +1034,10 @@
                   "projectName": "electron",
                   "results": [
                     {
-                      "workerIndex": 11,
+                      "workerIndex": 28,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 56,
+                      "duration": 47,
                       "error": {
                         "message": "SqliteError: table cases has no column named case_number",
                         "stack": "SqliteError: table cases has no column named case_number\n    at Database.exec (C:\\Users\\sava6\\Desktop\\Justice Companion\\node_modules\\better-sqlite3\\lib\\methods\\wrappers.js:9:14)\n    at seedTestData (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:88:8)\n    at setupTestDatabase (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:48:11)\n    at launchElectronApp (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts:30:18)\n    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\evidence-upload.e2e.test.ts:10:13",
@@ -1053,7 +1068,7 @@
                       ],
                       "stdout": [
                         {
-                          "text": "Test database created at: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759956770295.db\n"
+                          "text": "Test database created at: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759957838011.db\n"
                         }
                       ],
                       "stderr": [
@@ -1062,7 +1077,7 @@
                         }
                       ],
                       "retry": 0,
-                      "startTime": "2025-10-08T20:52:50.272Z",
+                      "startTime": "2025-10-08T21:10:37.988Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -1116,10 +1131,10 @@
                   "projectName": "electron",
                   "results": [
                     {
-                      "workerIndex": 12,
+                      "workerIndex": 29,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 50,
+                      "duration": 48,
                       "error": {
                         "message": "SqliteError: table cases has no column named case_number",
                         "stack": "SqliteError: table cases has no column named case_number\n    at Database.exec (C:\\Users\\sava6\\Desktop\\Justice Companion\\node_modules\\better-sqlite3\\lib\\methods\\wrappers.js:9:14)\n    at seedTestData (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:88:8)\n    at setupTestDatabase (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:48:11)\n    at launchElectronApp (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts:30:18)\n    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\facts-tracking.e2e.test.ts:9:13",
@@ -1150,7 +1165,7 @@
                       ],
                       "stdout": [
                         {
-                          "text": "Test database created at: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759956771334.db\n"
+                          "text": "Test database created at: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759957839047.db\n"
                         }
                       ],
                       "stderr": [
@@ -1159,7 +1174,7 @@
                         }
                       ],
                       "retry": 0,
-                      "startTime": "2025-10-08T20:52:51.311Z",
+                      "startTime": "2025-10-08T21:10:39.023Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -1196,7 +1211,7 @@
                   "projectName": "electron",
                   "results": [
                     {
-                      "workerIndex": 13,
+                      "workerIndex": 30,
                       "parallelIndex": 0,
                       "status": "failed",
                       "duration": 46,
@@ -1230,7 +1245,7 @@
                       ],
                       "stdout": [
                         {
-                          "text": "Test database created at: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759956772367.db\n"
+                          "text": "Test database created at: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759957840054.db\n"
                         }
                       ],
                       "stderr": [
@@ -1239,7 +1254,7 @@
                         }
                       ],
                       "retry": 0,
-                      "startTime": "2025-10-08T20:52:52.345Z",
+                      "startTime": "2025-10-08T21:10:40.031Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -1276,10 +1291,10 @@
                   "projectName": "electron",
                   "results": [
                     {
-                      "workerIndex": 14,
+                      "workerIndex": 31,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 45,
+                      "duration": 46,
                       "error": {
                         "message": "SqliteError: table cases has no column named case_number",
                         "stack": "SqliteError: table cases has no column named case_number\n    at Database.exec (C:\\Users\\sava6\\Desktop\\Justice Companion\\node_modules\\better-sqlite3\\lib\\methods\\wrappers.js:9:14)\n    at seedTestData (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:88:8)\n    at setupTestDatabase (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:48:11)\n    at launchElectronApp (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts:30:18)\n    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\facts-tracking.e2e.test.ts:9:13",
@@ -1310,7 +1325,7 @@
                       ],
                       "stdout": [
                         {
-                          "text": "Test database created at: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759956773378.db\n"
+                          "text": "Test database created at: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759957841065.db\n"
                         }
                       ],
                       "stderr": [
@@ -1319,7 +1334,7 @@
                         }
                       ],
                       "retry": 0,
-                      "startTime": "2025-10-08T20:52:53.356Z",
+                      "startTime": "2025-10-08T21:10:41.042Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -1356,10 +1371,10 @@
                   "projectName": "electron",
                   "results": [
                     {
-                      "workerIndex": 15,
+                      "workerIndex": 32,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 47,
+                      "duration": 49,
                       "error": {
                         "message": "SqliteError: table cases has no column named case_number",
                         "stack": "SqliteError: table cases has no column named case_number\n    at Database.exec (C:\\Users\\sava6\\Desktop\\Justice Companion\\node_modules\\better-sqlite3\\lib\\methods\\wrappers.js:9:14)\n    at seedTestData (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:88:8)\n    at setupTestDatabase (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\test-database.ts:48:11)\n    at launchElectronApp (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts:30:18)\n    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\facts-tracking.e2e.test.ts:9:13",
@@ -1390,7 +1405,7 @@
                       ],
                       "stdout": [
                         {
-                          "text": "Test database created at: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759956774435.db\n"
+                          "text": "Test database created at: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759957842134.db\n"
                         }
                       ],
                       "stderr": [
@@ -1399,7 +1414,7 @@
                         }
                       ],
                       "retry": 0,
-                      "startTime": "2025-10-08T20:52:54.413Z",
+                      "startTime": "2025-10-08T21:10:42.110Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -1442,7 +1457,7 @@
           "specs": [
             {
               "title": "should complete full workflow: create case → add evidence → add facts → chat with AI → verify persistence",
-              "ok": false,
+              "ok": true,
               "tags": [],
               "tests": [
                 {
@@ -1453,29 +1468,21 @@
                   "projectName": "electron",
                   "results": [
                     {
-                      "workerIndex": 16,
+                      "workerIndex": 33,
                       "parallelIndex": 0,
-                      "status": "timedOut",
-                      "duration": 30009,
+                      "status": "interrupted",
+                      "duration": 13757,
                       "error": {
-                        "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m",
-                        "stack": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\user-journey.e2e.test.ts:8:6",
+                        "message": "TypeError: Cannot destructure property 'app' of 'testApp' as it is undefined.",
+                        "stack": "TypeError: Cannot destructure property 'app' of 'testApp' as it is undefined.\n    at closeElectronApp (C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts:85:11)\n    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\user-journey.e2e.test.ts:14:25",
                         "location": {
-                          "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\user-journey.e2e.test.ts",
-                          "column": 6,
-                          "line": 8
+                          "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts",
+                          "column": 11,
+                          "line": 85
                         },
-                        "snippet": "\u001b[0m \u001b[90m  6 |\u001b[39m \u001b[36mlet\u001b[39m testApp\u001b[33m:\u001b[39m \u001b[33mElectronTestApp\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m  7 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  8 |\u001b[39m test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m () \u001b[33m=>\u001b[39m {\n \u001b[90m    |\u001b[39m      \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m  9 |\u001b[39m   \u001b[90m// Start with clean database\u001b[39m\n \u001b[90m 10 |\u001b[39m   testApp \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m launchElectronApp({ seedData\u001b[33m:\u001b[39m \u001b[36mfalse\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 11 |\u001b[39m })\u001b[33m;\u001b[39m\u001b[0m"
+                        "snippet": "\u001b[90m   at \u001b[39m..\\setup\\electron-setup.ts:85\n\n\u001b[0m \u001b[90m 83 |\u001b[39m \u001b[90m */\u001b[39m\n \u001b[90m 84 |\u001b[39m \u001b[36mexport\u001b[39m \u001b[36masync\u001b[39m \u001b[36mfunction\u001b[39m closeElectronApp(testApp\u001b[33m:\u001b[39m \u001b[33mElectronTestApp\u001b[39m)\u001b[33m:\u001b[39m \u001b[33mPromise\u001b[39m\u001b[33m<\u001b[39m\u001b[36mvoid\u001b[39m\u001b[33m>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 85 |\u001b[39m   \u001b[36mconst\u001b[39m { app\u001b[33m,\u001b[39m dbPath } \u001b[33m=\u001b[39m testApp\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m           \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 86 |\u001b[39m\n \u001b[90m 87 |\u001b[39m   \u001b[36mtry\u001b[39m {\n \u001b[90m 88 |\u001b[39m     \u001b[90m// Close Electron app\u001b[39m\u001b[0m"
                       },
                       "errors": [
-                        {
-                          "location": {
-                            "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\user-journey.e2e.test.ts",
-                            "column": 6,
-                            "line": 8
-                          },
-                          "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n\n\u001b[0m \u001b[90m  6 |\u001b[39m \u001b[36mlet\u001b[39m testApp\u001b[33m:\u001b[39m \u001b[33mElectronTestApp\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m  7 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  8 |\u001b[39m test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m () \u001b[33m=>\u001b[39m {\n \u001b[90m    |\u001b[39m      \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m  9 |\u001b[39m   \u001b[90m// Start with clean database\u001b[39m\n \u001b[90m 10 |\u001b[39m   testApp \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m launchElectronApp({ seedData\u001b[33m:\u001b[39m \u001b[36mfalse\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 11 |\u001b[39m })\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\user-journey.e2e.test.ts:8:6\u001b[22m"
-                        },
                         {
                           "location": {
                             "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts",
@@ -1487,18 +1494,18 @@
                       ],
                       "stdout": [
                         {
-                          "text": "Test database created at: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759956775459.db\n"
+                          "text": "Test database created at: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759957843165.db\n"
                         },
                         {
                           "text": "Launching Electron from: C:\\Users\\sava6\\Desktop\\Justice Companion\\electron\\main.ts\n"
                         },
                         {
-                          "text": "Using test database: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759956775459.db\n"
+                          "text": "Using test database: C:\\Users\\sava6\\Desktop\\Justice Companion\\test-data\\test-1759957843165.db\n"
                         }
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-10-08T20:52:55.435Z",
+                      "startTime": "2025-10-08T21:10:43.142Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -1508,13 +1515,13 @@
                         }
                       ],
                       "errorLocation": {
-                        "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\specs\\user-journey.e2e.test.ts",
-                        "column": 6,
-                        "line": 8
+                        "file": "C:\\Users\\sava6\\Desktop\\Justice Companion\\tests\\e2e\\setup\\electron-setup.ts",
+                        "column": 11,
+                        "line": 85
                       }
                     }
                   ],
-                  "status": "unexpected"
+                  "status": "skipped"
                 }
               ],
               "id": "a0b04368faebbd2d000d-e34b3961092482e03cfc",
@@ -1529,11 +1536,11 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2025-10-08T20:50:01.893Z",
-    "duration": 203722.546,
+    "startTime": "2025-10-08T21:07:52.496Z",
+    "duration": 184555.6989999998,
     "expected": 0,
-    "skipped": 0,
-    "unexpected": 17,
+    "skipped": 1,
+    "unexpected": 16,
     "flaky": 0
   }
 }

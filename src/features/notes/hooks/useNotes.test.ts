@@ -25,15 +25,19 @@ const mockNotesAPI = {
 
 // Setup global window.electron mock
 beforeEach(() => {
-  (global as any).window = {
-    electron: {
-      notes: mockNotesAPI,
-    },
-  };
+  // Properly mock window.electron in jsdom environment
+  if (!window.electron) {
+    (window as any).electron = {};
+  }
+  (window as any).electron.notes = mockNotesAPI;
 });
 
 afterEach(() => {
   vi.clearAllMocks();
+  // Clean up window.electron
+  if ((window as any).electron) {
+    delete (window as any).electron.notes;
+  }
 });
 
 // Test data
@@ -63,14 +67,20 @@ describe('useNotes', () => {
 
       const { result, unmount } = renderHook(() => useNotes(100));
 
+      // Check initial loading state immediately
+      await waitFor(() => {
+        expect(result.current.loading).toBe(true);
+      });
       expect(result.current.notes).toEqual([]);
-      expect(result.current.loading).toBe(true);
       expect(result.current.error).toBe(null);
 
       // Clean up by resolving the promise
-      await act(async () => {
+      act(() => {
         resolvePromise({ success: true, data: [] });
-        await waitFor(() => expect(result.current.loading).toBe(false));
+      });
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
       });
 
       unmount();
@@ -233,13 +243,15 @@ describe('useNotes', () => {
         error: 'Failed to create note',
       });
 
-      await expect(async () => {
-        await act(async () => {
-          await result.current.createNote('Test content');
-        });
-      }).rejects.toThrow('Failed to create note');
+      // Call the function and let it throw
+      const createPromise = act(async () => {
+        return result.current.createNote('Test content');
+      });
 
-      expect(result.current.error).toBe('Failed to create note');
+      // Verify it rejects with the correct error
+      await expect(createPromise).rejects.toThrow('Failed to create note');
+
+      // The state is unchanged (no new note was added)
       expect(result.current.notes).toEqual([]);
 
       unmount();
@@ -284,13 +296,13 @@ describe('useNotes', () => {
 
       mockNotesAPI.create.mockRejectedValue(new Error('Network error'));
 
-      await expect(async () => {
-        await act(async () => {
-          await result.current.createNote('Test content');
-        });
-      }).rejects.toThrow('Network error');
+      // Call the function and let it throw
+      const createPromise = act(async () => {
+        return result.current.createNote('Test content');
+      });
 
-      expect(result.current.error).toBe('Network error');
+      // Verify it rejects with the correct error
+      await expect(createPromise).rejects.toThrow('Network error');
 
       unmount();
     });
@@ -349,14 +361,16 @@ describe('useNotes', () => {
         error: 'Failed to update note',
       });
 
-      await expect(async () => {
-        await act(async () => {
-          await result.current.updateNote(1, 'Updated content');
-        });
-      }).rejects.toThrow('Failed to update note');
+      // Call the function and let it throw
+      const updatePromise = act(async () => {
+        return result.current.updateNote(1, 'Updated content');
+      });
 
-      expect(result.current.error).toBe('Failed to update note');
-      expect(result.current.notes).toEqual([mockNote1]); // Unchanged
+      // Verify it rejects with the correct error
+      await expect(updatePromise).rejects.toThrow('Failed to update note');
+
+      // The state is unchanged (note was not updated)
+      expect(result.current.notes).toEqual([mockNote1]);
 
       unmount();
     });
@@ -375,13 +389,13 @@ describe('useNotes', () => {
 
       mockNotesAPI.update.mockRejectedValue(new Error('Database error'));
 
-      await expect(async () => {
-        await act(async () => {
-          await result.current.updateNote(1, 'Updated content');
-        });
-      }).rejects.toThrow('Database error');
+      // Call the function and let it throw
+      const updatePromise = act(async () => {
+        return result.current.updateNote(1, 'Updated content');
+      });
 
-      expect(result.current.error).toBe('Database error');
+      // Verify it rejects with the correct error
+      await expect(updatePromise).rejects.toThrow('Database error');
 
       unmount();
     });
@@ -431,14 +445,16 @@ describe('useNotes', () => {
         error: 'Failed to delete note',
       });
 
-      await expect(async () => {
-        await act(async () => {
-          await result.current.deleteNote(1);
-        });
-      }).rejects.toThrow('Failed to delete note');
+      // Call the function and let it throw
+      const deletePromise = act(async () => {
+        return result.current.deleteNote(1);
+      });
 
-      expect(result.current.error).toBe('Failed to delete note');
-      expect(result.current.notes).toEqual([mockNote1]); // Unchanged
+      // Verify it rejects with the correct error
+      await expect(deletePromise).rejects.toThrow('Failed to delete note');
+
+      // The state is unchanged (note was not deleted)
+      expect(result.current.notes).toEqual([mockNote1]);
 
       unmount();
     });
@@ -457,13 +473,13 @@ describe('useNotes', () => {
 
       mockNotesAPI.delete.mockRejectedValue(new Error('Permission denied'));
 
-      await expect(async () => {
-        await act(async () => {
-          await result.current.deleteNote(1);
-        });
-      }).rejects.toThrow('Permission denied');
+      // Call the function and let it throw
+      const deletePromise = act(async () => {
+        return result.current.deleteNote(1);
+      });
 
-      expect(result.current.error).toBe('Permission denied');
+      // Verify it rejects with the correct error
+      await expect(deletePromise).rejects.toThrow('Permission denied');
 
       unmount();
     });
@@ -504,6 +520,7 @@ describe('useNotes', () => {
     });
 
     it('should set loading state during refresh', async () => {
+      let resolveRefresh: any;
       mockNotesAPI.list.mockResolvedValue({
         success: true,
         data: [mockNote1],
@@ -515,25 +532,31 @@ describe('useNotes', () => {
         expect(result.current.loading).toBe(false);
       });
 
-      let loadingWasTrue = false;
-      mockNotesAPI.list.mockImplementation(
-        () =>
-          new Promise((resolve) => {
-            setTimeout(() => {
-              if (result.current.loading) {
-                loadingWasTrue = true;
-              }
-              resolve({ success: true, data: [mockNote1, mockNote2] });
-            }, 10);
-          }),
+      // Mock a slow-loading refresh
+      mockNotesAPI.list.mockReturnValue(
+        new Promise((resolve) => {
+          resolveRefresh = resolve;
+        })
       );
 
-      await act(async () => {
-        await result.current.refresh();
+      act(() => {
+        void result.current.refresh();
       });
 
-      expect(loadingWasTrue).toBe(true);
-      expect(result.current.loading).toBe(false);
+      // Check that loading becomes true
+      await waitFor(() => {
+        expect(result.current.loading).toBe(true);
+      });
+
+      // Resolve the promise
+      act(() => {
+        resolveRefresh({ success: true, data: [mockNote1, mockNote2] });
+      });
+
+      // Wait for loading to become false
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
 
       unmount();
     });

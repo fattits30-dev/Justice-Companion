@@ -3,22 +3,22 @@
 ## ⚡ Essential References - START HERE
 
 **Critical Documentation** (read these first):
-1. **[MASTER_BUILD_GUIDE.md](MASTER_BUILD_GUIDE.md)** - Comprehensive 8-phase build roadmap (58KB, 13,000+ words)
+1. **[MASTER_BUILD_GUIDE.md](docs/guides/MASTER_BUILD_GUIDE.md)** - Comprehensive 8-phase build roadmap (58KB, 13,000+ words)
    - Complete architecture, security, testing, and deployment guide
    - Blocks production: Weeks 2-4 (Security), Weeks 9-10 (Testing)
 
-2. **[BUILD_QUICK_REFERENCE.md](BUILD_QUICK_REFERENCE.md)** - Critical path summary (6.6KB, 1-page)
+2. **[BUILD_QUICK_REFERENCE.md](docs/guides/BUILD_QUICK_REFERENCE.md)** - Critical path summary (6.6KB, 1-page)
    - Quick command reference and priority checklist
    - Essential for day-to-day development
 
-3. **[AUDIT_COMPLETION_SUMMARY.md](AUDIT_COMPLETION_SUMMARY.md)** - Full audit report (19KB)
+3. **[AUDIT_COMPLETION_SUMMARY.md](docs/reports/AUDIT_COMPLETION_SUMMARY.md)** - Full audit report (19KB)
    - Actionable recommendations across all domains
    - Database, backend, frontend, integration, testing, security findings
 
 **When to Use Each**:
-- **Starting a new task?** → Check `BUILD_QUICK_REFERENCE.md` for commands and priorities
-- **Planning a phase?** → Read relevant section in `MASTER_BUILD_GUIDE.md`
-- **Need context on existing code?** → Review `AUDIT_COMPLETION_SUMMARY.md` findings
+- **Starting a new task?** → Check `docs/guides/BUILD_QUICK_REFERENCE.md` for commands and priorities
+- **Planning a phase?** → Read relevant section in `docs/guides/MASTER_BUILD_GUIDE.md`
+- **Need context on existing code?** → Review `docs/reports/AUDIT_COMPLETION_SUMMARY.md` findings
 
 ---
 
@@ -414,13 +414,14 @@ Use this coordination framework when managing multi-agent workflows. This style 
 - **Documentation**: Update relevant docs in `docs/` or root-level `.md` files
 
 ### Project Documentation Reference
-- **Build Process**: `MASTER_BUILD_GUIDE.md`, `BUILD_QUICK_REFERENCE.md`
-- **Security**: `docs/implementation/ENCRYPTION_IMPLEMENTATION.md`, `AUTHENTICATION_IMPLEMENTATION_SUMMARY.md`
+- **Build Process**: `docs/guides/MASTER_BUILD_GUIDE.md`, `docs/guides/BUILD_QUICK_REFERENCE.md`
+- **Security**: `docs/implementation/ENCRYPTION_IMPLEMENTATION.md`, `docs/implementation/AUTHENTICATION_IMPLEMENTATION_SUMMARY.md`, `docs/reference/SECURITY.md`
 - **APIs**: `docs/api/IPC_API_REFERENCE.md`, `docs/api/IPC_QUICK_REFERENCE.md`, `docs/api/IPC_DOCUMENTATION_SUMMARY.md`
-- **Testing**: `docs/implementation/AUDIT_LOGGER_E2E_TEST_REPORT.md`
-- **Audits**: `docs/reports/AUDIT_SUMMARY_2025-10-08.md`, `AUDIT_COMPLETION_SUMMARY.md`
+- **Testing**: `docs/implementation/AUDIT_LOGGER_E2E_TEST_REPORT.md`, `docs/implementation/TEST_SUITE_IMPROVEMENTS_2025-10-08.md`, `docs/reference/TESTING.md`
+- **Audits**: `docs/reports/` (10+ comprehensive reports)
 - **Features**: `docs/implementation/FACTS_FEATURE_IMPLEMENTATION.md`
 - **Migrations**: `docs/architecture/MIGRATION_SYSTEM_GUIDE.md`
+- **Reference**: `docs/reference/CODE_SNIPPETS.md`, `docs/reference/CONTEXT7_LIBRARIES.md`
 
 **Consistency across agents keeps Justice Companion stable. Use this dashboard to drive disciplined execution.**
 
