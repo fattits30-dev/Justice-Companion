@@ -112,6 +112,51 @@ xcode-select --install
 sudo apt-get install build-essential python3
 ```
 
+## E2E Test Environment (Playwright)
+
+### Issue
+When running E2E tests with Playwright, you may encounter the **reverse** version mismatch:
+
+```
+Error: The module 'better_sqlite3.node' was compiled against a different Node.js version using
+NODE_MODULE_VERSION 139. This version of Node.js requires NODE_MODULE_VERSION 127.
+```
+
+This is because:
+- **Electron** uses Node v22 (MODULE_VERSION 139)
+- **Playwright** uses Node v20 (MODULE_VERSION 127)
+
+### Solution
+The E2E test scripts automatically handle this:
+
+```bash
+# These scripts automatically rebuild for Node v20 before tests,
+# then rebuild for Electron after tests:
+npm run test:e2e
+npm run test:e2e:headed
+npm run test:e2e:debug
+npm run test:e2e:ui
+```
+
+**How it works:**
+1. `pretest:e2e` runs `scripts/rebuild-for-node.js` → rebuilds for current Node.js (v20 for Playwright)
+2. `test:e2e` runs Playwright tests
+3. `posttest:e2e` runs `scripts/rebuild-for-electron.js` → rebuilds for Electron (v22)
+
+**Manual rebuild commands:**
+```bash
+# Rebuild for current Node.js version (for Playwright/manual testing)
+npm run rebuild:node
+
+# Rebuild for Electron
+npm run rebuild:electron
+```
+
+### Important Notes
+- ⚠️ **Always** run `npm run rebuild:electron` after manual Playwright tests
+- ⚠️ Running E2E tests will **temporarily break** Electron until posttest rebuild completes
+- ✅ Use `npm run test:e2e` (not `playwright test` directly) to ensure automatic rebuilds
+
 ## Related Issues
 - [Electron Rebuild Documentation](https://github.com/electron/rebuild)
 - [Better-SQLite3 Documentation](https://github.com/WiseLibs/better-sqlite3)
@@ -120,6 +165,7 @@ sudo apt-get install build-essential python3
 - **Date**: 2025-10-09
 - **Context**: Auth system initialization failing due to database connection errors
 - **Resolution Time**: ~15 minutes diagnosis + 30 seconds rebuild
+- **E2E Test Fix**: 2025-10-09 (added dual-environment rebuild scripts)
 
 ---
 
