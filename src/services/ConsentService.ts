@@ -23,7 +23,7 @@ export class ConsentService {
 
   constructor(
     private consentRepository: ConsentRepository,
-    private auditLogger?: AuditLogger
+    private auditLogger?: AuditLogger,
   ) {}
 
   /**

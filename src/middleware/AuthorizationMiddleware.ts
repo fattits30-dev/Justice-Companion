@@ -28,7 +28,7 @@ export class AuthorizationError extends Error {
 export class AuthorizationMiddleware {
   constructor(
     private caseRepository: CaseRepository,
-    private auditLogger?: AuditLogger
+    private auditLogger?: AuditLogger,
   ) {}
 
   /**

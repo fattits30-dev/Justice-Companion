@@ -43,7 +43,7 @@ export class AuthenticationService {
   constructor(
     private userRepository: UserRepository,
     private sessionRepository: SessionRepository,
-    private auditLogger?: AuditLogger
+    private auditLogger?: AuditLogger,
   ) {}
 
   /**
@@ -58,7 +58,7 @@ export class AuthenticationService {
     // Validate password strength
     if (password.length < 12) {
       throw new AuthenticationError(
-        'Password must be at least 12 characters (OWASP requirement)'
+        'Password must be at least 12 characters (OWASP requirement)',
       );
     }
 
@@ -119,7 +119,7 @@ export class AuthenticationService {
     username: string,
     password: string,
     ipAddress?: string,
-    userAgent?: string
+    userAgent?: string,
   ): Promise<{ user: User; session: Session }> {
     const user = this.userRepository.findByUsername(username);
 
@@ -155,7 +155,7 @@ export class AuthenticationService {
     const hash = (await scrypt(password, salt, this.KEY_LENGTH)) as Buffer;
     const isValid = crypto.timingSafeEqual(
       Buffer.from(user.passwordHash, 'hex'),
-      hash
+      hash,
     );
 
     if (!isValid) {
@@ -250,7 +250,7 @@ export class AuthenticationService {
   async changePassword(
     userId: number,
     oldPassword: string,
-    newPassword: string
+    newPassword: string,
   ): Promise<void> {
     const user = this.userRepository.findById(userId);
 
@@ -263,7 +263,7 @@ export class AuthenticationService {
     const hash = (await scrypt(oldPassword, salt, this.KEY_LENGTH)) as Buffer;
     const isValid = crypto.timingSafeEqual(
       Buffer.from(user.passwordHash, 'hex'),
-      hash
+      hash,
     );
 
     if (!isValid) {
@@ -303,7 +303,7 @@ export class AuthenticationService {
     this.userRepository.updatePassword(
       userId,
       newHash.toString('hex'),
-      newSalt.toString('hex')
+      newSalt.toString('hex'),
     );
 
     // Invalidate all existing sessions for security

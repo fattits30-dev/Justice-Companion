@@ -17,15 +17,15 @@ import { vi } from 'vitest';
 //   console.error = originalError;
 // });
 
-// Mock window.matchMedia (used by some components for responsive behavior)
+// Mock window.matchMedia (used by some components for responsive behavior and framer-motion)
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
   value: vi.fn().mockImplementation((query: string) => ({
-    matches: false,
+    matches: query === '(prefers-reduced-motion: no-preference)', // Default to no reduced motion
     media: query,
     onchange: null,
-    addListener: vi.fn(), // Deprecated
-    removeListener: vi.fn(), // Deprecated
+    addListener: vi.fn(), // Deprecated but required by framer-motion
+    removeListener: vi.fn(), // Deprecated but required by framer-motion
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),
     dispatchEvent: vi.fn(),
