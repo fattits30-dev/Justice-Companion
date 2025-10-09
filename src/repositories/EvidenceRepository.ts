@@ -21,13 +21,16 @@ export class EvidenceRepository {
       const db = getDb();
 
       // Encrypt content before INSERT (if provided)
-      const encryptedContent = input.content
-        ? this.encryptionService?.encrypt(input.content)
-        : null;
-
-      const contentToStore = encryptedContent
-        ? JSON.stringify(encryptedContent)
-        : null;
+      let contentToStore: string | null = null;
+      if (input.content) {
+        if (this.encryptionService) {
+          const encryptedContent = this.encryptionService.encrypt(input.content);
+          contentToStore = JSON.stringify(encryptedContent);
+        } else {
+          // No encryption service - store as plaintext (backward compatibility)
+          contentToStore = input.content;
+        }
+      }
 
       const stmt = db.prepare(`
         INSERT INTO evidence (
@@ -210,13 +213,17 @@ export class EvidenceRepository {
       if (input.content !== undefined) {
         updates.push('content = @content');
         // Encrypt content before UPDATE
-        const encryptedContent = input.content
-          ? this.encryptionService?.encrypt(input.content)
-          : null;
-
-        params.content = encryptedContent
-          ? JSON.stringify(encryptedContent)
-          : null;
+        if (input.content) {
+          if (this.encryptionService) {
+            const encryptedContent = this.encryptionService.encrypt(input.content);
+            params.content = JSON.stringify(encryptedContent);
+          } else {
+            // No encryption service - store as plaintext (backward compatibility)
+            params.content = input.content;
+          }
+        } else {
+          params.content = null;
+        }
       }
       if (input.evidenceType !== undefined) {
         updates.push('evidence_type = @evidenceType');

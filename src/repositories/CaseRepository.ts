@@ -16,13 +16,16 @@ export class CaseRepository {
       const db = getDb();
 
       // Encrypt description before INSERT
-      const encryptedDescription = input.description
-        ? this.encryptionService?.encrypt(input.description)
-        : null;
-
-      const descriptionToStore = encryptedDescription
-        ? JSON.stringify(encryptedDescription)
-        : null;
+      let descriptionToStore: string | null = null;
+      if (input.description) {
+        if (this.encryptionService) {
+          const encryptedDescription = this.encryptionService.encrypt(input.description);
+          descriptionToStore = JSON.stringify(encryptedDescription);
+        } else {
+          // No encryption service - store as plaintext (backward compatibility)
+          descriptionToStore = input.description;
+        }
+      }
 
       const stmt = db.prepare(`
         INSERT INTO cases (title, description, case_type, status)
@@ -157,13 +160,17 @@ export class CaseRepository {
       if (input.description !== undefined) {
         updates.push('description = @description');
         // Encrypt description before UPDATE
-        const encryptedDescription = input.description
-          ? this.encryptionService?.encrypt(input.description)
-          : null;
-
-        params.description = encryptedDescription
-          ? JSON.stringify(encryptedDescription)
-          : null;
+        if (input.description) {
+          if (this.encryptionService) {
+            const encryptedDescription = this.encryptionService.encrypt(input.description);
+            params.description = JSON.stringify(encryptedDescription);
+          } else {
+            // No encryption service - store as plaintext (backward compatibility)
+            params.description = input.description;
+          }
+        } else {
+          params.description = null;
+        }
       }
       if (input.caseType !== undefined) {
         updates.push('case_type = @caseType');

@@ -26,7 +26,7 @@ vi.mock('../hooks/useCases', () => ({
   useCases: () => mockUseCases(),
 }));
 
-vi.mock('../../../hooks/useEvidence', () => ({
+vi.mock('@/features/documents', () => ({
   useEvidence: () => mockUseEvidence(),
 }));
 

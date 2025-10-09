@@ -300,9 +300,9 @@ describe.sequential('AuditLogger', () => {
         action: 'update',
       });
 
-      // Tamper with first log's hash
+      // Tamper with first log's hash (use ROWID for deterministic ordering)
       db.prepare(
-        'UPDATE audit_logs SET integrity_hash = ? WHERE id = (SELECT id FROM audit_logs ORDER BY timestamp LIMIT 1)',
+        'UPDATE audit_logs SET integrity_hash = ? WHERE id = (SELECT id FROM audit_logs ORDER BY ROWID ASC LIMIT 1)',
       ).run('TAMPERED_HASH_1234567890123456789012345678901234567890123456789012');
 
       const report = auditLogger.verifyIntegrity();
@@ -321,9 +321,9 @@ describe.sequential('AuditLogger', () => {
         });
       }
 
-      // Break the chain by modifying previous_log_hash
+      // Break the chain by modifying previous_log_hash (use ROWID for deterministic ordering)
       db.prepare(
-        'UPDATE audit_logs SET previous_log_hash = ? WHERE id = (SELECT id FROM audit_logs ORDER BY timestamp DESC LIMIT 1 OFFSET 1)',
+        'UPDATE audit_logs SET previous_log_hash = ? WHERE id = (SELECT id FROM audit_logs ORDER BY ROWID DESC LIMIT 1 OFFSET 1)',
       ).run('BROKEN_LINK_1234567890123456789012345678901234567890123456789012');
 
       const report = auditLogger.verifyIntegrity();
@@ -338,9 +338,9 @@ describe.sequential('AuditLogger', () => {
         action: 'create',
       });
 
-      // Tamper with event type (hash will no longer match)
+      // Tamper with event type (hash will no longer match) - use ROWID for deterministic ordering
       db.prepare(
-        'UPDATE audit_logs SET event_type = ? WHERE id = (SELECT id FROM audit_logs ORDER BY timestamp LIMIT 1)',
+        'UPDATE audit_logs SET event_type = ? WHERE id = (SELECT id FROM audit_logs ORDER BY ROWID ASC LIMIT 1)',
       ).run('case.delete');
 
       const report = auditLogger.verifyIntegrity();

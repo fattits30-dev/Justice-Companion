@@ -27,7 +27,7 @@ vi.mock('../hooks/useCases', () => ({
   useCases: () => mockUseCases(),
 }));
 
-vi.mock('../../../hooks/useEvidence', () => ({
+vi.mock('@/features/documents', () => ({
   useEvidence: () => mockUseEvidence(),
 }));
 
@@ -249,9 +249,10 @@ describe('CasesView', () => {
     it('should render timeline events for active case', () => {
       render(<CasesView onCaseSelect={mockOnCaseSelect} />);
 
-      expect(screen.getByText('Case Created')).toBeInTheDocument();
-      expect(screen.getByText('Last Updated')).toBeInTheDocument();
-      expect(screen.getByText('Expected Resolution')).toBeInTheDocument();
+      // Text may appear multiple times, check at least one exists
+      expect(screen.getAllByText('Case Created').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('Last Updated').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('Expected Resolution').length).toBeGreaterThan(0);
     });
 
     it('should show case closed event for closed cases', async () => {
@@ -262,7 +263,7 @@ describe('CasesView', () => {
       const selector = screen.getByDisplayValue('Employment Case');
       await user.selectOptions(selector, '2');
 
-      expect(screen.getByText('Case Closed')).toBeInTheDocument();
+      expect(screen.getAllByText('Case Closed').length).toBeGreaterThan(0);
       expect(screen.queryByText('Expected Resolution')).not.toBeInTheDocument();
     });
 

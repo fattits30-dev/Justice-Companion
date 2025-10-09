@@ -16,14 +16,29 @@ import { render, screen } from '@/test-utils/test-utils';
 import userEvent from '@testing-library/user-event';
 import { DashboardView } from './DashboardView';
 
+// Mock matchMedia for framer-motion
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: vi.fn().mockImplementation(query => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })),
+});
+
 // Mock useCases hook
 const mockUseCases = vi.fn();
-vi.mock('../../hooks/useCases', () => ({
+vi.mock('@/features/cases', () => ({
   useCases: () => mockUseCases(),
 }));
 
 // Mock DashboardEmptyState component
-vi.mock('../ui/DashboardEmptyState', () => ({
+vi.mock('@/components/ui/DashboardEmptyState', () => ({
   DashboardEmptyState: ({ onCreateCase, onStartChat, onUploadDocument }: any) => (
     <div data-testid="dashboard-empty-state">
       <button onClick={onCreateCase}>Create Case (Empty State)</button>

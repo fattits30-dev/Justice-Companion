@@ -26,13 +26,14 @@ export class NotesRepository {
       const db = getDb();
 
       // Encrypt content before INSERT (P0 priority field)
-      const encryptedContent = input.content
-        ? this.encryptionService?.encrypt(input.content)
-        : null;
-
-      const contentToStore = encryptedContent
-        ? JSON.stringify(encryptedContent)
-        : null;
+      let contentToStore: string;
+      if (this.encryptionService) {
+        const encryptedContent = this.encryptionService.encrypt(input.content);
+        contentToStore = JSON.stringify(encryptedContent);
+      } else {
+        // No encryption service - store as plaintext (backward compatibility)
+        contentToStore = input.content;
+      }
 
       const stmt = db.prepare(`
         INSERT INTO notes (case_id, content)
@@ -127,7 +128,7 @@ export class NotesRepository {
         updated_at as updatedAt
       FROM notes
       WHERE case_id = ?
-      ORDER BY created_at DESC
+      ORDER BY created_at DESC, id DESC
     `);
 
     const rows = stmt.all(caseId) as Note[];
@@ -147,13 +148,14 @@ export class NotesRepository {
       const db = getDb();
 
       // Encrypt new content before UPDATE
-      const encryptedContent = input.content
-        ? this.encryptionService?.encrypt(input.content)
-        : null;
-
-      const contentToStore = encryptedContent
-        ? JSON.stringify(encryptedContent)
-        : null;
+      let contentToStore: string;
+      if (this.encryptionService) {
+        const encryptedContent = this.encryptionService.encrypt(input.content);
+        contentToStore = JSON.stringify(encryptedContent);
+      } else {
+        // No encryption service - store as plaintext (backward compatibility)
+        contentToStore = input.content;
+      }
 
       const stmt = db.prepare(`
         UPDATE notes

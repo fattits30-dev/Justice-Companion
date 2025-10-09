@@ -19,7 +19,7 @@ import { MessageBubble } from './MessageBubble';
 import type { ChatMessage } from '@/types/ai';
 
 // Mock SourceCitation component to simplify testing
-vi.mock('./SourceCitation', () => ({
+vi.mock('../../../components/SourceCitation', () => ({
   SourceCitation: ({ sources }: { sources: string[] }) => (
     <div data-testid="source-citation">Sources: {sources.length}</div>
   ),

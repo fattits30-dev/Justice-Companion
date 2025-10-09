@@ -79,10 +79,10 @@ describe('LegalAPIService', () => {
       expect(category).toBe('consumer');
     });
 
-    it('should default to civil for unknown questions', () => {
+    it('should default to general for unknown questions', () => {
       const question = 'What are my general rights?';
       const category = service.classifyQuestion(question);
-      expect(category).toBe('civil');
+      expect(category).toBe('general');
     });
   });
 

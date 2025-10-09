@@ -123,7 +123,7 @@ export class LegalIssuesRepository {
         created_at as createdAt
       FROM legal_issues
       WHERE case_id = ?
-      ORDER BY created_at DESC
+      ORDER BY created_at DESC, id DESC
     `);
 
     const rows = stmt.all(caseId) as LegalIssue[];

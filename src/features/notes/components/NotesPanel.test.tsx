@@ -450,14 +450,15 @@ describe('NotesPanel', () => {
 
       const multilineNote = screen.getByText(/Third note/i);
       expect(multilineNote).toBeInTheDocument();
-      expect(multilineNote).toHaveStyle({ whiteSpace: 'pre-wrap' });
+      // Component uses whitespace-pre-wrap Tailwind class, check it's in the element
+      expect(multilineNote).toHaveClass('whitespace-pre-wrap');
     });
 
     it('should display full timestamps in locale format', () => {
       render(<NotesPanel caseId={1} />);
 
-      // Get all timestamp divs
-      const timestampElements = document.querySelectorAll('div[style*="font-size: 12px"]');
+      // Timestamps are rendered with text-xs class
+      const timestampElements = document.querySelectorAll('.text-xs.text-blue-400\\/70');
       expect(timestampElements.length).toBeGreaterThan(0);
     });
   });
