@@ -18,16 +18,22 @@ import { ReactElement, ReactNode } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { vi } from 'vitest';
 import type { JusticeCompanionAPI } from '@/types/ipc';
+import { AuthProvider } from '@/contexts/AuthContext';
 
 /**
  * All Providers Component
  *
  * Wraps components with necessary providers for testing:
  * - BrowserRouter (for components using react-router hooks)
+ * - AuthProvider (for components using useAuth hook)
  * - Add other providers here as needed (ThemeProvider, QueryClientProvider, etc.)
  */
 function AllTheProviders({ children }: { children: ReactNode }) {
-  return <BrowserRouter>{children}</BrowserRouter>;
+  return (
+    <BrowserRouter>
+      <AuthProvider>{children}</AuthProvider>
+    </BrowserRouter>
+  );
 }
 
 /**
@@ -42,11 +48,36 @@ function AllTheProviders({ children }: { children: ReactNode }) {
 const customRender = (ui: ReactElement, options?: Omit<RenderOptions, 'wrapper'>) =>
   render(ui, { wrapper: AllTheProviders, ...options });
 
-// Re-export everything from React Testing Library
-export * from '@testing-library/react';
+// Re-export specific items from React Testing Library (excluding render to avoid conflict)
+export {
+  screen,
+  waitFor,
+  within,
+  fireEvent,
+  act,
+  renderHook,
+  cleanup,
+  getByRole,
+  getByLabelText,
+  getByPlaceholderText,
+  getByText,
+  getByDisplayValue,
+  getByAltText,
+  getByTitle,
+  getByTestId,
+  queryByRole,
+  queryByLabelText,
+  queryByPlaceholderText,
+  queryByText,
+  queryByDisplayValue,
+  queryByAltText,
+  queryByTitle,
+  queryByTestId,
+} from '@testing-library/react';
+
 export { default as userEvent } from '@testing-library/user-event';
 
-// Override render method with custom render
+// Export custom render as render (replaces RTL's render)
 export { customRender as render };
 
 /**

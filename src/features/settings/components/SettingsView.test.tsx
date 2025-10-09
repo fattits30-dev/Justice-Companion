@@ -10,14 +10,37 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { render, screen, waitFor } from '@/test-utils/test-utils';
+import { render as rtlRender, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { BrowserRouter } from 'react-router-dom';
+import { AuthProvider } from '@/contexts/AuthContext';
 import { SettingsView } from './SettingsView';
+
+// Custom render with providers
+function render(ui: React.ReactElement) {
+  return rtlRender(
+    <BrowserRouter>
+      <AuthProvider>{ui}</AuthProvider>
+    </BrowserRouter>
+  );
+}
 
 // Mock window.justiceAPI
 const mockJusticeAPI = {
+  // Auth methods (required by AuthProvider)
+  getCurrentUser: vi.fn(),
+  loginUser: vi.fn(),
+  logoutUser: vi.fn(),
+  registerUser: vi.fn(),
+  // Profile methods
   getUserProfile: vi.fn(),
   updateUserProfile: vi.fn(),
+  // Consent methods
+  getUserConsents: vi.fn(),
+  grantConsent: vi.fn(),
+  revokeConsent: vi.fn(),
+  changePassword: vi.fn(),
+  // Data management methods
   getAllCases: vi.fn(),
   getAllConversations: vi.fn(),
   deleteCase: vi.fn(),
@@ -34,6 +57,19 @@ describe('SettingsView', () => {
 
     // Setup default mock responses
     (window as any).justiceAPI = mockJusticeAPI;
+
+    // Auth mocks (AuthProvider calls getCurrentUser on mount)
+    mockJusticeAPI.getCurrentUser.mockResolvedValue({
+      success: true,
+      data: {
+        id: 1,
+        username: 'testuser',
+        createdAt: '2025-01-01T00:00:00.000Z',
+        updatedAt: '2025-01-01T00:00:00.000Z',
+      },
+    });
+
+    // Profile mocks
     mockJusticeAPI.getUserProfile.mockResolvedValue({
       success: true,
       data: {
@@ -43,6 +79,12 @@ describe('SettingsView', () => {
         createdAt: '2025-01-01T00:00:00.000Z',
         updatedAt: '2025-01-01T00:00:00.000Z',
       },
+    });
+
+    // Consent mocks
+    mockJusticeAPI.getUserConsents.mockResolvedValue({
+      success: true,
+      data: [],
     });
   });
 
