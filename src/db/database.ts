@@ -113,4 +113,4 @@ class DatabaseManager {
 }
 
 export const databaseManager = DatabaseManager.getInstance();
-export const getDb = (): Database => databaseManager.getDatabase();
+export const getDb = (): Database.Database => databaseManager.getDatabase();
