@@ -109,7 +109,10 @@ TOKEN_SECURITY_UPGRADE.md
 QUICK_TOKEN_SETUP.md
 
 # Documentation (keep local, exclude from git - app files only in git)
-docs/
+docs/*
+!docs/troubleshooting/
+!docs/implementation/
+!docs/COMPREHENSIVE_SCAN_*.md
 CLAUDE.md
 CONTRIBUTING.md
 SECURITY.md
