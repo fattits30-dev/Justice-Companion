@@ -103,3 +103,9 @@ nul
 # Public release preparation (developer-only)
 CLEANUP_SUMMARY.md
 RELEASE_NOW.md
+PUBLIC_RELEASE_READY.md
+TOKEN_SECURITY_UPGRADE.md
+QUICK_TOKEN_SETUP.md
+
+# Documentation guides (keep local, exclude from git)
+docs/guides/SECURE_TOKEN_SETUP.md
