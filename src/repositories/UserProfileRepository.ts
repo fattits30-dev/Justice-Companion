@@ -42,12 +42,13 @@ export class UserProfileRepository {
       const originalName = profile.name;
       const originalEmail = profile.email;
 
-      profile.name = this.decryptField(profile.name) || 'Legal User';
+      profile.name = this.decryptField(profile.name) ?? 'Legal User';
       profile.email = this.decryptField(profile.email);
 
       // Audit: PII accessed (encrypted name/email fields)
-      const piiAccessed = (originalName && profile.name !== originalName) ||
-                          (originalEmail && profile.email !== originalEmail);
+      const piiAccessed =
+        (originalName && profile.name !== originalName) ||
+        (originalEmail && profile.email !== originalEmail);
 
       if (piiAccessed) {
         this.auditLogger?.log({
@@ -79,25 +80,30 @@ export class UserProfileRepository {
     const db = getDb();
 
     try {
+      const encryption = this.requireEncryptionService();
       const updates: string[] = [];
       const params: Record<string, unknown> = {};
 
       if (input.name !== undefined) {
         updates.push('name = @name');
-        // Encrypt name before UPDATE (P0 priority PII)
-        const encryptedName = input.name
-          ? this.encryptionService?.encrypt(input.name)
-          : null;
-        params.name = encryptedName ? JSON.stringify(encryptedName) : null;
+        if (input.name && input.name.trim().length > 0) {
+          const encryptedName = encryption.encrypt(input.name);
+          params.name = encryptedName ? JSON.stringify(encryptedName) : null;
+        } else {
+          params.name = null;
+        }
       }
 
       if (input.email !== undefined) {
         updates.push('email = @email');
-        // Encrypt email before UPDATE (P0 priority PII)
-        const encryptedEmail = input.email
-          ? this.encryptionService?.encrypt(input.email)
-          : null;
-        params.email = encryptedEmail ? JSON.stringify(encryptedEmail) : null;
+        if (input.email === null) {
+          params.email = null;
+        } else if (input.email && input.email.trim().length > 0) {
+          const encryptedEmail = encryption.encrypt(input.email);
+          params.email = encryptedEmail ? JSON.stringify(encryptedEmail) : null;
+        } else {
+          params.email = null;
+        }
       }
 
       if (input.avatarUrl !== undefined) {
@@ -192,6 +198,13 @@ export class UserProfileRepository {
    */
   setAuditLogger(logger: AuditLogger): void {
     this.auditLogger = logger;
+  }
+
+  private requireEncryptionService(): EncryptionService {
+    if (!this.encryptionService) {
+      throw new Error('EncryptionService not configured for UserProfileRepository');
+    }
+    return this.encryptionService;
   }
 }
 

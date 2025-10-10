@@ -47,14 +47,7 @@ describe('NotesService', () => {
         caseId: 100,
         content: 'Test note content',
       });
-      expect(errorLogger.logError).toHaveBeenCalledWith(
-        'Note created successfully',
-        expect.objectContaining({
-          type: 'info',
-          noteId: 1,
-          caseId: 100,
-        }),
-      );
+      expect(errorLogger.logError).not.toHaveBeenCalled();
     });
 
     it('should throw error if content is empty', () => {
@@ -67,7 +60,7 @@ describe('NotesService', () => {
       const longContent = 'a'.repeat(10001);
 
       expect(() => notesService.createNote(100, longContent)).toThrow(
-        'Note content must be 10000 characters or less',
+        'Note content must be 10000 characters or less'
       );
       expect(notesRepository.create).not.toHaveBeenCalled();
     });
@@ -99,7 +92,7 @@ describe('NotesService', () => {
       expect(() => notesService.createNote(100, 'Test content')).toThrow('Database error');
       expect(errorLogger.logError).toHaveBeenCalledWith(
         error,
-        expect.objectContaining({ context: 'createNote', caseId: 100 }),
+        expect.objectContaining({ context: 'createNote', caseId: 100 })
       );
     });
   });
@@ -149,7 +142,7 @@ describe('NotesService', () => {
       expect(() => notesService.getNotesByCaseId(100)).toThrow('Database error');
       expect(errorLogger.logError).toHaveBeenCalledWith(
         error,
-        expect.objectContaining({ context: 'getNotesByCaseId', caseId: 100 }),
+        expect.objectContaining({ context: 'getNotesByCaseId', caseId: 100 })
       );
     });
   });
@@ -170,13 +163,7 @@ describe('NotesService', () => {
 
       expect(result).toEqual(mockNote);
       expect(notesRepository.update).toHaveBeenCalledWith(1, { content: 'Updated content' });
-      expect(errorLogger.logError).toHaveBeenCalledWith(
-        'Note updated successfully',
-        expect.objectContaining({
-          type: 'info',
-          noteId: 1,
-        }),
-      );
+      expect(errorLogger.logError).not.toHaveBeenCalled();
     });
 
     it('should throw error if content is empty', () => {
@@ -189,7 +176,7 @@ describe('NotesService', () => {
       const longContent = 'a'.repeat(10001);
 
       expect(() => notesService.updateNote(1, longContent)).toThrow(
-        'Note content must be 10000 characters or less',
+        'Note content must be 10000 characters or less'
       );
       expect(notesRepository.update).not.toHaveBeenCalled();
     });
@@ -210,7 +197,7 @@ describe('NotesService', () => {
       expect(() => notesService.updateNote(1, 'Test content')).toThrow('Database error');
       expect(errorLogger.logError).toHaveBeenCalledWith(
         error,
-        expect.objectContaining({ context: 'updateNote', id: 1 }),
+        expect.objectContaining({ context: 'updateNote', id: 1 })
       );
     });
   });
@@ -222,13 +209,7 @@ describe('NotesService', () => {
       notesService.deleteNote(1);
 
       expect(notesRepository.delete).toHaveBeenCalledWith(1);
-      expect(errorLogger.logError).toHaveBeenCalledWith(
-        'Note deleted successfully',
-        expect.objectContaining({
-          type: 'info',
-          noteId: 1,
-        }),
-      );
+      expect(errorLogger.logError).not.toHaveBeenCalled();
     });
 
     it('should log and rethrow repository errors', () => {
@@ -240,14 +221,15 @@ describe('NotesService', () => {
       expect(() => notesService.deleteNote(1)).toThrow('Database error');
       expect(errorLogger.logError).toHaveBeenCalledWith(
         error,
-        expect.objectContaining({ context: 'deleteNote', id: 1 }),
+        expect.objectContaining({ context: 'deleteNote', id: 1 })
       );
     });
   });
 
   describe('Edge Cases', () => {
     it('should handle special characters in content', () => {
-      const specialContent = 'Test with "quotes", \'apostrophes\', & ampersands, <tags>, \n newlines';
+      const specialContent =
+        'Test with "quotes", \'apostrophes\', & ampersands, <tags>, \n newlines';
       const mockNote: Note = {
         id: 1,
         caseId: 100,

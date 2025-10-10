@@ -155,7 +155,7 @@ class ChatConversationRepository {
       // Decrypt all message content and thinking content
       const decryptedMessages = messages.map((msg) => ({
         ...msg,
-        content: this.decryptField(msg.content) || msg.content,
+        content: this.decryptField(msg.content) ?? msg.content,
         thinkingContent: this.decryptField(msg.thinkingContent),
       }));
 
@@ -210,17 +210,23 @@ class ChatConversationRepository {
     const db = getDb();
 
     try {
+      const encryption = this.requireEncryptionService();
+
       // Encrypt content before INSERT (P0 priority field)
-      const contentToStore = this.encryptionService
-        ? JSON.stringify(this.encryptionService.encrypt(input.content))
-        : input.content;
+      const encryptedContent = encryption.encrypt(input.content);
+      if (!encryptedContent) {
+        throw new Error('Message content cannot be empty');
+      }
+      const contentToStore = JSON.stringify(encryptedContent);
 
       // Encrypt thinking_content before INSERT (P1 priority field)
-      const thinkingContentToStore = input.thinkingContent === null || input.thinkingContent === undefined
-        ? null
-        : this.encryptionService
-          ? JSON.stringify(this.encryptionService.encrypt(input.thinkingContent))
-          : input.thinkingContent;
+      const thinkingContentToStore =
+        input.thinkingContent === null || input.thinkingContent === undefined
+          ? null
+          : (() => {
+              const encryptedThinking = encryption.encrypt(input.thinkingContent);
+              return encryptedThinking ? JSON.stringify(encryptedThinking) : null;
+            })();
 
       const stmt = db.prepare(`
         INSERT INTO chat_messages (conversation_id, role, content, thinking_content, token_count)
@@ -232,7 +238,7 @@ class ChatConversationRepository {
         input.role,
         contentToStore,
         thinkingContentToStore,
-        input.tokenCount ?? null,
+        input.tokenCount ?? null
       );
 
       // Get the inserted message
@@ -246,7 +252,7 @@ class ChatConversationRepository {
       const message = msgStmt.get(result.lastInsertRowid) as ChatMessage;
 
       // Decrypt before returning
-      message.content = this.decryptField(message.content) || message.content;
+      message.content = this.decryptField(message.content) ?? message.content;
       message.thinkingContent = this.decryptField(message.thinkingContent);
 
       // Audit: Message created
@@ -319,6 +325,13 @@ class ChatConversationRepository {
    */
   setEncryptionService(service: EncryptionService): void {
     this.encryptionService = service;
+  }
+
+  private requireEncryptionService(): EncryptionService {
+    if (!this.encryptionService) {
+      throw new Error('EncryptionService not configured for ChatConversationRepository');
+    }
+    return this.encryptionService;
   }
 
   /**

@@ -21,7 +21,9 @@ import { aiServiceFactory } from '../src/services/AIServiceFactory';
 import { ragService } from '../src/services/RAGService';
 import { legalAPIService } from '../src/services/LegalAPIService';
 import { chatConversationService } from '../src/services/ChatConversationService';
+import { chatConversationRepository } from '../src/repositories/ChatConversationRepository';
 import { userProfileService } from '../src/services/UserProfileService';
+import { userProfileRepository } from '../src/repositories/UserProfileRepository';
 import { modelDownloadService } from '../src/services/ModelDownloadService';
 import { UserRepository } from '../src/repositories/UserRepository';
 import { SessionRepository } from '../src/repositories/SessionRepository';
@@ -112,6 +114,14 @@ let consentRepository: ConsentRepository;
 let authenticationService: AuthenticationService;
 let consentService: ConsentService;
 let _authorizationMiddleware: AuthorizationMiddleware; // Unused - will be used for future authorization checks
+
+function initializeEncryptionService(): EncryptionService {
+  const rawKey = process.env.ENCRYPTION_KEY_BASE64?.trim();
+  if (!rawKey) {
+    throw new Error('ENCRYPTION_KEY_BASE64 is required before starting the application');
+  }
+  return new EncryptionService(rawKey);
+}
 
 function createWindow() {
   try {
@@ -207,21 +217,18 @@ function setupIpcHandlers() {
    * ```
    */
   // Case: Create
-  ipcMain.handle(
-    IPC_CHANNELS.CASE_CREATE,
-    async (_, request: CaseCreateRequest) => {
-      try {
-        const createdCase = caseService.createCase(request.input);
-        return { success: true, data: createdCase };
-      } catch (error) {
-        errorLogger.logError(error as Error, { context: 'ipc:case:create' });
-        return {
-          success: false,
-          error: error instanceof Error ? error.message : 'Failed to create case',
-        };
-      }
+  ipcMain.handle(IPC_CHANNELS.CASE_CREATE, async (_, request: CaseCreateRequest) => {
+    try {
+      const createdCase = caseService.createCase(request.input);
+      return { success: true, data: createdCase };
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'ipc:case:create' });
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to create case',
+      };
     }
-  );
+  });
 
   /**
    * Get a case by its ID.
@@ -245,22 +252,18 @@ function setupIpcHandlers() {
    * ```
    */
   // Case: Get by ID
-  ipcMain.handle(
-    IPC_CHANNELS.CASE_GET_BY_ID,
-    async (_, request: CaseGetByIdRequest) => {
-      try {
-        const foundCase = caseRepository.findById(request.id);
-        return { success: true, data: foundCase };
-      } catch (error) {
-        errorLogger.logError(error as Error, { context: 'ipc:case:getById' });
-        return {
-          success: false,
-          error:
-            error instanceof Error ? error.message : 'Failed to get case by ID',
-        };
-      }
+  ipcMain.handle(IPC_CHANNELS.CASE_GET_BY_ID, async (_, request: CaseGetByIdRequest) => {
+    try {
+      const foundCase = caseRepository.findById(request.id);
+      return { success: true, data: foundCase };
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'ipc:case:getById' });
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to get case by ID',
+      };
     }
-  );
+  });
 
   /**
    * Get all cases.
@@ -283,22 +286,18 @@ function setupIpcHandlers() {
    * ```
    */
   // Case: Get all
-  ipcMain.handle(
-    IPC_CHANNELS.CASE_GET_ALL,
-    async (_event, _request: CaseGetAllRequest) => {
-      try {
-        const allCases = caseRepository.findAll();
-        return { success: true, data: allCases };
-      } catch (error) {
-        errorLogger.logError(error as Error, { context: 'ipc:case:getAll' });
-        return {
-          success: false,
-          error:
-            error instanceof Error ? error.message : 'Failed to get all cases',
-        };
-      }
+  ipcMain.handle(IPC_CHANNELS.CASE_GET_ALL, async (_event, _request: CaseGetAllRequest) => {
+    try {
+      const allCases = caseRepository.findAll();
+      return { success: true, data: allCases };
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'ipc:case:getAll' });
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to get all cases',
+      };
     }
-  );
+  });
 
   /**
    * Update an existing case.
@@ -328,21 +327,18 @@ function setupIpcHandlers() {
    * ```
    */
   // Case: Update
-  ipcMain.handle(
-    IPC_CHANNELS.CASE_UPDATE,
-    async (_, request: CaseUpdateRequest) => {
-      try {
-        const updatedCase = caseService.updateCase(request.id, request.input);
-        return { success: true, data: updatedCase };
-      } catch (error) {
-        errorLogger.logError(error as Error, { context: 'ipc:case:update' });
-        return {
-          success: false,
-          error: error instanceof Error ? error.message : 'Failed to update case',
-        };
-      }
+  ipcMain.handle(IPC_CHANNELS.CASE_UPDATE, async (_, request: CaseUpdateRequest) => {
+    try {
+      const updatedCase = caseService.updateCase(request.id, request.input);
+      return { success: true, data: updatedCase };
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'ipc:case:update' });
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to update case',
+      };
     }
-  );
+  });
 
   /**
    * Delete a case (hard delete with cascading).
@@ -369,38 +365,32 @@ function setupIpcHandlers() {
    * ```
    */
   // Case: Delete
-  ipcMain.handle(
-    IPC_CHANNELS.CASE_DELETE,
-    async (_, request: CaseDeleteRequest) => {
-      try {
-        caseService.deleteCase(request.id);
-        return { success: true };
-      } catch (error) {
-        errorLogger.logError(error as Error, { context: 'ipc:case:delete' });
-        return {
-          success: false,
-          error: error instanceof Error ? error.message : 'Failed to delete case',
-        };
-      }
+  ipcMain.handle(IPC_CHANNELS.CASE_DELETE, async (_, request: CaseDeleteRequest) => {
+    try {
+      caseService.deleteCase(request.id);
+      return { success: true };
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'ipc:case:delete' });
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to delete case',
+      };
     }
-  );
+  });
 
   // Case: Close
-  ipcMain.handle(
-    IPC_CHANNELS.CASE_CLOSE,
-    async (_, request: CaseCloseRequest) => {
-      try {
-        const closedCase = caseService.closeCase(request.id);
-        return { success: true, data: closedCase };
-      } catch (error) {
-        errorLogger.logError(error as Error, { context: 'ipc:case:close' });
-        return {
-          success: false,
-          error: error instanceof Error ? error.message : 'Failed to close case',
-        };
-      }
+  ipcMain.handle(IPC_CHANNELS.CASE_CLOSE, async (_, request: CaseCloseRequest) => {
+    try {
+      const closedCase = caseService.closeCase(request.id);
+      return { success: true, data: closedCase };
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'ipc:case:close' });
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to close case',
+      };
     }
-  );
+  });
 
   // Case: Get statistics
   ipcMain.handle(
@@ -415,10 +405,7 @@ function setupIpcHandlers() {
         });
         return {
           success: false,
-          error:
-            error instanceof Error
-              ? error.message
-              : 'Failed to get case statistics',
+          error: error instanceof Error ? error.message : 'Failed to get case statistics',
         };
       }
     }
@@ -454,21 +441,18 @@ function setupIpcHandlers() {
    * ```
    */
   // Evidence: Create
-  ipcMain.handle(
-    IPC_CHANNELS.EVIDENCE_CREATE,
-    async (_, request: EvidenceCreateRequest) => {
-      try {
-        const createdEvidence = evidenceRepository.create(request.input);
-        return { success: true, data: createdEvidence };
-      } catch (error) {
-        errorLogger.logError(error as Error, { context: 'ipc:evidence:create' });
-        return {
-          success: false,
-          error: error instanceof Error ? error.message : 'Failed to create evidence',
-        };
-      }
+  ipcMain.handle(IPC_CHANNELS.EVIDENCE_CREATE, async (_, request: EvidenceCreateRequest) => {
+    try {
+      const createdEvidence = evidenceRepository.create(request.input);
+      return { success: true, data: createdEvidence };
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'ipc:evidence:create' });
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to create evidence',
+      };
     }
-  );
+  });
 
   /**
    * Get evidence by ID.
@@ -492,22 +476,18 @@ function setupIpcHandlers() {
    * ```
    */
   // Evidence: Get by ID
-  ipcMain.handle(
-    IPC_CHANNELS.EVIDENCE_GET_BY_ID,
-    async (_, request: EvidenceGetByIdRequest) => {
-      try {
-        const evidence = evidenceRepository.findById(request.id);
-        return { success: true, data: evidence };
-      } catch (error) {
-        errorLogger.logError(error as Error, { context: 'ipc:evidence:getById' });
-        return {
-          success: false,
-          error:
-            error instanceof Error ? error.message : 'Failed to get evidence by ID',
-        };
-      }
+  ipcMain.handle(IPC_CHANNELS.EVIDENCE_GET_BY_ID, async (_, request: EvidenceGetByIdRequest) => {
+    try {
+      const evidence = evidenceRepository.findById(request.id);
+      return { success: true, data: evidence };
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'ipc:evidence:getById' });
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to get evidence by ID',
+      };
     }
-  );
+  });
 
   /**
    * Get all evidence with optional type filter.
@@ -531,22 +511,18 @@ function setupIpcHandlers() {
    * ```
    */
   // Evidence: Get all
-  ipcMain.handle(
-    IPC_CHANNELS.EVIDENCE_GET_ALL,
-    async (_, request: EvidenceGetAllRequest) => {
-      try {
-        const allEvidence = evidenceRepository.findAll(request.evidenceType);
-        return { success: true, data: allEvidence };
-      } catch (error) {
-        errorLogger.logError(error as Error, { context: 'ipc:evidence:getAll' });
-        return {
-          success: false,
-          error:
-            error instanceof Error ? error.message : 'Failed to get all evidence',
-        };
-      }
+  ipcMain.handle(IPC_CHANNELS.EVIDENCE_GET_ALL, async (_, request: EvidenceGetAllRequest) => {
+    try {
+      const allEvidence = evidenceRepository.findAll(request.evidenceType);
+      return { success: true, data: allEvidence };
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'ipc:evidence:getAll' });
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to get all evidence',
+      };
     }
-  );
+  });
 
   /**
    * Get all evidence for a specific case.
@@ -580,8 +556,7 @@ function setupIpcHandlers() {
         errorLogger.logError(error as Error, { context: 'ipc:evidence:getByCaseId' });
         return {
           success: false,
-          error:
-            error instanceof Error ? error.message : 'Failed to get evidence for case',
+          error: error instanceof Error ? error.message : 'Failed to get evidence for case',
         };
       }
     }
@@ -616,21 +591,18 @@ function setupIpcHandlers() {
    * ```
    */
   // Evidence: Update
-  ipcMain.handle(
-    IPC_CHANNELS.EVIDENCE_UPDATE,
-    async (_, request: EvidenceUpdateRequest) => {
-      try {
-        const updatedEvidence = evidenceRepository.update(request.id, request.input);
-        return { success: true, data: updatedEvidence };
-      } catch (error) {
-        errorLogger.logError(error as Error, { context: 'ipc:evidence:update' });
-        return {
-          success: false,
-          error: error instanceof Error ? error.message : 'Failed to update evidence',
-        };
-      }
+  ipcMain.handle(IPC_CHANNELS.EVIDENCE_UPDATE, async (_, request: EvidenceUpdateRequest) => {
+    try {
+      const updatedEvidence = evidenceRepository.update(request.id, request.input);
+      return { success: true, data: updatedEvidence };
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'ipc:evidence:update' });
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to update evidence',
+      };
     }
-  );
+  });
 
   /**
    * Delete evidence (hard delete).
@@ -657,70 +629,61 @@ function setupIpcHandlers() {
    * ```
    */
   // Evidence: Delete
-  ipcMain.handle(
-    IPC_CHANNELS.EVIDENCE_DELETE,
-    async (_, request: EvidenceDeleteRequest) => {
-      try {
-        evidenceRepository.delete(request.id);
-        return { success: true };
-      } catch (error) {
-        errorLogger.logError(error as Error, { context: 'ipc:evidence:delete' });
-        return {
-          success: false,
-          error: error instanceof Error ? error.message : 'Failed to delete evidence',
-        };
-      }
+  ipcMain.handle(IPC_CHANNELS.EVIDENCE_DELETE, async (_, request: EvidenceDeleteRequest) => {
+    try {
+      evidenceRepository.delete(request.id);
+      return { success: true };
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'ipc:evidence:delete' });
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to delete evidence',
+      };
     }
-  );
+  });
 
   // AI: Check Status
-  ipcMain.handle(
-    IPC_CHANNELS.AI_CHECK_STATUS,
-    async (_event, _request: AICheckStatusRequest) => {
-      try {
-        const status = await aiServiceFactory.checkConnection();
-        return {
-          success: true,
-          connected: status.connected,
-          endpoint: status.endpoint,
-          model: status.model,
-          error: status.error,
-        };
-      } catch (error) {
-        errorLogger.logError(error as Error, { context: 'ipc:ai:checkStatus' });
-        return {
-          success: false,
-          error: error instanceof Error ? error.message : 'Failed to check AI status',
-        };
-      }
+  ipcMain.handle(IPC_CHANNELS.AI_CHECK_STATUS, async (_event, _request: AICheckStatusRequest) => {
+    try {
+      const status = await aiServiceFactory.checkConnection();
+      return {
+        success: true,
+        connected: status.connected,
+        endpoint: status.endpoint,
+        model: status.model,
+        error: status.error,
+      };
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'ipc:ai:checkStatus' });
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to check AI status',
+      };
     }
-  );
+  });
 
   // AI: Chat (non-streaming)
-  ipcMain.handle(
-    IPC_CHANNELS.AI_CHAT,
-    async (_event, request: AIChatRequest) => {
-      try {
-        const response = await aiServiceFactory.chat({
-          messages: request.messages as unknown[], // Type conversion
-          context: request.context,
-          caseId: request.caseId,
-        });
+  ipcMain.handle(IPC_CHANNELS.AI_CHAT, async (_event, request: AIChatRequest) => {
+    try {
+      const response = await aiServiceFactory.chat({
+        messages: request.messages as unknown[], // Type conversion
+        context: request.context,
+        caseId: request.caseId,
+      });
 
-        if (!response.success) {
-          return response; // Already formatted error
-        }
-
-        return response;
-      } catch (error) {
-        errorLogger.logError(error as Error, { context: 'ipc:ai:chat' });
-        return {
-          success: false,
-          error: error instanceof Error ? error.message : 'Failed to process chat',
-        };
+      if (!response.success) {
+        return response; // Already formatted error
       }
+
+      return response;
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'ipc:ai:chat' });
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to process chat',
+      };
     }
-  );
+  });
 
   /**
    * Start a streaming AI chat session with RAG integration.
@@ -766,198 +729,188 @@ function setupIpcHandlers() {
    * ```
    */
   // AI: Stream Start
-  ipcMain.handle(
-    IPC_CHANNELS.AI_STREAM_START,
-    async (event, request: AIStreamStartRequest) => {
-      try {
-        const streamId = Date.now().toString(); // Unique stream ID
+  ipcMain.handle(IPC_CHANNELS.AI_STREAM_START, async (event, request: AIStreamStartRequest) => {
+    try {
+      const streamId = Date.now().toString(); // Unique stream ID
 
-        // PHASE 5.1: Fetch RAG context from UK Legal APIs
-        let ragContext = request.context; // Start with provided context
+      // PHASE 5.1: Fetch RAG context from UK Legal APIs
+      let ragContext = request.context; // Start with provided context
 
-        // Extract user's question (last message in conversation)
-        if (request.messages && request.messages.length > 0) {
-          const lastMessage = request.messages[request.messages.length - 1];
+      // Extract user's question (last message in conversation)
+      if (request.messages && request.messages.length > 0) {
+        const lastMessage = request.messages[request.messages.length - 1];
 
-          if (lastMessage.role === 'user' && lastMessage.content) {
-            // INTELLIGENT FILTERING: Only fetch RAG if question is about legal topics
-            const questionCategory = legalAPIService.classifyQuestion(lastMessage.content);
-            const isLegalQuestion = questionCategory !== 'general';
+        if (lastMessage.role === 'user' && lastMessage.content) {
+          // INTELLIGENT FILTERING: Only fetch RAG if question is about legal topics
+          const questionCategory = legalAPIService.classifyQuestion(lastMessage.content);
+          const isLegalQuestion = questionCategory !== 'general';
 
-            // Emit status: Analyzing question
-            event.sender.send(IPC_CHANNELS.AI_STATUS_UPDATE, '🤔 Thinking...');
+          // Emit status: Analyzing question
+          event.sender.send(IPC_CHANNELS.AI_STATUS_UPDATE, '🤔 Thinking...');
 
-            if (isLegalQuestion) {
-              try {
-                // Emit status: Searching legislation
-                event.sender.send(IPC_CHANNELS.AI_STATUS_UPDATE, '🔍 Researching...');
+          if (isLegalQuestion) {
+            try {
+              // Emit status: Searching legislation
+              event.sender.send(IPC_CHANNELS.AI_STATUS_UPDATE, '🔍 Researching...');
 
-                // Fetch legal context from UK Legal APIs
-                const legalContext = await ragService.fetchContextForQuestion(
-                  lastMessage.content
-                );
+              // Fetch legal context from UK Legal APIs
+              const legalContext = await ragService.fetchContextForQuestion(lastMessage.content);
 
-                // Merge RAG context with existing context
-                ragContext = {
-                  ...ragContext,
-                  ...legalContext,
-                };
-              } catch (ragError) {
-                // Log error but continue - don't block streaming on RAG failure
-                errorLogger.logError(ragError as Error, {
-                  context: 'RAG context fetch failed, continuing without legal data',
-                });
-              }
+              // Merge RAG context with existing context
+              ragContext = {
+                ...ragContext,
+                ...legalContext,
+              };
+            } catch (ragError) {
+              // Log error but continue - don't block streaming on RAG failure
+              errorLogger.logError(ragError as Error, {
+                context: 'RAG context fetch failed, continuing without legal data',
+              });
             }
           }
-        }
+          // Emit status: Generating response
+          event.sender.send(IPC_CHANNELS.AI_STATUS_UPDATE, '?o??,? Writing...');
 
-        // Emit status: Generating response
-        event.sender.send(IPC_CHANNELS.AI_STATUS_UPDATE, '✍️ Writing...');
+          // Start streaming in background
+          // Use streamChatWithFunctions if caseId is provided (enables fact-gathering)
+          const useFunctionCalling = !!request.caseId;
 
-        // Start streaming in background
-        // Use streamChatWithFunctions if caseId is provided (enables fact-gathering)
-        const useFunctionCalling = !!request.caseId;
+          let tokensSent = 0;
+          let thinkTokensSent = 0;
 
-        let tokensSent = 0;
-        let thinkTokensSent = 0;
-
-        if (useFunctionCalling) {
-          // Use streamChatWithFunctions for case-specific conversations
-          aiServiceFactory
-            .streamChatWithFunctions(
-              {
-                messages: request.messages as unknown[],
-                context: ragContext,
-                caseId: request.caseId,
-              },
-              request.caseId,
-              // onToken callback
-              (token: string) => {
-                tokensSent++;
-                event.sender.send(IPC_CHANNELS.AI_STREAM_TOKEN, token);
-              },
-              // onComplete callback
-              () => {
-                errorLogger.logError('Stream with functions complete', {
-                  type: 'info',
-                  tokensSent,
+          if (useFunctionCalling) {
+            // Use streamChatWithFunctions for case-specific conversations
+            aiServiceFactory
+              .streamChatWithFunctions(
+                {
+                  messages: request.messages as unknown[],
+                  context: ragContext,
+                  caseId: request.caseId,
+                },
+                request.caseId,
+                // onToken callback
+                (token: string) => {
+                  tokensSent++;
+                  event.sender.send(IPC_CHANNELS.AI_STREAM_TOKEN, token);
+                },
+                // onComplete callback
+                () => {
+                  errorLogger.logError('Stream with functions complete', {
+                    type: 'info',
+                    tokensSent,
+                  });
+                  event.sender.send(IPC_CHANNELS.AI_STREAM_COMPLETE);
+                },
+                // onError callback
+                (error: string) => {
+                  event.sender.send(IPC_CHANNELS.AI_STREAM_ERROR, error);
+                }
+              )
+              .catch((error) => {
+                errorLogger.logError(error as Error, {
+                  context: 'ipc:ai:stream:functions:background',
                 });
-                event.sender.send(IPC_CHANNELS.AI_STREAM_COMPLETE);
-              },
-              // onError callback
-              (error: string) => {
-                event.sender.send(IPC_CHANNELS.AI_STREAM_ERROR, error);
-              }
-            )
-            .catch((error) => {
-              errorLogger.logError(error as Error, {
-                context: 'ipc:ai:stream:functions:background',
+                event.sender.send(
+                  IPC_CHANNELS.AI_STREAM_ERROR,
+                  error instanceof Error ? error.message : 'Stream with functions failed'
+                );
               });
-              event.sender.send(
-                IPC_CHANNELS.AI_STREAM_ERROR,
-                error instanceof Error ? error.message : 'Stream with functions failed'
-              );
-            });
-        } else {
-          // Use regular streamChat for general conversations
-          aiServiceFactory
-            .streamChat(
-              {
-                messages: request.messages as unknown[],
-                context: ragContext, // Pass RAG-enhanced context
-                caseId: request.caseId,
-              },
-              // onToken callback - send display tokens to renderer
-              (token: string) => {
-                tokensSent++;
-                event.sender.send(IPC_CHANNELS.AI_STREAM_TOKEN, token);
-              },
-              // onComplete callback
-              () => {
-                errorLogger.logError('Stream complete, tokens sent to renderer', {
-                  type: 'info',
-                  tokensSent,
-                  thinkTokensSent,
+          } else {
+            // Use regular streamChat for general conversations
+            aiServiceFactory
+              .streamChat(
+                {
+                  messages: request.messages as unknown[],
+                  context: ragContext, // Pass RAG-enhanced context
+                  caseId: request.caseId,
+                },
+                // onToken callback - send display tokens to renderer
+                (token: string) => {
+                  tokensSent++;
+                  event.sender.send(IPC_CHANNELS.AI_STREAM_TOKEN, token);
+                },
+                // onComplete callback
+                () => {
+                  errorLogger.logError('Stream complete, tokens sent to renderer', {
+                    type: 'info',
+                    tokensSent,
+                    thinkTokensSent,
+                  });
+                  event.sender.send(IPC_CHANNELS.AI_STREAM_COMPLETE);
+                },
+                // onError callback
+                (error: string) => {
+                  event.sender.send(IPC_CHANNELS.AI_STREAM_ERROR, error);
+                },
+                // onThinkToken callback - send reasoning tokens to renderer
+                (thinkToken: string) => {
+                  thinkTokensSent++;
+                  event.sender.send(IPC_CHANNELS.AI_STREAM_THINK_TOKEN, thinkToken);
+                },
+                // onSources callback - send legal source citations to renderer
+                (sources: string[]) => {
+                  errorLogger.logError('Sending sources to renderer', {
+                    type: 'info',
+                    sourcesCount: sources.length,
+                  });
+                  event.sender.send(IPC_CHANNELS.AI_STREAM_SOURCES, sources);
+                }
+              )
+              .catch((error) => {
+                errorLogger.logError(error as Error, {
+                  context: 'ipc:ai:stream:background',
                 });
-                event.sender.send(IPC_CHANNELS.AI_STREAM_COMPLETE);
-              },
-              // onError callback
-              (error: string) => {
-                event.sender.send(IPC_CHANNELS.AI_STREAM_ERROR, error);
-              },
-              // onThinkToken callback - send reasoning tokens to renderer
-              (thinkToken: string) => {
-                thinkTokensSent++;
-                event.sender.send(IPC_CHANNELS.AI_STREAM_THINK_TOKEN, thinkToken);
-              },
-              // onSources callback - send legal source citations to renderer
-              (sources: string[]) => {
-                errorLogger.logError('Sending sources to renderer', {
-                  type: 'info',
-                  sourcesCount: sources.length,
-                });
-                event.sender.send(IPC_CHANNELS.AI_STREAM_SOURCES, sources);
-              }
-            )
-            .catch((error) => {
-              errorLogger.logError(error as Error, {
-                context: 'ipc:ai:stream:background',
+                event.sender.send(
+                  IPC_CHANNELS.AI_STREAM_ERROR,
+                  error instanceof Error ? error.message : 'Stream failed'
+                );
               });
-              event.sender.send(
-                IPC_CHANNELS.AI_STREAM_ERROR,
-                error instanceof Error ? error.message : 'Stream failed'
-              );
-            });
+          }
         }
-
-        return { success: true, streamId };
-      } catch (error) {
-        errorLogger.logError(error as Error, { context: 'ipc:ai:stream:start' });
-        return {
-          success: false,
-          error:
-            error instanceof Error ? error.message : 'Failed to start stream',
-        };
       }
+
+      return { success: true, streamId };
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'ipc:ai:stream:start' });
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to start stream',
+      };
     }
-  );
+  });
 
   // File: Select
-  ipcMain.handle(
-    IPC_CHANNELS.FILE_SELECT,
-    async (_event, request: FileSelectRequest = {}) => {
-      try {
-        if (!mainWindow) {
-          return {
-            success: false,
-            error: 'Main window not available',
-          };
-        }
-
-        const result = await dialog.showOpenDialog(mainWindow, {
-          properties: request.properties || ['openFile'],
-          filters: request.filters || [
-            { name: 'Documents', extensions: ['pdf', 'docx', 'txt'] },
-            { name: 'Images', extensions: ['jpg', 'jpeg', 'png'] },
-            { name: 'All Files', extensions: ['*'] },
-          ],
-        });
-
-        return {
-          success: true,
-          filePaths: result.filePaths,
-          canceled: result.canceled,
-        };
-      } catch (error) {
-        errorLogger.logError(error as Error, { context: 'ipc:file:select' });
+  ipcMain.handle(IPC_CHANNELS.FILE_SELECT, async (_event, request: FileSelectRequest = {}) => {
+    try {
+      if (!mainWindow) {
         return {
           success: false,
-          error: error instanceof Error ? error.message : 'Failed to select file',
+          error: 'Main window not available',
         };
       }
+
+      const result = await dialog.showOpenDialog(mainWindow, {
+        properties: request.properties || ['openFile'],
+        filters: request.filters || [
+          { name: 'Documents', extensions: ['pdf', 'docx', 'txt'] },
+          { name: 'Images', extensions: ['jpg', 'jpeg', 'png'] },
+          { name: 'All Files', extensions: ['*'] },
+        ],
+      });
+
+      return {
+        success: true,
+        filePaths: result.filePaths,
+        canceled: result.canceled,
+      };
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'ipc:file:select' });
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to select file',
+      };
     }
-  );
+  });
 
   /**
    * Upload a file and extract text content.
@@ -991,67 +944,64 @@ function setupIpcHandlers() {
    * ```
    */
   // File: Upload (process and extract text)
-  ipcMain.handle(
-    IPC_CHANNELS.FILE_UPLOAD,
-    async (_, request: FileUploadRequest) => {
-      try {
-        const filePath = request.filePath;
-        const stats = await fs.stat(filePath);
-        const fileName = path.basename(filePath);
-        const extension = path.extname(filePath).toLowerCase();
+  ipcMain.handle(IPC_CHANNELS.FILE_UPLOAD, async (_, request: FileUploadRequest) => {
+    try {
+      const filePath = request.filePath;
+      const stats = await fs.stat(filePath);
+      const fileName = path.basename(filePath);
+      const extension = path.extname(filePath).toLowerCase();
 
-        // File size validation (50MB max)
-        const MAX_FILE_SIZE = 50 * 1024 * 1024;
-        if (stats.size > MAX_FILE_SIZE) {
-          return {
-            success: false,
-            error: 'File size exceeds 50MB limit',
-          };
-        }
-
-        // Determine MIME type
-        const mimeTypes: Record<string, string> = {
-          '.pdf': 'application/pdf',
-          '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-          '.txt': 'text/plain',
-          '.jpg': 'image/jpeg',
-          '.jpeg': 'image/jpeg',
-          '.png': 'image/png',
-        };
-        const mimeType = mimeTypes[extension] || 'application/octet-stream';
-
-        let extractedText: string | undefined;
-
-        // Extract text based on file type
-        if (extension === '.pdf') {
-          const pdfParse = (await import('pdf-parse')).default;
-          const dataBuffer = await fs.readFile(filePath);
-          const data = await pdfParse(dataBuffer);
-          extractedText = data.text;
-        } else if (extension === '.docx') {
-          const mammoth = await import('mammoth');
-          const result = await mammoth.extractRawText({ path: filePath });
-          extractedText = result.value;
-        } else if (extension === '.txt') {
-          extractedText = await fs.readFile(filePath, 'utf-8');
-        }
-
-        return {
-          success: true,
-          fileName,
-          fileSize: stats.size,
-          mimeType,
-          extractedText,
-        };
-      } catch (error) {
-        errorLogger.logError(error as Error, { context: 'ipc:file:upload' });
+      // File size validation (50MB max)
+      const MAX_FILE_SIZE = 50 * 1024 * 1024;
+      if (stats.size > MAX_FILE_SIZE) {
         return {
           success: false,
-          error: error instanceof Error ? error.message : 'Failed to upload file',
+          error: 'File size exceeds 50MB limit',
         };
       }
+
+      // Determine MIME type
+      const mimeTypes: Record<string, string> = {
+        '.pdf': 'application/pdf',
+        '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        '.txt': 'text/plain',
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.png': 'image/png',
+      };
+      const mimeType = mimeTypes[extension] || 'application/octet-stream';
+
+      let extractedText: string | undefined;
+
+      // Extract text based on file type
+      if (extension === '.pdf') {
+        const pdfParse = (await import('pdf-parse')).default;
+        const dataBuffer = await fs.readFile(filePath);
+        const data = await pdfParse(dataBuffer);
+        extractedText = data.text;
+      } else if (extension === '.docx') {
+        const mammoth = await import('mammoth');
+        const result = await mammoth.extractRawText({ path: filePath });
+        extractedText = result.value;
+      } else if (extension === '.txt') {
+        extractedText = await fs.readFile(filePath, 'utf-8');
+      }
+
+      return {
+        success: true,
+        fileName,
+        fileSize: stats.size,
+        mimeType,
+        extractedText,
+      };
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'ipc:file:upload' });
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to upload file',
+      };
     }
-  );
+  });
 
   /**
    * View/open a file in the system's default application.
@@ -1070,28 +1020,25 @@ function setupIpcHandlers() {
    * ```
    */
   // File: View/Open
-  ipcMain.handle(
-    IPC_CHANNELS.FILE_VIEW,
-    async (_, request: FileViewRequest) => {
-      try {
-        const result = await shell.openPath(request.filePath);
-        if (result) {
-          // openPath returns empty string on success, error message on failure
-          return {
-            success: false,
-            error: result,
-          };
-        }
-        return { success: true };
-      } catch (error) {
-        errorLogger.logError(error as Error, { context: 'ipc:file:view' });
+  ipcMain.handle(IPC_CHANNELS.FILE_VIEW, async (_, request: FileViewRequest) => {
+    try {
+      const result = await shell.openPath(request.filePath);
+      if (result) {
+        // openPath returns empty string on success, error message on failure
         return {
           success: false,
-          error: error instanceof Error ? error.message : 'Failed to open file',
+          error: result,
         };
       }
+      return { success: true };
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'ipc:file:view' });
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to open file',
+      };
     }
-  );
+  });
 
   /**
    * Download/save a file to user-selected location.
@@ -1111,37 +1058,32 @@ function setupIpcHandlers() {
    * ```
    */
   // File: Download/Save
-  ipcMain.handle(
-    IPC_CHANNELS.FILE_DOWNLOAD,
-    async (_, request: FileDownloadRequest) => {
-      try {
-        const fileName = request.fileName || path.basename(request.filePath);
-        const result = await dialog.showSaveDialog({
-          title: 'Save File',
-          defaultPath: path.join(app.getPath('downloads'), fileName),
-          filters: [
-            { name: 'All Files', extensions: ['*'] },
-          ],
-        });
+  ipcMain.handle(IPC_CHANNELS.FILE_DOWNLOAD, async (_, request: FileDownloadRequest) => {
+    try {
+      const fileName = request.fileName || path.basename(request.filePath);
+      const result = await dialog.showSaveDialog({
+        title: 'Save File',
+        defaultPath: path.join(app.getPath('downloads'), fileName),
+        filters: [{ name: 'All Files', extensions: ['*'] }],
+      });
 
-        if (result.canceled || !result.filePath) {
-          return {
-            success: false,
-            error: 'Download canceled by user',
-          };
-        }
-
-        await fs.copyFile(request.filePath, result.filePath);
-        return { success: true, savedPath: result.filePath };
-      } catch (error) {
-        errorLogger.logError(error as Error, { context: 'ipc:file:download' });
+      if (result.canceled || !result.filePath) {
         return {
           success: false,
-          error: error instanceof Error ? error.message : 'Failed to download file',
+          error: 'Download canceled by user',
         };
       }
+
+      await fs.copyFile(request.filePath, result.filePath);
+      return { success: true, savedPath: result.filePath };
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'ipc:file:download' });
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to download file',
+      };
     }
-  );
+  });
 
   /**
    * Print a file using system print dialog.
@@ -1160,29 +1102,26 @@ function setupIpcHandlers() {
    * ```
    */
   // File: Print
-  ipcMain.handle(
-    IPC_CHANNELS.FILE_PRINT,
-    async (_, request: FilePrintRequest) => {
-      try {
-        // Open the file in default application which typically has print capability
-        const result = await shell.openPath(request.filePath);
-        if (result) {
-          return {
-            success: false,
-            error: `Cannot open file for printing: ${result}`,
-          };
-        }
-        // Note: User must manually select Print from the opened application
-        return { success: true };
-      } catch (error) {
-        errorLogger.logError(error as Error, { context: 'ipc:file:print' });
+  ipcMain.handle(IPC_CHANNELS.FILE_PRINT, async (_, request: FilePrintRequest) => {
+    try {
+      // Open the file in default application which typically has print capability
+      const result = await shell.openPath(request.filePath);
+      if (result) {
         return {
           success: false,
-          error: error instanceof Error ? error.message : 'Failed to open file for printing',
+          error: `Cannot open file for printing: ${result}`,
         };
       }
+      // Note: User must manually select Print from the opened application
+      return { success: true };
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'ipc:file:print' });
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to open file for printing',
+      };
     }
-  );
+  });
 
   /**
    * Compose email with file attachments.
@@ -1204,36 +1143,33 @@ function setupIpcHandlers() {
    * ```
    */
   // File: Email
-  ipcMain.handle(
-    IPC_CHANNELS.FILE_EMAIL,
-    async (_event, request: FileEmailRequest) => {
-      try {
-        // Note: mailto: protocol has limited attachment support across email clients
+  ipcMain.handle(IPC_CHANNELS.FILE_EMAIL, async (_event, request: FileEmailRequest) => {
+    try {
+      // Note: mailto: protocol has limited attachment support across email clients
 
-        const subject = encodeURIComponent(request.subject || 'Documents from Justice Companion');
-        const body = encodeURIComponent(request.body || 'Please find attached documents.');
+      const subject = encodeURIComponent(request.subject || 'Documents from Justice Companion');
+      const body = encodeURIComponent(request.body || 'Please find attached documents.');
 
-        // Note: mailto: protocol has limited attachment support
-        // On Windows, this will open default email client
-        // Some email clients may not support file:// attachments via mailto:
-        let mailtoUrl = `mailto:?subject=${subject}&body=${body}`;
+      // Note: mailto: protocol has limited attachment support
+      // On Windows, this will open default email client
+      // Some email clients may not support file:// attachments via mailto:
+      let mailtoUrl = `mailto:?subject=${subject}&body=${body}`;
 
-        // For better compatibility, just open email client and let user attach files
-        // We'll include a note about attachments in the body
-        const attachmentNote = `\n\nNote: Please manually attach the following files:\n${request.filePaths.map(p => `- ${path.basename(p)}`).join('\n')}`;
-        mailtoUrl = `mailto:?subject=${subject}&body=${encodeURIComponent((request.body || '') + attachmentNote)}`;
+      // For better compatibility, just open email client and let user attach files
+      // We'll include a note about attachments in the body
+      const attachmentNote = `\n\nNote: Please manually attach the following files:\n${request.filePaths.map((p) => `- ${path.basename(p)}`).join('\n')}`;
+      mailtoUrl = `mailto:?subject=${subject}&body=${encodeURIComponent((request.body || '') + attachmentNote)}`;
 
-        await shell.openExternal(mailtoUrl);
-        return { success: true };
-      } catch (error) {
-        errorLogger.logError(error as Error, { context: 'ipc:file:email' });
-        return {
-          success: false,
-          error: error instanceof Error ? error.message : 'Failed to open email client',
-        };
-      }
+      await shell.openExternal(mailtoUrl);
+      return { success: true };
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'ipc:file:email' });
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to open email client',
+      };
     }
-  );
+  });
 
   // Conversation: Create
   ipcMain.handle(
@@ -1253,21 +1189,18 @@ function setupIpcHandlers() {
   );
 
   // Conversation: Get by ID
-  ipcMain.handle(
-    IPC_CHANNELS.CONVERSATION_GET,
-    async (_, request: ConversationGetRequest) => {
-      try {
-        const conversation = chatConversationService.getConversation(request.id);
-        return { success: true, data: conversation };
-      } catch (error) {
-        errorLogger.logError(error as Error, { context: 'ipc:conversation:get' });
-        return {
-          success: false,
-          error: error instanceof Error ? error.message : 'Failed to get conversation',
-        };
-      }
+  ipcMain.handle(IPC_CHANNELS.CONVERSATION_GET, async (_, request: ConversationGetRequest) => {
+    try {
+      const conversation = chatConversationService.getConversation(request.id);
+      return { success: true, data: conversation };
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'ipc:conversation:get' });
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to get conversation',
+      };
     }
-  );
+  });
 
   // Conversation: Get all (optionally filtered by case)
   ipcMain.handle(
@@ -1341,57 +1274,48 @@ function setupIpcHandlers() {
   );
 
   // Message: Add to conversation
-  ipcMain.handle(
-    IPC_CHANNELS.MESSAGE_ADD,
-    async (_event, request: MessageAddRequest) => {
-      try {
-        chatConversationService.addMessage(request.input);
-        // Return updated conversation
-        const conversation = chatConversationService.getConversation(request.input.conversationId)!;
-        return { success: true, data: conversation };
-      } catch (error) {
-        errorLogger.logError(error as Error, { context: 'ipc:message:add' });
-        return {
-          success: false,
-          error: error instanceof Error ? error.message : 'Failed to add message',
-        };
-      }
+  ipcMain.handle(IPC_CHANNELS.MESSAGE_ADD, async (_event, request: MessageAddRequest) => {
+    try {
+      chatConversationService.addMessage(request.input);
+      // Return updated conversation
+      const conversation = chatConversationService.getConversation(request.input.conversationId)!;
+      return { success: true, data: conversation };
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'ipc:message:add' });
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to add message',
+      };
     }
-  );
+  });
 
   // Profile: Get
-  ipcMain.handle(
-    IPC_CHANNELS.PROFILE_GET,
-    async (_event, _request: ProfileGetRequest) => {
-      try {
-        const profile = userProfileService.getProfile();
-        return { success: true, data: profile };
-      } catch (error) {
-        errorLogger.logError(error as Error, { context: 'ipc:profile:get' });
-        return {
-          success: false,
-          error: error instanceof Error ? error.message : 'Failed to get profile',
-        };
-      }
+  ipcMain.handle(IPC_CHANNELS.PROFILE_GET, async (_event, _request: ProfileGetRequest) => {
+    try {
+      const profile = userProfileService.getProfile();
+      return { success: true, data: profile };
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'ipc:profile:get' });
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to get profile',
+      };
     }
-  );
+  });
 
   // Profile: Update
-  ipcMain.handle(
-    IPC_CHANNELS.PROFILE_UPDATE,
-    async (_, request: ProfileUpdateRequest) => {
-      try {
-        const profile = userProfileService.updateProfile(request.input);
-        return { success: true, data: profile };
-      } catch (error) {
-        errorLogger.logError(error as Error, { context: 'ipc:profile:update' });
-        return {
-          success: false,
-          error: error instanceof Error ? error.message : 'Failed to update profile',
-        };
-      }
+  ipcMain.handle(IPC_CHANNELS.PROFILE_UPDATE, async (_, request: ProfileUpdateRequest) => {
+    try {
+      const profile = userProfileService.updateProfile(request.input);
+      return { success: true, data: profile };
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'ipc:profile:update' });
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to update profile',
+      };
     }
-  );
+  });
 
   // Model: Get Available Models
   ipcMain.handle(
@@ -1428,22 +1352,19 @@ function setupIpcHandlers() {
   );
 
   // Model: Check if Downloaded
-  ipcMain.handle(
-    IPC_CHANNELS.MODEL_IS_DOWNLOADED,
-    async (_, request: ModelIsDownloadedRequest) => {
-      try {
-        const downloaded = modelDownloadService.isModelDownloaded(request.modelId);
-        const path = modelDownloadService.getModelPath(request.modelId);
-        return { success: true, downloaded, path: path || undefined };
-      } catch (error) {
-        errorLogger.logError(error as Error, { context: 'ipc:model:isDownloaded' });
-        return {
-          success: false,
-          error: error instanceof Error ? error.message : 'Failed to check model status',
-        };
-      }
+  ipcMain.handle(IPC_CHANNELS.MODEL_IS_DOWNLOADED, async (_, request: ModelIsDownloadedRequest) => {
+    try {
+      const downloaded = modelDownloadService.isModelDownloaded(request.modelId);
+      const path = modelDownloadService.getModelPath(request.modelId);
+      return { success: true, downloaded, path: path || undefined };
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'ipc:model:isDownloaded' });
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to check model status',
+      };
     }
-  );
+  });
 
   // Model: Start Download
   ipcMain.handle(
@@ -1468,114 +1389,108 @@ function setupIpcHandlers() {
   );
 
   // Model: Delete
-  ipcMain.handle(
-    IPC_CHANNELS.MODEL_DELETE,
-    async (_, request: ModelDeleteRequest) => {
-      try {
-        const deleted = await modelDownloadService.deleteModel(request.modelId);
-        return { success: true, deleted };
-      } catch (error) {
-        errorLogger.logError(error as Error, { context: 'ipc:model:delete' });
-        return {
-          success: false,
-          error: error instanceof Error ? error.message : 'Failed to delete model',
-        };
-      }
+  ipcMain.handle(IPC_CHANNELS.MODEL_DELETE, async (_, request: ModelDeleteRequest) => {
+    try {
+      const deleted = await modelDownloadService.deleteModel(request.modelId);
+      return { success: true, deleted };
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'ipc:model:delete' });
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to delete model',
+      };
     }
-  );
+  });
 
   // Facts: Store a case fact (supports both old & new formats)
-  ipcMain.handle(
-    'facts:store',
-    async (_event, params: unknown) => {
-      try {
-        const p = params as Record<string, unknown>;
-        let factContent: string;
-        let factCategory: string;
-        let importance: 'low' | 'medium' | 'high' | 'critical';
+  ipcMain.handle('facts:store', async (_event, params: unknown) => {
+    try {
+      const p = params as Record<string, unknown>;
+      let factContent: string;
+      let factCategory: string;
+      let importance: 'low' | 'medium' | 'high' | 'critical';
 
-        // NEW format (from AIFunctionDefinitions): factContent + factCategory + importance
-        if (p.factContent) {
-          factContent = p.factContent as string;
-          factCategory = (p.factCategory as string) || 'other';
-          importance = (p.importance as 'low' | 'medium' | 'high' | 'critical') || 'medium';
-        }
-        // OLD format (backwards compat): factType + factKey + factValue + confidence
-        else {
-          factContent = `${p.factKey}: ${p.factValue}`;
-          factCategory = (p.factType as string) || 'other';
-
-          // Map confidence to importance
-          if (p.confidence !== undefined) {
-            const conf = p.confidence as number;
-            if (conf >= 0.9) importance = 'critical';
-            else if (conf >= 0.7) importance = 'high';
-            else if (conf >= 0.5) importance = 'medium';
-            else importance = 'low';
-          } else {
-            importance = 'medium';
-          }
-        }
-
-        const fact = caseFactsRepository.create({
-          caseId: p.caseId as number,
-          factContent,
-          factCategory: factCategory as 'timeline' | 'evidence' | 'witness' | 'location' | 'communication' | 'other',
-          importance,
-        });
-
-        return { success: true, data: fact };
-      } catch (error) {
-        errorLogger.logError(error as Error, { context: 'ipc:facts:store' });
-        return {
-          success: false,
-          error: error instanceof Error ? error.message : 'Failed to store fact',
-        };
+      // NEW format (from AIFunctionDefinitions): factContent + factCategory + importance
+      if (p.factContent) {
+        factContent = p.factContent as string;
+        factCategory = (p.factCategory as string) || 'other';
+        importance = (p.importance as 'low' | 'medium' | 'high' | 'critical') || 'medium';
       }
+      // OLD format (backwards compat): factType + factKey + factValue + confidence
+      else {
+        factContent = `${p.factKey}: ${p.factValue}`;
+        factCategory = (p.factType as string) || 'other';
+
+        // Map confidence to importance
+        if (p.confidence !== undefined) {
+          const conf = p.confidence as number;
+          if (conf >= 0.9) importance = 'critical';
+          else if (conf >= 0.7) importance = 'high';
+          else if (conf >= 0.5) importance = 'medium';
+          else importance = 'low';
+        } else {
+          importance = 'medium';
+        }
+      }
+
+      const fact = caseFactsRepository.create({
+        caseId: p.caseId as number,
+        factContent,
+        factCategory: factCategory as
+          | 'timeline'
+          | 'evidence'
+          | 'witness'
+          | 'location'
+          | 'communication'
+          | 'other',
+        importance,
+      });
+
+      return { success: true, data: fact };
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'ipc:facts:store' });
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to store fact',
+      };
     }
-  );
+  });
 
   // Facts: Get facts for a case
-  ipcMain.handle(
-    'facts:get',
-    async (_event, caseId: number, factType?: string) => {
-      try {
-        let facts;
-        if (factType) {
-          // Get facts filtered by category (factType maps to factCategory)
-          facts = caseFactsRepository.findByCategory(caseId, factType);
-        } else {
-          // Get all facts for case
-          facts = caseFactsRepository.findByCaseId(caseId);
-        }
-        return { success: true, data: facts };
-      } catch (error) {
-        errorLogger.logError(error as Error, { context: 'ipc:facts:get' });
-        return {
-          success: false,
-          error: error instanceof Error ? error.message : 'Failed to get facts',
-        };
+  ipcMain.handle('facts:get', async (_event, caseId: number, factType?: string) => {
+    try {
+      let facts;
+      if (factType) {
+        // Get facts filtered by category (factType maps to factCategory)
+        facts = caseFactsRepository.findByCategory(caseId, factType);
+      } else {
+        // Get all facts for case
+        facts = caseFactsRepository.findByCaseId(caseId);
       }
+      return { success: true, data: facts };
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'ipc:facts:get' });
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to get facts',
+      };
     }
-  );
+  });
 
   // Facts: Get fact count for a case
-  ipcMain.handle(
-    'facts:count',
-    async (_event, caseId: number) => {
-      try {
-        const facts = caseFactsRepository.findByCaseId(caseId);
-        const count = facts.length;
-        return { success: true, data: count };
-      } catch (error) {
-        errorLogger.logError(error as Error, { context: 'ipc:facts:count' });
-        return {
-          success: false,
-          error: error instanceof Error ? error.message : 'Failed to get fact count',
-        };
-      }
+  ipcMain.handle('facts:count', async (_event, caseId: number) => {
+    try {
+      const facts = caseFactsRepository.findByCaseId(caseId);
+      const count = facts.length;
+      return { success: true, data: count };
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'ipc:facts:count' });
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to get fact count',
+      };
     }
-  );
+  });
 
   /**
    * GDPR: Export all user data
@@ -1649,7 +1564,8 @@ function setupIpcHandlers() {
             version: '1.0.0',
             application: 'Justice Companion',
             format: 'JSON',
-            disclaimer: 'This export contains all your personal data stored in Justice Companion. All encrypted fields have been decrypted for portability.',
+            disclaimer:
+              'This export contains all your personal data stored in Justice Companion. All encrypted fields have been decrypted for portability.',
           },
           profile,
           cases,
@@ -1829,11 +1745,9 @@ function setupIpcHandlers() {
           db.prepare('DELETE FROM chat_conversations').run();
 
           // Reset user profile (keep table, just clear data)
-          db.prepare('UPDATE user_profile SET name = ?, email = ?, avatar_url = ? WHERE id = 1').run(
-            'Legal User',
-            null,
-            null
-          );
+          db.prepare(
+            'UPDATE user_profile SET name = ?, email = ?, avatar_url = ? WHERE id = 1'
+          ).run('Legal User', null, null);
 
           // Note: We don't delete audit logs - they are kept for compliance
         });
@@ -1886,75 +1800,66 @@ function setupIpcHandlers() {
   );
 
   // Authentication: Register
-  ipcMain.handle(
-    IPC_CHANNELS.AUTH_REGISTER,
-    async (_, request: AuthRegisterRequest) => {
-      try {
-        const user = await authenticationService.register(
-          request.username,
-          request.password,
-          request.email
-        );
-        return { success: true, data: user };
-      } catch (error) {
-        errorLogger.logError(error as Error, { context: 'ipc:auth:register' });
-        return {
-          success: false,
-          error: error instanceof Error ? error.message : 'Failed to register user',
-        };
-      }
+  ipcMain.handle(IPC_CHANNELS.AUTH_REGISTER, async (_, request: AuthRegisterRequest) => {
+    try {
+      const user = await authenticationService.register(
+        request.username,
+        request.password,
+        request.email
+      );
+      return { success: true, data: user };
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'ipc:auth:register' });
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to register user',
+      };
     }
-  );
+  });
 
   // Authentication: Login
-  ipcMain.handle(
-    IPC_CHANNELS.AUTH_LOGIN,
-    async (_, request: AuthLoginRequest) => {
-      try {
-        const { user, session } = await authenticationService.login(
-          request.username,
-          request.password
-        );
+  ipcMain.handle(IPC_CHANNELS.AUTH_LOGIN, async (_, request: AuthLoginRequest) => {
+    try {
+      const { user, session } = await authenticationService.login(
+        request.username,
+        request.password
+      );
 
-        // Store session ID for auth state management
-        currentSessionId = session.id;
+      // Store session ID for auth state management
+      currentSessionId = session.id;
 
-        return {
-          success: true,
-          data: {
-            user,
-            sessionId: session.id,
-          },
-        };
-      } catch (error) {
-        errorLogger.logError(error as Error, { context: 'ipc:auth:login' });
-        return {
-          success: false,
-          error: error instanceof Error ? error.message : 'Failed to login',
-        };
-      }
+      return {
+        success: true,
+        data: {
+          user,
+          sessionId: session.id,
+        },
+      };
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'ipc:auth:login' });
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to login',
+      };
     }
-  );
+  });
 
   // Authentication: Logout
-  ipcMain.handle(
-    IPC_CHANNELS.AUTH_LOGOUT,
-    async (_event, _request: AuthLogoutRequest) => {
-      try {
-        if (currentSessionId) {
-          await authenticationService.logout(currentSessionId);
-          currentSessionId = null;
-        }
-        return { success: true };
-      } catch (error) {
-        errorLogger.logError(error as Error, { context: 'ipc:auth:logout' });
-        return {
-          success: false,
-          error: error instanceof Error ? error.message : 'Failed to logout',
-        };
+  ipcMain.handle(IPC_CHANNELS.AUTH_LOGOUT, async (_event, _request: AuthLogoutRequest) => {
+    try {
+      if (currentSessionId) {
+        await authenticationService.logout(currentSessionId);
+        currentSessionId = null;
       }
+      return { success: true };
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'ipc:auth:logout' });
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to logout',
+      };
     }
-  );
+  });
 
   // Authentication: Get Current User
   ipcMain.handle(
@@ -2027,106 +1932,97 @@ function setupIpcHandlers() {
   );
 
   // Consent: Grant
-  ipcMain.handle(
-    IPC_CHANNELS.CONSENT_GRANT,
-    async (_, request: ConsentGrantRequest) => {
-      try {
-        if (!currentSessionId) {
-          return {
-            success: false,
-            error: 'Not authenticated',
-          };
-        }
-
-        const user = authenticationService.validateSession(currentSessionId);
-
-        if (!user) {
-          currentSessionId = null;
-          return {
-            success: false,
-            error: 'Session expired',
-          };
-        }
-
-        const consent = consentService.grantConsent(user.id, request.consentType);
-        return { success: true, data: consent };
-      } catch (error) {
-        errorLogger.logError(error as Error, { context: 'ipc:consent:grant' });
+  ipcMain.handle(IPC_CHANNELS.CONSENT_GRANT, async (_, request: ConsentGrantRequest) => {
+    try {
+      if (!currentSessionId) {
         return {
           success: false,
-          error: error instanceof Error ? error.message : 'Failed to grant consent',
+          error: 'Not authenticated',
         };
       }
+
+      const user = authenticationService.validateSession(currentSessionId);
+
+      if (!user) {
+        currentSessionId = null;
+        return {
+          success: false,
+          error: 'Session expired',
+        };
+      }
+
+      const consent = consentService.grantConsent(user.id, request.consentType);
+      return { success: true, data: consent };
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'ipc:consent:grant' });
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to grant consent',
+      };
     }
-  );
+  });
 
   // Consent: Revoke
-  ipcMain.handle(
-    IPC_CHANNELS.CONSENT_REVOKE,
-    async (_, request: ConsentRevokeRequest) => {
-      try {
-        if (!currentSessionId) {
-          return {
-            success: false,
-            error: 'Not authenticated',
-          };
-        }
-
-        const user = authenticationService.validateSession(currentSessionId);
-
-        if (!user) {
-          currentSessionId = null;
-          return {
-            success: false,
-            error: 'Session expired',
-          };
-        }
-
-        consentService.revokeConsent(user.id, request.consentType);
-        return { success: true };
-      } catch (error) {
-        errorLogger.logError(error as Error, { context: 'ipc:consent:revoke' });
+  ipcMain.handle(IPC_CHANNELS.CONSENT_REVOKE, async (_, request: ConsentRevokeRequest) => {
+    try {
+      if (!currentSessionId) {
         return {
           success: false,
-          error: error instanceof Error ? error.message : 'Failed to revoke consent',
+          error: 'Not authenticated',
         };
       }
+
+      const user = authenticationService.validateSession(currentSessionId);
+
+      if (!user) {
+        currentSessionId = null;
+        return {
+          success: false,
+          error: 'Session expired',
+        };
+      }
+
+      consentService.revokeConsent(user.id, request.consentType);
+      return { success: true };
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'ipc:consent:revoke' });
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to revoke consent',
+      };
     }
-  );
+  });
 
   // Consent: Has Consent
-  ipcMain.handle(
-    IPC_CHANNELS.CONSENT_HAS_CONSENT,
-    async (_, request: ConsentHasConsentRequest) => {
-      try {
-        if (!currentSessionId) {
-          return {
-            success: false,
-            error: 'Not authenticated',
-          };
-        }
-
-        const user = authenticationService.validateSession(currentSessionId);
-
-        if (!user) {
-          currentSessionId = null;
-          return {
-            success: false,
-            error: 'Session expired',
-          };
-        }
-
-        const hasConsent = consentService.hasConsent(user.id, request.consentType);
-        return { success: true, data: hasConsent };
-      } catch (error) {
-        errorLogger.logError(error as Error, { context: 'ipc:consent:hasConsent' });
+  ipcMain.handle(IPC_CHANNELS.CONSENT_HAS_CONSENT, async (_, request: ConsentHasConsentRequest) => {
+    try {
+      if (!currentSessionId) {
         return {
           success: false,
-          error: error instanceof Error ? error.message : 'Failed to check consent',
+          error: 'Not authenticated',
         };
       }
+
+      const user = authenticationService.validateSession(currentSessionId);
+
+      if (!user) {
+        currentSessionId = null;
+        return {
+          success: false,
+          error: 'Session expired',
+        };
+      }
+
+      const hasConsent = consentService.hasConsent(user.id, request.consentType);
+      return { success: true, data: hasConsent };
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'ipc:consent:hasConsent' });
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to check consent',
+      };
     }
-  );
+  });
 
   // Consent: Get User Consents
   ipcMain.handle(
@@ -2217,7 +2113,10 @@ function setupIpcHandlers() {
     }
   );
 
-  errorLogger.logError('IPC handlers registered successfully (cases + evidence + AI + files + conversations + profile + models + facts + GDPR + authentication + consent + UI errors)', { type: 'info' });
+  errorLogger.logError(
+    'IPC handlers registered successfully (cases + evidence + AI + files + conversations + profile + models + facts + GDPR + authentication + consent + UI errors)',
+    { type: 'info' }
+  );
 }
 
 // Prevent multiple instances - request single instance lock
@@ -2263,8 +2162,8 @@ if (process.env.NODE_ENV !== 'production') {
       throw error;
     }
   };
-  ipcMain.handle("dev-api:cases:create", casesCreateHandler);
-  devAPIServer.registerHandler("dev-api:cases:create", casesCreateHandler);
+  ipcMain.handle('dev-api:cases:create', casesCreateHandler);
+  devAPIServer.registerHandler('dev-api:cases:create', casesCreateHandler);
 
   const casesGetHandler = async (_event: unknown, id: string) => {
     try {
@@ -2274,8 +2173,8 @@ if (process.env.NODE_ENV !== 'production') {
       throw error;
     }
   };
-  ipcMain.handle("dev-api:cases:get", casesGetHandler);
-  devAPIServer.registerHandler("dev-api:cases:get", casesGetHandler);
+  ipcMain.handle('dev-api:cases:get', casesGetHandler);
+  devAPIServer.registerHandler('dev-api:cases:get', casesGetHandler);
 
   const casesListHandler = async (_event: unknown, _filters: unknown) => {
     try {
@@ -2285,10 +2184,13 @@ if (process.env.NODE_ENV !== 'production') {
       throw error;
     }
   };
-  ipcMain.handle("dev-api:cases:list", casesListHandler);
-  devAPIServer.registerHandler("dev-api:cases:list", casesListHandler);
+  ipcMain.handle('dev-api:cases:list', casesListHandler);
+  devAPIServer.registerHandler('dev-api:cases:list', casesListHandler);
 
-  const casesUpdateHandler = async (_event: unknown, { id, updates }: { id: string; updates: unknown }) => {
+  const casesUpdateHandler = async (
+    _event: unknown,
+    { id, updates }: { id: string; updates: unknown }
+  ) => {
     try {
       return caseService.updateCase(id, updates);
     } catch (error) {
@@ -2296,8 +2198,8 @@ if (process.env.NODE_ENV !== 'production') {
       throw error;
     }
   };
-  ipcMain.handle("dev-api:cases:update", casesUpdateHandler);
-  devAPIServer.registerHandler("dev-api:cases:update", casesUpdateHandler);
+  ipcMain.handle('dev-api:cases:update', casesUpdateHandler);
+  devAPIServer.registerHandler('dev-api:cases:update', casesUpdateHandler);
 
   const casesDeleteHandler = async (_event: unknown, id: string) => {
     try {
@@ -2308,28 +2210,30 @@ if (process.env.NODE_ENV !== 'production') {
       throw error;
     }
   };
-  ipcMain.handle("dev-api:cases:delete", casesDeleteHandler);
-  devAPIServer.registerHandler("dev-api:cases:delete", casesDeleteHandler);
+  ipcMain.handle('dev-api:cases:delete', casesDeleteHandler);
+  devAPIServer.registerHandler('dev-api:cases:delete', casesDeleteHandler);
 
   const casesCreateTestFixtureHandler = async (_event: unknown, args: Record<string, unknown>) => {
     try {
       const testCase = caseService.createCase({
-        title: (args.title as string) || "Test Case",
-        caseType: (args.caseType as 'employment' | 'housing' | 'consumer' | 'family' | 'debt' | 'other') || "employment",
-        description: (args.description as string) || "Test case for MCP integration"
+        title: (args.title as string) || 'Test Case',
+        caseType:
+          (args.caseType as 'employment' | 'housing' | 'consumer' | 'family' | 'debt' | 'other') ||
+          'employment',
+        description: (args.description as string) || 'Test case for MCP integration',
       });
       return {
         caseId: testCase.id,
-        documentIds: ["doc-1", "doc-2", "doc-3"],
-        conversationIds: ["conv-1", "conv-2"],
+        documentIds: ['doc-1', 'doc-2', 'doc-3'],
+        conversationIds: ['conv-1', 'conv-2'],
       };
     } catch (error) {
       errorLogger.logError(error as Error, { context: 'dev-api:cases:createTestFixture' });
       throw error;
     }
   };
-  ipcMain.handle("dev-api:cases:createTestFixture", casesCreateTestFixtureHandler);
-  devAPIServer.registerHandler("dev-api:cases:createTestFixture", casesCreateTestFixtureHandler);
+  ipcMain.handle('dev-api:cases:createTestFixture', casesCreateTestFixtureHandler);
+  devAPIServer.registerHandler('dev-api:cases:createTestFixture', casesCreateTestFixtureHandler);
 
   // Evidence handlers
   const evidenceCreateHandler = async (_event: unknown, input: CreateEvidenceInput) => {
@@ -2341,14 +2245,14 @@ if (process.env.NODE_ENV !== 'production') {
       throw error;
     }
   };
-  ipcMain.handle("dev-api:evidence:create", evidenceCreateHandler);
-  devAPIServer.registerHandler("dev-api:evidence:create", evidenceCreateHandler);
+  ipcMain.handle('dev-api:evidence:create', evidenceCreateHandler);
+  devAPIServer.registerHandler('dev-api:evidence:create', evidenceCreateHandler);
 
   // Database handlers
   const databaseQueryHandler = async (_event: unknown, sql: string) => {
     // Security: Only allow SELECT queries
-    if (!sql.trim().toUpperCase().startsWith("SELECT")) {
-      throw new Error("Only SELECT queries allowed via dev API");
+    if (!sql.trim().toUpperCase().startsWith('SELECT')) {
+      throw new Error('Only SELECT queries allowed via dev API');
     }
     try {
       const db = databaseManager.getDatabase();
@@ -2358,20 +2262,20 @@ if (process.env.NODE_ENV !== 'production') {
       throw error;
     }
   };
-  ipcMain.handle("dev-api:database:query", databaseQueryHandler);
-  devAPIServer.registerHandler("dev-api:database:query", databaseQueryHandler);
+  ipcMain.handle('dev-api:database:query', databaseQueryHandler);
+  devAPIServer.registerHandler('dev-api:database:query', databaseQueryHandler);
 
   const databaseMigrateHandler = async (_event: unknown, targetVersion?: number) => {
     try {
       runMigrations();
-      return { success: true, version: targetVersion || "latest" };
+      return { success: true, version: targetVersion || 'latest' };
     } catch (error) {
       errorLogger.logError(error as Error, { context: 'dev-api:database:migrate' });
       throw error;
     }
   };
-  ipcMain.handle("dev-api:database:migrate", databaseMigrateHandler);
-  devAPIServer.registerHandler("dev-api:database:migrate", databaseMigrateHandler);
+  ipcMain.handle('dev-api:database:migrate', databaseMigrateHandler);
+  devAPIServer.registerHandler('dev-api:database:migrate', databaseMigrateHandler);
 
   const databaseBackupHandler = async (_event: unknown, path: string) => {
     // Security: Validate path is in allowed directories
@@ -2380,7 +2284,7 @@ if (process.env.NODE_ENV !== 'production') {
 
     try {
       const db = databaseManager.getDatabase();
-      const backupDb = await import('better-sqlite3').then(m => m.default(path));
+      const backupDb = await import('better-sqlite3').then((m) => m.default(path));
       await db.backup(backupDb);
       backupDb.close();
       return { success: true, path };
@@ -2389,8 +2293,8 @@ if (process.env.NODE_ENV !== 'production') {
       throw error;
     }
   };
-  ipcMain.handle("dev-api:database:backup", databaseBackupHandler);
-  devAPIServer.registerHandler("dev-api:database:backup", databaseBackupHandler);
+  ipcMain.handle('dev-api:database:backup', databaseBackupHandler);
+  devAPIServer.registerHandler('dev-api:database:backup', databaseBackupHandler);
 
   app.on('ready', () => {
     devAPIServer!.start();
@@ -2408,155 +2312,119 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 app.whenReady().then(() => {
-    // Setup global error handlers for uncaught exceptions/rejections
-    setupGlobalErrorHandlers();
+  // Setup global error handlers for uncaught exceptions/rejections
+  setupGlobalErrorHandlers();
 
-    // Initialize database and run migrations
-    try {
-      databaseManager.getDatabase();
-      runMigrations();
-      errorLogger.logError('Database initialized and migrations complete', {
-        type: 'info',
-      });
-    } catch (error) {
-      errorLogger.logError(error as Error, { context: 'database-initialization' });
-      // Continue anyway - will show error in UI
-    }
-
-    // CRITICAL SECURITY: Initialize encryption service for PII/sensitive data
-    try {
-      const encryptionKeyBase64 = process.env.ENCRYPTION_KEY_BASE64;
-
-      if (!encryptionKeyBase64) {
-        errorLogger.logError('ENCRYPTION_KEY_BASE64 not found in environment variables', {
-          type: 'error',
-          context: 'encryption-initialization',
-        });
-        errorLogger.logError('⚠️  WARNING: Encryption service not initialized - sensitive data will not be encrypted!', {
-          type: 'warn',
-        });
-      } else {
-        // Initialize encryption service with key from .env
-        const encryptionService = new EncryptionService(encryptionKeyBase64);
-
-        // Inject encryption service into repositories that handle sensitive data
-        caseRepository.setEncryptionService(encryptionService);
-        evidenceRepository.setEncryptionService(encryptionService);
-        notesRepository.setEncryptionService(encryptionService);
-        legalIssuesRepository.setEncryptionService(encryptionService);
-        timelineRepository.setEncryptionService(encryptionService);
-        userFactsRepository.setEncryptionService(encryptionService);
-        caseFactsRepository.setEncryptionService(encryptionService);
-
-        errorLogger.logError('✅ Encryption service initialized successfully', {
-          type: 'info',
-        });
-        errorLogger.logError('🔐 11 sensitive fields will be encrypted at rest (cases, evidence, notes, legal issues, timeline, user facts, case facts)', {
-          type: 'info',
-        });
-      }
-    } catch (error) {
-      errorLogger.logError(error as Error, { context: 'encryption-initialization' });
-      errorLogger.logError('⚠️  WARNING: Encryption initialization failed - sensitive data will not be encrypted!', {
-        type: 'error',
-      });
-    }
-
-    // CRITICAL SECURITY: Initialize audit logger for immutable audit trail
-    try {
-      const db = databaseManager.getDatabase();
-      const auditLogger = new AuditLogger(db);
-
-      // Inject audit logger into repositories for automatic audit logging
-      caseRepository.setAuditLogger(auditLogger);
-      evidenceRepository.setAuditLogger(auditLogger);
-      notesRepository.setAuditLogger(auditLogger);
-      legalIssuesRepository.setAuditLogger(auditLogger);
-      timelineRepository.setAuditLogger(auditLogger);
-      userFactsRepository.setAuditLogger(auditLogger);
-      caseFactsRepository.setAuditLogger(auditLogger);
-
-      errorLogger.logError('✅ Audit logger initialized successfully', {
-        type: 'info',
-      });
-      errorLogger.logError('📝 All operations (cases, evidence, notes, legal issues, timeline, facts) logged to immutable audit trail', {
-        type: 'info',
-      });
-    } catch (error) {
-      errorLogger.logError(error as Error, { context: 'audit-logger-initialization' });
-      errorLogger.logError('⚠️  WARNING: Audit logger initialization failed - operations will not be audited!', {
-        type: 'error',
-      });
-    }
-
-    // Inject CaseFactRepository into AIServiceFactory for fact loading
-    try {
-      aiServiceFactory.setCaseFactsRepository(caseFactsRepository);
-      errorLogger.logError('✅ CaseFactRepository injected into AI Service Factory', {
-        type: 'info',
-      });
-      errorLogger.logError('🧠 AI can now load and reference stored case facts', {
-        type: 'info',
-      });
-    } catch (error) {
-      errorLogger.logError(error as Error, { context: 'ai-service-factory-injection' });
-      errorLogger.logError('⚠️  WARNING: Failed to inject repository - AI won\'t have access to stored facts!', {
-        type: 'warn',
-      });
-    }
-
-    // CRITICAL SECURITY: Initialize authentication services
-    try {
-      const db = databaseManager.getDatabase();
-      const auditLogger = new AuditLogger(db);
-
-      // Initialize repositories
-      userRepository = new UserRepository(auditLogger);
-      sessionRepository = new SessionRepository();
-      consentRepository = new ConsentRepository();
-
-      // Initialize services
-      authenticationService = new AuthenticationService(
-        userRepository,
-        sessionRepository,
-        auditLogger
-      );
-      consentService = new ConsentService(
-        consentRepository,
-        auditLogger
-      );
-      _authorizationMiddleware = new AuthorizationMiddleware(
-        caseRepository,
-        auditLogger
-      );
-
-      errorLogger.logError('✅ Authentication services initialized successfully', {
-        type: 'info',
-      });
-      errorLogger.logError('🔐 Local user authentication ready (scrypt password hashing, 24-hour sessions)', {
-        type: 'info',
-      });
-      errorLogger.logError('📋 GDPR consent management ready (4 consent types)', {
-        type: 'info',
-      });
-    } catch (error) {
-      errorLogger.logError(error as Error, { context: 'authentication-initialization' });
-      errorLogger.logError('⚠️  WARNING: Authentication initialization failed - auth features will not work!', {
-        type: 'error',
-      });
-    }
-
-    // Setup IPC handlers after database is ready
-    setupIpcHandlers();
-
-    createWindow();
-
-    app.on('activate', () => {
-      if (BrowserWindow.getAllWindows().length === 0) {
-        createWindow();
-      }
+  // Initialize database and run migrations
+  try {
+    databaseManager.getDatabase();
+    runMigrations();
+    errorLogger.logError('Database initialized and migrations complete', {
+      type: 'info',
     });
+  } catch (error) {
+    errorLogger.logError(error as Error, { context: 'database-initialization' });
+    // Continue anyway - will show error in UI
+  }
+
+  // CRITICAL SECURITY: Initialize encryption service for PII/sensitive data
+  let encryptionService: EncryptionService;
+  try {
+    encryptionService = initializeEncryptionService();
+  } catch (error) {
+    errorLogger.logError(error as Error, { context: 'encryption-initialization' });
+    app.exit(1);
+    return;
+  }
+
+  // Inject encryption service into repositories that handle sensitive data
+  caseRepository.setEncryptionService(encryptionService);
+  evidenceRepository.setEncryptionService(encryptionService);
+  notesRepository.setEncryptionService(encryptionService);
+  legalIssuesRepository.setEncryptionService(encryptionService);
+  timelineRepository.setEncryptionService(encryptionService);
+  userFactsRepository.setEncryptionService(encryptionService);
+  caseFactsRepository.setEncryptionService(encryptionService);
+  chatConversationRepository.setEncryptionService(encryptionService);
+  userProfileRepository.setEncryptionService(encryptionService);
+
+  // CRITICAL SECURITY: Initialize audit logger for immutable audit trail
+  try {
+    const db = databaseManager.getDatabase();
+    const auditLogger = new AuditLogger(db);
+
+    caseRepository.setAuditLogger(auditLogger);
+    evidenceRepository.setAuditLogger(auditLogger);
+    notesRepository.setAuditLogger(auditLogger);
+    legalIssuesRepository.setAuditLogger(auditLogger);
+    timelineRepository.setAuditLogger(auditLogger);
+    userFactsRepository.setAuditLogger(auditLogger);
+    caseFactsRepository.setAuditLogger(auditLogger);
+  } catch (error) {
+    errorLogger.logError(error as Error, { context: 'audit-logger-initialization' });
+    errorLogger.logError(
+      'WARNING: Audit logger initialization failed - operations will not be audited',
+      {
+        type: 'error',
+      }
+    );
+  }
+
+  // Inject CaseFactRepository into AIServiceFactory for fact loading
+  try {
+    aiServiceFactory.setCaseFactsRepository(caseFactsRepository);
+  } catch (error) {
+    errorLogger.logError(error as Error, { context: 'ai-service-factory-injection' });
+    errorLogger.logError(
+      'WARNING: Failed to inject repository - AI will not have access to stored facts',
+      {
+        type: 'warn',
+      }
+    );
+  }
+  // CRITICAL SECURITY: Initialize authentication services
+  try {
+    const db = databaseManager.getDatabase();
+    const auditLogger = new AuditLogger(db);
+
+    // Initialize repositories
+    userRepository = new UserRepository(auditLogger);
+    sessionRepository = new SessionRepository();
+    consentRepository = new ConsentRepository();
+
+    // Initialize services
+    authenticationService = new AuthenticationService(
+      userRepository,
+      sessionRepository,
+      auditLogger
+    );
+    consentService = new ConsentService(consentRepository, auditLogger);
+    _authorizationMiddleware = new AuthorizationMiddleware(caseRepository, auditLogger);
+
+    errorLogger.logError('✅ Authentication services initialized', { type: 'info' });
+    errorLogger.logError('✅ Authorization middleware initialized', { type: 'info' });
+    errorLogger.logError('✅ Consent services initialized', { type: 'info' });
+  } catch (error) {
+    errorLogger.logError(error as Error, { context: 'authentication-initialization' });
+    errorLogger.logError(
+      '⚠️  WARNING: Authentication initialization failed - auth features will not work!',
+      {
+        type: 'error',
+      }
+    );
+  }
+
+  // Setup IPC handlers after database is ready
+  setupIpcHandlers();
+
+  createWindow();
+
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createWindow();
+    }
   });
+});
 // } // Temporarily disabled single-instance lock
 
 app.on('window-all-closed', () => {
@@ -2569,4 +2437,3 @@ app.on('quit', () => {
   // Close database connection
   databaseManager.close();
 });
-

@@ -54,14 +54,7 @@ describe('LegalIssuesService', () => {
         title: 'Wrongful Termination',
         description: 'Employee was terminated without cause',
       });
-      expect(errorLogger.logError).toHaveBeenCalledWith(
-        'Legal issue created successfully',
-        expect.objectContaining({
-          type: 'info',
-          legalIssueId: 1,
-          caseId: 100,
-        }),
-      );
+      expect(errorLogger.logError).not.toHaveBeenCalled();
     });
 
     it('should create a legal issue without description', () => {
@@ -86,13 +79,13 @@ describe('LegalIssuesService', () => {
     });
 
     it('should throw error if title is empty', () => {
-      expect(() =>
-        legalIssuesService.createLegalIssue({ caseId: 100, title: '' }),
-      ).toThrow('Legal issue title is required');
+      expect(() => legalIssuesService.createLegalIssue({ caseId: 100, title: '' })).toThrow(
+        'Legal issue title is required'
+      );
 
-      expect(() =>
-        legalIssuesService.createLegalIssue({ caseId: 100, title: '   ' }),
-      ).toThrow('Legal issue title is required');
+      expect(() => legalIssuesService.createLegalIssue({ caseId: 100, title: '   ' })).toThrow(
+        'Legal issue title is required'
+      );
 
       expect(legalIssuesRepository.create).not.toHaveBeenCalled();
     });
@@ -100,9 +93,9 @@ describe('LegalIssuesService', () => {
     it('should throw error if title exceeds 200 characters', () => {
       const longTitle = 'a'.repeat(201);
 
-      expect(() =>
-        legalIssuesService.createLegalIssue({ caseId: 100, title: longTitle }),
-      ).toThrow('Legal issue title must be 200 characters or less');
+      expect(() => legalIssuesService.createLegalIssue({ caseId: 100, title: longTitle })).toThrow(
+        'Legal issue title must be 200 characters or less'
+      );
 
       expect(legalIssuesRepository.create).not.toHaveBeenCalled();
     });
@@ -137,7 +130,7 @@ describe('LegalIssuesService', () => {
           caseId: 100,
           title: 'Test Title',
           description: longDescription,
-        }),
+        })
       ).toThrow('Legal issue description must be 10000 characters or less');
 
       expect(legalIssuesRepository.create).not.toHaveBeenCalled();
@@ -176,15 +169,16 @@ describe('LegalIssuesService', () => {
         legalIssuesService.createLegalIssue({
           caseId: 100,
           title: 'Test Title',
-        }),
+        })
       ).toThrow('Database error');
 
       expect(errorLogger.logError).toHaveBeenCalledWith(
         error,
         expect.objectContaining({
           context: 'createLegalIssue',
-          input: { caseId: 100, title: 'Test Title' },
-        }),
+          caseId: 100,
+          fields: ['title'],
+        })
       );
     });
   });
@@ -226,7 +220,7 @@ describe('LegalIssuesService', () => {
       expect(() => legalIssuesService.getLegalIssueById(1)).toThrow('Database error');
       expect(errorLogger.logError).toHaveBeenCalledWith(
         error,
-        expect.objectContaining({ context: 'getLegalIssueById', id: 1 }),
+        expect.objectContaining({ context: 'getLegalIssueById', id: 1 })
       );
     });
   });
@@ -278,7 +272,7 @@ describe('LegalIssuesService', () => {
       expect(() => legalIssuesService.getLegalIssuesByCaseId(100)).toThrow('Database error');
       expect(errorLogger.logError).toHaveBeenCalledWith(
         error,
-        expect.objectContaining({ context: 'getLegalIssuesByCaseId', caseId: 100 }),
+        expect.objectContaining({ context: 'getLegalIssuesByCaseId', caseId: 100 })
       );
     });
   });
@@ -306,13 +300,7 @@ describe('LegalIssuesService', () => {
         title: 'Updated Title',
         description: 'Updated description',
       });
-      expect(errorLogger.logError).toHaveBeenCalledWith(
-        'Legal issue updated successfully',
-        expect.objectContaining({
-          type: 'info',
-          legalIssueId: 1,
-        }),
-      );
+      expect(errorLogger.logError).not.toHaveBeenCalled();
     });
 
     it('should update only title', () => {
@@ -335,13 +323,13 @@ describe('LegalIssuesService', () => {
     });
 
     it('should throw error if title is empty string', () => {
-      expect(() =>
-        legalIssuesService.updateLegalIssue(1, { title: '' }),
-      ).toThrow('Legal issue title cannot be empty');
+      expect(() => legalIssuesService.updateLegalIssue(1, { title: '' })).toThrow(
+        'Legal issue title cannot be empty'
+      );
 
-      expect(() =>
-        legalIssuesService.updateLegalIssue(1, { title: '   ' }),
-      ).toThrow('Legal issue title cannot be empty');
+      expect(() => legalIssuesService.updateLegalIssue(1, { title: '   ' })).toThrow(
+        'Legal issue title cannot be empty'
+      );
 
       expect(legalIssuesRepository.update).not.toHaveBeenCalled();
     });
@@ -349,9 +337,9 @@ describe('LegalIssuesService', () => {
     it('should throw error if title exceeds 200 characters', () => {
       const longTitle = 'a'.repeat(201);
 
-      expect(() =>
-        legalIssuesService.updateLegalIssue(1, { title: longTitle }),
-      ).toThrow('Legal issue title must be 200 characters or less');
+      expect(() => legalIssuesService.updateLegalIssue(1, { title: longTitle })).toThrow(
+        'Legal issue title must be 200 characters or less'
+      );
 
       expect(legalIssuesRepository.update).not.toHaveBeenCalled();
     });
@@ -360,7 +348,7 @@ describe('LegalIssuesService', () => {
       const longDescription = 'a'.repeat(10001);
 
       expect(() =>
-        legalIssuesService.updateLegalIssue(1, { description: longDescription }),
+        legalIssuesService.updateLegalIssue(1, { description: longDescription })
       ).toThrow('Legal issue description must be 10000 characters or less');
 
       expect(legalIssuesRepository.update).not.toHaveBeenCalled();
@@ -369,9 +357,9 @@ describe('LegalIssuesService', () => {
     it('should throw error if legal issue not found', () => {
       vi.mocked(legalIssuesRepository.update).mockReturnValue(null);
 
-      expect(() =>
-        legalIssuesService.updateLegalIssue(999, { title: 'Test' }),
-      ).toThrow('Legal issue not found');
+      expect(() => legalIssuesService.updateLegalIssue(999, { title: 'Test' })).toThrow(
+        'Legal issue not found'
+      );
 
       expect(legalIssuesRepository.update).toHaveBeenCalledWith(999, { title: 'Test' });
     });
@@ -382,17 +370,17 @@ describe('LegalIssuesService', () => {
         throw error;
       });
 
-      expect(() =>
-        legalIssuesService.updateLegalIssue(1, { title: 'Test' }),
-      ).toThrow('Database error');
+      expect(() => legalIssuesService.updateLegalIssue(1, { title: 'Test' })).toThrow(
+        'Database error'
+      );
 
       expect(errorLogger.logError).toHaveBeenCalledWith(
         error,
         expect.objectContaining({
           context: 'updateLegalIssue',
           id: 1,
-          input: { title: 'Test' },
-        }),
+          fields: ['title'],
+        })
       );
     });
   });
@@ -404,13 +392,7 @@ describe('LegalIssuesService', () => {
       legalIssuesService.deleteLegalIssue(1);
 
       expect(legalIssuesRepository.delete).toHaveBeenCalledWith(1);
-      expect(errorLogger.logError).toHaveBeenCalledWith(
-        'Legal issue deleted successfully',
-        expect.objectContaining({
-          type: 'info',
-          legalIssueId: 1,
-        }),
-      );
+      expect(errorLogger.logError).not.toHaveBeenCalled();
     });
 
     it('should log and rethrow repository errors', () => {
@@ -422,7 +404,7 @@ describe('LegalIssuesService', () => {
       expect(() => legalIssuesService.deleteLegalIssue(1)).toThrow('Database error');
       expect(errorLogger.logError).toHaveBeenCalledWith(
         error,
-        expect.objectContaining({ context: 'deleteLegalIssue', id: 1 }),
+        expect.objectContaining({ context: 'deleteLegalIssue', id: 1 })
       );
     });
   });

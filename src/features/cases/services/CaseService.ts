@@ -17,16 +17,12 @@ export class CaseService {
         throw new Error('Case title must be 200 characters or less');
       }
 
-      const createdCase = caseRepository.create(input);
-
-      errorLogger.logError('Case created successfully', {
-        type: 'info',
-        caseId: createdCase.id,
-      });
-
-      return createdCase;
+      return caseRepository.create(input);
     } catch (error) {
-      errorLogger.logError(error as Error, { context: 'createCase', input });
+      errorLogger.logError(error as Error, {
+        context: 'createCase',
+        caseType: input.caseType,
+      });
       throw error;
     }
   }
@@ -50,7 +46,10 @@ export class CaseService {
     try {
       return caseRepository.findAll(status);
     } catch (error) {
-      errorLogger.logError(error as Error, { context: 'getAllCases', status });
+      errorLogger.logError(error as Error, {
+        context: 'getAllCases',
+        status,
+      });
       throw error;
     }
   }
@@ -70,18 +69,13 @@ export class CaseService {
         }
       }
 
-      const updatedCase = caseRepository.update(id, input);
-
-      if (updatedCase) {
-        errorLogger.logError('Case updated successfully', {
-          type: 'info',
-          caseId: id,
-        });
-      }
-
-      return updatedCase;
+      return caseRepository.update(id, input);
     } catch (error) {
-      errorLogger.logError(error as Error, { context: 'updateCase', id, input });
+      errorLogger.logError(error as Error, {
+        context: 'updateCase',
+        id,
+        fields: Object.keys(input ?? {}),
+      });
       throw error;
     }
   }
@@ -91,18 +85,12 @@ export class CaseService {
    */
   deleteCase(id: number): boolean {
     try {
-      const deleted = caseRepository.delete(id);
-
-      if (deleted) {
-        errorLogger.logError('Case deleted successfully', {
-          type: 'info',
-          caseId: id,
-        });
-      }
-
-      return deleted;
+      return caseRepository.delete(id);
     } catch (error) {
-      errorLogger.logError(error as Error, { context: 'deleteCase', id });
+      errorLogger.logError(error as Error, {
+        context: 'deleteCase',
+        id,
+      });
       throw error;
     }
   }
@@ -112,18 +100,12 @@ export class CaseService {
    */
   closeCase(id: number): Case | null {
     try {
-      const closedCase = caseRepository.close(id);
-
-      if (closedCase) {
-        errorLogger.logError('Case closed successfully', {
-          type: 'info',
-          caseId: id,
-        });
-      }
-
-      return closedCase;
+      return caseRepository.close(id);
     } catch (error) {
-      errorLogger.logError(error as Error, { context: 'closeCase', id });
+      errorLogger.logError(error as Error, {
+        context: 'closeCase',
+        id,
+      });
       throw error;
     }
   }

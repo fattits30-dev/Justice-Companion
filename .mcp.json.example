@@ -8,20 +8,19 @@
       }
     },
     "sequential-thinking": {
-      "command": "cmd",
-      "args": ["/c", "npx", "-y", "@modelcontextprotocol/server-sequential-thinking"]
+      "command": "node",
+      "args": [
+        "node_modules/@modelcontextprotocol/server-sequential-thinking/dist/index.js"
+      ]
     },
     "memory": {
-      "command": "cmd",
-      "args": ["/c", "npx", "-y", "@modelcontextprotocol/server-memory"]
+      "command": "node",
+      "args": ["node_modules/@modelcontextprotocol/server-memory/dist/index.js"]
     },
     "filesystem": {
-      "command": "cmd",
+      "command": "node",
       "args": [
-        "/c",
-        "npx",
-        "-y",
-        "@modelcontextprotocol/server-filesystem",
+        "node_modules/@modelcontextprotocol/server-filesystem/dist/index.js",
         "."
       ],
       "env": {
@@ -29,34 +28,33 @@
       }
     },
     "github": {
-      "command": "cmd",
-      "args": ["/c", "npx", "-y", "@modelcontextprotocol/server-github"],
+      "command": "node",
+      "args": ["node_modules/@modelcontextprotocol/server-github/dist/index.js"],
       "env": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
       }
     },
     "sqlite": {
-      "command": "cmd",
+      "command": "node",
       "args": [
-        "/c",
-        "npx",
-        "-y",
-        "mcp-server-sqlite",
+        "node_modules/mcp-server-sqlite/dist/index.js",
         "--db-path",
         "./justice.db"
       ]
     },
     "playwright": {
-      "command": "cmd",
-      "args": ["/c", "npx", "-y", "@executeautomation/playwright-mcp-server"]
+      "command": "node",
+      "args": [
+        "node_modules/@executeautomation/playwright-mcp-server/dist/index.js"
+      ]
     },
     "puppeteer": {
-      "command": "cmd",
-      "args": ["/c", "npx", "-y", "@modelcontextprotocol/server-puppeteer"]
+      "command": "node",
+      "args": ["node_modules/@modelcontextprotocol/server-puppeteer/dist/index.js"]
     },
     "context7": {
-      "command": "cmd",
-      "args": ["/c", "npx", "-y", "context7-mcp"],
+      "command": "node",
+      "args": ["node_modules/@upstash/context7-mcp/dist/index.js"],
       "env": {
         "CONTEXT7_API_KEY": "${CONTEXT7_API_KEY}"
       }

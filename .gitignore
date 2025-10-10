@@ -127,3 +127,12 @@ compass_artifact_*.md
 GIT_AUTOMATION_IMPLEMENTATION_REPORT.md
 PHASE*.md
 WINDOWS_*.md
+
+# Codex development environment files
+AGENTS.md
+CODEX_*.md
+activate-codex.ps1
+test-codex*.ps1
+verify-profile.ps1
+fix_braces.txt
+.github/workflows/codex-autofix.yml

@@ -62,10 +62,12 @@ describe('NotesRepository', () => {
     `);
 
     // Create test case
-    db.prepare(`
+    db.prepare(
+      `
       INSERT INTO cases (title, case_type)
       VALUES ('Test Case', 'employment')
-    `).run();
+    `
+    ).run();
 
     // Initialize services
     const encryptionKey = EncryptionService.generateKey();
@@ -95,7 +97,9 @@ describe('NotesRepository', () => {
       expect(note.content).toBe('This is a sensitive private note about the case.');
 
       // Verify content is encrypted in database
-      const storedNote = db.prepare('SELECT content FROM notes WHERE id = ?').get(1) as { content: string };
+      const storedNote = db.prepare('SELECT content FROM notes WHERE id = ?').get(1) as {
+        content: string;
+      };
       const parsedContent = JSON.parse(storedNote.content);
 
       expect(parsedContent).toHaveProperty('algorithm');
@@ -111,9 +115,13 @@ describe('NotesRepository', () => {
         content: 'Test note',
       });
 
-      const auditLog = db.prepare(`
+      const auditLog = db
+        .prepare(
+          `
         SELECT * FROM audit_logs WHERE event_type = 'note.create'
-      `).get() as any;
+      `
+        )
+        .get() as any;
 
       expect(auditLog).toBeDefined();
       expect(auditLog.resource_type).toBe('note');
@@ -128,9 +136,13 @@ describe('NotesRepository', () => {
         content: sensitiveContent,
       });
 
-      const auditLog = db.prepare(`
+      const auditLog = db
+        .prepare(
+          `
         SELECT details FROM audit_logs WHERE event_type = 'note.create'
-      `).get() as { details: string };
+      `
+        )
+        .get() as { details: string };
 
       expect(auditLog.details).not.toContain(sensitiveContent);
       expect(auditLog.details).toContain('contentLength');
@@ -158,9 +170,13 @@ describe('NotesRepository', () => {
 
       repository.findById(created.id);
 
-      const piiAccessLog = db.prepare(`
+      const piiAccessLog = db
+        .prepare(
+          `
         SELECT * FROM audit_logs WHERE event_type = 'note.content_access'
-      `).get() as any;
+      `
+        )
+        .get() as any;
 
       expect(piiAccessLog).toBeDefined();
       expect(piiAccessLog.action).toBe('read');
@@ -206,7 +222,9 @@ describe('NotesRepository', () => {
       expect(updated!.content).toBe('Updated content');
 
       // Verify new ciphertext in database
-      const storedNote = db.prepare('SELECT content FROM notes WHERE id = ?').get(created.id) as { content: string };
+      const storedNote = db.prepare('SELECT content FROM notes WHERE id = ?').get(created.id) as {
+        content: string;
+      };
       const parsedContent = JSON.parse(storedNote.content);
 
       expect(parsedContent.algorithm).toBe('aes-256-gcm');
@@ -220,9 +238,13 @@ describe('NotesRepository', () => {
 
       repository.update(created.id, { content: 'Updated content' });
 
-      const updateLog = db.prepare(`
+      const updateLog = db
+        .prepare(
+          `
         SELECT * FROM audit_logs WHERE event_type = 'note.update' AND resource_id = ?
-      `).get(created.id.toString()) as any;
+      `
+        )
+        .get(created.id.toString()) as any;
 
       expect(updateLog).toBeDefined();
       expect(updateLog.success).toBe(1);
@@ -257,9 +279,13 @@ describe('NotesRepository', () => {
 
       repository.delete(created.id);
 
-      const deleteLog = db.prepare(`
+      const deleteLog = db
+        .prepare(
+          `
         SELECT * FROM audit_logs WHERE event_type = 'note.delete' AND resource_id = ?
-      `).get(created.id.toString()) as any;
+      `
+        )
+        .get(created.id.toString()) as any;
 
       expect(deleteLog).toBeDefined();
       expect(deleteLog.success).toBe(1);
@@ -269,10 +295,12 @@ describe('NotesRepository', () => {
   describe('backward compatibility', () => {
     it('should handle legacy plaintext notes', () => {
       // Insert plaintext note directly
-      db.prepare(`
+      db.prepare(
+        `
         INSERT INTO notes (case_id, content)
         VALUES (?, ?)
-      `).run(1, 'Legacy plaintext note');
+      `
+      ).run(1, 'Legacy plaintext note');
 
       const note = repository.findById(1);
 
@@ -281,10 +309,12 @@ describe('NotesRepository', () => {
     });
 
     it('should handle empty content', () => {
-      db.prepare(`
+      db.prepare(
+        `
         INSERT INTO notes (case_id, content)
         VALUES (?, ?)
-      `).run(1, '');
+      `
+      ).run(1, '');
 
       const note = repository.findById(1);
 
@@ -294,21 +324,18 @@ describe('NotesRepository', () => {
   });
 
   describe('without encryption service', () => {
-    it('should handle notes without encryption', () => {
+    it('should throw when creating without encryption', () => {
       const repoNoEncryption = new NotesRepository();
 
       // Override getDb
       vi.spyOn(databaseModule, 'getDb').mockReturnValue(db);
 
-      const note = repoNoEncryption.create({
-        caseId: 1,
-        content: 'Plaintext note',
-      });
-
-      expect(note.content).toBe('Plaintext note');
-
-      const retrieved = repoNoEncryption.findById(note.id);
-      expect(retrieved!.content).toBe('Plaintext note');
+      expect(() =>
+        repoNoEncryption.create({
+          caseId: 1,
+          content: 'Plaintext note',
+        })
+      ).toThrow('EncryptionService not configured for NotesRepository');
     });
   });
 
@@ -319,7 +346,9 @@ describe('NotesRepository', () => {
       repository.create({ caseId: 1, content: sensitiveData });
       repository.findById(1);
 
-      const allAuditLogs = db.prepare('SELECT details, error_message FROM audit_logs').all() as any[];
+      const allAuditLogs = db
+        .prepare('SELECT details, error_message FROM audit_logs')
+        .all() as any[];
 
       allAuditLogs.forEach((log) => {
         if (log.details) {

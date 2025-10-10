@@ -17,18 +17,13 @@ export class UserFactsService {
         throw new Error('User fact content must be 5000 characters or less');
       }
 
-      const userFact = userFactsRepository.create(input);
-
-      errorLogger.logError('User fact created successfully', {
-        type: 'info',
-        userFactId: userFact.id,
+      return userFactsRepository.create(input);
+    } catch (error) {
+      errorLogger.logError(error as Error, {
+        context: 'createUserFact',
         caseId: input.caseId,
         factType: input.factType,
       });
-
-      return userFact;
-    } catch (error) {
-      errorLogger.logError(error as Error, { context: 'createUserFact', input });
       throw error;
     }
   }
@@ -89,14 +84,13 @@ export class UserFactsService {
         throw new Error('User fact not found');
       }
 
-      errorLogger.logError('User fact updated successfully', {
-        type: 'info',
-        userFactId: id,
-      });
-
       return userFact;
     } catch (error) {
-      errorLogger.logError(error as Error, { context: 'updateUserFact', id, input });
+      errorLogger.logError(error as Error, {
+        context: 'updateUserFact',
+        id,
+        fields: Object.keys(input ?? {}),
+      });
       throw error;
     }
   }
@@ -107,13 +101,11 @@ export class UserFactsService {
   deleteUserFact(id: number): void {
     try {
       userFactsRepository.delete(id);
-
-      errorLogger.logError('User fact deleted successfully', {
-        type: 'info',
-        userFactId: id,
-      });
     } catch (error) {
-      errorLogger.logError(error as Error, { context: 'deleteUserFact', id });
+      errorLogger.logError(error as Error, {
+        context: 'deleteUserFact',
+        id,
+      });
       throw error;
     }
   }
