@@ -48,6 +48,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Install Electron binary
+        run: pnpm exec electron install
+
+      - name: Rebuild native modules for Electron
+        run: pnpm exec electron-rebuild
+
       - name: Type check
         run: pnpm type-check
 
