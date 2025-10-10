@@ -18,7 +18,7 @@ interface CreateCaseInput {
   status?: 'active' | 'closed';
 }
 
-async function callIPC(channel: string, args: any[]) {
+async function callIPC(channel: string, args: unknown[]): Promise<unknown> {
   const response = await fetch(DEV_API_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -48,14 +48,16 @@ async function generateTestData() {
     await createCase({
       title: 'Unfair Dismissal - Tech Co.',
       caseType: 'employment',
-      description: 'Wrongful termination without proper procedure or notice. Employee was dismissed after raising safety concerns.',
+      description:
+        'Wrongful termination without proper procedure or notice. Employee was dismissed after raising safety concerns.',
       status: 'active',
     });
 
     await createCase({
       title: 'Discrimination Claim - Retail Store',
       caseType: 'employment',
-      description: 'Age discrimination in hiring process. Candidate was rejected despite qualifications due to age.',
+      description:
+        'Age discrimination in hiring process. Candidate was rejected despite qualifications due to age.',
       status: 'active',
     });
 
@@ -63,14 +65,16 @@ async function generateTestData() {
     await createCase({
       title: 'Landlord Deposit Dispute',
       caseType: 'housing',
-      description: 'Landlord refusing to return deposit despite property being in good condition. No inventory provided.',
+      description:
+        'Landlord refusing to return deposit despite property being in good condition. No inventory provided.',
       status: 'active',
     });
 
     await createCase({
       title: 'Tenant Rights - Unsafe Property',
       caseType: 'housing',
-      description: 'Property has serious damp and mold issues. Landlord refusing to make repairs despite multiple requests.',
+      description:
+        'Property has serious damp and mold issues. Landlord refusing to make repairs despite multiple requests.',
       status: 'active',
     });
 
@@ -78,7 +82,8 @@ async function generateTestData() {
     await createCase({
       title: 'Child Custody Arrangement',
       caseType: 'family',
-      description: 'Establishing fair custody arrangement after separation. Focus on child\'s best interests.',
+      description:
+        "Establishing fair custody arrangement after separation. Focus on child's best interests.",
       status: 'active',
     });
 
@@ -86,7 +91,8 @@ async function generateTestData() {
     await createCase({
       title: 'Contract Breach - Freelance Work',
       caseType: 'civil',
-      description: 'Client refusing to pay for completed work. Contract clearly outlines payment terms.',
+      description:
+        'Client refusing to pay for completed work. Contract clearly outlines payment terms.',
       status: 'active',
     });
 
@@ -108,7 +114,6 @@ async function generateTestData() {
     console.log('\n✅ Test data generation complete!');
     console.log('📊 Created 8 test cases (6 active, 2 closed)');
     console.log('\n💡 Refresh the app to see the test data');
-
   } catch (error) {
     console.error('❌ Error generating test data:', error);
     console.error('\n💡 Make sure the dev server is running: npm run dev');

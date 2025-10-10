@@ -18,7 +18,7 @@ type ViewType = 'dashboard' | 'chat' | 'cases' | 'case-detail' | 'documents' | '
 /**
  * Main application component (requires authentication)
  */
-function AuthenticatedApp() {
+function AuthenticatedApp(): JSX.Element {
   const { isAuthenticated, isLoading } = useAuth();
   const [activeView, setActiveView] = useState<ViewType>('dashboard');
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
@@ -26,9 +26,10 @@ function AuthenticatedApp() {
   const [selectedCaseForDetail, setSelectedCaseForDetail] = useState<number | null>(null);
 
   // Dummy conversation load handler (ChatWindow will handle its own state)
-  const handleConversationLoad = async (_conversationId: number): Promise<void> => {
+  const handleConversationLoad = (_conversationId: number): Promise<void> => {
     // Switch to chat view when loading a conversation
     setActiveView('chat');
+    return Promise.resolve();
   };
 
   // Global keyboard shortcuts
@@ -37,7 +38,7 @@ function AuthenticatedApp() {
       // Toggle sidebar with Ctrl+B
       if (e.ctrlKey && e.key === 'b') {
         e.preventDefault();
-        setSidebarExpanded(prev => !prev);
+        setSidebarExpanded((prev) => !prev);
       }
       // Escape to minimize sidebar
       if (e.key === 'Escape' && sidebarExpanded) {
@@ -68,23 +69,32 @@ function AuthenticatedApp() {
   }
 
   // Render the appropriate view wrapped in ViewErrorBoundary
-  const renderView = () => {
+  const renderView = (): JSX.Element => {
     switch (activeView) {
       case 'dashboard':
         return (
-          <ViewErrorBoundary viewName="Dashboard" onNavigateToDashboard={() => setActiveView('dashboard')}>
+          <ViewErrorBoundary
+            viewName="Dashboard"
+            onNavigateToDashboard={() => setActiveView('dashboard')}
+          >
             <DashboardView onViewChange={setActiveView} />
           </ViewErrorBoundary>
         );
       case 'chat':
         return (
-          <ViewErrorBoundary viewName="Chat" onNavigateToDashboard={() => setActiveView('dashboard')}>
+          <ViewErrorBoundary
+            viewName="Chat"
+            onNavigateToDashboard={() => setActiveView('dashboard')}
+          >
             <ChatWindow sidebarExpanded={sidebarExpanded} caseId={activeCaseId} />
           </ViewErrorBoundary>
         );
       case 'cases':
         return (
-          <ViewErrorBoundary viewName="Cases" onNavigateToDashboard={() => setActiveView('dashboard')}>
+          <ViewErrorBoundary
+            viewName="Cases"
+            onNavigateToDashboard={() => setActiveView('dashboard')}
+          >
             <CasesView
               onCaseSelect={(caseId) => {
                 setSelectedCaseForDetail(caseId);
@@ -95,7 +105,10 @@ function AuthenticatedApp() {
         );
       case 'case-detail':
         return selectedCaseForDetail ? (
-          <ViewErrorBoundary viewName="Case Detail" onNavigateToDashboard={() => setActiveView('dashboard')}>
+          <ViewErrorBoundary
+            viewName="Case Detail"
+            onNavigateToDashboard={() => setActiveView('dashboard')}
+          >
             <CaseDetailView
               caseId={selectedCaseForDetail}
               onBack={() => {
@@ -105,7 +118,10 @@ function AuthenticatedApp() {
             />
           </ViewErrorBoundary>
         ) : (
-          <ViewErrorBoundary viewName="Cases" onNavigateToDashboard={() => setActiveView('dashboard')}>
+          <ViewErrorBoundary
+            viewName="Cases"
+            onNavigateToDashboard={() => setActiveView('dashboard')}
+          >
             <CasesView
               onCaseSelect={(caseId) => {
                 setSelectedCaseForDetail(caseId);
@@ -116,19 +132,28 @@ function AuthenticatedApp() {
         );
       case 'documents':
         return (
-          <ViewErrorBoundary viewName="Documents" onNavigateToDashboard={() => setActiveView('dashboard')}>
+          <ViewErrorBoundary
+            viewName="Documents"
+            onNavigateToDashboard={() => setActiveView('dashboard')}
+          >
             <DocumentsView />
           </ViewErrorBoundary>
         );
       case 'settings':
         return (
-          <ViewErrorBoundary viewName="Settings" onNavigateToDashboard={() => setActiveView('dashboard')}>
+          <ViewErrorBoundary
+            viewName="Settings"
+            onNavigateToDashboard={() => setActiveView('dashboard')}
+          >
             <SettingsView />
           </ViewErrorBoundary>
         );
       default:
         return (
-          <ViewErrorBoundary viewName="Dashboard" onNavigateToDashboard={() => setActiveView('dashboard')}>
+          <ViewErrorBoundary
+            viewName="Dashboard"
+            onNavigateToDashboard={() => setActiveView('dashboard')}
+          >
             <DashboardView onViewChange={setActiveView} />
           </ViewErrorBoundary>
         );
@@ -173,7 +198,7 @@ function AuthenticatedApp() {
 /**
  * Root App component with providers
  */
-function App() {
+function App(): JSX.Element {
   return (
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
       <ErrorBoundary>

@@ -24,6 +24,20 @@ const dbPath = path.join(
 
 console.log(`📂 Database: ${dbPath}\n`);
 
+interface CaseRow {
+  id: number;
+  title: string;
+  case_type: string;
+  status: string;
+  created_at: string;
+}
+
+interface EvidenceRow {
+  id: number;
+  title: string;
+  evidence_type: string;
+}
+
 const db = new Database(dbPath);
 
 // 1. Check if Case #16 exists
@@ -44,13 +58,15 @@ if (!case16) {
 
 // 2. List ALL cases (simulate what sidebar does)
 console.log('📋 All cases in database (what sidebar should show):');
-const allCases = db.prepare('SELECT id, title, case_type, status, created_at FROM cases ORDER BY created_at DESC').all();
+const allCases = db
+  .prepare('SELECT id, title, case_type, status, created_at FROM cases ORDER BY created_at DESC')
+  .all();
 
 if (allCases.length === 0) {
   console.log('   ⚠️  No cases found!\n');
 } else {
   console.log(`   Found ${allCases.length} case(s):\n`);
-  allCases.forEach((c: any) => {
+  allCases.forEach((c: CaseRow) => {
     console.log(`   • Case #${c.id}: ${c.title}`);
     console.log(`     Type: ${c.case_type} | Status: ${c.status}`);
     console.log(`     Created: ${c.created_at}\n`);
@@ -60,13 +76,15 @@ if (allCases.length === 0) {
 // 3. Check evidence for Case #16
 if (case16) {
   console.log('📄 Evidence for Case #16:');
-  const evidence = db.prepare('SELECT id, title, evidence_type FROM evidence WHERE case_id = ?').all(16);
+  const evidence = db
+    .prepare('SELECT id, title, evidence_type FROM evidence WHERE case_id = ?')
+    .all(16);
 
   if (evidence.length === 0) {
     console.log('   ⚠️  No evidence found for this case\n');
   } else {
     console.log(`   Found ${evidence.length} evidence item(s):\n`);
-    evidence.forEach((e: any) => {
+    evidence.forEach((e: EvidenceRow) => {
       console.log(`   • Evidence #${e.id}: ${e.title}`);
       console.log(`     Type: ${e.evidence_type}\n`);
     });
