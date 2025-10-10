@@ -90,6 +90,7 @@ legal-docs/
 .mcp/
 .mcp.json
 .pytest_cache/
+.github/pull_request_template.md
 automation/
 tmp/
 
@@ -107,5 +108,18 @@ PUBLIC_RELEASE_READY.md
 TOKEN_SECURITY_UPGRADE.md
 QUICK_TOKEN_SETUP.md
 
-# Documentation guides (keep local, exclude from git)
-docs/guides/SECURE_TOKEN_SETUP.md
+# Documentation (keep local, exclude from git - app files only in git)
+docs/
+CLAUDE.md
+CONTRIBUTING.md
+SECURITY.md
+TODO.md
+*_COMPLETE.md
+*_REPORT.md
+*_SUMMARY.md
+compass_artifact_*.md
+
+# Status reports and guides
+GIT_AUTOMATION_IMPLEMENTATION_REPORT.md
+PHASE*.md
+WINDOWS_*.md

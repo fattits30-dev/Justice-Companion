@@ -1,9 +1,0 @@
-{
-  "event_type": "file_changed",
-  "agent_id": "file_monitor",
-  "timestamp": "2025-10-06T22:54:08.875632+00:00",
-  "files": [
-    "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\services\\AuditLogger.ts"
-  ],
-  "count": 1
-}
