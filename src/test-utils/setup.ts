@@ -18,19 +18,22 @@ import { vi } from 'vitest';
 // });
 
 // Mock window.matchMedia (used by some components for responsive behavior and framer-motion)
-Object.defineProperty(window, 'matchMedia', {
-  writable: true,
-  value: vi.fn().mockImplementation((query: string) => ({
-    matches: query === '(prefers-reduced-motion: no-preference)', // Default to no reduced motion
-    media: query,
-    onchange: null,
-    addListener: vi.fn(), // Deprecated but required by framer-motion
-    removeListener: vi.fn(), // Deprecated but required by framer-motion
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    dispatchEvent: vi.fn(),
-  })),
-});
+// Only mock in jsdom environment (not in node environment)
+if (typeof window !== 'undefined') {
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: vi.fn().mockImplementation((query: string) => ({
+      matches: query === '(prefers-reduced-motion: no-preference)', // Default to no reduced motion
+      media: query,
+      onchange: null,
+      addListener: vi.fn(), // Deprecated but required by framer-motion
+      removeListener: vi.fn(), // Deprecated but required by framer-motion
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
+  });
+}
 
 // Mock IntersectionObserver (used by some UI libraries)
 class IntersectionObserverMock {

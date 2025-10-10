@@ -57,14 +57,7 @@ describe('TimelineService', () => {
         eventDate: '2025-01-15',
         description: 'Initial client consultation',
       });
-      expect(errorLogger.logError).toHaveBeenCalledWith(
-        'Timeline event created successfully',
-        expect.objectContaining({
-          type: 'info',
-          timelineEventId: 1,
-          caseId: 100,
-        }),
-      );
+      expect(errorLogger.logError).not.toHaveBeenCalled();
     });
 
     it('should create a timeline event without description', () => {
@@ -96,7 +89,7 @@ describe('TimelineService', () => {
           caseId: 100,
           title: '',
           eventDate: '2025-01-15',
-        }),
+        })
       ).toThrow('Timeline event title is required');
 
       expect(() =>
@@ -104,7 +97,7 @@ describe('TimelineService', () => {
           caseId: 100,
           title: '   ',
           eventDate: '2025-01-15',
-        }),
+        })
       ).toThrow('Timeline event title is required');
 
       expect(timelineRepository.create).not.toHaveBeenCalled();
@@ -118,7 +111,7 @@ describe('TimelineService', () => {
           caseId: 100,
           title: longTitle,
           eventDate: '2025-01-15',
-        }),
+        })
       ).toThrow('Timeline event title must be 200 characters or less');
 
       expect(timelineRepository.create).not.toHaveBeenCalled();
@@ -154,7 +147,7 @@ describe('TimelineService', () => {
           caseId: 100,
           title: 'Test Event',
           eventDate: '',
-        }),
+        })
       ).toThrow('Timeline event date is required');
 
       expect(timelineRepository.create).not.toHaveBeenCalled();
@@ -169,7 +162,7 @@ describe('TimelineService', () => {
           title: 'Test Event',
           eventDate: '2025-01-15',
           description: longDescription,
-        }),
+        })
       ).toThrow('Timeline event description must be 10000 characters or less');
 
       expect(timelineRepository.create).not.toHaveBeenCalled();
@@ -211,19 +204,15 @@ describe('TimelineService', () => {
           caseId: 100,
           title: 'Test Event',
           eventDate: '2025-01-15',
-        }),
+        })
       ).toThrow('Database error');
 
       expect(errorLogger.logError).toHaveBeenCalledWith(
         error,
         expect.objectContaining({
           context: 'createTimelineEvent',
-          input: {
-            caseId: 100,
-            title: 'Test Event',
-            eventDate: '2025-01-15',
-          },
-        }),
+          caseId: 100,
+        })
       );
     });
   });
@@ -266,7 +255,7 @@ describe('TimelineService', () => {
       expect(() => timelineService.getTimelineEventById(1)).toThrow('Database error');
       expect(errorLogger.logError).toHaveBeenCalledWith(
         error,
-        expect.objectContaining({ context: 'getTimelineEventById', id: 1 }),
+        expect.objectContaining({ context: 'getTimelineEventById', id: 1 })
       );
     });
   });
@@ -320,7 +309,7 @@ describe('TimelineService', () => {
       expect(() => timelineService.getTimelineEventsByCaseId(100)).toThrow('Database error');
       expect(errorLogger.logError).toHaveBeenCalledWith(
         error,
-        expect.objectContaining({ context: 'getTimelineEventsByCaseId', caseId: 100 }),
+        expect.objectContaining({ context: 'getTimelineEventsByCaseId', caseId: 100 })
       );
     });
   });
@@ -351,13 +340,7 @@ describe('TimelineService', () => {
         eventDate: '2025-03-10',
         description: 'Updated description',
       });
-      expect(errorLogger.logError).toHaveBeenCalledWith(
-        'Timeline event updated successfully',
-        expect.objectContaining({
-          type: 'info',
-          timelineEventId: 1,
-        }),
-      );
+      expect(errorLogger.logError).not.toHaveBeenCalled();
     });
 
     it('should update only title', () => {
@@ -381,13 +364,13 @@ describe('TimelineService', () => {
     });
 
     it('should throw error if title is empty string', () => {
-      expect(() =>
-        timelineService.updateTimelineEvent(1, { title: '' }),
-      ).toThrow('Timeline event title cannot be empty');
+      expect(() => timelineService.updateTimelineEvent(1, { title: '' })).toThrow(
+        'Timeline event title cannot be empty'
+      );
 
-      expect(() =>
-        timelineService.updateTimelineEvent(1, { title: '   ' }),
-      ).toThrow('Timeline event title cannot be empty');
+      expect(() => timelineService.updateTimelineEvent(1, { title: '   ' })).toThrow(
+        'Timeline event title cannot be empty'
+      );
 
       expect(timelineRepository.update).not.toHaveBeenCalled();
     });
@@ -395,9 +378,9 @@ describe('TimelineService', () => {
     it('should throw error if title exceeds 200 characters', () => {
       const longTitle = 'a'.repeat(201);
 
-      expect(() =>
-        timelineService.updateTimelineEvent(1, { title: longTitle }),
-      ).toThrow('Timeline event title must be 200 characters or less');
+      expect(() => timelineService.updateTimelineEvent(1, { title: longTitle })).toThrow(
+        'Timeline event title must be 200 characters or less'
+      );
 
       expect(timelineRepository.update).not.toHaveBeenCalled();
     });
@@ -406,7 +389,7 @@ describe('TimelineService', () => {
       const longDescription = 'a'.repeat(10001);
 
       expect(() =>
-        timelineService.updateTimelineEvent(1, { description: longDescription }),
+        timelineService.updateTimelineEvent(1, { description: longDescription })
       ).toThrow('Timeline event description must be 10000 characters or less');
 
       expect(timelineRepository.update).not.toHaveBeenCalled();
@@ -415,9 +398,9 @@ describe('TimelineService', () => {
     it('should throw error if timeline event not found', () => {
       vi.mocked(timelineRepository.update).mockReturnValue(null);
 
-      expect(() =>
-        timelineService.updateTimelineEvent(999, { title: 'Test' }),
-      ).toThrow('Timeline event not found');
+      expect(() => timelineService.updateTimelineEvent(999, { title: 'Test' })).toThrow(
+        'Timeline event not found'
+      );
 
       expect(timelineRepository.update).toHaveBeenCalledWith(999, { title: 'Test' });
     });
@@ -428,17 +411,17 @@ describe('TimelineService', () => {
         throw error;
       });
 
-      expect(() =>
-        timelineService.updateTimelineEvent(1, { title: 'Test' }),
-      ).toThrow('Database error');
+      expect(() => timelineService.updateTimelineEvent(1, { title: 'Test' })).toThrow(
+        'Database error'
+      );
 
       expect(errorLogger.logError).toHaveBeenCalledWith(
         error,
         expect.objectContaining({
           context: 'updateTimelineEvent',
           id: 1,
-          input: { title: 'Test' },
-        }),
+          fields: ['title'],
+        })
       );
     });
   });
@@ -450,13 +433,7 @@ describe('TimelineService', () => {
       timelineService.deleteTimelineEvent(1);
 
       expect(timelineRepository.delete).toHaveBeenCalledWith(1);
-      expect(errorLogger.logError).toHaveBeenCalledWith(
-        'Timeline event deleted successfully',
-        expect.objectContaining({
-          type: 'info',
-          timelineEventId: 1,
-        }),
-      );
+      expect(errorLogger.logError).not.toHaveBeenCalled();
     });
 
     it('should log and rethrow repository errors', () => {
@@ -468,7 +445,7 @@ describe('TimelineService', () => {
       expect(() => timelineService.deleteTimelineEvent(1)).toThrow('Database error');
       expect(errorLogger.logError).toHaveBeenCalledWith(
         error,
-        expect.objectContaining({ context: 'deleteTimelineEvent', id: 1 }),
+        expect.objectContaining({ context: 'deleteTimelineEvent', id: 1 })
       );
     });
   });

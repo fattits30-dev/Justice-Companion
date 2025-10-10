@@ -14,9 +14,10 @@ describe('ErrorLogger', () => {
     logger = new ErrorLogger(testLogDir, testLogFile, 1, 2); // 1KB max, 2 backups
   });
 
-  afterEach(() => {
-    // Clean up test files
-    logger.clearLogs();
+  afterEach(async () => {
+    // Ensure any pending writes complete before cleanup
+    await logger.waitForFlush();
+    await logger.clearLogs();
     if (fs.existsSync(testLogDir)) {
       fs.rmSync(testLogDir, { recursive: true });
     }
@@ -26,9 +27,10 @@ describe('ErrorLogger', () => {
     expect(fs.existsSync(testLogDir)).toBe(true);
   });
 
-  test('should log error to file', () => {
+  test('should log error to file', async () => {
     const error = new Error('Test error');
     logger.logError(error);
+    await logger.waitForFlush();
 
     const logPath = path.join(testLogDir, testLogFile);
     expect(fs.existsSync(logPath)).toBe(true);
@@ -38,16 +40,18 @@ describe('ErrorLogger', () => {
     expect(content).toContain('Error:');
   });
 
-  test('should log string error', () => {
+  test('should log string error', async () => {
     logger.logError('Simple error message');
+    await logger.waitForFlush();
 
     const logPath = path.join(testLogDir, testLogFile);
     const content = fs.readFileSync(logPath, 'utf8');
     expect(content).toContain('Simple error message');
   });
 
-  test('should include context in log', () => {
+  test('should include context in log', async () => {
     logger.logError('Error with context', { userId: 123, action: 'save' });
+    await logger.waitForFlush();
 
     const logPath = path.join(testLogDir, testLogFile);
     const content = fs.readFileSync(logPath, 'utf8');
@@ -56,11 +60,12 @@ describe('ErrorLogger', () => {
     expect(content).toContain('123');
   });
 
-  test('should rotate log file when exceeding max size', () => {
+  test('should rotate log file when exceeding max size', async () => {
     // Write enough data to exceed 1KB
     for (let i = 0; i < 50; i++) {
       logger.logError(`Error ${i} with some padding text to increase size`);
     }
+    await logger.waitForFlush();
 
     const logPath = path.join(testLogDir, testLogFile);
     const backupPath = `${logPath}.1`;
@@ -69,34 +74,37 @@ describe('ErrorLogger', () => {
     expect(fs.existsSync(backupPath)).toBe(true);
 
     // Current log should be smaller than max
-    expect(logger.getLogSizeKB()).toBeLessThan(1);
+    expect(await logger.getLogSizeKB()).toBeLessThan(1);
   });
 
-  test('should read recent errors', () => {
+  test('should read recent errors', async () => {
     logger.logError('Error 1');
     logger.logError('Error 2');
     logger.logError('Error 3');
+    await logger.waitForFlush();
 
-    const recent = logger.readRecentErrors(2);
+    const recent = await logger.readRecentErrors(2);
     expect(recent.length).toBeGreaterThan(0);
     expect(recent.join('\n')).toContain('Error 3');
   });
 
-  test('should clear all logs', () => {
+  test('should clear all logs', async () => {
     logger.logError('Error 1');
     logger.logError('Error 2');
+    await logger.waitForFlush();
 
-    logger.clearLogs();
+    await logger.clearLogs();
 
     const logPath = path.join(testLogDir, testLogFile);
     expect(fs.existsSync(logPath)).toBe(false);
   });
 
-  test('should maintain max number of backups', () => {
+  test('should maintain max number of backups', async () => {
     // Write enough to trigger multiple rotations
     for (let i = 0; i < 150; i++) {
       logger.logError(`Error ${i} with padding text to increase file size quickly`);
     }
+    await logger.waitForFlush();
 
     const logPath = path.join(testLogDir, testLogFile);
 

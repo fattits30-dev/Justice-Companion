@@ -17,17 +17,12 @@ export class NotesService {
         throw new Error('Note content must be 10000 characters or less');
       }
 
-      const note = notesRepository.create({ caseId, content });
-
-      errorLogger.logError('Note created successfully', {
-        type: 'info',
-        noteId: note.id,
+      return notesRepository.create({ caseId, content });
+    } catch (error) {
+      errorLogger.logError(error as Error, {
+        context: 'createNote',
         caseId,
       });
-
-      return note;
-    } catch (error) {
-      errorLogger.logError(error as Error, { context: 'createNote', caseId });
       throw error;
     }
   }
@@ -64,14 +59,12 @@ export class NotesService {
         throw new Error('Note not found');
       }
 
-      errorLogger.logError('Note updated successfully', {
-        type: 'info',
-        noteId: id,
-      });
-
       return note;
     } catch (error) {
-      errorLogger.logError(error as Error, { context: 'updateNote', id });
+      errorLogger.logError(error as Error, {
+        context: 'updateNote',
+        id,
+      });
       throw error;
     }
   }
@@ -82,13 +75,11 @@ export class NotesService {
   deleteNote(id: number): void {
     try {
       notesRepository.delete(id);
-
-      errorLogger.logError('Note deleted successfully', {
-        type: 'info',
-        noteId: id,
-      });
     } catch (error) {
-      errorLogger.logError(error as Error, { context: 'deleteNote', id });
+      errorLogger.logError(error as Error, {
+        context: 'deleteNote',
+        id,
+      });
       throw error;
     }
   }

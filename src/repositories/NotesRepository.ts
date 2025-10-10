@@ -15,7 +15,7 @@ import type { AuditLogger } from '../services/AuditLogger.js';
 export class NotesRepository {
   constructor(
     private encryptionService?: EncryptionService,
-    private auditLogger?: AuditLogger,
+    private auditLogger?: AuditLogger
   ) {}
 
   /**
@@ -24,16 +24,14 @@ export class NotesRepository {
   create(input: CreateNoteInput): Note {
     try {
       const db = getDb();
+      const encryption = this.requireEncryptionService();
 
       // Encrypt content before INSERT (P0 priority field)
-      let contentToStore: string;
-      if (this.encryptionService) {
-        const encryptedContent = this.encryptionService.encrypt(input.content);
-        contentToStore = JSON.stringify(encryptedContent);
-      } else {
-        // No encryption service - store as plaintext (backward compatibility)
-        contentToStore = input.content;
+      const encryptedContent = encryption.encrypt(input.content);
+      if (!encryptedContent) {
+        throw new Error('Failed to encrypt note content');
       }
+      const contentToStore = JSON.stringify(encryptedContent);
 
       const stmt = db.prepare(`
         INSERT INTO notes (case_id, content)
@@ -146,16 +144,14 @@ export class NotesRepository {
   update(id: number, input: UpdateNoteInput): Note | null {
     try {
       const db = getDb();
+      const encryption = this.requireEncryptionService();
 
       // Encrypt new content before UPDATE
-      let contentToStore: string;
-      if (this.encryptionService) {
-        const encryptedContent = this.encryptionService.encrypt(input.content);
-        contentToStore = JSON.stringify(encryptedContent);
-      } else {
-        // No encryption service - store as plaintext (backward compatibility)
-        contentToStore = input.content;
+      const encryptedContent = encryption.encrypt(input.content);
+      if (!encryptedContent) {
+        throw new Error('Failed to encrypt note content');
       }
+      const contentToStore = JSON.stringify(encryptedContent);
 
       const stmt = db.prepare(`
         UPDATE notes
@@ -252,7 +248,7 @@ export class NotesRepository {
 
       // Verify it's actually encrypted data format
       if (this.encryptionService.isEncrypted(encryptedData)) {
-        return this.encryptionService.decrypt(encryptedData) || '';
+        return this.encryptionService.decrypt(encryptedData) ?? '';
       }
 
       // If it's not encrypted format, treat as legacy plaintext
@@ -261,6 +257,13 @@ export class NotesRepository {
       // JSON parse failed - likely legacy plaintext data
       return storedValue;
     }
+  }
+
+  private requireEncryptionService(): EncryptionService {
+    if (!this.encryptionService) {
+      throw new Error('EncryptionService not configured for NotesRepository');
+    }
+    return this.encryptionService;
   }
 
   /**

@@ -1,4 +1,6 @@
+/* eslint-disable no-undef */
 import fs from 'fs';
+import { promises as fsPromises } from 'fs';
 import path from 'path';
 
 interface ErrorLogEntry {
@@ -13,12 +15,13 @@ export class ErrorLogger {
   private logFilePath: string;
   private maxFileSizeKB: number;
   private maxBackups: number;
+  private writeQueue: Promise<void>;
 
   constructor(
     logDir: string = 'logs',
     fileName: string = 'errors.log',
     maxFileSizeKB: number = 500, // 500KB max per file
-    maxBackups: number = 3, // Keep 3 backup files
+    maxBackups: number = 3 // Keep 3 backup files
   ) {
     // Ensure logs directory exists
     if (!fs.existsSync(logDir)) {
@@ -28,6 +31,7 @@ export class ErrorLogger {
     this.logFilePath = path.join(logDir, fileName);
     this.maxFileSizeKB = maxFileSizeKB;
     this.maxBackups = maxBackups;
+    this.writeQueue = Promise.resolve();
   }
 
   /**
@@ -43,21 +47,17 @@ export class ErrorLogger {
     };
 
     const logLine = this.formatLogEntry(entry);
-
-    // Check file size before writing
-    this.rotateIfNeeded();
-
-    // Append to log file
-    fs.appendFileSync(this.logFilePath, logLine + '\n', 'utf8');
+    this.enqueueWrite(async () => {
+      await this.rotateIfNeeded();
+      await fsPromises.appendFile(this.logFilePath, `${logLine}\n`, 'utf8');
+    });
   }
 
   /**
    * Format log entry as readable text
    */
   private formatLogEntry(entry: ErrorLogEntry): string {
-    const lines = [
-      `[${entry.timestamp}] ${entry.type}: ${entry.message}`,
-    ];
+    const lines = [`[${entry.timestamp}] ${entry.type}: ${entry.message}`];
 
     if (entry.stack) {
       lines.push(`Stack: ${entry.stack}`);
@@ -74,87 +74,114 @@ export class ErrorLogger {
   /**
    * Rotate log file if it exceeds max size
    */
-  private rotateIfNeeded(): void {
-    if (!fs.existsSync(this.logFilePath)) {
-      return;
-    }
+  private async rotateIfNeeded(): Promise<void> {
+    try {
+      const stats = await fsPromises.stat(this.logFilePath);
+      const fileSizeKB = stats.size / 1024;
 
-    const stats = fs.statSync(this.logFilePath);
-    const fileSizeKB = stats.size / 1024;
-
-    if (fileSizeKB >= this.maxFileSizeKB) {
-      this.rotateFiles();
+      if (fileSizeKB >= this.maxFileSizeKB) {
+        await this.rotateFiles();
+      }
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+        return;
+      }
+      throw error;
     }
   }
 
   /**
    * Rotate log files (errors.log -> errors.log.1 -> errors.log.2, etc.)
    */
-  private rotateFiles(): void {
+  private async rotateFiles(): Promise<void> {
     // Delete oldest backup if at limit
     const oldestBackup = `${this.logFilePath}.${this.maxBackups}`;
-    if (fs.existsSync(oldestBackup)) {
-      fs.unlinkSync(oldestBackup);
-    }
+    await fsPromises.rm(oldestBackup, { force: true });
 
     // Rotate existing backups
     for (let i = this.maxBackups - 1; i >= 1; i--) {
       const oldFile = `${this.logFilePath}.${i}`;
       const newFile = `${this.logFilePath}.${i + 1}`;
 
-      if (fs.existsSync(oldFile)) {
-        fs.renameSync(oldFile, newFile);
+      try {
+        await fsPromises.rename(oldFile, newFile);
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+          throw error;
+        }
       }
     }
 
     // Rotate current log to .1
-    if (fs.existsSync(this.logFilePath)) {
-      fs.renameSync(this.logFilePath, `${this.logFilePath}.1`);
+    try {
+      await fsPromises.rename(this.logFilePath, `${this.logFilePath}.1`);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+        throw error;
+      }
     }
   }
 
   /**
    * Get log file size in KB
    */
-  getLogSizeKB(): number {
-    if (!fs.existsSync(this.logFilePath)) {
-      return 0;
+  async getLogSizeKB(): Promise<number> {
+    try {
+      const stats = await fsPromises.stat(this.logFilePath);
+      return stats.size / 1024;
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+        return 0;
+      }
+      throw error;
     }
-    const stats = fs.statSync(this.logFilePath);
-    return stats.size / 1024;
   }
 
   /**
    * Clear all log files
    */
-  clearLogs(): void {
-    // Remove main log
-    if (fs.existsSync(this.logFilePath)) {
-      fs.unlinkSync(this.logFilePath);
-    }
+  async clearLogs(): Promise<void> {
+    const deletions = [
+      fsPromises.rm(this.logFilePath, { force: true }),
+      ...Array.from({ length: this.maxBackups }, (_, index) => {
+        const backupFile = `${this.logFilePath}.${index + 1}`;
+        return fsPromises.rm(backupFile, { force: true });
+      }),
+    ];
 
-    // Remove backups
-    for (let i = 1; i <= this.maxBackups; i++) {
-      const backupFile = `${this.logFilePath}.${i}`;
-      if (fs.existsSync(backupFile)) {
-        fs.unlinkSync(backupFile);
-      }
-    }
+    await Promise.allSettled(deletions);
+  }
+
+  /**
+   * Wait for all pending writes to complete
+   */
+  async waitForFlush(): Promise<void> {
+    await this.writeQueue;
+  }
+
+  /**
+   * Enqueue a write operation to preserve order
+   */
+  private enqueueWrite(task: () => Promise<void>): void {
+    this.writeQueue = this.writeQueue.then(task).catch((error) => {
+      console.error('ErrorLogger write failed', error);
+    });
   }
 
   /**
    * Read recent errors from log file
    */
-  readRecentErrors(lines: number = 50): string[] {
-    if (!fs.existsSync(this.logFilePath)) {
-      return [];
+  async readRecentErrors(lines: number = 50): Promise<string[]> {
+    try {
+      const content = await fsPromises.readFile(this.logFilePath, 'utf8');
+      const allLines = content.split('\n').filter((line) => line.trim());
+      return allLines.slice(-lines);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+        return [];
+      }
+      throw error;
     }
-
-    const content = fs.readFileSync(this.logFilePath, 'utf8');
-    const allLines = content.split('\n').filter((line) => line.trim());
-
-    // Return last N lines
-    return allLines.slice(-lines);
   }
 }
 
@@ -172,8 +199,7 @@ export function setupGlobalErrorHandlers(): void {
   // Unhandled promise rejections
   process.on('unhandledRejection', (reason: unknown) => {
     console.error('Unhandled Rejection:', reason);
-    const error =
-      reason instanceof Error ? reason : new Error(String(reason));
+    const error = reason instanceof Error ? reason : new Error(String(reason));
     errorLogger.logError(error, { type: 'unhandledRejection' });
   });
 }

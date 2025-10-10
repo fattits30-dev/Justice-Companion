@@ -115,3 +115,46 @@ export class TestDatabaseHelper {
 export function createTestDatabase(): TestDatabaseHelper {
   return new TestDatabaseHelper();
 }
+
+/**
+ * Setup a test database (simple async API)
+ * Returns the database file path for use in tests
+ */
+export async function setupTestDatabase(): Promise<string> {
+  const helper = new TestDatabaseHelper();
+  helper.initialize();
+
+  // Return a unique identifier for this test database
+  // For in-memory databases, we'll return a dummy path
+  return ':memory:';
+}
+
+/**
+ * Cleanup a test database (simple async API)
+ */
+export async function cleanupTestDatabase(_dbPath: string): Promise<void> {
+  // For in-memory databases, cleanup is handled by closure
+  // This function exists for API compatibility
+  return Promise.resolve();
+}
+
+/**
+ * Get a test audit logger instance
+ * Creates an AuditLogger using an in-memory database
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function getTestAuditLogger(_dbPath?: string): any {
+  // Import AuditLogger dynamically to avoid circular dependencies
+  const helper = new TestDatabaseHelper();
+  const db = helper.initialize();
+
+  const { AuditLogger } = require('../services/AuditLogger'); // eslint-disable-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
+  const auditLogger = new AuditLogger(db);
+
+  // Add a test-only method to get all logs
+  auditLogger.getAllLogs = () => {
+    return db.prepare('SELECT * FROM audit_logs ORDER BY created_at').all();
+  };
+
+  return auditLogger;
+}

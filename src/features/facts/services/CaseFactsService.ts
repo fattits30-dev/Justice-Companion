@@ -17,19 +17,13 @@ export class CaseFactsService {
         throw new Error('Case fact content must be 5000 characters or less');
       }
 
-      const caseFact = caseFactsRepository.create(input);
-
-      errorLogger.logError('Case fact created successfully', {
-        type: 'info',
-        caseFactId: caseFact.id,
+      return caseFactsRepository.create(input);
+    } catch (error) {
+      errorLogger.logError(error as Error, {
+        context: 'createCaseFact',
         caseId: input.caseId,
         factCategory: input.factCategory,
-        importance: input.importance,
       });
-
-      return caseFact;
-    } catch (error) {
-      errorLogger.logError(error as Error, { context: 'createCaseFact', input });
       throw error;
     }
   }
@@ -65,7 +59,11 @@ export class CaseFactsService {
     try {
       return caseFactsRepository.findByCategory(caseId, factCategory);
     } catch (error) {
-      errorLogger.logError(error as Error, { context: 'getCaseFactsByCategory', caseId, factCategory });
+      errorLogger.logError(error as Error, {
+        context: 'getCaseFactsByCategory',
+        caseId,
+        factCategory,
+      });
       throw error;
     }
   }
@@ -77,7 +75,11 @@ export class CaseFactsService {
     try {
       return caseFactsRepository.findByImportance(caseId, importance);
     } catch (error) {
-      errorLogger.logError(error as Error, { context: 'getCaseFactsByImportance', caseId, importance });
+      errorLogger.logError(error as Error, {
+        context: 'getCaseFactsByImportance',
+        caseId,
+        importance,
+      });
       throw error;
     }
   }
@@ -102,14 +104,13 @@ export class CaseFactsService {
         throw new Error('Case fact not found');
       }
 
-      errorLogger.logError('Case fact updated successfully', {
-        type: 'info',
-        caseFactId: id,
-      });
-
       return caseFact;
     } catch (error) {
-      errorLogger.logError(error as Error, { context: 'updateCaseFact', id, input });
+      errorLogger.logError(error as Error, {
+        context: 'updateCaseFact',
+        id,
+        fields: Object.keys(input ?? {}),
+      });
       throw error;
     }
   }
@@ -120,13 +121,11 @@ export class CaseFactsService {
   deleteCaseFact(id: number): void {
     try {
       caseFactsRepository.delete(id);
-
-      errorLogger.logError('Case fact deleted successfully', {
-        type: 'info',
-        caseFactId: id,
-      });
     } catch (error) {
-      errorLogger.logError(error as Error, { context: 'deleteCaseFact', id });
+      errorLogger.logError(error as Error, {
+        context: 'deleteCaseFact',
+        id,
+      });
       throw error;
     }
   }

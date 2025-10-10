@@ -36,14 +36,25 @@
     "guard:build": "tsc -p automation/tsconfig.json",
     "guard": "npm run guard:build && node automation/dist/simple-orchestrator.js",
     "guard:once": "npm run guard:build && node automation/dist/simple-orchestrator.js --once",
+    "rebuild:node": "node scripts/rebuild-for-node.js",
+    "rebuild:electron": "node scripts/rebuild-for-electron.js",
+    "pretest:e2e": "node scripts/rebuild-for-node.js",
     "test:e2e": "playwright test tests/e2e",
+    "posttest:e2e": "node scripts/rebuild-for-electron.js",
+    "pretest:e2e:headed": "node scripts/rebuild-for-node.js",
     "test:e2e:headed": "playwright test tests/e2e --headed",
+    "posttest:e2e:headed": "node scripts/rebuild-for-electron.js",
+    "pretest:e2e:debug": "node scripts/rebuild-for-node.js",
     "test:e2e:debug": "playwright test tests/e2e --debug",
+    "posttest:e2e:debug": "node scripts/rebuild-for-electron.js",
+    "pretest:e2e:ui": "node scripts/rebuild-for-node.js",
     "test:e2e:ui": "playwright test tests/e2e --ui",
+    "posttest:e2e:ui": "node scripts/rebuild-for-electron.js",
     "test:e2e:report": "playwright show-report test-results/html-report",
     "test:e2e:cleanup": "powershell -ExecutionPolicy Bypass -File scripts/cleanup-test-processes.ps1",
     "audit:dependencies": "npm audit --production --audit-level=high",
-    "best-practices": "npm run lint && npm run type-check && npm run audit:dependencies"
+    "best-practices": "npm run lint && npm run type-check && npm run audit:dependencies",
+    "prepare": "husky"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.65.0",
@@ -95,6 +106,7 @@
     "@typescript-eslint/parser": "^8.5.0",
     "@upstash/context7-mcp": "^1.0.21",
     "@vitejs/plugin-react": "^5.0.4",
+    "@vitest/coverage-v8": "^3.2.4",
     "autoprefixer": "^10.4.0",
     "concurrently": "^9.0.0",
     "electron": "^38.2.1",
@@ -102,7 +114,10 @@
     "electron-rebuild": "^3.2.9",
     "eslint": "^9.10.0",
     "globals": "^16.4.0",
+    "husky": "^9.1.7",
     "jsdom": "^27.0.0",
+    "lint-staged": "^16.2.3",
+    "mcp-server-sqlite": "^0.0.2",
     "playwright": "^1.55.1",
     "postcss": "^8.4.0",
     "tailwindcss": "^3.4.0",
@@ -147,5 +162,15 @@
       ],
       "icon": "build/icon.png"
     }
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix --max-warnings 0",
+      "prettier --write",
+      "bash -c 'npm run type-check'"
+    ],
+    "*.{js,jsx,json,css,md}": [
+      "prettier --write"
+    ]
   }
 }

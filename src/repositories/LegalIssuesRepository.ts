@@ -1,5 +1,9 @@
 import { getDb } from '../db/database';
-import type { LegalIssue, CreateLegalIssueInput, UpdateLegalIssueInput } from '../models/LegalIssue';
+import type {
+  LegalIssue,
+  CreateLegalIssueInput,
+  UpdateLegalIssueInput,
+} from '../models/LegalIssue';
 import { EncryptionService, type EncryptedData } from '../services/EncryptionService.js';
 import type { AuditLogger } from '../services/AuditLogger.js';
 
@@ -14,7 +18,7 @@ import type { AuditLogger } from '../services/AuditLogger.js';
 export class LegalIssuesRepository {
   constructor(
     private encryptionService?: EncryptionService,
-    private auditLogger?: AuditLogger,
+    private auditLogger?: AuditLogger
   ) {}
 
   /**
@@ -23,17 +27,14 @@ export class LegalIssuesRepository {
   create(input: CreateLegalIssueInput): LegalIssue {
     try {
       const db = getDb();
+      const encryption = this.requireEncryptionService();
 
       let descriptionToStore: string | null;
       if (input.description === null || input.description === undefined) {
         descriptionToStore = null;
-      } else if (this.encryptionService) {
-        // Encrypt description before INSERT (P1 priority field)
-        const encryptedDescription = this.encryptionService.encrypt(input.description);
-        descriptionToStore = JSON.stringify(encryptedDescription);
       } else {
-        // Store plaintext when no encryption service is available
-        descriptionToStore = input.description;
+        const encryptedDescription = encryption.encrypt(input.description);
+        descriptionToStore = encryptedDescription ? JSON.stringify(encryptedDescription) : null;
       }
 
       const stmt = db.prepare(`
@@ -141,6 +142,7 @@ export class LegalIssuesRepository {
   update(id: number, input: UpdateLegalIssueInput): LegalIssue | null {
     try {
       const db = getDb();
+      const encryption = this.requireEncryptionService();
 
       const updates: string[] = [];
       const params: Record<string, unknown> = { id };
@@ -150,11 +152,14 @@ export class LegalIssuesRepository {
         params.title = input.title;
       }
 
-      if (input.description !== null && input.description !== undefined) {
+      if (input.description !== undefined) {
         updates.push('description = @description');
-        params.description = this.encryptionService
-          ? JSON.stringify(this.encryptionService.encrypt(input.description))
-          : input.description;
+        if (input.description === null) {
+          params.description = null;
+        } else {
+          const encryptedDescription = encryption.encrypt(input.description);
+          params.description = encryptedDescription ? JSON.stringify(encryptedDescription) : null;
+        }
       }
 
       if (input.relevantLaw !== undefined) {
@@ -272,6 +277,13 @@ export class LegalIssuesRepository {
       // JSON parse failed - likely legacy plaintext data
       return storedValue;
     }
+  }
+
+  private requireEncryptionService(): EncryptionService {
+    if (!this.encryptionService) {
+      throw new Error('EncryptionService not configured for LegalIssuesRepository');
+    }
+    return this.encryptionService;
   }
 
   /**

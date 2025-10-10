@@ -1,5 +1,9 @@
 import { getDb } from '../db/database';
-import type { TimelineEvent, CreateTimelineEventInput, UpdateTimelineEventInput } from '../models/TimelineEvent';
+import type {
+  TimelineEvent,
+  CreateTimelineEventInput,
+  UpdateTimelineEventInput,
+} from '../models/TimelineEvent';
 import { EncryptionService, type EncryptedData } from '../services/EncryptionService.js';
 import type { AuditLogger } from '../services/AuditLogger.js';
 
@@ -14,7 +18,7 @@ import type { AuditLogger } from '../services/AuditLogger.js';
 export class TimelineRepository {
   constructor(
     private encryptionService?: EncryptionService,
-    private auditLogger?: AuditLogger,
+    private auditLogger?: AuditLogger
   ) {}
 
   /**
@@ -23,15 +27,12 @@ export class TimelineRepository {
   create(input: CreateTimelineEventInput): TimelineEvent {
     try {
       const db = getDb();
+      const encryption = this.requireEncryptionService();
 
       // Encrypt description before INSERT (P1 priority field)
-      const encryptedDescription = input.description
-        ? this.encryptionService?.encrypt(input.description)
-        : null;
+      const encryptedDescription = input.description ? encryption.encrypt(input.description) : null;
 
-      const descriptionToStore = encryptedDescription
-        ? JSON.stringify(encryptedDescription)
-        : null;
+      const descriptionToStore = encryptedDescription ? JSON.stringify(encryptedDescription) : null;
 
       const stmt = db.prepare(`
         INSERT INTO timeline_events (case_id, event_date, title, description)
@@ -136,6 +137,7 @@ export class TimelineRepository {
   update(id: number, input: UpdateTimelineEventInput): TimelineEvent | null {
     try {
       const db = getDb();
+      const encryption = this.requireEncryptionService();
 
       const updates: string[] = [];
       const params: Record<string, unknown> = { id };
@@ -154,12 +156,10 @@ export class TimelineRepository {
         updates.push('description = @description');
         // Encrypt description before UPDATE
         const encryptedDescription = input.description
-          ? this.encryptionService?.encrypt(input.description)
+          ? encryption.encrypt(input.description)
           : null;
 
-        params.description = encryptedDescription
-          ? JSON.stringify(encryptedDescription)
-          : null;
+        params.description = encryptedDescription ? JSON.stringify(encryptedDescription) : null;
       }
 
       if (updates.length === 0) {
@@ -285,6 +285,13 @@ export class TimelineRepository {
     }
 
     return 'Unknown error';
+  }
+
+  private requireEncryptionService(): EncryptionService {
+    if (!this.encryptionService) {
+      throw new Error('EncryptionService not configured for TimelineRepository');
+    }
+    return this.encryptionService;
   }
 
   /**

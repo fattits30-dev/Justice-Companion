@@ -1,5 +1,9 @@
 import { timelineRepository } from '@/repositories/TimelineRepository';
-import type { TimelineEvent, CreateTimelineEventInput, UpdateTimelineEventInput } from '@/models/TimelineEvent';
+import type {
+  TimelineEvent,
+  CreateTimelineEventInput,
+  UpdateTimelineEventInput,
+} from '@/models/TimelineEvent';
 import { errorLogger } from '@/utils/error-logger';
 
 export class TimelineService {
@@ -25,17 +29,12 @@ export class TimelineService {
         throw new Error('Timeline event description must be 10000 characters or less');
       }
 
-      const timelineEvent = timelineRepository.create(input);
-
-      errorLogger.logError('Timeline event created successfully', {
-        type: 'info',
-        timelineEventId: timelineEvent.id,
+      return timelineRepository.create(input);
+    } catch (error) {
+      errorLogger.logError(error as Error, {
+        context: 'createTimelineEvent',
         caseId: input.caseId,
       });
-
-      return timelineEvent;
-    } catch (error) {
-      errorLogger.logError(error as Error, { context: 'createTimelineEvent', input });
       throw error;
     }
   }
@@ -88,14 +87,13 @@ export class TimelineService {
         throw new Error('Timeline event not found');
       }
 
-      errorLogger.logError('Timeline event updated successfully', {
-        type: 'info',
-        timelineEventId: id,
-      });
-
       return timelineEvent;
     } catch (error) {
-      errorLogger.logError(error as Error, { context: 'updateTimelineEvent', id, input });
+      errorLogger.logError(error as Error, {
+        context: 'updateTimelineEvent',
+        id,
+        fields: Object.keys(input ?? {}),
+      });
       throw error;
     }
   }
@@ -106,13 +104,11 @@ export class TimelineService {
   deleteTimelineEvent(id: number): void {
     try {
       timelineRepository.delete(id);
-
-      errorLogger.logError('Timeline event deleted successfully', {
-        type: 'info',
-        timelineEventId: id,
-      });
     } catch (error) {
-      errorLogger.logError(error as Error, { context: 'deleteTimelineEvent', id });
+      errorLogger.logError(error as Error, {
+        context: 'deleteTimelineEvent',
+        id,
+      });
       throw error;
     }
   }

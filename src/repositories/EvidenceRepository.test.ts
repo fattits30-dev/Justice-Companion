@@ -66,7 +66,8 @@ describe('EvidenceRepository with Encryption', () => {
         caseId: testCaseId,
         title: 'Email Evidence',
         evidenceType: 'email',
-        content: 'Confidential email content: Subject: Re: Termination, Body: Your employment is terminated...',
+        content:
+          'Confidential email content: Subject: Re: Termination, Body: Your employment is terminated...',
       };
 
       const created = evidenceRepo.create(evidenceInput);
@@ -100,7 +101,9 @@ describe('EvidenceRepository with Encryption', () => {
 
       const created = evidenceRepo.create(evidenceInput);
 
-      const rawRow = db.prepare('SELECT file_path, content FROM evidence WHERE id = ?').get(created.id) as {
+      const rawRow = db
+        .prepare('SELECT file_path, content FROM evidence WHERE id = ?')
+        .get(created.id) as {
         file_path: string | null;
         content: string | null;
       };
@@ -178,11 +181,12 @@ describe('EvidenceRepository with Encryption', () => {
         { title: 'Document 1', evidenceType: 'document' as const, content: 'Document content 1' },
       ];
 
-      const createdIds = evidenceItems.map((e) =>
-        evidenceRepo.create({
-          caseId: testCaseId,
-          ...e,
-        }).id,
+      const createdIds = evidenceItems.map(
+        (e) =>
+          evidenceRepo.create({
+            caseId: testCaseId,
+            ...e,
+          }).id
       );
 
       const allEvidence = evidenceRepo.findByCaseId(testCaseId);
@@ -242,7 +246,7 @@ describe('EvidenceRepository with Encryption', () => {
       const result = db
         .prepare(
           `INSERT INTO evidence (case_id, title, evidence_type, content)
-         VALUES (?, ?, ?, ?)`,
+         VALUES (?, ?, ?, ?)`
         )
         .run(testCaseId, 'Legacy Evidence', 'note', 'This is plaintext from old version');
 
@@ -255,22 +259,17 @@ describe('EvidenceRepository with Encryption', () => {
       expect(retrieved!.content).toBe('This is plaintext from old version');
     });
 
-    it('should work without encryption service', () => {
+    it('should throw when encryption service is not configured', () => {
       const repoWithoutEncryption = new EvidenceRepository();
 
-      const created = repoWithoutEncryption.create({
-        caseId: testCaseId,
-        title: 'Unencrypted Evidence',
-        evidenceType: 'note',
-        content: 'This will be stored as plaintext',
-      });
-
-      const rawRow = db.prepare('SELECT content FROM evidence WHERE id = ?').get(created.id) as {
-        content: string | null;
-      };
-
-      // Without encryption service, content is stored as plaintext
-      expect(rawRow.content).toBe('This will be stored as plaintext');
+      expect(() =>
+        repoWithoutEncryption.create({
+          caseId: testCaseId,
+          title: 'Unencrypted Evidence',
+          evidenceType: 'note',
+          content: 'This will be stored as plaintext',
+        })
+      ).toThrow('EncryptionService not configured for EvidenceRepository');
     });
   });
 

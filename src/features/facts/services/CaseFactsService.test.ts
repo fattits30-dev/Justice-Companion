@@ -59,16 +59,7 @@ describe('CaseFactsService', () => {
         importance: 'high',
         factContent: 'Incident occurred on January 15, 2025',
       });
-      expect(errorLogger.logError).toHaveBeenCalledWith(
-        'Case fact created successfully',
-        expect.objectContaining({
-          type: 'info',
-          caseFactId: 1,
-          caseId: 100,
-          factCategory: 'timeline',
-          importance: 'high',
-        }),
-      );
+      expect(errorLogger.logError).not.toHaveBeenCalled();
     });
 
     it('should create case facts with different categories', () => {
@@ -132,7 +123,7 @@ describe('CaseFactsService', () => {
           factCategory: 'timeline',
           importance: 'medium',
           factContent: '',
-        }),
+        })
       ).toThrow('Case fact content is required');
 
       expect(() =>
@@ -141,7 +132,7 @@ describe('CaseFactsService', () => {
           factCategory: 'timeline',
           importance: 'medium',
           factContent: '   ',
-        }),
+        })
       ).toThrow('Case fact content is required');
 
       expect(caseFactsRepository.create).not.toHaveBeenCalled();
@@ -156,7 +147,7 @@ describe('CaseFactsService', () => {
           factCategory: 'timeline',
           importance: 'medium',
           factContent: longContent,
-        }),
+        })
       ).toThrow('Case fact content must be 5000 characters or less');
 
       expect(caseFactsRepository.create).not.toHaveBeenCalled();
@@ -199,20 +190,16 @@ describe('CaseFactsService', () => {
           factCategory: 'timeline',
           importance: 'medium',
           factContent: 'Test content',
-        }),
+        })
       ).toThrow('Database error');
 
       expect(errorLogger.logError).toHaveBeenCalledWith(
         error,
         expect.objectContaining({
           context: 'createCaseFact',
-          input: {
-            caseId: 100,
-            factCategory: 'timeline',
-            importance: 'medium',
-            factContent: 'Test content',
-          },
-        }),
+          caseId: 100,
+          factCategory: 'timeline',
+        })
       );
     });
   });
@@ -255,7 +242,7 @@ describe('CaseFactsService', () => {
       expect(() => caseFactsService.getCaseFactById(1)).toThrow('Database error');
       expect(errorLogger.logError).toHaveBeenCalledWith(
         error,
-        expect.objectContaining({ context: 'getCaseFactById', id: 1 }),
+        expect.objectContaining({ context: 'getCaseFactById', id: 1 })
       );
     });
   });
@@ -309,7 +296,7 @@ describe('CaseFactsService', () => {
       expect(() => caseFactsService.getCaseFactsByCaseId(100)).toThrow('Database error');
       expect(errorLogger.logError).toHaveBeenCalledWith(
         error,
-        expect.objectContaining({ context: 'getCaseFactsByCaseId', caseId: 100 }),
+        expect.objectContaining({ context: 'getCaseFactsByCaseId', caseId: 100 })
       );
     });
   });
@@ -360,14 +347,16 @@ describe('CaseFactsService', () => {
         throw error;
       });
 
-      expect(() => caseFactsService.getCaseFactsByCategory(100, 'evidence')).toThrow('Database error');
+      expect(() => caseFactsService.getCaseFactsByCategory(100, 'evidence')).toThrow(
+        'Database error'
+      );
       expect(errorLogger.logError).toHaveBeenCalledWith(
         error,
         expect.objectContaining({
           context: 'getCaseFactsByCategory',
           caseId: 100,
           factCategory: 'evidence',
-        }),
+        })
       );
     });
   });
@@ -418,14 +407,16 @@ describe('CaseFactsService', () => {
         throw error;
       });
 
-      expect(() => caseFactsService.getCaseFactsByImportance(100, 'high')).toThrow('Database error');
+      expect(() => caseFactsService.getCaseFactsByImportance(100, 'high')).toThrow(
+        'Database error'
+      );
       expect(errorLogger.logError).toHaveBeenCalledWith(
         error,
         expect.objectContaining({
           context: 'getCaseFactsByImportance',
           caseId: 100,
           importance: 'high',
-        }),
+        })
       );
     });
   });
@@ -456,13 +447,7 @@ describe('CaseFactsService', () => {
         importance: 'high',
         factContent: 'Updated witness statement',
       });
-      expect(errorLogger.logError).toHaveBeenCalledWith(
-        'Case fact updated successfully',
-        expect.objectContaining({
-          type: 'info',
-          caseFactId: 1,
-        }),
-      );
+      expect(errorLogger.logError).not.toHaveBeenCalled();
     });
 
     it('should update only factContent', () => {
@@ -506,13 +491,13 @@ describe('CaseFactsService', () => {
     });
 
     it('should throw error if factContent is empty string', () => {
-      expect(() =>
-        caseFactsService.updateCaseFact(1, { factContent: '' }),
-      ).toThrow('Case fact content cannot be empty');
+      expect(() => caseFactsService.updateCaseFact(1, { factContent: '' })).toThrow(
+        'Case fact content cannot be empty'
+      );
 
-      expect(() =>
-        caseFactsService.updateCaseFact(1, { factContent: '   ' }),
-      ).toThrow('Case fact content cannot be empty');
+      expect(() => caseFactsService.updateCaseFact(1, { factContent: '   ' })).toThrow(
+        'Case fact content cannot be empty'
+      );
 
       expect(caseFactsRepository.update).not.toHaveBeenCalled();
     });
@@ -520,9 +505,9 @@ describe('CaseFactsService', () => {
     it('should throw error if factContent exceeds 5000 characters', () => {
       const longContent = 'a'.repeat(5001);
 
-      expect(() =>
-        caseFactsService.updateCaseFact(1, { factContent: longContent }),
-      ).toThrow('Case fact content must be 5000 characters or less');
+      expect(() => caseFactsService.updateCaseFact(1, { factContent: longContent })).toThrow(
+        'Case fact content must be 5000 characters or less'
+      );
 
       expect(caseFactsRepository.update).not.toHaveBeenCalled();
     });
@@ -530,9 +515,9 @@ describe('CaseFactsService', () => {
     it('should throw error if case fact not found', () => {
       vi.mocked(caseFactsRepository.update).mockReturnValue(null);
 
-      expect(() =>
-        caseFactsService.updateCaseFact(999, { factContent: 'Test' }),
-      ).toThrow('Case fact not found');
+      expect(() => caseFactsService.updateCaseFact(999, { factContent: 'Test' })).toThrow(
+        'Case fact not found'
+      );
 
       expect(caseFactsRepository.update).toHaveBeenCalledWith(999, { factContent: 'Test' });
     });
@@ -543,17 +528,17 @@ describe('CaseFactsService', () => {
         throw error;
       });
 
-      expect(() =>
-        caseFactsService.updateCaseFact(1, { factContent: 'Test' }),
-      ).toThrow('Database error');
+      expect(() => caseFactsService.updateCaseFact(1, { factContent: 'Test' })).toThrow(
+        'Database error'
+      );
 
       expect(errorLogger.logError).toHaveBeenCalledWith(
         error,
         expect.objectContaining({
           context: 'updateCaseFact',
           id: 1,
-          input: { factContent: 'Test' },
-        }),
+          fields: ['factContent'],
+        })
       );
     });
   });
@@ -565,13 +550,7 @@ describe('CaseFactsService', () => {
       caseFactsService.deleteCaseFact(1);
 
       expect(caseFactsRepository.delete).toHaveBeenCalledWith(1);
-      expect(errorLogger.logError).toHaveBeenCalledWith(
-        'Case fact deleted successfully',
-        expect.objectContaining({
-          type: 'info',
-          caseFactId: 1,
-        }),
-      );
+      expect(errorLogger.logError).not.toHaveBeenCalled();
     });
 
     it('should log and rethrow repository errors', () => {
@@ -583,14 +562,15 @@ describe('CaseFactsService', () => {
       expect(() => caseFactsService.deleteCaseFact(1)).toThrow('Database error');
       expect(errorLogger.logError).toHaveBeenCalledWith(
         error,
-        expect.objectContaining({ context: 'deleteCaseFact', id: 1 }),
+        expect.objectContaining({ context: 'deleteCaseFact', id: 1 })
       );
     });
   });
 
   describe('Edge Cases', () => {
     it('should handle special characters in factContent', () => {
-      const specialContent = 'Location: "Main St. & 5th Ave." <coordinates: 40.7128° N, 74.0060° W>';
+      const specialContent =
+        'Location: "Main St. & 5th Ave." <coordinates: 40.7128° N, 74.0060° W>';
       const mockCaseFact: CaseFact = {
         id: 1,
         caseId: 100,
@@ -638,7 +618,8 @@ describe('CaseFactsService', () => {
     });
 
     it('should handle formatted content with newlines', () => {
-      const formattedContent = 'Evidence List:\n1. Document A (dated 2025-01-15)\n2. Photo B (location: scene)\n3. Video C (timestamp: 14:30)';
+      const formattedContent =
+        'Evidence List:\n1. Document A (dated 2025-01-15)\n2. Photo B (location: scene)\n3. Video C (timestamp: 14:30)';
       const mockCaseFact: CaseFact = {
         id: 1,
         caseId: 100,
@@ -662,7 +643,8 @@ describe('CaseFactsService', () => {
     });
 
     it('should handle dates and timestamps in factContent', () => {
-      const dateContent = 'Timeline: 2025-01-15 08:00 AM - Incident occurred; 2025-01-15 09:30 AM - Police arrived; 2025-01-15 10:15 AM - Witness interviewed';
+      const dateContent =
+        'Timeline: 2025-01-15 08:00 AM - Incident occurred; 2025-01-15 09:30 AM - Police arrived; 2025-01-15 10:15 AM - Witness interviewed';
       const mockCaseFact: CaseFact = {
         id: 1,
         caseId: 100,

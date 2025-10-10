@@ -10,6 +10,16 @@ import Database from 'better-sqlite3';
 import fs from 'fs';
 import path from 'path';
 
+interface MigrationRow {
+  id: number;
+  name: string;
+  checksum: string;
+  applied_at: string;
+  applied_by: string | null;
+  duration_ms: number | null;
+  status: 'applied' | 'rolled_back' | 'failed';
+}
+
 // Initialize database directly (no Electron context)
 const dbPath = path.join(process.cwd(), 'justice.db');
 const db = new Database(dbPath);
@@ -54,11 +64,11 @@ if (!migrationName) {
 
     const applied = db
       .prepare('SELECT * FROM migrations WHERE status = ? ORDER BY applied_at ASC')
-      .all('applied') as any[];
+      .all('applied') as MigrationRow[];
 
     if (applied.length > 0) {
       console.log('Available migrations to rollback:');
-      applied.forEach((migration: any) => {
+      applied.forEach((migration: MigrationRow) => {
         console.log(`  • ${migration.name}`);
       });
     } else {
@@ -93,7 +103,7 @@ try {
   // Check if migration is applied
   const migration = db
     .prepare('SELECT * FROM migrations WHERE name = ? AND status = ?')
-    .get(migrationName, 'applied') as any;
+    .get(migrationName, 'applied') as MigrationRow | undefined;
 
   if (!migration) {
     throw new Error(`Migration ${migrationName} is not applied or already rolled back`);
@@ -130,11 +140,13 @@ try {
   const rollback = db.transaction(() => {
     db.exec(down);
 
-    db.prepare(`
+    db.prepare(
+      `
       UPDATE migrations
       SET status = 'rolled_back'
       WHERE name = ?
-    `).run(migrationName);
+    `
+    ).run(migrationName);
   });
 
   rollback();

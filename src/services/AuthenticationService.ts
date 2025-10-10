@@ -55,6 +55,11 @@ export class AuthenticationService {
    * - At least one number
    */
   async register(username: string, password: string, email: string): Promise<User> {
+    // Validate username
+    if (!username || username.trim().length === 0) {
+      throw new AuthenticationError('Username cannot be empty');
+    }
+
     // Validate password strength
     if (password.length < 12) {
       throw new AuthenticationError(
@@ -202,7 +207,7 @@ export class AuthenticationService {
   /**
    * Logout user and delete session
    */
-  async logout(sessionId: string): Promise<void> {
+  logout(sessionId: string): void {
     const session = this.sessionRepository.findById(sessionId);
 
     if (session) {

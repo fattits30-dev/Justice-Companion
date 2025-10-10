@@ -10,7 +10,7 @@ import type { AuditLogger } from '../services/AuditLogger.js';
 export class EvidenceRepository {
   constructor(
     private encryptionService?: EncryptionService,
-    private auditLogger?: AuditLogger,
+    private auditLogger?: AuditLogger
   ) {}
 
   /**
@@ -19,17 +19,13 @@ export class EvidenceRepository {
   create(input: CreateEvidenceInput): Evidence {
     try {
       const db = getDb();
+      const encryption = this.requireEncryptionService();
 
       // Encrypt content before INSERT (if provided)
       let contentToStore: string | null = null;
       if (input.content) {
-        if (this.encryptionService) {
-          const encryptedContent = this.encryptionService.encrypt(input.content);
-          contentToStore = JSON.stringify(encryptedContent);
-        } else {
-          // No encryption service - store as plaintext (backward compatibility)
-          contentToStore = input.content;
-        }
+        const encryptedContent = encryption.encrypt(input.content);
+        contentToStore = encryptedContent ? JSON.stringify(encryptedContent) : null;
       }
 
       const stmt = db.prepare(`
@@ -198,6 +194,7 @@ export class EvidenceRepository {
   update(id: number, input: UpdateEvidenceInput): Evidence | null {
     try {
       const db = getDb();
+      const encryption = this.requireEncryptionService();
 
       const updates: string[] = [];
       const params: Record<string, unknown> = { id };
@@ -214,13 +211,8 @@ export class EvidenceRepository {
         updates.push('content = @content');
         // Encrypt content before UPDATE
         if (input.content) {
-          if (this.encryptionService) {
-            const encryptedContent = this.encryptionService.encrypt(input.content);
-            params.content = JSON.stringify(encryptedContent);
-          } else {
-            // No encryption service - store as plaintext (backward compatibility)
-            params.content = input.content;
-          }
+          const encryptedContent = encryption.encrypt(input.content);
+          params.content = encryptedContent ? JSON.stringify(encryptedContent) : null;
         } else {
           params.content = null;
         }
@@ -346,9 +338,10 @@ export class EvidenceRepository {
     query += ' GROUP BY evidence_type';
 
     const stmt = db.prepare(query);
-    const results = caseId !== undefined
-      ? stmt.all(caseId) as Array<{ type: string; count: number }>
-      : stmt.all() as Array<{ type: string; count: number }>;
+    const results =
+      caseId !== undefined
+        ? (stmt.all(caseId) as Array<{ type: string; count: number }>)
+        : (stmt.all() as Array<{ type: string; count: number }>);
 
     const counts: Record<string, number> = {
       document: 0,
@@ -395,6 +388,13 @@ export class EvidenceRepository {
       // JSON parse failed - likely legacy plaintext data
       return storedValue;
     }
+  }
+
+  private requireEncryptionService(): EncryptionService {
+    if (!this.encryptionService) {
+      throw new Error('EncryptionService not configured for EvidenceRepository');
+    }
+    return this.encryptionService;
   }
 
   /**

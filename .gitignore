@@ -11,6 +11,9 @@ out/
 
 # Testing
 coverage/
+test-results/
+**/test-results/
+playwright-report/
 
 # Environment variables
 .env
@@ -36,9 +39,24 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
+
+# Lint/test output files
 lint-report.json
 lint-output.txt
+lint-output.json
 lint-violations-summary.txt
+lint-errors.txt
+lint-result.txt
+lint-full-output.txt
+lint-report-final.txt
+lint-*.json
+guard-output.txt
+test-output.txt
+test-auth-startup.log
+electron-startup.log
+*-failures.txt
+*-test-results.txt
+files-with-nullish.txt
 
 # OS
 Thumbs.db
@@ -68,15 +86,53 @@ legal-docs/
 # Local tooling / automation artifacts
 .amazonq/
 .claude/
+.cursor/
 .mcp/
 .mcp.json
 .pytest_cache/
-automation/archives/
-automation/dist/
-automation/results/
-automation/state/
+.github/pull_request_template.md
+automation/
 tmp/
+
+# Public release checklist (developer-only)
+PUBLIC_RELEASE_CHECKLIST.md
 
 # Build artifacts
 *.tsbuildinfo
 nul
+
+# Public release preparation (developer-only)
+CLEANUP_SUMMARY.md
+RELEASE_NOW.md
+PUBLIC_RELEASE_READY.md
+TOKEN_SECURITY_UPGRADE.md
+QUICK_TOKEN_SETUP.md
+
+# Documentation (keep local, exclude from git - app files only in git)
+docs/*
+!docs/troubleshooting/
+!docs/implementation/
+!docs/COMPREHENSIVE_SCAN_*.md
+!docs/README.md
+CLAUDE.md
+CONTRIBUTING.md
+SECURITY.md
+TODO.md
+*_COMPLETE.md
+*_REPORT.md
+*_SUMMARY.md
+compass_artifact_*.md
+
+# Status reports and guides
+GIT_AUTOMATION_IMPLEMENTATION_REPORT.md
+PHASE*.md
+WINDOWS_*.md
+
+# Codex development environment files
+AGENTS.md
+CODEX_*.md
+activate-codex.ps1
+test-codex*.ps1
+verify-profile.ps1
+fix_braces.txt
+.github/workflows/codex-autofix.yml

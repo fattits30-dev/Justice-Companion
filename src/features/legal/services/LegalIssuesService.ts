@@ -21,17 +21,15 @@ export class LegalIssuesService {
         throw new Error('Legal issue description must be 10000 characters or less');
       }
 
-      const legalIssue = legalIssuesRepository.create(input);
-
-      errorLogger.logError('Legal issue created successfully', {
-        type: 'info',
-        legalIssueId: legalIssue.id,
-        caseId: input.caseId,
-      });
-
-      return legalIssue;
+      return legalIssuesRepository.create(input);
     } catch (error) {
-      errorLogger.logError(error as Error, { context: 'createLegalIssue', input });
+      errorLogger.logError(error as Error, {
+        context: 'createLegalIssue',
+        caseId: input.caseId,
+        fields: ['title', 'description', 'relevantLaw', 'guidance'].filter(
+          (field) => field in input
+        ),
+      });
       throw error;
     }
   }
@@ -84,14 +82,13 @@ export class LegalIssuesService {
         throw new Error('Legal issue not found');
       }
 
-      errorLogger.logError('Legal issue updated successfully', {
-        type: 'info',
-        legalIssueId: id,
-      });
-
       return legalIssue;
     } catch (error) {
-      errorLogger.logError(error as Error, { context: 'updateLegalIssue', id, input });
+      errorLogger.logError(error as Error, {
+        context: 'updateLegalIssue',
+        id,
+        fields: Object.keys(input ?? {}),
+      });
       throw error;
     }
   }
@@ -102,13 +99,11 @@ export class LegalIssuesService {
   deleteLegalIssue(id: number): void {
     try {
       legalIssuesRepository.delete(id);
-
-      errorLogger.logError('Legal issue deleted successfully', {
-        type: 'info',
-        legalIssueId: id,
-      });
     } catch (error) {
-      errorLogger.logError(error as Error, { context: 'deleteLegalIssue', id });
+      errorLogger.logError(error as Error, {
+        context: 'deleteLegalIssue',
+        id,
+      });
       throw error;
     }
   }

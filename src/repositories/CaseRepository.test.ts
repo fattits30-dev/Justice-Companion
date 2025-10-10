@@ -59,7 +59,9 @@ describe('CaseRepository with Encryption', () => {
       const createdCase = repository.create(caseInput);
 
       // Query database directly to verify encryption
-      const rawRow = db.prepare('SELECT description FROM cases WHERE id = ?').get(createdCase.id) as {
+      const rawRow = db
+        .prepare('SELECT description FROM cases WHERE id = ?')
+        .get(createdCase.id) as {
         description: string | null;
       };
 
@@ -77,7 +79,7 @@ describe('CaseRepository with Encryption', () => {
       expect(encryptedData).toHaveProperty('version', 1);
     });
 
-    it('should store null for empty description without encryption', () => {
+    it('should store null for empty description', () => {
       const caseInput: CreateCaseInput = {
         title: 'Test Case',
         caseType: 'consumer',
@@ -86,7 +88,9 @@ describe('CaseRepository with Encryption', () => {
 
       const createdCase = repository.create(caseInput);
 
-      const rawRow = db.prepare('SELECT description FROM cases WHERE id = ?').get(createdCase.id) as {
+      const rawRow = db
+        .prepare('SELECT description FROM cases WHERE id = ?')
+        .get(createdCase.id) as {
         description: string | null;
       };
 
@@ -109,7 +113,9 @@ describe('CaseRepository with Encryption', () => {
       expect(updated).toBeTruthy();
 
       // Verify encryption in database
-      const rawRow = db.prepare('SELECT description FROM cases WHERE id = ?').get(createdCase.id) as {
+      const rawRow = db
+        .prepare('SELECT description FROM cases WHERE id = ?')
+        .get(createdCase.id) as {
         description: string | null;
       };
 
@@ -175,7 +181,7 @@ describe('CaseRepository with Encryption', () => {
       const result = db
         .prepare(
           `INSERT INTO cases (title, case_type, description, status)
-         VALUES (?, ?, ?, ?)`,
+         VALUES (?, ?, ?, ?)`
         )
         .run('Legacy Case', 'consumer', 'This is plaintext from old version', 'active');
 
@@ -188,21 +194,16 @@ describe('CaseRepository with Encryption', () => {
       expect(retrievedCase!.description).toBe('This is plaintext from old version');
     });
 
-    it('should work without encryption service (backward compat mode)', () => {
+    it('should throw when encryption service is not configured', () => {
       const repoWithoutEncryption = new CaseRepository();
 
-      const createdCase = repoWithoutEncryption.create({
-        title: 'Unencrypted Case',
-        caseType: 'debt',
-        description: 'This will be stored as plaintext',
-      });
-
-      const rawRow = db.prepare('SELECT description FROM cases WHERE id = ?').get(createdCase.id) as {
-        description: string | null;
-      };
-
-      // Without encryption service, description is stored as plaintext
-      expect(rawRow.description).toBe('This will be stored as plaintext');
+      expect(() =>
+        repoWithoutEncryption.create({
+          title: 'Unencrypted Case',
+          caseType: 'debt',
+          description: 'This will be stored as plaintext',
+        })
+      ).toThrow('EncryptionService not configured for CaseRepository');
     });
   });
 
@@ -292,7 +293,8 @@ describe('CaseRepository with Encryption', () => {
     });
 
     it('should handle special legal characters', () => {
-      const description = '§123.45(a)(1) - "Plaintiff" vs. \'Defendant\' @ 50% liability [cite: 2024 WL 12345]';
+      const description =
+        '§123.45(a)(1) - "Plaintiff" vs. \'Defendant\' @ 50% liability [cite: 2024 WL 12345]';
 
       const createdCase = repository.create({
         title: 'Special Chars Case',

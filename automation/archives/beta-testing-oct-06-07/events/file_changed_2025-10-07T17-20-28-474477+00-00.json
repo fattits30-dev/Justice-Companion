@@ -1,9 +1,0 @@
-{
-  "event_type": "file_changed",
-  "agent_id": "file_monitor",
-  "timestamp": "2025-10-07T17:20:28.474477+00:00",
-  "files": [
-    "C:\\Users\\sava6\\Desktop\\Justice Companion\\src\\components\\views\\SettingsView.tsx"
-  ],
-  "count": 1
-}

@@ -6,7 +6,7 @@ import type { AuditLogger } from '../services/AuditLogger.js';
 export class CaseRepository {
   constructor(
     private encryptionService?: EncryptionService,
-    private auditLogger?: AuditLogger,
+    private auditLogger?: AuditLogger
   ) {}
   /**
    * Create a new case
@@ -14,17 +14,13 @@ export class CaseRepository {
   create(input: CreateCaseInput): Case {
     try {
       const db = getDb();
+      const encryption = this.requireEncryptionService();
 
       // Encrypt description before INSERT
       let descriptionToStore: string | null = null;
       if (input.description) {
-        if (this.encryptionService) {
-          const encryptedDescription = this.encryptionService.encrypt(input.description);
-          descriptionToStore = JSON.stringify(encryptedDescription);
-        } else {
-          // No encryption service - store as plaintext (backward compatibility)
-          descriptionToStore = input.description;
-        }
+        const encryptedDescription = encryption.encrypt(input.description);
+        descriptionToStore = encryptedDescription ? JSON.stringify(encryptedDescription) : null;
       }
 
       const stmt = db.prepare(`
@@ -149,6 +145,7 @@ export class CaseRepository {
   update(id: number, input: UpdateCaseInput): Case | null {
     try {
       const db = getDb();
+      const encryption = this.requireEncryptionService();
 
       const updates: string[] = [];
       const params: Record<string, unknown> = { id };
@@ -161,13 +158,8 @@ export class CaseRepository {
         updates.push('description = @description');
         // Encrypt description before UPDATE
         if (input.description) {
-          if (this.encryptionService) {
-            const encryptedDescription = this.encryptionService.encrypt(input.description);
-            params.description = JSON.stringify(encryptedDescription);
-          } else {
-            // No encryption service - store as plaintext (backward compatibility)
-            params.description = input.description;
-          }
+          const encryptedDescription = encryption.encrypt(input.description);
+          params.description = encryptedDescription ? JSON.stringify(encryptedDescription) : null;
         } else {
           params.description = null;
         }
@@ -332,6 +324,13 @@ export class CaseRepository {
       // JSON parse failed - likely legacy plaintext data
       return storedValue;
     }
+  }
+
+  private requireEncryptionService(): EncryptionService {
+    if (!this.encryptionService) {
+      throw new Error('EncryptionService not configured for CaseRepository');
+    }
+    return this.encryptionService;
   }
 
   /**

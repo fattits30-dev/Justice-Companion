@@ -332,6 +332,32 @@ export class UserRepository {
   }
 
   /**
+   * Update user active status
+   */
+  updateActiveStatus(id: number, isActive: boolean): void {
+    const db = getDb();
+
+    const stmt = db.prepare(`
+      UPDATE users
+      SET is_active = ?
+      WHERE id = ?
+    `);
+
+    stmt.run(isActive ? 1 : 0, id);
+
+    // Audit: Active status changed
+    this.auditLogger?.log({
+      eventType: 'user.update',
+      userId: id.toString(),
+      resourceType: 'user',
+      resourceId: id.toString(),
+      action: 'update',
+      details: { isActive },
+      success: true,
+    });
+  }
+
+  /**
    * Delete user
    */
   delete(id: number): boolean {

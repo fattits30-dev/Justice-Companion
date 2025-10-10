@@ -58,41 +58,45 @@ Add a postinstall script to `package.json`:
 This automatically rebuilds `better-sqlite3` after every `npm install`.
 
 ## Verification
-After rebuilding, check the logs for successful initialization:
 
-```bash
-# Start the app
-npm run electron:dev
+After rebuilding, verify the fix:
 
-# Check logs (should show these messages):
-# ✅ Database initialized and migrations complete
-# ✅ Authentication services initialized successfully
-# 🔐 Local user authentication ready
-```
+1. **Check database connection**:
+   ```bash
+   npm run db:migrate:status
+   ```
 
-Or check `logs/errors.log`:
+2. **Run database tests**:
+   ```bash
+   npm test -- src/repositories
+   ```
 
-```bash
-tail -50 logs/errors.log | grep "Authentication"
-# Should show: ✅ Authentication services initialized successfully
-```
+3. **Start the application**:
+   ```bash
+   npm run electron:dev
+   ```
+
+4. **Check authentication** - Look for this log message:
+   ```
+   ✅ Authentication services initialized successfully
+   🔐 Local user authentication ready (scrypt password hashing, 24-hour sessions)
+   ```
 
 ## Technical Details
 
 ### Node Module Versions
-- **MODULE_VERSION 127**: Node.js v20.x
-- **MODULE_VERSION 139**: Node.js v22.x (Electron 38.x)
-
-Electron 38.x (used by Justice Companion) uses Node.js v22, which requires MODULE_VERSION 139.
+- **NODE_MODULE_VERSION 127**: Node.js v22.11.0
+- **NODE_MODULE_VERSION 128**: Node.js v22.20.0
+- **NODE_MODULE_VERSION 139**: Electron v38.x (uses Node.js v22.x)
 
 ### Why This Happens
-1. `npm install` downloads pre-built binaries from npm registry
-2. Pre-built binaries are compiled for specific Node.js versions
-3. If the binary version doesn't match your runtime, it fails to load
-4. Native modules must be rebuilt using `electron-rebuild`
+Electron bundles its own version of Node.js, which may differ from the system Node.js version. The `better-sqlite3` package compiles native C++ code that links directly to Node.js internals. These internals change between Node.js versions, requiring the module to be recompiled for each specific version.
 
 ### Files Affected
-- `node_modules/better-sqlite3/build/Release/better_sqlite3.node` (native binary)
+The rebuild process regenerates:
+- `node_modules/better-sqlite3/build/Release/better_sqlite3.node`
+
+This is the compiled native binary that interfaces between Node.js and SQLite3.
 
 ### Build Dependencies
 Ensure you have build tools installed:
@@ -113,15 +117,15 @@ sudo apt-get install build-essential python3
 ```
 
 ## Related Issues
-- [Electron Rebuild Documentation](https://github.com/electron/rebuild)
-- [Better-SQLite3 Documentation](https://github.com/WiseLibs/better-sqlite3)
+- Database tests failing with "NODE_MODULE_VERSION" error
+- E2E tests timing out or failing to start
+- Repository operations returning undefined
+- Audit logging not working
 
 ## Discovered
-- **Date**: 2025-10-09
-- **Context**: Auth system initialization failing due to database connection errors
-- **Resolution Time**: ~15 minutes diagnosis + 30 seconds rebuild
+This issue was identified during comprehensive testing when:
+- All database tests (14/14) were failing
+- 83 tests were being skipped due to database unavailability
+- Authentication services couldn't initialize properly
 
----
-
-**Last Updated**: 2025-10-09
-**Maintainer**: Justice Companion Team
+The fix was implemented as a `postinstall` script to ensure consistent operation across all development environments.

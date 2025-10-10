@@ -55,15 +55,7 @@ describe('UserFactsService', () => {
         factType: 'personal',
         factContent: 'John Doe, age 35, software engineer',
       });
-      expect(errorLogger.logError).toHaveBeenCalledWith(
-        'User fact created successfully',
-        expect.objectContaining({
-          type: 'info',
-          userFactId: 1,
-          caseId: 100,
-          factType: 'personal',
-        }),
-      );
+      expect(errorLogger.logError).not.toHaveBeenCalled();
     });
 
     it('should create a user fact with different fact types', () => {
@@ -97,7 +89,7 @@ describe('UserFactsService', () => {
           caseId: 100,
           factType: 'personal',
           factContent: '',
-        }),
+        })
       ).toThrow('User fact content is required');
 
       expect(() =>
@@ -105,7 +97,7 @@ describe('UserFactsService', () => {
           caseId: 100,
           factType: 'personal',
           factContent: '   ',
-        }),
+        })
       ).toThrow('User fact content is required');
 
       expect(userFactsRepository.create).not.toHaveBeenCalled();
@@ -119,7 +111,7 @@ describe('UserFactsService', () => {
           caseId: 100,
           factType: 'personal',
           factContent: longContent,
-        }),
+        })
       ).toThrow('User fact content must be 5000 characters or less');
 
       expect(userFactsRepository.create).not.toHaveBeenCalled();
@@ -159,19 +151,16 @@ describe('UserFactsService', () => {
           caseId: 100,
           factType: 'personal',
           factContent: 'Test content',
-        }),
+        })
       ).toThrow('Database error');
 
       expect(errorLogger.logError).toHaveBeenCalledWith(
         error,
         expect.objectContaining({
           context: 'createUserFact',
-          input: {
-            caseId: 100,
-            factType: 'personal',
-            factContent: 'Test content',
-          },
-        }),
+          caseId: 100,
+          factType: 'personal',
+        })
       );
     });
   });
@@ -213,7 +202,7 @@ describe('UserFactsService', () => {
       expect(() => userFactsService.getUserFactById(1)).toThrow('Database error');
       expect(errorLogger.logError).toHaveBeenCalledWith(
         error,
-        expect.objectContaining({ context: 'getUserFactById', id: 1 }),
+        expect.objectContaining({ context: 'getUserFactById', id: 1 })
       );
     });
   });
@@ -265,7 +254,7 @@ describe('UserFactsService', () => {
       expect(() => userFactsService.getUserFactsByCaseId(100)).toThrow('Database error');
       expect(errorLogger.logError).toHaveBeenCalledWith(
         error,
-        expect.objectContaining({ context: 'getUserFactsByCaseId', caseId: 100 }),
+        expect.objectContaining({ context: 'getUserFactsByCaseId', caseId: 100 })
       );
     });
   });
@@ -321,7 +310,7 @@ describe('UserFactsService', () => {
           context: 'getUserFactsByType',
           caseId: 100,
           factType: 'personal',
-        }),
+        })
       );
     });
   });
@@ -349,13 +338,7 @@ describe('UserFactsService', () => {
         factType: 'employment',
         factContent: 'Updated employment information',
       });
-      expect(errorLogger.logError).toHaveBeenCalledWith(
-        'User fact updated successfully',
-        expect.objectContaining({
-          type: 'info',
-          userFactId: 1,
-        }),
-      );
+      expect(errorLogger.logError).not.toHaveBeenCalled();
     });
 
     it('should update only factContent', () => {
@@ -378,13 +361,13 @@ describe('UserFactsService', () => {
     });
 
     it('should throw error if factContent is empty string', () => {
-      expect(() =>
-        userFactsService.updateUserFact(1, { factContent: '' }),
-      ).toThrow('User fact content cannot be empty');
+      expect(() => userFactsService.updateUserFact(1, { factContent: '' })).toThrow(
+        'User fact content cannot be empty'
+      );
 
-      expect(() =>
-        userFactsService.updateUserFact(1, { factContent: '   ' }),
-      ).toThrow('User fact content cannot be empty');
+      expect(() => userFactsService.updateUserFact(1, { factContent: '   ' })).toThrow(
+        'User fact content cannot be empty'
+      );
 
       expect(userFactsRepository.update).not.toHaveBeenCalled();
     });
@@ -392,9 +375,9 @@ describe('UserFactsService', () => {
     it('should throw error if factContent exceeds 5000 characters', () => {
       const longContent = 'a'.repeat(5001);
 
-      expect(() =>
-        userFactsService.updateUserFact(1, { factContent: longContent }),
-      ).toThrow('User fact content must be 5000 characters or less');
+      expect(() => userFactsService.updateUserFact(1, { factContent: longContent })).toThrow(
+        'User fact content must be 5000 characters or less'
+      );
 
       expect(userFactsRepository.update).not.toHaveBeenCalled();
     });
@@ -402,9 +385,9 @@ describe('UserFactsService', () => {
     it('should throw error if user fact not found', () => {
       vi.mocked(userFactsRepository.update).mockReturnValue(null);
 
-      expect(() =>
-        userFactsService.updateUserFact(999, { factContent: 'Test' }),
-      ).toThrow('User fact not found');
+      expect(() => userFactsService.updateUserFact(999, { factContent: 'Test' })).toThrow(
+        'User fact not found'
+      );
 
       expect(userFactsRepository.update).toHaveBeenCalledWith(999, { factContent: 'Test' });
     });
@@ -415,17 +398,17 @@ describe('UserFactsService', () => {
         throw error;
       });
 
-      expect(() =>
-        userFactsService.updateUserFact(1, { factContent: 'Test' }),
-      ).toThrow('Database error');
+      expect(() => userFactsService.updateUserFact(1, { factContent: 'Test' })).toThrow(
+        'Database error'
+      );
 
       expect(errorLogger.logError).toHaveBeenCalledWith(
         error,
         expect.objectContaining({
           context: 'updateUserFact',
           id: 1,
-          input: { factContent: 'Test' },
-        }),
+          fields: ['factContent'],
+        })
       );
     });
   });
@@ -437,13 +420,7 @@ describe('UserFactsService', () => {
       userFactsService.deleteUserFact(1);
 
       expect(userFactsRepository.delete).toHaveBeenCalledWith(1);
-      expect(errorLogger.logError).toHaveBeenCalledWith(
-        'User fact deleted successfully',
-        expect.objectContaining({
-          type: 'info',
-          userFactId: 1,
-        }),
-      );
+      expect(errorLogger.logError).not.toHaveBeenCalled();
     });
 
     it('should log and rethrow repository errors', () => {
@@ -455,7 +432,7 @@ describe('UserFactsService', () => {
       expect(() => userFactsService.deleteUserFact(1)).toThrow('Database error');
       expect(errorLogger.logError).toHaveBeenCalledWith(
         error,
-        expect.objectContaining({ context: 'deleteUserFact', id: 1 }),
+        expect.objectContaining({ context: 'deleteUserFact', id: 1 })
       );
     });
   });
@@ -506,7 +483,8 @@ describe('UserFactsService', () => {
     });
 
     it('should handle newlines and formatting in factContent', () => {
-      const formattedContent = 'Personal Info:\n- Name: John Doe\n- Age: 35\n- Occupation: Engineer';
+      const formattedContent =
+        'Personal Info:\n- Name: John Doe\n- Age: 35\n- Occupation: Engineer';
       const mockUserFact: UserFact = {
         id: 1,
         caseId: 100,
@@ -528,7 +506,8 @@ describe('UserFactsService', () => {
     });
 
     it('should handle PII data in factContent', () => {
-      const piiContent = 'SSN: 123-45-6789, DOB: 1990-05-15, Email: john.doe@email.com, Phone: (555) 123-4567';
+      const piiContent =
+        'SSN: 123-45-6789, DOB: 1990-05-15, Email: john.doe@email.com, Phone: (555) 123-4567';
       const mockUserFact: UserFact = {
         id: 1,
         caseId: 100,
