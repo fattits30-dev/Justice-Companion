@@ -4,6 +4,7 @@ import { UserRepository } from '../repositories/UserRepository';
 import { SessionRepository } from '../repositories/SessionRepository';
 import { AuditLogger } from './AuditLogger';
 import { TestDatabaseHelper } from '../test-utils/database-test-helper';
+import { databaseManager } from '../db/database';
 
 describe('AuthenticationService', () => {
   let authService: AuthenticationService;
@@ -16,10 +17,59 @@ describe('AuthenticationService', () => {
     testDb = new TestDatabaseHelper();
     const db = testDb.initialize();
 
+    // Inject test database into the singleton for proper test isolation
+    databaseManager.setTestDatabase(db);
+
     auditLogger = new AuditLogger(db);
-    // Add test-only method to get logs
+    // Add test-only method to get logs (use ROWID for consistent ordering)
     (auditLogger as any).getAllLogs = () => {
-      return db.prepare('SELECT * FROM audit_logs ORDER BY created_at').all();
+      const rows = db.prepare('SELECT * FROM audit_logs ORDER BY ROWID ASC').all() as Array<{
+        id: string;
+        timestamp: string;
+        event_type: string;
+        user_id: string | null;
+        resource_type: string;
+        resource_id: string;
+        action: string;
+        details: string | null;
+        ip_address: string | null;
+        user_agent: string | null;
+        success: number;
+        error_message: string | null;
+        integrity_hash: string;
+        previous_log_hash: string | null;
+        created_at: string;
+      }>;
+
+      // Map to proper format like AuditLogger.query() does
+      return rows.map((row) => {
+        let parsedDetails: Record<string, unknown> | undefined;
+        if (row.details) {
+          try {
+            parsedDetails = JSON.parse(row.details);
+          } catch {
+            parsedDetails = { value: row.details };
+          }
+        }
+
+        return {
+          id: row.id,
+          timestamp: row.timestamp,
+          eventType: row.event_type,
+          userId: row.user_id,
+          resourceType: row.resource_type,
+          resourceId: row.resource_id,
+          action: row.action,
+          details: parsedDetails ?? null,
+          ipAddress: row.ip_address,
+          userAgent: row.user_agent,
+          success: row.success === 1,
+          errorMessage: row.error_message,
+          integrityHash: row.integrity_hash,
+          previousLogHash: row.previous_log_hash,
+          createdAt: row.created_at,
+        };
+      });
     };
 
     // Add test-only method to get database (for manual expiry tests)
@@ -31,8 +81,9 @@ describe('AuthenticationService', () => {
   });
 
   afterEach(() => {
-    testDb.clearAllTables(); // Clear data between tests
-    testDb.cleanup();
+    testDb.clearAllTables(); // Clear data between tests (must happen before cleanup)
+    testDb.cleanup(); // Close database connection
+    databaseManager.resetDatabase(); // Reset singleton to clean state
   });
 
   describe('register()', () => {
@@ -69,7 +120,7 @@ describe('AuthenticationService', () => {
 
     it('should require at least one number', async () => {
       await expect(
-        authService.register('testuser', 'NoNumbers', 'test@example.com')
+        authService.register('testuser', 'NoNumbersHere', 'test@example.com')
       ).rejects.toThrow('Password must contain at least one number');
     });
 
@@ -90,8 +141,8 @@ describe('AuthenticationService', () => {
     });
 
     it('should generate unique salt for each user', async () => {
-      const user1 = await authService.register('user1', 'SamePass123', 'user1@example.com');
-      const user2 = await authService.register('user2', 'SamePass123', 'user2@example.com');
+      const user1 = await authService.register('user1', 'SamePass1234', 'user1@example.com');
+      const user2 = await authService.register('user2', 'SamePass1234', 'user2@example.com');
 
       expect(user1.passwordSalt).not.toBe(user2.passwordSalt);
       expect(user1.passwordHash).not.toBe(user2.passwordHash); // Same password, different hashes
@@ -101,6 +152,7 @@ describe('AuthenticationService', () => {
       await authService.register('testuser', 'SecurePass123', 'test@example.com');
 
       const logs = auditLogger['getAllLogs']();
+      // Filter to get only user.register events (excluding user.create from repository)
       const registerLog = logs.find((log) => log.eventType === 'user.register');
 
       expect(registerLog).toBeDefined();
@@ -317,9 +369,9 @@ describe('AuthenticationService', () => {
       const db = (auditLogger as any).getDb();
       const session = sessionRepository.findById(sessionId);
       if (session) {
-        const pastDate = new Date(Date.now() - 1000).toISOString(); // 1 second ago
-        db.prepare('UPDATE sessions SET expires_at = ? WHERE id = ?')
-          .run(pastDate, sessionId);
+        // Use SQLite datetime format that's definitely in the past
+        db.prepare("UPDATE sessions SET expires_at = datetime('now', '-1 hour') WHERE id = ?")
+          .run(sessionId);
       }
 
       const result = authService.validateSession(sessionId);
@@ -418,10 +470,9 @@ describe('AuthenticationService', () => {
       const result1 = await authService.login('user1', 'SecurePass123');
       const result2 = await authService.login('user2', 'SecurePass456');
 
-      // Manually expire one session
-      const pastDate = new Date(Date.now() - 1000).toISOString();
-      db.prepare('UPDATE sessions SET expires_at = ? WHERE id = ?')
-        .run(pastDate, result1.session.id);
+      // Manually expire one session (use SQLite datetime format that's definitely in the past)
+      db.prepare("UPDATE sessions SET expires_at = datetime('now', '-1 hour') WHERE id = ?")
+        .run(result1.session.id);
 
       const deletedCount = authService.cleanupExpiredSessions();
 
@@ -440,10 +491,9 @@ describe('AuthenticationService', () => {
       await authService.register('user1', 'SecurePass123', 'user1@example.com');
       const result = await authService.login('user1', 'SecurePass123');
 
-      // Expire the session
-      const pastDate = new Date(Date.now() - 1000).toISOString();
-      db.prepare('UPDATE sessions SET expires_at = ? WHERE id = ?')
-        .run(pastDate, result.session.id);
+      // Expire the session (use SQLite datetime format that's definitely in the past)
+      db.prepare("UPDATE sessions SET expires_at = datetime('now', '-1 hour') WHERE id = ?")
+        .run(result.session.id);
 
       authService.cleanupExpiredSessions();
 

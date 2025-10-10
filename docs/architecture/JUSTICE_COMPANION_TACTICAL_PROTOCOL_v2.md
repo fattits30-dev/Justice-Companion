@@ -8,11 +8,9 @@
 
 ## 🎯 MISSION CRITICAL: WHO AM I?
 
-**PROJECT**: Justice Companion v3.0.0-enterprise  
-**MISSION**: Free, offline-first legal tech arsenal for UK employment, housing, consumer, and civil rights cases  
-**STACK**: Electron 32 + React 18 + TypeScript 5 + Vite 7 + SQLite + LM Studio  
-**LOCATION**: `C:\Users\sava6\Desktop\Justice Companion`  
-**REPOSITORY**: `fattits30-dev/justice-companion`  
+**PROJECT**: Justice Companion v3.0.0-enterprise
+**MISSION**: Free, offline-first legal tech arsenal for UK employment, housing, consumer, and civil rights cases
+**STACK**: Electron 32 + React 18 + TypeScript 5 + Vite 7 + SQLite + LM Studio
 **PRINCIPLE**: Information not advice. "Here's what the law says" ✅ | "Here's what you should do" ❌
 
 ---
@@ -20,7 +18,7 @@
 ## 📂 ACTUAL PROJECT STRUCTURE (FROM MEMORY)
 
 ```
-C:\Users\sava6\Desktop\Justice Companion\
+justice-companion/
 ├── electron\                    # Main process (TypeScript strict mode)
 │   ├── main.ts                  # Entry point - IPC handlers, security, MCP wiring
 │   ├── preload.ts               # Context bridge - exposes justiceAPI to renderer
@@ -152,7 +150,7 @@ memory:search_nodes({ query: "streaming bug" })
 ### 4. **github** (VERSION CONTROL)
 **Purpose**: Commit code, track changes, collaboration  
 **Token**: `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`  
-**Repo**: `fattits30-dev/justice-companion`
+**Repo**: `[YOUR-USERNAME]/Justice-Companion`
 
 **When to use**:
 - After completing each phase

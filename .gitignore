@@ -86,15 +86,20 @@ legal-docs/
 # Local tooling / automation artifacts
 .amazonq/
 .claude/
+.cursor/
 .mcp/
 .mcp.json
 .pytest_cache/
-automation/archives/
-automation/dist/
-automation/results/
-automation/state/
+automation/
 tmp/
+
+# Public release checklist (developer-only)
+PUBLIC_RELEASE_CHECKLIST.md
 
 # Build artifacts
 *.tsbuildinfo
 nul
+
+# Public release preparation (developer-only)
+CLEANUP_SUMMARY.md
+RELEASE_NOW.md

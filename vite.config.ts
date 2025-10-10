@@ -116,9 +116,4 @@ export default defineConfig({
   server: {
     port: 5173,
   },
-  test: {
-    environment: 'node', // Use Node environment for tests (needed for fs, path, etc.)
-    globals: true,
-    setupFiles: [],
-  },
 });

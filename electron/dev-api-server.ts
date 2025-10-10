@@ -61,6 +61,14 @@ export class DevAPIServer {
       );
     }
 
+    // Security: Verify handler is actually a function before invoking
+    if (typeof handler !== 'function') {
+      throw new Error(
+        `Handler for channel '${channel}' is not a function. ` +
+        `Got type: ${typeof handler}`
+      );
+    }
+
     const mockEvent = { sender: null };
     return await Promise.resolve(handler(mockEvent, ...args));
   }

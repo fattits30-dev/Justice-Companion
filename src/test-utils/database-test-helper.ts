@@ -122,7 +122,7 @@ export function createTestDatabase(): TestDatabaseHelper {
  */
 export async function setupTestDatabase(): Promise<string> {
   const helper = new TestDatabaseHelper();
-  const db = helper.initialize();
+  helper.initialize();
 
   // Return a unique identifier for this test database
   // For in-memory databases, we'll return a dummy path
@@ -132,7 +132,7 @@ export async function setupTestDatabase(): Promise<string> {
 /**
  * Cleanup a test database (simple async API)
  */
-export async function cleanupTestDatabase(dbPath: string): Promise<void> {
+export async function cleanupTestDatabase(_dbPath: string): Promise<void> {
   // For in-memory databases, cleanup is handled by closure
   // This function exists for API compatibility
   return Promise.resolve();
@@ -142,13 +142,13 @@ export async function cleanupTestDatabase(dbPath: string): Promise<void> {
  * Get a test audit logger instance
  * Creates an AuditLogger using an in-memory database
  */
-export function getTestAuditLogger(dbPath?: string): any {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function getTestAuditLogger(_dbPath?: string): any {
   // Import AuditLogger dynamically to avoid circular dependencies
   const helper = new TestDatabaseHelper();
   const db = helper.initialize();
 
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { AuditLogger } = require('../services/AuditLogger');
+  const { AuditLogger } = require('../services/AuditLogger'); // eslint-disable-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
   const auditLogger = new AuditLogger(db);
 
   // Add a test-only method to get all logs

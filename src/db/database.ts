@@ -88,7 +88,29 @@ class DatabaseManager {
       throw error;
     }
   }
+
+  /**
+   * TEST ONLY: Inject a test database instance
+   * This allows tests to override the singleton with an in-memory database
+   */
+  public setTestDatabase(testDb: Database.Database): void {
+    if (this.db && this.db !== testDb) {
+      this.db.close();
+    }
+    this.db = testDb;
+  }
+
+  /**
+   * TEST ONLY: Reset the database instance
+   * Clears the singleton state for test isolation
+   */
+  public resetDatabase(): void {
+    if (this.db) {
+      this.db.close();
+      this.db = null;
+    }
+  }
 }
 
 export const databaseManager = DatabaseManager.getInstance();
-export const getDb = () => databaseManager.getDatabase();
+export const getDb = (): Database => databaseManager.getDatabase();

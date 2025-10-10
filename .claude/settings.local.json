@@ -140,6 +140,7 @@
   },
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
+    "justice-companion",
     "sequential-thinking",
     "memory",
     "filesystem",
