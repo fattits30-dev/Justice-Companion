@@ -44,7 +44,10 @@ export class ViewErrorBoundary extends Component<ViewErrorBoundaryProps, ViewErr
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     // Log to console for immediate visibility
     console.error(`[ViewErrorBoundary:${this.props.viewName}] Caught error:`, error);
-    console.error(`[ViewErrorBoundary:${this.props.viewName}] Component stack:`, errorInfo.componentStack);
+    console.error(
+      `[ViewErrorBoundary:${this.props.viewName}] Component stack:`,
+      errorInfo.componentStack
+    );
 
     // Send to main process via IPC for persistent logging
     this.logErrorToMainProcess(error, errorInfo);
@@ -62,18 +65,20 @@ export class ViewErrorBoundary extends Component<ViewErrorBoundaryProps, ViewErr
   private logErrorToMainProcess(error: Error, errorInfo: ErrorInfo): void {
     try {
       // Check if justiceAPI is available
-      if (typeof window !== 'undefined' && window.justiceAPI && window.justiceAPI.logUIError) {
-        window.justiceAPI.logUIError({
-          error: `[${this.props.viewName}] ${error.message || 'Unknown error'}`,
-          errorInfo: error.stack || 'No stack trace available',
-          componentStack: errorInfo.componentStack || 'No component stack available',
-          timestamp: new Date().toISOString(),
-          url: window.location.href,
-          userAgent: navigator.userAgent,
-        }).catch((logError) => {
-          // Silently fail if logging fails - we don't want to crash from logging
-          console.error('[ViewErrorBoundary] Failed to log error to main process:', logError);
-        });
+      if (typeof window !== 'undefined' && window.justiceAPI?.logUIError) {
+        window.justiceAPI
+          .logUIError({
+            error: `[${this.props.viewName}] ${error.message ?? 'Unknown error'}`,
+            errorInfo: error.stack ?? 'No stack trace available',
+            componentStack: errorInfo.componentStack ?? 'No component stack available',
+            timestamp: new Date().toISOString(),
+            url: window.location.href,
+            userAgent: navigator.userAgent,
+          })
+          .catch((logError) => {
+            // Silently fail if logging fails - we don't want to crash from logging
+            console.error('[ViewErrorBoundary] Failed to log error to main process:', logError);
+          });
       } else {
         console.warn('[ViewErrorBoundary] justiceAPI.logUIError not available');
       }
@@ -132,18 +137,18 @@ export class ViewErrorBoundary extends Component<ViewErrorBoundaryProps, ViewErr
                   d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
                 />
               </svg>
-              <h1 className="text-2xl font-bold text-red-400">
-                View Error
-              </h1>
+              <h1 className="text-2xl font-bold text-red-400">View Error</h1>
             </div>
 
             {/* Error Message */}
             <div className="mb-6">
               <p className="mb-3 text-lg text-slate-300">
-                The <span className="font-semibold text-blue-400">{this.props.viewName}</span> view encountered an error.
+                The <span className="font-semibold text-blue-400">{this.props.viewName}</span> view
+                encountered an error.
               </p>
               <p className="text-sm text-slate-400">
-                Don't worry - the rest of the application is still working. You can navigate back to the dashboard or try again.
+                Don't worry - the rest of the application is still working. You can navigate back to
+                the dashboard or try again.
               </p>
             </div>
 

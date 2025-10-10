@@ -66,18 +66,20 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   private logErrorToMainProcess(error: Error, errorInfo: ErrorInfo): void {
     try {
       // Check if justiceAPI is available
-      if (typeof window !== 'undefined' && window.justiceAPI && window.justiceAPI.logUIError) {
-        window.justiceAPI.logUIError({
-          error: error.message || 'Unknown error',
-          errorInfo: error.stack || 'No stack trace available',
-          componentStack: errorInfo.componentStack || 'No component stack available',
-          timestamp: new Date().toISOString(),
-          url: window.location.href,
-          userAgent: navigator.userAgent,
-        }).catch((logError) => {
-          // Silently fail if logging fails - we don't want to crash from logging
-          console.error('[ErrorBoundary] Failed to log error to main process:', logError);
-        });
+      if (typeof window !== 'undefined' && window.justiceAPI?.logUIError) {
+        window.justiceAPI
+          .logUIError({
+            error: error.message ?? 'Unknown error',
+            errorInfo: error.stack ?? 'No stack trace available',
+            componentStack: errorInfo.componentStack ?? 'No component stack available',
+            timestamp: new Date().toISOString(),
+            url: window.location.href,
+            userAgent: navigator.userAgent,
+          })
+          .catch((logError) => {
+            // Silently fail if logging fails - we don't want to crash from logging
+            console.error('[ErrorBoundary] Failed to log error to main process:', logError);
+          });
       } else {
         console.warn('[ErrorBoundary] justiceAPI.logUIError not available');
       }
@@ -126,19 +128,15 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                   d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
                 />
               </svg>
-              <h1 className="text-3xl font-bold text-gray-900">
-                Something went wrong
-              </h1>
+              <h1 className="text-3xl font-bold text-gray-900">Something went wrong</h1>
             </div>
 
             {/* Error Message */}
             <div className="mb-6">
-              <h2 className="mb-2 text-lg font-semibold text-gray-800">
-                Error Details:
-              </h2>
+              <h2 className="mb-2 text-lg font-semibold text-gray-800">Error Details:</h2>
               <div className="rounded-md bg-red-100 p-4">
                 <p className="font-mono text-sm text-red-800">
-                  {this.state.error?.message || 'An unexpected error occurred'}
+                  {this.state.error?.message ?? 'An unexpected error occurred'}
                 </p>
               </div>
             </div>

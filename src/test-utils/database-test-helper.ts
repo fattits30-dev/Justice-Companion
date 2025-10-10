@@ -86,13 +86,13 @@ export class TestDatabaseHelper {
       'evidence',
       'legal_issues',
       'cases',
-      'consents',          // Phase 1
-      'sessions',          // Phase 1
+      'consents', // Phase 1
+      'sessions', // Phase 1
       'user_profile',
       'audit_logs',
       'error_logs',
       // Note: users table deleted last (has foreign keys from many tables)
-      'users',             // Phase 1
+      'users', // Phase 1
     ];
 
     this.db.exec('PRAGMA foreign_keys = OFF');
@@ -148,7 +148,7 @@ export function getTestAuditLogger(_dbPath?: string): any {
   const helper = new TestDatabaseHelper();
   const db = helper.initialize();
 
-  const { AuditLogger } = require('../services/AuditLogger'); // eslint-disable-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
+  const { AuditLogger } = require('../services/AuditLogger'); // eslint-disable-line @typescript-eslint/no-require-imports
   const auditLogger = new AuditLogger(db);
 
   // Add a test-only method to get all logs
