@@ -93,6 +93,16 @@ const aiAPI = {
     return ipcRenderer.invoke(IPC_CHANNELS.AI_STREAM_START, request);
   },
 
+  // Configure OpenAI API credentials
+  configureAI: (request: Record<string, unknown>) => {
+    return ipcRenderer.invoke(IPC_CHANNELS.AI_CONFIGURE, request);
+  },
+
+  // Test OpenAI connection with provided credentials
+  testAIConnection: (request: Record<string, unknown>) => {
+    return ipcRenderer.invoke(IPC_CHANNELS.AI_TEST_CONNECTION, request);
+  },
+
   // Listen for streaming tokens
   onAIStreamToken: (callback: (token: string) => void) => {
     const handler = (_event: IpcRendererEvent, token: string) => {

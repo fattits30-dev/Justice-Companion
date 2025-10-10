@@ -1,10 +1,12 @@
 import { useState, useEffect, type ComponentType, type ReactNode } from 'react';
-import { User, Bell, Lock, Database, Info, Brain, Briefcase, Shield, CheckCircle2, XCircle } from 'lucide-react';
+import { User, Bell, Lock, Database, Info, Brain, Briefcase, Shield, CheckCircle2, XCircle, Sparkles, Settings } from 'lucide-react';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { useToast } from '@/hooks/useToast';
 import { useAuth } from '@/contexts/AuthContext';
 import { SkeletonText } from '@/components/ui/Skeleton';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { OpenAISettings } from './OpenAISettings';
+import { Tabs } from '@/components/ui/Tabs';
 import type { UserProfile } from '@/models/UserProfile';
 import type { Consent, ConsentType } from '@/models/Consent';
 
@@ -430,6 +432,580 @@ export function SettingsView(): JSX.Element {
     }
   };
 
+  // Tab content components
+  const AccountTab = () => (
+    <div className="p-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-7xl">
+        {/* Profile Section */}
+        <SettingsSection
+          icon={User}
+          title="Profile"
+          description="Manage your personal information"
+        >
+          {isLoadingProfile ? (
+            <div className="space-y-3" role="status" aria-live="polite" aria-busy="true">
+              <SkeletonText lines={2} />
+              <span className="sr-only">Loading profile...</span>
+            </div>
+          ) : isEditingProfile ? (
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-white mb-1">Name</label>
+                <input
+                  type="text"
+                  value={editedName}
+                  onChange={(e) => setEditedName(e.target.value)}
+                  className="w-full px-3 py-1.5 text-xs bg-slate-800/50 border border-blue-700/30 rounded-lg text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  placeholder="Enter your name"
+                  disabled={isSavingProfile}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-white mb-1">Email</label>
+                <input
+                  type="email"
+                  value={editedEmail}
+                  onChange={(e) => setEditedEmail(e.target.value)}
+                  className="w-full px-3 py-1.5 text-xs bg-slate-800/50 border border-blue-700/30 rounded-lg text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  placeholder="Enter your email"
+                  disabled={isSavingProfile}
+                />
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleSaveProfile}
+                  disabled={isSavingProfile}
+                  className="flex-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {isSavingProfile ? (
+                    <>
+                      <LoadingSpinner size="sm" color="white" />
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    'Save'
+                  )}
+                </button>
+                <button
+                  onClick={() => {
+                    setIsEditingProfile(false);
+                    setEditedName(userProfile?.name || '');
+                    setEditedEmail(userProfile?.email || '');
+                  }}
+                  disabled={isSavingProfile}
+                  className="flex-1 px-3 py-1.5 bg-slate-700 text-white rounded-lg hover:bg-slate-600 transition-colors text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <SettingItem
+                label="Name"
+                value={userProfile?.name || 'Not set'}
+                action="Edit"
+                onAction={() => setIsEditingProfile(true)}
+              />
+              <SettingItem
+                label="Email"
+                value={userProfile?.email || 'Not set'}
+                action="Edit"
+                onAction={() => setIsEditingProfile(true)}
+              />
+            </>
+          )}
+        </SettingsSection>
+
+        {/* Account Security */}
+        <SettingsSection
+          icon={Shield}
+          title="Account Security"
+          description="Manage your account password"
+        >
+          {user && (
+            <SettingItem
+              label="Username"
+              value={user.username}
+              info
+            />
+          )}
+          {!isChangingPassword ? (
+            <button
+              onClick={() => setIsChangingPassword(true)}
+              className="w-full px-3 py-2 bg-blue-600/20 border border-blue-500/30 text-blue-300 rounded-lg hover:bg-blue-600/30 transition-all text-xs font-medium"
+            >
+              Change Password
+            </button>
+          ) : (
+            <div className="space-y-3">
+              {passwordError && (
+                <div className="px-3 py-2 bg-red-900/30 border border-red-500/50 text-red-200 rounded-lg text-xs">
+                  {passwordError}
+                </div>
+              )}
+              <div>
+                <label className="block text-xs font-medium text-white mb-1">Current Password</label>
+                <input
+                  type="password"
+                  value={oldPassword}
+                  onChange={(e) => setOldPassword(e.target.value)}
+                  className="w-full px-3 py-1.5 text-xs bg-slate-800/50 border border-blue-700/30 rounded-lg text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  placeholder="Enter current password"
+                  disabled={isSubmittingPassword}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-white mb-1">New Password</label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="w-full px-3 py-1.5 text-xs bg-slate-800/50 border border-blue-700/30 rounded-lg text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  placeholder="At least 12 characters"
+                  disabled={isSubmittingPassword}
+                />
+                <p className="text-xs text-slate-400 mt-1">12+ chars, uppercase, lowercase, number</p>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-white mb-1">Confirm New Password</label>
+                <input
+                  type="password"
+                  value={confirmNewPassword}
+                  onChange={(e) => setConfirmNewPassword(e.target.value)}
+                  className="w-full px-3 py-1.5 text-xs bg-slate-800/50 border border-blue-700/30 rounded-lg text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  placeholder="Re-enter new password"
+                  disabled={isSubmittingPassword}
+                />
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleChangePassword}
+                  disabled={isSubmittingPassword}
+                  className="flex-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {isSubmittingPassword ? (
+                    <>
+                      <LoadingSpinner size="sm" color="white" />
+                      <span>Changing...</span>
+                    </>
+                  ) : (
+                    'Change Password'
+                  )}
+                </button>
+                <button
+                  onClick={() => {
+                    setIsChangingPassword(false);
+                    setOldPassword('');
+                    setNewPassword('');
+                    setConfirmNewPassword('');
+                    setPasswordError(null);
+                  }}
+                  disabled={isSubmittingPassword}
+                  className="flex-1 px-3 py-1.5 bg-slate-700 text-white rounded-lg hover:bg-slate-600 transition-colors text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+        </SettingsSection>
+
+        {/* Consent Management */}
+        <SettingsSection
+          icon={CheckCircle2}
+          title="Consent Management"
+          description="Manage your GDPR data processing consents"
+        >
+          {isLoadingConsents ? (
+            <div className="space-y-3">
+              <SkeletonText lines={3} />
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {['data_processing', 'encryption', 'ai_processing', 'marketing'].map((type) => {
+                const consentType = type as ConsentType;
+                const consent = consents.find((c) => c.consentType === consentType && !c.revokedAt);
+                const isRequired = consentType === 'data_processing';
+
+                return (
+                  <div key={consentType} className="flex items-center justify-between py-2 border-b border-blue-800/20 last:border-0">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <div className="text-xs font-medium text-white capitalize">
+                          {consentType.replace('_', ' ')}
+                        </div>
+                        {isRequired && (
+                          <span className="text-xs bg-blue-900/50 text-blue-200 px-2 py-0.5 rounded">
+                            Required
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-xs text-slate-400 mt-0.5">
+                        {consent ? (
+                          <span className="flex items-center gap-1 text-green-400">
+                            <CheckCircle2 size={12} />
+                            Granted
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1 text-slate-500">
+                            <XCircle size={12} />
+                            Not granted
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    {consent ? (
+                      <button
+                        onClick={() => handleRevokeConsent(consentType)}
+                        disabled={isRequired}
+                        className="px-3 py-1.5 text-xs text-red-300 hover:text-red-200 font-medium transition-colors flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isRequired ? 'Cannot revoke' : 'Revoke'}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleGrantConsent(consentType)}
+                        className="px-3 py-1.5 text-xs text-green-300 hover:text-green-200 font-medium transition-colors flex-shrink-0"
+                      >
+                        Grant
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+              <div className="bg-blue-900/20 border border-blue-700/30 rounded-lg p-3">
+                <p className="text-xs text-blue-200">
+                  <strong>Your Rights (GDPR):</strong> You can withdraw consent at any time except for required consents. Revoking data processing consent will prevent the app from functioning.
+                </p>
+              </div>
+            </div>
+          )}
+        </SettingsSection>
+      </div>
+    </div>
+  );
+
+  const AIConfigTab = () => (
+    <div className="p-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-7xl">
+        {/* AI & Legal Data Section */}
+        <SettingsSection
+          icon={Brain}
+          title="AI & Legal Data"
+          description="Configure AI assistant and legal information sources"
+        >
+          <ToggleSetting
+            label="Enhanced legal responses (RAG)"
+            enabled={ragEnabled}
+            onChange={setRagEnabled}
+          />
+          <SettingItem
+            label="Data sources"
+            value="legislation.gov.uk, caselaw.nationalarchives.gov.uk"
+            info
+          />
+          <SettingItem
+            label="Response mode"
+            value="Information only - never legal advice"
+            info
+          />
+        </SettingsSection>
+
+        {/* OpenAI Provider Configuration */}
+        <SettingsSection
+          icon={Sparkles}
+          title="AI Provider Configuration"
+          description="Configure OpenAI API for AI-powered assistance"
+        >
+          <OpenAISettings onConfigSaved={() => toast.success('OpenAI configured successfully!')} />
+        </SettingsSection>
+
+        {/* Advanced AI */}
+        <SettingsSection
+          icon={Brain}
+          title="Advanced AI"
+          description="Fine-tune AI response behavior"
+        >
+          <SelectSetting
+            label="Response length"
+            value={responseLength}
+            onChange={setResponseLength}
+            options={[
+              { value: 'concise', label: 'Concise' },
+              { value: 'balanced', label: 'Balanced' },
+              { value: 'detailed', label: 'Detailed' },
+            ]}
+          />
+          <SelectSetting
+            label="Citation detail"
+            value={citationDetail}
+            onChange={setCitationDetail}
+            options={[
+              { value: 'minimal', label: 'Minimal' },
+              { value: 'detailed', label: 'Detailed' },
+              { value: 'comprehensive', label: 'Comprehensive' },
+            ]}
+          />
+          <SelectSetting
+            label="Jurisdiction"
+            value={jurisdiction}
+            onChange={setJurisdiction}
+            options={[
+              { value: 'uk-england-wales', label: 'England & Wales' },
+              { value: 'uk-scotland', label: 'Scotland' },
+              { value: 'uk-northern-ireland', label: 'Northern Ireland' },
+            ]}
+          />
+        </SettingsSection>
+      </div>
+    </div>
+  );
+
+  const PreferencesTab = () => (
+    <div className="p-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-7xl">
+        {/* Notifications Section */}
+        <SettingsSection
+          icon={Bell}
+          title="Notifications"
+          description="Control how you receive updates"
+        >
+          <ToggleSetting
+            label="Chat notifications"
+            enabled={chatNotifications}
+            onChange={setChatNotifications}
+          />
+          <ToggleSetting
+            label="Case updates"
+            enabled={caseUpdates}
+            onChange={setCaseUpdates}
+          />
+          <ToggleSetting
+            label="Document analysis complete"
+            enabled={documentAnalysisNotif}
+            onChange={setDocumentAnalysisNotif}
+          />
+        </SettingsSection>
+
+        {/* Appearance */}
+        <SettingsSection
+          icon={Settings}
+          title="Appearance"
+          description="Customize the interface look and feel"
+        >
+          <ToggleSetting
+            label="Dark mode"
+            enabled={darkMode}
+            onChange={setDarkMode}
+          />
+          <SelectSetting
+            label="Font size"
+            value={fontSize}
+            onChange={setFontSize}
+            options={[
+              { value: 'small', label: 'Small' },
+              { value: 'medium', label: 'Medium' },
+              { value: 'large', label: 'Large' },
+            ]}
+          />
+        </SettingsSection>
+
+        {/* Voice Input */}
+        <SettingsSection
+          icon={Bell}
+          title="Voice Input"
+          description="Configure speech recognition settings"
+        >
+          <SelectSetting
+            label="Microphone"
+            value={selectedMicrophone}
+            onChange={setSelectedMicrophone}
+            options={[
+              { value: 'default', label: 'Default' },
+              { value: 'system', label: 'System Default' },
+            ]}
+          />
+          <SelectSetting
+            label="Language"
+            value={speechLanguage}
+            onChange={setSpeechLanguage}
+            options={[
+              { value: 'en-GB', label: 'English (UK)' },
+              { value: 'en-US', label: 'English (US)' },
+            ]}
+          />
+          <ToggleSetting
+            label="Auto-transcribe"
+            enabled={autoTranscribe}
+            onChange={setAutoTranscribe}
+          />
+        </SettingsSection>
+
+        {/* Accessibility */}
+        <SettingsSection
+          icon={Lock}
+          title="Accessibility"
+          description="Enhance usability and accessibility"
+        >
+          <ToggleSetting
+            label="High contrast mode"
+            enabled={highContrast}
+            onChange={setHighContrast}
+          />
+          <ToggleSetting
+            label="Screen reader support"
+            enabled={screenReaderSupport}
+            onChange={setScreenReaderSupport}
+          />
+          <button
+            onClick={() => console.log('View keyboard shortcuts')}
+            className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600/30 text-slate-300 rounded-lg hover:bg-slate-600/50 transition-all text-xs font-medium"
+          >
+            Keyboard Shortcuts
+          </button>
+        </SettingsSection>
+      </div>
+    </div>
+  );
+
+  const DataPrivacyTab = () => (
+    <div className="p-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-7xl">
+        {/* Privacy & Security */}
+        <SettingsSection
+          icon={Lock}
+          title="Privacy & Security"
+          description="Your data privacy and security settings"
+        >
+          <SettingItem
+            label="Local data storage"
+            value="All data stored locally on your device"
+            info
+          />
+          <ToggleSetting
+            label="Encrypt sensitive data"
+            enabled={encryptData}
+            onChange={setEncryptData}
+          />
+        </SettingsSection>
+
+        {/* Data Management */}
+        <SettingsSection
+          icon={Database}
+          title="Data Management"
+          description="Manage your stored data"
+        >
+          <SettingItem label="Database location" value="AppData/justice-companion" info />
+          <button
+            onClick={() => setClearDataConfirmOpen(true)}
+            className="w-full px-3 py-2 bg-red-600/20 border border-red-500/30 text-red-300 rounded-lg hover:bg-red-600/30 transition-all text-xs font-medium"
+          >
+            Clear All Data
+          </button>
+        </SettingsSection>
+
+        {/* Export & Backup */}
+        <SettingsSection
+          icon={Database}
+          title="Export & Backup"
+          description="Configure data export and backup options"
+        >
+          <SettingItem
+            label="Export location"
+            value={exportLocation}
+            action="Change"
+            onAction={() => setExportLocation('Custom/Path')}
+          />
+          <SelectSetting
+            label="Auto-backup"
+            value={autoBackupFrequency}
+            onChange={setAutoBackupFrequency}
+            options={[
+              { value: 'never', label: 'Never' },
+              { value: 'daily', label: 'Daily' },
+              { value: 'weekly', label: 'Weekly' },
+            ]}
+          />
+          <button
+            onClick={() => console.log('Restore from backup')}
+            className="w-full px-3 py-2 bg-blue-600/20 border border-blue-500/30 text-blue-300 rounded-lg hover:bg-blue-600/30 transition-all text-xs font-medium"
+          >
+            Restore from Backup
+          </button>
+        </SettingsSection>
+      </div>
+    </div>
+  );
+
+  const CaseManagementTab = () => (
+    <div className="p-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-7xl">
+        {/* Case Management */}
+        <SettingsSection
+          icon={Briefcase}
+          title="Case Management"
+          description="Configure case handling preferences"
+        >
+          <SelectSetting
+            label="Default case type"
+            value={defaultCaseType}
+            onChange={setDefaultCaseType}
+            options={[
+              { value: 'general', label: 'General' },
+              { value: 'employment', label: 'Employment' },
+              { value: 'family', label: 'Family' },
+              { value: 'housing', label: 'Housing' },
+              { value: 'immigration', label: 'Immigration' },
+            ]}
+          />
+          <SelectSetting
+            label="Auto-archive after"
+            value={autoArchiveDays}
+            onChange={setAutoArchiveDays}
+            options={[
+              { value: '30', label: '30 days' },
+              { value: '90', label: '90 days' },
+              { value: '180', label: '180 days' },
+              { value: 'never', label: 'Never' },
+            ]}
+          />
+          <SelectSetting
+            label="Case numbering"
+            value={caseNumberFormat}
+            onChange={setCaseNumberFormat}
+            options={[
+              { value: 'YYYY-NNNN', label: 'YYYY-NNNN' },
+              { value: 'NNNN-YYYY', label: 'NNNN-YYYY' },
+              { value: 'SEQUENTIAL', label: 'Sequential' },
+            ]}
+          />
+        </SettingsSection>
+      </div>
+    </div>
+  );
+
+  const AboutTab = () => (
+    <div className="p-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-7xl">
+        {/* About */}
+        <SettingsSection
+          icon={Info}
+          title="About"
+          description="Application information"
+        >
+          <SettingItem label="Version" value="1.0.0" />
+          <SettingItem label="Build" value="Development" />
+          <SettingItem
+            label="License"
+            value="MIT License - Free and open source"
+            info
+          />
+        </SettingsSection>
+      </div>
+    </div>
+  );
+
   return (
     <div className="flex-1 overflow-hidden p-6 flex flex-col">
       {/* Success Message */}
@@ -446,537 +1022,49 @@ export function SettingsView(): JSX.Element {
         <p className="text-sm text-blue-200">Manage your preferences</p>
       </div>
 
-      {/* Settings Grid - Fills remaining space with scroll */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="grid grid-cols-3 gap-4 pb-4">
-          {/* Profile Section */}
-          <SettingsSection
-            icon={User}
-            title="Profile"
-            description="Manage your personal information"
-          >
-            {isLoadingProfile ? (
-              <div className="space-y-3" role="status" aria-live="polite" aria-busy="true">
-                <SkeletonText lines={2} />
-                <span className="sr-only">Loading profile...</span>
-              </div>
-            ) : isEditingProfile ? (
-              <div className="space-y-3">
-                <div>
-                  <label className="block text-xs font-medium text-white mb-1">Name</label>
-                  <input
-                    type="text"
-                    value={editedName}
-                    onChange={(e) => setEditedName(e.target.value)}
-                    className="w-full px-3 py-1.5 text-xs bg-slate-800/50 border border-blue-700/30 rounded-lg text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    placeholder="Enter your name"
-                    disabled={isSavingProfile}
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-white mb-1">Email</label>
-                  <input
-                    type="email"
-                    value={editedEmail}
-                    onChange={(e) => setEditedEmail(e.target.value)}
-                    className="w-full px-3 py-1.5 text-xs bg-slate-800/50 border border-blue-700/30 rounded-lg text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    placeholder="Enter your email"
-                    disabled={isSavingProfile}
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleSaveProfile}
-                    disabled={isSavingProfile}
-                    className="flex-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                  >
-                    {isSavingProfile ? (
-                      <>
-                        <LoadingSpinner size="sm" color="white" />
-                        <span>Saving...</span>
-                      </>
-                    ) : (
-                      'Save'
-                    )}
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIsEditingProfile(false);
-                      setEditedName(userProfile?.name || '');
-                      setEditedEmail(userProfile?.email || '');
-                    }}
-                    disabled={isSavingProfile}
-                    className="flex-1 px-3 py-1.5 bg-slate-700 text-white rounded-lg hover:bg-slate-600 transition-colors text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <>
-                <SettingItem
-                  label="Name"
-                  value={userProfile?.name || 'Not set'}
-                  action="Edit"
-                  onAction={() => setIsEditingProfile(true)}
-                />
-                <SettingItem
-                  label="Email"
-                  value={userProfile?.email || 'Not set'}
-                  action="Edit"
-                  onAction={() => setIsEditingProfile(true)}
-                />
-              </>
-            )}
-          </SettingsSection>
-
-          {/* AI & Legal Data Section */}
-          <SettingsSection
-            icon={Brain}
-            title="AI & Legal Data"
-            description="Configure AI assistant and legal information sources"
-          >
-            <ToggleSetting
-              label="Enhanced legal responses (RAG)"
-              enabled={ragEnabled}
-              onChange={setRagEnabled}
-            />
-            <SettingItem
-              label="Data sources"
-              value="legislation.gov.uk, caselaw.nationalarchives.gov.uk"
-              info
-            />
-            <SettingItem
-              label="Response mode"
-              value="Information only - never legal advice"
-              info
-            />
-          </SettingsSection>
-
-          {/* Notifications Section */}
-          <SettingsSection
-            icon={Bell}
-            title="Notifications"
-            description="Control how you receive updates"
-          >
-            <ToggleSetting
-              label="Chat notifications"
-              enabled={chatNotifications}
-              onChange={setChatNotifications}
-            />
-            <ToggleSetting
-              label="Case updates"
-              enabled={caseUpdates}
-              onChange={setCaseUpdates}
-            />
-            <ToggleSetting
-              label="Document analysis complete"
-              enabled={documentAnalysisNotif}
-              onChange={setDocumentAnalysisNotif}
-            />
-          </SettingsSection>
-
-          {/* Account Security */}
-          <SettingsSection
-            icon={Shield}
-            title="Account Security"
-            description="Manage your account password"
-          >
-            {user && (
-              <SettingItem
-                label="Username"
-                value={user.username}
-                info
-              />
-            )}
-            {!isChangingPassword ? (
-              <button
-                onClick={() => setIsChangingPassword(true)}
-                className="w-full px-3 py-2 bg-blue-600/20 border border-blue-500/30 text-blue-300 rounded-lg hover:bg-blue-600/30 transition-all text-xs font-medium"
-              >
-                Change Password
-              </button>
-            ) : (
-              <div className="space-y-3">
-                {passwordError && (
-                  <div className="px-3 py-2 bg-red-900/30 border border-red-500/50 text-red-200 rounded-lg text-xs">
-                    {passwordError}
-                  </div>
-                )}
-                <div>
-                  <label className="block text-xs font-medium text-white mb-1">Current Password</label>
-                  <input
-                    type="password"
-                    value={oldPassword}
-                    onChange={(e) => setOldPassword(e.target.value)}
-                    className="w-full px-3 py-1.5 text-xs bg-slate-800/50 border border-blue-700/30 rounded-lg text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    placeholder="Enter current password"
-                    disabled={isSubmittingPassword}
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-white mb-1">New Password</label>
-                  <input
-                    type="password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full px-3 py-1.5 text-xs bg-slate-800/50 border border-blue-700/30 rounded-lg text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    placeholder="At least 12 characters"
-                    disabled={isSubmittingPassword}
-                  />
-                  <p className="text-xs text-slate-400 mt-1">12+ chars, uppercase, lowercase, number</p>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-white mb-1">Confirm New Password</label>
-                  <input
-                    type="password"
-                    value={confirmNewPassword}
-                    onChange={(e) => setConfirmNewPassword(e.target.value)}
-                    className="w-full px-3 py-1.5 text-xs bg-slate-800/50 border border-blue-700/30 rounded-lg text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    placeholder="Re-enter new password"
-                    disabled={isSubmittingPassword}
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleChangePassword}
-                    disabled={isSubmittingPassword}
-                    className="flex-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                  >
-                    {isSubmittingPassword ? (
-                      <>
-                        <LoadingSpinner size="sm" color="white" />
-                        <span>Changing...</span>
-                      </>
-                    ) : (
-                      'Change Password'
-                    )}
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIsChangingPassword(false);
-                      setOldPassword('');
-                      setNewPassword('');
-                      setConfirmNewPassword('');
-                      setPasswordError(null);
-                    }}
-                    disabled={isSubmittingPassword}
-                    className="flex-1 px-3 py-1.5 bg-slate-700 text-white rounded-lg hover:bg-slate-600 transition-colors text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            )}
-          </SettingsSection>
-
-          {/* Consent Management */}
-          <SettingsSection
-            icon={CheckCircle2}
-            title="Consent Management"
-            description="Manage your GDPR data processing consents"
-          >
-            {isLoadingConsents ? (
-              <div className="space-y-3">
-                <SkeletonText lines={3} />
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {['data_processing', 'encryption', 'ai_processing', 'marketing'].map((type) => {
-                  const consentType = type as ConsentType;
-                  const consent = consents.find((c) => c.consentType === consentType && !c.revokedAt);
-                  const isRequired = consentType === 'data_processing';
-
-                  return (
-                    <div key={consentType} className="flex items-center justify-between py-2 border-b border-blue-800/20 last:border-0">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <div className="text-xs font-medium text-white capitalize">
-                            {consentType.replace('_', ' ')}
-                          </div>
-                          {isRequired && (
-                            <span className="text-xs bg-blue-900/50 text-blue-200 px-2 py-0.5 rounded">
-                              Required
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-xs text-slate-400 mt-0.5">
-                          {consent ? (
-                            <span className="flex items-center gap-1 text-green-400">
-                              <CheckCircle2 size={12} />
-                              Granted
-                            </span>
-                          ) : (
-                            <span className="flex items-center gap-1 text-slate-500">
-                              <XCircle size={12} />
-                              Not granted
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      {consent ? (
-                        <button
-                          onClick={() => handleRevokeConsent(consentType)}
-                          disabled={isRequired}
-                          className="px-3 py-1.5 text-xs text-red-300 hover:text-red-200 font-medium transition-colors flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {isRequired ? 'Cannot revoke' : 'Revoke'}
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => handleGrantConsent(consentType)}
-                          className="px-3 py-1.5 text-xs text-green-300 hover:text-green-200 font-medium transition-colors flex-shrink-0"
-                        >
-                          Grant
-                        </button>
-                      )}
-                    </div>
-                  );
-                })}
-                <div className="bg-blue-900/20 border border-blue-700/30 rounded-lg p-3">
-                  <p className="text-xs text-blue-200">
-                    <strong>Your Rights (GDPR):</strong> You can withdraw consent at any time except for required consents. Revoking data processing consent will prevent the app from functioning.
-                  </p>
-                </div>
-              </div>
-            )}
-          </SettingsSection>
-
-          {/* Privacy & Security */}
-          <SettingsSection
-            icon={Lock}
-            title="Privacy & Security"
-            description="Your data privacy and security settings"
-          >
-            <SettingItem
-              label="Local data storage"
-              value="All data stored locally on your device"
-              info
-            />
-            <ToggleSetting
-              label="Encrypt sensitive data"
-              enabled={encryptData}
-              onChange={setEncryptData}
-            />
-          </SettingsSection>
-
-          {/* Data Management */}
-          <SettingsSection
-            icon={Database}
-            title="Data Management"
-            description="Manage your stored data"
-          >
-            <SettingItem label="Database location" value="AppData/justice-companion" info />
-            <button
-              onClick={() => setClearDataConfirmOpen(true)}
-              className="w-full px-3 py-2 bg-red-600/20 border border-red-500/30 text-red-300 rounded-lg hover:bg-red-600/30 transition-all text-xs font-medium"
-            >
-              Clear All Data
-            </button>
-          </SettingsSection>
-
-          {/* About */}
-          <SettingsSection
-            icon={Info}
-            title="About"
-            description="Application information"
-          >
-            <SettingItem label="Version" value="1.0.0" />
-            <SettingItem label="Build" value="Development" />
-            <SettingItem
-              label="License"
-              value="MIT License - Free and open source"
-              info
-            />
-          </SettingsSection>
-
-          {/* Appearance */}
-          <SettingsSection
-            icon={User}
-            title="Appearance"
-            description="Customize the interface look and feel"
-          >
-            <ToggleSetting
-              label="Dark mode"
-              enabled={darkMode}
-              onChange={setDarkMode}
-            />
-            <SelectSetting
-              label="Font size"
-              value={fontSize}
-              onChange={setFontSize}
-              options={[
-                { value: 'small', label: 'Small' },
-                { value: 'medium', label: 'Medium' },
-                { value: 'large', label: 'Large' },
-              ]}
-            />
-          </SettingsSection>
-
-          {/* Voice Input */}
-          <SettingsSection
-            icon={Bell}
-            title="Voice Input"
-            description="Configure speech recognition settings"
-          >
-            <SelectSetting
-              label="Microphone"
-              value={selectedMicrophone}
-              onChange={setSelectedMicrophone}
-              options={[
-                { value: 'default', label: 'Default' },
-                { value: 'system', label: 'System Default' },
-              ]}
-            />
-            <SelectSetting
-              label="Language"
-              value={speechLanguage}
-              onChange={setSpeechLanguage}
-              options={[
-                { value: 'en-GB', label: 'English (UK)' },
-                { value: 'en-US', label: 'English (US)' },
-              ]}
-            />
-            <ToggleSetting
-              label="Auto-transcribe"
-              enabled={autoTranscribe}
-              onChange={setAutoTranscribe}
-            />
-          </SettingsSection>
-
-          {/* Export & Backup */}
-          <SettingsSection
-            icon={Database}
-            title="Export & Backup"
-            description="Configure data export and backup options"
-          >
-            <SettingItem
-              label="Export location"
-              value={exportLocation}
-              action="Change"
-              onAction={() => setExportLocation('Custom/Path')}
-            />
-            <SelectSetting
-              label="Auto-backup"
-              value={autoBackupFrequency}
-              onChange={setAutoBackupFrequency}
-              options={[
-                { value: 'never', label: 'Never' },
-                { value: 'daily', label: 'Daily' },
-                { value: 'weekly', label: 'Weekly' },
-              ]}
-            />
-            <button
-              onClick={() => console.log('Restore from backup')}
-              className="w-full px-3 py-2 bg-blue-600/20 border border-blue-500/30 text-blue-300 rounded-lg hover:bg-blue-600/30 transition-all text-xs font-medium"
-            >
-              Restore from Backup
-            </button>
-          </SettingsSection>
-
-          {/* Accessibility */}
-          <SettingsSection
-            icon={Lock}
-            title="Accessibility"
-            description="Enhance usability and accessibility"
-          >
-            <ToggleSetting
-              label="High contrast mode"
-              enabled={highContrast}
-              onChange={setHighContrast}
-            />
-            <ToggleSetting
-              label="Screen reader support"
-              enabled={screenReaderSupport}
-              onChange={setScreenReaderSupport}
-            />
-            <button
-              onClick={() => console.log('View keyboard shortcuts')}
-              className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600/30 text-slate-300 rounded-lg hover:bg-slate-600/50 transition-all text-xs font-medium"
-            >
-              Keyboard Shortcuts
-            </button>
-          </SettingsSection>
-
-          {/* Advanced AI */}
-          <SettingsSection
-            icon={Brain}
-            title="Advanced AI"
-            description="Fine-tune AI response behavior"
-          >
-            <SelectSetting
-              label="Response length"
-              value={responseLength}
-              onChange={setResponseLength}
-              options={[
-                { value: 'concise', label: 'Concise' },
-                { value: 'balanced', label: 'Balanced' },
-                { value: 'detailed', label: 'Detailed' },
-              ]}
-            />
-            <SelectSetting
-              label="Citation detail"
-              value={citationDetail}
-              onChange={setCitationDetail}
-              options={[
-                { value: 'minimal', label: 'Minimal' },
-                { value: 'detailed', label: 'Detailed' },
-                { value: 'comprehensive', label: 'Comprehensive' },
-              ]}
-            />
-            <SelectSetting
-              label="Jurisdiction"
-              value={jurisdiction}
-              onChange={setJurisdiction}
-              options={[
-                { value: 'uk-england-wales', label: 'England & Wales' },
-                { value: 'uk-scotland', label: 'Scotland' },
-                { value: 'uk-northern-ireland', label: 'Northern Ireland' },
-              ]}
-            />
-          </SettingsSection>
-
-          {/* Case Management */}
-          <SettingsSection
-            icon={Briefcase}
-            title="Case Management"
-            description="Configure case handling preferences"
-          >
-            <SelectSetting
-              label="Default case type"
-              value={defaultCaseType}
-              onChange={setDefaultCaseType}
-              options={[
-                { value: 'general', label: 'General' },
-                { value: 'employment', label: 'Employment' },
-                { value: 'family', label: 'Family' },
-                { value: 'housing', label: 'Housing' },
-                { value: 'immigration', label: 'Immigration' },
-              ]}
-            />
-            <SelectSetting
-              label="Auto-archive after"
-              value={autoArchiveDays}
-              onChange={setAutoArchiveDays}
-              options={[
-                { value: '30', label: '30 days' },
-                { value: '90', label: '90 days' },
-                { value: '180', label: '180 days' },
-                { value: 'never', label: 'Never' },
-              ]}
-            />
-            <SelectSetting
-              label="Case numbering"
-              value={caseNumberFormat}
-              onChange={setCaseNumberFormat}
-              options={[
-                { value: 'YYYY-NNNN', label: 'YYYY-NNNN' },
-                { value: 'NNNN-YYYY', label: 'NNNN-YYYY' },
-                { value: 'SEQUENTIAL', label: 'Sequential' },
-              ]}
-            />
-          </SettingsSection>
-        </div>
+      {/* Tabbed Settings - Fills remaining space */}
+      <div className="flex-1 overflow-hidden">
+        <Tabs
+          defaultTab="account"
+          tabs={[
+            {
+              id: 'account',
+              label: 'Account',
+              icon: User,
+              content: <AccountTab />,
+            },
+            {
+              id: 'ai',
+              label: 'AI Configuration',
+              icon: Brain,
+              content: <AIConfigTab />,
+            },
+            {
+              id: 'preferences',
+              label: 'Preferences',
+              icon: Settings,
+              content: <PreferencesTab />,
+            },
+            {
+              id: 'privacy',
+              label: 'Data & Privacy',
+              icon: Lock,
+              content: <DataPrivacyTab />,
+            },
+            {
+              id: 'cases',
+              label: 'Case Management',
+              icon: Briefcase,
+              content: <CaseManagementTab />,
+            },
+            {
+              id: 'about',
+              label: 'About',
+              icon: Info,
+              content: <AboutTab />,
+            },
+          ]}
+        />
       </div>
 
       {/* Clear Data Confirmation Dialog */}
@@ -1060,6 +1148,8 @@ function ToggleSetting({ label, enabled, onChange }: ToggleSettingProps): JSX.El
         className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors flex-shrink-0 ${
           enabled ? 'bg-blue-600' : 'bg-slate-700'
         }`}
+        aria-label={`Toggle ${label}`}
+        aria-pressed={enabled}
       >
         <span
           className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
@@ -1086,6 +1176,7 @@ function SelectSetting({ label, value, onChange, options }: SelectSettingProps):
         value={value}
         onChange={(e) => onChange?.(e.target.value)}
         className="px-2 py-1 text-xs bg-slate-800/50 border border-blue-700/30 rounded text-white focus:outline-none focus:ring-1 focus:ring-blue-500 flex-shrink-0"
+        aria-label={label}
       >
         {options.map((option) => (
           <option key={option.value} value={option.value}>

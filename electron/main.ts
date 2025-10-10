@@ -22,6 +22,8 @@ import { ragService } from '../src/services/RAGService';
 import { legalAPIService } from '../src/services/LegalAPIService';
 import { chatConversationService } from '../src/services/ChatConversationService';
 import { chatConversationRepository } from '../src/repositories/ChatConversationRepository';
+import { validateOpenAIConfig } from '../src/features/chat/validation/openai-schemas';
+import { OpenAITestConnectionSchema } from '../src/features/chat/validation/openai-schemas';
 import { userProfileService } from '../src/services/UserProfileService';
 import { userProfileRepository } from '../src/repositories/UserProfileRepository';
 import { modelDownloadService } from '../src/services/ModelDownloadService';
@@ -53,6 +55,8 @@ import type {
   AICheckStatusRequest,
   AIChatRequest,
   AIStreamStartRequest,
+  AIConfigureRequest,
+  AITestConnectionRequest,
   FileSelectRequest,
   FileUploadRequest,
   ConversationCreateRequest,
@@ -658,6 +662,148 @@ function setupIpcHandlers() {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Failed to check AI status',
+      };
+    }
+  });
+
+  /**
+   * Configure OpenAI API credentials and model selection.
+   *
+   * Validates API key format and creates/updates OpenAIService instance.
+   * API key is stored in memory only (not persisted to disk).
+   *
+   * @param {AIConfigureRequest} request - Configuration request
+   * @param {string} request.apiKey - OpenAI API key (format: sk-proj-... or sk-...)
+   * @param {string} request.model - Model selection (gpt-4o, gpt-4o-mini, gpt-3.5-turbo)
+   * @param {string} [request.organization] - Optional organization ID (format: org-...)
+   *
+   * @returns {Promise<AIConfigureResponse | IPCErrorResponse>} Success or validation error
+   *
+   * @security
+   * - Input validation via Zod schema (validateOpenAIConfig)
+   * - API key format validation (must start with sk-)
+   * - Organization ID validation (must start with org-)
+   * - No API key logging for security
+   *
+   * @example
+   * ```typescript
+   * const result = await window.justiceAPI.configureAI({
+   *   apiKey: "sk-proj-...",
+   *   model: "gpt-4o",
+   *   organization: "org-..."
+   * });
+   * if (result.success) {
+   *   console.log("OpenAI configured successfully");
+   * }
+   * ```
+   */
+  ipcMain.handle(IPC_CHANNELS.AI_CONFIGURE, async (_, request: AIConfigureRequest) => {
+    try {
+      // Validate input using Zod schema
+      const validatedConfig = validateOpenAIConfig(request);
+
+      // Configure OpenAI via AIServiceFactory
+      await aiServiceFactory.configureOpenAI(validatedConfig);
+
+      errorLogger.logError('OpenAI configured successfully via AIServiceFactory', {
+        type: 'info',
+        model: validatedConfig.model,
+        hasOrganization: !!validatedConfig.organization,
+      });
+
+      return { success: true };
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'ipc:ai:configure' });
+
+      // Handle Zod validation errors
+      if (error && typeof error === 'object' && 'issues' in error) {
+        const zodError = error as { issues: Array<{ message: string }> };
+        const errorMessages = zodError.issues.map(issue => issue.message).join(', ');
+        return {
+          success: false,
+          error: `Validation failed: ${errorMessages}`,
+        };
+      }
+
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to configure OpenAI',
+      };
+    }
+  });
+
+  /**
+   * Test OpenAI API connection with provided credentials.
+   *
+   * Creates a temporary OpenAIService instance and attempts a minimal API call
+   * to verify the API key is valid and the service is reachable.
+   *
+   * @param {AITestConnectionRequest} request - Test request
+   * @param {string} request.apiKey - OpenAI API key to test
+   * @param {string} [request.model] - Optional model to test (default: gpt-4o)
+   *
+   * @returns {Promise<AITestConnectionResponse | IPCErrorResponse>} Connection status
+   *
+   * @security
+   * - Input validation via Zod schema (OpenAITestConnectionSchema)
+   * - Temporary service instance (not persisted)
+   * - No API key logging
+   * - Timeout protection (OpenAI SDK default timeout)
+   *
+   * @example
+   * ```typescript
+   * const result = await window.justiceAPI.testAIConnection({
+   *   apiKey: "sk-proj-...",
+   *   model: "gpt-4o"
+   * });
+   * if (result.success && result.connected) {
+   *   console.log("Connection successful:", result.model);
+   * } else {
+   *   console.error("Connection failed:", result.error);
+   * }
+   * ```
+   */
+  ipcMain.handle(IPC_CHANNELS.AI_TEST_CONNECTION, async (_, request: AITestConnectionRequest) => {
+    try {
+      // Validate input using Zod schema
+      const validatedRequest = OpenAITestConnectionSchema.parse(request);
+
+      // Test connection via AIServiceFactory
+      const status = await aiServiceFactory.testOpenAIConnection({
+        apiKey: validatedRequest.apiKey,
+        model: validatedRequest.model || 'gpt-4o',
+        organization: undefined,
+      });
+
+      errorLogger.logError('OpenAI connection test completed via AIServiceFactory', {
+        type: 'info',
+        connected: status.connected,
+        model: status.model,
+      });
+
+      return {
+        success: true,
+        connected: status.connected,
+        endpoint: status.endpoint,
+        model: status.model,
+        error: status.error,
+      };
+    } catch (error) {
+      errorLogger.logError(error as Error, { context: 'ipc:ai:testConnection' });
+
+      // Handle Zod validation errors
+      if (error && typeof error === 'object' && 'issues' in error) {
+        const zodError = error as { issues: Array<{ message: string }> };
+        const errorMessages = zodError.issues.map(issue => issue.message).join(', ');
+        return {
+          success: false,
+          error: `Validation failed: ${errorMessages}`,
+        };
+      }
+
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to test connection',
       };
     }
   });
@@ -2114,7 +2260,7 @@ function setupIpcHandlers() {
   );
 
   errorLogger.logError(
-    'IPC handlers registered successfully (cases + evidence + AI + files + conversations + profile + models + facts + GDPR + authentication + consent + UI errors)',
+    'IPC handlers registered successfully (cases + evidence + AI + OpenAI + files + conversations + profile + models + facts + GDPR + authentication + consent + UI errors)',
     { type: 'info' }
   );
 }

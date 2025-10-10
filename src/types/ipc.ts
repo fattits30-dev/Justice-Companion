@@ -47,6 +47,8 @@ export const IPC_CHANNELS = {
   AI_STREAM_COMPLETE: 'ai:stream:complete', // Event (main -> renderer)
   AI_STREAM_ERROR: 'ai:stream:error', // Event (main -> renderer)
   AI_STATUS_UPDATE: 'ai:status:update', // Event (main -> renderer) - Progress updates
+  AI_CONFIGURE: 'ai:configure', // Configure OpenAI API credentials
+  AI_TEST_CONNECTION: 'ai:testConnection', // Test OpenAI connection
 
   // Model Download Operations
   MODEL_GET_AVAILABLE: 'model:getAvailable',
@@ -266,6 +268,29 @@ export interface AIStreamStartRequest {
 export interface AIStreamStartResponse {
   success: true;
   streamId: string;
+}
+
+export interface AIConfigureRequest {
+  apiKey: string;
+  model: 'gpt-4o' | 'gpt-4o-mini' | 'gpt-3.5-turbo';
+  organization?: string;
+}
+
+export interface AIConfigureResponse {
+  success: true;
+}
+
+export interface AITestConnectionRequest {
+  apiKey: string;
+  model?: 'gpt-4o' | 'gpt-4o-mini' | 'gpt-3.5-turbo';
+}
+
+export interface AITestConnectionResponse {
+  success: true;
+  connected: boolean;
+  endpoint: string;
+  model?: string;
+  error?: string;
 }
 
 // Model Download IPC Request/Response types
@@ -658,6 +683,8 @@ export interface JusticeCompanionAPI {
   checkAIStatus(): Promise<IPCResponse<AICheckStatusResponse>>;
   aiChat(request: AIChatRequest): Promise<IPCResponse<AIChatResponse>>;
   aiStreamStart(request: AIStreamStartRequest): Promise<IPCResponse<AIStreamStartResponse>>;
+  configureAI(request: AIConfigureRequest): Promise<IPCResponse<AIConfigureResponse>>;
+  testAIConnection(request: AITestConnectionRequest): Promise<IPCResponse<AITestConnectionResponse>>;
   // AI streaming events (one-way: main -> renderer)
   // Returns cleanup function to remove listener
   onAIStreamToken(callback: (token: string) => void): () => void;

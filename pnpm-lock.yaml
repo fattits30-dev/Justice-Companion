@@ -10,7 +10,7 @@ importers:
     dependencies:
       '@anthropic-ai/sdk':
         specifier: ^0.65.0
-        version: 0.65.0(zod@3.25.76)
+        version: 0.65.0(zod@4.1.12)
       '@openai/codex-sdk':
         specifier: ^0.45.0
         version: 0.45.0
@@ -59,6 +59,9 @@ importers:
       node-llama-cpp:
         specifier: ^3.14.0
         version: 3.14.0(typescript@5.9.3)
+      openai:
+        specifier: ^6.3.0
+        version: 6.3.0(ws@8.18.3)(zod@4.1.12)
       pdf-parse:
         specifier: ^2.1.6
         version: 2.1.9
@@ -89,6 +92,9 @@ importers:
       tailwind-merge:
         specifier: ^2.5.0
         version: 2.6.0
+      zod:
+        specifier: ^4.1.12
+        version: 4.1.12
       zustand:
         specifier: ^5.0.0
         version: 5.0.8(@types/react@18.3.25)(react@18.3.1)
@@ -101,7 +107,7 @@ importers:
         version: 1.0.4
       '@modelcontextprotocol/server-filesystem':
         specifier: ^2025.8.21
-        version: 2025.8.21(zod@3.25.76)
+        version: 2025.8.21(zod@4.1.12)
       '@modelcontextprotocol/server-github':
         specifier: ^2025.4.8
         version: 2025.4.8
@@ -160,7 +166,7 @@ importers:
         specifier: ^9.0.0
         version: 9.2.1
       electron:
-        specifier: ^38.2.1
+        specifier: 38.2.1
         version: 38.2.1
       electron-builder:
         specifier: ^26.0.12
@@ -3861,6 +3867,18 @@ packages:
     resolution: {integrity: sha512-VXJjc87FScF88uafS3JllDgvAm+c/Slfz06lorj2uAY34rlUu0Nt+v8wreiImcrgAjjIHp1rXpTDlLOGw29WwQ==}
     engines: {node: '>=18'}
 
+  openai@6.3.0:
+    resolution: {integrity: sha512-E6vOGtZvdcb4yXQ5jXvDlUG599OhIkb/GjBLZXS+qk0HF+PJReIldEc9hM8Ft81vn+N6dRdFRb7BZNK8bbvXrw==}
+    hasBin: true
+    peerDependencies:
+      ws: ^8.18.0
+      zod: ^3.25 || ^4.0
+    peerDependenciesMeta:
+      ws:
+        optional: true
+      zod:
+        optional: true
+
   option@0.2.4:
     resolution: {integrity: sha512-pkEqbDyl8ou5cpq+VsnQbe/WlEy5qS7xPzMS1U55OCG9KPvwFD46zDbxQIj3egJSFc3D+XhYOPUzz49zQAVy7A==}
 
@@ -5242,6 +5260,9 @@ packages:
   zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
+  zod@4.1.12:
+    resolution: {integrity: sha512-JInaHOamG8pt5+Ey8kGmdcAcg3OL9reK8ltczgHTAwNhMys/6ThXHityHxVV2p3fkw/c+MAvBHFVYHFZDmjMCQ==}
+
   zustand@5.0.8:
     resolution: {integrity: sha512-gyPKpIaxY9XcO2vSMrLbiER7QMAMGOQZVRdJ6Zi782jkbzZygq5GI9nG8g+sMgitRtndwaBSl7uiqC49o1SSiw==}
     engines: {node: '>=12.20.0'}
@@ -5276,11 +5297,11 @@ snapshots:
       '@jridgewell/gen-mapping': 0.3.13
       '@jridgewell/trace-mapping': 0.3.31
 
-  '@anthropic-ai/sdk@0.65.0(zod@3.25.76)':
+  '@anthropic-ai/sdk@0.65.0(zod@4.1.12)':
     dependencies:
       json-schema-to-ts: 3.1.1
     optionalDependencies:
-      zod: 3.25.76
+      zod: 4.1.12
 
   '@asamuzakjp/css-color@4.0.5':
     dependencies:
@@ -5817,13 +5838,13 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@modelcontextprotocol/server-filesystem@2025.8.21(zod@3.25.76)':
+  '@modelcontextprotocol/server-filesystem@2025.8.21(zod@4.1.12)':
     dependencies:
       '@modelcontextprotocol/sdk': 1.19.1
       diff: 5.2.0
       glob: 10.4.5
       minimatch: 10.0.3
-      zod-to-json-schema: 3.24.6(zod@3.25.76)
+      zod-to-json-schema: 3.24.6(zod@4.1.12)
     transitivePeerDependencies:
       - supports-color
       - zod
@@ -9450,6 +9471,11 @@ snapshots:
     dependencies:
       mimic-function: 5.0.1
 
+  openai@6.3.0(ws@8.18.3)(zod@4.1.12):
+    optionalDependencies:
+      ws: 8.18.3
+      zod: 4.1.12
+
   option@0.2.4: {}
 
   optionator@0.9.4:
@@ -10960,9 +10986,15 @@ snapshots:
     dependencies:
       zod: 3.25.76
 
+  zod-to-json-schema@3.24.6(zod@4.1.12):
+    dependencies:
+      zod: 4.1.12
+
   zod@3.23.8: {}
 
   zod@3.25.76: {}
+
+  zod@4.1.12: {}
 
   zustand@5.0.8(@types/react@18.3.25)(react@18.3.1):
     optionalDependencies:
