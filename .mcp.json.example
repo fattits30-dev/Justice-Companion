@@ -2,7 +2,7 @@
   "mcpServers": {
     "justice-companion": {
       "command": "node",
-      "args": ["mcp-server/dist/index.js"],
+      "args": ["../../MCPs/justice-companion/dist/index.js"],
       "env": {
         "NODE_ENV": "development"
       }
