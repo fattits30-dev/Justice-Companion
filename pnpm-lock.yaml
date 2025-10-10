@@ -24,7 +24,7 @@ importers:
         specifier: ^5.56.0
         version: 5.90.2(react@18.3.1)
       better-sqlite3:
-        specifier: ^12.4.1
+        specifier: 12.4.1
         version: 12.4.1
       chokidar:
         specifier: ^4.0.3
@@ -166,8 +166,8 @@ importers:
         specifier: ^9.0.0
         version: 9.2.1
       electron:
-        specifier: 38.2.1
-        version: 38.2.1
+        specifier: ^38.2.2
+        version: 38.2.2
       electron-builder:
         specifier: ^26.0.12
         version: 26.0.12(electron-builder-squirrel-windows@26.0.12)
@@ -193,7 +193,7 @@ importers:
         specifier: ^0.0.2
         version: 0.0.2
       playwright:
-        specifier: ^1.55.1
+        specifier: ^1.56.0
         version: 1.56.0
       postcss:
         specifier: ^8.4.0
@@ -391,6 +391,11 @@ packages:
 
   '@electron/asar@3.2.18':
     resolution: {integrity: sha512-2XyvMe3N3Nrs8cV39IKELRHTYUWFKrmqqSY1U+GMlc0jvqjIVnoxhNd2H4JolWQncbJi1DCvb5TNxZuI2fEjWg==}
+    engines: {node: '>=10.12.0'}
+    hasBin: true
+
+  '@electron/asar@3.4.1':
+    resolution: {integrity: sha512-i4/rNPRS84t0vSRa2HorerGRXWyF4vThfHesw0dmcWHp+cspK743UanA0suA5Q5y8kzY2y6YKrvbIUn69BCAiA==}
     engines: {node: '>=10.12.0'}
     hasBin: true
 
@@ -2444,8 +2449,8 @@ packages:
     resolution: {integrity: sha512-bO3y10YikuUwUuDUQRM4KfwNkKhnpVO7IPdbsrejwN9/AABJzzTQ4GeHwyzNSrVO+tEH3/Np255a3sVZpZDjvg==}
     engines: {node: '>=8.0.0'}
 
-  electron@38.2.1:
-    resolution: {integrity: sha512-P4pE2RpRg3kM8IeOK+heg6iAxR5wcXnNHrbVchn7M3GBnYAhjfJRkROusdOro5PlKzdtfKjesbbqaG4MqQXccg==}
+  electron@38.2.2:
+    resolution: {integrity: sha512-OXSaVNXDlonXDjMRsFNQo1j5tzTKwKXh5/m46IjAFccBcZJZMISI+EjSI07oexIuhvKM8AZLuFuihVn4YjWWrA==}
     engines: {node: '>= 12.20.55'}
     hasBin: true
 
@@ -5472,6 +5477,12 @@ snapshots:
       glob: 7.2.3
       minimatch: 3.1.2
 
+  '@electron/asar@3.4.1':
+    dependencies:
+      commander: 5.1.0
+      glob: 7.2.3
+      minimatch: 3.1.2
+
   '@electron/fuses@1.8.0':
     dependencies:
       chalk: 4.1.2
@@ -7658,7 +7669,7 @@ snapshots:
 
   electron-winstaller@5.4.0:
     dependencies:
-      '@electron/asar': 3.2.18
+      '@electron/asar': 3.4.1
       debug: 4.4.3
       fs-extra: 7.0.1
       lodash: 4.17.21
@@ -7668,7 +7679,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  electron@38.2.1:
+  electron@38.2.2:
     dependencies:
       '@electron/get': 2.0.3
       '@types/node': 22.18.8

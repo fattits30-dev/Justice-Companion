@@ -41,9 +41,16 @@ export async function launchElectronApp(options?: {
   console.log(`Using test database: ${dbPath}`);
 
   try {
-    // Launch Electron
+    // Launch Electron with Electron 38+ compatibility
+    // Playwright needs to add --user-data-dir for Electron 38+ due to Chromium security changes
+    const userDataDir = path.join(process.cwd(), 'test-data', `electron-user-data-${Date.now()}`);
+    fs.mkdirSync(userDataDir, { recursive: true });
+
     const app = await electron.launch({
-      args: [mainPath],
+      args: [
+        mainPath,
+        `--user-data-dir=${userDataDir}`, // Required for Electron 38+ remote debugging
+      ],
       env: {
         ...process.env,
         NODE_ENV: 'test',
@@ -99,11 +106,7 @@ export async function closeElectronApp(testApp: ElectronTestApp): Promise<void> 
 /**
  * Wait for element to be visible and return it
  */
-export async function waitForElement(
-  page: Page,
-  selector: string,
-  timeout = 5000
-): Promise<void> {
+export async function waitForElement(page: Page, selector: string, timeout = 5000): Promise<void> {
   await page.waitForSelector(selector, { state: 'visible', timeout });
 }
 
@@ -118,10 +121,7 @@ export async function clickAndWait(
   const { timeout = 5000, waitForNavigation = false } = options || {};
 
   if (waitForNavigation) {
-    await Promise.all([
-      page.waitForNavigation({ timeout }),
-      page.click(selector, { timeout }),
-    ]);
+    await Promise.all([page.waitForNavigation({ timeout }), page.click(selector, { timeout })]);
   } else {
     await page.click(selector, { timeout });
     // Small delay to allow UI to update
@@ -159,10 +159,7 @@ export async function selectOption(
 /**
  * Take screenshot for debugging
  */
-export async function takeScreenshot(
-  page: Page,
-  name: string
-): Promise<void> {
+export async function takeScreenshot(page: Page, name: string): Promise<void> {
   const screenshotPath = path.join(process.cwd(), 'test-results', 'screenshots', `${name}.png`);
   const screenshotDir = path.dirname(screenshotPath);
 
@@ -178,10 +175,7 @@ export async function takeScreenshot(
 /**
  * Get text content of element
  */
-export async function getTextContent(
-  page: Page,
-  selector: string
-): Promise<string | null> {
+export async function getTextContent(page: Page, selector: string): Promise<string | null> {
   const element = await page.$(selector);
   if (!element) return null;
   return element.textContent();
@@ -190,10 +184,7 @@ export async function getTextContent(
 /**
  * Check if element exists
  */
-export async function elementExists(
-  page: Page,
-  selector: string
-): Promise<boolean> {
+export async function elementExists(page: Page, selector: string): Promise<boolean> {
   const element = await page.$(selector);
   return element !== null;
 }
@@ -212,9 +203,6 @@ export async function waitForElementToDisappear(
 /**
  * Execute JavaScript in page context
  */
-export async function evaluateInPage<T>(
-  page: Page,
-  fn: () => T
-): Promise<T> {
+export async function evaluateInPage<T>(page: Page, fn: () => T): Promise<T> {
   return page.evaluate(fn);
 }

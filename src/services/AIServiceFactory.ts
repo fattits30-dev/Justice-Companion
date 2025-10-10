@@ -2,12 +2,7 @@ import { errorLogger } from '../utils/error-logger';
 import { IntegratedAIService } from '../features/chat/services/IntegratedAIService';
 import { OpenAIService } from '../features/chat/services/OpenAIService';
 import type { OpenAIConfig } from '../features/chat/services/OpenAIService';
-import type {
-  AIConfig,
-  AIStatus,
-  AIChatRequest,
-  AIResponse,
-} from '../types/ai';
+import type { AIConfig, AIStatus, AIChatRequest, AIResponse } from '../types/ai';
 import fs from 'fs';
 import path from 'path';
 import { app } from 'electron';
@@ -44,11 +39,7 @@ export class AIServiceFactory {
 
     // Check model availability
     const userDataPath = app.getPath('userData');
-    this.modelPath = path.join(
-      userDataPath,
-      'models',
-      'Qwen_Qwen3-8B-Q4_K_M.gguf',
-    );
+    this.modelPath = path.join(userDataPath, 'models', 'Qwen_Qwen3-8B-Q4_K_M.gguf');
 
     errorLogger.logError('AIServiceFactory initialized with multi-provider support', {
       type: 'info',
@@ -96,7 +87,7 @@ export class AIServiceFactory {
       }
 
       // Configure with API key
-      await this.openAIService.configure(config);
+      this.openAIService.configure(config);
 
       // Switch to OpenAI as current provider
       this.currentProvider = 'openai';
@@ -125,7 +116,7 @@ export class AIServiceFactory {
     try {
       // Create temporary service for testing
       const testService = new OpenAIService();
-      await testService.configure(config);
+      testService.configure(config);
       const status = await testService.checkConnection();
 
       errorLogger.logError('OpenAI connection test completed', {
@@ -277,17 +268,10 @@ export class AIServiceFactory {
     onComplete: () => void,
     onError: (error: string) => void,
     onThinkToken?: (token: string) => void,
-    onSources?: (sources: string[]) => void,
+    onSources?: (sources: string[]) => void
   ): Promise<void> {
     const service = this.getActiveService();
-    await service.streamChat(
-      request,
-      onToken,
-      onComplete,
-      onError,
-      onThinkToken,
-      onSources,
-    );
+    await service.streamChat(request, onToken, onComplete, onError, onThinkToken, onSources);
   }
 
   /**
@@ -308,16 +292,10 @@ export class AIServiceFactory {
     caseId: number | undefined,
     onToken: (token: string) => void,
     onComplete: () => void,
-    onError: (error: string) => void,
+    onError: (error: string) => void
   ): Promise<void> {
     const service = this.getActiveService();
-    await service.streamChatWithFunctions(
-      request,
-      caseId,
-      onToken,
-      onComplete,
-      onError,
-    );
+    await service.streamChatWithFunctions(request, caseId, onToken, onComplete, onError);
   }
 
   /**
@@ -350,7 +328,7 @@ export class AIServiceFactory {
       await this.integratedService.dispose();
 
       if (this.openAIService) {
-        await this.openAIService.dispose();
+        this.openAIService.dispose();
       }
 
       errorLogger.logError('AIServiceFactory disposed (all providers)', { type: 'info' });

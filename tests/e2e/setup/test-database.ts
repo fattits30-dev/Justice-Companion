@@ -86,14 +86,13 @@ async function seedTestData(dbPath: string): Promise<void> {
   try {
     // Insert sample case
     db.exec(`
-      INSERT INTO cases (id, case_number, title, case_type, description, status, created_at, updated_at)
+      INSERT INTO cases (id, title, case_type, description, status, created_at, updated_at)
       VALUES (
         1,
-        'CASE-2024-001',
         'Employment Discrimination Case',
         'employment',
         'Sample employment discrimination case for testing',
-        'open',
+        'active',
         datetime('now'),
         datetime('now')
       );
@@ -101,26 +100,25 @@ async function seedTestData(dbPath: string): Promise<void> {
 
     // Insert sample evidence
     db.exec(`
-      INSERT INTO evidence (id, case_id, title, description, file_path, file_type, upload_date)
+      INSERT INTO evidence (id, case_id, title, file_path, evidence_type, created_at)
       VALUES (
         1,
         1,
         'Employment Contract',
-        'Original employment contract',
         '/test/evidence/contract.pdf',
-        'application/pdf',
+        'document',
         datetime('now')
       );
     `);
 
     // Insert sample user facts
     db.exec(`
-      INSERT INTO user_facts (id, fact_type, fact_content, importance, created_at, updated_at)
+      INSERT INTO user_facts (id, case_id, fact_type, fact_content, created_at, updated_at)
       VALUES (
+        1,
         1,
         'personal',
         'Test user fact: personal information',
-        'high',
         datetime('now'),
         datetime('now')
       );
@@ -128,7 +126,7 @@ async function seedTestData(dbPath: string): Promise<void> {
 
     // Insert sample case facts
     db.exec(`
-      INSERT INTO case_facts (id, case_id, category, fact_content, importance, created_at, updated_at)
+      INSERT INTO case_facts (id, case_id, fact_category, fact_content, importance, created_at, updated_at)
       VALUES (
         1,
         1,
@@ -169,9 +167,15 @@ export async function verifyDatabaseState(dbPath: string): Promise<{
 
   try {
     const cases = db.prepare('SELECT COUNT(*) as count FROM cases').get() as { count: number };
-    const evidence = db.prepare('SELECT COUNT(*) as count FROM evidence').get() as { count: number };
-    const userFacts = db.prepare('SELECT COUNT(*) as count FROM user_facts').get() as { count: number };
-    const caseFacts = db.prepare('SELECT COUNT(*) as count FROM case_facts').get() as { count: number };
+    const evidence = db.prepare('SELECT COUNT(*) as count FROM evidence').get() as {
+      count: number;
+    };
+    const userFacts = db.prepare('SELECT COUNT(*) as count FROM user_facts').get() as {
+      count: number;
+    };
+    const caseFacts = db.prepare('SELECT COUNT(*) as count FROM case_facts').get() as {
+      count: number;
+    };
 
     return {
       cases: cases.count,

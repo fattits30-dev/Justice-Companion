@@ -49,7 +49,7 @@ export default defineConfig({
             fs.mkdirSync(dest, { recursive: true });
           }
 
-          fs.readdirSync(src).forEach(file => {
+          fs.readdirSync(src).forEach((file: string) => {
             if (file.endsWith('.sql')) {
               fs.copyFileSync(path.join(src, file), path.join(dest, file));
             }
@@ -60,14 +60,11 @@ export default defineConfig({
       },
       {
         entry: 'electron/preload.ts',
-        onstart(options) {
-          options.reload();
-        },
+        // Don't call reload() here - it causes duplicate Electron instances
+        // The preload script will be rebuilt automatically when it changes
       },
     ]),
-    renderer({
-      nodeIntegration: true,
-    }),
+    renderer(),
   ],
   resolve: {
     alias: {
@@ -85,14 +82,37 @@ export default defineConfig({
   },
   build: {
     target: 'esnext', // Support top-level await
+    chunkSizeWarningLimit: 1000, // Increase warning limit to 1MB
     rollupOptions: {
       external: [
         'electron',
         ...builtinModules,
-        ...builtinModules.map(m => `node:${m}`),
+        ...builtinModules.map((m) => `node:${m}`),
         'node-llama-cpp',
         /^@node-llama-cpp\//,
       ],
+      output: {
+        manualChunks: {
+          // Core React libraries
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          // UI components and libraries
+          'ui-vendor': [
+            '@radix-ui/react-dialog',
+            '@radix-ui/react-icons',
+            'lucide-react',
+            'framer-motion',
+            'sonner',
+          ],
+          // Markdown and rendering
+          markdown: ['react-markdown', 'remark-gfm'],
+          // PDF and document processing
+          document: ['html2pdf.js', 'html2canvas'],
+          // Large utility libraries
+          'utils-vendor': ['clsx', 'tailwind-merge', 'zustand'],
+          // AI and OpenAI
+          'ai-vendor': ['@anthropic-ai/sdk', '@openai/codex-sdk', 'openai'],
+        },
+      },
     },
   },
   optimizeDeps: {
