@@ -1,0 +1,7 @@
+# Run lint-staged to check and fix TypeScript/ESLint/Prettier issues
+npx lint-staged
+
+# Show staged files for transparency
+echo ""
+echo "📋 Files staged for commit:"
+git diff --cached --name-only
