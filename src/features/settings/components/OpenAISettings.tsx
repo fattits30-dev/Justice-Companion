@@ -1,5 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Brain, Eye, EyeOff, ExternalLink, AlertCircle, CheckCircle2, Loader2, XCircle } from 'lucide-react';
+import {
+  Brain,
+  Eye,
+  EyeOff,
+  ExternalLink,
+  AlertCircle,
+  CheckCircle2,
+  Loader2,
+  XCircle,
+} from 'lucide-react';
 import { useToast } from '@/hooks/useToast';
 
 type ConnectionStatus = 'idle' | 'testing' | 'connected' | 'error';
@@ -26,7 +35,7 @@ export function OpenAISettings({ onConfigSaved }: OpenAISettingsProps): JSX.Elem
 
   // Load saved configuration on mount
   useEffect(() => {
-    const loadSavedConfig = () => {
+    const loadSavedConfig = (): void => {
       const savedApiKey = localStorage.getItem('openai_api_key');
       const savedModel = localStorage.getItem('openai_model');
       const savedOrganization = localStorage.getItem('openai_organization');
@@ -34,7 +43,7 @@ export function OpenAISettings({ onConfigSaved }: OpenAISettingsProps): JSX.Elem
       if (savedApiKey) {
         setHasConfigured(true);
         setMaskedApiKey(maskApiKey(savedApiKey));
-        setModel((savedModel as 'gpt-4o' | 'gpt-4o-mini' | 'gpt-3.5-turbo') || 'gpt-4o');
+        setModel((savedModel as 'gpt-4o' | 'gpt-4o-mini' | 'gpt-3.5-turbo') ?? 'gpt-4o');
         if (savedOrganization) {
           setOrganization(savedOrganization);
         }
@@ -45,7 +54,9 @@ export function OpenAISettings({ onConfigSaved }: OpenAISettingsProps): JSX.Elem
   }, []);
 
   const maskApiKey = (key: string): string => {
-    if (key.length < 8) return key;
+    if (key.length < 8) {
+      return key;
+    }
     const prefix = key.substring(0, 8);
     return `${prefix}${'•'.repeat(32)}`;
   };
@@ -65,7 +76,7 @@ export function OpenAISettings({ onConfigSaved }: OpenAISettingsProps): JSX.Elem
     return true;
   };
 
-  const handleTestConnection = async () => {
+  const handleTestConnection = async (): Promise<void> => {
     if (!apiKey) {
       toast.error('Please enter an API key first');
       return;
@@ -88,16 +99,16 @@ export function OpenAISettings({ onConfigSaved }: OpenAISettingsProps): JSX.Elem
         if (response.connected) {
           setConnectionStatus('connected');
           setConnectionError(null);
-          toast.success(`Connected to OpenAI successfully! (${response.model || model})`);
+          toast.success(`Connected to OpenAI successfully! (${response.model ?? model})`);
         } else {
           setConnectionStatus('error');
-          setConnectionError(response.error || 'Connection failed');
-          toast.error(`Connection failed: ${response.error || 'Unknown error'}`);
+          setConnectionError(response.error ?? 'Connection failed');
+          toast.error(`Connection failed: ${response.error ?? 'Unknown error'}`);
         }
       } else {
         setConnectionStatus('error');
-        setConnectionError(response.error || 'Connection failed');
-        toast.error(`Connection failed: ${response.error || 'Unknown error'}`);
+        setConnectionError(response.error ?? 'Connection failed');
+        toast.error(`Connection failed: ${response.error ?? 'Unknown error'}`);
       }
     } catch (error) {
       setConnectionStatus('error');
@@ -107,7 +118,7 @@ export function OpenAISettings({ onConfigSaved }: OpenAISettingsProps): JSX.Elem
     }
   };
 
-  const handleSaveConfiguration = async () => {
+  const handleSaveConfiguration = async (): Promise<void> => {
     if (!apiKey) {
       toast.error('Please enter an API key');
       return;
@@ -124,7 +135,7 @@ export function OpenAISettings({ onConfigSaved }: OpenAISettingsProps): JSX.Elem
       const response = await window.justiceAPI.configureAI({
         apiKey,
         model,
-        organization: organization || undefined,
+        organization: organization ?? undefined,
       });
 
       if (response.success) {
@@ -155,8 +166,13 @@ export function OpenAISettings({ onConfigSaved }: OpenAISettingsProps): JSX.Elem
     }
   };
 
-  const handleClearConfiguration = () => {
-    if (!confirm('Are you sure you want to clear your OpenAI configuration? This will remove your API key.')) {
+  const handleClearConfiguration = (): void => {
+    // eslint-disable-next-line no-alert
+    if (
+      !confirm(
+        'Are you sure you want to clear your OpenAI configuration? This will remove your API key.'
+      )
+    ) {
       return;
     }
 
@@ -175,7 +191,7 @@ export function OpenAISettings({ onConfigSaved }: OpenAISettingsProps): JSX.Elem
     toast.success('OpenAI configuration cleared');
   };
 
-  const getStatusIcon = () => {
+  const getStatusIcon = (): JSX.Element => {
     switch (connectionStatus) {
       case 'testing':
         return <Loader2 className="w-4 h-4 text-blue-400 animate-spin" />;
@@ -188,20 +204,20 @@ export function OpenAISettings({ onConfigSaved }: OpenAISettingsProps): JSX.Elem
     }
   };
 
-  const getStatusText = () => {
+  const getStatusText = (): string => {
     switch (connectionStatus) {
       case 'testing':
         return 'Testing connection...';
       case 'connected':
         return 'Connected successfully';
       case 'error':
-        return `Error: ${connectionError || 'Connection failed'}`;
+        return `Error: ${connectionError ?? 'Connection failed'}`;
       default:
         return 'Not tested';
     }
   };
 
-  const getStatusColor = () => {
+  const getStatusColor = (): string => {
     switch (connectionStatus) {
       case 'testing':
         return 'text-blue-300';
@@ -225,7 +241,8 @@ export function OpenAISettings({ onConfigSaved }: OpenAISettingsProps): JSX.Elem
               <strong>OpenAI API Configuration</strong>
             </p>
             <p className="text-xs text-blue-300">
-              Provide your own OpenAI API key to enable AI-powered legal assistance. Your key is stored securely and never shared.
+              Provide your own OpenAI API key to enable AI-powered legal assistance. Your key is
+              stored securely and never shared.
             </p>
             <a
               href="https://platform.openai.com/api-keys"
@@ -361,7 +378,7 @@ export function OpenAISettings({ onConfigSaved }: OpenAISettingsProps): JSX.Elem
       {/* Action Buttons */}
       <div className="flex gap-2">
         <button
-          onClick={handleTestConnection}
+          onClick={() => void handleTestConnection()}
           disabled={!apiKey || isSaving || connectionStatus === 'testing'}
           className="flex-1 px-3 py-2 bg-blue-600/20 border border-blue-500/30 text-blue-300 rounded-lg hover:bg-blue-600/30 transition-all text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
@@ -379,7 +396,7 @@ export function OpenAISettings({ onConfigSaved }: OpenAISettingsProps): JSX.Elem
         </button>
 
         <button
-          onClick={handleSaveConfiguration}
+          onClick={() => void handleSaveConfiguration()}
           disabled={!apiKey || isSaving}
           className="flex-1 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
@@ -406,8 +423,8 @@ export function OpenAISettings({ onConfigSaved }: OpenAISettingsProps): JSX.Elem
               <strong>Pay-Per-Use Model</strong>
             </p>
             <p className="text-xs text-amber-300">
-              OpenAI charges based on usage (tokens processed). Typical cost for legal Q&A is $1-6/month.
-              You control spending via OpenAI's usage dashboard.
+              OpenAI charges based on usage (tokens processed). Typical cost for legal Q&A is
+              $1-6/month. You control spending via OpenAI's usage dashboard.
             </p>
             <a
               href="https://openai.com/pricing"
@@ -428,7 +445,9 @@ export function OpenAISettings({ onConfigSaved }: OpenAISettingsProps): JSX.Elem
           <Brain className="w-4 h-4 text-slate-400 mt-0.5 flex-shrink-0" />
           <div className="flex-1">
             <p className="text-xs text-slate-300">
-              <strong>Security:</strong> Your API key is stored locally and encrypted. It's never sent to any server except OpenAI's official API. Always keep your API key confidential.
+              <strong>Security:</strong> Your API key is stored locally and encrypted. It's never
+              sent to any server except OpenAI's official API. Always keep your API key
+              confidential.
             </p>
           </div>
         </div>

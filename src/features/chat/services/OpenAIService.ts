@@ -65,7 +65,7 @@ export class OpenAIService {
       ...config,
     } as AIConfig;
 
-    this.caseFactsRepository = caseFactsRepository || null;
+    this.caseFactsRepository = caseFactsRepository ?? null;
 
     errorLogger.logError('OpenAIService initialized', {
       type: 'info',
@@ -79,7 +79,7 @@ export class OpenAIService {
    *
    * @param openAIConfig - API key and model selection
    */
-  async configure(openAIConfig: OpenAIConfig): Promise<void> {
+  configure(openAIConfig: OpenAIConfig): void {
     try {
       this.openAIConfig = openAIConfig;
 
@@ -179,7 +179,7 @@ export class OpenAIService {
         undefined, // No think tokens for OpenAI
         (extractedSources) => {
           sources.push(...extractedSources);
-        },
+        }
       );
 
       return {
@@ -222,7 +222,7 @@ export class OpenAIService {
     onComplete: () => void,
     onError: (error: string) => void,
     _onThinkToken?: (token: string) => void, // Not used - OpenAI doesn't have <think> tags
-    onSources?: (sources: string[]) => void,
+    onSources?: (sources: string[]) => void
   ): Promise<void> {
     try {
       // Validate configuration
@@ -330,7 +330,7 @@ export class OpenAIService {
     caseId: number | undefined,
     onToken: (token: string) => void,
     onComplete: () => void,
-    onError: (error: string) => void,
+    onError: (error: string) => void
   ): Promise<void> {
     try {
       // Validate configuration
@@ -371,7 +371,7 @@ export class OpenAIService {
           type: 'function',
           function: {
             name: 'store_case_fact',
-            description: 'Store a fact about the user\'s case',
+            description: "Store a fact about the user's case",
             parameters: {
               type: 'object',
               properties: {
@@ -543,7 +543,7 @@ Use these facts as your memory. Reference them in your responses.`;
   /**
    * Cleanup resources
    */
-  async dispose(): Promise<void> {
+  dispose(): void {
     try {
       this.client = null;
       this.openAIConfig = null;

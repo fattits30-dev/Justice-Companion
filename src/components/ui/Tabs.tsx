@@ -16,7 +16,7 @@ export interface TabsProps {
 }
 
 export function Tabs({ tabs, defaultTab, onChange, className = '' }: TabsProps): JSX.Element {
-  const [activeTab, setActiveTab] = useState<string>(defaultTab || tabs[0]?.id || '');
+  const [activeTab, setActiveTab] = useState<string>(defaultTab ?? tabs[0]?.id ?? '');
   const tabRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
 
   useEffect(() => {
@@ -25,12 +25,12 @@ export function Tabs({ tabs, defaultTab, onChange, className = '' }: TabsProps):
     }
   }, [defaultTab, tabs]);
 
-  const handleTabClick = (tabId: string) => {
+  const handleTabClick = (tabId: string): void => {
     setActiveTab(tabId);
     onChange?.(tabId);
   };
 
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>, index: number): void => {
     const tabCount = tabs.length;
     let newIndex = index;
 
@@ -97,11 +97,7 @@ export function Tabs({ tabs, defaultTab, onChange, className = '' }: TabsProps):
               className={`
                 group relative flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap
                 transition-all duration-200 ease-out
-                ${
-                  isActive
-                    ? 'text-blue-300'
-                    : 'text-slate-400 hover:text-slate-300'
-                }
+                ${isActive ? 'text-blue-300' : 'text-slate-400 hover:text-slate-300'}
                 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-900 rounded-t-lg
               `}
             >
@@ -154,12 +150,7 @@ export function Tabs({ tabs, defaultTab, onChange, className = '' }: TabsProps):
       </div>
 
       {/* Screen reader announcements */}
-      <div
-        role="status"
-        aria-live="polite"
-        aria-atomic="true"
-        className="sr-only"
-      >
+      <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
         {activeTabContent && `${tabs.find((tab) => tab.id === activeTab)?.label} tab selected`}
       </div>
     </div>

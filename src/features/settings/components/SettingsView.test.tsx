@@ -10,7 +10,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { render as rtlRender, screen, waitFor } from '@testing-library/react';
+import { render as rtlRender, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from '@/contexts/AuthContext';
@@ -24,6 +24,12 @@ function render(ui: React.ReactElement) {
     </BrowserRouter>
   );
 }
+
+// Helper function to click tabs
+const clickTab = async (tabName: string): Promise<void> => {
+  const tab = screen.getByRole('tab', { name: tabName });
+  await userEvent.setup().click(tab);
+};
 
 // Mock window.justiceAPI
 const mockJusticeAPI = {
@@ -103,12 +109,13 @@ describe('SettingsView', () => {
     it('should render all settings sections', () => {
       render(<SettingsView />);
 
-      expect(screen.getByText('Profile')).toBeInTheDocument();
-      expect(screen.getByText('AI & Legal Data')).toBeInTheDocument();
-      expect(screen.getByText('Notifications')).toBeInTheDocument();
-      expect(screen.getByText('Privacy & Security')).toBeInTheDocument();
-      expect(screen.getByText('Data Management')).toBeInTheDocument();
-      expect(screen.getByText('About')).toBeInTheDocument();
+      // Check for all 6 tabs
+      expect(screen.getByRole('tab', { name: 'Account' })).toBeInTheDocument();
+      expect(screen.getByRole('tab', { name: 'AI Configuration' })).toBeInTheDocument();
+      expect(screen.getByRole('tab', { name: 'Preferences' })).toBeInTheDocument();
+      expect(screen.getByRole('tab', { name: 'Data & Privacy' })).toBeInTheDocument();
+      expect(screen.getByRole('tab', { name: 'Case Management' })).toBeInTheDocument();
+      expect(screen.getByRole('tab', { name: 'About' })).toBeInTheDocument();
     });
 
     it('should render version information', () => {
@@ -189,6 +196,7 @@ describe('SettingsView', () => {
 
       render(<SettingsView />);
 
+      // Wait for profile to load (Account tab is default, already visible)
       await waitFor(() => {
         expect(screen.getByText('John Doe')).toBeInTheDocument();
       });
@@ -197,14 +205,28 @@ describe('SettingsView', () => {
       const editButtons = screen.getAllByText('Edit');
       await user.click(editButtons[0]);
 
-      // Change name and email
-      const nameInput = screen.getByPlaceholderText('Enter your name');
-      const emailInput = screen.getByPlaceholderText('Enter your email');
+      // Wait for edit mode to render
+      await waitFor(() => {
+        expect(screen.getByPlaceholderText('Enter your name')).toBeInTheDocument();
+      });
 
+      // Get inputs
+      const nameInput = screen.getByPlaceholderText('Enter your name') as HTMLInputElement;
+      const emailInput = screen.getByPlaceholderText('Enter your email') as HTMLInputElement;
+
+      // Update name by typing
       await user.clear(nameInput);
       await user.type(nameInput, 'Jane Smith');
+
+      // Update email by typing
       await user.clear(emailInput);
       await user.type(emailInput, 'jane@example.com');
+
+      // Verify both values are updated
+      await waitFor(() => {
+        expect(nameInput.value).toBe('Jane Smith');
+        expect(emailInput.value).toBe('jane@example.com');
+      });
 
       // Save
       await user.click(screen.getByRole('button', { name: 'Save' }));
@@ -263,7 +285,7 @@ describe('SettingsView', () => {
       });
 
       // Small delay to ensure DOM is settled
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       const ragText = screen.getByText('Enhanced legal responses (RAG)');
       // Get the parent div (ToggleSetting root) - closest returns the label div, need parent
@@ -293,7 +315,7 @@ describe('SettingsView', () => {
       });
 
       // Small delay to ensure DOM is settled
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       const notifText = screen.getByText('Chat notifications');
       const labelDiv = notifText.closest('div');
@@ -318,7 +340,7 @@ describe('SettingsView', () => {
       });
 
       // Small delay to ensure DOM is settled
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       const encryptText = screen.getByText('Encrypt sensitive data');
       const labelDiv = encryptText.closest('div');
@@ -343,7 +365,7 @@ describe('SettingsView', () => {
       });
 
       // Small delay to ensure DOM is settled
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       const darkModeText = screen.getByText('Dark mode');
       const labelDiv = darkModeText.closest('div');
@@ -370,7 +392,7 @@ describe('SettingsView', () => {
       });
 
       // Small delay to ensure DOM is settled
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       const fontSizeText = screen.getByText('Font size');
       // Get the parent div (SelectSetting root) - closest returns the label div, need parent
@@ -396,7 +418,7 @@ describe('SettingsView', () => {
       });
 
       // Small delay to ensure DOM is settled
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       const responseLengthText = screen.getByText('Response length');
       // Get the parent div (SelectSetting root) - closest returns the label div, need parent
@@ -422,7 +444,7 @@ describe('SettingsView', () => {
       });
 
       // Small delay to ensure DOM is settled
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       const jurisdictionText = screen.getByText('Jurisdiction');
       // Get the parent div (SelectSetting root) - closest returns the label div, need parent
@@ -449,6 +471,15 @@ describe('SettingsView', () => {
         expect(screen.getByText('John Doe')).toBeInTheDocument();
       });
 
+      // Click Data & Privacy tab to access data management section
+      const dataPrivacyTab = screen.getByRole('tab', { name: 'Data & Privacy' });
+      await user.click(dataPrivacyTab);
+
+      // Wait for tab content to render
+      await waitFor(() => {
+        expect(screen.getByRole('tabpanel')).toBeInTheDocument();
+      });
+
       const clearButton = screen.getByRole('button', { name: 'Clear All Data' });
       await user.click(clearButton);
 
@@ -464,6 +495,20 @@ describe('SettingsView', () => {
       const user = userEvent.setup();
       render(<SettingsView />);
 
+      // Wait for component to load
+      await waitFor(() => {
+        expect(screen.getByText('John Doe')).toBeInTheDocument();
+      });
+
+      // Click Data & Privacy tab to access data management section
+      const dataPrivacyTab = screen.getByRole('tab', { name: 'Data & Privacy' });
+      await user.click(dataPrivacyTab);
+
+      // Wait for tab content to render
+      await waitFor(() => {
+        expect(screen.getByRole('tabpanel')).toBeInTheDocument();
+      });
+
       const clearButton = screen.getByRole('button', { name: 'Clear All Data' });
       await user.click(clearButton);
 
@@ -471,7 +516,9 @@ describe('SettingsView', () => {
       await user.click(cancelButton);
 
       expect(mockJusticeAPI.getAllCases).not.toHaveBeenCalled();
-      expect(screen.queryByText('Are you sure you want to clear all data?')).not.toBeInTheDocument();
+      expect(
+        screen.queryByText('Are you sure you want to clear all data?')
+      ).not.toBeInTheDocument();
     });
 
     it('should clear all data when confirmed', async () => {
@@ -497,18 +544,34 @@ describe('SettingsView', () => {
         expect(screen.getByText('John Doe')).toBeInTheDocument();
       });
 
-      // Click the Clear All Data button (outside dialog)
-      const clearButtons = screen.getAllByRole('button', { name: 'Clear All Data' });
-      await user.click(clearButtons[0]); // First one is the main button
+      // Click Data & Privacy tab to access data management section
+      const dataPrivacyTab = screen.getByRole('tab', { name: 'Data & Privacy' });
+      await user.click(dataPrivacyTab);
 
-      // Wait for dialog to appear and click confirm button
+      // Wait for tab content to render and button to be available
+      await waitFor(() => {
+        expect(screen.getByText('Data Management')).toBeInTheDocument();
+      });
+
+      // Click the Clear All Data button
+      const clearButton = screen.getByRole('button', { name: 'Clear All Data' });
+      await user.click(clearButton);
+
+      // Wait for dialog to appear
       await waitFor(() => {
         expect(screen.getByText(/Are you sure you want to clear all data/i)).toBeInTheDocument();
       });
 
-      // The second "Clear All Data" button is in the dialog
-      const dialogConfirmButton = clearButtons[1] || screen.getAllByRole('button', { name: /Clear All Data/i })[1];
-      await user.click(dialogConfirmButton);
+      // Find all buttons with "Clear All Data" text
+      // The dialog confirm button will be the second one (index 1)
+      const allButtons = screen.getAllByRole('button');
+      const confirmButton = allButtons.find(
+        (button) =>
+          button.textContent === 'Clear All Data' && button.className.includes('bg-red-600')
+      );
+
+      expect(confirmButton).toBeInTheDocument();
+      await user.click(confirmButton!);
 
       await waitFor(() => {
         expect(mockJusticeAPI.getAllCases).toHaveBeenCalled();
@@ -533,7 +596,7 @@ describe('SettingsView', () => {
       });
 
       // Small delay to ensure DOM is settled
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       const ragText = screen.getByText('Enhanced legal responses (RAG)');
       const labelDiv = ragText.closest('div');
@@ -556,7 +619,7 @@ describe('SettingsView', () => {
       });
 
       // Small delay to ensure DOM is settled
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Toggle RAG
       const ragText = screen.getByText('Enhanced legal responses (RAG)');

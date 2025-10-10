@@ -1,5 +1,18 @@
 import { useState, useEffect, type ComponentType, type ReactNode } from 'react';
-import { User, Bell, Lock, Database, Info, Brain, Briefcase, Shield, CheckCircle2, XCircle, Sparkles, Settings } from 'lucide-react';
+import {
+  User,
+  Bell,
+  Lock,
+  Database,
+  Info,
+  Brain,
+  Briefcase,
+  Shield,
+  CheckCircle2,
+  XCircle,
+  Sparkles,
+  Settings,
+} from 'lucide-react';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { useToast } from '@/hooks/useToast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -38,110 +51,110 @@ export function SettingsView(): JSX.Element {
   // RAG toggle state - persisted in localStorage
   const [ragEnabled, setRagEnabled] = useState(() => {
     const saved = localStorage.getItem('ragEnabled');
-    return saved !== null ? JSON.parse(saved) : true; // Default: enabled
+    return saved !== null ? (JSON.parse(saved) as boolean) : true; // Default: enabled
   });
 
   // Notification toggles
   const [chatNotifications, setChatNotifications] = useState(() => {
     const saved = localStorage.getItem('chatNotifications');
-    return saved !== null ? JSON.parse(saved) : true;
+    return saved !== null ? (JSON.parse(saved) as boolean) : true;
   });
 
   const [caseUpdates, setCaseUpdates] = useState(() => {
     const saved = localStorage.getItem('caseUpdates');
-    return saved !== null ? JSON.parse(saved) : true;
+    return saved !== null ? (JSON.parse(saved) as boolean) : true;
   });
 
   const [documentAnalysisNotif, setDocumentAnalysisNotif] = useState(() => {
     const saved = localStorage.getItem('documentAnalysisNotif');
-    return saved !== null ? JSON.parse(saved) : false;
+    return saved !== null ? (JSON.parse(saved) as boolean) : false;
   });
 
   // Privacy toggle
   const [encryptData, setEncryptData] = useState(() => {
     const saved = localStorage.getItem('encryptData');
-    return saved !== null ? JSON.parse(saved) : true;
+    return saved !== null ? (JSON.parse(saved) as boolean) : true;
   });
 
   // Appearance settings
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem('darkMode');
-    return saved !== null ? JSON.parse(saved) : true;
+    return saved !== null ? (JSON.parse(saved) as boolean) : true;
   });
 
   const [fontSize, setFontSize] = useState(() => {
     const saved = localStorage.getItem('fontSize');
-    return saved || 'medium';
+    return saved ?? 'medium';
   });
 
   // Voice Input settings
   const [selectedMicrophone, setSelectedMicrophone] = useState(() => {
     const saved = localStorage.getItem('selectedMicrophone');
-    return saved || 'default';
+    return saved ?? 'default';
   });
 
   const [speechLanguage, setSpeechLanguage] = useState(() => {
     const saved = localStorage.getItem('speechLanguage');
-    return saved || 'en-GB';
+    return saved ?? 'en-GB';
   });
 
   const [autoTranscribe, setAutoTranscribe] = useState(() => {
     const saved = localStorage.getItem('autoTranscribe');
-    return saved !== null ? JSON.parse(saved) : true;
+    return saved !== null ? (JSON.parse(saved) as boolean) : true;
   });
 
   // Export & Backup settings
   const [exportLocation, setExportLocation] = useState(() => {
     const saved = localStorage.getItem('exportLocation');
-    return saved || 'Downloads';
+    return saved ?? 'Downloads';
   });
 
   const [autoBackupFrequency, setAutoBackupFrequency] = useState(() => {
     const saved = localStorage.getItem('autoBackupFrequency');
-    return saved || 'daily';
+    return saved ?? 'daily';
   });
 
   // Accessibility settings
   const [highContrast, setHighContrast] = useState(() => {
     const saved = localStorage.getItem('highContrast');
-    return saved !== null ? JSON.parse(saved) : false;
+    return saved !== null ? (JSON.parse(saved) as boolean) : false;
   });
 
   const [screenReaderSupport, setScreenReaderSupport] = useState(() => {
     const saved = localStorage.getItem('screenReaderSupport');
-    return saved !== null ? JSON.parse(saved) : true;
+    return saved !== null ? (JSON.parse(saved) as boolean) : true;
   });
 
   // Advanced AI settings
   const [responseLength, setResponseLength] = useState(() => {
     const saved = localStorage.getItem('responseLength');
-    return saved || 'balanced';
+    return saved ?? 'balanced';
   });
 
   const [citationDetail, setCitationDetail] = useState(() => {
     const saved = localStorage.getItem('citationDetail');
-    return saved || 'detailed';
+    return saved ?? 'detailed';
   });
 
   const [jurisdiction, setJurisdiction] = useState(() => {
     const saved = localStorage.getItem('jurisdiction');
-    return saved || 'uk-england-wales';
+    return saved ?? 'uk-england-wales';
   });
 
   // Case Management settings
   const [defaultCaseType, setDefaultCaseType] = useState(() => {
     const saved = localStorage.getItem('defaultCaseType');
-    return saved || 'general';
+    return saved ?? 'general';
   });
 
   const [autoArchiveDays, setAutoArchiveDays] = useState(() => {
     const saved = localStorage.getItem('autoArchiveDays');
-    return saved || '90';
+    return saved ?? '90';
   });
 
   const [caseNumberFormat, setCaseNumberFormat] = useState(() => {
     const saved = localStorage.getItem('caseNumberFormat');
-    return saved || 'YYYY-NNNN';
+    return saved ?? 'YYYY-NNNN';
   });
 
   // Clear data confirmation
@@ -149,7 +162,7 @@ export function SettingsView(): JSX.Element {
 
   // Load user profile and consents on mount
   useEffect(() => {
-    const loadProfile = async () => {
+    const loadProfile = async (): Promise<void> => {
       if (!window.justiceAPI) {
         setIsLoadingProfile(false);
         return;
@@ -160,8 +173,8 @@ export function SettingsView(): JSX.Element {
         const result = await window.justiceAPI.getUserProfile();
         if (result.success && result.data) {
           setUserProfile(result.data);
-          setEditedName(result.data.name || '');
-          setEditedEmail(result.data.email || '');
+          setEditedName(result.data.name ?? '');
+          setEditedEmail(result.data.email ?? '');
         }
       } catch (error) {
         console.error('Failed to load user profile:', error);
@@ -263,7 +276,7 @@ export function SettingsView(): JSX.Element {
     localStorage.setItem('caseNumberFormat', caseNumberFormat);
   }, [caseNumberFormat]);
 
-  const handleSaveProfile = async () => {
+  const handleSaveProfile = async (): Promise<void> => {
     if (!window.justiceAPI) {
       return;
     }
@@ -289,7 +302,7 @@ export function SettingsView(): JSX.Element {
     }
   };
 
-  const handleChangePassword = async () => {
+  const handleChangePassword = async (): Promise<void> => {
     setPasswordError(null);
 
     // Validation
@@ -347,7 +360,7 @@ export function SettingsView(): JSX.Element {
     }
   };
 
-  const loadConsents = async () => {
+  const loadConsents = async (): Promise<void> => {
     setIsLoadingConsents(true);
     try {
       const result = await window.justiceAPI.getUserConsents();
@@ -362,7 +375,7 @@ export function SettingsView(): JSX.Element {
     }
   };
 
-  const handleRevokeConsent = async (consentType: ConsentType) => {
+  const handleRevokeConsent = async (consentType: ConsentType): Promise<void> => {
     try {
       const result = await window.justiceAPI.revokeConsent(consentType);
       if (result.success) {
@@ -377,7 +390,7 @@ export function SettingsView(): JSX.Element {
     }
   };
 
-  const handleGrantConsent = async (consentType: ConsentType) => {
+  const handleGrantConsent = async (consentType: ConsentType): Promise<void> => {
     try {
       const result = await window.justiceAPI.grantConsent(consentType);
       if (result.success) {
@@ -392,7 +405,7 @@ export function SettingsView(): JSX.Element {
     }
   };
 
-  const handleClearAllData = async () => {
+  const handleClearAllData = async (): Promise<void> => {
     try {
       toast.info('Clearing all data...');
 
@@ -433,15 +446,11 @@ export function SettingsView(): JSX.Element {
   };
 
   // Tab content components
-  const AccountTab = () => (
+  const AccountTab = (): JSX.Element => (
     <div className="p-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-7xl">
         {/* Profile Section */}
-        <SettingsSection
-          icon={User}
-          title="Profile"
-          description="Manage your personal information"
-        >
+        <SettingsSection icon={User} title="Profile" description="Manage your personal information">
           {isLoadingProfile ? (
             <div className="space-y-3" role="status" aria-live="polite" aria-busy="true">
               <SkeletonText lines={2} />
@@ -473,7 +482,7 @@ export function SettingsView(): JSX.Element {
               </div>
               <div className="flex gap-2">
                 <button
-                  onClick={handleSaveProfile}
+                  onClick={() => void handleSaveProfile()}
                   disabled={isSavingProfile}
                   className="flex-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
@@ -489,8 +498,8 @@ export function SettingsView(): JSX.Element {
                 <button
                   onClick={() => {
                     setIsEditingProfile(false);
-                    setEditedName(userProfile?.name || '');
-                    setEditedEmail(userProfile?.email || '');
+                    setEditedName(userProfile?.name ?? '');
+                    setEditedEmail(userProfile?.email ?? '');
                   }}
                   disabled={isSavingProfile}
                   className="flex-1 px-3 py-1.5 bg-slate-700 text-white rounded-lg hover:bg-slate-600 transition-colors text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
@@ -503,13 +512,13 @@ export function SettingsView(): JSX.Element {
             <>
               <SettingItem
                 label="Name"
-                value={userProfile?.name || 'Not set'}
+                value={userProfile?.name ?? 'Not set'}
                 action="Edit"
                 onAction={() => setIsEditingProfile(true)}
               />
               <SettingItem
                 label="Email"
-                value={userProfile?.email || 'Not set'}
+                value={userProfile?.email ?? 'Not set'}
                 action="Edit"
                 onAction={() => setIsEditingProfile(true)}
               />
@@ -523,13 +532,7 @@ export function SettingsView(): JSX.Element {
           title="Account Security"
           description="Manage your account password"
         >
-          {user && (
-            <SettingItem
-              label="Username"
-              value={user.username}
-              info
-            />
-          )}
+          {user && <SettingItem label="Username" value={user.username} info />}
           {!isChangingPassword ? (
             <button
               onClick={() => setIsChangingPassword(true)}
@@ -545,7 +548,9 @@ export function SettingsView(): JSX.Element {
                 </div>
               )}
               <div>
-                <label className="block text-xs font-medium text-white mb-1">Current Password</label>
+                <label className="block text-xs font-medium text-white mb-1">
+                  Current Password
+                </label>
                 <input
                   type="password"
                   value={oldPassword}
@@ -565,10 +570,14 @@ export function SettingsView(): JSX.Element {
                   placeholder="At least 12 characters"
                   disabled={isSubmittingPassword}
                 />
-                <p className="text-xs text-slate-400 mt-1">12+ chars, uppercase, lowercase, number</p>
+                <p className="text-xs text-slate-400 mt-1">
+                  12+ chars, uppercase, lowercase, number
+                </p>
               </div>
               <div>
-                <label className="block text-xs font-medium text-white mb-1">Confirm New Password</label>
+                <label className="block text-xs font-medium text-white mb-1">
+                  Confirm New Password
+                </label>
                 <input
                   type="password"
                   value={confirmNewPassword}
@@ -580,7 +589,7 @@ export function SettingsView(): JSX.Element {
               </div>
               <div className="flex gap-2">
                 <button
-                  onClick={handleChangePassword}
+                  onClick={() => void handleChangePassword()}
                   disabled={isSubmittingPassword}
                   className="flex-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
@@ -629,7 +638,10 @@ export function SettingsView(): JSX.Element {
                 const isRequired = consentType === 'data_processing';
 
                 return (
-                  <div key={consentType} className="flex items-center justify-between py-2 border-b border-blue-800/20 last:border-0">
+                  <div
+                    key={consentType}
+                    className="flex items-center justify-between py-2 border-b border-blue-800/20 last:border-0"
+                  >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <div className="text-xs font-medium text-white capitalize">
@@ -657,7 +669,7 @@ export function SettingsView(): JSX.Element {
                     </div>
                     {consent ? (
                       <button
-                        onClick={() => handleRevokeConsent(consentType)}
+                        onClick={() => void handleRevokeConsent(consentType)}
                         disabled={isRequired}
                         className="px-3 py-1.5 text-xs text-red-300 hover:text-red-200 font-medium transition-colors flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
@@ -665,7 +677,7 @@ export function SettingsView(): JSX.Element {
                       </button>
                     ) : (
                       <button
-                        onClick={() => handleGrantConsent(consentType)}
+                        onClick={() => void handleGrantConsent(consentType)}
                         className="px-3 py-1.5 text-xs text-green-300 hover:text-green-200 font-medium transition-colors flex-shrink-0"
                       >
                         Grant
@@ -676,7 +688,9 @@ export function SettingsView(): JSX.Element {
               })}
               <div className="bg-blue-900/20 border border-blue-700/30 rounded-lg p-3">
                 <p className="text-xs text-blue-200">
-                  <strong>Your Rights (GDPR):</strong> You can withdraw consent at any time except for required consents. Revoking data processing consent will prevent the app from functioning.
+                  <strong>Your Rights (GDPR):</strong> You can withdraw consent at any time except
+                  for required consents. Revoking data processing consent will prevent the app from
+                  functioning.
                 </p>
               </div>
             </div>
@@ -686,7 +700,7 @@ export function SettingsView(): JSX.Element {
     </div>
   );
 
-  const AIConfigTab = () => (
+  const AIConfigTab = (): JSX.Element => (
     <div className="p-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-7xl">
         {/* AI & Legal Data Section */}
@@ -705,11 +719,7 @@ export function SettingsView(): JSX.Element {
             value="legislation.gov.uk, caselaw.nationalarchives.gov.uk"
             info
           />
-          <SettingItem
-            label="Response mode"
-            value="Information only - never legal advice"
-            info
-          />
+          <SettingItem label="Response mode" value="Information only - never legal advice" info />
         </SettingsSection>
 
         {/* OpenAI Provider Configuration */}
@@ -762,7 +772,7 @@ export function SettingsView(): JSX.Element {
     </div>
   );
 
-  const PreferencesTab = () => (
+  const PreferencesTab = (): JSX.Element => (
     <div className="p-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-7xl">
         {/* Notifications Section */}
@@ -776,11 +786,7 @@ export function SettingsView(): JSX.Element {
             enabled={chatNotifications}
             onChange={setChatNotifications}
           />
-          <ToggleSetting
-            label="Case updates"
-            enabled={caseUpdates}
-            onChange={setCaseUpdates}
-          />
+          <ToggleSetting label="Case updates" enabled={caseUpdates} onChange={setCaseUpdates} />
           <ToggleSetting
             label="Document analysis complete"
             enabled={documentAnalysisNotif}
@@ -794,11 +800,7 @@ export function SettingsView(): JSX.Element {
           title="Appearance"
           description="Customize the interface look and feel"
         >
-          <ToggleSetting
-            label="Dark mode"
-            enabled={darkMode}
-            onChange={setDarkMode}
-          />
+          <ToggleSetting label="Dark mode" enabled={darkMode} onChange={setDarkMode} />
           <SelectSetting
             label="Font size"
             value={fontSize}
@@ -859,7 +861,9 @@ export function SettingsView(): JSX.Element {
             onChange={setScreenReaderSupport}
           />
           <button
-            onClick={() => console.log('View keyboard shortcuts')}
+            onClick={() => {
+              // TODO: Implement keyboard shortcuts dialog
+            }}
             className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600/30 text-slate-300 rounded-lg hover:bg-slate-600/50 transition-all text-xs font-medium"
           >
             Keyboard Shortcuts
@@ -869,7 +873,7 @@ export function SettingsView(): JSX.Element {
     </div>
   );
 
-  const DataPrivacyTab = () => (
+  const DataPrivacyTab = (): JSX.Element => (
     <div className="p-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-7xl">
         {/* Privacy & Security */}
@@ -928,7 +932,9 @@ export function SettingsView(): JSX.Element {
             ]}
           />
           <button
-            onClick={() => console.log('Restore from backup')}
+            onClick={() => {
+              // TODO: Implement restore from backup functionality
+            }}
             className="w-full px-3 py-2 bg-blue-600/20 border border-blue-500/30 text-blue-300 rounded-lg hover:bg-blue-600/30 transition-all text-xs font-medium"
           >
             Restore from Backup
@@ -938,7 +944,7 @@ export function SettingsView(): JSX.Element {
     </div>
   );
 
-  const CaseManagementTab = () => (
+  const CaseManagementTab = (): JSX.Element => (
     <div className="p-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-7xl">
         {/* Case Management */}
@@ -985,22 +991,14 @@ export function SettingsView(): JSX.Element {
     </div>
   );
 
-  const AboutTab = () => (
+  const AboutTab = (): JSX.Element => (
     <div className="p-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-7xl">
         {/* About */}
-        <SettingsSection
-          icon={Info}
-          title="About"
-          description="Application information"
-        >
+        <SettingsSection icon={Info} title="About" description="Application information">
           <SettingItem label="Version" value="1.0.0" />
           <SettingItem label="Build" value="Development" />
-          <SettingItem
-            label="License"
-            value="MIT License - Free and open source"
-            info
-          />
+          <SettingItem label="License" value="MIT License - Free and open source" info />
         </SettingsSection>
       </div>
     </div>
@@ -1075,7 +1073,7 @@ export function SettingsView(): JSX.Element {
         confirmText="Clear All Data"
         cancelText="Cancel"
         variant="danger"
-        onConfirm={handleClearAllData}
+        onConfirm={() => void handleClearAllData()}
         onCancel={() => setClearDataConfirmOpen(false)}
       />
     </div>
@@ -1089,7 +1087,12 @@ interface SettingsSectionProps {
   children: ReactNode;
 }
 
-function SettingsSection({ icon: Icon, title, description, children }: SettingsSectionProps): JSX.Element {
+function SettingsSection({
+  icon: Icon,
+  title,
+  description,
+  children,
+}: SettingsSectionProps): JSX.Element {
   return (
     <div className="bg-gradient-to-br from-slate-900/50 to-blue-950/50 border border-blue-800/30 rounded-xl overflow-hidden flex flex-col">
       <div className="flex items-center gap-3 p-4 border-b border-blue-800/30 bg-slate-900/50">
@@ -1119,7 +1122,9 @@ function SettingItem({ label, value, action, onAction, info }: SettingItemProps)
     <div className="flex items-center justify-between py-2 border-b border-blue-800/20 last:border-0">
       <div className="flex-1 min-w-0">
         <div className="text-xs font-medium text-white mb-0.5">{label}</div>
-        <div className={`text-xs truncate ${info ? 'text-blue-400' : 'text-blue-300'}`}>{value}</div>
+        <div className={`text-xs truncate ${info ? 'text-blue-400' : 'text-blue-300'}`}>
+          {value}
+        </div>
       </div>
       {action && (
         <button
