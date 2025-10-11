@@ -1,0 +1,34 @@
+{
+  "name": "justice-companion-mcp-dev",
+  "version": "1.0.0",
+  "description": "Development MCP server for Justice Companion",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "justice-companion-mcp": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "justice-companion",
+    "development",
+    "legal"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.20.0",
+    "better-sqlite3": "^11.8.1",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/node": "^22.14.3",
+    "typescript": "^5.9.3"
+  }
+}
