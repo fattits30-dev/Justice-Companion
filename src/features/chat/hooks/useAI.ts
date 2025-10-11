@@ -45,7 +45,7 @@ export interface UseAIReturn {
   loadMessages: (messages: ChatMessage[]) => void;
 
   // Refs for auto-scroll
-  messagesEndRef: RefObject<HTMLDivElement | null>;
+  messagesEndRef: RefObject<HTMLDivElement>;
 }
 
 /**
@@ -79,7 +79,7 @@ export function useAI(caseId?: number, initialMessages: ChatMessage[] = []): Use
   const isMountedRef = useRef<boolean>(true);
   const streamingContentRef = useRef<string>('');
   const thinkingContentRef = useRef<string>(''); // NEW: Ref for thinking content
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null!);
 
   // Sync streamingContent and thinkingContent to refs for event handlers
   useEffect(() => {
