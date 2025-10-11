@@ -63,7 +63,7 @@ export function FloatingChatInput({
   // Update value when voice transcript changes
   useEffect(() => {
     if (transcript) {
-      setValue(prev => {
+      setValue((prev) => {
         const newValue = prev ? `${prev} ${transcript}` : transcript;
         return newValue;
       });
@@ -159,17 +159,23 @@ export function FloatingChatInput({
   };
 
   return (
-    <div className={`fixed bottom-6 w-full max-w-4xl px-6 z-50 animate-slide-up transition-all duration-300 ${
-      isSidebarOpen ? 'left-[calc(50%+160px)] -translate-x-1/2' : 'left-[calc(50%+32px)] -translate-x-1/2'
-    }`}>
-      <div className="bg-white rounded-2xl shadow-2xl border border-gray-200">
+    <div
+      className={`fixed bottom-6 w-full max-w-4xl px-6 z-50 animate-slide-up transition-all duration-300 ${
+        isSidebarOpen
+          ? 'left-[calc(50%+160px)] -translate-x-1/2'
+          : 'left-[calc(50%+32px)] -translate-x-1/2'
+      }`}
+    >
+      <div className="bg-white rounded-2xl shadow-2xl ring-1 ring-black/5 border border-gray-200">
         {/* File Preview (if file uploaded) */}
         {uploadedFile && (
           <div className="border-b border-gray-200 p-3">
             <div className="flex items-center gap-2 bg-blue-50 rounded-lg px-3 py-2 border border-blue-200">
               <BiPaperclip className="w-4 h-4 text-blue-600" />
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium text-gray-900 truncate">{uploadedFile.fileName}</div>
+                <div className="text-sm font-medium text-gray-900 truncate">
+                  {uploadedFile.fileName}
+                </div>
                 <div className="text-xs text-gray-500">{formatFileSize(uploadedFile.fileSize)}</div>
               </div>
               <button
@@ -186,9 +192,7 @@ export function FloatingChatInput({
         {/* Voice Error Display */}
         {voiceError && (
           <div className="border-b border-gray-200 p-3">
-            <div className="text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2">
-              {voiceError}
-            </div>
+            <div className="text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2">{voiceError}</div>
           </div>
         )}
 
@@ -199,7 +203,7 @@ export function FloatingChatInput({
             onClick={handleFileClick}
             disabled={disabled || !!uploadedFile}
             aria-label="Attach file"
-            className="p-2.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="p-2.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors focus:outline-none focus:ring-3 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <BiPaperclip className="w-5 h-5" />
           </button>
@@ -210,7 +214,7 @@ export function FloatingChatInput({
             onClick={handleVoiceClick}
             disabled={disabled}
             aria-label={isListening ? 'Stop listening' : 'Start voice input'}
-            className={`p-2.5 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed ${
+            className={`p-2.5 rounded-lg transition-all focus:outline-none focus:ring-3 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed ${
               isListening
                 ? 'text-red-600 bg-red-50 animate-pulse'
                 : 'text-gray-500 hover:text-blue-600 hover:bg-blue-50'
@@ -234,11 +238,7 @@ export function FloatingChatInput({
                 w-full resize-none rounded-lg border-0 px-3 py-2
                 focus:outline-none focus:ring-0
                 transition-colors bg-transparent
-                ${
-    disabled
-      ? 'text-gray-400 cursor-not-allowed'
-      : 'text-gray-900'
-    }
+                ${disabled ? 'text-gray-400 cursor-not-allowed' : 'text-gray-900'}
               `}
               rows={1}
               style={{ minHeight: '40px', maxHeight: `${MAX_HEIGHT}px` }}
@@ -259,12 +259,12 @@ export function FloatingChatInput({
             aria-label="Send message"
             className={`
               p-2.5 rounded-lg transition-all
-              focus:outline-none focus:ring-2 focus:ring-blue-500
+              focus:outline-none focus:ring-3 focus:ring-blue-500
               ${
-    isButtonDisabled
-      ? 'text-gray-400 cursor-not-allowed'
-      : 'text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800'
-    }
+                isButtonDisabled
+                  ? 'text-gray-400 cursor-not-allowed'
+                  : 'text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800'
+              }
             `}
           >
             <BiSend className="w-5 h-5" />

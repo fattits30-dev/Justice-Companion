@@ -32,7 +32,7 @@ export function ConfirmDialog({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="bg-gradient-to-br from-slate-900 to-blue-950 border border-blue-700/50 rounded-xl shadow-2xl max-w-md w-full mx-4 p-6">
+      <div className="bg-gradient-to-br from-slate-900 to-blue-950 border border-blue-700/50 rounded-xl shadow-2xl ring-1 ring-white/10 max-w-md w-full mx-4 p-6">
         {/* Header */}
         <div className="flex items-start justify-between mb-4">
           <h3 className="text-lg font-bold text-white">{title}</h3>

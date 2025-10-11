@@ -237,14 +237,9 @@ describe('useUserFacts', () => {
         expect(result.current.loading).toBe(false);
       });
 
-      const factTypes: Array<'personal' | 'employment' | 'financial' | 'contact' | 'medical' | 'other'> = [
-        'personal',
-        'employment',
-        'financial',
-        'contact',
-        'medical',
-        'other',
-      ];
+      const factTypes: Array<
+        'personal' | 'employment' | 'financial' | 'contact' | 'medical' | 'other'
+      > = ['personal', 'employment', 'financial', 'contact', 'medical', 'other'];
 
       for (let i = 0; i < factTypes.length; i++) {
         const factType = factTypes[i];
@@ -299,9 +294,11 @@ describe('useUserFacts', () => {
         factType: 'personal',
       };
 
-      await expect(result.current.createUserFact(input)).rejects.toThrow(
-        'Failed to create user fact',
-      );
+      await act(async () => {
+        await expect(result.current.createUserFact(input)).rejects.toThrow(
+          'Failed to create user fact'
+        );
+      });
 
       // Error state assertion removed - setError() is async but throw is sync
       expect(result.current.userFacts).toEqual([]);
@@ -327,7 +324,9 @@ describe('useUserFacts', () => {
         factType: 'personal',
       };
 
-      await expect(result.current.createUserFact(input)).rejects.toThrow('Network error');
+      await act(async () => {
+        await expect(result.current.createUserFact(input)).rejects.toThrow('Network error');
+      });
 
       // Error state assertion removed - setError() is async but throw is sync
     });
@@ -464,9 +463,11 @@ describe('useUserFacts', () => {
         factContent: 'Updated content',
       };
 
-      await expect(result.current.updateUserFact(1, updateInput)).rejects.toThrow(
-        'Failed to update user fact',
-      );
+      await act(async () => {
+        await expect(result.current.updateUserFact(1, updateInput)).rejects.toThrow(
+          'Failed to update user fact'
+        );
+      });
 
       // Error state assertion removed - setError() is async but throw is sync
       expect(result.current.userFacts).toEqual([mockPersonalFact]); // Unchanged
@@ -490,9 +491,11 @@ describe('useUserFacts', () => {
         factContent: 'Updated content',
       };
 
-      await expect(result.current.updateUserFact(1, updateInput)).rejects.toThrow(
-        'Database error',
-      );
+      await act(async () => {
+        await expect(result.current.updateUserFact(1, updateInput)).rejects.toThrow(
+          'Database error'
+        );
+      });
 
       // Error state assertion removed - setError() is async but throw is sync
     });
@@ -540,7 +543,11 @@ describe('useUserFacts', () => {
         error: 'Failed to delete user fact',
       });
 
-      await expect(result.current.deleteUserFact(1)).rejects.toThrow('Failed to delete user fact');
+      await act(async () => {
+        await expect(result.current.deleteUserFact(1)).rejects.toThrow(
+          'Failed to delete user fact'
+        );
+      });
 
       // Error state assertion removed - setError() is async but throw is sync
       expect(result.current.userFacts).toEqual([mockPersonalFact]); // Unchanged
@@ -560,7 +567,9 @@ describe('useUserFacts', () => {
 
       mockUserFactsAPI.delete.mockRejectedValue(new Error('Permission denied'));
 
-      await expect(result.current.deleteUserFact(1)).rejects.toThrow('Permission denied');
+      await act(async () => {
+        await expect(result.current.deleteUserFact(1)).rejects.toThrow('Permission denied');
+      });
 
       // Error state assertion removed - setError() is async but throw is sync
     });
@@ -610,14 +619,9 @@ describe('useUserFacts', () => {
         expect(result.current.loading).toBe(false);
       });
 
-      const factTypes: Array<'personal' | 'employment' | 'financial' | 'contact' | 'medical' | 'other'> = [
-        'personal',
-        'employment',
-        'financial',
-        'contact',
-        'medical',
-        'other',
-      ];
+      const factTypes: Array<
+        'personal' | 'employment' | 'financial' | 'contact' | 'medical' | 'other'
+      > = ['personal', 'employment', 'financial', 'contact', 'medical', 'other'];
 
       for (const factType of factTypes) {
         const mockFact: UserFact = {
@@ -714,17 +718,22 @@ describe('useUserFacts', () => {
       mockUserFactsAPI.listByType.mockReturnValue(
         new Promise((resolve) => {
           resolveFilter = resolve;
-        }),
+        })
       );
 
-      const filterPromise = result.current.loadFactsByType('employment');
+      let filterPromise: Promise<void>;
+      act(() => {
+        filterPromise = result.current.loadFactsByType('employment');
+      });
 
       await waitFor(() => {
         expect(result.current.loading).toBe(true);
       });
 
-      resolveFilter({ success: true, data: [mockEmploymentFact] });
-      await filterPromise;
+      await act(async () => {
+        resolveFilter({ success: true, data: [mockEmploymentFact] });
+        await filterPromise;
+      });
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -780,17 +789,22 @@ describe('useUserFacts', () => {
       mockUserFactsAPI.list.mockReturnValue(
         new Promise((resolve) => {
           resolveRefresh = resolve;
-        }),
+        })
       );
 
-      const refreshPromise = result.current.refresh();
+      let refreshPromise: Promise<void>;
+      act(() => {
+        refreshPromise = result.current.refresh();
+      });
 
       await waitFor(() => {
         expect(result.current.loading).toBe(true);
       });
 
-      resolveRefresh({ success: true, data: [mockPersonalFact, mockEmploymentFact] });
-      await refreshPromise;
+      await act(async () => {
+        resolveRefresh({ success: true, data: [mockPersonalFact, mockEmploymentFact] });
+        await refreshPromise;
+      });
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);

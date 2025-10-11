@@ -62,7 +62,10 @@ export function ChatWindow({ sidebarExpanded = false, caseId }: ChatWindowProps)
       try {
         // Check if user has any conversations
         const conversationsResult = await window.justiceAPI.getAllConversations();
-        const hasConversations = conversationsResult.success && conversationsResult.data && conversationsResult.data.length > 0;
+        const hasConversations =
+          conversationsResult.success &&
+          conversationsResult.data &&
+          conversationsResult.data.length > 0;
 
         // Check if user profile is empty
         const profileResult = await window.justiceAPI.getUserProfile();
@@ -117,7 +120,7 @@ Take your time - I'm here to listen and help you work through this step by step.
           <button
             onClick={() => setClearChatConfirmOpen(true)}
             disabled={isStreaming}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-700/90 backdrop-blur-sm text-white rounded-lg hover:bg-slate-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 shadow-lg"
+            className="flex items-center gap-2 px-4 py-2 bg-slate-700/90 backdrop-blur-sm text-white rounded-lg hover:bg-slate-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-3 focus:ring-slate-500 focus:ring-offset-2 shadow-lg"
             aria-label="Clear chat"
             title="Clear current chat messages"
           >
@@ -127,7 +130,7 @@ Take your time - I'm here to listen and help you work through this step by step.
           <button
             onClick={handleExportPDF}
             disabled={isStreaming}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600/90 backdrop-blur-sm text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-lg"
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600/90 backdrop-blur-sm text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-3 focus:ring-blue-500 focus:ring-offset-2 shadow-lg"
             aria-label="Export to PDF"
           >
             <BiDownload className="w-5 h-5" />
@@ -150,7 +153,11 @@ Take your time - I'm here to listen and help you work through this step by step.
       />
 
       {/* Floating Chat Input - centered to chat content */}
-      <FloatingChatInput onSend={sendMessage} disabled={isStreaming} isSidebarOpen={sidebarExpanded} />
+      <FloatingChatInput
+        onSend={sendMessage}
+        disabled={isStreaming}
+        isSidebarOpen={sidebarExpanded}
+      />
 
       {/* Clear Chat Confirmation Dialog */}
       <ConfirmDialog

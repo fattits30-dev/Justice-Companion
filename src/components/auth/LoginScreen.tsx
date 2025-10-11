@@ -70,7 +70,7 @@ export function LoginScreen({ onSwitchToRegister }: LoginScreenProps) {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full px-4 py-2 bg-slate-800 border border-blue-700/30 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 bg-slate-800 border border-blue-700/30 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Enter your username"
                 autoFocus
                 disabled={isLoading}
@@ -87,7 +87,7 @@ export function LoginScreen({ onSwitchToRegister }: LoginScreenProps) {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2 bg-slate-800 border border-blue-700/30 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 bg-slate-800 border border-blue-700/30 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Enter your password"
                 disabled={isLoading}
               />

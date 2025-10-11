@@ -17,7 +17,11 @@ interface StreamingIndicatorProps {
   thinkingContent?: string; // AI reasoning content (displayed in expanded section)
 }
 
-export function StreamingIndicator({ loadingState, progressStages, thinkingContent }: StreamingIndicatorProps): JSX.Element | null {
+export function StreamingIndicator({
+  loadingState,
+  progressStages,
+  thinkingContent,
+}: StreamingIndicatorProps): JSX.Element | null {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isReasoningExpanded, setIsReasoningExpanded] = useState(false);
 
@@ -72,9 +76,7 @@ export function StreamingIndicator({ loadingState, progressStages, thinkingConte
 
   // Current status message (last stage or default)
   const currentMessage =
-    progressStages.length > 0
-      ? progressStages[progressStages.length - 1].stage
-      : 'Processing...';
+    progressStages.length > 0 ? progressStages[progressStages.length - 1].stage : 'Processing...';
 
   return (
     <div className="border-b border-gray-200 bg-blue-50">
@@ -88,9 +90,18 @@ export function StreamingIndicator({ loadingState, progressStages, thinkingConte
         <span className="text-gray-400 text-xs">{getIcon()}</span>
         {loadingState !== 'idle' && (
           <div className="flex gap-1">
-            <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
-            <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
-            <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+            <span
+              className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"
+              style={{ animationDelay: '0ms' }}
+            ></span>
+            <span
+              className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"
+              style={{ animationDelay: '150ms' }}
+            ></span>
+            <span
+              className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"
+              style={{ animationDelay: '300ms' }}
+            ></span>
           </div>
         )}
         <span className="font-medium">{currentMessage}</span>
@@ -114,14 +125,10 @@ export function StreamingIndicator({ loadingState, progressStages, thinkingConte
                   </span>
                   <div className="flex-1">
                     <div className="font-medium">{stage.stage}</div>
-                    <div className="text-gray-500 text-xs">
-                      {formatTime(stage.timestamp)}
-                    </div>
+                    <div className="text-gray-500 text-xs">{formatTime(stage.timestamp)}</div>
                   </div>
                   {stage.completed && (
-                    <span className="text-green-600 text-xs font-semibold">
-                      Complete
-                    </span>
+                    <span className="text-green-600 text-xs font-semibold">Complete</span>
                   )}
                   {!stage.completed && (
                     <span className="text-blue-600 text-xs font-semibold animate-pulse">
@@ -140,15 +147,20 @@ export function StreamingIndicator({ loadingState, progressStages, thinkingConte
         <div className="border-t border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
           <button
             onClick={() => setIsReasoningExpanded(!isReasoningExpanded)}
-            className="w-full px-4 py-2 flex items-center justify-between hover:bg-blue-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset"
-            aria-label={isReasoningExpanded ? 'Collapse AI reasoning process' : 'Expand AI reasoning process'}
+            className="w-full px-4 py-2 flex items-center justify-between hover:bg-blue-100 transition-colors focus:outline-none focus:ring-3 focus:ring-blue-500 focus:ring-inset"
+            aria-label={
+              isReasoningExpanded ? 'Collapse AI reasoning process' : 'Expand AI reasoning process'
+            }
             aria-expanded={isReasoningExpanded}
           >
             <span className="text-sm font-medium text-blue-900 flex items-center gap-2">
               <span className="text-lg">🧠</span>
               AI Reasoning Process
             </span>
-            <span className="text-blue-600 transition-transform duration-200" style={{ transform: isReasoningExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }}>
+            <span
+              className="text-blue-600 transition-transform duration-200"
+              style={{ transform: isReasoningExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }}
+            >
               ▶
             </span>
           </button>
@@ -158,7 +170,9 @@ export function StreamingIndicator({ loadingState, progressStages, thinkingConte
                 {thinkingContent}
               </pre>
               <div className="mt-2 pt-2 border-t border-slate-300 text-xs text-gray-600">
-                <span className="italic">💡 This shows the AI's internal reasoning process before generating the response</span>
+                <span className="italic">
+                  💡 This shows the AI's internal reasoning process before generating the response
+                </span>
               </div>
             </div>
           )}

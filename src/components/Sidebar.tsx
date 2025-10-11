@@ -1,5 +1,15 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, MessageSquare, Briefcase, FileText, Settings, Menu, ChevronLeft, LogOut, User } from 'lucide-react';
+import {
+  LayoutDashboard,
+  MessageSquare,
+  Briefcase,
+  FileText,
+  Settings,
+  Menu,
+  ChevronLeft,
+  LogOut,
+  User,
+} from 'lucide-react';
 import SidebarCaseContext from '../features/chat/components/SidebarCaseContext';
 import { ConfirmDialog } from './ConfirmDialog';
 import { useAuth } from '../contexts/AuthContext';
@@ -11,7 +21,9 @@ interface SidebarProps {
   onToggle: () => void;
   onConversationLoad: (conversationId: number) => Promise<void>;
   activeView: 'dashboard' | 'chat' | 'cases' | 'case-detail' | 'documents' | 'settings';
-  onViewChange: (view: 'dashboard' | 'chat' | 'cases' | 'case-detail' | 'documents' | 'settings') => void;
+  onViewChange: (
+    view: 'dashboard' | 'chat' | 'cases' | 'case-detail' | 'documents' | 'settings'
+  ) => void;
   activeCaseId: number | null;
   onActiveCaseIdChange: (caseId: number | null) => void;
 }
@@ -24,7 +36,15 @@ const navigationItems = [
   { id: 'settings' as const, label: 'Settings', icon: Settings },
 ];
 
-export function Sidebar({ isExpanded, onToggle, onConversationLoad, activeView, onViewChange, activeCaseId, onActiveCaseIdChange }: SidebarProps): JSX.Element {
+export function Sidebar({
+  isExpanded,
+  onToggle,
+  onConversationLoad,
+  activeView,
+  onViewChange,
+  activeCaseId,
+  onActiveCaseIdChange,
+}: SidebarProps): JSX.Element {
   const { user, logout } = useAuth();
   const [activeConversationId, setActiveConversationId] = useState<number | null>(null);
   const [recentChats, setRecentChats] = useState<ChatConversation[]>([]);
@@ -94,7 +114,7 @@ export function Sidebar({ isExpanded, onToggle, onConversationLoad, activeView, 
       });
 
       if (result.success) {
-        setRecentChats(prev => [result.data, ...prev]);
+        setRecentChats((prev) => [result.data, ...prev]);
         setActiveConversationId(result.data.id);
       }
     } catch (error) {
@@ -117,7 +137,7 @@ export function Sidebar({ isExpanded, onToggle, onConversationLoad, activeView, 
     try {
       const result = await window.justiceAPI.deleteConversation(conversationToDelete);
       if (result.success) {
-        setRecentChats(prev => prev.filter(chat => chat.id !== conversationToDelete));
+        setRecentChats((prev) => prev.filter((chat) => chat.id !== conversationToDelete));
         if (activeConversationId === conversationToDelete) {
           setActiveConversationId(null);
         }
@@ -137,10 +157,8 @@ export function Sidebar({ isExpanded, onToggle, onConversationLoad, activeView, 
 
     try {
       console.log(`Rename conversation ${conversationId} to "${newTitle}"`);
-      setRecentChats(prev =>
-        prev.map(chat =>
-          chat.id === conversationId ? { ...chat, title: newTitle } : chat,
-        ),
+      setRecentChats((prev) =>
+        prev.map((chat) => (chat.id === conversationId ? { ...chat, title: newTitle } : chat))
       );
     } catch (error) {
       console.error('Error renaming conversation:', error);
@@ -155,7 +173,7 @@ export function Sidebar({ isExpanded, onToggle, onConversationLoad, activeView, 
     if (userProfile?.name) {
       return userProfile.name
         .split(' ')
-        .map(n => n[0])
+        .map((n) => n[0])
         .join('')
         .toUpperCase()
         .slice(0, 2);
@@ -178,9 +196,11 @@ export function Sidebar({ isExpanded, onToggle, onConversationLoad, activeView, 
   return (
     <>
       {/* Sidebar - always visible, width changes based on isExpanded */}
-      <div className={`fixed inset-y-0 left-0 bg-gradient-to-b from-slate-900 via-blue-950 to-slate-900 border-r border-blue-800/30 flex flex-col z-50 shadow-2xl transition-all duration-300 ${
-        isExpanded ? 'w-80' : 'w-16'
-      }`}>
+      <div
+        className={`fixed inset-y-0 left-0 bg-gradient-to-b from-slate-900 via-blue-950 to-slate-900 border-r border-white/10 flex flex-col z-50 shadow-2xl transition-all duration-300 ${
+          isExpanded ? 'w-80' : 'w-16'
+        }`}
+      >
         {/* Logo - always visible at top */}
         <div className="p-3 border-b border-blue-800/30 bg-slate-900/50 flex items-center justify-center">
           {isExpanded ? (
@@ -273,7 +293,9 @@ export function Sidebar({ isExpanded, onToggle, onConversationLoad, activeView, 
                 </div>
                 <div className="flex-1 text-left">
                   <div className="text-sm font-medium text-white">{user?.username || 'User'}</div>
-                  <div className="text-xs text-blue-300">{user?.email || userProfile?.email || 'user@example.com'}</div>
+                  <div className="text-xs text-blue-300">
+                    {user?.email || userProfile?.email || 'user@example.com'}
+                  </div>
                 </div>
                 <User size={16} className="text-blue-300" />
               </button>

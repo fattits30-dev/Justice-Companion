@@ -78,7 +78,7 @@ const SidebarCaseContext: React.FC<SidebarCaseContextProps> = ({
   }, []);
 
   const activeCaseTitle = activeCaseId
-    ? cases.find(c => c.id === activeCaseId)?.title || `Case #${activeCaseId}`
+    ? cases.find((c) => c.id === activeCaseId)?.title || `Case #${activeCaseId}`
     : 'General Chat';
 
   return (
@@ -95,9 +95,7 @@ const SidebarCaseContext: React.FC<SidebarCaseContextProps> = ({
           >
             <div className="flex items-center gap-2">
               <Scale className="w-4 h-4 text-blue-300" />
-              <span className="text-sm text-blue-100 font-medium">
-                {activeCaseTitle}
-              </span>
+              <span className="text-sm text-blue-100 font-medium">{activeCaseTitle}</span>
             </div>
             <ChevronDown
               className={`w-4 h-4 text-blue-300 transition-transform ${
@@ -133,7 +131,9 @@ const SidebarCaseContext: React.FC<SidebarCaseContextProps> = ({
                 >
                   <div className="flex flex-col">
                     <span className="font-medium">{truncateTitle(caseItem.title, 30)}</span>
-                    <span className="text-xs text-blue-400/70">Case #{caseItem.id} • {caseItem.caseType}</span>
+                    <span className="text-xs text-blue-400/70">
+                      Case #{caseItem.id} • {caseItem.caseType}
+                    </span>
                   </div>
                 </button>
               ))}
@@ -149,9 +149,7 @@ const SidebarCaseContext: React.FC<SidebarCaseContextProps> = ({
         </h3>
         <div className="space-y-1 max-h-96 overflow-y-auto custom-scrollbar">
           {recentChats.length === 0 ? (
-            <p className="text-sm text-blue-400/60 italic py-2 px-3">
-              No recent chats yet
-            </p>
+            <p className="text-sm text-blue-400/60 italic py-2 px-3">No recent chats yet</p>
           ) : (
             recentChats.slice(0, 10).map((chat) => (
               <div
@@ -182,7 +180,7 @@ const SidebarCaseContext: React.FC<SidebarCaseContextProps> = ({
                       }}
                       onBlur={() => setEditingChatId(null)}
                       autoFocus
-                      className="w-full bg-blue-950/50 border border-blue-500/50 rounded px-2 py-1 text-sm text-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full bg-blue-950/50 border border-blue-500/50 rounded px-2 py-1 text-sm text-blue-100 focus:outline-none focus:ring-3 focus:ring-blue-500"
                       placeholder="Enter title..."
                     />
                   </div>
