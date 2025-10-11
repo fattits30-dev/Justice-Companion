@@ -26,14 +26,8 @@ const factTypeLabels: Record<string, string> = {
 };
 
 export function UserFactsPanel({ caseId }: UserFactsPanelProps) {
-  const {
-    userFacts,
-    loading,
-    error,
-    createUserFact,
-    updateUserFact,
-    deleteUserFact,
-  } = useUserFacts(caseId);
+  const { userFacts, loading, error, createUserFact, updateUserFact, deleteUserFact } =
+    useUserFacts(caseId);
 
   const [selectedType, setSelectedType] = useState<string>('all');
   const [isCreating, setIsCreating] = useState(false);
@@ -58,18 +52,12 @@ export function UserFactsPanel({ caseId }: UserFactsPanelProps) {
   };
 
   if (loading) {
-    return (
-      <div className="p-6 text-center text-blue-300">
-        Loading user facts...
-      </div>
-    );
+    return <div className="p-6 text-center text-blue-300">Loading user facts...</div>;
   }
 
   if (error) {
     return (
-      <div className="p-6 text-center text-red-300 bg-red-900/30 rounded-lg">
-        Error: {error}
-      </div>
+      <div className="p-6 text-center text-red-300 bg-red-900/30 rounded-lg">Error: {error}</div>
     );
   }
 
@@ -77,9 +65,7 @@ export function UserFactsPanel({ caseId }: UserFactsPanelProps) {
     <div className="p-6">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-white">
-          User Facts ({filteredFacts.length})
-        </h2>
+        <h2 className="text-2xl font-bold text-white">User Facts ({filteredFacts.length})</h2>
 
         <button
           onClick={() => setIsCreating(true)}
@@ -124,9 +110,7 @@ export function UserFactsPanel({ caseId }: UserFactsPanelProps) {
       {isCreating && (
         <div className="mb-6">
           <div className="mb-3">
-            <label className="block mb-2 font-bold text-white text-sm">
-              Fact Type:
-            </label>
+            <label className="block mb-2 font-bold text-white text-sm">Fact Type:</label>
             <select
               value={newFactType}
               onChange={(e) =>
@@ -137,10 +121,10 @@ export function UserFactsPanel({ caseId }: UserFactsPanelProps) {
                     | 'financial'
                     | 'contact'
                     | 'medical'
-                    | 'other',
+                    | 'other'
                 )
               }
-              className="px-3 py-2 border border-blue-700/30 bg-slate-800/50 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-3 py-2 border border-blue-700/30 bg-slate-800/50 rounded-lg text-sm text-white focus:outline-none focus:ring-3 focus:ring-blue-500"
             >
               {Object.entries(factTypeLabels).map(([type, label]) => (
                 <option key={type} value={type}>
@@ -173,9 +157,7 @@ export function UserFactsPanel({ caseId }: UserFactsPanelProps) {
               id={fact.id}
               content={fact.factContent}
               color={factTypeColors[fact.factType]}
-              onUpdate={(id, content) =>
-                updateUserFact(id, { factContent: content })
-              }
+              onUpdate={(id, content) => updateUserFact(id, { factContent: content })}
               onDelete={(id) => deleteUserFact(id)}
             />
           ))}

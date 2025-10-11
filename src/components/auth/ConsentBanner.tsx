@@ -97,7 +97,7 @@ export function ConsentBanner({ onComplete }: ConsentBannerProps) {
                 onChange={(e) =>
                   setConsents((prev) => ({ ...prev, data_processing: e.target.checked }))
                 }
-                className="mt-1 h-5 w-5 rounded border-blue-700 bg-slate-800 text-blue-600 focus:ring-2 focus:ring-blue-500"
+                className="mt-1 h-5 w-5 rounded border-blue-700 bg-slate-800 text-blue-600 focus:ring-3 focus:ring-blue-500"
                 disabled={isSubmitting}
               />
               <div className="flex-1">
@@ -108,8 +108,8 @@ export function ConsentBanner({ onComplete }: ConsentBannerProps) {
                   </span>
                 </div>
                 <p className="text-sm text-slate-400 mt-1">
-                  I consent to the local processing of my case data, notes, and legal information
-                  on this device. This is required for the application to function.
+                  I consent to the local processing of my case data, notes, and legal information on
+                  this device. This is required for the application to function.
                 </p>
               </div>
             </label>
@@ -121,10 +121,8 @@ export function ConsentBanner({ onComplete }: ConsentBannerProps) {
               <input
                 type="checkbox"
                 checked={consents.encryption}
-                onChange={(e) =>
-                  setConsents((prev) => ({ ...prev, encryption: e.target.checked }))
-                }
-                className="mt-1 h-5 w-5 rounded border-blue-700 bg-slate-800 text-blue-600 focus:ring-2 focus:ring-blue-500"
+                onChange={(e) => setConsents((prev) => ({ ...prev, encryption: e.target.checked }))}
+                className="mt-1 h-5 w-5 rounded border-blue-700 bg-slate-800 text-blue-600 focus:ring-3 focus:ring-blue-500"
                 disabled={isSubmitting}
               />
               <div className="flex-1">
@@ -151,7 +149,7 @@ export function ConsentBanner({ onComplete }: ConsentBannerProps) {
                 onChange={(e) =>
                   setConsents((prev) => ({ ...prev, ai_processing: e.target.checked }))
                 }
-                className="mt-1 h-5 w-5 rounded border-blue-700 bg-slate-800 text-blue-600 focus:ring-2 focus:ring-blue-500"
+                className="mt-1 h-5 w-5 rounded border-blue-700 bg-slate-800 text-blue-600 focus:ring-3 focus:ring-blue-500"
                 disabled={isSubmitting}
               />
               <div className="flex-1">
@@ -176,10 +174,8 @@ export function ConsentBanner({ onComplete }: ConsentBannerProps) {
               <input
                 type="checkbox"
                 checked={consents.marketing}
-                onChange={(e) =>
-                  setConsents((prev) => ({ ...prev, marketing: e.target.checked }))
-                }
-                className="mt-1 h-5 w-5 rounded border-blue-700 bg-slate-800 text-blue-600 focus:ring-2 focus:ring-blue-500"
+                onChange={(e) => setConsents((prev) => ({ ...prev, marketing: e.target.checked }))}
+                className="mt-1 h-5 w-5 rounded border-blue-700 bg-slate-800 text-blue-600 focus:ring-3 focus:ring-blue-500"
                 disabled={isSubmitting}
               />
               <div className="flex-1">

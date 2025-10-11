@@ -33,14 +33,8 @@ const importanceLabels: Record<string, string> = {
 };
 
 export function CaseFactsPanel({ caseId }: CaseFactsPanelProps) {
-  const {
-    caseFacts,
-    loading,
-    error,
-    createCaseFact,
-    updateCaseFact,
-    deleteCaseFact,
-  } = useCaseFacts(caseId);
+  const { caseFacts, loading, error, createCaseFact, updateCaseFact, deleteCaseFact } =
+    useCaseFacts(caseId);
 
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [filterImportance, setFilterImportance] = useState<string>('all');
@@ -53,10 +47,8 @@ export function CaseFactsPanel({ caseId }: CaseFactsPanelProps) {
   >('medium');
 
   const filteredFacts = caseFacts.filter((fact: CaseFact) => {
-    const categoryMatch =
-      filterCategory === 'all' || fact.factCategory === filterCategory;
-    const importanceMatch =
-      filterImportance === 'all' || fact.importance === filterImportance;
+    const categoryMatch = filterCategory === 'all' || fact.factCategory === filterCategory;
+    const importanceMatch = filterImportance === 'all' || fact.importance === filterImportance;
     return categoryMatch && importanceMatch;
   });
 
@@ -73,18 +65,12 @@ export function CaseFactsPanel({ caseId }: CaseFactsPanelProps) {
   };
 
   if (loading) {
-    return (
-      <div className="p-6 text-center text-blue-300">
-        Loading case facts...
-      </div>
-    );
+    return <div className="p-6 text-center text-blue-300">Loading case facts...</div>;
   }
 
   if (error) {
     return (
-      <div className="p-6 text-center text-red-300 bg-red-900/30 rounded-lg">
-        Error: {error}
-      </div>
+      <div className="p-6 text-center text-red-300 bg-red-900/30 rounded-lg">Error: {error}</div>
     );
   }
 
@@ -92,9 +78,7 @@ export function CaseFactsPanel({ caseId }: CaseFactsPanelProps) {
     <div className="p-6">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-white">
-          Case Facts ({filteredFacts.length})
-        </h2>
+        <h2 className="text-2xl font-bold text-white">Case Facts ({filteredFacts.length})</h2>
 
         <button
           onClick={() => setIsCreating(true)}
@@ -108,9 +92,7 @@ export function CaseFactsPanel({ caseId }: CaseFactsPanelProps) {
       <div className="mb-6 space-y-4">
         {/* Category Filters */}
         <div>
-          <label className="block mb-2 font-bold text-white text-sm">
-            Category:
-          </label>
+          <label className="block mb-2 font-bold text-white text-sm">Category:</label>
           <div className="flex gap-3 flex-wrap">
             <button
               onClick={() => setFilterCategory('all')}
@@ -144,9 +126,7 @@ export function CaseFactsPanel({ caseId }: CaseFactsPanelProps) {
 
         {/* Importance Filters */}
         <div>
-          <label className="block mb-2 font-bold text-white text-sm">
-            Importance:
-          </label>
+          <label className="block mb-2 font-bold text-white text-sm">Importance:</label>
           <div className="flex gap-3 flex-wrap">
             <button
               onClick={() => setFilterImportance('all')}
@@ -160,9 +140,7 @@ export function CaseFactsPanel({ caseId }: CaseFactsPanelProps) {
             </button>
 
             {Object.entries(importanceLabels).map(([importance, label]) => {
-              const count = caseFacts.filter(
-                (f: CaseFact) => f.importance === importance,
-              ).length;
+              const count = caseFacts.filter((f: CaseFact) => f.importance === importance).length;
               return (
                 <button
                   key={importance}
@@ -186,9 +164,7 @@ export function CaseFactsPanel({ caseId }: CaseFactsPanelProps) {
         <div className="mb-6">
           <div className="flex gap-4 mb-3">
             <div className="flex-1">
-              <label className="block mb-2 font-bold text-white text-sm">
-                Category:
-              </label>
+              <label className="block mb-2 font-bold text-white text-sm">Category:</label>
               <select
                 value={newFactCategory}
                 onChange={(e) =>
@@ -199,10 +175,10 @@ export function CaseFactsPanel({ caseId }: CaseFactsPanelProps) {
                       | 'witness'
                       | 'location'
                       | 'communication'
-                      | 'other',
+                      | 'other'
                   )
                 }
-                className="w-full px-3 py-2 border border-blue-700/30 bg-slate-800/50 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full px-3 py-2 border border-blue-700/30 bg-slate-800/50 rounded-lg text-sm text-white focus:outline-none focus:ring-3 focus:ring-green-500"
               >
                 {Object.entries(categoryLabels).map(([category, label]) => (
                   <option key={category} value={category}>
@@ -213,17 +189,13 @@ export function CaseFactsPanel({ caseId }: CaseFactsPanelProps) {
             </div>
 
             <div className="flex-1">
-              <label className="block mb-2 font-bold text-white text-sm">
-                Importance:
-              </label>
+              <label className="block mb-2 font-bold text-white text-sm">Importance:</label>
               <select
                 value={newFactImportance}
                 onChange={(e) =>
-                  setNewFactImportance(
-                    e.target.value as 'low' | 'medium' | 'high' | 'critical',
-                  )
+                  setNewFactImportance(e.target.value as 'low' | 'medium' | 'high' | 'critical')
                 }
-                className="w-full px-3 py-2 border border-blue-700/30 bg-slate-800/50 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full px-3 py-2 border border-blue-700/30 bg-slate-800/50 rounded-lg text-sm text-white focus:outline-none focus:ring-3 focus:ring-green-500"
               >
                 {Object.entries(importanceLabels).map(([importance, label]) => (
                   <option key={importance} value={importance}>
@@ -257,9 +229,7 @@ export function CaseFactsPanel({ caseId }: CaseFactsPanelProps) {
                 id={fact.id}
                 content={fact.factContent}
                 color={categoryColors[fact.factCategory]}
-                onUpdate={(id, content) =>
-                  updateCaseFact(id, { factContent: content })
-                }
+                onUpdate={(id, content) => updateCaseFact(id, { factContent: content })}
                 onDelete={(id) => deleteCaseFact(id)}
               />
               {/* Importance badge */}

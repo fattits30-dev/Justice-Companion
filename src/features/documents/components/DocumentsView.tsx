@@ -1,5 +1,16 @@
 import { useState } from 'react';
-import { FileText, Download, Printer, Eye, CheckCircle, AlertCircle, XCircle, Filter, Mail, Upload } from 'lucide-react';
+import {
+  FileText,
+  Download,
+  Printer,
+  Eye,
+  CheckCircle,
+  AlertCircle,
+  XCircle,
+  Filter,
+  Mail,
+  Upload,
+} from 'lucide-react';
 import { useEvidence } from '../hooks/useEvidence';
 import { useCases } from '@/features/cases';
 import { SkeletonCard } from '@/components/ui/Skeleton';
@@ -10,7 +21,13 @@ import type { Evidence } from '@/models/Evidence';
 interface Document {
   id: string;
   title: string;
-  type: 'evidence' | 'witness_statement' | 'contract' | 'correspondence' | 'court_form' | 'expert_report';
+  type:
+    | 'evidence'
+    | 'witness_statement'
+    | 'contract'
+    | 'correspondence'
+    | 'court_form'
+    | 'expert_report';
   status: 'complete' | 'needs_review' | 'incomplete';
   fileName: string;
   fileType: 'PDF' | 'DOCX';
@@ -34,7 +51,8 @@ function mapEvidenceToDocument(evidence: Evidence, caseName: string): Document {
     title: evidence.title,
     type: 'evidence', // Map from evidence.evidenceType if needed
     status: evidence.filePath ? 'complete' : evidence.content ? 'needs_review' : 'incomplete',
-    fileName: evidence.filePath?.split('/').pop() || evidence.filePath?.split('\\').pop() || 'Unknown',
+    fileName:
+      evidence.filePath?.split('/').pop() || evidence.filePath?.split('\\').pop() || 'Unknown',
     fileType: evidence.filePath?.endsWith('.pdf') ? 'PDF' : 'DOCX',
     uploadDate: new Date(evidence.createdAt).toLocaleDateString(),
     fileSize: 'Unknown', // Evidence model doesn't track file size yet
@@ -68,7 +86,7 @@ export function DocumentsView(): JSX.Element {
     return mapEvidenceToDocument(ev, caseName);
   });
 
-  const filteredDocuments = documents.filter(doc => {
+  const filteredDocuments = documents.filter((doc) => {
     const caseMatch = filterCase === 'all' || doc.associatedCase === filterCase;
     const statusMatch = filterStatus === 'all' || doc.status === filterStatus;
     return caseMatch && statusMatch;
@@ -92,7 +110,7 @@ export function DocumentsView(): JSX.Element {
       return;
     }
 
-    void window.justiceAPI.viewFile(evidence.filePath).then(result => {
+    void window.justiceAPI.viewFile(evidence.filePath).then((result) => {
       if (!result.success) {
         toast.error(`Failed to open file: ${result.error}`);
       }
@@ -106,7 +124,7 @@ export function DocumentsView(): JSX.Element {
       return;
     }
 
-    void window.justiceAPI.downloadFile(evidence.filePath, doc.fileName).then(result => {
+    void window.justiceAPI.downloadFile(evidence.filePath, doc.fileName).then((result) => {
       if (result.success) {
         toast.success(`File saved to: ${result.savedPath}`);
       } else {
@@ -122,7 +140,7 @@ export function DocumentsView(): JSX.Element {
       return;
     }
 
-    void window.justiceAPI.printFile(evidence.filePath).then(result => {
+    void window.justiceAPI.printFile(evidence.filePath).then((result) => {
       if (result.success) {
         toast.success('File opened for printing');
       } else {
@@ -138,24 +156,27 @@ export function DocumentsView(): JSX.Element {
       return;
     }
 
-    void window.justiceAPI.emailFiles(
-      [evidence.filePath],
-      `${doc.title} - ${doc.associatedCase}`,
-      `Attached: ${doc.fileName}`,
-    ).then(result => {
-      if (result.success) {
-        toast.success('Email client opened');
-      } else {
-        toast.error(`Failed to open email: ${result.error}`);
-      }
-    });
+    void window.justiceAPI
+      .emailFiles(
+        [evidence.filePath],
+        `${doc.title} - ${doc.associatedCase}`,
+        `Attached: ${doc.fileName}`
+      )
+      .then((result) => {
+        if (result.success) {
+          toast.success('Email client opened');
+        } else {
+          toast.error(`Failed to open email: ${result.error}`);
+        }
+      });
   };
 
   // Bundle operations (multiple files)
   const handleDownloadBundle = () => {
-    const docs = selectedDocs.size > 0
-      ? filteredDocuments.filter(d => selectedDocs.has(d.id))
-      : filteredDocuments;
+    const docs =
+      selectedDocs.size > 0
+        ? filteredDocuments.filter((d) => selectedDocs.has(d.id))
+        : filteredDocuments;
 
     if (docs.length === 0) {
       toast.error('No documents to download');
@@ -179,9 +200,10 @@ export function DocumentsView(): JSX.Element {
   };
 
   const handlePrintBundle = () => {
-    const docs = selectedDocs.size > 0
-      ? filteredDocuments.filter(d => selectedDocs.has(d.id))
-      : filteredDocuments;
+    const docs =
+      selectedDocs.size > 0
+        ? filteredDocuments.filter((d) => selectedDocs.has(d.id))
+        : filteredDocuments;
 
     if (docs.length === 0) {
       toast.error('No documents to print');
@@ -205,9 +227,10 @@ export function DocumentsView(): JSX.Element {
   };
 
   const handleEmailBundle = () => {
-    const docs = selectedDocs.size > 0
-      ? filteredDocuments.filter(d => selectedDocs.has(d.id))
-      : filteredDocuments;
+    const docs =
+      selectedDocs.size > 0
+        ? filteredDocuments.filter((d) => selectedDocs.has(d.id))
+        : filteredDocuments;
 
     if (docs.length === 0) {
       toast.error('No documents to email');
@@ -227,22 +250,24 @@ export function DocumentsView(): JSX.Element {
       return;
     }
 
-    void window.justiceAPI.emailFiles(
-      filePaths,
-      `Case Bundle: ${filePaths.length} documents`,
-      'Please find attached case documents.',
-    ).then(result => {
-      if (result.success) {
-        toast.success('Email client opened with documents');
-      } else {
-        toast.error(`Failed to open email: ${result.error}`);
-      }
-    });
+    void window.justiceAPI
+      .emailFiles(
+        filePaths,
+        `Case Bundle: ${filePaths.length} documents`,
+        'Please find attached case documents.'
+      )
+      .then((result) => {
+        if (result.success) {
+          toast.success('Email client opened with documents');
+        } else {
+          toast.error(`Failed to open email: ${result.error}`);
+        }
+      });
   };
 
   // Helper function to find evidence by document ID
   const findEvidenceById = (docId: string) => {
-    return evidence.find(ev => ev.id.toString() === docId);
+    return evidence.find((ev) => ev.id.toString() === docId);
   };
 
   const getStatusIcon = (status: string) => {
@@ -272,7 +297,10 @@ export function DocumentsView(): JSX.Element {
   };
 
   const getTypeLabel = (type: string) => {
-    return type.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+    return type
+      .split('_')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
   };
 
   // Show loading state with skeleton cards
@@ -285,8 +313,12 @@ export function DocumentsView(): JSX.Element {
             <div className="text-amber-400 text-lg">⚖️</div>
             <div className="flex-1">
               <p className="text-amber-200 text-xs">
-                <strong>Legal Notice:</strong> This tool assists with document organization only. You have the right to self-represent.
-                <span className="text-amber-100"> However, licensed legal counsel is strongly advised regardless of your intentions.</span>
+                <strong>Legal Notice:</strong> This tool assists with document organization only.
+                You have the right to self-represent.
+                <span className="text-amber-100">
+                  {' '}
+                  However, licensed legal counsel is strongly advised regardless of your intentions.
+                </span>
               </p>
             </div>
           </div>
@@ -325,8 +357,12 @@ export function DocumentsView(): JSX.Element {
             <div className="text-amber-400 text-lg">⚖️</div>
             <div className="flex-1">
               <p className="text-amber-200 text-xs">
-                <strong>Legal Notice:</strong> This tool assists with document organization only. You have the right to self-represent.
-                <span className="text-amber-100"> However, licensed legal counsel is strongly advised regardless of your intentions.</span>
+                <strong>Legal Notice:</strong> This tool assists with document organization only.
+                You have the right to self-represent.
+                <span className="text-amber-100">
+                  {' '}
+                  However, licensed legal counsel is strongly advised regardless of your intentions.
+                </span>
               </p>
             </div>
           </div>
@@ -362,8 +398,12 @@ export function DocumentsView(): JSX.Element {
             <div className="text-amber-400 text-lg">⚖️</div>
             <div className="flex-1">
               <p className="text-amber-200 text-xs">
-                <strong>Legal Notice:</strong> This tool assists with document organization only. You have the right to self-represent.
-                <span className="text-amber-100"> However, licensed legal counsel is strongly advised regardless of your intentions.</span>
+                <strong>Legal Notice:</strong> This tool assists with document organization only.
+                You have the right to self-represent.
+                <span className="text-amber-100">
+                  {' '}
+                  However, licensed legal counsel is strongly advised regardless of your intentions.
+                </span>
               </p>
             </div>
           </div>
@@ -377,7 +417,8 @@ export function DocumentsView(): JSX.Element {
             </div>
             <h2 className="text-2xl font-bold text-white mb-3">No Documents Yet</h2>
             <p className="text-blue-200 mb-6">
-              Upload evidence, contracts, witness statements, or other legal documents to get started organizing your case files.
+              Upload evidence, contracts, witness statements, or other legal documents to get
+              started organizing your case files.
             </p>
             <button
               onClick={() => setIsUploadModalOpen(true)}
@@ -385,9 +426,7 @@ export function DocumentsView(): JSX.Element {
             >
               Upload Your First Document
             </button>
-            <p className="text-gray-400 text-sm mt-4">
-              Supported formats: PDF, DOCX, Images
-            </p>
+            <p className="text-gray-400 text-sm mt-4">Supported formats: PDF, DOCX, Images</p>
           </div>
         </div>
       </div>
@@ -402,8 +441,12 @@ export function DocumentsView(): JSX.Element {
           <div className="text-amber-400 text-lg">⚖️</div>
           <div className="flex-1">
             <p className="text-amber-200 text-xs">
-              <strong>Legal Notice:</strong> This tool assists with document organization only. You have the right to self-represent.
-              <span className="text-amber-100"> However, licensed legal counsel is strongly advised regardless of your intentions.</span>
+              <strong>Legal Notice:</strong> This tool assists with document organization only. You
+              have the right to self-represent.
+              <span className="text-amber-100">
+                {' '}
+                However, licensed legal counsel is strongly advised regardless of your intentions.
+              </span>
             </p>
           </div>
         </div>
@@ -417,7 +460,7 @@ export function DocumentsView(): JSX.Element {
           <select
             value={filterCase}
             onChange={(e) => setFilterCase(e.target.value)}
-            className="px-4 py-2 bg-slate-800/50 border border-blue-700/30 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-4 py-2 bg-slate-800/50 border border-blue-700/30 rounded-lg text-white text-sm focus:outline-none focus:ring-3 focus:ring-blue-500"
           >
             <option value="all">All Cases</option>
             <option value="Smith vs ABC Corp">Smith vs ABC Corp</option>
@@ -427,7 +470,7 @@ export function DocumentsView(): JSX.Element {
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-4 py-2 bg-slate-800/50 border border-blue-700/30 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-4 py-2 bg-slate-800/50 border border-blue-700/30 rounded-lg text-white text-sm focus:outline-none focus:ring-3 focus:ring-blue-500"
           >
             <option value="all">All Statuses</option>
             <option value="complete">Complete</option>
@@ -449,7 +492,9 @@ export function DocumentsView(): JSX.Element {
 
           {selectedDocs.size > 0 ? (
             <div className="flex items-center gap-3">
-              <span className="text-blue-300 text-sm font-medium">{selectedDocs.size} selected</span>
+              <span className="text-blue-300 text-sm font-medium">
+                {selectedDocs.size} selected
+              </span>
               <div className="flex gap-2">
                 <button
                   onClick={() => void handleDownloadBundle()}
@@ -519,7 +564,9 @@ export function DocumentsView(): JSX.Element {
               <div
                 key={doc.id}
                 className={`bg-slate-900/50 border rounded-lg p-5 transition-all hover:border-blue-600/50 hover:shadow-lg hover:shadow-blue-600/20 cursor-pointer ${
-                  selectedDocs.has(doc.id) ? 'border-blue-600/70 shadow-lg shadow-blue-600/30' : 'border-blue-800/30'
+                  selectedDocs.has(doc.id)
+                    ? 'border-blue-600/70 shadow-lg shadow-blue-600/30'
+                    : 'border-blue-800/30'
                 }`}
                 onClick={() => toggleDocSelection(doc.id)}
               >
@@ -542,29 +589,48 @@ export function DocumentsView(): JSX.Element {
                 <div className="text-xs text-blue-300 mb-3">{getTypeLabel(doc.type)}</div>
 
                 {/* Status Badge */}
-                <div className={`inline-flex items-center gap-1 px-3 py-1 rounded-full border text-xs font-medium mb-4 ${getStatusBadge(doc.status)}`}>
+                <div
+                  className={`inline-flex items-center gap-1 px-3 py-1 rounded-full border text-xs font-medium mb-4 ${getStatusBadge(doc.status)}`}
+                >
                   <span className="capitalize">{doc.status.replace('_', ' ')}</span>
                 </div>
 
                 {/* Metadata */}
                 <div className="space-y-1 mb-4 text-sm text-gray-400">
-                  <div className="truncate"><span className="text-gray-500">Case:</span> {doc.associatedCase}</div>
-                  <div><span className="text-gray-500">Uploaded:</span> {doc.uploadDate}</div>
-                  <div><span className="text-gray-500">Priority:</span> <span className={`capitalize font-medium ${doc.priority === 'critical' ? 'text-red-400' : doc.priority === 'important' ? 'text-amber-400' : 'text-gray-400'}`}>{doc.priority}</span></div>
+                  <div className="truncate">
+                    <span className="text-gray-500">Case:</span> {doc.associatedCase}
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Uploaded:</span> {doc.uploadDate}
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Priority:</span>{' '}
+                    <span
+                      className={`capitalize font-medium ${doc.priority === 'critical' ? 'text-red-400' : doc.priority === 'important' ? 'text-amber-400' : 'text-gray-400'}`}
+                    >
+                      {doc.priority}
+                    </span>
+                  </div>
                 </div>
 
                 {/* Checklist */}
                 <div className="border-t border-blue-800/30 pt-3 mb-4">
                   <div className="text-xs text-gray-400 mb-2">Document Checklist:</div>
                   <div className="flex flex-wrap gap-2">
-                    <span className={`text-xs px-2 py-1 rounded ${doc.checklist.signed ? 'bg-green-600/20 text-green-300' : 'bg-gray-700/50 text-gray-500'}`}>
+                    <span
+                      className={`text-xs px-2 py-1 rounded ${doc.checklist.signed ? 'bg-green-600/20 text-green-300' : 'bg-gray-700/50 text-gray-500'}`}
+                    >
                       {doc.checklist.signed ? '✓' : '○'} Signed
                     </span>
-                    <span className={`text-xs px-2 py-1 rounded ${doc.checklist.dated ? 'bg-green-600/20 text-green-300' : 'bg-gray-700/50 text-gray-500'}`}>
+                    <span
+                      className={`text-xs px-2 py-1 rounded ${doc.checklist.dated ? 'bg-green-600/20 text-green-300' : 'bg-gray-700/50 text-gray-500'}`}
+                    >
                       {doc.checklist.dated ? '✓' : '○'} Dated
                     </span>
                     {doc.type === 'witness_statement' && (
-                      <span className={`text-xs px-2 py-1 rounded ${doc.checklist.witnessed ? 'bg-green-600/20 text-green-300' : 'bg-gray-700/50 text-gray-500'}`}>
+                      <span
+                        className={`text-xs px-2 py-1 rounded ${doc.checklist.witnessed ? 'bg-green-600/20 text-green-300' : 'bg-gray-700/50 text-gray-500'}`}
+                      >
                         {doc.checklist.witnessed ? '✓' : '○'} Witnessed
                       </span>
                     )}

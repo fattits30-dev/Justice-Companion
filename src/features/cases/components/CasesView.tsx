@@ -40,7 +40,11 @@ function transformCaseToTreeData(caseItem: Case, caseEvidence: Evidence[]): Case
 
   const timeline: TimelineEvent[] = [
     { date: createdDate, label: 'Case Created', status: 'completed' },
-    { date: updatedDate, label: 'Last Updated', status: caseItem.status === 'active' ? 'current' : 'completed' },
+    {
+      date: updatedDate,
+      label: 'Last Updated',
+      status: caseItem.status === 'active' ? 'current' : 'completed',
+    },
   ];
 
   if (caseItem.status === 'closed') {
@@ -50,11 +54,11 @@ function transformCaseToTreeData(caseItem: Case, caseEvidence: Evidence[]): Case
   }
 
   // Group evidence by type
-  const documents = caseEvidence.filter(e => e.evidenceType === 'document');
-  const photos = caseEvidence.filter(e => e.evidenceType === 'photo');
-  const emails = caseEvidence.filter(e => e.evidenceType === 'email');
-  const recordings = caseEvidence.filter(e => e.evidenceType === 'recording');
-  const notes = caseEvidence.filter(e => e.evidenceType === 'note');
+  const documents = caseEvidence.filter((e) => e.evidenceType === 'document');
+  const photos = caseEvidence.filter((e) => e.evidenceType === 'photo');
+  const emails = caseEvidence.filter((e) => e.evidenceType === 'email');
+  const recordings = caseEvidence.filter((e) => e.evidenceType === 'recording');
+  const notes = caseEvidence.filter((e) => e.evidenceType === 'note');
 
   // Build evidence nodes
   const evidenceChildren: TreeNode[] = [];
@@ -64,7 +68,7 @@ function transformCaseToTreeData(caseItem: Case, caseEvidence: Evidence[]): Case
       id: `docs-category-${caseItem.id}`,
       type: 'category',
       label: `Documents (${documents.length})`,
-      children: documents.map(doc => ({
+      children: documents.map((doc) => ({
         id: `evidence-${doc.id}`,
         type: 'item',
         label: doc.title,
@@ -79,7 +83,7 @@ function transformCaseToTreeData(caseItem: Case, caseEvidence: Evidence[]): Case
       id: `photos-category-${caseItem.id}`,
       type: 'category',
       label: `Photos (${photos.length})`,
-      children: photos.map(photo => ({
+      children: photos.map((photo) => ({
         id: `evidence-${photo.id}`,
         type: 'item',
         label: photo.title,
@@ -94,7 +98,7 @@ function transformCaseToTreeData(caseItem: Case, caseEvidence: Evidence[]): Case
       id: `emails-category-${caseItem.id}`,
       type: 'category',
       label: `Emails (${emails.length})`,
-      children: emails.map(email => ({
+      children: emails.map((email) => ({
         id: `evidence-${email.id}`,
         type: 'item',
         label: email.title,
@@ -109,7 +113,7 @@ function transformCaseToTreeData(caseItem: Case, caseEvidence: Evidence[]): Case
       id: `recordings-category-${caseItem.id}`,
       type: 'category',
       label: `Recordings (${recordings.length})`,
-      children: recordings.map(rec => ({
+      children: recordings.map((rec) => ({
         id: `evidence-${rec.id}`,
         type: 'item',
         label: rec.title,
@@ -124,7 +128,7 @@ function transformCaseToTreeData(caseItem: Case, caseEvidence: Evidence[]): Case
       id: `notes-category-${caseItem.id}`,
       type: 'category',
       label: `Notes (${notes.length})`,
-      children: notes.map(note => ({
+      children: notes.map((note) => ({
         id: `evidence-${note.id}`,
         type: 'item',
         label: note.title,
@@ -212,9 +216,9 @@ export function CasesView({ onCaseSelect }: CasesViewProps): JSX.Element {
     if (!cases || cases.length === 0) {
       return [];
     }
-    return cases.map(caseItem => {
+    return cases.map((caseItem) => {
       // Filter evidence for this specific case
-      const caseEvidence = evidence.filter(ev => ev.caseId === caseItem.id);
+      const caseEvidence = evidence.filter((ev) => ev.caseId === caseItem.id);
       return transformCaseToTreeData(caseItem, caseEvidence);
     });
   }, [cases, evidence]);
@@ -232,7 +236,7 @@ export function CasesView({ onCaseSelect }: CasesViewProps): JSX.Element {
     if (selectedCaseId === null) {
       return transformedCases[0];
     }
-    return transformedCases.find(c => c.id === selectedCaseId) || transformedCases[0];
+    return transformedCases.find((c) => c.id === selectedCaseId) || transformedCases[0];
   }, [transformedCases, selectedCaseId]);
 
   // Calculate width needed for each subtree
@@ -251,7 +255,13 @@ export function CasesView({ onCaseSelect }: CasesViewProps): JSX.Element {
     return Math.max(totalChildWidth + gaps, nodeWidth);
   };
 
-  const renderTreeNode = (node: TreeNode, x: number, y: number, parentX?: number, parentY?: number): JSX.Element[] => {
+  const renderTreeNode = (
+    node: TreeNode,
+    x: number,
+    y: number,
+    parentX?: number,
+    parentY?: number
+  ): JSX.Element[] => {
     const elements: JSX.Element[] = [];
 
     // Box dimensions based on type (reduced sizes)
@@ -281,17 +291,15 @@ export function CasesView({ onCaseSelect }: CasesViewProps): JSX.Element {
           style={{
             filter: hoveredNodeId === node.id ? 'brightness(1.3)' : 'none',
           }}
-        />,
+        />
       );
     }
 
     // Box colors based on type
-    const boxColor = node.type === 'case' ? '#8B4513' :
-      node.type === 'category' ? '#A0522D' :
-        '#1e40af'; // Dark blue for items
-    const borderColor = node.type === 'case' ? '#654321' :
-      node.type === 'category' ? '#8B4513' :
-        '#3b82f6'; // Blue border for items
+    const boxColor =
+      node.type === 'case' ? '#8B4513' : node.type === 'category' ? '#A0522D' : '#1e40af'; // Dark blue for items
+    const borderColor =
+      node.type === 'case' ? '#654321' : node.type === 'category' ? '#8B4513' : '#3b82f6'; // Blue border for items
 
     // Render strength stars (if item)
     const renderStars = (strength: number): string => {
@@ -313,9 +321,10 @@ export function CasesView({ onCaseSelect }: CasesViewProps): JSX.Element {
           rx={8}
           className="transition-all duration-300 cursor-pointer"
           style={{
-            filter: hoveredNodeId === node.id ?
-              'brightness(1.3) drop-shadow(0 0 12px rgba(59, 130, 246, 0.8))' :
-              'drop-shadow(0 4px 6px rgba(0,0,0,0.4))',
+            filter:
+              hoveredNodeId === node.id
+                ? 'brightness(1.3) drop-shadow(0 0 12px rgba(59, 130, 246, 0.8))'
+                : 'drop-shadow(0 4px 6px rgba(0,0,0,0.4))',
           }}
           onMouseEnter={() => setHoveredNodeId(node.id)}
           onMouseLeave={() => setHoveredNodeId(null)}
@@ -336,7 +345,9 @@ export function CasesView({ onCaseSelect }: CasesViewProps): JSX.Element {
           y={y - boxHeight / 2 + 20}
           textAnchor="middle"
           className="font-bold fill-white pointer-events-none"
-          style={{ fontSize: node.type === 'case' ? '14px' : node.type === 'category' ? '12px' : '11px' }}
+          style={{
+            fontSize: node.type === 'case' ? '14px' : node.type === 'category' ? '12px' : '11px',
+          }}
         >
           {node.label}
         </text>
@@ -363,7 +374,9 @@ export function CasesView({ onCaseSelect }: CasesViewProps): JSX.Element {
             className="fill-gray-300 pointer-events-none"
             style={{ fontSize: '9px' }}
           >
-            {node.faultBreach.length > 25 ? node.faultBreach.substring(0, 25) + '...' : node.faultBreach}
+            {node.faultBreach.length > 25
+              ? node.faultBreach.substring(0, 25) + '...'
+              : node.faultBreach}
           </text>
         )}
 
@@ -379,7 +392,7 @@ export function CasesView({ onCaseSelect }: CasesViewProps): JSX.Element {
             {node.date}
           </text>
         )}
-      </g>,
+      </g>
     );
 
     // Recursively draw children with proper spacing
@@ -418,7 +431,10 @@ export function CasesView({ onCaseSelect }: CasesViewProps): JSX.Element {
         <div className="h-28 bg-gradient-to-b from-slate-900/30 to-transparent border-b border-blue-800/20 px-6 py-4">
           <div className="max-w-5xl mx-auto">
             <div className="relative h-full flex items-center">
-              <div className="absolute left-0 right-0 h-1 bg-slate-700/50 rounded-full" style={{ top: '40px' }} />
+              <div
+                className="absolute left-0 right-0 h-1 bg-slate-700/50 rounded-full"
+                style={{ top: '40px' }}
+              />
               <div className="relative w-full flex justify-between">
                 {Array.from({ length: 3 }).map((_, index) => (
                   <div key={index} className="flex flex-col items-center" style={{ flex: 1 }}>
@@ -497,10 +513,12 @@ export function CasesView({ onCaseSelect }: CasesViewProps): JSX.Element {
           <select
             value={selectedCaseId || ''}
             onChange={(e) => setSelectedCaseId(Number(e.target.value))}
-            className="appearance-none bg-slate-800/50 border border-blue-700/30 rounded-lg px-4 py-2 pr-10 text-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer transition-all"
+            className="appearance-none bg-slate-800/50 border border-blue-700/30 rounded-lg px-4 py-2 pr-10 text-white text-sm font-medium focus:outline-none focus:ring-3 focus:ring-blue-500 cursor-pointer transition-all"
           >
-            {transformedCases.map(c => (
-              <option key={c.id} value={c.id}>{c.title}</option>
+            {transformedCases.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.title}
+              </option>
             ))}
           </select>
           <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-300 pointer-events-none" />
@@ -512,7 +530,10 @@ export function CasesView({ onCaseSelect }: CasesViewProps): JSX.Element {
         <div className="max-w-5xl mx-auto">
           <div className="relative h-full flex items-center">
             {/* Timeline line */}
-            <div className="absolute left-0 right-0 h-1 bg-slate-700/50 rounded-full" style={{ top: '40px' }} />
+            <div
+              className="absolute left-0 right-0 h-1 bg-slate-700/50 rounded-full"
+              style={{ top: '40px' }}
+            />
 
             {/* Timeline events */}
             <div className="relative w-full flex justify-between">
@@ -521,14 +542,20 @@ export function CasesView({ onCaseSelect }: CasesViewProps): JSX.Element {
                 const isCurrent = event.status === 'current';
 
                 return (
-                  <div key={index} className="flex flex-col items-center group relative" style={{ flex: 1 }}>
+                  <div
+                    key={index}
+                    className="flex flex-col items-center group relative"
+                    style={{ flex: 1 }}
+                  >
                     {/* Marker */}
                     <div className="relative z-10">
                       <div
                         className={`w-4 h-4 rounded-full border-4 transition-all duration-300 ${
-                          isCompleted ? 'bg-gray-400 border-gray-300' :
-                            isCurrent ? 'bg-blue-500 border-blue-400 animate-pulse' :
-                              'bg-slate-600 border-slate-500'
+                          isCompleted
+                            ? 'bg-gray-400 border-gray-300'
+                            : isCurrent
+                              ? 'bg-blue-500 border-blue-400 animate-pulse'
+                              : 'bg-slate-600 border-slate-500'
                         }`}
                       />
                       {isCurrent && (
@@ -538,11 +565,15 @@ export function CasesView({ onCaseSelect }: CasesViewProps): JSX.Element {
 
                     {/* Label */}
                     <div className="mt-3 text-center">
-                      <div className={`text-xs font-medium ${
-                        isCompleted ? 'text-gray-400' :
-                          isCurrent ? 'text-blue-300' :
-                            'text-slate-400'
-                      }`}>
+                      <div
+                        className={`text-xs font-medium ${
+                          isCompleted
+                            ? 'text-gray-400'
+                            : isCurrent
+                              ? 'text-blue-300'
+                              : 'text-slate-400'
+                        }`}
+                      >
                         {event.label}
                       </div>
                       <div className="text-[10px] text-slate-500 mt-1">{event.date}</div>

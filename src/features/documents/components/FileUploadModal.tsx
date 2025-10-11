@@ -26,7 +26,7 @@ function formatFileSize(bytes: number): string {
   const k = 1024;
   const sizes = ['Bytes', 'KB', 'MB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+  return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
 }
 
 function getFileExtension(filename: string): string {
@@ -267,7 +267,7 @@ export function FileUploadModal({
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full px-4 py-2 bg-slate-800/50 border border-blue-700/30 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-2 bg-slate-800/50 border border-blue-700/30 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-3 focus:ring-blue-500"
             placeholder="Enter evidence title"
             disabled={isUploading}
             required
@@ -276,14 +276,17 @@ export function FileUploadModal({
 
         {/* Description */}
         <div className="mb-4">
-          <label htmlFor="evidence-description" className="block text-sm font-medium text-blue-200 mb-2">
+          <label
+            htmlFor="evidence-description"
+            className="block text-sm font-medium text-blue-200 mb-2"
+          >
             Description (Optional)
           </label>
           <textarea
             id="evidence-description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="w-full px-4 py-2 bg-slate-800/50 border border-blue-700/30 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[80px] resize-y"
+            className="w-full px-4 py-2 bg-slate-800/50 border border-blue-700/30 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-3 focus:ring-blue-500 min-h-[80px] resize-y"
             placeholder="Add any notes or context about this evidence"
             disabled={isUploading}
           />
@@ -298,7 +301,7 @@ export function FileUploadModal({
             id="evidence-type"
             value={evidenceType}
             onChange={(e) => setEvidenceType(e.target.value as EvidenceType)}
-            className="w-full px-4 py-2 bg-slate-800/50 border border-blue-700/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-2 bg-slate-800/50 border border-blue-700/30 rounded-lg text-white focus:outline-none focus:ring-3 focus:ring-blue-500"
             disabled={isUploading}
           >
             <option value="document">Document</option>
@@ -319,7 +322,7 @@ export function FileUploadModal({
             type="date"
             value={obtainedDate}
             onChange={(e) => setObtainedDate(e.target.value)}
-            className="w-full px-4 py-2 bg-slate-800/50 border border-blue-700/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-2 bg-slate-800/50 border border-blue-700/30 rounded-lg text-white focus:outline-none focus:ring-3 focus:ring-blue-500"
             disabled={isUploading}
           />
         </div>

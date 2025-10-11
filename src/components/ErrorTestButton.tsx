@@ -27,7 +27,7 @@ export function ErrorTestButton({
   return (
     <button
       onClick={() => setShouldThrow(true)}
-      className="rounded-lg bg-red-600 px-4 py-2 font-semibold text-white transition-colors hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+      className="rounded-lg bg-red-600 px-4 py-2 font-semibold text-white transition-colors hover:bg-red-700 focus:outline-none focus:ring-3 focus:ring-red-500 focus:ring-offset-2"
       aria-label="Test error boundary by throwing an error"
     >
       {buttonText}

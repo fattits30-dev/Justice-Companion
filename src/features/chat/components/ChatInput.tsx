@@ -26,7 +26,11 @@ interface ChatInputProps {
  * @param props - ChatInputProps
  * @returns React component
  */
-export function ChatInput({ onSend, disabled = false, placeholder = 'Ask a legal question...' }: ChatInputProps) {
+export function ChatInput({
+  onSend,
+  disabled = false,
+  placeholder = 'Ask a legal question...',
+}: ChatInputProps) {
   const [value, setValue] = useState<string>('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -89,13 +93,13 @@ export function ChatInput({ onSend, disabled = false, placeholder = 'Ask a legal
         aria-disabled={disabled ? 'true' : 'false'}
         className={`
           flex-1 resize-none rounded-lg border px-4 py-3
-          focus:outline-none focus:ring-2 focus:ring-blue-500
+          focus:outline-none focus:ring-3 focus:ring-blue-500
           transition-colors
           ${
-    disabled
-      ? 'bg-gray-100 border-gray-200 text-gray-500 cursor-not-allowed'
-      : 'bg-white border-gray-300 text-gray-900'
-    }
+            disabled
+              ? 'bg-gray-100 border-gray-200 text-gray-500 cursor-not-allowed'
+              : 'bg-white border-gray-300 text-gray-900'
+          }
         `}
         rows={1}
         style={{ minHeight: '48px', maxHeight: `${MAX_HEIGHT}px` }}
@@ -109,12 +113,12 @@ export function ChatInput({ onSend, disabled = false, placeholder = 'Ask a legal
         aria-label="Send message"
         className={`
           px-6 py-3 rounded-lg font-medium transition-all
-          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+          focus:outline-none focus:ring-3 focus:ring-blue-500 focus:ring-offset-2
           ${
-    isButtonDisabled
-      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-      : 'bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800'
-    }
+            isButtonDisabled
+              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              : 'bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800'
+          }
         `}
       >
         Send

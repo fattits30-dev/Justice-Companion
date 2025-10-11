@@ -37,13 +37,7 @@ function getStrengthLabel(strength: number): string {
 }
 
 function getStrengthColor(strength: number): string {
-  const colors = [
-    'bg-red-500',
-    'bg-orange-500',
-    'bg-yellow-500',
-    'bg-lime-500',
-    'bg-green-500',
-  ];
+  const colors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-lime-500', 'bg-green-500'];
   return colors[strength] || 'bg-red-500';
 }
 
@@ -156,7 +150,7 @@ export function RegistrationScreen({ onSwitchToLogin }: RegistrationScreenProps)
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full px-4 py-2 bg-slate-800 border border-blue-700/30 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 bg-slate-800 border border-blue-700/30 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Choose a username"
                 autoFocus
                 disabled={isLoading}
@@ -173,7 +167,7 @@ export function RegistrationScreen({ onSwitchToLogin }: RegistrationScreenProps)
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-2 bg-slate-800 border border-blue-700/30 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 bg-slate-800 border border-blue-700/30 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-transparent"
                 placeholder="your@email.com"
                 disabled={isLoading}
               />
@@ -189,7 +183,7 @@ export function RegistrationScreen({ onSwitchToLogin }: RegistrationScreenProps)
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2 bg-slate-800 border border-blue-700/30 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 bg-slate-800 border border-blue-700/30 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-transparent"
                 placeholder="At least 12 characters"
                 disabled={isLoading}
               />
@@ -239,7 +233,7 @@ export function RegistrationScreen({ onSwitchToLogin }: RegistrationScreenProps)
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full px-4 py-2 bg-slate-800 border border-blue-700/30 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 bg-slate-800 border border-blue-700/30 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Re-enter your password"
                 disabled={isLoading}
               />

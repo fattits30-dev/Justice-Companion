@@ -184,14 +184,14 @@ export class ViewErrorBoundary extends Component<ViewErrorBoundaryProps, ViewErr
             <div className="flex gap-3">
               <button
                 onClick={this.handleNavigateToDashboard}
-                className="flex-1 rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-900"
+                className="flex-1 rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-3 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-900"
                 aria-label="Navigate back to dashboard"
               >
                 Back to Dashboard
               </button>
               <button
                 onClick={this.handleTryAgain}
-                className="flex-1 rounded-lg border-2 border-slate-700 bg-slate-800 px-5 py-3 font-semibold text-slate-300 transition-colors hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 focus:ring-offset-slate-900"
+                className="flex-1 rounded-lg border-2 border-slate-700 bg-slate-800 px-5 py-3 font-semibold text-slate-300 transition-colors hover:bg-slate-700 focus:outline-none focus:ring-3 focus:ring-slate-500 focus:ring-offset-2 focus:ring-offset-slate-900"
                 aria-label="Try to reload this view"
               >
                 Try Again

@@ -70,9 +70,7 @@ export function AIChatExample(): JSX.Element {
         {messages.map((message, index) => (
           <div
             key={index}
-            className={`mb-4 ${
-              message.role === 'user' ? 'text-right' : 'text-left'
-            }`}
+            className={`mb-4 ${message.role === 'user' ? 'text-right' : 'text-left'}`}
           >
             <div
               className={`inline-block max-w-[80%] px-4 py-2 rounded-lg ${
@@ -107,9 +105,7 @@ export function AIChatExample(): JSX.Element {
 
         {/* Loading State Indicator */}
         {loadingState === 'connecting' && (
-          <div className="text-gray-500 text-center">
-            Connecting to AI...
-          </div>
+          <div className="text-gray-500 text-center">Connecting to AI...</div>
         )}
         {loadingState === '🤔 Thinking...' && (
           <div className="text-gray-500 text-center">🤔 Thinking...</div>
@@ -133,7 +129,7 @@ export function AIChatExample(): JSX.Element {
           onChange={(e) => setInputValue(e.target.value)}
           onKeyPress={handleKeyPress}
           placeholder="Ask a legal question..."
-          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-3 focus:ring-blue-500"
           disabled={isStreaming}
         />
         <button
@@ -149,9 +145,7 @@ export function AIChatExample(): JSX.Element {
       <div className="mt-2 text-sm text-gray-500 text-center h-6">
         {loadingState === 'streaming' && 'Receiving response...'}
         {isStreaming && messages.length > 0 && (
-          <span className="text-xs">
-            (Messages: {messages.length})
-          </span>
+          <span className="text-xs">(Messages: {messages.length})</span>
         )}
       </div>
     </div>

@@ -7,8 +7,7 @@ export interface NotesPanelProps {
 }
 
 export function NotesPanel({ caseId }: NotesPanelProps) {
-  const { notes, loading, error, createNote, updateNote, deleteNote } =
-    useNotes(caseId);
+  const { notes, loading, error, createNote, updateNote, deleteNote } = useNotes(caseId);
 
   const [isCreating, setIsCreating] = useState(false);
   const [newNoteContent, setNewNoteContent] = useState('');
@@ -32,18 +31,12 @@ export function NotesPanel({ caseId }: NotesPanelProps) {
   };
 
   if (loading) {
-    return (
-      <div className="p-6 text-center text-blue-300">
-        Loading notes...
-      </div>
-    );
+    return <div className="p-6 text-center text-blue-300">Loading notes...</div>;
   }
 
   if (error) {
     return (
-      <div className="p-6 text-center text-red-300 bg-red-900/30 rounded-lg">
-        Error: {error}
-      </div>
+      <div className="p-6 text-center text-red-300 bg-red-900/30 rounded-lg">Error: {error}</div>
     );
   }
 
@@ -51,9 +44,7 @@ export function NotesPanel({ caseId }: NotesPanelProps) {
     <div className="p-6">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-white">
-          Notes ({notes.length})
-        </h2>
+        <h2 className="text-2xl font-bold text-white">Notes ({notes.length})</h2>
 
         <button
           onClick={() => setIsCreating(true)}
@@ -70,7 +61,7 @@ export function NotesPanel({ caseId }: NotesPanelProps) {
             value={newNoteContent}
             onChange={(e) => setNewNoteContent(e.target.value)}
             placeholder="Enter note content..."
-            className="w-full min-h-[100px] p-3 border border-blue-700/30 bg-slate-800/50 rounded-lg text-sm text-white placeholder-blue-400/50 focus:outline-none focus:ring-2 focus:ring-yellow-500 resize-y"
+            className="w-full min-h-[100px] p-3 border border-blue-700/30 bg-slate-800/50 rounded-lg text-sm text-white placeholder-blue-400/50 focus:outline-none focus:ring-3 focus:ring-yellow-500 resize-y"
             autoFocus
           />
           <div className="flex gap-3 mt-3">
@@ -110,7 +101,7 @@ export function NotesPanel({ caseId }: NotesPanelProps) {
                   <textarea
                     value={editContent}
                     onChange={(e) => setEditContent(e.target.value)}
-                    className="w-full min-h-[100px] p-3 border border-blue-700/30 bg-slate-800/50 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
+                    className="w-full min-h-[100px] p-3 border border-blue-700/30 bg-slate-800/50 rounded-lg text-sm text-white focus:outline-none focus:ring-3 focus:ring-blue-500 resize-y"
                     autoFocus
                   />
                   <div className="flex gap-3 mt-3">

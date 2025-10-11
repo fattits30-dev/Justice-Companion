@@ -464,7 +464,7 @@ export function SettingsView(): JSX.Element {
                   type="text"
                   value={editedName}
                   onChange={(e) => setEditedName(e.target.value)}
-                  className="w-full px-3 py-1.5 text-xs bg-slate-800/50 border border-blue-700/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-1.5 text-xs bg-slate-800/50 border border-blue-700/30 rounded-lg text-white focus:outline-none focus:ring-3 focus:ring-blue-500"
                   placeholder="Enter your name"
                   disabled={isSavingProfile}
                 />
@@ -475,7 +475,7 @@ export function SettingsView(): JSX.Element {
                   type="email"
                   value={editedEmail}
                   onChange={(e) => setEditedEmail(e.target.value)}
-                  className="w-full px-3 py-1.5 text-xs bg-slate-800/50 border border-blue-700/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-1.5 text-xs bg-slate-800/50 border border-blue-700/30 rounded-lg text-white focus:outline-none focus:ring-3 focus:ring-blue-500"
                   placeholder="Enter your email"
                   disabled={isSavingProfile}
                 />
@@ -555,7 +555,7 @@ export function SettingsView(): JSX.Element {
                   type="password"
                   value={oldPassword}
                   onChange={(e) => setOldPassword(e.target.value)}
-                  className="w-full px-3 py-1.5 text-xs bg-slate-800/50 border border-blue-700/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-1.5 text-xs bg-slate-800/50 border border-blue-700/30 rounded-lg text-white focus:outline-none focus:ring-3 focus:ring-blue-500"
                   placeholder="Enter current password"
                   disabled={isSubmittingPassword}
                 />
@@ -566,7 +566,7 @@ export function SettingsView(): JSX.Element {
                   type="password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full px-3 py-1.5 text-xs bg-slate-800/50 border border-blue-700/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-1.5 text-xs bg-slate-800/50 border border-blue-700/30 rounded-lg text-white focus:outline-none focus:ring-3 focus:ring-blue-500"
                   placeholder="At least 12 characters"
                   disabled={isSubmittingPassword}
                 />
@@ -582,7 +582,7 @@ export function SettingsView(): JSX.Element {
                   type="password"
                   value={confirmNewPassword}
                   onChange={(e) => setConfirmNewPassword(e.target.value)}
-                  className="w-full px-3 py-1.5 text-xs bg-slate-800/50 border border-blue-700/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-1.5 text-xs bg-slate-800/50 border border-blue-700/30 rounded-lg text-white focus:outline-none focus:ring-3 focus:ring-blue-500"
                   placeholder="Re-enter new password"
                   disabled={isSubmittingPassword}
                 />
@@ -1180,7 +1180,7 @@ function SelectSetting({ label, value, onChange, options }: SelectSettingProps):
       <select
         value={value}
         onChange={(e) => onChange?.(e.target.value)}
-        className="px-2 py-1 text-xs bg-slate-800/50 border border-blue-700/30 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500 flex-shrink-0"
+        className="px-2 py-1 text-xs bg-slate-800/50 border border-blue-700/30 rounded text-white focus:outline-none focus:ring-3 focus:ring-blue-500 flex-shrink-0"
         aria-label={label}
       >
         {options.map((option) => (
