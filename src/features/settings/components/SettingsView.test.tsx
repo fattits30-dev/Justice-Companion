@@ -214,17 +214,21 @@ describe('SettingsView', () => {
       const nameInput = screen.getByPlaceholderText('Enter your name') as HTMLInputElement;
       const emailInput = screen.getByPlaceholderText('Enter your email') as HTMLInputElement;
 
-      // Update name by typing
-      await user.clear(nameInput);
-      await user.type(nameInput, 'Jane Smith');
+      // Update name - clear and type new value
+      await user.click(nameInput);
+      fireEvent.change(nameInput, { target: { value: 'Jane Smith' } });
 
-      // Update email by typing
-      await user.clear(emailInput);
-      await user.type(emailInput, 'jane@example.com');
-
-      // Verify both values are updated
+      // Wait for state to update
       await waitFor(() => {
         expect(nameInput.value).toBe('Jane Smith');
+      });
+
+      // Update email - clear and type new value
+      await user.click(emailInput);
+      fireEvent.change(emailInput, { target: { value: 'jane@example.com' } });
+
+      // Verify email value is updated
+      await waitFor(() => {
         expect(emailInput.value).toBe('jane@example.com');
       });
 

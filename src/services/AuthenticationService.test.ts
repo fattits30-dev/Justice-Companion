@@ -101,9 +101,9 @@ describe('AuthenticationService', () => {
     });
 
     it('should enforce minimum password length (12 chars)', async () => {
-      await expect(
-        authService.register('testuser', 'Short1', 'test@example.com')
-      ).rejects.toThrow('Password must be at least 12 characters');
+      await expect(authService.register('testuser', 'Short1', 'test@example.com')).rejects.toThrow(
+        'Password must be at least 12 characters'
+      );
     });
 
     it('should require at least one uppercase letter', async () => {
@@ -194,15 +194,15 @@ describe('AuthenticationService', () => {
     });
 
     it('should reject login with invalid username', async () => {
-      await expect(
-        authService.login('nonexistent', 'SecurePass123')
-      ).rejects.toThrow('Invalid credentials');
+      await expect(authService.login('nonexistent', 'SecurePass123')).rejects.toThrow(
+        'Invalid credentials'
+      );
     });
 
     it('should reject login with invalid password', async () => {
-      await expect(
-        authService.login('testuser', 'WrongPassword123')
-      ).rejects.toThrow('Invalid credentials');
+      await expect(authService.login('testuser', 'WrongPassword123')).rejects.toThrow(
+        'Invalid credentials'
+      );
     });
 
     it('should reject login for inactive user', async () => {
@@ -211,9 +211,9 @@ describe('AuthenticationService', () => {
         userRepository.updateActiveStatus(user.id, false);
       }
 
-      await expect(
-        authService.login('testuser', 'SecurePass123')
-      ).rejects.toThrow('Account is inactive');
+      await expect(authService.login('testuser', 'SecurePass123')).rejects.toThrow(
+        'Account is inactive'
+      );
     });
 
     it('should update last login timestamp', async () => {
@@ -248,9 +248,7 @@ describe('AuthenticationService', () => {
       await authService.login('testuser', 'SecurePass123');
 
       const logs = auditLogger['getAllLogs']();
-      const loginLog = logs.find(
-        (log) => log.eventType === 'user.login' && log.success === true
-      );
+      const loginLog = logs.find((log) => log.eventType === 'user.login' && log.success === true);
 
       expect(loginLog).toBeDefined();
       expect(loginLog?.details).toHaveProperty('sessionId');
@@ -264,9 +262,7 @@ describe('AuthenticationService', () => {
       }
 
       const logs = auditLogger['getAllLogs']();
-      const failedLog = logs.find(
-        (log) => log.eventType === 'user.login' && log.success === false
-      );
+      const failedLog = logs.find((log) => log.eventType === 'user.login' && log.success === false);
 
       expect(failedLog).toBeDefined();
       expect(failedLog?.details).toMatchObject({
@@ -331,8 +327,8 @@ describe('AuthenticationService', () => {
       expect(logoutLog?.resourceId).toBe(sessionId);
     });
 
-    it('should handle logout of non-existent session gracefully', async () => {
-      await expect(authService.logout('non-existent-id')).resolves.not.toThrow();
+    it('should handle logout of non-existent session gracefully', () => {
+      expect(() => authService.logout('non-existent-id')).not.toThrow();
     });
   });
 
@@ -370,8 +366,9 @@ describe('AuthenticationService', () => {
       const session = sessionRepository.findById(sessionId);
       if (session) {
         // Use SQLite datetime format that's definitely in the past
-        db.prepare("UPDATE sessions SET expires_at = datetime('now', '-1 hour') WHERE id = ?")
-          .run(sessionId);
+        db.prepare("UPDATE sessions SET expires_at = datetime('now', '-1 hour') WHERE id = ?").run(
+          sessionId
+        );
       }
 
       const result = authService.validateSession(sessionId);
@@ -400,9 +397,9 @@ describe('AuthenticationService', () => {
     it('should reject old password after change', async () => {
       await authService.changePassword(userId, 'OldPassword123', 'NewPassword456');
 
-      await expect(
-        authService.login('testuser', 'OldPassword123')
-      ).rejects.toThrow('Invalid credentials');
+      await expect(authService.login('testuser', 'OldPassword123')).rejects.toThrow(
+        'Invalid credentials'
+      );
     });
 
     it('should reject change with incorrect old password', async () => {
@@ -412,9 +409,9 @@ describe('AuthenticationService', () => {
     });
 
     it('should validate new password strength', async () => {
-      await expect(
-        authService.changePassword(userId, 'OldPassword123', 'weak')
-      ).rejects.toThrow('Password must be at least 12 characters');
+      await expect(authService.changePassword(userId, 'OldPassword123', 'weak')).rejects.toThrow(
+        'Password must be at least 12 characters'
+      );
     });
 
     it('should invalidate all sessions after password change', async () => {
@@ -471,8 +468,9 @@ describe('AuthenticationService', () => {
       const result2 = await authService.login('user2', 'SecurePass456');
 
       // Manually expire one session (use SQLite datetime format that's definitely in the past)
-      db.prepare("UPDATE sessions SET expires_at = datetime('now', '-1 hour') WHERE id = ?")
-        .run(result1.session.id);
+      db.prepare("UPDATE sessions SET expires_at = datetime('now', '-1 hour') WHERE id = ?").run(
+        result1.session.id
+      );
 
       const deletedCount = authService.cleanupExpiredSessions();
 
@@ -492,8 +490,9 @@ describe('AuthenticationService', () => {
       const result = await authService.login('user1', 'SecurePass123');
 
       // Expire the session (use SQLite datetime format that's definitely in the past)
-      db.prepare("UPDATE sessions SET expires_at = datetime('now', '-1 hour') WHERE id = ?")
-        .run(result.session.id);
+      db.prepare("UPDATE sessions SET expires_at = datetime('now', '-1 hour') WHERE id = ?").run(
+        result.session.id
+      );
 
       authService.cleanupExpiredSessions();
 
@@ -541,8 +540,7 @@ describe('AuthenticationService', () => {
       const result = await authService.login('testuser', 'SecurePass123');
 
       // UUID format: 8-4-4-4-12 hex chars
-      const uuidRegex =
-        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       expect(result.session.id).toMatch(uuidRegex);
     });
 
@@ -569,15 +567,13 @@ describe('AuthenticationService', () => {
 
   describe('Edge Cases', () => {
     it('should handle empty username gracefully', async () => {
-      await expect(
-        authService.register('', 'SecurePass123', 'test@example.com')
-      ).rejects.toThrow();
+      await expect(authService.register('', 'SecurePass123', 'test@example.com')).rejects.toThrow();
     });
 
     it('should handle empty password gracefully', async () => {
-      await expect(
-        authService.register('testuser', '', 'test@example.com')
-      ).rejects.toThrow('Password must be at least 12 characters');
+      await expect(authService.register('testuser', '', 'test@example.com')).rejects.toThrow(
+        'Password must be at least 12 characters'
+      );
     });
 
     it('should handle empty email gracefully', async () => {

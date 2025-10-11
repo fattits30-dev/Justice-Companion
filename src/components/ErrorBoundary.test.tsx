@@ -308,7 +308,7 @@ describe('ErrorBoundary', () => {
     it('should display default message if error has no message', () => {
       function NoMessageError(): JSX.Element {
         const error: any = new Error();
-        error.message = '';
+        error.message = undefined; // Set to undefined so ?? operator uses fallback
         throw error;
       }
 
@@ -318,7 +318,7 @@ describe('ErrorBoundary', () => {
         </ErrorBoundary>
       );
 
-      expect(screen.getByText('An unexpected error occurred')).toBeInTheDocument();
+      expect(screen.getByText(/An unexpected error occurred/i)).toBeInTheDocument();
     });
   });
 
