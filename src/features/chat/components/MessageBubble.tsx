@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, memo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { ChatMessage } from '../../../types/ai';
@@ -26,10 +26,17 @@ export interface MessageBubbleProps {
  * - AI Reasoning dropdown for assistant messages (when available)
  * - Per-message disclaimer for assistant messages
  *
+ * Performance optimized with React.memo to prevent unnecessary re-renders
+ * during chat sessions.
+ *
  * @param props - MessageBubbleProps
  * @returns React component
  */
-export function MessageBubble({ message, sources = [], isStreaming = false }: MessageBubbleProps) {
+export const MessageBubble = memo(function MessageBubble({
+  message,
+  sources = [],
+  isStreaming = false,
+}: MessageBubbleProps) {
   const isUser = message.role === 'user';
   const isAssistant = message.role === 'assistant';
   const [isReasoningExpanded, setIsReasoningExpanded] = useState(false);
@@ -190,4 +197,4 @@ export function MessageBubble({ message, sources = [], isStreaming = false }: Me
       </div>
     </div>
   );
-}
+});
