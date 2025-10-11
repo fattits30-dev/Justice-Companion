@@ -287,7 +287,7 @@ export function OpenAISettings({ onConfigSaved }: OpenAISettingsProps): JSX.Elem
             type={showApiKey ? 'text' : 'password'}
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
-            className="w-full px-3 py-2 pr-10 text-xs bg-slate-800/50 border border-blue-700/30 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500 font-mono"
+            className="w-full px-3 py-2 pr-10 text-xs bg-slate-800/50 border border-blue-700/30 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-3 focus:ring-blue-500 font-mono"
             placeholder="sk-proj-••••••••••••••••••••••••••••••••"
             disabled={isSaving}
           />
@@ -325,7 +325,7 @@ export function OpenAISettings({ onConfigSaved }: OpenAISettingsProps): JSX.Elem
         <select
           value={model}
           onChange={(e) => setModel(e.target.value as 'gpt-4o' | 'gpt-4o-mini' | 'gpt-3.5-turbo')}
-          className="w-full px-3 py-2 text-xs bg-slate-800/50 border border-blue-700/30 rounded-lg text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="w-full px-3 py-2 text-xs bg-slate-800/50 border border-blue-700/30 rounded-lg text-white focus:outline-none focus:ring-3 focus:ring-blue-500"
           disabled={isSaving}
         >
           <option value="gpt-4o">GPT-4o (Recommended - Most capable)</option>
@@ -354,7 +354,7 @@ export function OpenAISettings({ onConfigSaved }: OpenAISettingsProps): JSX.Elem
           type="text"
           value={organization}
           onChange={(e) => setOrganization(e.target.value)}
-          className="w-full px-3 py-2 text-xs bg-slate-800/50 border border-blue-700/30 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500 font-mono"
+          className="w-full px-3 py-2 text-xs bg-slate-800/50 border border-blue-700/30 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-3 focus:ring-blue-500 font-mono"
           placeholder="org-••••••••••••••••••••••••"
           disabled={isSaving}
         />
