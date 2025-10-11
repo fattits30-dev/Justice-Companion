@@ -1,11 +1,22 @@
-import { useState, useEffect } from 'react';
-import { ChatWindow } from '@/features/chat';
-import { CasesView, CaseDetailView } from '@/features/cases';
-import { DocumentsView } from '@/features/documents';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { Sidebar } from './components/Sidebar';
-import { DashboardView } from '@/features/dashboard';
-import { SettingsView } from '@/features/settings';
 import { DebugProvider } from './contexts/DebugContext';
+
+// Lazy-loaded view components for code splitting
+const ChatWindow = lazy(() => import('@/features/chat').then((m) => ({ default: m.ChatWindow })));
+const CasesView = lazy(() => import('@/features/cases').then((m) => ({ default: m.CasesView })));
+const CaseDetailView = lazy(() =>
+  import('@/features/cases').then((m) => ({ default: m.CaseDetailView }))
+);
+const DocumentsView = lazy(() =>
+  import('@/features/documents').then((m) => ({ default: m.DocumentsView }))
+);
+const DashboardView = lazy(() =>
+  import('@/features/dashboard').then((m) => ({ default: m.DashboardView }))
+);
+const SettingsView = lazy(() =>
+  import('@/features/settings').then((m) => ({ default: m.SettingsView }))
+);
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { AuthFlow } from './components/auth';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -14,6 +25,20 @@ import { ThemeProvider } from './components/ThemeProvider';
 import { Toaster } from './components/ui/sonner';
 
 type ViewType = 'dashboard' | 'chat' | 'cases' | 'case-detail' | 'documents' | 'settings';
+
+/**
+ * Loading fallback for lazy-loaded views
+ */
+function ViewLoadingFallback(): JSX.Element {
+  return (
+    <div className="flex items-center justify-center h-full">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+        <p className="text-sm text-blue-300">Loading view...</p>
+      </div>
+    </div>
+  );
+}
 
 /**
  * Main application component (requires authentication)
@@ -189,7 +214,9 @@ function AuthenticatedApp(): JSX.Element {
         </div>
 
         {/* View Content */}
-        <div className="flex-1 overflow-hidden">{renderView()}</div>
+        <div className="flex-1 overflow-hidden">
+          <Suspense fallback={<ViewLoadingFallback />}>{renderView()}</Suspense>
+        </div>
       </div>
     </div>
   );
