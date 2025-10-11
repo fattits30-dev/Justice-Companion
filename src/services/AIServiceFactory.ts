@@ -28,6 +28,7 @@ export class AIServiceFactory {
   private openAIService: OpenAIService | null = null;
   private modelPath: string;
   private currentProvider: 'openai' | 'integrated' = 'integrated';
+  private caseFactsRepository: CaseFactsRepository | null = null;
 
   private constructor() {
     // IntegratedService created without repository initially
@@ -62,12 +63,21 @@ export class AIServiceFactory {
    * Set CaseFactsRepository dependency (called from main.ts after repository initialization)
    */
   setCaseFactsRepository(repository: CaseFactsRepository): void {
+    // Store repository reference for future service creation
+    this.caseFactsRepository = repository;
+
     // Recreate IntegratedAIService with repository
     this.integratedService = new IntegratedAIService(undefined, repository);
 
-    // Also inject into OpenAI service if it exists
+    // Recreate OpenAI service with repository (preserving config if it exists)
     if (this.openAIService) {
+      const existingConfig = this.openAIService.getOpenAIConfig();
       this.openAIService = new OpenAIService(undefined, repository);
+
+      // Restore OpenAI configuration if it existed
+      if (existingConfig) {
+        this.openAIService.configure(existingConfig);
+      }
     }
 
     errorLogger.logError('CaseFactRepository injected into AIServiceFactory', { type: 'info' });
@@ -81,9 +91,9 @@ export class AIServiceFactory {
    */
   async configureOpenAI(config: OpenAIConfig): Promise<void> {
     try {
-      // Create new OpenAI service if it doesn't exist
+      // Create new OpenAI service if it doesn't exist (inject repository if available)
       if (!this.openAIService) {
-        this.openAIService = new OpenAIService();
+        this.openAIService = new OpenAIService(undefined, this.caseFactsRepository || undefined);
       }
 
       // Configure with API key
