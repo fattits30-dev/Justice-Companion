@@ -212,24 +212,28 @@ describe('SettingsView', () => {
 
       // Get inputs
       const nameInput = screen.getByPlaceholderText('Enter your name') as HTMLInputElement;
-      const emailInput = screen.getByPlaceholderText('Enter your email') as HTMLInputElement;
+      let emailInput = screen.getByPlaceholderText('Enter your email') as HTMLInputElement;
 
-      // Update name - clear and type new value
+      // Update name - directly update the controlled input
       await user.click(nameInput);
-      fireEvent.change(nameInput, { target: { value: 'Jane Smith' } });
+      fireEvent.input(nameInput, { target: { value: 'Jane Smith' } });
 
       // Wait for state to update
       await waitFor(() => {
         expect(nameInput.value).toBe('Jane Smith');
       });
 
-      // Update email - clear and type new value
+      // Re-query email input in case React re-rendered
+      emailInput = screen.getByPlaceholderText('Enter your email') as HTMLInputElement;
+
+      // Update email - directly update the controlled input
       await user.click(emailInput);
       fireEvent.change(emailInput, { target: { value: 'jane@example.com' } });
+      fireEvent.input(emailInput, { target: { value: 'jane@example.com' } });
 
       // Verify email value is updated
       await waitFor(() => {
-        expect(emailInput.value).toBe('jane@example.com');
+        expect(screen.getByPlaceholderText('Enter your email')).toHaveValue('jane@example.com');
       });
 
       // Save
