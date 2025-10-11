@@ -16,7 +16,7 @@ export interface MessageListProps {
   thinkingContent: string;
   currentSources: string[]; // Legal source citations
   progressStages: ProgressStage[]; // NEW: Cumulative progress timeline
-  messagesEndRef: RefObject<HTMLDivElement>;
+  messagesEndRef: RefObject<HTMLDivElement | null>;
   caseId?: number | null; // Optional case ID for fact display
 }
 

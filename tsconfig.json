@@ -11,6 +11,7 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
+    "jsxImportSource": "react",
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
@@ -18,7 +19,7 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
-    "types": ["node", "vite/client", "vitest/globals"],
+    "types": ["node", "vite/client", "vitest/globals", "react", "react-dom"],
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
@@ -34,6 +35,12 @@
     }
   },
   "include": ["src"],
-  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx", "src/**/*.spec.ts", "src/**/*.spec.tsx", "src/test-utils"],
+  "exclude": [
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx",
+    "src/**/*.spec.ts",
+    "src/**/*.spec.tsx",
+    "src/test-utils"
+  ],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

@@ -45,7 +45,7 @@ export interface UseAIReturn {
   loadMessages: (messages: ChatMessage[]) => void;
 
   // Refs for auto-scroll
-  messagesEndRef: RefObject<HTMLDivElement>;
+  messagesEndRef: RefObject<HTMLDivElement | null>;
 }
 
 /**
@@ -108,14 +108,12 @@ export function useAI(caseId?: number, initialMessages: ChatMessage[] = []): Use
         }
 
         if (!response.connected) {
-          setError(
-            'AI initialization failed. Please check model availability.',
-          );
+          setError('AI initialization failed. Please check model availability.');
         }
       } catch (err) {
         logger.error('useAI', 'AI status check failed', { err });
         setError(
-          'AI service initialization error. Please ensure the AI model is properly configured.',
+          'AI service initialization error. Please ensure the AI model is properly configured.'
         );
       }
     };
@@ -127,7 +125,10 @@ export function useAI(caseId?: number, initialMessages: ChatMessage[] = []): Use
   useEffect(() => {
     // Safety check: ensure window.justiceAPI is available
     if (!window.justiceAPI) {
-      logger.error('useAI', 'window.justiceAPI is not available. Preload script may not have executed.');
+      logger.error(
+        'useAI',
+        'window.justiceAPI is not available. Preload script may not have executed.'
+      );
       setError('Application initialization error. Please reload the app.');
       return;
     }
@@ -196,9 +197,7 @@ export function useAI(caseId?: number, initialMessages: ChatMessage[] = []): Use
       }
 
       // Mark all stages as completed
-      setProgressStages((prev) =>
-        prev.map((stage) => ({ ...stage, completed: true })),
-      );
+      setProgressStages((prev) => prev.map((stage) => ({ ...stage, completed: true })));
 
       // Add complete assistant message to history with thinking content
       const assistantMessage: ChatMessage = {
@@ -250,7 +249,7 @@ export function useAI(caseId?: number, initialMessages: ChatMessage[] = []): Use
       setProgressStages((prev) => {
         // Mark the last stage as completed
         const updatedPrev = prev.map((stage, index) =>
-          index === prev.length - 1 ? { ...stage, completed: true } : stage,
+          index === prev.length - 1 ? { ...stage, completed: true } : stage
         );
 
         // Add new stage as in-progress
@@ -337,11 +336,10 @@ export function useAI(caseId?: number, initialMessages: ChatMessage[] = []): Use
       setProgressStages([]); // Reset progress timeline for new message
 
       try {
-        const response: IPCResponse<AIStreamStartResponse> =
-          await window.justiceAPI.aiStreamStart({
-            messages: [...messages, userMessage],
-            caseId: caseId,
-          });
+        const response: IPCResponse<AIStreamStartResponse> = await window.justiceAPI.aiStreamStart({
+          messages: [...messages, userMessage],
+          caseId: caseId,
+        });
 
         if (!response.success) {
           setError(response.error);
@@ -362,7 +360,7 @@ export function useAI(caseId?: number, initialMessages: ChatMessage[] = []): Use
         setIsStreaming(false);
       }
     },
-    [messages, isStreaming, caseId],
+    [messages, isStreaming, caseId]
   );
 
   /**
