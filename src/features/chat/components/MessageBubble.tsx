@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { ChatMessage } from '../../../types/ai';
 import { SourceCitation } from '../../../components/SourceCitation';
+import { CitationService } from '../../../services/CitationService';
 
 /**
  * Props for MessageBubble component
@@ -32,6 +33,14 @@ export function MessageBubble({ message, sources = [], isStreaming = false }: Me
   const isUser = message.role === 'user';
   const isAssistant = message.role === 'assistant';
   const [isReasoningExpanded, setIsReasoningExpanded] = useState(false);
+
+  // Extract legal citations from assistant messages
+  const citations = useMemo(() => {
+    if (!isAssistant || !message.content || isStreaming) {
+      return [];
+    }
+    return CitationService.extractCitations(message.content);
+  }, [isAssistant, message.content, isStreaming]);
 
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
@@ -75,6 +84,61 @@ export function MessageBubble({ message, sources = [], isStreaming = false }: Me
         {isAssistant && sources.length > 0 && (
           <div className="mt-2 bg-gray-50 rounded-lg p-3 border border-gray-200">
             <SourceCitation sources={sources} />
+          </div>
+        )}
+
+        {/* Legal Citations (only for assistant messages) */}
+        {isAssistant && citations.length > 0 && (
+          <div className="mt-2 bg-amber-50 rounded-lg p-3 border border-amber-200">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="text-xs font-semibold text-amber-900 uppercase tracking-wide">
+                Legal Citations Detected
+              </h4>
+              <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-medium bg-amber-200 text-amber-900 rounded-full">
+                {citations.length}
+              </span>
+            </div>
+            <div className="space-y-1.5">
+              {citations.map((citation, index) => {
+                const courtListenerLink = CitationService.getCourtListenerLink(citation);
+                const formattedCitation = CitationService.formatCitation(citation);
+
+                return (
+                  <div
+                    key={index}
+                    className="flex items-start gap-2 text-sm text-amber-900 bg-white rounded px-2 py-1.5 border border-amber-100"
+                  >
+                    <span className="text-amber-600 font-mono text-xs mt-0.5">
+                      {citation.type === 'FullCaseCitation' && '⚖️'}
+                      {citation.type === 'FullLawCitation' && '📜'}
+                      {citation.type === 'ShortCaseCitation' && '↩️'}
+                      {citation.type === 'IdCitation' && '🔗'}
+                      {citation.type === 'SupraCitation' && '⬆️'}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      {courtListenerLink ? (
+                        <a
+                          href={courtListenerLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-700 hover:text-blue-900 hover:underline font-medium"
+                        >
+                          {formattedCitation}
+                        </a>
+                      ) : (
+                        <span className="font-medium">{formattedCitation}</span>
+                      )}
+                      <span className="ml-2 text-xs text-amber-700 font-mono">
+                        {citation.type.replace(/Citation$/, '')}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <p className="mt-2 text-xs text-amber-700 italic">
+              💡 Click case citations to search on CourtListener
+            </p>
           </div>
         )}
 
