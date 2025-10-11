@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { X, Upload, FileText, AlertCircle, CheckCircle } from 'lucide-react';
 import { useEvidence } from '../hooks/useEvidence';
 import type { EvidenceType } from '@/models/Evidence';
@@ -65,7 +65,19 @@ export function FileUploadModal({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
+  // Ref for timeout cleanup (prevent memory leaks)
+  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const { createEvidence } = useEvidence();
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (closeTimeoutRef.current) {
+        clearTimeout(closeTimeoutRef.current);
+      }
+    };
+  }, []);
 
   if (!isOpen) {
     return null;
@@ -145,7 +157,7 @@ export function FileUploadModal({
       setSuccess(true);
 
       // Close modal after brief delay
-      setTimeout(() => {
+      closeTimeoutRef.current = setTimeout(() => {
         if (onUploadComplete) {
           onUploadComplete();
         }

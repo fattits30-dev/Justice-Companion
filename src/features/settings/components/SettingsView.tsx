@@ -1,4 +1,4 @@
-import { useState, useEffect, type ComponentType, type ReactNode } from 'react';
+import { useState, useEffect, useRef, type ComponentType, type ReactNode } from 'react';
 import {
   User,
   Bell,
@@ -160,6 +160,10 @@ export function SettingsView(): JSX.Element {
   // Clear data confirmation
   const [clearDataConfirmOpen, setClearDataConfirmOpen] = useState(false);
 
+  // Refs for timeout cleanup (prevent memory leaks)
+  const successTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const reloadTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // Load user profile and consents on mount
   useEffect(() => {
     const loadProfile = async (): Promise<void> => {
@@ -185,6 +189,16 @@ export function SettingsView(): JSX.Element {
 
     void loadProfile();
     void loadConsents();
+
+    // Cleanup timeouts on unmount to prevent memory leaks
+    return () => {
+      if (successTimeoutRef.current) {
+        clearTimeout(successTimeoutRef.current);
+      }
+      if (reloadTimeoutRef.current) {
+        clearTimeout(reloadTimeoutRef.current);
+      }
+    };
   }, []);
 
   // Persist RAG setting to localStorage
@@ -292,7 +306,11 @@ export function SettingsView(): JSX.Element {
         setUserProfile(result.data);
         setIsEditingProfile(false);
         setShowSaveSuccess(true);
-        setTimeout(() => setShowSaveSuccess(false), 3000);
+        // Clear any existing timeout before setting new one
+        if (successTimeoutRef.current) {
+          clearTimeout(successTimeoutRef.current);
+        }
+        successTimeoutRef.current = setTimeout(() => setShowSaveSuccess(false), 3000);
       }
     } catch (error) {
       console.error('Failed to update profile:', error);
@@ -436,7 +454,7 @@ export function SettingsView(): JSX.Element {
       setClearDataConfirmOpen(false);
 
       // Reload page to reset all state
-      setTimeout(() => {
+      reloadTimeoutRef.current = setTimeout(() => {
         window.location.reload();
       }, 1000);
     } catch (error) {
