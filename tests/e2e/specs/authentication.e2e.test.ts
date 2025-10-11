@@ -1,7 +1,11 @@
-import { test, expect } from '@playwright/test';
-import { launchElectronApp, closeElectronApp, type ElectronTestApp } from '../setup/electron-setup.js';
-import { getTestDatabase } from '../setup/test-database.js';
+import { expect, test } from '@playwright/test';
 import crypto from 'crypto';
+import {
+  closeElectronApp,
+  launchElectronApp,
+  type ElectronTestApp,
+} from '../setup/electron-setup.js';
+import { getTestDatabase } from '../setup/test-database.js';
 
 /**
  * E2E Tests for Authentication System
@@ -113,7 +117,8 @@ test.describe('Authentication E2E', () => {
     expect(session).toBeDefined();
 
     // Verify consent was granted
-    const consent = db.prepare('SELECT * FROM consents WHERE user_id = ? AND consent_type = ?')
+    const consent = db
+      .prepare('SELECT * FROM consents WHERE user_id = ? AND consent_type = ?')
       .get(user.id, 'data_processing');
     expect(consent).toBeDefined();
 
@@ -137,19 +142,24 @@ test.describe('Authentication E2E', () => {
     const salt = crypto.randomBytes(16);
     const hash = crypto.scryptSync(password, salt, 64);
     const passwordHash = Buffer.concat([salt, hash]).toString('base64');
+    const passwordSalt = salt.toString('base64');
 
-    db.prepare(`
-      INSERT INTO users (username, email, password_hash, created_at, updated_at)
-      VALUES (?, ?, ?, datetime('now'), datetime('now'))
-    `).run(username, email, passwordHash);
+    db.prepare(
+      `
+      INSERT INTO users (username, email, password_hash, password_salt, created_at, updated_at)
+      VALUES (?, ?, ?, ?, datetime('now'), datetime('now'))
+    `
+    ).run(username, email, passwordHash, passwordSalt);
 
     const user = db.prepare('SELECT * FROM users WHERE username = ?').get(username) as any;
 
     // Grant required consent
-    db.prepare(`
+    db.prepare(
+      `
       INSERT INTO consents (user_id, consent_type, granted, granted_at)
       VALUES (?, 'data_processing', 1, datetime('now'))
-    `).run(user.id);
+    `
+    ).run(user.id);
 
     db.close();
 
@@ -200,11 +210,14 @@ test.describe('Authentication E2E', () => {
     const salt = crypto.randomBytes(16);
     const hash = crypto.scryptSync(correctPassword, salt, 64);
     const passwordHash = Buffer.concat([salt, hash]).toString('base64');
+    const passwordSalt = salt.toString('base64');
 
-    db.prepare(`
-      INSERT INTO users (username, email, password_hash, created_at, updated_at)
-      VALUES (?, ?, ?, datetime('now'), datetime('now'))
-    `).run(username, `${username}@example.com`, passwordHash);
+    db.prepare(
+      `
+      INSERT INTO users (username, email, password_hash, password_salt, created_at, updated_at)
+      VALUES (?, ?, ?, ?, datetime('now'), datetime('now'))
+    `
+    ).run(username, `${username}@example.com`, passwordHash, passwordSalt);
 
     db.close();
 
@@ -222,7 +235,9 @@ test.describe('Authentication E2E', () => {
     await window.waitForTimeout(1500);
 
     // 5. Should show error message
-    const errorMessage = await window.$('text=/Invalid.*credentials|Login failed|Authentication failed/i');
+    const errorMessage = await window.$(
+      'text=/Invalid.*credentials|Login failed|Authentication failed/i'
+    );
     expect(errorMessage).toBeTruthy();
 
     // 6. Should remain on login screen
@@ -248,20 +263,25 @@ test.describe('Authentication E2E', () => {
 
     const salt = crypto.randomBytes(16);
     const hash = crypto.scryptSync(password, salt, 64);
-    const passwordHash = Buffer.concat([salt, hash]).toString('base64');
+    const passwordHash = hash.toString('hex');
+    const passwordSalt = salt.toString('hex');
 
-    db.prepare(`
-      INSERT INTO users (username, email, password_hash, created_at, updated_at)
-      VALUES (?, ?, ?, datetime('now'), datetime('now'))
-    `).run(username, `${username}@example.com`, passwordHash);
+    db.prepare(
+      `
+      INSERT INTO users (username, email, password_hash, password_salt, created_at, updated_at)
+      VALUES (?, ?, ?, ?, datetime('now'), datetime('now'))
+    `
+    ).run(username, `${username}@example.com`, passwordHash, passwordSalt);
 
     const user = db.prepare('SELECT * FROM users WHERE username = ?').get(username) as any;
 
     // Grant consent
-    db.prepare(`
+    db.prepare(
+      `
       INSERT INTO consents (user_id, consent_type, granted, granted_at)
       VALUES (?, 'data_processing', 1, datetime('now'))
-    `).run(user.id);
+    `
+    ).run(user.id);
 
     db.close();
 
@@ -306,20 +326,25 @@ test.describe('Authentication E2E', () => {
 
     const salt = crypto.randomBytes(16);
     const hash = crypto.scryptSync(password, salt, 64);
-    const passwordHash = Buffer.concat([salt, hash]).toString('base64');
+    const passwordHash = hash.toString('hex');
+    const passwordSalt = salt.toString('hex');
 
-    db.prepare(`
-      INSERT INTO users (username, email, password_hash, created_at, updated_at)
-      VALUES (?, ?, ?, datetime('now'), datetime('now'))
-    `).run(username, `${username}@example.com`, passwordHash);
+    db.prepare(
+      `
+      INSERT INTO users (username, email, password_hash, password_salt, created_at, updated_at)
+      VALUES (?, ?, ?, ?, datetime('now'), datetime('now'))
+    `
+    ).run(username, `${username}@example.com`, passwordHash, passwordSalt);
 
     const user = db.prepare('SELECT * FROM users WHERE username = ?').get(username) as any;
 
     // Grant consent
-    db.prepare(`
+    db.prepare(
+      `
       INSERT INTO consents (user_id, consent_type, granted, granted_at)
       VALUES (?, 'data_processing', 1, datetime('now'))
-    `).run(user.id);
+    `
+    ).run(user.id);
 
     db.close();
 
@@ -328,26 +353,28 @@ test.describe('Authentication E2E', () => {
     await window.waitForTimeout(1000);
     await window.fill('#username', username);
     await window.fill('#password', password);
-    const loginBtn = await window.$('button:has-text("Sign In")');
+    const loginBtn = await window.$('button:has-text("Login")');
     await loginBtn?.click();
     await window.waitForTimeout(2000);
 
     // 2. Click logout button (usually in sidebar or user menu)
     // Try multiple possible logout button locations
-    let logoutBtn = await window.$('button:has-text("Logout")') ||
-                     await window.$('button:has-text("Log Out")') ||
-                     await window.$('button:has-text("Sign Out")') ||
-                     await window.$('[data-testid="logout-btn"]');
+    let logoutBtn =
+      (await window.$('button:has-text("Logout")')) ||
+      (await window.$('button:has-text("Log Out")')) ||
+      (await window.$('button:has-text("Sign Out")')) ||
+      (await window.$('[data-testid="logout-btn"]'));
 
     // If not found, try clicking on user menu first
     if (!logoutBtn) {
-      const userMenu = await window.$('[data-testid="user-menu"]') ||
-                        await window.$(`text=${username}`);
+      const userMenu =
+        (await window.$('[data-testid="user-menu"]')) || (await window.$(`text=${username}`));
       if (userMenu) {
         await userMenu.click();
         await window.waitForTimeout(500);
-        logoutBtn = await window.$('button:has-text("Logout")') ||
-                    await window.$('button:has-text("Log Out")');
+        logoutBtn =
+          (await window.$('button:has-text("Logout")')) ||
+          (await window.$('button:has-text("Log Out")'));
       }
     }
 
@@ -358,9 +385,10 @@ test.describe('Authentication E2E', () => {
     await window.waitForTimeout(500);
 
     // 4. May show confirmation dialog
-    const confirmBtn = await window.$('button:has-text("Logout")') ||
-                        await window.$('button:has-text("Yes")') ||
-                        await window.$('button:has-text("Confirm")');
+    const confirmBtn =
+      (await window.$('button:has-text("Logout")')) ||
+      (await window.$('button:has-text("Yes")')) ||
+      (await window.$('button:has-text("Confirm")'));
     if (confirmBtn) {
       await confirmBtn.click();
       await window.waitForTimeout(1000);
@@ -450,7 +478,7 @@ test.describe('Authentication E2E', () => {
     await registerBtn5?.click();
     await window.waitForTimeout(800);
 
-    errorMsg = await window.$('text=/do not match|don\'t match/i');
+    errorMsg = await window.$("text=/do not match|don't match/i");
     expect(errorMsg).toBeTruthy();
 
     // Test 6: Valid password - should proceed to consent
@@ -464,8 +492,8 @@ test.describe('Authentication E2E', () => {
     const registrationScreen = await window.$('text=Create Account');
     // If we're no longer on registration screen, validation passed
     // (We'll be on consent screen or logged in)
-    const consentOrDashboard = await window.$('text=Privacy & Consent') ||
-                               await window.$(`text=${username}`);
+    const consentOrDashboard =
+      (await window.$('text=Privacy & Consent')) || (await window.$(`text=${username}`));
     expect(consentOrDashboard).toBeTruthy();
   });
 
@@ -484,19 +512,24 @@ test.describe('Authentication E2E', () => {
     const salt = crypto.randomBytes(16);
     const hash = crypto.scryptSync(password, salt, 64);
     const passwordHash = Buffer.concat([salt, hash]).toString('base64');
+    const passwordSalt = salt.toString('base64');
 
-    db.prepare(`
-      INSERT INTO users (username, email, password_hash, created_at, updated_at)
-      VALUES (?, ?, ?, datetime('now'), datetime('now'))
-    `).run(username, `${username}@example.com`, passwordHash);
+    db.prepare(
+      `
+      INSERT INTO users (username, email, password_hash, password_salt, created_at, updated_at)
+      VALUES (?, ?, ?, ?, datetime('now'), datetime('now'))
+    `
+    ).run(username, `${username}@example.com`, passwordHash, passwordSalt);
 
     const user = db.prepare('SELECT * FROM users WHERE username = ?').get(username) as any;
 
     // Grant consent
-    db.prepare(`
+    db.prepare(
+      `
       INSERT INTO consents (user_id, consent_type, granted, granted_at)
       VALUES (?, 'data_processing', 1, datetime('now'))
-    `).run(user.id);
+    `
+    ).run(user.id);
 
     db.close();
 
@@ -515,11 +548,15 @@ test.describe('Authentication E2E', () => {
 
     // 2. Manually expire session in database
     const dbExpire = getTestDatabase(dbPath);
-    dbExpire.prepare(`
+    dbExpire
+      .prepare(
+        `
       UPDATE sessions
       SET expires_at = datetime('now', '-1 day')
       WHERE user_id = ?
-    `).run(user.id);
+    `
+      )
+      .run(user.id);
     dbExpire.close();
 
     // 3. Try to access protected route or refresh

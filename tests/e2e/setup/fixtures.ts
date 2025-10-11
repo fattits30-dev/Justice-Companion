@@ -10,7 +10,7 @@ export interface CaseFixture {
   caseType: 'employment' | 'housing' | 'consumer' | 'family' | 'debt' | 'other';
   description: string;
   caseNumber?: string;
-  status?: 'open' | 'closed' | 'pending';
+  status?: 'active' | 'closed' | 'pending';
 }
 
 export interface EvidenceFixture {
@@ -46,21 +46,21 @@ export const casesFixtures: Record<string, CaseFixture> = {
     caseType: 'employment',
     description: 'Dismissed without proper procedure or notice period',
     caseNumber: 'EMP-2024-001',
-    status: 'open',
+    status: 'active',
   },
   housing: {
     title: 'Deposit Dispute',
     caseType: 'housing',
     description: 'Landlord refusing to return deposit without valid reason',
     caseNumber: 'HSG-2024-002',
-    status: 'open',
+    status: 'active',
   },
   consumer: {
     title: 'Faulty Product Refund',
     caseType: 'consumer',
     description: 'Retailer refusing refund for defective product',
     caseNumber: 'CON-2024-003',
-    status: 'open',
+    status: 'active',
   },
   family: {
     title: 'Child Custody Arrangement',
@@ -74,7 +74,7 @@ export const casesFixtures: Record<string, CaseFixture> = {
     caseType: 'debt',
     description: 'Creditor using unfair collection practices',
     caseNumber: 'DBT-2024-005',
-    status: 'open',
+    status: 'active',
   },
 };
 

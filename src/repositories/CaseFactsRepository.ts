@@ -1,7 +1,7 @@
 import { getDb } from '../db/database';
 import type { CaseFact, CreateCaseFactInput, UpdateCaseFactInput } from '../models/CaseFact';
-import { EncryptionService, type EncryptedData } from '../services/EncryptionService.js';
 import type { AuditLogger } from '../services/AuditLogger.js';
+import { EncryptionService, type EncryptedData } from '../services/EncryptionService.js';
 
 /**
  * Repository for managing case facts with encryption
@@ -15,7 +15,7 @@ import type { AuditLogger } from '../services/AuditLogger.js';
 export class CaseFactsRepository {
   constructor(
     private encryptionService?: EncryptionService,
-    private auditLogger?: AuditLogger,
+    private auditLogger?: AuditLogger
   ) {}
 
   /**
@@ -113,7 +113,7 @@ export class CaseFactsRepository {
         resourceType: 'case_fact',
         resourceId: id.toString(),
         action: 'read',
-        details: { field: 'fact_content', encrypted: true },
+        details: { factId: id, field: 'fact_content', encrypted: true },
         success: true,
       });
     }
@@ -329,6 +329,8 @@ export class CaseFactsRepository {
         resourceId: id.toString(),
         action: 'update',
         details: {
+          factId: id,
+          changes: input,
           updatedFields: Object.keys(input),
           contentLength: input.factContent?.length,
         },
@@ -366,6 +368,7 @@ export class CaseFactsRepository {
         resourceType: 'case_fact',
         resourceId: id.toString(),
         action: 'delete',
+        details: { factId: id },
         success,
       });
 

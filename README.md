@@ -71,7 +71,7 @@ Justice Companion is a privacy-first, desktop application for managing legal cas
 2. **Install dependencies**
 
    ```bash
-   npm install
+   pnpm install
    ```
 
 3. **Set up encryption key**
@@ -96,13 +96,13 @@ Justice Companion is a privacy-first, desktop application for managing legal cas
 4. **Run database migrations**
 
    ```bash
-   npm run db:migrate
+   pnpm db:migrate
    ```
 
 5. **Start the application**
 
    ```bash
-   npm run electron:dev
+   pnpm electron:dev
    ```
 
 ## 📖 Usage
@@ -131,7 +131,7 @@ Justice Companion is a privacy-first, desktop application for managing legal cas
 - **Chat with AI**: Sidebar → Chat (select a case for context)
 - **Export data**: Settings → GDPR → Export All Data
 - **Change password**: Settings → User Profile → Change Password
-- **Backup database**: `npm run db:backup`
+- **Backup database**: `pnpm db:backup`
 
 ## 🛠️ Development
 
@@ -150,32 +150,32 @@ Justice Companion is a privacy-first, desktop application for managing legal cas
 
 ```bash
 # Development
-npm run dev                  # Start Vite dev server
-npm run electron:dev         # Start Electron with dev server
+pnpm dev                  # Start Vite dev server
+pnpm electron:dev         # Start Electron with dev server
 
 # Building
-npm run build                # Build for all platforms
-npm run build:win            # Build for Windows
-npm run build:mac            # Build for macOS
-npm run build:linux          # Build for Linux
+pnpm build                # Build for all platforms
+pnpm build:win            # Build for Windows
+pnpm build:mac            # Build for macOS
+pnpm build:linux          # Build for Linux
 
 # Testing
-npm test                     # Run unit tests
-npm run test:coverage        # Run tests with coverage
-npm run test:e2e             # Run E2E tests
+pnpm test                     # Run unit tests
+pnpm test:coverage        # Run tests with coverage
+pnpm test:e2e             # Run E2E tests
 
 # Code Quality
-npm run lint                 # Run ESLint
-npm run lint:fix             # Auto-fix linting issues
-npm run type-check           # TypeScript type checking
-npm run format               # Format code with Prettier
+pnpm lint                 # Run ESLint
+pnpm lint:fix             # Auto-fix linting issues
+pnpm type-check           # TypeScript type checking
+pnpm format               # Format code with Prettier
 
 # Database
-npm run db:migrate           # Run pending migrations
-npm run db:migrate:status    # Check migration status
-npm run db:migrate:rollback  # Rollback last migration
-npm run db:backup            # Create database backup
-npm run db:backup:list       # List all backups
+pnpm db:migrate           # Run pending migrations
+pnpm db:migrate:status    # Check migration status
+pnpm db:migrate:rollback  # Rollback last migration
+pnpm db:backup            # Create database backup
+pnpm db:backup:list       # List all backups
 ```
 
 ### Project Structure

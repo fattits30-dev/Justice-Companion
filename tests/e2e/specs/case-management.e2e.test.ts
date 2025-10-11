@@ -1,5 +1,9 @@
 import { test, expect } from '@playwright/test';
-import { launchElectronApp, closeElectronApp, type ElectronTestApp } from '../setup/electron-setup.js';
+import {
+  launchElectronApp,
+  closeElectronApp,
+  type ElectronTestApp,
+} from '../setup/electron-setup.js';
 import { casesFixtures } from '../setup/fixtures.js';
 import { getTestDatabase, verifyDatabaseState } from '../setup/test-database.js';
 
@@ -31,9 +35,10 @@ test.describe('Case Management E2E', () => {
     }
 
     // Look for create case button
-    const createBtn = await window.$('[data-testid="create-case-btn"]') ||
-                      await window.$('button:has-text("New Case")') ||
-                      await window.$('button:has-text("Create Case")');
+    const createBtn =
+      (await window.$('[data-testid="create-case-btn"]')) ||
+      (await window.$('button:has-text("New Case")')) ||
+      (await window.$('button:has-text("Create Case")'));
 
     expect(createBtn).toBeTruthy();
     await createBtn?.click();
@@ -45,9 +50,10 @@ test.describe('Case Management E2E', () => {
     await window.fill('[name="description"]', caseData.description);
 
     // Submit form
-    const saveBtn = await window.$('[data-testid="save-case-btn"]') ||
-                    await window.$('button:has-text("Save")') ||
-                    await window.$('button:has-text("Create")');
+    const saveBtn =
+      (await window.$('[data-testid="save-case-btn"]')) ||
+      (await window.$('button:has-text("Save")')) ||
+      (await window.$('button:has-text("Create")'));
 
     await saveBtn?.click();
     await window.waitForTimeout(2000);
@@ -62,7 +68,7 @@ test.describe('Case Management E2E', () => {
 
     expect(dbCase).toBeDefined();
     expect(dbCase.case_type).toBe(caseData.caseType);
-    expect(dbCase.status).toBe('open');
+    expect(dbCase.status).toBe('active');
 
     db.close();
   });
@@ -76,7 +82,7 @@ test.describe('Case Management E2E', () => {
 
     db.exec(`
       INSERT INTO cases (title, case_type, description, status, created_at, updated_at)
-      VALUES ('${caseData.title}', '${caseData.caseType}', '${caseData.description}', 'open', datetime('now'), datetime('now'))
+      VALUES ('${caseData.title}', '${caseData.caseType}', '${caseData.description}', 'active', datetime('now'), datetime('now'))
     `);
     db.close();
 
@@ -108,7 +114,7 @@ test.describe('Case Management E2E', () => {
 
     db.exec(`
       INSERT INTO cases (id, title, case_type, description, status, created_at, updated_at)
-      VALUES (1, '${caseData.title}', '${caseData.caseType}', '${caseData.description}', 'open', datetime('now'), datetime('now'))
+      VALUES (1, '${caseData.title}', '${caseData.caseType}', '${caseData.description}', 'active', datetime('now'), datetime('now'))
     `);
     db.close();
 
@@ -123,8 +129,9 @@ test.describe('Case Management E2E', () => {
     await window.waitForTimeout(1000);
 
     // Click edit button
-    const editBtn = await window.$('[data-testid="edit-case-btn"]') ||
-                    await window.$('button:has-text("Edit")');
+    const editBtn =
+      (await window.$('[data-testid="edit-case-btn"]')) ||
+      (await window.$('button:has-text("Edit")'));
 
     if (editBtn) {
       await editBtn.click();
@@ -135,8 +142,9 @@ test.describe('Case Management E2E', () => {
       await window.fill('[name="title"]', newTitle);
 
       // Save changes
-      const saveBtn = await window.$('[data-testid="save-case-btn"]') ||
-                      await window.$('button:has-text("Save")');
+      const saveBtn =
+        (await window.$('[data-testid="save-case-btn"]')) ||
+        (await window.$('button:has-text("Save")'));
       await saveBtn?.click();
       await window.waitForTimeout(2000);
 
@@ -158,7 +166,7 @@ test.describe('Case Management E2E', () => {
 
     db.exec(`
       INSERT INTO cases (id, title, case_type, description, status, created_at, updated_at)
-      VALUES (1, '${caseData.title}', '${caseData.caseType}', '${caseData.description}', 'open', datetime('now'), datetime('now'))
+      VALUES (1, '${caseData.title}', '${caseData.caseType}', '${caseData.description}', 'active', datetime('now'), datetime('now'))
     `);
     db.close();
 
@@ -173,16 +181,18 @@ test.describe('Case Management E2E', () => {
     await window.waitForTimeout(1000);
 
     // Click delete button
-    const deleteBtn = await window.$('[data-testid="delete-case-btn"]') ||
-                      await window.$('button:has-text("Delete")');
+    const deleteBtn =
+      (await window.$('[data-testid="delete-case-btn"]')) ||
+      (await window.$('button:has-text("Delete")'));
 
     if (deleteBtn) {
       await deleteBtn.click();
       await window.waitForTimeout(500);
 
       // Confirm deletion if there's a confirmation dialog
-      const confirmBtn = await window.$('button:has-text("Confirm")') ||
-                        await window.$('button:has-text("Yes")');
+      const confirmBtn =
+        (await window.$('button:has-text("Confirm")')) ||
+        (await window.$('button:has-text("Yes")'));
       if (confirmBtn) {
         await confirmBtn.click();
       }
@@ -206,13 +216,15 @@ test.describe('Case Management E2E', () => {
     const db = getTestDatabase(dbPath);
     db.exec(`
       INSERT INTO cases (title, case_type, description, status, created_at, updated_at)
-      VALUES ('${caseData.title}', '${caseData.caseType}', '${caseData.description}', 'open', datetime('now'), datetime('now'))
+      VALUES ('${caseData.title}', '${caseData.caseType}', '${caseData.description}', 'active', datetime('now'), datetime('now'))
     `);
     db.close();
 
     // Verify data exists in database
     const dbVerify = getTestDatabase(dbPath);
-    const persistedCase = dbVerify.prepare('SELECT * FROM cases WHERE title = ?').get(caseData.title) as any;
+    const persistedCase = dbVerify
+      .prepare('SELECT * FROM cases WHERE title = ?')
+      .get(caseData.title) as any;
 
     expect(persistedCase).toBeDefined();
     expect(persistedCase.title).toBe(caseData.title);

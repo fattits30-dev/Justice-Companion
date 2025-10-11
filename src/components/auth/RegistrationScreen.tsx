@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useState } from 'react';
 
 interface RegistrationScreenProps {
   onSwitchToLogin: () => void;
@@ -120,31 +120,33 @@ export function RegistrationScreen({ onSwitchToLogin }: RegistrationScreenProps)
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 px-8 py-24">
-      <div className="w-full max-w-5xl">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 p-6">
+      <div className="w-full max-w-md">
         {/* Logo/Title */}
-        <div className="text-center mb-36">
-          <h1 className="text-8xl font-black text-white mb-12 drop-shadow-2xl tracking-tight leading-tight">
-            Justice Companion
-          </h1>
-          <p className="text-3xl text-blue-100 font-semibold mt-8">Create Your Account</p>
+        <div className="text-center mb-24">
+          <h1 className="text-5xl font-bold text-white mb-6 drop-shadow-lg">Justice Companion</h1>
+          <p className="text-lg text-blue-300">Create Your Account</p>
         </div>
 
-        {/* Registration Form Card */}
-        <div className="bg-slate-900/95 backdrop-blur-xl border-2 border-blue-600/50 rounded-3xl shadow-2xl px-24 py-36">
-          <h2 className="text-5xl font-black text-white mb-24 text-center">Create Account</h2>
+        {/* Registration Form */}
+        <div>
+          <h2 className="text-3xl font-bold text-white mb-20 text-center">Create Account</h2>
 
-          <form onSubmit={handleSubmit} className="space-y-20">
+          <form onSubmit={handleSubmit} className="space-y-16" aria-label="Registration form">
             {/* Error Display */}
             {error && (
-              <div className="bg-red-900/40 border-2 border-red-500/60 text-red-100 px-10 py-6 rounded-2xl text-xl font-semibold">
+              <div
+                className="bg-red-900/30 border border-red-500/50 text-red-200 px-4 py-3 rounded-lg text-sm"
+                role="alert"
+                aria-live="polite"
+              >
                 {error}
               </div>
             )}
 
             {/* Username Field */}
             <div>
-              <label htmlFor="username" className="block text-2xl font-bold text-blue-100 mb-8">
+              <label htmlFor="username" className="block text-sm font-medium text-blue-200 mb-6">
                 Username
               </label>
               <input
@@ -152,16 +154,26 @@ export function RegistrationScreen({ onSwitchToLogin }: RegistrationScreenProps)
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full px-10 py-8 text-2xl bg-slate-800/80 border-2 border-blue-700/40 rounded-2xl text-white placeholder-slate-500 focus:outline-none focus:ring-4 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                className="w-full px-4 py-3 bg-slate-800/80 border border-blue-700/40 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 placeholder="Choose a username"
                 autoFocus
                 disabled={isLoading}
+                aria-required="true"
+                aria-invalid={error ? 'true' : undefined}
+                aria-describedby={
+                  username.length > 0 && username.length < 3 ? 'username-error' : undefined
+                }
               />
+              {username.length > 0 && username.length < 3 && (
+                <p id="username-error" className="text-xs text-red-400 mt-1">
+                  Username must be at least 3 characters
+                </p>
+              )}
             </div>
 
             {/* Email Field */}
             <div>
-              <label htmlFor="email" className="block text-2xl font-bold text-blue-100 mb-8">
+              <label htmlFor="email" className="block text-sm font-medium text-blue-200 mb-6">
                 Email
               </label>
               <input
@@ -169,15 +181,21 @@ export function RegistrationScreen({ onSwitchToLogin }: RegistrationScreenProps)
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-10 py-8 text-2xl bg-slate-800/80 border-2 border-blue-700/40 rounded-2xl text-white placeholder-slate-500 focus:outline-none focus:ring-4 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                className="w-full px-4 py-3 bg-slate-800/80 border border-blue-700/40 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 placeholder="your@email.com"
                 disabled={isLoading}
+                aria-required="true"
+                aria-invalid={
+                  error && email.length > 0 && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+                    ? 'true'
+                    : undefined
+                }
               />
             </div>
 
             {/* Password Field */}
             <div>
-              <label htmlFor="password" className="block text-2xl font-bold text-blue-100 mb-8">
+              <label htmlFor="password" className="block text-sm font-medium text-blue-200 mb-6">
                 Password
               </label>
               <input
@@ -185,26 +203,44 @@ export function RegistrationScreen({ onSwitchToLogin }: RegistrationScreenProps)
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-10 py-8 text-2xl bg-slate-800/80 border-2 border-blue-700/40 rounded-2xl text-white placeholder-slate-500 focus:outline-none focus:ring-4 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                className="w-full px-4 py-3 bg-slate-800/80 border border-blue-700/40 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 placeholder="At least 12 characters"
                 disabled={isLoading}
+                aria-required="true"
+                aria-invalid={
+                  error && password.length > 0 && password.length < 12 ? 'true' : undefined
+                }
+                aria-describedby={password ? 'password-requirements' : undefined}
               />
 
               {/* Password Strength Indicator */}
               {password && (
-                <div className="mt-5">
-                  <div className="flex items-center gap-4 mb-3">
-                    <div className="flex-1 h-3 bg-slate-700 rounded-full overflow-hidden">
+                <div className="mt-3" id="password-requirements">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
                       <div
-                        className={`h-full transition-all duration-300 ${getStrengthColor(passwordStrength)}`}
+                        className={`h-full transition-all duration-300 ${getStrengthColor(
+                          passwordStrength
+                        )}`}
                         style={{ width: `${(passwordStrength / 4) * 100}%` }}
+                        role="progressbar"
+                        aria-valuenow={passwordStrength}
+                        aria-valuemin={0}
+                        aria-valuemax={4}
+                        aria-label="Password strength"
                       />
                     </div>
-                    <span className="text-lg text-slate-400 font-semibold min-w-[100px]">
+                    <span
+                      className="text-xs text-slate-400 font-medium min-w-[70px]"
+                      aria-live="polite"
+                    >
                       {getStrengthLabel(passwordStrength)}
                     </span>
                   </div>
-                  <ul className="text-lg text-slate-400 space-y-2">
+                  <ul
+                    className="text-xs text-slate-400 space-y-1"
+                    aria-label="Password requirements"
+                  >
                     <li className={password.length >= 12 ? 'text-green-400' : ''}>
                       {password.length >= 12 ? '✓' : '○'} At least 12 characters
                     </li>
@@ -226,7 +262,7 @@ export function RegistrationScreen({ onSwitchToLogin }: RegistrationScreenProps)
             <div>
               <label
                 htmlFor="confirmPassword"
-                className="block text-2xl font-bold text-blue-100 mb-8"
+                className="block text-sm font-medium text-blue-200 mb-6"
               >
                 Confirm Password
               </label>
@@ -235,12 +271,12 @@ export function RegistrationScreen({ onSwitchToLogin }: RegistrationScreenProps)
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full px-10 py-8 text-2xl bg-slate-800/80 border-2 border-blue-700/40 rounded-2xl text-white placeholder-slate-500 focus:outline-none focus:ring-4 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                className="w-full px-4 py-3 bg-slate-800/80 border border-blue-700/40 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 placeholder="Re-enter your password"
                 disabled={isLoading}
               />
               {confirmPassword && password !== confirmPassword && (
-                <p className="text-lg text-red-400 mt-3">Passwords do not match</p>
+                <p className="text-xs text-red-400 mt-1">Passwords do not match</p>
               )}
             </div>
 
@@ -248,20 +284,48 @@ export function RegistrationScreen({ onSwitchToLogin }: RegistrationScreenProps)
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full mt-24 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:from-blue-800 disabled:to-blue-900 disabled:cursor-not-allowed text-white font-black text-2xl py-9 px-12 rounded-2xl transition-all duration-200 shadow-xl hover:shadow-2xl transform hover:-translate-y-0.5"
+              className="w-full mt-10 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:from-blue-800 disabled:to-blue-900 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-xl transition-all shadow-lg hover:shadow-xl"
+              aria-busy={isLoading ? 'true' : undefined}
             >
-              {isLoading ? 'Creating Account...' : 'Create Account'}
+              {isLoading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg
+                    className="animate-spin h-5 w-5"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  Creating Account...
+                </span>
+              ) : (
+                'Create Account'
+              )}
             </button>
           </form>
 
           {/* Login Link */}
-          <div className="mt-32 text-center">
-            <p className="text-2xl text-slate-400">
+          <div className="mt-20 text-center">
+            <p className="text-sm text-slate-400">
               Already have an account?{' '}
               <button
                 type="button"
                 onClick={onSwitchToLogin}
-                className="text-blue-400 hover:text-blue-300 font-black transition-colors underline decoration-2 underline-offset-4"
+                className="text-blue-400 hover:text-blue-300 font-semibold transition-colors"
                 disabled={isLoading}
               >
                 Sign In
@@ -270,13 +334,11 @@ export function RegistrationScreen({ onSwitchToLogin }: RegistrationScreenProps)
           </div>
 
           {/* Local Storage Notice */}
-          <div className="mt-32 pt-24 border-t-2 border-blue-800/30">
-            <div className="flex items-center justify-center gap-5">
-              <span className="text-4xl">🔒</span>
-              <p className="text-xl text-slate-400 text-center leading-relaxed">
-                All data is stored locally on your device.
-                <br />
-                <span className="text-slate-500">No data is sent to external servers.</span>
+          <div className="mt-20 pt-20 border-t border-blue-800/30">
+            <div className="flex items-start gap-3 justify-center">
+              <span className="text-xl">🔒</span>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                All data is stored locally on your device. No data is sent to external servers.
               </p>
             </div>
           </div>

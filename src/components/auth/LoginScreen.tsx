@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useState } from 'react';
 
 interface LoginScreenProps {
   onSwitchToRegister: () => void;
@@ -16,7 +16,6 @@ export function LoginScreen({ onSwitchToRegister }: LoginScreenProps) {
     e.preventDefault();
     setError(null);
 
-    // Validation
     if (!username.trim()) {
       setError('Username is required');
       return;
@@ -31,7 +30,6 @@ export function LoginScreen({ onSwitchToRegister }: LoginScreenProps) {
 
     try {
       await login(username.trim(), password);
-      // Login successful - AuthContext will update user state
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
     } finally {
@@ -40,33 +38,52 @@ export function LoginScreen({ onSwitchToRegister }: LoginScreenProps) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 px-8 py-24">
-      <div className="w-full max-w-5xl">
-        {/* Logo/Title */}
-        <div className="text-center mb-36">
-          <h1 className="text-8xl font-black text-white mb-12 drop-shadow-2xl tracking-tight leading-tight">
-            Justice Companion
-          </h1>
-          <p className="text-3xl text-blue-100 font-semibold mt-8">
-            Your Legal Case Management Assistant
-          </p>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 p-8">
+      <div className="w-full max-w-3xl">
+        {/* Title */}
+        <div className="text-center mb-10">
+          <h1 className="text-8xl font-black text-white leading-tight">Justice</h1>
+          <h1 className="text-8xl font-black text-white leading-tight mb-8">Companion</h1>
+
+          {/* Scales Icon */}
+          <div className="flex justify-center mb-8">
+            <svg
+              className="w-40 h-40 text-white"
+              viewBox="0 0 512 512"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path d="M256 0c-8.284 0-15 6.716-15 15v45.72C108.49 69.485 0 183.618 0 323c0 8.284 6.716 15 15 15s15-6.716 15-15c0-123.514 100.486-224 224-224s224 100.486 224 224c0 8.284 6.716 15 15 15s15-6.716 15-15c0-139.382-108.49-253.515-241-262.28V15c0-8.284-6.716-15-15-15z" />
+              <path d="M256 113c-8.284 0-15 6.716-15 15v384c0 8.284 6.716 15 15 15s15-6.716 15-15V128c0-8.284-6.716-15-15-15z" />
+              <path d="M406 143c-8.284 0-15 6.716-15 15v30h-46c-8.284 0-15 6.716-15 15s6.716 15 15 15h61c8.284 0 15-6.716 15-15v-45c0-8.284-6.716-15-15-15zM121 188h46v-30c0-8.284 6.716-15 15-15s15 6.716 15 15v45c0 8.284-6.716 15-15 15h-61c-8.284 0-15-6.716-15-15s6.716-15 15-15z" />
+              <ellipse cx="406" cy="248" rx="60" ry="20" />
+              <path d="M406 218c-33.084 0-60 13.458-60 30v15c0 16.542 26.916 30 60 30s60-13.458 60-30v-15c0-16.542-26.916-30-60-30z" />
+              <ellipse cx="106" cy="248" rx="60" ry="20" />
+              <path d="M106 218c-33.084 0-60 13.458-60 30v15c0 16.542 26.916 30 60 30s60-13.458 60-30v-15c0-16.542-26.916-30-60-30z" />
+            </svg>
+          </div>
+
+          <p className="text-4xl text-white font-light">Your Legal Assistant</p>
         </div>
 
-        {/* Login Form Card */}
-        <div className="bg-slate-900/95 backdrop-blur-xl border-2 border-blue-600/50 rounded-3xl shadow-2xl px-24 py-36">
-          <h2 className="text-5xl font-black text-white mb-24 text-center">Welcome Back</h2>
+        {/* Form Card */}
+        <div className="bg-blue-500/20 backdrop-blur-md border-2 border-blue-400/30 rounded-[48px] p-12">
+          {/* Sign In Heading */}
+          <h2 className="text-4xl font-bold text-white mb-8 text-center">Sign In</h2>
 
-          <form onSubmit={handleSubmit} className="space-y-20">
-            {/* Error Display */}
-            {error && (
-              <div className="bg-red-900/40 border-2 border-red-500/60 text-red-100 px-10 py-6 rounded-2xl text-xl font-semibold">
-                {error}
-              </div>
-            )}
+          {error && (
+            <div
+              className="mb-8 bg-red-500/80 text-white px-6 py-4 rounded-3xl text-xl text-center"
+              role="alert"
+              aria-live="polite"
+            >
+              {error}
+            </div>
+          )}
 
-            {/* Username Field */}
+          <form onSubmit={handleSubmit} className="space-y-6" aria-label="Login form">
             <div>
-              <label htmlFor="username" className="block text-2xl font-bold text-blue-100 mb-8">
+              <label htmlFor="username" className="sr-only">
                 Username
               </label>
               <input
@@ -74,16 +91,17 @@ export function LoginScreen({ onSwitchToRegister }: LoginScreenProps) {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full px-10 py-8 text-2xl bg-slate-800/80 border-2 border-blue-700/40 rounded-2xl text-white placeholder-slate-500 focus:outline-none focus:ring-4 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-                placeholder="Enter your username"
+                placeholder="Username"
+                className="w-full px-8 py-7 bg-blue-300/25 border-2 border-blue-200/40 rounded-3xl text-white text-3xl placeholder-white/75 focus:outline-none focus:border-white/50 focus:ring-2 focus:ring-white/30 transition-all"
                 autoFocus
                 disabled={isLoading}
+                aria-required="true"
+                aria-invalid={error ? 'true' : undefined}
               />
             </div>
 
-            {/* Password Field */}
             <div>
-              <label htmlFor="password" className="block text-2xl font-bold text-blue-100 mb-8">
+              <label htmlFor="password" className="sr-only">
                 Password
               </label>
               <input
@@ -91,47 +109,61 @@ export function LoginScreen({ onSwitchToRegister }: LoginScreenProps) {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-10 py-8 text-2xl bg-slate-800/80 border-2 border-blue-700/40 rounded-2xl text-white placeholder-slate-500 focus:outline-none focus:ring-4 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-                placeholder="Enter your password"
+                placeholder="Password"
+                className="w-full px-8 py-7 bg-blue-300/25 border-2 border-blue-200/40 rounded-3xl text-white text-3xl placeholder-white/75 focus:outline-none focus:border-white/50 focus:ring-2 focus:ring-white/30 transition-all"
                 disabled={isLoading}
+                aria-required="true"
+                aria-invalid={error ? 'true' : undefined}
               />
             </div>
 
-            {/* Submit Button */}
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full mt-24 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:from-blue-800 disabled:to-blue-900 disabled:cursor-not-allowed text-white font-black text-2xl py-9 px-12 rounded-2xl transition-all duration-200 shadow-xl hover:shadow-2xl transform hover:-translate-y-0.5"
+              className="w-full bg-blue-600/70 hover:bg-blue-600/90 disabled:bg-blue-800/40 disabled:cursor-not-allowed text-white text-3xl font-bold py-7 rounded-3xl transition-all shadow-lg hover:shadow-xl"
+              aria-busy={isLoading ? 'true' : undefined}
             >
-              {isLoading ? 'Signing in...' : 'Sign In'}
+              {isLoading ? (
+                <span className="flex items-center justify-center gap-3">
+                  <svg
+                    className="animate-spin h-8 w-8"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  Signing in...
+                </span>
+              ) : (
+                'Login'
+              )}
             </button>
           </form>
 
-          {/* Register Link */}
-          <div className="mt-32 text-center">
-            <p className="text-2xl text-slate-400">
-              Don't have an account?{' '}
-              <button
-                type="button"
-                onClick={onSwitchToRegister}
-                className="text-blue-400 hover:text-blue-300 font-black transition-colors underline decoration-2 underline-offset-4"
-                disabled={isLoading}
-              >
-                Create Account
-              </button>
-            </p>
-          </div>
-
-          {/* Local Storage Notice */}
-          <div className="mt-32 pt-24 border-t-2 border-blue-800/30">
-            <div className="flex items-center justify-center gap-5">
-              <span className="text-4xl">🔒</span>
-              <p className="text-xl text-slate-400 text-center leading-relaxed">
-                All data is stored locally on your device.
-                <br />
-                <span className="text-slate-500">No data is sent to external servers.</span>
-              </p>
-            </div>
+          <div className="mt-8 text-center">
+            <button
+              type="button"
+              onClick={onSwitchToRegister}
+              className="text-white/90 text-lg hover:text-white hover:underline transition-colors"
+              disabled={isLoading}
+              aria-label="Switch to registration"
+            >
+              Don't have an account? Create one
+            </button>
           </div>
         </div>
       </div>

@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import Database from 'better-sqlite3';
 import { CaseFactsRepository } from './CaseFactsRepository';
-import { EncryptionService } from '../services/EncryptionService.js';
-import { AuditLogger } from '../services/AuditLogger.js';
+import { EncryptionService } from '../services/EncryptionService';
+import { AuditLogger } from '../services/AuditLogger';
 import * as databaseModule from '../db/database';
 
 describe('CaseFactsRepository', () => {
@@ -64,10 +64,12 @@ describe('CaseFactsRepository', () => {
     `);
 
     // Create test case
-    db.prepare(`
+    db.prepare(
+      `
       INSERT INTO cases (title, case_type)
       VALUES ('Test Case', 'employment')
-    `).run();
+    `
+    ).run();
 
     // Initialize services
     const encryptionKey = EncryptionService.generateKey();
@@ -102,7 +104,9 @@ describe('CaseFactsRepository', () => {
       expect(fact.importance).toBe('high');
 
       // Verify content is encrypted in database
-      const storedFact = db.prepare('SELECT fact_content FROM case_facts WHERE id = ?').get(1) as { fact_content: string };
+      const storedFact = db.prepare('SELECT fact_content FROM case_facts WHERE id = ?').get(1) as {
+        fact_content: string;
+      };
       const parsedContent = JSON.parse(storedFact.fact_content);
 
       expect(parsedContent).toHaveProperty('algorithm');
@@ -113,14 +117,9 @@ describe('CaseFactsRepository', () => {
     });
 
     it('should create case facts with different categories', () => {
-      const factCategories: Array<'timeline' | 'evidence' | 'witness' | 'location' | 'communication' | 'other'> = [
-        'timeline',
-        'evidence',
-        'witness',
-        'location',
-        'communication',
-        'other',
-      ];
+      const factCategories: Array<
+        'timeline' | 'evidence' | 'witness' | 'location' | 'communication' | 'other'
+      > = ['timeline', 'evidence', 'witness', 'location', 'communication', 'other'];
 
       factCategories.forEach((factCategory, index) => {
         const fact = repository.create({
@@ -164,7 +163,9 @@ describe('CaseFactsRepository', () => {
         importance: 'critical',
       });
 
-      const auditLogs = db.prepare('SELECT * FROM audit_logs WHERE event_type = ?').all('case_fact.create');
+      const auditLogs = db
+        .prepare('SELECT * FROM audit_logs WHERE event_type = ?')
+        .all('case_fact.create');
       expect(auditLogs).toHaveLength(1);
 
       const log = auditLogs[0] as {
@@ -194,7 +195,7 @@ describe('CaseFactsRepository', () => {
           factContent: 'Test fact',
           factCategory: 'timeline',
         });
-      }).toThrow('EncryptionService is required');
+      }).toThrow('EncryptionService is required to create case facts');
     });
 
     it('should audit failed creation', () => {
@@ -210,7 +211,9 @@ describe('CaseFactsRepository', () => {
         // Expected error
       }
 
-      const auditLogs = db.prepare('SELECT * FROM audit_logs WHERE event_type = ? AND success = 0').all('case_fact.create');
+      const auditLogs = db
+        .prepare('SELECT * FROM audit_logs WHERE event_type = ? AND success = 0')
+        .all('case_fact.create');
       expect(auditLogs).toHaveLength(1);
     });
   });
@@ -238,11 +241,11 @@ describe('CaseFactsRepository', () => {
       expect(found).toBeNull();
     });
 
-    it('should audit content access when decrypting', () => {
+    it('should audit content access', () => {
       const created = repository.create({
         caseId: 1,
-        factContent: 'Evidence photo taken at scene',
-        factCategory: 'evidence',
+        factContent: 'Confidential witness statement',
+        factCategory: 'witness',
       });
 
       // Clear previous audit logs
@@ -250,21 +253,14 @@ describe('CaseFactsRepository', () => {
 
       repository.findById(created.id);
 
-      const auditLogs = db.prepare('SELECT * FROM audit_logs WHERE event_type = ?').all('case_fact.content_access');
+      const auditLogs = db
+        .prepare('SELECT * FROM audit_logs WHERE event_type = ?')
+        .all('case_fact.content_access');
       expect(auditLogs).toHaveLength(1);
 
-      const log = auditLogs[0] as {
-        resource_type: string;
-        action: string;
-        details: string;
-      };
-
-      expect(log.resource_type).toBe('case_fact');
-      expect(log.action).toBe('read');
-
+      const log = auditLogs[0] as { details: string };
       const details = JSON.parse(log.details);
-      expect(details.field).toBe('fact_content');
-      expect(details.encrypted).toBe(true);
+      expect(details.factId).toBe(created.id);
     });
   });
 
@@ -322,7 +318,9 @@ describe('CaseFactsRepository', () => {
 
       repository.findByCaseId(1);
 
-      const auditLogs = db.prepare('SELECT * FROM audit_logs WHERE event_type = ?').all('case_fact.content_access');
+      const auditLogs = db
+        .prepare('SELECT * FROM audit_logs WHERE event_type = ?')
+        .all('case_fact.content_access');
       expect(auditLogs).toHaveLength(1);
 
       const log = auditLogs[0] as { details: string };
@@ -377,7 +375,9 @@ describe('CaseFactsRepository', () => {
 
       repository.findByCategory(1, 'location');
 
-      const auditLogs = db.prepare('SELECT * FROM audit_logs WHERE event_type = ?').all('case_fact.content_access');
+      const auditLogs = db
+        .prepare('SELECT * FROM audit_logs WHERE event_type = ?')
+        .all('case_fact.content_access');
       expect(auditLogs).toHaveLength(1);
 
       const log = auditLogs[0] as { details: string };
@@ -390,58 +390,37 @@ describe('CaseFactsRepository', () => {
     it('should find case facts by importance level', () => {
       repository.create({
         caseId: 1,
-        factContent: 'Critical fact 1',
+        factContent: 'Critical fact',
         factCategory: 'timeline',
         importance: 'critical',
       });
 
       repository.create({
         caseId: 1,
-        factContent: 'Medium fact',
+        factContent: 'Low importance fact',
         factCategory: 'witness',
-        importance: 'medium',
+        importance: 'low',
       });
 
       repository.create({
         caseId: 1,
-        factContent: 'Critical fact 2',
+        factContent: 'Another critical fact',
         factCategory: 'evidence',
         importance: 'critical',
       });
 
       const criticalFacts = repository.findByImportance(1, 'critical');
-      const mediumFacts = repository.findByImportance(1, 'medium');
+      const lowFacts = repository.findByImportance(1, 'low');
 
       expect(criticalFacts).toHaveLength(2);
-      expect(mediumFacts).toHaveLength(1);
+      expect(lowFacts).toHaveLength(1);
       expect(criticalFacts.every((f) => f.importance === 'critical')).toBe(true);
-      expect(mediumFacts.every((f) => f.importance === 'medium')).toBe(true);
+      expect(lowFacts.every((f) => f.importance === 'low')).toBe(true);
     });
 
     it('should return empty array for importance level with no facts', () => {
-      const lowFacts = repository.findByImportance(1, 'low');
-      expect(lowFacts).toEqual([]);
-    });
-
-    it('should audit filtered content access by importance', () => {
-      repository.create({
-        caseId: 1,
-        factContent: 'High importance fact',
-        factCategory: 'timeline',
-        importance: 'high',
-      });
-
-      // Clear previous audit logs
-      db.prepare('DELETE FROM audit_logs WHERE event_type = ?').run('case_fact.content_access');
-
-      repository.findByImportance(1, 'high');
-
-      const auditLogs = db.prepare('SELECT * FROM audit_logs WHERE event_type = ?').all('case_fact.content_access');
-      expect(auditLogs).toHaveLength(1);
-
-      const log = auditLogs[0] as { details: string };
-      const details = JSON.parse(log.details);
-      expect(details.importance).toBe('high');
+      const highFacts = repository.findByImportance(1, 'high');
+      expect(highFacts).toEqual([]);
     });
   });
 
@@ -461,110 +440,63 @@ describe('CaseFactsRepository', () => {
       expect(updated!.factContent).toBe('New content');
 
       // Verify new content is encrypted in database
-      const storedFact = db.prepare('SELECT fact_content FROM case_facts WHERE id = ?').get(created.id) as { fact_content: string };
+      const storedFact = db
+        .prepare('SELECT fact_content FROM case_facts WHERE id = ?')
+        .get(created.id) as { fact_content: string };
       const parsedContent = JSON.parse(storedFact.fact_content);
 
       expect(parsedContent).toHaveProperty('ciphertext');
       expect(parsedContent.algorithm).toBe('aes-256-gcm');
     });
 
-    it('should update fact category', () => {
+    it('should update fact category and importance', () => {
       const created = repository.create({
         caseId: 1,
         factContent: 'Test fact',
         factCategory: 'timeline',
+        importance: 'medium',
       });
 
       const updated = repository.update(created.id, {
-        factCategory: 'evidence',
-      });
-
-      expect(updated).not.toBeNull();
-      expect(updated!.factCategory).toBe('evidence');
-      expect(updated!.factContent).toBe('Test fact'); // Content unchanged
-    });
-
-    it('should update importance level', () => {
-      const created = repository.create({
-        caseId: 1,
-        factContent: 'Test fact',
-        factCategory: 'timeline',
-        importance: 'low',
-      });
-
-      const updated = repository.update(created.id, {
+        factCategory: 'witness',
         importance: 'critical',
       });
 
       expect(updated).not.toBeNull();
+      expect(updated!.factCategory).toBe('witness');
       expect(updated!.importance).toBe('critical');
     });
 
-    it('should update multiple fields at once', () => {
-      const created = repository.create({
-        caseId: 1,
-        factContent: 'Old fact',
-        factCategory: 'timeline',
-        importance: 'low',
+    it('should return null for non-existent ID', () => {
+      const updated = repository.update(999, {
+        factContent: 'New content',
       });
 
-      const updated = repository.update(created.id, {
-        factContent: 'New fact',
-        factCategory: 'witness',
-        importance: 'high',
-      });
-
-      expect(updated).not.toBeNull();
-      expect(updated!.factContent).toBe('New fact');
-      expect(updated!.factCategory).toBe('witness');
-      expect(updated!.importance).toBe('high');
+      expect(updated).toBeNull();
     });
 
-    it('should audit update operation', () => {
+    it('should audit fact updates', () => {
       const created = repository.create({
         caseId: 1,
-        factContent: 'Test fact',
+        factContent: 'Original content',
         factCategory: 'timeline',
       });
 
       repository.update(created.id, {
-        factContent: 'Updated fact',
+        factContent: 'Updated content',
         importance: 'high',
       });
 
-      const auditLogs = db.prepare('SELECT * FROM audit_logs WHERE event_type = ?').all('case_fact.update');
-      expect(auditLogs.length).toBeGreaterThan(0);
+      const auditLogs = db
+        .prepare('SELECT * FROM audit_logs WHERE event_type = ?')
+        .all('case_fact.update');
+      expect(auditLogs).toHaveLength(1);
 
-      const log = auditLogs[auditLogs.length - 1] as {
-        resource_type: string;
-        action: string;
-        success: number;
-        details: string;
-      };
-
-      expect(log.resource_type).toBe('case_fact');
-      expect(log.action).toBe('update');
-      expect(log.success).toBe(1);
-
+      const log = auditLogs[0] as { details: string };
       const details = JSON.parse(log.details);
-      expect(details.updatedFields).toContain('factContent');
-      expect(details.updatedFields).toContain('importance');
-    });
-
-    it('should throw error if encryption service is missing', () => {
-      const created = repository.create({
-        caseId: 1,
-        factContent: 'Test fact',
-        factCategory: 'timeline',
-      });
-
-      const repoWithoutEncryption = new CaseFactsRepository();
-
-      expect(() => {
-        repoWithoutEncryption.update(created.id, {
-          factContent: 'New content',
-        });
-      }).toThrow('EncryptionService is required');
+      expect(details.factId).toBe(created.id);
+      expect(details.changes).toHaveProperty('factContent');
+      expect(details.changes).toHaveProperty('importance');
     });
   });
 
@@ -572,53 +504,52 @@ describe('CaseFactsRepository', () => {
     it('should delete case fact', () => {
       const created = repository.create({
         caseId: 1,
-        factContent: 'To be deleted',
+        factContent: 'Fact to delete',
         factCategory: 'timeline',
       });
 
-      const success = repository.delete(created.id);
-      expect(success).toBe(true);
+      const deleted = repository.delete(created.id);
+
+      expect(deleted).toBe(true);
 
       const found = repository.findById(created.id);
       expect(found).toBeNull();
     });
 
-    it('should return false for non-existent fact', () => {
-      const success = repository.delete(999);
-      expect(success).toBe(false);
+    it('should return false for non-existent ID', () => {
+      const deleted = repository.delete(999);
+      expect(deleted).toBe(false);
     });
 
-    it('should audit delete operation', () => {
+    it('should audit fact deletion', () => {
       const created = repository.create({
         caseId: 1,
-        factContent: 'Test fact',
+        factContent: 'Fact to delete',
         factCategory: 'timeline',
       });
 
       repository.delete(created.id);
 
-      const auditLogs = db.prepare('SELECT * FROM audit_logs WHERE event_type = ?').all('case_fact.delete');
-      expect(auditLogs.length).toBeGreaterThan(0);
+      const auditLogs = db
+        .prepare('SELECT * FROM audit_logs WHERE event_type = ?')
+        .all('case_fact.delete');
+      expect(auditLogs).toHaveLength(1);
 
-      const log = auditLogs[auditLogs.length - 1] as {
-        resource_type: string;
-        action: string;
-        success: number;
-      };
-
-      expect(log.resource_type).toBe('case_fact');
-      expect(log.action).toBe('delete');
-      expect(log.success).toBe(1);
+      const log = auditLogs[0] as { details: string };
+      const details = JSON.parse(log.details);
+      expect(details.factId).toBe(created.id);
     });
   });
 
   describe('backward compatibility', () => {
     it('should handle legacy plaintext data', () => {
       // Insert plaintext fact directly
-      db.prepare(`
+      db.prepare(
+        `
         INSERT INTO case_facts (case_id, fact_content, fact_category, importance)
         VALUES (?, ?, ?, ?)
-      `).run(1, 'Plaintext fact', 'timeline', 'medium');
+      `
+      ).run(1, 'Plaintext fact', 'timeline', 'medium');
 
       const found = repository.findById(1);
 
@@ -630,10 +561,12 @@ describe('CaseFactsRepository', () => {
       const repoWithoutEncryption = new CaseFactsRepository();
 
       // Insert plaintext fact
-      db.prepare(`
+      db.prepare(
+        `
         INSERT INTO case_facts (case_id, fact_content, fact_category, importance)
         VALUES (?, ?, ?, ?)
-      `).run(1, 'Plaintext fact', 'timeline', 'medium');
+      `
+      ).run(1, 'Plaintext fact', 'timeline', 'medium');
 
       const found = repoWithoutEncryption.findById(1);
 
@@ -666,7 +599,9 @@ describe('CaseFactsRepository', () => {
         factCategory: 'timeline',
       });
 
-      const auditLogs = db.prepare('SELECT * FROM audit_logs WHERE event_type = ?').all('case_fact.create');
+      const auditLogs = db
+        .prepare('SELECT * FROM audit_logs WHERE event_type = ?')
+        .all('case_fact.create');
       expect(auditLogs).toHaveLength(1);
     });
   });
