@@ -33,7 +33,7 @@ const DB_PATH =
   path.join(
     process.env.APPDATA || path.join(process.env.HOME || '', 'AppData', 'Roaming'),
     'justice-companion',
-    'justice-companion.db'
+    'justice.db'
   );
 
 // Zod schemas for tool inputs
