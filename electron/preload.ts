@@ -1,9 +1,13 @@
+console.log('[Preload] Script started loading...');
+
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
 import { IPC_CHANNELS } from '../src/types/ipc';
 import type { JusticeCompanionAPI } from '../src/types/ipc';
 import type { CreateCaseInput, UpdateCaseInput } from '../src/models/Case';
 import type { CreateEvidenceInput, UpdateEvidenceInput } from '../src/models/Evidence';
 import type { ConsentType } from '../src/models/Consent';
+
+console.log('[Preload] Imports completed successfully');
 
 /**
  * Expose Justice Companion API to renderer process via contextBridge
@@ -347,8 +351,8 @@ const authAPI = {
   },
 
   // Login user
-  loginUser: (username: string, password: string) => {
-    return ipcRenderer.invoke(IPC_CHANNELS.AUTH_LOGIN, { username, password });
+  loginUser: (username: string, password: string, rememberMe?: boolean) => {
+    return ipcRenderer.invoke(IPC_CHANNELS.AUTH_LOGIN, { username, password, rememberMe });
   },
 
   // Logout current user
@@ -398,7 +402,35 @@ const errorLoggingAPI = {
   },
 };
 
-// Combine case, AI, model, file, conversation, profile, facts, GDPR, authentication, consent, and error logging APIs
+// Secure Storage API methods (for API keys)
+const secureStorageAPI = {
+  // Check if encryption is available on the platform
+  isEncryptionAvailable: () => {
+    return ipcRenderer.invoke('secure-storage:is-encryption-available');
+  },
+
+  // Set an encrypted value
+  set: (key: string, value: string) => {
+    return ipcRenderer.invoke('secure-storage:set', key, value);
+  },
+
+  // Get an encrypted value
+  get: (key: string) => {
+    return ipcRenderer.invoke('secure-storage:get', key);
+  },
+
+  // Delete an encrypted value
+  delete: (key: string) => {
+    return ipcRenderer.invoke('secure-storage:delete', key);
+  },
+
+  // Clear all encrypted values
+  clearAll: () => {
+    return ipcRenderer.invoke('secure-storage:clear-all');
+  },
+};
+
+// Combine case, AI, model, file, conversation, profile, facts, GDPR, authentication, consent, error logging, and secure storage APIs
 const fullAPI = {
   ...justiceAPI,
   ...aiAPI,
@@ -411,9 +443,17 @@ const fullAPI = {
   ...authAPI,
   ...consentAPI,
   ...errorLoggingAPI,
+  secureStorage: secureStorageAPI,
 };
 
 // Expose combined API to window object with type safety
-contextBridge.exposeInMainWorld('justiceAPI', fullAPI);
+console.log('[Preload] About to call contextBridge.exposeInMainWorld...');
+console.log('[Preload] contextBridge available:', typeof contextBridge !== 'undefined');
 
-console.log('[Preload] justiceAPI exposed successfully with methods:', Object.keys(fullAPI));
+try {
+  contextBridge.exposeInMainWorld('justiceAPI', fullAPI);
+  console.log('[Preload] ✅ justiceAPI exposed successfully with methods:', Object.keys(fullAPI));
+} catch (error) {
+  console.error('[Preload] ❌ FAILED to expose justiceAPI:', error);
+  throw error;
+}

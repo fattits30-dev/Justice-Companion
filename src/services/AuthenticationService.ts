@@ -1,8 +1,10 @@
 import crypto from 'crypto';
 import { promisify } from 'util';
+import { v4 as uuidv4 } from 'uuid';
 import { UserRepository } from '../repositories/UserRepository';
 import { SessionRepository } from '../repositories/SessionRepository';
 import { AuditLogger } from './AuditLogger';
+import { RateLimitService } from './RateLimitService';
 import type { User } from '../models/User';
 import type { Session } from '../models/Session';
 
@@ -19,12 +21,26 @@ export class AuthenticationError extends Error {
 }
 
 /**
+ * Interface for session persistence operations
+ * Allows injection of platform-specific persistence (e.g., Electron's safeStorage)
+ */
+export interface SessionPersistenceHandler {
+  storeSessionId(sessionId: string): Promise<void>;
+  retrieveSessionId(): Promise<string | null>;
+  clearSession(): Promise<void>;
+  hasStoredSession(): Promise<boolean>;
+  isAvailable(): Promise<boolean>;
+}
+
+/**
  * Authentication service for local user management
  *
  * Features:
  * - User registration with strong password requirements (OWASP)
  * - Password hashing using scrypt (OWASP recommended)
  * - Session management with 24-hour expiration
+ * - Session ID regeneration on every login (prevents session fixation)
+ * - Remember Me with secure session persistence
  * - Timing-safe password comparison (prevents timing attacks)
  * - Comprehensive audit logging
  *
@@ -32,19 +48,24 @@ export class AuthenticationError extends Error {
  * - Passwords never stored in plaintext
  * - Random salt per user (16 bytes)
  * - scrypt key derivation (64-byte hash)
- * - UUID session IDs
+ * - UUID session IDs (always regenerated on login)
  * - All authentication events audited
  */
 export class AuthenticationService {
   private readonly SALT_LENGTH = 16;
   private readonly KEY_LENGTH = 64;
   private readonly SESSION_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
+  private readonly REMEMBER_ME_DURATION_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+  private rateLimitService: RateLimitService;
 
   constructor(
     private userRepository: UserRepository,
     private sessionRepository: SessionRepository,
     private auditLogger?: AuditLogger,
-  ) {}
+    private sessionPersistence?: SessionPersistenceHandler,
+  ) {
+    this.rateLimitService = RateLimitService.getInstance();
+  }
 
   /**
    * Register a new user
@@ -119,16 +140,50 @@ export class AuthenticationService {
   /**
    * Login user and create session
    * Uses timing-safe comparison to prevent timing attacks
+   * Implements rate limiting to prevent brute force attacks
+   * Always generates a new session ID to prevent session fixation
+   * Integrates with SessionPersistenceService for Remember Me functionality
+   * @param rememberMe - If true, session will last 30 days instead of 24 hours
    */
   async login(
     username: string,
     password: string,
+    rememberMe: boolean = false,
     ipAddress?: string,
     userAgent?: string,
   ): Promise<{ user: User; session: Session }> {
+    // Check rate limit before attempting login
+    const rateLimitResult = this.rateLimitService.checkRateLimit(username);
+
+    if (!rateLimitResult.allowed) {
+      // Account is locked due to too many failed attempts
+      this.auditLogger?.log({
+        eventType: 'user.login',
+        userId: undefined,
+        resourceType: 'user',
+        resourceId: 'unknown',
+        action: 'read',
+        success: false,
+        details: {
+          username,
+          reason: 'Rate limit exceeded',
+          remainingTime: rateLimitResult.remainingTime,
+        },
+      });
+
+      const errorMessage = rateLimitResult.remainingTime
+        ? `Account temporarily locked. Please try again in ${Math.ceil(rateLimitResult.remainingTime / 60)} minutes.`
+        : 'Too many failed login attempts. Please try again later.';
+
+      throw new AuthenticationError(errorMessage);
+    }
+
     const user = this.userRepository.findByUsername(username);
 
     if (!user) {
+      // Record failed attempt for rate limiting
+      this.rateLimitService.recordFailedAttempt(username);
+
       this.auditLogger?.log({
         eventType: 'user.login',
         userId: undefined,
@@ -143,6 +198,9 @@ export class AuthenticationService {
 
     // Check if user is active
     if (!user.isActive) {
+      // Record failed attempt for rate limiting
+      this.rateLimitService.recordFailedAttempt(username);
+
       this.auditLogger?.log({
         eventType: 'user.login',
         userId: user.id.toString(),
@@ -164,6 +222,9 @@ export class AuthenticationService {
     );
 
     if (!isValid) {
+      // Record failed attempt for rate limiting
+      this.rateLimitService.recordFailedAttempt(username);
+
       this.auditLogger?.log({
         eventType: 'user.login',
         userId: user.id.toString(),
@@ -176,17 +237,43 @@ export class AuthenticationService {
       throw new AuthenticationError('Invalid credentials');
     }
 
-    // Create session
-    const sessionId = crypto.randomUUID();
-    const expiresAt = new Date(Date.now() + this.SESSION_DURATION_MS);
+    // Login successful - clear rate limit attempts
+    this.rateLimitService.clearAttempts(username);
+
+    // SECURITY: Always generate a NEW session ID to prevent session fixation attacks
+    // Never reuse existing session IDs
+    const newSessionId = uuidv4();
+
+    // Create session with appropriate duration based on rememberMe flag
+    const sessionDuration = rememberMe ? this.REMEMBER_ME_DURATION_MS : this.SESSION_DURATION_MS;
+    const expiresAt = new Date(Date.now() + sessionDuration);
 
     const session = this.sessionRepository.create({
-      id: sessionId,
+      id: newSessionId,  // Force new ID - prevents session fixation
       userId: user.id,
       expiresAt: expiresAt.toISOString(),
       ipAddress,
       userAgent,
+      rememberMe,
     });
+
+    // If Remember Me is enabled, store session in persistent storage
+    let sessionPersisted = false;
+    if (rememberMe && this.sessionPersistence) {
+      try {
+        if (await this.sessionPersistence.isAvailable()) {
+          await this.sessionPersistence.storeSessionId(newSessionId);
+          sessionPersisted = true;
+        } else {
+          console.warn('[AuthenticationService] Persistent storage not available, Remember Me will not persist across app restarts');
+        }
+      } catch (error) {
+        // Don't fail login if persistence fails - just log the error
+        console.error('[AuthenticationService] Failed to persist session:', error);
+      }
+    } else if (rememberMe && !this.sessionPersistence) {
+      console.warn('[AuthenticationService] Remember Me requested but no persistence handler configured');
+    }
 
     // Update last login timestamp
     this.userRepository.updateLastLogin(user.id);
@@ -198,7 +285,13 @@ export class AuthenticationService {
       resourceId: user.id.toString(),
       action: 'read',
       success: true,
-      details: { username, sessionId },
+      details: {
+        username,
+        sessionId: newSessionId,
+        rememberMe: rememberMe ? 'enabled' : 'disabled',
+        sessionRegenerated: true,
+        sessionPersisted: sessionPersisted,
+      },
     });
 
     return { user, session };
@@ -206,11 +299,23 @@ export class AuthenticationService {
 
   /**
    * Logout user and delete session
+   * Clears persisted session if exists (Remember Me cleanup)
    */
-  logout(sessionId: string): void {
+  async logout(sessionId: string): Promise<void> {
     const session = this.sessionRepository.findById(sessionId);
 
     if (session) {
+      // Clear persisted session if exists (Remember Me cleanup)
+      if (this.sessionPersistence) {
+        try {
+          await this.sessionPersistence.clearSession();
+        } catch (error) {
+          // Don't fail logout if persistence clear fails
+          console.error('[AuthenticationService] Failed to clear persisted session:', error);
+        }
+      }
+
+      // Delete session from database
       this.sessionRepository.delete(sessionId);
 
       this.auditLogger?.log({
@@ -220,6 +325,9 @@ export class AuthenticationService {
         resourceId: sessionId,
         action: 'delete',
         success: true,
+        details: {
+          sessionCleared: true,
+        },
       });
     }
   }
@@ -322,6 +430,89 @@ export class AuthenticationService {
       action: 'update',
       success: true,
     });
+  }
+
+  /**
+   * Restore session from persistent storage (for Remember Me functionality)
+   * Called on app startup to restore a previously persisted session
+   * @returns User and session if valid persisted session found, null otherwise
+   */
+  async restorePersistedSession(): Promise<{ user: User; session: Session } | null> {
+    try {
+      // Check if persistence handler is configured
+      if (!this.sessionPersistence) {
+        return null;
+      }
+
+      // Check if there's a persisted session
+      if (!await this.sessionPersistence.hasStoredSession()) {
+        return null;
+      }
+
+      // Retrieve the persisted session ID
+      const sessionId = await this.sessionPersistence.retrieveSessionId();
+      if (!sessionId) {
+        return null;
+      }
+
+      // Validate the session is still valid in the database
+      const session = this.sessionRepository.findById(sessionId);
+      if (!session) {
+        await this.sessionPersistence.clearSession();
+        return null;
+      }
+
+      // Check if session is expired
+      if (this.sessionRepository.isExpired(session)) {
+        await this.sessionPersistence.clearSession();
+        this.sessionRepository.delete(sessionId);
+        return null;
+      }
+
+      // Get the user for this session
+      const user = this.userRepository.findById(session.userId);
+      if (!user) {
+        await this.sessionPersistence.clearSession();
+        this.sessionRepository.delete(sessionId);
+        return null;
+      }
+
+      // Check if user is still active
+      if (!user.isActive) {
+        await this.sessionPersistence.clearSession();
+        this.sessionRepository.delete(sessionId);
+        return null;
+      }
+
+      // Session is valid - log the successful restoration
+      this.auditLogger?.log({
+        eventType: 'user.login',
+        userId: user.id.toString(),
+        resourceType: 'session',
+        resourceId: sessionId,
+        action: 'read',
+        success: true,
+        details: {
+          rememberMe: session.rememberMe,
+          restored: true,
+          restoredFromPersistence: true,
+        },
+      });
+
+      return { user, session };
+
+    } catch (error) {
+      console.error('[AuthenticationService] Error restoring persisted session:', error);
+      // Clear any corrupted persisted session
+      if (this.sessionPersistence) {
+        try {
+          await this.sessionPersistence.clearSession();
+        } catch {
+          // Ignore cleanup errors
+        }
+      }
+      return null;
+    }
   }
 
   /**

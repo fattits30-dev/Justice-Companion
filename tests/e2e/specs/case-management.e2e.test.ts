@@ -1,17 +1,24 @@
-import { test, expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import {
-  launchElectronApp,
+  authenticateTestUser,
   closeElectronApp,
+  launchElectronApp,
   type ElectronTestApp,
 } from '../setup/electron-setup.js';
 import { casesFixtures } from '../setup/fixtures.js';
-import { getTestDatabase, verifyDatabaseState } from '../setup/test-database.js';
+import { getTestDatabase, TEST_USER_CREDENTIALS } from '../setup/test-database.js';
 
 let testApp: ElectronTestApp;
 
 test.beforeEach(async () => {
-  // Launch app with clean database (no seed data)
-  testApp = await launchElectronApp({ seedData: false });
+  // Launch app with seeded data (includes authenticated user)
+  testApp = await launchElectronApp({ seedData: true });
+
+  // Authenticate test user to bypass login screen
+  await authenticateTestUser(testApp.window, {
+    username: TEST_USER_CREDENTIALS.username,
+    password: TEST_USER_CREDENTIALS.password,
+  });
 });
 
 test.afterEach(async () => {

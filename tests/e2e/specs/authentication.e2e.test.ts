@@ -5,7 +5,7 @@ import {
   launchElectronApp,
   type ElectronTestApp,
 } from '../setup/electron-setup.js';
-import { getTestDatabase } from '../setup/test-database.js';
+import { getTestDatabase, seedUserConsents } from '../setup/test-database.js';
 
 /**
  * E2E Tests for Authentication System
@@ -44,21 +44,15 @@ test.describe('Authentication E2E', () => {
 
     // 1. Start app, should show login screen
     await window.waitForLoadState('domcontentloaded');
-    await window.waitForTimeout(1000);
 
-    // Verify we're on the login screen
-    const loginHeading = await window.$('text=Sign In');
-    expect(loginHeading).toBeTruthy();
+    // ✅ Web-first assertion: Wait for login screen
+    await expect(window.getByText('Sign In')).toBeVisible({ timeout: 10000 });
 
-    // 2. Click "Create Account" button
-    const createAccountBtn = await window.$('button:has-text("Create Account")');
-    expect(createAccountBtn).toBeTruthy();
-    await createAccountBtn?.click();
-    await window.waitForTimeout(500);
+    // 2. Click "Create Account" button (full text: "Don't have an account? Create one")
+    await window.getByRole('button', { name: /Create one/i }).click();
 
-    // Verify registration screen is shown
-    const registerHeading = await window.$('text=Create Account');
-    expect(registerHeading).toBeTruthy();
+    // ✅ Web-first assertion: Wait for registration screen
+    await expect(window.getByText('Create Account')).toBeVisible({ timeout: 5000 });
 
     // 3. Fill registration form
     const username = `testuser_${Date.now()}`;
@@ -70,40 +64,27 @@ test.describe('Authentication E2E', () => {
     await window.fill('#password', password);
     await window.fill('#confirmPassword', password);
 
-    // 4. Click "Register" button
-    const registerBtn = await window.$('button:has-text("Create Account")');
-    expect(registerBtn).toBeTruthy();
-    await registerBtn?.click();
-    await window.waitForTimeout(2000);
+    // 4. Click "Register" button and wait for navigation to consent screen
+    await window.getByRole('button', { name: /Create Account/i }).click();
 
-    // 5. Should show consent banner
-    const consentHeading = await window.$('text=Privacy & Consent');
-    expect(consentHeading).toBeTruthy();
+    // ✅ Web-first assertion: Wait for consent screen to appear after registration
+    await expect(window.getByText('Privacy & Consent')).toBeVisible({ timeout: 10000 });
 
-    // Verify required consent checkbox is present
-    const dataProcessingCheckbox = await window.$('input[type="checkbox"]');
-    expect(dataProcessingCheckbox).toBeTruthy();
-
-    // 6. Click first checkbox (data processing - required)
+    // 5. Verify required consent checkbox is present and check it
     const checkboxes = await window.$$('input[type="checkbox"]');
+    expect(checkboxes.length).toBeGreaterThan(0);
     await checkboxes[0]?.check(); // Data processing
-    await window.waitForTimeout(300);
 
-    // Click "Accept All" or "Accept & Continue" button
-    const acceptBtn = await window.$('button:has-text("Accept")');
-    expect(acceptBtn).toBeTruthy();
-    await acceptBtn?.click();
-    await window.waitForTimeout(2000);
+    // 6. Click "Accept" button and wait for navigation to main app
+    await window.getByRole('button', { name: /Accept/i }).click();
 
-    // 7. Should show main app (dashboard or main content)
-    // Check if we've navigated past the consent screen
-    const consentBanner = await window.$('text=Privacy & Consent');
-    expect(consentBanner).toBeFalsy(); // Should be gone
+    // ✅ Web-first assertion: Wait for consent screen to disappear
+    await expect(window.getByText('Privacy & Consent')).toBeHidden({ timeout: 10000 });
 
-    // 8. Verify user info is displayed (check for username in UI)
-    // The sidebar or header should show the logged-in username
-    const userElement = await window.$(`text=${username}`);
-    expect(userElement).toBeTruthy();
+    // 7. Verify successful login by checking Dashboard is displayed
+    await expect(window.getByText('Welcome to Justice Companion')).toBeVisible({
+      timeout: 5000,
+    });
 
     // Verify database state
     const db = getTestDatabase(dbPath);
@@ -153,40 +134,31 @@ test.describe('Authentication E2E', () => {
 
     const user = db.prepare('SELECT * FROM users WHERE username = ?').get(username) as any;
 
-    // Grant required consent
-    db.prepare(
-      `
-      INSERT INTO consents (user_id, consent_type, granted, granted_at)
-      VALUES (?, 'data_processing', 1, datetime('now'))
-    `
-    ).run(user.id);
+    // Grant required consent using shared function
+    seedUserConsents(db, user.id);
 
     db.close();
 
     // 2. Start app, should show login screen
     await window.waitForLoadState('domcontentloaded');
-    await window.waitForTimeout(1000);
 
-    const loginHeading = await window.$('text=Sign In');
-    expect(loginHeading).toBeTruthy();
+    // ✅ Web-first assertion: Wait for login screen
+    await expect(window.getByText('Sign In')).toBeVisible({ timeout: 10000 });
 
     // 3. Fill login form
     await window.fill('#username', username);
     await window.fill('#password', password);
 
-    // 4. Click "Login" button
-    const loginBtn = await window.$('button:has-text("Sign In")');
-    expect(loginBtn).toBeTruthy();
-    await loginBtn?.click();
-    await window.waitForTimeout(2000);
+    // 4. Click "Login" button and wait for navigation
+    await window.getByRole('button', { name: 'Login' }).click();
 
-    // 5. Should show main app immediately (no consent banner)
-    const consentBanner = await window.$('text=Privacy & Consent');
-    expect(consentBanner).toBeFalsy();
+    // ✅ Web-first assertion: Wait for main app (no consent banner should appear)
+    await expect(window.getByText('Privacy & Consent')).toBeHidden({ timeout: 5000 });
 
-    // 6. Verify user name in UI
-    const userElement = await window.$(`text=${username}`);
-    expect(userElement).toBeTruthy();
+    // 5. Verify successful login by checking Dashboard is displayed
+    await expect(window.getByText('Welcome to Justice Companion')).toBeVisible({
+      timeout: 5000,
+    });
 
     // Verify session was created
     const dbVerify = getTestDatabase(dbPath);
@@ -223,26 +195,24 @@ test.describe('Authentication E2E', () => {
 
     // 2. Start app at login screen
     await window.waitForLoadState('domcontentloaded');
-    await window.waitForTimeout(1000);
+
+    // ✅ Web-first assertion: Wait for login screen
+    await expect(window.getByText('Sign In')).toBeVisible({ timeout: 10000 });
 
     // 3. Fill login form with wrong password
     await window.fill('#username', username);
     await window.fill('#password', 'WrongPassword123!');
 
     // 4. Click "Login" button
-    const loginBtn = await window.$('button:has-text("Sign In")');
-    await loginBtn?.click();
-    await window.waitForTimeout(1500);
+    await window.getByRole('button', { name: 'Login' }).click();
 
-    // 5. Should show error message
-    const errorMessage = await window.$(
-      'text=/Invalid.*credentials|Login failed|Authentication failed/i'
-    );
-    expect(errorMessage).toBeTruthy();
+    // ✅ Web-first assertion: Wait for error message to appear
+    await expect(
+      window.getByText(/Invalid.*credentials|Login failed|Authentication failed/i)
+    ).toBeVisible({ timeout: 5000 });
 
-    // 6. Should remain on login screen
-    const loginHeading = await window.$('text=Sign In');
-    expect(loginHeading).toBeTruthy();
+    // 5. Should remain on login screen
+    await expect(window.getByText('Sign In')).toBeVisible();
 
     // User should NOT be in main app
     const mainContent = await window.$('[data-testid="dashboard"]');
@@ -278,8 +248,8 @@ test.describe('Authentication E2E', () => {
     // Grant consent
     db.prepare(
       `
-      INSERT INTO consents (user_id, consent_type, granted, granted_at)
-      VALUES (?, 'data_processing', 1, datetime('now'))
+      INSERT INTO consents (user_id, consent_type, granted, granted_at, version)
+      VALUES (?, 'data_processing', 1, datetime('now'), '1.0')
     `
     ).run(user.id);
 
@@ -287,29 +257,30 @@ test.describe('Authentication E2E', () => {
 
     // Login
     await window.waitForLoadState('domcontentloaded');
-    await window.waitForTimeout(1000);
+
+    // ✅ Web-first assertion: Wait for login screen
+    await expect(window.getByText('Sign In')).toBeVisible({ timeout: 10000 });
+
     await window.fill('#username', username);
     await window.fill('#password', password);
-    const loginBtn = await window.$('button:has-text("Sign In")');
-    await loginBtn?.click();
-    await window.waitForTimeout(2000);
+    await window.getByRole('button', { name: 'Login' }).click();
 
-    // 2. Verify logged in
-    let userElement = await window.$(`text=${username}`);
-    expect(userElement).toBeTruthy();
+    // 2. Verify logged in by checking Dashboard is displayed
+    await expect(window.getByText('Welcome to Justice Companion')).toBeVisible({
+      timeout: 10000,
+    });
 
     // 3. Refresh page
     await window.reload();
     await window.waitForLoadState('domcontentloaded');
-    await window.waitForTimeout(2000);
 
-    // 4. Should still be logged in (no login screen shown)
-    const loginScreen = await window.$('text=Sign In');
-    expect(loginScreen).toBeFalsy();
+    // ✅ Web-first assertion: Login screen should NOT appear
+    await expect(window.getByText('Sign In')).toBeHidden({ timeout: 5000 });
 
-    // 5. User name still displayed
-    userElement = await window.$(`text=${username}`);
-    expect(userElement).toBeTruthy();
+    // 4. Dashboard still displayed (session persisted)
+    await expect(window.getByText('Welcome to Justice Companion')).toBeVisible({
+      timeout: 5000,
+    });
   });
 
   /**
@@ -341,8 +312,8 @@ test.describe('Authentication E2E', () => {
     // Grant consent
     db.prepare(
       `
-      INSERT INTO consents (user_id, consent_type, granted, granted_at)
-      VALUES (?, 'data_processing', 1, datetime('now'))
+      INSERT INTO consents (user_id, consent_type, granted, granted_at, version)
+      VALUES (?, 'data_processing', 1, datetime('now'), '1.0')
     `
     ).run(user.id);
 
@@ -350,12 +321,18 @@ test.describe('Authentication E2E', () => {
 
     // Login
     await window.waitForLoadState('domcontentloaded');
-    await window.waitForTimeout(1000);
+
+    // ✅ Web-first assertion: Wait for login screen
+    await expect(window.getByText('Sign In')).toBeVisible({ timeout: 10000 });
+
     await window.fill('#username', username);
     await window.fill('#password', password);
-    const loginBtn = await window.$('button:has-text("Login")');
-    await loginBtn?.click();
-    await window.waitForTimeout(2000);
+    await window.getByRole('button', { name: 'Login' }).click();
+
+    // ✅ Wait for successful login by checking Dashboard is displayed
+    await expect(window.getByText('Welcome to Justice Companion')).toBeVisible({
+      timeout: 10000,
+    });
 
     // 2. Click logout button (usually in sidebar or user menu)
     // Try multiple possible logout button locations
@@ -371,7 +348,8 @@ test.describe('Authentication E2E', () => {
         (await window.$('[data-testid="user-menu"]')) || (await window.$(`text=${username}`));
       if (userMenu) {
         await userMenu.click();
-        await window.waitForTimeout(500);
+        // ✅ Wait for menu to open
+        await window.waitForTimeout(300);
         logoutBtn =
           (await window.$('button:has-text("Logout")')) ||
           (await window.$('button:has-text("Log Out")'));
@@ -382,7 +360,6 @@ test.describe('Authentication E2E', () => {
 
     // 3. Click logout button
     await logoutBtn?.click();
-    await window.waitForTimeout(500);
 
     // 4. May show confirmation dialog
     const confirmBtn =
@@ -391,13 +368,10 @@ test.describe('Authentication E2E', () => {
       (await window.$('button:has-text("Confirm")'));
     if (confirmBtn) {
       await confirmBtn.click();
-      await window.waitForTimeout(1000);
     }
 
-    // 5. Should return to login screen
-    await window.waitForTimeout(1000);
-    const loginScreen = await window.$('text=Sign In');
-    expect(loginScreen).toBeTruthy();
+    // ✅ Web-first assertion: Should return to login screen
+    await expect(window.getByText('Sign In')).toBeVisible({ timeout: 10000 });
 
     // 6. Session should be invalidated in database
     const dbVerify = getTestDatabase(dbPath);
@@ -417,12 +391,15 @@ test.describe('Authentication E2E', () => {
     const { window } = testApp;
 
     await window.waitForLoadState('domcontentloaded');
-    await window.waitForTimeout(1000);
+
+    // ✅ Web-first assertion: Wait for login screen
+    await expect(window.getByText('Sign In')).toBeVisible({ timeout: 10000 });
 
     // Navigate to registration screen
-    const createAccountBtn = await window.$('button:has-text("Create Account")');
-    await createAccountBtn?.click();
-    await window.waitForTimeout(500);
+    await window.getByRole('button', { name: /Create one/i }).click();
+
+    // ✅ Wait for registration screen
+    await expect(window.getByText('Create Account')).toBeVisible({ timeout: 5000 });
 
     const username = `passtest_${Date.now()}`;
     const email = `${username}@example.com`;
@@ -434,67 +411,50 @@ test.describe('Authentication E2E', () => {
     // Test 1: Password too short (< 12 characters)
     await window.fill('#password', 'Short1A');
     await window.fill('#confirmPassword', 'Short1A');
-    const registerBtn1 = await window.$('button:has-text("Create Account")');
-    await registerBtn1?.click();
-    await window.waitForTimeout(800);
+    await window.getByRole('button', { name: /Create Account/i }).click();
 
-    let errorMsg = await window.$('text=/at least 12 characters/i');
-    expect(errorMsg).toBeTruthy();
+    // ✅ Wait for error message
+    await expect(window.getByText(/at least 12 characters/i)).toBeVisible({ timeout: 3000 });
 
     // Test 2: Password missing uppercase
     await window.fill('#password', 'nouppercase123');
     await window.fill('#confirmPassword', 'nouppercase123');
-    const registerBtn2 = await window.$('button:has-text("Create Account")');
-    await registerBtn2?.click();
-    await window.waitForTimeout(800);
+    await window.getByRole('button', { name: /Create Account/i }).click();
 
-    errorMsg = await window.$('text=/uppercase/i');
-    expect(errorMsg).toBeTruthy();
+    // ✅ Wait for error message
+    await expect(window.getByText(/uppercase/i)).toBeVisible({ timeout: 3000 });
 
     // Test 3: Password missing lowercase
     await window.fill('#password', 'NOLOWERCASE123');
     await window.fill('#confirmPassword', 'NOLOWERCASE123');
-    const registerBtn3 = await window.$('button:has-text("Create Account")');
-    await registerBtn3?.click();
-    await window.waitForTimeout(800);
+    await window.getByRole('button', { name: /Create Account/i }).click();
 
-    errorMsg = await window.$('text=/lowercase/i');
-    expect(errorMsg).toBeTruthy();
+    // ✅ Wait for error message
+    await expect(window.getByText(/lowercase/i)).toBeVisible({ timeout: 3000 });
 
     // Test 4: Password missing number
     await window.fill('#password', 'NoNumbersHere!');
     await window.fill('#confirmPassword', 'NoNumbersHere!');
-    const registerBtn4 = await window.$('button:has-text("Create Account")');
-    await registerBtn4?.click();
-    await window.waitForTimeout(800);
+    await window.getByRole('button', { name: /Create Account/i }).click();
 
-    errorMsg = await window.$('text=/number/i');
-    expect(errorMsg).toBeTruthy();
+    // ✅ Wait for error message
+    await expect(window.getByText(/number/i)).toBeVisible({ timeout: 3000 });
 
     // Test 5: Passwords don't match
     await window.fill('#password', 'ValidPassword123!');
     await window.fill('#confirmPassword', 'DifferentPassword123!');
-    const registerBtn5 = await window.$('button:has-text("Create Account")');
-    await registerBtn5?.click();
-    await window.waitForTimeout(800);
+    await window.getByRole('button', { name: /Create Account/i }).click();
 
-    errorMsg = await window.$("text=/do not match|don't match/i");
-    expect(errorMsg).toBeTruthy();
+    // ✅ Wait for error message
+    await expect(window.getByText(/do not match|don't match/i)).toBeVisible({ timeout: 3000 });
 
     // Test 6: Valid password - should proceed to consent
     await window.fill('#password', 'ValidPassword123!');
     await window.fill('#confirmPassword', 'ValidPassword123!');
-    const registerBtn6 = await window.$('button:has-text("Create Account")');
-    await registerBtn6?.click();
-    await window.waitForTimeout(2000);
+    await window.getByRole('button', { name: /Create Account/i }).click();
 
-    // Should reach consent screen or next step
-    const registrationScreen = await window.$('text=Create Account');
-    // If we're no longer on registration screen, validation passed
-    // (We'll be on consent screen or logged in)
-    const consentOrDashboard =
-      (await window.$('text=Privacy & Consent')) || (await window.$(`text=${username}`));
-    expect(consentOrDashboard).toBeTruthy();
+    // ✅ Should reach consent screen (registration screen should disappear)
+    await expect(window.getByText('Privacy & Consent')).toBeVisible({ timeout: 10000 });
   });
 
   /**
@@ -526,8 +486,8 @@ test.describe('Authentication E2E', () => {
     // Grant consent
     db.prepare(
       `
-      INSERT INTO consents (user_id, consent_type, granted, granted_at)
-      VALUES (?, 'data_processing', 1, datetime('now'))
+      INSERT INTO consents (user_id, consent_type, granted, granted_at, version)
+      VALUES (?, 'data_processing', 1, datetime('now'), '1.0')
     `
     ).run(user.id);
 
@@ -535,16 +495,18 @@ test.describe('Authentication E2E', () => {
 
     // Login
     await window.waitForLoadState('domcontentloaded');
-    await window.waitForTimeout(1000);
+
+    // ✅ Web-first assertion: Wait for login screen
+    await expect(window.getByText('Sign In')).toBeVisible({ timeout: 10000 });
+
     await window.fill('#username', username);
     await window.fill('#password', password);
-    const loginBtn = await window.$('button:has-text("Sign In")');
-    await loginBtn?.click();
-    await window.waitForTimeout(2000);
+    await window.getByRole('button', { name: 'Login' }).click();
 
-    // Verify logged in
-    let userElement = await window.$(`text=${username}`);
-    expect(userElement).toBeTruthy();
+    // ✅ Verify logged in by checking Dashboard is displayed
+    await expect(window.getByText('Welcome to Justice Companion')).toBeVisible({
+      timeout: 10000,
+    });
 
     // 2. Manually expire session in database
     const dbExpire = getTestDatabase(dbPath);
@@ -562,14 +524,42 @@ test.describe('Authentication E2E', () => {
     // 3. Try to access protected route or refresh
     await window.reload();
     await window.waitForLoadState('domcontentloaded');
-    await window.waitForTimeout(2000);
 
-    // 4. Should redirect to login screen
-    const loginScreen = await window.$('text=Sign In');
-    expect(loginScreen).toBeTruthy();
+    // ✅ Web-first assertion: Should redirect to login screen
+    await expect(window.getByText('Sign In')).toBeVisible({ timeout: 10000 });
 
-    // User should not be logged in
-    userElement = await window.$(`text=${username}`);
-    expect(userElement).toBeFalsy();
+    // Dashboard should not be visible (user logged out)
+    await expect(window.getByText('Welcome to Justice Companion')).toBeHidden({
+      timeout: 3000,
+    });
+  });
+
+  /**
+   * Scenario 8: Remember Me Checkbox Visibility
+   * Verify Remember Me checkbox is visible and accessible on login screen
+   */
+  test('should display Remember Me checkbox on login screen', async () => {
+    const { window } = testApp;
+
+    // 1. Navigate to login screen
+    await window.waitForLoadState('domcontentloaded');
+    await expect(window.getByText('Sign In')).toBeVisible({ timeout: 10000 });
+
+    // 2. Verify Remember Me checkbox is visible
+    const rememberMeCheckbox = window.getByLabel('Remember me for 30 days');
+    await expect(rememberMeCheckbox).toBeVisible();
+
+    // 3. Verify checkbox is not checked by default
+    await expect(rememberMeCheckbox).not.toBeChecked();
+
+    // 4. Verify checkbox can be toggled
+    await rememberMeCheckbox.check();
+    await expect(rememberMeCheckbox).toBeChecked();
+
+    await rememberMeCheckbox.uncheck();
+    await expect(rememberMeCheckbox).not.toBeChecked();
+
+    // 5. Verify label text is correct
+    await expect(window.getByText('Remember me for 30 days')).toBeVisible();
   });
 });

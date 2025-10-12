@@ -1,12 +1,23 @@
-import { test, expect } from '@playwright/test';
-import { launchElectronApp, closeElectronApp, type ElectronTestApp } from '../setup/electron-setup.js';
-import { userFactsFixtures, caseFactsFixtures } from '../setup/fixtures.js';
-import { getTestDatabase } from '../setup/test-database.js';
+import { expect, test } from '@playwright/test';
+import {
+  authenticateTestUser,
+  closeElectronApp,
+  launchElectronApp,
+  type ElectronTestApp,
+} from '../setup/electron-setup.js';
+import { caseFactsFixtures, userFactsFixtures } from '../setup/fixtures.js';
+import { getTestDatabase, TEST_USER_CREDENTIALS } from '../setup/test-database.js';
 
 let testApp: ElectronTestApp;
 
 test.beforeEach(async () => {
   testApp = await launchElectronApp({ seedData: true });
+
+  // Authenticate test user to bypass login screen
+  await authenticateTestUser(testApp.window, {
+    username: TEST_USER_CREDENTIALS.username,
+    password: TEST_USER_CREDENTIALS.password,
+  });
 });
 
 test.afterEach(async () => {
@@ -22,9 +33,10 @@ test.describe('Facts Tracking E2E', () => {
     await window.waitForTimeout(2000);
 
     // Navigate to user facts
-    const factsNav = await window.$('[data-testid="nav-user-facts"]') ||
-                     await window.$('a:has-text("My Facts")') ||
-                     await window.$('a:has-text("User Facts")');
+    const factsNav =
+      (await window.$('[data-testid="nav-user-facts"]')) ||
+      (await window.$('a:has-text("My Facts")')) ||
+      (await window.$('a:has-text("User Facts")'));
 
     if (factsNav) {
       await factsNav.click();
@@ -32,8 +44,9 @@ test.describe('Facts Tracking E2E', () => {
     }
 
     // Click create fact button
-    const createBtn = await window.$('[data-testid="create-user-fact-btn"]') ||
-                      await window.$('button:has-text("Add Fact")');
+    const createBtn =
+      (await window.$('[data-testid="create-user-fact-btn"]')) ||
+      (await window.$('button:has-text("Add Fact")'));
 
     if (createBtn) {
       await createBtn.click();
@@ -45,8 +58,9 @@ test.describe('Facts Tracking E2E', () => {
         await typeSelect.selectOption(factData.factType);
       }
 
-      const contentInput = await window.$('[name="factContent"]') ||
-                          await window.$('textarea[placeholder*="fact" i]');
+      const contentInput =
+        (await window.$('[name="factContent"]')) ||
+        (await window.$('textarea[placeholder*="fact" i]'));
       if (contentInput) {
         await contentInput.fill(factData.factContent);
       }
@@ -57,8 +71,9 @@ test.describe('Facts Tracking E2E', () => {
       }
 
       // Save fact
-      const saveBtn = await window.$('[data-testid="save-user-fact-btn"]') ||
-                     await window.$('button:has-text("Save")');
+      const saveBtn =
+        (await window.$('[data-testid="save-user-fact-btn"]')) ||
+        (await window.$('button:has-text("Save")'));
       if (saveBtn) {
         await saveBtn.click();
         await window.waitForTimeout(2000);
@@ -70,7 +85,9 @@ test.describe('Facts Tracking E2E', () => {
 
       // Verify database persistence
       const db = getTestDatabase(dbPath);
-      const dbFact = db.prepare('SELECT * FROM user_facts WHERE fact_type = ?').get(factData.factType) as any;
+      const dbFact = db
+        .prepare('SELECT * FROM user_facts WHERE fact_type = ?')
+        .get(factData.factType) as any;
 
       expect(dbFact).toBeDefined();
       expect(dbFact.importance).toBe(factData.importance);
@@ -93,8 +110,9 @@ test.describe('Facts Tracking E2E', () => {
       await window.waitForTimeout(1000);
 
       // Click on first case
-      const firstCase = await window.$('[data-testid="case-item"]') ||
-                        await window.$$('.case-card').then(cards => cards[0]);
+      const firstCase =
+        (await window.$('[data-testid="case-item"]')) ||
+        (await window.$$('.case-card').then((cards) => cards[0]));
       if (firstCase) {
         await firstCase.click();
         await window.waitForTimeout(1000);
@@ -102,8 +120,9 @@ test.describe('Facts Tracking E2E', () => {
     }
 
     // Find case facts section
-    const factsTab = await window.$('[data-testid="case-facts-tab"]') ||
-                     await window.$('button:has-text("Facts")');
+    const factsTab =
+      (await window.$('[data-testid="case-facts-tab"]')) ||
+      (await window.$('button:has-text("Facts")'));
 
     if (factsTab) {
       await factsTab.click();
@@ -111,8 +130,9 @@ test.describe('Facts Tracking E2E', () => {
     }
 
     // Create case fact
-    const createBtn = await window.$('[data-testid="create-case-fact-btn"]') ||
-                      await window.$('button:has-text("Add Fact")');
+    const createBtn =
+      (await window.$('[data-testid="create-case-fact-btn"]')) ||
+      (await window.$('button:has-text("Add Fact")'));
 
     if (createBtn) {
       await createBtn.click();
@@ -142,7 +162,9 @@ test.describe('Facts Tracking E2E', () => {
 
       // Verify in database
       const db = getTestDatabase(dbPath);
-      const dbFact = db.prepare('SELECT * FROM case_facts WHERE category = ?').get(factData.category) as any;
+      const dbFact = db
+        .prepare('SELECT * FROM case_facts WHERE category = ?')
+        .get(factData.category) as any;
 
       expect(dbFact).toBeDefined();
       db.close();
@@ -175,8 +197,9 @@ test.describe('Facts Tracking E2E', () => {
     }
 
     // Filter by employment
-    const employmentFilter = await window.$('[data-testid="filter-employment"]') ||
-                             await window.$('button:has-text("Employment")');
+    const employmentFilter =
+      (await window.$('[data-testid="filter-employment"]')) ||
+      (await window.$('button:has-text("Employment")'));
 
     if (employmentFilter) {
       await employmentFilter.click();
@@ -217,8 +240,9 @@ test.describe('Facts Tracking E2E', () => {
     const factCard = await window.$('text=Test fact to update');
     if (factCard) {
       // Click to edit
-      const editBtn = await window.$('[data-testid="edit-fact-999"]') ||
-                     factCard.locator('button:has-text("Edit")');
+      const editBtn =
+        (await window.$('[data-testid="edit-fact-999"]')) ||
+        factCard.locator('button:has-text("Edit")');
 
       if (editBtn) {
         await editBtn.click();
@@ -237,7 +261,9 @@ test.describe('Facts Tracking E2E', () => {
 
           // Verify update
           const dbVerify = getTestDatabase(dbPath);
-          const updatedFact = dbVerify.prepare('SELECT * FROM user_facts WHERE id = ?').get(999) as any;
+          const updatedFact = dbVerify
+            .prepare('SELECT * FROM user_facts WHERE id = ?')
+            .get(999) as any;
 
           expect(updatedFact.fact_content).toContain('Updated');
           dbVerify.close();
@@ -245,8 +271,9 @@ test.describe('Facts Tracking E2E', () => {
       }
 
       // Delete the fact
-      const deleteBtn = await window.$('[data-testid="delete-fact-999"]') ||
-                       await window.$('button:has-text("Delete")');
+      const deleteBtn =
+        (await window.$('[data-testid="delete-fact-999"]')) ||
+        (await window.$('button:has-text("Delete")'));
 
       if (deleteBtn) {
         await deleteBtn.click();

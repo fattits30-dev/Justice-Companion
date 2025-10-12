@@ -174,7 +174,8 @@ export class EncryptionService {
    * Usage:
    * ```ts
    * const key = EncryptionService.generateKey();
-   * console.log('ENCRYPTION_KEY_BASE64=' + key.toString('base64'));
+   * const keyBase64 = key.toString('base64');
+   * // Store securely in .env file: ENCRYPTION_KEY_BASE64=<keyBase64>
    * ```
    */
   static generateKey(): Buffer {

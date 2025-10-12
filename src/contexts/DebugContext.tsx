@@ -45,12 +45,10 @@ export function DebugProvider({ children }: DebugProviderProps): JSX.Element {
 
   const enableDebug = useCallback(() => {
     setIsDebugMode(true);
-    console.log('[DebugContext] Debug mode ENABLED');
   }, []);
 
   const disableDebug = useCallback(() => {
     setIsDebugMode(false);
-    console.log('[DebugContext] Debug mode DISABLED');
   }, []);
 
   const log = useCallback(
@@ -167,10 +165,10 @@ if (typeof window !== 'undefined') {
 
   (window as WindowWithDebug).debug = {
     enable: () => {
-      console.log('Debug mode enabled via window.debug.enable()');
+      // Enable debug mode
     },
     disable: () => {
-      console.log('Debug mode disabled via window.debug.disable()');
+      // Disable debug mode
     },
   };
 }

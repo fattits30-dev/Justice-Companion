@@ -44,7 +44,7 @@ export function PostItNote({
   onUpdate,
   onDelete,
   readOnly = false,
-}: PostItNoteProps) {
+}: PostItNoteProps): JSX.Element {
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(content);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -61,14 +61,14 @@ export function PostItNote({
     }
   }, [isEditing]);
 
-  const handleBlur = () => {
+  const handleBlur = (): void => {
     setIsEditing(false);
     if (editedContent.trim() !== content && onUpdate) {
       onUpdate(id, editedContent.trim());
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent): void => {
     if (e.key === 'Escape') {
       setEditedContent(content);
       setIsEditing(false);

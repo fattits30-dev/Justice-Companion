@@ -46,7 +46,7 @@ export class ViewErrorBoundary extends Component<ViewErrorBoundaryProps, ViewErr
     console.error(`[ViewErrorBoundary:${this.props.viewName}] Caught error:`, error);
     console.error(
       `[ViewErrorBoundary:${this.props.viewName}] Component stack:`,
-      errorInfo.componentStack
+      errorInfo.componentStack,
     );
 
     // Send to main process via IPC for persistent logging
@@ -146,7 +146,7 @@ export class ViewErrorBoundary extends Component<ViewErrorBoundaryProps, ViewErr
                 The <span className="font-semibold text-blue-400">{this.props.viewName}</span> view
                 encountered an error.
               </p>
-              <p className="text-sm text-slate-400">
+              <p className="text-sm text-slate-300">
                 Don't worry - the rest of the application is still working. You can navigate back to
                 the dashboard or try again.
               </p>
@@ -156,7 +156,7 @@ export class ViewErrorBoundary extends Component<ViewErrorBoundaryProps, ViewErr
             {process.env.NODE_ENV === 'development' && this.state.error && (
               <div className="mb-6">
                 <details className="group">
-                  <summary className="cursor-pointer text-sm font-semibold text-slate-400 hover:text-slate-300 select-none">
+                  <summary className="cursor-pointer text-sm font-semibold text-slate-300 hover:text-white select-none">
                     Error Details (Dev Only)
                   </summary>
                   <div className="mt-2 rounded-md bg-slate-950 border border-red-500/20 p-3">
@@ -171,10 +171,10 @@ export class ViewErrorBoundary extends Component<ViewErrorBoundaryProps, ViewErr
             {/* Component Stack (Development Only) */}
             {process.env.NODE_ENV === 'development' && this.state.errorInfo && (
               <details className="mb-6">
-                <summary className="cursor-pointer text-sm font-semibold text-slate-400 hover:text-slate-300 select-none">
+                <summary className="cursor-pointer text-sm font-semibold text-slate-300 hover:text-white select-none">
                   Component Stack (Dev Only)
                 </summary>
-                <pre className="mt-2 overflow-auto rounded-md bg-slate-950 border border-red-500/20 p-3 text-xs text-slate-400 max-h-32">
+                <pre className="mt-2 overflow-auto rounded-md bg-slate-950 border border-red-500/20 p-3 text-xs text-slate-300 max-h-32">
                   {this.state.errorInfo.componentStack}
                 </pre>
               </details>

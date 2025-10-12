@@ -2,6 +2,20 @@ import { getDb } from '../db/database';
 import type { Session, CreateSessionInput } from '../models/Session';
 
 /**
+ * Raw database row from sessions table
+ * rememberMe is stored as INTEGER (0/1) in SQLite
+ */
+interface SessionRow {
+  id: string;
+  userId: number;
+  expiresAt: string;
+  createdAt: string;
+  ipAddress: string | null;
+  userAgent: string | null;
+  rememberMe: number; // INTEGER 0 or 1
+}
+
+/**
  * Repository for managing user sessions
  * Handles session creation, validation, and cleanup
  *
@@ -18,14 +32,15 @@ export class SessionRepository {
     const db = getDb();
 
     const stmt = db.prepare(`
-      INSERT INTO sessions (id, user_id, expires_at, ip_address, user_agent)
-      VALUES (@id, @userId, @expiresAt, @ipAddress, @userAgent)
+      INSERT INTO sessions (id, user_id, expires_at, remember_me, ip_address, user_agent)
+      VALUES (@id, @userId, @expiresAt, @rememberMe, @ipAddress, @userAgent)
     `);
 
     stmt.run({
       id: input.id,
       userId: input.userId,
       expiresAt: input.expiresAt,
+      rememberMe: input.rememberMe ? 1 : 0, // Convert boolean to INTEGER for SQLite
       ipAddress: input.ipAddress ?? null,
       userAgent: input.userAgent ?? null,
     });
@@ -45,13 +60,22 @@ export class SessionRepository {
         expires_at as expiresAt,
         created_at as createdAt,
         ip_address as ipAddress,
-        user_agent as userAgent
+        user_agent as userAgent,
+        remember_me as rememberMe
       FROM sessions
       WHERE id = ?
     `);
 
-    const row = stmt.get(id) as Session | undefined;
-    return row ?? null;
+    const row = stmt.get(id) as SessionRow | undefined;
+    if (!row) {
+      return null;
+    }
+
+    // Convert INTEGER (0/1) back to boolean
+    return {
+      ...row,
+      rememberMe: row.rememberMe === 1,
+    } as Session;
   }
 
   /**
@@ -66,13 +90,19 @@ export class SessionRepository {
         expires_at as expiresAt,
         created_at as createdAt,
         ip_address as ipAddress,
-        user_agent as userAgent
+        user_agent as userAgent,
+        remember_me as rememberMe
       FROM sessions
       WHERE user_id = ?
       ORDER BY created_at DESC
     `);
 
-    return stmt.all(userId) as Session[];
+    const rows = stmt.all(userId) as SessionRow[];
+    // Convert INTEGER (0/1) back to boolean for each session
+    return rows.map(row => ({
+      ...row,
+      rememberMe: row.rememberMe === 1,
+    })) as Session[];
   }
 
   /**

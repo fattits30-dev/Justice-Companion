@@ -27,7 +27,7 @@ export class LegalIssuesService {
         context: 'createLegalIssue',
         caseId: input.caseId,
         fields: ['title', 'description', 'relevantLaw', 'guidance'].filter(
-          (field) => field in input
+          (field) => field in input,
         ),
       });
       throw error;

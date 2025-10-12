@@ -179,7 +179,7 @@ export class OpenAIService {
         undefined, // No think tokens for OpenAI
         (extractedSources) => {
           sources.push(...extractedSources);
-        }
+        },
       );
 
       return {
@@ -222,7 +222,7 @@ export class OpenAIService {
     onComplete: () => void,
     onError: (error: string) => void,
     _onThinkToken?: (token: string) => void, // Not used - OpenAI doesn't have <think> tags
-    onSources?: (sources: string[]) => void
+    onSources?: (sources: string[]) => void,
   ): Promise<void> {
     try {
       // Validate configuration
@@ -330,7 +330,7 @@ export class OpenAIService {
     caseId: number | undefined,
     onToken: (token: string) => void,
     onComplete: () => void,
-    onError: (error: string) => void
+    onError: (error: string) => void,
   ): Promise<void> {
     try {
       // Validate configuration

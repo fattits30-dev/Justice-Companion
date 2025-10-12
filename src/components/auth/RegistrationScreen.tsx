@@ -41,7 +41,7 @@ function getStrengthColor(strength: number): string {
   return colors[strength] || 'bg-red-500';
 }
 
-export function RegistrationScreen({ onSwitchToLogin }: RegistrationScreenProps) {
+export function RegistrationScreen({ onSwitchToLogin }: RegistrationScreenProps): JSX.Element {
   const { register } = useAuth();
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -52,7 +52,7 @@ export function RegistrationScreen({ onSwitchToLogin }: RegistrationScreenProps)
 
   const passwordStrength = calculatePasswordStrength(password);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     setError(null);
 
@@ -154,7 +154,7 @@ export function RegistrationScreen({ onSwitchToLogin }: RegistrationScreenProps)
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-800/80 border border-blue-700/40 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                className="w-full px-4 py-3 bg-slate-800/80 border border-blue-700/40 rounded-xl text-white placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 placeholder="Choose a username"
                 autoFocus
                 disabled={isLoading}
@@ -181,7 +181,7 @@ export function RegistrationScreen({ onSwitchToLogin }: RegistrationScreenProps)
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-800/80 border border-blue-700/40 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                className="w-full px-4 py-3 bg-slate-800/80 border border-blue-700/40 rounded-xl text-white placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 placeholder="your@email.com"
                 disabled={isLoading}
                 aria-required="true"
@@ -203,7 +203,7 @@ export function RegistrationScreen({ onSwitchToLogin }: RegistrationScreenProps)
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-800/80 border border-blue-700/40 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                className="w-full px-4 py-3 bg-slate-800/80 border border-blue-700/40 rounded-xl text-white placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 placeholder="At least 12 characters"
                 disabled={isLoading}
                 aria-required="true"
@@ -220,7 +220,7 @@ export function RegistrationScreen({ onSwitchToLogin }: RegistrationScreenProps)
                     <div className="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
                       <div
                         className={`h-full transition-all duration-300 ${getStrengthColor(
-                          passwordStrength
+                          passwordStrength,
                         )}`}
                         style={{ width: `${(passwordStrength / 4) * 100}%` }}
                         role="progressbar"
@@ -231,14 +231,14 @@ export function RegistrationScreen({ onSwitchToLogin }: RegistrationScreenProps)
                       />
                     </div>
                     <span
-                      className="text-xs text-slate-400 font-medium min-w-[70px]"
+                      className="text-xs text-slate-300 font-medium min-w-[70px]"
                       aria-live="polite"
                     >
                       {getStrengthLabel(passwordStrength)}
                     </span>
                   </div>
                   <ul
-                    className="text-xs text-slate-400 space-y-1"
+                    className="text-xs text-slate-300 space-y-1"
                     aria-label="Password requirements"
                   >
                     <li className={password.length >= 12 ? 'text-green-400' : ''}>
@@ -271,7 +271,7 @@ export function RegistrationScreen({ onSwitchToLogin }: RegistrationScreenProps)
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-800/80 border border-blue-700/40 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                className="w-full px-4 py-3 bg-slate-800/80 border border-blue-700/40 rounded-xl text-white placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 placeholder="Re-enter your password"
                 disabled={isLoading}
               />
@@ -320,7 +320,7 @@ export function RegistrationScreen({ onSwitchToLogin }: RegistrationScreenProps)
 
           {/* Login Link */}
           <div className="mt-20 text-center">
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-slate-300">
               Already have an account?{' '}
               <button
                 type="button"
@@ -337,7 +337,7 @@ export function RegistrationScreen({ onSwitchToLogin }: RegistrationScreenProps)
           <div className="mt-20 pt-20 border-t border-blue-800/30">
             <div className="flex items-start gap-3 justify-center">
               <span className="text-xl">🔒</span>
-              <p className="text-xs text-slate-400 leading-relaxed">
+              <p className="text-xs text-slate-300 leading-relaxed">
                 All data is stored locally on your device. No data is sent to external servers.
               </p>
             </div>

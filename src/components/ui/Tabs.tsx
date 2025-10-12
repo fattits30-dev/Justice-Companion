@@ -97,7 +97,7 @@ export function Tabs({ tabs, defaultTab, onChange, className = '' }: TabsProps):
               className={`
                 group relative flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap
                 transition-all duration-200 ease-out
-                ${isActive ? 'text-blue-300' : 'text-slate-400 hover:text-slate-300'}
+                ${isActive ? 'text-blue-300' : 'text-slate-300 hover:text-white'}
                 focus:outline-none focus:ring-3 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-900 rounded-t-lg
               `}
             >
@@ -105,7 +105,7 @@ export function Tabs({ tabs, defaultTab, onChange, className = '' }: TabsProps):
                 <Icon
                   className={`
                     w-4 h-4 transition-colors duration-200
-                    ${isActive ? 'text-blue-400' : 'text-slate-500 group-hover:text-slate-400'}
+                    ${isActive ? 'text-blue-400' : 'text-slate-300 group-hover:text-white'}
                   `}
                   size={16}
                 />

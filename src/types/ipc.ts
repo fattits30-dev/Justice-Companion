@@ -517,6 +517,7 @@ export interface AuthRegisterResponse {
 export interface AuthLoginRequest {
   username: string;
   password: string;
+  rememberMe?: boolean; // Optional flag for extended session duration (30 days)
 }
 
 export interface AuthLoginResponse {
@@ -748,7 +749,7 @@ export interface JusticeCompanionAPI {
 
   // Authentication operations (Phase 1)
   registerUser(username: string, password: string, email: string): Promise<IPCResponse<AuthRegisterResponse>>;
-  loginUser(username: string, password: string): Promise<IPCResponse<AuthLoginResponse>>;
+  loginUser(username: string, password: string, rememberMe?: boolean): Promise<IPCResponse<AuthLoginResponse>>;
   logoutUser(): Promise<IPCResponse<AuthLogoutResponse>>;
   getCurrentUser(): Promise<IPCResponse<AuthGetCurrentUserResponse>>;
   changePassword(oldPassword: string, newPassword: string): Promise<IPCResponse<AuthChangePasswordResponse>>;
@@ -761,6 +762,15 @@ export interface JusticeCompanionAPI {
 
   // UI Error Logging
   logUIError(errorData: UIErrorData): Promise<IPCResponse<LogUIErrorResponse>>;
+
+  // Secure Storage operations (for API keys)
+  secureStorage: {
+    isEncryptionAvailable(): Promise<boolean>;
+    set(key: string, value: string): Promise<{ success: boolean }>;
+    get(key: string): Promise<string | null>;
+    delete(key: string): Promise<{ success: boolean }>;
+    clearAll(): Promise<{ success: boolean }>;
+  };
 }
 
 // Extend Window interface for TypeScript

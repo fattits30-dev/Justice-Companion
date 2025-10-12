@@ -175,7 +175,7 @@ export function CaseFactsPanel({ caseId }: CaseFactsPanelProps) {
                       | 'witness'
                       | 'location'
                       | 'communication'
-                      | 'other'
+                      | 'other',
                   )
                 }
                 className="w-full px-3 py-2 border border-blue-700/30 bg-slate-800/50 rounded-lg text-sm text-white focus:outline-none focus:ring-3 focus:ring-green-500"

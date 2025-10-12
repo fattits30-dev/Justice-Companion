@@ -49,7 +49,7 @@ if ($allNodeProcesses) {
             $cmdLine = (Get-WmiObject Win32_Process -Filter "ProcessId=$($proc.Id)").CommandLine
             Write-Host "  PID: $($proc.Id) - Memory: $([math]::Round($proc.WS/1MB, 2)) MB" -ForegroundColor Gray
             if ($cmdLine -match "playwright|test|vitest") {
-                Write-Host "    → Test-related: $($cmdLine.Substring(0, [Math]::Min(80, $cmdLine.Length)))" -ForegroundColor DarkGray
+                Write-Host "    -> Test-related: $($cmdLine.Substring(0, [Math]::Min(80, $cmdLine.Length)))" -ForegroundColor DarkGray
             }
         }
 

@@ -1,28 +1,29 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
+import { AuthFlow } from './components/auth';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { Sidebar } from './components/Sidebar';
+import { ThemeProvider } from './components/ThemeProvider';
+import { Toaster } from './components/ui/sonner';
+import { ViewErrorBoundary } from './components/ViewErrorBoundary';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { DebugProvider } from './contexts/DebugContext';
+import { migrateToSecureStorage } from './utils/migrate-to-secure-storage';
 
 // Lazy-loaded view components for code splitting
 const ChatWindow = lazy(() => import('@/features/chat').then((m) => ({ default: m.ChatWindow })));
 const CasesView = lazy(() => import('@/features/cases').then((m) => ({ default: m.CasesView })));
 const CaseDetailView = lazy(() =>
-  import('@/features/cases').then((m) => ({ default: m.CaseDetailView }))
+  import('@/features/cases').then((m) => ({ default: m.CaseDetailView })),
 );
 const DocumentsView = lazy(() =>
-  import('@/features/documents').then((m) => ({ default: m.DocumentsView }))
+  import('@/features/documents').then((m) => ({ default: m.DocumentsView })),
 );
 const DashboardView = lazy(() =>
-  import('@/features/dashboard').then((m) => ({ default: m.DashboardView }))
+  import('@/features/dashboard').then((m) => ({ default: m.DashboardView })),
 );
 const SettingsView = lazy(() =>
-  import('@/features/settings').then((m) => ({ default: m.SettingsView }))
+  import('@/features/settings').then((m) => ({ default: m.SettingsView })),
 );
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { AuthFlow } from './components/auth';
-import { ErrorBoundary } from './components/ErrorBoundary';
-import { ViewErrorBoundary } from './components/ViewErrorBoundary';
-import { ThemeProvider } from './components/ThemeProvider';
-import { Toaster } from './components/ui/sonner';
 
 type ViewType = 'dashboard' | 'chat' | 'cases' | 'case-detail' | 'documents' | 'settings';
 
@@ -56,6 +57,22 @@ function AuthenticatedApp(): JSX.Element {
     setActiveView('chat');
     return Promise.resolve();
   };
+
+  // Run API key migration once after authentication
+  useEffect(() => {
+    if (isAuthenticated && !isLoading) {
+      // Run migration in the background, don't block the UI
+      migrateToSecureStorage()
+        .then((summary) => {
+          if (summary.failedKeys > 0) {
+            console.error(`[App] Failed to migrate ${summary.failedKeys} API key(s)`);
+          }
+        })
+        .catch((error) => {
+          console.error('[App] API key migration failed:', error);
+        });
+    }
+  }, [isAuthenticated, isLoading]);
 
   // Global keyboard shortcuts
   useEffect(() => {
@@ -204,7 +221,9 @@ function AuthenticatedApp(): JSX.Element {
 
       {/* Main Content Area */}
       <div
-        className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ${sidebarExpanded ? 'ml-80' : 'ml-16'}`}
+        className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ${
+          sidebarExpanded ? 'ml-80' : 'ml-16'
+        }`}
       >
         {/* Top bar - no menu button, just title */}
         <div className="h-14 bg-slate-900/50 border-b border-blue-800/30 flex items-center px-4 gap-3">

@@ -43,7 +43,11 @@ export async function setupTestDatabase(config?: Partial<TestDatabaseConfig>): P
     throw error;
   }
 
-  // Seed test data if requested
+  // Always create test user and consent (needed for authentication)
+  // But don't create session - let actual login flow handle that
+  await createTestUser(dbPath);
+
+  // Seed additional test data if requested (cases, evidence, etc.)
   if (config?.seedData) {
     await seedTestData(dbPath);
   }
@@ -78,16 +82,69 @@ export async function cleanupTestDatabase(dbPath: string): Promise<void> {
 }
 
 /**
- * Seed test database with sample data
+ * Create test user with authentication credentials
+ * This is called for ALL tests to ensure a user exists for login
+ * Does NOT create a session - that will be created during actual login flow
+ */
+async function createTestUser(dbPath: string): Promise<void> {
+  const db = new Database(dbPath);
+
+  try {
+    // Create test user with authentication
+    // Password: "TestPassword123!" (for reference in tests)
+    const crypto = await import('crypto');
+    const password = 'TestPassword123!';
+    const salt = crypto.randomBytes(16);
+    const hash = crypto.scryptSync(password, salt, 64);
+    const passwordHash = hash.toString('hex');
+    const passwordSalt = salt.toString('hex');
+
+    // Insert test user
+    db.exec(`
+      INSERT INTO users (id, username, email, password_hash, password_salt, created_at, updated_at)
+      VALUES (
+        1,
+        'testuser',
+        'testuser@example.com',
+        '${passwordHash}',
+        '${passwordSalt}',
+        datetime('now'),
+        datetime('now')
+      );
+    `);
+
+    // Grant required consent (data_processing with version 1.0)
+    db.exec(`
+      INSERT INTO consents (user_id, consent_type, granted, granted_at, version)
+      VALUES (1, 'data_processing', 1, datetime('now'), '1.0');
+    `);
+
+    console.log('Test user created successfully');
+    console.log('Test user credentials: username=testuser, password=TestPassword123!');
+  } catch (error) {
+    console.error('Failed to create test user:', error);
+    throw error;
+  } finally {
+    db.close();
+  }
+}
+
+/**
+ * Seed test database with additional sample data
+ * Includes cases, evidence, facts, etc.
+ * Note: Test user is created separately by createTestUser()
  */
 async function seedTestData(dbPath: string): Promise<void> {
   const db = new Database(dbPath);
 
   try {
-    // Insert sample case
+    // Note: User and consent are created by createTestUser(), not here
+
+    // Insert sample case (owned by test user)
     db.exec(`
-      INSERT INTO cases (id, title, case_type, description, status, created_at, updated_at)
+      INSERT INTO cases (id, user_id, title, case_type, description, status, created_at, updated_at)
       VALUES (
+        1,
         1,
         'Employment Discrimination Case',
         'employment',
@@ -138,7 +195,7 @@ async function seedTestData(dbPath: string): Promise<void> {
       );
     `);
 
-    console.log('Test data seeded successfully');
+    console.log('Additional test data seeded successfully (cases, evidence, facts)');
   } catch (error) {
     console.error('Failed to seed test data:', error);
     throw error;
@@ -209,3 +266,32 @@ export async function cleanupAllTestDatabases(): Promise<void> {
 
   console.log('All test databases cleaned up');
 }
+
+/**
+ * Seed GDPR consents for a test user
+ * This ensures the user can access the app without being blocked by the consent banner
+ *
+ * @param db - Database instance
+ * @param userId - User ID to seed consents for
+ */
+export function seedUserConsents(db: Database, userId: number): void {
+  // Required: data_processing consent (must be granted for app access)
+  db.prepare(
+    `
+    INSERT INTO consents (user_id, consent_type, granted, granted_at, version)
+    VALUES (?, 'data_processing', 1, datetime('now'), '1.0')
+  `
+  ).run(userId);
+
+  console.log(`✅ Seeded data_processing consent for user ${userId}`);
+}
+
+/**
+ * Test user credentials (for use in tests that need to authenticate)
+ */
+export const TEST_USER_CREDENTIALS = {
+  username: 'testuser',
+  email: 'testuser@example.com',
+  password: 'TestPassword123!',
+  userId: 1,
+};

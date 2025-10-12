@@ -17,7 +17,7 @@ interface ErrorTestButtonProps {
 export function ErrorTestButton({
   buttonText = 'Throw Error',
   errorMessage = 'Test error triggered by ErrorTestButton',
-}: ErrorTestButtonProps) {
+}: ErrorTestButtonProps): JSX.Element {
   const [shouldThrow, setShouldThrow] = useState(false);
 
   if (shouldThrow) {

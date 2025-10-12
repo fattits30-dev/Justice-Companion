@@ -1,0 +1,75 @@
+# Claude Code Permission Configuration
+# Controls which tools require user approval before execution
+
+# Permission modes:
+# - always_allow: Tool runs without asking (use for safe operations)
+# - always_ask: Always prompt for confirmation (use for destructive operations)
+# - smart: Claude decides based on context (default)
+
+# File Operations (Safe - Allow automatically)
+always_allow:
+  - "Read"
+  - "Glob"
+  - "Grep"
+
+# Code Modifications (Ask for confirmation)
+always_ask:
+  - "Edit"
+  - "Write"
+  - "NotebookEdit"
+
+# Build & Test Operations (Allow - non-destructive)
+always_allow:
+  - "Bash(pnpm test*)"
+  - "Bash(pnpm type-check*)"
+  - "Bash(pnpm lint*)"
+  - "Bash(pnpm build*)"
+
+# Database Operations (Ask - can modify data)
+always_ask:
+  - "Bash(pnpm db:migrate*)"
+  - "Bash(pnpm db:backup*)"
+  - "Bash(*DROP TABLE*)"
+  - "Bash(*DELETE FROM*)"
+
+# Git Operations (Ask for destructive, allow read)
+always_allow:
+  - "Bash(git status*)"
+  - "Bash(git diff*)"
+  - "Bash(git log*)"
+  - "Bash(git branch*)"
+
+always_ask:
+  - "Bash(git commit*)"
+  - "Bash(git push*)"
+  - "Bash(git reset*)"
+  - "Bash(git rebase*)"
+  - "Bash(git merge*)"
+
+# File System Operations (Ask for destructive)
+always_ask:
+  - "Bash(rm *)"
+  - "Bash(del *)"
+  - "Bash(rmdir *)"
+
+# Package Management (Ask - modifies dependencies)
+always_ask:
+  - "Bash(pnpm install*)"
+  - "Bash(pnpm add*)"
+  - "Bash(pnpm remove*)"
+  - "Bash(npm install*)"
+
+# Web & External Operations (Allow - read-only)
+always_allow:
+  - "WebSearch"
+  - "WebFetch"
+
+# Agent Operations (Smart mode - context dependent)
+smart:
+  - "Task"
+  - "SlashCommand"
+
+# MCP Tools (Allow - mostly read operations)
+always_allow:
+  - "mcp__ide__getDiagnostics"
+  - "mcp__ide__executeCode"

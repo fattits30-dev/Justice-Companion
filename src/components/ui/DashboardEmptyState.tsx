@@ -124,7 +124,6 @@ export function DashboardEmptyState({
             label: 'Learn How It Works',
             onClick: () => {
               // TODO: Open tutorial/guide
-              console.log('Opening tutorial...');
             },
           }}
         >

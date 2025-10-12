@@ -55,7 +55,7 @@ export function Sidebar({
 
   // Data loading when expanded
   useEffect(() => {
-    const loadInitialData = async () => {
+    const loadInitialData = async (): Promise<void> => {
       if (!window.justiceAPI) {
         console.error('window.justiceAPI is not available');
         return;
@@ -81,7 +81,7 @@ export function Sidebar({
     }
   }, [isExpanded]);
 
-  const handleCaseChange = async (caseId: number | null) => {
+  const handleCaseChange = async (caseId: number | null): Promise<void> => {
     onActiveCaseIdChange(caseId);
     if (!window.justiceAPI) {
       return;
@@ -97,12 +97,12 @@ export function Sidebar({
     }
   };
 
-  const handleConversationSelect = (conversationId: number) => {
+  const handleConversationSelect = (conversationId: number): void => {
     setActiveConversationId(conversationId);
     void onConversationLoad(conversationId);
   };
 
-  const handleNewChat = async () => {
+  const handleNewChat = async (): Promise<void> => {
     if (!window.justiceAPI) {
       return;
     }
@@ -122,12 +122,12 @@ export function Sidebar({
     }
   };
 
-  const handleDeleteConversation = (conversationId: number) => {
+  const handleDeleteConversation = (conversationId: number): void => {
     setConversationToDelete(conversationId);
     setDeleteConfirmOpen(true);
   };
 
-  const confirmDelete = async () => {
+  const confirmDelete = async (): Promise<void> => {
     if (!window.justiceAPI || conversationToDelete === null) {
       setDeleteConfirmOpen(false);
       setConversationToDelete(null);
@@ -150,15 +150,14 @@ export function Sidebar({
     }
   };
 
-  const handleRenameConversation = async (conversationId: number, newTitle: string) => {
+  const handleRenameConversation = async (conversationId: number, newTitle: string): Promise<void> => {
     if (!window.justiceAPI || !newTitle.trim()) {
       return;
     }
 
     try {
-      console.log(`Rename conversation ${conversationId} to "${newTitle}"`);
       setRecentChats((prev) =>
-        prev.map((chat) => (chat.id === conversationId ? { ...chat, title: newTitle } : chat))
+        prev.map((chat) => (chat.id === conversationId ? { ...chat, title: newTitle } : chat)),
       );
     } catch (error) {
       console.error('Error renaming conversation:', error);
@@ -166,7 +165,7 @@ export function Sidebar({
   };
 
   // Get user initials from auth user or profile
-  const getUserInitials = () => {
+  const getUserInitials = (): string => {
     if (user?.username) {
       return user.username.slice(0, 2).toUpperCase();
     }
@@ -182,7 +181,7 @@ export function Sidebar({
   };
 
   // Handle logout
-  const handleLogout = async () => {
+  const handleLogout = async (): Promise<void> => {
     try {
       await logout();
       // App will automatically redirect to login screen via AuthContext

@@ -77,6 +77,7 @@ describe('AuthenticationService', () => {
 
     userRepository = new UserRepository(auditLogger);
     sessionRepository = new SessionRepository();
+    // Create without sessionPersistence handler (it's optional)
     authService = new AuthenticationService(userRepository, sessionRepository, auditLogger);
   });
 
@@ -236,6 +237,7 @@ describe('AuthenticationService', () => {
       const result = await authService.login(
         'testuser',
         'SecurePass123',
+        false, // rememberMe
         '192.168.1.1',
         'Mozilla/5.0'
       );
@@ -327,8 +329,8 @@ describe('AuthenticationService', () => {
       expect(logoutLog?.resourceId).toBe(sessionId);
     });
 
-    it('should handle logout of non-existent session gracefully', () => {
-      expect(() => authService.logout('non-existent-id')).not.toThrow();
+    it('should handle logout of non-existent session gracefully', async () => {
+      await expect(authService.logout('non-existent-id')).resolves.not.toThrow();
     });
   });
 
@@ -562,6 +564,141 @@ describe('AuthenticationService', () => {
 
       expect(diffHours).toBeGreaterThanOrEqual(23.99); // Allow for execution time
       expect(diffHours).toBeLessThanOrEqual(24.01);
+    });
+  });
+
+  describe('Remember Me and Session Persistence', () => {
+    it('should create session with Remember Me flag', async () => {
+      await authService.register('testuser', 'SecurePass123', 'test@example.com');
+      const result = await authService.login('testuser', 'SecurePass123', true);
+
+      expect(result.session.rememberMe).toBe(true);
+    });
+
+    it('should create 30-day session when Remember Me is enabled', async () => {
+      await authService.register('testuser', 'SecurePass123', 'test@example.com');
+      const beforeLogin = Date.now();
+      const result = await authService.login('testuser', 'SecurePass123', true);
+      const afterLogin = Date.now();
+
+      const sessionExpiry = new Date(result.session.expiresAt).getTime();
+      const expectedMin = beforeLogin + 30 * 24 * 60 * 60 * 1000;
+      const expectedMax = afterLogin + 30 * 24 * 60 * 60 * 1000;
+
+      expect(sessionExpiry).toBeGreaterThanOrEqual(expectedMin);
+      expect(sessionExpiry).toBeLessThanOrEqual(expectedMax);
+    });
+
+    it('should handle Remember Me without persistence handler gracefully', async () => {
+      // authService created without sessionPersistence handler
+      await authService.register('testuser', 'SecurePass123', 'test@example.com');
+
+      // Should not throw even though persistence handler is not configured
+      const result = await authService.login('testuser', 'SecurePass123', true);
+      expect(result.session.rememberMe).toBe(true);
+    });
+
+    it('should always generate new session ID on login (prevent session fixation)', async () => {
+      await authService.register('testuser', 'SecurePass123', 'test@example.com');
+
+      const result1 = await authService.login('testuser', 'SecurePass123');
+      const result2 = await authService.login('testuser', 'SecurePass123');
+
+      // Each login MUST generate a new session ID
+      expect(result1.session.id).not.toBe(result2.session.id);
+
+      // Both should be valid UUIDs
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      expect(result1.session.id).toMatch(uuidRegex);
+      expect(result2.session.id).toMatch(uuidRegex);
+    });
+
+    it('should restore persisted session returns null without handler', async () => {
+      // No persistence handler configured
+      const result = await authService.restorePersistedSession();
+      expect(result).toBeNull();
+    });
+
+    describe('with mock persistence handler', () => {
+      let mockPersistenceHandler: any;
+      let authServiceWithPersistence: AuthenticationService;
+
+      beforeEach(() => {
+        // Create mock persistence handler
+        mockPersistenceHandler = {
+          storeSessionId: vi.fn().mockResolvedValue(undefined),
+          retrieveSessionId: vi.fn().mockResolvedValue(null),
+          clearSession: vi.fn().mockResolvedValue(undefined),
+          hasStoredSession: vi.fn().mockResolvedValue(false),
+          isAvailable: vi.fn().mockResolvedValue(true),
+        };
+
+        authServiceWithPersistence = new AuthenticationService(
+          userRepository,
+          sessionRepository,
+          auditLogger,
+          mockPersistenceHandler
+        );
+      });
+
+      it('should store session when Remember Me is enabled', async () => {
+        await authServiceWithPersistence.register('testuser', 'SecurePass123', 'test@example.com');
+        const result = await authServiceWithPersistence.login('testuser', 'SecurePass123', true);
+
+        expect(mockPersistenceHandler.isAvailable).toHaveBeenCalled();
+        expect(mockPersistenceHandler.storeSessionId).toHaveBeenCalledWith(result.session.id);
+      });
+
+      it('should not store session when Remember Me is disabled', async () => {
+        await authServiceWithPersistence.register('testuser', 'SecurePass123', 'test@example.com');
+        await authServiceWithPersistence.login('testuser', 'SecurePass123', false);
+
+        expect(mockPersistenceHandler.storeSessionId).not.toHaveBeenCalled();
+      });
+
+      it('should clear persisted session on logout', async () => {
+        await authServiceWithPersistence.register('testuser', 'SecurePass123', 'test@example.com');
+        const result = await authServiceWithPersistence.login('testuser', 'SecurePass123', true);
+
+        await authServiceWithPersistence.logout(result.session.id);
+
+        expect(mockPersistenceHandler.clearSession).toHaveBeenCalled();
+      });
+
+      it('should restore valid persisted session', async () => {
+        const user = await authServiceWithPersistence.register('testuser', 'SecurePass123', 'test@example.com');
+        const loginResult = await authServiceWithPersistence.login('testuser', 'SecurePass123', true);
+
+        // Mock that there's a stored session
+        mockPersistenceHandler.hasStoredSession.mockResolvedValue(true);
+        mockPersistenceHandler.retrieveSessionId.mockResolvedValue(loginResult.session.id);
+
+        const restored = await authServiceWithPersistence.restorePersistedSession();
+
+        expect(restored).not.toBeNull();
+        expect(restored?.user.id).toBe(user.id);
+        expect(restored?.session.id).toBe(loginResult.session.id);
+      });
+
+      it('should clear expired persisted session', async () => {
+        const db = (auditLogger as any).getDb();
+        await authServiceWithPersistence.register('testuser', 'SecurePass123', 'test@example.com');
+        const loginResult = await authServiceWithPersistence.login('testuser', 'SecurePass123', true);
+
+        // Expire the session
+        db.prepare("UPDATE sessions SET expires_at = datetime('now', '-1 hour') WHERE id = ?").run(
+          loginResult.session.id
+        );
+
+        // Mock that there's a stored session
+        mockPersistenceHandler.hasStoredSession.mockResolvedValue(true);
+        mockPersistenceHandler.retrieveSessionId.mockResolvedValue(loginResult.session.id);
+
+        const restored = await authServiceWithPersistence.restorePersistedSession();
+
+        expect(restored).toBeNull();
+        expect(mockPersistenceHandler.clearSession).toHaveBeenCalled();
+      });
     });
   });
 

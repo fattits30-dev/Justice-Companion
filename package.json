@@ -54,6 +54,11 @@
     "test:e2e:cleanup": "powershell -ExecutionPolicy Bypass -File scripts/cleanup-test-processes.ps1",
     "audit:dependencies": "npm audit --production --audit-level=high",
     "best-practices": "npm run lint && npm run type-check && npm run audit:dependencies",
+    "process:monitor": "node scripts/process-manager.js monitor",
+    "process:list": "node scripts/process-manager.js list",
+    "process:status": "node scripts/process-manager.js status",
+    "process:kill": "node scripts/process-manager.js kill",
+    "process:force": "node scripts/process-manager.js force",
     "prepare": "husky"
   },
   "dependencies": {

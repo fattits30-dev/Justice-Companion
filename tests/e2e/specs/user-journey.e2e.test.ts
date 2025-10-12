@@ -1,13 +1,34 @@
-import { test, expect } from '@playwright/test';
-import { launchElectronApp, closeElectronApp, type ElectronTestApp } from '../setup/electron-setup.js';
-import { casesFixtures, evidenceFixtures, userFactsFixtures, caseFactsFixtures, createTestFile } from '../setup/fixtures.js';
-import { getTestDatabase, verifyDatabaseState } from '../setup/test-database.js';
+import { expect, test } from '@playwright/test';
+import {
+  authenticateTestUser,
+  closeElectronApp,
+  launchElectronApp,
+  type ElectronTestApp,
+} from '../setup/electron-setup.js';
+import {
+  caseFactsFixtures,
+  casesFixtures,
+  createTestFile,
+  evidenceFixtures,
+  userFactsFixtures,
+} from '../setup/fixtures.js';
+import {
+  getTestDatabase,
+  TEST_USER_CREDENTIALS,
+  verifyDatabaseState,
+} from '../setup/test-database.js';
 
 let testApp: ElectronTestApp;
 
 test.beforeEach(async () => {
-  // Start with clean database
-  testApp = await launchElectronApp({ seedData: false });
+  // Start with seeded database (includes authenticated user)
+  testApp = await launchElectronApp({ seedData: true });
+
+  // Authenticate test user to bypass login screen
+  await authenticateTestUser(testApp.window, {
+    username: TEST_USER_CREDENTIALS.username,
+    password: TEST_USER_CREDENTIALS.password,
+  });
 });
 
 test.afterEach(async () => {
@@ -32,9 +53,10 @@ test.describe('Complete User Journey E2E', () => {
     const caseData = casesFixtures.employment;
 
     // Navigate to cases
-    const casesNav = await window.$('[data-testid="nav-cases"]') ||
-                     await window.$('a:has-text("Cases")') ||
-                     await window.$('button:has-text("Cases")');
+    const casesNav =
+      (await window.$('[data-testid="nav-cases"]')) ||
+      (await window.$('a:has-text("Cases")')) ||
+      (await window.$('button:has-text("Cases")'));
 
     if (casesNav) {
       await casesNav.click();
@@ -42,9 +64,10 @@ test.describe('Complete User Journey E2E', () => {
     }
 
     // Create new case
-    const createCaseBtn = await window.$('[data-testid="create-case-btn"]') ||
-                          await window.$('button:has-text("New Case")') ||
-                          await window.$('button:has-text("Create Case")');
+    const createCaseBtn =
+      (await window.$('[data-testid="create-case-btn"]')) ||
+      (await window.$('button:has-text("New Case")')) ||
+      (await window.$('button:has-text("Create Case")'));
 
     expect(createCaseBtn, 'Create case button should exist').toBeTruthy();
 
@@ -57,9 +80,10 @@ test.describe('Complete User Journey E2E', () => {
       await window.selectOption('[name="caseType"]', caseData.caseType);
       await window.fill('[name="description"]', caseData.description);
 
-      const saveCaseBtn = await window.$('[data-testid="save-case-btn"]') ||
-                          await window.$('button:has-text("Save")') ||
-                          await window.$('button:has-text("Create")');
+      const saveCaseBtn =
+        (await window.$('[data-testid="save-case-btn"]')) ||
+        (await window.$('button:has-text("Save")')) ||
+        (await window.$('button:has-text("Create")'));
 
       if (saveCaseBtn) {
         await saveCaseBtn.click();
@@ -82,16 +106,18 @@ test.describe('Complete User Journey E2E', () => {
     const userFactData = userFactsFixtures.employment1;
 
     // Navigate to user facts
-    const userFactsNav = await window.$('[data-testid="nav-user-facts"]') ||
-                         await window.$('a:has-text("My Facts")');
+    const userFactsNav =
+      (await window.$('[data-testid="nav-user-facts"]')) ||
+      (await window.$('a:has-text("My Facts")'));
 
     if (userFactsNav) {
       await userFactsNav.click();
       await window.waitForTimeout(1000);
 
       // Create user fact
-      const createFactBtn = await window.$('[data-testid="create-user-fact-btn"]') ||
-                           await window.$('button:has-text("Add Fact")');
+      const createFactBtn =
+        (await window.$('[data-testid="create-user-fact-btn"]')) ||
+        (await window.$('button:has-text("Add Fact")'));
 
       if (createFactBtn) {
         await createFactBtn.click();
@@ -140,8 +166,9 @@ test.describe('Complete User Journey E2E', () => {
     }
 
     // Upload evidence
-    const uploadBtn = await window.$('[data-testid="upload-evidence-btn"]') ||
-                      await window.$('button:has-text("Upload Evidence")');
+    const uploadBtn =
+      (await window.$('[data-testid="upload-evidence-btn"]')) ||
+      (await window.$('button:has-text("Upload Evidence")'));
 
     if (uploadBtn) {
       await uploadBtn.click();
@@ -177,15 +204,17 @@ test.describe('Complete User Journey E2E', () => {
     const caseFactData = caseFactsFixtures.timeline1;
 
     // Find case facts section
-    const factsTab = await window.$('[data-testid="case-facts-tab"]') ||
-                     await window.$('button:has-text("Facts")');
+    const factsTab =
+      (await window.$('[data-testid="case-facts-tab"]')) ||
+      (await window.$('button:has-text("Facts")'));
 
     if (factsTab) {
       await factsTab.click();
       await window.waitForTimeout(500);
 
-      const createCaseFactBtn = await window.$('[data-testid="create-case-fact-btn"]') ||
-                               await window.$('button:has-text("Add Fact")');
+      const createCaseFactBtn =
+        (await window.$('[data-testid="create-case-fact-btn"]')) ||
+        (await window.$('button:has-text("Add Fact")'));
 
       if (createCaseFactBtn) {
         await createCaseFactBtn.click();
@@ -216,22 +245,24 @@ test.describe('Complete User Journey E2E', () => {
     // ============================================
     // STEP 6: Chat with AI about the case
     // ============================================
-    const chatNav = await window.$('[data-testid="nav-chat"]') ||
-                    await window.$('a:has-text("Chat")');
+    const chatNav =
+      (await window.$('[data-testid="nav-chat"]')) || (await window.$('a:has-text("Chat")'));
 
     if (chatNav) {
       await chatNav.click();
       await window.waitForTimeout(1000);
 
-      const chatInput = await window.$('[data-testid="chat-input"]') ||
-                        await window.$('textarea[placeholder*="message" i]');
+      const chatInput =
+        (await window.$('[data-testid="chat-input"]')) ||
+        (await window.$('textarea[placeholder*="message" i]'));
 
       if (chatInput) {
         await chatInput.fill('What are my rights in this employment case?');
         await window.waitForTimeout(500);
 
-        const sendBtn = await window.$('[data-testid="send-message-btn"]') ||
-                       await window.$('button:has-text("Send")');
+        const sendBtn =
+          (await window.$('[data-testid="send-message-btn"]')) ||
+          (await window.$('button:has-text("Send")'));
 
         if (sendBtn) {
           await sendBtn.click();
@@ -278,7 +309,9 @@ test.describe('Complete User Journey E2E', () => {
     expect(dbCase.case_type).toBe(caseData.caseType);
 
     // Verify evidence
-    const dbEvidence = db.prepare('SELECT * FROM evidence WHERE title = ?').get(evidenceData.title) as any;
+    const dbEvidence = db
+      .prepare('SELECT * FROM evidence WHERE title = ?')
+      .get(evidenceData.title) as any;
     expect(dbEvidence, 'Evidence should exist in database').toBeDefined();
 
     // Verify user facts
@@ -306,7 +339,9 @@ test.describe('Complete User Journey E2E', () => {
     expect(auditLogs.length, 'Should have audit logs for all operations').toBeGreaterThan(0);
 
     // Check for specific event types
-    const caseCreateLog = dbAudit.prepare('SELECT * FROM audit_logs WHERE event_type = ?').get('case.create');
+    const caseCreateLog = dbAudit
+      .prepare('SELECT * FROM audit_logs WHERE event_type = ?')
+      .get('case.create');
     expect(caseCreateLog, 'Should have case.create audit log').toBeDefined();
 
     dbAudit.close();

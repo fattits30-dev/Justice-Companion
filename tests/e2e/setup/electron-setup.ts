@@ -1,7 +1,8 @@
-import { _electron as electron, ElectronApplication, Page } from 'playwright';
-import path from 'path';
+import { expect } from '@playwright/test';
 import fs from 'fs';
-import { setupTestDatabase, cleanupTestDatabase } from './test-database.js';
+import path from 'path';
+import { _electron as electron, ElectronApplication, Page } from 'playwright';
+import { cleanupTestDatabase, setupTestDatabase } from './test-database.js';
 
 /**
  * Electron app instance with test database and page
@@ -64,6 +65,13 @@ export async function launchElectronApp(options?: {
     // Wait for first window
     const window = await app.firstWindow({
       timeout,
+    });
+
+    // ✅ FIX #1: Capture renderer process console output for debugging
+    window.on('console', msg => {
+      const type = msg.type();
+      const text = msg.text();
+      console.log(`[Renderer ${type}] ${text}`);
     });
 
     // Wait for app to be fully loaded
@@ -205,4 +213,57 @@ export async function waitForElementToDisappear(
  */
 export async function evaluateInPage<T>(page: Page, fn: () => T): Promise<T> {
   return page.evaluate(fn);
+}
+
+/**
+ * Authenticate test user via UI login
+ * Use this after launching app with seedData: true to bypass login screen
+ *
+ * Uses Playwright web-first assertions for reliable waiting (no hard timeouts)
+ */
+export async function authenticateTestUser(
+  page: Page,
+  credentials: { username: string; password: string },
+  timeout = 15000
+): Promise<void> {
+  try {
+    console.log(`[authenticateTestUser] Waiting for login screen...`);
+
+    // ✅ Web-first assertion: Wait for login screen to be visible
+    await expect(page.getByText('Sign In')).toBeVisible({ timeout });
+    console.log(`[authenticateTestUser] Login screen found`);
+
+    // Fill login form
+    console.log(`[authenticateTestUser] Filling username: ${credentials.username}`);
+    await page.fill('#username', credentials.username);
+
+    console.log(`[authenticateTestUser] Filling password`);
+    await page.fill('#password', credentials.password);
+
+    // ✅ Click login button using role-based selector (more reliable)
+    console.log(`[authenticateTestUser] Clicking Login button`);
+    await page.getByRole('button', { name: 'Login' }).click();
+
+    // ✅ Web-first assertion: Wait for post-login element to appear
+    // The app shows the Dashboard with "Welcome to Justice Companion" heading after successful login
+    console.log(`[authenticateTestUser] Waiting for authentication to complete...`);
+
+    // Wait for the Dashboard welcome heading (most reliable post-login indicator)
+    await expect(page.getByText('Welcome to Justice Companion')).toBeVisible({ timeout: 15000 });
+    console.log(`[authenticateTestUser] ✅ Dashboard loaded`);
+
+    console.log(`[authenticateTestUser] ✅ Authenticated as ${credentials.username}`);
+  } catch (error) {
+    console.error('[authenticateTestUser] ❌ Failed to authenticate test user:', error);
+
+    // Take screenshot for debugging
+    try {
+      const screenshot = await page.screenshot();
+      console.error('[authenticateTestUser] Screenshot saved (base64 length):', screenshot.length);
+    } catch (screenshotError) {
+      console.error('[authenticateTestUser] Failed to take screenshot:', screenshotError);
+    }
+
+    throw error;
+  }
 }

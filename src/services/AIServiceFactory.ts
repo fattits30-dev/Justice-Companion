@@ -278,7 +278,7 @@ export class AIServiceFactory {
     onComplete: () => void,
     onError: (error: string) => void,
     onThinkToken?: (token: string) => void,
-    onSources?: (sources: string[]) => void
+    onSources?: (sources: string[]) => void,
   ): Promise<void> {
     const service = this.getActiveService();
     await service.streamChat(request, onToken, onComplete, onError, onThinkToken, onSources);
@@ -302,7 +302,7 @@ export class AIServiceFactory {
     caseId: number | undefined,
     onToken: (token: string) => void,
     onComplete: () => void,
-    onError: (error: string) => void
+    onError: (error: string) => void,
   ): Promise<void> {
     const service = this.getActiveService();
     await service.streamChatWithFunctions(request, caseId, onToken, onComplete, onError);

@@ -5,6 +5,6 @@ import { type ThemeProviderProps } from 'next-themes';
  * Theme provider wrapper for shadcn/ui components
  * Enables dark/light mode support across the application
  */
-export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
+export function ThemeProvider({ children, ...props }: ThemeProviderProps): JSX.Element {
   return <NextThemesProvider {...props}>{children}</NextThemesProvider>;
 }

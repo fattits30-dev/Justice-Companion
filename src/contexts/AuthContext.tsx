@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useMemo, useCallback, ReactNode } from 'react';
 import type { User } from '@/models/User';
 
 /**
@@ -20,7 +20,7 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (username: string, password: string) => Promise<void>;
+  login: (username: string, password: string, rememberMe?: boolean) => Promise<void>;
   logout: () => Promise<void>;
   register: (username: string, password: string, email: string) => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -50,13 +50,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
           return;
         }
 
-        console.log('[AuthContext] justiceAPI is available, checking current user...');
         const result = await window.justiceAPI.getCurrentUser();
         if (result.success && result.data) {
           setUser(result.data);
         }
       } catch (error) {
-        console.error('Failed to check auth status:', error);
+        console.error('[AuthContext] Failed to check auth status:', error);
       } finally {
         setIsLoading(false);
       }
@@ -67,29 +66,32 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   /**
    * Login user with username and password
+   * @param rememberMe - If true, session will last 30 days instead of 24 hours
    */
-  const login = async (username: string, password: string): Promise<void> => {
+  const login = useCallback(async (username: string, password: string, rememberMe: boolean = false): Promise<void> => {
     setIsLoading(true);
     try {
-      console.log('[AuthContext] Attempting login for user:', username);
-      const result = await window.justiceAPI.loginUser(username, password);
-      console.log('[AuthContext] Login result:', result);
+      const result = await window.justiceAPI.loginUser(username, password, rememberMe);
 
       if (!result.success) {
+        console.error('[AuthContext] Login failed with error:', result.error);
+        console.error('[AuthContext] Full result object:', JSON.stringify(result, null, 2));
         throw new Error(result.error || 'Login failed');
       }
 
       setUser(result.data.user);
-      console.log('[AuthContext] Login successful, user set:', result.data.user.username);
+
+      // Force a small delay to ensure state update propagates
+      await new Promise(resolve => setTimeout(resolve, 0));
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   /**
    * Logout current user
    */
-  const logout = async (): Promise<void> => {
+  const logout = useCallback(async (): Promise<void> => {
     setIsLoading(true);
     try {
       await window.justiceAPI.logoutUser();
@@ -101,38 +103,35 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   /**
    * Register new user
    */
-  const register = async (
+  const register = useCallback(async (
     username: string,
     password: string,
     email: string,
   ): Promise<void> => {
     setIsLoading(true);
     try {
-      console.log('[AuthContext] Attempting registration for user:', username, 'email:', email);
       const result = await window.justiceAPI.registerUser(username, password, email);
-      console.log('[AuthContext] Registration result:', result);
 
       if (!result.success) {
         throw new Error(result.error || 'Registration failed');
       }
 
-      console.log('[AuthContext] Registration successful, auto-logging in...');
       // After registration, automatically log in
       await login(username, password);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [login]);
 
   /**
    * Refresh current user data
    */
-  const refreshUser = async (): Promise<void> => {
+  const refreshUser = useCallback(async (): Promise<void> => {
     try {
       const result = await window.justiceAPI.getCurrentUser();
       if (result.success && result.data) {
@@ -144,17 +143,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
       console.error('Failed to refresh user:', error);
       setUser(null);
     }
-  };
+  }, []);
 
-  const value: AuthContextType = {
-    user,
-    isLoading,
-    isAuthenticated: user !== null,
-    login,
-    logout,
-    register,
-    refreshUser,
-  };
+  // Memoize context value to ensure new reference on state changes
+  // This is critical for triggering re-renders in consuming components
+  const value: AuthContextType = useMemo(
+    () => ({
+      user,
+      isLoading,
+      isAuthenticated: user !== null,
+      login,
+      logout,
+      register,
+      refreshUser,
+    }),
+    [user, isLoading, login, logout, register, refreshUser],
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

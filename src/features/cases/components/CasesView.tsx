@@ -260,7 +260,7 @@ export function CasesView({ onCaseSelect }: CasesViewProps): JSX.Element {
     x: number,
     y: number,
     parentX?: number,
-    parentY?: number
+    parentY?: number,
   ): JSX.Element[] => {
     const elements: JSX.Element[] = [];
 
@@ -291,7 +291,7 @@ export function CasesView({ onCaseSelect }: CasesViewProps): JSX.Element {
           style={{
             filter: hoveredNodeId === node.id ? 'brightness(1.3)' : 'none',
           }}
-        />
+        />,
       );
     }
 
@@ -392,7 +392,7 @@ export function CasesView({ onCaseSelect }: CasesViewProps): JSX.Element {
             {node.date}
           </text>
         )}
-      </g>
+      </g>,
     );
 
     // Recursively draw children with proper spacing
@@ -497,7 +497,7 @@ export function CasesView({ onCaseSelect }: CasesViewProps): JSX.Element {
           <p className="text-blue-200 mb-6">
             Create your first case to start organizing evidence, documents, and legal information.
           </p>
-          <p className="text-gray-400 text-sm">
+          <p className="text-slate-300 text-sm">
             Use the chat to create a case, or wait for the case management feature.
           </p>
         </div>
@@ -568,15 +568,15 @@ export function CasesView({ onCaseSelect }: CasesViewProps): JSX.Element {
                       <div
                         className={`text-xs font-medium ${
                           isCompleted
-                            ? 'text-gray-400'
+                            ? 'text-slate-300'
                             : isCurrent
                               ? 'text-blue-300'
-                              : 'text-slate-400'
+                              : 'text-slate-300'
                         }`}
                       >
                         {event.label}
                       </div>
-                      <div className="text-[10px] text-slate-500 mt-1">{event.date}</div>
+                      <div className="text-[10px] text-slate-300 mt-1">{event.date}</div>
                     </div>
 
                     {/* Tooltip on hover */}

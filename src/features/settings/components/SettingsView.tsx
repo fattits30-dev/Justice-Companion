@@ -588,7 +588,7 @@ export function SettingsView(): JSX.Element {
                   placeholder="At least 12 characters"
                   disabled={isSubmittingPassword}
                 />
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="text-xs text-slate-300 mt-1">
                   12+ chars, uppercase, lowercase, number
                 </p>
               </div>
@@ -671,14 +671,14 @@ export function SettingsView(): JSX.Element {
                           </span>
                         )}
                       </div>
-                      <div className="text-xs text-slate-400 mt-0.5">
+                      <div className="text-xs text-slate-300 mt-0.5">
                         {consent ? (
                           <span className="flex items-center gap-1 text-green-400">
                             <CheckCircle2 size={12} />
                             Granted
                           </span>
                         ) : (
-                          <span className="flex items-center gap-1 text-slate-500">
+                          <span className="flex items-center gap-1 text-slate-300">
                             <XCircle size={12} />
                             Not granted
                           </span>

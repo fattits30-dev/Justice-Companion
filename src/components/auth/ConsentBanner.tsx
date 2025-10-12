@@ -12,7 +12,7 @@ interface ConsentBannerProps {
   onComplete: () => void;
 }
 
-export function ConsentBanner({ onComplete }: ConsentBannerProps) {
+export function ConsentBanner({ onComplete }: ConsentBannerProps): JSX.Element {
   const [consents, setConsents] = useState({
     data_processing: false,
     encryption: false,
@@ -24,7 +24,7 @@ export function ConsentBanner({ onComplete }: ConsentBannerProps) {
 
   // Check if required consents are already granted
   useEffect(() => {
-    const checkConsents = async () => {
+    const checkConsents = async (): Promise<void> => {
       try {
         const result = await window.justiceAPI.hasConsent('data_processing');
         if (result.success && result.data) {
@@ -39,7 +39,7 @@ export function ConsentBanner({ onComplete }: ConsentBannerProps) {
     void checkConsents(); // Async call in useEffect - errors handled internally
   }, [onComplete]);
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (): Promise<void> => {
     setError(null);
 
     // Validate required consents
@@ -75,7 +75,7 @@ export function ConsentBanner({ onComplete }: ConsentBannerProps) {
         {/* Header */}
         <div className="p-6 border-b border-blue-800/30">
           <h2 className="text-2xl font-semibold text-white">Privacy & Consent</h2>
-          <p className="text-slate-400 mt-2">
+          <p className="text-slate-300 mt-2">
             Before you start using Justice Companion, we need your consent for data processing.
           </p>
         </div>
@@ -107,7 +107,7 @@ export function ConsentBanner({ onComplete }: ConsentBannerProps) {
                     Required
                   </span>
                 </div>
-                <p className="text-sm text-slate-400 mt-1">
+                <p className="text-sm text-slate-300 mt-1">
                   I consent to the local processing of my case data, notes, and legal information on
                   this device. This is required for the application to function.
                 </p>
@@ -132,7 +132,7 @@ export function ConsentBanner({ onComplete }: ConsentBannerProps) {
                     Recommended
                   </span>
                 </div>
-                <p className="text-sm text-slate-400 mt-1">
+                <p className="text-sm text-slate-300 mt-1">
                   I consent to encryption of sensitive data (case descriptions, evidence content,
                   personal information) using AES-256-GCM. Recommended for security.
                 </p>
@@ -159,7 +159,7 @@ export function ConsentBanner({ onComplete }: ConsentBannerProps) {
                     Optional
                   </span>
                 </div>
-                <p className="text-sm text-slate-400 mt-1">
+                <p className="text-sm text-slate-300 mt-1">
                   I consent to using AI features for legal research, case analysis, and document
                   drafting. AI processing happens locally if using local models, or via your
                   configured AI provider.
@@ -185,7 +185,7 @@ export function ConsentBanner({ onComplete }: ConsentBannerProps) {
                     Optional
                   </span>
                 </div>
-                <p className="text-sm text-slate-400 mt-1">
+                <p className="text-sm text-slate-300 mt-1">
                   I consent to receive updates, tips, and feature announcements about Justice
                   Companion. You can withdraw this consent at any time.
                 </p>

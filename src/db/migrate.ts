@@ -290,9 +290,7 @@ export function validateMigration(migrationName: string): {
 // Run migrations when script is executed directly
 if (require.main === module) {
   try {
-    console.log('🔄 Running database migrations...');
     runMigrations();
-    console.log('✅ Migrations completed successfully!');
     process.exit(0);
   } catch (error) {
     console.error('❌ Migration failed:', error);

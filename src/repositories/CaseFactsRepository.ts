@@ -15,7 +15,7 @@ import { EncryptionService, type EncryptedData } from '../services/EncryptionSer
 export class CaseFactsRepository {
   constructor(
     private encryptionService?: EncryptionService,
-    private auditLogger?: AuditLogger
+    private auditLogger?: AuditLogger,
   ) {}
 
   /**

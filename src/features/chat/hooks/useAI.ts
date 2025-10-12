@@ -113,7 +113,7 @@ export function useAI(caseId?: number, initialMessages: ChatMessage[] = []): Use
       } catch (err) {
         logger.error('useAI', 'AI status check failed', { err });
         setError(
-          'AI service initialization error. Please ensure the AI model is properly configured.'
+          'AI service initialization error. Please ensure the AI model is properly configured.',
         );
       }
     };
@@ -127,7 +127,7 @@ export function useAI(caseId?: number, initialMessages: ChatMessage[] = []): Use
     if (!window.justiceAPI) {
       logger.error(
         'useAI',
-        'window.justiceAPI is not available. Preload script may not have executed.'
+        'window.justiceAPI is not available. Preload script may not have executed.',
       );
       setError('Application initialization error. Please reload the app.');
       return;
@@ -249,7 +249,7 @@ export function useAI(caseId?: number, initialMessages: ChatMessage[] = []): Use
       setProgressStages((prev) => {
         // Mark the last stage as completed
         const updatedPrev = prev.map((stage, index) =>
-          index === prev.length - 1 ? { ...stage, completed: true } : stage
+          index === prev.length - 1 ? { ...stage, completed: true } : stage,
         );
 
         // Add new stage as in-progress
@@ -360,7 +360,7 @@ export function useAI(caseId?: number, initialMessages: ChatMessage[] = []): Use
         setIsStreaming(false);
       }
     },
-    [messages, isStreaming, caseId]
+    [messages, isStreaming, caseId],
   );
 
   /**

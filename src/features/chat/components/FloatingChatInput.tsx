@@ -261,10 +261,10 @@ export function FloatingChatInput({
               p-2.5 rounded-lg transition-all
               focus:outline-none focus:ring-3 focus:ring-blue-500
               ${
-                isButtonDisabled
-                  ? 'text-gray-400 cursor-not-allowed'
-                  : 'text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800'
-              }
+    isButtonDisabled
+      ? 'text-gray-400 cursor-not-allowed'
+      : 'text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800'
+    }
             `}
           >
             <BiSend className="w-5 h-5" />

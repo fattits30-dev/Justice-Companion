@@ -9,8 +9,8 @@ export default defineConfig({
   // Test directory
   testDir: './specs',
 
-  // Test timeout (30 seconds per test)
-  timeout: 30000,
+  // Test timeout (90 seconds per test - increased for Electron app launch + authentication)
+  timeout: 90000,
 
   // Global timeout for entire test run (10 minutes)
   globalTimeout: 600000,

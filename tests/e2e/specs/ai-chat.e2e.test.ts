@@ -1,17 +1,26 @@
-import { test, expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import {
-  launchElectronApp,
+  authenticateTestUser,
   closeElectronApp,
+  launchElectronApp,
   type ElectronTestApp,
 } from '../setup/electron-setup.js';
 import { chatMessagesFixtures } from '../setup/fixtures.js';
-import { getTestDatabase } from '../setup/test-database.js';
+import { getTestDatabase, TEST_USER_CREDENTIALS } from '../setup/test-database.js';
 
 let testApp: ElectronTestApp;
 
 test.beforeEach(async () => {
-  // Launch app with seeded data
-  testApp = await launchElectronApp({ seedData: true });
+  // ✅ FIX #2: Launch app WITHOUT seeded data to avoid session management mismatch
+  // The app uses runtime-only session variable (currentSessionId) that's only set during IPC login,
+  // not from database. Going through actual login flow ensures proper session state.
+  testApp = await launchElectronApp({ seedData: false });
+
+  // Authenticate test user through actual login flow (sets currentSessionId properly)
+  await authenticateTestUser(testApp.window, {
+    username: TEST_USER_CREDENTIALS.username,
+    password: TEST_USER_CREDENTIALS.password,
+  });
 });
 
 test.afterEach(async () => {

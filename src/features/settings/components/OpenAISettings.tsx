@@ -10,6 +10,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { useToast } from '@/hooks/useToast';
+import { secureStorage } from '@/services/SecureStorageService';
 
 type ConnectionStatus = 'idle' | 'testing' | 'connected' | 'error';
 
@@ -35,23 +36,32 @@ export function OpenAISettings({ onConfigSaved }: OpenAISettingsProps): JSX.Elem
 
   // Load saved configuration on mount
   useEffect(() => {
-    const loadSavedConfig = (): void => {
-      const savedApiKey = localStorage.getItem('openai_api_key');
-      const savedModel = localStorage.getItem('openai_model');
-      const savedOrganization = localStorage.getItem('openai_organization');
+    const loadSavedConfig = async (): Promise<void> => {
+      try {
+        // Initialize secure storage first
+        await secureStorage.init();
 
-      if (savedApiKey) {
-        setHasConfigured(true);
-        setMaskedApiKey(maskApiKey(savedApiKey));
-        setModel((savedModel as 'gpt-4o' | 'gpt-4o-mini' | 'gpt-3.5-turbo') ?? 'gpt-4o');
-        if (savedOrganization) {
-          setOrganization(savedOrganization);
+        // Load API key, model, and organization from secure storage
+        const savedApiKey = await secureStorage.getApiKey('openai_api_key');
+        const savedModel = await secureStorage.getApiKey('openai_model');
+        const savedOrganization = await secureStorage.getApiKey('openai_organization');
+
+        if (savedApiKey) {
+          setHasConfigured(true);
+          setMaskedApiKey(maskApiKey(savedApiKey));
+          setModel((savedModel as 'gpt-4o' | 'gpt-4o-mini' | 'gpt-3.5-turbo') ?? 'gpt-4o');
+          if (savedOrganization) {
+            setOrganization(savedOrganization);
+          }
         }
+      } catch (error) {
+        console.error('[OpenAISettings] Failed to load saved configuration:', error);
+        toast.error('Failed to load saved API key configuration');
       }
     };
 
-    loadSavedConfig();
-  }, []);
+    void loadSavedConfig();
+  }, [toast]);
 
   const maskApiKey = (key: string): string => {
     if (key.length < 8) {
@@ -139,13 +149,13 @@ export function OpenAISettings({ onConfigSaved }: OpenAISettingsProps): JSX.Elem
       });
 
       if (response.success) {
-        // Save to localStorage for persistence (encrypted by main process)
-        localStorage.setItem('openai_api_key', apiKey);
-        localStorage.setItem('openai_model', model);
+        // Save to secure storage (OS-native encryption)
+        await secureStorage.setApiKey('openai_api_key', apiKey);
+        await secureStorage.setApiKey('openai_model', model);
         if (organization) {
-          localStorage.setItem('openai_organization', organization);
+          await secureStorage.setApiKey('openai_organization', organization);
         } else {
-          localStorage.removeItem('openai_organization');
+          await secureStorage.deleteApiKey('openai_organization');
         }
 
         setHasConfigured(true);
@@ -166,28 +176,34 @@ export function OpenAISettings({ onConfigSaved }: OpenAISettingsProps): JSX.Elem
     }
   };
 
-  const handleClearConfiguration = (): void => {
+  const handleClearConfiguration = async (): Promise<void> => {
     if (
       !confirm(
-        'Are you sure you want to clear your OpenAI configuration? This will remove your API key.'
+        'Are you sure you want to clear your OpenAI configuration? This will remove your API key.',
       )
     ) {
       return;
     }
 
-    localStorage.removeItem('openai_api_key');
-    localStorage.removeItem('openai_model');
-    localStorage.removeItem('openai_organization');
+    try {
+      // Delete from secure storage
+      await secureStorage.deleteApiKey('openai_api_key');
+      await secureStorage.deleteApiKey('openai_model');
+      await secureStorage.deleteApiKey('openai_organization');
 
-    setApiKey('');
-    setModel('gpt-4o');
-    setOrganization('');
-    setHasConfigured(false);
-    setMaskedApiKey(null);
-    setConnectionStatus('idle');
-    setConnectionError(null);
+      setApiKey('');
+      setModel('gpt-4o');
+      setOrganization('');
+      setHasConfigured(false);
+      setMaskedApiKey(null);
+      setConnectionStatus('idle');
+      setConnectionError(null);
 
-    toast.success('OpenAI configuration cleared');
+      toast.success('OpenAI configuration cleared');
+    } catch (error) {
+      console.error('[OpenAISettings] Failed to clear configuration:', error);
+      toast.error('Failed to clear API key configuration');
+    }
   };
 
   const getStatusIcon = (): JSX.Element => {
@@ -199,7 +215,7 @@ export function OpenAISettings({ onConfigSaved }: OpenAISettingsProps): JSX.Elem
       case 'error':
         return <XCircle className="w-4 h-4 text-red-400" />;
       default:
-        return <AlertCircle className="w-4 h-4 text-slate-400" />;
+        return <AlertCircle className="w-4 h-4 text-slate-300" />;
     }
   };
 
@@ -225,7 +241,7 @@ export function OpenAISettings({ onConfigSaved }: OpenAISettingsProps): JSX.Elem
       case 'error':
         return 'text-red-300';
       default:
-        return 'text-slate-400';
+        return 'text-slate-300';
     }
   };
 
@@ -268,7 +284,7 @@ export function OpenAISettings({ onConfigSaved }: OpenAISettingsProps): JSX.Elem
               </div>
             </div>
             <button
-              onClick={handleClearConfiguration}
+              onClick={() => void handleClearConfiguration()}
               className="px-3 py-1.5 text-xs text-red-300 hover:text-red-200 font-medium transition-colors"
             >
               Clear
@@ -287,7 +303,7 @@ export function OpenAISettings({ onConfigSaved }: OpenAISettingsProps): JSX.Elem
             type={showApiKey ? 'text' : 'password'}
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
-            className="w-full px-3 py-2 pr-10 text-xs bg-slate-800/50 border border-blue-700/30 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-3 focus:ring-blue-500 font-mono"
+            className="w-full px-3 py-2 pr-10 text-xs bg-slate-800/50 border border-blue-700/30 rounded-lg text-white placeholder-slate-300 focus:outline-none focus:ring-3 focus:ring-blue-500 font-mono"
             placeholder="sk-proj-••••••••••••••••••••••••••••••••"
             disabled={isSaving}
           />
@@ -298,13 +314,13 @@ export function OpenAISettings({ onConfigSaved }: OpenAISettingsProps): JSX.Elem
             title={showApiKey ? 'Hide API key' : 'Show API key'}
           >
             {showApiKey ? (
-              <EyeOff className="w-4 h-4 text-slate-400" />
+              <EyeOff className="w-4 h-4 text-slate-300" />
             ) : (
-              <Eye className="w-4 h-4 text-slate-400" />
+              <Eye className="w-4 h-4 text-slate-300" />
             )}
           </button>
         </div>
-        <p className="text-xs text-slate-400 mt-1">
+        <p className="text-xs text-slate-300 mt-1">
           Get your API key from{' '}
           <a
             href="https://platform.openai.com/api-keys"
@@ -332,7 +348,7 @@ export function OpenAISettings({ onConfigSaved }: OpenAISettingsProps): JSX.Elem
           <option value="gpt-4o-mini">GPT-4o Mini (Faster, lower cost)</option>
           <option value="gpt-3.5-turbo">GPT-3.5 Turbo (Lowest cost)</option>
         </select>
-        <p className="text-xs text-slate-400 mt-1">
+        <p className="text-xs text-slate-300 mt-1">
           GPT-4o provides the best quality for legal assistance. See{' '}
           <a
             href="https://openai.com/pricing"
@@ -348,17 +364,17 @@ export function OpenAISettings({ onConfigSaved }: OpenAISettingsProps): JSX.Elem
       {/* Organization ID (Optional) */}
       <div>
         <label className="block text-xs font-medium text-white mb-1">
-          Organization ID <span className="text-slate-500">(Optional)</span>
+          Organization ID <span className="text-slate-300">(Optional)</span>
         </label>
         <input
           type="text"
           value={organization}
           onChange={(e) => setOrganization(e.target.value)}
-          className="w-full px-3 py-2 text-xs bg-slate-800/50 border border-blue-700/30 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-3 focus:ring-blue-500 font-mono"
+          className="w-full px-3 py-2 text-xs bg-slate-800/50 border border-blue-700/30 rounded-lg text-white placeholder-slate-300 focus:outline-none focus:ring-3 focus:ring-blue-500 font-mono"
           placeholder="org-••••••••••••••••••••••••"
           disabled={isSaving}
         />
-        <p className="text-xs text-slate-400 mt-1">
+        <p className="text-xs text-slate-300 mt-1">
           Only needed if your API key belongs to an organization
         </p>
       </div>
@@ -441,10 +457,10 @@ export function OpenAISettings({ onConfigSaved }: OpenAISettingsProps): JSX.Elem
       {/* Security Note */}
       <div className="bg-slate-800/50 border border-slate-700/30 rounded-lg p-3">
         <div className="flex items-start gap-2">
-          <Brain className="w-4 h-4 text-slate-400 mt-0.5 flex-shrink-0" />
+          <Brain className="w-4 h-4 text-slate-300 mt-0.5 flex-shrink-0" />
           <div className="flex-1">
             <p className="text-xs text-slate-300">
-              <strong>Security:</strong> Your API key is stored locally and encrypted. It's never
+              <strong>Security:</strong> Your API key is encrypted using OS-native encryption (Windows DPAPI, macOS Keychain, Linux libsecret) and stored securely on your device. It's never
               sent to any server except OpenAI's official API. Always keep your API key
               confidential.
             </p>

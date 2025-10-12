@@ -145,7 +145,7 @@ export class CitationService {
           c.span(),
           '<mark class="legal-citation" data-citation-type="' + c.constructor.name + '">',
           '</mark>',
-        ])
+        ]),
       );
     } catch (error) {
       logger.error('CitationService', 'Failed to highlight citations', {

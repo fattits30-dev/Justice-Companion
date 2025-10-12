@@ -6,7 +6,7 @@ import type { AuditLogger } from '../services/AuditLogger.js';
 export class CaseRepository {
   constructor(
     private encryptionService?: EncryptionService,
-    private auditLogger?: AuditLogger
+    private auditLogger?: AuditLogger,
   ) {}
   /**
    * Create a new case

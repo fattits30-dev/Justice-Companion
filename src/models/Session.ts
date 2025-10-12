@@ -9,6 +9,7 @@ export interface Session {
   createdAt: string;
   ipAddress: string | null;
   userAgent: string | null;
+  rememberMe?: boolean; // Optional flag for extended session duration
 }
 
 /**
@@ -20,4 +21,5 @@ export interface CreateSessionInput {
   expiresAt: string;
   ipAddress?: string;
   userAgent?: string;
+  rememberMe?: boolean; // Optional flag for extended session duration
 }

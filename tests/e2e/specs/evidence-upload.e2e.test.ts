@@ -1,13 +1,24 @@
-import { test, expect } from '@playwright/test';
-import { launchElectronApp, closeElectronApp, type ElectronTestApp } from '../setup/electron-setup.js';
-import { evidenceFixtures, createTestFile, cleanupTestFiles } from '../setup/fixtures.js';
-import { getTestDatabase } from '../setup/test-database.js';
+import { expect, test } from '@playwright/test';
+import {
+  authenticateTestUser,
+  closeElectronApp,
+  launchElectronApp,
+  type ElectronTestApp,
+} from '../setup/electron-setup.js';
+import { cleanupTestFiles, createTestFile, evidenceFixtures } from '../setup/fixtures.js';
+import { getTestDatabase, TEST_USER_CREDENTIALS } from '../setup/test-database.js';
 
 let testApp: ElectronTestApp;
 
 test.beforeEach(async () => {
   // Launch app with seeded data (includes a case to attach evidence to)
   testApp = await launchElectronApp({ seedData: true });
+
+  // Authenticate test user to bypass login screen
+  await authenticateTestUser(testApp.window, {
+    username: TEST_USER_CREDENTIALS.username,
+    password: TEST_USER_CREDENTIALS.password,
+  });
 });
 
 test.afterEach(async () => {
@@ -30,23 +41,26 @@ test.describe('Evidence Upload E2E', () => {
     await window.waitForTimeout(2000);
 
     // Look for evidence section or upload button
-    const uploadBtn = await window.$('[data-testid="upload-evidence-btn"]') ||
-                      await window.$('button:has-text("Upload Evidence")') ||
-                      await window.$('button:has-text("Add Evidence")');
+    const uploadBtn =
+      (await window.$('[data-testid="upload-evidence-btn"]')) ||
+      (await window.$('button:has-text("Upload Evidence")')) ||
+      (await window.$('button:has-text("Add Evidence")'));
 
     if (uploadBtn) {
       await uploadBtn.click();
       await window.waitForTimeout(500);
 
       // Fill evidence form
-      const titleInput = await window.$('[name="evidenceTitle"]') ||
-                        await window.$('input[placeholder*="title" i]');
+      const titleInput =
+        (await window.$('[name="evidenceTitle"]')) ||
+        (await window.$('input[placeholder*="title" i]'));
       if (titleInput) {
         await titleInput.fill(evidenceData.title);
       }
 
-      const descInput = await window.$('[name="evidenceDescription"]') ||
-                       await window.$('textarea[placeholder*="description" i]');
+      const descInput =
+        (await window.$('[name="evidenceDescription"]')) ||
+        (await window.$('textarea[placeholder*="description" i]'));
       if (descInput) {
         await descInput.fill(evidenceData.description);
       }
@@ -59,9 +73,10 @@ test.describe('Evidence Upload E2E', () => {
       }
 
       // Submit form
-      const submitBtn = await window.$('[data-testid="save-evidence-btn"]') ||
-                       await window.$('button:has-text("Upload")') ||
-                       await window.$('button:has-text("Save")');
+      const submitBtn =
+        (await window.$('[data-testid="save-evidence-btn"]')) ||
+        (await window.$('button:has-text("Upload")')) ||
+        (await window.$('button:has-text("Save")'));
       if (submitBtn) {
         await submitBtn.click();
         await window.waitForTimeout(2000);
@@ -73,7 +88,9 @@ test.describe('Evidence Upload E2E', () => {
 
       // Verify database persistence
       const db = getTestDatabase(dbPath);
-      const dbEvidence = db.prepare('SELECT * FROM evidence WHERE title = ?').get(evidenceData.title) as any;
+      const dbEvidence = db
+        .prepare('SELECT * FROM evidence WHERE title = ?')
+        .get(evidenceData.title) as any;
 
       expect(dbEvidence).toBeDefined();
       expect(dbEvidence.case_id).toBe(1);
@@ -93,8 +110,9 @@ test.describe('Evidence Upload E2E', () => {
     await window.waitForLoadState('domcontentloaded');
     await window.waitForTimeout(2000);
 
-    const uploadBtn = await window.$('[data-testid="upload-evidence-btn"]') ||
-                      await window.$('button:has-text("Upload Evidence")');
+    const uploadBtn =
+      (await window.$('[data-testid="upload-evidence-btn"]')) ||
+      (await window.$('button:has-text("Upload Evidence")'));
 
     if (uploadBtn) {
       await uploadBtn.click();
@@ -122,7 +140,9 @@ test.describe('Evidence Upload E2E', () => {
 
       // Verify in database
       const db = getTestDatabase(dbPath);
-      const dbEvidence = db.prepare('SELECT * FROM evidence WHERE title = ?').get(evidenceData.title) as any;
+      const dbEvidence = db
+        .prepare('SELECT * FROM evidence WHERE title = ?')
+        .get(evidenceData.title) as any;
 
       expect(dbEvidence).toBeDefined();
       expect(dbEvidence.file_type).toContain('image');
@@ -189,16 +209,18 @@ test.describe('Evidence Upload E2E', () => {
       await window.waitForTimeout(1000);
 
       // Click delete button
-      const deleteBtn = await window.$('[data-testid="delete-evidence-btn"]') ||
-                       await window.$('button:has-text("Delete")');
+      const deleteBtn =
+        (await window.$('[data-testid="delete-evidence-btn"]')) ||
+        (await window.$('button:has-text("Delete")'));
 
       if (deleteBtn) {
         await deleteBtn.click();
         await window.waitForTimeout(500);
 
         // Confirm deletion
-        const confirmBtn = await window.$('button:has-text("Confirm")') ||
-                          await window.$('button:has-text("Yes")');
+        const confirmBtn =
+          (await window.$('button:has-text("Confirm")')) ||
+          (await window.$('button:has-text("Yes")'));
         if (confirmBtn) {
           await confirmBtn.click();
         }
