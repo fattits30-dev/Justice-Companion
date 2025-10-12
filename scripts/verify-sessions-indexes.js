@@ -29,12 +29,16 @@ function main() {
     console.log('📋 Current Indexes on sessions table:');
     console.log('-'.repeat(60));
 
-    const indexes = db.prepare(`
+    const indexes = db
+      .prepare(
+        `
       SELECT name, sql
       FROM sqlite_master
       WHERE type = 'index' AND tbl_name = 'sessions'
       ORDER BY name
-    `).all();
+    `
+      )
+      .all();
 
     if (indexes.length === 0) {
       console.log('   ⚠️  No indexes found (only PRIMARY KEY exists)');
@@ -51,17 +55,21 @@ function main() {
     console.log('\n\n🔍 Checking for idx_sessions_remember_me:');
     console.log('-'.repeat(60));
 
-    const rememberMeIndex = db.prepare(`
+    const rememberMeIndex = db
+      .prepare(
+        `
       SELECT name
       FROM sqlite_master
       WHERE type = 'index'
         AND tbl_name = 'sessions'
         AND name = 'idx_sessions_remember_me'
-    `).get();
+    `
+      )
+      .get();
 
     if (rememberMeIndex) {
       console.log('   ❌ idx_sessions_remember_me EXISTS (should be removed)');
-      console.log('   💡 Run migration 014 to remove this unused index');
+      console.log('   💡 Run migration 014 to remove this index');
     } else {
       console.log('   ✅ idx_sessions_remember_me NOT FOUND (correctly removed)');
     }
@@ -70,19 +78,20 @@ function main() {
     console.log('\n\n✅ Essential Index Verification:');
     console.log('-'.repeat(60));
 
-    const essentialIndexes = [
-      'idx_sessions_user_id',
-      'idx_sessions_expires_at',
-    ];
+    const essentialIndexes = ['idx_sessions_user_id', 'idx_sessions_expires_at'];
 
     essentialIndexes.forEach((indexName) => {
-      const exists = db.prepare(`
+      const exists = db
+        .prepare(
+          `
         SELECT name
         FROM sqlite_master
         WHERE type = 'index'
           AND tbl_name = 'sessions'
           AND name = ?
-      `).get(indexName);
+      `
+        )
+        .get(indexName);
 
       if (exists) {
         console.log(`   ✅ ${indexName} exists`);
@@ -147,11 +156,15 @@ function main() {
     const sessionCount = db.prepare('SELECT COUNT(*) as count FROM sessions').get();
     console.log(`   Total sessions: ${sessionCount.count}`);
 
-    const activeCount = db.prepare(`
+    const activeCount = db
+      .prepare(
+        `
       SELECT COUNT(*) as count
       FROM sessions
       WHERE expires_at > datetime('now')
-    `).get();
+    `
+      )
+      .get();
     console.log(`   Active sessions: ${activeCount.count}`);
 
     const expiredCount = sessionCount.count - activeCount.count;
@@ -160,7 +173,6 @@ function main() {
     console.log('\n' + '='.repeat(60));
     console.log('  Verification Complete');
     console.log('='.repeat(60) + '\n');
-
   } catch (error) {
     console.error('\n❌ Error:', error.message);
     console.error('\nTroubleshooting:');

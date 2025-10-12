@@ -1,7 +1,7 @@
-import { safeStorage, app } from 'electron';
-import path from 'path';
+import { app, safeStorage } from 'electron';
 import fs from 'fs/promises';
-import { validate as uuidValidate } from 'uuid';
+import path from 'path';
+import { validate as uuidValidate, version as uuidVersion } from 'uuid';
 
 /**
  * Service for securely persisting session IDs across app restarts
@@ -16,6 +16,7 @@ import { validate as uuidValidate } from 'uuid';
  */
 export class SessionPersistenceService {
   private static readonly FILE_NAME = 'session.enc';
+  private static readonly UUID_V4_VERSION = 4;
   private static instance: SessionPersistenceService;
 
   private constructor() {
@@ -72,8 +73,18 @@ export class SessionPersistenceService {
       return false;
     }
 
-    // Check UUID v4 format
-    return uuidValidate(sessionId) && sessionId.includes('-');
+    // Check UUID v4 format specifically
+    if (!uuidValidate(sessionId) || !sessionId.includes('-')) {
+      return false;
+    }
+
+    // Ensure it's specifically version 4
+    try {
+      return uuidVersion(sessionId) === SessionPersistenceService.UUID_V4_VERSION;
+    } catch (error) {
+      console.error('[SessionPersistence] Error validating UUID version:', error);
+      return false;
+    }
   }
 
   /**
@@ -109,7 +120,6 @@ export class SessionPersistenceService {
 
       // Write encrypted data to file
       await fs.writeFile(storagePath, encrypted);
-
     } catch (error) {
       console.error('[SessionPersistence] Failed to store session ID:', error);
 
@@ -167,15 +177,16 @@ export class SessionPersistenceService {
       }
 
       return decrypted;
-
     } catch (error) {
       console.error('[SessionPersistence] Failed to retrieve session ID:', error);
 
       // Handle corrupted file by removing it
-      if (error instanceof Error &&
-          (error.message.includes('decrypt') ||
-           error.message.includes('corrupt') ||
-           error.message.includes('invalid'))) {
+      if (
+        error instanceof Error &&
+        (error.message.includes('decrypt') ||
+          error.message.includes('corrupt') ||
+          error.message.includes('invalid'))
+      ) {
         console.warn('[SessionPersistence] Corrupted session file detected, cleaning up');
         await this.clearSession();
       }

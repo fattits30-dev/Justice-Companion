@@ -1,17 +1,17 @@
-import { describe, it, expect, beforeEach, vi, Mock } from 'vitest';
-import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
+import { v4 as uuidv4 } from 'uuid';
+import { beforeEach, describe, expect, it, Mock, vi } from 'vitest';
 
 // Mock Electron before importing the service (hoisted to top)
 vi.mock('electron', () => ({
   safeStorage: {
     isEncryptionAvailable: vi.fn(() => true),
     encryptString: vi.fn((str: string) => Buffer.from('encrypted-' + str)),
-    decryptString: vi.fn(() => 'decrypted')
+    decryptString: vi.fn(() => 'decrypted'),
   },
   app: {
-    getPath: vi.fn(() => '/mock/user/data')
-  }
+    getPath: vi.fn(() => '/mock/user/data'),
+  },
 }));
 
 // Mock fs/promises (hoisted to top)
@@ -21,7 +21,7 @@ vi.mock('fs/promises', () => ({
   writeFile: vi.fn(),
   readFile: vi.fn(),
   unlink: vi.fn(),
-  stat: vi.fn()
+  stat: vi.fn(),
 }));
 
 describe('SessionPersistenceService', () => {
@@ -32,7 +32,8 @@ describe('SessionPersistenceService', () => {
   let mockApp: any;
   let fs: any;
 
-  const mockUserDataPath = '/mock/user/data';
+  // Use path.join for Windows compatibility
+  const mockUserDataPath = path.join(path.sep, 'mock', 'user', 'data');
   const mockSessionFilePath = path.join(mockUserDataPath, 'session.enc');
   const validSessionId = uuidv4();
 
@@ -43,12 +44,15 @@ describe('SessionPersistenceService', () => {
 
     // Import modules after reset
     const electron = await import('electron');
-    fs = await import('fs/promises');
+    const fsModule = await import('fs/promises');
     const serviceModule = await import('./SessionPersistenceService');
 
     SessionPersistenceService = serviceModule.SessionPersistenceService;
     mockSafeStorage = electron.safeStorage;
     mockApp = electron.app;
+
+    // Get fs from default export (how the service imports it)
+    fs = fsModule as typeof import('fs/promises');
 
     // Setup default mock behaviors
     mockApp.getPath.mockReturnValue(mockUserDataPath);
@@ -139,11 +143,13 @@ describe('SessionPersistenceService', () => {
         null as any,
         undefined as any,
         123 as any,
-        'invalid-uuid-format'
+        'invalid-uuid-format',
       ];
 
       for (const invalidId of invalidIds) {
-        await expect(service.storeSessionId(invalidId)).rejects.toThrow('Invalid session ID format');
+        await expect(service.storeSessionId(invalidId)).rejects.toThrow(
+          'Invalid session ID format'
+        );
       }
 
       expect(mockSafeStorage.encryptString).not.toHaveBeenCalled();
@@ -152,7 +158,9 @@ describe('SessionPersistenceService', () => {
     it('should throw error when encryption is not available', async () => {
       mockSafeStorage.isEncryptionAvailable.mockReturnValue(false);
 
-      await expect(service.storeSessionId(validSessionId)).rejects.toThrow('Encryption not available');
+      await expect(service.storeSessionId(validSessionId)).rejects.toThrow(
+        'Encryption not available'
+      );
     });
 
     it('should clean up file on write error', async () => {
@@ -313,7 +321,7 @@ describe('SessionPersistenceService', () => {
       const mockDate = new Date('2025-01-12T10:00:00Z');
       (fs.stat as Mock).mockResolvedValue({
         size: 256,
-        mtime: mockDate
+        mtime: mockDate,
       });
 
       const result = await service.getSessionMetadata();
@@ -322,7 +330,7 @@ describe('SessionPersistenceService', () => {
         exists: true,
         size: 256,
         modified: mockDate,
-        encryptionAvailable: true
+        encryptionAvailable: true,
       });
     });
 
@@ -333,7 +341,7 @@ describe('SessionPersistenceService', () => {
 
       expect(result).toEqual({
         exists: false,
-        encryptionAvailable: true
+        encryptionAvailable: true,
       });
     });
 
@@ -381,10 +389,10 @@ describe('SessionPersistenceService', () => {
       const allLogs = [
         ...consoleLogSpy.mock.calls.flat(),
         ...consoleErrorSpy.mock.calls.flat(),
-        ...consoleWarnSpy.mock.calls.flat()
-      ].map(arg => String(arg));
+        ...consoleWarnSpy.mock.calls.flat(),
+      ].map((arg) => String(arg));
 
-      expect(allLogs.some(log => log.includes(validSessionId))).toBe(false);
+      expect(allLogs.some((log) => log.includes(validSessionId))).toBe(false);
 
       // Restore spies
       consoleLogSpy.mockRestore();
@@ -401,7 +409,9 @@ describe('SessionPersistenceService', () => {
       ];
 
       for (const invalidId of invalidUUIDs) {
-        await expect(service.storeSessionId(invalidId)).rejects.toThrow('Invalid session ID format');
+        await expect(service.storeSessionId(invalidId)).rejects.toThrow(
+          'Invalid session ID format'
+        );
       }
     });
   });

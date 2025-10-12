@@ -15,7 +15,7 @@
  * - Console logging validation
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SecureStorageService, secureStorage } from './SecureStorageService';
 
 // Mock electron module
@@ -40,6 +40,24 @@ describe('SecureStorageService', () => {
     // Access private instance to reset it
     (SecureStorageService as any).instance = undefined;
 
+    // Mock window.justiceAPI.secureStorage using vi.spyOn to avoid global assignment
+    const secureStorageMock = {
+      isEncryptionAvailable: vi.fn(() =>
+        ipcRenderer.invoke('secure-storage:is-encryption-available')
+      ),
+      set: vi.fn((key: string, value: string) =>
+        ipcRenderer.invoke('secure-storage:set', key, value)
+      ),
+      get: vi.fn((key: string) => ipcRenderer.invoke('secure-storage:get', key)),
+      delete: vi.fn((key: string) => ipcRenderer.invoke('secure-storage:delete', key)),
+      clearAll: vi.fn(() => ipcRenderer.invoke('secure-storage:clear-all')),
+    };
+    vi.stubGlobal('window', {
+      justiceAPI: {
+        secureStorage: secureStorageMock,
+      },
+    });
+
     // Get fresh instance
     service = SecureStorageService.getInstance();
 
@@ -58,6 +76,9 @@ describe('SecureStorageService', () => {
 
     // Reset singleton
     (SecureStorageService as any).instance = undefined;
+
+    // Clean up global window mock
+    vi.unstubAllGlobals();
   });
 
   describe('Singleton Pattern', () => {
@@ -139,10 +160,7 @@ describe('SecureStorageService', () => {
       mockInvoke.mockRejectedValueOnce(error);
 
       await expect(service.init()).rejects.toThrow('Failed to initialize secure storage');
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        '[SecureStorage] Failed to initialize:',
-        error
-      );
+      expect(consoleErrorSpy).toHaveBeenCalledWith('[SecureStorage] Failed to initialize:', error);
     });
 
     it('should throw error with non-Error object failure', async () => {
@@ -187,14 +205,17 @@ describe('SecureStorageService', () => {
       await service.setApiKey('openai_api_key', 'sk-test123');
 
       expect(mockInvoke).toHaveBeenNthCalledWith(1, 'secure-storage:is-encryption-available');
-      expect(mockInvoke).toHaveBeenNthCalledWith(2, 'secure-storage:set', 'openai_api_key', 'sk-test123');
+      expect(mockInvoke).toHaveBeenNthCalledWith(
+        2,
+        'secure-storage:set',
+        'openai_api_key',
+        'sk-test123'
+      );
       expect(mockInvoke).toHaveBeenCalledTimes(2);
     });
 
     it('should set API key successfully', async () => {
-      mockInvoke
-        .mockResolvedValueOnce(true)
-        .mockResolvedValueOnce(undefined);
+      mockInvoke.mockResolvedValueOnce(true).mockResolvedValueOnce(undefined);
 
       await service.setApiKey('anthropic_api_key', 'sk-ant-test456');
 
@@ -239,32 +260,38 @@ describe('SecureStorageService', () => {
     it('should throw error when key is null', async () => {
       mockInvoke.mockResolvedValueOnce(true);
 
-      await expect(service.setApiKey(null as any, 'value')).rejects.toThrow('Key and value are required');
+      await expect(service.setApiKey(null as any, 'value')).rejects.toThrow(
+        'Key and value are required'
+      );
     });
 
     it('should throw error when value is null', async () => {
       mockInvoke.mockResolvedValueOnce(true);
 
-      await expect(service.setApiKey('key', null as any)).rejects.toThrow('Key and value are required');
+      await expect(service.setApiKey('key', null as any)).rejects.toThrow(
+        'Key and value are required'
+      );
     });
 
     it('should throw error when key is undefined', async () => {
       mockInvoke.mockResolvedValueOnce(true);
 
-      await expect(service.setApiKey(undefined as any, 'value')).rejects.toThrow('Key and value are required');
+      await expect(service.setApiKey(undefined as any, 'value')).rejects.toThrow(
+        'Key and value are required'
+      );
     });
 
     it('should throw error when value is undefined', async () => {
       mockInvoke.mockResolvedValueOnce(true);
 
-      await expect(service.setApiKey('key', undefined as any)).rejects.toThrow('Key and value are required');
+      await expect(service.setApiKey('key', undefined as any)).rejects.toThrow(
+        'Key and value are required'
+      );
     });
 
     it('should handle IPC failure when setting API key', async () => {
       const ipcError = new Error('IPC set failed');
-      mockInvoke
-        .mockResolvedValueOnce(true)
-        .mockRejectedValueOnce(ipcError);
+      mockInvoke.mockResolvedValueOnce(true).mockRejectedValueOnce(ipcError);
 
       await expect(service.setApiKey('test_key', 'test_value')).rejects.toThrow(
         'Failed to store API key: IPC set failed'
@@ -276,9 +303,7 @@ describe('SecureStorageService', () => {
     });
 
     it('should handle non-Error IPC failure when setting API key', async () => {
-      mockInvoke
-        .mockResolvedValueOnce(true)
-        .mockRejectedValueOnce('String error');
+      mockInvoke.mockResolvedValueOnce(true).mockRejectedValueOnce('String error');
 
       await expect(service.setApiKey('test_key', 'test_value')).rejects.toThrow(
         'Failed to store API key: Unknown error'
@@ -290,9 +315,7 @@ describe('SecureStorageService', () => {
     });
 
     it('should allow setting keys with special characters', async () => {
-      mockInvoke
-        .mockResolvedValueOnce(true)
-        .mockResolvedValueOnce(undefined);
+      mockInvoke.mockResolvedValueOnce(true).mockResolvedValueOnce(undefined);
 
       await service.setApiKey('key-with-dashes_and_underscores.and.dots', 'sk-!@#$%^&*()');
 
@@ -318,9 +341,7 @@ describe('SecureStorageService', () => {
     });
 
     it('should get API key successfully', async () => {
-      mockInvoke
-        .mockResolvedValueOnce(true)
-        .mockResolvedValueOnce('sk-ant-test456');
+      mockInvoke.mockResolvedValueOnce(true).mockResolvedValueOnce('sk-ant-test456');
 
       const result = await service.getApiKey('anthropic_api_key');
 
@@ -329,9 +350,7 @@ describe('SecureStorageService', () => {
     });
 
     it('should return null when API key not found', async () => {
-      mockInvoke
-        .mockResolvedValueOnce(true)
-        .mockResolvedValueOnce(null);
+      mockInvoke.mockResolvedValueOnce(true).mockResolvedValueOnce(null);
 
       const result = await service.getApiKey('non_existent_key');
 
@@ -339,9 +358,7 @@ describe('SecureStorageService', () => {
     });
 
     it('should return null when IPC returns undefined', async () => {
-      mockInvoke
-        .mockResolvedValueOnce(true)
-        .mockResolvedValueOnce(undefined);
+      mockInvoke.mockResolvedValueOnce(true).mockResolvedValueOnce(undefined);
 
       const result = await service.getApiKey('missing_key');
 
@@ -349,9 +366,7 @@ describe('SecureStorageService', () => {
     });
 
     it('should return null when IPC returns empty string', async () => {
-      mockInvoke
-        .mockResolvedValueOnce(true)
-        .mockResolvedValueOnce('');
+      mockInvoke.mockResolvedValueOnce(true).mockResolvedValueOnce('');
 
       const result = await service.getApiKey('empty_key');
 
@@ -379,9 +394,7 @@ describe('SecureStorageService', () => {
 
     it('should handle IPC failure when getting API key', async () => {
       const ipcError = new Error('IPC get failed');
-      mockInvoke
-        .mockResolvedValueOnce(true)
-        .mockRejectedValueOnce(ipcError);
+      mockInvoke.mockResolvedValueOnce(true).mockRejectedValueOnce(ipcError);
 
       await expect(service.getApiKey('test_key')).rejects.toThrow(
         'Failed to retrieve API key: IPC get failed'
@@ -393,9 +406,7 @@ describe('SecureStorageService', () => {
     });
 
     it('should handle non-Error IPC failure when getting API key', async () => {
-      mockInvoke
-        .mockResolvedValueOnce(true)
-        .mockRejectedValueOnce('String error');
+      mockInvoke.mockResolvedValueOnce(true).mockRejectedValueOnce('String error');
 
       await expect(service.getApiKey('test_key')).rejects.toThrow(
         'Failed to retrieve API key: Unknown error'
@@ -438,9 +449,7 @@ describe('SecureStorageService', () => {
     });
 
     it('should delete API key successfully', async () => {
-      mockInvoke
-        .mockResolvedValueOnce(true)
-        .mockResolvedValueOnce(undefined);
+      mockInvoke.mockResolvedValueOnce(true).mockResolvedValueOnce(undefined);
 
       await service.deleteApiKey('test_key');
 
@@ -468,9 +477,7 @@ describe('SecureStorageService', () => {
 
     it('should handle IPC failure when deleting API key', async () => {
       const ipcError = new Error('IPC delete failed');
-      mockInvoke
-        .mockResolvedValueOnce(true)
-        .mockRejectedValueOnce(ipcError);
+      mockInvoke.mockResolvedValueOnce(true).mockRejectedValueOnce(ipcError);
 
       await expect(service.deleteApiKey('test_key')).rejects.toThrow(
         'Failed to delete API key: IPC delete failed'
@@ -482,9 +489,7 @@ describe('SecureStorageService', () => {
     });
 
     it('should handle non-Error IPC failure when deleting API key', async () => {
-      mockInvoke
-        .mockResolvedValueOnce(true)
-        .mockRejectedValueOnce('String error');
+      mockInvoke.mockResolvedValueOnce(true).mockRejectedValueOnce('String error');
 
       await expect(service.deleteApiKey('test_key')).rejects.toThrow(
         'Failed to delete API key: Unknown error'
@@ -527,9 +532,7 @@ describe('SecureStorageService', () => {
     });
 
     it('should return true when API key exists', async () => {
-      mockInvoke
-        .mockResolvedValueOnce(true)
-        .mockResolvedValueOnce('sk-test-value');
+      mockInvoke.mockResolvedValueOnce(true).mockResolvedValueOnce('sk-test-value');
 
       const result = await service.hasApiKey('test_key');
 
@@ -537,9 +540,7 @@ describe('SecureStorageService', () => {
     });
 
     it('should return false when API key does not exist', async () => {
-      mockInvoke
-        .mockResolvedValueOnce(true)
-        .mockResolvedValueOnce(null);
+      mockInvoke.mockResolvedValueOnce(true).mockResolvedValueOnce(null);
 
       const result = await service.hasApiKey('non_existent_key');
 
@@ -547,9 +548,7 @@ describe('SecureStorageService', () => {
     });
 
     it('should return false when API key is empty string', async () => {
-      mockInvoke
-        .mockResolvedValueOnce(true)
-        .mockResolvedValueOnce('');
+      mockInvoke.mockResolvedValueOnce(true).mockResolvedValueOnce('');
 
       const result = await service.hasApiKey('empty_key');
 
@@ -582,9 +581,7 @@ describe('SecureStorageService', () => {
     });
 
     it('should return false when getApiKey throws error', async () => {
-      mockInvoke
-        .mockResolvedValueOnce(true)
-        .mockRejectedValueOnce(new Error('IPC error'));
+      mockInvoke.mockResolvedValueOnce(true).mockRejectedValueOnce(new Error('IPC error'));
 
       const result = await service.hasApiKey('test_key');
 
@@ -620,9 +617,7 @@ describe('SecureStorageService', () => {
     });
 
     it('should clear all API keys successfully', async () => {
-      mockInvoke
-        .mockResolvedValueOnce(true)
-        .mockResolvedValueOnce(undefined);
+      mockInvoke.mockResolvedValueOnce(true).mockResolvedValueOnce(undefined);
 
       await service.clearAll();
 
@@ -631,9 +626,7 @@ describe('SecureStorageService', () => {
 
     it('should handle IPC failure when clearing all keys', async () => {
       const ipcError = new Error('IPC clear-all failed');
-      mockInvoke
-        .mockResolvedValueOnce(true)
-        .mockRejectedValueOnce(ipcError);
+      mockInvoke.mockResolvedValueOnce(true).mockRejectedValueOnce(ipcError);
 
       await expect(service.clearAll()).rejects.toThrow('Failed to clear all API keys');
       expect(consoleErrorSpy).toHaveBeenCalledWith(
@@ -643,9 +636,7 @@ describe('SecureStorageService', () => {
     });
 
     it('should handle non-Error IPC failure when clearing all keys', async () => {
-      mockInvoke
-        .mockResolvedValueOnce(true)
-        .mockRejectedValueOnce('String error');
+      mockInvoke.mockResolvedValueOnce(true).mockRejectedValueOnce('String error');
 
       await expect(service.clearAll()).rejects.toThrow('Failed to clear all API keys');
       expect(consoleErrorSpy).toHaveBeenCalledWith(
@@ -782,9 +773,7 @@ describe('SecureStorageService', () => {
 
     it('should handle very long API key values', async () => {
       const longValue = 'sk-' + 'x'.repeat(10000);
-      mockInvoke
-        .mockResolvedValueOnce(true)
-        .mockResolvedValueOnce(undefined);
+      mockInvoke.mockResolvedValueOnce(true).mockResolvedValueOnce(undefined);
 
       await service.setApiKey('long_key', longValue);
 
@@ -792,9 +781,7 @@ describe('SecureStorageService', () => {
     });
 
     it('should handle special characters in key names', async () => {
-      mockInvoke
-        .mockResolvedValueOnce(true)
-        .mockResolvedValueOnce(undefined);
+      mockInvoke.mockResolvedValueOnce(true).mockResolvedValueOnce(undefined);
 
       await service.setApiKey('key-with-dashes_underscores.dots:colons', 'value');
 
@@ -806,9 +793,7 @@ describe('SecureStorageService', () => {
     });
 
     it('should handle rapid successive calls', async () => {
-      mockInvoke
-        .mockResolvedValueOnce(true)
-        .mockResolvedValue(undefined);
+      mockInvoke.mockResolvedValueOnce(true).mockResolvedValue(undefined);
 
       await service.init();
 
@@ -825,9 +810,7 @@ describe('SecureStorageService', () => {
   describe('Error Message Validation', () => {
     it('should provide detailed error message for set failures', async () => {
       const specificError = new Error('Disk write failed');
-      mockInvoke
-        .mockResolvedValueOnce(true)
-        .mockRejectedValueOnce(specificError);
+      mockInvoke.mockResolvedValueOnce(true).mockRejectedValueOnce(specificError);
 
       await expect(service.setApiKey('key', 'value')).rejects.toThrow(
         'Failed to store API key: Disk write failed'
@@ -836,9 +819,7 @@ describe('SecureStorageService', () => {
 
     it('should provide detailed error message for get failures', async () => {
       const specificError = new Error('Disk read failed');
-      mockInvoke
-        .mockResolvedValueOnce(true)
-        .mockRejectedValueOnce(specificError);
+      mockInvoke.mockResolvedValueOnce(true).mockRejectedValueOnce(specificError);
 
       await expect(service.getApiKey('key')).rejects.toThrow(
         'Failed to retrieve API key: Disk read failed'
@@ -847,9 +828,7 @@ describe('SecureStorageService', () => {
 
     it('should provide detailed error message for delete failures', async () => {
       const specificError = new Error('Permission denied');
-      mockInvoke
-        .mockResolvedValueOnce(true)
-        .mockRejectedValueOnce(specificError);
+      mockInvoke.mockResolvedValueOnce(true).mockRejectedValueOnce(specificError);
 
       await expect(service.deleteApiKey('key')).rejects.toThrow(
         'Failed to delete API key: Permission denied'
@@ -875,17 +854,12 @@ describe('SecureStorageService', () => {
 
       await expect(service.init()).rejects.toThrow();
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        '[SecureStorage] Failed to initialize:',
-        error
-      );
+      expect(consoleErrorSpy).toHaveBeenCalledWith('[SecureStorage] Failed to initialize:', error);
     });
 
     it('should log error with key name when set fails', async () => {
       const error = new Error('Set failed');
-      mockInvoke
-        .mockResolvedValueOnce(true)
-        .mockRejectedValueOnce(error);
+      mockInvoke.mockResolvedValueOnce(true).mockRejectedValueOnce(error);
 
       await expect(service.setApiKey('my_api_key', 'value')).rejects.toThrow();
 
@@ -897,9 +871,7 @@ describe('SecureStorageService', () => {
 
     it('should log error with key name when get fails', async () => {
       const error = new Error('Get failed');
-      mockInvoke
-        .mockResolvedValueOnce(true)
-        .mockRejectedValueOnce(error);
+      mockInvoke.mockResolvedValueOnce(true).mockRejectedValueOnce(error);
 
       await expect(service.getApiKey('my_api_key')).rejects.toThrow();
 
@@ -911,9 +883,7 @@ describe('SecureStorageService', () => {
 
     it('should log error with key name when delete fails', async () => {
       const error = new Error('Delete failed');
-      mockInvoke
-        .mockResolvedValueOnce(true)
-        .mockRejectedValueOnce(error);
+      mockInvoke.mockResolvedValueOnce(true).mockRejectedValueOnce(error);
 
       await expect(service.deleteApiKey('my_api_key')).rejects.toThrow();
 
@@ -925,9 +895,7 @@ describe('SecureStorageService', () => {
 
     it('should log error when clearAll fails', async () => {
       const error = new Error('Clear all failed');
-      mockInvoke
-        .mockResolvedValueOnce(true)
-        .mockRejectedValueOnce(error);
+      mockInvoke.mockResolvedValueOnce(true).mockRejectedValueOnce(error);
 
       await expect(service.clearAll()).rejects.toThrow();
 

@@ -29,6 +29,8 @@ export class TestDatabaseHelper {
       '010_authentication_system.sql',
       '011_add_user_ownership.sql',
       '012_consent_management.sql',
+      '013_add_remember_me_to_sessions.sql',
+      '014_remove_unused_remember_me_index.sql',
     ];
 
     for (const migration of migrations) {
