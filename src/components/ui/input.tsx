@@ -24,27 +24,29 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           'transition-all duration-200 ease-in-out',
           // Typography
           'placeholder:text-slate-300',
-          // Focus state
+          // Focus state with glow
           'focus:outline-none focus:ring-2 focus:ring-offset-2',
-          // Default state
+          // Default state with blue glow
           !error && [
             'border-slate-700/50',
             'focus:border-blue-500 focus:ring-blue-500/20 focus:ring-offset-slate-950',
+            'focus:shadow-lg focus:shadow-blue-500/50',
           ],
-          // Error state
+          // Error state with red glow
           error && [
             'border-red-500/50',
             'focus:border-red-500 focus:ring-red-500/20 focus:ring-offset-slate-950',
+            'focus:shadow-lg focus:shadow-red-500/50',
           ],
           // Disabled state
           'disabled:cursor-not-allowed disabled:opacity-50',
-          className,
+          className
         )}
         ref={ref}
         {...props}
       />
     );
-  },
+  }
 );
 Input.displayName = 'Input';
 

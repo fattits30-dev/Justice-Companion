@@ -1,4 +1,12 @@
-import { createContext, useContext, useState, useEffect, useMemo, useCallback, ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  ReactNode,
+} from 'react';
 import type { User } from '@/models/User';
 
 /**
@@ -44,8 +52,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       try {
         // Wait for justiceAPI to be available
         if (typeof window === 'undefined' || !window.justiceAPI) {
-          console.error('[AuthContext] window.justiceAPI is not available!');
-          console.error('[AuthContext] window object keys:', typeof window !== 'undefined' ? Object.keys(window) : 'window is undefined');
           setIsLoading(false);
           return;
         }
@@ -68,25 +74,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
    * Login user with username and password
    * @param rememberMe - If true, session will last 30 days instead of 24 hours
    */
-  const login = useCallback(async (username: string, password: string, rememberMe: boolean = false): Promise<void> => {
-    setIsLoading(true);
-    try {
-      const result = await window.justiceAPI.loginUser(username, password, rememberMe);
+  const login = useCallback(
+    async (username: string, password: string, rememberMe: boolean = false): Promise<void> => {
+      setIsLoading(true);
+      try {
+        const result = await window.justiceAPI.loginUser(username, password, rememberMe);
 
-      if (!result.success) {
-        console.error('[AuthContext] Login failed with error:', result.error);
-        console.error('[AuthContext] Full result object:', JSON.stringify(result, null, 2));
-        throw new Error(result.error || 'Login failed');
+        if (!result.success) {
+          console.error('[AuthContext] Login failed with error:', result.error);
+          throw new Error(result.error || 'Login failed');
+        }
+
+        setUser(result.data.user);
+
+        // Force a small delay to ensure state update propagates
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      } finally {
+        setIsLoading(false);
       }
-
-      setUser(result.data.user);
-
-      // Force a small delay to ensure state update propagates
-      await new Promise(resolve => setTimeout(resolve, 0));
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+    },
+    []
+  );
 
   /**
    * Logout current user
@@ -108,25 +116,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
   /**
    * Register new user
    */
-  const register = useCallback(async (
-    username: string,
-    password: string,
-    email: string,
-  ): Promise<void> => {
-    setIsLoading(true);
-    try {
-      const result = await window.justiceAPI.registerUser(username, password, email);
+  const register = useCallback(
+    async (username: string, password: string, email: string): Promise<void> => {
+      setIsLoading(true);
+      try {
+        const result = await window.justiceAPI.registerUser(username, password, email);
 
-      if (!result.success) {
-        throw new Error(result.error || 'Registration failed');
+        if (!result.success) {
+          throw new Error(result.error || 'Registration failed');
+        }
+
+        // After registration, automatically log in
+        await login(username, password);
+      } finally {
+        setIsLoading(false);
       }
-
-      // After registration, automatically log in
-      await login(username, password);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [login]);
+    },
+    [login]
+  );
 
   /**
    * Refresh current user data
@@ -157,7 +164,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       register,
       refreshUser,
     }),
-    [user, isLoading, login, logout, register, refreshUser],
+    [user, isLoading, login, logout, register, refreshUser]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

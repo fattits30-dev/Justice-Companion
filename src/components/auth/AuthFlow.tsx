@@ -1,4 +1,6 @@
 import { useAuth } from '@/contexts/AuthContext';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useCallback, useEffect, useState } from 'react';
 import { ConsentBanner } from './ConsentBanner';
 import { LoginScreen } from './LoginScreen';
@@ -17,6 +19,7 @@ type AuthView = 'login' | 'register' | 'consent';
 
 export function AuthFlow(): JSX.Element | null {
   const { isAuthenticated } = useAuth();
+  const prefersReducedMotion = useReducedMotion();
   const [view, setView] = useState<AuthView>('login');
   const [showConsent, setShowConsent] = useState(false);
   const [consentCheckComplete, setConsentCheckComplete] = useState(false);
@@ -79,9 +82,30 @@ export function AuthFlow(): JSX.Element | null {
     return null;
   }
 
-  // Render login or registration screen
-  if (view === 'login') {
-    return <LoginScreen onSwitchToRegister={() => setView('register')} />;
-  }
-  return <RegistrationScreen onSwitchToLogin={() => setView('login')} />;
+  // Render login or registration screen with smooth transitions
+  return (
+    <AnimatePresence mode="wait">
+      {view === 'login' ? (
+        <motion.div
+          key="login"
+          initial={prefersReducedMotion ? undefined : { opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={prefersReducedMotion ? undefined : { opacity: 0, x: 20 }}
+          transition={{ duration: prefersReducedMotion ? 0 : 0.3, ease: 'easeInOut' }}
+        >
+          <LoginScreen onSwitchToRegister={() => setView('register')} />
+        </motion.div>
+      ) : (
+        <motion.div
+          key="register"
+          initial={prefersReducedMotion ? undefined : { opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={prefersReducedMotion ? undefined : { opacity: 0, x: -20 }}
+          transition={{ duration: prefersReducedMotion ? 0 : 0.3, ease: 'easeInOut' }}
+        >
+          <RegistrationScreen onSwitchToLogin={() => setView('login')} />
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
 }

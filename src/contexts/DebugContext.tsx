@@ -36,9 +36,7 @@ interface DebugProviderProps {
 
 export function DebugProvider({ children }: DebugProviderProps): JSX.Element {
   // Enable debug mode by default in development
-  const [isDebugMode, setIsDebugMode] = useState<boolean>(
-    process.env.NODE_ENV === 'development',
-  );
+  const [isDebugMode, setIsDebugMode] = useState<boolean>(process.env.NODE_ENV === 'development');
 
   // Performance timers
   const timers = new Map<string, number>();
@@ -78,7 +76,6 @@ export function DebugProvider({ children }: DebugProviderProps): JSX.Element {
       switch (level) {
         case 'error':
           console.error(`${timestamp} ${logMessage}`);
-          // TODO: Send to main process via IPC for persistent logging
           break;
         case 'warn':
           console.warn(`${timestamp} ${logMessage}`);
@@ -91,7 +88,7 @@ export function DebugProvider({ children }: DebugProviderProps): JSX.Element {
           break;
       }
     },
-    [isDebugMode],
+    [isDebugMode]
   );
 
   const startTimer = useCallback(
@@ -102,7 +99,7 @@ export function DebugProvider({ children }: DebugProviderProps): JSX.Element {
       timers.set(label, performance.now());
       log('debug', 'Performance', `Timer started: ${label}`);
     },
-    [isDebugMode, log],
+    [isDebugMode, log]
   );
 
   const endTimer = useCallback(
@@ -122,7 +119,7 @@ export function DebugProvider({ children }: DebugProviderProps): JSX.Element {
         duration: `${elapsed.toFixed(2)}ms`,
       });
     },
-    [isDebugMode, log],
+    [isDebugMode, log]
   );
 
   const value: DebugContextValue = {

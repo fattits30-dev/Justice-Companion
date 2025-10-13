@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
 import type { ConsentType } from '@/models/Consent';
+import { useEffect, useState } from 'react';
 
 /**
  * GDPR Consent Banner
@@ -70,18 +70,18 @@ export function ConsentBanner({ onComplete }: ConsentBannerProps): JSX.Element {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center px-4 py-4 md:px-8 z-50">
       <div className="bg-slate-900 border border-blue-800/30 rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="p-6 border-b border-blue-800/30">
-          <h2 className="text-2xl font-semibold text-white">Privacy & Consent</h2>
-          <p className="text-slate-300 mt-2">
+        <div className="px-4 py-4 md:px-6 md:py-6 border-b border-blue-800/30">
+          <h2 className="text-xl md:text-2xl font-semibold text-white">Privacy & Consent</h2>
+          <p className="text-sm md:text-base text-slate-300 mt-1 md:mt-2">
             Before you start using Justice Companion, we need your consent for data processing.
           </p>
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6">
+        <div className="px-4 py-4 md:px-6 md:py-6 space-y-4 md:space-y-6">
           {error && (
             <div className="bg-red-900/30 border border-red-500/50 text-red-200 px-4 py-3 rounded-lg">
               {error}
@@ -209,12 +209,12 @@ export function ConsentBanner({ onComplete }: ConsentBannerProps): JSX.Element {
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-blue-800/30 flex justify-end gap-3">
+        <div className="px-4 py-4 md:px-6 md:py-6 border-t border-blue-800/30 flex justify-end gap-3">
           <button
             type="button"
-            onClick={handleSubmit}
+            onClick={() => void handleSubmit()}
             disabled={isSubmitting || !consents.data_processing}
-            className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed text-white font-medium py-2 px-6 rounded-lg transition-colors duration-200"
+            className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed text-white font-medium py-2 px-4 md:px-6 rounded-lg transition-colors duration-200 text-sm md:text-base"
           >
             {isSubmitting ? 'Saving...' : 'Accept & Continue'}
           </button>

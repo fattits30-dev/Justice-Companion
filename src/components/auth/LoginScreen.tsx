@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { FormField } from '@/components/ui/form-field';
 import { useAuth } from '@/contexts/AuthContext';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { motion } from 'framer-motion';
 import { AlertTriangle, Scale } from 'lucide-react';
 import { useState } from 'react';
@@ -20,6 +21,7 @@ interface LoginScreenProps {
  */
 export function LoginScreen({ onSwitchToRegister }: LoginScreenProps): JSX.Element {
   const { login } = useAuth();
+  const prefersReducedMotion = useReducedMotion();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
@@ -55,42 +57,53 @@ export function LoginScreen({ onSwitchToRegister }: LoginScreenProps): JSX.Eleme
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 p-4 sm:p-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 p-4 sm:p-6 md:p-8">
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-md"
+        transition={{ duration: prefersReducedMotion ? 0 : 0.5 }}
+        className="w-full max-w-md lg:max-w-lg xl:max-w-xl"
       >
         {/* Logo and Title */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-6 sm:mb-8 md:mb-10">
           <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
+            initial={prefersReducedMotion ? false : { scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.1, duration: 0.5 }}
-            className="inline-flex items-center justify-center w-16 h-16 mb-4 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 shadow-lg shadow-blue-600/30"
+            transition={{
+              delay: prefersReducedMotion ? 0 : 0.1,
+              duration: prefersReducedMotion ? 0 : 0.5,
+            }}
+            className="inline-flex items-center justify-center w-16 h-16 sm:w-18 sm:h-18 md:w-20 md:h-20 lg:w-24 lg:h-24 mb-4 sm:mb-5 md:mb-6 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 shadow-lg shadow-blue-600/30"
           >
-            <Scale className="w-8 h-8 text-white" />
+            <Scale className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 lg:w-12 lg:h-12 text-white" />
           </motion.div>
-          <h1 className="text-3xl font-bold text-white mb-2">Justice Companion</h1>
-          <p className="text-slate-300">Your Legal Assistant</p>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-2 sm:mb-3">
+            Justice Companion
+          </h1>
+          <p className="text-base sm:text-lg md:text-xl text-slate-300">Your Legal Assistant</p>
         </div>
 
         {/* Login Card */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
-          className="bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-2xl p-8 shadow-2xl"
+          transition={{
+            delay: prefersReducedMotion ? 0 : 0.2,
+            duration: prefersReducedMotion ? 0 : 0.5,
+          }}
+          className="bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-2xl p-6 sm:p-8 md:p-10 lg:p-12 shadow-2xl"
         >
-          <h2 className="text-2xl font-semibold text-white mb-6">Sign In</h2>
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-white mb-6 sm:mb-8">
+            Sign In
+          </h2>
 
           {/* Error Message */}
           {error && (
             <motion.div
-              initial={{ opacity: 0, height: 0 }}
+              initial={prefersReducedMotion ? undefined : { opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
+              exit={prefersReducedMotion ? undefined : { opacity: 0, height: 0 }}
+              transition={{ duration: prefersReducedMotion ? 0 : 0.3 }}
               className="mb-6 bg-red-500/10 border border-red-500/50 text-red-400 px-4 py-3 rounded-xl text-sm flex items-start gap-2"
               role="alert"
               aria-live="polite"
@@ -112,7 +125,11 @@ export function LoginScreen({ onSwitchToRegister }: LoginScreenProps): JSX.Eleme
           )}
 
           {/* Login Form */}
-          <form onSubmit={handleSubmit} className="space-y-5" aria-label="Login form">
+          <form
+            onSubmit={(e) => void handleSubmit(e)}
+            className="space-y-5 sm:space-y-6 md:space-y-7"
+            aria-label="Login form"
+          >
             <FormField
               label="Username"
               id="username"
@@ -138,21 +155,21 @@ export function LoginScreen({ onSwitchToRegister }: LoginScreenProps): JSX.Eleme
               aria-required="true"
             />
 
-            {/* Remember Me Checkbox */}
-            <div>
-              <div className="flex items-center gap-2 mt-4">
+            {/* Remember Me Checkbox - Glass Effect Container */}
+            <div className="bg-slate-800/20 backdrop-blur-sm border border-slate-700/30 rounded-lg px-3 py-3 hover:bg-slate-800/30 hover:border-slate-600/40 transition-all duration-200">
+              <div className="flex items-center gap-2">
                 <input
                   type="checkbox"
                   id="remember-me"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
                   disabled={isLoading}
-                  className="w-4 h-4 rounded border-blue-700/30 bg-slate-800/50 text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-4 h-4 rounded border-blue-700/30 bg-slate-800/50 text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                   aria-describedby="remember-me-description remember-me-warning"
                 />
                 <label
                   htmlFor="remember-me"
-                  className="text-sm text-slate-300 cursor-pointer select-none"
+                  className="text-sm text-slate-300 cursor-pointer select-none hover:text-slate-100 transition-colors"
                 >
                   Remember me for 30 days
                 </label>
@@ -164,11 +181,11 @@ export function LoginScreen({ onSwitchToRegister }: LoginScreenProps): JSX.Eleme
               {/* Security Warning - Animated */}
               {rememberMe && (
                 <motion.div
-                  initial={{ opacity: 0, height: 0 }}
+                  initial={prefersReducedMotion ? undefined : { opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.3, ease: 'easeInOut' }}
-                  className="mt-2 text-xs text-amber-300 flex items-start gap-1.5 px-3 py-2 rounded-lg bg-amber-500/5 border border-amber-500/20"
+                  exit={prefersReducedMotion ? undefined : { opacity: 0, height: 0 }}
+                  transition={{ duration: prefersReducedMotion ? 0 : 0.3, ease: 'easeInOut' }}
+                  className="mt-2 text-xs text-amber-300 flex items-start gap-1.5 px-3 rounded-lg bg-amber-500/5 border border-amber-500/20"
                   role="alert"
                   aria-live="polite"
                   id="remember-me-warning"
@@ -194,11 +211,11 @@ export function LoginScreen({ onSwitchToRegister }: LoginScreenProps): JSX.Eleme
           </form>
 
           {/* Switch to Register */}
-          <div className="mt-6 text-center">
+          <div className="mt-6 sm:mt-8 md:mt-10 text-center">
             <button
               type="button"
               onClick={onSwitchToRegister}
-              className="text-sm text-slate-300 hover:text-white transition-colors"
+              className="text-sm sm:text-base md:text-lg text-slate-300 hover:text-white transition-colors"
               disabled={isLoading}
               aria-label="Switch to registration"
             >
@@ -209,7 +226,9 @@ export function LoginScreen({ onSwitchToRegister }: LoginScreenProps): JSX.Eleme
         </motion.div>
 
         {/* Footer */}
-        <p className="mt-6 text-center text-xs text-slate-300">Secure • Encrypted • Private</p>
+        <p className="mt-6 sm:mt-8 md:mt-10 text-center text-xs sm:text-sm md:text-base text-slate-300">
+          Secure • Encrypted • Private
+        </p>
       </motion.div>
     </div>
   );

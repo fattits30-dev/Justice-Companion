@@ -9,13 +9,13 @@ const { execSync } = require('child_process');
 const path = require('path');
 
 function rebuildForElectron() {
-  console.log('\n🔧 Rebuilding better-sqlite3 for Electron (Node v22)');
+  console.log('\n🔧 Rebuilding better-sqlite3 for Electron');
 
   try {
     // Rebuild better-sqlite3 for Electron
     execSync('npx electron-rebuild -f -w better-sqlite3', {
       stdio: 'inherit',
-      cwd: path.join(__dirname, '..')
+      cwd: path.join(__dirname, '..'),
     });
 
     console.log('✅ better-sqlite3 rebuilt successfully for Electron\n');

@@ -16,7 +16,9 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { SecureStorageService, secureStorage } from './SecureStorageService';
+
+// Import the mocked electron to get access to the mocked ipcRenderer
+import { ipcRenderer } from 'electron';
 
 // Mock electron module
 vi.mock('electron', () => ({
@@ -25,8 +27,25 @@ vi.mock('electron', () => ({
   },
 }));
 
-// Import the mocked electron to get access to the mocked ipcRenderer
-import { ipcRenderer } from 'electron';
+// Set up global window mock BEFORE importing the service
+vi.stubGlobal('window', {
+  justiceAPI: {
+    secureStorage: {
+      isEncryptionAvailable: vi.fn(async () =>
+        ipcRenderer.invoke('secure-storage:is-encryption-available')
+      ),
+      set: vi.fn(async (key: string, value: string) =>
+        ipcRenderer.invoke('secure-storage:set', key, value)
+      ),
+      get: vi.fn(async (key: string) => ipcRenderer.invoke('secure-storage:get', key)),
+      delete: vi.fn(async (key: string) => ipcRenderer.invoke('secure-storage:delete', key)),
+      clearAll: vi.fn(async () => ipcRenderer.invoke('secure-storage:clear-all')),
+    },
+  },
+});
+
+// Import the service after mocking
+import { SecureStorageService, secureStorage } from './SecureStorageService';
 
 describe('SecureStorageService', () => {
   let service: SecureStorageService;
@@ -36,27 +55,11 @@ describe('SecureStorageService', () => {
   const mockInvoke = vi.mocked(ipcRenderer.invoke);
 
   beforeEach(() => {
-    // Reset singleton instance for testing
-    // Access private instance to reset it
-    (SecureStorageService as any).instance = undefined;
+    // Reset module cache to ensure fresh import and global mocks are applied
+    vi.resetModules();
 
-    // Mock window.justiceAPI.secureStorage using vi.spyOn to avoid global assignment
-    const secureStorageMock = {
-      isEncryptionAvailable: vi.fn(() =>
-        ipcRenderer.invoke('secure-storage:is-encryption-available')
-      ),
-      set: vi.fn((key: string, value: string) =>
-        ipcRenderer.invoke('secure-storage:set', key, value)
-      ),
-      get: vi.fn((key: string) => ipcRenderer.invoke('secure-storage:get', key)),
-      delete: vi.fn((key: string) => ipcRenderer.invoke('secure-storage:delete', key)),
-      clearAll: vi.fn(() => ipcRenderer.invoke('secure-storage:clear-all')),
-    };
-    vi.stubGlobal('window', {
-      justiceAPI: {
-        secureStorage: secureStorageMock,
-      },
-    });
+    // Reset singleton instance for testing
+    (SecureStorageService as any).instance = undefined;
 
     // Get fresh instance
     service = SecureStorageService.getInstance();

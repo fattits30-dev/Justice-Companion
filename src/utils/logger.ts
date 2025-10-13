@@ -44,7 +44,7 @@ class Logger {
       'import.meta.env.PROD': import.meta.env.PROD,
       'import.meta.env.DEV': import.meta.env.DEV,
       'import.meta.env.MODE': import.meta.env.MODE,
-      'isProduction': this.isProduction,
+      isProduction: this.isProduction,
     });
     /* eslint-enable no-console */
   }
@@ -56,7 +56,7 @@ class Logger {
     level: LogLevel,
     component: string,
     message: string,
-    data?: unknown,
+    data?: unknown
   ): string {
     const timestamp = new Date().toISOString();
     const dataStr = data ? ` ${JSON.stringify(data, null, 2)}` : '';
@@ -91,8 +91,6 @@ class Logger {
       data,
     };
     this.bufferLog(entry);
-
-    // TODO: Send to main process via IPC for persistent logging
   }
 
   /**
@@ -111,8 +109,6 @@ class Logger {
       data,
     };
     this.bufferLog(entry);
-
-    // TODO: Send to main process via IPC for persistent logging
   }
 
   /**

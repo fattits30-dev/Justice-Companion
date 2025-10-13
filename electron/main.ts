@@ -1,93 +1,93 @@
-import { app, BrowserWindow, ipcMain, dialog, shell, safeStorage } from 'electron';
-import path from 'path';
-import fs from 'fs/promises';
-import fsSync from 'fs';
 import dotenv from 'dotenv';
-import { errorLogger, setupGlobalErrorHandlers } from '../src/utils/error-logger';
+import { app, BrowserWindow, dialog, ipcMain, safeStorage, shell } from 'electron';
+import fsSync from 'fs';
+import fs from 'fs/promises';
+import path from 'path';
 import { databaseManager } from '../src/db/database';
 import { runMigrations } from '../src/db/migrate';
-import { DevAPIServer } from './dev-api-server.js';
 import { caseService } from '../src/features/cases/services/CaseService';
-import { caseRepository } from '../src/repositories/CaseRepository';
-import { evidenceRepository } from '../src/repositories/EvidenceRepository';
+import { AuthorizationMiddleware } from '../src/middleware/AuthorizationMiddleware';
+import { ValidationError, ValidationMiddleware } from '../src/middleware/ValidationMiddleware';
+import type { CaseStatus } from '../src/models/Case';
 import type { CreateEvidenceInput } from '../src/models/Evidence';
-import { notesRepository } from '../src/repositories/NotesRepository';
+import { caseFactsRepository } from '../src/repositories/CaseFactsRepository';
+import { caseRepository } from '../src/repositories/CaseRepository';
+import { chatConversationRepository } from '../src/repositories/ChatConversationRepository';
+import { ConsentRepository } from '../src/repositories/ConsentRepository';
+import { evidenceRepository } from '../src/repositories/EvidenceRepository';
 import { legalIssuesRepository } from '../src/repositories/LegalIssuesRepository';
+import { notesRepository } from '../src/repositories/NotesRepository';
+import { SessionRepository } from '../src/repositories/SessionRepository';
 import { timelineRepository } from '../src/repositories/TimelineRepository';
 import { userFactsRepository } from '../src/repositories/UserFactsRepository';
-import { caseFactsRepository } from '../src/repositories/CaseFactsRepository';
-import { EncryptionService } from '../src/services/EncryptionService';
-import { AuditLogger } from '../src/services/AuditLogger';
-import { aiServiceFactory } from '../src/services/AIServiceFactory';
-import { ragService } from '../src/services/RAGService';
-import { legalAPIService } from '../src/services/LegalAPIService';
-import { chatConversationService } from '../src/services/ChatConversationService';
-import { chatConversationRepository } from '../src/repositories/ChatConversationRepository';
-import { validateOpenAIConfig } from '../src/features/chat/validation/openai-schemas';
-import { OpenAITestConnectionSchema } from '../src/features/chat/validation/openai-schemas';
-import { userProfileService } from '../src/services/UserProfileService';
 import { userProfileRepository } from '../src/repositories/UserProfileRepository';
-import { modelDownloadService } from '../src/services/ModelDownloadService';
 import { UserRepository } from '../src/repositories/UserRepository';
-import { SessionRepository } from '../src/repositories/SessionRepository';
-import { ConsentRepository } from '../src/repositories/ConsentRepository';
-import { AuthenticationService } from '../src/services/AuthenticationService';
+import { aiServiceFactory } from '../src/services/AIServiceFactory';
+import { AuditLogger } from '../src/services/AuditLogger';
 import type { SessionPersistenceHandler } from '../src/services/AuthenticationService';
-import { SessionPersistenceService } from '../src/services/SessionPersistenceService';
+import { AuthenticationService } from '../src/services/AuthenticationService';
+import { chatConversationService } from '../src/services/ChatConversationService';
 import { ConsentService } from '../src/services/ConsentService';
-import { AuthorizationMiddleware } from '../src/middleware/AuthorizationMiddleware';
+import { EncryptionService } from '../src/services/EncryptionService';
+import { legalAPIService } from '../src/services/LegalAPIService';
+import { modelDownloadService } from '../src/services/ModelDownloadService';
+import { ragService } from '../src/services/RAGService';
+import { SessionPersistenceService } from '../src/services/SessionPersistenceService';
+import { userProfileService } from '../src/services/UserProfileService';
+import type {
+  AIChatRequest,
+  AICheckStatusRequest,
+  AIConfigureRequest,
+  AIStreamStartRequest,
+  AITestConnectionRequest,
+  AuthChangePasswordRequest,
+  AuthGetCurrentUserRequest,
+  AuthLoginRequest,
+  AuthLogoutRequest,
+  AuthRegisterRequest,
+  CaseCloseRequest,
+  CaseCreateRequest,
+  CaseDeleteRequest,
+  CaseGetAllRequest,
+  CaseGetByIdRequest,
+  CaseGetStatisticsRequest,
+  CaseUpdateRequest,
+  ConsentGetUserConsentsRequest,
+  ConsentGrantRequest,
+  ConsentHasConsentRequest,
+  ConsentRevokeRequest,
+  ConversationCreateRequest,
+  ConversationDeleteRequest,
+  ConversationGetAllRequest,
+  ConversationGetRecentRequest,
+  ConversationGetRequest,
+  ConversationLoadWithMessagesRequest,
+  EvidenceCreateRequest,
+  EvidenceDeleteRequest,
+  EvidenceGetAllRequest,
+  EvidenceGetByCaseRequest,
+  EvidenceGetByIdRequest,
+  EvidenceUpdateRequest,
+  FileSelectRequest,
+  FileUploadRequest,
+  GDPRDeleteUserDataRequest,
+  GDPRExportUserDataRequest,
+  MessageAddRequest,
+  ModelDeleteRequest,
+  ModelDownloadStartRequest,
+  ModelGetAvailableRequest,
+  ModelGetDownloadedRequest,
+  ModelIsDownloadedRequest,
+  ProfileGetRequest,
+  ProfileUpdateRequest,
+} from '../src/types/ipc';
 import { IPC_CHANNELS } from '../src/types/ipc';
+import { errorLogger, setupGlobalErrorHandlers } from '../src/utils/error-logger';
+import { DevAPIServer } from './dev-api-server.js';
 
 // CRITICAL: Load environment variables FIRST (before any other initialization)
 // This loads .env file containing encryption keys and other config
 dotenv.config();
-import type {
-  CaseCreateRequest,
-  CaseGetByIdRequest,
-  CaseGetAllRequest,
-  CaseUpdateRequest,
-  CaseDeleteRequest,
-  CaseCloseRequest,
-  CaseGetStatisticsRequest,
-  EvidenceCreateRequest,
-  EvidenceGetByIdRequest,
-  EvidenceGetAllRequest,
-  EvidenceGetByCaseRequest,
-  EvidenceUpdateRequest,
-  EvidenceDeleteRequest,
-  AICheckStatusRequest,
-  AIChatRequest,
-  AIStreamStartRequest,
-  AIConfigureRequest,
-  AITestConnectionRequest,
-  FileSelectRequest,
-  FileUploadRequest,
-  ConversationCreateRequest,
-  ConversationGetRequest,
-  ConversationGetAllRequest,
-  ConversationGetRecentRequest,
-  ConversationLoadWithMessagesRequest,
-  ConversationDeleteRequest,
-  MessageAddRequest,
-  ProfileGetRequest,
-  ProfileUpdateRequest,
-  ModelGetAvailableRequest,
-  ModelGetDownloadedRequest,
-  ModelIsDownloadedRequest,
-  ModelDownloadStartRequest,
-  ModelDeleteRequest,
-  GDPRExportUserDataRequest,
-  GDPRDeleteUserDataRequest,
-  AuthRegisterRequest,
-  AuthLoginRequest,
-  AuthLogoutRequest,
-  AuthGetCurrentUserRequest,
-  AuthChangePasswordRequest,
-  ConsentGrantRequest,
-  ConsentRevokeRequest,
-  ConsentHasConsentRequest,
-  ConsentGetUserConsentsRequest,
-} from '../src/types/ipc';
 
 // File operation types
 interface FileViewRequest {
@@ -120,7 +120,10 @@ let sessionRepository: SessionRepository;
 let consentRepository: ConsentRepository;
 let authenticationService: AuthenticationService;
 let consentService: ConsentService;
-let _authorizationMiddleware: AuthorizationMiddleware; // Unused - will be used for future authorization checks
+let authorizationMiddleware: AuthorizationMiddleware;
+
+// Validation middleware (initialized here, ready to use)
+const validationMiddleware = new ValidationMiddleware();
 
 function initializeEncryptionService(): EncryptionService {
   const rawKey = process.env.ENCRYPTION_KEY_BASE64?.trim();
@@ -177,6 +180,39 @@ function createWindow() {
 }
 
 /**
+ * Get the current authenticated user's ID from the active session.
+ *
+ * @returns {number} The user ID from the current session
+ * @throws {Error} If user is not authenticated or session is invalid
+ *
+ * @security
+ * - Validates session existence and validity
+ * - Used as first line of defense in authorization checks
+ * - All authorization failures are audited
+ */
+function getCurrentUserIdFromSession(): number {
+  if (!currentSessionId) {
+    throw new Error('Unauthorized: No active session');
+  }
+
+  const session = sessionRepository.findById(currentSessionId);
+  if (!session) {
+    // Session ID exists but session not found in database - clear it
+    currentSessionId = null;
+    throw new Error('Unauthorized: Invalid session');
+  }
+
+  // Check if session is expired
+  const now = Date.now();
+  if (session.expiresAt < now) {
+    currentSessionId = null;
+    throw new Error('Unauthorized: Session expired');
+  }
+
+  return session.userId;
+}
+
+/**
  * Setup IPC handlers for communication with renderer process.
  *
  * Registers all IPC handlers for type-safe communication between the
@@ -187,6 +223,7 @@ function createWindow() {
  * - All CRUD operations are logged to the immutable audit trail
  * - Input validation on all parameters
  * - Parameterized SQL queries to prevent injection
+ * - **Authorization checks**: Resource ownership verified on all operations
  *
  * **Handler Categories**:
  * - Case Management: create, read, update, delete, close, statistics
@@ -214,6 +251,7 @@ function setupIpcHandlers() {
    * @throws {Error} If validation fails or database error occurs
    *
    * @security
+   * - **Authorization**: Requires authenticated user (sets userId automatically)
    * - Description field is encrypted with AES-256-GCM before storage
    * - Case creation is logged to audit trail (event: case.create)
    * - Failed attempts are also audited with error details
@@ -230,7 +268,28 @@ function setupIpcHandlers() {
   // Case: Create
   ipcMain.handle(IPC_CHANNELS.CASE_CREATE, async (_, request: CaseCreateRequest) => {
     try {
-      const createdCase = caseService.createCase(request.input);
+      // 1. VALIDATION: Validate input before authorization
+      const validationResult = await validationMiddleware.validate(
+        IPC_CHANNELS.CASE_CREATE,
+        request
+      );
+
+      if (!validationResult.success) {
+        return {
+          success: false,
+          error: 'Validation failed',
+          errors: validationResult.errors,
+        };
+      }
+
+      // 2. AUTHORIZATION: Get current user ID and set as case owner
+      const userId = getCurrentUserIdFromSession();
+
+      // 3. BUSINESS LOGIC: Use validated data
+      const createdCase = caseService.createCase({
+        ...validationResult.data.input,
+        userId,
+      });
       return { success: true, data: createdCase };
     } catch (error) {
       errorLogger.logError(error as Error, { context: 'ipc:case:create' });
@@ -250,6 +309,7 @@ function setupIpcHandlers() {
    * @returns {Promise<CaseGetByIdResponse | IPCErrorResponse>} Case data or error
    *
    * @security
+   * - **Authorization**: Verifies user owns the case (prevents horizontal privilege escalation)
    * - Description field is automatically decrypted
    * - PII access is logged to audit trail if description was encrypted (event: case.pii_access)
    * - Audit log includes metadata only (no sensitive data)
@@ -265,7 +325,26 @@ function setupIpcHandlers() {
   // Case: Get by ID
   ipcMain.handle(IPC_CHANNELS.CASE_GET_BY_ID, async (_, request: CaseGetByIdRequest) => {
     try {
-      const foundCase = caseRepository.findById(request.id);
+      // 1. VALIDATION: Validate input before authorization
+      const validationResult = await validationMiddleware.validate(
+        IPC_CHANNELS.CASE_GET_BY_ID,
+        request
+      );
+
+      if (!validationResult.success) {
+        return {
+          success: false,
+          error: 'Validation failed',
+          errors: validationResult.errors,
+        };
+      }
+
+      // 2. AUTHORIZATION: Verify user owns this case
+      const userId = getCurrentUserIdFromSession();
+      authorizationMiddleware.verifyCaseOwnership(validationResult.data.id, userId);
+
+      // 3. BUSINESS LOGIC: Use validated data
+      const foundCase = caseRepository.findById(validationResult.data.id);
       return { success: true, data: foundCase };
     } catch (error) {
       errorLogger.logError(error as Error, { context: 'ipc:case:getById' });
@@ -284,6 +363,7 @@ function setupIpcHandlers() {
    * @returns {Promise<CaseGetAllResponse | IPCErrorResponse>} Array of cases or error
    *
    * @security
+   * - **Authorization**: Returns only cases owned by current user (prevents horizontal privilege escalation)
    * - All description fields are automatically decrypted
    * - No audit logging for bulk operations (performance)
    * - PII access only logged on individual getById calls
@@ -299,8 +379,28 @@ function setupIpcHandlers() {
   // Case: Get all
   ipcMain.handle(IPC_CHANNELS.CASE_GET_ALL, async (_event, _request: CaseGetAllRequest) => {
     try {
+      // 1. VALIDATION: Validate input before authorization (even if empty)
+      const validationResult = await validationMiddleware.validate(
+        IPC_CHANNELS.CASE_GET_ALL,
+        _request
+      );
+
+      if (!validationResult.success) {
+        return {
+          success: false,
+          error: 'Validation failed',
+          errors: validationResult.errors,
+        };
+      }
+
+      // 2. AUTHORIZATION: Get current user ID and filter cases
+      const userId = getCurrentUserIdFromSession();
+
+      // 3. BUSINESS LOGIC: Use validated data
       const allCases = caseRepository.findAll();
-      return { success: true, data: allCases };
+      // Filter to only cases owned by current user
+      const userCases = allCases.filter((c) => c.userId === userId);
+      return { success: true, data: userCases };
     } catch (error) {
       errorLogger.logError(error as Error, { context: 'ipc:case:getAll' });
       return {
@@ -324,6 +424,7 @@ function setupIpcHandlers() {
    * @returns {Promise<CaseUpdateResponse | IPCErrorResponse>} Updated case or error
    *
    * @security
+   * - **Authorization**: Verifies user owns the case before update
    * - Description field is encrypted before UPDATE
    * - Update operation logged to audit trail (event: case.update)
    * - Audit log includes list of fields updated (not values)
@@ -340,7 +441,29 @@ function setupIpcHandlers() {
   // Case: Update
   ipcMain.handle(IPC_CHANNELS.CASE_UPDATE, async (_, request: CaseUpdateRequest) => {
     try {
-      const updatedCase = caseService.updateCase(request.id, request.input);
+      // 1. VALIDATION: Validate input before authorization
+      const validationResult = await validationMiddleware.validate(
+        IPC_CHANNELS.CASE_UPDATE,
+        request
+      );
+
+      if (!validationResult.success) {
+        return {
+          success: false,
+          error: 'Validation failed',
+          errors: validationResult.errors,
+        };
+      }
+
+      // 2. AUTHORIZATION: Verify user owns this case
+      const userId = getCurrentUserIdFromSession();
+      authorizationMiddleware.verifyCaseOwnership(validationResult.data.id, userId);
+
+      // 3. BUSINESS LOGIC: Use validated data
+      const updatedCase = caseService.updateCase(
+        validationResult.data.id,
+        validationResult.data.input
+      );
       return { success: true, data: updatedCase };
     } catch (error) {
       errorLogger.logError(error as Error, { context: 'ipc:case:update' });
@@ -360,6 +483,7 @@ function setupIpcHandlers() {
    * @returns {Promise<CaseDeleteResponse | IPCErrorResponse>} Success or error
    *
    * @security
+   * - **Authorization**: Verifies user owns the case before deletion
    * - Hard delete (not soft delete)
    * - Cascades to evidence, conversations, messages via FK constraints
    * - Deletion logged to audit trail (event: case.delete)
@@ -378,7 +502,26 @@ function setupIpcHandlers() {
   // Case: Delete
   ipcMain.handle(IPC_CHANNELS.CASE_DELETE, async (_, request: CaseDeleteRequest) => {
     try {
-      caseService.deleteCase(request.id);
+      // 1. VALIDATION: Validate input before authorization
+      const validationResult = await validationMiddleware.validate(
+        IPC_CHANNELS.CASE_DELETE,
+        request
+      );
+
+      if (!validationResult.success) {
+        return {
+          success: false,
+          error: 'Validation failed',
+          errors: validationResult.errors,
+        };
+      }
+
+      // 2. AUTHORIZATION: Verify user owns this case
+      const userId = getCurrentUserIdFromSession();
+      authorizationMiddleware.verifyCaseOwnership(validationResult.data.id, userId);
+
+      // 3. BUSINESS LOGIC: Use validated data
+      caseService.deleteCase(validationResult.data.id);
       return { success: true };
     } catch (error) {
       errorLogger.logError(error as Error, { context: 'ipc:case:delete' });
@@ -392,7 +535,26 @@ function setupIpcHandlers() {
   // Case: Close
   ipcMain.handle(IPC_CHANNELS.CASE_CLOSE, async (_, request: CaseCloseRequest) => {
     try {
-      const closedCase = caseService.closeCase(request.id);
+      // 1. VALIDATION: Validate input before authorization
+      const validationResult = await validationMiddleware.validate(
+        IPC_CHANNELS.CASE_CLOSE,
+        request
+      );
+
+      if (!validationResult.success) {
+        return {
+          success: false,
+          error: 'Validation failed',
+          errors: validationResult.errors,
+        };
+      }
+
+      // 2. AUTHORIZATION: Verify user owns this case
+      const userId = getCurrentUserIdFromSession();
+      authorizationMiddleware.verifyCaseOwnership(validationResult.data.id, userId);
+
+      // 3. BUSINESS LOGIC: Use validated data
+      const closedCase = caseService.closeCase(validationResult.data.id);
       return { success: true, data: closedCase };
     } catch (error) {
       errorLogger.logError(error as Error, { context: 'ipc:case:close' });
@@ -408,8 +570,41 @@ function setupIpcHandlers() {
     IPC_CHANNELS.CASE_GET_STATISTICS,
     async (_event, _request: CaseGetStatisticsRequest) => {
       try {
-        const stats = caseRepository.getStatistics();
-        return { success: true, data: stats };
+        // 1. VALIDATION: Validate input before authorization (even if empty)
+        const validationResult = await validationMiddleware.validate(
+          IPC_CHANNELS.CASE_GET_STATISTICS,
+          _request
+        );
+
+        if (!validationResult.success) {
+          return {
+            success: false,
+            error: 'Validation failed',
+            errors: validationResult.errors,
+          };
+        }
+
+        // 2. AUTHORIZATION: Get current user ID and filter statistics
+        const userId = getCurrentUserIdFromSession();
+
+        // 3. BUSINESS LOGIC: Use validated data
+        // Get all stats, then filter to current user's cases
+        const allCases = caseRepository.findAll();
+        const userCases = allCases.filter((c) => c.userId === userId);
+
+        // Calculate statistics for user's cases only
+        const statusCounts: Record<string, number> = {};
+        userCases.forEach((c) => {
+          statusCounts[c.status] = (statusCounts[c.status] || 0) + 1;
+        });
+
+        return {
+          success: true,
+          data: {
+            totalCases: userCases.length,
+            statusCounts: statusCounts as Record<CaseStatus, number>,
+          },
+        };
       } catch (error) {
         errorLogger.logError(error as Error, {
           context: 'ipc:case:getStatistics',
@@ -454,7 +649,26 @@ function setupIpcHandlers() {
   // Evidence: Create
   ipcMain.handle(IPC_CHANNELS.EVIDENCE_CREATE, async (_, request: EvidenceCreateRequest) => {
     try {
-      const createdEvidence = evidenceRepository.create(request.input);
+      // 1. VALIDATION: Validate input before authorization
+      const validationResult = await validationMiddleware.validate(
+        IPC_CHANNELS.EVIDENCE_CREATE,
+        request
+      );
+
+      if (!validationResult.success) {
+        return {
+          success: false,
+          error: 'Validation failed',
+          errors: validationResult.errors,
+        };
+      }
+
+      // 2. AUTHORIZATION: Verify user owns the case before creating evidence
+      const userId = getCurrentUserIdFromSession();
+      authorizationMiddleware.verifyCaseOwnership(validationResult.data.input.caseId, userId);
+
+      // 3. BUSINESS LOGIC: Use validated data
+      const createdEvidence = evidenceRepository.create(validationResult.data.input);
       return { success: true, data: createdEvidence };
     } catch (error) {
       errorLogger.logError(error as Error, { context: 'ipc:evidence:create' });
@@ -489,7 +703,27 @@ function setupIpcHandlers() {
   // Evidence: Get by ID
   ipcMain.handle(IPC_CHANNELS.EVIDENCE_GET_BY_ID, async (_, request: EvidenceGetByIdRequest) => {
     try {
-      const evidence = evidenceRepository.findById(request.id);
+      // 1. VALIDATION: Validate input before authorization
+      const validationResult = await validationMiddleware.validate(
+        IPC_CHANNELS.EVIDENCE_GET_BY_ID,
+        request
+      );
+
+      if (!validationResult.success) {
+        return {
+          success: false,
+          error: 'Validation failed',
+          errors: validationResult.errors,
+        };
+      }
+
+      // 2. Get evidence first to find its caseId
+      const evidence = evidenceRepository.findById(validationResult.data.id);
+
+      // 3. AUTHORIZATION: Verify user owns the case that this evidence belongs to
+      const userId = getCurrentUserIdFromSession();
+      authorizationMiddleware.verifyCaseOwnership(evidence.caseId, userId);
+
       return { success: true, data: evidence };
     } catch (error) {
       errorLogger.logError(error as Error, { context: 'ipc:evidence:getById' });
@@ -524,8 +758,30 @@ function setupIpcHandlers() {
   // Evidence: Get all
   ipcMain.handle(IPC_CHANNELS.EVIDENCE_GET_ALL, async (_, request: EvidenceGetAllRequest) => {
     try {
-      const allEvidence = evidenceRepository.findAll(request.evidenceType);
-      return { success: true, data: allEvidence };
+      // 1. VALIDATION: Validate input before authorization
+      const validationResult = await validationMiddleware.validate(
+        IPC_CHANNELS.EVIDENCE_GET_ALL,
+        request
+      );
+
+      if (!validationResult.success) {
+        return {
+          success: false,
+          error: 'Validation failed',
+          errors: validationResult.errors,
+        };
+      }
+
+      // 2. AUTHORIZATION: Get current user's cases first, then filter evidence
+      const userId = getCurrentUserIdFromSession();
+      const userCases = caseRepository.findAll().filter((c) => c.userId === userId);
+      const userCaseIds = new Set(userCases.map((c) => c.id));
+
+      // 3. BUSINESS LOGIC: Get all evidence and filter to only user's cases
+      const allEvidence = evidenceRepository.findAll(validationResult.data.evidenceType);
+      const userEvidence = allEvidence.filter((e) => userCaseIds.has(e.caseId));
+
+      return { success: true, data: userEvidence };
     } catch (error) {
       errorLogger.logError(error as Error, { context: 'ipc:evidence:getAll' });
       return {
@@ -561,7 +817,26 @@ function setupIpcHandlers() {
     IPC_CHANNELS.EVIDENCE_GET_BY_CASE,
     async (_, request: EvidenceGetByCaseRequest) => {
       try {
-        const caseEvidence = evidenceRepository.findByCaseId(request.caseId);
+        // 1. VALIDATION: Validate input before authorization
+        const validationResult = await validationMiddleware.validate(
+          IPC_CHANNELS.EVIDENCE_GET_BY_CASE,
+          request
+        );
+
+        if (!validationResult.success) {
+          return {
+            success: false,
+            error: 'Validation failed',
+            errors: validationResult.errors,
+          };
+        }
+
+        // 2. AUTHORIZATION: Verify user owns the case before retrieving evidence
+        const userId = getCurrentUserIdFromSession();
+        authorizationMiddleware.verifyCaseOwnership(validationResult.data.caseId, userId);
+
+        // 3. BUSINESS LOGIC: Use validated data
+        const caseEvidence = evidenceRepository.findByCaseId(validationResult.data.caseId);
         return { success: true, data: caseEvidence };
       } catch (error) {
         errorLogger.logError(error as Error, { context: 'ipc:evidence:getByCaseId' });
@@ -604,7 +879,32 @@ function setupIpcHandlers() {
   // Evidence: Update
   ipcMain.handle(IPC_CHANNELS.EVIDENCE_UPDATE, async (_, request: EvidenceUpdateRequest) => {
     try {
-      const updatedEvidence = evidenceRepository.update(request.id, request.input);
+      // 1. VALIDATION: Validate input before authorization
+      const validationResult = await validationMiddleware.validate(
+        IPC_CHANNELS.EVIDENCE_UPDATE,
+        request
+      );
+
+      if (!validationResult.success) {
+        return {
+          success: false,
+          error: 'Validation failed',
+          errors: validationResult.errors,
+        };
+      }
+
+      // 2. Get evidence first to find its caseId
+      const evidence = evidenceRepository.findById(validationResult.data.id);
+
+      // 3. AUTHORIZATION: Verify user owns the case that this evidence belongs to
+      const userId = getCurrentUserIdFromSession();
+      authorizationMiddleware.verifyCaseOwnership(evidence.caseId, userId);
+
+      // 4. BUSINESS LOGIC: Use validated data
+      const updatedEvidence = evidenceRepository.update(
+        validationResult.data.id,
+        validationResult.data.input
+      );
       return { success: true, data: updatedEvidence };
     } catch (error) {
       errorLogger.logError(error as Error, { context: 'ipc:evidence:update' });
@@ -642,7 +942,29 @@ function setupIpcHandlers() {
   // Evidence: Delete
   ipcMain.handle(IPC_CHANNELS.EVIDENCE_DELETE, async (_, request: EvidenceDeleteRequest) => {
     try {
-      evidenceRepository.delete(request.id);
+      // 1. VALIDATION: Validate input before authorization
+      const validationResult = await validationMiddleware.validate(
+        IPC_CHANNELS.EVIDENCE_DELETE,
+        request
+      );
+
+      if (!validationResult.success) {
+        return {
+          success: false,
+          error: 'Validation failed',
+          errors: validationResult.errors,
+        };
+      }
+
+      // 2. Get evidence first to find its caseId
+      const evidence = evidenceRepository.findById(validationResult.data.id);
+
+      // 3. AUTHORIZATION: Verify user owns the case that this evidence belongs to
+      const userId = getCurrentUserIdFromSession();
+      authorizationMiddleware.verifyCaseOwnership(evidence.caseId, userId);
+
+      // 4. BUSINESS LOGIC: Use validated data
+      evidenceRepository.delete(validationResult.data.id);
       return { success: true };
     } catch (error) {
       errorLogger.logError(error as Error, { context: 'ipc:evidence:delete' });
@@ -654,8 +976,23 @@ function setupIpcHandlers() {
   });
 
   // AI: Check Status
-  ipcMain.handle(IPC_CHANNELS.AI_CHECK_STATUS, async (_event, _request: AICheckStatusRequest) => {
+  ipcMain.handle(IPC_CHANNELS.AI_CHECK_STATUS, async (_event, request: AICheckStatusRequest) => {
     try {
+      // 1. VALIDATION: Validate input (even if empty)
+      const validationResult = await validationMiddleware.validate(
+        IPC_CHANNELS.AI_CHECK_STATUS,
+        request || {}
+      );
+
+      if (!validationResult.success) {
+        return {
+          success: false,
+          error: 'Validation failed',
+          errors: validationResult.errors,
+        };
+      }
+
+      // 2. BUSINESS LOGIC: Check connection status
       const status = await aiServiceFactory.checkConnection();
       return {
         success: true,
@@ -706,31 +1043,32 @@ function setupIpcHandlers() {
    */
   ipcMain.handle(IPC_CHANNELS.AI_CONFIGURE, async (_, request: AIConfigureRequest) => {
     try {
-      // Validate input using Zod schema
-      const validatedConfig = validateOpenAIConfig(request);
+      // 1. VALIDATION: Validate input before processing
+      const validationResult = await validationMiddleware.validate(
+        IPC_CHANNELS.AI_CONFIGURE,
+        request
+      );
 
-      // Configure OpenAI via AIServiceFactory
-      await aiServiceFactory.configureOpenAI(validatedConfig);
+      if (!validationResult.success) {
+        return {
+          success: false,
+          error: 'Validation failed',
+          errors: validationResult.errors,
+        };
+      }
+
+      // 2. BUSINESS LOGIC: Configure OpenAI via AIServiceFactory
+      await aiServiceFactory.configureOpenAI(validationResult.data);
 
       errorLogger.logError('OpenAI configured successfully via AIServiceFactory', {
         type: 'info',
-        model: validatedConfig.model,
-        hasOrganization: !!validatedConfig.organization,
+        model: validationResult.data.model,
+        hasOrganization: !!validationResult.data.organization,
       });
 
       return { success: true };
     } catch (error) {
       errorLogger.logError(error as Error, { context: 'ipc:ai:configure' });
-
-      // Handle Zod validation errors
-      if (error && typeof error === 'object' && 'issues' in error) {
-        const zodError = error as { issues: Array<{ message: string }> };
-        const errorMessages = zodError.issues.map(issue => issue.message).join(', ');
-        return {
-          success: false,
-          error: `Validation failed: ${errorMessages}`,
-        };
-      }
 
       return {
         success: false,
@@ -772,13 +1110,24 @@ function setupIpcHandlers() {
    */
   ipcMain.handle(IPC_CHANNELS.AI_TEST_CONNECTION, async (_, request: AITestConnectionRequest) => {
     try {
-      // Validate input using Zod schema
-      const validatedRequest = OpenAITestConnectionSchema.parse(request);
+      // 1. VALIDATION: Validate input before testing
+      const validationResult = await validationMiddleware.validate(
+        IPC_CHANNELS.AI_TEST_CONNECTION,
+        request
+      );
 
-      // Test connection via AIServiceFactory
+      if (!validationResult.success) {
+        return {
+          success: false,
+          error: 'Validation failed',
+          errors: validationResult.errors,
+        };
+      }
+
+      // 2. BUSINESS LOGIC: Test connection via AIServiceFactory
       const status = await aiServiceFactory.testOpenAIConnection({
-        apiKey: validatedRequest.apiKey,
-        model: validatedRequest.model || 'gpt-4o',
+        apiKey: validationResult.data.apiKey,
+        model: validationResult.data.model || 'gpt-4o',
         organization: undefined,
       });
 
@@ -798,16 +1147,6 @@ function setupIpcHandlers() {
     } catch (error) {
       errorLogger.logError(error as Error, { context: 'ipc:ai:testConnection' });
 
-      // Handle Zod validation errors
-      if (error && typeof error === 'object' && 'issues' in error) {
-        const zodError = error as { issues: Array<{ message: string }> };
-        const errorMessages = zodError.issues.map(issue => issue.message).join(', ');
-        return {
-          success: false,
-          error: `Validation failed: ${errorMessages}`,
-        };
-      }
-
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Failed to test connection',
@@ -818,10 +1157,22 @@ function setupIpcHandlers() {
   // AI: Chat (non-streaming)
   ipcMain.handle(IPC_CHANNELS.AI_CHAT, async (_event, request: AIChatRequest) => {
     try {
+      // 1. VALIDATION: Validate input before processing
+      const validationResult = await validationMiddleware.validate(IPC_CHANNELS.AI_CHAT, request);
+
+      if (!validationResult.success) {
+        return {
+          success: false,
+          error: 'Validation failed',
+          errors: validationResult.errors,
+        };
+      }
+
+      // 2. BUSINESS LOGIC: Process chat with validated data
       const response = await aiServiceFactory.chat({
-        messages: request.messages as unknown[], // Type conversion
-        context: request.context,
-        caseId: request.caseId,
+        messages: validationResult.data.messages as unknown[], // Type conversion
+        context: validationResult.data.context,
+        caseId: validationResult.data.caseId,
       });
 
       if (!response.success) {
@@ -884,14 +1235,30 @@ function setupIpcHandlers() {
   // AI: Stream Start
   ipcMain.handle(IPC_CHANNELS.AI_STREAM_START, async (event, request: AIStreamStartRequest) => {
     try {
+      // 1. VALIDATION: Validate input before streaming
+      const validationResult = await validationMiddleware.validate(
+        IPC_CHANNELS.AI_STREAM_START,
+        request
+      );
+
+      if (!validationResult.success) {
+        return {
+          success: false,
+          error: 'Validation failed',
+          errors: validationResult.errors,
+        };
+      }
+
       const streamId = Date.now().toString(); // Unique stream ID
 
+      // 2. BUSINESS LOGIC: Process streaming with validated data
       // PHASE 5.1: Fetch RAG context from UK Legal APIs
-      let ragContext = request.context; // Start with provided context
+      let ragContext = validationResult.data.context; // Start with provided context
 
       // Extract user's question (last message in conversation)
-      if (request.messages && request.messages.length > 0) {
-        const lastMessage = request.messages[request.messages.length - 1];
+      if (validationResult.data.messages && validationResult.data.messages.length > 0) {
+        const lastMessage =
+          validationResult.data.messages[validationResult.data.messages.length - 1];
 
         if (lastMessage.role === 'user' && lastMessage.content) {
           // INTELLIGENT FILTERING: Only fetch RAG if question is about legal topics
@@ -926,7 +1293,7 @@ function setupIpcHandlers() {
 
           // Start streaming in background
           // Use streamChatWithFunctions if caseId is provided (enables fact-gathering)
-          const useFunctionCalling = !!request.caseId;
+          const useFunctionCalling = !!validationResult.data.caseId;
 
           let tokensSent = 0;
           let thinkTokensSent = 0;
@@ -936,11 +1303,11 @@ function setupIpcHandlers() {
             aiServiceFactory
               .streamChatWithFunctions(
                 {
-                  messages: request.messages as unknown[],
+                  messages: validationResult.data.messages as unknown[],
                   context: ragContext,
-                  caseId: request.caseId,
+                  caseId: validationResult.data.caseId,
                 },
-                request.caseId,
+                validationResult.data.caseId,
                 // onToken callback
                 (token: string) => {
                   tokensSent++;
@@ -973,9 +1340,9 @@ function setupIpcHandlers() {
             aiServiceFactory
               .streamChat(
                 {
-                  messages: request.messages as unknown[],
+                  messages: validationResult.data.messages as unknown[],
                   context: ragContext, // Pass RAG-enhanced context
-                  caseId: request.caseId,
+                  caseId: validationResult.data.caseId,
                 },
                 // onToken callback - send display tokens to renderer
                 (token: string) => {
@@ -1035,6 +1402,21 @@ function setupIpcHandlers() {
   // File: Select
   ipcMain.handle(IPC_CHANNELS.FILE_SELECT, async (_event, request: FileSelectRequest = {}) => {
     try {
+      // 1. VALIDATION: Validate input before showing dialog
+      const validationResult = await validationMiddleware.validate(
+        IPC_CHANNELS.FILE_SELECT,
+        request
+      );
+
+      if (!validationResult.success) {
+        return {
+          success: false,
+          error: 'Validation failed',
+          errors: validationResult.errors,
+        };
+      }
+
+      // 2. BUSINESS LOGIC: Show file dialog with validated options
       if (!mainWindow) {
         return {
           success: false,
@@ -1043,8 +1425,8 @@ function setupIpcHandlers() {
       }
 
       const result = await dialog.showOpenDialog(mainWindow, {
-        properties: request.properties || ['openFile'],
-        filters: request.filters || [
+        properties: validationResult.data.properties || ['openFile'],
+        filters: validationResult.data.filters || [
           { name: 'Documents', extensions: ['pdf', 'docx', 'txt'] },
           { name: 'Images', extensions: ['jpg', 'jpeg', 'png'] },
           { name: 'All Files', extensions: ['*'] },
@@ -1099,7 +1481,22 @@ function setupIpcHandlers() {
   // File: Upload (process and extract text)
   ipcMain.handle(IPC_CHANNELS.FILE_UPLOAD, async (_, request: FileUploadRequest) => {
     try {
-      const filePath = request.filePath;
+      // 1. VALIDATION: Validate and sanitize file path
+      const validationResult = await validationMiddleware.validate(
+        IPC_CHANNELS.FILE_UPLOAD,
+        request
+      );
+
+      if (!validationResult.success) {
+        return {
+          success: false,
+          error: 'Validation failed',
+          errors: validationResult.errors,
+        };
+      }
+
+      // 2. BUSINESS LOGIC: Use sanitized file path from validation
+      const filePath = validationResult.data.filePath;
       const stats = await fs.stat(filePath);
       const fileName = path.basename(filePath);
       const extension = path.extname(filePath).toLowerCase();
@@ -1175,7 +1572,19 @@ function setupIpcHandlers() {
   // File: View/Open
   ipcMain.handle(IPC_CHANNELS.FILE_VIEW, async (_, request: FileViewRequest) => {
     try {
-      const result = await shell.openPath(request.filePath);
+      // 1. VALIDATION: Validate and sanitize file path
+      const validationResult = await validationMiddleware.validate(IPC_CHANNELS.FILE_VIEW, request);
+
+      if (!validationResult.success) {
+        return {
+          success: false,
+          error: 'Validation failed',
+          errors: validationResult.errors,
+        };
+      }
+
+      // 2. BUSINESS LOGIC: Open file with sanitized path
+      const result = await shell.openPath(validationResult.data.filePath);
       if (result) {
         // openPath returns empty string on success, error message on failure
         return {
@@ -1213,7 +1622,23 @@ function setupIpcHandlers() {
   // File: Download/Save
   ipcMain.handle(IPC_CHANNELS.FILE_DOWNLOAD, async (_, request: FileDownloadRequest) => {
     try {
-      const fileName = request.fileName || path.basename(request.filePath);
+      // 1. VALIDATION: Validate and sanitize file paths
+      const validationResult = await validationMiddleware.validate(
+        IPC_CHANNELS.FILE_DOWNLOAD,
+        request
+      );
+
+      if (!validationResult.success) {
+        return {
+          success: false,
+          error: 'Validation failed',
+          errors: validationResult.errors,
+        };
+      }
+
+      // 2. BUSINESS LOGIC: Use sanitized paths from validation
+      const fileName =
+        validationResult.data.fileName || path.basename(validationResult.data.filePath);
       const result = await dialog.showSaveDialog({
         title: 'Save File',
         defaultPath: path.join(app.getPath('downloads'), fileName),
@@ -1227,7 +1652,7 @@ function setupIpcHandlers() {
         };
       }
 
-      await fs.copyFile(request.filePath, result.filePath);
+      await fs.copyFile(validationResult.data.filePath, result.filePath);
       return { success: true, savedPath: result.filePath };
     } catch (error) {
       errorLogger.logError(error as Error, { context: 'ipc:file:download' });
@@ -1257,8 +1682,23 @@ function setupIpcHandlers() {
   // File: Print
   ipcMain.handle(IPC_CHANNELS.FILE_PRINT, async (_, request: FilePrintRequest) => {
     try {
+      // 1. VALIDATION: Validate file path and printable file type
+      const validationResult = await validationMiddleware.validate(
+        IPC_CHANNELS.FILE_PRINT,
+        request
+      );
+
+      if (!validationResult.success) {
+        return {
+          success: false,
+          error: 'Validation failed',
+          errors: validationResult.errors,
+        };
+      }
+
+      // 2. BUSINESS LOGIC: Open file for printing with sanitized path
       // Open the file in default application which typically has print capability
-      const result = await shell.openPath(request.filePath);
+      const result = await shell.openPath(validationResult.data.filePath);
       if (result) {
         return {
           success: false,
@@ -1298,10 +1738,29 @@ function setupIpcHandlers() {
   // File: Email
   ipcMain.handle(IPC_CHANNELS.FILE_EMAIL, async (_event, request: FileEmailRequest) => {
     try {
+      // 1. VALIDATION: Validate file paths and email content
+      const validationResult = await validationMiddleware.validate(
+        IPC_CHANNELS.FILE_EMAIL,
+        request
+      );
+
+      if (!validationResult.success) {
+        return {
+          success: false,
+          error: 'Validation failed',
+          errors: validationResult.errors,
+        };
+      }
+
+      // 2. BUSINESS LOGIC: Compose email with validated data
       // Note: mailto: protocol has limited attachment support across email clients
 
-      const subject = encodeURIComponent(request.subject || 'Documents from Justice Companion');
-      const body = encodeURIComponent(request.body || 'Please find attached documents.');
+      const subject = encodeURIComponent(
+        validationResult.data.subject || 'Documents from Justice Companion'
+      );
+      const body = encodeURIComponent(
+        validationResult.data.body || 'Please find attached documents.'
+      );
 
       // Note: mailto: protocol has limited attachment support
       // On Windows, this will open default email client
@@ -1310,8 +1769,12 @@ function setupIpcHandlers() {
 
       // For better compatibility, just open email client and let user attach files
       // We'll include a note about attachments in the body
-      const attachmentNote = `\n\nNote: Please manually attach the following files:\n${request.filePaths.map((p) => `- ${path.basename(p)}`).join('\n')}`;
-      mailtoUrl = `mailto:?subject=${subject}&body=${encodeURIComponent((request.body || '') + attachmentNote)}`;
+      const attachmentNote = `\n\nNote: Please manually attach the following files:\n${validationResult.data.filePaths
+        .map((p) => `- ${path.basename(p)}`)
+        .join('\n')}`;
+      mailtoUrl = `mailto:?subject=${subject}&body=${encodeURIComponent(
+        (validationResult.data.body || '') + attachmentNote
+      )}`;
 
       await shell.openExternal(mailtoUrl);
       return { success: true };
@@ -1329,6 +1792,15 @@ function setupIpcHandlers() {
     IPC_CHANNELS.CONVERSATION_CREATE,
     async (_, request: ConversationCreateRequest) => {
       try {
+        // Authorization: If caseId provided, verify user owns the case
+        const userId = getCurrentUserIdFromSession();
+
+        // TODO: Add user_id column to chat_conversations table for proper ownership
+        // Currently, conversations without caseId cannot be secured (security gap)
+        if (request.input.caseId) {
+          authorizationMiddleware.verifyCaseOwnership(request.input.caseId, userId);
+        }
+
         const conversation = chatConversationService.createConversation(request.input);
         return { success: true, data: conversation };
       } catch (error) {
@@ -1344,7 +1816,37 @@ function setupIpcHandlers() {
   // Conversation: Get by ID
   ipcMain.handle(IPC_CHANNELS.CONVERSATION_GET, async (_, request: ConversationGetRequest) => {
     try {
-      const conversation = chatConversationService.getConversation(request.id);
+      // 1. VALIDATION: Validate input before authorization
+      let validatedData: any;
+      try {
+        validatedData = await validationMiddleware.validate(IPC_CHANNELS.CONVERSATION_GET, request);
+      } catch (validationError) {
+        // Handle validation errors
+        const error =
+          validationError instanceof ValidationError
+            ? validationError
+            : new ValidationError('Validation failed');
+        return {
+          success: false,
+          error: error.message || 'Validation failed',
+          errors: error.fields || {},
+        };
+      }
+
+      // 2. Get conversation first to check caseId
+      const conversation = chatConversationService.getConversation(validatedData.id);
+
+      // 3. AUTHORIZATION: Verify user owns the case (if conversation has caseId)
+      const userId = getCurrentUserIdFromSession();
+
+      if (conversation && conversation.caseId) {
+        authorizationMiddleware.verifyCaseOwnership(conversation.caseId, userId);
+      } else if (conversation && !conversation.caseId) {
+        // TODO: Security gap - conversations without caseId can't be secured
+        // Block access until user_id column is added to chat_conversations table
+        throw new Error('Unauthorized: Cannot access general conversations without case context');
+      }
+
       return { success: true, data: conversation };
     } catch (error) {
       errorLogger.logError(error as Error, { context: 'ipc:conversation:get' });
@@ -1360,8 +1862,29 @@ function setupIpcHandlers() {
     IPC_CHANNELS.CONVERSATION_GET_ALL,
     async (_, request: ConversationGetAllRequest) => {
       try {
-        const conversations = chatConversationService.getAllConversations(request.caseId);
-        return { success: true, data: conversations };
+        // Authorization: Get user's cases first, then filter conversations
+        const userId = getCurrentUserIdFromSession();
+
+        // If caseId provided, verify user owns it
+        if (request.caseId) {
+          authorizationMiddleware.verifyCaseOwnership(request.caseId, userId);
+          // Get conversations for this specific case
+          const conversations = chatConversationService.getAllConversations(request.caseId);
+          return { success: true, data: conversations };
+        }
+
+        // No caseId provided - filter to user's cases only
+        const userCases = caseRepository.findAll().filter((c) => c.userId === userId);
+        const userCaseIds = new Set(userCases.map((c) => c.id));
+
+        const allConversations = chatConversationService.getAllConversations();
+        // Filter to only conversations linked to user's cases
+        // Excludes general chats (caseId=null) for security
+        const userConversations = allConversations.filter(
+          (conv) => conv.caseId && userCaseIds.has(conv.caseId)
+        );
+
+        return { success: true, data: userConversations };
       } catch (error) {
         errorLogger.logError(error as Error, { context: 'ipc:conversation:getAll' });
         return {
@@ -1377,6 +1900,13 @@ function setupIpcHandlers() {
     IPC_CHANNELS.CONVERSATION_GET_RECENT,
     async (_, request: ConversationGetRecentRequest) => {
       try {
+        // Authorization: Verify user owns the case (if caseId provided)
+        const userId = getCurrentUserIdFromSession();
+
+        if (request.caseId) {
+          authorizationMiddleware.verifyCaseOwnership(request.caseId, userId);
+        }
+
         const conversations = chatConversationService.getRecentConversationsByCase(
           request.caseId,
           request.limit
@@ -1397,7 +1927,19 @@ function setupIpcHandlers() {
     IPC_CHANNELS.CONVERSATION_LOAD_WITH_MESSAGES,
     async (_, request: ConversationLoadWithMessagesRequest) => {
       try {
+        // Get conversation first to check caseId
         const conversation = chatConversationService.loadConversation(request.conversationId);
+
+        // Authorization: Verify user owns the case (if conversation has caseId)
+        const userId = getCurrentUserIdFromSession();
+
+        if (conversation && conversation.caseId) {
+          authorizationMiddleware.verifyCaseOwnership(conversation.caseId, userId);
+        } else if (conversation && !conversation.caseId) {
+          // TODO: Security gap - conversations without caseId can't be secured
+          throw new Error('Unauthorized: Cannot access general conversations without case context');
+        }
+
         return { success: true, data: conversation };
       } catch (error) {
         errorLogger.logError(error as Error, { context: 'ipc:conversation:loadWithMessages' });
@@ -1414,6 +1956,19 @@ function setupIpcHandlers() {
     IPC_CHANNELS.CONVERSATION_DELETE,
     async (_, request: ConversationDeleteRequest) => {
       try {
+        // Get conversation first to check caseId
+        const conversation = chatConversationService.getConversation(request.id);
+
+        // Authorization: Verify user owns the case (if conversation has caseId)
+        const userId = getCurrentUserIdFromSession();
+
+        if (conversation && conversation.caseId) {
+          authorizationMiddleware.verifyCaseOwnership(conversation.caseId, userId);
+        } else if (conversation && !conversation.caseId) {
+          // TODO: Security gap - conversations without caseId can't be secured
+          throw new Error('Unauthorized: Cannot delete general conversations without case context');
+        }
+
         chatConversationService.deleteConversation(request.id);
         return { success: true };
       } catch (error) {
@@ -1429,10 +1984,47 @@ function setupIpcHandlers() {
   // Message: Add to conversation
   ipcMain.handle(IPC_CHANNELS.MESSAGE_ADD, async (_event, request: MessageAddRequest) => {
     try {
-      chatConversationService.addMessage(request.input);
+      // 1. VALIDATION: Validate message input before authorization
+      let validatedData: any;
+      try {
+        validatedData = await validationMiddleware.validate(IPC_CHANNELS.MESSAGE_ADD, request);
+      } catch (validationError) {
+        // Handle validation errors (role validation, content length, etc.)
+        const error =
+          validationError instanceof ValidationError
+            ? validationError
+            : new ValidationError('Validation failed');
+        return {
+          success: false,
+          error: error.message || 'Validation failed',
+          errors: error.fields || {},
+        };
+      }
+
+      // 2. Get conversation first to check caseId
+      const conversation = chatConversationService.getConversation(
+        validatedData.input.conversationId
+      );
+
+      // 3. AUTHORIZATION: Verify user owns the case (if conversation has caseId)
+      const userId = getCurrentUserIdFromSession();
+
+      if (conversation && conversation.caseId) {
+        authorizationMiddleware.verifyCaseOwnership(conversation.caseId, userId);
+      } else if (conversation && !conversation.caseId) {
+        // TODO: Security gap - conversations without caseId can't be secured
+        throw new Error(
+          'Unauthorized: Cannot add messages to general conversations without case context'
+        );
+      }
+
+      // 4. BUSINESS LOGIC: Add validated message
+      chatConversationService.addMessage(validatedData.input);
       // Return updated conversation
-      const conversation = chatConversationService.getConversation(request.input.conversationId)!;
-      return { success: true, data: conversation };
+      const updatedConversation = chatConversationService.getConversation(
+        validatedData.input.conversationId
+      )!;
+      return { success: true, data: updatedConversation };
     } catch (error) {
       errorLogger.logError(error as Error, { context: 'ipc:message:add' });
       return {
@@ -1445,6 +2037,10 @@ function setupIpcHandlers() {
   // Profile: Get
   ipcMain.handle(IPC_CHANNELS.PROFILE_GET, async (_event, _request: ProfileGetRequest) => {
     try {
+      // 1. VALIDATION: No validation needed (no parameters)
+      // This handler is in the no-validation list in ValidationMiddleware
+
+      // 2. BUSINESS LOGIC: Get current user's profile
       const profile = userProfileService.getProfile();
       return { success: true, data: profile };
     } catch (error) {
@@ -1459,7 +2055,26 @@ function setupIpcHandlers() {
   // Profile: Update
   ipcMain.handle(IPC_CHANNELS.PROFILE_UPDATE, async (_, request: ProfileUpdateRequest) => {
     try {
-      const profile = userProfileService.updateProfile(request.input);
+      // 1. VALIDATION: Validate update fields (email, name, avatar URL)
+      let validatedData: ProfileUpdateRequest;
+      try {
+        validatedData = await validationMiddleware.validate(IPC_CHANNELS.PROFILE_UPDATE, request);
+      } catch (validationError) {
+        const error =
+          validationError instanceof ValidationError
+            ? validationError
+            : new ValidationError('Validation failed');
+        return {
+          success: false,
+          error: error.message || 'Validation failed',
+          errors: error.fields || {},
+        };
+      }
+
+      // 2. BUSINESS LOGIC: Update profile with validated data
+      // Validates: email format, HTTPS-only avatar URLs, name length
+      // Ensures at least one field is provided for update
+      const profile = userProfileService.updateProfile(validatedData.input);
       return { success: true, data: profile };
     } catch (error) {
       errorLogger.logError(error as Error, { context: 'ipc:profile:update' });
@@ -1507,8 +2122,28 @@ function setupIpcHandlers() {
   // Model: Check if Downloaded
   ipcMain.handle(IPC_CHANNELS.MODEL_IS_DOWNLOADED, async (_, request: ModelIsDownloadedRequest) => {
     try {
-      const downloaded = modelDownloadService.isModelDownloaded(request.modelId);
-      const path = modelDownloadService.getModelPath(request.modelId);
+      // 1. VALIDATION: Validate model ID
+      let validatedData: any;
+      try {
+        validatedData = await validationMiddleware.validate(
+          IPC_CHANNELS.MODEL_IS_DOWNLOADED,
+          request
+        );
+      } catch (validationError) {
+        const error =
+          validationError instanceof ValidationError
+            ? validationError
+            : new ValidationError('Validation failed');
+        return {
+          success: false,
+          error: error.message || 'Validation failed',
+          errors: error.fields || {},
+        };
+      }
+
+      // 2. BUSINESS LOGIC: Check if model is downloaded using validated data
+      const downloaded = modelDownloadService.isModelDownloaded(validatedData.modelId);
+      const path = modelDownloadService.getModelPath(validatedData.modelId);
       return { success: true, downloaded, path: path || undefined };
     } catch (error) {
       errorLogger.logError(error as Error, { context: 'ipc:model:isDownloaded' });
@@ -1544,7 +2179,26 @@ function setupIpcHandlers() {
   // Model: Delete
   ipcMain.handle(IPC_CHANNELS.MODEL_DELETE, async (_, request: ModelDeleteRequest) => {
     try {
-      const deleted = await modelDownloadService.deleteModel(request.modelId);
+      // 1. VALIDATION: Validate model ID and enforce protection rules
+      // The validation schema prevents deletion of protected system models
+      let validatedData: any;
+      try {
+        validatedData = await validationMiddleware.validate(IPC_CHANNELS.MODEL_DELETE, request);
+      } catch (validationError) {
+        const error =
+          validationError instanceof ValidationError
+            ? validationError
+            : new ValidationError('Validation failed');
+        return {
+          success: false,
+          error: error.message || 'Validation failed',
+          errors: error.fields || {},
+        };
+      }
+
+      // 2. BUSINESS LOGIC: Delete model using validated data
+      // Note: The validation schema already prevents deletion of protected models
+      const deleted = await modelDownloadService.deleteModel(validatedData.modelId);
       return { success: true, deleted };
     } catch (error) {
       errorLogger.logError(error as Error, { context: 'ipc:model:delete' });
@@ -1676,15 +2330,44 @@ function setupIpcHandlers() {
     IPC_CHANNELS.GDPR_EXPORT_USER_DATA,
     async (_event, _request: GDPRExportUserDataRequest) => {
       try {
+        // 1. VALIDATION: Validate input (even if minimal/empty)
+        try {
+          await validationMiddleware.validate(IPC_CHANNELS.GDPR_EXPORT_USER_DATA, _request);
+        } catch (validationError) {
+          const error =
+            validationError instanceof ValidationError
+              ? validationError
+              : new ValidationError('Validation failed');
+          return {
+            success: false,
+            error: error.message,
+            errors: error.fields,
+          };
+        }
+
+        // 2. AUTHORIZATION: Get current user ID for filtering
+        const userId = getCurrentUserIdFromSession();
+
         const db = databaseManager.getDatabase();
         const exportDate = new Date().toISOString();
         const timestamp = exportDate.replace(/[:.]/g, '-').slice(0, 19);
 
-        // Gather all user data from database
-        const cases = caseRepository.findAll();
-        const evidence = evidenceRepository.findAll();
+        // Gather ONLY current user's data from database
+        const allCases = caseRepository.findAll();
+        const cases = allCases.filter((c) => c.userId === userId);
+        const caseIds = new Set(cases.map((c) => c.id));
+
+        // Filter evidence to user's cases only
+        const allEvidence = evidenceRepository.findAll();
+        const evidence = allEvidence.filter((e) => caseIds.has(e.caseId));
+
         const profile = userProfileService.getProfile();
-        const conversations = chatConversationService.getAllConversations();
+
+        // Filter conversations to user's cases only (excludes general chats)
+        const allConversations = chatConversationService.getAllConversations();
+        const conversations = allConversations.filter(
+          (conv) => conv.caseId && caseIds.has(conv.caseId)
+        );
 
         // Gather case-related data by iterating through cases
         const notes: unknown[] = [];
@@ -1754,9 +2437,9 @@ function setupIpcHandlers() {
         const auditLogger = new AuditLogger(db);
         auditLogger.log({
           eventType: 'gdpr.export',
-          userId: 'local-user',
+          userId: userId.toString(),
           resourceType: 'user_data',
-          resourceId: 'all',
+          resourceId: userId.toString(),
           action: 'export',
           details: {
             exportPath,
@@ -1821,22 +2504,56 @@ function setupIpcHandlers() {
     IPC_CHANNELS.GDPR_DELETE_USER_DATA,
     async (_event, request: GDPRDeleteUserDataRequest) => {
       try {
-        // Safety check: require explicit confirmation
-        if (request.confirmation !== 'DELETE_ALL_MY_DATA') {
+        // 1. VALIDATION: Validate input including confirmation string
+        // CRITICAL SECURITY: Must validate exact confirmation string match
+        let validatedData: GDPRDeleteUserDataRequest;
+        try {
+          validatedData = await validationMiddleware.validate(
+            IPC_CHANNELS.GDPR_DELETE_USER_DATA,
+            request
+          );
+        } catch (validationError) {
+          const error =
+            validationError instanceof ValidationError
+              ? validationError
+              : new ValidationError('Validation failed');
+          return {
+            success: false,
+            error: error.message || 'Validation failed',
+            errors: error.fields || {},
+          };
+        }
+
+        // 2. Additional safety check (redundant but critical for security)
+        // The validation schema already enforces this, but we keep it as defense-in-depth
+        if (validatedData.confirmation !== 'DELETE_ALL_MY_DATA') {
           return {
             success: false,
             error: 'Invalid confirmation string. Must be "DELETE_ALL_MY_DATA".',
           };
         }
 
+        // 3. AUTHORIZATION: Get current user ID for filtering
+        const userId = getCurrentUserIdFromSession();
+
         const db = databaseManager.getDatabase();
         const deletedAt = new Date().toISOString();
 
-        // Count records before deletion for summary
-        const cases = caseRepository.findAll();
+        // Count ONLY current user's records before deletion for summary
+        const allCases = caseRepository.findAll();
+        const cases = allCases.filter((c) => c.userId === userId);
         const casesCount = cases.length;
-        const evidenceCount = evidenceRepository.findAll().length;
-        const conversationsCount = chatConversationService.getAllConversations().length;
+        const caseIds = new Set(cases.map((c) => c.id));
+
+        // Count evidence belonging to user's cases
+        const allEvidence = evidenceRepository.findAll();
+        const evidenceCount = allEvidence.filter((e) => caseIds.has(e.caseId)).length;
+
+        // Count conversations linked to user's cases
+        const allConversations = chatConversationService.getAllConversations();
+        const conversationsCount = allConversations.filter(
+          (conv) => conv.caseId && caseIds.has(conv.caseId)
+        ).length;
 
         // Count case-related records
         let notesCount = 0;
@@ -1867,9 +2584,9 @@ function setupIpcHandlers() {
         const auditLogger = new AuditLogger(db);
         auditLogger.log({
           eventType: 'gdpr.delete',
-          userId: 'local-user',
+          userId: userId.toString(),
           resourceType: 'user_data',
-          resourceId: 'all',
+          resourceId: userId.toString(),
           action: 'delete',
           details: {
             deletedAt,
@@ -1888,24 +2605,27 @@ function setupIpcHandlers() {
           success: true,
         });
 
-        // Delete all data using CASCADE constraints
+        // Delete ONLY current user's data using CASCADE constraints
         // Start transaction for atomicity
-        const deleteAllData = db.transaction(() => {
-          // Delete all cases (CASCADE will delete evidence, notes, legal issues, timeline events, user facts, case facts)
-          db.prepare('DELETE FROM cases').run();
+        const deleteUserData = db.transaction(() => {
+          // Delete user's cases (CASCADE will delete evidence, notes, legal issues, timeline events, user facts, case facts)
+          db.prepare('DELETE FROM cases WHERE user_id = ?').run(userId);
 
-          // Delete all conversations (CASCADE will delete messages)
-          db.prepare('DELETE FROM chat_conversations').run();
+          // Delete conversations linked to user's cases
+          // Note: General conversations (caseId=null) are NOT deleted due to security gap
+          const caseIdsArray = Array.from(caseIds);
+          if (caseIdsArray.length > 0) {
+            const placeholders = caseIdsArray.map(() => '?').join(',');
+            db.prepare(`DELETE FROM chat_conversations WHERE case_id IN (${placeholders})`).run(
+              ...caseIdsArray
+            );
+          }
 
-          // Reset user profile (keep table, just clear data)
-          db.prepare(
-            'UPDATE user_profile SET name = ?, email = ?, avatar_url = ? WHERE id = 1'
-          ).run('Legal User', null, null);
-
+          // Note: User profile is shared - don't delete/reset it
           // Note: We don't delete audit logs - they are kept for compliance
         });
 
-        deleteAllData();
+        deleteUserData();
 
         // Note: Audit logs are kept for compliance and not deleted
 
@@ -2317,7 +3037,7 @@ app.whenReady().then(async () => {
       isAvailable: async () => {
         const service = SessionPersistenceService.getInstance();
         return await service.isAvailable();
-      }
+      },
     };
     console.log('[Main] SessionPersistenceHandler adapter created');
 
@@ -2331,7 +3051,7 @@ app.whenReady().then(async () => {
     console.log('[Main] AuthenticationService created with session persistence');
     consentService = new ConsentService(consentRepository, auditLogger);
     console.log('[Main] ConsentService created');
-    _authorizationMiddleware = new AuthorizationMiddleware(caseRepository, auditLogger);
+    authorizationMiddleware = new AuthorizationMiddleware(caseRepository, auditLogger);
     console.log('[Main] AuthorizationMiddleware created');
 
     errorLogger.logError('✅ Authentication services initialized', { type: 'info' });
@@ -2346,8 +3066,13 @@ app.whenReady().then(async () => {
       const restored = await authenticationService.restorePersistedSession();
       if (restored) {
         currentSessionId = restored.session.id;
-        console.log('[Main] ✅ Successfully restored persisted session for user:', restored.user.username);
-        errorLogger.logError(`Session restored for user: ${restored.user.username}`, { type: 'info' });
+        console.log(
+          '[Main] ✅ Successfully restored persisted session for user:',
+          restored.user.username
+        );
+        errorLogger.logError(`Session restored for user: ${restored.user.username}`, {
+          type: 'info',
+        });
       } else {
         console.log('[Main] No valid persisted session to restore');
       }
@@ -2364,10 +3089,27 @@ app.whenReady().then(async () => {
     // Authentication: Register
     ipcMain.handle(IPC_CHANNELS.AUTH_REGISTER, async (_, request: AuthRegisterRequest) => {
       try {
+        // 1. VALIDATION: Validate input using try-catch pattern
+        let validatedData: AuthRegisterRequest;
+        try {
+          validatedData = await validationMiddleware.validate(IPC_CHANNELS.AUTH_REGISTER, request);
+        } catch (validationError) {
+          const error =
+            validationError instanceof ValidationError
+              ? validationError
+              : new ValidationError('Validation failed');
+          return {
+            success: false,
+            error: error.message || 'Validation failed',
+            errors: error.fields || {},
+          };
+        }
+
+        // 2. BUSINESS LOGIC: Use validated data (no authorization check for registration)
         const user = await authenticationService.register(
-          request.username,
-          request.password,
-          request.email
+          validatedData.username,
+          validatedData.password,
+          validatedData.email
         );
         return { success: true, data: user };
       } catch (error) {
@@ -2382,12 +3124,25 @@ app.whenReady().then(async () => {
     // Authentication: Login
     ipcMain.handle(IPC_CHANNELS.AUTH_LOGIN, async (_, request: AuthLoginRequest) => {
       try {
-        const { username, password, rememberMe = false } = request;
-        const { user, session } = await authenticationService.login(
-          username,
-          password,
-          rememberMe
-        );
+        // 1. VALIDATION: Validate input using try-catch pattern
+        let validatedData: AuthLoginRequest;
+        try {
+          validatedData = await validationMiddleware.validate(IPC_CHANNELS.AUTH_LOGIN, request);
+        } catch (validationError) {
+          const error =
+            validationError instanceof ValidationError
+              ? validationError
+              : new ValidationError('Validation failed');
+          return {
+            success: false,
+            error: error.message || 'Validation failed',
+            errors: error.fields || {},
+          };
+        }
+
+        // 2. BUSINESS LOGIC: Use validated data (no authorization check for login)
+        const { username, password, rememberMe = false } = validatedData;
+        const { user, session } = await authenticationService.login(username, password, rememberMe);
 
         // Store session ID for auth state management
         currentSessionId = session.id;
@@ -2409,13 +3164,36 @@ app.whenReady().then(async () => {
     });
 
     // Authentication: Logout
-    ipcMain.handle(IPC_CHANNELS.AUTH_LOGOUT, async (_event, _request: AuthLogoutRequest) => {
+    ipcMain.handle(IPC_CHANNELS.AUTH_LOGOUT, async (_event, request: AuthLogoutRequest) => {
       try {
-        if (currentSessionId) {
-          // Call async logout to properly clear persisted session
-          await authenticationService.logout(currentSessionId);
-          currentSessionId = null;
+        // 1. VALIDATION: Validate input using try-catch pattern (minimal validation for logout)
+        try {
+          await validationMiddleware.validate(IPC_CHANNELS.AUTH_LOGOUT, request || {});
+        } catch (validationError) {
+          const error =
+            validationError instanceof ValidationError
+              ? validationError
+              : new ValidationError('Validation failed');
+          return {
+            success: false,
+            error: error.message,
+            errors: error.fields,
+          };
         }
+
+        // 2. AUTHORIZATION: Check if user is logged in
+        if (!currentSessionId) {
+          return {
+            success: false,
+            error: 'Not authenticated',
+          };
+        }
+
+        // 3. BUSINESS LOGIC: Perform logout
+        // Call async logout to properly clear persisted session
+        await authenticationService.logout(currentSessionId);
+        currentSessionId = null;
+
         return { success: true };
       } catch (error) {
         errorLogger.logError(error as Error, { context: 'ipc:auth:logout' });
@@ -2459,6 +3237,26 @@ app.whenReady().then(async () => {
       IPC_CHANNELS.AUTH_CHANGE_PASSWORD,
       async (_, request: AuthChangePasswordRequest) => {
         try {
+          // 1. VALIDATION: Validate input using try-catch pattern
+          let validatedData: AuthChangePasswordRequest;
+          try {
+            validatedData = await validationMiddleware.validate(
+              IPC_CHANNELS.AUTH_CHANGE_PASSWORD,
+              request
+            );
+          } catch (validationError) {
+            const error =
+              validationError instanceof ValidationError
+                ? validationError
+                : new ValidationError('Validation failed');
+            return {
+              success: false,
+              error: error.message || 'Validation failed',
+              errors: error.fields || {},
+            };
+          }
+
+          // 2. AUTHORIZATION: Check if user is logged in
           if (!currentSessionId) {
             return {
               success: false,
@@ -2476,10 +3274,11 @@ app.whenReady().then(async () => {
             };
           }
 
+          // 3. BUSINESS LOGIC: Use validated data
           await authenticationService.changePassword(
             user.id,
-            request.oldPassword,
-            request.newPassword
+            validatedData.oldPassword,
+            validatedData.newPassword
           );
 
           // Session was invalidated by password change
@@ -2499,6 +3298,22 @@ app.whenReady().then(async () => {
     // Consent: Grant
     ipcMain.handle(IPC_CHANNELS.CONSENT_GRANT, async (_, request: ConsentGrantRequest) => {
       try {
+        // Validation step
+        let validatedData: ConsentGrantRequest;
+        try {
+          validatedData = await validationMiddleware.validate(IPC_CHANNELS.CONSENT_GRANT, request);
+        } catch (validationError) {
+          const error =
+            validationError instanceof ValidationError
+              ? validationError
+              : new ValidationError('Validation failed');
+          return {
+            success: false,
+            error: error.message || 'Validation failed',
+            errors: error.fields || {},
+          };
+        }
+
         if (!currentSessionId) {
           return {
             success: false,
@@ -2516,7 +3331,7 @@ app.whenReady().then(async () => {
           };
         }
 
-        const consent = consentService.grantConsent(user.id, request.consentType);
+        const consent = consentService.grantConsent(user.id, validatedData.consentType);
         return { success: true, data: consent };
       } catch (error) {
         errorLogger.logError(error as Error, { context: 'ipc:consent:grant' });
@@ -2530,6 +3345,22 @@ app.whenReady().then(async () => {
     // Consent: Revoke
     ipcMain.handle(IPC_CHANNELS.CONSENT_REVOKE, async (_, request: ConsentRevokeRequest) => {
       try {
+        // Validation step - includes mandatory consent protection
+        let validatedData: ConsentRevokeRequest;
+        try {
+          validatedData = await validationMiddleware.validate(IPC_CHANNELS.CONSENT_REVOKE, request);
+        } catch (validationError) {
+          const error =
+            validationError instanceof ValidationError
+              ? validationError
+              : new ValidationError('Validation failed');
+          return {
+            success: false,
+            error: error.message || 'Validation failed',
+            errors: error.fields || {},
+          };
+        }
+
         if (!currentSessionId) {
           return {
             success: false,
@@ -2547,7 +3378,7 @@ app.whenReady().then(async () => {
           };
         }
 
-        consentService.revokeConsent(user.id, request.consentType);
+        consentService.revokeConsent(user.id, validatedData.consentType);
         return { success: true };
       } catch (error) {
         errorLogger.logError(error as Error, { context: 'ipc:consent:revoke' });
@@ -2559,35 +3390,57 @@ app.whenReady().then(async () => {
     });
 
     // Consent: Has Consent
-    ipcMain.handle(IPC_CHANNELS.CONSENT_HAS_CONSENT, async (_, request: ConsentHasConsentRequest) => {
-      try {
-        if (!currentSessionId) {
+    ipcMain.handle(
+      IPC_CHANNELS.CONSENT_HAS_CONSENT,
+      async (_, request: ConsentHasConsentRequest) => {
+        try {
+          // Validation step
+          let validatedData: ConsentHasConsentRequest;
+          try {
+            validatedData = await validationMiddleware.validate(
+              IPC_CHANNELS.CONSENT_HAS_CONSENT,
+              request
+            );
+          } catch (validationError) {
+            const error =
+              validationError instanceof ValidationError
+                ? validationError
+                : new ValidationError('Validation failed');
+            return {
+              success: false,
+              error: error.message || 'Validation failed',
+              errors: error.fields || {},
+            };
+          }
+
+          if (!currentSessionId) {
+            return {
+              success: false,
+              error: 'Not authenticated',
+            };
+          }
+
+          const user = authenticationService.validateSession(currentSessionId);
+
+          if (!user) {
+            currentSessionId = null;
+            return {
+              success: false,
+              error: 'Session expired',
+            };
+          }
+
+          const hasConsent = consentService.hasConsent(user.id, validatedData.consentType);
+          return { success: true, data: hasConsent };
+        } catch (error) {
+          errorLogger.logError(error as Error, { context: 'ipc:consent:hasConsent' });
           return {
             success: false,
-            error: 'Not authenticated',
+            error: error instanceof Error ? error.message : 'Failed to check consent',
           };
         }
-
-        const user = authenticationService.validateSession(currentSessionId);
-
-        if (!user) {
-          currentSessionId = null;
-          return {
-            success: false,
-            error: 'Session expired',
-          };
-        }
-
-        const hasConsent = consentService.hasConsent(user.id, request.consentType);
-        return { success: true, data: hasConsent };
-      } catch (error) {
-        errorLogger.logError(error as Error, { context: 'ipc:consent:hasConsent' });
-        return {
-          success: false,
-          error: error instanceof Error ? error.message : 'Failed to check consent',
-        };
       }
-    });
+    );
 
     // Consent: Get User Consents
     ipcMain.handle(
