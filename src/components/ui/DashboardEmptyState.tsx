@@ -1,5 +1,5 @@
-import { FileText, FolderOpen, MessageSquare, Scale } from 'lucide-react';
 import React from 'react';
+import { FileText, FolderOpen, MessageSquare } from 'lucide-react';
 import { ViewContainer } from '../layouts/ViewContainer';
 
 interface DashboardEmptyStateProps {
@@ -10,8 +10,6 @@ interface DashboardEmptyStateProps {
 
 export function DashboardEmptyState({
   onCreateCase,
-  onStartChat,
-  onUploadDocument,
 }: DashboardEmptyStateProps): JSX.Element {
   return (
     <ViewContainer>
@@ -22,18 +20,17 @@ export function DashboardEmptyState({
           <div className="relative">
             <div className="absolute inset-0 bg-blue-500/30 rounded-full blur-3xl animate-pulse" />
             <div className="relative w-32 h-32 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-2xl">
-              <Scale className="w-16 h-16 text-white" />
+              {/* You can place another icon here if needed */}
             </div>
           </div>
         </div>
 
         {/* Simple, Clear Headline */}
         <h1 className="text-5xl font-bold text-white mb-4">Justice Companion</h1>
-        <p className="text-2xl text-blue-200 mb-8">
-          Your legal matters, organized and simple
-        </p>
+        <p className="text-2xl text-blue-200 mb-8">Your legal matters, organized and simple</p>
         <p className="text-lg text-slate-300 max-w-2xl mx-auto">
-          Track your cases, manage documents, and stay on top of important deadlines—all in one place.
+          Track your cases, manage documents, and stay on top of important deadlines—all in one
+          place.
         </p>
       </div>
 
@@ -62,9 +59,7 @@ export function DashboardEmptyState({
             <FolderOpen className="w-8 h-8 text-blue-400" />
           </div>
           <h3 className="text-xl font-semibold text-white mb-2">Organize Cases</h3>
-          <p className="text-slate-300">
-            Keep all your legal matters in one secure place
-          </p>
+          <p className="text-slate-300">Keep all your legal matters in one secure place</p>
         </div>
 
         <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 text-center hover:border-blue-500/50 transition-all">
@@ -72,9 +67,7 @@ export function DashboardEmptyState({
             <FileText className="w-8 h-8 text-green-400" />
           </div>
           <h3 className="text-xl font-semibold text-white mb-2">Store Documents</h3>
-          <p className="text-slate-300">
-            Upload and manage all your important files
-          </p>
+          <p className="text-slate-300">Upload and manage all your important files</p>
         </div>
 
         <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 text-center hover:border-blue-500/50 transition-all">
@@ -82,9 +75,7 @@ export function DashboardEmptyState({
             <MessageSquare className="w-8 h-8 text-purple-400" />
           </div>
           <h3 className="text-xl font-semibold text-white mb-2">Get Help</h3>
-          <p className="text-slate-300">
-            Chat with our AI assistant for guidance
-          </p>
+          <p className="text-slate-300">Chat with our AI assistant for guidance</p>
         </div>
       </div>
 
@@ -104,8 +95,8 @@ export function DashboardEmptyState({
             <div className="flex-1">
               <h3 className="text-xl font-bold text-yellow-200 mb-2">Important Note</h3>
               <p className="text-yellow-100 leading-relaxed">
-                This app helps you organize information—it doesn't provide legal advice.
-                For legal advice specific to your situation, please consult a qualified attorney.
+                This app helps you organize information—it doesn't provide legal advice. For legal
+                advice specific to your situation, please consult a qualified attorney.
               </p>
             </div>
           </div>
