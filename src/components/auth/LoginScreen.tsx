@@ -47,9 +47,7 @@ export function LoginScreen({ onSwitchToRegister }: LoginScreenProps): JSX.Eleme
     try {
       await login(username.trim(), password, rememberMe);
     } catch (err) {
-      console.error('[LoginScreen] Login error caught:', err);
       const errorMessage = err instanceof Error ? err.message : 'Login failed';
-      console.error('[LoginScreen] Error message:', errorMessage);
       setError(errorMessage);
     } finally {
       setIsLoading(false);

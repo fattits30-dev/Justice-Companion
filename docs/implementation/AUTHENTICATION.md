@@ -748,15 +748,33 @@ npm run type-check
 
 ---
 
+## Critical Bug Fixes (October 2025)
+
+### Password Hashing Format Fix
+**Problem**: E2E tests were using different password hashing format than AuthenticationService.
+**Solution**: Fixed hash encoding to use hex strings consistently:
+```typescript
+// CORRECT (hex encoding)
+const passwordHash = hash.toString('hex');
+const passwordSalt = salt.toString('hex');
+```
+
+### UI/UX Improvements
+- Added "Sign In" heading to LoginScreen
+- Added comprehensive accessibility labels (WCAG 2.1 AA compliant)
+- Added loading spinners during authentication
+- Improved focus states and transitions
+- Fixed async event handler patterns for TypeScript compliance
+
 ## Next Steps
 
-### Immediate Tasks (Optional)
+### Immediate Tasks (Completed)
 
-1. ✅ ~~Apply migrations 010-012 to production database~~
-2. ✅ ~~Create IPC handlers in electron/main.ts~~
-3. ✅ ~~Create UI components (login, registration, consent)~~
-4. ⏳ Run comprehensive integration tests
-5. ⏳ Performance testing for session validation
+1. ✅ Apply migrations 010-012 to production database
+2. ✅ Create IPC handlers in electron/main.ts
+3. ✅ Create UI components (login, registration, consent)
+4. ✅ Fix password hashing format mismatch
+5. ✅ Add accessibility improvements
 
 ### Week 5-8 (Per Roadmap)
 

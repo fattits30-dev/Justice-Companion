@@ -109,12 +109,13 @@ PUBLIC_RELEASE_READY.md
 TOKEN_SECURITY_UPGRADE.md
 QUICK_TOKEN_SETUP.md
 
-# Documentation (keep local, exclude from git - app files only in git)
-docs/*
-!docs/troubleshooting/
-!docs/implementation/
-!docs/COMPREHENSIVE_SCAN_*.md
-!docs/README.md
+# ===================================================================
+# DEVELOPER DOCUMENTATION - Exclude from repository
+# These files are for local development only and should not be committed
+# ===================================================================
+
+# Root-level documentation files (Claude Code, Contributors, etc.)
+AGENTS.md
 CLAUDE.md
 CONTRIBUTING.md
 SECURITY.md
@@ -122,18 +123,28 @@ TODO.md
 *_COMPLETE.md
 *_REPORT.md
 *_SUMMARY.md
+*_GUIDE.md
+*_PLAN.md
 compass_artifact_*.md
-
-# Status reports and guides
-GIT_AUTOMATION_IMPLEMENTATION_REPORT.md
 PHASE*.md
 WINDOWS_*.md
+CLEANUP_*.md
+RELEASE_*.md
+PUBLIC_RELEASE_*.md
+TOKEN_*.md
+QUICK_*.md
+GIT_*.md
 
 # Codex development environment files
-AGENTS.md
 CODEX_*.md
 activate-codex.ps1
 test-codex*.ps1
 verify-profile.ps1
 fix_braces.txt
 .github/workflows/codex-autofix.yml
+
+# Temporary verification and status files
+*_VERIFICATION.md
+*_STATUS.md
+*_IMPLEMENTATION*.md
+*_INTEGRATION*.md

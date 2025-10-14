@@ -1,13 +1,9 @@
-console.log('[Preload] Script started loading...');
-
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
 import { IPC_CHANNELS } from '../src/types/ipc';
 import type { JusticeCompanionAPI } from '../src/types/ipc';
 import type { CreateCaseInput, UpdateCaseInput } from '../src/models/Case';
 import type { CreateEvidenceInput, UpdateEvidenceInput } from '../src/models/Evidence';
 import type { ConsentType } from '../src/models/Consent';
-
-console.log('[Preload] Imports completed successfully');
 
 /**
  * Expose Justice Companion API to renderer process via contextBridge
@@ -110,13 +106,10 @@ const aiAPI = {
   // Listen for streaming tokens
   onAIStreamToken: (callback: (token: string) => void) => {
     const handler = (_event: IpcRendererEvent, token: string) => {
-      console.log('[preload] Token received from main:', token);
       callback(token);
     };
     ipcRenderer.on(IPC_CHANNELS.AI_STREAM_TOKEN, handler);
-    console.log('[preload] Registered token listener');
     return () => {
-      console.log('[preload] Removing token listener');
       ipcRenderer.removeListener(IPC_CHANNELS.AI_STREAM_TOKEN, handler);
     };
   },
@@ -124,13 +117,10 @@ const aiAPI = {
   // Listen for streaming think tokens (AI reasoning content)
   onAIStreamThinkToken: (callback: (token: string) => void) => {
     const handler = (_event: IpcRendererEvent, token: string) => {
-      console.log('[preload] Think token received from main:', token);
       callback(token);
     };
     ipcRenderer.on(IPC_CHANNELS.AI_STREAM_THINK_TOKEN, handler);
-    console.log('[preload] Registered think token listener');
     return () => {
-      console.log('[preload] Removing think token listener');
       ipcRenderer.removeListener(IPC_CHANNELS.AI_STREAM_THINK_TOKEN, handler);
     };
   },
@@ -138,13 +128,10 @@ const aiAPI = {
   // Listen for source citations (legal references)
   onAIStreamSources: (callback: (sources: string[]) => void) => {
     const handler = (_event: IpcRendererEvent, sources: string[]) => {
-      console.log('[preload] Received sources:', sources);
       callback(sources);
     };
     ipcRenderer.on(IPC_CHANNELS.AI_STREAM_SOURCES, handler);
-    console.log('[preload] Registered sources listener');
     return () => {
-      console.log('[preload] Removing sources listener');
       ipcRenderer.removeListener(IPC_CHANNELS.AI_STREAM_SOURCES, handler);
     };
   },
@@ -166,13 +153,10 @@ const aiAPI = {
   // Listen for status updates (RAG progress)
   onAIStatusUpdate: (callback: (status: string) => void) => {
     const handler = (_event: IpcRendererEvent, status: string) => {
-      console.log('[preload] Status update received:', status);
       callback(status);
     };
     ipcRenderer.on(IPC_CHANNELS.AI_STATUS_UPDATE, handler);
-    console.log('[preload] Registered status update listener');
     return () => {
-      console.log('[preload] Removing status update listener');
       ipcRenderer.removeListener(IPC_CHANNELS.AI_STATUS_UPDATE, handler);
     };
   },
@@ -447,12 +431,8 @@ const fullAPI = {
 };
 
 // Expose combined API to window object with type safety
-console.log('[Preload] About to call contextBridge.exposeInMainWorld...');
-console.log('[Preload] contextBridge available:', typeof contextBridge !== 'undefined');
-
 try {
   contextBridge.exposeInMainWorld('justiceAPI', fullAPI);
-  console.log('[Preload] ✅ justiceAPI exposed successfully with methods:', Object.keys(fullAPI));
 } catch (error) {
   console.error('[Preload] ❌ FAILED to expose justiceAPI:', error);
   throw error;
