@@ -192,22 +192,22 @@ export function DashboardView({ onViewChange }: DashboardViewProps): JSX.Element
       <div className="max-w-7xl mx-auto">
         {/* Welcome Section */}
         <motion.div
-          className="mb-4"
+          className="mb-6"
           initial={prefersReducedMotion ? false : 'hidden'}
           animate="visible"
           variants={containerVariants}
         >
           <motion.div
-            className="glass-effect rounded-xl px-4 py-3 mb-4 border border-slate-700/50 shadow-2xl"
+            className="glass-effect rounded-xl px-6 py-5 mb-4 border border-slate-700/50 shadow-2xl bg-gradient-to-r from-slate-900/60 to-blue-900/40"
             variants={itemVariants}
           >
-            {/* Compact Welcome Header */}
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex-1">
-                <h1 className="text-xl font-bold bg-gradient-to-r from-blue-200 to-indigo-200 bg-clip-text text-transparent">
+            {/* Enhanced Welcome Header */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex-1 text-center sm:text-left">
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-300 via-indigo-300 to-purple-300 bg-clip-text text-transparent mb-2">
                   Welcome back
                 </h1>
-                <p className="text-sm text-blue-200/80">Your legal information assistant</p>
+                <p className="text-base text-blue-200/90">Your legal information assistant</p>
               </div>
             </div>
 
@@ -218,14 +218,26 @@ export function DashboardView({ onViewChange }: DashboardViewProps): JSX.Element
 
         {/* Error State */}
         {error && (
-          <div className="mb-4 bg-red-900/30 border-2 border-red-700/50 rounded-lg px-4 py-3 text-red-200 text-sm">
-            Failed to load dashboard data: {error}
-          </div>
+          <motion.div
+            className="mb-6 bg-gradient-to-r from-red-900/40 to-red-800/30 border-2 border-red-600/60 rounded-xl px-6 py-4 text-red-200 shadow-lg"
+            initial={prefersReducedMotion ? false : { opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="w-5 h-5 text-red-400" />
+              <div>
+                <p className="font-semibold mb-1">Failed to load dashboard data</p>
+                <p className="text-sm text-red-300/80">{error}</p>
+              </div>
+            </div>
+          </motion.div>
         )}
 
-        {/* Quick Actions - Moved before stats for better visibility */}
-        <div className="glass-effect rounded-xl px-4 py-4 mb-4 border border-slate-700/50">
-          <h2 className="text-lg font-bold text-white mb-3">Quick Actions</h2>
+        {/* Quick Actions - Enhanced with better styling */}
+        <div className="glass-effect rounded-xl px-6 py-6 mb-6 border border-slate-700/50 shadow-xl bg-gradient-to-br from-slate-900/50 to-blue-950/30">
+          <h2 className="text-2xl font-bold text-center sm:text-left bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent mb-5">
+            Quick Actions
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <QuickActionButton
               icon={MessageSquare}
@@ -257,117 +269,124 @@ export function DashboardView({ onViewChange }: DashboardViewProps): JSX.Element
           </div>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-          {loading ? (
-            <>
-              {Array.from({ length: 3 }).map((_, index) => (
-                <div
-                  key={index}
-                  className="bg-gradient-to-br from-slate-900/50 to-blue-950/50 rounded-xl p-6 shadow-lg"
-                  role="status"
-                  aria-label="Loading statistics"
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    <Skeleton className="w-8 h-8 rounded-lg" />
+        {/* Stats Grid - Enhanced */}
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-center sm:text-left bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent mb-5">
+            Overview
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {loading ? (
+              <>
+                {Array.from({ length: 3 }).map((_, index) => (
+                  <div
+                    key={index}
+                    className="bg-gradient-to-br from-slate-900/50 to-blue-950/50 rounded-xl p-6 shadow-lg"
+                    role="status"
+                    aria-label="Loading statistics"
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <Skeleton className="w-8 h-8 rounded-lg" />
+                    </div>
+                    <Skeleton className="h-8 w-16 mb-2" />
+                    <Skeleton className="h-4 w-24 mb-2" />
+                    <Skeleton className="h-3 w-20" />
                   </div>
-                  <Skeleton className="h-8 w-16 mb-2" />
-                  <Skeleton className="h-4 w-24 mb-2" />
-                  <Skeleton className="h-3 w-20" />
+                ))}
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={() => onViewChange('cases')}
+                  className="hover:scale-105 transition-transform cursor-pointer"
+                  aria-label="View active cases"
+                >
+                  <DashboardStatsCard
+                    icon={Scale}
+                    label="Active Cases"
+                    value={stats.activeCases.toString()}
+                    trend={
+                      <div className="flex items-center gap-1">
+                        <TrendIndicator type={stats.casesTrend.type} text={stats.casesTrend.text} />
+                      </div>
+                    }
+                    color="indigo"
+                    delay={0}
+                  />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onViewChange('documents')}
+                  className="hover:scale-105 transition-transform cursor-pointer"
+                  aria-label="View documents"
+                >
+                  <DashboardStatsCard
+                    icon={FileText}
+                    label="Documents"
+                    value={stats.documentsUploaded.toString()}
+                    trend={
+                      <div className="flex items-center gap-1">
+                        <TrendIndicator
+                          type={stats.documentsTrend.type}
+                          text={stats.documentsTrend.text}
+                        />
+                      </div>
+                    }
+                    color="purple"
+                    delay={0.1}
+                  />
+                </button>
+                <div className="cursor-default">
+                  <DashboardStatsCard
+                    icon={TrendingUp}
+                    label="Recent Activity"
+                    value={stats.recentActivity.toString()}
+                    trend={
+                      <div className="flex items-center gap-1">
+                        <TrendIndicator
+                          type={stats.activityTrend.type}
+                          text={stats.activityTrend.text}
+                        />
+                      </div>
+                    }
+                    color="cyan"
+                    delay={0.2}
+                  />
                 </div>
-              ))}
-            </>
-          ) : (
-            <>
-              <button
-                type="button"
-                onClick={() => onViewChange('cases')}
-                className="hover:scale-105 transition-transform cursor-pointer"
-                aria-label="View active cases"
-              >
-                <DashboardStatsCard
-                  icon={Scale}
-                  label="Active Cases"
-                  value={stats.activeCases.toString()}
-                  trend={
-                    <div className="flex items-center gap-1">
-                      <TrendIndicator type={stats.casesTrend.type} text={stats.casesTrend.text} />
-                    </div>
-                  }
-                  color="indigo"
-                  delay={0}
-                />
-              </button>
-              <button
-                type="button"
-                onClick={() => onViewChange('documents')}
-                className="hover:scale-105 transition-transform cursor-pointer"
-                aria-label="View documents"
-              >
-                <DashboardStatsCard
-                  icon={FileText}
-                  label="Documents"
-                  value={stats.documentsUploaded.toString()}
-                  trend={
-                    <div className="flex items-center gap-1">
-                      <TrendIndicator
-                        type={stats.documentsTrend.type}
-                        text={stats.documentsTrend.text}
-                      />
-                    </div>
-                  }
-                  color="purple"
-                  delay={0.1}
-                />
-              </button>
-              <div className="cursor-default">
-                <DashboardStatsCard
-                  icon={TrendingUp}
-                  label="Recent Activity"
-                  value={stats.recentActivity.toString()}
-                  trend={
-                    <div className="flex items-center gap-1">
-                      <TrendIndicator
-                        type={stats.activityTrend.type}
-                        text={stats.activityTrend.text}
-                      />
-                    </div>
-                  }
-                  color="cyan"
-                  delay={0.2}
-                />
-              </div>
-            </>
-          )}
+              </>
+            )}
+          </div>
         </div>
 
         {/* Recent Activity */}
         <motion.div
-          className="glass-effect rounded-xl px-6 py-6 border border-slate-700/50 shadow-2xl"
+          className="glass-effect rounded-xl px-6 py-6 border border-slate-700/50 shadow-2xl bg-gradient-to-br from-slate-900/50 to-blue-950/30"
           initial={prefersReducedMotion ? false : { opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5, duration: 0.6, ease: 'easeOut' as const }}
         >
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-white">Recent Activity</h2>
+            <h2 className="text-2xl font-bold bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
+              Recent Activity
+            </h2>
             <div className="flex items-center gap-2 px-3 py-1 glass-effect rounded-lg border border-blue-500/30">
               <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
               <span className="text-sm text-blue-300 font-medium">Live Updates</span>
             </div>
           </div>
 
-          {/* Empty State - Compact */}
+          {/* Empty State - Enhanced */}
           <motion.div
-            className="text-center py-8"
+            className="text-center py-12"
             initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.7, duration: 0.4 }}
           >
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-blue-600/20 to-indigo-600/20 border border-blue-500/30 mb-3">
-              <TrendingUp className="w-6 h-6 text-blue-400/60" />
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-blue-600/30 to-indigo-600/30 border-2 border-blue-500/40 mb-4 shadow-lg">
+              <TrendingUp className="w-8 h-8 text-blue-400" />
             </div>
-            <p className="text-slate-400 text-sm mb-1">No recent activity</p>
-            <p className="text-slate-500 text-xs">Your recent actions will appear here</p>
+            <p className="text-slate-300 text-base font-medium mb-2">No recent activity</p>
+            <p className="text-slate-500 text-sm">Your recent actions will appear here</p>
           </motion.div>
         </motion.div>
       </div>
