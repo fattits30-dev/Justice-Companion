@@ -2,12 +2,12 @@ import { getDb } from '../db/database';
 import type {
   ChatConversation,
   ChatMessage,
+  ConversationWithMessages,
   CreateConversationInput,
   CreateMessageInput,
-  ConversationWithMessages,
 } from '../models/ChatConversation';
-import { EncryptionService, type EncryptedData } from '../services/EncryptionService.js';
 import type { AuditLogger } from '../services/AuditLogger.js';
+import { EncryptionService, type EncryptedData } from '../services/EncryptionService.js';
 import { errorLogger } from '../utils/error-logger';
 
 /**
@@ -30,11 +30,11 @@ class ChatConversationRepository {
 
     try {
       const stmt = db.prepare(`
-        INSERT INTO chat_conversations (case_id, title)
-        VALUES (?, ?)
+        INSERT INTO chat_conversations (case_id, user_id, title)
+        VALUES (?, ?, ?)
       `);
 
-      const result = stmt.run(input.caseId ?? null, input.title);
+      const result = stmt.run(input.caseId ?? null, input.userId, input.title);
 
       return this.findById(result.lastInsertRowid as number)!;
     } catch (error) {
@@ -53,7 +53,7 @@ class ChatConversationRepository {
 
     try {
       const stmt = db.prepare(`
-        SELECT id, case_id as caseId, title, created_at as createdAt,
+        SELECT id, case_id as caseId, user_id as userId, title, created_at as createdAt,
                updated_at as updatedAt, message_count as messageCount
         FROM chat_conversations
         WHERE id = ?
@@ -69,9 +69,9 @@ class ChatConversationRepository {
   }
 
   /**
-   * Find all conversations (optionally filtered by case)
+   * Find all conversations for a user (optionally filtered by case)
    */
-  findAll(caseId?: number | null): ChatConversation[] {
+  findAll(userId: number, caseId?: number | null): ChatConversation[] {
     const db = getDb();
 
     try {
@@ -79,23 +79,26 @@ class ChatConversationRepository {
 
       if (caseId !== undefined) {
         stmt = db.prepare(`
-          SELECT id, case_id as caseId, title, created_at as createdAt,
+          SELECT id, case_id as caseId, user_id as userId, title, created_at as createdAt,
                  updated_at as updatedAt, message_count as messageCount
           FROM chat_conversations
-          WHERE case_id ${caseId === null ? 'IS NULL' : '= ?'}
+          WHERE user_id = ? AND case_id ${caseId === null ? 'IS NULL' : '= ?'}
           ORDER BY updated_at DESC
         `);
 
-        return (caseId === null ? stmt.all() : stmt.all(caseId)) as ChatConversation[];
+        return (
+          caseId === null ? stmt.all(userId) : stmt.all(userId, caseId)
+        ) as ChatConversation[];
       } else {
         stmt = db.prepare(`
-          SELECT id, case_id as caseId, title, created_at as createdAt,
+          SELECT id, case_id as caseId, user_id as userId, title, created_at as createdAt,
                  updated_at as updatedAt, message_count as messageCount
           FROM chat_conversations
+          WHERE user_id = ?
           ORDER BY updated_at DESC
         `);
 
-        return stmt.all() as ChatConversation[];
+        return stmt.all(userId) as ChatConversation[];
       }
     } catch (error) {
       errorLogger.logError(error as Error, {
@@ -106,22 +109,24 @@ class ChatConversationRepository {
   }
 
   /**
-   * Get recent conversations for a case (limit 10)
+   * Get recent conversations for a user and case (limit 10)
    */
-  findRecentByCase(caseId: number | null, limit: number = 10): ChatConversation[] {
+  findRecentByCase(userId: number, caseId: number | null, limit: number = 10): ChatConversation[] {
     const db = getDb();
 
     try {
       const stmt = db.prepare(`
-        SELECT id, case_id as caseId, title, created_at as createdAt,
+        SELECT id, case_id as caseId, user_id as userId, title, created_at as createdAt,
                updated_at as updatedAt, message_count as messageCount
         FROM chat_conversations
-        WHERE case_id ${caseId === null ? 'IS NULL' : '= ?'}
+        WHERE user_id = ? AND case_id ${caseId === null ? 'IS NULL' : '= ?'}
         ORDER BY updated_at DESC
         LIMIT ?
       `);
 
-      return (caseId === null ? stmt.all(limit) : stmt.all(caseId, limit)) as ChatConversation[];
+      return (
+        caseId === null ? stmt.all(userId, limit) : stmt.all(userId, caseId, limit)
+      ) as ChatConversation[];
     } catch (error) {
       errorLogger.logError(error as Error, {
         context: 'ChatConversationRepository.findRecentByCase',
@@ -224,9 +229,9 @@ class ChatConversationRepository {
         input.thinkingContent === null || input.thinkingContent === undefined
           ? null
           : (() => {
-            const encryptedThinking = encryption.encrypt(input.thinkingContent);
-            return encryptedThinking ? JSON.stringify(encryptedThinking) : null;
-          })();
+              const encryptedThinking = encryption.encrypt(input.thinkingContent);
+              return encryptedThinking ? JSON.stringify(encryptedThinking) : null;
+            })();
 
       const stmt = db.prepare(`
         INSERT INTO chat_messages (conversation_id, role, content, thinking_content, token_count)
@@ -238,7 +243,7 @@ class ChatConversationRepository {
         input.role,
         contentToStore,
         thinkingContentToStore,
-        input.tokenCount ?? null,
+        input.tokenCount ?? null
       );
 
       // Get the inserted message
@@ -339,6 +344,28 @@ class ChatConversationRepository {
    */
   setAuditLogger(logger: AuditLogger): void {
     this.auditLogger = logger;
+  }
+
+  /**
+   * Verify that a user owns a conversation
+   * Returns true if the conversation exists and belongs to the user
+   */
+  verifyOwnership(conversationId: number, userId: number): boolean {
+    const db = getDb();
+
+    try {
+      const stmt = db.prepare(`
+        SELECT 1 FROM chat_conversations
+        WHERE id = ? AND user_id = ?
+      `);
+
+      return stmt.get(conversationId, userId) !== undefined;
+    } catch (error) {
+      errorLogger.logError(error as Error, {
+        context: 'ChatConversationRepository.verifyOwnership',
+      });
+      throw error;
+    }
   }
 }
 

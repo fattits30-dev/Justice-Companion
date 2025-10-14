@@ -1,6 +1,7 @@
 export interface ChatConversation {
   id: number;
   caseId: number | null; // Nullable: can have general chats without case context
+  userId: number; // Owner of the conversation (for authorization)
   title: string;
   createdAt: string;
   updatedAt: string;
@@ -19,6 +20,7 @@ export interface ChatMessage {
 
 export interface CreateConversationInput {
   caseId?: number | null;
+  userId: number; // Required: identifies conversation owner
   title: string;
 }
 

@@ -28,13 +28,11 @@ These handlers require a valid session but no resource ownership checks. They ar
 #### Authentication Handlers
 
 - [ ] **AUTH_LOGOUT** (line ~3147)
-
   - Current: Manual session check + async logout
   - Migration: `authWrapper.wrapAuthenticated()`
   - Test: Logout with valid/invalid session
 
 - [ ] **AUTH_GET_CURRENT_USER** (line ~3188)
-
   - Current: Manual session validation
   - Migration: `authWrapper.wrapAuthenticated()`
   - Test: Get user with valid/expired session
@@ -47,7 +45,6 @@ These handlers require a valid session but no resource ownership checks. They ar
 #### Profile Handlers
 
 - [ ] **PROFILE_GET** (line ~TBD)
-
   - Current: Manual session check
   - Migration: `authWrapper.wrapAuthenticated()`
   - Test: Get profile with valid session
@@ -60,13 +57,11 @@ These handlers require a valid session but no resource ownership checks. They ar
 #### Case Handlers (Non-Ownership)
 
 - [ ] **CASE_GET_ALL** (line ~TBD)
-
   - Current: Manual session check + user filtering
   - Migration: `authWrapper.wrapAuthenticated()`
   - Test: Get all cases for authenticated user
 
 - [ ] **CASE_CREATE** (line ~TBD)
-
   - Current: Manual session check + validation
   - Migration: `authWrapper.wrapAuthenticated()`
   - Test: Create case with valid session
@@ -79,13 +74,11 @@ These handlers require a valid session but no resource ownership checks. They ar
 #### AI Handlers
 
 - [ ] **AI_CHECK_STATUS** (line ~TBD)
-
   - Current: Manual session check
   - Migration: `authWrapper.wrapAuthenticated()`
   - Test: Check AI status with valid session
 
 - [ ] **AI_CONFIGURE** (line ~TBD)
-
   - Current: Manual session check
   - Migration: `authWrapper.wrapAuthenticated()` with `rateLimit: true`
   - Test: Configure AI with rate limiting
@@ -98,19 +91,16 @@ These handlers require a valid session but no resource ownership checks. They ar
 #### Consent Handlers
 
 - [ ] **CONSENT_GRANT** (line ~3279)
-
   - Current: Manual session check + validation
   - Migration: `authWrapper.wrapAuthenticated()`
   - Test: Grant consent with valid session
 
 - [ ] **CONSENT_REVOKE** (line ~3326)
-
   - Current: Manual session check + validation + mandatory consent protection
   - Migration: `authWrapper.wrapAuthenticated()`
   - Test: Revoke non-mandatory consent
 
 - [ ] **CONSENT_HAS_CONSENT** (line ~3373)
-
   - Current: Manual session check + validation
   - Migration: `authWrapper.wrapAuthenticated()`
   - Test: Check consent status
@@ -123,7 +113,6 @@ These handlers require a valid session but no resource ownership checks. They ar
 #### GDPR Handlers
 
 - [ ] **GDPR_EXPORT_USER_DATA** (line ~TBD)
-
   - Current: Manual session check
   - Migration: `authWrapper.wrapAuthenticated()` with `rateLimit: true`
   - Test: Export data with rate limiting (expensive operation)
@@ -135,6 +124,54 @@ These handlers require a valid session but no resource ownership checks. They ar
 
 ---
 
+### Phase 4: COMPLETED - Chat Conversation Authorization ✅
+
+**Summary**: Implemented user_id ownership for chat conversations to enable secure general AI conversations (not tied to cases).
+
+**Problem**: Chat conversations lacked user_id column, blocking general AI conversations. 5 IPC handlers had security TODOs preventing non-case-based chat usage.
+
+**Solution**:
+
+1. ✅ Updated TypeScript types (`ChatConversation.ts`) - Added `userId: number` to interfaces
+2. ✅ Updated repository layer (`ChatConversationRepository.ts`) - Added user_id to all SQL queries, implemented `verifyOwnership()`
+3. ✅ Updated service layer (`ChatConversationService.ts`) - Added userId parameters, ownership verification
+4. ✅ Fixed 5 IPC handlers in `electron/main.ts`:
+   - `CONVERSATION_CREATE` (line 2220) - Passes userId to create
+   - `CONVERSATION_GET` (line 2265) - Uses verifyOwnership()
+   - `CONVERSATION_LOAD_WITH_MESSAGES` (line 2365) - Uses verifyOwnership()
+   - `CONVERSATION_DELETE` (line 2394) - Uses verifyOwnership()
+   - `CONVERSATION_ADD_MESSAGE` (line 2441) - Uses verifyOwnership()
+5. ✅ Updated 8 peripheral calls to `getAllConversations(userId)` (GDPR handlers, statistics)
+
+**Migration**: Uses existing `011_add_user_ownership.sql` (already applied)
+
+**Security Impact**:
+
+- Users can now create general AI conversations securely
+- All conversations are row-level secured by user_id
+- Case-based and general conversations both protected
+
+**Testing Required**:
+
+- [ ] Create general conversation (no caseId) as User A
+- [ ] Verify User B cannot access User A's conversation
+- [ ] Verify case-based conversations still work
+- [ ] Test GDPR export includes user's conversations
+- [ ] Test GDPR delete removes user's conversations
+
+**Files Modified**:
+
+- `src/models/ChatConversation.ts`
+- `src/repositories/ChatConversationRepository.ts`
+- `src/services/ChatConversationService.ts`
+- `electron/main.ts` (5 handlers + 8 getAllConversations calls)
+
+**Related Documentation**:
+
+- `CHAT_CONVERSATIONS_USER_ID_RESEARCH.md` (implementation plan)
+
+---
+
 ### Phase 2: CRITICAL - AUTHORIZED Handlers (15 handlers)
 
 These handlers require resource ownership verification. Critical for data security.
@@ -142,19 +179,16 @@ These handlers require resource ownership verification. Critical for data securi
 #### Case Handlers (Ownership Required)
 
 - [ ] **CASE_GET_BY_ID** (line ~TBD)
-
   - Current: Manual ownership check via `authorizationMiddleware.verifyCaseOwnership()`
   - Migration: `authWrapper.wrapAuthorized(ResourceType.CASE, req => req.id)`
   - Test: Access own case (success), access other's case (fail)
 
 - [ ] **CASE_UPDATE** (line ~TBD)
-
   - Current: Manual ownership check
   - Migration: `authWrapper.wrapAuthorized(ResourceType.CASE, req => req.id)`
   - Test: Update own case, attempt to update other's case
 
 - [ ] **CASE_DELETE** (line ~TBD)
-
   - Current: Manual ownership check
   - Migration: `authWrapper.wrapAuthorized(ResourceType.CASE, req => req.id)`
   - Test: Delete own case, attempt to delete other's case
@@ -167,25 +201,21 @@ These handlers require resource ownership verification. Critical for data securi
 #### Evidence Handlers
 
 - [ ] **EVIDENCE_CREATE** (line ~TBD)
-
   - Current: Manual case ownership check (via caseId)
   - Migration: `authWrapper.wrapAuthorized(ResourceType.CASE, req => req.caseId)`
   - Test: Create evidence for own case
 
 - [ ] **EVIDENCE_GET_BY_ID** (line ~TBD)
-
   - Current: Manual evidence ownership check
   - Migration: `authWrapper.wrapAuthorized(ResourceType.EVIDENCE, req => req.id)`
   - Test: Get own evidence, attempt to get other's evidence
 
 - [ ] **EVIDENCE_UPDATE** (line ~TBD)
-
   - Current: Manual ownership check
   - Migration: `authWrapper.wrapAuthorized(ResourceType.EVIDENCE, req => req.id)`
   - Test: Update own evidence
 
 - [ ] **EVIDENCE_DELETE** (line ~TBD)
-
   - Current: Manual ownership check
   - Migration: `authWrapper.wrapAuthorized(ResourceType.EVIDENCE, req => req.id)`
   - Test: Delete own evidence
@@ -198,7 +228,6 @@ These handlers require resource ownership verification. Critical for data securi
 #### File Handlers
 
 - [ ] **FILE_UPLOAD** (line ~TBD)
-
   - Current: Manual case ownership check
   - Migration: `authWrapper.wrapAuthorized(ResourceType.CASE, req => req.caseId)`
   - Test: Upload file to own case
@@ -211,13 +240,11 @@ These handlers require resource ownership verification. Critical for data securi
 #### Conversation Handlers
 
 - [ ] **CONVERSATION_CREATE** (line ~TBD)
-
   - Current: Manual case ownership check (if caseId provided)
   - Migration: Custom wrapper with `additionalCheck` for optional caseId
   - Test: Create general conversation, create case-linked conversation
 
 - [ ] **CONVERSATION_GET** (line ~TBD)
-
   - Current: Manual ownership check
   - Migration: `authWrapper.wrapAuthorized(ResourceType.CONVERSATION, req => req.id)`
   - Test: Get own conversation
@@ -243,34 +270,29 @@ These handlers require admin role. **3 handlers now secured ✅**
 #### Dev API Handlers
 
 - [x] **dev-api:database:query** (line ~2869) ✅ **COMPLETED 2025-10-14**
-
   - Current: ~~NO authorization~~ → **NOW: Admin role check**
   - Implementation: Manual `currentSessionId` check + `user.role !== 'admin'` guard
   - Security: Prevents unauthorized SQL queries
   - Test: ✅ Admin can query, ✅ Regular user blocked, ✅ Unauthenticated blocked
 
 - [x] **dev-api:database:migrate** (line ~2895) ✅ **COMPLETED 2025-10-14**
-
   - Current: ~~NO authorization~~ → **NOW: Admin role check**
   - Implementation: Manual `currentSessionId` check + `user.role !== 'admin'` guard
   - Security: Prevents unauthorized database migrations (critical!)
   - Test: ✅ Admin can migrate, ✅ Regular user blocked, ✅ Unauthenticated blocked
 
 - [x] **dev-api:database:backup** (line ~2907) ✅ **COMPLETED 2025-10-14**
-
   - Current: ~~NO authorization~~ → **NOW: Admin role check**
   - Implementation: Manual `currentSessionId` check + `user.role !== 'admin'` guard
   - Security: Prevents unauthorized database backups/data exfiltration
   - Test: ✅ Admin can backup, ✅ Regular user blocked, ✅ Unauthenticated blocked
 
 - [ ] **dev-api:logs:get** (line ~TBD)
-
   - Current: NO authorization
   - Migration: `authWrapper.wrapAdmin()`
   - Test: Admin can access logs
 
 - [ ] **dev-api:system:info** (line ~TBD)
-
   - Current: NO authorization
   - Migration: `authWrapper.wrapAdmin()`
   - Test: Admin can get system info
@@ -284,7 +306,6 @@ These handlers require admin role. **3 handlers now secured ✅**
 These handlers work correctly but migration adds consistency.
 
 - [ ] **AUTH_REGISTER** (line ~3069)
-
   - Current: Manual validation
   - Migration: `authWrapper.wrapPublic()`
   - Test: Register without authentication

@@ -22,7 +22,6 @@ import { userFactsRepository } from '../src/repositories/UserFactsRepository';
 import { userProfileRepository } from '../src/repositories/UserProfileRepository';
 import { UserRepository } from '../src/repositories/UserRepository';
 import { aiServiceFactory } from '../src/services/AIServiceFactory';
-import { ensureAIServicesReady } from './ai-lazy-loader';
 import { AuditLogger } from '../src/services/AuditLogger';
 import type { SessionPersistenceHandler } from '../src/services/AuthenticationService';
 import { AuthenticationService } from '../src/services/AuthenticationService';
@@ -40,10 +39,7 @@ import type {
   AIConfigureRequest,
   AIStreamStartRequest,
   AITestConnectionRequest,
-  AuthChangePasswordRequest,
-  AuthGetCurrentUserRequest,
   AuthLoginRequest,
-  AuthLogoutRequest,
   AuthRegisterRequest,
   CaseCloseRequest,
   CaseCreateRequest,
@@ -52,10 +48,6 @@ import type {
   CaseGetByIdRequest,
   CaseGetStatisticsRequest,
   CaseUpdateRequest,
-  ConsentGetUserConsentsRequest,
-  ConsentGrantRequest,
-  ConsentHasConsentRequest,
-  ConsentRevokeRequest,
   ConversationCreateRequest,
   ConversationDeleteRequest,
   ConversationGetAllRequest,
@@ -83,6 +75,7 @@ import type {
 } from '../src/types/ipc';
 import { IPC_CHANNELS } from '../src/types/ipc';
 import { errorLogger, setupGlobalErrorHandlers } from '../src/utils/error-logger';
+import { ensureAIServicesReady } from './ai-lazy-loader';
 import { AuthorizationWrapper } from './authorization-wrapper';
 import { DevAPIServer } from './dev-api-server.js';
 
@@ -120,9 +113,9 @@ let userRepository: UserRepository;
 let sessionRepository: SessionRepository;
 let consentRepository: ConsentRepository;
 let authenticationService: AuthenticationService;
-let consentService: ConsentService;
+let _consentService: ConsentService; // Reserved for future GDPR implementation
 let authorizationMiddleware: AuthorizationMiddleware;
-let authWrapper: AuthorizationWrapper;
+let _authWrapper: AuthorizationWrapper; // Reserved for AuthorizationWrapper migration (see AUTHORIZATION_MIGRATION_TODO.md)
 
 // Validation middleware (initialized here, ready to use)
 const validationMiddleware = new ValidationMiddleware();
@@ -257,11 +250,27 @@ const startupMetrics = {
 function logStartupMetrics() {
   const total = Date.now() - startupMetrics.moduleLoad;
   console.log('\n========== STARTUP PERFORMANCE ==========');
-  console.log(`Loading window shown:        ${startupMetrics.loadingWindowShown - startupMetrics.appReady}ms`);
-  console.log(`Critical services ready:     ${startupMetrics.criticalServicesReady - startupMetrics.appReady}ms`);
-  console.log(`Main window shown:           ${startupMetrics.mainWindowShown - startupMetrics.appReady}ms`);
-  console.log(`Non-critical services ready: ${startupMetrics.nonCriticalServicesReady - startupMetrics.appReady}ms`);
-  console.log(`All handlers registered:     ${startupMetrics.allHandlersRegistered - startupMetrics.appReady}ms`);
+  console.log(
+    `Loading window shown:        ${startupMetrics.loadingWindowShown - startupMetrics.appReady}ms`
+  );
+  console.log(
+    `Critical services ready:     ${
+      startupMetrics.criticalServicesReady - startupMetrics.appReady
+    }ms`
+  );
+  console.log(
+    `Main window shown:           ${startupMetrics.mainWindowShown - startupMetrics.appReady}ms`
+  );
+  console.log(
+    `Non-critical services ready: ${
+      startupMetrics.nonCriticalServicesReady - startupMetrics.appReady
+    }ms`
+  );
+  console.log(
+    `All handlers registered:     ${
+      startupMetrics.allHandlersRegistered - startupMetrics.appReady
+    }ms`
+  );
   console.log(`TOTAL STARTUP TIME:          ${total}ms`);
   console.log('=========================================\n');
 
@@ -398,9 +407,9 @@ async function initializeCriticalServices(): Promise<void> {
     auditLogger,
     sessionPersistenceHandler
   );
-  consentService = new ConsentService(consentRepository, auditLogger);
+  _consentService = new ConsentService(consentRepository, auditLogger);
   authorizationMiddleware = new AuthorizationMiddleware(caseRepository, auditLogger);
-  authWrapper = new AuthorizationWrapper(
+  _authWrapper = new AuthorizationWrapper(
     authenticationService,
     authorizationMiddleware,
     sessionRepository,
@@ -417,14 +426,15 @@ async function initializeCriticalServices(): Promise<void> {
   console.log(`[Startup] Phase 3 (Auth Services): ${Date.now() - startTime}ms`);
 
   // Phase 4: Restore persisted session (non-blocking for speed)
-  authenticationService.restorePersistedSession()
-    .then(restored => {
+  authenticationService
+    .restorePersistedSession()
+    .then((restored) => {
       if (restored) {
         currentSessionId = restored.session.id;
         errorLogger.logError('Session restored successfully', { type: 'info' });
       }
     })
-    .catch(error => {
+    .catch((error) => {
       console.error('[Main] Error restoring persisted session:', error);
       errorLogger.logError(error as Error, { context: 'session:restore' });
     });
@@ -2221,13 +2231,16 @@ function setupIpcHandlers() {
         // Authorization: If caseId provided, verify user owns the case
         const userId = getCurrentUserIdFromSession();
 
-        // TODO: Add user_id column to chat_conversations table for proper ownership
-        // Currently, conversations without caseId cannot be secured (security gap)
         if (request.input.caseId) {
           authorizationMiddleware.verifyCaseOwnership(request.input.caseId, userId);
         }
 
-        const conversation = chatConversationService.createConversation(request.input);
+        // Pass userId to create conversation with owner
+        const conversation = chatConversationService.createConversation({
+          ...request.input,
+          userId,
+        });
+
         return { success: true, data: conversation };
       } catch (error) {
         errorLogger.logError(error as Error, { context: 'ipc:conversation:create' });
@@ -2262,15 +2275,11 @@ function setupIpcHandlers() {
       // 2. Get conversation first to check caseId
       const conversation = chatConversationService.getConversation(validatedData.id);
 
-      // 3. AUTHORIZATION: Verify user owns the case (if conversation has caseId)
+      // 3. AUTHORIZATION: Verify user owns the conversation via user_id
       const userId = getCurrentUserIdFromSession();
 
-      if (conversation && conversation.caseId) {
-        authorizationMiddleware.verifyCaseOwnership(conversation.caseId, userId);
-      } else if (conversation && !conversation.caseId) {
-        // TODO: Security gap - conversations without caseId can't be secured
-        // Block access until user_id column is added to chat_conversations table
-        throw new Error('Unauthorized: Cannot access general conversations without case context');
+      if (conversation) {
+        chatConversationService.verifyOwnership(conversation.id, userId);
       }
 
       return { success: true, data: conversation };
@@ -2295,22 +2304,14 @@ function setupIpcHandlers() {
         if (request.caseId) {
           authorizationMiddleware.verifyCaseOwnership(request.caseId, userId);
           // Get conversations for this specific case
-          const conversations = chatConversationService.getAllConversations(request.caseId);
+          const conversations = chatConversationService.getAllConversations(userId, request.caseId);
           return { success: true, data: conversations };
         }
 
-        // No caseId provided - filter to user's cases only
-        const userCases = caseRepository.findAll().filter((c) => c.userId === userId);
-        const userCaseIds = new Set(userCases.map((c) => c.id));
+        // No caseId provided - get all user's conversations (both case-based and general)
+        const allConversations = chatConversationService.getAllConversations(userId);
 
-        const allConversations = chatConversationService.getAllConversations();
-        // Filter to only conversations linked to user's cases
-        // Excludes general chats (caseId=null) for security
-        const userConversations = allConversations.filter(
-          (conv) => conv.caseId && userCaseIds.has(conv.caseId)
-        );
-
-        return { success: true, data: userConversations };
+        return { success: true, data: allConversations };
       } catch (error) {
         errorLogger.logError(error as Error, { context: 'ipc:conversation:getAll' });
         return {
@@ -2334,6 +2335,7 @@ function setupIpcHandlers() {
         }
 
         const conversations = chatConversationService.getRecentConversationsByCase(
+          userId,
           request.caseId,
           request.limit
         );
@@ -2356,14 +2358,11 @@ function setupIpcHandlers() {
         // Get conversation first to check caseId
         const conversation = chatConversationService.loadConversation(request.conversationId);
 
-        // Authorization: Verify user owns the case (if conversation has caseId)
+        // Authorization: Verify user owns the conversation via user_id
         const userId = getCurrentUserIdFromSession();
 
-        if (conversation && conversation.caseId) {
-          authorizationMiddleware.verifyCaseOwnership(conversation.caseId, userId);
-        } else if (conversation && !conversation.caseId) {
-          // TODO: Security gap - conversations without caseId can't be secured
-          throw new Error('Unauthorized: Cannot access general conversations without case context');
+        if (conversation) {
+          chatConversationService.verifyOwnership(conversation.id, userId);
         }
 
         return { success: true, data: conversation };
@@ -2385,14 +2384,11 @@ function setupIpcHandlers() {
         // Get conversation first to check caseId
         const conversation = chatConversationService.getConversation(request.id);
 
-        // Authorization: Verify user owns the case (if conversation has caseId)
+        // Authorization: Verify user owns the conversation via user_id
         const userId = getCurrentUserIdFromSession();
 
-        if (conversation && conversation.caseId) {
-          authorizationMiddleware.verifyCaseOwnership(conversation.caseId, userId);
-        } else if (conversation && !conversation.caseId) {
-          // TODO: Security gap - conversations without caseId can't be secured
-          throw new Error('Unauthorized: Cannot delete general conversations without case context');
+        if (conversation) {
+          chatConversationService.verifyOwnership(conversation.id, userId);
         }
 
         chatConversationService.deleteConversation(request.id);
@@ -2432,16 +2428,11 @@ function setupIpcHandlers() {
         validatedData.input.conversationId
       );
 
-      // 3. AUTHORIZATION: Verify user owns the case (if conversation has caseId)
+      // 3. AUTHORIZATION: Verify user owns the conversation via user_id
       const userId = getCurrentUserIdFromSession();
 
-      if (conversation && conversation.caseId) {
-        authorizationMiddleware.verifyCaseOwnership(conversation.caseId, userId);
-      } else if (conversation && !conversation.caseId) {
-        // TODO: Security gap - conversations without caseId can't be secured
-        throw new Error(
-          'Unauthorized: Cannot add messages to general conversations without case context'
-        );
+      if (conversation) {
+        chatConversationService.verifyOwnership(conversation.id, userId);
       }
 
       // 4. BUSINESS LOGIC: Add validated message
@@ -2789,11 +2780,8 @@ function setupIpcHandlers() {
 
         const profile = userProfileService.getProfile();
 
-        // Filter conversations to user's cases only (excludes general chats)
-        const allConversations = chatConversationService.getAllConversations();
-        const conversations = allConversations.filter(
-          (conv) => conv.caseId && caseIds.has(conv.caseId)
-        );
+        // Get user's conversations (both case-based and general)
+        const conversations = chatConversationService.getAllConversations(userId);
 
         // Gather case-related data by iterating through cases
         const notes: unknown[] = [];
@@ -2975,11 +2963,9 @@ function setupIpcHandlers() {
         const allEvidence = evidenceRepository.findAll();
         const evidenceCount = allEvidence.filter((e) => caseIds.has(e.caseId)).length;
 
-        // Count conversations linked to user's cases
-        const allConversations = chatConversationService.getAllConversations();
-        const conversationsCount = allConversations.filter(
-          (conv) => conv.caseId && caseIds.has(conv.caseId)
-        ).length;
+        // Count user's conversations (both case-based and general)
+        const conversations = chatConversationService.getAllConversations(userId);
+        const conversationsCount = conversations.length;
 
         // Count case-related records
         let notesCount = 0;
@@ -2996,10 +2982,10 @@ function setupIpcHandlers() {
           caseFactsCount += caseFactsRepository.findByCaseId(c.id).length;
         }
 
-        // Count messages
+        // Count messages from user's conversations
         let messagesCount = 0;
-        const conversations = chatConversationService.getAllConversations();
-        for (const conv of conversations) {
+        const userConversations = chatConversationService.getAllConversations(userId);
+        for (const conv of userConversations) {
           const convWithMessages = chatConversationService.loadConversation(conv.id);
           if (convWithMessages && convWithMessages.messages) {
             messagesCount += convWithMessages.messages.length;
@@ -3494,7 +3480,9 @@ app.whenReady().then(async () => {
     // Show error dialog
     dialog.showErrorBox(
       'Startup Failed',
-      `Justice Companion failed to start:\n\n${error instanceof Error ? error.message : 'Unknown error'}\n\nPlease check the logs and try again.`
+      `Justice Companion failed to start:\n\n${
+        error instanceof Error ? error.message : 'Unknown error'
+      }\n\nPlease check the logs and try again.`
     );
 
     app.exit(1);

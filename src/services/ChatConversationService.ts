@@ -1,11 +1,11 @@
-import { chatConversationRepository } from '../repositories/ChatConversationRepository';
 import type {
   ChatConversation,
   ChatMessage,
+  ConversationWithMessages,
   CreateConversationInput,
   CreateMessageInput,
-  ConversationWithMessages,
 } from '../models/ChatConversation';
+import { chatConversationRepository } from '../repositories/ChatConversationRepository';
 import { errorLogger } from '../utils/error-logger';
 
 class ChatConversationService {
@@ -39,11 +39,11 @@ class ChatConversationService {
   }
 
   /**
-   * Get all conversations (optionally filtered by case)
+   * Get all conversations for a user (optionally filtered by case)
    */
-  getAllConversations(caseId?: number | null): ChatConversation[] {
+  getAllConversations(userId: number, caseId?: number | null): ChatConversation[] {
     try {
-      return chatConversationRepository.findAll(caseId);
+      return chatConversationRepository.findAll(userId, caseId);
     } catch (error) {
       errorLogger.logError(error as Error, {
         context: 'ChatConversationService.getAllConversations',
@@ -56,9 +56,13 @@ class ChatConversationService {
    * Get recent conversations for a specific case
    * Used for sidebar "Recent Chats" section
    */
-  getRecentConversationsByCase(caseId: number | null, limit: number = 10): ChatConversation[] {
+  getRecentConversationsByCase(
+    userId: number,
+    caseId: number | null,
+    limit: number = 10
+  ): ChatConversation[] {
     try {
-      return chatConversationRepository.findRecentByCase(caseId, limit);
+      return chatConversationRepository.findRecentByCase(userId, caseId, limit);
     } catch (error) {
       errorLogger.logError(error as Error, {
         context: 'ChatConversationService.getRecentConversationsByCase',
@@ -116,15 +120,17 @@ class ChatConversationService {
    * Helper method used when starting a new chat
    */
   startNewConversation(
+    userId: number,
     caseId: number | null,
-    firstMessage: { role: 'user' | 'assistant'; content: string; thinkingContent?: string },
+    firstMessage: { role: 'user' | 'assistant'; content: string; thinkingContent?: string }
   ): ConversationWithMessages {
     try {
       // Generate title from first user message (truncate at 50 chars)
-      const title = firstMessage.content.substring(0, 50).trim() +
+      const title =
+        firstMessage.content.substring(0, 50).trim() +
         (firstMessage.content.length > 50 ? '...' : '');
 
-      const conversation = this.createConversation({ caseId, title });
+      const conversation = this.createConversation({ userId, caseId, title });
 
       const message = this.addMessage({
         conversationId: conversation.id,
@@ -140,6 +146,24 @@ class ChatConversationService {
     } catch (error) {
       errorLogger.logError(error as Error, {
         context: 'ChatConversationService.startNewConversation',
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Verify that a user owns a conversation
+   * Throws error if user does not own the conversation
+   */
+  verifyOwnership(conversationId: number, userId: number): void {
+    try {
+      const isOwner = chatConversationRepository.verifyOwnership(conversationId, userId);
+      if (!isOwner) {
+        throw new Error(`Unauthorized: User ${userId} does not own conversation ${conversationId}`);
+      }
+    } catch (error) {
+      errorLogger.logError(error as Error, {
+        context: 'ChatConversationService.verifyOwnership',
       });
       throw error;
     }
