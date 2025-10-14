@@ -221,9 +221,10 @@ function AuthenticatedApp(): JSX.Element {
 
       {/* Main Content Area - Positioned to account for fixed sidebar */}
       <div
-        className={`flex flex-1 flex-col overflow-hidden transition-[margin] duration-300 ease-in-out ${
-          sidebarExpanded ? 'ml-64' : 'ml-12'
-        }`}
+        className="flex flex-1 flex-col overflow-hidden transition-all duration-300 ease-in-out"
+        style={{
+          marginLeft: sidebarExpanded ? '256px' : '48px',
+        }}
         role="main"
       >
         {/* Top bar - no menu button, just title */}
