@@ -196,57 +196,75 @@ export function Sidebar({
 
   return (
     <>
-      {/* Sidebar - always visible, width changes based on isExpanded */}
-      <div
-        className={`fixed inset-y-0 left-0 bg-gradient-to-b from-slate-900 via-blue-950 to-slate-900 border-r border-white/10 flex flex-col z-50 shadow-2xl transition-all duration-300 ease-in-out ${
-          isExpanded ? 'w-64' : 'w-14'
-        }`}
+      {/* Sidebar - Modern 2025 Design: Ultra-compact collapsed (48px), sleek expanded (256px) */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 flex flex-col ${
+          isExpanded ? 'w-64' : 'w-12'
+        } bg-gradient-to-b from-slate-900/95 via-blue-950/95 to-slate-900/95 border-r border-white/5 shadow-2xl backdrop-blur-xl transition-[width] duration-300 ease-in-out`}
+        aria-label="Main navigation"
       >
-        {/* Logo - always visible at top */}
-        <div
-          className={`border-b border-blue-800/30 bg-slate-900/50 flex items-center justify-center ${
-            isExpanded ? 'p-2' : 'py-2 px-1'
-          }`}
+        {/* Logo - Minimal and modern */}
+        <header
+          className={`flex items-center justify-center h-14 ${
+            isExpanded ? 'px-3' : 'px-0'
+          } bg-slate-900/30 border-b border-blue-800/20 transition-[padding] duration-300`}
         >
           {isExpanded ? (
-            <div className="flex items-center space-x-2 w-full px-1">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg ring-2 ring-blue-400/20">
-                <span className="text-white font-bold text-sm">⚖️</span>
+            <div className="flex items-center gap-2.5 w-full">
+              <div className="w-7 h-7 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center shadow-lg ring-1 ring-blue-400/30 transition-transform hover:scale-105">
+                <span className="text-white font-bold text-xs">⚖️</span>
               </div>
-              <div className="flex-1">
-                <h1 className="text-sm font-bold text-white tracking-tight">Justice Companion</h1>
-                <p className="text-xs text-blue-300">Legal Assistant</p>
+              <div className="flex-1 min-w-0">
+                <h1 className="text-xs font-bold text-white tracking-tight truncate">
+                  Justice Companion
+                </h1>
+                <p className="text-[10px] text-blue-300/80 truncate">Legal Assistant</p>
               </div>
             </div>
           ) : (
-            <div className="w-7 h-7 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg ring-2 ring-blue-400/20">
-              <span className="text-white font-bold text-xs">⚖️</span>
+            <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center shadow-lg ring-1 ring-blue-400/30 transition-transform hover:scale-110">
+              <span className="text-white text-[10px] font-bold">⚖️</span>
             </div>
           )}
-        </div>
+        </header>
 
-        {/* Navigation */}
-        <nav className={`flex-1 overflow-y-auto ${isExpanded ? 'p-2' : 'py-2 px-1'}`}>
-          {/* Toggle Button - First Item */}
+        {/* Navigation - Refined spacing and hover effects */}
+        <nav
+          className={`flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-blue-800/50 scrollbar-track-transparent ${
+            isExpanded ? 'px-2 py-3' : 'px-1 py-3'
+          }`}
+          role="navigation"
+          aria-label="Main menu"
+        >
+          {/* Toggle Button - Sleek and minimal */}
           <button
             type="button"
             onClick={onToggle}
-            className={`w-full flex items-center rounded-lg transition-all mb-2 text-blue-100 hover:bg-blue-800/30 border-b border-blue-800/20 ${
-              isExpanded ? 'gap-3 py-3 px-3 pb-3' : 'justify-center py-2 pb-2'
+            className={`group mb-3 flex w-full items-center rounded-md border-b border-blue-800/10 pb-3 text-blue-100/90 transition-[background-color,transform,color] duration-200 hover:bg-blue-800/25 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/50 active:scale-95 ${
+              isExpanded ? 'gap-2.5 px-2.5 py-2.5' : 'justify-center py-2.5'
             }`}
-            title={isExpanded ? 'Minimize sidebar' : 'Expand sidebar'}
+            aria-label={isExpanded ? 'Minimize sidebar' : 'Expand sidebar'}
+            title={isExpanded ? 'Minimize sidebar (Ctrl+B)' : 'Expand sidebar (Ctrl+B)'}
           >
             {isExpanded ? (
               <>
-                <ChevronLeft size={20} className="flex-shrink-0" />
-                <span className="font-medium text-sm">Minimize</span>
+                <ChevronLeft
+                  size={18}
+                  className="flex-shrink-0 transition-transform group-hover:-translate-x-0.5"
+                  aria-hidden="true"
+                />
+                <span className="text-xs font-medium">Minimize</span>
               </>
             ) : (
-              <Menu size={20} className="flex-shrink-0" />
+              <Menu
+                size={18}
+                className="flex-shrink-0 transition-transform group-hover:scale-110"
+                aria-hidden="true"
+              />
             )}
           </button>
 
-          {/* Navigation Items */}
+          {/* Navigation Items - Modern hover states and active indicators */}
           {navigationItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeView === item.id;
@@ -256,22 +274,36 @@ export function Sidebar({
                 type="button"
                 key={item.id}
                 onClick={() => onViewChange(item.id)}
-                className={`w-full flex items-center rounded-lg transition-all mb-1 ${
+                className={`group mb-1 flex w-full items-center rounded-md transition-[background-color,box-shadow,transform,color] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/50 active:scale-95 ${
                   isActive
-                    ? 'bg-blue-600/20 text-blue-300 shadow-lg'
-                    : 'text-blue-100 hover:bg-blue-800/30'
-                } ${isExpanded ? 'gap-3 py-2.5 px-3' : 'justify-center py-2.5'}`}
+                    ? 'bg-gradient-to-r from-blue-600/25 to-blue-500/20 text-blue-200 shadow-md ring-1 ring-blue-500/20'
+                    : 'text-blue-100/80 hover:bg-blue-800/20 hover:text-white'
+                } ${isExpanded ? 'gap-2.5 px-2.5 py-2' : 'justify-center py-2.5'}`}
+                aria-label={item.label}
+                aria-current={isActive ? 'page' : undefined}
                 title={isExpanded ? undefined : item.label}
               >
-                <Icon size={20} className="flex-shrink-0" />
-                {isExpanded && <span className="font-medium text-sm">{item.label}</span>}
+                <Icon
+                  size={18}
+                  className={`flex-shrink-0 transition-transform ${
+                    isActive ? 'text-blue-300' : 'group-hover:scale-110'
+                  }`}
+                  aria-hidden="true"
+                />
+                {isExpanded && <span className="truncate text-xs font-medium">{item.label}</span>}
+                {isActive && !isExpanded && (
+                  <div
+                    className="absolute left-0 h-5 w-0.5 rounded-r-full bg-blue-400"
+                    aria-hidden="true"
+                  />
+                )}
               </button>
             );
           })}
 
           {/* Case Context - only when expanded */}
           {isExpanded && (
-            <div className="mt-2">
+            <div className="mt-3 border-t border-blue-800/10 pt-3">
               <SidebarCaseContext
                 activeCaseId={activeCaseId}
                 activeConversationId={activeConversationId}
@@ -286,62 +318,74 @@ export function Sidebar({
           )}
         </nav>
 
-        {/* Profile - always visible */}
-        <div
-          className={`border-t border-blue-800/30 bg-slate-900/50 ${
-            isExpanded ? 'p-2' : 'py-2 px-1'
+        {/* Profile - Polished and compact */}
+        <footer
+          className={`border-t border-blue-800/20 bg-slate-900/30 transition-[padding] duration-300 ${
+            isExpanded ? 'px-2 py-2.5' : 'px-1 py-2.5'
           }`}
+          role="contentinfo"
         >
           {isExpanded ? (
-            <div className="space-y-1.5">
-              {/* User Info */}
+            <div className="space-y-1">
+              {/* User Info - Compact and modern */}
               <button
                 type="button"
                 onClick={() => onViewChange('settings')}
-                className="w-full flex items-center gap-2 hover:bg-blue-800/30 rounded-lg transition-colors p-2"
+                className="group flex w-full items-center gap-2 rounded-md p-1.5 transition-[background-color,transform] duration-200 hover:bg-blue-800/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/50 active:scale-95"
+                aria-label="Open user settings"
                 title="Open Settings"
               >
-                {/* Profile Picture/Initials */}
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs shadow-lg">
+                {/* Profile Picture/Initials - Smaller and refined */}
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-[10px] font-bold text-white shadow-md ring-1 ring-blue-400/30 transition-transform group-hover:scale-105">
                   {getUserInitials()}
                 </div>
-                <div className="flex-1 text-left min-w-0">
-                  <div className="text-xs font-medium text-white truncate">
-                    {user?.username || 'User'}
+                <div className="min-w-0 flex-1 text-left">
+                  <div className="truncate text-[11px] font-semibold text-white">
+                    {user?.username ?? 'User'}
                   </div>
-                  <div className="text-xs text-blue-300 truncate">
-                    {user?.email || userProfile?.email || 'user@example.com'}
+                  <div className="truncate text-[10px] text-blue-300/70">
+                    {user?.email ?? userProfile?.email ?? 'user@example.com'}
                   </div>
                 </div>
-                <User size={16} className="text-blue-300 flex-shrink-0" />
+                <User
+                  size={14}
+                  className="flex-shrink-0 text-blue-300/60 transition-transform group-hover:scale-110"
+                  aria-hidden="true"
+                />
               </button>
 
-              {/* Logout Button */}
+              {/* Logout Button - Refined danger state */}
               <button
                 type="button"
                 onClick={() => setLogoutConfirmOpen(true)}
-                className="w-full flex items-center gap-2 hover:bg-red-800/30 rounded-lg transition-colors p-2 text-red-300"
+                className="group flex w-full items-center gap-2 rounded-md p-1.5 text-red-300/80 transition-[background-color,transform,color] duration-200 hover:bg-red-900/20 hover:text-red-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400/50 active:scale-95"
+                aria-label="Logout"
                 title="Logout"
               >
-                <LogOut size={18} className="flex-shrink-0" />
-                <span className="text-xs font-medium">Logout</span>
+                <LogOut
+                  size={16}
+                  className="flex-shrink-0 transition-transform group-hover:scale-110"
+                  aria-hidden="true"
+                />
+                <span className="text-[11px] font-medium">Logout</span>
               </button>
             </div>
           ) : (
             <button
               type="button"
               onClick={onToggle}
-              className="w-full flex items-center justify-center hover:bg-blue-800/30 rounded-lg transition-colors py-1.5"
-              title={user?.username || 'User Profile'}
+              className="group flex w-full items-center justify-center rounded-md py-1.5 transition-[background-color,transform] duration-200 hover:bg-blue-800/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/50 active:scale-95"
+              aria-label={`${user?.username ?? 'User Profile'} - Click to expand`}
+              title={`${user?.username ?? 'User Profile'} - Click to expand`}
             >
-              {/* Profile Picture/Initials */}
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs shadow-lg">
+              {/* Profile Picture/Initials - Compact collapsed state */}
+              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-[10px] font-bold text-white shadow-md ring-1 ring-blue-400/30 transition-transform group-hover:scale-110">
                 {getUserInitials()}
               </div>
             </button>
           )}
-        </div>
-      </div>
+        </footer>
+      </aside>
 
       {/* Delete Confirmation Dialog */}
       <ConfirmDialog

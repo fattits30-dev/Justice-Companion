@@ -221,19 +221,20 @@ function AuthenticatedApp(): JSX.Element {
 
       {/* Main Content Area - Positioned to account for fixed sidebar */}
       <div
-        className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ease-in-out ${
-          sidebarExpanded ? 'ml-64' : 'ml-14'
+        className={`flex flex-1 flex-col overflow-hidden transition-[margin] duration-300 ease-in-out ${
+          sidebarExpanded ? 'ml-64' : 'ml-12'
         }`}
+        role="main"
       >
         {/* Top bar - no menu button, just title */}
-        <div className="h-14 bg-slate-900/50 border-b border-blue-800/30 flex items-center px-4 gap-3">
+        <header className="flex h-14 items-center gap-3 border-b border-blue-800/30 bg-slate-900/50 px-4">
           <div className="flex items-center gap-2">
-            <span className="text-blue-300 font-medium capitalize">{activeView}</span>
+            <span className="font-medium capitalize text-blue-300">{activeView}</span>
           </div>
-        </div>
+        </header>
 
         {/* View Content */}
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex flex-1 flex-col overflow-hidden">
           <Suspense fallback={<ViewLoadingFallback />}>{renderView()}</Suspense>
         </div>
       </div>
