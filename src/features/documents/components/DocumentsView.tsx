@@ -160,7 +160,7 @@ export function DocumentsView(): JSX.Element {
       .emailFiles(
         [evidence.filePath],
         `${doc.title} - ${doc.associatedCase}`,
-        `Attached: ${doc.fileName}`
+        `Attached: ${doc.fileName}`,
       )
       .then((result) => {
         if (result.success) {
@@ -254,7 +254,7 @@ export function DocumentsView(): JSX.Element {
       .emailFiles(
         filePaths,
         `Case Bundle: ${filePaths.length} documents`,
-        'Please find attached case documents.'
+        'Please find attached case documents.',
       )
       .then((result) => {
         if (result.success) {
@@ -591,7 +591,7 @@ export function DocumentsView(): JSX.Element {
                 {/* Status Badge */}
                 <div
                   className={`inline-flex items-center gap-1 px-3 py-1 rounded-full border text-xs font-medium mb-4 ${getStatusBadge(
-                    doc.status
+                    doc.status,
                   )}`}
                 >
                   <span className="capitalize">{doc.status.replace('_', ' ')}</span>
@@ -612,8 +612,8 @@ export function DocumentsView(): JSX.Element {
                         doc.priority === 'critical'
                           ? 'text-red-400'
                           : doc.priority === 'important'
-                          ? 'text-amber-400'
-                          : 'text-gray-400'
+                            ? 'text-amber-400'
+                            : 'text-gray-400'
                       }`}
                     >
                       {doc.priority}
