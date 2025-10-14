@@ -11,9 +11,9 @@
  * - Stats card rendering
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen } from '@/test-utils/test-utils';
 import userEvent from '@testing-library/user-event';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DashboardView } from './DashboardView';
 
 // Mock useCases hook
@@ -41,9 +41,7 @@ describe('DashboardView', () => {
 
     // Default mock: at least one case to render main dashboard (not empty state)
     mockUseCases.mockReturnValue({
-      cases: [
-        { id: 1, title: 'Test Case', caseType: 'employment', status: 'active' },
-      ],
+      cases: [{ id: 1, title: 'Test Case', caseType: 'employment', status: 'active' }],
       loading: false,
       error: null,
     });
@@ -53,32 +51,50 @@ describe('DashboardView', () => {
     it('should render welcome heading and description', () => {
       render(<DashboardView onViewChange={mockOnViewChange} />);
 
-      expect(screen.getByText('Welcome to Justice Companion')).toBeInTheDocument();
-      expect(screen.getByText('Your personal legal information assistant')).toBeInTheDocument();
+      expect(screen.getByText('Welcome back')).toBeInTheDocument();
+      expect(screen.getByText('Your legal information assistant')).toBeInTheDocument();
     });
 
-    it('should render main introduction paragraph', () => {
-      render(<DashboardView onViewChange={mockOnViewChange} />);
-
-      expect(
-        screen.getByText(/Justice Companion helps you organize legal information/i),
-      ).toBeInTheDocument();
-    });
-
-    it('should render legal disclaimer with warning icon', () => {
+    it('should render legal disclaimer heading (collapsed by default)', () => {
       render(<DashboardView onViewChange={mockOnViewChange} />);
 
       expect(screen.getByText('Important Legal Disclaimer')).toBeInTheDocument();
-      expect(screen.getByText(/This app provides information only, not legal advice/i)).toBeInTheDocument();
-      expect(screen.getByText(/Nothing in this application creates an attorney-client relationship/i)).toBeInTheDocument();
+      // Disclaimer content should NOT be visible when collapsed
+      expect(
+        screen.queryByText(/This app provides information only, not legal advice/i)
+      ).not.toBeInTheDocument();
     });
 
-    it('should render feature benefits section', () => {
+    it('should expand and collapse legal disclaimer when clicked', async () => {
+      const user = userEvent.setup();
       render(<DashboardView onViewChange={mockOnViewChange} />);
 
-      expect(screen.getByText('Track Your Cases')).toBeInTheDocument();
-      expect(screen.getByText('Stay Informed')).toBeInTheDocument();
-      expect(screen.getByText('Manage Documents')).toBeInTheDocument();
+      const disclaimerButton = screen.getByText('Important Legal Disclaimer').closest('button');
+      expect(disclaimerButton).toBeInTheDocument();
+
+      // Initially collapsed - content not visible
+      expect(
+        screen.queryByText(/This app provides information only, not legal advice/i)
+      ).not.toBeInTheDocument();
+
+      // Click to expand
+      await user.click(disclaimerButton!);
+
+      // Content should now be visible
+      expect(
+        screen.getByText(/This app provides information only, not legal advice/i)
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(/Nothing in this application creates an attorney-client relationship/i)
+      ).toBeInTheDocument();
+
+      // Click to collapse
+      await user.click(disclaimerButton!);
+
+      // Content should be hidden again
+      expect(
+        screen.queryByText(/This app provides information only, not legal advice/i)
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -148,7 +164,7 @@ describe('DashboardView', () => {
       render(<DashboardView onViewChange={mockOnViewChange} />);
 
       const skeletons = screen.getAllByRole('status', { name: 'Loading statistics' });
-      expect(skeletons).toHaveLength(4);
+      expect(skeletons).toHaveLength(3);
     });
 
     it('should not render stat cards when loading', () => {
@@ -160,8 +176,8 @@ describe('DashboardView', () => {
 
       render(<DashboardView onViewChange={mockOnViewChange} />);
 
-      expect(screen.queryByText('Total Chats')).not.toBeInTheDocument();
       expect(screen.queryByText('Active Cases')).not.toBeInTheDocument();
+      expect(screen.queryByText('Documents')).not.toBeInTheDocument();
     });
 
     it('should still render welcome section when loading', () => {
@@ -173,7 +189,7 @@ describe('DashboardView', () => {
 
       render(<DashboardView onViewChange={mockOnViewChange} />);
 
-      expect(screen.getByText('Welcome to Justice Companion')).toBeInTheDocument();
+      expect(screen.getByText('Welcome back')).toBeInTheDocument();
     });
   });
 
@@ -252,21 +268,20 @@ describe('DashboardView', () => {
       expect(activeCasesValue).toHaveTextContent('2');
     });
 
-    it('should render all 4 stat cards when cases exist', () => {
+    it('should render all 3 stat cards when cases exist', () => {
       mockUseCases.mockReturnValue({
-        cases: [
-          { id: 1, title: 'Case 1', caseType: 'employment', status: 'active' },
-        ],
+        cases: [{ id: 1, title: 'Case 1', caseType: 'employment', status: 'active' }],
         loading: false,
         error: null,
       });
 
       render(<DashboardView onViewChange={mockOnViewChange} />);
 
-      expect(screen.getByText('Total Chats')).toBeInTheDocument();
       expect(screen.getByText('Active Cases')).toBeInTheDocument();
       expect(screen.getByText('Documents')).toBeInTheDocument();
-      expect(screen.getByText('Sessions')).toBeInTheDocument();
+      // "Recent Activity" appears twice (stat card + section heading), so use getAllByText
+      const recentActivityElements = screen.getAllByText('Recent Activity');
+      expect(recentActivityElements.length).toBeGreaterThanOrEqual(1);
     });
   });
 
@@ -274,9 +289,7 @@ describe('DashboardView', () => {
     beforeEach(() => {
       // Ensure we have at least one case so main dashboard renders
       mockUseCases.mockReturnValue({
-        cases: [
-          { id: 1, title: 'Case 1', caseType: 'employment', status: 'active' },
-        ],
+        cases: [{ id: 1, title: 'Case 1', caseType: 'employment', status: 'active' }],
         loading: false,
         error: null,
       });
@@ -325,19 +338,19 @@ describe('DashboardView', () => {
   });
 
   describe('Recent Activity', () => {
-    it('should render recent activity section', () => {
+    it('should render recent activity section with empty state', () => {
       mockUseCases.mockReturnValue({
-        cases: [
-          { id: 1, title: 'Case 1', caseType: 'employment', status: 'active' },
-        ],
+        cases: [{ id: 1, title: 'Case 1', caseType: 'employment', status: 'active' }],
         loading: false,
         error: null,
       });
 
       render(<DashboardView onViewChange={mockOnViewChange} />);
 
-      expect(screen.getByText('Recent Activity')).toBeInTheDocument();
-      expect(screen.getByText('No recent activity yet. Start a chat to get legal information!')).toBeInTheDocument();
+      // Use getByRole to specifically target the h2 heading (not the stat card label)
+      expect(screen.getByRole('heading', { name: 'Recent Activity' })).toBeInTheDocument();
+      expect(screen.getByText('No recent activity')).toBeInTheDocument();
+      expect(screen.getByText('Your recent actions will appear here')).toBeInTheDocument();
     });
   });
 
@@ -357,9 +370,7 @@ describe('DashboardView', () => {
 
     it('should have accessible quick action buttons', () => {
       mockUseCases.mockReturnValue({
-        cases: [
-          { id: 1, title: 'Case 1', caseType: 'employment', status: 'active' },
-        ],
+        cases: [{ id: 1, title: 'Case 1', caseType: 'employment', status: 'active' }],
         loading: false,
         error: null,
       });

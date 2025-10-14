@@ -1,20 +1,20 @@
-import { useState, useEffect } from 'react';
 import {
-  LayoutDashboard,
-  MessageSquare,
   Briefcase,
-  FileText,
-  Settings,
-  Menu,
   ChevronLeft,
+  FileText,
+  LayoutDashboard,
   LogOut,
+  Menu,
+  MessageSquare,
+  Settings,
   User,
 } from 'lucide-react';
-import SidebarCaseContext from '../features/chat/components/SidebarCaseContext';
-import { ConfirmDialog } from './ConfirmDialog';
+import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import SidebarCaseContext from '../features/chat/components/SidebarCaseContext';
 import type { ChatConversation } from '../models/ChatConversation';
 import type { UserProfile } from '../models/UserProfile';
+import { ConfirmDialog } from './ConfirmDialog';
 
 interface SidebarProps {
   isExpanded: boolean;
@@ -198,41 +198,48 @@ export function Sidebar({
     <>
       {/* Sidebar - always visible, width changes based on isExpanded */}
       <div
-        className={`fixed inset-y-0 left-0 bg-gradient-to-b from-slate-900 via-blue-950 to-slate-900 border-r border-white/10 flex flex-col z-50 shadow-2xl transition-all duration-300 ${
-          isExpanded ? 'w-80' : 'w-16'
+        className={`fixed inset-y-0 left-0 bg-gradient-to-b from-slate-900 via-blue-950 to-slate-900 border-r border-white/10 flex flex-col z-50 shadow-2xl transition-all duration-300 ease-in-out ${
+          isExpanded ? 'w-64' : 'w-14'
         }`}
       >
         {/* Logo - always visible at top */}
-        <div className="p-3 border-b border-blue-800/30 bg-slate-900/50 flex items-center justify-center">
+        <div
+          className={`border-b border-blue-800/30 bg-slate-900/50 flex items-center justify-center ${
+            isExpanded ? 'p-2' : 'py-2 px-1'
+          }`}
+        >
           {isExpanded ? (
-            <div className="flex items-center space-x-3 w-full">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg ring-2 ring-blue-400/20">
-                <span className="text-white font-bold text-base">⚖️</span>
+            <div className="flex items-center space-x-2 w-full px-1">
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg ring-2 ring-blue-400/20">
+                <span className="text-white font-bold text-sm">⚖️</span>
               </div>
               <div className="flex-1">
-                <h1 className="text-base font-bold text-white tracking-tight">Justice Companion</h1>
-                <p className="text-xs text-blue-300">Here to help</p>
+                <h1 className="text-sm font-bold text-white tracking-tight">Justice Companion</h1>
+                <p className="text-xs text-blue-300">Legal Assistant</p>
               </div>
             </div>
           ) : (
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg ring-2 ring-blue-400/20">
-              <span className="text-white font-bold text-base">⚖️</span>
+            <div className="w-7 h-7 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg ring-2 ring-blue-400/20">
+              <span className="text-white font-bold text-xs">⚖️</span>
             </div>
           )}
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-2 overflow-y-auto">
+        <nav className={`flex-1 overflow-y-auto ${isExpanded ? 'p-2' : 'py-2 px-1'}`}>
           {/* Toggle Button - First Item */}
           <button
+            type="button"
             onClick={onToggle}
-            className="w-full flex items-center gap-3 py-3 px-3 rounded-lg transition-all mb-2 text-blue-100 hover:bg-blue-800/30 border-b border-blue-800/20 pb-3"
+            className={`w-full flex items-center rounded-lg transition-all mb-2 text-blue-100 hover:bg-blue-800/30 border-b border-blue-800/20 ${
+              isExpanded ? 'gap-3 py-3 px-3 pb-3' : 'justify-center py-2 pb-2'
+            }`}
             title={isExpanded ? 'Minimize sidebar' : 'Expand sidebar'}
           >
             {isExpanded ? (
               <>
                 <ChevronLeft size={20} className="flex-shrink-0" />
-                <span className="font-medium">Minimize</span>
+                <span className="font-medium text-sm">Minimize</span>
               </>
             ) : (
               <Menu size={20} className="flex-shrink-0" />
@@ -246,17 +253,18 @@ export function Sidebar({
 
             return (
               <button
+                type="button"
                 key={item.id}
                 onClick={() => onViewChange(item.id)}
-                className={`w-full flex items-center gap-3 py-3 px-3 rounded-lg transition-all mb-1 ${
+                className={`w-full flex items-center rounded-lg transition-all mb-1 ${
                   isActive
                     ? 'bg-blue-600/20 text-blue-300 shadow-lg'
                     : 'text-blue-100 hover:bg-blue-800/30'
-                }`}
+                } ${isExpanded ? 'gap-3 py-2.5 px-3' : 'justify-center py-2.5'}`}
                 title={isExpanded ? undefined : item.label}
               >
                 <Icon size={20} className="flex-shrink-0" />
-                {isExpanded && <span className="font-medium">{item.label}</span>}
+                {isExpanded && <span className="font-medium text-sm">{item.label}</span>}
               </button>
             );
           })}
@@ -279,46 +287,55 @@ export function Sidebar({
         </nav>
 
         {/* Profile - always visible */}
-        <div className="border-t border-blue-800/30 p-3 bg-slate-900/50">
+        <div
+          className={`border-t border-blue-800/30 bg-slate-900/50 ${
+            isExpanded ? 'p-2' : 'py-2 px-1'
+          }`}
+        >
           {isExpanded ? (
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               {/* User Info */}
               <button
+                type="button"
                 onClick={() => onViewChange('settings')}
-                className="w-full flex items-center gap-3 hover:bg-blue-800/30 rounded-lg transition-colors p-2"
+                className="w-full flex items-center gap-2 hover:bg-blue-800/30 rounded-lg transition-colors p-2"
                 title="Open Settings"
               >
                 {/* Profile Picture/Initials */}
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold shadow-lg">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs shadow-lg">
                   {getUserInitials()}
                 </div>
-                <div className="flex-1 text-left">
-                  <div className="text-sm font-medium text-white">{user?.username || 'User'}</div>
-                  <div className="text-xs text-blue-300">
+                <div className="flex-1 text-left min-w-0">
+                  <div className="text-xs font-medium text-white truncate">
+                    {user?.username || 'User'}
+                  </div>
+                  <div className="text-xs text-blue-300 truncate">
                     {user?.email || userProfile?.email || 'user@example.com'}
                   </div>
                 </div>
-                <User size={16} className="text-blue-300" />
+                <User size={16} className="text-blue-300 flex-shrink-0" />
               </button>
 
               {/* Logout Button */}
               <button
+                type="button"
                 onClick={() => setLogoutConfirmOpen(true)}
-                className="w-full flex items-center gap-3 hover:bg-red-800/30 rounded-lg transition-colors p-2 text-red-300"
+                className="w-full flex items-center gap-2 hover:bg-red-800/30 rounded-lg transition-colors p-2 text-red-300"
                 title="Logout"
               >
                 <LogOut size={18} className="flex-shrink-0" />
-                <span className="text-sm font-medium">Logout</span>
+                <span className="text-xs font-medium">Logout</span>
               </button>
             </div>
           ) : (
             <button
+              type="button"
               onClick={onToggle}
-              className="w-full flex items-center justify-center hover:bg-blue-800/30 rounded-lg transition-colors p-2"
+              className="w-full flex items-center justify-center hover:bg-blue-800/30 rounded-lg transition-colors py-1.5"
               title={user?.username || 'User Profile'}
             >
               {/* Profile Picture/Initials */}
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold shadow-lg">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs shadow-lg">
                 {getUserInitials()}
               </div>
             </button>

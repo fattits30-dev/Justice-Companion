@@ -1,12 +1,13 @@
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { motion } from 'framer-motion';
 import { LucideIcon } from 'lucide-react';
+import { ReactNode } from 'react';
 
 interface DashboardStatsCardProps {
   icon: LucideIcon;
   label: string;
   value: string | number;
-  trend?: string;
+  trend?: string | ReactNode;
   color?: 'blue' | 'indigo' | 'purple' | 'cyan' | 'green' | 'amber';
   delay?: number;
 }

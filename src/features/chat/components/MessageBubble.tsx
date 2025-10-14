@@ -1,9 +1,8 @@
-import { useState, useMemo, memo } from 'react';
+import { memo, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import type { ChatMessage } from '../../../types/ai';
 import { SourceCitation } from '../../../components/SourceCitation';
-import { CitationService } from '../../../services/CitationService';
+import type { ChatMessage } from '../../../types/ai';
 
 /**
  * Props for MessageBubble component
@@ -41,13 +40,8 @@ export const MessageBubble = memo(function MessageBubble({
   const isAssistant = message.role === 'assistant';
   const [isReasoningExpanded, setIsReasoningExpanded] = useState(false);
 
-  // Extract legal citations from assistant messages
-  const citations = useMemo(() => {
-    if (!isAssistant || !message.content || isStreaming) {
-      return [];
-    }
-    return CitationService.extractCitations(message.content);
-  }, [isAssistant, message.content, isStreaming]);
+  // TEMPORARY: Citation extraction disabled due to bundling issues with @beshkenadze/eyecite
+  // TODO: Move citation processing to main process or fix Vite bundling
 
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
@@ -94,7 +88,9 @@ export const MessageBubble = memo(function MessageBubble({
           </div>
         )}
 
-        {/* Legal Citations (only for assistant messages) */}
+        {/* TEMPORARY: Legal Citations disabled due to @beshkenadze/eyecite bundling issues */}
+        {/* TODO: Re-enable after fixing Vite configuration or moving to main process */}
+        {/*
         {isAssistant && citations.length > 0 && (
           <div className="mt-2 bg-amber-50 rounded-lg p-3 border border-amber-200">
             <div className="flex items-center justify-between mb-2">
@@ -148,6 +144,7 @@ export const MessageBubble = memo(function MessageBubble({
             </p>
           </div>
         )}
+        */}
 
         {/* AI Reasoning Dropdown (only for assistant messages with thinking content) */}
         {isAssistant && message.thinkingContent && message.thinkingContent.length > 0 && (

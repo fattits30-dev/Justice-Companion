@@ -4,13 +4,13 @@
  */
 
 export interface StartupTimestamps {
-  moduleLoad: number;          // When main.ts is first loaded
-  appReady: number;            // When Electron app.whenReady fires
-  loadingWindowShown: number;  // When loading window becomes visible
+  moduleLoad: number; // When main.ts is first loaded
+  appReady: number; // When Electron app.whenReady fires
+  loadingWindowShown: number; // When loading window becomes visible
   criticalServicesReady: number; // Database, encryption, auth ready
   criticalHandlersRegistered: number; // Essential IPC handlers ready
-  mainWindowCreated: number;   // Main window instantiated
-  mainWindowShown: number;     // Main window visible to user
+  mainWindowCreated: number; // Main window instantiated
+  mainWindowShown: number; // Main window visible to user
   nonCriticalServicesReady: number; // AI, secondary services ready
   allHandlersRegistered: number; // All IPC handlers ready
 }
@@ -77,11 +77,17 @@ export class StartupMetrics {
 
     // Times relative to appReady
     const timeToLoadingWindow = ts.loadingWindowShown ? ts.loadingWindowShown - appReady : 0;
-    const timeToCriticalServices = ts.criticalServicesReady ? ts.criticalServicesReady - appReady : 0;
-    const timeToCriticalHandlers = ts.criticalHandlersRegistered ? ts.criticalHandlersRegistered - appReady : 0;
+    const timeToCriticalServices = ts.criticalServicesReady
+      ? ts.criticalServicesReady - appReady
+      : 0;
+    const timeToCriticalHandlers = ts.criticalHandlersRegistered
+      ? ts.criticalHandlersRegistered - appReady
+      : 0;
     const timeToMainWindowCreated = ts.mainWindowCreated ? ts.mainWindowCreated - appReady : 0;
     const timeToMainWindowShown = ts.mainWindowShown ? ts.mainWindowShown - appReady : 0;
-    const timeToNonCriticalServices = ts.nonCriticalServicesReady ? ts.nonCriticalServicesReady - appReady : 0;
+    const timeToNonCriticalServices = ts.nonCriticalServicesReady
+      ? ts.nonCriticalServicesReady - appReady
+      : 0;
     const timeToAllHandlers = ts.allHandlersRegistered ? ts.allHandlersRegistered - appReady : 0;
 
     // Phase deltas
@@ -117,11 +123,19 @@ export class StartupMetrics {
    * Format a duration with appropriate units
    */
   private formatDuration(ms: number): string {
-    if (ms === 0) return 'N/A';
-    if (ms < 0) return 'Error';
+    if (ms === 0) {
+      return 'N/A';
+    }
+    if (ms < 0) {
+      return 'Error';
+    }
 
-    if (ms < 1000) return `${ms}ms`;
-    if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
+    if (ms < 1000) {
+      return `${ms}ms`;
+    }
+    if (ms < 60000) {
+      return `${(ms / 1000).toFixed(1)}s`;
+    }
     return `${(ms / 60000).toFixed(1)}m`;
   }
 
@@ -130,10 +144,16 @@ export class StartupMetrics {
    */
   private formatWithIndicator(ms: number, threshold: { good: number; warning: number }): string {
     const formatted = this.formatDuration(ms);
-    if (ms === 0) return formatted;
+    if (ms === 0) {
+      return formatted;
+    }
 
-    if (ms <= threshold.good) return `✅ ${formatted}`;
-    if (ms <= threshold.warning) return `⚠️  ${formatted}`;
+    if (ms <= threshold.good) {
+      return `✅ ${formatted}`;
+    }
+    if (ms <= threshold.warning) {
+      return `⚠️  ${formatted}`;
+    }
     return `❌ ${formatted}`;
   }
 
@@ -149,26 +169,54 @@ export class StartupMetrics {
     console.log('║                                                              ║');
     console.log('║  📊 Phase Timing (from app ready)                           ║');
     console.log('║  ─────────────────────────────────                         ║');
-    console.log(`║  Loading window shown:         ${this.formatWithIndicator(metrics.timeToLoadingWindow, { good: 50, warning: 100 }).padEnd(20)} ║`);
-    console.log(`║  Critical services ready:      ${this.formatWithIndicator(metrics.timeToCriticalServices, { good: 150, warning: 250 }).padEnd(20)} ║`);
-    console.log(`║  Critical handlers registered: ${this.formatWithIndicator(metrics.timeToCriticalHandlers, { good: 160, warning: 260 }).padEnd(20)} ║`);
-    console.log(`║  Main window created:          ${this.formatWithIndicator(metrics.timeToMainWindowCreated, { good: 200, warning: 300 }).padEnd(20)} ║`);
-    console.log(`║  Main window shown:            ${this.formatWithIndicator(metrics.timeToMainWindowShown, { good: 250, warning: 400 }).padEnd(20)} ║`);
-    console.log(`║  Non-critical services ready:  ${this.formatDuration(metrics.timeToNonCriticalServices).padEnd(20)} ║`);
-    console.log(`║  All handlers registered:      ${this.formatDuration(metrics.timeToAllHandlers).padEnd(20)} ║`);
+    console.log(
+      `║  Loading window shown:         ${this.formatWithIndicator(metrics.timeToLoadingWindow, { good: 50, warning: 100 }).padEnd(20)} ║`
+    );
+    console.log(
+      `║  Critical services ready:      ${this.formatWithIndicator(metrics.timeToCriticalServices, { good: 150, warning: 250 }).padEnd(20)} ║`
+    );
+    console.log(
+      `║  Critical handlers registered: ${this.formatWithIndicator(metrics.timeToCriticalHandlers, { good: 160, warning: 260 }).padEnd(20)} ║`
+    );
+    console.log(
+      `║  Main window created:          ${this.formatWithIndicator(metrics.timeToMainWindowCreated, { good: 200, warning: 300 }).padEnd(20)} ║`
+    );
+    console.log(
+      `║  Main window shown:            ${this.formatWithIndicator(metrics.timeToMainWindowShown, { good: 250, warning: 400 }).padEnd(20)} ║`
+    );
+    console.log(
+      `║  Non-critical services ready:  ${this.formatDuration(metrics.timeToNonCriticalServices).padEnd(20)} ║`
+    );
+    console.log(
+      `║  All handlers registered:      ${this.formatDuration(metrics.timeToAllHandlers).padEnd(20)} ║`
+    );
     console.log('║                                                              ║');
     console.log('║  ⏱️  Phase Deltas                                           ║');
     console.log('║  ─────────────────                                         ║');
-    console.log(`║  Loading → Services:           ${this.formatDuration(metrics.loadingToServices).padEnd(20)} ║`);
-    console.log(`║  Services → Handlers:          ${this.formatDuration(metrics.servicesToHandlers).padEnd(20)} ║`);
-    console.log(`║  Handlers → Main Window:       ${this.formatDuration(metrics.handlersToMainWindow).padEnd(20)} ║`);
-    console.log(`║  Main Window → Non-Critical:   ${this.formatDuration(metrics.mainWindowToNonCritical).padEnd(20)} ║`);
-    console.log(`║  Non-Critical → Complete:      ${this.formatDuration(metrics.nonCriticalToComplete).padEnd(20)} ║`);
+    console.log(
+      `║  Loading → Services:           ${this.formatDuration(metrics.loadingToServices).padEnd(20)} ║`
+    );
+    console.log(
+      `║  Services → Handlers:          ${this.formatDuration(metrics.servicesToHandlers).padEnd(20)} ║`
+    );
+    console.log(
+      `║  Handlers → Main Window:       ${this.formatDuration(metrics.handlersToMainWindow).padEnd(20)} ║`
+    );
+    console.log(
+      `║  Main Window → Non-Critical:   ${this.formatDuration(metrics.mainWindowToNonCritical).padEnd(20)} ║`
+    );
+    console.log(
+      `║  Non-Critical → Complete:      ${this.formatDuration(metrics.nonCriticalToComplete).padEnd(20)} ║`
+    );
     console.log('║                                                              ║');
     console.log('║  🎯 Summary                                                 ║');
     console.log('║  ──────────                                                ║');
-    console.log(`║  Perceived startup time:       ${this.formatWithIndicator(metrics.perceivedStartupTime, { good: 400, warning: 600 }).padEnd(20)} ║`);
-    console.log(`║  Total startup time:           ${this.formatWithIndicator(metrics.totalStartupTime, { good: 500, warning: 800 }).padEnd(20)} ║`);
+    console.log(
+      `║  Perceived startup time:       ${this.formatWithIndicator(metrics.perceivedStartupTime, { good: 400, warning: 600 }).padEnd(20)} ║`
+    );
+    console.log(
+      `║  Total startup time:           ${this.formatWithIndicator(metrics.totalStartupTime, { good: 500, warning: 800 }).padEnd(20)} ║`
+    );
     console.log('║                                                              ║');
     console.log('╚════════════════════════════════════════════════════════════╝');
 
@@ -196,16 +244,24 @@ export class StartupMetrics {
     const timestamps = this.getTimestamps();
     const metrics = this.calculateMetrics();
 
-    return JSON.stringify({
-      timestamps,
-      metrics,
-      summary: {
-        perceivedStartupTime: metrics.perceivedStartupTime,
-        totalStartupTime: metrics.totalStartupTime,
-        performance: metrics.perceivedStartupTime <= 400 ? 'excellent' :
-                     metrics.perceivedStartupTime <= 600 ? 'good' : 'needs improvement',
+    return JSON.stringify(
+      {
+        timestamps,
+        metrics,
+        summary: {
+          perceivedStartupTime: metrics.perceivedStartupTime,
+          totalStartupTime: metrics.totalStartupTime,
+          performance:
+            metrics.perceivedStartupTime <= 400
+              ? 'excellent'
+              : metrics.perceivedStartupTime <= 600
+                ? 'good'
+                : 'needs improvement',
+        },
       },
-    }, null, 2);
+      null,
+      2
+    );
   }
 }
 

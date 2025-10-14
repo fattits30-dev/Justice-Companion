@@ -2300,19 +2300,24 @@ function setupIpcHandlers() {
         // Authorization: Get user's cases first, then filter conversations
         const userId = getCurrentUserIdFromSession();
 
+        console.log('[CONVERSATION_GET_ALL] Request:', { userId, caseId: request.caseId });
+
         // If caseId provided, verify user owns it
         if (request.caseId) {
           authorizationMiddleware.verifyCaseOwnership(request.caseId, userId);
           // Get conversations for this specific case
           const conversations = chatConversationService.getAllConversations(userId, request.caseId);
+          console.log('[CONVERSATION_GET_ALL] Returning case conversations:', conversations.length);
           return { success: true, data: conversations };
         }
 
         // No caseId provided - get all user's conversations (both case-based and general)
         const allConversations = chatConversationService.getAllConversations(userId);
+        console.log('[CONVERSATION_GET_ALL] Returning all conversations:', allConversations.length);
 
         return { success: true, data: allConversations };
       } catch (error) {
+        console.error('[CONVERSATION_GET_ALL] Error:', error);
         errorLogger.logError(error as Error, { context: 'ipc:conversation:getAll' });
         return {
           success: false,

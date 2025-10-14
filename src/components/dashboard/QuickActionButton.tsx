@@ -9,6 +9,7 @@ interface QuickActionButtonProps {
   onClick: () => void;
   color?: 'blue' | 'indigo' | 'purple' | 'cyan' | 'green';
   delay?: number;
+  shortcut?: string;
 }
 
 const colorConfig = {
@@ -74,6 +75,7 @@ export function QuickActionButton({
   onClick,
   color = 'blue',
   delay = 0,
+  shortcut,
 }: QuickActionButtonProps): JSX.Element {
   const prefersReducedMotion = useReducedMotion();
   const config = colorConfig[color];
@@ -131,9 +133,16 @@ export function QuickActionButton({
 
       {/* Content */}
       <div className="relative flex-1 min-w-0">
-        <h3 className="font-bold text-white text-lg mb-1 group-hover:text-blue-100 transition-colors">
-          {label}
-        </h3>
+        <div className="flex items-center justify-between gap-2 mb-1">
+          <h3 className="font-bold text-white text-lg group-hover:text-blue-100 transition-colors">
+            {label}
+          </h3>
+          {shortcut && (
+            <span className="text-xs font-mono text-slate-400 bg-slate-800/50 px-2 py-0.5 rounded border border-slate-700/50">
+              {shortcut}
+            </span>
+          )}
+        </div>
         <p className="text-sm text-slate-300 group-hover:text-slate-200 transition-colors">
           {description}
         </p>

@@ -1,10 +1,10 @@
-import { useState, useMemo } from 'react';
-import { ChevronDown, FileText } from 'lucide-react';
-import { useCases } from '../hooks/useCases';
 import { useEvidence } from '@/features/documents';
+import { ChevronDown, FileText } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { SkeletonTree } from '../../../components/ui/Skeleton';
 import type { Case } from '../../../models/Case';
 import type { Evidence } from '../../../models/Evidence';
+import { useCases } from '../hooks/useCases';
 
 interface TimelineEvent {
   date: string;
@@ -260,7 +260,7 @@ export function CasesView({ onCaseSelect }: CasesViewProps): JSX.Element {
     x: number,
     y: number,
     parentX?: number,
-    parentY?: number,
+    parentY?: number
   ): JSX.Element[] => {
     const elements: JSX.Element[] = [];
 
@@ -291,7 +291,7 @@ export function CasesView({ onCaseSelect }: CasesViewProps): JSX.Element {
           style={{
             filter: hoveredNodeId === node.id ? 'brightness(1.3)' : 'none',
           }}
-        />,
+        />
       );
     }
 
@@ -392,7 +392,7 @@ export function CasesView({ onCaseSelect }: CasesViewProps): JSX.Element {
             {node.date}
           </text>
         )}
-      </g>,
+      </g>
     );
 
     // Recursively draw children with proper spacing
@@ -429,7 +429,7 @@ export function CasesView({ onCaseSelect }: CasesViewProps): JSX.Element {
 
         {/* Timeline Skeleton */}
         <div className="h-28 bg-gradient-to-b from-slate-900/30 to-transparent border-b border-blue-800/20 px-6 py-4">
-          <div className="max-w-5xl mx-auto">
+          <div className="w-full mx-auto">
             <div className="relative h-full flex items-center">
               <div
                 className="absolute left-0 right-0 h-1 bg-slate-700/50 rounded-full"
@@ -468,7 +468,7 @@ export function CasesView({ onCaseSelect }: CasesViewProps): JSX.Element {
   if (error) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 p-8">
-        <div className="max-w-md text-center">
+        <div className="w-full text-center px-4">
           <div className="w-24 h-24 bg-red-600/20 rounded-full flex items-center justify-center mx-auto mb-6">
             <FileText className="w-12 h-12 text-red-400" />
           </div>
@@ -489,7 +489,7 @@ export function CasesView({ onCaseSelect }: CasesViewProps): JSX.Element {
   if (!selectedCase) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 p-8">
-        <div className="max-w-md text-center">
+        <div className="w-full text-center px-4">
           <div className="w-24 h-24 bg-blue-600/20 rounded-full flex items-center justify-center mx-auto mb-6">
             <FileText className="w-12 h-12 text-blue-400" />
           </div>
@@ -527,7 +527,7 @@ export function CasesView({ onCaseSelect }: CasesViewProps): JSX.Element {
 
       {/* Timeline Tracker */}
       <div className="h-28 bg-gradient-to-b from-slate-900/30 to-transparent border-b border-blue-800/20 px-6 py-4">
-        <div className="max-w-5xl mx-auto">
+        <div className="w-full mx-auto">
           <div className="relative h-full flex items-center">
             {/* Timeline line */}
             <div

@@ -1,5 +1,5 @@
+import { BookOpen, FileText, FolderOpen, MessageSquare, Scale } from 'lucide-react';
 import React from 'react';
-import { FolderOpen, MessageSquare, Scale, FileText, BookOpen } from 'lucide-react';
 import { EmptyState } from './EmptyState';
 
 interface DashboardEmptyStateProps {
@@ -15,7 +15,12 @@ interface QuickActionCardProps {
   onClick: () => void;
 }
 
-function QuickActionCard({ icon: Icon, title, description, onClick }: QuickActionCardProps): JSX.Element {
+function QuickActionCard({
+  icon: Icon,
+  title,
+  description,
+  onClick,
+}: QuickActionCardProps): JSX.Element {
   return (
     <button
       onClick={onClick}
@@ -47,7 +52,7 @@ export function DashboardEmptyState({
 }: DashboardEmptyStateProps): JSX.Element {
   return (
     <div className="flex-1 overflow-y-auto p-8">
-      <div className="max-w-4xl mx-auto">
+      <div className="w-full mx-auto">
         {/* Welcome Section */}
         <div className="bg-gradient-to-br from-blue-950/50 to-indigo-950/50 border border-blue-800/30 rounded-xl p-8 mb-8">
           <div className="flex items-start gap-4 mb-6">
@@ -62,24 +67,30 @@ export function DashboardEmptyState({
 
           <div className="space-y-4 text-blue-100 leading-relaxed">
             <p>
-              Justice Companion helps you organize legal information, track case details, and understand your legal matters better.
-              Use this tool to keep notes, manage documents, and stay informed about your situation.
+              Justice Companion helps you organize legal information, track case details, and
+              understand your legal matters better. Use this tool to keep notes, manage documents,
+              and stay informed about your situation.
             </p>
 
             <div className="bg-yellow-900/20 border-2 border-yellow-600/50 rounded-lg p-4">
               <div className="flex items-start gap-3">
                 <div className="flex-shrink-0">
                   <svg className="w-6 h-6 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    <path
+                      fillRule="evenodd"
+                      d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                 </div>
                 <div className="flex-1">
                   <h3 className="font-bold text-yellow-200 mb-2">Important Legal Disclaimer</h3>
                   <p className="text-sm text-yellow-100/90 leading-relaxed">
-                    <strong>This app provides information only, not legal advice.</strong> Justice Companion is designed to help you
-                    organize and understand legal information, but it cannot replace professional legal counsel. For legal advice
-                    tailored to your specific situation, please consult a qualified attorney. Nothing in this application creates
-                    an attorney-client relationship.
+                    <strong>This app provides information only, not legal advice.</strong> Justice
+                    Companion is designed to help you organize and understand legal information, but
+                    it cannot replace professional legal counsel. For legal advice tailored to your
+                    specific situation, please consult a qualified attorney. Nothing in this
+                    application creates an attorney-client relationship.
                   </p>
                 </div>
               </div>

@@ -1,27 +1,27 @@
-import { useState, useEffect, useRef, type ComponentType, type ReactNode } from 'react';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { SkeletonText } from '@/components/ui/Skeleton';
+import { LoadingSpinner } from '@/components/ui/Spinner';
+import { Tabs } from '@/components/ui/Tabs';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/useToast';
+import type { Consent, ConsentType } from '@/models/Consent';
+import type { UserProfile } from '@/models/UserProfile';
 import {
-  User,
   Bell,
-  Lock,
-  Database,
-  Info,
   Brain,
   Briefcase,
-  Shield,
   CheckCircle2,
-  XCircle,
-  Sparkles,
+  Database,
+  Info,
+  Lock,
   Settings,
+  Shield,
+  Sparkles,
+  User,
+  XCircle,
 } from 'lucide-react';
-import { ConfirmDialog } from '@/components/ConfirmDialog';
-import { useToast } from '@/hooks/useToast';
-import { useAuth } from '@/contexts/AuthContext';
-import { SkeletonText } from '@/components/ui/Skeleton';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { useEffect, useRef, useState, type ComponentType, type ReactNode } from 'react';
 import { OpenAISettings } from './OpenAISettings';
-import { Tabs } from '@/components/ui/Tabs';
-import type { UserProfile } from '@/models/UserProfile';
-import type { Consent, ConsentType } from '@/models/Consent';
 
 export function SettingsView(): JSX.Element {
   const toast = useToast();

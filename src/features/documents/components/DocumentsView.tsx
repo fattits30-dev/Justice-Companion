@@ -1,22 +1,22 @@
-import { useState } from 'react';
+import { SkeletonCard } from '@/components/ui/Skeleton';
+import { useCases } from '@/features/cases';
+import type { Evidence } from '@/models/Evidence';
 import {
-  FileText,
-  Download,
-  Printer,
-  Eye,
-  CheckCircle,
   AlertCircle,
-  XCircle,
+  CheckCircle,
+  Download,
+  Eye,
+  FileText,
   Filter,
   Mail,
+  Printer,
   Upload,
+  XCircle,
 } from 'lucide-react';
-import { useEvidence } from '../hooks/useEvidence';
-import { useCases } from '@/features/cases';
-import { SkeletonCard } from '@/components/ui/Skeleton';
-import { FileUploadModal } from './FileUploadModal';
+import { useState } from 'react';
 import { toast } from 'sonner';
-import type { Evidence } from '@/models/Evidence';
+import { useEvidence } from '../hooks/useEvidence';
+import { FileUploadModal } from './FileUploadModal';
 
 interface Document {
   id: string;
@@ -160,7 +160,7 @@ export function DocumentsView(): JSX.Element {
       .emailFiles(
         [evidence.filePath],
         `${doc.title} - ${doc.associatedCase}`,
-        `Attached: ${doc.fileName}`,
+        `Attached: ${doc.fileName}`
       )
       .then((result) => {
         if (result.success) {
@@ -254,7 +254,7 @@ export function DocumentsView(): JSX.Element {
       .emailFiles(
         filePaths,
         `Case Bundle: ${filePaths.length} documents`,
-        'Please find attached case documents.',
+        'Please find attached case documents.'
       )
       .then((result) => {
         if (result.success) {
@@ -309,7 +309,7 @@ export function DocumentsView(): JSX.Element {
       <div className="flex-1 flex flex-col overflow-hidden bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950">
         {/* Legal Disclaimer Banner */}
         <div className="bg-gradient-to-r from-amber-600/20 to-orange-600/20 border-b border-amber-600/30 px-4 py-2">
-          <div className="flex items-center gap-2 max-w-7xl mx-auto">
+          <div className="flex items-center gap-2 w-full mx-auto">
             <div className="text-amber-400 text-lg">⚖️</div>
             <div className="flex-1">
               <p className="text-amber-200 text-xs">
@@ -326,7 +326,7 @@ export function DocumentsView(): JSX.Element {
 
         {/* Filter Bar Skeleton */}
         <div className="bg-slate-900/50 border-b border-blue-800/30 px-4 py-2">
-          <div className="max-w-7xl mx-auto flex items-center gap-3 h-10" />
+          <div className="w-full mx-auto flex items-center gap-3 h-10" />
         </div>
 
         {/* Loading State with Skeleton Cards */}
@@ -353,7 +353,7 @@ export function DocumentsView(): JSX.Element {
       <div className="flex-1 flex flex-col overflow-hidden bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950">
         {/* Legal Disclaimer Banner */}
         <div className="bg-gradient-to-r from-amber-600/20 to-orange-600/20 border-b border-amber-600/30 px-4 py-2">
-          <div className="flex items-center gap-2 max-w-7xl mx-auto">
+          <div className="flex items-center gap-2 w-full mx-auto">
             <div className="text-amber-400 text-lg">⚖️</div>
             <div className="flex-1">
               <p className="text-amber-200 text-xs">
@@ -370,7 +370,7 @@ export function DocumentsView(): JSX.Element {
 
         {/* Error State */}
         <div className="flex-1 flex items-center justify-center p-8">
-          <div className="max-w-md text-center">
+          <div className="w-full text-center px-4">
             <div className="w-24 h-24 bg-red-600/20 rounded-full flex items-center justify-center mx-auto mb-6">
               <XCircle className="w-12 h-12 text-red-400" />
             </div>
@@ -394,7 +394,7 @@ export function DocumentsView(): JSX.Element {
       <div className="flex-1 flex flex-col overflow-hidden bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950">
         {/* Legal Disclaimer Banner */}
         <div className="bg-gradient-to-r from-amber-600/20 to-orange-600/20 border-b border-amber-600/30 px-4 py-2">
-          <div className="flex items-center gap-2 max-w-7xl mx-auto">
+          <div className="flex items-center gap-2 w-full mx-auto">
             <div className="text-amber-400 text-lg">⚖️</div>
             <div className="flex-1">
               <p className="text-amber-200 text-xs">
@@ -411,7 +411,7 @@ export function DocumentsView(): JSX.Element {
 
         {/* Empty State */}
         <div className="flex-1 flex items-center justify-center p-8">
-          <div className="max-w-md text-center">
+          <div className="w-full text-center px-4">
             <div className="w-24 h-24 bg-blue-600/20 rounded-full flex items-center justify-center mx-auto mb-6">
               <Upload className="w-12 h-12 text-blue-400" />
             </div>
@@ -437,7 +437,7 @@ export function DocumentsView(): JSX.Element {
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Legal Disclaimer Banner */}
       <div className="bg-gradient-to-r from-amber-600/20 to-orange-600/20 border-b border-amber-600/30 px-4 py-2">
-        <div className="flex items-center gap-2 max-w-7xl mx-auto">
+        <div className="flex items-center gap-2 w-full mx-auto">
           <div className="text-amber-400 text-lg">⚖️</div>
           <div className="flex-1">
             <p className="text-amber-200 text-xs">
@@ -454,7 +454,7 @@ export function DocumentsView(): JSX.Element {
 
       {/* Filter Bar */}
       <div className="bg-slate-900/50 border-b border-blue-800/30 px-4 py-2">
-        <div className="max-w-7xl mx-auto flex items-center gap-3">
+        <div className="w-full mx-auto flex items-center gap-3">
           <Filter className="w-5 h-5 text-blue-300" />
 
           <select
@@ -590,7 +590,9 @@ export function DocumentsView(): JSX.Element {
 
                 {/* Status Badge */}
                 <div
-                  className={`inline-flex items-center gap-1 px-3 py-1 rounded-full border text-xs font-medium mb-4 ${getStatusBadge(doc.status)}`}
+                  className={`inline-flex items-center gap-1 px-3 py-1 rounded-full border text-xs font-medium mb-4 ${getStatusBadge(
+                    doc.status
+                  )}`}
                 >
                   <span className="capitalize">{doc.status.replace('_', ' ')}</span>
                 </div>
@@ -606,7 +608,13 @@ export function DocumentsView(): JSX.Element {
                   <div>
                     <span className="text-gray-500">Priority:</span>{' '}
                     <span
-                      className={`capitalize font-medium ${doc.priority === 'critical' ? 'text-red-400' : doc.priority === 'important' ? 'text-amber-400' : 'text-gray-400'}`}
+                      className={`capitalize font-medium ${
+                        doc.priority === 'critical'
+                          ? 'text-red-400'
+                          : doc.priority === 'important'
+                            ? 'text-amber-400'
+                            : 'text-gray-400'
+                      }`}
                     >
                       {doc.priority}
                     </span>
@@ -618,18 +626,30 @@ export function DocumentsView(): JSX.Element {
                   <div className="text-xs text-gray-400 mb-2">Document Checklist:</div>
                   <div className="flex flex-wrap gap-2">
                     <span
-                      className={`text-xs px-2 py-1 rounded ${doc.checklist.signed ? 'bg-green-600/20 text-green-300' : 'bg-gray-700/50 text-gray-500'}`}
+                      className={`text-xs px-2 py-1 rounded ${
+                        doc.checklist.signed
+                          ? 'bg-green-600/20 text-green-300'
+                          : 'bg-gray-700/50 text-gray-500'
+                      }`}
                     >
                       {doc.checklist.signed ? '✓' : '○'} Signed
                     </span>
                     <span
-                      className={`text-xs px-2 py-1 rounded ${doc.checklist.dated ? 'bg-green-600/20 text-green-300' : 'bg-gray-700/50 text-gray-500'}`}
+                      className={`text-xs px-2 py-1 rounded ${
+                        doc.checklist.dated
+                          ? 'bg-green-600/20 text-green-300'
+                          : 'bg-gray-700/50 text-gray-500'
+                      }`}
                     >
                       {doc.checklist.dated ? '✓' : '○'} Dated
                     </span>
                     {doc.type === 'witness_statement' && (
                       <span
-                        className={`text-xs px-2 py-1 rounded ${doc.checklist.witnessed ? 'bg-green-600/20 text-green-300' : 'bg-gray-700/50 text-gray-500'}`}
+                        className={`text-xs px-2 py-1 rounded ${
+                          doc.checklist.witnessed
+                            ? 'bg-green-600/20 text-green-300'
+                            : 'bg-gray-700/50 text-gray-500'
+                        }`}
                       >
                         {doc.checklist.witnessed ? '✓' : '○'} Witnessed
                       </span>

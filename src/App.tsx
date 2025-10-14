@@ -219,10 +219,10 @@ function AuthenticatedApp(): JSX.Element {
         onActiveCaseIdChange={setActiveCaseId}
       />
 
-      {/* Main Content Area */}
+      {/* Main Content Area - Positioned to account for fixed sidebar */}
       <div
-        className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ${
-          sidebarExpanded ? 'ml-80' : 'ml-16'
+        className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ease-in-out ${
+          sidebarExpanded ? 'ml-64' : 'ml-14'
         }`}
       >
         {/* Top bar - no menu button, just title */}

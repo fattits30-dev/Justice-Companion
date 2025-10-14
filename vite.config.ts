@@ -1,9 +1,9 @@
-import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { builtinModules } from 'module';
+import path from 'path';
+import { defineConfig } from 'vite';
 import electron from 'vite-plugin-electron';
 import renderer from 'vite-plugin-electron-renderer';
-import path from 'path';
-import { builtinModules } from 'module';
 
 export default defineConfig({
   plugins: [
@@ -64,7 +64,11 @@ export default defineConfig({
         // The preload script will be rebuilt automatically when it changes
       },
     ]),
-    renderer(),
+    renderer({
+      resolve: {
+        crypto: { type: 'cjs' },
+      },
+    }),
   ],
   resolve: {
     alias: {
@@ -79,6 +83,10 @@ export default defineConfig({
       '@/db': path.resolve(__dirname, './src/db'),
       '@/repositories': path.resolve(__dirname, './src/repositories'),
     },
+  },
+  define: {
+    // Polyfill for @beshkenadze/eyecite package
+    'process.env': {},
   },
   build: {
     target: 'esnext', // Support top-level await

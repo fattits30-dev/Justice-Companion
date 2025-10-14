@@ -1,12 +1,13 @@
-import { useState, useEffect } from 'react';
-import { useAI } from '../hooks/useAI';
-import { MessageList } from './MessageList';
-import { FloatingChatInput } from './FloatingChatInput';
-import { ErrorDisplay } from '../../../components/ErrorDisplay';
-import { ConfirmDialog } from '../../../components/ConfirmDialog';
-import { exportChatToPDF } from '../../../utils/exportToPDF';
-import { BiDownload } from 'react-icons/bi';
 import { Trash2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { BiDownload } from 'react-icons/bi';
+import { ConfirmDialog } from '../../../components/ConfirmDialog';
+import { ErrorDisplay } from '../../../components/ErrorDisplay';
+import { exportChatToPDF } from '../../../utils/exportToPDF';
+import { logger } from '../../../utils/logger';
+import { useAI } from '../hooks/useAI';
+import { FloatingChatInput } from './FloatingChatInput';
+import { MessageList } from './MessageList';
 
 interface ChatWindowProps {
   sidebarExpanded?: boolean;
@@ -50,18 +51,31 @@ export function ChatWindow({ sidebarExpanded = false, caseId }: ChatWindowProps)
     sendMessage,
     clearMessages,
     loadMessages,
-  } = useAI(caseId || undefined);
+  } = useAI(caseId ?? undefined);
+
+  // Wrap sendMessage to return void (for React event handlers)
+  const handleSendMessage = (content: string): void => {
+    void sendMessage(content);
+  };
 
   // First-time user welcome flow
   useEffect(() => {
-    const checkFirstTimeUser = async () => {
+    const checkFirstTimeUser = async (): Promise<void> => {
       if (!window.justiceAPI || welcomeMessageSent || messages.length > 0) {
+        logger.debug('ChatWindow', 'Skipping first-time check', {
+          hasAPI: !!window.justiceAPI,
+          welcomeMessageSent,
+          messageCount: messages.length,
+        });
         return;
       }
 
       try {
+        logger.debug('ChatWindow', 'Checking first-time user...');
         // Check if user has any conversations
         const conversationsResult = await window.justiceAPI.getAllConversations();
+        logger.debug('ChatWindow', 'getAllConversations result', conversationsResult);
+
         const hasConversations =
           conversationsResult.success &&
           conversationsResult.data &&
@@ -69,28 +83,20 @@ export function ChatWindow({ sidebarExpanded = false, caseId }: ChatWindowProps)
 
         // Check if user profile is empty
         const profileResult = await window.justiceAPI.getUserProfile();
-        const hasProfile = profileResult.success && profileResult.data && profileResult.data.name;
+        logger.debug('ChatWindow', 'getUserProfile result', profileResult);
+
+        const hasProfile = profileResult.success && profileResult.data?.name;
+
+        logger.debug('ChatWindow', 'First-time check', { hasConversations, hasProfile });
 
         // First-time user: no conversations and no profile
         if (!hasConversations && !hasProfile) {
+          logger.debug('ChatWindow', 'First-time user detected, injecting welcome message');
           // Auto-inject welcome message
           const welcomeMessage = {
             role: 'assistant' as const,
-            content: `Welcome to Justice Companion! 👋
-
-I'm here to help you navigate your legal situation with care and precision.
-
-Before we dive into the specifics of your case, I'd like to get to know you a bit better so I can provide the most relevant assistance.
-
-**Let's start with a few quick questions:**
-
-1. **What's your name?**
-
-2. **What's your email address?** (optional, but helpful for records)
-
-3. **In a nutshell, what brings you here today?** (e.g., "I was unfairly dismissed from my job" or "I'm having issues with my landlord")
-
-Take your time - I'm here to listen and help you work through this step by step. 🤝`,
+            content:
+              "Welcome to Justice Companion! 👋\n\nI'm here to help you navigate your legal situation with care and precision.\n\nBefore we dive into the specifics of your case, I'd like to get to know you a bit better so I can provide the most relevant assistance.\n\n**Let's start with a few quick questions:**\n\n1. **What's your name?**\n\n2. **What's your email address?** (optional, but helpful for records)\n\n3. **In a nutshell, what brings you here today?** (e.g., \"I was unfairly dismissed from my job\" or \"I'm having issues with my landlord\")\n\nTake your time - I'm here to listen and help you work through this step by step. 🤝",
             timestamp: new Date().toISOString(),
           };
 
@@ -98,7 +104,7 @@ Take your time - I'm here to listen and help you work through this step by step.
           setWelcomeMessageSent(true);
         }
       } catch (error) {
-        console.error('Failed to check first-time user:', error);
+        logger.error('ChatWindow', 'Failed to check first-time user', error);
       }
     };
 
@@ -154,7 +160,7 @@ Take your time - I'm here to listen and help you work through this step by step.
 
       {/* Floating Chat Input - centered to chat content */}
       <FloatingChatInput
-        onSend={sendMessage}
+        onSend={handleSendMessage}
         disabled={isStreaming}
         isSidebarOpen={sidebarExpanded}
       />
