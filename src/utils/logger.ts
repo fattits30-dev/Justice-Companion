@@ -56,7 +56,7 @@ class Logger {
     level: LogLevel,
     component: string,
     message: string,
-    data?: unknown
+    data?: unknown,
   ): string {
     const timestamp = new Date().toISOString();
     const dataStr = data ? ` ${JSON.stringify(data, null, 2)}` : '';

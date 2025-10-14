@@ -88,7 +88,7 @@ export function DebugProvider({ children }: DebugProviderProps): JSX.Element {
           break;
       }
     },
-    [isDebugMode]
+    [isDebugMode],
   );
 
   const startTimer = useCallback(
@@ -99,7 +99,7 @@ export function DebugProvider({ children }: DebugProviderProps): JSX.Element {
       timers.set(label, performance.now());
       log('debug', 'Performance', `Timer started: ${label}`);
     },
-    [isDebugMode, log]
+    [isDebugMode, log],
   );
 
   const endTimer = useCallback(
@@ -119,7 +119,7 @@ export function DebugProvider({ children }: DebugProviderProps): JSX.Element {
         duration: `${elapsed.toFixed(2)}ms`,
       });
     },
-    [isDebugMode, log]
+    [isDebugMode, log],
   );
 
   const value: DebugContextValue = {

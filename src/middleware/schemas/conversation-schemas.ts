@@ -143,7 +143,7 @@ export const messageAddSchema = z.object({
         .string()
         .max(
           MAX_STRING_LENGTH,
-          `Thinking content must be less than ${MAX_STRING_LENGTH} characters`
+          `Thinking content must be less than ${MAX_STRING_LENGTH} characters`,
         )
         .trim()
         .nullable()

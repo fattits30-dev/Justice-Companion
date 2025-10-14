@@ -19,7 +19,7 @@ const Spinner = React.forwardRef<HTMLDivElement, SpinnerProps>(
       'aria-label': ariaLabel,
       'data-testid': testId,
     },
-    ref
+    ref,
   ) => {
     const sizeClasses = {
       sm: 'w-4 h-4 border-2',
@@ -59,7 +59,7 @@ const Spinner = React.forwardRef<HTMLDivElement, SpinnerProps>(
           className={cn(
             'rounded-full animate-spin motion-reduce:animate-pulse',
             sizeClasses[size],
-            colorClasses[color]
+            colorClasses[color],
           )}
         >
           <span className="sr-only">{text ?? 'Loading...'}</span>
@@ -71,7 +71,7 @@ const Spinner = React.forwardRef<HTMLDivElement, SpinnerProps>(
         )}
       </div>
     );
-  }
+  },
 );
 
 Spinner.displayName = 'Spinner';

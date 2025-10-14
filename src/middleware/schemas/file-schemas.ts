@@ -38,11 +38,11 @@ export const fileSelectSchema = z
                 .min(1, 'Extension cannot be empty')
                 .max(10, 'Extension must be less than 10 characters')
                 .regex(/^[a-zA-Z0-9]+$/, 'Extension can only contain letters and numbers')
-                .transform((s) => s.toLowerCase())
+                .transform((s) => s.toLowerCase()),
             )
             .min(1, 'At least one extension is required')
             .max(20, 'Too many extensions in filter'),
-        })
+        }),
       )
       .max(10, 'Too many filters')
       .optional(),
@@ -51,7 +51,7 @@ export const fileSelectSchema = z
       .array(
         z.enum(['openFile', 'multiSelections'], {
           message: 'Invalid file selection property',
-        })
+        }),
       )
       .max(5, 'Too many properties')
       .optional(),
@@ -77,7 +77,7 @@ export const fileUploadSchema = z
           return false;
         }
         return ALLOWED_FILE_EXTENSIONS.includes(
-          extension as (typeof ALLOWED_FILE_EXTENSIONS)[number]
+          extension as (typeof ALLOWED_FILE_EXTENSIONS)[number],
         );
       }, 'File type is not allowed')
       .refine((path) => {
@@ -167,7 +167,7 @@ export const fileEmailSchema = z
           .min(1, 'File path cannot be empty')
           .max(MAX_PATH_LENGTH, `File path must be less than ${MAX_PATH_LENGTH} characters`)
           .transform(sanitizeFilePath)
-          .refine((path) => !path.includes('..'), 'Path traversal is not allowed')
+          .refine((path) => !path.includes('..'), 'Path traversal is not allowed'),
       )
       .min(1, 'At least one file is required')
       .max(MAX_FILES_PER_UPLOAD, `Cannot email more than ${MAX_FILES_PER_UPLOAD} files at once`)

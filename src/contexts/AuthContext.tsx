@@ -93,7 +93,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setIsLoading(false);
       }
     },
-    []
+    [],
   );
 
   /**
@@ -132,7 +132,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setIsLoading(false);
       }
     },
-    [login]
+    [login],
   );
 
   /**
@@ -164,7 +164,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       register,
       refreshUser,
     }),
-    [user, isLoading, login, logout, register, refreshUser]
+    [user, isLoading, login, logout, register, refreshUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

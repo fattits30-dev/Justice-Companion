@@ -92,10 +92,10 @@ export function QuickActionButton({
         prefersReducedMotion
           ? {}
           : {
-              scale: 1.02,
-              y: -2,
-              transition: { duration: 0.2 },
-            }
+            scale: 1.02,
+            y: -2,
+            transition: { duration: 0.2 },
+          }
       }
       whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
       onClick={onClick}

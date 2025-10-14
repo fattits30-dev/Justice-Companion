@@ -17,7 +17,7 @@ const modelIdSchema = z
   .max(200, 'Model ID is too long')
   .regex(
     /^[a-zA-Z0-9._-]+$/,
-    'Model ID can only contain letters, numbers, dots, underscores, and hyphens'
+    'Model ID can only contain letters, numbers, dots, underscores, and hyphens',
   )
   .refine((id) => {
     // Prevent path traversal attempts in model IDs
@@ -66,7 +66,7 @@ export const modelDownloadStartSchema = z
       ];
 
       const hasValidPrefix = validPrefixes.some((prefix) =>
-        data.modelId.toLowerCase().startsWith(prefix)
+        data.modelId.toLowerCase().startsWith(prefix),
       );
 
       return hasValidPrefix;
@@ -74,7 +74,7 @@ export const modelDownloadStartSchema = z
     {
       message: 'Model ID does not appear to be from a supported model provider',
       path: ['modelId'],
-    }
+    },
   );
 
 /**
@@ -94,7 +94,7 @@ export const modelDeleteSchema = z
     {
       message: 'Cannot delete protected system models',
       path: ['modelId'],
-    }
+    },
   );
 
 // Type exports for use in other files

@@ -23,7 +23,7 @@ export const profileUpdateSchema = z
           .max(200, 'Name must be less than 200 characters')
           .regex(
             /^[a-zA-Z\s'-]+$/,
-            'Name can only contain letters, spaces, hyphens, and apostrophes'
+            'Name can only contain letters, spaces, hyphens, and apostrophes',
           )
           .trim()
           .optional(),
@@ -116,7 +116,7 @@ export const profileUpdateSchema = z
       .strict() // No additional properties allowed
       .refine(
         (data) => Object.keys(data).length > 0,
-        'At least one field must be provided for update'
+        'At least one field must be provided for update',
       ),
   })
   .strict();

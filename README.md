@@ -52,12 +52,13 @@ Justice Companion is a privacy-first, desktop application for managing legal cas
 
 ### Prerequisites
 
-- **Node.js** 20.x LTS (Required - [Download](https://nodejs.org/))
+- **Node.js** 20.18.0 LTS (Required - [Download](https://nodejs.org/))
   - ⚠️ **Important**: Use Node 20.x for best compatibility
-  - Node 22.x may cause better-sqlite3 module version issues
-  - Use [nvm](https://github.com/nvm-sh/nvm) to manage Node versions: `nvm use 20`
+  - Recommended: Use [fnm](https://github.com/Schniz/fnm) to manage Node versions: `fnm use 20`
 - **pnpm** 10.18.2+ (`npm install -g pnpm`)
+  - ⚠️ **Must use pnpm** - NOT npm or yarn (native module compatibility)
 - **Git** (optional, for cloning)
+- **Windows 11** (native, not WSL) - Primary development platform
 
 ### Installation
 
@@ -110,10 +111,12 @@ Justice Companion is a privacy-first, desktop application for managing legal cas
 ### First Time Setup
 
 1. **Register an account**
+
    - Enter username, email, and strong password (12+ characters)
    - Real-time password strength indicator
 
 2. **Grant required consents**
+
    - Data processing (required)
    - Encryption (recommended)
    - AI processing (optional)
@@ -137,13 +140,14 @@ Justice Companion is a privacy-first, desktop application for managing legal cas
 
 ### Tech Stack
 
-- **Frontend**: React 18.3.1, TypeScript 5.6.0, Vite 6.3.6, TailwindCSS
-- **Backend**: Electron 38.2.1, Node.js 20.x LTS
-- **Package Manager**: pnpm 10.18.2
-- **Database**: SQLite (better-sqlite3 12.4.1)
-- **AI**: OpenAI SDK 6.3.0, node-llama-cpp 3.14.0, UK Legal APIs
-- **Testing**: Vitest 3.2.4, Playwright 1.55.1
-- **Build System**: electron-builder 26.0.12
+- **Frontend**: React 19.2.0, TypeScript 5.9.3, Vite 7.1.9, TailwindCSS 4.1.14
+- **Backend**: Electron 38.2.2, Node.js 20.18.0 LTS
+- **Package Manager**: pnpm 10.18.2 ⚠️ **MUST use pnpm, NOT npm/yarn**
+- **Database**: Better-SQLite3 12.4.1 (15 tables, 11 encrypted fields)
+- **State**: Zustand 5.0.8, React Query 5.90.2
+- **UI**: Framer Motion 12.23.24, Lucide React 0.545.0
+- **Testing**: Vitest 3.2.4, Playwright 1.56.0
+- **Build System**: Electron Builder
 - **CI/CD**: GitHub Actions
 
 ### Available Scripts
@@ -457,6 +461,7 @@ All workflows use latest stable versions:
 ### Known Issues & Workarounds
 
 1. **better-sqlite3 Node Module Version Mismatch**
+
    - **Symptom**: Tests fail with "NODE_MODULE_VERSION mismatch" error
    - **Cause**: better-sqlite3 compiled for different Node.js version
    - **Fix**: Use Node 20.x (see Prerequisites above)
@@ -472,11 +477,13 @@ All workflows use latest stable versions:
      ```
 
 2. **ESLint Warnings (320 in legacy code)**
+
    - CI workflow: Use `continue-on-error: true` on lint step
    - Or: `pnpm lint --max-warnings 500`
    - New code (OpenAI integration) is clean
 
 3. **Test Pass Rate: 99.7% (1152/1156)**
+
    - 4 failing tests are due to Node version mismatch (see issue #1 above)
    - Once Node 20.x is used, all tests pass
    - Non-blocking for functionality

@@ -41,7 +41,7 @@ export const caseCreateSchema = z.object({
         .string()
         .max(
           MAX_DESCRIPTION_LENGTH,
-          `Description must be less than ${MAX_DESCRIPTION_LENGTH} characters`
+          `Description must be less than ${MAX_DESCRIPTION_LENGTH} characters`,
         )
         .trim()
         .optional(),
@@ -149,7 +149,7 @@ export const caseUpdateSchema = z.object({
         .string()
         .max(
           MAX_DESCRIPTION_LENGTH,
-          `Description must be less than ${MAX_DESCRIPTION_LENGTH} characters`
+          `Description must be less than ${MAX_DESCRIPTION_LENGTH} characters`,
         )
         .trim()
         .optional(),
@@ -198,7 +198,7 @@ export const caseUpdateSchema = z.object({
     .strict() // No additional properties allowed
     .refine(
       (data) => Object.keys(data).length > 0,
-      'At least one field must be provided for update'
+      'At least one field must be provided for update',
     ),
 });
 

@@ -56,7 +56,7 @@ const legalContextSchema = z
             .max(MAX_URL_LENGTH, 'URL is too long')
             .refine(
               (url) => url.startsWith('https://www.legislation.gov.uk'),
-              'Legislation URL must be from legislation.gov.uk'
+              'Legislation URL must be from legislation.gov.uk',
             ),
 
           relevance: z
@@ -64,7 +64,7 @@ const legalContextSchema = z
             .min(0, 'Relevance must be between 0 and 1')
             .max(1, 'Relevance must be between 0 and 1')
             .optional(),
-        })
+        }),
       )
       .max(50, 'Too many legislation entries')
       .optional()
@@ -101,7 +101,7 @@ const legalContextSchema = z
             .max(MAX_URL_LENGTH, 'URL is too long')
             .refine(
               (url) => url.startsWith('https://caselaw.nationalarchives.gov.uk'),
-              'Case law URL must be from caselaw.nationalarchives.gov.uk'
+              'Case law URL must be from caselaw.nationalarchives.gov.uk',
             ),
 
           relevance: z
@@ -109,7 +109,7 @@ const legalContextSchema = z
             .min(0, 'Relevance must be between 0 and 1')
             .max(1, 'Relevance must be between 0 and 1')
             .optional(),
-        })
+        }),
       )
       .max(50, 'Too many case law entries')
       .optional()
@@ -137,7 +137,7 @@ const legalContextSchema = z
             .max(20, 'Too many sources')
             .optional()
             .default([]),
-        })
+        }),
       )
       .max(50, 'Too many knowledge base entries')
       .optional()

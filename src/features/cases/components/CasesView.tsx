@@ -554,8 +554,8 @@ export function CasesView({ onCaseSelect }: CasesViewProps): JSX.Element {
                           isCompleted
                             ? 'bg-gray-400 border-gray-300'
                             : isCurrent
-                              ? 'bg-blue-500 border-blue-400 animate-pulse'
-                              : 'bg-slate-600 border-slate-500'
+                            ? 'bg-blue-500 border-blue-400 animate-pulse'
+                            : 'bg-slate-600 border-slate-500'
                         }`}
                       />
                       {isCurrent && (
@@ -570,8 +570,8 @@ export function CasesView({ onCaseSelect }: CasesViewProps): JSX.Element {
                           isCompleted
                             ? 'text-slate-300'
                             : isCurrent
-                              ? 'text-blue-300'
-                              : 'text-slate-300'
+                            ? 'text-blue-300'
+                            : 'text-slate-300'
                         }`}
                       >
                         {event.label}

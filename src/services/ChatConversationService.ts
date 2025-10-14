@@ -59,7 +59,7 @@ class ChatConversationService {
   getRecentConversationsByCase(
     userId: number,
     caseId: number | null,
-    limit: number = 10
+    limit: number = 10,
   ): ChatConversation[] {
     try {
       return chatConversationRepository.findRecentByCase(userId, caseId, limit);
@@ -122,7 +122,7 @@ class ChatConversationService {
   startNewConversation(
     userId: number,
     caseId: number | null,
-    firstMessage: { role: 'user' | 'assistant'; content: string; thinkingContent?: string }
+    firstMessage: { role: 'user' | 'assistant'; content: string; thinkingContent?: string },
   ): ConversationWithMessages {
     try {
       // Generate title from first user message (truncate at 50 chars)

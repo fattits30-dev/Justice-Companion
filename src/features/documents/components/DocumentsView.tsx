@@ -612,8 +612,8 @@ export function DocumentsView(): JSX.Element {
                         doc.priority === 'critical'
                           ? 'text-red-400'
                           : doc.priority === 'important'
-                            ? 'text-amber-400'
-                            : 'text-gray-400'
+                          ? 'text-amber-400'
+                          : 'text-gray-400'
                       }`}
                     >
                       {doc.priority}

@@ -95,7 +95,7 @@ export class ValidationMiddleware {
         throw new ValidationError(
           `No validation schema defined for channel: ${channel}`,
           {},
-          'SCHEMA_NOT_FOUND'
+          'SCHEMA_NOT_FOUND',
         );
       }
 
@@ -129,7 +129,7 @@ export class ValidationMiddleware {
         throw new ValidationError(
           'Validation failed: Invalid request data',
           fields,
-          'VALIDATION_FAILED'
+          'VALIDATION_FAILED',
         );
       }
 
@@ -145,7 +145,7 @@ export class ValidationMiddleware {
 
       if (duration > this.slowValidationThreshold) {
         console.warn(
-          `[ValidationMiddleware] Slow validation for ${channel}: ${duration.toFixed(2)}ms`
+          `[ValidationMiddleware] Slow validation for ${channel}: ${duration.toFixed(2)}ms`,
         );
       }
 
@@ -174,7 +174,7 @@ export class ValidationMiddleware {
       throw new ValidationError(
         'Validation error: Unable to process request',
         {},
-        'VALIDATION_ERROR'
+        'VALIDATION_ERROR',
       );
     }
   }
@@ -264,7 +264,7 @@ export class ValidationMiddleware {
         throw new ValidationError(
           'String exceeds maximum length',
           { field: [`Maximum length is ${this.maxStringLength} characters`] },
-          'STRING_TOO_LONG'
+          'STRING_TOO_LONG',
         );
       }
 
@@ -276,7 +276,7 @@ export class ValidationMiddleware {
         throw new ValidationError(
           'Invalid characters detected',
           { field: ['Input contains potentially dangerous characters'] },
-          'INVALID_CHARACTERS'
+          'INVALID_CHARACTERS',
         );
       }
 
@@ -289,7 +289,7 @@ export class ValidationMiddleware {
         throw new ValidationError(
           'Array exceeds maximum length',
           { field: [`Maximum ${this.maxArrayLength} items allowed`] },
-          'ARRAY_TOO_LONG'
+          'ARRAY_TOO_LONG',
         );
       }
 
@@ -349,7 +349,7 @@ export class ValidationMiddleware {
           throw new ValidationError(
             'Filing deadline cannot be after hearing date',
             { 'input.filingDeadline': ['Filing deadline must be before hearing date'] },
-            'INVALID_DATE_RANGE'
+            'INVALID_DATE_RANGE',
           );
         }
       }

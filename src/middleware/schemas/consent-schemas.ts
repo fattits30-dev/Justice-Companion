@@ -53,7 +53,7 @@ export const consentRevokeSchema = z
         {
           message:
             'Cannot revoke mandatory consent - this consent is required for the app to function',
-        }
+        },
       ),
   })
   .strict();

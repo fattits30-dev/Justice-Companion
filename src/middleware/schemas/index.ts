@@ -110,7 +110,7 @@ const _schemaRegistryCheck: SchemaRegistry = ipcSchemas;
 // Export count for validation
 export const TOTAL_IPC_CHANNELS = Object.keys(IPC_CHANNELS).length;
 export const CHANNELS_WITH_VALIDATION = Object.values(ipcSchemas).filter(
-  (s) => s !== undefined
+  (s) => s !== undefined,
 ).length;
 export const CHANNELS_WITHOUT_VALIDATION = TOTAL_IPC_CHANNELS - CHANNELS_WITH_VALIDATION;
 

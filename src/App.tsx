@@ -13,16 +13,16 @@ import { migrateToSecureStorage } from './utils/migrate-to-secure-storage';
 const ChatWindow = lazy(() => import('@/features/chat').then((m) => ({ default: m.ChatWindow })));
 const CasesView = lazy(() => import('@/features/cases').then((m) => ({ default: m.CasesView })));
 const CaseDetailView = lazy(() =>
-  import('@/features/cases').then((m) => ({ default: m.CaseDetailView }))
+  import('@/features/cases').then((m) => ({ default: m.CaseDetailView })),
 );
 const DocumentsView = lazy(() =>
-  import('@/features/documents').then((m) => ({ default: m.DocumentsView }))
+  import('@/features/documents').then((m) => ({ default: m.DocumentsView })),
 );
 const DashboardView = lazy(() =>
-  import('@/features/dashboard').then((m) => ({ default: m.DashboardView }))
+  import('@/features/dashboard').then((m) => ({ default: m.DashboardView })),
 );
 const SettingsView = lazy(() =>
-  import('@/features/settings').then((m) => ({ default: m.SettingsView }))
+  import('@/features/settings').then((m) => ({ default: m.SettingsView })),
 );
 
 type ViewType = 'dashboard' | 'chat' | 'cases' | 'case-detail' | 'documents' | 'settings';

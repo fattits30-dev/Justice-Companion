@@ -151,7 +151,7 @@ export function Sidebar({
 
   const handleRenameConversation = async (
     conversationId: number,
-    newTitle: string
+    newTitle: string,
   ): Promise<void> => {
     if (!window.justiceAPI || !newTitle.trim()) {
       return;
@@ -159,7 +159,7 @@ export function Sidebar({
 
     try {
       setRecentChats((prev) =>
-        prev.map((chat) => (chat.id === conversationId ? { ...chat, title: newTitle } : chat))
+        prev.map((chat) => (chat.id === conversationId ? { ...chat, title: newTitle } : chat)),
       );
     } catch (error) {
       console.error('Error renaming conversation:', error);

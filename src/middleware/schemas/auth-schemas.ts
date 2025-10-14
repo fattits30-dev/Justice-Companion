@@ -24,16 +24,16 @@ const passwordSchema = z
   .max(MAX_PASSWORD_LENGTH, `Password must be less than ${MAX_PASSWORD_LENGTH} characters`)
   .refine(
     (password) => /[a-z]/.test(password),
-    'Password must contain at least one lowercase letter'
+    'Password must contain at least one lowercase letter',
   )
   .refine(
     (password) => /[A-Z]/.test(password),
-    'Password must contain at least one uppercase letter'
+    'Password must contain at least one uppercase letter',
   )
   .refine((password) => /[0-9]/.test(password), 'Password must contain at least one number')
   .refine(
     (password) => /[^a-zA-Z0-9]/.test(password),
-    'Password must contain at least one special character'
+    'Password must contain at least one special character',
   )
   .refine((password) => {
     // Check for common weak patterns
@@ -59,7 +59,7 @@ export const authRegisterSchema = z
       .max(MAX_USERNAME_LENGTH, `Username must be less than ${MAX_USERNAME_LENGTH} characters`)
       .regex(
         PATTERNS.USERNAME,
-        'Username can only contain letters, numbers, underscores, and hyphens'
+        'Username can only contain letters, numbers, underscores, and hyphens',
       )
       .transform((s) => s.toLowerCase()) // Normalize to lowercase
       .refine((username) => {
@@ -266,7 +266,7 @@ export const authTwoFactorSetupSchema = z
     {
       message: 'Phone number is required for SMS 2FA',
       path: ['phoneNumber'],
-    }
+    },
   );
 
 /**

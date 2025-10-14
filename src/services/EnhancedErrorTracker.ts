@@ -356,15 +356,15 @@ export class EnhancedErrorTracker extends EventEmitter {
 
     // Filter groups within time range
     const recentGroups = Array.from(this.errorGroups.values()).filter(
-      (group) => group.lastSeen >= startTime
+      (group) => group.lastSeen >= startTime,
     );
 
     // Calculate metrics
     const totalErrors = recentGroups.reduce((sum, group) => sum + group.count, 0);
     const affectedUsers = new Set(
       recentGroups.flatMap((group) =>
-        group.errors.map((error) => error.context?.userId).filter(Boolean)
-      )
+        group.errors.map((error) => error.context?.userId).filter(Boolean),
+      ),
     ).size;
 
     // Calculate error rate (simplified - would need total operations in real implementation)
@@ -438,7 +438,7 @@ export class EnhancedErrorTracker extends EventEmitter {
     // Rough estimate: 1KB per error * number of errors in memory
     const errorCount = Array.from(this.errorGroups.values()).reduce(
       (sum, group) => sum + group.errors.length,
-      0
+      0,
     );
     return (errorCount * 1024) / (1024 * 1024); // Convert to MB
   }
@@ -460,7 +460,7 @@ export class EnhancedErrorTracker extends EventEmitter {
       () => {
         this.cleanup();
       },
-      5 * 60 * 1000
+      5 * 60 * 1000,
     ); // Cleanup every 5 minutes
   }
 

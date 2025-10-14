@@ -30,7 +30,7 @@ export const gdprDeleteUserDataSchema = z
     {
       message: 'Confirmation must be exactly "DELETE_ALL_MY_DATA" (case-sensitive)',
       path: ['confirmation'],
-    }
+    },
   );
 
 // Type exports for use in other files

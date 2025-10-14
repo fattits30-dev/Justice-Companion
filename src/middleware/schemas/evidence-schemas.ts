@@ -74,7 +74,7 @@ export const evidenceCreateSchema = z.object({
     .strict() // No additional properties allowed
     .refine(
       (data) => data.filePath ?? data.content,
-      'Either file path or content must be provided'
+      'Either file path or content must be provided',
     ),
 });
 
@@ -167,7 +167,7 @@ export const evidenceUpdateSchema = z.object({
     .strict() // No additional properties allowed
     .refine(
       (data) => Object.keys(data).length > 0,
-      'At least one field must be provided for update'
+      'At least one field must be provided for update',
     ),
 });
 

@@ -101,16 +101,16 @@ export function DashboardStatsCard({
         prefersReducedMotion
           ? {}
           : {
-              scale: 1.03,
-              y: -4,
-              transition: { duration: 0.2 },
-            }
+            scale: 1.03,
+            y: -4,
+            transition: { duration: 0.2 },
+          }
       }
       className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${
         config.gradient
       } backdrop-blur-sm ${config.glow} hover:${config.glow.replace(
         '0.3',
-        '0.5'
+        '0.5',
       )} transition-shadow duration-300`}
     >
       {/* Animated background pattern */}

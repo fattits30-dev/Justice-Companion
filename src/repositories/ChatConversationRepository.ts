@@ -229,9 +229,9 @@ class ChatConversationRepository {
         input.thinkingContent === null || input.thinkingContent === undefined
           ? null
           : (() => {
-              const encryptedThinking = encryption.encrypt(input.thinkingContent);
-              return encryptedThinking ? JSON.stringify(encryptedThinking) : null;
-            })();
+            const encryptedThinking = encryption.encrypt(input.thinkingContent);
+            return encryptedThinking ? JSON.stringify(encryptedThinking) : null;
+          })();
 
       const stmt = db.prepare(`
         INSERT INTO chat_messages (conversation_id, role, content, thinking_content, token_count)
@@ -243,7 +243,7 @@ class ChatConversationRepository {
         input.role,
         contentToStore,
         thinkingContentToStore,
-        input.tokenCount ?? null
+        input.tokenCount ?? null,
       );
 
       // Get the inserted message
