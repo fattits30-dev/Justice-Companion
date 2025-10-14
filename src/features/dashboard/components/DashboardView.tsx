@@ -188,7 +188,7 @@ export function DashboardView({ onViewChange }: DashboardViewProps): JSX.Element
   }
 
   return (
-    <div className="h-full w-full overflow-y-auto px-6 py-6 bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950">
+    <div className="h-full flex-1 overflow-y-auto px-6 py-6 bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950">
       <div className="w-full mx-auto">
         {/* Welcome Section */}
         <motion.div
