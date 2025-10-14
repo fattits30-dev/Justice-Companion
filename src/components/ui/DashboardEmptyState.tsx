@@ -1,4 +1,3 @@
-import React from 'react';
 import { FileText, FolderOpen, MessageSquare } from 'lucide-react';
 import { ViewContainer } from '../layouts/ViewContainer';
 
@@ -8,9 +7,7 @@ interface DashboardEmptyStateProps {
   onUploadDocument?: () => void;
 }
 
-export function DashboardEmptyState({
-  onCreateCase,
-}: DashboardEmptyStateProps): JSX.Element {
+export function DashboardEmptyState({ onCreateCase }: DashboardEmptyStateProps): JSX.Element {
   return (
     <ViewContainer>
       {/* Hero Section */}
