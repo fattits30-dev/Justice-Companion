@@ -51,18 +51,24 @@ export function DashboardEmptyState({
   onUploadDocument,
 }: DashboardEmptyStateProps): JSX.Element {
   return (
-    <div className="flex-1 overflow-y-auto p-8">
-      <div className="w-full mx-auto">
+    <div className="flex-1 overflow-y-auto px-8 py-8">
+      <div className="max-w-7xl mx-auto">
         {/* Welcome Section */}
         <div className="bg-gradient-to-br from-blue-950/50 to-indigo-950/50 border border-blue-800/30 rounded-xl p-8 mb-8">
-          <div className="flex items-start gap-4 mb-6">
-            <div className="p-3 bg-blue-600/20 rounded-lg">
-              <Scale className="w-8 h-8 text-blue-300" />
+          {/* Centered Legal Icon */}
+          <div className="flex justify-center mb-6">
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-full blur-2xl" />
+              <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-blue-600/30 to-indigo-600/30 border-2 border-blue-500/40 flex items-center justify-center shadow-2xl backdrop-blur-sm">
+                <Scale className="w-12 h-12 text-blue-300" />
+              </div>
             </div>
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold text-white mb-2">Welcome to Justice Companion</h1>
-              <p className="text-lg text-blue-200">Your personal legal information assistant</p>
-            </div>
+          </div>
+
+          {/* Centered Welcome Text */}
+          <div className="text-center mb-6">
+            <h1 className="text-3xl font-bold text-white mb-2">Welcome to Justice Companion</h1>
+            <p className="text-lg text-blue-200">Your personal legal information assistant</p>
           </div>
 
           <div className="space-y-4 text-blue-100 leading-relaxed">
