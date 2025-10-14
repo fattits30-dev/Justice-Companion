@@ -215,7 +215,7 @@ export function DashboardView({ onViewChange }: DashboardViewProps): JSX.Element
           <div className="flex items-center justify-between mb-4">
             <div className="flex-1 text-center">
               <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-300 via-indigo-300 to-purple-300 bg-clip-text text-transparent mb-2">
-                  Welcome back
+                Welcome back
               </h1>
               <p className="text-base text-blue-200/90">Your legal information assistant</p>
             </div>
@@ -246,7 +246,7 @@ export function DashboardView({ onViewChange }: DashboardViewProps): JSX.Element
       {/* Quick Actions - Enhanced with better styling */}
       <div className="glass-effect rounded-xl px-6 py-6 mb-6 border border-slate-700/50 shadow-xl bg-gradient-to-br from-slate-900/50 to-blue-950/30">
         <h2 className="text-2xl font-bold text-center bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent mb-5">
-            Quick Actions
+          Quick Actions
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <QuickActionButton
@@ -282,7 +282,7 @@ export function DashboardView({ onViewChange }: DashboardViewProps): JSX.Element
       {/* Stats Grid - Enhanced */}
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-center bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent mb-5">
-            Overview
+          Overview
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {loading ? (
@@ -377,7 +377,7 @@ export function DashboardView({ onViewChange }: DashboardViewProps): JSX.Element
       >
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
-              Recent Activity
+            Recent Activity
           </h2>
           <div className="flex items-center gap-2 px-3 py-1 glass-effect rounded-lg border border-blue-500/30">
             <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />

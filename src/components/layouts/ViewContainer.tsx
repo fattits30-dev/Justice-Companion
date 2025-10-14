@@ -21,11 +21,11 @@ export function ViewContainer({
 }: ViewContainerProps): JSX.Element {
   const baseClasses = 'flex-1 bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950';
   const scrollClasses = scrollable ? 'overflow-y-auto' : 'overflow-hidden flex flex-col';
-  const paddingClasses = 'px-8 py-6';
+  const paddingClasses = 'px-12 py-8';
 
   return (
     <div className={`${baseClasses} ${scrollClasses} ${paddingClasses} ${className}`}>
-      {centered ? <div className="max-w-7xl mx-auto w-full">{children}</div> : children}
+      {centered ? <div className="w-full">{children}</div> : children}
     </div>
   );
 }

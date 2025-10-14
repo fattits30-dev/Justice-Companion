@@ -73,9 +73,9 @@ export function DashboardEmptyState({
 
         <div className="space-y-4 text-blue-100 leading-relaxed">
           <p>
-              Justice Companion helps you organize legal information, track case details, and
-              understand your legal matters better. Use this tool to keep notes, manage documents,
-              and stay informed about your situation.
+            Justice Companion helps you organize legal information, track case details, and
+            understand your legal matters better. Use this tool to keep notes, manage documents, and
+            stay informed about your situation.
           </p>
 
           <div className="bg-yellow-900/20 border-2 border-yellow-600/50 rounded-lg p-4">
@@ -93,10 +93,10 @@ export function DashboardEmptyState({
                 <h3 className="font-bold text-yellow-200 mb-2">Important Legal Disclaimer</h3>
                 <p className="text-sm text-yellow-100/90 leading-relaxed">
                   <strong>This app provides information only, not legal advice.</strong> Justice
-                    Companion is designed to help you organize and understand legal information, but
-                    it cannot replace professional legal counsel. For legal advice tailored to your
-                    specific situation, please consult a qualified attorney. Nothing in this
-                    application creates an attorney-client relationship.
+                  Companion is designed to help you organize and understand legal information, but
+                  it cannot replace professional legal counsel. For legal advice tailored to your
+                  specific situation, please consult a qualified attorney. Nothing in this
+                  application creates an attorney-client relationship.
                 </p>
               </div>
             </div>
