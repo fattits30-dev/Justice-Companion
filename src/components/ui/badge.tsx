@@ -45,7 +45,7 @@ const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(
       'data-testid': testId,
       ...props
     },
-    ref
+    ref,
   ) => {
     // Variant-based styling
     const variantClasses = {
@@ -84,7 +84,7 @@ const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(
           sizeClasses[size],
           // Shape
           shapeClasses[shape],
-          className
+          className,
         )}
         aria-label={ariaLabel}
         data-testid={testId}
@@ -94,7 +94,7 @@ const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(
         {children}
       </span>
     );
-  }
+  },
 );
 
 Badge.displayName = 'Badge';

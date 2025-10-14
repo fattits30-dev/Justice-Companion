@@ -55,7 +55,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
       'data-testid': testId,
       ...props
     },
-    ref
+    ref,
   ) => {
     // Size-based padding
     const sizeClasses = {
@@ -96,7 +96,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
           interactive && 'cursor-pointer',
           // Hover styles
           hoverable && 'hover:shadow-xl hover:shadow-black/30 hover:border-slate-600/70',
-          className
+          className,
         )}
         whileHover={hoverable ? CARD_HOVER : undefined}
         aria-label={ariaLabel}
@@ -106,7 +106,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
         {children}
       </motion.div>
     );
-  }
+  },
 );
 
 Card.displayName = 'Card';
@@ -125,7 +125,7 @@ const CardHeader = React.forwardRef<HTMLDivElement, CardHeaderProps>(
         {children}
       </div>
     );
-  }
+  },
 );
 
 CardHeader.displayName = 'CardHeader';
@@ -144,14 +144,14 @@ const CardTitle = React.forwardRef<HTMLHeadingElement, CardTitleProps>(
         ref={ref}
         className={cn(
           'text-2xl font-semibold leading-none tracking-tight text-slate-100',
-          className
+          className,
         )}
         {...props}
       >
         {children}
       </h3>
     );
-  }
+  },
 );
 
 CardTitle.displayName = 'CardTitle';
@@ -170,7 +170,7 @@ const CardDescription = React.forwardRef<HTMLParagraphElement, CardDescriptionPr
         {children}
       </p>
     );
-  }
+  },
 );
 
 CardDescription.displayName = 'CardDescription';
@@ -189,7 +189,7 @@ const CardContent = React.forwardRef<HTMLDivElement, CardContentProps>(
         {children}
       </div>
     );
-  }
+  },
 );
 
 CardContent.displayName = 'CardContent';
@@ -208,7 +208,7 @@ const CardFooter = React.forwardRef<HTMLDivElement, CardFooterProps>(
         {children}
       </div>
     );
-  }
+  },
 );
 
 CardFooter.displayName = 'CardFooter';

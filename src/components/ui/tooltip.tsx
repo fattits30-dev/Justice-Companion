@@ -111,7 +111,7 @@ const Tooltip: React.FC<TooltipProps> = ({
             // Animation
             'animate-in fade-in-0 zoom-in-95 duration-200',
             // Position
-            positionClasses[position]
+            positionClasses[position],
           )}
         >
           {content}
@@ -123,7 +123,7 @@ const Tooltip: React.FC<TooltipProps> = ({
               position === 'top' && 'border-b border-r',
               position === 'bottom' && 'border-t border-l',
               position === 'left' && 'border-t border-r',
-              position === 'right' && 'border-b border-l'
+              position === 'right' && 'border-b border-l',
             )}
           />
         </div>
