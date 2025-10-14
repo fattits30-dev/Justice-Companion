@@ -198,9 +198,19 @@ export function DashboardView({ onViewChange }: DashboardViewProps): JSX.Element
           variants={containerVariants}
         >
           <motion.div
-            className="glass-effect rounded-xl px-6 py-5 mb-4 border border-slate-700/50 shadow-2xl bg-gradient-to-r from-slate-900/60 to-blue-900/40"
+            className="glass-effect rounded-xl px-6 py-8 mb-4 border border-slate-700/50 shadow-2xl bg-gradient-to-r from-slate-900/60 to-blue-900/40"
             variants={itemVariants}
           >
+            {/* Centered Legal Icon */}
+            <div className="flex justify-center mb-6">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-full blur-2xl" />
+                <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-blue-600/30 to-indigo-600/30 border-2 border-blue-500/40 flex items-center justify-center shadow-2xl backdrop-blur-sm">
+                  <Scale className="w-12 h-12 text-blue-300" />
+                </div>
+              </div>
+            </div>
+
             {/* Enhanced Welcome Header */}
             <div className="flex items-center justify-between mb-4">
               <div className="flex-1 text-center">
