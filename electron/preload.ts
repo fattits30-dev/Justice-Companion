@@ -1,0 +1,220 @@
+import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
+
+/**
+ * Electron API exposed to renderer process via contextBridge
+ *
+ * SECURITY: This is the ONLY way renderer can communicate with main process
+ * - contextIsolation: true (enforced in main.ts)
+ * - No direct Node.js API access in renderer
+ * - Type-safe IPC invocations
+ */
+
+// Type definitions for exposed API
+export interface ElectronAPI {
+  auth: {
+    register: (data: RegisterData) => Promise<AuthResponse>;
+    login: (data: LoginData) => Promise<AuthResponse>;
+    logout: (sessionId: string) => Promise<void>;
+    getSession: (sessionId: string) => Promise<SessionResponse>;
+  };
+  cases: {
+    create: (data: CreateCaseData) => Promise<CaseResponse>;
+    list: () => Promise<CaseListResponse>;
+    get: (id: string) => Promise<CaseResponse>;
+    update: (id: string, data: UpdateCaseData) => Promise<CaseResponse>;
+    delete: (id: string) => Promise<void>;
+  };
+  evidence: {
+    upload: (caseId: string, file: File) => Promise<EvidenceResponse>;
+    list: (caseId: string) => Promise<EvidenceListResponse>;
+    delete: (id: string) => Promise<void>;
+  };
+  chat: {
+    send: (message: string, caseId?: string) => Promise<ChatResponse>;
+    onStream: (callback: (event: IpcRendererEvent, data: string) => void) => void;
+    offStream: () => void;
+  };
+  db: {
+    migrate: () => Promise<MigrationResponse>;
+    backup: () => Promise<BackupResponse>;
+    status: () => Promise<MigrationStatusResponse>;
+  };
+  gdpr: {
+    export: () => Promise<ExportResponse>;
+    delete: () => Promise<void>;
+  };
+}
+
+// Type definitions (placeholder - will be replaced with actual types)
+interface RegisterData {
+  username: string;
+  email: string;
+  password: string;
+}
+
+interface LoginData {
+  email: string;
+  password: string;
+}
+
+interface AuthResponse {
+  success: boolean;
+  data?: {
+    userId: string;
+    sessionId: string;
+    username: string;
+  };
+  error?: string;
+}
+
+interface SessionResponse {
+  success: boolean;
+  data?: {
+    userId: string;
+    username: string;
+    email: string;
+  };
+  error?: string;
+}
+
+interface CreateCaseData {
+  title: string;
+  type: string;
+  status: string;
+  description?: string;
+}
+
+interface UpdateCaseData {
+  title?: string;
+  status?: string;
+  description?: string;
+}
+
+interface CaseResponse {
+  success: boolean;
+  data?: any;
+  error?: string;
+}
+
+interface CaseListResponse {
+  success: boolean;
+  data?: any[];
+  error?: string;
+}
+
+interface EvidenceResponse {
+  success: boolean;
+  data?: any;
+  error?: string;
+}
+
+interface EvidenceListResponse {
+  success: boolean;
+  data?: any[];
+  error?: string;
+}
+
+interface ChatResponse {
+  success: boolean;
+  data?: any;
+  error?: string;
+}
+
+interface MigrationResponse {
+  success: boolean;
+  data?: any;
+  error?: string;
+}
+
+interface BackupResponse {
+  success: boolean;
+  data?: { backupPath: string };
+  error?: string;
+}
+
+interface MigrationStatusResponse {
+  success: boolean;
+  data?: any;
+  error?: string;
+}
+
+interface ExportResponse {
+  success: boolean;
+  data?: { exportPath: string };
+  error?: string;
+}
+
+/**
+ * Expose Electron API to renderer process
+ */
+const electronAPI: ElectronAPI = {
+  // ===== AUTHENTICATION =====
+  auth: {
+    register: (data: RegisterData) => ipcRenderer.invoke('auth:register', data),
+    login: (data: LoginData) => ipcRenderer.invoke('auth:login', data),
+    logout: (sessionId: string) => ipcRenderer.invoke('auth:logout', sessionId),
+    getSession: (sessionId: string) => ipcRenderer.invoke('auth:session', sessionId)
+  },
+
+  // ===== CASES =====
+  cases: {
+    create: (data: CreateCaseData) => ipcRenderer.invoke('case:create', data),
+    list: () => ipcRenderer.invoke('case:list'),
+    get: (id: string) => ipcRenderer.invoke('case:get', id),
+    update: (id: string, data: UpdateCaseData) =>
+      ipcRenderer.invoke('case:update', id, data),
+    delete: (id: string) => ipcRenderer.invoke('case:delete', id)
+  },
+
+  // ===== EVIDENCE =====
+  evidence: {
+    upload: (caseId: string, file: File) =>
+      ipcRenderer.invoke('evidence:upload', caseId, file),
+    list: (caseId: string) => ipcRenderer.invoke('evidence:list', caseId),
+    delete: (id: string) => ipcRenderer.invoke('evidence:delete', id)
+  },
+
+  // ===== AI CHAT =====
+  chat: {
+    send: (message: string, caseId?: string) =>
+      ipcRenderer.invoke('chat:send', message, caseId),
+    onStream: (callback: (event: IpcRendererEvent, data: string) => void) => {
+      ipcRenderer.on('chat:stream', callback);
+    },
+    offStream: () => {
+      ipcRenderer.removeAllListeners('chat:stream');
+    }
+  },
+
+  // ===== DATABASE =====
+  db: {
+    migrate: () => ipcRenderer.invoke('db:migrate'),
+    backup: () => ipcRenderer.invoke('db:backup'),
+    status: () => ipcRenderer.invoke('db:status')
+  },
+
+  // ===== GDPR =====
+  gdpr: {
+    export: () => ipcRenderer.invoke('gdpr:export'),
+    delete: () => ipcRenderer.invoke('gdpr:delete')
+  }
+};
+
+/**
+ * Expose API to window object (type-safe)
+ */
+contextBridge.exposeInMainWorld('electronAPI', electronAPI);
+
+/**
+ * Security: Log preload script loaded
+ */
+console.log('[Preload] Context bridge established');
+
+/**
+ * Extend Window interface for TypeScript
+ */
+declare global {
+  interface Window {
+    electronAPI: ElectronAPI;
+  }
+}

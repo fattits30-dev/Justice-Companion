@@ -1,0 +1,300 @@
+name: PR Quality Gate
+
+on:
+  pull_request:
+    branches: [main, develop]
+    types: [opened, synchronize, reopened]
+
+env:
+  NODE_VERSION: '20.18.0'
+  PNPM_VERSION: '9.15.0'
+
+jobs:
+  quality-gate:
+    name: Quality Gate Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    permissions:
+      pull-requests: write
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for better diff analysis
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Format Check
+      - name: Check code formatting
+        id: format
+        run: |
+          pnpm format:check > format-output.txt 2>&1
+          if [ $? -eq 0 ]; then
+            echo "status=✅ PASSED" >> $GITHUB_OUTPUT
+            echo "details=All files properly formatted" >> $GITHUB_OUTPUT
+          else
+            echo "status=❌ FAILED" >> $GITHUB_OUTPUT
+            UNFORMATTED=$(cat format-output.txt | wc -l)
+            echo "details=$UNFORMATTED files need formatting" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
+
+      # Lint Check
+      - name: Run linter
+        id: lint
+        run: |
+          pnpm lint > lint-output.txt 2>&1
+          WARNINGS=$(grep -c "warning" lint-output.txt || echo "0")
+          ERRORS=$(grep -c "error" lint-output.txt || echo "0")
+
+          if [ $? -eq 0 ]; then
+            echo "status=✅ PASSED" >> $GITHUB_OUTPUT
+            echo "details=No lint errors ($WARNINGS warnings)" >> $GITHUB_OUTPUT
+          else
+            echo "status=❌ FAILED" >> $GITHUB_OUTPUT
+            echo "details=$ERRORS errors, $WARNINGS warnings" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
+
+      # Type Check
+      - name: TypeScript type check
+        id: typecheck
+        run: |
+          pnpm type-check > typecheck-output.txt 2>&1
+          if [ $? -eq 0 ]; then
+            echo "status=✅ PASSED" >> $GITHUB_OUTPUT
+            echo "details=No type errors" >> $GITHUB_OUTPUT
+          else
+            ERRORS=$(grep -c "error" typecheck-output.txt || echo "0")
+            echo "status=❌ FAILED" >> $GITHUB_OUTPUT
+            echo "details=$ERRORS type errors found" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
+
+      # Test Coverage
+      - name: Run tests with coverage
+        id: test
+        run: |
+          pnpm rebuild:node
+          pnpm test:coverage > test-output.txt 2>&1
+          if [ $? -eq 0 ]; then
+            COVERAGE=$(cat coverage/coverage-summary.json | jq '.total.lines.pct')
+            echo "coverage=$COVERAGE" >> $GITHUB_OUTPUT
+            if (( $(echo "$COVERAGE >= 80" | bc -l) )); then
+              echo "status=✅ PASSED" >> $GITHUB_OUTPUT
+              echo "details=Coverage: $COVERAGE% (≥80% target)" >> $GITHUB_OUTPUT
+            else
+              echo "status=⚠️ WARNING" >> $GITHUB_OUTPUT
+              echo "details=Coverage: $COVERAGE% (<80% target)" >> $GITHUB_OUTPUT
+            fi
+          else
+            FAILED=$(grep -c "FAIL" test-output.txt || echo "0")
+            echo "status=❌ FAILED" >> $GITHUB_OUTPUT
+            echo "details=$FAILED tests failed" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
+
+      # Security Check
+      - name: Security audit
+        id: security
+        run: |
+          pnpm audit --audit-level=moderate > audit-output.txt 2>&1
+          VULNERABILITIES=$(grep -c "vulnerabilities" audit-output.txt || echo "0")
+          if [ $? -eq 0 ]; then
+            echo "status=✅ PASSED" >> $GITHUB_OUTPUT
+            echo "details=No vulnerabilities found" >> $GITHUB_OUTPUT
+          else
+            echo "status=⚠️ WARNING" >> $GITHUB_OUTPUT
+            echo "details=Vulnerabilities detected - review audit output" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
+
+      # Code Complexity Analysis
+      - name: Analyze code complexity
+        id: complexity
+        run: |
+          npx complexity-report src/ --format json > complexity.json || echo "{}"
+          echo "status=ℹ️ INFO" >> $GITHUB_OUTPUT
+          echo "details=Complexity analysis completed" >> $GITHUB_OUTPUT
+        continue-on-error: true
+
+      # Bundle Size Check
+      - name: Check bundle size
+        id: bundle
+        run: |
+          pnpm build:electron
+          BUNDLE_SIZE=$(du -sb dist | awk '{print $1}')
+          BUNDLE_MB=$(($BUNDLE_SIZE / 1024 / 1024))
+          echo "size=$BUNDLE_MB" >> $GITHUB_OUTPUT
+
+          if [ $BUNDLE_MB -lt 50 ]; then
+            echo "status=✅ PASSED" >> $GITHUB_OUTPUT
+            echo "details=Bundle size: ${BUNDLE_MB}MB (<50MB)" >> $GITHUB_OUTPUT
+          else
+            echo "status=⚠️ WARNING" >> $GITHUB_OUTPUT
+            echo "details=Bundle size: ${BUNDLE_MB}MB (≥50MB)" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
+
+      # Generate Quality Report
+      - name: Generate quality report
+        id: report
+        run: |
+          cat > quality-report.md << 'EOF'
+          ## 📊 Quality Gate Report
+
+          | Check | Status | Details |
+          |-------|--------|---------|
+          | 🎨 **Formatting** | ${{ steps.format.outputs.status }} | ${{ steps.format.outputs.details }} |
+          | 🔍 **Linting** | ${{ steps.lint.outputs.status }} | ${{ steps.lint.outputs.details }} |
+          | 📝 **Type Check** | ${{ steps.typecheck.outputs.status }} | ${{ steps.typecheck.outputs.details }} |
+          | 🧪 **Tests** | ${{ steps.test.outputs.status }} | ${{ steps.test.outputs.details }} |
+          | 🔒 **Security** | ${{ steps.security.outputs.status }} | ${{ steps.security.outputs.details }} |
+          | 📦 **Bundle Size** | ${{ steps.bundle.outputs.status }} | ${{ steps.bundle.outputs.details }} |
+
+          ### 📈 Coverage Report
+
+          EOF
+
+          if [ -f "coverage/coverage-summary.json" ]; then
+            cat >> quality-report.md << 'EOF'
+          | Metric | Coverage |
+          |--------|----------|
+          | **Lines** | $(cat coverage/coverage-summary.json | jq '.total.lines.pct')% |
+          | **Statements** | $(cat coverage/coverage-summary.json | jq '.total.statements.pct')% |
+          | **Functions** | $(cat coverage/coverage-summary.json | jq '.total.functions.pct')% |
+          | **Branches** | $(cat coverage/coverage-summary.json | jq '.total.branches.pct')% |
+          EOF
+          fi
+
+          cat >> quality-report.md << 'EOF'
+
+          ### ✅ Quality Gate Status
+
+          EOF
+
+          # Determine overall status
+          FAILED=0
+          if [[ "${{ steps.format.outputs.status }}" == *"FAILED"* ]]; then FAILED=$((FAILED+1)); fi
+          if [[ "${{ steps.lint.outputs.status }}" == *"FAILED"* ]]; then FAILED=$((FAILED+1)); fi
+          if [[ "${{ steps.typecheck.outputs.status }}" == *"FAILED"* ]]; then FAILED=$((FAILED+1)); fi
+          if [[ "${{ steps.test.outputs.status }}" == *"FAILED"* ]]; then FAILED=$((FAILED+1)); fi
+
+          if [ $FAILED -eq 0 ]; then
+            echo "**🎉 All quality checks passed!** This PR is ready for review." >> quality-report.md
+            echo "overall=success" >> $GITHUB_OUTPUT
+          elif [ $FAILED -le 2 ]; then
+            echo "**⚠️ Some quality checks need attention.** Please address the issues above." >> quality-report.md
+            echo "overall=warning" >> $GITHUB_OUTPUT
+          else
+            echo "**❌ Multiple quality checks failed.** Please fix the critical issues before proceeding." >> quality-report.md
+            echo "overall=failure" >> $GITHUB_OUTPUT
+          fi
+
+          cat >> quality-report.md << 'EOF'
+
+          ---
+
+          <details>
+          <summary>📚 How to fix issues</summary>
+
+          **Formatting:**
+          ```bash
+          pnpm format
+          ```
+
+          **Linting:**
+          ```bash
+          pnpm lint:fix
+          ```
+
+          **Type errors:**
+          Check the TypeScript errors in the workflow logs and fix type issues in your code.
+
+          **Test failures:**
+          ```bash
+          pnpm rebuild:node
+          pnpm test
+          ```
+
+          **Security vulnerabilities:**
+          ```bash
+          pnpm audit
+          pnpm audit fix
+          ```
+          </details>
+
+          ---
+
+          *Quality gate ran at $(date -u +"%Y-%m-%d %H:%M:%S UTC")*
+          EOF
+
+      # Post comment to PR
+      - name: Post quality report to PR
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('quality-report.md', 'utf8');
+
+            // Find existing comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const botComment = comments.find(comment =>
+              comment.user.type === 'Bot' &&
+              comment.body.includes('Quality Gate Report')
+            );
+
+            // Update or create comment
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: report
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: report
+              });
+            }
+
+      # Upload coverage report
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 7
+
+      # Fail job if critical checks failed
+      - name: Enforce quality gate
+        run: |
+          if [[ "${{ steps.report.outputs.overall }}" == "failure" ]]; then
+            echo "❌ Quality gate failed - blocking merge"
+            exit 1
+          fi

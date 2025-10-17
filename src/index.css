@@ -1,0 +1,92 @@
+@import './styles/design-tokens.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Typography */
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    'Roboto',
+    'Oxygen',
+    'Ubuntu',
+    'Cantarell',
+    'Fira Sans',
+    'Droid Sans',
+    'Helvetica Neue',
+    sans-serif;
+  line-height: var(--line-height-normal);
+  font-weight: var(--font-weight-normal);
+
+  /* Color scheme */
+  color-scheme: dark;
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
+
+  /* Font rendering */
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  min-height: 100vh;
+  background: var(--bg-gradient-primary);
+  overflow-x: hidden;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-primary-700);
+  border-radius: var(--radius-full);
+  border: 2px solid var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary-600);
+}
+
+/* Selection styling */
+::selection {
+  background: rgba(59, 130, 246, 0.3);
+  color: var(--text-primary);
+}
+
+::-moz-selection {
+  background: rgba(59, 130, 246, 0.3);
+  color: var(--text-primary);
+}
+
+/* Focus visible styling */
+:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-md);
+}

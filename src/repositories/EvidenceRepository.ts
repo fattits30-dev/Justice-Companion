@@ -1,0 +1,415 @@
+import { getDb } from '../db/database';
+import type { Evidence, CreateEvidenceInput, UpdateEvidenceInput } from '../models/Evidence';
+import { EncryptionService, type EncryptedData } from '../services/EncryptionService.js';
+import type { AuditLogger } from '../services/AuditLogger.js';
+
+/**
+ * Repository for managing evidence (documents, photos, emails, recordings, notes)
+ * with built-in encryption for sensitive content
+ */
+export class EvidenceRepository {
+  constructor(
+    private encryptionService?: EncryptionService,
+    private auditLogger?: AuditLogger,
+  ) {}
+
+  /**
+   * Create new evidence with encrypted content
+   */
+  create(input: CreateEvidenceInput): Evidence {
+    try {
+      const db = getDb();
+      const encryption = this.requireEncryptionService();
+
+      // Encrypt content before INSERT (if provided)
+      let contentToStore: string | null = null;
+      if (input.content) {
+        const encryptedContent = encryption.encrypt(input.content);
+        contentToStore = encryptedContent ? JSON.stringify(encryptedContent) : null;
+      }
+
+      const stmt = db.prepare(`
+        INSERT INTO evidence (
+          case_id, title, file_path, content, evidence_type, obtained_date
+        )
+        VALUES (
+          @caseId, @title, @filePath, @content, @evidenceType, @obtainedDate
+        )
+      `);
+
+      const result = stmt.run({
+        caseId: input.caseId,
+        title: input.title,
+        filePath: input.filePath ?? null,
+        content: contentToStore,
+        evidenceType: input.evidenceType,
+        obtainedDate: input.obtainedDate ?? null,
+      });
+
+      const createdEvidence = this.findById(result.lastInsertRowid as number)!;
+
+      // Audit: Evidence created
+      this.auditLogger?.log({
+        eventType: 'evidence.create',
+        resourceType: 'evidence',
+        resourceId: createdEvidence.id.toString(),
+        action: 'create',
+        details: {
+          caseId: createdEvidence.caseId,
+          evidenceType: createdEvidence.evidenceType,
+        },
+        success: true,
+      });
+
+      return createdEvidence;
+    } catch (error) {
+      // Audit: Failed evidence creation
+      this.auditLogger?.log({
+        eventType: 'evidence.create',
+        resourceType: 'evidence',
+        resourceId: 'unknown',
+        action: 'create',
+        success: false,
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Find evidence by ID with decrypted content
+   */
+  findById(id: number): Evidence | null {
+    const db = getDb();
+    const stmt = db.prepare(`
+      SELECT
+        id,
+        case_id as caseId,
+        title,
+        file_path as filePath,
+        content,
+        evidence_type as evidenceType,
+        obtained_date as obtainedDate,
+        created_at as createdAt
+      FROM evidence
+      WHERE id = ?
+    `);
+
+    const row = stmt.get(id) as Evidence | null;
+
+    if (row) {
+      // Decrypt content after SELECT
+      const originalContent = row.content;
+      row.content = this.decryptContent(row.content);
+
+      // Audit: PII/content accessed (encrypted content field)
+      if (originalContent && row.content !== originalContent) {
+        this.auditLogger?.log({
+          eventType: 'evidence.content_access',
+          resourceType: 'evidence',
+          resourceId: id.toString(),
+          action: 'read',
+          details: {
+            caseId: row.caseId,
+            evidenceType: row.evidenceType,
+            field: 'content',
+            encrypted: true,
+          },
+          success: true,
+        });
+      }
+    }
+
+    return row ?? null;
+  }
+
+  /**
+   * Find all evidence for a case with decrypted content
+   */
+  findByCaseId(caseId: number): Evidence[] {
+    const db = getDb();
+    const stmt = db.prepare(`
+      SELECT
+        id,
+        case_id as caseId,
+        title,
+        file_path as filePath,
+        content,
+        evidence_type as evidenceType,
+        obtained_date as obtainedDate,
+        created_at as createdAt
+      FROM evidence
+      WHERE case_id = ?
+      ORDER BY created_at DESC
+    `);
+
+    const rows = stmt.all(caseId) as Evidence[];
+
+    // Decrypt all content
+    return rows.map((row) => ({
+      ...row,
+      content: this.decryptContent(row.content),
+    }));
+  }
+
+  /**
+   * Find all evidence with optional type filter
+   */
+  findAll(evidenceType?: string): Evidence[] {
+    const db = getDb();
+
+    let query = `
+      SELECT
+        id,
+        case_id as caseId,
+        title,
+        file_path as filePath,
+        content,
+        evidence_type as evidenceType,
+        obtained_date as obtainedDate,
+        created_at as createdAt
+      FROM evidence
+    `;
+
+    let rows: Evidence[];
+
+    if (evidenceType) {
+      query += ' WHERE evidence_type = ? ORDER BY created_at DESC';
+      rows = db.prepare(query).all(evidenceType) as Evidence[];
+    } else {
+      query += ' ORDER BY created_at DESC';
+      rows = db.prepare(query).all() as Evidence[];
+    }
+
+    // Decrypt all content
+    return rows.map((row) => ({
+      ...row,
+      content: this.decryptContent(row.content),
+    }));
+  }
+
+  /**
+   * Update evidence with encrypted content
+   */
+  update(id: number, input: UpdateEvidenceInput): Evidence | null {
+    try {
+      const db = getDb();
+      const encryption = this.requireEncryptionService();
+
+      const updates: string[] = [];
+      const params: Record<string, unknown> = { id };
+
+      if (input.title !== undefined) {
+        updates.push('title = @title');
+        params.title = input.title;
+      }
+      if (input.filePath !== undefined) {
+        updates.push('file_path = @filePath');
+        params.filePath = input.filePath;
+      }
+      if (input.content !== undefined) {
+        updates.push('content = @content');
+        // Encrypt content before UPDATE
+        if (input.content) {
+          const encryptedContent = encryption.encrypt(input.content);
+          params.content = encryptedContent ? JSON.stringify(encryptedContent) : null;
+        } else {
+          params.content = null;
+        }
+      }
+      if (input.evidenceType !== undefined) {
+        updates.push('evidence_type = @evidenceType');
+        params.evidenceType = input.evidenceType;
+      }
+      if (input.obtainedDate !== undefined) {
+        updates.push('obtained_date = @obtainedDate');
+        params.obtainedDate = input.obtainedDate;
+      }
+
+      if (updates.length === 0) {
+        return this.findById(id);
+      }
+
+      const stmt = db.prepare(`
+        UPDATE evidence
+        SET ${updates.join(', ')}
+        WHERE id = @id
+      `);
+
+      stmt.run(params);
+
+      const updatedEvidence = this.findById(id);
+
+      // Audit: Evidence updated
+      if (updatedEvidence) {
+        this.auditLogger?.log({
+          eventType: 'evidence.update',
+          resourceType: 'evidence',
+          resourceId: id.toString(),
+          action: 'update',
+          details: {
+            fieldsUpdated: Object.keys(input),
+            caseId: updatedEvidence.caseId,
+            evidenceType: updatedEvidence.evidenceType,
+          },
+          success: true,
+        });
+      }
+
+      return updatedEvidence;
+    } catch (error) {
+      // Audit: Failed update
+      this.auditLogger?.log({
+        eventType: 'evidence.update',
+        resourceType: 'evidence',
+        resourceId: id.toString(),
+        action: 'update',
+        success: false,
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Delete evidence
+   */
+  delete(id: number): boolean {
+    try {
+      const db = getDb();
+      const stmt = db.prepare('DELETE FROM evidence WHERE id = ?');
+      const result = stmt.run(id);
+      const success = result.changes > 0;
+
+      // Audit: Evidence deleted
+      this.auditLogger?.log({
+        eventType: 'evidence.delete',
+        resourceType: 'evidence',
+        resourceId: id.toString(),
+        action: 'delete',
+        success,
+      });
+
+      return success;
+    } catch (error) {
+      // Audit: Failed deletion
+      this.auditLogger?.log({
+        eventType: 'evidence.delete',
+        resourceType: 'evidence',
+        resourceId: id.toString(),
+        action: 'delete',
+        success: false,
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Count evidence by case
+   */
+  countByCase(caseId: number): number {
+    const db = getDb();
+    const stmt = db.prepare(`
+      SELECT COUNT(*) as count
+      FROM evidence
+      WHERE case_id = ?
+    `);
+
+    const result = stmt.get(caseId) as { count: number };
+    return result.count;
+  }
+
+  /**
+   * Count evidence by type
+   */
+  countByType(caseId?: number): Record<string, number> {
+    const db = getDb();
+
+    let query = `
+      SELECT evidence_type as type, COUNT(*) as count
+      FROM evidence
+    `;
+
+    if (caseId !== undefined) {
+      query += ' WHERE case_id = ?';
+    }
+
+    query += ' GROUP BY evidence_type';
+
+    const stmt = db.prepare(query);
+    const results =
+      caseId !== undefined
+        ? (stmt.all(caseId) as Array<{ type: string; count: number }>)
+        : (stmt.all() as Array<{ type: string; count: number }>);
+
+    const counts: Record<string, number> = {
+      document: 0,
+      photo: 0,
+      email: 0,
+      recording: 0,
+      note: 0,
+    };
+
+    results.forEach((row) => {
+      counts[row.type] = row.count;
+    });
+
+    return counts;
+  }
+
+  /**
+   * Decrypt content field with backward compatibility
+   * @param storedValue - Encrypted JSON string or legacy plaintext
+   * @returns Decrypted plaintext or null
+   */
+  private decryptContent(storedValue: string | null | undefined): string | null {
+    if (!storedValue) {
+      return null;
+    }
+
+    // If no encryption service, return as-is (backward compatibility)
+    if (!this.encryptionService) {
+      return storedValue;
+    }
+
+    try {
+      // Try to parse as encrypted data
+      const encryptedData = JSON.parse(storedValue) as EncryptedData;
+
+      // Verify it's actually encrypted data format
+      if (this.encryptionService.isEncrypted(encryptedData)) {
+        return this.encryptionService.decrypt(encryptedData);
+      }
+
+      // If it's not encrypted format, treat as legacy plaintext
+      return storedValue;
+    } catch (_error) {
+      // JSON parse failed - likely legacy plaintext data
+      return storedValue;
+    }
+  }
+
+  private requireEncryptionService(): EncryptionService {
+    if (!this.encryptionService) {
+      throw new Error('EncryptionService not configured for EvidenceRepository');
+    }
+    return this.encryptionService;
+  }
+
+  /**
+   * Set encryption service (for dependency injection)
+   */
+  setEncryptionService(service: EncryptionService): void {
+    this.encryptionService = service;
+  }
+
+  /**
+   * Set audit logger (for dependency injection)
+   */
+  setAuditLogger(logger: AuditLogger): void {
+    this.auditLogger = logger;
+  }
+}
+
+export const evidenceRepository = new EvidenceRepository();

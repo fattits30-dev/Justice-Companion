@@ -1,0 +1,331 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  NODE_VERSION: '20.18.0'
+  PNPM_VERSION: '9.15.0'
+
+jobs:
+  # Job 1: Code Quality & Security Checks
+  quality-and-security:
+    name: Quality & Security Checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for better analysis
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Code Quality Checks
+      - name: Format check
+        run: pnpm format:check
+
+      - name: Lint check
+        run: pnpm lint
+        continue-on-error: false  # Fail on lint errors
+
+      - name: TypeScript type check
+        run: pnpm type-check
+
+      # Security Scanning
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1'  # Fail on critical/high vulnerabilities
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: GitLeaks secret scanning
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Dependency vulnerability check
+      - name: Check for known vulnerabilities
+        run: pnpm audit --audit-level=high
+        continue-on-error: true  # Don't fail but report
+
+      - name: License compliance check
+        run: |
+          npx license-checker --summary --production --onlyAllow "MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC;0BSD" || echo "⚠️ License compliance issues found"
+
+  # Job 2: Unit & Integration Tests
+  test:
+    name: Test Suite
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+      fail-fast: false
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Rebuild better-sqlite3 for Node.js (critical for tests)
+      - name: Rebuild better-sqlite3 for Node.js
+        run: pnpm rebuild:node
+
+      # Generate encryption key for tests
+      - name: Generate test encryption key
+        run: node scripts/generate-encryption-key.js
+        env:
+          CI: true
+
+      # Run unit tests with coverage
+      - name: Run unit tests
+        run: pnpm test:coverage
+        env:
+          CI: true
+          NODE_ENV: test
+
+      # Upload coverage to Codecov
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        if: matrix.os == 'ubuntu-latest'
+        with:
+          files: ./coverage/coverage-final.json
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+
+      # Quality Gate: Enforce minimum coverage
+      - name: Check coverage threshold
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          COVERAGE=$(cat coverage/coverage-summary.json | jq '.total.lines.pct')
+          echo "Coverage: $COVERAGE%"
+          if (( $(echo "$COVERAGE < 75" | bc -l) )); then
+            echo "❌ Coverage $COVERAGE% is below 75% threshold"
+            exit 1
+          fi
+          echo "✅ Coverage $COVERAGE% meets minimum threshold"
+
+  # Job 3: E2E Tests
+  e2e:
+    name: E2E Tests
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+      fail-fast: false
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps
+
+      - name: Build Electron app
+        run: pnpm build:electron
+
+      - name: Run E2E tests
+        run: pnpm test:e2e
+        env:
+          CI: true
+
+      - name: Upload E2E test artifacts
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: e2e-test-results-${{ matrix.os }}
+          path: |
+            test-results/
+            playwright-report/
+          retention-days: 7
+
+  # Job 4: Build Verification
+  build:
+    name: Build Verification
+    runs-on: ${{ matrix.os }}
+    needs: [quality-and-security, test]
+    timeout-minutes: 25
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+      fail-fast: false
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Electron app
+        run: pnpm build:electron
+
+      - name: Verify build artifacts
+        run: |
+          if [ ! -d "dist" ]; then
+            echo "❌ Build artifacts not found"
+            exit 1
+          fi
+          echo "✅ Build artifacts verified"
+        shell: bash
+
+      # Check bundle size (prevent bloat)
+      - name: Check bundle size
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          BUNDLE_SIZE=$(du -sb dist | awk '{print $1}')
+          MAX_SIZE=$((50 * 1024 * 1024))  # 50MB limit
+          echo "Bundle size: $(($BUNDLE_SIZE / 1024 / 1024))MB"
+          if [ $BUNDLE_SIZE -gt $MAX_SIZE ]; then
+            echo "⚠️ Bundle size exceeds 50MB limit"
+          fi
+
+  # Job 5: Performance & Regression Tests
+  performance:
+    name: Performance Tests
+    runs-on: ubuntu-latest
+    needs: [test]
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Rebuild for Node.js
+        run: pnpm rebuild:node
+
+      # TODO: Add performance benchmarks
+      - name: Run performance benchmarks
+        run: |
+          echo "⚠️ Performance benchmarks not yet implemented"
+          echo "TODO: Add benchmark tests for:"
+          echo "  - Database query performance (pagination)"
+          echo "  - Large file operations"
+          echo "  - Encryption/decryption overhead"
+          echo "  - Search performance"
+        continue-on-error: true
+
+  # Job 6: Security SAST Analysis
+  sast:
+    name: SAST Security Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript, typescript
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:javascript"
+
+  # Summary job
+  ci-success:
+    name: CI Pipeline Success
+    runs-on: ubuntu-latest
+    needs: [quality-and-security, test, e2e, build, sast]
+    if: success()
+
+    steps:
+      - name: CI Success
+        run: |
+          echo "✅ All CI checks passed successfully!"
+          echo "📊 Quality gates: PASSED"
+          echo "🔒 Security scans: PASSED"
+          echo "🧪 Tests: PASSED"
+          echo "🏗️ Build: PASSED"

@@ -1,0 +1,135 @@
+{
+  "name": "justice-companion",
+  "version": "1.0.0",
+  "description": "Privacy-first desktop application for managing legal cases, evidence, documents, and AI-powered legal research",
+  "main": "dist/electron/main.js",
+  "author": {
+    "name": "Justice Companion Team",
+    "email": "support@justicecompanion.app"
+  },
+  "license": "MIT",
+  "private": true,
+  "engines": {
+    "node": ">=20.18.0 <21.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "dev:electron": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
+    "electron:dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
+    "build": "tsc && vite build",
+    "build:electron": "tsc -p tsconfig.electron.json && vite build",
+    "electron:build": "pnpm build:electron && electron-builder",
+    "build:win": "pnpm build:electron && electron-builder --win",
+    "build:mac": "pnpm build:electron && electron-builder --mac",
+    "build:linux": "pnpm build:electron && electron-builder --linux",
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "lint:fix": "eslint . --ext ts,tsx --fix",
+    "type-check": "tsc --noEmit",
+    "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "db:migrate": "tsx scripts/migration-status.ts run",
+    "db:migrate:status": "tsx scripts/migration-status.ts",
+    "db:migrate:rollback": "tsx scripts/rollback-migration.ts",
+    "db:backup": "tsx scripts/backup-database.ts",
+    "db:backup:list": "tsx scripts/list-backups.ts",
+    "rebuild:electron": "electron-rebuild -f -w better-sqlite3",
+    "rebuild:node": "node scripts/rebuild-for-node.js",
+    "rebuild": "pnpm rebuild:electron",
+    "postinstall": "electron-rebuild -f -w better-sqlite3"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "@tanstack/react-query": "^5.90.2",
+    "better-sqlite3": "^11.7.0",
+    "clsx": "^2.1.1",
+    "dompurify": "^3.3.0",
+    "drizzle-orm": "^0.37.0",
+    "framer-motion": "^11.15.0",
+    "html2pdf.js": "^0.12.1",
+    "lucide-react": "^0.468.0",
+    "next-themes": "^0.4.6",
+    "openai": "^4.79.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-icons": "^5.5.0",
+    "react-markdown": "^10.1.0",
+    "rehype-highlight": "^7.0.2",
+    "remark-gfm": "^4.0.1",
+    "sonner": "^2.0.7",
+    "tailwind-merge": "^3.3.1",
+    "zod": "^3.24.1",
+    "zustand": "^5.0.8"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.1",
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/dompurify": "^3.2.0",
+    "@types/node": "^22.10.2",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@typescript-eslint/eslint-plugin": "^8.20.0",
+    "@typescript-eslint/parser": "^8.20.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "@vitest/coverage-v8": "^2.1.8",
+    "autoprefixer": "^10.4.20",
+    "concurrently": "^9.1.2",
+    "drizzle-kit": "^0.30.2",
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8",
+    "electron-rebuild": "^3.2.9",
+    "eslint": "^9.17.0",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "eslint-plugin-react-refresh": "^0.4.16",
+    "postcss": "^8.4.49",
+    "prettier": "^3.4.2",
+    "tailwindcss": "^3.4.17",
+    "tsx": "^4.19.2",
+    "typescript": "^5.9.3",
+    "vite": "^5.4.11",
+    "vitest": "^2.1.8",
+    "wait-on": "^8.0.1"
+  },
+  "build": {
+    "appId": "com.justicecompanion.app",
+    "productName": "Justice Companion",
+    "asar": true,
+    "asarUnpack": [
+      "node_modules/node-llama-cpp/**/*"
+    ],
+    "files": [
+      "dist/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "build/icon.ico"
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "icon": "build/icon.icns",
+      "category": "public.app-category.productivity"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "icon": "build/icon.png",
+      "category": "Office"
+    }
+  }
+}
