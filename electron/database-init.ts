@@ -16,9 +16,9 @@ export async function initializeDatabase(): Promise<void> {
 
     // Dynamic require to avoid TypeScript cross-directory issues
     // Runtime path: from dist/electron/ to src/ (two levels up)
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+     
     const { databaseManager } = require('../../src/db/database');
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+     
     const { runMigrations } = require('../../src/db/migrate');
 
     // Initialize database connection
@@ -41,7 +41,7 @@ export async function initializeDatabase(): Promise<void> {
 export function closeDatabase(): void {
   try {
     // Runtime path: from dist/electron/ to src/ (two levels up)
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+     
     const { databaseManager } = require('../../src/db/database');
 
     databaseManager.close();

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { useCaseFacts } from './useCaseFacts';
-import type { CaseFact, CreateCaseFactInput, UpdateCaseFactInput } from '../models/CaseFact';
+import type { CaseFact, CreateCaseFactInput, UpdateCaseFactInput } from '../../../models/CaseFact';
 
 /**
  * Test Suite for useCaseFacts Hook
@@ -261,7 +261,7 @@ describe('useCaseFacts', () => {
         data: newFact,
       });
 
-      let created: CaseFact;
+      let created!: CaseFact;
       await act(async () => {
         created = await result.current.createCaseFact(input);
       });
@@ -304,7 +304,7 @@ describe('useCaseFacts', () => {
         data: newFact,
       });
 
-      let created: CaseFact;
+      let created!: CaseFact;
       await act(async () => {
         created = await result.current.createCaseFact(input);
       });
@@ -357,7 +357,7 @@ describe('useCaseFacts', () => {
           data: newFact,
         });
 
-        let created: CaseFact;
+        let created!: CaseFact;
         await act(async () => {
           created = await result.current.createCaseFact(input);
         });
@@ -408,7 +408,7 @@ describe('useCaseFacts', () => {
           data: newFact,
         });
 
-        let created: CaseFact;
+        let created!: CaseFact;
         await act(async () => {
           created = await result.current.createCaseFact(input);
         });
@@ -501,7 +501,7 @@ describe('useCaseFacts', () => {
         data: updatedFact,
       });
 
-      let returned: CaseFact;
+      let returned!: CaseFact;
       await act(async () => {
         returned = await result.current.updateCaseFact(1, updateInput);
       });

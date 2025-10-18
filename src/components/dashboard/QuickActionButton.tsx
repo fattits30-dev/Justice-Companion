@@ -1,6 +1,7 @@
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { motion } from 'framer-motion';
 import { LucideIcon } from 'lucide-react';
+import { memo, useMemo, useCallback } from 'react';
 
 interface QuickActionButtonProps {
   icon: LucideIcon;
@@ -67,8 +68,10 @@ const colorConfig = {
 
 /**
  * Modern quick action button with glow effects and animations
+ *
+ * @performance Memoized to prevent unnecessary re-renders when props haven't changed
  */
-export function QuickActionButton({
+const QuickActionButtonComponent = ({
   icon: Icon,
   label,
   description,
@@ -76,9 +79,33 @@ export function QuickActionButton({
   color = 'blue',
   delay = 0,
   shortcut,
-}: QuickActionButtonProps): JSX.Element {
+}: QuickActionButtonProps): JSX.Element => {
   const prefersReducedMotion = useReducedMotion();
   const config = colorConfig[color];
+
+  // Memoize click handler to prevent child re-renders
+  const handleClick = useCallback(() => {
+    onClick();
+  }, [onClick]);
+
+  // Memoize animation variants to prevent recreation on every render
+  const whileHoverVariant = useMemo(() => (
+    prefersReducedMotion
+      ? {}
+      : {
+        scale: 1.02,
+        y: -2,
+        transition: { duration: 0.2 },
+      }
+  ), [prefersReducedMotion]);
+
+  const whileTapVariant = useMemo(() => (
+    prefersReducedMotion ? {} : { scale: 0.98 }
+  ), [prefersReducedMotion]);
+
+  const iconHoverVariant = useMemo(() => (
+    prefersReducedMotion ? {} : { rotate: [0, -10, 10, 0] }
+  ), [prefersReducedMotion]);
 
   return (
     <motion.button
@@ -88,17 +115,9 @@ export function QuickActionButton({
         duration: prefersReducedMotion ? 0 : 0.3,
         delay: prefersReducedMotion ? 0 : delay,
       }}
-      whileHover={
-        prefersReducedMotion
-          ? {}
-          : {
-            scale: 1.02,
-            y: -2,
-            transition: { duration: 0.2 },
-          }
-      }
-      whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
-      onClick={onClick}
+      whileHover={whileHoverVariant}
+      whileTap={whileTapVariant}
+      onClick={handleClick}
       className={`
         group relative overflow-hidden
         flex items-start gap-4 p-5
@@ -119,7 +138,7 @@ export function QuickActionButton({
 
       {/* Icon container */}
       <motion.div
-        whileHover={prefersReducedMotion ? {} : { rotate: [0, -10, 10, 0] }}
+        whileHover={iconHoverVariant}
         transition={{ duration: 0.5 }}
         className={`
           relative p-3.5 rounded-xl
@@ -154,4 +173,7 @@ export function QuickActionButton({
       </div>
     </motion.button>
   );
-}
+};
+
+// Export memoized component to prevent unnecessary re-renders
+export const QuickActionButton = memo(QuickActionButtonComponent);

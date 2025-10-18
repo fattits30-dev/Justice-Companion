@@ -1,3 +1,4 @@
+import { memo, useMemo } from 'react';
 import type { RefObject } from 'react';
 import type { ChatMessage } from '../../../types/ai';
 import type { AILoadingState, ProgressStage } from '../hooks/useAI';
@@ -34,8 +35,9 @@ export interface MessageListProps {
  *
  * @param {MessageListProps} props - Component props
  * @returns {JSX.Element} Scrollable message list
+ * @performance Memoized to prevent unnecessary re-renders when props haven't changed
  */
-export function MessageList({
+const MessageListComponent = ({
   messages,
   streamingContent,
   isStreaming,
@@ -45,7 +47,13 @@ export function MessageList({
   progressStages,
   messagesEndRef,
   caseId,
-}: MessageListProps): JSX.Element {
+}: MessageListProps): JSX.Element => {
+  // Memoize streaming message object to prevent recreation on every render
+  const streamingMessage = useMemo<ChatMessage>(() => ({
+    role: 'assistant',
+    content: streamingContent,
+    timestamp: new Date().toISOString(),
+  }), [streamingContent]);
   return (
     <div className="flex-1 overflow-y-auto p-4">
       <div className="mx-auto space-y-4 pb-32">
@@ -85,11 +93,7 @@ export function MessageList({
         {/* Streaming assistant response */}
         {isStreaming && streamingContent.length > 0 && (
           <MessageBubble
-            message={{
-              role: 'assistant',
-              content: streamingContent,
-              timestamp: new Date().toISOString(),
-            }}
+            message={streamingMessage}
             isStreaming={true}
           />
         )}
@@ -127,4 +131,7 @@ export function MessageList({
       </div>
     </div>
   );
-}
+};
+
+// Export memoized component to prevent unnecessary re-renders
+export const MessageList = memo(MessageListComponent);

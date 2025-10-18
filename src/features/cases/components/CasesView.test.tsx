@@ -37,6 +37,7 @@ describe('CasesView', () => {
   const mockCases: Case[] = [
     {
       id: 1,
+      userId: 1,
       title: 'Employment Case',
       caseType: 'employment',
       description: 'Test case 1',
@@ -46,6 +47,7 @@ describe('CasesView', () => {
     },
     {
       id: 2,
+      userId: 1,
       title: 'Housing Case',
       caseType: 'housing',
       description: 'Test case 2',

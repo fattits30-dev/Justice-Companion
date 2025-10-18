@@ -170,7 +170,7 @@ describe('PostItNote', () => {
       const noteDiv = container.firstChild as HTMLElement;
       await user.click(noteDiv);
 
-      const textarea = screen.getByRole('textbox');
+      const textarea = screen.getByRole('textbox') as HTMLTextAreaElement;
       expect(textarea).toHaveFocus();
       // Text should be selected (selectionStart: 0, selectionEnd: length)
       expect(textarea.selectionStart).toBe(0);

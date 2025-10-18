@@ -38,10 +38,10 @@ import type { ChatConversation } from './models/ChatConversation';
 const createMockSession = (userId: number, expired = false): Session => ({
   id: 'mock-session-id',
   userId,
-  token: 'mock-token',
-  createdAt: Date.now() - 3600000, // 1 hour ago
-  expiresAt: expired ? Date.now() - 1000 : Date.now() + 3600000, // Expired or 1 hour from now
-  lastActivityAt: Date.now(),
+  createdAt: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
+  expiresAt: expired ? new Date(Date.now() - 1000).toISOString() : new Date(Date.now() + 3600000).toISOString(), // Expired or 1 hour from now
+  ipAddress: '127.0.0.1',
+  userAgent: 'test-agent',
   rememberMe: false,
 });
 
@@ -66,13 +66,11 @@ const createMockEvidence = (id: number, caseId: number): Evidence => ({
   id,
   caseId,
   title: `Test Evidence ${id}`,
-  description: 'Test description',
   evidenceType: 'document',
   filePath: `/path/to/evidence-${id}.pdf`,
-  fileSize: 1024,
-  mimeType: 'application/pdf',
-  dateObtained: new Date().toISOString(),
-  uploadedAt: new Date().toISOString(),
+  content: null,
+  obtainedDate: new Date().toISOString(),
+  createdAt: new Date().toISOString(),
 });
 
 /**
@@ -81,6 +79,7 @@ const createMockEvidence = (id: number, caseId: number): Evidence => ({
 const createMockConversation = (id: number, caseId: number | null): ChatConversation => ({
   id,
   caseId,
+  userId: 1,
   title: `Test Conversation ${id}`,
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
@@ -316,7 +315,7 @@ describe('Case Handlers Authorization', () => {
           throw new Error('Unauthorized: No active session');
         }
         const session = mockSessionRepository.findById(mockCurrentSessionId);
-        if (!session) throw new Error('Unauthorized: Invalid session');
+        if (!session) {throw new Error('Unauthorized: Invalid session');}
         return session.userId;
       };
 
@@ -543,9 +542,6 @@ describe('Evidence Handlers Authorization', () => {
   let mockAuthorizationMiddleware: {
     verifyCaseOwnership: Mock;
   };
-  let mockSessionRepository: {
-    findById: Mock;
-  };
 
   beforeEach(() => {
     mockEvidenceRepository = {
@@ -564,10 +560,6 @@ describe('Evidence Handlers Authorization', () => {
 
     mockAuthorizationMiddleware = {
       verifyCaseOwnership: vi.fn(),
-    };
-
-    mockSessionRepository = {
-      findById: vi.fn(),
     };
   });
 
@@ -963,7 +955,6 @@ describe('GDPR Handlers Authorization', () => {
       // The new code must have: DELETE FROM cases WHERE user_id = ?
 
       // Arrange
-      const userId = 1;
       const dangerousStatement = 'DELETE FROM cases'; // No WHERE clause
       const secureStatement = 'DELETE FROM cases WHERE user_id = ?'; // With WHERE
 

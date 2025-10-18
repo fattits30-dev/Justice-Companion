@@ -238,8 +238,8 @@ export class ValidationMiddleware {
         if ('expected' in err && 'received' in err) {
           message = `Expected ${String(err.expected)}, received ${String(err.received)}`;
         }
-      } else if (err.code === 'invalid_value') {
-        // In Zod v4, enum validation uses invalid_value instead of invalid_enum_value
+      } else if (err.code === 'invalid_enum_value') {
+        // Zod enum validation error
         message = 'Please select a valid option';
       }
 

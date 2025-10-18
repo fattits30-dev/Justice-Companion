@@ -1,10 +1,29 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { AuthenticationService, AuthenticationError } from './AuthenticationService';
+import { AuthenticationService } from './AuthenticationService';
 import { UserRepository } from '../repositories/UserRepository';
 import { SessionRepository } from '../repositories/SessionRepository';
 import { AuditLogger } from './AuditLogger';
 import { TestDatabaseHelper } from '../test-utils/database-test-helper';
 import { databaseManager } from '../db/database';
+
+// Type for audit log entries returned by test helper
+interface TestAuditLog {
+  id: string;
+  timestamp: string;
+  eventType: string;
+  userId: string | null;
+  resourceType: string;
+  resourceId: string;
+  action: string;
+  details: Record<string, unknown> | null;
+  ipAddress: string | null;
+  userAgent: string | null;
+  success: boolean;
+  errorMessage: string | null;
+  integrityHash: string;
+  previousLogHash: string | null;
+  createdAt: string;
+}
 
 describe('AuthenticationService', () => {
   let authService: AuthenticationService;
@@ -152,9 +171,9 @@ describe('AuthenticationService', () => {
     it('should log registration event', async () => {
       await authService.register('testuser', 'SecurePass123', 'test@example.com');
 
-      const logs = auditLogger['getAllLogs']();
+      const logs = (auditLogger as any).getAllLogs() as TestAuditLog[];
       // Filter to get only user.register events (excluding user.create from repository)
-      const registerLog = logs.find((log) => log.eventType === 'user.register');
+      const registerLog = logs.find((log: TestAuditLog) => log.eventType === 'user.register');
 
       expect(registerLog).toBeDefined();
       expect(registerLog?.success).toBe(true);
@@ -249,8 +268,8 @@ describe('AuthenticationService', () => {
     it('should log successful login', async () => {
       await authService.login('testuser', 'SecurePass123');
 
-      const logs = auditLogger['getAllLogs']();
-      const loginLog = logs.find((log) => log.eventType === 'user.login' && log.success === true);
+      const logs = (auditLogger as any).getAllLogs() as TestAuditLog[];
+      const loginLog = logs.find((log: TestAuditLog) => log.eventType === 'user.login' && log.success === true);
 
       expect(loginLog).toBeDefined();
       expect(loginLog?.details).toHaveProperty('sessionId');
@@ -263,8 +282,8 @@ describe('AuthenticationService', () => {
         // Expected to fail
       }
 
-      const logs = auditLogger['getAllLogs']();
-      const failedLog = logs.find((log) => log.eventType === 'user.login' && log.success === false);
+      const logs = (auditLogger as any).getAllLogs() as TestAuditLog[];
+      const failedLog = logs.find((log: TestAuditLog) => log.eventType === 'user.login' && log.success === false);
 
       expect(failedLog).toBeDefined();
       expect(failedLog?.details).toMatchObject({
@@ -278,7 +297,6 @@ describe('AuthenticationService', () => {
       // We can't directly test timing safety, but we ensure different passwords
       // still take similar time (no early return on first different byte)
 
-      const correctPassword = 'SecurePass123';
       const wrongPassword1 = 'AecurePass123'; // First char different
       const wrongPassword2 = 'SecurePass12A'; // Last char different
 
@@ -321,8 +339,8 @@ describe('AuthenticationService', () => {
     it('should log logout event', async () => {
       await authService.logout(sessionId);
 
-      const logs = auditLogger['getAllLogs']();
-      const logoutLog = logs.find((log) => log.eventType === 'user.logout');
+      const logs = (auditLogger as any).getAllLogs() as TestAuditLog[];
+      const logoutLog = logs.find((log: TestAuditLog) => log.eventType === 'user.logout');
 
       expect(logoutLog).toBeDefined();
       expect(logoutLog?.success).toBe(true);
@@ -431,9 +449,9 @@ describe('AuthenticationService', () => {
     it('should log password change event', async () => {
       await authService.changePassword(userId, 'OldPassword123', 'NewPassword456');
 
-      const logs = auditLogger['getAllLogs']();
+      const logs = (auditLogger as any).getAllLogs() as TestAuditLog[];
       const passwordChangeLog = logs.find(
-        (log) => log.eventType === 'user.password_change' && log.success === true
+        (log: TestAuditLog) => log.eventType === 'user.password_change' && log.success === true
       );
 
       expect(passwordChangeLog).toBeDefined();
@@ -447,9 +465,9 @@ describe('AuthenticationService', () => {
         // Expected to fail
       }
 
-      const logs = auditLogger['getAllLogs']();
+      const logs = (auditLogger as any).getAllLogs() as TestAuditLog[];
       const failedLog = logs.find(
-        (log) => log.eventType === 'user.password_change' && log.success === false
+        (log: TestAuditLog) => log.eventType === 'user.password_change' && log.success === false
       );
 
       expect(failedLog).toBeDefined();
@@ -498,8 +516,8 @@ describe('AuthenticationService', () => {
 
       authService.cleanupExpiredSessions();
 
-      const logs = auditLogger['getAllLogs']();
-      const cleanupLog = logs.find((log) => log.eventType === 'session.cleanup');
+      const logs = (auditLogger as any).getAllLogs() as TestAuditLog[];
+      const cleanupLog = logs.find((log: TestAuditLog) => log.eventType === 'session.cleanup');
 
       expect(cleanupLog).toBeDefined();
       expect(cleanupLog?.details).toMatchObject({ deletedCount: 1 });

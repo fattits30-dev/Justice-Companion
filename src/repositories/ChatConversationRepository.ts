@@ -20,8 +20,11 @@ import { errorLogger } from '../utils/error-logger';
  * - Backward compatibility with legacy plaintext messages
  */
 class ChatConversationRepository {
-  private encryptionService?: EncryptionService;
-  private auditLogger?: AuditLogger;
+  constructor(
+    private encryptionService: EncryptionService,
+    private auditLogger?: AuditLogger,
+  ) {}
+
   /**
    * Create a new conversation
    */
@@ -325,25 +328,11 @@ class ChatConversationRepository {
     }
   }
 
-  /**
-   * Set encryption service (for dependency injection)
-   */
-  setEncryptionService(service: EncryptionService): void {
-    this.encryptionService = service;
-  }
-
   private requireEncryptionService(): EncryptionService {
     if (!this.encryptionService) {
       throw new Error('EncryptionService not configured for ChatConversationRepository');
     }
     return this.encryptionService;
-  }
-
-  /**
-   * Set audit logger (for dependency injection)
-   */
-  setAuditLogger(logger: AuditLogger): void {
-    this.auditLogger = logger;
   }
 
   /**
@@ -369,4 +358,4 @@ class ChatConversationRepository {
   }
 }
 
-export const chatConversationRepository = new ChatConversationRepository();
+export { ChatConversationRepository };

@@ -25,12 +25,6 @@ function render(ui: React.ReactElement) {
   );
 }
 
-// Helper function to click tabs
-const clickTab = async (tabName: string): Promise<void> => {
-  const tab = screen.getByRole('tab', { name: tabName });
-  await userEvent.setup().click(tab);
-};
-
 // Mock window.justiceAPI
 const mockJusticeAPI = {
   // Auth methods (required by AuthProvider)

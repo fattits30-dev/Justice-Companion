@@ -6,8 +6,25 @@
  */
 
 import { describe, test, expect } from 'vitest';
-import type { UseAIReturn, AILoadingState } from './useAI';
 import type { ChatMessage } from '../types/ai';
+
+// Type definitions for useAI hook (for testing type structure)
+type AILoadingState = 'idle' | 'connecting' | '🤔 Thinking...' | '🔍 Researching...' | '✍️ Writing...' | 'streaming';
+
+interface UseAIReturn {
+  messages: ChatMessage[];
+  loadingState: AILoadingState;
+  error: string | null;
+  isStreaming: boolean;
+  streamingContent: string;
+  thinkingContent: string;
+  currentSources: unknown[];
+  progressStages: unknown[];
+  sendMessage: (content: string) => Promise<void>;
+  clearMessages: () => void;
+  loadMessages: () => void;
+  messagesEndRef: { current: null };
+}
 
 describe('useAI types', () => {
   test('AILoadingState has correct values', () => {

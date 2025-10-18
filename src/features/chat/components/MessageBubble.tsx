@@ -1,4 +1,4 @@
-import { memo, useState } from 'react';
+import { memo, useState, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { SourceCitation } from '../../../components/SourceCitation';
@@ -39,6 +39,11 @@ export const MessageBubble = memo(function MessageBubble({
   const isUser = message.role === 'user';
   const isAssistant = message.role === 'assistant';
   const [isReasoningExpanded, setIsReasoningExpanded] = useState(false);
+
+  // Memoize reasoning toggle handler to prevent child re-renders
+  const handleToggleReasoning = useCallback(() => {
+    setIsReasoningExpanded(!isReasoningExpanded);
+  }, [isReasoningExpanded]);
 
   // TEMPORARY: Citation extraction disabled due to bundling issues with @beshkenadze/eyecite
   // TODO: Move citation processing to main process or fix Vite bundling
@@ -150,7 +155,7 @@ export const MessageBubble = memo(function MessageBubble({
         {isAssistant && message.thinkingContent && message.thinkingContent.length > 0 && (
           <div className="mt-2 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200 overflow-hidden">
             <button
-              onClick={() => setIsReasoningExpanded(!isReasoningExpanded)}
+              onClick={handleToggleReasoning}
               className="w-full px-4 py-2.5 flex items-center justify-between hover:bg-blue-100 transition-colors focus:outline-none focus:ring-3 focus:ring-blue-500 focus:ring-inset"
               aria-label={
                 isReasoningExpanded

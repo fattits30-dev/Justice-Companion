@@ -1,8 +1,12 @@
-import { userFactsRepository } from '../../../repositories/UserFactsRepository';
+import { getRepositories } from '../../../repositories';
 import type { UserFact, CreateUserFactInput, UpdateUserFactInput } from '../../../models/UserFact';
 import { errorLogger } from '../../../utils/error-logger';
 
 export class UserFactsService {
+  private get userFactsRepository() {
+    return getRepositories().userFactsRepository;
+  }
+
   /**
    * Create a new user fact for a case
    */
@@ -17,7 +21,7 @@ export class UserFactsService {
         throw new Error('User fact content must be 5000 characters or less');
       }
 
-      return userFactsRepository.create(input);
+      return this.userFactsRepository.create(input);
     } catch (error) {
       errorLogger.logError(error as Error, {
         context: 'createUserFact',
@@ -33,7 +37,7 @@ export class UserFactsService {
    */
   getUserFactById(id: number): UserFact | null {
     try {
-      return userFactsRepository.findById(id);
+      return this.userFactsRepository.findById(id);
     } catch (error) {
       errorLogger.logError(error as Error, { context: 'getUserFactById', id });
       throw error;
@@ -45,7 +49,7 @@ export class UserFactsService {
    */
   getUserFactsByCaseId(caseId: number): UserFact[] {
     try {
-      return userFactsRepository.findByCaseId(caseId);
+      return this.userFactsRepository.findByCaseId(caseId);
     } catch (error) {
       errorLogger.logError(error as Error, { context: 'getUserFactsByCaseId', caseId });
       throw error;
@@ -57,7 +61,7 @@ export class UserFactsService {
    */
   getUserFactsByType(caseId: number, factType: string): UserFact[] {
     try {
-      return userFactsRepository.findByType(caseId, factType);
+      return this.userFactsRepository.findByType(caseId, factType);
     } catch (error) {
       errorLogger.logError(error as Error, { context: 'getUserFactsByType', caseId, factType });
       throw error;
@@ -78,7 +82,7 @@ export class UserFactsService {
         throw new Error('User fact content must be 5000 characters or less');
       }
 
-      const userFact = userFactsRepository.update(id, input);
+      const userFact = this.userFactsRepository.update(id, input);
 
       if (!userFact) {
         throw new Error('User fact not found');
@@ -100,7 +104,7 @@ export class UserFactsService {
    */
   deleteUserFact(id: number): void {
     try {
-      userFactsRepository.delete(id);
+      this.userFactsRepository.delete(id);
     } catch (error) {
       errorLogger.logError(error as Error, {
         context: 'deleteUserFact',

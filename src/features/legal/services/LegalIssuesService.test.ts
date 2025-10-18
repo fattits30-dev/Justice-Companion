@@ -1,18 +1,22 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { LegalIssuesService } from './LegalIssuesService';
-import { legalIssuesRepository } from '../../../repositories/LegalIssuesRepository';
 import { errorLogger } from '../../../utils/error-logger';
 import type { LegalIssue } from '../../../models/LegalIssue';
 
-// Mock dependencies
-vi.mock('../../../repositories/LegalIssuesRepository', () => ({
-  legalIssuesRepository: {
-    create: vi.fn(),
-    findById: vi.fn(),
-    findByCaseId: vi.fn(),
-    update: vi.fn(),
-    delete: vi.fn(),
-  },
+// Mock centralized repository initialization
+const mockLegalIssuesRepository = {
+  create: vi.fn(),
+  findById: vi.fn(),
+  findByCaseId: vi.fn(),
+  update: vi.fn(),
+  delete: vi.fn(),
+};
+
+vi.mock('../../../repositories', () => ({
+  getRepositories: vi.fn(() => ({
+    legalIssuesRepository: mockLegalIssuesRepository,
+  })),
+  resetRepositories: vi.fn(),
 }));
 
 vi.mock('../../../utils/error-logger', () => ({
@@ -36,11 +40,13 @@ describe('LegalIssuesService', () => {
         caseId: 100,
         title: 'Wrongful Termination',
         description: 'Employee was terminated without cause',
+        relevantLaw: null,
+        guidance: null,
         createdAt: '2025-10-06T00:00:00.000Z',
         updatedAt: '2025-10-06T00:00:00.000Z',
       };
 
-      vi.mocked(legalIssuesRepository.create).mockReturnValue(mockLegalIssue);
+      vi.mocked(mockLegalIssuesRepository.create).mockReturnValue(mockLegalIssue);
 
       const result = legalIssuesService.createLegalIssue({
         caseId: 100,
@@ -49,7 +55,7 @@ describe('LegalIssuesService', () => {
       });
 
       expect(result).toEqual(mockLegalIssue);
-      expect(legalIssuesRepository.create).toHaveBeenCalledWith({
+      expect(mockLegalIssuesRepository.create).toHaveBeenCalledWith({
         caseId: 100,
         title: 'Wrongful Termination',
         description: 'Employee was terminated without cause',
@@ -63,11 +69,13 @@ describe('LegalIssuesService', () => {
         caseId: 100,
         title: 'Discrimination Claim',
         description: null,
+        relevantLaw: null,
+        guidance: null,
         createdAt: '2025-10-06T00:00:00.000Z',
         updatedAt: '2025-10-06T00:00:00.000Z',
       };
 
-      vi.mocked(legalIssuesRepository.create).mockReturnValue(mockLegalIssue);
+      vi.mocked(mockLegalIssuesRepository.create).mockReturnValue(mockLegalIssue);
 
       const result = legalIssuesService.createLegalIssue({
         caseId: 100,
@@ -75,7 +83,7 @@ describe('LegalIssuesService', () => {
       });
 
       expect(result).toEqual(mockLegalIssue);
-      expect(legalIssuesRepository.create).toHaveBeenCalled();
+      expect(mockLegalIssuesRepository.create).toHaveBeenCalled();
     });
 
     it('should throw error if title is empty', () => {
@@ -87,7 +95,7 @@ describe('LegalIssuesService', () => {
         'Legal issue title is required'
       );
 
-      expect(legalIssuesRepository.create).not.toHaveBeenCalled();
+      expect(mockLegalIssuesRepository.create).not.toHaveBeenCalled();
     });
 
     it('should throw error if title exceeds 200 characters', () => {
@@ -97,7 +105,7 @@ describe('LegalIssuesService', () => {
         'Legal issue title must be 200 characters or less'
       );
 
-      expect(legalIssuesRepository.create).not.toHaveBeenCalled();
+      expect(mockLegalIssuesRepository.create).not.toHaveBeenCalled();
     });
 
     it('should accept title exactly 200 characters', () => {
@@ -107,11 +115,13 @@ describe('LegalIssuesService', () => {
         caseId: 100,
         title: maxTitle,
         description: null,
+        relevantLaw: null,
+        guidance: null,
         createdAt: '2025-10-06T00:00:00.000Z',
         updatedAt: '2025-10-06T00:00:00.000Z',
       };
 
-      vi.mocked(legalIssuesRepository.create).mockReturnValue(mockLegalIssue);
+      vi.mocked(mockLegalIssuesRepository.create).mockReturnValue(mockLegalIssue);
 
       const result = legalIssuesService.createLegalIssue({
         caseId: 100,
@@ -119,7 +129,7 @@ describe('LegalIssuesService', () => {
       });
 
       expect(result).toEqual(mockLegalIssue);
-      expect(legalIssuesRepository.create).toHaveBeenCalled();
+      expect(mockLegalIssuesRepository.create).toHaveBeenCalled();
     });
 
     it('should throw error if description exceeds 10000 characters', () => {
@@ -133,7 +143,7 @@ describe('LegalIssuesService', () => {
         })
       ).toThrow('Legal issue description must be 10000 characters or less');
 
-      expect(legalIssuesRepository.create).not.toHaveBeenCalled();
+      expect(mockLegalIssuesRepository.create).not.toHaveBeenCalled();
     });
 
     it('should accept description exactly 10000 characters', () => {
@@ -143,11 +153,13 @@ describe('LegalIssuesService', () => {
         caseId: 100,
         title: 'Test Title',
         description: maxDescription,
+        relevantLaw: null,
+        guidance: null,
         createdAt: '2025-10-06T00:00:00.000Z',
         updatedAt: '2025-10-06T00:00:00.000Z',
       };
 
-      vi.mocked(legalIssuesRepository.create).mockReturnValue(mockLegalIssue);
+      vi.mocked(mockLegalIssuesRepository.create).mockReturnValue(mockLegalIssue);
 
       const result = legalIssuesService.createLegalIssue({
         caseId: 100,
@@ -156,12 +168,12 @@ describe('LegalIssuesService', () => {
       });
 
       expect(result).toEqual(mockLegalIssue);
-      expect(legalIssuesRepository.create).toHaveBeenCalled();
+      expect(mockLegalIssuesRepository.create).toHaveBeenCalled();
     });
 
     it('should log and rethrow repository errors', () => {
       const error = new Error('Database error');
-      vi.mocked(legalIssuesRepository.create).mockImplementation(() => {
+      vi.mocked(mockLegalIssuesRepository.create).mockImplementation(() => {
         throw error;
       });
 
@@ -190,30 +202,32 @@ describe('LegalIssuesService', () => {
         caseId: 100,
         title: 'Test Issue',
         description: 'Test description',
+        relevantLaw: null,
+        guidance: null,
         createdAt: '2025-10-06T00:00:00.000Z',
         updatedAt: '2025-10-06T00:00:00.000Z',
       };
 
-      vi.mocked(legalIssuesRepository.findById).mockReturnValue(mockLegalIssue);
+      vi.mocked(mockLegalIssuesRepository.findById).mockReturnValue(mockLegalIssue);
 
       const result = legalIssuesService.getLegalIssueById(1);
 
       expect(result).toEqual(mockLegalIssue);
-      expect(legalIssuesRepository.findById).toHaveBeenCalledWith(1);
+      expect(mockLegalIssuesRepository.findById).toHaveBeenCalledWith(1);
     });
 
     it('should return null if legal issue not found', () => {
-      vi.mocked(legalIssuesRepository.findById).mockReturnValue(null);
+      vi.mocked(mockLegalIssuesRepository.findById).mockReturnValue(null);
 
       const result = legalIssuesService.getLegalIssueById(999);
 
       expect(result).toBeNull();
-      expect(legalIssuesRepository.findById).toHaveBeenCalledWith(999);
+      expect(mockLegalIssuesRepository.findById).toHaveBeenCalledWith(999);
     });
 
     it('should log and rethrow repository errors', () => {
       const error = new Error('Database error');
-      vi.mocked(legalIssuesRepository.findById).mockImplementation(() => {
+      vi.mocked(mockLegalIssuesRepository.findById).mockImplementation(() => {
         throw error;
       });
 
@@ -233,6 +247,8 @@ describe('LegalIssuesService', () => {
           caseId: 100,
           title: 'Issue 1',
           description: 'Description 1',
+          relevantLaw: null,
+          guidance: null,
           createdAt: '2025-10-06T00:00:00.000Z',
           updatedAt: '2025-10-06T00:00:00.000Z',
         },
@@ -241,31 +257,33 @@ describe('LegalIssuesService', () => {
           caseId: 100,
           title: 'Issue 2',
           description: 'Description 2',
+          relevantLaw: null,
+          guidance: null,
           createdAt: '2025-10-06T00:01:00.000Z',
           updatedAt: '2025-10-06T00:01:00.000Z',
         },
       ];
 
-      vi.mocked(legalIssuesRepository.findByCaseId).mockReturnValue(mockLegalIssues);
+      vi.mocked(mockLegalIssuesRepository.findByCaseId).mockReturnValue(mockLegalIssues);
 
       const result = legalIssuesService.getLegalIssuesByCaseId(100);
 
       expect(result).toEqual(mockLegalIssues);
-      expect(legalIssuesRepository.findByCaseId).toHaveBeenCalledWith(100);
+      expect(mockLegalIssuesRepository.findByCaseId).toHaveBeenCalledWith(100);
     });
 
     it('should return empty array if no legal issues exist', () => {
-      vi.mocked(legalIssuesRepository.findByCaseId).mockReturnValue([]);
+      vi.mocked(mockLegalIssuesRepository.findByCaseId).mockReturnValue([]);
 
       const result = legalIssuesService.getLegalIssuesByCaseId(999);
 
       expect(result).toEqual([]);
-      expect(legalIssuesRepository.findByCaseId).toHaveBeenCalledWith(999);
+      expect(mockLegalIssuesRepository.findByCaseId).toHaveBeenCalledWith(999);
     });
 
     it('should log and rethrow repository errors', () => {
       const error = new Error('Database error');
-      vi.mocked(legalIssuesRepository.findByCaseId).mockImplementation(() => {
+      vi.mocked(mockLegalIssuesRepository.findByCaseId).mockImplementation(() => {
         throw error;
       });
 
@@ -284,11 +302,13 @@ describe('LegalIssuesService', () => {
         caseId: 100,
         title: 'Updated Title',
         description: 'Updated description',
+        relevantLaw: null,
+        guidance: null,
         createdAt: '2025-10-06T00:00:00.000Z',
         updatedAt: '2025-10-06T00:05:00.000Z',
       };
 
-      vi.mocked(legalIssuesRepository.update).mockReturnValue(mockLegalIssue);
+      vi.mocked(mockLegalIssuesRepository.update).mockReturnValue(mockLegalIssue);
 
       const result = legalIssuesService.updateLegalIssue(1, {
         title: 'Updated Title',
@@ -296,7 +316,7 @@ describe('LegalIssuesService', () => {
       });
 
       expect(result).toEqual(mockLegalIssue);
-      expect(legalIssuesRepository.update).toHaveBeenCalledWith(1, {
+      expect(mockLegalIssuesRepository.update).toHaveBeenCalledWith(1, {
         title: 'Updated Title',
         description: 'Updated description',
       });
@@ -309,11 +329,13 @@ describe('LegalIssuesService', () => {
         caseId: 100,
         title: 'Updated Title',
         description: 'Original description',
+        relevantLaw: null,
+        guidance: null,
         createdAt: '2025-10-06T00:00:00.000Z',
         updatedAt: '2025-10-06T00:05:00.000Z',
       };
 
-      vi.mocked(legalIssuesRepository.update).mockReturnValue(mockLegalIssue);
+      vi.mocked(mockLegalIssuesRepository.update).mockReturnValue(mockLegalIssue);
 
       const result = legalIssuesService.updateLegalIssue(1, {
         title: 'Updated Title',
@@ -331,7 +353,7 @@ describe('LegalIssuesService', () => {
         'Legal issue title cannot be empty'
       );
 
-      expect(legalIssuesRepository.update).not.toHaveBeenCalled();
+      expect(mockLegalIssuesRepository.update).not.toHaveBeenCalled();
     });
 
     it('should throw error if title exceeds 200 characters', () => {
@@ -341,7 +363,7 @@ describe('LegalIssuesService', () => {
         'Legal issue title must be 200 characters or less'
       );
 
-      expect(legalIssuesRepository.update).not.toHaveBeenCalled();
+      expect(mockLegalIssuesRepository.update).not.toHaveBeenCalled();
     });
 
     it('should throw error if description exceeds 10000 characters', () => {
@@ -351,22 +373,22 @@ describe('LegalIssuesService', () => {
         legalIssuesService.updateLegalIssue(1, { description: longDescription })
       ).toThrow('Legal issue description must be 10000 characters or less');
 
-      expect(legalIssuesRepository.update).not.toHaveBeenCalled();
+      expect(mockLegalIssuesRepository.update).not.toHaveBeenCalled();
     });
 
     it('should throw error if legal issue not found', () => {
-      vi.mocked(legalIssuesRepository.update).mockReturnValue(null);
+      vi.mocked(mockLegalIssuesRepository.update).mockReturnValue(null);
 
       expect(() => legalIssuesService.updateLegalIssue(999, { title: 'Test' })).toThrow(
         'Legal issue not found'
       );
 
-      expect(legalIssuesRepository.update).toHaveBeenCalledWith(999, { title: 'Test' });
+      expect(mockLegalIssuesRepository.update).toHaveBeenCalledWith(999, { title: 'Test' });
     });
 
     it('should log and rethrow repository errors', () => {
       const error = new Error('Database error');
-      vi.mocked(legalIssuesRepository.update).mockImplementation(() => {
+      vi.mocked(mockLegalIssuesRepository.update).mockImplementation(() => {
         throw error;
       });
 
@@ -387,17 +409,17 @@ describe('LegalIssuesService', () => {
 
   describe('deleteLegalIssue', () => {
     it('should delete a legal issue successfully', () => {
-      vi.mocked(legalIssuesRepository.delete).mockReturnValue(undefined);
+      vi.mocked(mockLegalIssuesRepository.delete).mockReturnValue(undefined);
 
       legalIssuesService.deleteLegalIssue(1);
 
-      expect(legalIssuesRepository.delete).toHaveBeenCalledWith(1);
+      expect(mockLegalIssuesRepository.delete).toHaveBeenCalledWith(1);
       expect(errorLogger.logError).not.toHaveBeenCalled();
     });
 
     it('should log and rethrow repository errors', () => {
       const error = new Error('Database error');
-      vi.mocked(legalIssuesRepository.delete).mockImplementation(() => {
+      vi.mocked(mockLegalIssuesRepository.delete).mockImplementation(() => {
         throw error;
       });
 
@@ -417,11 +439,13 @@ describe('LegalIssuesService', () => {
         caseId: 100,
         title: specialTitle,
         description: null,
+        relevantLaw: null,
+        guidance: null,
         createdAt: '2025-10-06T00:00:00.000Z',
         updatedAt: '2025-10-06T00:00:00.000Z',
       };
 
-      vi.mocked(legalIssuesRepository.create).mockReturnValue(mockLegalIssue);
+      vi.mocked(mockLegalIssuesRepository.create).mockReturnValue(mockLegalIssue);
 
       const result = legalIssuesService.createLegalIssue({
         caseId: 100,
@@ -439,11 +463,13 @@ describe('LegalIssuesService', () => {
         caseId: 100,
         title: unicodeTitle,
         description: unicodeDescription,
+        relevantLaw: null,
+        guidance: null,
         createdAt: '2025-10-06T00:00:00.000Z',
         updatedAt: '2025-10-06T00:00:00.000Z',
       };
 
-      vi.mocked(legalIssuesRepository.create).mockReturnValue(mockLegalIssue);
+      vi.mocked(mockLegalIssuesRepository.create).mockReturnValue(mockLegalIssue);
 
       const result = legalIssuesService.createLegalIssue({
         caseId: 100,
@@ -462,11 +488,13 @@ describe('LegalIssuesService', () => {
         caseId: 100,
         title: 'Test',
         description: descriptionWithNewlines,
+        relevantLaw: null,
+        guidance: null,
         createdAt: '2025-10-06T00:00:00.000Z',
         updatedAt: '2025-10-06T00:00:00.000Z',
       };
 
-      vi.mocked(legalIssuesRepository.create).mockReturnValue(mockLegalIssue);
+      vi.mocked(mockLegalIssuesRepository.create).mockReturnValue(mockLegalIssue);
 
       const result = legalIssuesService.createLegalIssue({
         caseId: 100,

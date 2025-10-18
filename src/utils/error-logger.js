@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.errorLogger = exports.ErrorLogger = void 0;
 exports.setupGlobalErrorHandlers = setupGlobalErrorHandlers;
-/* eslint-disable no-undef */
+ 
 const fs_1 = __importDefault(require("fs"));
 const fs_2 = require("fs");
 const path_1 = __importDefault(require("path"));

@@ -1,19 +1,23 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { UserFactsService } from './UserFactsService';
-import { userFactsRepository } from '../../../repositories/UserFactsRepository';
 import { errorLogger } from '../../../utils/error-logger';
 import type { UserFact } from '../../../models/UserFact';
 
-// Mock dependencies
-vi.mock('../../../repositories/UserFactsRepository', () => ({
-  userFactsRepository: {
-    create: vi.fn(),
-    findById: vi.fn(),
-    findByCaseId: vi.fn(),
-    findByType: vi.fn(),
-    update: vi.fn(),
-    delete: vi.fn(),
-  },
+// Mock centralized repository initialization
+const mockUserFactsRepository = {
+  create: vi.fn(),
+  findById: vi.fn(),
+  findByCaseId: vi.fn(),
+  findByType: vi.fn(),
+  update: vi.fn(),
+  delete: vi.fn(),
+};
+
+vi.mock('../../../repositories', () => ({
+  getRepositories: vi.fn(() => ({
+    userFactsRepository: mockUserFactsRepository,
+  })),
+  resetRepositories: vi.fn(),
 }));
 
 vi.mock('../../../utils/error-logger', () => ({
@@ -41,7 +45,7 @@ describe('UserFactsService', () => {
         updatedAt: '2025-10-06T00:00:00.000Z',
       };
 
-      vi.mocked(userFactsRepository.create).mockReturnValue(mockUserFact);
+      vi.mocked(mockUserFactsRepository.create).mockReturnValue(mockUserFact);
 
       const result = userFactsService.createUserFact({
         caseId: 100,
@@ -50,7 +54,7 @@ describe('UserFactsService', () => {
       });
 
       expect(result).toEqual(mockUserFact);
-      expect(userFactsRepository.create).toHaveBeenCalledWith({
+      expect(mockUserFactsRepository.create).toHaveBeenCalledWith({
         caseId: 100,
         factType: 'personal',
         factContent: 'John Doe, age 35, software engineer',
@@ -59,7 +63,7 @@ describe('UserFactsService', () => {
     });
 
     it('should create a user fact with different fact types', () => {
-      const factTypes = ['personal', 'employment', 'financial', 'contact', 'medical', 'other'];
+      const factTypes: UserFact['factType'][] = ['personal', 'employment', 'financial', 'contact', 'medical', 'other'];
 
       factTypes.forEach((factType, index) => {
         const mockUserFact: UserFact = {
@@ -71,7 +75,7 @@ describe('UserFactsService', () => {
           updatedAt: '2025-10-06T00:00:00.000Z',
         };
 
-        vi.mocked(userFactsRepository.create).mockReturnValue(mockUserFact);
+        vi.mocked(mockUserFactsRepository.create).mockReturnValue(mockUserFact);
 
         const result = userFactsService.createUserFact({
           caseId: 100,
@@ -100,7 +104,7 @@ describe('UserFactsService', () => {
         })
       ).toThrow('User fact content is required');
 
-      expect(userFactsRepository.create).not.toHaveBeenCalled();
+      expect(mockUserFactsRepository.create).not.toHaveBeenCalled();
     });
 
     it('should throw error if factContent exceeds 5000 characters', () => {
@@ -114,7 +118,7 @@ describe('UserFactsService', () => {
         })
       ).toThrow('User fact content must be 5000 characters or less');
 
-      expect(userFactsRepository.create).not.toHaveBeenCalled();
+      expect(mockUserFactsRepository.create).not.toHaveBeenCalled();
     });
 
     it('should accept factContent exactly 5000 characters', () => {
@@ -128,7 +132,7 @@ describe('UserFactsService', () => {
         updatedAt: '2025-10-06T00:00:00.000Z',
       };
 
-      vi.mocked(userFactsRepository.create).mockReturnValue(mockUserFact);
+      vi.mocked(mockUserFactsRepository.create).mockReturnValue(mockUserFact);
 
       const result = userFactsService.createUserFact({
         caseId: 100,
@@ -137,12 +141,12 @@ describe('UserFactsService', () => {
       });
 
       expect(result).toEqual(mockUserFact);
-      expect(userFactsRepository.create).toHaveBeenCalled();
+      expect(mockUserFactsRepository.create).toHaveBeenCalled();
     });
 
     it('should log and rethrow repository errors', () => {
       const error = new Error('Database error');
-      vi.mocked(userFactsRepository.create).mockImplementation(() => {
+      vi.mocked(mockUserFactsRepository.create).mockImplementation(() => {
         throw error;
       });
 
@@ -176,26 +180,26 @@ describe('UserFactsService', () => {
         updatedAt: '2025-10-06T00:00:00.000Z',
       };
 
-      vi.mocked(userFactsRepository.findById).mockReturnValue(mockUserFact);
+      vi.mocked(mockUserFactsRepository.findById).mockReturnValue(mockUserFact);
 
       const result = userFactsService.getUserFactById(1);
 
       expect(result).toEqual(mockUserFact);
-      expect(userFactsRepository.findById).toHaveBeenCalledWith(1);
+      expect(mockUserFactsRepository.findById).toHaveBeenCalledWith(1);
     });
 
     it('should return null if user fact not found', () => {
-      vi.mocked(userFactsRepository.findById).mockReturnValue(null);
+      vi.mocked(mockUserFactsRepository.findById).mockReturnValue(null);
 
       const result = userFactsService.getUserFactById(999);
 
       expect(result).toBeNull();
-      expect(userFactsRepository.findById).toHaveBeenCalledWith(999);
+      expect(mockUserFactsRepository.findById).toHaveBeenCalledWith(999);
     });
 
     it('should log and rethrow repository errors', () => {
       const error = new Error('Database error');
-      vi.mocked(userFactsRepository.findById).mockImplementation(() => {
+      vi.mocked(mockUserFactsRepository.findById).mockImplementation(() => {
         throw error;
       });
 
@@ -228,26 +232,26 @@ describe('UserFactsService', () => {
         },
       ];
 
-      vi.mocked(userFactsRepository.findByCaseId).mockReturnValue(mockUserFacts);
+      vi.mocked(mockUserFactsRepository.findByCaseId).mockReturnValue(mockUserFacts);
 
       const result = userFactsService.getUserFactsByCaseId(100);
 
       expect(result).toEqual(mockUserFacts);
-      expect(userFactsRepository.findByCaseId).toHaveBeenCalledWith(100);
+      expect(mockUserFactsRepository.findByCaseId).toHaveBeenCalledWith(100);
     });
 
     it('should return empty array if no user facts exist', () => {
-      vi.mocked(userFactsRepository.findByCaseId).mockReturnValue([]);
+      vi.mocked(mockUserFactsRepository.findByCaseId).mockReturnValue([]);
 
       const result = userFactsService.getUserFactsByCaseId(999);
 
       expect(result).toEqual([]);
-      expect(userFactsRepository.findByCaseId).toHaveBeenCalledWith(999);
+      expect(mockUserFactsRepository.findByCaseId).toHaveBeenCalledWith(999);
     });
 
     it('should log and rethrow repository errors', () => {
       const error = new Error('Database error');
-      vi.mocked(userFactsRepository.findByCaseId).mockImplementation(() => {
+      vi.mocked(mockUserFactsRepository.findByCaseId).mockImplementation(() => {
         throw error;
       });
 
@@ -280,26 +284,26 @@ describe('UserFactsService', () => {
         },
       ];
 
-      vi.mocked(userFactsRepository.findByType).mockReturnValue(mockUserFacts);
+      vi.mocked(mockUserFactsRepository.findByType).mockReturnValue(mockUserFacts);
 
       const result = userFactsService.getUserFactsByType(100, 'personal');
 
       expect(result).toEqual(mockUserFacts);
-      expect(userFactsRepository.findByType).toHaveBeenCalledWith(100, 'personal');
+      expect(mockUserFactsRepository.findByType).toHaveBeenCalledWith(100, 'personal');
     });
 
     it('should return empty array if no facts match type', () => {
-      vi.mocked(userFactsRepository.findByType).mockReturnValue([]);
+      vi.mocked(mockUserFactsRepository.findByType).mockReturnValue([]);
 
       const result = userFactsService.getUserFactsByType(100, 'medical');
 
       expect(result).toEqual([]);
-      expect(userFactsRepository.findByType).toHaveBeenCalledWith(100, 'medical');
+      expect(mockUserFactsRepository.findByType).toHaveBeenCalledWith(100, 'medical');
     });
 
     it('should log and rethrow repository errors', () => {
       const error = new Error('Database error');
-      vi.mocked(userFactsRepository.findByType).mockImplementation(() => {
+      vi.mocked(mockUserFactsRepository.findByType).mockImplementation(() => {
         throw error;
       });
 
@@ -326,7 +330,7 @@ describe('UserFactsService', () => {
         updatedAt: '2025-10-06T00:05:00.000Z',
       };
 
-      vi.mocked(userFactsRepository.update).mockReturnValue(mockUserFact);
+      vi.mocked(mockUserFactsRepository.update).mockReturnValue(mockUserFact);
 
       const result = userFactsService.updateUserFact(1, {
         factType: 'employment',
@@ -334,7 +338,7 @@ describe('UserFactsService', () => {
       });
 
       expect(result).toEqual(mockUserFact);
-      expect(userFactsRepository.update).toHaveBeenCalledWith(1, {
+      expect(mockUserFactsRepository.update).toHaveBeenCalledWith(1, {
         factType: 'employment',
         factContent: 'Updated employment information',
       });
@@ -351,7 +355,7 @@ describe('UserFactsService', () => {
         updatedAt: '2025-10-06T00:05:00.000Z',
       };
 
-      vi.mocked(userFactsRepository.update).mockReturnValue(mockUserFact);
+      vi.mocked(mockUserFactsRepository.update).mockReturnValue(mockUserFact);
 
       const result = userFactsService.updateUserFact(1, {
         factContent: 'Updated content',
@@ -369,7 +373,7 @@ describe('UserFactsService', () => {
         'User fact content cannot be empty'
       );
 
-      expect(userFactsRepository.update).not.toHaveBeenCalled();
+      expect(mockUserFactsRepository.update).not.toHaveBeenCalled();
     });
 
     it('should throw error if factContent exceeds 5000 characters', () => {
@@ -379,22 +383,22 @@ describe('UserFactsService', () => {
         'User fact content must be 5000 characters or less'
       );
 
-      expect(userFactsRepository.update).not.toHaveBeenCalled();
+      expect(mockUserFactsRepository.update).not.toHaveBeenCalled();
     });
 
     it('should throw error if user fact not found', () => {
-      vi.mocked(userFactsRepository.update).mockReturnValue(null);
+      vi.mocked(mockUserFactsRepository.update).mockReturnValue(null);
 
       expect(() => userFactsService.updateUserFact(999, { factContent: 'Test' })).toThrow(
         'User fact not found'
       );
 
-      expect(userFactsRepository.update).toHaveBeenCalledWith(999, { factContent: 'Test' });
+      expect(mockUserFactsRepository.update).toHaveBeenCalledWith(999, { factContent: 'Test' });
     });
 
     it('should log and rethrow repository errors', () => {
       const error = new Error('Database error');
-      vi.mocked(userFactsRepository.update).mockImplementation(() => {
+      vi.mocked(mockUserFactsRepository.update).mockImplementation(() => {
         throw error;
       });
 
@@ -415,17 +419,17 @@ describe('UserFactsService', () => {
 
   describe('deleteUserFact', () => {
     it('should delete a user fact successfully', () => {
-      vi.mocked(userFactsRepository.delete).mockReturnValue(undefined);
+      vi.mocked(mockUserFactsRepository.delete).mockReturnValue(undefined);
 
       userFactsService.deleteUserFact(1);
 
-      expect(userFactsRepository.delete).toHaveBeenCalledWith(1);
+      expect(mockUserFactsRepository.delete).toHaveBeenCalledWith(1);
       expect(errorLogger.logError).not.toHaveBeenCalled();
     });
 
     it('should log and rethrow repository errors', () => {
       const error = new Error('Database error');
-      vi.mocked(userFactsRepository.delete).mockImplementation(() => {
+      vi.mocked(mockUserFactsRepository.delete).mockImplementation(() => {
         throw error;
       });
 
@@ -449,7 +453,7 @@ describe('UserFactsService', () => {
         updatedAt: '2025-10-06T00:00:00.000Z',
       };
 
-      vi.mocked(userFactsRepository.create).mockReturnValue(mockUserFact);
+      vi.mocked(mockUserFactsRepository.create).mockReturnValue(mockUserFact);
 
       const result = userFactsService.createUserFact({
         caseId: 100,
@@ -471,7 +475,7 @@ describe('UserFactsService', () => {
         updatedAt: '2025-10-06T00:00:00.000Z',
       };
 
-      vi.mocked(userFactsRepository.create).mockReturnValue(mockUserFact);
+      vi.mocked(mockUserFactsRepository.create).mockReturnValue(mockUserFact);
 
       const result = userFactsService.createUserFact({
         caseId: 100,
@@ -494,7 +498,7 @@ describe('UserFactsService', () => {
         updatedAt: '2025-10-06T00:00:00.000Z',
       };
 
-      vi.mocked(userFactsRepository.create).mockReturnValue(mockUserFact);
+      vi.mocked(mockUserFactsRepository.create).mockReturnValue(mockUserFact);
 
       const result = userFactsService.createUserFact({
         caseId: 100,
@@ -517,7 +521,7 @@ describe('UserFactsService', () => {
         updatedAt: '2025-10-06T00:00:00.000Z',
       };
 
-      vi.mocked(userFactsRepository.create).mockReturnValue(mockUserFact);
+      vi.mocked(mockUserFactsRepository.create).mockReturnValue(mockUserFact);
 
       const result = userFactsService.createUserFact({
         caseId: 100,

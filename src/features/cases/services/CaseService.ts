@@ -1,8 +1,12 @@
-import { caseRepository } from '../../../repositories/CaseRepository';
+import { getRepositories } from '../../../repositories';
 import type { Case, CreateCaseInput, UpdateCaseInput, CaseStatus } from '../../../models/Case';
 import { errorLogger } from '../../../utils/error-logger';
 
 export class CaseService {
+  private get caseRepository() {
+    return getRepositories().caseRepository;
+  }
+
   /**
    * Create a new case with validation
    */
@@ -17,7 +21,7 @@ export class CaseService {
         throw new Error('Case title must be 200 characters or less');
       }
 
-      return caseRepository.create(input);
+      return this.caseRepository.create(input);
     } catch (error) {
       errorLogger.logError(error as Error, {
         context: 'createCase',
@@ -32,7 +36,7 @@ export class CaseService {
    */
   getCaseById(id: number): Case | null {
     try {
-      return caseRepository.findById(id);
+      return this.caseRepository.findById(id);
     } catch (error) {
       errorLogger.logError(error as Error, { context: 'getCaseById', id });
       throw error;
@@ -44,7 +48,7 @@ export class CaseService {
    */
   getAllCases(status?: CaseStatus): Case[] {
     try {
-      return caseRepository.findAll(status);
+      return this.caseRepository.findAll(status);
     } catch (error) {
       errorLogger.logError(error as Error, {
         context: 'getAllCases',
@@ -69,7 +73,7 @@ export class CaseService {
         }
       }
 
-      return caseRepository.update(id, input);
+      return this.caseRepository.update(id, input);
     } catch (error) {
       errorLogger.logError(error as Error, {
         context: 'updateCase',
@@ -85,7 +89,7 @@ export class CaseService {
    */
   deleteCase(id: number): boolean {
     try {
-      return caseRepository.delete(id);
+      return this.caseRepository.delete(id);
     } catch (error) {
       errorLogger.logError(error as Error, {
         context: 'deleteCase',
@@ -100,7 +104,7 @@ export class CaseService {
    */
   closeCase(id: number): Case | null {
     try {
-      return caseRepository.close(id);
+      return this.caseRepository.close(id);
     } catch (error) {
       errorLogger.logError(error as Error, {
         context: 'closeCase',
@@ -115,7 +119,7 @@ export class CaseService {
    */
   getCaseStatistics(): Record<CaseStatus, number> {
     try {
-      return caseRepository.countByStatus();
+      return this.caseRepository.countByStatus();
     } catch (error) {
       errorLogger.logError(error as Error, { context: 'getCaseStatistics' });
       throw error;

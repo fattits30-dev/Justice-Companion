@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
 import { CaseRepository } from './CaseRepository';
 import { EncryptionService } from '../services/EncryptionService';
-import { createTestDatabase, type TestDatabaseHelper } from '../test-utils/database-test-helper';
+import { createTestDatabase } from '../test-utils/database-test-helper';
 import type { CreateCaseInput } from '../models/Case';
 import type Database from 'better-sqlite3';
 
@@ -195,7 +195,7 @@ describe('CaseRepository with Encryption', () => {
     });
 
     it('should throw when encryption service is not configured', () => {
-      const repoWithoutEncryption = new CaseRepository();
+      const repoWithoutEncryption = new CaseRepository(undefined as any);
 
       expect(() =>
         repoWithoutEncryption.create({

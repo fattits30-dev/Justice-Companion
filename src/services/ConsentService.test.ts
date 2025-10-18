@@ -36,7 +36,7 @@ describe('ConsentService', () => {
       return db.prepare('SELECT * FROM audit_logs ORDER BY created_at').all();
     };
 
-    consentRepository = new ConsentRepository(auditLogger);
+    consentRepository = new ConsentRepository();
     consentService = new ConsentService(consentRepository, auditLogger);
   });
 
@@ -85,7 +85,8 @@ describe('ConsentService', () => {
       const consent = consentService.grantConsent(TEST_USER_ID, 'ai_processing');
       const afterTime = new Date().getTime();
 
-      const grantedTime = new Date(consent.grantedAt).getTime();
+      expect(consent.grantedAt).toBeTruthy();
+      const grantedTime = new Date(consent.grantedAt!).getTime();
       expect(grantedTime).toBeGreaterThanOrEqual(beforeTime - 1000); // Allow 1s tolerance
       expect(grantedTime).toBeLessThanOrEqual(afterTime + 1000);
     });

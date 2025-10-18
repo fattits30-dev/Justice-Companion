@@ -323,22 +323,6 @@ describe('NotesRepository', () => {
     });
   });
 
-  describe('without encryption service', () => {
-    it('should throw when creating without encryption', () => {
-      const repoNoEncryption = new NotesRepository();
-
-      // Override getDb
-      vi.spyOn(databaseModule, 'getDb').mockReturnValue(db);
-
-      expect(() =>
-        repoNoEncryption.create({
-          caseId: 1,
-          content: 'Plaintext note',
-        })
-      ).toThrow('EncryptionService not configured for NotesRepository');
-    });
-  });
-
   describe('GDPR compliance', () => {
     it('should never log decrypted content in audit logs', () => {
       const sensitiveData = 'EXTREMELY_SENSITIVE_PERSONAL_DATA';

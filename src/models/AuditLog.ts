@@ -63,6 +63,23 @@ export type AuditEventType =
   // GDPR operations
   | 'gdpr.export'
   | 'gdpr.deletion_request'
+  | 'gdpr.erasure'
+  | 'gdpr.access_request'
+  // Cache operations (Phase 2 - Pagination)
+  | 'cache.hit'
+  | 'cache.miss'
+  | 'cache.set'
+  | 'cache.evict'
+  | 'cache.invalidate_entity'
+  | 'cache.invalidate_type'
+  | 'cache.clear'
+  | 'cache.initialized'
+  // Query operations (Phase 2 - Pagination)
+  | 'query.all'
+  | 'query.paginated'
+  | 'query.by_id'
+  | 'query.count'
+  | 'query.by_status_paginated'
   // System operations
   | 'database.backup'
   | 'database.restore'
@@ -76,7 +93,7 @@ export interface AuditLogEntry {
   userId: string | null;
   resourceType: string;
   resourceId: string;
-  action: 'create' | 'read' | 'update' | 'delete' | 'export' | 'decrypt';
+  action: 'create' | 'read' | 'update' | 'delete' | 'export' | 'decrypt' | 'evict';
   details: Record<string, unknown> | null;
   ipAddress: string | null;
   userAgent: string | null;
@@ -92,7 +109,7 @@ export interface AuditEvent {
   userId?: string;
   resourceType: string;
   resourceId: string;
-  action: 'create' | 'read' | 'update' | 'delete' | 'export' | 'decrypt';
+  action: 'create' | 'read' | 'update' | 'delete' | 'export' | 'decrypt' | 'evict';
   details?: Record<string, unknown>;
   ipAddress?: string;
   userAgent?: string;

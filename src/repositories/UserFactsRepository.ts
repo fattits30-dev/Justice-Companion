@@ -14,7 +14,7 @@ import type { AuditLogger } from '../services/AuditLogger.js';
  */
 export class UserFactsRepository {
   constructor(
-    private encryptionService?: EncryptionService,
+    private encryptionService: EncryptionService,
     private auditLogger?: AuditLogger,
   ) {}
 
@@ -341,19 +341,4 @@ export class UserFactsRepository {
     }
   }
 
-  /**
-   * Set encryption service (for dependency injection)
-   */
-  setEncryptionService(service: EncryptionService): void {
-    this.encryptionService = service;
-  }
-
-  /**
-   * Set audit logger (for dependency injection)
-   */
-  setAuditLogger(logger: AuditLogger): void {
-    this.auditLogger = logger;
-  }
 }
-
-export const userFactsRepository = new UserFactsRepository();

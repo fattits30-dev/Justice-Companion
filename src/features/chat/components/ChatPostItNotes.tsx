@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, memo, useCallback } from 'react';
 import type { CaseFact } from '../../../models/CaseFact';
 
 interface ChatPostItNotesProps {
@@ -16,15 +16,15 @@ interface ChatPostItNotesProps {
  * - Case Facts: Timelines, evidence, events, locations
  *
  * @param caseId - Case ID to load facts for
+ * @performance Memoized to prevent unnecessary re-renders when props haven't changed
  */
-export function ChatPostItNotes({ caseId }: ChatPostItNotesProps) {
+const ChatPostItNotesComponent = ({ caseId }: ChatPostItNotesProps) => {
   const [userFacts, setUserFacts] = useState<string>('');
   const [caseFacts, setCaseFacts] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
 
-  // Fetch facts whenever caseId changes
-  useEffect(() => {
-    const loadFacts = async () => {
+  // Memoize data-fetching callback
+  const loadFacts = useCallback(async () => {
       if (!caseId || !window.justiceAPI) {
         // No case selected - show empty state
         setUserFacts('👤 No user facts yet\n\nSelect a case and chat with the AI to gather facts.');
@@ -79,10 +79,12 @@ export function ChatPostItNotes({ caseId }: ChatPostItNotesProps) {
       } finally {
         setLoading(false);
       }
-    };
-
-    void loadFacts();
   }, [caseId]);
+
+  // Fetch facts whenever caseId changes
+  useEffect(() => {
+    void loadFacts();
+  }, [loadFacts]);
 
   return (
     <div className="mb-8 flex justify-center">
@@ -165,4 +167,7 @@ export function ChatPostItNotes({ caseId }: ChatPostItNotesProps) {
       </div>
     </div>
   );
-}
+};
+
+// Export memoized component to prevent unnecessary re-renders
+export const ChatPostItNotes = memo(ChatPostItNotesComponent);

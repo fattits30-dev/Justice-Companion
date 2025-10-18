@@ -98,6 +98,7 @@ describe('DocumentsView', () => {
   const mockCases: Case[] = [
     {
       id: 1,
+      userId: 1,
       title: 'Employment Case',
       caseType: 'employment',
       description: 'Test case 1',
@@ -107,6 +108,7 @@ describe('DocumentsView', () => {
     },
     {
       id: 2,
+      userId: 1,
       title: 'Housing Case',
       caseType: 'housing',
       description: 'Test case 2',
@@ -297,7 +299,6 @@ describe('DocumentsView', () => {
 
   describe('Filtering', () => {
     it('should change case filter value', async () => {
-      const user = userEvent.setup();
       render(<DocumentsView />);
 
       const caseFilter = screen.getByDisplayValue('All Cases');

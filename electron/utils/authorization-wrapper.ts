@@ -32,9 +32,9 @@ interface SessionData {
  */
 function getAuthService() {
   // Runtime path: from dist/electron/ to src/ (two levels up)
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+   
   const { AuthenticationService } = require('../../src/services/AuthenticationService');
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+   
   const { getDb } = require('../../src/db/database');
   return new AuthenticationService(getDb());
 }
@@ -131,11 +131,11 @@ export async function withAuthorization<T>(
  * Lazy-load AuthorizationMiddleware
  */
 export function getAuthorizationMiddleware() {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+   
   const { AuthorizationMiddleware } = require('../../src/middleware/AuthorizationMiddleware');
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+   
   const { caseRepository } = require('../../src/repositories/CaseRepository');
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+   
   const { auditLogger } = require('../../src/services/AuditLogger');
 
   return new AuthorizationMiddleware(caseRepository, auditLogger);
@@ -145,7 +145,7 @@ export function getAuthorizationMiddleware() {
  * Get EvidenceRepository for evidence ownership checks
  */
 export function getEvidenceRepository() {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+   
   const { evidenceRepository } = require('../../src/repositories/EvidenceRepository');
   return evidenceRepository;
 }

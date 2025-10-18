@@ -1,17 +1,21 @@
-import { describe, it, expect, beforeEach, afterAll, beforeAll, vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { NotesService } from './NotesService';
-import { notesRepository } from '../../../repositories/NotesRepository';
 import { errorLogger } from '../../../utils/error-logger';
 import type { Note } from '../../../models/Note';
 
-// Mock dependencies
-vi.mock('../../../repositories/NotesRepository', () => ({
-  notesRepository: {
-    create: vi.fn(),
-    findByCaseId: vi.fn(),
-    update: vi.fn(),
-    delete: vi.fn(),
-  },
+// Mock centralized repository initialization
+const mockNotesRepository = {
+  create: vi.fn(),
+  findByCaseId: vi.fn(),
+  update: vi.fn(),
+  delete: vi.fn(),
+};
+
+vi.mock('../../../repositories', () => ({
+  getRepositories: vi.fn(() => ({
+    notesRepository: mockNotesRepository,
+  })),
+  resetRepositories: vi.fn(),
 }));
 
 vi.mock('../../../utils/error-logger', () => ({
@@ -38,12 +42,12 @@ describe('NotesService', () => {
         updatedAt: '2025-10-06T00:00:00.000Z',
       };
 
-      vi.mocked(notesRepository.create).mockReturnValue(mockNote);
+      vi.mocked(mockNotesRepository.create).mockReturnValue(mockNote);
 
       const result = notesService.createNote(100, 'Test note content');
 
       expect(result).toEqual(mockNote);
-      expect(notesRepository.create).toHaveBeenCalledWith({
+      expect(mockNotesRepository.create).toHaveBeenCalledWith({
         caseId: 100,
         content: 'Test note content',
       });
@@ -53,7 +57,7 @@ describe('NotesService', () => {
     it('should throw error if content is empty', () => {
       expect(() => notesService.createNote(100, '')).toThrow('Note content is required');
       expect(() => notesService.createNote(100, '   ')).toThrow('Note content is required');
-      expect(notesRepository.create).not.toHaveBeenCalled();
+      expect(mockNotesRepository.create).not.toHaveBeenCalled();
     });
 
     it('should throw error if content exceeds 10000 characters', () => {
@@ -62,7 +66,7 @@ describe('NotesService', () => {
       expect(() => notesService.createNote(100, longContent)).toThrow(
         'Note content must be 10000 characters or less'
       );
-      expect(notesRepository.create).not.toHaveBeenCalled();
+      expect(mockNotesRepository.create).not.toHaveBeenCalled();
     });
 
     it('should accept content exactly 10000 characters', () => {
@@ -75,17 +79,17 @@ describe('NotesService', () => {
         updatedAt: '2025-10-06T00:00:00.000Z',
       };
 
-      vi.mocked(notesRepository.create).mockReturnValue(mockNote);
+      vi.mocked(mockNotesRepository.create).mockReturnValue(mockNote);
 
       const result = notesService.createNote(100, maxContent);
 
       expect(result).toEqual(mockNote);
-      expect(notesRepository.create).toHaveBeenCalled();
+      expect(mockNotesRepository.create).toHaveBeenCalled();
     });
 
     it('should log and rethrow repository errors', () => {
       const error = new Error('Database error');
-      vi.mocked(notesRepository.create).mockImplementation(() => {
+      vi.mocked(mockNotesRepository.create).mockImplementation(() => {
         throw error;
       });
 
@@ -116,26 +120,26 @@ describe('NotesService', () => {
         },
       ];
 
-      vi.mocked(notesRepository.findByCaseId).mockReturnValue(mockNotes);
+      vi.mocked(mockNotesRepository.findByCaseId).mockReturnValue(mockNotes);
 
       const result = notesService.getNotesByCaseId(100);
 
       expect(result).toEqual(mockNotes);
-      expect(notesRepository.findByCaseId).toHaveBeenCalledWith(100);
+      expect(mockNotesRepository.findByCaseId).toHaveBeenCalledWith(100);
     });
 
     it('should return empty array if no notes exist', () => {
-      vi.mocked(notesRepository.findByCaseId).mockReturnValue([]);
+      vi.mocked(mockNotesRepository.findByCaseId).mockReturnValue([]);
 
       const result = notesService.getNotesByCaseId(999);
 
       expect(result).toEqual([]);
-      expect(notesRepository.findByCaseId).toHaveBeenCalledWith(999);
+      expect(mockNotesRepository.findByCaseId).toHaveBeenCalledWith(999);
     });
 
     it('should log and rethrow repository errors', () => {
       const error = new Error('Database error');
-      vi.mocked(notesRepository.findByCaseId).mockImplementation(() => {
+      vi.mocked(mockNotesRepository.findByCaseId).mockImplementation(() => {
         throw error;
       });
 
@@ -157,19 +161,19 @@ describe('NotesService', () => {
         updatedAt: '2025-10-06T00:05:00.000Z',
       };
 
-      vi.mocked(notesRepository.update).mockReturnValue(mockNote);
+      vi.mocked(mockNotesRepository.update).mockReturnValue(mockNote);
 
       const result = notesService.updateNote(1, 'Updated content');
 
       expect(result).toEqual(mockNote);
-      expect(notesRepository.update).toHaveBeenCalledWith(1, { content: 'Updated content' });
+      expect(mockNotesRepository.update).toHaveBeenCalledWith(1, { content: 'Updated content' });
       expect(errorLogger.logError).not.toHaveBeenCalled();
     });
 
     it('should throw error if content is empty', () => {
       expect(() => notesService.updateNote(1, '')).toThrow('Note content is required');
       expect(() => notesService.updateNote(1, '   ')).toThrow('Note content is required');
-      expect(notesRepository.update).not.toHaveBeenCalled();
+      expect(mockNotesRepository.update).not.toHaveBeenCalled();
     });
 
     it('should throw error if content exceeds 10000 characters', () => {
@@ -178,19 +182,19 @@ describe('NotesService', () => {
       expect(() => notesService.updateNote(1, longContent)).toThrow(
         'Note content must be 10000 characters or less'
       );
-      expect(notesRepository.update).not.toHaveBeenCalled();
+      expect(mockNotesRepository.update).not.toHaveBeenCalled();
     });
 
     it('should throw error if note not found', () => {
-      vi.mocked(notesRepository.update).mockReturnValue(null);
+      vi.mocked(mockNotesRepository.update).mockReturnValue(null);
 
       expect(() => notesService.updateNote(999, 'Content')).toThrow('Note not found');
-      expect(notesRepository.update).toHaveBeenCalledWith(999, { content: 'Content' });
+      expect(mockNotesRepository.update).toHaveBeenCalledWith(999, { content: 'Content' });
     });
 
     it('should log and rethrow repository errors', () => {
       const error = new Error('Database error');
-      vi.mocked(notesRepository.update).mockImplementation(() => {
+      vi.mocked(mockNotesRepository.update).mockImplementation(() => {
         throw error;
       });
 
@@ -204,17 +208,17 @@ describe('NotesService', () => {
 
   describe('deleteNote', () => {
     it('should delete a note successfully', () => {
-      vi.mocked(notesRepository.delete).mockReturnValue(undefined);
+      vi.mocked(mockNotesRepository.delete).mockReturnValue(undefined);
 
       notesService.deleteNote(1);
 
-      expect(notesRepository.delete).toHaveBeenCalledWith(1);
+      expect(mockNotesRepository.delete).toHaveBeenCalledWith(1);
       expect(errorLogger.logError).not.toHaveBeenCalled();
     });
 
     it('should log and rethrow repository errors', () => {
       const error = new Error('Database error');
-      vi.mocked(notesRepository.delete).mockImplementation(() => {
+      vi.mocked(mockNotesRepository.delete).mockImplementation(() => {
         throw error;
       });
 
@@ -238,7 +242,7 @@ describe('NotesService', () => {
         updatedAt: '2025-10-06T00:00:00.000Z',
       };
 
-      vi.mocked(notesRepository.create).mockReturnValue(mockNote);
+      vi.mocked(mockNotesRepository.create).mockReturnValue(mockNote);
 
       const result = notesService.createNote(100, specialContent);
 
@@ -255,7 +259,7 @@ describe('NotesService', () => {
         updatedAt: '2025-10-06T00:00:00.000Z',
       };
 
-      vi.mocked(notesRepository.create).mockReturnValue(mockNote);
+      vi.mocked(mockNotesRepository.create).mockReturnValue(mockNote);
 
       const result = notesService.createNote(100, unicodeContent);
 

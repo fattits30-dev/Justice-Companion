@@ -178,7 +178,7 @@ export function OpenAISettings({ onConfigSaved }: OpenAISettingsProps): JSX.Elem
 
   const handleClearConfiguration = async (): Promise<void> => {
     if (
-      // eslint-disable-next-line no-alert
+       
       !window.confirm(
         'Are you sure you want to clear your OpenAI configuration? This will remove your API key.',
       )

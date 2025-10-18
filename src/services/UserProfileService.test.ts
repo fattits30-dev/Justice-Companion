@@ -3,16 +3,14 @@
  */
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { userProfileService } from './UserProfileService';
-import { userProfileRepository } from '../repositories/UserProfileRepository';
 import { AuditLogger } from './AuditLogger';
-import { EncryptionService } from './EncryptionService';
 import { TestDatabaseHelper } from '../test-utils/database-test-helper';
 import { databaseManager } from '../db/database';
+import { resetRepositories } from '../repositories';
 import type { UpdateUserProfileInput } from '../models/UserProfile';
 
 describe('UserProfileService', () => {
   let auditLogger: AuditLogger;
-  let encryptionService: EncryptionService;
   let testDb: TestDatabaseHelper;
 
   beforeEach(() => {
@@ -23,19 +21,19 @@ describe('UserProfileService', () => {
     databaseManager.setTestDatabase(db);
 
     // Initialize encryption service (32-byte key = 64 hex chars converted to Buffer)
-    encryptionService = new EncryptionService(
-      Buffer.from('0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef', 'hex'),
-    );
+    const testKey = Buffer.from('0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef', 'hex');
+
+    // Set environment variable for getRepositories() to use
+    process.env.ENCRYPTION_KEY_BASE64 = testKey.toString('base64');
+
+    // Reset singleton to force re-initialization with test key
+    resetRepositories();
 
     // Initialize audit logger with test helper method
     auditLogger = new AuditLogger(db);
     (auditLogger as any).getAllLogs = () => {
-      return db.prepare('SELECT * FROM audit_logs ORDER BY created_at').all();
+      return db.prepare('SELECT * FROM audit_logs ORDER by created_at').all();
     };
-
-    // Configure singleton repository with dependencies
-    userProfileRepository.setEncryptionService(encryptionService);
-    userProfileRepository.setAuditLogger(auditLogger);
   });
 
   afterEach(() => {
@@ -198,18 +196,18 @@ describe('UserProfileService', () => {
       expect(details.fieldsUpdated).toContain('email');
     });
 
-    it('should update updated_at timestamp', () => {
+    it('should update updated_at timestamp', async () => {
       const beforeUpdate = userProfileService.getProfile();
       const beforeTime = new Date(beforeUpdate.updatedAt).getTime();
 
       // Wait a tiny bit to ensure timestamp difference
-      setTimeout(() => {
-        userProfileService.updateProfile({ name: 'New Name' });
-        const afterUpdate = userProfileService.getProfile();
-        const afterTime = new Date(afterUpdate.updatedAt).getTime();
+      await new Promise(resolve => setTimeout(resolve, 10));
 
-        expect(afterTime).toBeGreaterThanOrEqual(beforeTime);
-      }, 10);
+      userProfileService.updateProfile({ name: 'New Name' });
+      const afterUpdate = userProfileService.getProfile();
+      const afterTime = new Date(afterUpdate.updatedAt).getTime();
+
+      expect(afterTime).toBeGreaterThanOrEqual(beforeTime);
     });
 
     it('should allow clearing email to null', () => {

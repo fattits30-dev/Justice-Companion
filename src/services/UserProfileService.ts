@@ -1,14 +1,18 @@
-import { userProfileRepository } from '../repositories/UserProfileRepository';
+import { getRepositories } from '../repositories';
 import type { UserProfile, UpdateUserProfileInput } from '../models/UserProfile';
 import { errorLogger } from '../utils/error-logger';
 
 class UserProfileService {
+  private get userProfileRepository() {
+    return getRepositories().userProfileRepository;
+  }
+
   /**
    * Get the current user profile
    */
   getProfile(): UserProfile {
     try {
-      return userProfileRepository.get();
+      return this.userProfileRepository.get();
     } catch (error) {
       errorLogger.logError(error as Error, {
         context: 'UserProfileService.getProfile',
@@ -35,7 +39,7 @@ class UserProfileService {
         }
       }
 
-      return userProfileRepository.update(input);
+      return this.userProfileRepository.update(input);
     } catch (error) {
       errorLogger.logError(error as Error, {
         context: 'UserProfileService.updateProfile',

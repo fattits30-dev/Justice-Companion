@@ -14,9 +14,9 @@
  * - Test response format
  * - Test integration between handlers
  */
-/* eslint-disable no-unreachable */
+ 
 
-import { describe, it, expect, beforeEach, afterEach, vi, type Mock } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { IPC_CHANNELS } from '../src/types/ipc';
 import type {
   CaseCreateRequest,
@@ -53,14 +53,12 @@ import type {
   ModelGetAvailableRequest,
   ModelGetDownloadedRequest,
   ModelIsDownloadedRequest,
-  ModelDownloadStartRequest,
   ModelDeleteRequest,
   GDPRExportUserDataRequest,
   GDPRDeleteUserDataRequest,
-  FileViewResponse,
 } from '../src/types/ipc';
-import type { CreateCaseInput, UpdateCaseInput, Case } from '../src/models/Case';
-import type { CreateEvidenceInput, UpdateEvidenceInput, Evidence } from '../src/models/Evidence';
+import type { Case } from '../src/models/Case';
+import type { Evidence } from '../src/models/Evidence';
 
 // Mock Electron IPC
 const mockIpcMain = {
@@ -114,7 +112,7 @@ const mockUserProfileService = {
 };
 
 const mockModelDownloadService = {
-  availableModels: [],
+  availableModels: [] as any[],
   getDownloadedModels: vi.fn(),
   isModelDownloaded: vi.fn(),
   getModelPath: vi.fn(),
@@ -143,9 +141,8 @@ const mockShell = {
   openExternal: vi.fn(),
 };
 
-const mockErrorLogger = {
-  logError: vi.fn(),
-};
+// const mockErrorLogger = {
+//   logError: vi.fn(),\r\n// };
 
 // Type for IPC handler function
 type IPCHandler = (event: any, ...args: any[]) => Promise<any>;
@@ -181,7 +178,7 @@ describe('IPC Handlers', () => {
   // Helper to setup handlers (simulates main.ts setupIpcHandlers)
   function setupTestHandlers() {
     // Case: Create
-    mockIpcMain.handle(IPC_CHANNELS.CASE_CREATE, async (_, request: CaseCreateRequest) => {
+    mockIpcMain.handle(IPC_CHANNELS.CASE_CREATE, async (_event: any, request: CaseCreateRequest) => {
       try {
         const createdCase = mockCaseService.createCase(request.input);
         return { success: true, data: createdCase };
@@ -194,7 +191,7 @@ describe('IPC Handlers', () => {
     });
 
     // Case: Get by ID
-    mockIpcMain.handle(IPC_CHANNELS.CASE_GET_BY_ID, async (_, request: CaseGetByIdRequest) => {
+    mockIpcMain.handle(IPC_CHANNELS.CASE_GET_BY_ID, async (_event: any, request: CaseGetByIdRequest) => {
       try {
         const foundCase = mockCaseRepository.findById(request.id);
         return { success: true, data: foundCase };
@@ -207,7 +204,7 @@ describe('IPC Handlers', () => {
     });
 
     // Case: Get all
-    mockIpcMain.handle(IPC_CHANNELS.CASE_GET_ALL, async (_, request: CaseGetAllRequest) => {
+    mockIpcMain.handle(IPC_CHANNELS.CASE_GET_ALL, async (_event: any, _request: CaseGetAllRequest) => {
       try {
         const allCases = mockCaseRepository.findAll();
         return { success: true, data: allCases };
@@ -220,7 +217,7 @@ describe('IPC Handlers', () => {
     });
 
     // Case: Update
-    mockIpcMain.handle(IPC_CHANNELS.CASE_UPDATE, async (_, request: CaseUpdateRequest) => {
+    mockIpcMain.handle(IPC_CHANNELS.CASE_UPDATE, async (_event: any, request: CaseUpdateRequest) => {
       try {
         const updatedCase = mockCaseService.updateCase(request.id, request.input);
         return { success: true, data: updatedCase };
@@ -233,7 +230,7 @@ describe('IPC Handlers', () => {
     });
 
     // Case: Delete
-    mockIpcMain.handle(IPC_CHANNELS.CASE_DELETE, async (_, request: CaseDeleteRequest) => {
+    mockIpcMain.handle(IPC_CHANNELS.CASE_DELETE, async (_event: any, request: CaseDeleteRequest) => {
       try {
         mockCaseService.deleteCase(request.id);
         return { success: true };
@@ -246,7 +243,7 @@ describe('IPC Handlers', () => {
     });
 
     // Case: Close
-    mockIpcMain.handle(IPC_CHANNELS.CASE_CLOSE, async (_, request: CaseCloseRequest) => {
+    mockIpcMain.handle(IPC_CHANNELS.CASE_CLOSE, async (_event: any, request: CaseCloseRequest) => {
       try {
         const closedCase = mockCaseService.closeCase(request.id);
         return { success: true, data: closedCase };
@@ -259,7 +256,7 @@ describe('IPC Handlers', () => {
     });
 
     // Case: Get statistics
-    mockIpcMain.handle(IPC_CHANNELS.CASE_GET_STATISTICS, async (_, request: CaseGetStatisticsRequest) => {
+    mockIpcMain.handle(IPC_CHANNELS.CASE_GET_STATISTICS, async (_event: any, _request: CaseGetStatisticsRequest) => {
       try {
         const stats = mockCaseRepository.getStatistics();
         return { success: true, data: stats };
@@ -272,7 +269,7 @@ describe('IPC Handlers', () => {
     });
 
     // Evidence: Create
-    mockIpcMain.handle(IPC_CHANNELS.EVIDENCE_CREATE, async (_, request: EvidenceCreateRequest) => {
+    mockIpcMain.handle(IPC_CHANNELS.EVIDENCE_CREATE, async (_event: any, request: EvidenceCreateRequest) => {
       try {
         const createdEvidence = mockEvidenceRepository.create(request.input);
         return { success: true, data: createdEvidence };
@@ -285,7 +282,7 @@ describe('IPC Handlers', () => {
     });
 
     // Evidence: Get by ID
-    mockIpcMain.handle(IPC_CHANNELS.EVIDENCE_GET_BY_ID, async (_, request: EvidenceGetByIdRequest) => {
+    mockIpcMain.handle(IPC_CHANNELS.EVIDENCE_GET_BY_ID, async (_event: any, request: EvidenceGetByIdRequest) => {
       try {
         const evidence = mockEvidenceRepository.findById(request.id);
         return { success: true, data: evidence };
@@ -298,7 +295,7 @@ describe('IPC Handlers', () => {
     });
 
     // Evidence: Get all
-    mockIpcMain.handle(IPC_CHANNELS.EVIDENCE_GET_ALL, async (_, request: EvidenceGetAllRequest) => {
+    mockIpcMain.handle(IPC_CHANNELS.EVIDENCE_GET_ALL, async (_event: any, request: EvidenceGetAllRequest) => {
       try {
         const allEvidence = mockEvidenceRepository.findAll(request.evidenceType);
         return { success: true, data: allEvidence };
@@ -311,7 +308,7 @@ describe('IPC Handlers', () => {
     });
 
     // Evidence: Get by case ID
-    mockIpcMain.handle(IPC_CHANNELS.EVIDENCE_GET_BY_CASE, async (_, request: EvidenceGetByCaseRequest) => {
+    mockIpcMain.handle(IPC_CHANNELS.EVIDENCE_GET_BY_CASE, async (_event: any, request: EvidenceGetByCaseRequest) => {
       try {
         const caseEvidence = mockEvidenceRepository.findByCaseId(request.caseId);
         return { success: true, data: caseEvidence };
@@ -324,7 +321,7 @@ describe('IPC Handlers', () => {
     });
 
     // Evidence: Update
-    mockIpcMain.handle(IPC_CHANNELS.EVIDENCE_UPDATE, async (_, request: EvidenceUpdateRequest) => {
+    mockIpcMain.handle(IPC_CHANNELS.EVIDENCE_UPDATE, async (_event: any, request: EvidenceUpdateRequest) => {
       try {
         const updatedEvidence = mockEvidenceRepository.update(request.id, request.input);
         return { success: true, data: updatedEvidence };
@@ -337,7 +334,7 @@ describe('IPC Handlers', () => {
     });
 
     // Evidence: Delete
-    mockIpcMain.handle(IPC_CHANNELS.EVIDENCE_DELETE, async (_, request: EvidenceDeleteRequest) => {
+    mockIpcMain.handle(IPC_CHANNELS.EVIDENCE_DELETE, async (_event: any, request: EvidenceDeleteRequest) => {
       try {
         mockEvidenceRepository.delete(request.id);
         return { success: true };
@@ -350,7 +347,7 @@ describe('IPC Handlers', () => {
     });
 
     // AI: Check Status
-    mockIpcMain.handle(IPC_CHANNELS.AI_CHECK_STATUS, async (_, request: AICheckStatusRequest) => {
+    mockIpcMain.handle(IPC_CHANNELS.AI_CHECK_STATUS, async (_event: any, _request: AICheckStatusRequest) => {
       try {
         const status = await mockAIServiceFactory.checkConnection();
         return {
@@ -369,7 +366,7 @@ describe('IPC Handlers', () => {
     });
 
     // AI: Chat (non-streaming)
-    mockIpcMain.handle(IPC_CHANNELS.AI_CHAT, async (_, request: AIChatRequest) => {
+    mockIpcMain.handle(IPC_CHANNELS.AI_CHAT, async (_event: any, request: AIChatRequest) => {
       try {
         const response = await mockAIServiceFactory.chat({
           messages: request.messages as any,
@@ -391,7 +388,7 @@ describe('IPC Handlers', () => {
     });
 
     // Profile: Get
-    mockIpcMain.handle(IPC_CHANNELS.PROFILE_GET, async (_, request: ProfileGetRequest) => {
+    mockIpcMain.handle(IPC_CHANNELS.PROFILE_GET, async (_event: any, _request: ProfileGetRequest) => {
       try {
         const profile = mockUserProfileService.getProfile();
         return { success: true, data: profile };
@@ -404,7 +401,7 @@ describe('IPC Handlers', () => {
     });
 
     // Profile: Update
-    mockIpcMain.handle(IPC_CHANNELS.PROFILE_UPDATE, async (_, request: ProfileUpdateRequest) => {
+    mockIpcMain.handle(IPC_CHANNELS.PROFILE_UPDATE, async (_event: any, request: ProfileUpdateRequest) => {
       try {
         const profile = mockUserProfileService.updateProfile(request.input);
         return { success: true, data: profile };
@@ -417,7 +414,7 @@ describe('IPC Handlers', () => {
     });
 
     // Model: Get Available Models
-    mockIpcMain.handle(IPC_CHANNELS.MODEL_GET_AVAILABLE, async (_, request: ModelGetAvailableRequest) => {
+    mockIpcMain.handle(IPC_CHANNELS.MODEL_GET_AVAILABLE, async (_event: any, _request: ModelGetAvailableRequest) => {
       try {
         const models = mockModelDownloadService.availableModels;
         return { success: true, models };
@@ -430,7 +427,7 @@ describe('IPC Handlers', () => {
     });
 
     // Model: Get Downloaded Models
-    mockIpcMain.handle(IPC_CHANNELS.MODEL_GET_DOWNLOADED, async (_, request: ModelGetDownloadedRequest) => {
+    mockIpcMain.handle(IPC_CHANNELS.MODEL_GET_DOWNLOADED, async (_event: any, _request: ModelGetDownloadedRequest) => {
       try {
         const models = mockModelDownloadService.getDownloadedModels();
         return { success: true, models };
@@ -443,7 +440,7 @@ describe('IPC Handlers', () => {
     });
 
     // Model: Check if Downloaded
-    mockIpcMain.handle(IPC_CHANNELS.MODEL_IS_DOWNLOADED, async (_, request: ModelIsDownloadedRequest) => {
+    mockIpcMain.handle(IPC_CHANNELS.MODEL_IS_DOWNLOADED, async (_event: any, request: ModelIsDownloadedRequest) => {
       try {
         const downloaded = mockModelDownloadService.isModelDownloaded(request.modelId);
         const path = mockModelDownloadService.getModelPath(request.modelId);
@@ -457,7 +454,7 @@ describe('IPC Handlers', () => {
     });
 
     // Model: Delete
-    mockIpcMain.handle(IPC_CHANNELS.MODEL_DELETE, async (_, request: ModelDeleteRequest) => {
+    mockIpcMain.handle(IPC_CHANNELS.MODEL_DELETE, async (_event: any, request: ModelDeleteRequest) => {
       try {
         const deleted = await mockModelDownloadService.deleteModel(request.modelId);
         return { success: true, deleted };
@@ -470,7 +467,7 @@ describe('IPC Handlers', () => {
     });
 
     // Facts: Store
-    mockIpcMain.handle('facts:store', async (_, params: any) => {
+    mockIpcMain.handle('facts:store', async (_event: any, params: any) => {
       try {
         let factContent: string;
         let factCategory: string;
@@ -516,7 +513,7 @@ describe('IPC Handlers', () => {
     });
 
     // Facts: Get
-    mockIpcMain.handle('facts:get', async (_, caseId: number, factType?: string) => {
+    mockIpcMain.handle('facts:get', async (_event: any, caseId: number, factType?: string) => {
       try {
         let facts;
         if (factType) {
@@ -534,7 +531,7 @@ describe('IPC Handlers', () => {
     });
 
     // Facts: Count
-    mockIpcMain.handle('facts:count', async (_, caseId: number) => {
+    mockIpcMain.handle('facts:count', async (_event: any, caseId: number) => {
       try {
         const facts = mockCaseFactsRepository.findByCaseId(caseId);
         const count = facts.length;
@@ -548,7 +545,7 @@ describe('IPC Handlers', () => {
     });
 
     // Conversation: Create
-    mockIpcMain.handle(IPC_CHANNELS.CONVERSATION_CREATE, async (_, request: ConversationCreateRequest) => {
+    mockIpcMain.handle(IPC_CHANNELS.CONVERSATION_CREATE, async (_event: any, request: ConversationCreateRequest) => {
       try {
         const conversation = mockChatConversationService.createConversation(request.input);
         return { success: true, data: conversation };
@@ -561,7 +558,7 @@ describe('IPC Handlers', () => {
     });
 
     // Conversation: Get by ID
-    mockIpcMain.handle(IPC_CHANNELS.CONVERSATION_GET, async (_, request: ConversationGetRequest) => {
+    mockIpcMain.handle(IPC_CHANNELS.CONVERSATION_GET, async (_event: any, request: ConversationGetRequest) => {
       try {
         const conversation = mockChatConversationService.getConversation(request.id);
         return { success: true, data: conversation };
@@ -574,7 +571,7 @@ describe('IPC Handlers', () => {
     });
 
     // Conversation: Get all
-    mockIpcMain.handle(IPC_CHANNELS.CONVERSATION_GET_ALL, async (_, request: ConversationGetAllRequest) => {
+    mockIpcMain.handle(IPC_CHANNELS.CONVERSATION_GET_ALL, async (_event: any, request: ConversationGetAllRequest) => {
       try {
         const conversations = mockChatConversationService.getAllConversations(request.caseId);
         return { success: true, data: conversations };
@@ -587,7 +584,7 @@ describe('IPC Handlers', () => {
     });
 
     // Conversation: Get recent
-    mockIpcMain.handle(IPC_CHANNELS.CONVERSATION_GET_RECENT, async (_, request: ConversationGetRecentRequest) => {
+    mockIpcMain.handle(IPC_CHANNELS.CONVERSATION_GET_RECENT, async (_event: any, request: ConversationGetRecentRequest) => {
       try {
         const conversations = mockChatConversationService.getRecentConversationsByCase(request.caseId, request.limit);
         return { success: true, data: conversations };
@@ -600,7 +597,7 @@ describe('IPC Handlers', () => {
     });
 
     // Conversation: Load with messages
-    mockIpcMain.handle(IPC_CHANNELS.CONVERSATION_LOAD_WITH_MESSAGES, async (_, request: ConversationLoadWithMessagesRequest) => {
+    mockIpcMain.handle(IPC_CHANNELS.CONVERSATION_LOAD_WITH_MESSAGES, async (_event: any, request: ConversationLoadWithMessagesRequest) => {
       try {
         const conversation = mockChatConversationService.loadConversation(request.conversationId);
         return { success: true, data: conversation };
@@ -613,7 +610,7 @@ describe('IPC Handlers', () => {
     });
 
     // Conversation: Delete
-    mockIpcMain.handle(IPC_CHANNELS.CONVERSATION_DELETE, async (_, request: ConversationDeleteRequest) => {
+    mockIpcMain.handle(IPC_CHANNELS.CONVERSATION_DELETE, async (_event: any, request: ConversationDeleteRequest) => {
       try {
         mockChatConversationService.deleteConversation(request.id);
         return { success: true };
@@ -626,7 +623,7 @@ describe('IPC Handlers', () => {
     });
 
     // Message: Add
-    mockIpcMain.handle(IPC_CHANNELS.MESSAGE_ADD, async (_, request: MessageAddRequest) => {
+    mockIpcMain.handle(IPC_CHANNELS.MESSAGE_ADD, async (_event: any, request: MessageAddRequest) => {
       try {
         mockChatConversationService.addMessage(request.input);
         const conversation = mockChatConversationService.getConversation(request.input.conversationId)!;
@@ -640,11 +637,10 @@ describe('IPC Handlers', () => {
     });
 
     // GDPR: Export User Data
-    mockIpcMain.handle(IPC_CHANNELS.GDPR_EXPORT_USER_DATA, async (_, request: GDPRExportUserDataRequest) => {
+    mockIpcMain.handle(IPC_CHANNELS.GDPR_EXPORT_USER_DATA, async (_event: any, _request: GDPRExportUserDataRequest) => {
       try {
         const cases = mockCaseRepository.findAll();
         const evidence = mockEvidenceRepository.findAll();
-        const profile = mockUserProfileService.getProfile();
         const conversations = mockChatConversationService.getAllConversations();
 
         const notes: any[] = [];
@@ -693,7 +689,7 @@ describe('IPC Handlers', () => {
     });
 
     // GDPR: Delete User Data
-    mockIpcMain.handle(IPC_CHANNELS.GDPR_DELETE_USER_DATA, async (_, request: GDPRDeleteUserDataRequest) => {
+    mockIpcMain.handle(IPC_CHANNELS.GDPR_DELETE_USER_DATA, async (_event: any, request: GDPRDeleteUserDataRequest) => {
       try {
         if (request.confirmation !== 'DELETE_ALL_MY_DATA') {
           return {
@@ -728,7 +724,6 @@ describe('IPC Handlers', () => {
           }
         }
 
-        const mockDb = mockDatabaseManager.getDatabase();
         const deletedAt = new Date().toISOString();
 
         return {
@@ -756,7 +751,7 @@ describe('IPC Handlers', () => {
     });
 
     // File: Select
-    mockIpcMain.handle(IPC_CHANNELS.FILE_SELECT, async (_, request: FileSelectRequest = {}) => {
+    mockIpcMain.handle(IPC_CHANNELS.FILE_SELECT, async (_event: any, request: FileSelectRequest = {}) => {
       try {
         const result = await mockDialog.showOpenDialog(null as any, {
           properties: request.properties || ['openFile'],
@@ -776,7 +771,7 @@ describe('IPC Handlers', () => {
     });
 
     // File: Upload
-    mockIpcMain.handle(IPC_CHANNELS.FILE_UPLOAD, async (_, request: FileUploadRequest) => {
+    mockIpcMain.handle(IPC_CHANNELS.FILE_UPLOAD, async (_event: any, _request: FileUploadRequest) => {
       try {
         // Simplified mock for testing
         return {
@@ -795,7 +790,7 @@ describe('IPC Handlers', () => {
     });
 
     // File: View
-    mockIpcMain.handle(IPC_CHANNELS.FILE_VIEW, async (_, request: FileViewRequest) => {
+    mockIpcMain.handle(IPC_CHANNELS.FILE_VIEW, async (_event: any, request: FileViewRequest) => {
       try {
         const result = await mockShell.openPath(request.filePath);
         if (result) {
@@ -811,7 +806,7 @@ describe('IPC Handlers', () => {
     });
 
     // File: Download
-    mockIpcMain.handle(IPC_CHANNELS.FILE_DOWNLOAD, async (_, request: FileDownloadRequest) => {
+    mockIpcMain.handle(IPC_CHANNELS.FILE_DOWNLOAD, async (_event: any, request: FileDownloadRequest) => {
       try {
         const result = await mockDialog.showSaveDialog({
           defaultPath: request.fileName || 'download.pdf',
@@ -832,7 +827,7 @@ describe('IPC Handlers', () => {
     });
 
     // File: Print
-    mockIpcMain.handle(IPC_CHANNELS.FILE_PRINT, async (_, request: FilePrintRequest) => {
+    mockIpcMain.handle(IPC_CHANNELS.FILE_PRINT, async (_event: any, request: FilePrintRequest) => {
       try {
         const result = await mockShell.openPath(request.filePath);
         if (result) {
@@ -848,7 +843,7 @@ describe('IPC Handlers', () => {
     });
 
     // File: Email
-    mockIpcMain.handle(IPC_CHANNELS.FILE_EMAIL, async (_, request: FileEmailRequest) => {
+    mockIpcMain.handle(IPC_CHANNELS.FILE_EMAIL, async (_event: any, _request: FileEmailRequest) => {
       try {
         await mockShell.openExternal('mailto:?subject=Test');
         return { success: true };
@@ -861,7 +856,7 @@ describe('IPC Handlers', () => {
     });
 
     // AI: Stream Start
-    mockIpcMain.handle(IPC_CHANNELS.AI_STREAM_START, async (event, request: AIStreamStartRequest) => {
+    mockIpcMain.handle(IPC_CHANNELS.AI_STREAM_START, async (_event: any, request: AIStreamStartRequest) => {
       try {
         const streamId = `stream-${Date.now()}`;
         await mockAIServiceFactory.streamChat({ messages: request.messages as any });
@@ -884,6 +879,7 @@ describe('IPC Handlers', () => {
       it('should create case and return success with data', async () => {
         const mockCase: Case = {
           id: 1,
+          userId: 1,
           title: 'Test Case',
           caseType: 'employment',
           status: 'active',
@@ -896,6 +892,7 @@ describe('IPC Handlers', () => {
 
         const request: CaseCreateRequest = {
           input: {
+
             title: 'Test Case',
             caseType: 'employment',
             description: 'Test description',
@@ -916,6 +913,7 @@ describe('IPC Handlers', () => {
 
         const request: CaseCreateRequest = {
           input: {
+
             title: '',
             caseType: 'employment',
           },
@@ -934,6 +932,7 @@ describe('IPC Handlers', () => {
 
         const request: CaseCreateRequest = {
           input: {
+
             title: 'Test Case',
             caseType: 'employment',
           },
@@ -950,6 +949,7 @@ describe('IPC Handlers', () => {
       it('should return case when found', async () => {
         const mockCase: Case = {
           id: 1,
+          userId: 1,
           title: 'Test Case',
           caseType: 'employment',
           status: 'active',
@@ -996,6 +996,7 @@ describe('IPC Handlers', () => {
         const mockCases: Case[] = [
           {
             id: 1,
+            userId: 1,
             title: 'Case 1',
             caseType: 'employment',
             status: 'active',
@@ -1005,6 +1006,7 @@ describe('IPC Handlers', () => {
           },
           {
             id: 2,
+            userId: 1,
             title: 'Case 2',
             caseType: 'housing',
             status: 'closed',
@@ -1016,7 +1018,7 @@ describe('IPC Handlers', () => {
 
         mockCaseRepository.findAll.mockReturnValue(mockCases);
 
-        const request: CaseGetAllRequest = {};
+        const request: CaseGetAllRequest = undefined;
         const result = await invokeHandler<any>(IPC_CHANNELS.CASE_GET_ALL, request);
 
         expect(result.success).toBe(true);
@@ -1027,7 +1029,7 @@ describe('IPC Handlers', () => {
       it('should return empty array when no cases exist', async () => {
         mockCaseRepository.findAll.mockReturnValue([]);
 
-        const request: CaseGetAllRequest = {};
+        const request: CaseGetAllRequest = undefined;
         const result = await invokeHandler<any>(IPC_CHANNELS.CASE_GET_ALL, request);
 
         expect(result.success).toBe(true);
@@ -1039,6 +1041,7 @@ describe('IPC Handlers', () => {
       it('should update case successfully', async () => {
         const mockCase: Case = {
           id: 1,
+          userId: 1,
           title: 'Updated Case',
           caseType: 'employment',
           status: 'active',
@@ -1052,6 +1055,7 @@ describe('IPC Handlers', () => {
         const request: CaseUpdateRequest = {
           id: 1,
           input: {
+
             title: 'Updated Case',
             description: 'Updated description',
           },
@@ -1109,6 +1113,7 @@ describe('IPC Handlers', () => {
       it('should close case successfully', async () => {
         const mockCase: Case = {
           id: 1,
+          userId: 1,
           title: 'Test Case',
           caseType: 'employment',
           status: 'closed',
@@ -1141,7 +1146,7 @@ describe('IPC Handlers', () => {
 
         mockCaseRepository.getStatistics.mockReturnValue(mockStats);
 
-        const request: CaseGetStatisticsRequest = {};
+        const request: CaseGetStatisticsRequest = undefined;
         const result = await invokeHandler<any>(IPC_CHANNELS.CASE_GET_STATISTICS, request);
 
         expect(result.success).toBe(true);
@@ -1194,6 +1199,7 @@ describe('IPC Handlers', () => {
 
         const request: EvidenceCreateRequest = {
           input: {
+            userId: 1,
             title: 'Test Evidence',
             evidenceType: 'document',
           } as any,
@@ -1235,6 +1241,7 @@ describe('IPC Handlers', () => {
         const mockEvidence: Evidence[] = [
           {
             id: 1,
+
             caseId: 1,
             title: 'Evidence 1',
             evidenceType: 'document',
@@ -1259,6 +1266,7 @@ describe('IPC Handlers', () => {
         const mockEvidence: Evidence[] = [
           {
             id: 1,
+
             caseId: 1,
             title: 'Document',
             evidenceType: 'document',
@@ -1285,6 +1293,7 @@ describe('IPC Handlers', () => {
         const mockEvidence: Evidence[] = [
           {
             id: 1,
+
             caseId: 1,
             title: 'Evidence 1',
             evidenceType: 'document',
@@ -1326,6 +1335,7 @@ describe('IPC Handlers', () => {
         const request: EvidenceUpdateRequest = {
           id: 1,
           input: {
+
             title: 'Updated Evidence',
             content: 'Updated content',
           },
@@ -1366,7 +1376,7 @@ describe('IPC Handlers', () => {
 
         mockAIServiceFactory.checkConnection.mockResolvedValue(mockStatus);
 
-        const request: AICheckStatusRequest = {};
+        const request: AICheckStatusRequest = undefined;
         const result = await invokeHandler<any>(IPC_CHANNELS.AI_CHECK_STATUS, request);
 
         expect(result.success).toBe(true);
@@ -1384,7 +1394,7 @@ describe('IPC Handlers', () => {
 
         mockAIServiceFactory.checkConnection.mockResolvedValue(mockStatus);
 
-        const request: AICheckStatusRequest = {};
+        const request: AICheckStatusRequest = undefined;
         const result = await invokeHandler<any>(IPC_CHANNELS.AI_CHECK_STATUS, request);
 
         expect(result.success).toBe(true);
@@ -1455,7 +1465,7 @@ describe('IPC Handlers', () => {
 
         mockUserProfileService.getProfile.mockReturnValue(mockProfile);
 
-        const request: ProfileGetRequest = {};
+        const request: ProfileGetRequest = undefined;
         const result = await invokeHandler<any>(IPC_CHANNELS.PROFILE_GET, request);
 
         expect(result.success).toBe(true);
@@ -1510,7 +1520,7 @@ describe('IPC Handlers', () => {
           },
         ];
 
-        const request: ModelGetAvailableRequest = {};
+        const request: ModelGetAvailableRequest = undefined;
         const result = await invokeHandler<any>(IPC_CHANNELS.MODEL_GET_AVAILABLE, request);
 
         expect(result.success).toBe(true);
@@ -1533,7 +1543,7 @@ describe('IPC Handlers', () => {
           },
         ]);
 
-        const request: ModelGetDownloadedRequest = {};
+        const request: ModelGetDownloadedRequest = undefined;
         const result = await invokeHandler<any>(IPC_CHANNELS.MODEL_GET_DOWNLOADED, request);
 
         expect(result.success).toBe(true);
@@ -1645,6 +1655,7 @@ describe('IPC Handlers', () => {
         const mockFacts = [
           {
             id: 1,
+            userId: 1,
             caseId: 1,
             factContent: 'Fact 1',
             factCategory: 'timeline',
@@ -1666,6 +1677,7 @@ describe('IPC Handlers', () => {
         const mockFacts = [
           {
             id: 1,
+            userId: 1,
             caseId: 1,
             factContent: 'Timeline fact',
             factCategory: 'timeline',
@@ -1711,6 +1723,7 @@ describe('IPC Handlers', () => {
       // Step 1: Create case
       const mockCase: Case = {
         id: 1,
+        userId: 1,
         title: 'Test Case',
         caseType: 'employment',
         status: 'active',
@@ -1723,6 +1736,7 @@ describe('IPC Handlers', () => {
 
       const caseRequest: CaseCreateRequest = {
         input: {
+
           title: 'Test Case',
           caseType: 'employment',
         },
@@ -1764,6 +1778,7 @@ describe('IPC Handlers', () => {
       // Create case
       const mockCase: Case = {
         id: 1,
+        userId: 1,
         title: 'Test Case',
         caseType: 'employment',
         status: 'active',
@@ -1776,6 +1791,7 @@ describe('IPC Handlers', () => {
 
       const caseRequest: CaseCreateRequest = {
         input: {
+
           title: 'Test Case',
           caseType: 'employment',
         },
@@ -1819,6 +1835,7 @@ describe('IPC Handlers', () => {
       // Update case
       const mockCase: Case = {
         id: 1,
+        userId: 1,
         title: 'Updated Title',
         caseType: 'employment',
         status: 'active',
@@ -1868,7 +1885,7 @@ describe('IPC Handlers', () => {
     it('should handle network errors in AI handlers', async () => {
       mockAIServiceFactory.checkConnection.mockRejectedValue(new Error('ECONNREFUSED'));
 
-      const request: AICheckStatusRequest = {};
+      const request: AICheckStatusRequest = undefined;
       const result = await invokeHandler<any>(IPC_CHANNELS.AI_CHECK_STATUS, request);
 
       expect(result.success).toBe(false);
@@ -1882,6 +1899,7 @@ describe('IPC Handlers', () => {
 
       const request: CaseCreateRequest = {
         input: {
+
           title: 'ab',
           caseType: 'employment',
         },
@@ -1969,6 +1987,7 @@ describe('IPC Handlers', () => {
 
         const request: ConversationCreateRequest = {
           input: {
+            userId: 1,
             caseId: 1,
             title: 'Case Discussion',
           },
@@ -1994,6 +2013,7 @@ describe('IPC Handlers', () => {
 
         const request: ConversationCreateRequest = {
           input: {
+            userId: 1,
             title: 'General Legal Question',
           },
         };
@@ -2011,6 +2031,7 @@ describe('IPC Handlers', () => {
 
         const request: ConversationCreateRequest = {
           input: {
+            userId: 1,
             title: '',
           },
         };
@@ -2269,7 +2290,7 @@ describe('IPC Handlers', () => {
         mockCaseFactsRepository.findByCaseId.mockReturnValue([]);
         mockUserProfileService.getProfile.mockReturnValue(mockProfile);
 
-        const request: GDPRExportUserDataRequest = {};
+        const request: GDPRExportUserDataRequest = undefined;
         const result = await invokeHandler<any>(IPC_CHANNELS.GDPR_EXPORT_USER_DATA, request);
 
         // Note: In real test, we'd mock fs.writeFile, but this shows the structure
@@ -2287,7 +2308,7 @@ describe('IPC Handlers', () => {
         mockUserProfileService.getProfile.mockReturnValue({ id: 1, name: 'User', email: null, createdAt: '2025-10-08T00:00:00Z', updatedAt: '2025-10-08T00:00:00Z' });
         mockChatConversationService.getAllConversations.mockReturnValue([]);
 
-        const request: GDPRExportUserDataRequest = {};
+        const request: GDPRExportUserDataRequest = undefined;
         const result = await invokeHandler<any>(IPC_CHANNELS.GDPR_EXPORT_USER_DATA, request);
 
         expect(result.success).toBe(true);
@@ -2307,7 +2328,7 @@ describe('IPC Handlers', () => {
           throw new Error('Database error');
         });
 
-        const request: GDPRExportUserDataRequest = {};
+        const request: GDPRExportUserDataRequest = undefined;
         const result = await invokeHandler<any>(IPC_CHANNELS.GDPR_EXPORT_USER_DATA, request);
 
         expect(result.success).toBe(false);
@@ -2430,13 +2451,6 @@ describe('IPC Handlers', () => {
 
     describe('FILE_UPLOAD', () => {
       it('should upload and process PDF file', async () => {
-        // Mock file stats and fs operations
-        const mockStats = { size: 1024000 }; // 1MB
-        const mockFs = {
-          stat: vi.fn().mockResolvedValue(mockStats),
-          readFile: vi.fn().mockResolvedValue(Buffer.from('test')),
-        };
-
         const request: FileUploadRequest = {
           filePath: '/path/to/document.pdf',
         };
@@ -2451,11 +2465,6 @@ describe('IPC Handlers', () => {
       });
 
       it('should reject files over 50MB', async () => {
-        const mockStats = { size: 51 * 1024 * 1024 }; // 51MB
-        const mockFs = {
-          stat: vi.fn().mockResolvedValue(mockStats),
-        };
-
         const request: FileUploadRequest = {
           filePath: '/path/to/large-file.pdf',
         };
@@ -2512,10 +2521,6 @@ describe('IPC Handlers', () => {
           filePath: '/downloads/saved-file.pdf',
           canceled: false,
         });
-
-        const mockFs = {
-          copyFile: vi.fn().mockResolvedValue(undefined),
-        };
 
         const request: FileDownloadRequest = {
           filePath: '/path/to/source.pdf',
@@ -2620,7 +2625,6 @@ describe('IPC Handlers', () => {
 
     describe('AI_STREAM_START', () => {
       it('should start streaming chat response', async () => {
-        const mockStreamId = 'stream-123';
         mockAIServiceFactory.streamChat.mockResolvedValue({
           on: vi.fn((event, callback) => {
             if (event === 'data') {
@@ -2659,12 +2663,6 @@ describe('IPC Handlers', () => {
 
     describe('AI Stream Events', () => {
       it('should emit stream tokens during streaming', async () => {
-        const mockEvent = {
-          sender: {
-            send: vi.fn(),
-          },
-        };
-
         // Note: Testing stream events requires complex mocking
         // This shows the structure expected
         expect(IPC_CHANNELS.AI_STREAM_TOKEN).toBeDefined();

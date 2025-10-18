@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, memo, useMemo, useCallback } from 'react';
 
 export interface PostItNoteProps {
   id: number;
@@ -37,18 +37,25 @@ const colorStyles = {
   },
 };
 
-export function PostItNote({
+/**
+ * Post-it note component with inline editing
+ *
+ * @performance Memoized to prevent unnecessary re-renders when props haven't changed
+ */
+const PostItNoteComponent = ({
   id,
   content,
   color = 'yellow',
   onUpdate,
   onDelete,
   readOnly = false,
-}: PostItNoteProps): JSX.Element {
+}: PostItNoteProps): JSX.Element => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(content);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const style = colorStyles[color];
+
+  // Memoize style object to prevent recreation on every render
+  const style = useMemo(() => colorStyles[color], [color]);
 
   useEffect(() => {
     setEditedContent(content);
@@ -61,19 +68,33 @@ export function PostItNote({
     }
   }, [isEditing]);
 
-  const handleBlur = (): void => {
+  // Memoize event handlers to prevent child re-renders
+  const handleBlur = useCallback((): void => {
     setIsEditing(false);
     if (editedContent.trim() !== content && onUpdate) {
       onUpdate(id, editedContent.trim());
     }
-  };
+  }, [content, editedContent, onUpdate, id]);
 
-  const handleKeyDown = (e: React.KeyboardEvent): void => {
+  const handleKeyDown = useCallback((e: React.KeyboardEvent): void => {
     if (e.key === 'Escape') {
       setEditedContent(content);
       setIsEditing(false);
     }
-  };
+  }, [content]);
+
+  const handleNoteClick = useCallback(() => {
+    if (!readOnly && !isEditing) {
+      setIsEditing(true);
+    }
+  }, [readOnly, isEditing]);
+
+  const handleDeleteClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (window.confirm('Delete this note?') && onDelete) {
+      onDelete(id);
+    }
+  }, [onDelete, id]);
 
   return (
     <div
@@ -93,11 +114,7 @@ export function PostItNote({
         transition: 'transform 0.2s ease, box-shadow 0.2s ease',
         transform: isEditing ? 'scale(1.02)' : 'scale(1)',
       }}
-      onClick={() => {
-        if (!readOnly && !isEditing) {
-          setIsEditing(true);
-        }
-      }}
+      onClick={handleNoteClick}
       onMouseEnter={(e) => {
         if (!isEditing) {
           e.currentTarget.style.transform = 'scale(1.02) rotate(-1deg)';
@@ -114,13 +131,7 @@ export function PostItNote({
       {/* Delete button */}
       {!readOnly && onDelete && (
         <button
-          onClick={(e) => {
-            e.stopPropagation();
-            // eslint-disable-next-line no-alert
-            if (window.confirm('Delete this note?')) {
-              onDelete(id);
-            }
-          }}
+          onClick={handleDeleteClick}
           style={{
             position: 'absolute',
             top: '8px',
@@ -189,4 +200,7 @@ export function PostItNote({
       )}
     </div>
   );
-}
+};
+
+// Export memoized component to prevent unnecessary re-renders
+export const PostItNote = memo(PostItNoteComponent);

@@ -1,8 +1,12 @@
-import { caseFactsRepository } from '../../../repositories/CaseFactsRepository';
+import { getRepositories } from '../../../repositories';
 import type { CaseFact, CreateCaseFactInput, UpdateCaseFactInput } from '../../../models/CaseFact';
 import { errorLogger } from '../../../utils/error-logger';
 
 export class CaseFactsService {
+  private get caseFactsRepository() {
+    return getRepositories().caseFactsRepository;
+  }
+
   /**
    * Create a new case fact for a case
    */
@@ -17,7 +21,7 @@ export class CaseFactsService {
         throw new Error('Case fact content must be 5000 characters or less');
       }
 
-      return caseFactsRepository.create(input);
+      return this.caseFactsRepository.create(input);
     } catch (error) {
       errorLogger.logError(error as Error, {
         context: 'createCaseFact',
@@ -33,7 +37,7 @@ export class CaseFactsService {
    */
   getCaseFactById(id: number): CaseFact | null {
     try {
-      return caseFactsRepository.findById(id);
+      return this.caseFactsRepository.findById(id);
     } catch (error) {
       errorLogger.logError(error as Error, { context: 'getCaseFactById', id });
       throw error;
@@ -45,7 +49,7 @@ export class CaseFactsService {
    */
   getCaseFactsByCaseId(caseId: number): CaseFact[] {
     try {
-      return caseFactsRepository.findByCaseId(caseId);
+      return this.caseFactsRepository.findByCaseId(caseId);
     } catch (error) {
       errorLogger.logError(error as Error, { context: 'getCaseFactsByCaseId', caseId });
       throw error;
@@ -57,7 +61,7 @@ export class CaseFactsService {
    */
   getCaseFactsByCategory(caseId: number, factCategory: string): CaseFact[] {
     try {
-      return caseFactsRepository.findByCategory(caseId, factCategory);
+      return this.caseFactsRepository.findByCategory(caseId, factCategory);
     } catch (error) {
       errorLogger.logError(error as Error, {
         context: 'getCaseFactsByCategory',
@@ -73,7 +77,7 @@ export class CaseFactsService {
    */
   getCaseFactsByImportance(caseId: number, importance: string): CaseFact[] {
     try {
-      return caseFactsRepository.findByImportance(caseId, importance);
+      return this.caseFactsRepository.findByImportance(caseId, importance);
     } catch (error) {
       errorLogger.logError(error as Error, {
         context: 'getCaseFactsByImportance',
@@ -98,7 +102,7 @@ export class CaseFactsService {
         throw new Error('Case fact content must be 5000 characters or less');
       }
 
-      const caseFact = caseFactsRepository.update(id, input);
+      const caseFact = this.caseFactsRepository.update(id, input);
 
       if (!caseFact) {
         throw new Error('Case fact not found');
@@ -120,7 +124,7 @@ export class CaseFactsService {
    */
   deleteCaseFact(id: number): void {
     try {
-      caseFactsRepository.delete(id);
+      this.caseFactsRepository.delete(id);
     } catch (error) {
       errorLogger.logError(error as Error, {
         context: 'deleteCaseFact',

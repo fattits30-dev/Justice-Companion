@@ -1,18 +1,22 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TimelineService } from './TimelineService';
-import { timelineRepository } from '../../../repositories/TimelineRepository';
 import { errorLogger } from '../../../utils/error-logger';
 import type { TimelineEvent } from '../../../models/TimelineEvent';
 
-// Mock dependencies
-vi.mock('../../../repositories/TimelineRepository', () => ({
-  timelineRepository: {
-    create: vi.fn(),
-    findById: vi.fn(),
-    findByCaseId: vi.fn(),
-    update: vi.fn(),
-    delete: vi.fn(),
-  },
+// Mock centralized repository initialization
+const mockTimelineRepository = {
+  create: vi.fn(),
+  findById: vi.fn(),
+  findByCaseId: vi.fn(),
+  update: vi.fn(),
+  delete: vi.fn(),
+};
+
+vi.mock('../../../repositories', () => ({
+  getRepositories: vi.fn(() => ({
+    timelineRepository: mockTimelineRepository,
+  })),
+  resetRepositories: vi.fn(),
 }));
 
 vi.mock('../../../utils/error-logger', () => ({
@@ -41,7 +45,7 @@ describe('TimelineService', () => {
         updatedAt: '2025-10-06T00:00:00.000Z',
       };
 
-      vi.mocked(timelineRepository.create).mockReturnValue(mockTimelineEvent);
+      vi.mocked(mockTimelineRepository.create).mockReturnValue(mockTimelineEvent);
 
       const result = timelineService.createTimelineEvent({
         caseId: 100,
@@ -51,7 +55,7 @@ describe('TimelineService', () => {
       });
 
       expect(result).toEqual(mockTimelineEvent);
-      expect(timelineRepository.create).toHaveBeenCalledWith({
+      expect(mockTimelineRepository.create).toHaveBeenCalledWith({
         caseId: 100,
         title: 'First Meeting',
         eventDate: '2025-01-15',
@@ -71,7 +75,7 @@ describe('TimelineService', () => {
         updatedAt: '2025-10-06T00:00:00.000Z',
       };
 
-      vi.mocked(timelineRepository.create).mockReturnValue(mockTimelineEvent);
+      vi.mocked(mockTimelineRepository.create).mockReturnValue(mockTimelineEvent);
 
       const result = timelineService.createTimelineEvent({
         caseId: 100,
@@ -80,7 +84,7 @@ describe('TimelineService', () => {
       });
 
       expect(result).toEqual(mockTimelineEvent);
-      expect(timelineRepository.create).toHaveBeenCalled();
+      expect(mockTimelineRepository.create).toHaveBeenCalled();
     });
 
     it('should throw error if title is empty', () => {
@@ -100,7 +104,7 @@ describe('TimelineService', () => {
         })
       ).toThrow('Timeline event title is required');
 
-      expect(timelineRepository.create).not.toHaveBeenCalled();
+      expect(mockTimelineRepository.create).not.toHaveBeenCalled();
     });
 
     it('should throw error if title exceeds 200 characters', () => {
@@ -114,7 +118,7 @@ describe('TimelineService', () => {
         })
       ).toThrow('Timeline event title must be 200 characters or less');
 
-      expect(timelineRepository.create).not.toHaveBeenCalled();
+      expect(mockTimelineRepository.create).not.toHaveBeenCalled();
     });
 
     it('should accept title exactly 200 characters', () => {
@@ -129,7 +133,7 @@ describe('TimelineService', () => {
         updatedAt: '2025-10-06T00:00:00.000Z',
       };
 
-      vi.mocked(timelineRepository.create).mockReturnValue(mockTimelineEvent);
+      vi.mocked(mockTimelineRepository.create).mockReturnValue(mockTimelineEvent);
 
       const result = timelineService.createTimelineEvent({
         caseId: 100,
@@ -138,7 +142,7 @@ describe('TimelineService', () => {
       });
 
       expect(result).toEqual(mockTimelineEvent);
-      expect(timelineRepository.create).toHaveBeenCalled();
+      expect(mockTimelineRepository.create).toHaveBeenCalled();
     });
 
     it('should throw error if eventDate is missing', () => {
@@ -150,7 +154,7 @@ describe('TimelineService', () => {
         })
       ).toThrow('Timeline event date is required');
 
-      expect(timelineRepository.create).not.toHaveBeenCalled();
+      expect(mockTimelineRepository.create).not.toHaveBeenCalled();
     });
 
     it('should throw error if description exceeds 10000 characters', () => {
@@ -165,7 +169,7 @@ describe('TimelineService', () => {
         })
       ).toThrow('Timeline event description must be 10000 characters or less');
 
-      expect(timelineRepository.create).not.toHaveBeenCalled();
+      expect(mockTimelineRepository.create).not.toHaveBeenCalled();
     });
 
     it('should accept description exactly 10000 characters', () => {
@@ -180,7 +184,7 @@ describe('TimelineService', () => {
         updatedAt: '2025-10-06T00:00:00.000Z',
       };
 
-      vi.mocked(timelineRepository.create).mockReturnValue(mockTimelineEvent);
+      vi.mocked(mockTimelineRepository.create).mockReturnValue(mockTimelineEvent);
 
       const result = timelineService.createTimelineEvent({
         caseId: 100,
@@ -190,12 +194,12 @@ describe('TimelineService', () => {
       });
 
       expect(result).toEqual(mockTimelineEvent);
-      expect(timelineRepository.create).toHaveBeenCalled();
+      expect(mockTimelineRepository.create).toHaveBeenCalled();
     });
 
     it('should log and rethrow repository errors', () => {
       const error = new Error('Database error');
-      vi.mocked(timelineRepository.create).mockImplementation(() => {
+      vi.mocked(mockTimelineRepository.create).mockImplementation(() => {
         throw error;
       });
 
@@ -229,26 +233,26 @@ describe('TimelineService', () => {
         updatedAt: '2025-10-06T00:00:00.000Z',
       };
 
-      vi.mocked(timelineRepository.findById).mockReturnValue(mockTimelineEvent);
+      vi.mocked(mockTimelineRepository.findById).mockReturnValue(mockTimelineEvent);
 
       const result = timelineService.getTimelineEventById(1);
 
       expect(result).toEqual(mockTimelineEvent);
-      expect(timelineRepository.findById).toHaveBeenCalledWith(1);
+      expect(mockTimelineRepository.findById).toHaveBeenCalledWith(1);
     });
 
     it('should return null if timeline event not found', () => {
-      vi.mocked(timelineRepository.findById).mockReturnValue(null);
+      vi.mocked(mockTimelineRepository.findById).mockReturnValue(null);
 
       const result = timelineService.getTimelineEventById(999);
 
       expect(result).toBeNull();
-      expect(timelineRepository.findById).toHaveBeenCalledWith(999);
+      expect(mockTimelineRepository.findById).toHaveBeenCalledWith(999);
     });
 
     it('should log and rethrow repository errors', () => {
       const error = new Error('Database error');
-      vi.mocked(timelineRepository.findById).mockImplementation(() => {
+      vi.mocked(mockTimelineRepository.findById).mockImplementation(() => {
         throw error;
       });
 
@@ -283,26 +287,26 @@ describe('TimelineService', () => {
         },
       ];
 
-      vi.mocked(timelineRepository.findByCaseId).mockReturnValue(mockTimelineEvents);
+      vi.mocked(mockTimelineRepository.findByCaseId).mockReturnValue(mockTimelineEvents);
 
       const result = timelineService.getTimelineEventsByCaseId(100);
 
       expect(result).toEqual(mockTimelineEvents);
-      expect(timelineRepository.findByCaseId).toHaveBeenCalledWith(100);
+      expect(mockTimelineRepository.findByCaseId).toHaveBeenCalledWith(100);
     });
 
     it('should return empty array if no timeline events exist', () => {
-      vi.mocked(timelineRepository.findByCaseId).mockReturnValue([]);
+      vi.mocked(mockTimelineRepository.findByCaseId).mockReturnValue([]);
 
       const result = timelineService.getTimelineEventsByCaseId(999);
 
       expect(result).toEqual([]);
-      expect(timelineRepository.findByCaseId).toHaveBeenCalledWith(999);
+      expect(mockTimelineRepository.findByCaseId).toHaveBeenCalledWith(999);
     });
 
     it('should log and rethrow repository errors', () => {
       const error = new Error('Database error');
-      vi.mocked(timelineRepository.findByCaseId).mockImplementation(() => {
+      vi.mocked(mockTimelineRepository.findByCaseId).mockImplementation(() => {
         throw error;
       });
 
@@ -326,7 +330,7 @@ describe('TimelineService', () => {
         updatedAt: '2025-10-06T00:05:00.000Z',
       };
 
-      vi.mocked(timelineRepository.update).mockReturnValue(mockTimelineEvent);
+      vi.mocked(mockTimelineRepository.update).mockReturnValue(mockTimelineEvent);
 
       const result = timelineService.updateTimelineEvent(1, {
         title: 'Updated Event',
@@ -335,7 +339,7 @@ describe('TimelineService', () => {
       });
 
       expect(result).toEqual(mockTimelineEvent);
-      expect(timelineRepository.update).toHaveBeenCalledWith(1, {
+      expect(mockTimelineRepository.update).toHaveBeenCalledWith(1, {
         title: 'Updated Event',
         eventDate: '2025-03-10',
         description: 'Updated description',
@@ -354,7 +358,7 @@ describe('TimelineService', () => {
         updatedAt: '2025-10-06T00:05:00.000Z',
       };
 
-      vi.mocked(timelineRepository.update).mockReturnValue(mockTimelineEvent);
+      vi.mocked(mockTimelineRepository.update).mockReturnValue(mockTimelineEvent);
 
       const result = timelineService.updateTimelineEvent(1, {
         title: 'Updated Title',
@@ -372,7 +376,7 @@ describe('TimelineService', () => {
         'Timeline event title cannot be empty'
       );
 
-      expect(timelineRepository.update).not.toHaveBeenCalled();
+      expect(mockTimelineRepository.update).not.toHaveBeenCalled();
     });
 
     it('should throw error if title exceeds 200 characters', () => {
@@ -382,7 +386,7 @@ describe('TimelineService', () => {
         'Timeline event title must be 200 characters or less'
       );
 
-      expect(timelineRepository.update).not.toHaveBeenCalled();
+      expect(mockTimelineRepository.update).not.toHaveBeenCalled();
     });
 
     it('should throw error if description exceeds 10000 characters', () => {
@@ -392,22 +396,22 @@ describe('TimelineService', () => {
         timelineService.updateTimelineEvent(1, { description: longDescription })
       ).toThrow('Timeline event description must be 10000 characters or less');
 
-      expect(timelineRepository.update).not.toHaveBeenCalled();
+      expect(mockTimelineRepository.update).not.toHaveBeenCalled();
     });
 
     it('should throw error if timeline event not found', () => {
-      vi.mocked(timelineRepository.update).mockReturnValue(null);
+      vi.mocked(mockTimelineRepository.update).mockReturnValue(null);
 
       expect(() => timelineService.updateTimelineEvent(999, { title: 'Test' })).toThrow(
         'Timeline event not found'
       );
 
-      expect(timelineRepository.update).toHaveBeenCalledWith(999, { title: 'Test' });
+      expect(mockTimelineRepository.update).toHaveBeenCalledWith(999, { title: 'Test' });
     });
 
     it('should log and rethrow repository errors', () => {
       const error = new Error('Database error');
-      vi.mocked(timelineRepository.update).mockImplementation(() => {
+      vi.mocked(mockTimelineRepository.update).mockImplementation(() => {
         throw error;
       });
 
@@ -428,17 +432,17 @@ describe('TimelineService', () => {
 
   describe('deleteTimelineEvent', () => {
     it('should delete a timeline event successfully', () => {
-      vi.mocked(timelineRepository.delete).mockReturnValue(undefined);
+      vi.mocked(mockTimelineRepository.delete).mockReturnValue(undefined);
 
       timelineService.deleteTimelineEvent(1);
 
-      expect(timelineRepository.delete).toHaveBeenCalledWith(1);
+      expect(mockTimelineRepository.delete).toHaveBeenCalledWith(1);
       expect(errorLogger.logError).not.toHaveBeenCalled();
     });
 
     it('should log and rethrow repository errors', () => {
       const error = new Error('Database error');
-      vi.mocked(timelineRepository.delete).mockImplementation(() => {
+      vi.mocked(mockTimelineRepository.delete).mockImplementation(() => {
         throw error;
       });
 
@@ -463,7 +467,7 @@ describe('TimelineService', () => {
         updatedAt: '2025-10-06T00:00:00.000Z',
       };
 
-      vi.mocked(timelineRepository.create).mockReturnValue(mockTimelineEvent);
+      vi.mocked(mockTimelineRepository.create).mockReturnValue(mockTimelineEvent);
 
       const result = timelineService.createTimelineEvent({
         caseId: 100,
@@ -487,7 +491,7 @@ describe('TimelineService', () => {
         updatedAt: '2025-10-06T00:00:00.000Z',
       };
 
-      vi.mocked(timelineRepository.create).mockReturnValue(mockTimelineEvent);
+      vi.mocked(mockTimelineRepository.create).mockReturnValue(mockTimelineEvent);
 
       const result = timelineService.createTimelineEvent({
         caseId: 100,
@@ -519,7 +523,7 @@ describe('TimelineService', () => {
           updatedAt: '2025-10-06T00:00:00.000Z',
         };
 
-        vi.mocked(timelineRepository.create).mockReturnValue(mockTimelineEvent);
+        vi.mocked(mockTimelineRepository.create).mockReturnValue(mockTimelineEvent);
 
         const result = timelineService.createTimelineEvent({
           caseId: 100,
@@ -543,7 +547,7 @@ describe('TimelineService', () => {
         updatedAt: '2025-10-06T00:00:00.000Z',
       };
 
-      vi.mocked(timelineRepository.create).mockReturnValue(mockTimelineEvent);
+      vi.mocked(mockTimelineRepository.create).mockReturnValue(mockTimelineEvent);
 
       const result = timelineService.createTimelineEvent({
         caseId: 100,

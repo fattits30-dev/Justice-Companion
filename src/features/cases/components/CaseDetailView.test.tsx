@@ -13,7 +13,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen } from '@/test-utils/test-utils';
 import userEvent from '@testing-library/user-event';
-import React from 'react';
 import { CaseDetailView } from './CaseDetailView';
 import type { Case } from '../../../models/Case';
 import type { Evidence } from '../../../models/Evidence';

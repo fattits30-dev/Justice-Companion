@@ -6,7 +6,8 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { AuthorizationWrapper, AuthLevel, ResourceType } from '../../electron/authorization-wrapper';
+// @ts-expect-error - Cross-project reference from src/ to electron/ (works at runtime)
+import { AuthorizationWrapper, AuthLevel, ResourceType } from '../../electron/utils/authorization-wrapper';
 import { AuthenticationService } from '../services/AuthenticationService';
 import { AuthorizationMiddleware } from '../middleware/AuthorizationMiddleware';
 import { AuditLogger } from '../services/AuditLogger';
@@ -35,9 +36,9 @@ describe('Authorization Security Tests', () => {
     passwordSalt: 'salt',
     role: 'user',
     isActive: true,
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-    lastLoginAt: Date.now(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    lastLoginAt: new Date().toISOString(),
   };
 
   const mockAdminUser: User = {
@@ -51,8 +52,8 @@ describe('Authorization Security Tests', () => {
   const mockSession: Session = {
     id: 'session-123',
     userId: 1,
-    expiresAt: Date.now() + 86400000, // 24 hours
-    createdAt: Date.now(),
+    expiresAt: new Date(Date.now() + 86400000).toISOString(), // 24 hours
+    createdAt: new Date().toISOString(),
     ipAddress: '127.0.0.1',
     userAgent: 'test',
     rememberMe: false,
@@ -62,7 +63,7 @@ describe('Authorization Security Tests', () => {
     // Initialize repositories with in-memory database
     const db = {} as any; // Mock database
     userRepo = new UserRepository(db);
-    sessionRepo = new SessionRepository(db);
+    sessionRepo = new SessionRepository();
     caseRepo = new CaseRepository(db);
     auditLogger = new AuditLogger(db);
 
@@ -81,14 +82,14 @@ describe('Authorization Security Tests', () => {
 
     // Setup mocks
     vi.spyOn(authService, 'validateSession').mockImplementation((sessionId) => {
-      if (sessionId === 'session-123') return mockUser;
-      if (sessionId === 'admin-session') return mockAdminUser;
+      if (sessionId === 'session-123') {return mockUser;}
+      if (sessionId === 'admin-session') {return mockAdminUser;}
       return null;
     });
 
     vi.spyOn(sessionRepo, 'findById').mockImplementation((id) => {
-      if (id === 'session-123') return mockSession;
-      if (id === 'admin-session') return { ...mockSession, id: 'admin-session', userId: 2 };
+      if (id === 'session-123') {return mockSession;}
+      if (id === 'admin-session') {return { ...mockSession, id: 'admin-session', userId: 2 };}
       return null;
     });
 
@@ -236,7 +237,7 @@ describe('Authorization Security Tests', () => {
       const wrapped = authWrapper.wrapAuthorized(
         'test:authorized',
         ResourceType.CASE,
-        (request) => request.caseId,
+        (request: { caseId: number }) => request.caseId,
         handler
       );
 
@@ -258,7 +259,7 @@ describe('Authorization Security Tests', () => {
       const wrapped = authWrapper.wrapAuthorized(
         'test:authorized',
         ResourceType.CASE,
-        (request) => request.caseId,
+        (request: { caseId: number }) => request.caseId,
         handler
       );
 
@@ -454,7 +455,7 @@ describe('Authorization Security Tests', () => {
       const wrapped = authWrapper.wrapAuthorized(
         'case:delete',
         ResourceType.CASE,
-        (request) => request.id,
+        (request: { id: number }) => request.id,
         handler
       );
 

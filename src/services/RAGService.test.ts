@@ -4,7 +4,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { RAGService } from './RAGService';
 import type {
-  LegalContext,
   LegislationResult,
   CaseResult,
   KnowledgeEntry,
@@ -72,32 +71,30 @@ describe('RAGService', () => {
 
     mockSearchLegislation.mockResolvedValue([
       {
-        id: '1',
         title: 'Employment Rights Act 1996',
+        content: 'Test legislation summary',
         url: 'https://legislation.gov.uk/ukpga/1996/18',
-        summary: 'Test legislation summary',
         relevance: 0.95,
       },
     ] as LegislationResult[]);
 
     mockSearchCaseLaw.mockResolvedValue([
       {
-        id: '1',
-        name: 'Test v. Employer [2024]',
-        court: 'Employment Tribunal',
-        year: '2024',
-        summary: 'Test case summary',
         citation: '[2024] ET 123',
+        court: 'Employment Tribunal',
+        date: '2024-01-01',
+        summary: 'Test case summary',
+        url: 'https://caselaw.nationalarchives.gov.uk/test',
         relevance: 0.90,
       },
     ] as CaseResult[]);
 
     mockSearchKnowledgeBase.mockResolvedValue([
       {
-        id: '1',
-        title: 'Employment Law Guide',
-        content: 'Test knowledge base content',
+        topic: 'Employment Law Guide',
         category: 'employment',
+        content: 'Test knowledge base content',
+        sources: ['Employment Rights Act 1996'],
       },
     ] as KnowledgeEntry[]);
 
@@ -122,7 +119,9 @@ describe('RAGService', () => {
 
       expect(response).toBeDefined();
       expect(response.success).toBe(true);
-      expect(response.message?.content).toContain('Employment law');
+      if (response.success) {
+        expect(response.message?.content).toContain('Employment law');
+      }
     });
 
     it('should process question with caseId', async () => {
@@ -143,8 +142,10 @@ describe('RAGService', () => {
       const response = await ragService.processQuestion('Obscure legal topic');
 
       expect(response.success).toBe(false);
-      expect(response.error).toContain("don't have information");
-      expect(response.code).toBe('NO_CONTEXT');
+      if (!response.success) {
+        expect(response.error).toContain("don't have information");
+        expect(response.code).toBe('NO_CONTEXT');
+      }
     });
 
     // Note: Disclaimer enforcement test removed - requires more complex mocking
@@ -164,7 +165,9 @@ describe('RAGService', () => {
       const response = await ragService.processQuestion('Test question');
 
       expect(response.success).toBe(false);
-      expect(response.code).toBe('SAFETY_VIOLATION');
+      if (!response.success) {
+        expect(response.code).toBe('SAFETY_VIOLATION');
+      }
     });
 
     it('should reject response with "I recommend" advice language', async () => {
@@ -181,7 +184,9 @@ describe('RAGService', () => {
       const response = await ragService.processQuestion('Test question');
 
       expect(response.success).toBe(false);
-      expect(response.code).toBe('SAFETY_VIOLATION');
+      if (!response.success) {
+        expect(response.code).toBe('SAFETY_VIOLATION');
+      }
     });
 
     it('should reject response with "I advise" advice language', async () => {
@@ -198,7 +203,9 @@ describe('RAGService', () => {
       const response = await ragService.processQuestion('Test question');
 
       expect(response.success).toBe(false);
-      expect(response.code).toBe('SAFETY_VIOLATION');
+      if (!response.success) {
+        expect(response.code).toBe('SAFETY_VIOLATION');
+      }
     });
 
     it('should reject response that is too short', async () => {
@@ -214,7 +221,9 @@ describe('RAGService', () => {
       const response = await ragService.processQuestion('Test question');
 
       expect(response.success).toBe(false);
-      expect(response.code).toBe('SAFETY_VIOLATION');
+      if (!response.success) {
+        expect(response.code).toBe('SAFETY_VIOLATION');
+      }
     });
 
     it('should handle AI service errors', async () => {
@@ -234,8 +243,10 @@ describe('RAGService', () => {
       const response = await ragService.processQuestion('Test question');
 
       expect(response.success).toBe(false);
-      expect(response.error).toContain('error occurred');
-      expect(response.code).toBe('EXCEPTION');
+      if (!response.success) {
+        expect(response.error).toContain('error occurred');
+        expect(response.code).toBe('EXCEPTION');
+      }
     });
 
     it('should handle API failures gracefully', async () => {
@@ -277,10 +288,12 @@ describe('RAGService', () => {
       const response = await ragService.processQuestion('Test question');
 
       expect(response.success).toBe(true);
-      const disclaimerCount = (
-        response.message?.content.match(/⚠️/g) || []
-      ).length;
-      expect(disclaimerCount).toBe(1);
+      if (response.success) {
+        const disclaimerCount = (
+          response.message?.content.match(/⚠️/g) || []
+        ).length;
+        expect(disclaimerCount).toBe(1);
+      }
     });
   });
 
@@ -327,29 +340,29 @@ describe('RAGService', () => {
     });
 
     it('should sort legislation by relevance', async () => {
-      const results: LegislationResult[] = [
+      const results = [
         {
           id: '1',
           title: 'Act 1',
+          content: 'Test',
           url: 'https://test.com',
-          summary: 'Test',
           relevance: 0.3,
         },
         {
           id: '2',
           title: 'Act 2',
+          content: 'Test',
           url: 'https://test.com',
-          summary: 'Test',
           relevance: 0.9,
         },
         {
           id: '3',
           title: 'Act 3',
+          content: 'Test',
           url: 'https://test.com',
-          summary: 'Test',
           relevance: 0.6,
         },
-      ];
+      ] as unknown as LegislationResult[];
 
       mockSearchLegislation.mockResolvedValueOnce(results);
 
@@ -379,26 +392,26 @@ describe('RAGService', () => {
     });
 
     it('should sort case law by relevance', async () => {
-      const results: CaseResult[] = [
+      const results = [
         {
           id: '1',
-          name: 'Case 1',
-          court: 'Court',
-          year: '2024',
-          summary: 'Test',
           citation: '[2024] TC 1',
+          court: 'Court',
+          date: '2024-01-01',
+          summary: 'Test',
+          url: 'https://test.com',
           relevance: 0.3,
         },
         {
           id: '2',
-          name: 'Case 2',
-          court: 'Court',
-          year: '2024',
-          summary: 'Test',
           citation: '[2024] TC 2',
+          court: 'Court',
+          date: '2024-01-01',
+          summary: 'Test',
+          url: 'https://test.com',
           relevance: 0.9,
         },
-      ];
+      ] as unknown as CaseResult[];
 
       mockSearchCaseLaw.mockResolvedValueOnce(results);
 
@@ -425,21 +438,21 @@ describe('RAGService', () => {
     });
 
     it('should handle results without relevance scores', async () => {
-      const results: LegislationResult[] = [
+      const results = [
         {
           id: '1',
           title: 'Act 1',
+          content: 'Test',
           url: 'https://test.com',
-          summary: 'Test',
         },
         {
           id: '2',
           title: 'Act 2',
+          content: 'Test',
           url: 'https://test.com',
-          summary: 'Test',
           relevance: 0.5,
         },
-      ];
+      ] as unknown as LegislationResult[];
 
       mockSearchLegislation.mockResolvedValueOnce(results);
 

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { useLegalIssues } from './useLegalIssues';
-import type { LegalIssue, CreateLegalIssueInput, UpdateLegalIssueInput } from '../models/LegalIssue';
+import type { LegalIssue, CreateLegalIssueInput, UpdateLegalIssueInput } from '../../../models/LegalIssue';
 
 /**
  * Test Suite for useLegalIssues Hook

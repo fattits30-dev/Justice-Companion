@@ -185,37 +185,6 @@ describe('CaseFactsRepository', () => {
       expect(details.importance).toBe('critical');
       expect(details.contentLength).toBe(36);
     });
-
-    it('should throw error if encryption service is missing', () => {
-      const repoWithoutEncryption = new CaseFactsRepository();
-
-      expect(() => {
-        repoWithoutEncryption.create({
-          caseId: 1,
-          factContent: 'Test fact',
-          factCategory: 'timeline',
-        });
-      }).toThrow('EncryptionService is required to create case facts');
-    });
-
-    it('should audit failed creation', () => {
-      const repoWithoutEncryption = new CaseFactsRepository(undefined, auditLogger);
-
-      try {
-        repoWithoutEncryption.create({
-          caseId: 1,
-          factContent: 'Test fact',
-          factCategory: 'timeline',
-        });
-      } catch (error) {
-        // Expected error
-      }
-
-      const auditLogs = db
-        .prepare('SELECT * FROM audit_logs WHERE event_type = ? AND success = 0')
-        .all('case_fact.create');
-      expect(auditLogs).toHaveLength(1);
-    });
   });
 
   describe('findById', () => {
@@ -555,54 +524,6 @@ describe('CaseFactsRepository', () => {
 
       expect(found).not.toBeNull();
       expect(found!.factContent).toBe('Plaintext fact');
-    });
-
-    it('should handle repository without encryption service', () => {
-      const repoWithoutEncryption = new CaseFactsRepository();
-
-      // Insert plaintext fact
-      db.prepare(
-        `
-        INSERT INTO case_facts (case_id, fact_content, fact_category, importance)
-        VALUES (?, ?, ?, ?)
-      `
-      ).run(1, 'Plaintext fact', 'timeline', 'medium');
-
-      const found = repoWithoutEncryption.findById(1);
-
-      expect(found).not.toBeNull();
-      expect(found!.factContent).toBe('Plaintext fact');
-    });
-  });
-
-  describe('dependency injection', () => {
-    it('should allow setting encryption service', () => {
-      const repo = new CaseFactsRepository();
-      repo.setEncryptionService(encryptionService);
-
-      const fact = repo.create({
-        caseId: 1,
-        factContent: 'Test fact',
-        factCategory: 'timeline',
-      });
-
-      expect(fact.factContent).toBe('Test fact');
-    });
-
-    it('should allow setting audit logger', () => {
-      const repo = new CaseFactsRepository(encryptionService);
-      repo.setAuditLogger(auditLogger);
-
-      repo.create({
-        caseId: 1,
-        factContent: 'Test fact',
-        factCategory: 'timeline',
-      });
-
-      const auditLogs = db
-        .prepare('SELECT * FROM audit_logs WHERE event_type = ?')
-        .all('case_fact.create');
-      expect(auditLogs).toHaveLength(1);
     });
   });
 

@@ -60,16 +60,16 @@ function setupAuthHandlers(): void {
   // Lazy-load services to avoid circular dependencies
   const getAuthService = () => {
     // Runtime path: from dist/electron/ to src/ (two levels up)
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+     
     const { AuthenticationService } = require('../../src/services/AuthenticationService');
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+     
     const { getDb } = require('../../src/db/database');
     return new AuthenticationService(getDb());
   };
 
   const getAuthSchemas = () => {
     // Runtime path: from dist/electron/ to src/ (two levels up)
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+     
     return require('../../src/middleware/schemas/auth-schemas');
   };
 
@@ -202,14 +202,14 @@ function setupCaseHandlers(): void {
   // Lazy-load services
   const getCaseService = () => {
     // Runtime path: from dist/electron/ to src/ (two levels up)
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+     
     const { caseService } = require('../../src/features/cases/services/CaseService');
     return caseService;
   };
 
   const getCaseSchemas = () => {
     // Runtime path: from dist/electron/ to src/ (two levels up)
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+     
     return require('../../src/middleware/schemas/case-schemas');
   };
 
@@ -460,14 +460,14 @@ function setupEvidenceHandlers(): void {
   // Lazy-load repository
   const getEvidenceRepository = () => {
     // Runtime path: from dist/electron/ to src/ (two levels up)
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+     
     const { evidenceRepository } = require('../../src/repositories/EvidenceRepository');
     return evidenceRepository;
   };
 
   const getEvidenceSchemas = () => {
     // Runtime path: from dist/electron/ to src/ (two levels up)
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+     
     return require('../../src/middleware/schemas/evidence-schemas');
   };
 

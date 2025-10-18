@@ -8,6 +8,7 @@
  * a structured tool that the LLM can invoke during conversations.
  */
 
+// @ts-expect-error - node-llama-cpp is an optional dependency with no type declarations
 import { defineChatSessionFunction } from 'node-llama-cpp';
 import type { CaseStatus, CreateCaseInput, UpdateCaseInput } from '../models/Case.js';
 import type { CreateEvidenceInput, EvidenceType } from '../models/Evidence.js';
@@ -39,7 +40,7 @@ const createCaseFunction = defineChatSessionFunction({
     },
     required: ['title', 'caseType', 'description'],
   },
-  handler: async (params) => {
+  handler: async (params: { title: string; caseType: string; description: string }) => {
     const input: CreateCaseInput = {
       title: params.title,
       caseType: (params.caseType as
@@ -87,7 +88,7 @@ const getCaseFunction = defineChatSessionFunction({
     },
     required: ['caseId'],
   },
-  handler: async (params) => {
+  handler: async (params: { caseId: number }) => {
     const response = await window.justiceAPI.getCaseById(params.caseId);
 
     if (response.success) {
@@ -128,7 +129,7 @@ const listCasesFunction = defineChatSessionFunction({
     },
     required: [],
   },
-  handler: async (params) => {
+  handler: async (params: { filterStatus?: string }) => {
     const response = await window.justiceAPI.getAllCases();
 
     if (response.success) {
@@ -192,7 +193,7 @@ const updateCaseFunction = defineChatSessionFunction({
     },
     required: ['caseId'],
   },
-  handler: async (params) => {
+  handler: async (params: { caseId: number; title?: string; caseType?: string; description?: string; status?: string }) => {
     const input: UpdateCaseInput = {};
 
     if (params.title !== undefined) {
@@ -276,7 +277,7 @@ const createEvidenceFunction = defineChatSessionFunction({
     },
     required: ['caseId', 'title', 'evidenceType'],
   },
-  handler: async (params) => {
+  handler: async (params: { caseId: number; title: string; evidenceType: string; content?: string; filePath?: string; obtainedDate?: string }) => {
     // Validate required evidenceType
     if (!params.evidenceType) {
       throw new Error('evidenceType is required');
@@ -333,7 +334,7 @@ const listEvidenceFunction = defineChatSessionFunction({
     },
     required: ['caseId'],
   },
-  handler: async (params) => {
+  handler: async (params: { caseId: number }) => {
     const response = await window.justiceAPI.getEvidenceByCaseId(params.caseId);
 
     if (response.success) {
@@ -386,7 +387,7 @@ const storeCaseFactFunction = defineChatSessionFunction({
     },
     required: ['caseId', 'factContent', 'factCategory'],
   },
-  handler: async (params) => {
+  handler: async (params: { caseId: number; factContent: string; factCategory: string; importance?: string }) => {
     const response = await window.justiceAPI.storeFact({
       caseId: params.caseId,
       factContent: params.factContent,
@@ -422,7 +423,7 @@ const getCaseFactsFunction = defineChatSessionFunction({
     },
     required: ['caseId'],
   },
-  handler: async (params) => {
+  handler: async (params: { caseId: number; factCategory?: string }) => {
     const response = await window.justiceAPI.getCaseFacts(params.caseId, params.factCategory);
     if (response.success) {
       return {
@@ -451,7 +452,7 @@ const searchLegislationFunction = defineChatSessionFunction({
     properties: { query: { type: 'string', description: 'Search query' } },
     required: ['query'],
   },
-  handler: async (params) => {
+  handler: async (params: { query: string }) => {
     const { legalAPIService } = await import('./LegalAPIService.js');
     const keywords = await legalAPIService.extractKeywords(params.query);
     const results = await legalAPIService.searchLegislation(keywords.all);
@@ -485,7 +486,7 @@ const searchCaseLawFunction = defineChatSessionFunction({
     },
     required: ['query'],
   },
-  handler: async (params) => {
+  handler: async (params: { query: string; category?: string }) => {
     const { legalAPIService } = await import('./LegalAPIService.js');
     const keywords = await legalAPIService.extractKeywords(params.query);
     const category = params.category || legalAPIService.classifyQuestion(params.query);
@@ -504,7 +505,7 @@ const classifyQuestionFunction = defineChatSessionFunction({
     properties: { question: { type: 'string', description: 'Legal question' } },
     required: ['question'],
   },
-  handler: async (params) => {
+  handler: async (params: { question: string }) => {
     const { legalAPIService } = await import('./LegalAPIService.js');
     const category = legalAPIService.classifyQuestion(params.question);
     const confidence = category === 'general' ? 0.3 : 0.9;

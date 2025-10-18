@@ -12,6 +12,7 @@ import type { LegalContext } from './ai';
 import type { CaseFact } from '../models/CaseFact';
 import type { User } from '../models/User';
 import type { Consent, ConsentType } from '../models/Consent';
+import type { PaginationParams, PaginatedResult } from './pagination';
 
 /**
  * IPC Channel definitions for type-safe communication
@@ -679,6 +680,11 @@ export interface JusticeCompanionAPI {
   deleteCase(id: number): Promise<IPCResponse<CaseDeleteResponse>>;
   closeCase(id: number): Promise<IPCResponse<CaseCloseResponse>>;
   getCaseStatistics(): Promise<IPCResponse<CaseGetStatisticsResponse>>;
+
+  // Case pagination operations (Phase 2 - Performance Optimization)
+  getAllCasesPaginated(params: PaginationParams): Promise<IPCResponse<{ success: true; data: PaginatedResult<Case> }>>;
+  getCasesByUserPaginated(userId: number, params: PaginationParams): Promise<IPCResponse<{ success: true; data: PaginatedResult<Case> }>>;
+  getCasesByStatusPaginated(status: CaseStatus, params: PaginationParams): Promise<IPCResponse<{ success: true; data: PaginatedResult<Case> }>>;
 
   // AI operations
   checkAIStatus(): Promise<IPCResponse<AICheckStatusResponse>>;

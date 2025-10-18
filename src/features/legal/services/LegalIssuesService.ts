@@ -1,8 +1,12 @@
-import { legalIssuesRepository } from '@/repositories/LegalIssuesRepository';
+import { getRepositories } from '@/repositories';
 import type { LegalIssue, CreateLegalIssueInput, UpdateLegalIssueInput } from '@/models/LegalIssue';
 import { errorLogger } from '@/utils/error-logger';
 
 export class LegalIssuesService {
+  private get legalIssuesRepository() {
+    return getRepositories().legalIssuesRepository;
+  }
+
   /**
    * Create a new legal issue for a case
    */
@@ -21,7 +25,7 @@ export class LegalIssuesService {
         throw new Error('Legal issue description must be 10000 characters or less');
       }
 
-      return legalIssuesRepository.create(input);
+      return this.legalIssuesRepository.create(input);
     } catch (error) {
       errorLogger.logError(error as Error, {
         context: 'createLegalIssue',
@@ -39,7 +43,7 @@ export class LegalIssuesService {
    */
   getLegalIssueById(id: number): LegalIssue | null {
     try {
-      return legalIssuesRepository.findById(id);
+      return this.legalIssuesRepository.findById(id);
     } catch (error) {
       errorLogger.logError(error as Error, { context: 'getLegalIssueById', id });
       throw error;
@@ -51,7 +55,7 @@ export class LegalIssuesService {
    */
   getLegalIssuesByCaseId(caseId: number): LegalIssue[] {
     try {
-      return legalIssuesRepository.findByCaseId(caseId);
+      return this.legalIssuesRepository.findByCaseId(caseId);
     } catch (error) {
       errorLogger.logError(error as Error, { context: 'getLegalIssuesByCaseId', caseId });
       throw error;
@@ -76,7 +80,7 @@ export class LegalIssuesService {
         throw new Error('Legal issue description must be 10000 characters or less');
       }
 
-      const legalIssue = legalIssuesRepository.update(id, input);
+      const legalIssue = this.legalIssuesRepository.update(id, input);
 
       if (!legalIssue) {
         throw new Error('Legal issue not found');
@@ -98,7 +102,7 @@ export class LegalIssuesService {
    */
   deleteLegalIssue(id: number): void {
     try {
-      legalIssuesRepository.delete(id);
+      this.legalIssuesRepository.delete(id);
     } catch (error) {
       errorLogger.logError(error as Error, {
         context: 'deleteLegalIssue',

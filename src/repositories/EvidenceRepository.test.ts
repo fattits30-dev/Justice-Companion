@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } 
 import { EvidenceRepository } from './EvidenceRepository';
 import { CaseRepository } from './CaseRepository';
 import { EncryptionService } from '../services/EncryptionService';
-import { createTestDatabase, type TestDatabaseHelper } from '../test-utils/database-test-helper';
+import { createTestDatabase } from '../test-utils/database-test-helper';
 import type { CreateEvidenceInput } from '../models/Evidence';
 import type Database from 'better-sqlite3';
 
@@ -257,19 +257,6 @@ describe('EvidenceRepository with Encryption', () => {
 
       expect(retrieved).toBeTruthy();
       expect(retrieved!.content).toBe('This is plaintext from old version');
-    });
-
-    it('should throw when encryption service is not configured', () => {
-      const repoWithoutEncryption = new EvidenceRepository();
-
-      expect(() =>
-        repoWithoutEncryption.create({
-          caseId: testCaseId,
-          title: 'Unencrypted Evidence',
-          evidenceType: 'note',
-          content: 'This will be stored as plaintext',
-        })
-      ).toThrow('EncryptionService not configured for EvidenceRepository');
     });
   });
 

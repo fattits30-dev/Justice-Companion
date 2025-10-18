@@ -319,7 +319,7 @@ export function LegalIssuesPanel({ caseId }: LegalIssuesPanelProps) {
                       </div>
                       <button
                         onClick={() => {
-                          // eslint-disable-next-line no-alert
+                           
                           if (window.confirm('Delete this legal issue?')) {
                             void deleteLegalIssue(issue.id);
                           }

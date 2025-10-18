@@ -1,12 +1,17 @@
 import type { Note } from '@/models/Note';
-import { useState } from 'react';
+import { useState, memo, useCallback } from 'react';
 import { useNotes } from '../hooks/useNotes';
 
 export interface NotesPanelProps {
   caseId: number;
 }
 
-export function NotesPanel({ caseId }: NotesPanelProps) {
+/**
+ * Notes panel with CRUD operations
+ *
+ * @performance Memoized to prevent unnecessary re-renders when props haven't changed
+ */
+const NotesPanelComponent = ({ caseId }: NotesPanelProps) => {
   const { notes, loading, error, createNote, updateNote, deleteNote } = useNotes(caseId);
 
   const [isCreating, setIsCreating] = useState(false);
@@ -14,21 +19,55 @@ export function NotesPanel({ caseId }: NotesPanelProps) {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editContent, setEditContent] = useState('');
 
-  const handleCreate = async () => {
+  // Memoize event handlers to prevent child re-renders
+  const handleCreate = useCallback(async () => {
     if (newNoteContent.trim()) {
       await createNote(newNoteContent);
       setNewNoteContent('');
       setIsCreating(false);
     }
-  };
+  }, [newNoteContent, createNote]);
 
-  const handleUpdate = async (id: number) => {
+  const handleUpdate = useCallback(async (id: number) => {
     if (editContent.trim()) {
       await updateNote(id, editContent);
       setEditingId(null);
       setEditContent('');
     }
-  };
+  }, [editContent, updateNote]);
+
+  const handleStartCreating = useCallback(() => {
+    setIsCreating(true);
+  }, []);
+
+  const handleCancelCreating = useCallback(() => {
+    setIsCreating(false);
+    setNewNoteContent('');
+  }, []);
+
+  const handleNewNoteChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setNewNoteContent(e.target.value);
+  }, []);
+
+  const handleEditContentChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setEditContent(e.target.value);
+  }, []);
+
+  const handleCancelEdit = useCallback(() => {
+    setEditingId(null);
+    setEditContent('');
+  }, []);
+
+  const handleStartEdit = useCallback((id: number, content: string) => {
+    setEditingId(id);
+    setEditContent(content);
+  }, []);
+
+  const handleDelete = useCallback((id: number) => {
+    if (window.confirm('Delete this note?')) {
+      void deleteNote(id);
+    }
+  }, [deleteNote]);
 
   if (loading) {
     return <div className="p-6 text-center text-blue-300">Loading notes...</div>;
@@ -47,7 +86,7 @@ export function NotesPanel({ caseId }: NotesPanelProps) {
         <h2 className="text-2xl font-bold text-white">Notes ({notes.length})</h2>
 
         <button
-          onClick={() => setIsCreating(true)}
+          onClick={handleStartCreating}
           className="px-5 py-2.5 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg text-sm font-bold transition-all duration-200"
         >
           + Add Note
@@ -59,7 +98,7 @@ export function NotesPanel({ caseId }: NotesPanelProps) {
         <div className="mb-4 p-4 bg-yellow-900/20 border-2 border-yellow-600/50 rounded-lg">
           <textarea
             value={newNoteContent}
-            onChange={(e) => setNewNoteContent(e.target.value)}
+            onChange={handleNewNoteChange}
             placeholder="Enter note content..."
             className="w-full min-h-[100px] p-3 border border-blue-700/30 bg-slate-800/50 rounded-lg text-sm text-white placeholder-blue-400/50 focus:outline-none focus:ring-3 focus:ring-yellow-500 resize-y"
             autoFocus
@@ -72,10 +111,7 @@ export function NotesPanel({ caseId }: NotesPanelProps) {
               Save
             </button>
             <button
-              onClick={() => {
-                setIsCreating(false);
-                setNewNoteContent('');
-              }}
+              onClick={handleCancelCreating}
               className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg text-sm font-bold transition-all duration-200"
             >
               Cancel
@@ -100,7 +136,7 @@ export function NotesPanel({ caseId }: NotesPanelProps) {
                 <div>
                   <textarea
                     value={editContent}
-                    onChange={(e) => setEditContent(e.target.value)}
+                    onChange={handleEditContentChange}
                     className="w-full min-h-[100px] p-3 border border-blue-700/30 bg-slate-800/50 rounded-lg text-sm text-white focus:outline-none focus:ring-3 focus:ring-blue-500 resize-y"
                     autoFocus
                   />
@@ -112,10 +148,7 @@ export function NotesPanel({ caseId }: NotesPanelProps) {
                       Save
                     </button>
                     <button
-                      onClick={() => {
-                        setEditingId(null);
-                        setEditContent('');
-                      }}
+                      onClick={handleCancelEdit}
                       className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg text-sm font-bold transition-all duration-200"
                     >
                       Cancel
@@ -133,21 +166,13 @@ export function NotesPanel({ caseId }: NotesPanelProps) {
                     </div>
                     <div className="flex gap-2">
                       <button
-                        onClick={() => {
-                          setEditingId(note.id);
-                          setEditContent(note.content);
-                        }}
+                        onClick={() => handleStartEdit(note.id, note.content)}
                         className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-bold transition-all duration-200"
                       >
                         Edit
                       </button>
                       <button
-                        onClick={() => {
-                          // eslint-disable-next-line no-alert
-                          if (window.confirm('Delete this note?')) {
-                            void deleteNote(note.id);
-                          }
-                        }}
+                        onClick={() => handleDelete(note.id)}
                         className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-bold transition-all duration-200"
                       >
                         Delete
@@ -162,4 +187,7 @@ export function NotesPanel({ caseId }: NotesPanelProps) {
       )}
     </div>
   );
-}
+};
+
+// Export memoized component to prevent unnecessary re-renders
+export const NotesPanel = memo(NotesPanelComponent);

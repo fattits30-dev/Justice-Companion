@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, memo, useMemo, useCallback } from 'react';
 import { PostItNote } from '../../../components/PostItNote';
 import { useUserFacts } from '../hooks/useUserFacts';
 import type { UserFact } from '../../../models/UserFact';
@@ -25,7 +25,12 @@ const factTypeLabels: Record<string, string> = {
   other: 'Other',
 };
 
-export function UserFactsPanel({ caseId }: UserFactsPanelProps) {
+/**
+ * User facts panel with CRUD operations
+ *
+ * @performance Memoized to prevent unnecessary re-renders when props haven't changed
+ */
+const UserFactsPanelComponent = ({ caseId }: UserFactsPanelProps) => {
   const { userFacts, loading, error, createUserFact, updateUserFact, deleteUserFact } =
     useUserFacts(caseId);
 
@@ -35,12 +40,16 @@ export function UserFactsPanel({ caseId }: UserFactsPanelProps) {
     'personal' | 'employment' | 'financial' | 'contact' | 'medical' | 'other'
   >('personal');
 
-  const filteredFacts =
+  // Memoize filtered facts computation
+  const filteredFacts = useMemo(() =>
     selectedType === 'all'
       ? userFacts
-      : userFacts.filter((fact: UserFact) => fact.factType === selectedType);
+      : userFacts.filter((fact: UserFact) => fact.factType === selectedType),
+    [userFacts, selectedType]
+  );
 
-  const handleCreate = async (content: string) => {
+  // Memoize event handlers to prevent child re-renders
+  const handleCreate = useCallback(async (content: string) => {
     if (content.trim()) {
       await createUserFact({
         caseId,
@@ -49,7 +58,31 @@ export function UserFactsPanel({ caseId }: UserFactsPanelProps) {
       });
       setIsCreating(false);
     }
-  };
+  }, [caseId, newFactType, createUserFact]);
+
+  const handleStartCreating = useCallback(() => {
+    setIsCreating(true);
+  }, []);
+
+  const handleCancelCreating = useCallback(() => {
+    setIsCreating(false);
+  }, []);
+
+  const handleFilterAll = useCallback(() => {
+    setSelectedType('all');
+  }, []);
+
+  const handleFactTypeChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    setNewFactType(e.target.value as 'personal' | 'employment' | 'financial' | 'contact' | 'medical' | 'other');
+  }, []);
+
+  const handleCreateNoteUpdate = useCallback((_id: number, content: string) => {
+    handleCreate(content);
+  }, [handleCreate]);
+
+  const handleUpdateFact = useCallback((id: number, content: string) => {
+    updateUserFact(id, { factContent: content });
+  }, [updateUserFact]);
 
   if (loading) {
     return <div className="p-6 text-center text-blue-300">Loading user facts...</div>;
@@ -68,7 +101,7 @@ export function UserFactsPanel({ caseId }: UserFactsPanelProps) {
         <h2 className="text-2xl font-bold text-white">User Facts ({filteredFacts.length})</h2>
 
         <button
-          onClick={() => setIsCreating(true)}
+          onClick={handleStartCreating}
           className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold transition-all duration-200"
         >
           + Add User Fact
@@ -78,7 +111,7 @@ export function UserFactsPanel({ caseId }: UserFactsPanelProps) {
       {/* Filter Bar */}
       <div className="flex gap-3 mb-6 flex-wrap">
         <button
-          onClick={() => setSelectedType('all')}
+          onClick={handleFilterAll}
           className={`px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 ${
             selectedType === 'all'
               ? 'bg-blue-600 text-white'
@@ -90,10 +123,11 @@ export function UserFactsPanel({ caseId }: UserFactsPanelProps) {
 
         {Object.entries(factTypeLabels).map(([type, label]) => {
           const count = userFacts.filter((f: UserFact) => f.factType === type).length;
+          const handleTypeClick = () => setSelectedType(type);
           return (
             <button
               key={type}
-              onClick={() => setSelectedType(type)}
+              onClick={handleTypeClick}
               className={`px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 ${
                 selectedType === type
                   ? 'bg-blue-600 text-white'
@@ -113,17 +147,7 @@ export function UserFactsPanel({ caseId }: UserFactsPanelProps) {
             <label className="block mb-2 font-bold text-white text-sm">Fact Type:</label>
             <select
               value={newFactType}
-              onChange={(e) =>
-                setNewFactType(
-                  e.target.value as
-                    | 'personal'
-                    | 'employment'
-                    | 'financial'
-                    | 'contact'
-                    | 'medical'
-                    | 'other',
-                )
-              }
+              onChange={handleFactTypeChange}
               className="px-3 py-2 border border-blue-700/30 bg-slate-800/50 rounded-lg text-sm text-white focus:outline-none focus:ring-3 focus:ring-blue-500"
             >
               {Object.entries(factTypeLabels).map(([type, label]) => (
@@ -138,8 +162,8 @@ export function UserFactsPanel({ caseId }: UserFactsPanelProps) {
             id={-1}
             content=""
             color={factTypeColors[newFactType]}
-            onUpdate={(_, content) => handleCreate(content)}
-            onDelete={() => setIsCreating(false)}
+            onUpdate={handleCreateNoteUpdate}
+            onDelete={handleCancelCreating}
           />
         </div>
       )}
@@ -157,12 +181,15 @@ export function UserFactsPanel({ caseId }: UserFactsPanelProps) {
               id={fact.id}
               content={fact.factContent}
               color={factTypeColors[fact.factType]}
-              onUpdate={(id, content) => updateUserFact(id, { factContent: content })}
-              onDelete={(id) => deleteUserFact(id)}
+              onUpdate={handleUpdateFact}
+              onDelete={deleteUserFact}
             />
           ))}
         </div>
       )}
     </div>
   );
-}
+};
+
+// Export memoized component to prevent unnecessary re-renders
+export const UserFactsPanel = memo(UserFactsPanelComponent);

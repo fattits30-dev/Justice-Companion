@@ -14,8 +14,10 @@ import { errorLogger } from '../utils/error-logger';
  * - Backward compatibility with legacy plaintext data
  */
 export class UserProfileRepository {
-  private encryptionService?: EncryptionService;
-  private auditLogger?: AuditLogger;
+  constructor(
+    private encryptionService: EncryptionService,
+    private auditLogger?: AuditLogger,
+  ) {}
 
   /**
    * Get the user profile (always ID = 1)
@@ -186,20 +188,6 @@ export class UserProfileRepository {
     }
   }
 
-  /**
-   * Set encryption service (for dependency injection)
-   */
-  setEncryptionService(service: EncryptionService): void {
-    this.encryptionService = service;
-  }
-
-  /**
-   * Set audit logger (for dependency injection)
-   */
-  setAuditLogger(logger: AuditLogger): void {
-    this.auditLogger = logger;
-  }
-
   private requireEncryptionService(): EncryptionService {
     if (!this.encryptionService) {
       throw new Error('EncryptionService not configured for UserProfileRepository');
@@ -207,5 +195,3 @@ export class UserProfileRepository {
     return this.encryptionService;
   }
 }
-
-export const userProfileRepository = new UserProfileRepository();

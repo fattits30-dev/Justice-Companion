@@ -1,4 +1,4 @@
-import { timelineRepository } from '@/repositories/TimelineRepository';
+import { getRepositories } from '@/repositories';
 import type {
   TimelineEvent,
   CreateTimelineEventInput,
@@ -7,6 +7,10 @@ import type {
 import { errorLogger } from '@/utils/error-logger';
 
 export class TimelineService {
+  private get timelineRepository() {
+    return getRepositories().timelineRepository;
+  }
+
   /**
    * Create a new timeline event for a case
    */
@@ -29,7 +33,7 @@ export class TimelineService {
         throw new Error('Timeline event description must be 10000 characters or less');
       }
 
-      return timelineRepository.create(input);
+      return this.timelineRepository.create(input);
     } catch (error) {
       errorLogger.logError(error as Error, {
         context: 'createTimelineEvent',
@@ -44,7 +48,7 @@ export class TimelineService {
    */
   getTimelineEventById(id: number): TimelineEvent | null {
     try {
-      return timelineRepository.findById(id);
+      return this.timelineRepository.findById(id);
     } catch (error) {
       errorLogger.logError(error as Error, { context: 'getTimelineEventById', id });
       throw error;
@@ -56,7 +60,7 @@ export class TimelineService {
    */
   getTimelineEventsByCaseId(caseId: number): TimelineEvent[] {
     try {
-      return timelineRepository.findByCaseId(caseId);
+      return this.timelineRepository.findByCaseId(caseId);
     } catch (error) {
       errorLogger.logError(error as Error, { context: 'getTimelineEventsByCaseId', caseId });
       throw error;
@@ -81,7 +85,7 @@ export class TimelineService {
         throw new Error('Timeline event description must be 10000 characters or less');
       }
 
-      const timelineEvent = timelineRepository.update(id, input);
+      const timelineEvent = this.timelineRepository.update(id, input);
 
       if (!timelineEvent) {
         throw new Error('Timeline event not found');
@@ -103,7 +107,7 @@ export class TimelineService {
    */
   deleteTimelineEvent(id: number): void {
     try {
-      timelineRepository.delete(id);
+      this.timelineRepository.delete(id);
     } catch (error) {
       errorLogger.logError(error as Error, {
         context: 'deleteTimelineEvent',

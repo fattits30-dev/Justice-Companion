@@ -103,9 +103,7 @@ describe('UserProfileRepository', () => {
 
   beforeEach(() => {
     setupDatabase();
-    repository = new UserProfileRepository();
-    repository.setEncryptionService(encryptionService);
-    repository.setAuditLogger(auditLogger);
+    repository = new UserProfileRepository(encryptionService, auditLogger);
   });
 
   afterEach(() => {
@@ -362,10 +360,7 @@ describe('Phase 3 GDPR Compliance', () => {
   it('should never log plaintext PII across all repositories', () => {
     setupDatabase();
 
-    const profileRepo = new UserProfileRepository();
-    profileRepo.setEncryptionService(encryptionService);
-    profileRepo.setAuditLogger(auditLogger);
-
+    const profileRepo = new UserProfileRepository(encryptionService, auditLogger);
     const legalRepo = new LegalIssuesRepository(encryptionService, auditLogger);
     const timelineRepo = new TimelineRepository(encryptionService, auditLogger);
 

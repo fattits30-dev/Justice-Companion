@@ -3,11 +3,10 @@
  */
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { chatConversationService } from './ChatConversationService';
-import { chatConversationRepository } from '../repositories/ChatConversationRepository';
 import { AuditLogger } from './AuditLogger';
-import { EncryptionService } from './EncryptionService';
 import { TestDatabaseHelper } from '../test-utils/database-test-helper';
 import { databaseManager } from '../db/database';
+import { resetRepositories } from '../repositories';
 import type {
   CreateConversationInput,
   CreateMessageInput,
@@ -15,9 +14,9 @@ import type {
 
 describe('ChatConversationService', () => {
   let auditLogger: AuditLogger;
-  let encryptionService: EncryptionService;
   let testDb: TestDatabaseHelper;
   const TEST_CASE_ID = 1;
+  const TEST_USER_ID = 1;
 
   beforeEach(() => {
     testDb = new TestDatabaseHelper();
@@ -39,19 +38,19 @@ describe('ChatConversationService', () => {
     `).run();
 
     // Initialize encryption service (32-byte key = 64 hex chars converted to Buffer)
-    encryptionService = new EncryptionService(
-      Buffer.from('0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef', 'hex'),
-    );
+    const testKey = Buffer.from('0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef', 'hex');
+
+    // Set environment variable for getRepositories() to use
+    process.env.ENCRYPTION_KEY_BASE64 = testKey.toString('base64');
+
+    // Reset singleton to force re-initialization with test key
+    resetRepositories();
 
     // Initialize audit logger with test helper method
     auditLogger = new AuditLogger(db);
     (auditLogger as any).getAllLogs = () => {
       return db.prepare('SELECT * FROM audit_logs ORDER BY created_at').all();
     };
-
-    // Configure singleton repository with dependencies
-    chatConversationRepository.setEncryptionService(encryptionService);
-    chatConversationRepository.setAuditLogger(auditLogger);
   });
 
   afterEach(() => {
@@ -63,6 +62,7 @@ describe('ChatConversationService', () => {
   describe('createConversation()', () => {
     it('should create conversation with case ID', () => {
       const input: CreateConversationInput = {
+        userId: TEST_USER_ID,
         caseId: TEST_CASE_ID,
         title: 'Test Conversation',
       };
@@ -78,6 +78,7 @@ describe('ChatConversationService', () => {
 
     it('should create conversation without case ID (global chat)', () => {
       const input: CreateConversationInput = {
+        userId: TEST_USER_ID,
         caseId: null,
         title: 'General Chat',
       };
@@ -91,6 +92,7 @@ describe('ChatConversationService', () => {
 
     it('should set timestamps on creation', () => {
       const conversation = chatConversationService.createConversation({
+        userId: TEST_USER_ID,
         title: 'Test',
       });
 
@@ -105,6 +107,7 @@ describe('ChatConversationService', () => {
   describe('getConversation()', () => {
     it('should get conversation by ID', () => {
       const created = chatConversationService.createConversation({
+        userId: TEST_USER_ID,
         caseId: TEST_CASE_ID,
         title: 'Test Conversation',
       });
@@ -126,34 +129,37 @@ describe('ChatConversationService', () => {
     beforeEach(() => {
       // Create test conversations
       chatConversationService.createConversation({
+        userId: TEST_USER_ID,
         caseId: TEST_CASE_ID,
         title: 'Case Conversation 1',
       });
       chatConversationService.createConversation({
+        userId: TEST_USER_ID,
         caseId: TEST_CASE_ID,
         title: 'Case Conversation 2',
       });
       chatConversationService.createConversation({
+        userId: TEST_USER_ID,
         caseId: null,
         title: 'Global Conversation',
       });
     });
 
     it('should get all conversations when no case ID provided', () => {
-      const conversations = chatConversationService.getAllConversations();
+      const conversations = chatConversationService.getAllConversations(TEST_USER_ID);
 
       expect(conversations).toHaveLength(3);
     });
 
     it('should filter conversations by case ID', () => {
-      const conversations = chatConversationService.getAllConversations(TEST_CASE_ID);
+      const conversations = chatConversationService.getAllConversations(TEST_USER_ID, TEST_CASE_ID);
 
       expect(conversations).toHaveLength(2);
       expect(conversations.every((c) => c.caseId === TEST_CASE_ID)).toBe(true);
     });
 
     it('should get only global conversations when case ID is null', () => {
-      const conversations = chatConversationService.getAllConversations(null);
+      const conversations = chatConversationService.getAllConversations(TEST_USER_ID, null);
 
       expect(conversations).toHaveLength(1);
       expect(conversations[0].caseId).toBeNull();
@@ -161,7 +167,7 @@ describe('ChatConversationService', () => {
     });
 
     it('should return empty array when no conversations exist for case', () => {
-      const conversations = chatConversationService.getAllConversations(999);
+      const conversations = chatConversationService.getAllConversations(TEST_USER_ID, 999);
       expect(conversations).toEqual([]);
     });
   });
@@ -171,12 +177,13 @@ describe('ChatConversationService', () => {
       // Create conversations
       for (let i = 1; i <= 15; i++) {
         chatConversationService.createConversation({
+          userId: TEST_USER_ID,
           caseId: TEST_CASE_ID,
           title: `Conversation ${i}`,
         });
       }
 
-      const recent = chatConversationService.getRecentConversationsByCase(TEST_CASE_ID);
+      const recent = chatConversationService.getRecentConversationsByCase(TEST_USER_ID, TEST_CASE_ID);
 
       expect(recent).toHaveLength(10); // Default limit
     });
@@ -185,27 +192,30 @@ describe('ChatConversationService', () => {
       // Create conversations
       for (let i = 1; i <= 8; i++) {
         chatConversationService.createConversation({
+          userId: TEST_USER_ID,
           caseId: TEST_CASE_ID,
           title: `Conversation ${i}`,
         });
       }
 
-      const recent = chatConversationService.getRecentConversationsByCase(TEST_CASE_ID, 5);
+      const recent = chatConversationService.getRecentConversationsByCase(TEST_USER_ID, TEST_CASE_ID, 5);
 
       expect(recent).toHaveLength(5);
     });
 
     it('should return conversations for global chats (null case ID)', () => {
       chatConversationService.createConversation({
+        userId: TEST_USER_ID,
         caseId: null,
         title: 'Global Chat 1',
       });
       chatConversationService.createConversation({
+        userId: TEST_USER_ID,
         caseId: null,
         title: 'Global Chat 2',
       });
 
-      const recent = chatConversationService.getRecentConversationsByCase(null, 10);
+      const recent = chatConversationService.getRecentConversationsByCase(TEST_USER_ID, null, 10);
 
       expect(recent).toHaveLength(2);
       expect(recent.every((c) => c.caseId === null)).toBe(true);
@@ -216,6 +226,7 @@ describe('ChatConversationService', () => {
     it('should load conversation with all messages', () => {
       // Create conversation
       const conversation = chatConversationService.createConversation({
+        userId: TEST_USER_ID,
         title: 'Test Chat',
       });
 
@@ -247,6 +258,7 @@ describe('ChatConversationService', () => {
 
     it('should decrypt message content when loading', () => {
       const conversation = chatConversationService.createConversation({
+        userId: TEST_USER_ID,
         title: 'Encrypted Chat',
       });
 
@@ -264,6 +276,7 @@ describe('ChatConversationService', () => {
 
     it('should log PII access when loading messages', () => {
       const conversation = chatConversationService.createConversation({
+        userId: TEST_USER_ID,
         title: 'Test',
       });
       chatConversationService.addMessage({
@@ -290,6 +303,7 @@ describe('ChatConversationService', () => {
 
     beforeEach(() => {
       const conversation = chatConversationService.createConversation({
+        userId: TEST_USER_ID,
         title: 'Test Chat',
       });
       conversationId = conversation.id;
@@ -377,6 +391,7 @@ describe('ChatConversationService', () => {
   describe('deleteConversation()', () => {
     it('should delete conversation and all its messages', () => {
       const conversation = chatConversationService.createConversation({
+        userId: TEST_USER_ID,
         title: 'To Delete',
       });
       chatConversationService.addMessage({
@@ -413,7 +428,7 @@ describe('ChatConversationService', () => {
 
   describe('startNewConversation()', () => {
     it('should create conversation with first user message', () => {
-      const result = chatConversationService.startNewConversation(TEST_CASE_ID, {
+      const result = chatConversationService.startNewConversation(TEST_USER_ID, TEST_CASE_ID, {
         role: 'user',
         content: 'Hello, I need help with my employment case',
       });
@@ -427,7 +442,7 @@ describe('ChatConversationService', () => {
 
     it('should auto-generate title from first message (truncate at 50 chars)', () => {
       const longMessage = 'This is a very long message that exceeds fifty characters in length';
-      const result = chatConversationService.startNewConversation(null, {
+      const result = chatConversationService.startNewConversation(TEST_USER_ID, null, {
         role: 'user',
         content: longMessage,
       });
@@ -439,7 +454,7 @@ describe('ChatConversationService', () => {
 
     it('should not truncate short messages', () => {
       const shortMessage = 'Short message';
-      const result = chatConversationService.startNewConversation(null, {
+      const result = chatConversationService.startNewConversation(TEST_USER_ID, null, {
         role: 'user',
         content: shortMessage,
       });
@@ -449,7 +464,7 @@ describe('ChatConversationService', () => {
     });
 
     it('should support assistant as first message', () => {
-      const result = chatConversationService.startNewConversation(null, {
+      const result = chatConversationService.startNewConversation(TEST_USER_ID, null, {
         role: 'assistant',
         content: 'Hello! How can I help you today?',
       });
@@ -459,7 +474,7 @@ describe('ChatConversationService', () => {
     });
 
     it('should include thinking content if provided', () => {
-      const result = chatConversationService.startNewConversation(null, {
+      const result = chatConversationService.startNewConversation(TEST_USER_ID, null, {
         role: 'assistant',
         content: 'Here is my answer',
         thinkingContent: 'Let me think about this...',
@@ -473,6 +488,7 @@ describe('ChatConversationService', () => {
     it('should throw error when creating conversation with invalid case ID', () => {
       expect(() => {
         chatConversationService.createConversation({
+          userId: TEST_USER_ID,
           caseId: 999, // Non-existent case
           title: 'Test',
         });

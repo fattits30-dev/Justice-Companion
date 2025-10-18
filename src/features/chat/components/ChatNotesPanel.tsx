@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, memo, useCallback } from 'react';
 import { StickyNote, X, Plus } from 'lucide-react';
 
 interface ChatNote {
@@ -15,12 +15,18 @@ const colorStyles = {
   purple: 'bg-gradient-to-br from-purple-100 to-purple-200 border-purple-400',
 };
 
-export function ChatNotesPanel() {
+/**
+ * Chat notes panel with sticky note functionality
+ *
+ * @performance Memoized to prevent unnecessary re-renders when props haven't changed
+ */
+const ChatNotesPanelComponent = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [notes, setNotes] = useState<ChatNote[]>([]);
   const [nextId, setNextId] = useState(1);
 
-  const addNote = () => {
+  // Memoize event handlers to prevent child re-renders
+  const addNote = useCallback(() => {
     const colors: Array<'yellow' | 'blue' | 'green' | 'pink' | 'purple'> =
       ['yellow', 'blue', 'green', 'pink', 'purple'];
     const randomColor = colors[Math.floor(Math.random() * colors.length)];
@@ -33,23 +39,31 @@ export function ChatNotesPanel() {
 
     setNotes([...notes, newNote]);
     setNextId(nextId + 1);
-  };
+  }, [notes, nextId]);
 
-  const updateNote = (id: number, content: string) => {
+  const updateNote = useCallback((id: number, content: string) => {
     setNotes(notes.map(note =>
       note.id === id ? { ...note, content } : note,
     ));
-  };
+  }, [notes]);
 
-  const deleteNote = (id: number) => {
+  const deleteNote = useCallback((id: number) => {
     setNotes(notes.filter(note => note.id !== id));
-  };
+  }, [notes]);
+
+  const handleToggle = useCallback(() => {
+    setIsOpen(!isOpen);
+  }, [isOpen]);
+
+  const handleClose = useCallback(() => {
+    setIsOpen(false);
+  }, []);
 
   return (
     <>
       {/* Toggle Button */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={handleToggle}
         className="fixed right-4 top-20 z-40 p-3 bg-yellow-400 hover:bg-yellow-500 rounded-full shadow-lg transition-all"
         title="Toggle Notes"
       >
@@ -74,7 +88,7 @@ export function ChatNotesPanel() {
                 <Plus className="w-4 h-4 text-blue-300" />
               </button>
               <button
-                onClick={() => setIsOpen(false)}
+                onClick={handleClose}
                 className="p-1.5 hover:bg-blue-700/30 rounded-lg transition-colors"
               >
                 <X className="w-4 h-4 text-blue-300" />
@@ -116,4 +130,7 @@ export function ChatNotesPanel() {
       )}
     </>
   );
-}
+};
+
+// Export memoized component to prevent unnecessary re-renders
+export const ChatNotesPanel = memo(ChatNotesPanelComponent);

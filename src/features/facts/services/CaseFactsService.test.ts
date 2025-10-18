@@ -1,20 +1,24 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { CaseFactsService } from './CaseFactsService';
-import { caseFactsRepository } from '../../../repositories/CaseFactsRepository';
 import { errorLogger } from '../../../utils/error-logger';
 import type { CaseFact } from '../../../models/CaseFact';
 
-// Mock dependencies
-vi.mock('../../../repositories/CaseFactsRepository', () => ({
-  caseFactsRepository: {
-    create: vi.fn(),
-    findById: vi.fn(),
-    findByCaseId: vi.fn(),
-    findByCategory: vi.fn(),
-    findByImportance: vi.fn(),
-    update: vi.fn(),
-    delete: vi.fn(),
-  },
+// Mock centralized repository initialization
+const mockCaseFactsRepository = {
+  create: vi.fn(),
+  findById: vi.fn(),
+  findByCaseId: vi.fn(),
+  findByCategory: vi.fn(),
+  findByImportance: vi.fn(),
+  update: vi.fn(),
+  delete: vi.fn(),
+};
+
+vi.mock('../../../repositories', () => ({
+  getRepositories: vi.fn(() => ({
+    caseFactsRepository: mockCaseFactsRepository,
+  })),
+  resetRepositories: vi.fn(),
 }));
 
 vi.mock('../../../utils/error-logger', () => ({
@@ -43,7 +47,7 @@ describe('CaseFactsService', () => {
         updatedAt: '2025-10-06T00:00:00.000Z',
       };
 
-      vi.mocked(caseFactsRepository.create).mockReturnValue(mockCaseFact);
+      vi.mocked(mockCaseFactsRepository.create).mockReturnValue(mockCaseFact);
 
       const result = caseFactsService.createCaseFact({
         caseId: 100,
@@ -53,7 +57,7 @@ describe('CaseFactsService', () => {
       });
 
       expect(result).toEqual(mockCaseFact);
-      expect(caseFactsRepository.create).toHaveBeenCalledWith({
+      expect(mockCaseFactsRepository.create).toHaveBeenCalledWith({
         caseId: 100,
         factCategory: 'timeline',
         importance: 'high',
@@ -63,7 +67,7 @@ describe('CaseFactsService', () => {
     });
 
     it('should create case facts with different categories', () => {
-      const categories = ['timeline', 'evidence', 'witness', 'location', 'communication', 'other'];
+      const categories: CaseFact['factCategory'][] = ['timeline', 'evidence', 'witness', 'location', 'communication', 'other'];
 
       categories.forEach((category, index) => {
         const mockCaseFact: CaseFact = {
@@ -76,7 +80,7 @@ describe('CaseFactsService', () => {
           updatedAt: '2025-10-06T00:00:00.000Z',
         };
 
-        vi.mocked(caseFactsRepository.create).mockReturnValue(mockCaseFact);
+        vi.mocked(mockCaseFactsRepository.create).mockReturnValue(mockCaseFact);
 
         const result = caseFactsService.createCaseFact({
           caseId: 100,
@@ -90,7 +94,7 @@ describe('CaseFactsService', () => {
     });
 
     it('should create case facts with different importance levels', () => {
-      const importanceLevels = ['low', 'medium', 'high', 'critical'];
+      const importanceLevels: CaseFact['importance'][] = ['low', 'medium', 'high', 'critical'];
 
       importanceLevels.forEach((importance, index) => {
         const mockCaseFact: CaseFact = {
@@ -103,7 +107,7 @@ describe('CaseFactsService', () => {
           updatedAt: '2025-10-06T00:00:00.000Z',
         };
 
-        vi.mocked(caseFactsRepository.create).mockReturnValue(mockCaseFact);
+        vi.mocked(mockCaseFactsRepository.create).mockReturnValue(mockCaseFact);
 
         const result = caseFactsService.createCaseFact({
           caseId: 100,
@@ -135,7 +139,7 @@ describe('CaseFactsService', () => {
         })
       ).toThrow('Case fact content is required');
 
-      expect(caseFactsRepository.create).not.toHaveBeenCalled();
+      expect(mockCaseFactsRepository.create).not.toHaveBeenCalled();
     });
 
     it('should throw error if factContent exceeds 5000 characters', () => {
@@ -150,7 +154,7 @@ describe('CaseFactsService', () => {
         })
       ).toThrow('Case fact content must be 5000 characters or less');
 
-      expect(caseFactsRepository.create).not.toHaveBeenCalled();
+      expect(mockCaseFactsRepository.create).not.toHaveBeenCalled();
     });
 
     it('should accept factContent exactly 5000 characters', () => {
@@ -165,7 +169,7 @@ describe('CaseFactsService', () => {
         updatedAt: '2025-10-06T00:00:00.000Z',
       };
 
-      vi.mocked(caseFactsRepository.create).mockReturnValue(mockCaseFact);
+      vi.mocked(mockCaseFactsRepository.create).mockReturnValue(mockCaseFact);
 
       const result = caseFactsService.createCaseFact({
         caseId: 100,
@@ -175,12 +179,12 @@ describe('CaseFactsService', () => {
       });
 
       expect(result).toEqual(mockCaseFact);
-      expect(caseFactsRepository.create).toHaveBeenCalled();
+      expect(mockCaseFactsRepository.create).toHaveBeenCalled();
     });
 
     it('should log and rethrow repository errors', () => {
       const error = new Error('Database error');
-      vi.mocked(caseFactsRepository.create).mockImplementation(() => {
+      vi.mocked(mockCaseFactsRepository.create).mockImplementation(() => {
         throw error;
       });
 
@@ -216,26 +220,26 @@ describe('CaseFactsService', () => {
         updatedAt: '2025-10-06T00:00:00.000Z',
       };
 
-      vi.mocked(caseFactsRepository.findById).mockReturnValue(mockCaseFact);
+      vi.mocked(mockCaseFactsRepository.findById).mockReturnValue(mockCaseFact);
 
       const result = caseFactsService.getCaseFactById(1);
 
       expect(result).toEqual(mockCaseFact);
-      expect(caseFactsRepository.findById).toHaveBeenCalledWith(1);
+      expect(mockCaseFactsRepository.findById).toHaveBeenCalledWith(1);
     });
 
     it('should return null if case fact not found', () => {
-      vi.mocked(caseFactsRepository.findById).mockReturnValue(null);
+      vi.mocked(mockCaseFactsRepository.findById).mockReturnValue(null);
 
       const result = caseFactsService.getCaseFactById(999);
 
       expect(result).toBeNull();
-      expect(caseFactsRepository.findById).toHaveBeenCalledWith(999);
+      expect(mockCaseFactsRepository.findById).toHaveBeenCalledWith(999);
     });
 
     it('should log and rethrow repository errors', () => {
       const error = new Error('Database error');
-      vi.mocked(caseFactsRepository.findById).mockImplementation(() => {
+      vi.mocked(mockCaseFactsRepository.findById).mockImplementation(() => {
         throw error;
       });
 
@@ -270,26 +274,26 @@ describe('CaseFactsService', () => {
         },
       ];
 
-      vi.mocked(caseFactsRepository.findByCaseId).mockReturnValue(mockCaseFacts);
+      vi.mocked(mockCaseFactsRepository.findByCaseId).mockReturnValue(mockCaseFacts);
 
       const result = caseFactsService.getCaseFactsByCaseId(100);
 
       expect(result).toEqual(mockCaseFacts);
-      expect(caseFactsRepository.findByCaseId).toHaveBeenCalledWith(100);
+      expect(mockCaseFactsRepository.findByCaseId).toHaveBeenCalledWith(100);
     });
 
     it('should return empty array if no case facts exist', () => {
-      vi.mocked(caseFactsRepository.findByCaseId).mockReturnValue([]);
+      vi.mocked(mockCaseFactsRepository.findByCaseId).mockReturnValue([]);
 
       const result = caseFactsService.getCaseFactsByCaseId(999);
 
       expect(result).toEqual([]);
-      expect(caseFactsRepository.findByCaseId).toHaveBeenCalledWith(999);
+      expect(mockCaseFactsRepository.findByCaseId).toHaveBeenCalledWith(999);
     });
 
     it('should log and rethrow repository errors', () => {
       const error = new Error('Database error');
-      vi.mocked(caseFactsRepository.findByCaseId).mockImplementation(() => {
+      vi.mocked(mockCaseFactsRepository.findByCaseId).mockImplementation(() => {
         throw error;
       });
 
@@ -324,26 +328,26 @@ describe('CaseFactsService', () => {
         },
       ];
 
-      vi.mocked(caseFactsRepository.findByCategory).mockReturnValue(mockCaseFacts);
+      vi.mocked(mockCaseFactsRepository.findByCategory).mockReturnValue(mockCaseFacts);
 
       const result = caseFactsService.getCaseFactsByCategory(100, 'evidence');
 
       expect(result).toEqual(mockCaseFacts);
-      expect(caseFactsRepository.findByCategory).toHaveBeenCalledWith(100, 'evidence');
+      expect(mockCaseFactsRepository.findByCategory).toHaveBeenCalledWith(100, 'evidence');
     });
 
     it('should return empty array if no facts match category', () => {
-      vi.mocked(caseFactsRepository.findByCategory).mockReturnValue([]);
+      vi.mocked(mockCaseFactsRepository.findByCategory).mockReturnValue([]);
 
       const result = caseFactsService.getCaseFactsByCategory(100, 'witness');
 
       expect(result).toEqual([]);
-      expect(caseFactsRepository.findByCategory).toHaveBeenCalledWith(100, 'witness');
+      expect(mockCaseFactsRepository.findByCategory).toHaveBeenCalledWith(100, 'witness');
     });
 
     it('should log and rethrow repository errors', () => {
       const error = new Error('Database error');
-      vi.mocked(caseFactsRepository.findByCategory).mockImplementation(() => {
+      vi.mocked(mockCaseFactsRepository.findByCategory).mockImplementation(() => {
         throw error;
       });
 
@@ -384,26 +388,26 @@ describe('CaseFactsService', () => {
         },
       ];
 
-      vi.mocked(caseFactsRepository.findByImportance).mockReturnValue(mockCaseFacts);
+      vi.mocked(mockCaseFactsRepository.findByImportance).mockReturnValue(mockCaseFacts);
 
       const result = caseFactsService.getCaseFactsByImportance(100, 'critical');
 
       expect(result).toEqual(mockCaseFacts);
-      expect(caseFactsRepository.findByImportance).toHaveBeenCalledWith(100, 'critical');
+      expect(mockCaseFactsRepository.findByImportance).toHaveBeenCalledWith(100, 'critical');
     });
 
     it('should return empty array if no facts match importance', () => {
-      vi.mocked(caseFactsRepository.findByImportance).mockReturnValue([]);
+      vi.mocked(mockCaseFactsRepository.findByImportance).mockReturnValue([]);
 
       const result = caseFactsService.getCaseFactsByImportance(100, 'low');
 
       expect(result).toEqual([]);
-      expect(caseFactsRepository.findByImportance).toHaveBeenCalledWith(100, 'low');
+      expect(mockCaseFactsRepository.findByImportance).toHaveBeenCalledWith(100, 'low');
     });
 
     it('should log and rethrow repository errors', () => {
       const error = new Error('Database error');
-      vi.mocked(caseFactsRepository.findByImportance).mockImplementation(() => {
+      vi.mocked(mockCaseFactsRepository.findByImportance).mockImplementation(() => {
         throw error;
       });
 
@@ -433,7 +437,7 @@ describe('CaseFactsService', () => {
         updatedAt: '2025-10-06T00:05:00.000Z',
       };
 
-      vi.mocked(caseFactsRepository.update).mockReturnValue(mockCaseFact);
+      vi.mocked(mockCaseFactsRepository.update).mockReturnValue(mockCaseFact);
 
       const result = caseFactsService.updateCaseFact(1, {
         factCategory: 'witness',
@@ -442,7 +446,7 @@ describe('CaseFactsService', () => {
       });
 
       expect(result).toEqual(mockCaseFact);
-      expect(caseFactsRepository.update).toHaveBeenCalledWith(1, {
+      expect(mockCaseFactsRepository.update).toHaveBeenCalledWith(1, {
         factCategory: 'witness',
         importance: 'high',
         factContent: 'Updated witness statement',
@@ -461,7 +465,7 @@ describe('CaseFactsService', () => {
         updatedAt: '2025-10-06T00:05:00.000Z',
       };
 
-      vi.mocked(caseFactsRepository.update).mockReturnValue(mockCaseFact);
+      vi.mocked(mockCaseFactsRepository.update).mockReturnValue(mockCaseFact);
 
       const result = caseFactsService.updateCaseFact(1, {
         factContent: 'Updated content',
@@ -481,7 +485,7 @@ describe('CaseFactsService', () => {
         updatedAt: '2025-10-06T00:05:00.000Z',
       };
 
-      vi.mocked(caseFactsRepository.update).mockReturnValue(mockCaseFact);
+      vi.mocked(mockCaseFactsRepository.update).mockReturnValue(mockCaseFact);
 
       const result = caseFactsService.updateCaseFact(1, {
         importance: 'critical',
@@ -499,7 +503,7 @@ describe('CaseFactsService', () => {
         'Case fact content cannot be empty'
       );
 
-      expect(caseFactsRepository.update).not.toHaveBeenCalled();
+      expect(mockCaseFactsRepository.update).not.toHaveBeenCalled();
     });
 
     it('should throw error if factContent exceeds 5000 characters', () => {
@@ -509,22 +513,22 @@ describe('CaseFactsService', () => {
         'Case fact content must be 5000 characters or less'
       );
 
-      expect(caseFactsRepository.update).not.toHaveBeenCalled();
+      expect(mockCaseFactsRepository.update).not.toHaveBeenCalled();
     });
 
     it('should throw error if case fact not found', () => {
-      vi.mocked(caseFactsRepository.update).mockReturnValue(null);
+      vi.mocked(mockCaseFactsRepository.update).mockReturnValue(null);
 
       expect(() => caseFactsService.updateCaseFact(999, { factContent: 'Test' })).toThrow(
         'Case fact not found'
       );
 
-      expect(caseFactsRepository.update).toHaveBeenCalledWith(999, { factContent: 'Test' });
+      expect(mockCaseFactsRepository.update).toHaveBeenCalledWith(999, { factContent: 'Test' });
     });
 
     it('should log and rethrow repository errors', () => {
       const error = new Error('Database error');
-      vi.mocked(caseFactsRepository.update).mockImplementation(() => {
+      vi.mocked(mockCaseFactsRepository.update).mockImplementation(() => {
         throw error;
       });
 
@@ -545,17 +549,17 @@ describe('CaseFactsService', () => {
 
   describe('deleteCaseFact', () => {
     it('should delete a case fact successfully', () => {
-      vi.mocked(caseFactsRepository.delete).mockReturnValue(undefined);
+      vi.mocked(mockCaseFactsRepository.delete).mockReturnValue(undefined);
 
       caseFactsService.deleteCaseFact(1);
 
-      expect(caseFactsRepository.delete).toHaveBeenCalledWith(1);
+      expect(mockCaseFactsRepository.delete).toHaveBeenCalledWith(1);
       expect(errorLogger.logError).not.toHaveBeenCalled();
     });
 
     it('should log and rethrow repository errors', () => {
       const error = new Error('Database error');
-      vi.mocked(caseFactsRepository.delete).mockImplementation(() => {
+      vi.mocked(mockCaseFactsRepository.delete).mockImplementation(() => {
         throw error;
       });
 
@@ -581,7 +585,7 @@ describe('CaseFactsService', () => {
         updatedAt: '2025-10-06T00:00:00.000Z',
       };
 
-      vi.mocked(caseFactsRepository.create).mockReturnValue(mockCaseFact);
+      vi.mocked(mockCaseFactsRepository.create).mockReturnValue(mockCaseFact);
 
       const result = caseFactsService.createCaseFact({
         caseId: 100,
@@ -605,7 +609,7 @@ describe('CaseFactsService', () => {
         updatedAt: '2025-10-06T00:00:00.000Z',
       };
 
-      vi.mocked(caseFactsRepository.create).mockReturnValue(mockCaseFact);
+      vi.mocked(mockCaseFactsRepository.create).mockReturnValue(mockCaseFact);
 
       const result = caseFactsService.createCaseFact({
         caseId: 100,
@@ -630,7 +634,7 @@ describe('CaseFactsService', () => {
         updatedAt: '2025-10-06T00:00:00.000Z',
       };
 
-      vi.mocked(caseFactsRepository.create).mockReturnValue(mockCaseFact);
+      vi.mocked(mockCaseFactsRepository.create).mockReturnValue(mockCaseFact);
 
       const result = caseFactsService.createCaseFact({
         caseId: 100,
@@ -655,7 +659,7 @@ describe('CaseFactsService', () => {
         updatedAt: '2025-10-06T00:00:00.000Z',
       };
 
-      vi.mocked(caseFactsRepository.create).mockReturnValue(mockCaseFact);
+      vi.mocked(mockCaseFactsRepository.create).mockReturnValue(mockCaseFact);
 
       const result = caseFactsService.createCaseFact({
         caseId: 100,

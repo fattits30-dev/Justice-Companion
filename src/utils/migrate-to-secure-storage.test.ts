@@ -120,7 +120,7 @@ describe('migrate-to-secure-storage', () => {
     it('should not migrate keys that already exist in secure storage', async () => {
       // Setup: API key in localStorage
       mockLocalStorage.getItem.mockImplementation((key: string) => {
-        if (key === 'openai_api_key') return 'sk-test-api-key-123';
+        if (key === 'openai_api_key') {return 'sk-test-api-key-123';}
         return null;
       });
 
@@ -161,7 +161,7 @@ describe('migrate-to-secure-storage', () => {
     it('should handle errors gracefully', async () => {
       // Setup: API key in localStorage
       mockLocalStorage.getItem.mockImplementation((key: string) => {
-        if (key === 'openai_api_key') return 'sk-test-api-key-123';
+        if (key === 'openai_api_key') {return 'sk-test-api-key-123';}
         return null;
       });
 
@@ -189,7 +189,7 @@ describe('migrate-to-secure-storage', () => {
 
       // Setup: API key in localStorage
       mockLocalStorage.getItem.mockImplementation((key: string) => {
-        if (key === 'openai_api_key') return 'sk-test-api-key-123';
+        if (key === 'openai_api_key') {return 'sk-test-api-key-123';}
         return null;
       });
 
@@ -207,7 +207,7 @@ describe('migrate-to-secure-storage', () => {
     it('should be idempotent (safe to run multiple times)', async () => {
       // First run: migrate keys
       mockLocalStorage.getItem.mockImplementation((key: string) => {
-        if (key === 'openai_api_key') return 'sk-test-api-key-123';
+        if (key === 'openai_api_key') {return 'sk-test-api-key-123';}
         return null;
       });
 
@@ -240,7 +240,7 @@ describe('migrate-to-secure-storage', () => {
     it('should return true when keys exist in localStorage but not in secure storage', async () => {
       // Setup: Key in localStorage
       mockLocalStorage.getItem.mockImplementation((key: string) => {
-        if (key === 'openai_api_key') return 'sk-test-api-key-123';
+        if (key === 'openai_api_key') {return 'sk-test-api-key-123';}
         return null;
       });
 
@@ -254,7 +254,7 @@ describe('migrate-to-secure-storage', () => {
     it('should return false when keys already exist in secure storage', async () => {
       // Setup: Key in localStorage
       mockLocalStorage.getItem.mockImplementation((key: string) => {
-        if (key === 'openai_api_key') return 'sk-test-api-key-123';
+        if (key === 'openai_api_key') {return 'sk-test-api-key-123';}
         return null;
       });
 

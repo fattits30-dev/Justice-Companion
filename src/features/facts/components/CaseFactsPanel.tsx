@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, memo, useMemo, useCallback } from 'react';
 import { PostItNote } from '../../../components/PostItNote';
 import { useCaseFacts } from '../hooks/useCaseFacts';
 import type { CaseFact } from '../../../models/CaseFact';
@@ -32,7 +32,12 @@ const importanceLabels: Record<string, string> = {
   critical: 'Critical',
 };
 
-export function CaseFactsPanel({ caseId }: CaseFactsPanelProps) {
+/**
+ * Case facts panel with CRUD operations
+ *
+ * @performance Memoized to prevent unnecessary re-renders when props haven't changed
+ */
+const CaseFactsPanelComponent = ({ caseId }: CaseFactsPanelProps) => {
   const { caseFacts, loading, error, createCaseFact, updateCaseFact, deleteCaseFact } =
     useCaseFacts(caseId);
 
@@ -46,13 +51,18 @@ export function CaseFactsPanel({ caseId }: CaseFactsPanelProps) {
     'low' | 'medium' | 'high' | 'critical'
   >('medium');
 
-  const filteredFacts = caseFacts.filter((fact: CaseFact) => {
-    const categoryMatch = filterCategory === 'all' || fact.factCategory === filterCategory;
-    const importanceMatch = filterImportance === 'all' || fact.importance === filterImportance;
-    return categoryMatch && importanceMatch;
-  });
+  // Memoize filtered facts computation
+  const filteredFacts = useMemo(() =>
+    caseFacts.filter((fact: CaseFact) => {
+      const categoryMatch = filterCategory === 'all' || fact.factCategory === filterCategory;
+      const importanceMatch = filterImportance === 'all' || fact.importance === filterImportance;
+      return categoryMatch && importanceMatch;
+    }),
+    [caseFacts, filterCategory, filterImportance]
+  );
 
-  const handleCreate = async (content: string) => {
+  // Memoize event handlers to prevent child re-renders
+  const handleCreate = useCallback(async (content: string) => {
     if (content.trim()) {
       await createCaseFact({
         caseId,
@@ -62,7 +72,39 @@ export function CaseFactsPanel({ caseId }: CaseFactsPanelProps) {
       });
       setIsCreating(false);
     }
-  };
+  }, [caseId, newFactCategory, newFactImportance, createCaseFact]);
+
+  const handleStartCreating = useCallback(() => {
+    setIsCreating(true);
+  }, []);
+
+  const handleCancelCreating = useCallback(() => {
+    setIsCreating(false);
+  }, []);
+
+  const handleFilterAllCategories = useCallback(() => {
+    setFilterCategory('all');
+  }, []);
+
+  const handleFilterAllImportance = useCallback(() => {
+    setFilterImportance('all');
+  }, []);
+
+  const handleCategoryChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    setNewFactCategory(e.target.value as 'timeline' | 'evidence' | 'witness' | 'location' | 'communication' | 'other');
+  }, []);
+
+  const handleImportanceChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    setNewFactImportance(e.target.value as 'low' | 'medium' | 'high' | 'critical');
+  }, []);
+
+  const handleCreateNoteUpdate = useCallback((_id: number, content: string) => {
+    handleCreate(content);
+  }, [handleCreate]);
+
+  const handleUpdateFact = useCallback((id: number, content: string) => {
+    updateCaseFact(id, { factContent: content });
+  }, [updateCaseFact]);
 
   if (loading) {
     return <div className="p-6 text-center text-blue-300">Loading case facts...</div>;
@@ -81,7 +123,7 @@ export function CaseFactsPanel({ caseId }: CaseFactsPanelProps) {
         <h2 className="text-2xl font-bold text-white">Case Facts ({filteredFacts.length})</h2>
 
         <button
-          onClick={() => setIsCreating(true)}
+          onClick={handleStartCreating}
           className="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-bold transition-all duration-200"
         >
           + Add Case Fact
@@ -95,7 +137,7 @@ export function CaseFactsPanel({ caseId }: CaseFactsPanelProps) {
           <label className="block mb-2 font-bold text-white text-sm">Category:</label>
           <div className="flex gap-3 flex-wrap">
             <button
-              onClick={() => setFilterCategory('all')}
+              onClick={handleFilterAllCategories}
               className={`px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 ${
                 filterCategory === 'all'
                   ? 'bg-green-600 text-white'
@@ -107,10 +149,11 @@ export function CaseFactsPanel({ caseId }: CaseFactsPanelProps) {
 
             {Object.entries(categoryLabels).map(([category, label]) => {
               const count = caseFacts.filter((f: CaseFact) => f.factCategory === category).length;
+              const handleCategoryClick = () => setFilterCategory(category);
               return (
                 <button
                   key={category}
-                  onClick={() => setFilterCategory(category)}
+                  onClick={handleCategoryClick}
                   className={`px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 ${
                     filterCategory === category
                       ? 'bg-green-600 text-white'
@@ -129,7 +172,7 @@ export function CaseFactsPanel({ caseId }: CaseFactsPanelProps) {
           <label className="block mb-2 font-bold text-white text-sm">Importance:</label>
           <div className="flex gap-3 flex-wrap">
             <button
-              onClick={() => setFilterImportance('all')}
+              onClick={handleFilterAllImportance}
               className={`px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 ${
                 filterImportance === 'all'
                   ? 'bg-green-600 text-white'
@@ -141,10 +184,11 @@ export function CaseFactsPanel({ caseId }: CaseFactsPanelProps) {
 
             {Object.entries(importanceLabels).map(([importance, label]) => {
               const count = caseFacts.filter((f: CaseFact) => f.importance === importance).length;
+              const handleImportanceClick = () => setFilterImportance(importance);
               return (
                 <button
                   key={importance}
-                  onClick={() => setFilterImportance(importance)}
+                  onClick={handleImportanceClick}
                   className={`px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 ${
                     filterImportance === importance
                       ? 'bg-green-600 text-white'
@@ -167,17 +211,7 @@ export function CaseFactsPanel({ caseId }: CaseFactsPanelProps) {
               <label className="block mb-2 font-bold text-white text-sm">Category:</label>
               <select
                 value={newFactCategory}
-                onChange={(e) =>
-                  setNewFactCategory(
-                    e.target.value as
-                      | 'timeline'
-                      | 'evidence'
-                      | 'witness'
-                      | 'location'
-                      | 'communication'
-                      | 'other',
-                  )
-                }
+                onChange={handleCategoryChange}
                 className="w-full px-3 py-2 border border-blue-700/30 bg-slate-800/50 rounded-lg text-sm text-white focus:outline-none focus:ring-3 focus:ring-green-500"
               >
                 {Object.entries(categoryLabels).map(([category, label]) => (
@@ -192,9 +226,7 @@ export function CaseFactsPanel({ caseId }: CaseFactsPanelProps) {
               <label className="block mb-2 font-bold text-white text-sm">Importance:</label>
               <select
                 value={newFactImportance}
-                onChange={(e) =>
-                  setNewFactImportance(e.target.value as 'low' | 'medium' | 'high' | 'critical')
-                }
+                onChange={handleImportanceChange}
                 className="w-full px-3 py-2 border border-blue-700/30 bg-slate-800/50 rounded-lg text-sm text-white focus:outline-none focus:ring-3 focus:ring-green-500"
               >
                 {Object.entries(importanceLabels).map(([importance, label]) => (
@@ -210,8 +242,8 @@ export function CaseFactsPanel({ caseId }: CaseFactsPanelProps) {
             id={-1}
             content=""
             color={categoryColors[newFactCategory]}
-            onUpdate={(_, content) => handleCreate(content)}
-            onDelete={() => setIsCreating(false)}
+            onUpdate={handleCreateNoteUpdate}
+            onDelete={handleCancelCreating}
           />
         </div>
       )}
@@ -229,8 +261,8 @@ export function CaseFactsPanel({ caseId }: CaseFactsPanelProps) {
                 id={fact.id}
                 content={fact.factContent}
                 color={categoryColors[fact.factCategory]}
-                onUpdate={(id, content) => updateCaseFact(id, { factContent: content })}
-                onDelete={(id) => deleteCaseFact(id)}
+                onUpdate={handleUpdateFact}
+                onDelete={deleteCaseFact}
               />
               {/* Importance badge */}
               <div
@@ -252,4 +284,7 @@ export function CaseFactsPanel({ caseId }: CaseFactsPanelProps) {
       )}
     </div>
   );
-}
+};
+
+// Export memoized component to prevent unnecessary re-renders
+export const CaseFactsPanel = memo(CaseFactsPanelComponent);

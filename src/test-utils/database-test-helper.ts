@@ -144,7 +144,7 @@ export async function cleanupTestDatabase(_dbPath: string): Promise<void> {
  * Get a test audit logger instance
  * Creates an AuditLogger using an in-memory database
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 export function getTestAuditLogger(_dbPath?: string): any {
   // Import AuditLogger dynamically to avoid circular dependencies
   const helper = new TestDatabaseHelper();

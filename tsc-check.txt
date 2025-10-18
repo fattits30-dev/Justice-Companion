@@ -1,0 +1,75 @@
+src/components/PostItNote.test.tsx(176,23): error TS2551: Property 'selectionStart' does not exist on type 'HTMLElement'. Did you mean 'onselectstart'?
+src/components/PostItNote.test.tsx(177,23): error TS2339: Property 'selectionEnd' does not exist on type 'HTMLElement'.
+src/electron-ipc-handlers.test.ts(207,71): error TS6133: 'request' is declared but its value is never read.
+src/electron-ipc-handlers.test.ts(259,78): error TS6133: 'request' is declared but its value is never read.
+src/electron-ipc-handlers.test.ts(350,74): error TS6133: 'request' is declared but its value is never read.
+src/electron-ipc-handlers.test.ts(391,70): error TS6133: 'request' is declared but its value is never read.
+src/electron-ipc-handlers.test.ts(417,78): error TS6133: 'request' is declared but its value is never read.
+src/electron-ipc-handlers.test.ts(430,79): error TS6133: 'request' is declared but its value is never read.
+src/electron-ipc-handlers.test.ts(640,80): error TS6133: 'request' is declared but its value is never read.
+src/electron-ipc-handlers.test.ts(644,15): error TS6133: 'profile' is declared but its value is never read.
+src/electron-ipc-handlers.test.ts(728,15): error TS6133: 'mockDb' is declared but its value is never read.
+src/electron-ipc-handlers.test.ts(776,70): error TS6133: 'request' is declared but its value is never read.
+src/electron-ipc-handlers.test.ts(848,69): error TS6133: 'request' is declared but its value is never read.
+src/electron-ipc-handlers.test.ts(861,61): error TS6133: 'event' is declared but its value is never read.
+src/electron-ipc-handlers.test.ts(861,61): error TS7006: Parameter 'event' implicitly has an 'any' type.
+src/electron-ipc-handlers.test.ts(897,13): error TS2353: Object literal may only specify known properties, and 'userId' does not exist in type 'CreateCaseInput'.
+src/electron-ipc-handlers.test.ts(918,13): error TS2353: Object literal may only specify known properties, and 'userId' does not exist in type 'CreateCaseInput'.
+src/electron-ipc-handlers.test.ts(937,13): error TS2353: Object literal may only specify known properties, and 'userId' does not exist in type 'CreateCaseInput'.
+src/electron-ipc-handlers.test.ts(1060,13): error TS2353: Object literal may only specify known properties, and 'userId' does not exist in type 'UpdateCaseInput'.
+src/electron-ipc-handlers.test.ts(1246,13): error TS2353: Object literal may only specify known properties, and 'userId' does not exist in type 'Evidence'.
+src/electron-ipc-handlers.test.ts(1271,13): error TS2353: Object literal may only specify known properties, and 'userId' does not exist in type 'Evidence'.
+src/electron-ipc-handlers.test.ts(1298,13): error TS2353: Object literal may only specify known properties, and 'userId' does not exist in type 'Evidence'.
+src/electron-ipc-handlers.test.ts(1340,13): error TS2353: Object literal may only specify known properties, and 'userId' does not exist in type 'UpdateEvidenceInput'.
+src/electron-ipc-handlers.test.ts(1741,11): error TS2353: Object literal may only specify known properties, and 'userId' does not exist in type 'CreateCaseInput'.
+src/electron-ipc-handlers.test.ts(1796,11): error TS2353: Object literal may only specify known properties, and 'userId' does not exist in type 'CreateCaseInput'.
+src/electron-ipc-handlers.test.ts(1904,11): error TS2353: Object literal may only specify known properties, and 'userId' does not exist in type 'CreateCaseInput'.
+src/electron-ipc-handlers.test.ts(1991,11): error TS2741: Property 'userId' is missing in type '{ caseId: number; title: string; }' but required in type 'CreateConversationInput'.
+src/electron-ipc-handlers.test.ts(2457,15): error TS6133: 'mockFs' is declared but its value is never read.
+src/electron-ipc-handlers.test.ts(2477,15): error TS6133: 'mockFs' is declared but its value is never read.
+src/electron-ipc-handlers.test.ts(2538,15): error TS6133: 'mockFs' is declared but its value is never read.
+src/electron-ipc-handlers.test.ts(2645,15): error TS6133: 'mockStreamId' is declared but its value is never read.
+src/electron-ipc-handlers.test.ts(2684,15): error TS6133: 'mockEvent' is declared but its value is never read.
+src/features/cases/components/CaseDetailView.test.tsx(16,1): error TS6133: 'React' is declared but its value is never read.
+src/features/cases/components/CasesView.test.tsx(38,5): error TS2741: Property 'userId' is missing in type '{ id: number; title: string; caseType: "employment"; description: string; status: "active"; createdAt: string; updatedAt: string; }' but required in type 'Case'.
+src/features/cases/components/CasesView.test.tsx(47,5): error TS2741: Property 'userId' is missing in type '{ id: number; title: string; caseType: "housing"; description: string; status: "closed"; createdAt: string; updatedAt: string; }' but required in type 'Case'.
+src/features/chat/components/ChatInput.test.tsx(242,23): error TS2339: Property 'value' does not exist on type 'HTMLElement'.
+src/features/chat/services/IntegratedAIService.ts(79,56): error TS2307: Cannot find module 'node-llama-cpp' or its corresponding type declarations.
+src/features/chat/services/IntegratedAIService.ts(372,49): error TS2307: Cannot find module 'node-llama-cpp' or its corresponding type declarations.
+src/features/chat/services/IntegratedAIService.ts(556,49): error TS2307: Cannot find module 'node-llama-cpp' or its corresponding type declarations.
+src/features/documents/components/DocumentsView.test.tsx(99,5): error TS2741: Property 'userId' is missing in type '{ id: number; title: string; caseType: "employment"; description: string; status: "active"; createdAt: string; updatedAt: string; }' but required in type 'Case'.
+src/features/documents/components/DocumentsView.test.tsx(108,5): error TS2741: Property 'userId' is missing in type '{ id: number; title: string; caseType: "housing"; description: string; status: "active"; createdAt: string; updatedAt: string; }' but required in type 'Case'.
+src/features/documents/components/DocumentsView.test.tsx(300,13): error TS6133: 'user' is declared but its value is never read.
+src/features/facts/components/UserFactsPanel.test.tsx(268,25): error TS2339: Property 'value' does not exist on type 'HTMLElement'.
+src/features/facts/hooks/useCaseFacts.test.ts(4,73): error TS2307: Cannot find module '../models/CaseFact' or its corresponding type declarations.
+src/features/facts/hooks/useUserFacts.test.ts(4,73): error TS2307: Cannot find module '../models/UserFact' or its corresponding type declarations.
+src/features/facts/services/CaseFactsService.test.ts(76,11): error TS2322: Type 'string' is not assignable to type '"location" | "other" | "witness" | "timeline" | "evidence" | "communication"'.
+src/features/facts/services/CaseFactsService.test.ts(87,11): error TS2322: Type 'string' is not assignable to type '"location" | "other" | "witness" | "timeline" | "evidence" | "communication"'.
+src/features/facts/services/CaseFactsService.test.ts(104,11): error TS2322: Type 'string' is not assignable to type '"medium" | "low" | "high" | "critical"'.
+src/features/facts/services/CaseFactsService.test.ts(115,11): error TS2322: Type 'string' is not assignable to type '"medium" | "low" | "high" | "critical" | undefined'.
+src/features/facts/services/UserFactsService.test.ts(72,11): error TS2322: Type 'string' is not assignable to type '"other" | "employment" | "personal" | "financial" | "contact" | "medical"'.
+src/features/facts/services/UserFactsService.test.ts(82,11): error TS2322: Type 'string' is not assignable to type '"other" | "employment" | "personal" | "financial" | "contact" | "medical"'.
+src/features/legal/hooks/useLegalIssues.test.ts(4,79): error TS2307: Cannot find module '../models/LegalIssue' or its corresponding type declarations.
+src/features/notes/hooks/useNotes.test.ts(4,27): error TS2307: Cannot find module '../models/Note' or its corresponding type declarations.
+src/features/notes/services/NotesService.test.ts(1,44): error TS6133: 'afterAll' is declared but its value is never read.
+src/features/notes/services/NotesService.test.ts(1,54): error TS6133: 'beforeAll' is declared but its value is never read.
+src/features/settings/components/SettingsView.test.tsx(15,31): error TS2307: Cannot find module 'react-router-dom' or its corresponding type declarations.
+src/features/settings/components/SettingsView.test.tsx(29,7): error TS6133: 'clickTab' is declared but its value is never read.
+src/features/timeline/hooks/useTimeline.test.ts(8,8): error TS2307: Cannot find module '../models/TimelineEvent' or its corresponding type declarations.
+src/hooks/useAI.test.ts(9,50): error TS2307: Cannot find module './useAI' or its corresponding type declarations.
+src/middleware/ValidationMiddleware.ts(241,18): error TS2367: This comparison appears to be unintentional because the types '"custom" | "unrecognized_keys" | "invalid_union" | "invalid_union_discriminator" | "invalid_arguments" | "invalid_return_type" | "invalid_string" | "not_multiple_of" | "invalid_literal" | ... 4 more ... | "too_big"' and '"invalid_value"' have no overlap.
+src/repositories/CaseRepository.test.ts(4,35): error TS6133: 'TestDatabaseHelper' is declared but its value is never read.
+src/repositories/CaseRepository.test.ts(198,37): error TS2554: Expected 1-2 arguments, but got 0.
+src/repositories/EvidenceRepository.test.ts(5,35): error TS6133: 'TestDatabaseHelper' is declared but its value is never read.
+src/services/ChatConversationService.test.ts(7,1): error TS6133: 'EncryptionService' is declared but its value is never read.
+src/services/ConsentService.test.ts(39,47): error TS2554: Expected 0 arguments, but got 1.
+src/services/ConsentService.test.ts(88,36): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'string | null' is not assignable to parameter of type 'string | number | Date'.
+      Type 'null' is not assignable to type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'string | null' is not assignable to parameter of type 'string | number'.
+      Type 'null' is not assignable to type 'string | number'.
+src/services/StartupMetrics.test.ts(257,9): error TS2349: This expression is not callable.
+  Type 'TaskContext<Test<object>> & TestContext' has no call signatures.
+src/services/UserProfileService.test.ts(7,1): error TS6133: 'EncryptionService' is declared but its value is never read.

@@ -264,7 +264,7 @@ describe('UserFactsPanel', () => {
       const addButton = screen.getByRole('button', { name: /\+ Add User Fact/i });
       await user.click(addButton);
 
-      const typeSelect = screen.getByRole('combobox');
+      const typeSelect = screen.getByRole('combobox') as HTMLSelectElement;
       expect(typeSelect.value).toBe('personal');
     });
 

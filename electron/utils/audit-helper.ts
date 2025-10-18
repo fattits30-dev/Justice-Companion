@@ -50,9 +50,9 @@ export enum AuditEventType {
  * Get AuditLogger instance (lazy-loaded at runtime)
  */
 function getAuditLogger() {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+   
   const { AuditLogger } = require('../../src/services/AuditLogger');
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+   
   const { getDb } = require('../../src/db/database');
 
   const db = getDb();

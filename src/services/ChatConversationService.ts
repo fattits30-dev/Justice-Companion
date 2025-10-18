@@ -5,17 +5,21 @@ import type {
   CreateConversationInput,
   CreateMessageInput,
 } from '../models/ChatConversation';
-import { chatConversationRepository } from '../repositories/ChatConversationRepository';
+import { getRepositories } from '../repositories';
 import { errorLogger } from '../utils/error-logger';
 
 class ChatConversationService {
+  private get chatConversationRepository() {
+    return getRepositories().chatConversationRepository;
+  }
+
   /**
    * Create a new conversation
    * Auto-generates title from first user message if not provided
    */
   createConversation(input: CreateConversationInput): ChatConversation {
     try {
-      return chatConversationRepository.create(input);
+      return this.chatConversationRepository.create(input);
     } catch (error) {
       errorLogger.logError(error as Error, {
         context: 'ChatConversationService.createConversation',
@@ -29,7 +33,7 @@ class ChatConversationService {
    */
   getConversation(id: number): ChatConversation | null {
     try {
-      return chatConversationRepository.findById(id);
+      return this.chatConversationRepository.findById(id);
     } catch (error) {
       errorLogger.logError(error as Error, {
         context: 'ChatConversationService.getConversation',
@@ -43,7 +47,7 @@ class ChatConversationService {
    */
   getAllConversations(userId: number, caseId?: number | null): ChatConversation[] {
     try {
-      return chatConversationRepository.findAll(userId, caseId);
+      return this.chatConversationRepository.findAll(userId, caseId);
     } catch (error) {
       errorLogger.logError(error as Error, {
         context: 'ChatConversationService.getAllConversations',
@@ -62,7 +66,7 @@ class ChatConversationService {
     limit: number = 10,
   ): ChatConversation[] {
     try {
-      return chatConversationRepository.findRecentByCase(userId, caseId, limit);
+      return this.chatConversationRepository.findRecentByCase(userId, caseId, limit);
     } catch (error) {
       errorLogger.logError(error as Error, {
         context: 'ChatConversationService.getRecentConversationsByCase',
@@ -77,7 +81,7 @@ class ChatConversationService {
    */
   loadConversation(conversationId: number): ConversationWithMessages | null {
     try {
-      return chatConversationRepository.findWithMessages(conversationId);
+      return this.chatConversationRepository.findWithMessages(conversationId);
     } catch (error) {
       errorLogger.logError(error as Error, {
         context: 'ChatConversationService.loadConversation',
@@ -92,7 +96,7 @@ class ChatConversationService {
    */
   addMessage(input: CreateMessageInput): ChatMessage {
     try {
-      return chatConversationRepository.addMessage(input);
+      return this.chatConversationRepository.addMessage(input);
     } catch (error) {
       errorLogger.logError(error as Error, {
         context: 'ChatConversationService.addMessage',
@@ -106,7 +110,7 @@ class ChatConversationService {
    */
   deleteConversation(id: number): void {
     try {
-      chatConversationRepository.delete(id);
+      this.chatConversationRepository.delete(id);
     } catch (error) {
       errorLogger.logError(error as Error, {
         context: 'ChatConversationService.deleteConversation',
@@ -157,7 +161,7 @@ class ChatConversationService {
    */
   verifyOwnership(conversationId: number, userId: number): void {
     try {
-      const isOwner = chatConversationRepository.verifyOwnership(conversationId, userId);
+      const isOwner = this.chatConversationRepository.verifyOwnership(conversationId, userId);
       if (!isOwner) {
         throw new Error(`Unauthorized: User ${userId} does not own conversation ${conversationId}`);
       }

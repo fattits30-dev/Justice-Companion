@@ -5,7 +5,7 @@ import type {
   TimelineEvent,
   CreateTimelineEventInput,
   UpdateTimelineEventInput,
-} from '../models/TimelineEvent';
+} from '../../../models/TimelineEvent';
 
 /**
  * Test Suite for useTimeline Hook
@@ -221,7 +221,7 @@ describe('useTimeline', () => {
         data: newEvent,
       });
 
-      let created: TimelineEvent;
+      let created!: TimelineEvent;
       await act(async () => {
         created = await result.current.createTimelineEvent(input);
       });
@@ -263,7 +263,7 @@ describe('useTimeline', () => {
         data: newEvent,
       });
 
-      let created: TimelineEvent;
+      let created!: TimelineEvent;
       await act(async () => {
         created = await result.current.createTimelineEvent(input);
       });
@@ -304,7 +304,7 @@ describe('useTimeline', () => {
         data: newEvent,
       });
 
-      let created: TimelineEvent;
+      let created!: TimelineEvent;
       await act(async () => {
         created = await result.current.createTimelineEvent(input);
       });
@@ -400,7 +400,7 @@ describe('useTimeline', () => {
         data: updatedEvent,
       });
 
-      let returned: TimelineEvent;
+      let returned!: TimelineEvent;
       await act(async () => {
         returned = await result.current.updateTimelineEvent(1, updateInput);
       });

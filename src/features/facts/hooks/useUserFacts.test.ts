@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { useUserFacts } from './useUserFacts';
-import type { UserFact, CreateUserFactInput, UpdateUserFactInput } from '../models/UserFact';
+import type { UserFact, CreateUserFactInput, UpdateUserFactInput } from '../../../models/UserFact';
 
 /**
  * Test Suite for useUserFacts Hook
@@ -215,7 +215,7 @@ describe('useUserFacts', () => {
         data: newFact,
       });
 
-      let created: UserFact;
+      let created!: UserFact;
       await act(async () => {
         created = await result.current.createUserFact(input);
       });
@@ -263,7 +263,7 @@ describe('useUserFacts', () => {
           data: newFact,
         });
 
-        let created: UserFact;
+        let created!: UserFact;
         await act(async () => {
           created = await result.current.createUserFact(input);
         });
@@ -360,7 +360,7 @@ describe('useUserFacts', () => {
         data: updatedFact,
       });
 
-      let returned: UserFact;
+      let returned!: UserFact;
       await act(async () => {
         returned = await result.current.updateUserFact(1, updateInput);
       });

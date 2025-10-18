@@ -457,7 +457,7 @@ export function TimelineView({ caseId }: TimelineViewProps) {
                           </button>
                           <button
                             onClick={() => {
-                              // eslint-disable-next-line no-alert
+                               
                               if (window.confirm('Delete this event?')) {
                                 void deleteTimelineEvent(event.id);
                               }

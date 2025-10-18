@@ -1,7 +1,7 @@
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { motion } from 'framer-motion';
 import { LucideIcon } from 'lucide-react';
-import { ReactNode } from 'react';
+import { ReactNode, memo, useMemo } from 'react';
 
 interface DashboardStatsCardProps {
   icon: LucideIcon;
@@ -53,19 +53,22 @@ const colorConfig = {
 
 /**
  * Modern dashboard stats card with glassmorphism and animations
+ *
+ * @performance Memoized to prevent unnecessary re-renders when props haven't changed
  */
-export function DashboardStatsCard({
+const DashboardStatsCardComponent = ({
   icon: Icon,
   label,
   value,
   trend,
   color = 'blue',
   delay = 0,
-}: DashboardStatsCardProps): JSX.Element {
+}: DashboardStatsCardProps): JSX.Element => {
   const prefersReducedMotion = useReducedMotion();
   const config = colorConfig[color];
 
-  const cardVariants = {
+  // Memoize animation variants to prevent recreation on every render
+  const cardVariants = useMemo(() => ({
     hidden: { opacity: 0, y: 20, scale: 0.95 },
     visible: {
       opacity: 1,
@@ -77,9 +80,9 @@ export function DashboardStatsCard({
         ease: 'easeInOut' as const,
       },
     },
-  };
+  }), [prefersReducedMotion, delay]);
 
-  const iconVariants = {
+  const iconVariants = useMemo(() => ({
     hidden: { scale: 0, rotate: -180 },
     visible: {
       scale: 1,
@@ -90,7 +93,7 @@ export function DashboardStatsCard({
         ease: 'easeOut' as const,
       },
     },
-  };
+  }), [prefersReducedMotion, delay]);
 
   return (
     <motion.div
@@ -161,4 +164,7 @@ export function DashboardStatsCard({
       </div>
     </motion.div>
   );
-}
+};
+
+// Export memoized component to prevent unnecessary re-renders
+export const DashboardStatsCard = memo(DashboardStatsCardComponent);

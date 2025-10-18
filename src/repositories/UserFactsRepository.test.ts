@@ -102,7 +102,7 @@ describe('UserFactsRepository', () => {
       expect(fact.factType).toBe('personal');
 
       // Verify content is encrypted in database
-      const storedFact = db.prepare('SELECT fact_content FROM user_facts WHERE id = ?').get(1) as { fact_content: string };
+      const storedFact = db!.prepare('SELECT fact_content FROM user_facts WHERE id = ?').get(1) as { fact_content: string };
       const parsedContent = JSON.parse(storedFact.fact_content);
 
       expect(parsedContent).toHaveProperty('algorithm');
@@ -141,7 +141,7 @@ describe('UserFactsRepository', () => {
         factType: 'contact',
       });
 
-      const auditLogs = db.prepare('SELECT * FROM audit_logs WHERE event_type = ?').all('user_fact.create');
+      const auditLogs = db!.prepare('SELECT * FROM audit_logs WHERE event_type = ?').all('user_fact.create');
       expect(auditLogs).toHaveLength(1);
 
       const log = auditLogs[0] as {
@@ -159,35 +159,6 @@ describe('UserFactsRepository', () => {
       expect(details.caseId).toBe(1);
       expect(details.factType).toBe('contact');
       expect(details.contentLength).toBe(15);
-    });
-
-    it('should throw error if encryption service is missing', () => {
-      const repoWithoutEncryption = new UserFactsRepository();
-
-      expect(() => {
-        repoWithoutEncryption.create({
-          caseId: 1,
-          factContent: 'Test fact',
-          factType: 'personal',
-        });
-      }).toThrow('EncryptionService is required');
-    });
-
-    it('should audit failed creation', () => {
-      const repoWithoutEncryption = new UserFactsRepository(undefined, auditLogger);
-
-      try {
-        repoWithoutEncryption.create({
-          caseId: 1,
-          factContent: 'Test fact',
-          factType: 'personal',
-        });
-      } catch (error) {
-        // Expected error
-      }
-
-      const auditLogs = db.prepare('SELECT * FROM audit_logs WHERE event_type = ? AND success = 0').all('user_fact.create');
-      expect(auditLogs).toHaveLength(1);
     });
   });
 
@@ -220,11 +191,11 @@ describe('UserFactsRepository', () => {
       });
 
       // Clear previous audit logs
-      db.prepare('DELETE FROM audit_logs WHERE event_type = ?').run('user_fact.content_access');
+      db!.prepare('DELETE FROM audit_logs WHERE event_type = ?').run('user_fact.content_access');
 
       repository.findById(created.id);
 
-      const auditLogs = db.prepare('SELECT * FROM audit_logs WHERE event_type = ?').all('user_fact.content_access');
+      const auditLogs = db!.prepare('SELECT * FROM audit_logs WHERE event_type = ?').all('user_fact.content_access');
       expect(auditLogs).toHaveLength(1);
 
       const log = auditLogs[0] as {
@@ -289,11 +260,11 @@ describe('UserFactsRepository', () => {
       });
 
       // Clear previous audit logs
-      db.prepare('DELETE FROM audit_logs WHERE event_type = ?').run('user_fact.content_access');
+      db!.prepare('DELETE FROM audit_logs WHERE event_type = ?').run('user_fact.content_access');
 
       repository.findByCaseId(1);
 
-      const auditLogs = db.prepare('SELECT * FROM audit_logs WHERE event_type = ?').all('user_fact.content_access');
+      const auditLogs = db!.prepare('SELECT * FROM audit_logs WHERE event_type = ?').all('user_fact.content_access');
       expect(auditLogs).toHaveLength(1);
 
       const log = auditLogs[0] as { details: string };
@@ -344,11 +315,11 @@ describe('UserFactsRepository', () => {
       });
 
       // Clear previous audit logs
-      db.prepare('DELETE FROM audit_logs WHERE event_type = ?').run('user_fact.content_access');
+      db!.prepare('DELETE FROM audit_logs WHERE event_type = ?').run('user_fact.content_access');
 
       repository.findByType(1, 'financial');
 
-      const auditLogs = db.prepare('SELECT * FROM audit_logs WHERE event_type = ?').all('user_fact.content_access');
+      const auditLogs = db!.prepare('SELECT * FROM audit_logs WHERE event_type = ?').all('user_fact.content_access');
       expect(auditLogs).toHaveLength(1);
 
       const log = auditLogs[0] as { details: string };
@@ -373,7 +344,7 @@ describe('UserFactsRepository', () => {
       expect(updated!.factContent).toBe('New content');
 
       // Verify new content is encrypted in database
-      const storedFact = db.prepare('SELECT fact_content FROM user_facts WHERE id = ?').get(created.id) as { fact_content: string };
+      const storedFact = db!.prepare('SELECT fact_content FROM user_facts WHERE id = ?').get(created.id) as { fact_content: string };
       const parsedContent = JSON.parse(storedFact.fact_content);
 
       expect(parsedContent).toHaveProperty('ciphertext');
@@ -424,7 +395,7 @@ describe('UserFactsRepository', () => {
         factContent: 'Updated fact',
       });
 
-      const auditLogs = db.prepare('SELECT * FROM audit_logs WHERE event_type = ?').all('user_fact.update');
+      const auditLogs = db!.prepare('SELECT * FROM audit_logs WHERE event_type = ?').all('user_fact.update');
       expect(auditLogs.length).toBeGreaterThan(0);
 
       const log = auditLogs[auditLogs.length - 1] as {
@@ -440,22 +411,6 @@ describe('UserFactsRepository', () => {
 
       const details = JSON.parse(log.details);
       expect(details.updatedFields).toContain('factContent');
-    });
-
-    it('should throw error if encryption service is missing', () => {
-      const created = repository.create({
-        caseId: 1,
-        factContent: 'Test fact',
-        factType: 'personal',
-      });
-
-      const repoWithoutEncryption = new UserFactsRepository();
-
-      expect(() => {
-        repoWithoutEncryption.update(created.id, {
-          factContent: 'New content',
-        });
-      }).toThrow('EncryptionService is required');
     });
   });
 
@@ -488,7 +443,7 @@ describe('UserFactsRepository', () => {
 
       repository.delete(created.id);
 
-      const auditLogs = db.prepare('SELECT * FROM audit_logs WHERE event_type = ?').all('user_fact.delete');
+      const auditLogs = db!.prepare('SELECT * FROM audit_logs WHERE event_type = ?').all('user_fact.delete');
       expect(auditLogs.length).toBeGreaterThan(0);
 
       const log = auditLogs[auditLogs.length - 1] as {
@@ -506,7 +461,7 @@ describe('UserFactsRepository', () => {
   describe('backward compatibility', () => {
     it('should handle legacy plaintext data', () => {
       // Insert plaintext fact directly
-      db.prepare(`
+      db!.prepare(`
         INSERT INTO user_facts (case_id, fact_content, fact_type)
         VALUES (?, ?, ?)
       `).run(1, 'Plaintext fact', 'personal');
@@ -515,50 +470,6 @@ describe('UserFactsRepository', () => {
 
       expect(found).not.toBeNull();
       expect(found!.factContent).toBe('Plaintext fact');
-    });
-
-    it('should handle repository without encryption service', () => {
-      const repoWithoutEncryption = new UserFactsRepository();
-
-      // Insert plaintext fact
-      db.prepare(`
-        INSERT INTO user_facts (case_id, fact_content, fact_type)
-        VALUES (?, ?, ?)
-      `).run(1, 'Plaintext fact', 'personal');
-
-      const found = repoWithoutEncryption.findById(1);
-
-      expect(found).not.toBeNull();
-      expect(found!.factContent).toBe('Plaintext fact');
-    });
-  });
-
-  describe('dependency injection', () => {
-    it('should allow setting encryption service', () => {
-      const repo = new UserFactsRepository();
-      repo.setEncryptionService(encryptionService);
-
-      const fact = repo.create({
-        caseId: 1,
-        factContent: 'Test fact',
-        factType: 'personal',
-      });
-
-      expect(fact.factContent).toBe('Test fact');
-    });
-
-    it('should allow setting audit logger', () => {
-      const repo = new UserFactsRepository(encryptionService);
-      repo.setAuditLogger(auditLogger);
-
-      repo.create({
-        caseId: 1,
-        factContent: 'Test fact',
-        factType: 'personal',
-      });
-
-      const auditLogs = db.prepare('SELECT * FROM audit_logs WHERE event_type = ?').all('user_fact.create');
-      expect(auditLogs).toHaveLength(1);
     });
   });
 
@@ -577,10 +488,10 @@ describe('UserFactsRepository', () => {
       });
 
       // Delete the case
-      db.prepare('DELETE FROM cases WHERE id = ?').run(1);
+      db!.prepare('DELETE FROM cases WHERE id = ?').run(1);
 
       // Facts should be deleted
-      const facts = db.prepare('SELECT * FROM user_facts WHERE case_id = ?').all(1);
+      const facts = db!.prepare('SELECT * FROM user_facts WHERE case_id = ?').all(1);
       expect(facts).toHaveLength(0);
     });
   });

@@ -1,8 +1,12 @@
-import { notesRepository } from '@/repositories/NotesRepository';
+import { getRepositories } from '@/repositories';
 import type { Note } from '@/models/Note';
 import { errorLogger } from '@/utils/error-logger';
 
 export class NotesService {
+  private get notesRepository() {
+    return getRepositories().notesRepository;
+  }
+
   /**
    * Create a new note for a case
    */
@@ -17,7 +21,7 @@ export class NotesService {
         throw new Error('Note content must be 10000 characters or less');
       }
 
-      return notesRepository.create({ caseId, content });
+      return this.notesRepository.create({ caseId, content });
     } catch (error) {
       errorLogger.logError(error as Error, {
         context: 'createNote',
@@ -32,7 +36,7 @@ export class NotesService {
    */
   getNotesByCaseId(caseId: number): Note[] {
     try {
-      return notesRepository.findByCaseId(caseId);
+      return this.notesRepository.findByCaseId(caseId);
     } catch (error) {
       errorLogger.logError(error as Error, { context: 'getNotesByCaseId', caseId });
       throw error;
@@ -53,7 +57,7 @@ export class NotesService {
         throw new Error('Note content must be 10000 characters or less');
       }
 
-      const note = notesRepository.update(id, { content });
+      const note = this.notesRepository.update(id, { content });
 
       if (!note) {
         throw new Error('Note not found');
@@ -74,7 +78,7 @@ export class NotesService {
    */
   deleteNote(id: number): void {
     try {
-      notesRepository.delete(id);
+      this.notesRepository.delete(id);
     } catch (error) {
       errorLogger.logError(error as Error, {
         context: 'deleteNote',

@@ -232,7 +232,7 @@ describe('ChatInput', () => {
       const user = userEvent.setup();
       render(<ChatInput onSend={mockOnSend} />);
 
-      const textarea = screen.getByLabelText('Message input');
+      const textarea = screen.getByLabelText('Message input') as HTMLTextAreaElement;
 
       // Type multiple lines
       await user.type(textarea, 'Line 1{Shift>}{Enter}{/Shift}Line 2{Shift>}{Enter}{/Shift}Line 3');

@@ -14,7 +14,7 @@ import { EncryptionService, type EncryptedData } from '../services/EncryptionSer
  */
 export class CaseFactsRepository {
   constructor(
-    private encryptionService?: EncryptionService,
+    private encryptionService: EncryptionService,
     private auditLogger?: AuditLogger,
   ) {}
 
@@ -419,19 +419,4 @@ export class CaseFactsRepository {
     }
   }
 
-  /**
-   * Set encryption service (for dependency injection)
-   */
-  setEncryptionService(service: EncryptionService): void {
-    this.encryptionService = service;
-  }
-
-  /**
-   * Set audit logger (for dependency injection)
-   */
-  setAuditLogger(logger: AuditLogger): void {
-    this.auditLogger = logger;
-  }
 }
-
-export const caseFactsRepository = new CaseFactsRepository();

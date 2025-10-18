@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { StartupMetrics } from './StartupMetrics';
 
 describe('StartupMetrics', () => {
@@ -216,46 +216,48 @@ describe('StartupMetrics', () => {
   });
 
   describe('phase deltas', () => {
-    it('should calculate phase deltas correctly', (done) => {
-      const delays = {
-        appReady: 0,
-        loadingWindowShown: 50,
-        criticalServicesReady: 100,
-        criticalHandlersRegistered: 110,
-        mainWindowShown: 200,
-        nonCriticalServicesReady: 250,
-        allHandlersRegistered: 300,
-      };
+    it('should calculate phase deltas correctly', () => {
+      return new Promise<void>((resolve) => {
+        const delays = {
+          appReady: 0,
+          loadingWindowShown: 50,
+          criticalServicesReady: 100,
+          criticalHandlersRegistered: 110,
+          mainWindowShown: 200,
+          nonCriticalServicesReady: 250,
+          allHandlersRegistered: 300,
+        };
 
-      metrics.recordPhase('appReady');
+        metrics.recordPhase('appReady');
 
-      setTimeout(() => metrics.recordPhase('loadingWindowShown'), delays.loadingWindowShown);
-      setTimeout(() => metrics.recordPhase('criticalServicesReady'), delays.criticalServicesReady);
-      setTimeout(
-        () => metrics.recordPhase('criticalHandlersRegistered'),
-        delays.criticalHandlersRegistered
-      );
-      setTimeout(() => metrics.recordPhase('mainWindowShown'), delays.mainWindowShown);
-      setTimeout(
-        () => metrics.recordPhase('nonCriticalServicesReady'),
-        delays.nonCriticalServicesReady
-      );
-      setTimeout(() => {
-        metrics.recordPhase('allHandlersRegistered');
+        setTimeout(() => metrics.recordPhase('loadingWindowShown'), delays.loadingWindowShown);
+        setTimeout(() => metrics.recordPhase('criticalServicesReady'), delays.criticalServicesReady);
+        setTimeout(
+          () => metrics.recordPhase('criticalHandlersRegistered'),
+          delays.criticalHandlersRegistered
+        );
+        setTimeout(() => metrics.recordPhase('mainWindowShown'), delays.mainWindowShown);
+        setTimeout(
+          () => metrics.recordPhase('nonCriticalServicesReady'),
+          delays.nonCriticalServicesReady
+        );
+        setTimeout(() => {
+          metrics.recordPhase('allHandlersRegistered');
 
-        const json = metrics.exportMetrics();
-        const parsed = JSON.parse(json);
-        const m = parsed.metrics;
+          const json = metrics.exportMetrics();
+          const parsed = JSON.parse(json);
+          const m = parsed.metrics;
 
-        // Check phase deltas
-        expect(m.loadingToServices).toBeGreaterThanOrEqual(40); // ~50ms
-        expect(m.servicesToHandlers).toBeGreaterThanOrEqual(5); // ~10ms
-        expect(m.handlersToMainWindow).toBeGreaterThanOrEqual(80); // ~90ms
-        expect(m.mainWindowToNonCritical).toBeGreaterThanOrEqual(40); // ~50ms
-        expect(m.nonCriticalToComplete).toBeGreaterThanOrEqual(40); // ~50ms
+          // Check phase deltas
+          expect(m.loadingToServices).toBeGreaterThanOrEqual(40); // ~50ms
+          expect(m.servicesToHandlers).toBeGreaterThanOrEqual(5); // ~10ms
+          expect(m.handlersToMainWindow).toBeGreaterThanOrEqual(80); // ~90ms
+          expect(m.mainWindowToNonCritical).toBeGreaterThanOrEqual(40); // ~50ms
+          expect(m.nonCriticalToComplete).toBeGreaterThanOrEqual(40); // ~50ms
 
-        done();
-      }, delays.allHandlersRegistered);
+          resolve();
+        }, delays.allHandlersRegistered);
+      });
     });
   });
 });
