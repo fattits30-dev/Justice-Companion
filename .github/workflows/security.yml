@@ -108,11 +108,13 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: TruffleHog secret scanning
+        # Only run on PRs or when there are actual commit differences
+        if: github.event_name == 'pull_request' || github.event.before != github.event.after
         uses: trufflesecurity/trufflehog@main
         with:
           path: ./
-          base: ${{ github.event.repository.default_branch }}
-          head: HEAD
+          base: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+          head: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
 
   # SAST (Static Application Security Testing)
   sast:
