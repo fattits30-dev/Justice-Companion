@@ -594,8 +594,9 @@ export type GDPRExportUserDataRequest = void;
 
 export interface GDPRExportUserDataResponse {
   success: true;
-  exportPath: string;
+  exportPath?: string; // Optional: path where data was saved to disk
   exportDate: string;
+  data?: any; // Optional: the actual export data (for in-memory download)
   summary: {
     casesCount: number;
     evidenceCount: number;

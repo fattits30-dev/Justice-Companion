@@ -20,7 +20,6 @@ import { EncryptionService } from '../services/EncryptionService';
 import { AuditLogger } from '../services/AuditLogger';
 import { DecryptionCache } from '../services/DecryptionCache';
 import { CaseRepositoryPaginated } from '../repositories/CaseRepositoryPaginated';
-import type { CreateCaseInput } from '../models/Case';
 
 // Benchmark configuration
 const DATASET_SIZES = [100, 500, 1000];

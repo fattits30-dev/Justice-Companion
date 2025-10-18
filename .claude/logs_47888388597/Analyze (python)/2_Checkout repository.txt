@@ -1,0 +1,75 @@
+﻿2025-10-18T04:09:45.7901505Z ##[group]Run actions/checkout@v4
+2025-10-18T04:09:45.7902821Z with:
+2025-10-18T04:09:45.7903589Z   repository: fattits30-dev/Justice-Companion
+2025-10-18T04:09:45.7905127Z   token: ***
+2025-10-18T04:09:45.7905815Z   ssh-strict: true
+2025-10-18T04:09:45.7906531Z   ssh-user: git
+2025-10-18T04:09:45.7907265Z   persist-credentials: true
+2025-10-18T04:09:45.7908104Z   clean: true
+2025-10-18T04:09:45.7908834Z   sparse-checkout-cone-mode: true
+2025-10-18T04:09:45.7909728Z   fetch-depth: 1
+2025-10-18T04:09:45.7910455Z   fetch-tags: false
+2025-10-18T04:09:45.7911196Z   show-progress: true
+2025-10-18T04:09:45.7911953Z   lfs: false
+2025-10-18T04:09:45.7912636Z   submodules: false
+2025-10-18T04:09:45.7913422Z   set-safe-directory: true
+2025-10-18T04:09:45.7914920Z env:
+2025-10-18T04:09:45.7915693Z   CODE_SCANNING_REF: refs/heads/main
+2025-10-18T04:09:45.7916702Z   CODE_SCANNING_BASE_BRANCH: 
+2025-10-18T04:09:45.7917720Z   CODE_SCANNING_IS_ANALYZING_DEFAULT_BRANCH: true
+2025-10-18T04:09:45.7918962Z   CODE_SCANNING_IS_STEADY_STATE_DEFAULT_SETUP: true
+2025-10-18T04:09:45.7943918Z   CODE_SCANNING_WORKFLOW_FILE: H4sIAAAAAAAA/6xV32/bNhB+919x8AakfZDzsD0JKFDFkRNvhp1aCrqsKAiaOslsZFLlD6dql/99oCjF0hrPGVY/WcfvPt7dd3cUdIchjKcyw3eL8UhZEXjTz9++QcHN1m4muEdhJlxU1ugJkxkSzagQXBREWUEcHh4fR1KEkNWC7jgbjVDswxHAdHUZk2QaLZfz5RVZx7MXE2PuOP/JcBElMblYR8vp9UuZNlQj2Sgq2PY5xnlComW0uPvTfVzGs+h2kf7HG7gmVNCy/uo+MsypLc2/35ikcXR5R5I0SuOnS5M4vb0JwSiL3/m8X61/ny1W78lsvohfGteDVPd5KR9IzstGodEnudFOFh8uur8AXu/Im+CV495Ro/iXSUlFYWnhfF83UGWFDpzODpQrufstWS1ftWhlhUD12qcMUKHaca25FNrfA0CZaT5BIc1aG5PCoDBDY0XZPS1waNTIrOKmDpqUdQgPihscdSRcWAykCFApqULIaan9oTaKGizqLoqc8jLIqTZ9ELQ5dyAALlhpMzwYAALoKhJ2ufROAZi7R6o6hPMn4HO4jeVlFuxkhiEIKXBw6MsYwtmHsd1YYWxQUoPajD+eHQnlE91TzRSvTGDqCv3fk4Gd9vrBYVa12UpxMq5nYP8rEG2wajswaHt9ukV2L60BhZXU3EhVt5RWu6ZrNTtnLe7t/tfRgGAuuOG05F8R/OYcuPvJPHfD+LkMPNk5F9y83f/SAh+42R46qxlHzXVwz0WmQ3CeQTfGT6iuQtqP3/czOnquXj3owdwHZ1ihyFCwOmCUbbkovJOv6wTFnispdigMvHkDZz65YCu1weysT/TZouIuuvEYfoJLvwcbaw3adqMKflxzXoTwV0/Idm8GGo2twoHCUhVDA4BLogzcmtAhfHjhPvSCkMYLHh/hY4/UbBVS0xSnbCjb007xxIUFlZJfasilAoUF18bl25LwLPTHp1tBG6pM0ICPdcSBnjCFGQrXbq3wGplCoydX8/T69oKs46t5kq7ncUJu1qs/7vqSHIbvSMcM2/oGVS7Vru1p/yRork9n1L4nh2za59//3FP2buGjI9erJG3zcIM5acowkdY0gjVfxDVXP40Bwc1qfZKgkuo4wTQi03idzmfzaZTGp6gYJQyV4Tl3y+oo6e16kZyisqrUB4Kh4IdN2FOqMzqnvwMAAP//uU2fwqkJAAA=
+2025-10-18T04:09:45.7968983Z ##[endgroup]
+2025-10-18T04:09:45.9057794Z Syncing repository: fattits30-dev/Justice-Companion
+2025-10-18T04:09:45.9060358Z ##[group]Getting Git version info
+2025-10-18T04:09:45.9061841Z Working directory is '/home/runner/work/Justice-Companion/Justice-Companion'
+2025-10-18T04:09:45.9063825Z [command]/usr/bin/git version
+2025-10-18T04:09:45.9158653Z git version 2.51.0
+2025-10-18T04:09:45.9185665Z ##[endgroup]
+2025-10-18T04:09:45.9200508Z Temporarily overriding HOME='/home/runner/work/_temp/3eebafc6-80cc-47d0-8a47-19adfb464f3b' before making global git config changes
+2025-10-18T04:09:45.9203268Z Adding repository directory to the temporary git global config as a safe directory
+2025-10-18T04:09:45.9214047Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/Justice-Companion/Justice-Companion
+2025-10-18T04:09:45.9251591Z Deleting the contents of '/home/runner/work/Justice-Companion/Justice-Companion'
+2025-10-18T04:09:45.9254559Z ##[group]Initializing the repository
+2025-10-18T04:09:45.9259172Z [command]/usr/bin/git init /home/runner/work/Justice-Companion/Justice-Companion
+2025-10-18T04:09:45.9412580Z hint: Using 'master' as the name for the initial branch. This default branch name
+2025-10-18T04:09:45.9415134Z hint: is subject to change. To configure the initial branch name to use in all
+2025-10-18T04:09:45.9418146Z hint: of your new repositories, which will suppress this warning, call:
+2025-10-18T04:09:45.9420917Z hint:
+2025-10-18T04:09:45.9422661Z hint: 	git config --global init.defaultBranch <name>
+2025-10-18T04:09:45.9425155Z hint:
+2025-10-18T04:09:45.9426928Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2025-10-18T04:09:45.9430054Z hint: 'development'. The just-created branch can be renamed via this command:
+2025-10-18T04:09:45.9432896Z hint:
+2025-10-18T04:09:45.9434074Z hint: 	git branch -m <name>
+2025-10-18T04:09:45.9435628Z hint:
+2025-10-18T04:09:45.9437722Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2025-10-18T04:09:45.9439958Z Initialized empty Git repository in /home/runner/work/Justice-Companion/Justice-Companion/.git/
+2025-10-18T04:09:45.9444188Z [command]/usr/bin/git remote add origin https://github.com/fattits30-dev/Justice-Companion
+2025-10-18T04:09:45.9474848Z ##[endgroup]
+2025-10-18T04:09:45.9477235Z ##[group]Disabling automatic garbage collection
+2025-10-18T04:09:45.9479392Z [command]/usr/bin/git config --local gc.auto 0
+2025-10-18T04:09:45.9508695Z ##[endgroup]
+2025-10-18T04:09:45.9510848Z ##[group]Setting up auth
+2025-10-18T04:09:45.9516437Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2025-10-18T04:09:45.9546860Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2025-10-18T04:09:45.9926286Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2025-10-18T04:09:45.9956072Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2025-10-18T04:09:46.0174661Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2025-10-18T04:09:46.0210678Z ##[endgroup]
+2025-10-18T04:09:46.0211964Z ##[group]Fetching the repository
+2025-10-18T04:09:46.0219946Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +019e657cb98aee5f318375f85e0fb6105403de7c:refs/remotes/origin/main
+2025-10-18T04:09:47.0715186Z From https://github.com/fattits30-dev/Justice-Companion
+2025-10-18T04:09:47.0716472Z  * [new ref]         019e657cb98aee5f318375f85e0fb6105403de7c -> origin/main
+2025-10-18T04:09:47.0749204Z ##[endgroup]
+2025-10-18T04:09:47.0749844Z ##[group]Determining the checkout info
+2025-10-18T04:09:47.0751665Z ##[endgroup]
+2025-10-18T04:09:47.0756908Z [command]/usr/bin/git sparse-checkout disable
+2025-10-18T04:09:47.0797779Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2025-10-18T04:09:47.0826505Z ##[group]Checking out the ref
+2025-10-18T04:09:47.0829348Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+2025-10-18T04:09:47.7893326Z Switched to a new branch 'main'
+2025-10-18T04:09:47.7894077Z branch 'main' set up to track 'origin/main'.
+2025-10-18T04:09:47.7910948Z ##[endgroup]
+2025-10-18T04:09:47.7951062Z [command]/usr/bin/git log -1 --format=%H
+2025-10-18T04:09:47.7975990Z 019e657cb98aee5f318375f85e0fb6105403de7c

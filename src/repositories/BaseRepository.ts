@@ -86,7 +86,7 @@ export abstract class BaseRepository<T> implements IRepository<T> {
     encryptedValue: string | null,
     entityId: number,
   ): string | null {
-    if (!encryptedValue) return null;
+    if (!encryptedValue) {return null;}
 
     // Check cache first (if available)
     if (this.cache) {

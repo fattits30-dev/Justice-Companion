@@ -1,0 +1,32 @@
+﻿2025-10-18T04:09:43.4599282Z Current runner version: '2.329.0'
+2025-10-18T04:09:43.4633099Z ##[group]Runner Image Provisioner
+2025-10-18T04:09:43.4634379Z Hosted Compute Agent
+2025-10-18T04:09:43.4635414Z Version: 20251013.424
+2025-10-18T04:09:43.4636446Z Commit: cfdd8bfed34d71a55b72df4d2e82343c3fc2bab3
+2025-10-18T04:09:43.4637592Z Build Date: 2025-10-13T20:22:23Z
+2025-10-18T04:09:43.4638767Z ##[endgroup]
+2025-10-18T04:09:43.4639607Z ##[group]Operating System
+2025-10-18T04:09:43.4640552Z Ubuntu
+2025-10-18T04:09:43.4641375Z 24.04.3
+2025-10-18T04:09:43.4642116Z LTS
+2025-10-18T04:09:43.4643065Z ##[endgroup]
+2025-10-18T04:09:43.4644071Z ##[group]Runner Image
+2025-10-18T04:09:43.4645069Z Image: ubuntu-24.04
+2025-10-18T04:09:43.4645883Z Version: 20251014.76.1
+2025-10-18T04:09:43.4647742Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20251014.76/images/ubuntu/Ubuntu2404-Readme.md
+2025-10-18T04:09:43.4650195Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20251014.76
+2025-10-18T04:09:43.4652258Z ##[endgroup]
+2025-10-18T04:09:43.4654931Z ##[group]GITHUB_TOKEN Permissions
+2025-10-18T04:09:43.4657614Z Actions: read
+2025-10-18T04:09:43.4658509Z Contents: read
+2025-10-18T04:09:43.4659417Z Metadata: read
+2025-10-18T04:09:43.4660219Z Packages: read
+2025-10-18T04:09:43.4661048Z SecurityEvents: write
+2025-10-18T04:09:43.4661992Z ##[endgroup]
+2025-10-18T04:09:43.4665434Z Secret source: Actions
+2025-10-18T04:09:43.4666687Z Prepare workflow directory
+2025-10-18T04:09:43.5421279Z Prepare all required actions
+2025-10-18T04:09:43.5479994Z Getting action download info
+2025-10-18T04:09:43.7411699Z Download action repository 'actions/checkout@v4' (SHA:08eba0b27e820071cde6df949e0beb9ba4906955)
+2025-10-18T04:09:43.9595756Z Download action repository 'github/codeql-action@v3' (SHA:42213152a85ae7569bdb6bec7bcd74cd691bfe41)
+2025-10-18T04:09:44.6993281Z Complete job name: Analyze (actions)

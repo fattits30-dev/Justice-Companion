@@ -45,14 +45,14 @@ export function usePaginatedCases({
   pageSize = 20,
   direction = 'desc',
   enabled = true,
-}: UsePaginatedCasesParams): UseInfiniteQueryResult<PaginatedResult<Case>, Error> {
+}: UsePaginatedCasesParams): UseInfiniteQueryResult<InfiniteData<PaginatedResult<Case>, string | undefined>, Error> {
   return useInfiniteQuery({
     queryKey: ['cases', 'paginated', userId, status, pageSize, direction],
 
-    queryFn: async (context): Promise<PaginatedResult<Case>> => {
+    queryFn: async ({ pageParam }: { pageParam: string | undefined }): Promise<PaginatedResult<Case>> => {
       const params: PaginationParams = {
         limit: pageSize,
-        cursor: context.pageParam,
+        cursor: pageParam,
         direction,
       };
 
@@ -104,7 +104,7 @@ export function usePaginatedCases({
 export function flattenPaginatedCases(
   data: InfiniteData<PaginatedResult<Case>, string | undefined> | undefined,
 ): Case[] {
-  if (!data) return [];
+  if (!data) {return [];}
 
   return data.pages.flatMap((page) => page.items);
 }
@@ -118,7 +118,7 @@ export function flattenPaginatedCases(
 export function getPaginatedCasesCount(
   data: InfiniteData<PaginatedResult<Case>, string | undefined> | undefined,
 ): number {
-  if (!data) return 0;
+  if (!data) {return 0;}
 
   return data.pages.reduce((total, page) => total + page.items.length, 0);
 }
