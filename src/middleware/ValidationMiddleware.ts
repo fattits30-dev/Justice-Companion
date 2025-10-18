@@ -6,6 +6,7 @@
  */
 
 import { z } from 'zod';
+import { logger } from '@/utils/logger';
 import type { AuditLogger } from '../services/AuditLogger';
 import { ipcSchemas } from './schemas';
 import { preventSqlInjection, sanitizeForLogging, sanitizeHtml } from './utils/sanitizers';
@@ -144,9 +145,7 @@ export class ValidationMiddleware {
       this.updateMetrics(channel, duration);
 
       if (duration > this.slowValidationThreshold) {
-        console.warn(
-          `[ValidationMiddleware] Slow validation for ${channel}: ${duration.toFixed(2)}ms`,
-        );
+        logger.warn('ValidationMiddleware', `Slow validation for ${channel}: ${duration.toFixed(2)}ms`);
       }
 
       return sanitized as T;
@@ -189,7 +188,7 @@ export class ValidationMiddleware {
     });
 
     if (process.env.NODE_ENV === 'development') {
-      console.warn(`[ValidationMiddleware] Registered ${this.schemas.size} validation schemas`);
+      logger.warn('ValidationMiddleware', 'Registered ${this.schemas.size} validation schemas');
     }
   }
 

@@ -2,6 +2,7 @@ import type { Case, CreateCaseInput, UpdateCaseInput } from '../models/Case';
 import type { CaseStatus } from '../models/Case';
 import type {
   ChatConversation,
+  ChatMessage,
   CreateConversationInput,
   CreateMessageInput,
   ConversationWithMessages,
@@ -10,6 +11,10 @@ import type { UserProfile, UpdateUserProfileInput } from '../models/UserProfile'
 import type { Evidence, CreateEvidenceInput, UpdateEvidenceInput } from '../models/Evidence';
 import type { LegalContext } from './ai';
 import type { CaseFact } from '../models/CaseFact';
+import type { UserFact } from '../models/UserFact';
+import type { Note } from '../models/Note';
+import type { LegalIssue } from '../models/LegalIssue';
+import type { TimelineEvent } from '../models/TimelineEvent';
 import type { User } from '../models/User';
 import type { Consent, ConsentType } from '../models/Consent';
 import type { PaginationParams, PaginatedResult } from './pagination';
@@ -592,11 +597,23 @@ export interface ConsentGetUserConsentsResponse {
 // No request parameters needed - handler exports all user data
 export type GDPRExportUserDataRequest = void;
 
+export interface GDPRExportData {
+  cases: Case[];
+  evidence: Evidence[];
+  notes: Note[];
+  legalIssues: LegalIssue[];
+  timelineEvents: TimelineEvent[];
+  conversations: ChatConversation[];
+  messages: ChatMessage[];
+  userFacts: UserFact[];
+  caseFacts: CaseFact[];
+}
+
 export interface GDPRExportUserDataResponse {
   success: true;
   exportPath?: string; // Optional: path where data was saved to disk
   exportDate: string;
-  data?: any; // Optional: the actual export data (for in-memory download)
+  data?: GDPRExportData; // Optional: the actual export data (for in-memory download)
   summary: {
     casesCount: number;
     evidenceCount: number;

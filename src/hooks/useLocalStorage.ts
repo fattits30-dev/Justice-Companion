@@ -33,6 +33,7 @@
  */
 
 import { useState, Dispatch, SetStateAction } from 'react';
+import { logger } from '../utils/logger';
 
 /**
  * Sanitize parsed data to prevent prototype pollution and other injection attacks
@@ -51,10 +52,10 @@ function sanitizeValue<T>(value: unknown): T {
   // For objects and arrays, remove dangerous properties
   const sanitized = Array.isArray(value) ? [...value] : { ...value as object };
 
-  // Delete prototype pollution vectors
-  delete (sanitized as any).__proto__;
-  delete (sanitized as any).constructor;
-  delete (sanitized as any).prototype;
+  // Delete prototype pollution vectors using Reflect.deleteProperty for type safety
+  Reflect.deleteProperty(sanitized as object, '__proto__');
+  Reflect.deleteProperty(sanitized as object, 'constructor');
+  Reflect.deleteProperty(sanitized as object, 'prototype');
 
   return sanitized as T;
 }
@@ -82,7 +83,7 @@ export function useLocalStorage<T>(
       return defaultValue;
     } catch (error) {
       // If error (localStorage unavailable or invalid JSON), return default value
-      console.warn(`Error reading localStorage key "${key}":`, error);
+      logger.warn('useLocalStorage', `Error reading localStorage key "${key}"`, { error });
       return defaultValue;
     }
   });
@@ -103,7 +104,7 @@ export function useLocalStorage<T>(
       window.localStorage.setItem(key, JSON.stringify(sanitizedValue));
     } catch (error) {
       // If error (localStorage full or unavailable), still update state
-      console.warn(`Error setting localStorage key "${key}":`, error);
+      logger.warn('useLocalStorage', `Error setting localStorage key "${key}"`, { error });
 
       // Update state even if localStorage fails
       const valueToStore = typeof value === 'function' ? (value as (prev: T) => T)(storedValue) : value;

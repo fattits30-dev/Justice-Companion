@@ -43,7 +43,7 @@ export interface IRepository<T> {
  * export class CaseRepository extends BaseRepository<Case> {
  *   protected getTableName() { return 'cases'; }
  *   protected getEncryptedFields() { return ['description']; }
- *   protected mapToDomain(row: any): Case { ... }
+ *   protected mapToDomain(row: unknown): Case { ... }
  * }
  * ```
  */
@@ -68,10 +68,10 @@ export abstract class BaseRepository<T> implements IRepository<T> {
 
   /**
    * Abstract method: Map database row to domain model
-   * @param row - Raw database row
+   * @param row - Raw database row (use type guards to safely access fields)
    * @returns Domain model instance
    */
-  protected abstract mapToDomain(row: any): T;
+  protected abstract mapToDomain(row: unknown): T;
 
   /**
    * Decrypt a single field with caching
@@ -199,7 +199,8 @@ export abstract class BaseRepository<T> implements IRepository<T> {
       success: true,
     });
 
-    const rows = this.db.prepare(query).all(...queryParams) as Array<{ rowid: number; [key: string]: any }>;
+    type SqlRow = Record<string, unknown> & { rowid: number };
+    const rows = this.db.prepare(query).all(...queryParams) as SqlRow[];
 
     // Check if there are more results
     const hasMore = rows.length > limit;

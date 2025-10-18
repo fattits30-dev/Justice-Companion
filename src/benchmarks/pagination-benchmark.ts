@@ -20,6 +20,7 @@ import { EncryptionService } from '../services/EncryptionService';
 import { AuditLogger } from '../services/AuditLogger';
 import { DecryptionCache } from '../services/DecryptionCache';
 import { CaseRepositoryPaginated } from '../repositories/CaseRepositoryPaginated';
+import { logger } from '../utils/logger';
 
 // Benchmark configuration
 const DATASET_SIZES = [100, 500, 1000];
@@ -102,7 +103,7 @@ function populateDatabase(
     });
   }
 
-  console.log(`✓ Populated database with ${count} cases`);
+  logger.info('BenchmarkSetup', `Populated database with ${count} cases`);
 }
 
 /**
@@ -163,9 +164,9 @@ function runBenchmark(datasetSize: number): {
   findPaginated: BenchmarkResult;
   improvement: number;
 } {
-  console.log(`\n${'='.repeat(60)}`);
-  console.log(`Benchmark: ${datasetSize} cases`);
-  console.log('='.repeat(60));
+  logger.info('Benchmark', `\n${'='.repeat(60)}`);
+  logger.info('Benchmark', `Dataset: ${datasetSize} cases`);
+  logger.info('Benchmark', '='.repeat(60));
 
   // Setup
   const db = setupTestDatabase();
@@ -202,71 +203,71 @@ function runBenchmark(datasetSize: number): {
  * Print results table
  */
 function printResults(results: ReturnType<typeof runBenchmark>[]): void {
-  console.log('\n' + '='.repeat(80));
-  console.log('PERFORMANCE BENCHMARK RESULTS');
-  console.log('='.repeat(80));
+  logger.info('BenchmarkResults', '\n' + '='.repeat(80));
+  logger.info('BenchmarkResults', 'PERFORMANCE BENCHMARK RESULTS');
+  logger.info('BenchmarkResults', '='.repeat(80));
 
   results.forEach((result) => {
-    console.log(`\n📊 Dataset: ${result.findAll.datasetSize} cases`);
-    console.log('-'.repeat(80));
+    logger.info('BenchmarkResults', `\nDataset: ${result.findAll.datasetSize} cases`);
+    logger.info('BenchmarkResults', '-'.repeat(80));
 
-    console.log('\nfindAll() - Load ALL cases:');
-    console.log(`  ⏱️  Load Time:       ${result.findAll.loadTimeMs} ms`);
-    console.log(`  🔓 Decryptions:     ${result.findAll.decryptionCount}`);
-    console.log(`  💾 Memory Used:     ${result.findAll.memoryUsedMB} MB`);
+    logger.info('BenchmarkResults', '\nfindAll() - Load ALL cases:');
+    logger.info('BenchmarkResults', `  Load Time:       ${result.findAll.loadTimeMs} ms`);
+    logger.info('BenchmarkResults', `  Decryptions:     ${result.findAll.decryptionCount}`);
+    logger.info('BenchmarkResults', `  Memory Used:     ${result.findAll.memoryUsedMB} MB`);
 
-    console.log('\nfindPaginated() - Load FIRST PAGE only (20 items):');
-    console.log(`  ⏱️  Load Time:       ${result.findPaginated.loadTimeMs} ms`);
-    console.log(`  🔓 Decryptions:     ${result.findPaginated.decryptionCount}`);
-    console.log(`  💾 Memory Used:     ${result.findPaginated.memoryUsedMB} MB`);
+    logger.info('BenchmarkResults', '\nfindPaginated() - Load FIRST PAGE only (20 items):');
+    logger.info('BenchmarkResults', `  Load Time:       ${result.findPaginated.loadTimeMs} ms`);
+    logger.info('BenchmarkResults', `  Decryptions:     ${result.findPaginated.decryptionCount}`);
+    logger.info('BenchmarkResults', `  Memory Used:     ${result.findPaginated.memoryUsedMB} MB`);
 
     const improvementColor = result.improvement >= 60 ? '🟢' : result.improvement >= 40 ? '🟡' : '🔴';
-    console.log(`\n${improvementColor} Performance Improvement: ${result.improvement}%`);
+    logger.info('BenchmarkResults', `\n${improvementColor} Performance Improvement: ${result.improvement}%`);
 
     if (result.improvement >= 60) {
-      console.log('   ✅ TARGET ACHIEVED (60-80% improvement)');
+      logger.info('BenchmarkResults', '   TARGET ACHIEVED (60-80% improvement)');
     } else if (result.improvement >= 40) {
-      console.log('   ⚠️  BELOW TARGET (expected 60-80%)');
+      logger.warn('BenchmarkResults', '   BELOW TARGET (expected 60-80%)');
     } else {
-      console.log('   ❌ SIGNIFICANT UNDERPERFORMANCE');
+      logger.error('BenchmarkResults', '   SIGNIFICANT UNDERPERFORMANCE');
     }
   });
 
   // Overall summary
-  console.log('\n' + '='.repeat(80));
-  console.log('SUMMARY');
-  console.log('='.repeat(80));
+  logger.info('BenchmarkResults', '\n' + '='.repeat(80));
+  logger.info('BenchmarkResults', 'SUMMARY');
+  logger.info('BenchmarkResults', '='.repeat(80));
 
   const avgImprovement = Math.round(
     results.reduce((sum, r) => sum + r.improvement, 0) / results.length,
   );
 
-  console.log(`\nAverage Improvement: ${avgImprovement}%`);
-  console.log(`Target Range: 60-80%`);
+  logger.info('BenchmarkResults', `\nAverage Improvement: ${avgImprovement}%`);
+  logger.info('BenchmarkResults', `Target Range: 60-80%`);
 
   if (avgImprovement >= 60 && avgImprovement <= 80) {
-    console.log('\n✅ PERFORMANCE TARGET ACHIEVED');
+    logger.info('BenchmarkResults', '\nPERFORMANCE TARGET ACHIEVED');
   } else if (avgImprovement > 80) {
-    console.log('\n🎯 EXCEEDED TARGET - Excellent performance!');
+    logger.info('BenchmarkResults', '\nEXCEEDED TARGET - Excellent performance!');
   } else {
-    console.log('\n⚠️  TARGET NOT MET - Further optimization needed');
+    logger.warn('BenchmarkResults', '\nTARGET NOT MET - Further optimization needed');
   }
 
-  console.log('\nKey Insight:');
-  console.log(`With pagination, you only decrypt ${PAGE_SIZE} items instead of ALL items.`);
-  console.log(`For a 1000-case dataset, that's ${PAGE_SIZE}/1000 = 2% of the work!`);
-  console.log('='.repeat(80) + '\n');
+  logger.info('BenchmarkResults', '\nKey Insight:');
+  logger.info('BenchmarkResults', `With pagination, you only decrypt ${PAGE_SIZE} items instead of ALL items.`);
+  logger.info('BenchmarkResults', `For a 1000-case dataset, that's ${PAGE_SIZE}/1000 = 2% of the work!`);
+  logger.info('BenchmarkResults', '='.repeat(80) + '\n');
 }
 
 /**
  * Main benchmark execution
  */
 function main(): void {
-  console.log('🚀 Starting Pagination Performance Benchmark\n');
-  console.log(`Configuration:`);
-  console.log(`  - Page Size: ${PAGE_SIZE} items`);
-  console.log(`  - Dataset Sizes: ${DATASET_SIZES.join(', ')} cases`);
-  console.log(`  - Target Improvement: 60-80%\n`);
+  logger.info('Benchmark', 'Starting Pagination Performance Benchmark\n');
+  logger.info('Benchmark', `Configuration:`);
+  logger.info('Benchmark', `  - Page Size: ${PAGE_SIZE} items`);
+  logger.info('Benchmark', `  - Dataset Sizes: ${DATASET_SIZES.join(', ')} cases`);
+  logger.info('Benchmark', `  - Target Improvement: 60-80%\n`);
 
   const results = DATASET_SIZES.map((size) => runBenchmark(size));
 

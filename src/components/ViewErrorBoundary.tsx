@@ -10,6 +10,7 @@
  */
 
 import { Component, ErrorInfo, ReactNode } from 'react';
+import { logger } from '../utils/logger';
 
 interface ViewErrorBoundaryProps {
   children: ReactNode;
@@ -43,11 +44,8 @@ export class ViewErrorBoundary extends Component<ViewErrorBoundaryProps, ViewErr
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     // Log to console for immediate visibility
-    console.error(`[ViewErrorBoundary:${this.props.viewName}] Caught error:`, error);
-    console.error(
-      `[ViewErrorBoundary:${this.props.viewName}] Component stack:`,
-      errorInfo.componentStack,
-    );
+    logger.error('ViewErrorBoundary:${this.props.viewName}', 'Caught error:', { error: error });
+    logger.error('ViewErrorBoundary:${this.props.viewName}', 'Component stack:', { error: errorInfo.componentStack, });
 
     // Send to main process via IPC for persistent logging
     this.logErrorToMainProcess(error, errorInfo);
@@ -77,14 +75,14 @@ export class ViewErrorBoundary extends Component<ViewErrorBoundaryProps, ViewErr
           })
           .catch((logError) => {
             // Silently fail if logging fails - we don't want to crash from logging
-            console.error('[ViewErrorBoundary] Failed to log error to main process:', logError);
+            logger.error('ViewErrorBoundary', 'Failed to log error to main process:', { error: logError });
           });
       } else {
-        console.warn('[ViewErrorBoundary] justiceAPI.logUIError not available');
+        logger.warn('ViewErrorBoundary', 'justiceAPI.logUIError not available');
       }
     } catch (logError) {
       // Silently fail if logging fails
-      console.error('[ViewErrorBoundary] Exception while logging error:', logError);
+      logger.error('ViewErrorBoundary', 'Exception while logging error:', { error: logError });
     }
   }
 

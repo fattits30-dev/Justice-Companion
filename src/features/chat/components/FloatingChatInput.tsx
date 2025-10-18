@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, type KeyboardEvent, type ChangeEvent } from 'react';
+import { logger } from '@/utils/logger';
 import { BiMicrophone, BiPaperclip, BiSend, BiX } from 'react-icons/bi';
 import { useVoiceRecognition } from '../../../hooks/useVoiceRecognition';
 
@@ -134,11 +135,11 @@ export function FloatingChatInput({
             extractedText: uploadResult.extractedText,
           });
         } else {
-          console.error('File upload failed:', uploadResult.error);
+          logger.error('App', 'File upload failed:', { error: uploadResult.error });
         }
       }
     } catch (error) {
-      console.error('File selection error:', error);
+      logger.error('App', 'File selection error:', { error: error });
     }
   };
 

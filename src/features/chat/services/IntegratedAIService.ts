@@ -9,6 +9,7 @@ import type {
   AIStatus,
   AIChatRequest,
   AIResponse,
+  LegalContext,
 } from '../../../types/ai';
 import path from 'path';
 import { app } from 'electron';
@@ -20,8 +21,33 @@ import os from 'os';
  * Runs Qwen 3 8B locally with AMD Vulkan GPU acceleration.
  * No external dependencies - complete sovereignty.
  */
-// Use eslint-disable for node-llama-cpp types (external library with complex types)
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
+/**
+ * Minimal type definitions for node-llama-cpp library (no TS types exported)
+ * Using unknown for type safety, with runtime type assertions where needed
+ */
+interface LlamaInstance {
+  gpu?: string | null;
+  loadModel(options: { modelPath: string; gpuLayers?: string | number; defaultContextFlashAttention?: boolean }): Promise<LlamaModel>;
+  dispose(): Promise<void>;
+}
+
+interface LlamaModel {
+  _trainContextSize?: number;
+  createContext(options: { contextSize?: number; batchSize?: number }): Promise<LlamaContext>;
+  dispose(): Promise<void>;
+}
+
+interface LlamaContext {
+  getSequence(): LlamaSequence;
+  dispose(): Promise<void>;
+}
+
+interface LlamaSequence {
+  dispose(): Promise<void>;
+  // node-llama-cpp methods for text generation
+  [key: string]: unknown;
+}
 
 interface CaseFactsRepository {
   findByCaseId(caseId: number): CaseFact[];
@@ -35,9 +61,9 @@ interface CaseFact {
 
 export class IntegratedAIService {
   private config: AIConfig;
-  private llama: any = null; // node-llama-cpp Llama instance
-  private model: any = null; // node-llama-cpp LlamaModel
-  private context: any = null; // node-llama-cpp LlamaContext
+  private llama: LlamaInstance | null = null;
+  private model: LlamaModel | null = null;
+  private context: LlamaContext | null = null;
   private isInitialized = false;
   private modelFileName = 'Qwen_Qwen3-8B-Q4_K_M.gguf';
   private modelPath: string;
@@ -83,11 +109,14 @@ export class IntegratedAIService {
       });
 
       // Initialize with AMD Vulkan GPU auto-detection
-      this.llama = await getLlama({
+      this.llama = (await getLlama({
         logLevel: LlamaLogLevel.warn,
-      });
+      })) as unknown as LlamaInstance;
 
-      // Log detected GPU
+      // Log detected GPU (null check)
+      if (!this.llama) {
+        throw new Error('Failed to initialize Llama instance');
+      }
       const gpu = this.llama.gpu;
       errorLogger.logError('GPU detected', {
         type: 'info',
@@ -117,6 +146,11 @@ export class IntegratedAIService {
         defaultContextFlashAttention: true, // Flash Attention for memory efficiency
       });
 
+      // Null check for model
+      if (!this.model) {
+        throw new Error('Failed to load model');
+      }
+
       // Auto-detect context size from model capabilities with VRAM awareness
       // For 8GB VRAM: Model (~4.5GB) + KV cache + overhead = safe limit ~16K tokens
       // For 16GB+ VRAM: Can use 90% of model's max (29,491 for 32K models)
@@ -143,6 +177,11 @@ export class IntegratedAIService {
         contextSize, // Auto-detected from model (90% of 32,768 = 29,491 tokens)
         ...(this.config.batchSize && { batchSize: this.config.batchSize }), // Optional batch size optimization
       });
+
+      // Null check for context
+      if (!this.context) {
+        throw new Error('Failed to create context');
+      }
 
       errorLogger.logError('IntegratedAIService fully initialized', {
         type: 'info',
@@ -173,7 +212,7 @@ export class IntegratedAIService {
    * Get Qwen 3 optimized system prompt with fact-gathering rules
    * Qwen 3 supports <think> tags for reasoning and [[call: function()]] for tool use
    */
-  private getQwen3SystemPrompt(context?: any, facts?: CaseFact[]): string {
+  private getQwen3SystemPrompt(context?: unknown, facts?: CaseFact[]): string {
     // Build base prompt with fact-gathering rules
     const basePrompt = `You are a UK legal information assistant with ADMINISTRATIVE POWERS.
 
@@ -249,7 +288,8 @@ Use these facts as your memory. Reference them in your responses.`;
 
     // If we have RAG context, use buildSystemPrompt but inject fact-gathering rules
     if (context) {
-      const ragPrompt = buildSystemPrompt(context);
+      const legalContext = context as LegalContext;
+      const ragPrompt = buildSystemPrompt(legalContext);
       // Prepend fact-gathering rules to RAG prompt
       return basePrompt + '\n\n--- RAG CONTEXT ---\n' + ragPrompt;
     }
@@ -357,7 +397,7 @@ Use these facts as your memory. Reference them in your responses.`;
     onThinkToken?: (token: string) => void,
     onSources?: (sources: string[]) => void,
   ): Promise<void> {
-    let contextSequence: any = null; // node-llama-cpp LlamaContextSequence
+    let contextSequence: LlamaSequence | null = null; // node-llama-cpp LlamaContextSequence
 
     try {
       // Ensure initialized
@@ -373,6 +413,11 @@ Use these facts as your memory. Reference them in your responses.`;
 
       // Build system prompt
       const systemPrompt = this.getQwen3SystemPrompt(request.context);
+
+      // Null check for context
+      if (!this.context) {
+        throw new Error('Context not initialized');
+      }
 
       // Create FRESH sequence that will be disposed after use
       // This prevents KV cache accumulation and VRAM overflow
@@ -398,7 +443,7 @@ Use these facts as your memory. Reference them in your responses.`;
 
       errorLogger.logError('Starting Qwen 3 8B streaming inference', {
         type: 'info',
-        gpu: this.llama.gpu,
+        gpu: this.llama?.gpu || 'CPU',
       });
 
       let accumulatedContent = '';
@@ -528,7 +573,7 @@ Use these facts as your memory. Reference them in your responses.`;
     onComplete: () => void,
     onError: (error: string) => void,
   ): Promise<void> {
-    let contextSequence: any = null; // node-llama-cpp LlamaContextSequence
+    let contextSequence: LlamaSequence | null = null; // node-llama-cpp LlamaContextSequence
 
     try {
       // Ensure initialized
@@ -558,6 +603,11 @@ Use these facts as your memory. Reference them in your responses.`;
 
       // Build system prompt with facts
       const systemPrompt = this.getQwen3SystemPrompt(request.context, facts);
+
+      // Null check for context
+      if (!this.context) {
+        throw new Error('Context not initialized');
+      }
 
       // Create fresh sequence
       contextSequence = this.context.getSequence();

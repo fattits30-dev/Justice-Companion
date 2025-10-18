@@ -1,6 +1,7 @@
 import Database from 'better-sqlite3';
 import { readFileSync } from 'fs';
 import path from 'path';
+import type { AuditLogger } from '../services/AuditLogger';
 
 /**
  * Test database helper for running integration tests
@@ -145,7 +146,7 @@ export async function cleanupTestDatabase(_dbPath: string): Promise<void> {
  * Creates an AuditLogger using an in-memory database
  */
  
-export function getTestAuditLogger(_dbPath?: string): any {
+export function getTestAuditLogger(_dbPath?: string): AuditLogger {
   // Import AuditLogger dynamically to avoid circular dependencies
   const helper = new TestDatabaseHelper();
   const db = helper.initialize();

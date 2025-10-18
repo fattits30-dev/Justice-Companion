@@ -1,3 +1,5 @@
+import { logger } from '@/utils/logger';
+
 /**
  * SecureStorageService - Electron safeStorage wrapper for secure API key storage
  *
@@ -49,7 +51,7 @@ export class SecureStorageService {
 
       this.initialized = true;
     } catch (error) {
-      console.error('[SecureStorage] Failed to initialize:', error);
+      logger.error('SecureStorage', 'Failed to initialize:', { error: error });
       throw new Error('Failed to initialize secure storage');
     }
   }
@@ -168,7 +170,7 @@ export class SecureStorageService {
     try {
       await window.justiceAPI.secureStorage.clearAll();
     } catch (error) {
-      console.error('[SecureStorage] Failed to clear all keys:', error);
+      logger.error('SecureStorage', 'Failed to clear all keys:', { error: error });
       throw new Error('Failed to clear all API keys');
     }
   }

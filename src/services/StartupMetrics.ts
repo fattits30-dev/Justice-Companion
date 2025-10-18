@@ -3,6 +3,8 @@
  * Monitors and logs critical startup phases for Justice Companion
  */
 
+import { logger } from '../utils/logger';
+
 export interface StartupTimestamps {
   moduleLoad: number; // When main.ts is first loaded
   appReady: number; // When Electron app.whenReady fires
@@ -163,115 +165,113 @@ export class StartupMetrics {
   logStartupMetrics(): void {
     const metrics = this.calculateMetrics();
 
-    /* eslint-disable no-console */
-    console.log('\n╔════════════════════════════════════════════════════════════╗');
-    console.log('║              STARTUP PERFORMANCE METRICS                    ║');
-    console.log('╠════════════════════════════════════════════════════════════╣');
-    console.log('║                                                              ║');
-    console.log('║  📊 Phase Timing (from app ready)                           ║');
-    console.log('║  ─────────────────────────────────                         ║');
-    console.log(
+    logger.info('StartupMetrics', '\n╔════════════════════════════════════════════════════════════╗');
+    logger.info('StartupMetrics', '║              STARTUP PERFORMANCE METRICS                    ║');
+    logger.info('StartupMetrics', '╠════════════════════════════════════════════════════════════╣');
+    logger.info('StartupMetrics', '║                                                              ║');
+    logger.info('StartupMetrics', '║  Phase Timing (from app ready)                              ║');
+    logger.info('StartupMetrics', '║  ─────────────────────────────────                          ║');
+    logger.info('StartupMetrics',
       `║  Loading window shown:         ${this.formatWithIndicator(metrics.timeToLoadingWindow, {
         good: 50,
         warning: 100,
       }).padEnd(20)} ║`,
     );
-    console.log(
+    logger.info('StartupMetrics',
       `║  Critical services ready:      ${this.formatWithIndicator(metrics.timeToCriticalServices, {
         good: 150,
         warning: 250,
       }).padEnd(20)} ║`,
     );
-    console.log(
+    logger.info('StartupMetrics',
       `║  Critical handlers registered: ${this.formatWithIndicator(metrics.timeToCriticalHandlers, {
         good: 160,
         warning: 260,
       }).padEnd(20)} ║`,
     );
-    console.log(
+    logger.info('StartupMetrics',
       `║  Main window created:          ${this.formatWithIndicator(
         metrics.timeToMainWindowCreated,
         { good: 200, warning: 300 },
       ).padEnd(20)} ║`,
     );
-    console.log(
+    logger.info('StartupMetrics',
       `║  Main window shown:            ${this.formatWithIndicator(metrics.timeToMainWindowShown, {
         good: 250,
         warning: 400,
       }).padEnd(20)} ║`,
     );
-    console.log(
+    logger.info('StartupMetrics',
       `║  Non-critical services ready:  ${this.formatDuration(
         metrics.timeToNonCriticalServices,
       ).padEnd(20)} ║`,
     );
-    console.log(
+    logger.info('StartupMetrics',
       `║  All handlers registered:      ${this.formatDuration(metrics.timeToAllHandlers).padEnd(
         20,
       )} ║`,
     );
-    console.log('║                                                              ║');
-    console.log('║  ⏱️  Phase Deltas                                           ║');
-    console.log('║  ─────────────────                                         ║');
-    console.log(
+    logger.info('StartupMetrics', '║                                                              ║');
+    logger.info('StartupMetrics', '║  Phase Deltas                                                ║');
+    logger.info('StartupMetrics', '║  ─────────────────                                           ║');
+    logger.info('StartupMetrics',
       `║  Loading → Services:           ${this.formatDuration(metrics.loadingToServices).padEnd(
         20,
       )} ║`,
     );
-    console.log(
+    logger.info('StartupMetrics',
       `║  Services → Handlers:          ${this.formatDuration(metrics.servicesToHandlers).padEnd(
         20,
       )} ║`,
     );
-    console.log(
+    logger.info('StartupMetrics',
       `║  Handlers → Main Window:       ${this.formatDuration(metrics.handlersToMainWindow).padEnd(
         20,
       )} ║`,
     );
-    console.log(
+    logger.info('StartupMetrics',
       `║  Main Window → Non-Critical:   ${this.formatDuration(
         metrics.mainWindowToNonCritical,
       ).padEnd(20)} ║`,
     );
-    console.log(
+    logger.info('StartupMetrics',
       `║  Non-Critical → Complete:      ${this.formatDuration(metrics.nonCriticalToComplete).padEnd(
         20,
       )} ║`,
     );
-    console.log('║                                                              ║');
-    console.log('║  🎯 Summary                                                 ║');
-    console.log('║  ──────────                                                ║');
-    console.log(
+    logger.info('StartupMetrics', '║                                                              ║');
+    logger.info('StartupMetrics', '║  Summary                                                     ║');
+    logger.info('StartupMetrics', '║  ──────────                                                  ║');
+    logger.info('StartupMetrics',
       `║  Perceived startup time:       ${this.formatWithIndicator(metrics.perceivedStartupTime, {
         good: 400,
         warning: 600,
       }).padEnd(20)} ║`,
     );
-    console.log(
+    logger.info('StartupMetrics',
       `║  Total startup time:           ${this.formatWithIndicator(metrics.totalStartupTime, {
         good: 500,
         warning: 800,
       }).padEnd(20)} ║`,
     );
-    console.log('║                                                              ║');
-    console.log('╚════════════════════════════════════════════════════════════╝');
+    logger.info('StartupMetrics', '║                                                              ║');
+    logger.info('StartupMetrics', '╚════════════════════════════════════════════════════════════╝');
 
     // Additional performance recommendations
     if (metrics.perceivedStartupTime > 600) {
-      console.log('\n⚠️  Performance Recommendations:');
+      logger.warn('StartupMetrics', '\nPerformance Recommendations:');
       if (metrics.timeToLoadingWindow > 100) {
-        console.log('  • Loading window is slow to show - check app.whenReady() early operations');
+        logger.warn('StartupMetrics', '  • Loading window is slow to show - check app.whenReady() early operations');
       }
       if (metrics.timeToCriticalServices > 250) {
-        console.log('  • Critical services initialization is slow - consider parallelizing');
+        logger.warn('StartupMetrics', '  • Critical services initialization is slow - consider parallelizing');
       }
       if (metrics.timeToMainWindowShown > 400) {
-        console.log('  • Main window taking too long - check renderer bundle size');
+        logger.warn('StartupMetrics', '  • Main window taking too long - check renderer bundle size');
       }
     } else if (metrics.perceivedStartupTime < 400) {
-      console.log('\n✅ Excellent startup performance! Target achieved.');
+      logger.info('StartupMetrics', '\nExcellent startup performance! Target achieved.');
     }
-    /* eslint-enable no-console */
   }
 
   /**

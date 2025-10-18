@@ -8,6 +8,7 @@
 import { performance } from 'perf_hooks';
 import * as fs from 'fs';
 import * as path from 'path';
+import { logger } from '../utils/logger';
 
 interface PerformanceMetrics {
   renderPerformance: {
@@ -107,7 +108,7 @@ class SettingsPerformanceAnalyzer {
   /**
    * Simulate tab switch operation
    */
-  private simulateTabSwitch(from: string, to: string): void {
+  private simulateTabSwitch(_from: string, _to: string): void {
     // Simulate unmounting old tab content
     const unmountTime = Math.random() * 5 + 2; // 2-7ms
 
@@ -186,7 +187,7 @@ class SettingsPerformanceAnalyzer {
   /**
    * Simulate localStorage read
    */
-  private simulateLocalStorageRead(key: string): any {
+  private simulateLocalStorageRead(key: string): unknown {
     // Simulate localStorage.getItem
     const simulatedDelay = Math.random() * 0.5; // 0-0.5ms
     const start = Date.now();
@@ -201,9 +202,9 @@ class SettingsPerformanceAnalyzer {
   /**
    * Simulate localStorage write
    */
-  private simulateLocalStorageWrite(key: string, value: any): void {
-    // Simulate JSON.stringify
-    const stringified = JSON.stringify(value);
+  private simulateLocalStorageWrite(_key: string, value: unknown): void {
+    // Simulate JSON.stringify (the call itself simulates the overhead)
+    JSON.stringify(value);
 
     // Simulate localStorage.setItem
     const simulatedDelay = Math.random() * 1 + 0.5; // 0.5-1.5ms
@@ -216,7 +217,7 @@ class SettingsPerformanceAnalyzer {
   /**
    * Generate test data for a setting
    */
-  private generateTestData(key: string): any {
+  private generateTestData(key: string): unknown {
     const dataTypes: Record<string, any> = {
       darkMode: true,
       fontSize: 'medium',
@@ -428,19 +429,19 @@ class SettingsPerformanceAnalyzer {
    * Run complete performance analysis
    */
   public async runAnalysis(): Promise<void> {
-    console.log('🔍 Starting Settings Module Performance Analysis...\n');
+    logger.info('PerformanceAnalysis', 'Starting Settings Module Performance Analysis...\n');
 
     // Run all measurements
-    console.log('📊 Measuring tab switching performance...');
+    logger.info('PerformanceAnalysis', 'Measuring tab switching performance...');
     this.measureTabSwitching();
 
-    console.log('💾 Profiling localStorage operations...');
+    logger.info('PerformanceAnalysis', 'Profiling localStorage operations...');
     this.profileLocalStorage();
 
-    console.log('🧠 Analyzing memory usage...');
+    logger.info('PerformanceAnalysis', 'Analyzing memory usage...');
     this.analyzeMemoryUsage();
 
-    console.log('🏗️ Analyzing component structure...');
+    logger.info('PerformanceAnalysis', 'Analyzing component structure...');
     this.analyzeComponentStructure();
 
     // Generate report
@@ -515,10 +516,10 @@ Implementing all recommended optimizations would result in:
     const reportPath = path.join(process.cwd(), 'settings-performance-report.md');
     fs.writeFileSync(reportPath, report);
 
-    console.log('\n✅ Performance analysis complete!');
-    console.log(`📄 Report saved to: ${reportPath}`);
-    console.log('\nKey Findings:');
-    console.log(this.generateBottleneckAnalysis());
+    logger.info('PerformanceAnalysis', '\nPerformance analysis complete!');
+    logger.info('PerformanceAnalysis', `Report saved to: ${reportPath}`);
+    logger.info('PerformanceAnalysis', '\nKey Findings:');
+    logger.info('PerformanceAnalysis', this.generateBottleneckAnalysis());
   }
 }
 

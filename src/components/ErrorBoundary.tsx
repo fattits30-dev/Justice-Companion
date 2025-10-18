@@ -9,6 +9,7 @@
  */
 
 import { Component, ErrorInfo, ReactNode } from 'react';
+import { logger } from '@/utils/logger';
 // errorLogger removed - uses fs which doesn't work in renderer process
 
 interface ErrorBoundaryProps {
@@ -40,15 +41,9 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    // Log to console for immediate visibility
-    console.error('[ErrorBoundary] Caught error:', error);
-    console.error('[ErrorBoundary] Component stack:', errorInfo.componentStack);
-    console.error('[ErrorBoundary] Error details:', {
-      component: 'ErrorBoundary',
-      componentStack: errorInfo.componentStack,
-      errorMessage: error.message,
-      errorStack: error.stack,
-    });
+    // Log for immediate visibility
+    logger.error('ErrorBoundary', 'Caught error', { error: error.message, stack: error.stack });
+    logger.error('ErrorBoundary', 'Component stack', { componentStack: errorInfo.componentStack });
 
     // Send to main process via IPC for persistent logging
     this.logErrorToMainProcess(error, errorInfo);
@@ -78,14 +73,14 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
           })
           .catch((logError) => {
             // Silently fail if logging fails - we don't want to crash from logging
-            console.error('[ErrorBoundary] Failed to log error to main process:', logError);
+            logger.error('ErrorBoundary', 'Failed to log error to main process', { logError });
           });
       } else {
-        console.warn('[ErrorBoundary] justiceAPI.logUIError not available');
+        logger.warn('ErrorBoundary', 'justiceAPI.logUIError not available');
       }
     } catch (logError) {
       // Silently fail if logging fails
-      console.error('[ErrorBoundary] Exception while logging error:', logError);
+      logger.error('ErrorBoundary', 'Exception while logging error', { logError });
     }
   }
 

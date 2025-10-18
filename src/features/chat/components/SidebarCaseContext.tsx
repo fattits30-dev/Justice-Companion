@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { logger } from '@/utils/logger';
 import { Scale, MessageSquarePlus, ChevronDown, Trash2, Edit2 } from 'lucide-react';
 import type { ChatConversation } from '../../../models/ChatConversation';
 import type { Case } from '../../../models/Case';
@@ -70,7 +71,7 @@ const SidebarCaseContext: React.FC<SidebarCaseContextProps> = ({
           setCases(response.data);
         }
       } catch (error) {
-        console.error('Failed to load cases:', error);
+        logger.error('App', 'Failed to load cases:', { error: error });
       }
     };
 

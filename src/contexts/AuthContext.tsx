@@ -8,6 +8,7 @@ import {
   ReactNode,
 } from 'react';
 import type { User } from '@/models/User';
+import { logger } from '../utils/logger';
 
 /**
  * Authentication Context for managing user authentication state globally.
@@ -61,7 +62,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           setUser(result.data);
         }
       } catch (error) {
-        console.error('[AuthContext] Failed to check auth status:', error);
+        logger.error('AuthContext', 'Failed to check auth status:', { error: error });
       } finally {
         setIsLoading(false);
       }
@@ -81,7 +82,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const result = await window.justiceAPI.loginUser(username, password, rememberMe);
 
         if (!result.success) {
-          console.error('[AuthContext] Login failed with error:', result.error);
+          logger.error('AuthContext', 'Login failed with error:', { error: result.error });
           throw new Error(result.error || 'Login failed');
         }
 
@@ -105,7 +106,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       await window.justiceAPI.logoutUser();
       setUser(null);
     } catch (error) {
-      console.error('Logout failed:', error);
+      logger.error('App', 'Logout failed:', { error: error });
       // Clear user state anyway on logout failure
       setUser(null);
     } finally {
@@ -147,7 +148,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setUser(null);
       }
     } catch (error) {
-      console.error('Failed to refresh user:', error);
+      logger.error('App', 'Failed to refresh user:', { error: error });
       setUser(null);
     }
   }, []);

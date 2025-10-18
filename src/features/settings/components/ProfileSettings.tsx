@@ -13,6 +13,7 @@
  */
 
 import { SkeletonText } from '@/components/ui/Skeleton';
+import { logger } from '@/utils/logger';
 import { LoadingSpinner } from '@/components/ui/Spinner';
 import { Shield, User } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
@@ -167,7 +168,7 @@ export function ProfileSettings({ toast }: ProfileSettingsProps): JSX.Element {
           toast.error('Failed to load profile');
         }
       } catch (error) {
-        console.error('Failed to load user profile:', error);
+        logger.error('App', 'Failed to load user profile:', { error: error });
         toast.error('Failed to load profile');
       } finally {
         setIsLoadingProfile(false);
@@ -209,7 +210,7 @@ export function ProfileSettings({ toast }: ProfileSettingsProps): JSX.Element {
         toast.error('Failed to update profile');
       }
     } catch (error) {
-      console.error('Failed to update profile:', error);
+      logger.error('App', 'Failed to update profile:', { error: error });
       toast.error('Failed to update profile. Please try again.');
     } finally {
       setIsSavingProfile(false);
@@ -248,7 +249,7 @@ export function ProfileSettings({ toast }: ProfileSettingsProps): JSX.Element {
         setPasswordError(result.error || 'Failed to change password');
       }
     } catch (error) {
-      console.error('Password change error:', error);
+      logger.error('App', 'Password change error:', { error: error });
       toast.error('Failed to change password. Please try again.');
     } finally {
       setIsSubmittingPassword(false);

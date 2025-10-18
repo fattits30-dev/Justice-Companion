@@ -8,6 +8,7 @@
  */
 
 import { secureStorage } from '@/services/SecureStorageService';
+import { logger } from '@/utils/logger';
 
 /**
  * Storage keys that need migration
@@ -55,7 +56,7 @@ function getFromLocalStorage(key: string): string | null {
     }
     return localStorage.getItem(key);
   } catch (error) {
-    console.error(`[MigrateToSecureStorage] Failed to read from localStorage for key "${key}":`, error);
+    logger.error('MigrateToSecureStorage', `Failed to read from localStorage for key "${key}"`, { error });
     return null;
   }
 }
@@ -71,7 +72,7 @@ function removeFromLocalStorage(key: string): boolean {
     localStorage.removeItem(key);
     return true;
   } catch (error) {
-    console.error(`[MigrateToSecureStorage] Failed to remove from localStorage for key "${key}":`, error);
+    logger.error('MigrateToSecureStorage', `Failed to remove from localStorage for key "${key}"`, { error });
     return false;
   }
 }
@@ -116,14 +117,14 @@ async function migrateKey(key: string): Promise<MigrationResult> {
     // Remove from localStorage after successful migration
     const removed = removeFromLocalStorage(key);
     if (!removed) {
-      console.warn(`[MigrateToSecureStorage] Key "${key}" migrated but could not be removed from localStorage`);
+      logger.warn('MigrateToSecureStorage', `Key "${key}" migrated but could not be removed from localStorage`);
     }
 
     result.migrated = true;
     return result;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error(`[MigrateToSecureStorage] Failed to migrate key "${key}":`, errorMessage);
+    logger.error('MigrateToSecureStorage', `Failed to migrate key "${key}"`, { error: errorMessage });
     result.error = errorMessage;
     return result;
   }
@@ -162,10 +163,11 @@ export async function migrateToSecureStorage(): Promise<MigrationSummary> {
     // Check if encryption is available
     const encryptionAvailable = secureStorage.isEncryptionAvailable();
     if (!encryptionAvailable) {
-      console.warn(
-        '[MigrateToSecureStorage] OS-native encryption not available. ' +
+      logger.warn(
+        'MigrateToSecureStorage',
+        'OS-native encryption not available. ' +
         'API keys will be stored without encryption. ' +
-        'Consider installing gnome-keyring or kwallet on Linux.',
+        'Consider installing gnome-keyring or kwallet on Linux.'
       );
     }
 
@@ -187,14 +189,15 @@ export async function migrateToSecureStorage(): Promise<MigrationSummary> {
 
     // Log summary
     if (summary.failedKeys > 0) {
-      console.error(
-        `[MigrateToSecureStorage] Migration completed with errors: ${summary.failedKeys} key(s) failed`,
+      logger.error(
+        'MigrateToSecureStorage',
+        `Migration completed with errors: ${summary.failedKeys} key(s) failed`
       );
     }
 
     return summary;
   } catch (error) {
-    console.error('[MigrateToSecureStorage] Migration failed with critical error:', error);
+    logger.error('MigrateToSecureStorage', 'Migration failed with critical error', { error });
     summary.success = false;
     return summary;
   }
@@ -226,7 +229,7 @@ export async function isMigrationNeeded(): Promise<boolean> {
     }
     return false;
   } catch (error) {
-    console.error('[MigrateToSecureStorage] Error checking migration status:', error);
+    logger.error('MigrateToSecureStorage', 'Error checking migration status', { error });
     return false;
   }
 }
@@ -244,7 +247,7 @@ export function cleanupLocalStorage(): void {
     try {
       removeFromLocalStorage(key);
     } catch (error) {
-      console.error(`[MigrateToSecureStorage] Failed to cleanup key "${key}":`, error);
+      logger.error('MigrateToSecureStorage', `Failed to cleanup key "${key}"`, { error });
     }
   }
 }

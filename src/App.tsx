@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
+import { logger } from '@/utils/logger';
 import { AuthFlow } from './components/auth';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Sidebar } from './components/Sidebar';
@@ -65,11 +66,11 @@ function AuthenticatedApp(): JSX.Element {
       migrateToSecureStorage()
         .then((summary) => {
           if (summary.failedKeys > 0) {
-            console.error(`[App] Failed to migrate ${summary.failedKeys} API key(s)`);
+            logger.error('App', 'Failed to migrate ${summary.failedKeys} API key(s)');
           }
         })
         .catch((error) => {
-          console.error('[App] API key migration failed:', error);
+          logger.error('App', 'API key migration failed:', { error: error });
         });
     }
   }, [isAuthenticated, isLoading]);

@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { logger } from '@/utils/logger';
 import { promisify } from 'util';
 import { v4 as uuidv4 } from 'uuid';
 import { UserRepository } from '../repositories/UserRepository';
@@ -265,14 +266,14 @@ export class AuthenticationService {
           await this.sessionPersistence.storeSessionId(newSessionId);
           sessionPersisted = true;
         } else {
-          console.warn('[AuthenticationService] Persistent storage not available, Remember Me will not persist across app restarts');
+          logger.warn('AuthenticationService', 'Persistent storage not available, Remember Me will not persist across app restarts');
         }
       } catch (error) {
         // Don't fail login if persistence fails - just log the error
-        console.error('[AuthenticationService] Failed to persist session:', error);
+        logger.error('AuthenticationService', 'Failed to persist session:', { error: error });
       }
     } else if (rememberMe && !this.sessionPersistence) {
-      console.warn('[AuthenticationService] Remember Me requested but no persistence handler configured');
+      logger.warn('AuthenticationService', 'Remember Me requested but no persistence handler configured');
     }
 
     // Update last login timestamp
@@ -311,7 +312,7 @@ export class AuthenticationService {
           await this.sessionPersistence.clearSession();
         } catch (error) {
           // Don't fail logout if persistence clear fails
-          console.error('[AuthenticationService] Failed to clear persisted session:', error);
+          logger.error('AuthenticationService', 'Failed to clear persisted session:', { error: error });
         }
       }
 
@@ -502,7 +503,7 @@ export class AuthenticationService {
       return { user, session };
 
     } catch (error) {
-      console.error('[AuthenticationService] Error restoring persisted session:', error);
+      logger.error('AuthenticationService', 'Error restoring persisted session:', { error: error });
       // Clear any corrupted persisted session
       if (this.sessionPersistence) {
         try {

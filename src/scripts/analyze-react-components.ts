@@ -10,6 +10,7 @@
 
 import { readdirSync, readFileSync, statSync } from 'fs';
 import { join } from 'path';
+import { logger } from '../utils/logger';
 
 interface ComponentAnalysis {
   file: string;
@@ -129,12 +130,12 @@ function analyzeComponent(filePath: string): ComponentAnalysis | null {
  * Main analysis function
  */
 function analyzeReactComponents(): void {
-  console.log('🔍 Analyzing React components for optimization opportunities...\n');
+  logger.info('ReactAnalysis', 'Analyzing React components for optimization opportunities...\n');
 
   const srcDir = join(process.cwd(), 'src');
   const tsxFiles = findTsxFiles(srcDir);
 
-  console.log(`Found ${tsxFiles.length} component files\n`);
+  logger.info('ReactAnalysis', `Found ${tsxFiles.length} component files\n`);
 
   const analyses: ComponentAnalysis[] = [];
 
@@ -154,52 +155,52 @@ function analyzeReactComponents(): void {
   const withoutMemo = analyses.filter(a => !a.hasMemo);
   const withoutUseCallback = analyses.filter(a => a.hasInlineHandlers && !a.hasUseCallback);
 
-  console.log('📊 SUMMARY\n');
-  console.log('='.repeat(80));
-  console.log(`Total Components: ${analyses.length}`);
-  console.log(`Without React.memo(): ${withoutMemo.length} (${Math.round((withoutMemo.length / analyses.length) * 100)}%)`);
-  console.log(`With inline handlers, no useCallback: ${withoutUseCallback.length}`);
-  console.log('='.repeat(80));
-  console.log();
+  logger.info('ReactAnalysis', 'SUMMARY\n');
+  logger.info('ReactAnalysis', '='.repeat(80));
+  logger.info('ReactAnalysis', `Total Components: ${analyses.length}`);
+  logger.info('ReactAnalysis', `Without React.memo(): ${withoutMemo.length} (${Math.round((withoutMemo.length / analyses.length) * 100)}%)`);
+  logger.info('ReactAnalysis', `With inline handlers, no useCallback: ${withoutUseCallback.length}`);
+  logger.info('ReactAnalysis', '='.repeat(80));
+  logger.info('ReactAnalysis', '');
 
   // High priority components
-  console.log(`🔴 HIGH PRIORITY (${highPriority.length} components)\n`);
-  console.log('These should be optimized first:\n');
+  logger.info('ReactAnalysis', `HIGH PRIORITY (${highPriority.length} components)\n`);
+  logger.info('ReactAnalysis', 'These should be optimized first:\n');
 
   highPriority.forEach(a => {
-    console.log(`  📄 ${a.componentName}`);
-    console.log(`     File: ${a.file.replace(srcDir, 'src')}`);
-    console.log(`     Reason: ${a.reason}`);
-    console.log(`     Memo: ${a.hasMemo ? '✅' : '❌'} | useCallback: ${a.hasUseCallback ? '✅' : '❌'} | LOC: ${a.linesOfCode}`);
-    console.log();
+    logger.info('ReactAnalysis', `  ${a.componentName}`);
+    logger.info('ReactAnalysis', `     File: ${a.file.replace(srcDir, 'src')}`);
+    logger.info('ReactAnalysis', `     Reason: ${a.reason}`);
+    logger.info('ReactAnalysis', `     Memo: ${a.hasMemo ? 'Yes' : 'No'} | useCallback: ${a.hasUseCallback ? 'Yes' : 'No'} | LOC: ${a.linesOfCode}`);
+    logger.info('ReactAnalysis', '');
   });
 
   // Medium priority components
-  console.log(`🟡 MEDIUM PRIORITY (${mediumPriority.length} components)\n`);
-  console.log('Should be optimized after high priority:\n');
+  logger.info('ReactAnalysis', `MEDIUM PRIORITY (${mediumPriority.length} components)\n`);
+  logger.info('ReactAnalysis', 'Should be optimized after high priority:\n');
 
   mediumPriority.slice(0, 10).forEach(a => {
-    console.log(`  📄 ${a.componentName}`);
-    console.log(`     Reason: ${a.reason}`);
-    console.log(`     Memo: ${a.hasMemo ? '✅' : '❌'} | useCallback: ${a.hasUseCallback ? '✅' : '❌'}`);
-    console.log();
+    logger.info('ReactAnalysis', `  ${a.componentName}`);
+    logger.info('ReactAnalysis', `     Reason: ${a.reason}`);
+    logger.info('ReactAnalysis', `     Memo: ${a.hasMemo ? 'Yes' : 'No'} | useCallback: ${a.hasUseCallback ? 'Yes' : 'No'}`);
+    logger.info('ReactAnalysis', '');
   });
 
   if (mediumPriority.length > 10) {
-    console.log(`  ... and ${mediumPriority.length - 10} more\n`);
+    logger.info('ReactAnalysis', `  ... and ${mediumPriority.length - 10} more\n`);
   }
 
   // Recommendations
-  console.log('='.repeat(80));
-  console.log('💡 RECOMMENDATIONS\n');
-  console.log(`1. Add React.memo() to ${highPriority.filter(a => !a.hasMemo).length} high-priority components`);
-  console.log(`2. Add useCallback to ${withoutUseCallback.filter(a => a.priority === 'high').length} high-priority event handlers`);
-  console.log(`3. Review ${mediumPriority.length} medium-priority components for optimization`);
-  console.log('='.repeat(80));
-  console.log();
+  logger.info('ReactAnalysis', '='.repeat(80));
+  logger.info('ReactAnalysis', 'RECOMMENDATIONS\n');
+  logger.info('ReactAnalysis', `1. Add React.memo() to ${highPriority.filter(a => !a.hasMemo).length} high-priority components`);
+  logger.info('ReactAnalysis', `2. Add useCallback to ${withoutUseCallback.filter(a => a.priority === 'high').length} high-priority event handlers`);
+  logger.info('ReactAnalysis', `3. Review ${mediumPriority.length} medium-priority components for optimization`);
+  logger.info('ReactAnalysis', '='.repeat(80));
+  logger.info('ReactAnalysis', '');
 
   // Export detailed report
-  console.log('📁 Detailed report saved to: src/scripts/component-analysis-report.json');
+  logger.info('ReactAnalysis', 'Detailed report saved to: src/scripts/component-analysis-report.json');
 
   const report = {
     summary: {

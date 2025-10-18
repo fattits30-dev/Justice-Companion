@@ -1,4 +1,5 @@
 import { useAuth } from '@/contexts/AuthContext';
+import { logger } from '../../utils/logger';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useCallback, useEffect, useState } from 'react';
@@ -43,7 +44,7 @@ export function AuthFlow(): JSX.Element | null {
           setShowConsent(true);
         }
       } catch (error) {
-        console.error('[AuthFlow] Failed to check consent:', error);
+        logger.error('AuthFlow', 'Failed to check consent:', { error: error });
         // On error, show consent banner to be safe
         setShowConsent(true);
       } finally {

@@ -15,6 +15,7 @@
  */
 
 import { createContext, ReactNode, useCallback, useContext, useState } from 'react';
+import { logger } from '../utils/logger';
 // errorLogger removed - uses fs which doesn't work in renderer process
 
 export type LogLevel = 'error' | 'warn' | 'info' | 'debug';
@@ -75,10 +76,10 @@ export function DebugProvider({ children }: DebugProviderProps): JSX.Element {
       // Console output with appropriate styling
       switch (level) {
         case 'error':
-          console.error(`${timestamp} ${logMessage}`);
+          logger.error('App', '${timestamp} ${logMessage}');
           break;
         case 'warn':
-          console.warn(`${timestamp} ${logMessage}`);
+          logger.warn('App', '${timestamp} ${logMessage}');
           break;
         case 'info':
           // eslint-disable-next-line no-console
