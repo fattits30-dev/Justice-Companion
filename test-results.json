@@ -24740,3 +24740,1130 @@ If this is a long-running test, pass a timeout value as the last argument or con
 
 [1m[7m[32m PASS [39m[27m[22m [32mWaiting for file changes...[39m
        [2mpress [22m[1mh[22m[2m to show help[22m[2m, [22m[2mpress [22m[1mq[22m[2m to quit[22m
+c[3J[1m[7m[34m RERUN [39m[27m[22m [34m[2mpackage.json [22m[39m
+
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Errors [27m[22m⎯⎯⎯⎯⎯⎯[39m
+[31m[1m
+Vitest caught 74 unhandled errors during the test run.
+This might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\web\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\ssr\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\ssr\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\ssr\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\ssr\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\ssr\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\ssr\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\ssr\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\ssr\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: ENOENT: no such file or directory, open 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\ssr\40b9f1f37d5bd759c353e90078138580f67eb091'[39m
+[90m [2m❯[22m readFileSync node:fs:[2m449:20[22m[39m
+[90m [2m❯[22m Object.fetchModule ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m623:22[22m[39m
+[90m [2m❯[22m process.processTicksAndRejections node:internal/process/task_queues:[2m95:5[22m[39m
+[90m [2m❯[22m VitestExecutor.directRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m277:46[22m[39m
+[90m [2m❯[22m VitestExecutor.cachedRequest ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m206:14[22m[39m
+[90m [2m❯[22m VitestExecutor.executeId ../Justice%20Companion%20take%202/node_modules/.pnpm/vite-node@2.1.9_@types+node@22.18.10/node_modules/vite-node/dist/client.mjs:[2m173:12[22m[39m
+[90m [2m❯[22m createVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m556:3[22m[39m
+[90m [2m❯[22m startVitestExecutor ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/execute.2pr0rHgK.js:[2m606:10[22m[39m
+[90m [2m❯[22m startViteNode ../Justice%20Companion%20take%202/node_modules/.pnpm/vitest@2.1.9_@types+node@22_a91ef75eee158fbf2bedbae516143731/node_modules/vitest/dist/chunks/base.BZZh4cSm.js:[2m11:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\sava6\AppData\Local\Temp\frx-bdYXR4RTOFx0Jaf8q\ssr\40b9f1f37d5bd759c353e90078138580f67eb091' }[39m
+[31m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[39m
+
+[2m Test Files [22m [2mno tests[22m
+[2m      Tests [22m [2mno tests[22m
+[2m     Errors [22m [1m[31m74 errors[39m[22m
+[2m   Start at [22m 14:19:55
+[2m   Duration [22m 0ms
+
+[1m[7m[31m FAIL [39m[27m[22m [31mTests failed. Watching for file changes...[39m
+       [2mpress [22m[1mh[22m[2m to show help[22m[2m, [22m[2mpress [22m[1mq[22m[2m to quit[22m

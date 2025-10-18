@@ -42,7 +42,12 @@
     "rebuild:electron": "electron-rebuild -f -w better-sqlite3",
     "rebuild:node": "node scripts/rebuild-for-node.js",
     "rebuild": "pnpm rebuild:electron",
-    "postinstall": "electron-rebuild -f -w better-sqlite3"
+    "postinstall": "electron-rebuild -f -w better-sqlite3",
+    "guardian": "powershell -ExecutionPolicy Bypass -File guardian-local.ps1 scan",
+    "guardian:scan": "powershell -ExecutionPolicy Bypass -File guardian-local.ps1 scan",
+    "guardian:file": "powershell -ExecutionPolicy Bypass -File guardian-local.ps1 file",
+    "guardian:watch": "powershell -ExecutionPolicy Bypass -File guardian-local.ps1 continuous",
+    "guardian:status": "powershell -ExecutionPolicy Bypass -File guardian-local.ps1 status"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.4",
