@@ -17,6 +17,7 @@
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { Database, Lock } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
 
 /**
  * Toast interface for showing notifications
@@ -184,21 +185,10 @@ function SettingItem({ label, value, action, onAction, info }: SettingItemProps)
  * All settings are automatically persisted to localStorage.
  */
 export function DataPrivacySettings({ toast }: DataPrivacySettingsProps): JSX.Element {
-  // Privacy settings - persisted to localStorage
-  const [encryptData, setEncryptData] = useState(() => {
-    const saved = localStorage.getItem('encryptData');
-    return saved !== null ? (JSON.parse(saved) as boolean) : true;
-  });
-
-  const [exportLocation, setExportLocation] = useState(() => {
-    const saved = localStorage.getItem('exportLocation');
-    return saved ?? 'Downloads';
-  });
-
-  const [autoBackupFrequency, setAutoBackupFrequency] = useState(() => {
-    const saved = localStorage.getItem('autoBackupFrequency');
-    return saved ?? 'daily';
-  });
+  // Privacy settings - persisted to localStorage via useLocalStorage hook
+  const [encryptData, setEncryptData] = useLocalStorage('encryptData', true);
+  const [exportLocation, setExportLocation] = useLocalStorage('exportLocation', 'Downloads');
+  const [autoBackupFrequency, setAutoBackupFrequency] = useLocalStorage('autoBackupFrequency', 'daily');
 
   // UI state (not persisted)
   const [clearDataConfirmOpen, setClearDataConfirmOpen] = useState(false);
@@ -214,19 +204,6 @@ export function DataPrivacySettings({ toast }: DataPrivacySettingsProps): JSX.El
       }
     };
   }, []);
-
-  // Persist privacy settings to localStorage
-  useEffect(() => {
-    localStorage.setItem('encryptData', JSON.stringify(encryptData));
-  }, [encryptData]);
-
-  useEffect(() => {
-    localStorage.setItem('exportLocation', exportLocation);
-  }, [exportLocation]);
-
-  useEffect(() => {
-    localStorage.setItem('autoBackupFrequency', autoBackupFrequency);
-  }, [autoBackupFrequency]);
 
   /**
    * Handle clearing all user data (GDPR Right to Erasure)

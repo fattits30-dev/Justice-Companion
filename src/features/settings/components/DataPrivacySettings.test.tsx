@@ -84,9 +84,9 @@ describe('DataPrivacySettings', () => {
     });
 
     it('should load saved privacy settings from localStorage', () => {
-      localStorage.setItem('encryptData', 'false');
-      localStorage.setItem('exportLocation', 'Custom/Path');
-      localStorage.setItem('autoBackupFrequency', 'weekly');
+      localStorage.setItem('encryptData', JSON.stringify(false));
+      localStorage.setItem('exportLocation', JSON.stringify('Custom/Path'));
+      localStorage.setItem('autoBackupFrequency', JSON.stringify('weekly'));
 
       render(<DataPrivacySettings toast={mockToast} />);
 
@@ -133,11 +133,11 @@ describe('DataPrivacySettings', () => {
 
       // Toggle off
       await user.click(encryptToggle);
-      expect(localStorage.getItem('encryptData')).toBe('false');
+      expect(localStorage.getItem('encryptData')).toBe(JSON.stringify(false));
 
       // Toggle back on
       await user.click(encryptToggle);
-      expect(localStorage.getItem('encryptData')).toBe('true');
+      expect(localStorage.getItem('encryptData')).toBe(JSON.stringify(true));
     });
   });
 
@@ -166,7 +166,7 @@ describe('DataPrivacySettings', () => {
       expect(backupSelect).toHaveValue('weekly');
 
       // Verify localStorage persistence
-      expect(localStorage.getItem('autoBackupFrequency')).toBe('weekly');
+      expect(localStorage.getItem('autoBackupFrequency')).toBe(JSON.stringify('weekly'));
     });
 
     it('should persist backup frequency to localStorage', async () => {
@@ -177,11 +177,11 @@ describe('DataPrivacySettings', () => {
 
       // Change to never
       await user.selectOptions(backupSelect, 'never');
-      expect(localStorage.getItem('autoBackupFrequency')).toBe('never');
+      expect(localStorage.getItem('autoBackupFrequency')).toBe(JSON.stringify('never'));
 
       // Change to daily
       await user.selectOptions(backupSelect, 'daily');
-      expect(localStorage.getItem('autoBackupFrequency')).toBe('daily');
+      expect(localStorage.getItem('autoBackupFrequency')).toBe(JSON.stringify('daily'));
     });
   });
 

@@ -14,7 +14,8 @@
  */
 
 import { Bell } from 'lucide-react';
-import { useEffect, useState, type ReactNode } from 'react';
+import { type ReactNode } from 'react';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
 
 /**
  * Props for SettingsSection helper component
@@ -96,34 +97,10 @@ function ToggleSetting({ label, enabled, onChange }: ToggleSettingProps): JSX.El
  * All settings are automatically persisted to localStorage.
  */
 export function NotificationSettings(): JSX.Element {
-  // Notification toggle states - all persisted to localStorage
-  const [chatNotifications, setChatNotifications] = useState(() => {
-    const saved = localStorage.getItem('chatNotifications');
-    return saved !== null ? (JSON.parse(saved) as boolean) : true;
-  });
-
-  const [caseUpdates, setCaseUpdates] = useState(() => {
-    const saved = localStorage.getItem('caseUpdates');
-    return saved !== null ? (JSON.parse(saved) as boolean) : true;
-  });
-
-  const [documentAnalysisNotif, setDocumentAnalysisNotif] = useState(() => {
-    const saved = localStorage.getItem('documentAnalysisNotif');
-    return saved !== null ? (JSON.parse(saved) as boolean) : false;
-  });
-
-  // Persist notification settings to localStorage
-  useEffect(() => {
-    localStorage.setItem('chatNotifications', JSON.stringify(chatNotifications));
-  }, [chatNotifications]);
-
-  useEffect(() => {
-    localStorage.setItem('caseUpdates', JSON.stringify(caseUpdates));
-  }, [caseUpdates]);
-
-  useEffect(() => {
-    localStorage.setItem('documentAnalysisNotif', JSON.stringify(documentAnalysisNotif));
-  }, [documentAnalysisNotif]);
+  // Notification toggle states - all persisted to localStorage via useLocalStorage hook
+  const [chatNotifications, setChatNotifications] = useLocalStorage('chatNotifications', true);
+  const [caseUpdates, setCaseUpdates] = useLocalStorage('caseUpdates', true);
+  const [documentAnalysisNotif, setDocumentAnalysisNotif] = useLocalStorage('documentAnalysisNotif', false);
 
   return (
     <SettingsSection
