@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ main, master ]
 
+# Allow workflow to read contents for cross-repo operations
+permissions:
+  contents: read
+
 jobs:
   cerberus-scan:
     runs-on: ubuntu-latest
@@ -24,7 +28,7 @@ jobs:
     - name: 🐺 Install Cerberus Guardian
       run: |
         echo "🐺 Installing Cerberus from GitHub..."
-        git clone https://github.com/fattits30-dev/cerberus-code-guardian.git /tmp/cerberus
+        git clone https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/fattits30-dev/cerberus-code-guardian.git /tmp/cerberus
         cd /tmp/cerberus
         pip install -r requirements.txt
         echo "✅ Cerberus installed!"
@@ -139,7 +143,7 @@ jobs:
 
     - name: 🐺 Install Cerberus Guardian
       run: |
-        git clone https://github.com/fattits30-dev/cerberus-code-guardian.git /tmp/cerberus
+        git clone https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/fattits30-dev/cerberus-code-guardian.git /tmp/cerberus
         cd /tmp/cerberus
         pip install -r requirements.txt
 
