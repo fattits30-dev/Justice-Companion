@@ -1,4 +1,5 @@
 import type { ConsentType } from '@/models/Consent';
+import { logger } from '../../utils/logger';
 import { useEffect, useState } from 'react';
 
 /**
@@ -32,7 +33,7 @@ export function ConsentBanner({ onComplete }: ConsentBannerProps): JSX.Element {
           onComplete();
         }
       } catch (err) {
-        console.error('Failed to check existing consents:', err);
+        logger.error('App', 'Failed to check existing consents:', { error: err });
       }
     };
 

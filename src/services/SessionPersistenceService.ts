@@ -2,6 +2,7 @@ import { app, safeStorage } from 'electron';
 import fs from 'fs/promises';
 import path from 'path';
 import { validate as uuidValidate, version as uuidVersion } from 'uuid';
+import { logger } from '../utils/logger';
 
 /**
  * Service for securely persisting session IDs across app restarts
@@ -48,19 +49,19 @@ export class SessionPersistenceService {
     try {
       // Check if safeStorage is available and encryption is possible
       if (!safeStorage || typeof safeStorage.isEncryptionAvailable !== 'function') {
-        console.warn('[SessionPersistence] safeStorage API not available');
+        logger.warn('SessionPersistence', 'safeStorage API not available');
         return false;
       }
 
       const available = safeStorage.isEncryptionAvailable();
 
       if (!available) {
-        console.warn('[SessionPersistence] Encryption not available (missing OS keychain support)');
+        logger.warn('SessionPersistence', 'Encryption not available (missing OS keychain support)');
       }
 
       return available;
     } catch (error) {
-      console.error('[SessionPersistence] Error checking encryption availability:', error);
+      logger.error('SessionPersistence', 'Error checking encryption availability', { error });
       return false;
     }
   }
@@ -82,7 +83,7 @@ export class SessionPersistenceService {
     try {
       return uuidVersion(sessionId) === SessionPersistenceService.UUID_V4_VERSION;
     } catch (error) {
-      console.error('[SessionPersistence] Error validating UUID version:', error);
+      logger.error('SessionPersistence', 'Error validating UUID version', { error });
       return false;
     }
   }
@@ -121,7 +122,7 @@ export class SessionPersistenceService {
       // Write encrypted data to file
       await fs.writeFile(storagePath, encrypted);
     } catch (error) {
-      console.error('[SessionPersistence] Failed to store session ID:', error);
+      logger.error('SessionPersistence', 'Failed to store session ID', { error });
 
       // Clean up any partial writes
       try {
@@ -144,7 +145,7 @@ export class SessionPersistenceService {
       // Check encryption availability
       const available = await this.isAvailable();
       if (!available) {
-        console.warn('[SessionPersistence] Cannot retrieve: encryption not available');
+        logger.warn('SessionPersistence', 'Cannot retrieve: encryption not available');
         return null;
       }
 
@@ -161,7 +162,7 @@ export class SessionPersistenceService {
       const encrypted = await fs.readFile(storagePath);
 
       if (!encrypted || encrypted.length === 0) {
-        console.warn('[SessionPersistence] Stored session file is empty');
+        logger.warn('SessionPersistence', 'Stored session file is empty');
         await this.clearSession(); // Clean up invalid file
         return null;
       }
@@ -171,14 +172,14 @@ export class SessionPersistenceService {
 
       // Validate the decrypted session ID
       if (!this.isValidSessionId(decrypted)) {
-        console.error('[SessionPersistence] Stored session ID is invalid');
+        logger.error('SessionPersistence', 'Stored session ID is invalid');
         await this.clearSession(); // Clean up invalid session
         return null;
       }
 
       return decrypted;
     } catch (error) {
-      console.error('[SessionPersistence] Failed to retrieve session ID:', error);
+      logger.error('SessionPersistence', 'Failed to retrieve session ID', { error });
 
       // Handle corrupted file by removing it
       if (
@@ -187,7 +188,7 @@ export class SessionPersistenceService {
           error.message.includes('corrupt') ||
           error.message.includes('invalid'))
       ) {
-        console.warn('[SessionPersistence] Corrupted session file detected, cleaning up');
+        logger.warn('SessionPersistence', 'Corrupted session file detected, cleaning up');
         await this.clearSession();
       }
 
@@ -210,7 +211,7 @@ export class SessionPersistenceService {
         // File doesn't exist or can't be deleted - not an error condition
       }
     } catch (error) {
-      console.error('[SessionPersistence] Error clearing session:', error);
+      logger.error('SessionPersistence', 'Error clearing session', { error });
       // Don't throw - clearing should be best effort
     }
   }

@@ -15,6 +15,7 @@
  */
 
 import { createHash, randomUUID } from 'node:crypto';
+import { logger } from '@/utils/logger';
 import { EventEmitter } from 'node:events';
 import type {
   ErrorData,
@@ -132,7 +133,7 @@ export class EnhancedErrorTracker extends EventEmitter {
         this.stats.totalErrors;
     } catch (error) {
       // Error tracking should never crash the app
-      console.error('EnhancedErrorTracker: Failed to track error', error);
+      logger.error('App', 'EnhancedErrorTracker: Failed to track error', { error: error });
     }
   }
 
@@ -311,7 +312,7 @@ export class EnhancedErrorTracker extends EventEmitter {
       });
     } catch (error) {
       // Silently fail - error logging should never crash app
-      console.error('Failed to persist error', error);
+      logger.error('App', 'Failed to persist error', { error: error });
     }
   }
 

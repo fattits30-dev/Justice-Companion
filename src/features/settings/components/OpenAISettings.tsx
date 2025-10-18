@@ -1,4 +1,5 @@
 import { useToast } from '@/hooks/useToast';
+import { logger } from '@/utils/logger';
 import { secureStorage } from '@/services/SecureStorageService';
 import {
   AlertCircle,
@@ -55,7 +56,7 @@ export function OpenAISettings({ onConfigSaved }: OpenAISettingsProps): JSX.Elem
           }
         }
       } catch (error) {
-        console.error('[OpenAISettings] Failed to load saved configuration:', error);
+        logger.error('OpenAISettings', 'Failed to load saved configuration:', { error: error });
         toast.error('Failed to load saved API key configuration');
       }
     };
@@ -202,7 +203,7 @@ export function OpenAISettings({ onConfigSaved }: OpenAISettingsProps): JSX.Elem
 
       toast.success('OpenAI configuration cleared');
     } catch (error) {
-      console.error('[OpenAISettings] Failed to clear configuration:', error);
+      logger.error('OpenAISettings', 'Failed to clear configuration:', { error: error });
       toast.error('Failed to clear API key configuration');
     }
   };

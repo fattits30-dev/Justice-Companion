@@ -13,6 +13,7 @@
  */
 
 import html2pdf from 'html2pdf.js';
+import { logger } from '@/utils/logger';
 import DOMPurify from 'dompurify';
 import type { ChatMessage } from '../types/ai';
 
@@ -47,7 +48,7 @@ export async function exportChatToPDF(
   try {
     await html2pdf().set(options).from(html).save();
   } catch (error) {
-    console.error('PDF export failed:', error);
+    logger.error('App', 'PDF export failed:', { error: error });
      
     alert('Failed to export PDF. Please try again.');
   }

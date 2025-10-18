@@ -1,6 +1,6 @@
 import { getDb } from '../db/database';
 import type Database from 'better-sqlite3';
-import type { Case, CreateCaseInput, UpdateCaseInput, CaseStatus } from '../models/Case';
+import type { Case, CreateCaseInput, UpdateCaseInput, CaseStatus, CaseType } from '../models/Case';
 import { EncryptionService } from '../services/EncryptionService.js';
 import type { AuditLogger } from '../services/AuditLogger.js';
 import { DecryptionCache } from '../services/DecryptionCache';
@@ -53,16 +53,31 @@ export class CaseRepositoryPaginated extends BaseRepository<Case> {
   /**
    * Map database row to Case domain model
    */
-  protected mapToDomain(row: any): Case {
+  protected mapToDomain(row: unknown): Case {
+    const caseRow = row as Record<string, unknown> & {
+      id: number;
+      title: string;
+      description: string | null;
+      case_type?: string;
+      caseType?: string;
+      status: CaseStatus;
+      user_id?: number | null;
+      userId?: number | null;
+      created_at?: string;
+      createdAt?: string;
+      updated_at?: string;
+      updatedAt?: string;
+    };
+
     return {
-      id: row.id,
-      title: row.title,
-      description: this.decryptField('description', row.description, row.id),
-      caseType: row.case_type || row.caseType,
-      status: row.status,
-      userId: row.user_id ?? row.userId ?? null,
-      createdAt: row.created_at || row.createdAt,
-      updatedAt: row.updated_at || row.updatedAt,
+      id: caseRow.id,
+      title: caseRow.title,
+      description: this.decryptField('description', caseRow.description, caseRow.id),
+      caseType: (caseRow.case_type || caseRow.caseType) as CaseType,
+      status: caseRow.status,
+      userId: caseRow.user_id ?? caseRow.userId ?? null,
+      createdAt: (caseRow.created_at || caseRow.createdAt) as string,
+      updatedAt: (caseRow.updated_at || caseRow.updatedAt) as string,
     };
   }
 
@@ -146,13 +161,14 @@ export class CaseRepositoryPaginated extends BaseRepository<Case> {
       FROM cases
     `;
 
-    let rows: any[];
+    type CaseRow = Record<string, unknown>;
+    let rows: CaseRow[];
 
     if (status) {
       query += ' WHERE status = ?';
-      rows = db.prepare(query).all(status);
+      rows = db.prepare(query).all(status) as CaseRow[];
     } else {
-      rows = db.prepare(query).all();
+      rows = db.prepare(query).all() as CaseRow[];
     }
 
     // Decrypt all descriptions using BaseRepository's caching logic
@@ -185,7 +201,7 @@ export class CaseRepositoryPaginated extends BaseRepository<Case> {
     const comparator = direction === 'asc' ? '>' : '<';
 
     let whereClause = `WHERE status = ?`;
-    const queryParams: any[] = [status];
+    const queryParams: (string | number)[] = [status];
 
     if (cursor) {
       whereClause += ` AND rowid ${comparator} ?`;
@@ -210,7 +226,8 @@ export class CaseRepositoryPaginated extends BaseRepository<Case> {
       success: true,
     });
 
-    const rows = db.prepare(query).all(...queryParams) as Array<{ rowid: number; [key: string]: any }>;
+    type SqlRow = Record<string, unknown> & { rowid: number };
+    const rows = db.prepare(query).all(...queryParams) as SqlRow[];
 
     // Process results
     const hasMore = rows.length > limit;

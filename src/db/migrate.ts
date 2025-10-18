@@ -1,4 +1,5 @@
 import fs from 'fs';
+import { logger } from '@/utils/logger';
 import path from 'path';
 import crypto from 'crypto';
 import { getDb } from './database';
@@ -96,14 +97,21 @@ export function runMigrations(): void {
       .sort();
 
     // Get already applied migrations
+    interface MigrationRow {
+      name: string;
+      checksum: string;
+    }
+
     const appliedMigrations = db
       .prepare('SELECT name, checksum FROM migrations WHERE status = ?')
       .all('applied')
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .map((row: any) => ({
-        name: row.name as string,
-        checksum: row.checksum as string,
-      }));
+      .map((row: unknown) => {
+        const migrationRow = row as MigrationRow;
+        return {
+          name: migrationRow.name,
+          checksum: migrationRow.checksum,
+        };
+      });
 
     const appliedNames = appliedMigrations.map((m) => m.name);
 
@@ -293,7 +301,7 @@ if (require.main === module) {
     runMigrations();
     process.exit(0);
   } catch (error) {
-    console.error('❌ Migration failed:', error);
+    logger.error('App', '❌ Migration failed:', { error: error });
     process.exit(1);
   }
 }

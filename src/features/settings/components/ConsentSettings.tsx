@@ -15,6 +15,7 @@
  */
 
 import { SkeletonText } from '@/components/ui/Skeleton';
+import { logger } from '@/utils/logger';
 import type { Consent, ConsentType } from '@/models/Consent';
 import { CheckCircle2, XCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -98,7 +99,7 @@ export function ConsentSettings({ toast }: ConsentSettingsProps): JSX.Element {
         setConsents(result.data);
       }
     } catch (error) {
-      console.error('Failed to load consents:', error);
+      logger.error('App', 'Failed to load consents:', { error: error });
       toast.error('Failed to load consents');
     } finally {
       setIsLoadingConsents(false);
@@ -120,7 +121,7 @@ export function ConsentSettings({ toast }: ConsentSettingsProps): JSX.Element {
         toast.error('Failed to grant consent');
       }
     } catch (error) {
-      console.error('Failed to grant consent:', error);
+      logger.error('App', 'Failed to grant consent:', { error: error });
       toast.error('Failed to grant consent');
     }
   };
@@ -140,7 +141,7 @@ export function ConsentSettings({ toast }: ConsentSettingsProps): JSX.Element {
         toast.error('Failed to revoke consent');
       }
     } catch (error) {
-      console.error('Failed to revoke consent:', error);
+      logger.error('App', 'Failed to revoke consent:', { error: error });
       toast.error('Failed to revoke consent');
     }
   };

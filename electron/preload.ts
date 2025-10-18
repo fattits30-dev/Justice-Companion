@@ -1,4 +1,7 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
+import type { Case } from '../src/models/Case';
+import type { Evidence } from '../src/models/Evidence';
+import type { ChatMessage } from '../src/models/ChatConversation';
 
 /**
  * Electron API exposed to renderer process via contextBridge
@@ -92,37 +95,40 @@ interface UpdateCaseData {
 
 interface CaseResponse {
   success: boolean;
-  data?: any;
+  data?: Case;
   error?: string;
 }
 
 interface CaseListResponse {
   success: boolean;
-  data?: any[];
+  data?: Case[];
   error?: string;
 }
 
 interface EvidenceResponse {
   success: boolean;
-  data?: any;
+  data?: Evidence;
   error?: string;
 }
 
 interface EvidenceListResponse {
   success: boolean;
-  data?: any[];
+  data?: Evidence[];
   error?: string;
 }
 
 interface ChatResponse {
   success: boolean;
-  data?: any;
+  data?: ChatMessage;
   error?: string;
 }
 
 interface MigrationResponse {
   success: boolean;
-  data?: any;
+  data?: {
+    appliedMigrations: number;
+    currentVersion: number;
+  };
   error?: string;
 }
 
@@ -134,7 +140,11 @@ interface BackupResponse {
 
 interface MigrationStatusResponse {
   success: boolean;
-  data?: any;
+  data?: {
+    currentVersion: number;
+    latestVersion: number;
+    pendingMigrations: number;
+  };
   error?: string;
 }
 

@@ -5,8 +5,9 @@
  * in the settings module components.
  */
 
-import React, { Profiler, ProfilerOnRenderCallback, useState, useEffect, useMemo } from 'react';
+import { Profiler, ProfilerOnRenderCallback, useState, useEffect, useMemo } from 'react';
 import { render } from '@testing-library/react';
+import { logger } from '../utils/logger';
 
 // Mock localStorage hook to track operations
 let localStorageReads = 0;
@@ -43,34 +44,33 @@ interface RenderMetrics {
 const renderMetrics: RenderMetrics[] = [];
 
 const onRenderCallback: ProfilerOnRenderCallback = (
-  id,
-  phase,
-  actualDuration,
-  baseDuration,
-  startTime,
-  commitTime,
-  interactions
+  id: string,
+  phase: 'mount' | 'update' | 'nested-update',
+  actualDuration: number,
+  baseDuration: number,
+  startTime: number,
+  commitTime: number
 ) => {
   renderMetrics.push({
     componentName: id,
-    phase: phase as 'mount' | 'update',
+    phase: phase === 'nested-update' ? 'update' : phase,
     actualDuration,
     baseDuration,
     startTime,
     commitTime,
-    interactions,
+    interactions: new Set(),
   });
 };
 
 // Simulated Settings Components
 function AppearanceSettings() {
   const [darkMode, setDarkMode] = useLocalStorageMock('darkMode', true);
-  const [fontSize, setFontSize] = useLocalStorageMock('fontSize', 'medium');
-  const [selectedMicrophone, setSelectedMicrophone] = useLocalStorageMock('selectedMicrophone', 'default');
-  const [speechLanguage, setSpeechLanguage] = useLocalStorageMock('speechLanguage', 'en-GB');
-  const [autoTranscribe, setAutoTranscribe] = useLocalStorageMock('autoTranscribe', true);
-  const [highContrast, setHighContrast] = useLocalStorageMock('highContrast', false);
-  const [screenReaderSupport, setScreenReaderSupport] = useLocalStorageMock('screenReaderSupport', true);
+  const [fontSize, _setFontSize] = useLocalStorageMock('fontSize', 'medium');
+  const [_selectedMicrophone, _setSelectedMicrophone] = useLocalStorageMock('selectedMicrophone', 'default');
+  const [_speechLanguage, _setSpeechLanguage] = useLocalStorageMock('speechLanguage', 'en-GB');
+  const [_autoTranscribe, _setAutoTranscribe] = useLocalStorageMock('autoTranscribe', true);
+  const [_highContrast, _setHighContrast] = useLocalStorageMock('highContrast', false);
+  const [_screenReaderSupport, _setScreenReaderSupport] = useLocalStorageMock('screenReaderSupport', true);
 
   // Simulate heavy computation
   const expensiveCalculation = useMemo(() => {
@@ -93,13 +93,13 @@ function AppearanceSettings() {
 }
 
 function AIConfigurationSettings() {
-  const [aiProvider, setAiProvider] = useLocalStorageMock('aiProvider', 'openai');
-  const [aiModel, setAiModel] = useLocalStorageMock('aiModel', 'gpt-4');
-  const [temperature, setTemperature] = useLocalStorageMock('temperature', 0.7);
-  const [maxTokens, setMaxTokens] = useLocalStorageMock('maxTokens', 2000);
-  const [streamResponses, setStreamResponses] = useLocalStorageMock('streamResponses', true);
-  const [saveHistory, setSaveHistory] = useLocalStorageMock('saveHistory', true);
-  const [contextLength, setContextLength] = useLocalStorageMock('contextLength', 4000);
+  const [aiProvider, _setAiProvider] = useLocalStorageMock('aiProvider', 'openai');
+  const [aiModel, _setAiModel] = useLocalStorageMock('aiModel', 'gpt-4');
+  const [temperature, _setTemperature] = useLocalStorageMock('temperature', 0.7);
+  const [_maxTokens, _setMaxTokens] = useLocalStorageMock('maxTokens', 2000);
+  const [_streamResponses, _setStreamResponses] = useLocalStorageMock('streamResponses', true);
+  const [_saveHistory, _setSaveHistory] = useLocalStorageMock('saveHistory', true);
+  const [_contextLength, _setContextLength] = useLocalStorageMock('contextLength', 4000);
 
   return (
     <div>
@@ -112,10 +112,10 @@ function AIConfigurationSettings() {
 }
 
 function CaseManagementSettings() {
-  const [defaultCaseView, setDefaultCaseView] = useLocalStorageMock('defaultCaseView', 'grid');
-  const [itemsPerPage, setItemsPerPage] = useLocalStorageMock('itemsPerPage', 25);
-  const [sortOrder, setSortOrder] = useLocalStorageMock('sortOrder', 'date_desc');
-  const [showArchived, setShowArchived] = useLocalStorageMock('showArchived', false);
+  const [defaultCaseView, _setDefaultCaseView] = useLocalStorageMock('defaultCaseView', 'grid');
+  const [itemsPerPage, _setItemsPerPage] = useLocalStorageMock('itemsPerPage', 25);
+  const [_sortOrder, _setSortOrder] = useLocalStorageMock('sortOrder', 'date_desc');
+  const [_showArchived, _setShowArchived] = useLocalStorageMock('showArchived', false);
 
   return (
     <div>
@@ -167,7 +167,7 @@ function SettingsView() {
 
 // Performance Analysis
 export function runReactProfiling() {
-  console.log('🔬 Starting React Performance Profiling...\n');
+  logger.info('ReactProfiling', 'Starting React Performance Profiling...\n');
 
   // Reset metrics
   renderMetrics.length = 0;
@@ -180,7 +180,7 @@ export function runReactProfiling() {
 
   // Simulate tab switches
   const tabs = ['appearance', 'ai', 'cases'];
-  tabs.forEach((tab, index) => {
+  tabs.forEach((_tab, index) => {
     setTimeout(() => {
       rerender(<SettingsView />);
     }, index * 100);
@@ -249,7 +249,7 @@ ${identifyOptimizationOpportunities()}
 *React profiling completed*
 `;
 
-  console.log(report);
+  logger.info('ReactProfiling', report);
   return report;
 }
 

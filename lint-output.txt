@@ -3,19 +3,549 @@
 > eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0
 
 
-Oops! Something went wrong! :(
+F:\Justice Companion take 2\electron\database-init.ts
+  15:5  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  26:5  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  29:5  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  31:5  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  48:5  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
 
-ESLint: 9.37.0
+F:\Justice Companion take 2\electron\ipc-handlers.ts
+   33:3   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+   53:3   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+   81:9   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+   94:9   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  112:9   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  129:9   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  147:9   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  160:9   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  174:9   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  188:9   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  222:11  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  252:11  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  278:9   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  287:9   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  302:11  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  330:11  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  346:11  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  377:11  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  405:11  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  433:11  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  480:11  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  515:11  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  543:11  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  557:11  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  573:11  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  600:11  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  633:11  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  681:11  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  711:7   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  727:7   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  741:7   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  757:7   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  771:7   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  777:7   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  798:9   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  815:9   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  843:9   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  860:9   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
 
-ESLint couldn't find an eslint.config.(js|mjs|cjs) file.
+F:\Justice Companion take 2\electron\main.ts
+   78:7  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  126:5  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
 
-From ESLint v9.0.0, the default configuration file is now eslint.config.js.
-If you are using a .eslintrc.* file, please follow the migration guide
-to update your configuration file to the new format:
+F:\Justice Companion take 2\electron\preload.ts
+  221:1  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
 
-https://eslint.org/docs/latest/use/configure/migration-guide
+F:\Justice Companion take 2\electron\utils\authorization-wrapper.ts
+  103:5  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
 
-If you still have problems after following the migration guide, please stop by
-https://eslint.org/chat/help to chat with the team.
+F:\Justice Companion take 2\src\benchmarks\pagination-benchmark.ts
+  105:3  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  166:3  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  167:3  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  168:3  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  205:3  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  206:3  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  207:3  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  210:5  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  211:5  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  213:5  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  214:5  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  215:5  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  216:5  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  218:5  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  219:5  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  220:5  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  221:5  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  224:5  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  227:7  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  229:7  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  231:7  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  236:3  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  237:3  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  238:3  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  244:3  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  245:3  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  248:5  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  250:5  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  252:5  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  255:3  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  256:3  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  257:3  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  258:3  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  265:3  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  266:3  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  267:3  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  268:3  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  269:3  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
 
- ELIFECYCLE  Command failed with exit code 2.
+F:\Justice Companion take 2\src\contexts\AuthContext.tsx
+  178:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+F:\Justice Companion take 2\src\contexts\DebugContext.tsx
+  104:5   warning  React Hook useCallback has a missing dependency: 'timers'. Either include it or remove the dependency array                     react-hooks/exhaustive-deps
+  124:5   warning  React Hook useCallback has a missing dependency: 'timers'. Either include it or remove the dependency array                     react-hooks/exhaustive-deps
+  143:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+F:\Justice Companion take 2\src\db\database.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): src\db\database.d.ts
+
+F:\Justice Companion take 2\src\db\migrate.js
+  82:13  error  Definition for rule '@typescript-eslint/no-explicit-any' was not found  @typescript-eslint/no-explicit-any
+
+F:\Justice Companion take 2\src\electron-ipc-handlers.test.ts
+  629:30  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+F:\Justice Companion take 2\src\features\cases\components\CaseDetailView.test.tsx
+  269:24  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  280:24  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  291:24  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  303:24  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  314:24  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  374:24  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  386:24  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  405:24  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  419:24  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  431:24  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+F:\Justice Companion take 2\src\features\chat\components\MessageBubble.test.tsx
+   99:29  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  338:34  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+F:\Justice Companion take 2\src\features\chat\hooks\useAI.ts
+  82:49  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+F:\Justice Companion take 2\src\features\dashboard\components\DashboardView.test.tsx
+  81:24  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  92:24  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+F:\Justice Companion take 2\src\features\documents\components\DocumentsView.test.tsx
+  366:24  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  376:24  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  379:24  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  390:24  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  391:24  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  401:24  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  502:24  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  519:24  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  542:24  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  543:24  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+F:\Justice Companion take 2\src\features\facts\hooks\useCaseFacts.ts
+   64:42  warning  Forbidden non-null assertion                                                                                      @typescript-eslint/no-non-null-assertion
+   80:48  warning  Forbidden non-null assertion                                                                                      @typescript-eslint/no-non-null-assertion
+  108:6   warning  React Hook useEffect has a missing dependency: 'loadCaseFacts'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+F:\Justice Companion take 2\src\features\facts\hooks\useUserFacts.ts
+  47:42  warning  Forbidden non-null assertion                                                                                      @typescript-eslint/no-non-null-assertion
+  63:48  warning  Forbidden non-null assertion                                                                                      @typescript-eslint/no-non-null-assertion
+  91:6   warning  React Hook useEffect has a missing dependency: 'loadUserFacts'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+F:\Justice Companion take 2\src\features\legal\hooks\useLegalIssues.ts
+  30:44  warning  Forbidden non-null assertion                                                                                        @typescript-eslint/no-non-null-assertion
+  46:50  warning  Forbidden non-null assertion                                                                                        @typescript-eslint/no-non-null-assertion
+  74:6   warning  React Hook useEffect has a missing dependency: 'loadLegalIssues'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+F:\Justice Companion take 2\src\features\notes\hooks\useNotes.ts
+  30:38  warning  Forbidden non-null assertion                                                                                  @typescript-eslint/no-non-null-assertion
+  45:59  warning  Forbidden non-null assertion                                                                                  @typescript-eslint/no-non-null-assertion
+  72:6   warning  React Hook useEffect has a missing dependency: 'loadNotes'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+F:\Justice Companion take 2\src\features\settings\components\AppearanceSettings.tsx
+  24:29  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+F:\Justice Companion take 2\src\features\settings\components\ConsentSettings.tsx
+  57:29  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+F:\Justice Companion take 2\src\features\settings\components\DataPrivacySettings.tsx
+  43:29  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+F:\Justice Companion take 2\src\features\settings\components\NotificationSettings.tsx
+  24:29  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+F:\Justice Companion take 2\src\features\settings\components\ProfileSettings.tsx
+  182:40  warning  The ref value 'successTimeoutRef.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'successTimeoutRef.current' to a variable inside the effect, and use that variable in the cleanup function  react-hooks/exhaustive-deps
+
+F:\Justice Companion take 2\src\features\timeline\hooks\useTimeline.ts
+  30:47  warning  Forbidden non-null assertion                                                                                           @typescript-eslint/no-non-null-assertion
+  46:50  warning  Forbidden non-null assertion                                                                                           @typescript-eslint/no-non-null-assertion
+  74:6   warning  React Hook useEffect has a missing dependency: 'loadTimelineEvents'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+F:\Justice Companion take 2\src\main.tsx
+  5:21  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+F:\Justice Companion take 2\src\middleware\AuthorizationMiddleware.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): src\middleware\AuthorizationMiddleware.d.ts
+
+F:\Justice Companion take 2\src\models\AuditLog.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): src\models\AuditLog.d.ts
+
+F:\Justice Companion take 2\src\models\Case.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): src\models\Case.d.ts
+
+F:\Justice Companion take 2\src\models\User.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): src\models\User.d.ts
+
+F:\Justice Companion take 2\src\repositories\BaseRepository.ts
+  114:16  warning  'error' is defined but never used. Allowed unused caught errors must match /^_/u  @typescript-eslint/no-unused-vars
+  124:14  warning  'error' is defined but never used. Allowed unused caught errors must match /^_/u  @typescript-eslint/no-unused-vars
+  174:16  warning  'error' is defined but never used. Allowed unused caught errors must match /^_/u  @typescript-eslint/no-unused-vars
+
+F:\Justice Companion take 2\src\repositories\CaseFactsRepository.test.ts
+  202:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  203:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  204:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  205:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  409:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  435:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  436:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  526:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+F:\Justice Companion take 2\src\repositories\CaseFactsRepository.ts
+  49:27  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+F:\Justice Companion take 2\src\repositories\CaseRepository.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): src\repositories\CaseRepository.d.ts
+
+F:\Justice Companion take 2\src\repositories\CaseRepository.test.ts
+   74:40  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  125:40  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  143:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  162:16  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  174:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  194:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  263:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  278:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  292:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  306:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+F:\Justice Companion take 2\src\repositories\CaseRepository.ts
+  37:27  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+F:\Justice Companion take 2\src\repositories\CaseRepositoryPaginated.ts
+  111:27  warning  Forbidden non-null assertion             @typescript-eslint/no-non-null-assertion
+  420:40  error    A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+F:\Justice Companion take 2\src\repositories\ChatConversationRepository.ts
+  42:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+F:\Justice Companion take 2\src\repositories\ConsentRepository.ts
+  33:12  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+F:\Justice Companion take 2\src\repositories\EvidenceRepository.test.ts
+   86:40  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  138:40  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  174:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  199:16  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  217:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  259:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  316:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  332:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  347:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  376:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+F:\Justice Companion take 2\src\repositories\EvidenceRepository.ts
+  49:31  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+F:\Justice Companion take 2\src\repositories\FactsRepositories.test.ts
+  191:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  192:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+F:\Justice Companion take 2\src\repositories\LegalIssuesRepository.ts
+  53:28  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+F:\Justice Companion take 2\src\repositories\NotesRepository.test.ts
+  162:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  222:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  308:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  322:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+F:\Justice Companion take 2\src\repositories\NotesRepository.ts
+  46:27  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+F:\Justice Companion take 2\src\repositories\Phase3Repositories.test.ts
+  205:12  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  238:12  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  298:12  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  334:12  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+F:\Justice Companion take 2\src\repositories\SessionRepository.ts
+  48:12  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+F:\Justice Companion take 2\src\repositories\TimelineRepository.ts
+  49:28  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+F:\Justice Companion take 2\src\repositories\UserFactsRepository.test.ts
+  105:26  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  144:25  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  176:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  177:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  178:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  194:7   warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  198:25  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  263:7   warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  267:25  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  318:7   warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  322:25  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  344:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  347:26  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  366:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  367:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  383:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  384:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  398:25  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  446:25  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  464:7   warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  472:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  491:7   warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  494:21  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+F:\Justice Companion take 2\src\repositories\UserFactsRepository.ts
+  48:27  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+F:\Justice Companion take 2\src\repositories\UserRepository.ts
+  37:27  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+F:\Justice Companion take 2\src\scripts\analyze-react-components.ts
+  132:3   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  137:3   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  157:3   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  158:3   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  159:3   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  160:3   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  161:3   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  162:3   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  163:3   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  166:3   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  167:3   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  170:5   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  171:5   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  172:5   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  173:5   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  174:5   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  178:3   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  179:3   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  182:5   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  183:5   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  184:5   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  185:5   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  189:5   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  193:3   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  194:3   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  195:3   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  196:3   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  197:3   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  198:3   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  199:3   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  202:3   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  221:29  error    A `require()` style import is forbidden                                            @typescript-eslint/no-require-imports
+
+F:\Justice Companion take 2\src\scripts\settings-performance-analysis.ts
+  220:37  warning  Unexpected any. Specify a different type                                           @typescript-eslint/no-explicit-any
+  431:5   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  434:5   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  437:5   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  440:5   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  443:5   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  518:5   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  519:5   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  520:5   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  521:5   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+
+F:\Justice Companion take 2\src\scripts\settings-react-profiling.tsx
+   14:38  warning  Unexpected any. Specify a different type                                                                @typescript-eslint/no-explicit-any
+   40:21  warning  Unexpected any. Specify a different type                                                                @typescript-eslint/no-explicit-any
+   65:10  warning  Fast refresh only works when a file only exports components. Move your component(s) to a separate file  react-refresh/only-export-components
+   94:10  warning  Fast refresh only works when a file only exports components. Move your component(s) to a separate file  react-refresh/only-export-components
+  113:10  warning  Fast refresh only works when a file only exports components. Move your component(s) to a separate file  react-refresh/only-export-components
+  129:10  warning  Fast refresh only works when a file only exports components. Move your component(s) to a separate file  react-refresh/only-export-components
+  169:3   warning  Unexpected console statement. Only these console methods are allowed: warn, error                       no-console
+  251:3   warning  Unexpected console statement. Only these console methods are allowed: warn, error                       no-console
+
+F:\Justice Companion take 2\src\services\AuditLogger.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): src\services\AuditLogger.d.ts
+
+F:\Justice Companion take 2\src\services\AuditLogger.e2e.test.ts
+   64:21  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  219:21  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+F:\Justice Companion take 2\src\services\AuditLogger.test.ts
+  683:23  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  724:23  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  738:23  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  753:23  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  933:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  934:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+F:\Justice Companion take 2\src\services\ChatConversationService.test.ts
+  118:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  119:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  248:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  249:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  250:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  251:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  274:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+F:\Justice Companion take 2\src\services\ConsentService.test.ts
+   89:36  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  133:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  134:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  137:36  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  137:36  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  202:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  203:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+F:\Justice Companion take 2\src\services\DecryptionCache.test.ts
+  219:28  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  220:28  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+F:\Justice Companion take 2\src\services\EncryptionService.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): src\services\EncryptionService.d.ts
+
+F:\Justice Companion take 2\src\services\EncryptionService.test.ts
+   79:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+   79:39  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+   82:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+   82:47  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+   94:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+   95:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+   98:41  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  104:25  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  117:25  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  178:25  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  189:25  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  199:25  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  221:25  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  246:25  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  256:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  257:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  266:25  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  283:25  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  290:25  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  298:25  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  310:25  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  322:25  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  403:25  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+F:\Justice Companion take 2\src\services\ai-functions.ts
+  139:23  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+F:\Justice Companion take 2\src\test-utils\test-utils.tsx
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): src\test-utils\test-utils.tsx
+
+F:\Justice Companion take 2\src\types\node-llama-cpp.d.ts
+  35:32  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+F:\Justice Companion take 2\src\utils\error-logger.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): src\utils\error-logger.d.ts
+
+F:\Justice Companion take 2\supabase\client-example.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): supabase\client-example.ts
+
+F:\Justice Companion take 2\supabase\functions\ai-task-breakdown\index.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): supabase\functions\ai-task-breakdown\index.ts
+
+F:\Justice Companion take 2\supabase\functions\github-sync\index.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): supabase\functions\github-sync\index.ts
+
+F:\Justice Companion take 2\tests\e2e\playwright.config.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): tests\e2e\playwright.config.ts
+
+F:\Justice Companion take 2\tests\e2e\setup\electron-setup.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): tests\e2e\setup\electron-setup.ts
+
+F:\Justice Companion take 2\tests\e2e\setup\fixtures.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): tests\e2e\setup\fixtures.ts
+
+F:\Justice Companion take 2\tests\e2e\setup\global-setup.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): tests\e2e\setup\global-setup.ts
+
+F:\Justice Companion take 2\tests\e2e\setup\global-teardown.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): tests\e2e\setup\global-teardown.ts
+
+F:\Justice Companion take 2\tests\e2e\setup\test-database.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): tests\e2e\setup\test-database.ts
+
+F:\Justice Companion take 2\tests\e2e\specs\ai-chat.e2e.test.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): tests\e2e\specs\ai-chat.e2e.test.ts
+
+F:\Justice Companion take 2\tests\e2e\specs\authentication.e2e.test.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): tests\e2e\specs\authentication.e2e.test.ts
+
+F:\Justice Companion take 2\tests\e2e\specs\authorization.e2e.test.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): tests\e2e\specs\authorization.e2e.test.ts
+
+F:\Justice Companion take 2\tests\e2e\specs\case-management.e2e.test.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): tests\e2e\specs\case-management.e2e.test.ts
+
+F:\Justice Companion take 2\tests\e2e\specs\evidence-upload.e2e.test.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): tests\e2e\specs\evidence-upload.e2e.test.ts
+
+F:\Justice Companion take 2\tests\e2e\specs\facts-tracking.e2e.test.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): tests\e2e\specs\facts-tracking.e2e.test.ts
+
+F:\Justice Companion take 2\tests\e2e\specs\remember-me.e2e.test.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): tests\e2e\specs\remember-me.e2e.test.ts
+
+F:\Justice Companion take 2\tests\e2e\specs\test-1.spec.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): tests\e2e\specs\test-1.spec.ts
+
+F:\Justice Companion take 2\tests\e2e\specs\test-2.spec.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): tests\e2e\specs\test-2.spec.ts
+
+F:\Justice Companion take 2\tests\e2e\specs\user-journey.e2e.test.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): tests\e2e\specs\user-journey.e2e.test.ts
+
+✖ 342 problems (32 errors, 310 warnings)
+
+ ELIFECYCLE  Command failed with exit code 1.

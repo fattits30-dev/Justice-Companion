@@ -15,6 +15,7 @@
  */
 
 import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { logger } from '@/utils/logger';
 import { Database, Lock } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
@@ -244,7 +245,7 @@ export function DataPrivacySettings({ toast }: DataPrivacySettingsProps): JSX.El
         window.location.reload();
       }, 1000);
     } catch (error) {
-      console.error('Failed to clear data:', error);
+      logger.error('App', 'Failed to clear data:', { error: error });
       toast.error('Failed to clear all data. Please try again.');
     }
   };
@@ -278,7 +279,7 @@ export function DataPrivacySettings({ toast }: DataPrivacySettingsProps): JSX.El
         toast.error('Failed to export data');
       }
     } catch (error) {
-      console.error('Failed to export data:', error);
+      logger.error('App', 'Failed to export data:', { error: error });
       toast.error('Failed to export data. Please try again.');
     }
   };

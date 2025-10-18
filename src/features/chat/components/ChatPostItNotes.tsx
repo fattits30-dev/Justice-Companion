@@ -1,4 +1,5 @@
 import { useEffect, useState, memo, useCallback } from 'react';
+import { logger } from '@/utils/logger';
 import type { CaseFact } from '../../../models/CaseFact';
 
 interface ChatPostItNotesProps {
@@ -73,7 +74,7 @@ const ChatPostItNotesComponent = ({ caseId }: ChatPostItNotesProps) => {
           setCaseFacts(`⚖️ Case Facts (${caseFactsList.length})\n\n${formatted}`);
         }
       } catch (error) {
-        console.error('Failed to load case facts:', error);
+        logger.error('App', 'Failed to load case facts:', { error: error });
         setUserFacts('❌ Error loading facts\n\nPlease try refreshing.');
         setCaseFacts('❌ Error loading facts\n\nPlease try refreshing.');
       } finally {

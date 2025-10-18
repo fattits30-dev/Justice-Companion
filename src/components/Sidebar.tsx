@@ -10,6 +10,7 @@ import {
   User,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { logger } from '../utils/logger';
 import { useAuth } from '../contexts/AuthContext';
 import SidebarCaseContext from '../features/chat/components/SidebarCaseContext';
 import type { ChatConversation } from '../models/ChatConversation';
@@ -71,7 +72,7 @@ export function Sidebar({
           setRecentChats(conversationsResult.data);
         }
       } catch (error) {
-        console.error('Failed to load sidebar data:', error);
+        logger.error('App', 'Failed to load sidebar data:', { error: error });
       }
     };
 
@@ -92,7 +93,7 @@ export function Sidebar({
         setRecentChats(result.data);
       }
     } catch (error) {
-      console.error('Failed to load conversations for case:', caseId, error);
+      logger.error('App', 'Failed to load conversations for case:', { caseId, error });
     }
   };
 
@@ -118,7 +119,7 @@ export function Sidebar({
         setActiveConversationId(result.data.id);
       }
     } catch (error) {
-      console.error('Failed to create new chat:', error);
+      logger.error('App', 'Failed to create new chat:', { error: error });
     }
   };
 
@@ -143,7 +144,7 @@ export function Sidebar({
         }
       }
     } catch (error) {
-      console.error('Error deleting conversation:', error);
+      logger.error('App', 'Error deleting conversation:', { error: error });
     } finally {
       setDeleteConfirmOpen(false);
       setConversationToDelete(null);
@@ -163,7 +164,7 @@ export function Sidebar({
         prev.map((chat) => (chat.id === conversationId ? { ...chat, title: newTitle } : chat)),
       );
     } catch (error) {
-      console.error('Error renaming conversation:', error);
+      logger.error('App', 'Error renaming conversation:', { error: error });
     }
   };
 
@@ -189,7 +190,7 @@ export function Sidebar({
       await logout();
       // App will automatically redirect to login screen via AuthContext
     } catch (error) {
-      console.error('Logout failed:', error);
+      logger.error('App', 'Logout failed:', { error: error });
     } finally {
       setLogoutConfirmOpen(false);
     }

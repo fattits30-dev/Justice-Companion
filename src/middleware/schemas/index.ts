@@ -6,6 +6,7 @@
  */
 
 import { z } from 'zod';
+import { logger } from '../../utils/logger';
 import { IPC_CHANNELS } from '../../types/ipc';
 import * as aiSchemas from './ai-schemas';
 import * as authSchemas from './auth-schemas';
@@ -116,9 +117,9 @@ export const CHANNELS_WITHOUT_VALIDATION = TOTAL_IPC_CHANNELS - CHANNELS_WITH_VA
 
 // Log schema registry stats during development
 if (process.env.NODE_ENV === 'development') {
-  console.warn(`[Schema Registry] Total channels: ${TOTAL_IPC_CHANNELS}`);
-  console.warn(`[Schema Registry] With validation: ${CHANNELS_WITH_VALIDATION}`);
-  console.warn(`[Schema Registry] Without validation: ${CHANNELS_WITHOUT_VALIDATION}`);
+  logger.warn('Schema Registry', 'Total channels: ${TOTAL_IPC_CHANNELS}');
+  logger.warn('Schema Registry', 'With validation: ${CHANNELS_WITH_VALIDATION}');
+  logger.warn('Schema Registry', 'Without validation: ${CHANNELS_WITHOUT_VALIDATION}');
 }
 
 // Re-export all schema modules for convenient importing
