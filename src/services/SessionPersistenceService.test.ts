@@ -15,14 +15,20 @@ vi.mock('electron', () => ({
 }));
 
 // Mock fs/promises (hoisted to top)
-vi.mock('fs/promises', () => ({
-  access: vi.fn(),
-  mkdir: vi.fn(),
-  writeFile: vi.fn(),
-  readFile: vi.fn(),
-  unlink: vi.fn(),
-  stat: vi.fn(),
-}));
+vi.mock('fs/promises', () => {
+  const mockFns = {
+    access: vi.fn(),
+    mkdir: vi.fn(),
+    writeFile: vi.fn(),
+    readFile: vi.fn(),
+    unlink: vi.fn(),
+    stat: vi.fn(),
+  };
+  return {
+    default: mockFns, // Default export for: import fs from 'fs/promises'
+    ...mockFns, // Named exports for: import { access } from 'fs/promises'
+  };
+});
 
 describe('SessionPersistenceService', () => {
   // Import after mocks are set up
@@ -52,7 +58,7 @@ describe('SessionPersistenceService', () => {
     mockApp = electron.app;
 
     // Get fs from default export (how the service imports it)
-    fs = fsModule as typeof import('fs/promises');
+    fs = fsModule.default || fsModule;
 
     // Setup default mock behaviors
     mockApp.getPath.mockReturnValue(mockUserDataPath);

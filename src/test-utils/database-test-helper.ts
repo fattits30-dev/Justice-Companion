@@ -35,7 +35,10 @@ export class TestDatabaseHelper {
     ];
 
     for (const migration of migrations) {
-      const migrationPath = path.join(__dirname, '../../src/db/migrations', migration);
+      // Use process.cwd() to get project root, then navigate to migrations
+      const projectRoot = process.cwd();
+      const migrationPath = path.join(projectRoot, 'src/db/migrations', migration);
+
       const migrationSQL = readFileSync(migrationPath, 'utf-8');
 
       // Extract UP section only (ignore DOWN for tests)
