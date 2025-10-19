@@ -1,59 +1,23 @@
 {
   "permissions": {
     "allow": [
-      "Bash(powershell -ExecutionPolicy Bypass -File 'F:\\Justice Companion take 2\\fix-hook-test-variables.ps1')",
-      "Bash(powershell -ExecutionPolicy Bypass -File \"F:\\Justice Companion take 2\\fix-handlers-simple.ps1\")",
-      "Bash(powershell -ExecutionPolicy Bypass -File \"F:\\Justice Companion take 2\\fix-handlers-final.ps1\")",
-      "Bash(pnpm lint:*)",
-      "Bash(pnpm lint:fix:*)",
-      "Bash(pnpm test:*)",
-      "Bash(pnpm type-check:*)",
-      "Bash(time pnpm test:*)",
-      "Bash(tee:*)",
-      "mcp__MCP_DOCKER__sequentialthinking",
-      "Bash(pnpm add:*)",
-      "Bash(pnpm rebuild:node:*)",
-      "Bash(pnpm benchmark:pagination:*)",
-      "Bash(pnpm analyze:components:*)",
-      "mcp__MCP_DOCKER__list_directory",
-      "Bash(tail -50 \".claude/logs_47888388597/0_Analyze (javascript-typescript).txt\")",
-      "Bash(tail -50 \".claude/logs_47888388597/1_Analyze (actions).txt\")",
-      "Bash(tail -50 \".claude/logs_47888388597/2_Analyze (python).txt\")",
-      "Bash(cat test-output.txt)",
-      "Bash(npx tsc --noEmit src/features/settings/components/NotificationSettings.tsx)",
-      "Bash(npx eslint src/features/settings/components/NotificationSettings.tsx)",
-      "Bash(pnpm type-check:renderer)",
-      "Bash(npx tsc --noEmit src/features/settings/components/AppearanceSettings.tsx)",
-      "Bash(npx tsc --noEmit src/features/settings/components/SettingsView.tsx src/features/settings/components/AppearanceSettings.tsx src/features/settings/components/NotificationSettings.tsx)",
-      "Bash(pnpm run)",
-      "Bash(Select-String -Pattern \"(error TS|Found 0 errors|Found [0-9]+ error)\")",
-      "Bash(Select-Object -First 30)",
-      "Bash(winget --version)",
-      "Bash(choco --version)",
-      "Bash(choco install gh -y)",
-      "Bash(cat \"C:\\Users\\sava6\\Desktop\\codebase-guardian\\config.yaml\")",
-      "Bash(refreshenv)",
-      "Bash(gh --version)",
-      "Bash(\"/c/Program Files/GitHub CLI/gh.exe\" --version)",
-      "Bash(cat \"C:\\Users\\sava6\\Desktop\\codebase-guardian\\GETTING_STARTED.md\")",
-      "Bash(cat \"F:\\Justice Companion take 2/.github/CERBERUS_SETUP.md\")",
-      "Bash(cat \"F:\\Justice Companion take 2/.guardian/reports/justice_companion_scan.md\")",
-      "Bash(\"/c/Program Files/GitHub CLI/gh.exe\" auth status)",
-      "Bash(\"/c/Program Files/GitHub CLI/gh.exe\" run list --limit 10)",
-      "Bash(\"/c/Program Files/GitHub CLI/gh.exe\" repo view --json name,description,owner,url)",
-      "Bash(powershell -ExecutionPolicy Bypass -File guardian-local.ps1 status)"
+      "Bash(git add -A)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nfix: critical test stabilization - remove compiled files from src/\n\n**Root Cause:** Compiled .js files in src/ caused Vitest to import CommonJS\ninstead of TypeScript sources, breaking mocks and module resolution.\n\n**Changes:**\n- Delete all 38 compiled .js/.d.ts files from src/ directory  \n- Fix TestDatabaseHelper to use process.cwd() for migration paths\n- Fix fs/promises mock to include default export\n- Add window.matchMedia mock for JSDOM\n- Fix date comparison in session expiry test\n- Standardize console logging in SecureStorageService\n\n**Test Results:**\n- Before: 1167 passing, 32 failing\n- After: 1423 passing, 44 failing (mostly E2E tests)\n- Fixed 250+ tests by ensuring TypeScript sources are used\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
     ],
     "deny": [],
-    "ask": [],
-    "additionalDirectories": [
-      "C:\\"
-    ]
+    "ask": []
   },
-  "enabledMcpjsonServers": [
-    "github",
-    "memory",
-    "playwright",
-    "justice-companion"
-  ],
-  "outputStyle": "default"
+  "allowedTools": [
+    "Read(*)",
+    "Write(*)",
+    "Edit(*)",
+    "Grep(*)",
+    "Glob(*)",
+    "Bash(*)",
+    "Task(*)",
+    "WebFetch(*)",
+    "WebSearch(*)",
+    "SlashCommand(*)",
+    "TodoWrite(*)"
+  ]
 }

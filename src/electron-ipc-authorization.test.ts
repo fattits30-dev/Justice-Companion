@@ -213,7 +213,8 @@ describe('getCurrentUserIdFromSession', () => {
       }
 
       const now = Date.now();
-      if (session.expiresAt < now) {
+      const expiresAt = new Date(session.expiresAt).getTime(); // FIX: Parse ISO string to timestamp
+      if (expiresAt < now) {
         mockCurrentSessionId = null;
         throw new Error('Unauthorized: Session expired');
       }
