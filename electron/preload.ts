@@ -213,7 +213,7 @@ const electronAPI: ElectronAPI = {
 /**
  * Expose API to window object (type-safe)
  */
-contextBridge.exposeInMainWorld('electronAPI', electronAPI);
+contextBridge.exposeInMainWorld('electron', electronAPI);
 
 /**
  * Security: Log preload script loaded
@@ -225,6 +225,6 @@ console.log('[Preload] Context bridge established');
  */
 declare global {
   interface Window {
-    electronAPI: ElectronAPI;
+    electron: ElectronAPI;
   }
 }
