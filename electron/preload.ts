@@ -247,11 +247,5 @@ contextBridge.exposeInMainWorld('electron', electronAPI);
  */
 console.warn('[Preload] Context bridge established');
 
-/**
- * Extend Window interface for TypeScript
- */
-declare global {
-  interface Window {
-    electron: ElectronAPI;
-  }
-}
+// Window type extension removed - TypeScript ambient declarations don't work in preload sandbox
+// The window.electron API is available at runtime via contextBridge
