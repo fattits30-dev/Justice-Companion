@@ -1,9 +1,14 @@
 import fs from 'fs';
 import { logger } from '../utils/logger.ts';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import crypto from 'crypto';
 import { getDb } from './database.ts';
 import { errorLogger } from '../utils/error-logger.ts';
+
+// ESM equivalent of __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /**
  * Migration status type

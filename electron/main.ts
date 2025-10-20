@@ -3,9 +3,14 @@ import 'dotenv/config';
 
 import { app, BrowserWindow, safeStorage } from 'electron';
 import * as path from 'path';
+import { fileURLToPath } from 'url';
 import { setupIpcHandlers } from './ipc-handlers.ts';
 import { initializeDatabase, closeDatabase } from './database-init.ts';
 import { KeyManager } from '../src/services/KeyManager.ts';
+
+// ESM equivalent of __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Single instance lock
 const gotTheLock = app.requestSingleInstanceLock();
