@@ -14,7 +14,7 @@
  * - Standardized error responses
  */
 
-import { type IPCResponse, errorResponse, IPCErrorCode } from './ipc-response';
+import { type IPCResponse, errorResponse, IPCErrorCode } from './ipc-response.ts';
 
 // AuthorizationError is loaded at runtime via require() to avoid TypeScript path issues
 class AuthorizationError extends Error {
