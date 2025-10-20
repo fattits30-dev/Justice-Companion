@@ -797,9 +797,6 @@ export interface JusticeCompanionAPI {
   };
 }
 
-// Extend Window interface for TypeScript
-declare global {
-  interface Window {
-    justiceAPI: JusticeCompanionAPI;
-  }
-}
+// NOTE: Window interface extended in src/types/window.d.ts
+// That file has the ACTUAL signatures that match electron/preload.ts
+// This JusticeCompanionAPI interface is for future "modern" API design

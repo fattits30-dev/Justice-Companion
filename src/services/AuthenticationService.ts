@@ -2,12 +2,12 @@ import crypto from 'crypto';
 import { logger } from '@/utils/logger';
 import { promisify } from 'util';
 import { v4 as uuidv4 } from 'uuid';
-import { UserRepository } from '../repositories/UserRepository';
-import { SessionRepository } from '../repositories/SessionRepository';
-import { AuditLogger } from './AuditLogger';
-import { RateLimitService } from './RateLimitService';
-import type { User } from '../models/User';
-import type { Session } from '../models/Session';
+import { UserRepository } from '../repositories/UserRepository.ts';
+import { SessionRepository } from '../repositories/SessionRepository.ts';
+import { AuditLogger } from './AuditLogger.ts';
+import { RateLimitService } from './RateLimitService.ts';
+import type { User } from '../models/User.ts';
+import type { Session } from '../models/Session.ts';
 
 const scrypt = promisify(crypto.scrypt);
 

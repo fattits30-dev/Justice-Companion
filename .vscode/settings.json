@@ -2,8 +2,13 @@
   // MCP Servers (Model Context Protocol)
   "claude.mcpServers": {
     "MCP_DOCKER": {
-      "command": "docker",
-      "args": ["mcp", "gateway", "run"],
+      "command": "pwsh",
+      "args": [
+        "-NoLogo",
+        "-NoProfile",
+        "-Command",
+        "docker mcp gateway run"
+      ],
       "type": "stdio",
       "description": "Docker-based MCP gateway for browser automation, GitHub API, sandboxed code execution, and more"
     }

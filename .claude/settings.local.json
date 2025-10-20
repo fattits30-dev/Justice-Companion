@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(cat \"F:\\Justice Companion take 2\\package.json\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
