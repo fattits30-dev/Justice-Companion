@@ -1,10 +1,24 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, safeStorage } from 'electron';
 import * as path from 'path';
 import { setupIpcHandlers } from './ipc-handlers';
 import { initializeDatabase, closeDatabase } from './database-init';
+import { KeyManager } from '../src/services/KeyManager';
 
 // Single instance lock
 const gotTheLock = app.requestSingleInstanceLock();
+
+// Global KeyManager instance (initialized in app.ready)
+let keyManager: KeyManager | null = null;
+
+/**
+ * Get KeyManager instance (throws if not initialized)
+ */
+export function getKeyManager(): KeyManager {
+  if (!keyManager) {
+    throw new Error('KeyManager not initialized. Call only after app.ready.');
+  }
+  return keyManager;
+}
 
 if (!gotTheLock) {
   app.quit();
@@ -71,13 +85,56 @@ if (!gotTheLock) {
   }
 
   /**
-   * App ready event - initialize database, create window, setup IPC
+   * Initialize KeyManager with automatic .env migration
+   */
+  async function initializeKeyManager(): Promise<void> {
+    try {
+      // Create KeyManager instance
+      keyManager = new KeyManager(safeStorage, app.getPath('userData'));
+
+      // Check if key exists in safeStorage
+      if (!keyManager.hasKey()) {
+        console.warn('[Main] No key in safeStorage, checking .env...');
+
+        // Try to migrate from .env
+        const envKey = process.env.ENCRYPTION_KEY_BASE64;
+        if (envKey) {
+          console.warn('[Main] Migrating key from .env to safeStorage...');
+          keyManager.migrateFromEnv(envKey);
+          console.warn('[Main] ✅ Key migrated successfully');
+          console.warn('[Main] ⚠️  IMPORTANT: Remove ENCRYPTION_KEY_BASE64 from .env file');
+        } else {
+          throw new Error(
+            'No encryption key found in safeStorage or .env. ' +
+            'Generate one with: node scripts/generate-encryption-key.js'
+          );
+        }
+      } else {
+        console.warn('[Main] ✅ Encryption key loaded from safeStorage');
+      }
+
+      // Validate key can be loaded
+      const key = keyManager.getKey();
+      if (key.length !== 32) {
+        throw new Error(`Invalid key length: ${key.length} bytes`);
+      }
+    } catch (error) {
+      console.error('[Main] KeyManager initialization failed:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * App ready event - initialize database, KeyManager, create window, setup IPC
    */
   app.on('ready', async () => {
     try {
       console.warn('[Main] App ready');
 
-      // Initialize database first
+      // Initialize KeyManager (must be after app.ready for safeStorage)
+      await initializeKeyManager();
+
+      // Initialize database
       await initializeDatabase();
 
       // Create window and setup IPC

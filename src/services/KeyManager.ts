@@ -69,9 +69,10 @@ export class KeyManager {
 
     // Verify key length
     if (this.cachedKey.length !== 32) {
+      const actualLength = this.cachedKey.length;
       this.cachedKey = null; // Clear invalid key
       throw new Error(
-        `Invalid encryption key: expected 32 bytes, got ${this.cachedKey.length} bytes`
+        `Invalid encryption key: expected 32 bytes, got ${actualLength} bytes`
       );
     }
 
