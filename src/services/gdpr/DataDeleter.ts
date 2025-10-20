@@ -149,23 +149,21 @@ export class DataDeleter {
       // 2.13: users (root table)
       const deleteUser = this.db.prepare('DELETE FROM users WHERE id = ?');
       deletedCounts.users = deleteUser.run(userId).changes;
-
-      // Step 3: Count preserved records (legal requirement)
-      const auditLogsStmt = this.db.prepare(
-        'SELECT COUNT(*) as count FROM audit_logs WHERE user_id = ?'
-      );
-      const preservedAuditLogs = (auditLogsStmt.get(userId.toString()) as any).count;
-
-      const consentsStmt = this.db.prepare(
-        'SELECT COUNT(*) as count FROM consent_records WHERE userId = ?'
-      );
-      const preservedConsents = (consentsStmt.get(userId) as any).count;
-
-      return { preservedAuditLogs, preservedConsents };
     });
 
     // Execute transaction
-    const { preservedAuditLogs, preservedConsents } = deleteTransaction();
+    deleteTransaction();
+
+    // Step 3: Count preserved records AFTER transaction (legal requirement)
+    const auditLogsStmt = this.db.prepare(
+      'SELECT COUNT(*) as count FROM audit_logs WHERE user_id = ?'
+    );
+    const preservedAuditLogs = (auditLogsStmt.get(userId.toString()) as any).count;
+
+    const consentsStmt = this.db.prepare(
+      'SELECT COUNT(*) as count FROM consent_records WHERE userId = ?'
+    );
+    const preservedConsents = (consentsStmt.get(userId) as any).count;
 
     return {
       success: true,

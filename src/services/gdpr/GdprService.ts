@@ -89,8 +89,7 @@ export class GdprService {
       this.incrementRateLimit(userId, 'export');
 
       return {
-        userData,
-        metadata: userData.metadata,
+        ...userData, // Spread UserDataExport (contains metadata and userData)
         filePath,
       };
     } catch (error) {
@@ -104,6 +103,11 @@ export class GdprService {
         success: false,
         errorMessage: error instanceof Error ? error.message : 'Unknown error',
       });
+
+      // Re-throw expected errors without wrapping (for clear test assertions)
+      if (error instanceof RateLimitError || error instanceof ConsentRequiredError) {
+        throw error;
+      }
 
       throw new GdprOperationError(
         'GDPR export failed',
@@ -166,11 +170,18 @@ export class GdprService {
         },
       });
 
+      // Re-count audit logs AFTER deletion log created (for accurate reporting)
+      const auditLogsStmt = this.db.prepare(
+        'SELECT COUNT(*) as count FROM audit_logs WHERE user_id = ?'
+      );
+      const finalAuditLogCount = (auditLogsStmt.get(userId.toString()) as any).count;
+
       // Increment rate limit counter
       this.incrementRateLimit(userId, 'delete');
 
       return {
         ...deleteResult,
+        preservedAuditLogs: finalAuditLogCount, // Override with final count
         exportPath,
       };
     } catch (error) {
@@ -184,6 +195,16 @@ export class GdprService {
         success: false,
         errorMessage: error instanceof Error ? error.message : 'Unknown error',
       });
+
+      // Re-throw expected errors without wrapping (for clear test assertions)
+      if (error instanceof RateLimitError || error instanceof ConsentRequiredError) {
+        throw error;
+      }
+
+      // Re-throw confirmation errors
+      if (error instanceof Error && error.message.includes('explicit confirmation')) {
+        throw error;
+      }
 
       throw new GdprOperationError(
         'GDPR deletion failed',

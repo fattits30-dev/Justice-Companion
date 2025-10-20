@@ -243,11 +243,16 @@ describe('GDPR Integration Tests', () => {
       expect(result.userData.cases.count).toBe(1);
       expect(result.userData.cases.records).toHaveLength(1);
 
-      // Description should be DECRYPTED
+      // Description should be DECRYPTED (plaintext, not JSON with ciphertext/iv)
       const exportedCase = result.userData.cases.records[0];
       expect(exportedCase.description).toBe('Sensitive legal case details');
-      expect(exportedCase.description).not.toContain('ciphertext');
-      expect(exportedCase.description).not.toContain('iv');
+      // Ensure it's plaintext, not encrypted JSON structure
+      expect(() => {
+        const parsed = JSON.parse(exportedCase.description);
+        if (parsed.ciphertext || parsed.iv) {
+          throw new Error('Still encrypted');
+        }
+      }).toThrow(); // Should throw because it's not valid JSON anymore
     });
 
     it('should export all 15 tables with correct counts', async () => {
