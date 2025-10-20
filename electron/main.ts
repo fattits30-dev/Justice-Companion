@@ -12,6 +12,25 @@ import { KeyManager } from '../src/services/KeyManager.ts';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Auto-reload Electron in development when files change
+if (process.env.NODE_ENV !== 'production') {
+  try {
+    require('electron-reloader')(module, {
+      debug: true,
+      watchRenderer: false, // Vite handles renderer HMR
+      ignore: [
+        'node_modules',
+        'dist',
+        'release',
+        'src/**/*', // Renderer code handled by Vite
+      ],
+    });
+    console.log('[Main] 🔥 Auto-reload enabled for Electron main process');
+  } catch (err) {
+    console.log('[Main] electron-reloader not available:', err);
+  }
+}
+
 // Single instance lock
 const gotTheLock = app.requestSingleInstanceLock();
 
