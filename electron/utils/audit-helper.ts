@@ -5,6 +5,12 @@
  */
 
 import type { IpcMainInvokeEvent } from 'electron';
+import * as path from 'path';
+import { fileURLToPath, pathToFileURL } from 'url';
+
+// ESM equivalent of __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /**
  * Audit event types for Justice Companion (const object - modern TypeScript best practice)
@@ -51,11 +57,13 @@ export type AuditEventType = (typeof AuditEventType)[keyof typeof AuditEventType
 /**
  * Get AuditLogger instance (lazy-loaded at runtime)
  */
-function getAuditLogger() {
-  // Runtime path: from dist/electron/utils/ to src/ (three levels up)
-  const { AuditLogger } = require('../../../src/services/AuditLogger');
+async function getAuditLogger() {
+  // Use absolute paths to prevent path traversal (CVSS 8.8 fix)
+  // Convert Windows paths to file:// URLs for ESM dynamic imports
+  // Add .ts extension for tsx to resolve TypeScript modules
+  const { AuditLogger } = await import(pathToFileURL(path.join(__dirname, '../../../src/services/AuditLogger.ts')).href);
 
-  const { getDb } = require('../../../src/db/database');
+  const { getDb } = await import(pathToFileURL(path.join(__dirname, '../../../src/db/database.ts')).href);
 
   const db = getDb();
   return new AuditLogger(db);
@@ -73,7 +81,7 @@ function getAuditLogger() {
  * @param success - Whether the operation succeeded (default: true)
  * @param errorMessage - Error message if operation failed
  */
-export function logAuditEvent(params: {
+export async function logAuditEvent(params: {
   eventType: AuditEventType;
   userId: string | null;
   resourceType: string;
@@ -82,9 +90,9 @@ export function logAuditEvent(params: {
   details?: Record<string, unknown>;
   success?: boolean;
   errorMessage?: string;
-}): void {
+}): Promise<void> {
   try {
-    const logger = getAuditLogger();
+    const logger = await getAuditLogger();
 
     logger.log({
       eventType: params.eventType,
@@ -140,13 +148,13 @@ export function requireAuth(event: IpcMainInvokeEvent): void {
 /**
  * Helper to log authentication events
  */
-export function logAuthEvent(
+export async function logAuthEvent(
   eventType: AuditEventType,
   userId: string | null,
   success: boolean,
   errorMessage?: string
-): void {
-  logAuditEvent({
+): Promise<void> {
+  await logAuditEvent({
     eventType,
     userId,
     resourceType: 'user',

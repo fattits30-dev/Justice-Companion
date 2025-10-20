@@ -12,7 +12,7 @@ import {
   MAX_USERNAME_LENGTH,
   MAX_EMAIL_LENGTH,
   PATTERNS,
-} from '../utils/constants';
+} from '../utils/constants.ts';
 
 /**
  * Password validation with strength requirements

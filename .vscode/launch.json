@@ -21,7 +21,9 @@
       "env": {
         "NODE_ENV": "development",
         "ELECTRON_ENABLE_LOGGING": "1"
-      }
+      },
+      "stopOnEntry": false,
+      "autoAttachChildProcesses": false
     },
     {
       "name": "Electron: Renderer Process",
@@ -53,6 +55,8 @@
         "NODE_ENV": "development",
         "ELECTRON_ENABLE_LOGGING": "1"
       },
+      "stopOnEntry": false,
+      "autoAttachChildProcesses": false,
       "serverReadyAction": {
         "pattern": "started on.*port ([0-9]+)",
         "uriFormat": "http://localhost:%s",
@@ -67,7 +71,9 @@
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["test", "--run"],
       "console": "integratedTerminal",
-      "skipFiles": ["<node_internals>/**"]
+      "skipFiles": ["<node_internals>/**"],
+      "stopOnEntry": false,
+      "autoAttachChildProcesses": false
     },
     {
       "name": "Debug Current Test File",
@@ -81,7 +87,9 @@
         "${relativeFile}"
       ],
       "console": "integratedTerminal",
-      "skipFiles": ["<node_internals>/**"]
+      "skipFiles": ["<node_internals>/**"],
+      "stopOnEntry": false,
+      "autoAttachChildProcesses": false
     },
     {
       "name": "E2E Tests (Playwright)",
@@ -91,7 +99,9 @@
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["test:e2e"],
       "console": "integratedTerminal",
-      "skipFiles": ["<node_internals>/**"]
+      "skipFiles": ["<node_internals>/**"],
+      "stopOnEntry": false,
+      "autoAttachChildProcesses": false
     }
   ],
   "compounds": [

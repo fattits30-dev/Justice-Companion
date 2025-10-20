@@ -1,5 +1,6 @@
 import { ipcMain, type IpcMainInvokeEvent } from 'electron';
 import * as path from 'path';
+import { fileURLToPath, pathToFileURL } from 'url';
 import {
   successResponse,
   errorResponse,
@@ -13,6 +14,10 @@ import {
   getAuthorizationMiddleware,
   verifyEvidenceOwnership,
 } from './utils/authorization-wrapper.ts';
+
+// ESM equivalent of __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /**
  * Setup all IPC handlers for Electron main process
@@ -59,16 +64,20 @@ export function setupIpcHandlers(): void {
  */
 function setupAuthHandlers(): void {
   // Lazy-load services to avoid circular dependencies
-  const getAuthService = () => {
+  const getAuthService = async () => {
     // Use absolute paths to prevent path traversal (CVSS 8.8 fix)
-    const { AuthenticationService } = require(path.join(__dirname, '../src/services/AuthenticationService'));
-    const { getDb } = require(path.join(__dirname, '../src/db/database'));
+    // Convert Windows paths to file:// URLs for ESM dynamic imports
+    // Add .ts extension for tsx to resolve TypeScript modules
+    const { AuthenticationService } = await import(pathToFileURL(path.join(__dirname, '../src/services/AuthenticationService.ts')).href);
+    const { getDb } = await import(pathToFileURL(path.join(__dirname, '../src/db/database.ts')).href);
     return new AuthenticationService(getDb());
   };
 
-  const getAuthSchemas = () => {
+  const getAuthSchemas = async () => {
     // Use absolute paths to prevent path traversal (CVSS 8.8 fix)
-    return require(path.join(__dirname, '../src/middleware/schemas/auth-schemas'));
+    // Convert Windows paths to file:// URLs for ESM dynamic imports
+    // Add .ts extension for tsx to resolve TypeScript modules
+    return await import(pathToFileURL(path.join(__dirname, '../src/middleware/schemas/auth-schemas.ts')).href);
   };
 
   // Register new user
@@ -79,11 +88,11 @@ function setupAuthHandlers(): void {
         console.warn('[IPC] auth:register called');
 
         // Validate input with Zod
-        const schemas = getAuthSchemas();
+        const schemas = await getAuthSchemas();
         const validatedData = schemas.authRegisterSchema.parse(data);
 
         // Call AuthenticationService.register()
-        const authService = getAuthService();
+        const authService = await getAuthService();
         const result = await authService.register(validatedData);
 
         // Log audit event
@@ -110,11 +119,11 @@ function setupAuthHandlers(): void {
         console.warn('[IPC] auth:login called');
 
         // Validate input with Zod
-        const schemas = getAuthSchemas();
+        const schemas = await getAuthSchemas();
         const validatedData = schemas.authLoginSchema.parse(data);
 
         // Call AuthenticationService.login()
-        const authService = getAuthService();
+        const authService = await getAuthService();
         const result = await authService.login(
           validatedData.username,
           validatedData.password,
@@ -149,7 +158,7 @@ function setupAuthHandlers(): void {
         }
 
         // Call AuthenticationService.logout()
-        const authService = getAuthService();
+        const authService = await getAuthService();
         await authService.logout(sessionId);
 
         // Log logout (we don't know userId at this point, so pass null)
@@ -176,7 +185,7 @@ function setupAuthHandlers(): void {
         }
 
         // Call AuthenticationService.getSession()
-        const authService = getAuthService();
+        const authService = await getAuthService();
         const session = await authService.getSession(sessionId);
 
         if (!session) {

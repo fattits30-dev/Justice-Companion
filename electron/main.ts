@@ -13,22 +13,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Auto-reload Electron in development when files change
+// NOTE: electron-reloader is not compatible with ES modules
+// Developers must manually restart Electron when making main process changes
 if (process.env.NODE_ENV !== 'production') {
-  try {
-    require('electron-reloader')(module, {
-      debug: true,
-      watchRenderer: false, // Vite handles renderer HMR
-      ignore: [
-        'node_modules',
-        'dist',
-        'release',
-        'src/**/*', // Renderer code handled by Vite
-      ],
-    });
-    console.log('[Main] 🔥 Auto-reload enabled for Electron main process');
-  } catch (err) {
-    console.log('[Main] electron-reloader not available:', err);
-  }
+  console.log('[Main] Running in development mode (manual restart required for main process changes)');
 }
 
 // Single instance lock
