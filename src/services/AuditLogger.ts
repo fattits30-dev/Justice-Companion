@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from 'node:crypto';
-import { logger } from '../utils/logger.js';
+import { logger } from '../utils/logger.ts';
 import type Database from 'better-sqlite3';
 import type {
   AuditEvent,
