@@ -16,7 +16,8 @@
   "scripts": {
     "dev": "vite",
     "dev:electron": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
-    "electron:dev": "concurrently \"vite\" \"wait-on http://localhost:5176 && tsx node_modules/electron/cli.js electron/main.ts\"",
+    "build:preload": "tsc --module CommonJS --target ES2022 --outDir dist/electron --skipLibCheck electron/preload.ts",
+    "electron:dev": "pnpm build:preload && concurrently \"vite\" \"wait-on http://localhost:5176 && tsx node_modules/electron/cli.js electron/main.ts\"",
     "build": "tsc && vite build",
     "build:electron": "tsc -p tsconfig.electron.json && vite build",
     "electron:build": "pnpm build:electron && electron-builder",
