@@ -38,7 +38,7 @@ if (!gotTheLock) {
    */
   function createWindow(): void {
     console.log('[Main] Creating window...');
-    const preloadPath = path.join(__dirname, 'preload.ts');
+    const preloadPath = path.join(__dirname, '../dist/electron/preload.js');
     console.log('[Main] Preload path:', preloadPath);
 
     mainWindow = new BrowserWindow({
