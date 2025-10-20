@@ -120,6 +120,11 @@ src/
     AuthenticationService.ts
     EncryptionService.ts
     AuditLogger.ts
+    KeyManager.ts
+    gdpr/              # GDPR compliance services
+      GdprService.ts
+      DataExporter.ts
+      DataDeleter.ts
 
   middleware/         # Authorization middleware
   types/             # TypeScript type definitions
@@ -134,11 +139,16 @@ src/
 4. **Database:** Drizzle ORM schemas and migrations in `src/db/`
 
 **Security Architecture:**
-- All sensitive data encrypted with AES-256-GCM (11 encrypted database fields)
-- Passwords hashed with scrypt (OWASP-compliant, 128-bit random salts)
-- Session management: 24-hour expiration, UUID v4 session IDs
-- Immutable audit logs with SHA-256 hash chaining
-- All inputs validated with Zod schemas
+- **Encryption:** AES-256-GCM for 11 sensitive database fields
+- **Key Management:** OS-level encryption via `KeyManager` (fixes CVSS 9.1)
+  - Windows: DPAPI | macOS: Keychain | Linux: libsecret
+  - Auto-migration from `.env` on first run
+- **Password Hashing:** scrypt (OWASP-compliant, 128-bit random salts)
+- **Session Management:** 24-hour expiration, UUID v4 session IDs
+- **Audit Logging:** Immutable SHA-256 hash chaining
+- **Input Validation:** Zod schemas for all user inputs
+- **Path Security:** Absolute paths with `path.join(__dirname, ...)` (fixes CVSS 8.8)
+- **GDPR Compliance:** Full implementation of Articles 17 & 20 (fixes CVSS 9.5)
 
 **Database Schema:**
 - 15 tables total
@@ -160,7 +170,20 @@ src/
 
 ## Environment Configuration
 
-Create `.env` file in root directory:
+### Encryption Key Management
+
+**Production (Recommended):** Encryption keys are stored securely using `KeyManager` with Electron's `safeStorage` API:
+
+- **Windows:** DPAPI (Data Protection API)
+- **macOS:** Keychain
+- **Linux:** Secret Service API (libsecret)
+
+The encrypted key is stored at `app.getPath('userData')/.encryption-key`.
+
+**First Run:** If you have an existing `.env` file with `ENCRYPTION_KEY_BASE64`, the app will automatically migrate it to safeStorage on first run. After migration, you should **delete the key from .env** for security.
+
+**Development/Testing:** For tests that need an encryption key, you can still use `.env`:
+
 ```env
 ENCRYPTION_KEY_BASE64=<your-32-byte-base64-encoded-key>
 ```
@@ -172,6 +195,26 @@ openssl rand -base64 32
 
 # Windows PowerShell:
 [Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Minimum 0 -Maximum 256 }))
+```
+
+**Migration Script:** If you need to manually migrate or generate a new key:
+
+```typescript
+import { KeyManager } from './src/services/KeyManager';
+import { app, safeStorage } from 'electron';
+
+const keyManager = new KeyManager(safeStorage, app.getPath('userData'));
+
+// Migrate from .env
+const envKey = process.env.ENCRYPTION_KEY_BASE64;
+if (envKey) {
+  keyManager.migrateFromEnv(envKey);
+  console.log('✓ Key migrated to safeStorage');
+}
+
+// Or generate new key
+const newKey = keyManager.generateNewKey();
+console.log('✓ New key generated:', newKey);
 ```
 
 ## CI/CD Pipeline
@@ -206,24 +249,99 @@ This triggers the release workflow to build all platform installers and create a
 ## Security & Compliance
 
 ### GDPR Compliance
-- Data portability: Export all user data to JSON
-- Right to erasure: Delete all user data
-- Consent management: Track user consents in database
-- Audit logging: Immutable trail of all data access
+
+Full implementation of GDPR Articles 17 & 20 with production-grade security:
+
+**Article 20 - Data Portability (Right to Export):**
+- **Service:** `GdprService.exportUserData(userId, options)`
+- **Output:** Machine-readable JSON with all user data across 13 tables
+- **Encryption:** All encrypted fields are decrypted before export
+- **Rate Limiting:** 5 exports per 24 hours per user (prevents abuse)
+- **Consent Required:** User must have active `data_processing` consent
+- **Audit Trail:** Every export logged with SHA-256 hash chaining
+- **File Export:** Optionally saves to disk at `exports/user-{userId}-export-{timestamp}.json`
+
+**Article 17 - Right to Erasure (Right to Delete):**
+- **Service:** `GdprService.deleteUserData(userId, options)`
+- **Deletion Order:** Respects foreign key constraints (15-step cascade)
+- **Safety:** Requires explicit `confirmed: true` flag
+- **Rate Limiting:** 1 deletion per 30 days per user (prevents accidents)
+- **Consent Required:** User must have `data_erasure_request` consent
+- **Preserved Data:** Audit logs and consent records (legal requirement)
+- **Export Option:** Can export before deletion with `exportBeforeDelete: true`
+- **Transaction Safety:** All-or-nothing deletion (atomic)
+
+**Implementation Files:**
+- `src/services/gdpr/GdprService.ts` - Orchestration layer (363 lines)
+- `src/services/gdpr/DataExporter.ts` - Export logic (344 lines)
+- `src/services/gdpr/DataDeleter.ts` - Deletion logic (191 lines)
+- `src/models/Gdpr.ts` - Type definitions (153 lines)
+- `src/services/gdpr/Gdpr.integration.test.ts` - Test suite (15/15 passing, 822 lines)
+
+**Usage Example:**
+```typescript
+import { GdprService } from './src/services/gdpr/GdprService';
+
+const gdprService = new GdprService(db, encryptionService, auditLogger);
+
+// Export user data
+const exportResult = await gdprService.exportUserData(userId, {
+  format: 'json',
+});
+console.log('Exported:', exportResult.metadata.totalRecords, 'records');
+console.log('Saved to:', exportResult.filePath);
+
+// Delete user data
+const deleteResult = await gdprService.deleteUserData(userId, {
+  confirmed: true,
+  exportBeforeDelete: true,
+  reason: 'User requested account deletion',
+});
+console.log('Deleted:', deleteResult.deletedCounts);
+console.log('Preserved audit logs:', deleteResult.preservedAuditLogs);
+```
+
+**Test Coverage:** 15 comprehensive integration tests covering:
+- Data export with decryption
+- Data deletion with cascade
+- Rate limiting enforcement
+- Consent requirement validation
+- Audit log preservation
+- Error handling and rollback
+- Export before delete workflow
+
+### Encryption Key Security
+
+**KeyManager Service** (`src/services/KeyManager.ts`):
+- **Fixes:** CVSS 9.1 vulnerability (plaintext key in .env)
+- **Storage:** OS-level encryption via Electron `safeStorage` API
+- **Auto-Migration:** Migrates from .env on first run
+- **Key Operations:**
+  - `getKey()` - Load and decrypt key (cached in memory)
+  - `migrateFromEnv(envKey)` - Migrate from .env to safeStorage
+  - `generateNewKey()` - Generate new 32-byte key
+  - `rotateKey()` - Rotate key (backs up old key)
+  - `clearCache()` - Securely wipe key from memory
+
+**Key Location:**
+- **Encrypted:** `app.getPath('userData')/.encryption-key`
+- **Permissions:** 0o600 (read/write owner only)
+- **Backup:** Automatic backup before rotation
 
 ### Security Best Practices
-- Never commit `.env` file or encryption keys
-- All user inputs must be validated with Zod schemas
-- Use `EncryptionService` for encrypting sensitive fields
-- Use `AuditLogger` for logging security-relevant events
-- Follow OWASP authentication guidelines (implemented in `AuthenticationService`)
+- **Never commit `.env` file or encryption keys** - Use KeyManager for production
+- **All user inputs validated with Zod schemas** - Runtime type checking
+- **Use `EncryptionService` for encrypting sensitive fields** - AES-256-GCM
+- **Use `AuditLogger` for logging security events** - SHA-256 hash chaining
+- **Follow OWASP authentication guidelines** - Implemented in `AuthenticationService`
+- **Path Traversal Prevention** - All `require()` calls use absolute paths with `path.join(__dirname, ...)`
 
 ### Encrypted Database Fields
 11 fields across the schema require encryption:
 - User passwords (scrypt hashed, not encrypted)
-- Case details
-- Evidence metadata
-- Personal information
+- Case details (case title, description, status)
+- Evidence metadata (file paths, notes)
+- Personal information (names, addresses, phone numbers)
 - AI chat messages (optional, based on user consent)
 
 ## Known Issues & Troubleshooting
