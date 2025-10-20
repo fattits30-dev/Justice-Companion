@@ -82,27 +82,30 @@ export function initializeRepositories(
 }
 
 /**
- * Create encryption service from environment variable
+ * Create encryption service from environment variable or explicit key
  *
+ * @param key - Optional encryption key (Buffer or base64 string).
+ *              If not provided, reads from ENCRYPTION_KEY_BASE64 env var (legacy fallback for tests)
  * @returns EncryptionService instance
- * @throws Error if ENCRYPTION_KEY_BASE64 is not set or invalid
+ * @throws Error if key not provided and ENCRYPTION_KEY_BASE64 is not set or invalid
  */
-export function createEncryptionService(): EncryptionService {
-  const key = process.env.ENCRYPTION_KEY_BASE64;
+export function createEncryptionService(key?: Buffer | string): EncryptionService {
+  // Use provided key or fall back to environment variable
+  const encryptionKey = key || process.env.ENCRYPTION_KEY_BASE64;
 
-  if (!key) {
+  if (!encryptionKey) {
     throw new Error(
-      'ENCRYPTION_KEY_BASE64 environment variable is required. ' +
+      'Encryption key required. Either pass key parameter or set ENCRYPTION_KEY_BASE64 environment variable. ' +
       'Generate one with: node scripts/generate-encryption-key.js'
     );
   }
 
   try {
-    return new EncryptionService(key);
+    return new EncryptionService(encryptionKey);
   } catch (error) {
     throw new Error(
       `Failed to create EncryptionService: ${error instanceof Error ? error.message : 'Unknown error'}. ` +
-      'Ensure ENCRYPTION_KEY_BASE64 is a valid base64-encoded 32-byte key.'
+      'Ensure key is a valid base64-encoded 32-byte key or 32-byte Buffer.'
     );
   }
 }

@@ -797,9 +797,12 @@ function setupGdprHandlers(): void {
     const { EncryptionService } = require('../../src/services/EncryptionService');
     const { AuditLogger } = require('../../src/services/AuditLogger');
     const { getDb } = require('../../src/db/database');
+    const { getKeyManager } = require('./main');
 
     const db = getDb();
-    const encryptionService = new EncryptionService();
+    const keyManager = getKeyManager();
+    const encryptionKey = keyManager.getKey();
+    const encryptionService = new EncryptionService(encryptionKey);
     const auditLogger = new AuditLogger(db);
 
     return new GdprService(db, encryptionService, auditLogger);
