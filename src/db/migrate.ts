@@ -1,9 +1,9 @@
 import fs from 'fs';
-import { logger } from '../utils/logger';
+import { logger } from '../utils/logger.ts';
 import path from 'path';
 import crypto from 'crypto';
-import { getDb } from './database';
-import { errorLogger } from '../utils/error-logger';
+import { getDb } from './database.ts';
+import { errorLogger } from '../utils/error-logger.ts';
 
 /**
  * Migration status type
