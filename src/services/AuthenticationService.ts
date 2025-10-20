@@ -57,14 +57,25 @@ export class AuthenticationService {
   private readonly KEY_LENGTH = 64;
   private readonly SESSION_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
   private readonly REMEMBER_ME_DURATION_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+
+  // Explicit property declarations (TSX strip-only mode compatibility)
+  private userRepository: UserRepository;
+  private sessionRepository: SessionRepository;
+  private auditLogger?: AuditLogger;
+  private sessionPersistence?: SessionPersistenceHandler;
   private rateLimitService: RateLimitService;
 
   constructor(
-    private userRepository: UserRepository,
-    private sessionRepository: SessionRepository,
-    private auditLogger?: AuditLogger,
-    private sessionPersistence?: SessionPersistenceHandler,
+    userRepository: UserRepository,
+    sessionRepository: SessionRepository,
+    auditLogger?: AuditLogger,
+    sessionPersistence?: SessionPersistenceHandler,
   ) {
+    // Explicit property assignments (TSX strip-only mode compatibility)
+    this.userRepository = userRepository;
+    this.sessionRepository = sessionRepository;
+    this.auditLogger = auditLogger;
+    this.sessionPersistence = sessionPersistence;
     this.rateLimitService = RateLimitService.getInstance();
   }
 

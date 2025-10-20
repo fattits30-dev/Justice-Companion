@@ -12,7 +12,13 @@ import type { AuditLogger } from '../services/AuditLogger';
  * - Email uniqueness enforced at database level
  */
 export class UserRepository {
-  constructor(private auditLogger?: AuditLogger) {}
+  // Explicit property declaration (TSX strip-only mode compatibility)
+  private auditLogger?: AuditLogger;
+
+  constructor(auditLogger?: AuditLogger) {
+    // Explicit property assignment (TSX strip-only mode compatibility)
+    this.auditLogger = auditLogger;
+  }
 
   /**
    * Create a new user
