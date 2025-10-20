@@ -1,3 +1,6 @@
+// Load environment variables BEFORE everything else
+import 'dotenv/config';
+
 import { app, BrowserWindow, safeStorage } from 'electron';
 import * as path from 'path';
 import { setupIpcHandlers } from './ipc-handlers.ts';

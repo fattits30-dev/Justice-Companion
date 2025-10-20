@@ -2,7 +2,7 @@ import Database from 'better-sqlite3';
 import fs from 'fs';
 import path from 'path';
 import { app } from 'electron';
-import { errorLogger } from '../utils/error-logger';
+import { errorLogger } from '../utils/error-logger.ts';
 
 const resolveDatabasePath = (): string => {
   if (process.env.JUSTICE_DB_PATH) {
