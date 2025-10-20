@@ -43,8 +43,8 @@ export interface ElectronAPI {
     status: () => Promise<MigrationStatusResponse>;
   };
   gdpr: {
-    export: () => Promise<ExportResponse>;
-    delete: () => Promise<void>;
+    export: (sessionId: string, options?: { format?: 'json' | 'csv' }) => Promise<GdprExportResponse>;
+    delete: (sessionId: string, options?: { confirmed: boolean; exportBeforeDelete?: boolean; reason?: string }) => Promise<GdprDeleteResponse>;
   };
 }
 
@@ -154,6 +154,30 @@ interface ExportResponse {
   error?: string;
 }
 
+interface GdprExportResponse {
+  success: boolean;
+  data?: {
+    filePath?: string;
+    totalRecords: number;
+    exportDate: string;
+    format: 'json' | 'csv';
+  };
+  error?: string;
+}
+
+interface GdprDeleteResponse {
+  success: boolean;
+  data?: {
+    success: boolean;
+    deletedCounts: Record<string, number>;
+    preservedAuditLogs: number;
+    preservedConsents: number;
+    deletionDate: string;
+    exportPath?: string;
+  };
+  error?: string;
+}
+
 /**
  * Expose Electron API to renderer process
  */
@@ -205,8 +229,10 @@ const electronAPI: ElectronAPI = {
 
   // ===== GDPR =====
   gdpr: {
-    export: () => ipcRenderer.invoke('gdpr:export'),
-    delete: () => ipcRenderer.invoke('gdpr:delete')
+    export: (sessionId: string, options?: { format?: 'json' | 'csv' }) =>
+      ipcRenderer.invoke('gdpr:export', sessionId, options),
+    delete: (sessionId: string, options?: { confirmed: boolean; exportBeforeDelete?: boolean; reason?: string }) =>
+      ipcRenderer.invoke('gdpr:delete', sessionId, options)
   }
 };
 
