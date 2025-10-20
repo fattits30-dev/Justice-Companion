@@ -8,7 +8,7 @@
  */
 
 import type Database from 'better-sqlite3';
-import type { GdprDeleteOptions, GdprDeleteResult } from '../../models/Gdpr';
+import type { GdprDeleteOptions, GdprDeleteResult } from '../../models/Gdpr.ts';
 
 export class DataDeleter {
   // Explicit property declaration (TSX strip-only mode compatibility)

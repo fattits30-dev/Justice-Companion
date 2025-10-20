@@ -6,8 +6,8 @@
  */
 
 import type Database from 'better-sqlite3';
-import { EncryptionService } from '../EncryptionService';
-import type { UserDataExport, TableExport, GdprExportOptions } from '../../models/Gdpr';
+import { EncryptionService } from '../EncryptionService.ts';
+import type { UserDataExport, TableExport, GdprExportOptions } from '../../models/Gdpr.ts';
 
 export class DataExporter {
   constructor(

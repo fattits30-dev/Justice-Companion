@@ -2,9 +2,11 @@
   "permissions": {
     "allow": [
       "WebSearch",
-      "Bash(cat \"F:\\Justice Companion take 2\\package.json\")"
+      "Bash(cat \"F:\\Justice Companion take 2\\package.json\")",
+      "mcp__MCP_DOCKER__sequentialthinking"
     ],
     "deny": [],
     "ask": []
-  }
+  },
+  "outputStyle": "frontend-specialist"
 }

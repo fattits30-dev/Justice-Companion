@@ -1,5 +1,5 @@
 import { getCitations, cleanText, annotateCitations, type Citation } from '@beshkenadze/eyecite';
-import { logger } from '../utils/logger';
+import { logger } from '../utils/logger.ts';
 
 /**
  * Citation Service

@@ -7,7 +7,7 @@
  */
 
 import { z } from 'zod';
-import { MAX_STRING_LENGTH, MAX_URL_LENGTH, PATTERNS } from '../utils/constants';
+import { MAX_STRING_LENGTH, MAX_URL_LENGTH, PATTERNS } from '../utils/constants.ts';
 
 /**
  * Schema for chat messages

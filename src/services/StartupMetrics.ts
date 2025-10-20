@@ -3,7 +3,7 @@
  * Monitors and logs critical startup phases for Justice Companion
  */
 
-import { logger } from '../utils/logger';
+import { logger } from '../utils/logger.ts';
 
 export interface StartupTimestamps {
   moduleLoad: number; // When main.ts is first loaded

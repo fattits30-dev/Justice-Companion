@@ -1,1 +1,1 @@
-export { SettingsView } from './components/SettingsView';
+export { SettingsView } from './components/SettingsView.ts';

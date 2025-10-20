@@ -1,23 +1,23 @@
-import type { Case, CreateCaseInput, UpdateCaseInput } from '../models/Case';
-import type { CaseStatus } from '../models/Case';
+import type { Case, CreateCaseInput, UpdateCaseInput } from '../models/Case.ts';
+import type { CaseStatus } from '../models/Case.ts';
 import type {
   ChatConversation,
   ChatMessage,
   CreateConversationInput,
   CreateMessageInput,
   ConversationWithMessages,
-} from '../models/ChatConversation';
-import type { UserProfile, UpdateUserProfileInput } from '../models/UserProfile';
-import type { Evidence, CreateEvidenceInput, UpdateEvidenceInput } from '../models/Evidence';
-import type { LegalContext } from './ai';
-import type { CaseFact } from '../models/CaseFact';
-import type { UserFact } from '../models/UserFact';
-import type { Note } from '../models/Note';
-import type { LegalIssue } from '../models/LegalIssue';
-import type { TimelineEvent } from '../models/TimelineEvent';
-import type { User } from '../models/User';
-import type { Consent, ConsentType } from '../models/Consent';
-import type { PaginationParams, PaginatedResult } from './pagination';
+} from '../models/ChatConversation.ts';
+import type { UserProfile, UpdateUserProfileInput } from '../models/UserProfile.ts';
+import type { Evidence, CreateEvidenceInput, UpdateEvidenceInput } from '../models/Evidence.ts';
+import type { LegalContext } from './ai.ts';
+import type { CaseFact } from '../models/CaseFact.ts';
+import type { UserFact } from '../models/UserFact.ts';
+import type { Note } from '../models/Note.ts';
+import type { LegalIssue } from '../models/LegalIssue.ts';
+import type { TimelineEvent } from '../models/TimelineEvent.ts';
+import type { User } from '../models/User.ts';
+import type { Consent, ConsentType } from '../models/Consent.ts';
+import type { PaginationParams, PaginatedResult } from './pagination.ts';
 
 /**
  * IPC Channel definitions for type-safe communication

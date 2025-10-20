@@ -6,7 +6,7 @@
  */
 
 import { z } from 'zod';
-import { VALID_CONSENT_TYPES } from '../utils/constants';
+import { VALID_CONSENT_TYPES } from '../utils/constants.ts';
 
 /**
  * Schema for granting consent

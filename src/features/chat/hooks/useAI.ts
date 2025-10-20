@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef, type RefObject } from 'react';
-import type { ChatMessage } from '../../../types/ai';
-import type { IPCResponse, AICheckStatusResponse, AIStreamStartResponse } from '../../../types/ipc';
-import { logger } from '../../../utils/logger';
+import type { ChatMessage } from '../../../types/ai.ts';
+import type { IPCResponse, AICheckStatusResponse, AIStreamStartResponse } from '../../../types/ipc.ts';
+import { logger } from '../../../utils/logger.ts';
 
 /**
  * Loading states for AI chat operations

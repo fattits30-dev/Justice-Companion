@@ -7,9 +7,9 @@
 
 import { z } from 'zod';
 import { logger } from '../utils/logger.ts';
-import type { AuditLogger } from '../services/AuditLogger';
-import { ipcSchemas } from './schemas';
-import { preventSqlInjection, sanitizeForLogging, sanitizeHtml } from './utils/sanitizers';
+import type { AuditLogger } from '../services/AuditLogger.ts';
+import { ipcSchemas } from './schemas.ts';
+import { preventSqlInjection, sanitizeForLogging, sanitizeHtml } from './utils/sanitizers.ts';
 
 /**
  * Custom validation error with detailed field information

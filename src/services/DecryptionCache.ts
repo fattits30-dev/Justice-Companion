@@ -1,5 +1,5 @@
 import { LRUCache } from 'lru-cache';
-import type { AuditLogger } from './AuditLogger';
+import type { AuditLogger } from './AuditLogger.ts';
 
 /**
  * In-memory LRU cache for decrypted values

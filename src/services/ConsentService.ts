@@ -1,6 +1,6 @@
-import { ConsentRepository } from '../repositories/ConsentRepository';
-import { AuditLogger } from './AuditLogger';
-import type { ConsentType, Consent } from '../models/Consent';
+import { ConsentRepository } from '../repositories/ConsentRepository.ts';
+import { AuditLogger } from './AuditLogger.ts';
+import type { ConsentType, Consent } from '../models/Consent.ts';
 
 /**
  * Service for managing GDPR consent

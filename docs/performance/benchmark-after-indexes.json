@@ -1,0 +1,130 @@
+{
+  "timestamp": "2025-10-20T15:59:02.604Z",
+  "nodeVersion": "v20.19.1",
+  "sqliteVersion": "3.49.2",
+  "totalQueries": 12,
+  "totalExecutionTimeMs": 1.1008486000000008,
+  "averageQueryTimeMs": 0.09173738333333341,
+  "indexedQueries": 12,
+  "results": [
+    {
+      "queryName": "User Active Cases",
+      "description": "SELECT * FROM cases WHERE user_id = 1 AND status = 'active'",
+      "executionTimeMs": 0.1488544,
+      "rowsReturned": 33,
+      "queryPlan": "SEARCH cases USING INDEX idx_cases_user_status (user_id=? AND status=?)",
+      "usesIndex": true,
+      "indexName": "idx_cases_user_status",
+      "iterations": 1000
+    },
+    {
+      "queryName": "Cases by Type",
+      "description": "SELECT * FROM cases WHERE case_type = 'employment'",
+      "executionTimeMs": 0.07574829999999998,
+      "rowsReturned": 16,
+      "queryPlan": "SEARCH cases USING INDEX idx_cases_case_type (case_type=?)",
+      "usesIndex": true,
+      "indexName": "idx_cases_case_type",
+      "iterations": 1000
+    },
+    {
+      "queryName": "Recent Cases",
+      "description": "SELECT * FROM cases ORDER BY created_at DESC LIMIT 20",
+      "executionTimeMs": 0.0941748,
+      "rowsReturned": 20,
+      "queryPlan": "SCAN cases USING INDEX idx_cases_created_at",
+      "usesIndex": true,
+      "indexName": "idx_cases_created_at",
+      "iterations": 1000
+    },
+    {
+      "queryName": "Cases with Evidence Count",
+      "description": "SELECT c.*, COUNT(e.id) FROM cases c LEFT JOIN evidence e ON c.id = e.case_id GROUP BY c.id",
+      "executionTimeMs": 0.5837186000000002,
+      "rowsReturned": 100,
+      "queryPlan": "SCAN c | SEARCH e USING COVERING INDEX idx_evidence_case_id (case_id=?) LEFT-JOIN",
+      "usesIndex": true,
+      "iterations": 1000
+    },
+    {
+      "queryName": "Evidence by Case and Type",
+      "description": "SELECT * FROM evidence WHERE case_id = 1 AND evidence_type = 'document'",
+      "executionTimeMs": 0.00987760000000003,
+      "rowsReturned": 1,
+      "queryPlan": "SEARCH evidence USING INDEX idx_evidence_case_type (case_id=? AND evidence_type=?)",
+      "usesIndex": true,
+      "indexName": "idx_evidence_case_type",
+      "iterations": 1000
+    },
+    {
+      "queryName": "Timeline Events for Case",
+      "description": "SELECT * FROM timeline_events WHERE user_id = 1 AND case_id = 1",
+      "executionTimeMs": 0.0033541999999999916,
+      "rowsReturned": 0,
+      "queryPlan": "SEARCH timeline_events USING INDEX idx_timeline_user_case (user_id=? AND case_id=?)",
+      "usesIndex": true,
+      "indexName": "idx_timeline_user_case",
+      "iterations": 1000
+    },
+    {
+      "queryName": "Active Actions by Case",
+      "description": "SELECT * FROM actions WHERE case_id = 1 AND status IN ('pending', 'in_progress')",
+      "executionTimeMs": 0.0064235999999998515,
+      "rowsReturned": 0,
+      "queryPlan": "SEARCH actions USING INDEX idx_actions_case_status (case_id=? AND status=?)",
+      "usesIndex": true,
+      "indexName": "idx_actions_case_status",
+      "iterations": 1000
+    },
+    {
+      "queryName": "Upcoming Deadlines",
+      "description": "SELECT * FROM actions WHERE case_id = 1 AND due_date > date('now') ORDER BY due_date",
+      "executionTimeMs": 0.0036141000000000077,
+      "rowsReturned": 0,
+      "queryPlan": "SEARCH actions USING INDEX idx_actions_case_due_date (case_id=? AND due_date>?)",
+      "usesIndex": true,
+      "indexName": "idx_actions_case_due_date",
+      "iterations": 1000
+    },
+    {
+      "queryName": "Chat Messages for Conversation",
+      "description": "SELECT * FROM chat_messages WHERE conversation_id = 1 ORDER BY timestamp",
+      "executionTimeMs": 0.07834950000000003,
+      "rowsReturned": 20,
+      "queryPlan": "SEARCH chat_messages USING INDEX idx_chat_messages_conv_timestamp (conversation_id=?)",
+      "usesIndex": true,
+      "indexName": "idx_chat_messages_conv_timestamp",
+      "iterations": 1000
+    },
+    {
+      "queryName": "Complex 5-Way JOIN",
+      "description": "SELECT c.*, e.id, t.id, a.id, n.id FROM cases c LEFT JOIN evidence e, timeline_events t, actions a, notes n",
+      "executionTimeMs": 0.08944600000000037,
+      "rowsReturned": 10,
+      "queryPlan": "SEARCH c USING INDEX idx_cases_user_id (user_id=?) | SEARCH e USING COVERING INDEX idx_evidence_case_id (case_id=?) LEFT-JOIN | SEARCH t USING COVERING INDEX idx_timeline_events_case_id (case_id=?) LEFT-JOIN | SEARCH a USING COVERING INDEX idx_actions_case_id (case_id=?) LEFT-JOIN | SEARCH n USING COVERING INDEX idx_notes_case_id (case_id=?) LEFT-JOIN | USE TEMP B-TREE FOR count(DISTINCT) | USE TEMP B-TREE FOR count(DISTINCT) | USE TEMP B-TREE FOR count(DISTINCT) | USE TEMP B-TREE FOR count(DISTINCT)",
+      "usesIndex": true,
+      "indexName": "idx_cases_user_id",
+      "iterations": 100
+    },
+    {
+      "queryName": "Expired Sessions Cleanup",
+      "description": "SELECT * FROM sessions WHERE expires_at < datetime('now')",
+      "executionTimeMs": 0.003713799999999992,
+      "rowsReturned": 0,
+      "queryPlan": "SEARCH sessions USING INDEX idx_sessions_expires_at_desc (expires_at<?)",
+      "usesIndex": true,
+      "indexName": "idx_sessions_expires_at_desc",
+      "iterations": 1000
+    },
+    {
+      "queryName": "User Facts by Case",
+      "description": "SELECT * FROM user_facts WHERE user_id = 1 AND case_id = 1",
+      "executionTimeMs": 0.0035737000000001444,
+      "rowsReturned": 0,
+      "queryPlan": "SEARCH user_facts USING INDEX idx_user_facts_user_id (user_id=?)",
+      "usesIndex": true,
+      "indexName": "idx_user_facts_user_id",
+      "iterations": 1000
+    }
+  ]
+}

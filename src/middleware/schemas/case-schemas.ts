@@ -12,7 +12,7 @@ import {
   MAX_TITLE_LENGTH,
   VALID_CASE_STATUSES,
   VALID_CASE_TYPES,
-} from '../utils/constants';
+} from '../utils/constants.ts';
 
 /**
  * Schema for case creation request

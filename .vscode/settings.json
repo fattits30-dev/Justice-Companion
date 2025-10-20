@@ -3,12 +3,7 @@
   "claude.mcpServers": {
     "MCP_DOCKER": {
       "command": "pwsh",
-      "args": [
-        "-NoLogo",
-        "-NoProfile",
-        "-Command",
-        "docker mcp gateway run"
-      ],
+      "args": ["-NoLogo", "-NoProfile", "-Command", "docker mcp gateway run"],
       "type": "stdio",
       "description": "Docker-based MCP gateway for browser automation, GitHub API, sandboxed code execution, and more"
     }
@@ -76,5 +71,8 @@
   "terminal.integrated.defaultProfile.windows": "Git Bash",
   "terminal.integrated.env.windows": {
     "NODE_ENV": "development"
-  }
+  },
+  "python.testing.unittestArgs": ["-v", "-s", ".", "-p", "*test.py"],
+  "python.testing.pytestEnabled": false,
+  "python.testing.unittestEnabled": true
 }

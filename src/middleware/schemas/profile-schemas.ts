@@ -6,8 +6,8 @@
  */
 
 import { z } from 'zod';
-import { MAX_EMAIL_LENGTH, MAX_URL_LENGTH, PATTERNS } from '../utils/constants';
-import { sanitizeEmail, sanitizeUrl } from '../utils/sanitizers';
+import { MAX_EMAIL_LENGTH, MAX_URL_LENGTH, PATTERNS } from '../utils/constants.ts';
+import { sanitizeEmail, sanitizeUrl } from '../utils/sanitizers.ts';
 
 /**
  * Schema for user profile update request

@@ -1,6 +1,6 @@
-import { getRepositories } from '../../../repositories';
-import type { UserFact, CreateUserFactInput, UpdateUserFactInput } from '../../../models/UserFact';
-import { errorLogger } from '../../../utils/error-logger';
+import { getRepositories } from '../../../repositories.ts';
+import type { UserFact, CreateUserFactInput, UpdateUserFactInput } from '../../../models/UserFact.ts';
+import { errorLogger } from '../../../utils/error-logger.ts';
 
 export class UserFactsService {
   private get userFactsRepository() {

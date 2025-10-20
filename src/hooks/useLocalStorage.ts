@@ -33,7 +33,7 @@
  */
 
 import { useState, Dispatch, SetStateAction } from 'react';
-import { logger } from '../utils/logger';
+import { logger } from '../utils/logger.ts';
 
 /**
  * Sanitize parsed data to prevent prototype pollution and other injection attacks

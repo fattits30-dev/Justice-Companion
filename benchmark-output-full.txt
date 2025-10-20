@@ -1,0 +1,85 @@
+=== DATABASE QUERY PERFORMANCE BENCHMARK ===
+
+✓ Test data exists (100 cases)
+
+Warming up database cache...
+✓ Cache warmed up
+
+Running benchmarks (1000 iterations per query)...
+
+
+=== BENCHMARK RESULTS ===
+
+Timestamp: 2025-10-20T15:58:06.672Z
+Node: v20.19.1 | SQLite: [object Object]
+Total Queries: 12
+Indexed Queries: 10/12 (83.3%)
+
+Query Performance (sorted by execution time):
+
+1. Cases with Evidence Count
+   SELECT c.*, COUNT(e.id) FROM cases c LEFT JOIN evidence e ON c.id = e.case_id GROUP BY c.id
+   Time: 0.5738 ms | Rows: 100 | Index: ✓ [undefined]
+   Plan: SCAN c | SEARCH e USING COVERING INDEX idx_evidence_case_id (case_id=?) LEFT-JOIN
+
+2. User Active Cases
+   SELECT * FROM cases WHERE user_id = 1 AND status = 'active'
+   Time: 0.1601 ms | Rows: 33 | Index: ✓ [idx_cases_user_id]
+   Plan: SEARCH cases USING INDEX idx_cases_user_id (user_id=?)
+
+3. Recent Cases
+   SELECT * FROM cases ORDER BY created_at DESC LIMIT 20
+   Time: 0.1279 ms | Rows: 20 | Index: ✗ [FULL SCAN]
+   Plan: SCAN cases | USE TEMP B-TREE FOR ORDER BY
+
+4. Complex 5-Way JOIN
+   SELECT c.*, e.id, t.id, a.id, n.id FROM cases c LEFT JOIN evidence e, timeline_events t, actions a, notes n
+   Time: 0.1172 ms | Rows: 10 | Index: ✓ [idx_cases_user_id]
+   Plan: SEARCH c USING INDEX idx_cases_user_id (user_id=?) | SEARCH e USING COVERING INDEX idx_evidence_case_id (case_id=?) LEFT-JOIN | SEARCH t USING COVERING INDEX idx_timeline_events_case_id (case_id=?) LEFT-JOIN | SEARCH a USING COVERING INDEX idx_actions_case_id (case_id=?) LEFT-JOIN | SEARCH n USING COVERING INDEX idx_notes_case_id (case_id=?) LEFT-JOIN | USE TEMP B-TREE FOR count(DISTINCT) | USE TEMP B-TREE FOR count(DISTINCT) | USE TEMP B-TREE FOR count(DISTINCT) | USE TEMP B-TREE FOR count(DISTINCT)
+
+5. Chat Messages for Conversation
+   SELECT * FROM chat_messages WHERE conversation_id = 1 ORDER BY timestamp
+   Time: 0.0826 ms | Rows: 20 | Index: ✓ [idx_chat_messages_conversation_id]
+   Plan: SEARCH chat_messages USING INDEX idx_chat_messages_conversation_id (conversation_id=?) | USE TEMP B-TREE FOR ORDER BY
+
+6. Cases by Type
+   SELECT * FROM cases WHERE case_type = 'employment'
+   Time: 0.0794 ms | Rows: 16 | Index: ✗ [FULL SCAN]
+   Plan: SCAN cases
+
+7. Evidence by Case and Type
+   SELECT * FROM evidence WHERE case_id = 1 AND evidence_type = 'document'
+   Time: 0.0105 ms | Rows: 1 | Index: ✓ [idx_evidence_case_id]
+   Plan: SEARCH evidence USING INDEX idx_evidence_case_id (case_id=?)
+
+8. User Facts by Case
+   SELECT * FROM user_facts WHERE user_id = 1 AND case_id = 1
+   Time: 0.0045 ms | Rows: 0 | Index: ✓ [idx_user_facts_user_id]
+   Plan: SEARCH user_facts USING INDEX idx_user_facts_user_id (user_id=?)
+
+9. Expired Sessions Cleanup
+   SELECT * FROM sessions WHERE expires_at < datetime('now')
+   Time: 0.0039 ms | Rows: 0 | Index: ✓ [idx_sessions_expires_at]
+   Plan: SEARCH sessions USING INDEX idx_sessions_expires_at (expires_at<?)
+
+10. Upcoming Deadlines
+   SELECT * FROM actions WHERE case_id = 1 AND due_date > date('now') ORDER BY due_date
+   Time: 0.0036 ms | Rows: 0 | Index: ✓ [idx_actions_case_id]
+   Plan: SEARCH actions USING INDEX idx_actions_case_id (case_id=?) | USE TEMP B-TREE FOR ORDER BY
+
+11. Active Actions by Case
+   SELECT * FROM actions WHERE case_id = 1 AND status IN ('pending', 'in_progress')
+   Time: 0.0034 ms | Rows: 0 | Index: ✓ [idx_actions_case_id]
+   Plan: SEARCH actions USING INDEX idx_actions_case_id (case_id=?)
+
+12. Timeline Events for Case
+   SELECT * FROM timeline_events WHERE user_id = 1 AND case_id = 1
+   Time: 0.0034 ms | Rows: 0 | Index: ✓ [idx_timeline_events_user_id]
+   Plan: SEARCH timeline_events USING INDEX idx_timeline_events_user_id (user_id=?)
+
+Total Execution Time: 1.17 ms
+Average Query Time: 0.0975 ms
+
+✓ Results saved to: F:\Justice Companion take 2\docs\performance\benchmark-before-indexes.json
+
+✓ Benchmark complete!

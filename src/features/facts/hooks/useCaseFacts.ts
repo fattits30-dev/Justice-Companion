@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import type { CaseFact, CreateCaseFactInput, UpdateCaseFactInput } from '../../../models/CaseFact';
+import type { CaseFact, CreateCaseFactInput, UpdateCaseFactInput } from '../../../models/CaseFact.ts';
 
 export function useCaseFacts(caseId: number) {
   const [caseFacts, setCaseFacts] = useState<CaseFact[]>([]);

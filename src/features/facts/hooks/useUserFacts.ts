@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import type { UserFact, CreateUserFactInput, UpdateUserFactInput } from '../../../models/UserFact';
+import type { UserFact, CreateUserFactInput, UpdateUserFactInput } from '../../../models/UserFact.ts';
 
 export function useUserFacts(caseId: number) {
   const [userFacts, setUserFacts] = useState<UserFact[]>([]);

@@ -12,21 +12,21 @@
  */
 
 import type Database from 'better-sqlite3';
-import { EncryptionService } from '../EncryptionService';
-import { AuditLogger } from '../AuditLogger';
-import { DataExporter } from './DataExporter';
-import { DataDeleter } from './DataDeleter';
+import { EncryptionService } from '../EncryptionService.ts';
+import { AuditLogger } from '../AuditLogger.ts';
+import { DataExporter } from './DataExporter.ts';
+import { DataDeleter } from './DataDeleter.ts';
 import type {
   GdprExportOptions,
   GdprExportResult,
   GdprDeleteOptions,
   GdprDeleteResult,
-} from '../../models/Gdpr';
+} from '../../models/Gdpr.ts';
 import {
   RateLimitError,
   ConsentRequiredError,
   GdprOperationError,
-} from '../../models/Gdpr';
+} from '../../models/Gdpr.ts';
 import * as fs from 'fs';
 import * as path from 'path';
 

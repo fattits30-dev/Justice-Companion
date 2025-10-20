@@ -1,6 +1,6 @@
-import { getRepositories } from '../../../repositories';
-import type { Case, CreateCaseInput, UpdateCaseInput, CaseStatus } from '../../../models/Case';
-import { errorLogger } from '../../../utils/error-logger';
+import { getRepositories } from '../../../repositories.ts';
+import type { Case, CreateCaseInput, UpdateCaseInput, CaseStatus } from '../../../models/Case.ts';
+import { errorLogger } from '../../../utils/error-logger.ts';
 
 export class CaseService {
   private get caseRepository() {

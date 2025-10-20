@@ -2,7 +2,7 @@ import { app, safeStorage } from 'electron';
 import fs from 'fs/promises';
 import path from 'path';
 import { validate as uuidValidate, version as uuidVersion } from 'uuid';
-import { logger } from '../utils/logger';
+import { logger } from '../utils/logger.ts';
 
 /**
  * Service for securely persisting session IDs across app restarts

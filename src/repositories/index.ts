@@ -6,29 +6,29 @@
  *
  * Usage:
  * ```ts
- * import { initializeRepositories } from './repositories';
+ * import { initializeRepositories } from './repositories.ts';
  * const repos = initializeRepositories(encryptionService, auditLogger);
  * ```
  */
 
-import { EncryptionService } from '../services/EncryptionService';
-import type { AuditLogger } from '../services/AuditLogger';
+import { EncryptionService } from '../services/EncryptionService.ts';
+import type { AuditLogger } from '../services/AuditLogger.ts';
 
 // Import repository classes
-import { CaseRepository } from './CaseRepository';
-import { EvidenceRepository } from './EvidenceRepository';
-import { ChatConversationRepository } from './ChatConversationRepository';
-import { UserProfileRepository } from './UserProfileRepository';
-import { NotesRepository } from './NotesRepository';
-import { UserFactsRepository } from './UserFactsRepository';
-import { TimelineRepository } from './TimelineRepository';
-import { LegalIssuesRepository } from './LegalIssuesRepository';
-import { CaseFactsRepository} from './CaseFactsRepository';
+import { CaseRepository } from './CaseRepository.ts';
+import { EvidenceRepository } from './EvidenceRepository.ts';
+import { ChatConversationRepository } from './ChatConversationRepository.ts';
+import { UserProfileRepository } from './UserProfileRepository.ts';
+import { NotesRepository } from './NotesRepository.ts';
+import { UserFactsRepository } from './UserFactsRepository.ts';
+import { TimelineRepository } from './TimelineRepository.ts';
+import { LegalIssuesRepository } from './LegalIssuesRepository.ts';
+import { CaseFactsRepository} from './CaseFactsRepository.ts';
 
 // Import repositories that don't need encryption
-import { UserRepository } from './UserRepository';
-import { SessionRepository } from './SessionRepository';
-import { ConsentRepository } from './ConsentRepository';
+import { UserRepository } from './UserRepository.ts';
+import { SessionRepository } from './SessionRepository.ts';
+import { ConsentRepository } from './ConsentRepository.ts';
 
 /**
  * Container for all initialized repositories

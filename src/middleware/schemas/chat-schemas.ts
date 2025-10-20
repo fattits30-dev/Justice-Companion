@@ -6,7 +6,7 @@
  */
 
 import { z } from 'zod';
-import { PATTERNS } from '../utils/constants';
+import { PATTERNS } from '../utils/constants.ts';
 
 /**
  * Maximum message length for chat messages

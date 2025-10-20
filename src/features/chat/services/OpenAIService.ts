@@ -1,6 +1,6 @@
 import OpenAI from 'openai';
 import type { Stream } from 'openai/streaming';
-import { errorLogger } from '../../../utils/error-logger';
+import { errorLogger } from '../../../utils/error-logger.ts';
 import {
   buildSystemPrompt,
   extractSources,
@@ -9,7 +9,7 @@ import {
   type AIChatRequest,
   type AIResponse,
   type LegalContext,
-} from '../../../types/ai';
+} from '../../../types/ai.ts';
 
 /**
  * OpenAI Provider Configuration

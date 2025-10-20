@@ -1,12 +1,12 @@
-import { getDb } from '../db/database';
+import { getDb } from '../db/database.ts';
 import type Database from 'better-sqlite3';
-import type { Case, CreateCaseInput, UpdateCaseInput, CaseStatus, CaseType } from '../models/Case';
+import type { Case, CreateCaseInput, UpdateCaseInput, CaseStatus, CaseType } from '../models/Case.ts';
 import { EncryptionService } from '../services/EncryptionService.js';
 import type { AuditLogger } from '../services/AuditLogger.js';
-import { DecryptionCache } from '../services/DecryptionCache';
-import { BaseRepository } from './BaseRepository';
-import type { PaginationParams, PaginatedResult } from '../types/pagination';
-import { PaginationParamsSchema } from '../types/pagination';
+import { DecryptionCache } from '../services/DecryptionCache.ts';
+import { BaseRepository } from './BaseRepository.ts';
+import type { PaginationParams, PaginatedResult } from '../types/pagination.ts';
+import { PaginationParamsSchema } from '../types/pagination.ts';
 
 /**
  * Case Repository with pagination and caching support

@@ -1,9 +1,9 @@
-import { getDb } from '../db/database';
+import { getDb } from '../db/database.ts';
 import type {
   LegalIssue,
   CreateLegalIssueInput,
   UpdateLegalIssueInput,
-} from '../models/LegalIssue';
+} from '../models/LegalIssue.ts';
 import { EncryptionService, type EncryptedData } from '../services/EncryptionService.js';
 import type { AuditLogger } from '../services/AuditLogger.js';
 

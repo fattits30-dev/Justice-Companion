@@ -1,5 +1,5 @@
-import { getDb } from '../db/database';
-import type { CaseFact, CreateCaseFactInput, UpdateCaseFactInput } from '../models/CaseFact';
+import { getDb } from '../db/database.ts';
+import type { CaseFact, CreateCaseFactInput, UpdateCaseFactInput } from '../models/CaseFact.ts';
 import type { AuditLogger } from '../services/AuditLogger.js';
 import { EncryptionService, type EncryptedData } from '../services/EncryptionService.js';
 

@@ -1,4 +1,4 @@
-import { errorLogger } from '../utils/error-logger';
+import { errorLogger } from '../utils/error-logger.ts';
 import fs from 'fs';
 import path from 'path';
 import { app } from 'electron';

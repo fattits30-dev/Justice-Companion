@@ -13,8 +13,8 @@ import {
   MAX_FILES_PER_UPLOAD,
   MAX_PATH_LENGTH,
   MAX_STRING_LENGTH,
-} from '../utils/constants';
-import { sanitizeFilePath, sanitizeFilename } from '../utils/sanitizers';
+} from '../utils/constants.ts';
+import { sanitizeFilePath, sanitizeFilename } from '../utils/sanitizers.ts';
 
 /**
  * Schema for file selection request

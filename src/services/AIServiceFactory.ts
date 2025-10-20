@@ -1,8 +1,8 @@
-import { errorLogger } from '../utils/error-logger';
-import { IntegratedAIService } from '../features/chat/services/IntegratedAIService';
-import { OpenAIService } from '../features/chat/services/OpenAIService';
-import type { OpenAIConfig } from '../features/chat/services/OpenAIService';
-import type { AIConfig, AIStatus, AIChatRequest, AIResponse } from '../types/ai';
+import { errorLogger } from '../utils/error-logger.ts';
+import { IntegratedAIService } from '../features/chat/services/IntegratedAIService.ts';
+import { OpenAIService } from '../features/chat/services/OpenAIService.ts';
+import type { OpenAIConfig } from '../features/chat/services/OpenAIService.ts';
+import type { AIConfig, AIStatus, AIChatRequest, AIResponse } from '../types/ai.ts';
 import fs from 'fs';
 import path from 'path';
 import { app } from 'electron';

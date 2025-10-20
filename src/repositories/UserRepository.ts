@@ -1,6 +1,6 @@
-import { getDb } from '../db/database';
-import type { User, CreateUserInput, UpdateUserInput } from '../models/User';
-import type { AuditLogger } from '../services/AuditLogger';
+import { getDb } from '../db/database.ts';
+import type { User, CreateUserInput, UpdateUserInput } from '../models/User.ts';
+import type { AuditLogger } from '../services/AuditLogger.ts';
 
 /**
  * Repository for managing users

@@ -1,7 +1,7 @@
 import Database from 'better-sqlite3';
 import { readFileSync } from 'fs';
 import path from 'path';
-import type { AuditLogger } from '../services/AuditLogger';
+import type { AuditLogger } from '../services/AuditLogger.ts';
 
 /**
  * Test database helper for running integration tests

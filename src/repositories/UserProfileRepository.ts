@@ -1,8 +1,8 @@
-import { getDb } from '../db/database';
-import type { UserProfile, UpdateUserProfileInput } from '../models/UserProfile';
+import { getDb } from '../db/database.ts';
+import type { UserProfile, UpdateUserProfileInput } from '../models/UserProfile.ts';
 import { EncryptionService, type EncryptedData } from '../services/EncryptionService.js';
 import type { AuditLogger } from '../services/AuditLogger.js';
-import { errorLogger } from '../utils/error-logger';
+import { errorLogger } from '../utils/error-logger.ts';
 
 /**
  * Repository for managing user profile with encryption for PII

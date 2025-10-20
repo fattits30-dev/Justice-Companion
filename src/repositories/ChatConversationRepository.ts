@@ -1,19 +1,19 @@
-import { getDb } from '../db/database';
+import { getDb } from '../db/database.ts';
 import type {
   ChatConversation,
   ChatMessage,
   ConversationWithMessages,
   CreateConversationInput,
   CreateMessageInput,
-} from '../models/ChatConversation';
+} from '../models/ChatConversation.ts';
 import type { AuditLogger } from '../services/AuditLogger.js';
 import { EncryptionService, type EncryptedData } from '../services/EncryptionService.js';
-import { errorLogger } from '../utils/error-logger';
+import { errorLogger } from '../utils/error-logger.ts';
 import {
   encodeSimpleCursor,
   decodeSimpleCursor,
   type PaginatedResult,
-} from '../utils/cursor-pagination';
+} from '../utils/cursor-pagination.ts';
 
 /**
  * Repository for managing chat conversations with encryption for message content
