@@ -16,11 +16,11 @@
  */
 
 import Database from 'better-sqlite3';
-import { EncryptionService } from '../services/EncryptionService';
-import { AuditLogger } from '../services/AuditLogger';
-import { DecryptionCache } from '../services/DecryptionCache';
-import { CaseRepositoryPaginated } from '../repositories/CaseRepositoryPaginated';
-import { logger } from '../utils/logger';
+import { EncryptionService } from '../services/EncryptionService.ts';
+import { AuditLogger } from '../services/AuditLogger.ts';
+import { DecryptionCache } from '../services/DecryptionCache.ts';
+import { CaseRepositoryPaginated } from '../repositories/CaseRepositoryPaginated.ts';
+import { logger } from '../utils/logger.ts';
 
 // Benchmark configuration
 const DATASET_SIZES = [100, 500, 1000];

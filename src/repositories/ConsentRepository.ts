@@ -1,5 +1,5 @@
-import { getDb } from '../db/database';
-import type { Consent, CreateConsentInput, ConsentType } from '../models/Consent';
+import { getDb } from '../db/database.ts';
+import type { Consent, CreateConsentInput, ConsentType } from '../models/Consent.ts';
 
 /**
  * Repository for managing GDPR consent records

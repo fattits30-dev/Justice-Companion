@@ -1,5 +1,5 @@
-import { getDb } from '../db/database';
-import type { Case, CreateCaseInput, UpdateCaseInput, CaseStatus } from '../models/Case';
+import { getDb } from '../db/database.ts';
+import type { Case, CreateCaseInput, UpdateCaseInput, CaseStatus } from '../models/Case.ts';
 import { EncryptionService, type EncryptedData } from '../services/EncryptionService.js';
 import type { AuditLogger } from '../services/AuditLogger.js';
 
@@ -132,7 +132,45 @@ export class CaseRepository {
       rows = db.prepare(query).all() as Case[];
     }
 
-    // Decrypt all descriptions
+    // Use batch decryption if enabled and encryption service is available
+    const useBatchEncryption = process.env.ENABLE_BATCH_ENCRYPTION !== 'false';
+
+    if (useBatchEncryption && this.encryptionService && rows.length > 0) {
+      // Collect all encrypted descriptions for batch decryption
+      const encryptedDescriptions = rows.map(row => {
+        if (!row.description) return null;
+
+        try {
+          const encryptedData = JSON.parse(row.description) as EncryptedData;
+          return this.encryptionService!.isEncrypted(encryptedData) ? encryptedData : null;
+        } catch {
+          return null; // Legacy plaintext
+        }
+      });
+
+      // Batch decrypt all encrypted descriptions
+      const decryptedDescriptions = this.encryptionService.batchDecrypt(encryptedDescriptions);
+
+      // Map decrypted descriptions back to rows
+      return rows.map((row, index) => {
+        let description: string | null = row.description;
+
+        // If we have a decrypted value from batch, use it
+        if (encryptedDescriptions[index] !== null) {
+          description = decryptedDescriptions[index];
+        } else if (row.description && !encryptedDescriptions[index]) {
+          // Legacy plaintext or failed parse - keep original
+          description = row.description;
+        }
+
+        return {
+          ...row,
+          description,
+        };
+      });
+    }
+
+    // Fallback to individual decryption
     return rows.map((row) => ({
       ...row,
       description: this.decryptDescription(row.description),

@@ -8,8 +8,8 @@
  */
 
 // Components
-export { DocumentsView } from './components/DocumentsView';
-export { FileUploadModal } from './components/FileUploadModal';
+export { DocumentsView } from './components/DocumentsView.ts';
+export { FileUploadModal } from './components/FileUploadModal.ts';
 
 // Hooks
-export { useEvidence } from './hooks/useEvidence';
+export { useEvidence } from './hooks/useEvidence.ts';

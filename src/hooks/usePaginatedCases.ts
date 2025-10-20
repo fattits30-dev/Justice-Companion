@@ -3,8 +3,8 @@ import {
   type UseInfiniteQueryResult,
   type InfiniteData,
 } from '@tanstack/react-query';
-import type { PaginationParams, PaginatedResult } from '../types/pagination';
-import type { Case, CaseStatus } from '../models/Case';
+import type { PaginationParams, PaginatedResult } from '../types/pagination.ts';
+import type { Case, CaseStatus } from '../models/Case.ts';
 
 interface UsePaginatedCasesParams {
   userId?: number;

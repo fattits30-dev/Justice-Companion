@@ -1,9 +1,9 @@
 import type Database from 'better-sqlite3';
-import { EncryptionService } from '../services/EncryptionService';
-import type { AuditLogger } from '../services/AuditLogger';
-import { DecryptionCache } from '../services/DecryptionCache';
-import { PaginationParamsSchema, type PaginationParams, type PaginatedResult } from '../types/pagination';
-import { generateCacheKey } from '../types/cache';
+import { EncryptionService } from '../services/EncryptionService.ts';
+import type { AuditLogger } from '../services/AuditLogger.ts';
+import { DecryptionCache } from '../services/DecryptionCache.ts';
+import { PaginationParamsSchema, type PaginationParams, type PaginatedResult } from '../types/pagination.ts';
+import { generateCacheKey } from '../types/cache.ts';
 
 /**
  * Base repository interface with dual API support

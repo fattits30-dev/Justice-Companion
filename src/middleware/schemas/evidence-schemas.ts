@@ -11,8 +11,8 @@ import {
   MAX_STRING_LENGTH,
   MAX_TITLE_LENGTH,
   VALID_EVIDENCE_TYPES,
-} from '../utils/constants';
-import { sanitizeFilePath } from '../utils/sanitizers';
+} from '../utils/constants.ts';
+import { sanitizeFilePath } from '../utils/sanitizers.ts';
 
 /**
  * Schema for evidence creation request

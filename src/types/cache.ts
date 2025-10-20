@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import type { PaginationParams } from './pagination';
+import type { PaginationParams } from './pagination.ts';
 
 /**
  * Cache key generation for decrypted values

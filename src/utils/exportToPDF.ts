@@ -15,7 +15,7 @@
 import html2pdf from 'html2pdf.js';
 import { logger } from '@/utils/logger';
 import DOMPurify from 'dompurify';
-import type { ChatMessage } from '../types/ai';
+import type { ChatMessage } from '../types/ai.ts';
 
 /**
  * Export chat conversation to PDF

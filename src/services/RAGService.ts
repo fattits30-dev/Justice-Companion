@@ -1,6 +1,6 @@
-import { errorLogger } from '../utils/error-logger';
-import { legalAPIService } from './LegalAPIService';
-import { aiServiceFactory } from './AIServiceFactory';
+import { errorLogger } from '../utils/error-logger.ts';
+import { legalAPIService } from './LegalAPIService.ts';
+import { aiServiceFactory } from './AIServiceFactory.ts';
 import type {
   LegalContext,
   LegislationResult,
@@ -8,7 +8,7 @@ import type {
   KnowledgeEntry,
   AIResponse,
   AIChatRequest,
-} from '../types/ai';
+} from '../types/ai.ts';
 
 /**
  * RAGService - Retrieval Augmented Generation for Legal Information

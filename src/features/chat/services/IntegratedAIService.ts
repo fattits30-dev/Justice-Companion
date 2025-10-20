@@ -1,16 +1,16 @@
-import { errorLogger } from '../../../utils/error-logger';
+import { errorLogger } from '../../../utils/error-logger.ts';
 import {
   DEFAULT_AI_CONFIG,
   buildSystemPrompt,
   extractSources,
-} from '../../../types/ai';
+} from '../../../types/ai.ts';
 import type {
   AIConfig,
   AIStatus,
   AIChatRequest,
   AIResponse,
   LegalContext,
-} from '../../../types/ai';
+} from '../../../types/ai.ts';
 import path from 'path';
 import { app } from 'electron';
 import os from 'os';

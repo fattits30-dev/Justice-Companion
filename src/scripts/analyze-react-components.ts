@@ -10,7 +10,7 @@
 
 import { readdirSync, readFileSync, statSync, writeFileSync } from 'fs';
 import { join } from 'path';
-import { logger } from '../utils/logger';
+import { logger } from '../utils/logger.ts';
 
 interface ComponentAnalysis {
   file: string;

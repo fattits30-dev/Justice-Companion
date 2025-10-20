@@ -1,12 +1,12 @@
-import { getDb } from '../db/database';
-import type { Evidence, CreateEvidenceInput, UpdateEvidenceInput } from '../models/Evidence';
+import { getDb } from '../db/database.ts';
+import type { Evidence, CreateEvidenceInput, UpdateEvidenceInput } from '../models/Evidence.ts';
 import { EncryptionService, type EncryptedData } from '../services/EncryptionService.js';
 import type { AuditLogger } from '../services/AuditLogger.js';
 import {
   encodeSimpleCursor,
   decodeSimpleCursor,
   type PaginatedResult,
-} from '../utils/cursor-pagination';
+} from '../utils/cursor-pagination.ts';
 
 /**
  * Repository for managing evidence (documents, photos, emails, recordings, notes)

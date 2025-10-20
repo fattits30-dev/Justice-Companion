@@ -1,6 +1,6 @@
-import { getRepositories } from '../../../repositories';
-import type { CaseFact, CreateCaseFactInput, UpdateCaseFactInput } from '../../../models/CaseFact';
-import { errorLogger } from '../../../utils/error-logger';
+import { getRepositories } from '../../../repositories.ts';
+import type { CaseFact, CreateCaseFactInput, UpdateCaseFactInput } from '../../../models/CaseFact.ts';
+import { errorLogger } from '../../../utils/error-logger.ts';
 
 export class CaseFactsService {
   private get caseFactsRepository() {

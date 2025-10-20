@@ -13,7 +13,7 @@
  * - Error aggregation
  *
  * Usage:
- * import { logger } from '../utils/logger';
+ * import { logger } from '../utils/logger.ts';
  * logger.info('MyComponent', 'Something happened', { data });
  */
 

@@ -1,4 +1,4 @@
-export { LoginScreen } from './LoginScreen';
-export { RegistrationScreen } from './RegistrationScreen';
-export { ConsentBanner } from './ConsentBanner';
-export { AuthFlow } from './AuthFlow';
+export { LoginScreen } from './LoginScreen.ts';
+export { RegistrationScreen } from './RegistrationScreen.ts';
+export { ConsentBanner } from './ConsentBanner.ts';
+export { AuthFlow } from './AuthFlow.ts';

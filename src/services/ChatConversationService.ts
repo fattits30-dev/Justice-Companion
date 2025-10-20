@@ -4,9 +4,9 @@ import type {
   ConversationWithMessages,
   CreateConversationInput,
   CreateMessageInput,
-} from '../models/ChatConversation';
-import { getRepositories } from '../repositories';
-import { errorLogger } from '../utils/error-logger';
+} from '../models/ChatConversation.ts';
+import { getRepositories } from '../repositories.ts';
+import { errorLogger } from '../utils/error-logger.ts';
 
 class ChatConversationService {
   private get chatConversationRepository() {

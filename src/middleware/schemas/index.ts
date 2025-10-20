@@ -6,18 +6,18 @@
  */
 
 import { z } from 'zod';
-import { logger } from '../../utils/logger';
-import { IPC_CHANNELS } from '../../types/ipc';
-import * as aiSchemas from './ai-schemas';
-import * as authSchemas from './auth-schemas';
-import * as caseSchemas from './case-schemas';
-import * as consentSchemas from './consent-schemas';
-import * as conversationSchemas from './conversation-schemas';
-import * as evidenceSchemas from './evidence-schemas';
-import * as fileSchemas from './file-schemas';
-import * as gdprSchemas from './gdpr-schemas';
-import * as modelSchemas from './model-schemas';
-import * as profileSchemas from './profile-schemas';
+import { logger } from '../../utils/logger.ts';
+import { IPC_CHANNELS } from '../../types/ipc.ts';
+import * as aiSchemas from './ai-schemas.ts';
+import * as authSchemas from './auth-schemas.ts';
+import * as caseSchemas from './case-schemas.ts';
+import * as consentSchemas from './consent-schemas.ts';
+import * as conversationSchemas from './conversation-schemas.ts';
+import * as evidenceSchemas from './evidence-schemas.ts';
+import * as fileSchemas from './file-schemas.ts';
+import * as gdprSchemas from './gdpr-schemas.ts';
+import * as modelSchemas from './model-schemas.ts';
+import * as profileSchemas from './profile-schemas.ts';
 
 /**
  * Complete mapping of IPC channels to validation schemas

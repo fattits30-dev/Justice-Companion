@@ -6,7 +6,7 @@
  */
 
 import { z } from 'zod';
-import { MAX_TITLE_LENGTH, MAX_STRING_LENGTH } from '../utils/constants';
+import { MAX_TITLE_LENGTH, MAX_STRING_LENGTH } from '../utils/constants.ts';
 
 /**
  * Schema for conversation creation request
