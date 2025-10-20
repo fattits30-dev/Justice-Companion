@@ -238,14 +238,127 @@ const electronAPI: ElectronAPI = {
 };
 
 /**
- * Expose API to window object (type-safe)
+ * Create flat API for legacy frontend compatibility
+ * Maps window.justiceAPI.loginUser() → ipcRenderer.invoke('auth:login')
  */
+const justiceAPI = {
+  // ===== AUTHENTICATION (flat methods) =====
+  loginUser: (username: string, password: string, rememberMe: boolean = false) =>
+    ipcRenderer.invoke('auth:login', { username, password, rememberMe }),
+
+  registerUser: (username: string, password: string, email: string) =>
+    ipcRenderer.invoke('auth:register', { username, email, password }),
+
+  logoutUser: (sessionId: string) =>
+    ipcRenderer.invoke('auth:logout', sessionId),
+
+  getCurrentUser: (sessionId: string) =>
+    ipcRenderer.invoke('auth:session', sessionId),
+
+  // ===== CASE MANAGEMENT (flat methods) =====
+  createCase: (data: any, sessionId: string) =>
+    ipcRenderer.invoke('case:create', data, sessionId),
+
+  getAllCases: (sessionId: string) =>
+    ipcRenderer.invoke('case:list', sessionId),
+
+  getAllCasesPaginated: (sessionId: string, page: number, pageSize: number) =>
+    ipcRenderer.invoke('case:list', sessionId), // TODO: Add pagination params
+
+  getCaseById: (id: string, sessionId: string) =>
+    ipcRenderer.invoke('case:get', id, sessionId),
+
+  updateCase: (id: string, data: any, sessionId: string) =>
+    ipcRenderer.invoke('case:update', id, data, sessionId),
+
+  deleteCase: (id: string, sessionId: string) =>
+    ipcRenderer.invoke('case:delete', id, sessionId),
+
+  closeCase: (id: string, sessionId: string) =>
+    ipcRenderer.invoke('case:update', id, { status: 'closed' }, sessionId),
+
+  // ===== EVIDENCE/DOCUMENTS (flat methods) =====
+  uploadFile: (caseId: string, file: File, sessionId: string) =>
+    ipcRenderer.invoke('evidence:upload', caseId, file, sessionId),
+
+  getAllEvidence: (caseId: string, sessionId: string) =>
+    ipcRenderer.invoke('evidence:list', caseId, sessionId),
+
+  getEvidenceByCaseId: (caseId: string, sessionId: string) =>
+    ipcRenderer.invoke('evidence:list', caseId, sessionId),
+
+  deleteEvidence: (id: string, sessionId: string) =>
+    ipcRenderer.invoke('evidence:delete', id, sessionId),
+
+  // ===== AI CHAT (flat methods) =====
+  createConversation: (message: string, caseId: string | undefined, sessionId: string) =>
+    ipcRenderer.invoke('chat:send', message, caseId, sessionId),
+
+  // AI stream listeners
+  onAIStreamToken: (callback: (event: any, data: string) => void) =>
+    ipcRenderer.on('chat:stream', callback),
+
+  onAIStreamComplete: (callback: (event: any, data: string) => void) =>
+    ipcRenderer.on('chat:stream', callback),
+
+  onAIStreamError: (callback: (event: any, data: string) => void) =>
+    ipcRenderer.on('chat:stream', callback),
+
+  // ===== DATABASE (flat methods) =====
+  // Add database methods as needed
+
+  // ===== GDPR (flat methods) =====
+  exportUserData: (sessionId: string, options?: any) =>
+    ipcRenderer.invoke('gdpr:export', sessionId, options),
+
+  // ===== PLACEHOLDER METHODS (add as needed) =====
+  // These will be implemented as the corresponding IPC handlers are created
+  changePassword: () => Promise.reject(new Error('Not implemented')),
+  checkAIStatus: () => Promise.reject(new Error('Not implemented')),
+  configureAI: () => Promise.reject(new Error('Not implemented')),
+  createEvidence: () => Promise.reject(new Error('Not implemented')),
+  deleteConversation: () => Promise.reject(new Error('Not implemented')),
+  downloadFile: () => Promise.reject(new Error('Not implemented')),
+  getAllConversations: () => Promise.reject(new Error('Not implemented')),
+  getCaseFacts: () => Promise.reject(new Error('Not implemented')),
+  getCasesByStatusPaginated: () => Promise.reject(new Error('Not implemented')),
+  getCasesByUserPaginated: () => Promise.reject(new Error('Not implemented')),
+  getCaseStatistics: () => Promise.reject(new Error('Not implemented')),
+  getEvidenceById: () => Promise.reject(new Error('Not implemented')),
+  getFacts: () => Promise.reject(new Error('Not implemented')),
+  getRecentConversations: () => Promise.reject(new Error('Not implemented')),
+  getUserConsents: () => Promise.reject(new Error('Not implemented')),
+  getUserProfile: () => Promise.reject(new Error('Not implemented')),
+  grantConsent: () => Promise.reject(new Error('Not implemented')),
+  hasConsent: () => Promise.reject(new Error('Not implemented')),
+  onAIStatusUpdate: () => Promise.reject(new Error('Not implemented')),
+  onAIStreamSources: () => Promise.reject(new Error('Not implemented')),
+  onAIStreamThinkToken: () => Promise.reject(new Error('Not implemented')),
+  printFile: () => Promise.reject(new Error('Not implemented')),
+  revokeConsent: () => Promise.reject(new Error('Not implemented')),
+  secureStorage: () => Promise.reject(new Error('Not implemented')),
+  selectFile: () => Promise.reject(new Error('Not implemented')),
+  storeFact: () => Promise.reject(new Error('Not implemented')),
+  testAIConnection: () => Promise.reject(new Error('Not implemented')),
+  updateEvidence: () => Promise.reject(new Error('Not implemented')),
+  updateUserProfile: () => Promise.reject(new Error('Not implemented')),
+  viewFile: () => Promise.reject(new Error('Not implemented')),
+  aiStreamStart: () => Promise.reject(new Error('Not implemented')),
+};
+
+/**
+ * Expose APIs to window object
+ */
+// Modern nested API (for future use)
 contextBridge.exposeInMainWorld('electron', electronAPI);
+
+// Legacy flat API (for current frontend compatibility)
+contextBridge.exposeInMainWorld('justiceAPI', justiceAPI);
 
 /**
  * Security: Log preload script loaded
  */
-console.warn('[Preload] Context bridge established');
+console.warn('[Preload] Context bridge established - window.justiceAPI and window.electron available');
 
 // Window type extension removed - TypeScript ambient declarations don't work in preload sandbox
 // The window.electron API is available at runtime via contextBridge
