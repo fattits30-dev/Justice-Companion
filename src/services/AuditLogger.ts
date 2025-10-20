@@ -18,7 +18,13 @@ import type {
  * - Never throws exceptions (audit failures shouldn't break app)
  */
 export class AuditLogger {
-  constructor(private db: Database.Database) {}
+  // Explicit property declaration (TSX strip-only mode compatibility)
+  private db: Database.Database;
+
+  constructor(db: Database.Database) {
+    // Explicit property assignment (TSX strip-only mode compatibility)
+    this.db = db;
+  }
 
   /**
    * Log an audit event (immutable, blockchain-style)

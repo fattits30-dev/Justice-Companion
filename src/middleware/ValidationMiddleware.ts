@@ -62,7 +62,13 @@ export class ValidationMiddleware {
   private readonly maxArrayLength = 1000;
   private readonly slowValidationThreshold = 10; // ms
 
-  constructor(private auditLogger?: AuditLogger) {
+  // Explicit property declaration (TSX strip-only mode compatibility)
+  private auditLogger?: AuditLogger;
+
+  constructor(auditLogger?: AuditLogger) {
+    // Explicit property assignment (TSX strip-only mode compatibility)
+    this.auditLogger = auditLogger;
+
     this.schemas = new Map();
     this.metrics = {
       totalValidations: 0,

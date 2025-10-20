@@ -11,7 +11,13 @@ import type Database from 'better-sqlite3';
 import type { GdprDeleteOptions, GdprDeleteResult } from '../../models/Gdpr';
 
 export class DataDeleter {
-  constructor(private db: Database.Database) {}
+  // Explicit property declaration (TSX strip-only mode compatibility)
+  private db: Database.Database;
+
+  constructor(db: Database.Database) {
+    // Explicit property assignment (TSX strip-only mode compatibility)
+    this.db = db;
+  }
 
   /**
    * Delete ALL user data across 15 tables (preserves audit logs + consents)
