@@ -1,9 +1,8 @@
 // CommonJS require for Electron preload (sandboxed context doesn't support ESM)
 const { contextBridge, ipcRenderer } = require('electron');
-import type { IpcRendererEvent } from 'electron';
-import type { Case } from '../src/models/Case';
-import type { Evidence } from '../src/models/Evidence';
-import type { ChatMessage } from '../src/models/ChatConversation';
+
+// Type imports removed - using inline types to avoid ESM in sandboxed context
+// IpcRendererEvent type will be inferred or use 'any'
 
 /**
  * Electron API exposed to renderer process via contextBridge
@@ -36,7 +35,7 @@ export interface ElectronAPI {
   };
   chat: {
     send: (message: string, caseId?: string) => Promise<ChatResponse>;
-    onStream: (callback: (event: IpcRendererEvent, data: string) => void) => void;
+    onStream: (callback: (event: any, data: string) => void) => void; // event: IpcRendererEvent
     offStream: () => void;
   };
   db: {
@@ -97,31 +96,31 @@ interface UpdateCaseData {
 
 interface CaseResponse {
   success: boolean;
-  data?: Case;
+  data?: any; // Case type (avoiding import in preload)
   error?: string;
 }
 
 interface CaseListResponse {
   success: boolean;
-  data?: Case[];
+  data?: any[]; // Case[] type (avoiding import in preload)
   error?: string;
 }
 
 interface EvidenceResponse {
   success: boolean;
-  data?: Evidence;
+  data?: any; // Evidence type (avoiding import in preload)
   error?: string;
 }
 
 interface EvidenceListResponse {
   success: boolean;
-  data?: Evidence[];
+  data?: any[]; // Evidence[] type (avoiding import in preload)
   error?: string;
 }
 
 interface ChatResponse {
   success: boolean;
-  data?: ChatMessage;
+  data?: any; // ChatMessage type (avoiding import in preload)
   error?: string;
 }
 
@@ -214,7 +213,7 @@ const electronAPI: ElectronAPI = {
   chat: {
     send: (message: string, caseId?: string) =>
       ipcRenderer.invoke('chat:send', message, caseId),
-    onStream: (callback: (event: IpcRendererEvent, data: string) => void) => {
+    onStream: (callback: (event: any, data: string) => void) => { // event: IpcRendererEvent
       ipcRenderer.on('chat:stream', callback);
     },
     offStream: () => {
