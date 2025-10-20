@@ -6,7 +6,7 @@
  */
 
 import { z } from 'zod';
-import { logger } from '@/utils/logger';
+import { logger } from '../utils/logger.js';
 import type { AuditLogger } from '../services/AuditLogger';
 import { ipcSchemas } from './schemas';
 import { preventSqlInjection, sanitizeForLogging, sanitizeHtml } from './utils/sanitizers';
