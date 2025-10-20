@@ -1,5 +1,5 @@
 import type { TimelineEvent } from '@/models/TimelineEvent';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useTimeline } from '../hooks/useTimeline';
 
 export interface TimelineViewProps {
@@ -67,10 +67,12 @@ export function TimelineView({ caseId }: TimelineViewProps) {
     );
   }
 
-  // Sort events by date (most recent first)
-  const sortedEvents = [...timelineEvents].sort(
-    (a, b) => new Date(b.eventDate).getTime() - new Date(a.eventDate).getTime(),
-  );
+  // Sort events by date (most recent first) - memoized to prevent re-sort on unrelated state changes
+  const sortedEvents = useMemo(() => {
+    return [...timelineEvents].sort(
+      (a, b) => new Date(b.eventDate).getTime() - new Date(a.eventDate).getTime(),
+    );
+  }, [timelineEvents]);
 
   return (
     <div className="p-6">
