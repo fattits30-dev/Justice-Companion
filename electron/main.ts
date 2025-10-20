@@ -1,8 +1,8 @@
 import { app, BrowserWindow, safeStorage } from 'electron';
 import * as path from 'path';
-import { setupIpcHandlers } from './ipc-handlers';
-import { initializeDatabase, closeDatabase } from './database-init';
-import { KeyManager } from '../src/services/KeyManager';
+import { setupIpcHandlers } from './ipc-handlers.ts';
+import { initializeDatabase, closeDatabase } from './database-init.ts';
+import { KeyManager } from '../src/services/KeyManager.ts';
 
 // Single instance lock
 const gotTheLock = app.requestSingleInstanceLock();

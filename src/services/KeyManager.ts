@@ -19,6 +19,7 @@ import type { SafeStorage } from 'electron';
  * using Electron's safeStorage API for OS-level encryption
  */
 export class KeyManager {
+  private readonly safeStorage: SafeStorage;
   private readonly keyFilePath: string;
   private cachedKey: Buffer | null = null;
 
@@ -27,9 +28,10 @@ export class KeyManager {
    * @param userDataPath - Electron app.getPath('userData')
    */
   constructor(
-    private safeStorage: SafeStorage,
+    safeStorage: SafeStorage,
     userDataPath: string
   ) {
+    this.safeStorage = safeStorage;
     // Store encrypted key in userData directory
     this.keyFilePath = path.join(userDataPath, '.encryption-key');
   }
