@@ -13,8 +13,8 @@ const { contextBridge, ipcRenderer } = require('electron');
  * - Type-safe IPC invocations
  */
 
-// Type definitions for exposed API
-export interface ElectronAPI {
+// Type definitions for exposed API (not exported - preload can't use ESM export)
+interface ElectronAPI {
   auth: {
     register: (data: RegisterData) => Promise<AuthResponse>;
     login: (data: LoginData) => Promise<AuthResponse>;
