@@ -66,14 +66,14 @@ interface UpdateCaseData {
   description?: string;
 }
 
-// Evidence types
-interface EvidenceUploadData {
+// Evidence types (placeholder for future use)
+interface _EvidenceUploadData {
   file: File;
   description?: string;
 }
 
-// Chat types
-interface ChatSendData {
+// Chat types (placeholder for future use)
+interface _ChatSendData {
   message: string;
   caseId?: number;
 }

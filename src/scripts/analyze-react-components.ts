@@ -8,7 +8,7 @@
  * - Components that should be code-split
  */
 
-import { readdirSync, readFileSync, statSync } from 'fs';
+import { readdirSync, readFileSync, statSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { logger } from '../utils/logger';
 
@@ -219,7 +219,6 @@ function analyzeReactComponents(): void {
   };
 
   // Write report to file
-  const { writeFileSync } = require('fs');
   writeFileSync(
     join(process.cwd(), 'src/scripts/component-analysis-report.json'),
     JSON.stringify(report, null, 2)

@@ -48,8 +48,8 @@ export async function setupTestDatabase(config?: Partial<TestDatabaseConfig>): P
   }
 
   fs.copyFileSync(templatePath, dbPath);
-  console.log(`Test database created at: ${dbPath}`);
-  console.log(`Copied from template: ${templatePath}`);
+  console.warn(`Test database created at: ${dbPath}`);
+  console.warn(`Copied from template: ${templatePath}`);
 
   // Set environment variable for database path
   process.env.JUSTICE_DB_PATH = dbPath;
@@ -59,8 +59,8 @@ export async function setupTestDatabase(config?: Partial<TestDatabaseConfig>): P
   // Additional seeding can be added by creating a seeded template or
   // by letting Electron app seed data after launch
   if (config?.seedData) {
-    console.log('Note: seedData is requested but not yet implemented in template approach');
-    console.log('Template includes: test user and consent');
+    console.warn('Note: seedData is requested but not yet implemented in template approach');
+    console.warn('Template includes: test user and consent');
   }
 
   return dbPath;
@@ -75,7 +75,7 @@ export async function cleanupTestDatabase(dbPath: string): Promise<void> {
     // Delete database file
     if (fs.existsSync(dbPath)) {
       fs.unlinkSync(dbPath);
-      console.log(`Test database cleaned up: ${dbPath}`);
+      console.warn(`Test database cleaned up: ${dbPath}`);
     }
 
     // Also cleanup WAL and SHM files (SQLite journal files)
@@ -124,7 +124,7 @@ export async function cleanupAllTestDatabases(): Promise<void> {
     }
   }
 
-  console.log('All test databases cleaned up');
+  console.warn('All test databases cleaned up');
 }
 
 /**

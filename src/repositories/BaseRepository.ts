@@ -111,7 +111,7 @@ export abstract class BaseRepository<T> implements IRepository<T> {
         }
 
         return decrypted;
-      } catch (error) {
+      } catch (_error) {
         // If JSON parse fails or decryption fails, return as-is (backward compatibility)
         return encryptedValue;
       }
@@ -121,7 +121,7 @@ export abstract class BaseRepository<T> implements IRepository<T> {
     try {
       const encryptedData = JSON.parse(encryptedValue);
       return this.encryptionService.decrypt(encryptedData);
-    } catch (error) {
+    } catch (_error) {
       // Backward compatibility: return as-is if not encrypted
       return encryptedValue;
     }
@@ -171,7 +171,7 @@ export abstract class BaseRepository<T> implements IRepository<T> {
         const decoded = Buffer.from(cursor, 'base64').toString('utf-8');
         const [rowid] = decoded.split(':');
         startRowId = parseInt(rowid, 10);
-      } catch (error) {
+      } catch (_error) {
         throw new Error('Invalid cursor format');
       }
     }

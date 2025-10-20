@@ -34,14 +34,14 @@ async function callIPC(channel: string, args: unknown[]): Promise<unknown> {
 }
 
 async function createCase(input: CreateCaseInput) {
-  console.log(`Creating case: ${input.title}...`);
+  console.warn(`Creating case: ${input.title}...`);
   const result = await callIPC('dev-api:cases:create', [input]);
-  console.log(`✓ Created case ID: ${result.id}`);
+  console.warn(`✓ Created case ID: ${result.id}`);
   return result;
 }
 
 async function generateTestData() {
-  console.log('🔥 JUSTICE COMPANION - Test Data Generation\n');
+  console.warn('🔥 JUSTICE COMPANION - Test Data Generation\n');
 
   try {
     // Employment Law Cases
@@ -111,9 +111,9 @@ async function generateTestData() {
       status: 'closed',
     });
 
-    console.log('\n✅ Test data generation complete!');
-    console.log('📊 Created 8 test cases (6 active, 2 closed)');
-    console.log('\n💡 Refresh the app to see the test data');
+    console.warn('\n✅ Test data generation complete!');
+    console.warn('📊 Created 8 test cases (6 active, 2 closed)');
+    console.warn('\n💡 Refresh the app to see the test data');
   } catch (error) {
     console.error('❌ Error generating test data:', error);
     console.error('\n💡 Make sure the dev server is running: npm run dev');

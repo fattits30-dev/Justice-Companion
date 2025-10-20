@@ -595,39 +595,12 @@ describe.sequential('AuditLogger', () => {
 
   describe('Error Handling', () => {
     it('does not throw on logging failure', () => {
-      // Close database to force error
-      const closedDb = db;
-      closedDb.close();
+      // Create a SEPARATE database instance for this test to avoid breaking shared db
+      const errorTestDb = createTestDatabase();
+      const errorDb = errorTestDb.initialize();
 
-      // Create new logger with closed DB
-      const failLogger = new AuditLogger(closedDb);
-
-      // Suppress console.error to avoid polluting test output
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-      // Should not throw
-      expect(() => {
-        failLogger.log({
-          eventType: 'case.create',
-          resourceType: 'case',
-          resourceId: '1',
-          action: 'create',
-        });
-      }).not.toThrow();
-
-      // Verify error was logged (but suppressed from output)
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        '❌ Audit logging failed:',
-        expect.any(Error),
-      );
-
-      // Restore console.error
-      consoleErrorSpy.mockRestore();
-
-      // Recreate database for remaining tests
-      testDb = createTestDatabase();
-      db = testDb.initialize();
-      db.exec(`
+      // Create table for this test db
+      errorDb.exec(`
         CREATE TABLE IF NOT EXISTS audit_logs (
           id TEXT PRIMARY KEY,
           timestamp TEXT NOT NULL,
@@ -646,7 +619,36 @@ describe.sequential('AuditLogger', () => {
           created_at TEXT NOT NULL DEFAULT (datetime('now'))
         );
       `);
-      auditLogger = new AuditLogger(db);
+
+      // Now close THIS database to force error
+      errorDb.close();
+
+      // Create new logger with closed DB
+      const failLogger = new AuditLogger(errorDb);
+
+      // Suppress console.error to avoid polluting test output
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      // Should not throw
+      expect(() => {
+        failLogger.log({
+          eventType: 'case.create',
+          resourceType: 'case',
+          resourceId: '1',
+          action: 'create',
+        });
+      }).not.toThrow();
+
+      // Verify error was logged (structured logger format)
+      expect(consoleErrorSpy).toHaveBeenCalled();
+      const lastCall = consoleErrorSpy.mock.calls[consoleErrorSpy.mock.calls.length - 1][0];
+      expect(lastCall).toContain('❌ Audit logging failed:');
+
+      // Restore console.error
+      consoleErrorSpy.mockRestore();
+
+      // Clean up the error test database
+      errorTestDb.cleanup();
     });
   });
 

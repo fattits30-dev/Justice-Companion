@@ -134,3 +134,38 @@ export function getRepositories(): Repositories {
 export function resetRepositories(): void {
   repositoriesInstance = null;
 }
+
+/**
+ * Initialize repositories for testing with explicit dependencies
+ *
+ * Unlike getRepositories() which uses lazy singleton initialization,
+ * this function allows tests to provide their own auditLogger instance
+ * to verify audit logging behavior.
+ *
+ * @param encryptionService - Encryption service instance
+ * @param auditLogger - Audit logger instance for testing
+ * @returns Initialized repositories with provided dependencies
+ *
+ * @example
+ * ```ts
+ * beforeEach(() => {
+ *   testDb = new TestDatabaseHelper();
+ *   const db = testDb.initialize();
+ *
+ *   resetRepositories();
+ *
+ *   const encryptionService = new EncryptionService(testKey);
+ *   const auditLogger = new AuditLogger(db);
+ *
+ *   // Use test initialization to inject auditLogger
+ *   const repos = initializeTestRepositories(encryptionService, auditLogger);
+ * });
+ * ```
+ */
+export function initializeTestRepositories(
+  encryptionService: EncryptionService,
+  auditLogger: AuditLogger,
+): Repositories {
+  repositoriesInstance = initializeRepositories(encryptionService, auditLogger);
+  return repositoriesInstance;
+}

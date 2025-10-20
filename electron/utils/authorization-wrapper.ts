@@ -15,7 +15,14 @@
  */
 
 import { type IPCResponse, errorResponse, IPCErrorCode } from './ipc-response';
-import { AuthorizationError } from '../../src/middleware/AuthorizationMiddleware';
+
+// AuthorizationError is loaded at runtime via require() to avoid TypeScript path issues
+class AuthorizationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'AuthorizationError';
+  }
+}
 
 /**
  * Session data returned from AuthenticationService
@@ -31,11 +38,11 @@ interface SessionData {
  * Lazy-load AuthenticationService to avoid circular dependencies
  */
 function getAuthService() {
-  // Runtime path: from dist/electron/ to src/ (two levels up)
-   
-  const { AuthenticationService } = require('../../src/services/AuthenticationService');
-   
-  const { getDb } = require('../../src/db/database');
+  // Runtime path: from dist/electron/utils/ to src/ (three levels up)
+
+  const { AuthenticationService } = require('../../../src/services/AuthenticationService');
+
+  const { getDb } = require('../../../src/db/database');
   return new AuthenticationService(getDb());
 }
 
@@ -100,7 +107,7 @@ export async function withAuthorization<T>(
     }
 
     // 4. Execute handler with validated userId
-    console.log('[Authorization] Session validated:', {
+    console.warn('[Authorization] Session validated:', {
       sessionId,
       userId: session.userId,
     });
@@ -117,7 +124,7 @@ export async function withAuthorization<T>(
     if (error instanceof AuthorizationError) {
       console.warn('[Authorization] Authorization denied:', error.message);
       return errorResponse(
-        IPCErrorCode.FORBIDDEN,
+        IPCErrorCode.UNAUTHORIZED,
         error.message
       );
     }
@@ -131,12 +138,12 @@ export async function withAuthorization<T>(
  * Lazy-load AuthorizationMiddleware
  */
 export function getAuthorizationMiddleware() {
-   
-  const { AuthorizationMiddleware } = require('../../src/middleware/AuthorizationMiddleware');
-   
-  const { caseRepository } = require('../../src/repositories/CaseRepository');
-   
-  const { auditLogger } = require('../../src/services/AuditLogger');
+
+  const { AuthorizationMiddleware } = require('../../../src/middleware/AuthorizationMiddleware');
+
+  const { caseRepository } = require('../../../src/repositories/CaseRepository');
+
+  const { auditLogger } = require('../../../src/services/AuditLogger');
 
   return new AuthorizationMiddleware(caseRepository, auditLogger);
 }
@@ -145,8 +152,8 @@ export function getAuthorizationMiddleware() {
  * Get EvidenceRepository for evidence ownership checks
  */
 export function getEvidenceRepository() {
-   
-  const { evidenceRepository } = require('../../src/repositories/EvidenceRepository');
+
+  const { evidenceRepository } = require('../../../src/repositories/EvidenceRepository');
   return evidenceRepository;
 }
 

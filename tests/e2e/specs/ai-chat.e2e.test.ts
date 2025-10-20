@@ -171,7 +171,7 @@ test.describe('AI Chat E2E', () => {
           expect(responseText).toBeTruthy();
           expect(responseText!.length).toBeGreaterThan(0);
         } else {
-          console.log('⚠️  AI not configured - skipping AI response check');
+          console.warn('⚠️  AI not configured - skipping AI response check');
         }
       }
     }

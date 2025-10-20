@@ -34,7 +34,7 @@ if (!gotTheLock) {
 
     // Load app (dev server or production build)
     if (process.env.NODE_ENV === 'development') {
-      mainWindow.loadURL('http://localhost:5173');
+      mainWindow.loadURL('http://localhost:5176');
       mainWindow.webContents.openDevTools(); // Open DevTools in development
     } else {
       mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
@@ -53,7 +53,7 @@ if (!gotTheLock) {
     // Security: Prevent navigation to external URLs
     mainWindow.webContents.on('will-navigate', (event, url) => {
       const allowedOrigins = [
-        'http://localhost:5173', // Dev server
+        'http://localhost:5176', // Dev server
         'file://' // Production build
       ];
 
@@ -75,7 +75,7 @@ if (!gotTheLock) {
    */
   app.on('ready', async () => {
     try {
-      console.log('[Main] App ready');
+      console.warn('[Main] App ready');
 
       // Initialize database first
       await initializeDatabase();
@@ -123,10 +123,10 @@ if (!gotTheLock) {
    * Before quit - cleanup
    */
   app.on('before-quit', () => {
-    console.log('[Main] App shutting down...');
+    console.warn('[Main] App shutting down...');
 
-    // Close database connections
-    closeDatabase();
+    // Close database connections (fire-and-forget - app is quitting anyway)
+    closeDatabase().catch((err) => console.error('[Main] Error during cleanup:', err));
 
     // TODO: Save window state
   });

@@ -24,23 +24,23 @@ const TEMPLATE_DIR = path.join(path.dirname(__dirname), 'tests', 'e2e', 'fixture
 const TEMPLATE_PATH = path.join(TEMPLATE_DIR, 'test-database-template.db');
 
 async function createTemplate(): Promise<void> {
-  console.log('🔧 Creating test database template...');
+  console.warn('🔧 Creating test database template...');
 
   // Create fixtures directory
   if (!fs.existsSync(TEMPLATE_DIR)) {
     fs.mkdirSync(TEMPLATE_DIR, { recursive: true });
-    console.log(`✅ Created fixtures directory: ${TEMPLATE_DIR}`);
+    console.warn(`✅ Created fixtures directory: ${TEMPLATE_DIR}`);
   }
 
   // Delete existing template
   if (fs.existsSync(TEMPLATE_PATH)) {
     fs.unlinkSync(TEMPLATE_PATH);
-    console.log('🗑️  Deleted existing template');
+    console.warn('🗑️  Deleted existing template');
   }
 
   // Create new database
   const db = new Database(TEMPLATE_PATH);
-  console.log(`✅ Created template database: ${TEMPLATE_PATH}`);
+  console.warn(`✅ Created template database: ${TEMPLATE_PATH}`);
 
   try {
     // Enable foreign keys
@@ -49,27 +49,27 @@ async function createTemplate(): Promise<void> {
     // Enable WAL mode for better concurrency
     db.pragma('journal_mode = WAL');
 
-    console.log('📚 Running migrations...');
+    console.warn('📚 Running migrations...');
 
     // Run all migrations (inline for simplicity)
     await runMigrations(db);
 
-    console.log('✅ Migrations completed');
+    console.warn('✅ Migrations completed');
 
     // Create test user
-    console.log('👤 Creating test user...');
+    console.warn('👤 Creating test user...');
     await createTestUser(db);
-    console.log('✅ Test user created');
+    console.warn('✅ Test user created');
 
     // Verify template
     const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get() as { count: number };
     const consentCount = db.prepare('SELECT COUNT(*) as count FROM consents').get() as { count: number };
 
-    console.log(`\n✅ Template created successfully:`);
-    console.log(`   - Users: ${userCount.count}`);
-    console.log(`   - Consents: ${consentCount.count}`);
-    console.log(`   - Location: ${TEMPLATE_PATH}`);
-    console.log(`\n🎯 Test credentials: username=testuser, password=TestPassword123!`);
+    console.warn(`\n✅ Template created successfully:`);
+    console.warn(`   - Users: ${userCount.count}`);
+    console.warn(`   - Consents: ${consentCount.count}`);
+    console.warn(`   - Location: ${TEMPLATE_PATH}`);
+    console.warn(`\n🎯 Test credentials: username=testuser, password=TestPassword123!`);
 
   } finally {
     db.close();
@@ -84,7 +84,7 @@ async function runMigrations(db: Database.Database): Promise<void> {
     .filter(f => f.endsWith('.sql'))
     .sort();
 
-  console.log(`   Found ${files.length} migrations`);
+  console.warn(`   Found ${files.length} migrations`);
 
   for (const file of files) {
     const migrationPath = path.join(migrationsDir, file);
@@ -96,7 +96,7 @@ async function runMigrations(db: Database.Database): Promise<void> {
 
     if (upSQL) {
       db.exec(upSQL);
-      console.log(`   ✓ ${file}`);
+      console.warn(`   ✓ ${file}`);
     }
   }
 }

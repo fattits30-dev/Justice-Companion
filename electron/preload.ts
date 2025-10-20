@@ -218,7 +218,7 @@ contextBridge.exposeInMainWorld('electron', electronAPI);
 /**
  * Security: Log preload script loaded
  */
-console.log('[Preload] Context bridge established');
+console.warn('[Preload] Context bridge established');
 
 /**
  * Extend Window interface for TypeScript

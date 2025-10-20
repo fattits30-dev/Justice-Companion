@@ -38,8 +38,8 @@ export async function launchElectronApp(options?: {
     ? electronMainPath
     : path.join(process.cwd(), 'electron', 'main.ts');
 
-  console.log(`Launching Electron from: ${mainPath}`);
-  console.log(`Using test database: ${dbPath}`);
+  console.warn(`Launching Electron from: ${mainPath}`);
+  console.warn(`Using test database: ${dbPath}`);
 
   try {
     // Launch Electron with Electron 38+ compatibility
@@ -71,7 +71,7 @@ export async function launchElectronApp(options?: {
     window.on('console', msg => {
       const type = msg.type();
       const text = msg.text();
-      console.log(`[Renderer ${type}] ${text}`);
+      console.warn(`[Renderer ${type}] ${text}`);
     });
 
     // Wait for app to be fully loaded
@@ -82,7 +82,7 @@ export async function launchElectronApp(options?: {
     // Give React time to hydrate
     await window.waitForTimeout(2000);
 
-    console.log('Electron app launched successfully');
+    console.warn('Electron app launched successfully');
 
     return { app, window, dbPath };
   } catch (error) {
@@ -102,7 +102,7 @@ export async function closeElectronApp(testApp: ElectronTestApp): Promise<void> 
   try {
     // Close Electron app
     await app.close();
-    console.log('Electron app closed');
+    console.warn('Electron app closed');
   } catch (error) {
     console.error('Error closing Electron app:', error);
   }
@@ -177,7 +177,7 @@ export async function takeScreenshot(page: Page, name: string): Promise<void> {
   }
 
   await page.screenshot({ path: screenshotPath, fullPage: true });
-  console.log(`Screenshot saved: ${screenshotPath}`);
+  console.warn(`Screenshot saved: ${screenshotPath}`);
 }
 
 /**
@@ -227,32 +227,32 @@ export async function authenticateTestUser(
   timeout = 15000
 ): Promise<void> {
   try {
-    console.log(`[authenticateTestUser] Waiting for login screen...`);
+    console.warn(`[authenticateTestUser] Waiting for login screen...`);
 
     // ✅ Web-first assertion: Wait for login screen to be visible
     await expect(page.getByText('Sign In')).toBeVisible({ timeout });
-    console.log(`[authenticateTestUser] Login screen found`);
+    console.warn(`[authenticateTestUser] Login screen found`);
 
     // Fill login form
-    console.log(`[authenticateTestUser] Filling username: ${credentials.username}`);
+    console.warn(`[authenticateTestUser] Filling username: ${credentials.username}`);
     await page.fill('#username', credentials.username);
 
-    console.log(`[authenticateTestUser] Filling password`);
+    console.warn(`[authenticateTestUser] Filling password`);
     await page.fill('#password', credentials.password);
 
     // ✅ Click login button using role-based selector (more reliable)
-    console.log(`[authenticateTestUser] Clicking Login button`);
+    console.warn(`[authenticateTestUser] Clicking Login button`);
     await page.getByRole('button', { name: 'Login' }).click();
 
     // ✅ Web-first assertion: Wait for post-login element to appear
     // The app shows the Dashboard with "Welcome to Justice Companion" heading after successful login
-    console.log(`[authenticateTestUser] Waiting for authentication to complete...`);
+    console.warn(`[authenticateTestUser] Waiting for authentication to complete...`);
 
     // Wait for the Dashboard welcome heading (most reliable post-login indicator)
     await expect(page.getByText('Welcome to Justice Companion')).toBeVisible({ timeout: 15000 });
-    console.log(`[authenticateTestUser] ✅ Dashboard loaded`);
+    console.warn(`[authenticateTestUser] ✅ Dashboard loaded`);
 
-    console.log(`[authenticateTestUser] ✅ Authenticated as ${credentials.username}`);
+    console.warn(`[authenticateTestUser] ✅ Authenticated as ${credentials.username}`);
   } catch (error) {
     console.error('[authenticateTestUser] ❌ Failed to authenticate test user:', error);
 

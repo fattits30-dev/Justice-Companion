@@ -4593,3 +4593,247 @@ This might cause false positive tests. Resolve unhandled errors to make sure you
 
 [1m[7m[31m FAIL [39m[27m[22m [31mTests failed. Watching for file changes...[39m
        [2mpress [22m[1mh[22m[2m to show help[22m[2m, [22m[2mpress [22m[1mq[22m[2m to quit[22m
+c[3J[1m[7m[34m RERUN [39m[27m[22m [34m[2mtests/e2e/setup/electron-setup.ts [22m[39m
+
+ [31m❯[39m tests/e2e/specs/test-1.spec.ts [2m([22m[2m0 test[22m[2m)[22m
+ [31m❯[39m tests/e2e/specs/test-2.spec.ts [2m([22m[2m0 test[22m[2m)[22m
+ [31m❯[39m src/services/ChatConversationService.test.ts [2m([22m[2m0 test[22m[2m)[22m
+ [31m❯[39m src/services/ConsentService.test.ts [2m([22m[2m0 test[22m[2m)[22m
+ [31m❯[39m src/services/RAGService.test.ts [2m([22m[2m0 test[22m[2m)[22m
+ [31m❯[39m src/services/UserProfileService.test.ts [2m([22m[2m0 test[22m[2m)[22m
+ [31m❯[39m src/services/AIServiceFactory.test.ts [2m([22m[2m0 test[22m[2m)[22m
+[90mstderr[2m | src/services/AuditLogger.test.ts
+[22m[39m[LOGGER INIT] {
+  [32m'import.meta.env.PROD'[39m: [33mfalse[39m,
+  [32m'import.meta.env.DEV'[39m: [33mtrue[39m,
+  [32m'import.meta.env.MODE'[39m: [32m'test'[39m,
+  isProduction: [33mfalse[39m
+}
+
+[90mstderr[2m | src/services/StartupMetrics.test.ts
+[22m[39m[LOGGER INIT] {
+  [32m'import.meta.env.PROD'[39m: [33mfalse[39m,
+  [32m'import.meta.env.DEV'[39m: [33mtrue[39m,
+  [32m'import.meta.env.MODE'[39m: [32m'test'[39m,
+  isProduction: [33mfalse[39m
+}
+
+[90mstderr[2m | src/services/RateLimitService.test.ts
+[22m[39m[LOGGER INIT] {
+  [32m'import.meta.env.PROD'[39m: [33mfalse[39m,
+  [32m'import.meta.env.DEV'[39m: [33mtrue[39m,
+  [32m'import.meta.env.MODE'[39m: [32m'test'[39m,
+  isProduction: [33mfalse[39m
+}
+
+[90mstderr[2m | src/tests/authorization-security.test.ts
+[22m[39m[LOGGER INIT] {
+  [32m'import.meta.env.PROD'[39m: [33mfalse[39m,
+  [32m'import.meta.env.DEV'[39m: [33mtrue[39m,
+  [32m'import.meta.env.MODE'[39m: [32m'test'[39m,
+  isProduction: [33mfalse[39m
+}
+
+[90mstdout[2m | src/services/StartupMetrics.test.ts[2m > [22m[2mStartupMetrics[2m > [22m[2mlogStartupMetrics[2m > [22m[2mshould show N/A for unrecorded phases
+[22m[39m[2025-10-19T17:17:21.235Z][INFO][StartupMetrics] 
+╔════════════════════════════════════════════════════════════╗
+[2025-10-19T17:17:21.235Z][INFO][StartupMetrics] ║              STARTUP PERFORMANCE METRICS                    ║
+[2025-10-19T17:17:21.235Z][INFO][StartupMetrics] ╠════════════════════════════════════════════════════════════╣
+[2025-10-19T17:17:21.236Z][INFO][StartupMetrics] ║                                                              ║
+[2025-10-19T17:17:21.236Z][INFO][StartupMetrics] ║  Phase Timing (from app ready)                              ║
+[2025-10-19T17:17:21.236Z][INFO][StartupMetrics] ║  ─────────────────────────────────                          ║
+[2025-10-19T17:17:21.236Z][INFO][StartupMetrics] ║  Loading window shown:         N/A                  ║
+[2025-10-19T17:17:21.236Z][INFO][StartupMetrics] ║  Critical services ready:      N/A                  ║
+[2025-10-19T17:17:21.236Z][INFO][StartupMetrics] ║  Critical handlers registered: N/A                  ║
+[2025-10-19T17:17:21.236Z][INFO][StartupMetrics] ║  Main window created:          N/A                  ║
+[2025-10-19T17:17:21.236Z][INFO][StartupMetrics] ║  Main window shown:            N/A                  ║
+[2025-10-19T17:17:21.237Z][INFO][StartupMetrics] ║  Non-critical services ready:  N/A                  ║
+[2025-10-19T17:17:21.237Z][INFO][StartupMetrics] ║  All handlers registered:      N/A                  ║
+[2025-10-19T17:17:21.237Z][INFO][StartupMetrics] ║                                                              ║
+[2025-10-19T17:17:21.237Z][INFO][StartupMetrics] ║  Phase Deltas                                                ║
+[2025-10-19T17:17:21.237Z][INFO][StartupMetrics] ║  ─────────────────                                           ║
+[2025-10-19T17:17:21.237Z][INFO][StartupMetrics] ║  Loading → Services:           N/A                  ║
+[2025-10-19T17:17:21.237Z][INFO][StartupMetrics] ║  Services → Handlers:          N/A                  ║
+[2025-10-19T17:17:21.237Z][INFO][StartupMetrics] ║  Handlers → Main Window:       N/A                  ║
+[2025-10-19T17:17:21.237Z][INFO][StartupMetrics] ║  Main Window → Non-Critical:   N/A                  ║
+[2025-10-19T17:17:21.237Z][INFO][StartupMetrics] ║  Non-Critical → Complete:      N/A                  ║
+[2025-10-19T17:17:21.237Z][INFO][StartupMetrics] ║                                                              ║
+[2025-10-19T17:17:21.237Z][INFO][StartupMetrics] ║  Summary                                                     ║
+[2025-10-19T17:17:21.237Z][INFO][StartupMetrics] ║  ──────────                                                  ║
+[2025-10-19T17:17:21.237Z][INFO][StartupMetrics] ║  Perceived startup time:       N/A                  ║
+[2025-10-19T17:17:21.237Z][INFO][StartupMetrics] ║  Total startup time:           N/A                  ║
+[2025-10-19T17:17:21.238Z][INFO][StartupMetrics] ║                                                              ║
+[2025-10-19T17:17:21.238Z][INFO][StartupMetrics] ╚════════════════════════════════════════════════════════════╝
+[2025-10-19T17:17:21.238Z][INFO][StartupMetrics] 
+Excellent startup performance! Target achieved.
+
+[90mstderr[2m | src/services/RateLimitService.test.ts[2m > [22m[2mRateLimitService[2m > [22m[2mRate Limiting[2m > [22m[2mshould lock account after 5 failed attempts
+[22m[39m[2025-10-19T17:17:21.234Z][ERROR][RateLimitService] BRUTE FORCE DETECTED for ${normalizedUsername}. Account locked for ${this.LOCK_DURATION_MS / 1000}s
+[2025-10-19T17:17:21.234Z][WARN][RateLimitService] Rate limit exceeded for ${normalizedUsername}. Attempts: ${attempt.count}, Lock time remaining: ${remainingSeconds}s
+
+[90mstderr[2m | src/services/RateLimitService.test.ts[2m > [22m[2mRateLimitService[2m > [22m[2mSliding Window[2m > [22m[2mshould unlock account after lock duration expires
+[22m[39m[2025-10-19T17:17:21.241Z][ERROR][RateLimitService] BRUTE FORCE DETECTED for ${normalizedUsername}. Account locked for ${this.LOCK_DURATION_MS / 1000}s
+[2025-10-19T17:17:21.241Z][WARN][RateLimitService] Rate limit exceeded for ${normalizedUsername}. Attempts: ${attempt.count}, Lock time remaining: ${remainingSeconds}s
+
+[90mstderr[2m | src/services/RateLimitService.test.ts[2m > [22m[2mRateLimitService[2m > [22m[2mCleanup Mechanism[2m > [22m[2mshould not clean up locked accounts prematurely
+[22m[39m[2025-10-19T17:17:21.243Z][ERROR][RateLimitService] BRUTE FORCE DETECTED for ${normalizedUsername}. Account locked for ${this.LOCK_DURATION_MS / 1000}s
+
+[90mstderr[2m | src/services/RateLimitService.test.ts[2m > [22m[2mRateLimitService[2m > [22m[2mHelper Methods[2m > [22m[2mshould correctly check if account is locked
+[22m[39m[2025-10-19T17:17:21.263Z][ERROR][RateLimitService] BRUTE FORCE DETECTED for ${normalizedUsername}. Account locked for ${this.LOCK_DURATION_MS / 1000}s
+
+[90mstderr[2m | src/services/RateLimitService.test.ts[2m > [22m[2mRateLimitService[2m > [22m[2mHelper Methods[2m > [22m[2mshould provide accurate statistics
+[22m[39m[2025-10-19T17:17:21.264Z][ERROR][RateLimitService] BRUTE FORCE DETECTED for ${normalizedUsername}. Account locked for ${this.LOCK_DURATION_MS / 1000}s
+
+[90mstderr[2m | src/services/RateLimitService.test.ts[2m > [22m[2mRateLimitService[2m > [22m[2mEdge Cases[2m > [22m[2mshould handle rapid successive attempts
+[22m[39m[2025-10-19T17:17:21.266Z][ERROR][RateLimitService] BRUTE FORCE DETECTED for ${normalizedUsername}. Account locked for ${this.LOCK_DURATION_MS / 1000}s
+
+[90mstderr[2m | src/services/RateLimitService.test.ts[2m > [22m[2mRateLimitService[2m > [22m[2mEdge Cases[2m > [22m[2mshould not increment count when already locked
+[22m[39m[2025-10-19T17:17:21.267Z][ERROR][RateLimitService] BRUTE FORCE DETECTED for ${normalizedUsername}. Account locked for ${this.LOCK_DURATION_MS / 1000}s
+
+ [32m✓[39m src/services/StartupMetrics.test.ts[2m > [22mStartupMetrics[2m > [22mrecordPhase[2m > [22mshould record timestamps for each phase
+ [32m✓[39m src/services/StartupMetrics.test.ts[2m > [22mStartupMetrics[2m > [22mrecordPhase[2m > [22mshould handle phases recorded out of order
+ [32m✓[39m src/services/StartupMetrics.test.ts[2m > [22mStartupMetrics[2m > [22mgetTimestamps[2m > [22mshould return a copy of timestamps
+ [32m✓[39m src/services/StartupMetrics.test.ts[2m > [22mStartupMetrics[2m > [22mgetTimestamps[2m > [22mshould include moduleLoad timestamp by default
+ [32m✓[39m src/services/StartupMetrics.test.ts[2m > [22mStartupMetrics[2m > [22mlogStartupMetrics[2m > [22mshould log formatted metrics to console
+ [31m×[39m src/services/StartupMetrics.test.ts[2m > [22mStartupMetrics[2m > [22mlogStartupMetrics[2m > [22mshould show N/A for unrecorded phases
+[31m   → expected '' to contain 'N/A'[39m
+ [32m✓[39m src/services/StartupMetrics.test.ts[2m > [22mStartupMetrics[2m > [22mlogStartupMetrics[2m > [22mshould show performance indicators
+ [32m✓[39m src/services/StartupMetrics.test.ts[2m > [22mStartupMetrics[2m > [22mlogStartupMetrics[2m > [22mshould show recommendations for slow startup
+ [32m✓[39m src/services/StartupMetrics.test.ts[2m > [22mStartupMetrics[2m > [22mexportMetrics[2m > [22mshould export metrics as JSON
+ [32m✓[39m src/services/StartupMetrics.test.ts[2m > [22mStartupMetrics[2m > [22mexportMetrics[2m > [22mshould categorize performance correctly
+ [32m✓[39m src/services/StartupMetrics.test.ts[2m > [22mStartupMetrics[2m > [22mformatDuration[2m > [22mshould format durations correctly
+ [32m✓[39m src/services/RateLimitService.test.ts[2m > [22mRateLimitService[2m > [22mSingleton Pattern[2m > [22mshould return the same instance
+ [32m✓[39m src/services/RateLimitService.test.ts[2m > [22mRateLimitService[2m > [22mSingleton Pattern[2m > [22mshould create new instance after reset
+ [32m✓[39m src/services/RateLimitService.test.ts[2m > [22mRateLimitService[2m > [22mRate Limiting[2m > [22mshould allow first login attempt
+ [32m✓[39m src/services/RateLimitService.test.ts[2m > [22mRateLimitService[2m > [22mRate Limiting[2m > [22mshould track failed attempts
+ [32m✓[39m src/services/RateLimitService.test.ts[2m > [22mRateLimitService[2m > [22mRate Limiting[2m > [22mshould lock account after 5 failed attempts
+ [32m✓[39m src/services/RateLimitService.test.ts[2m > [22mRateLimitService[2m > [22mRate Limiting[2m > [22mshould handle case-insensitive usernames
+ [32m✓[39m src/services/RateLimitService.test.ts[2m > [22mRateLimitService[2m > [22mRate Limiting[2m > [22mshould clear attempts on successful login
+ [32m✓[39m src/services/RateLimitService.test.ts[2m > [22mRateLimitService[2m > [22mSliding Window[2m > [22mshould reset attempts after window expires
+ [32m✓[39m src/services/RateLimitService.test.ts[2m > [22mRateLimitService[2m > [22mSliding Window[2m > [22mshould maintain count within sliding window
+ [32m✓[39m src/services/RateLimitService.test.ts[2m > [22mRateLimitService[2m > [22mSliding Window[2m > [22mshould unlock account after lock duration expires
+ [32m✓[39m src/services/RateLimitService.test.ts[2m > [22mRateLimitService[2m > [22mCleanup Mechanism[2m > [22mshould clean up expired entries automatically
+ [32m✓[39m src/services/RateLimitService.test.ts[2m > [22mRateLimitService[2m > [22mCleanup Mechanism[2m > [22mshould not clean up locked accounts prematurely
+ [31m×[39m src/services/RateLimitService.test.ts[2m > [22mRateLimitService[2m > [22mSecurity Logging[2m > [22mshould log when account is locked
+[31m   → expected "error" to be called with arguments: [ StringContaining{…} ][90m
+
+Received: 
+
+[1m  1st error call:
+
+[22m[2m  Array [[22m
+[32m-   StringContaining "BRUTE FORCE DETECTED for testuser",[90m
+[31m+   "[2025-10-19T17:17:21.245Z][ERROR][RateLimitService] BRUTE FORCE DETECTED for ${normalizedUsername}. Account locked for ${this.LOCK_DURATION_MS / 1000}s",[90m
+[2m  ][22m
+[31m[90m
+
+Number of calls: [1m1[22m
+[31m[39m
+ [31m×[39m src/services/RateLimitService.test.ts[2m > [22mRateLimitService[2m > [22mSecurity Logging[2m > [22mshould log rate limit violations
+[31m   → expected "warn" to be called with arguments: [ StringContaining{…} ][90m
+
+Received: 
+
+[1m  1st warn call:
+
+[22m[2m  Array [[22m
+[32m-   StringContaining "Rate limit exceeded for testuser",[90m
+[31m+   "[2025-10-19T17:17:21.260Z][WARN][RateLimitService] Rate limit exceeded for ${normalizedUsername}. Attempts: ${attempt.count}, Lock time remaining: ${remainingSeconds}s",[90m
+[2m  ][22m
+[31m[90m
+
+Number of calls: [1m1[22m
+[31m[39m
+ [32m✓[39m src/services/RateLimitService.test.ts[2m > [22mRateLimitService[2m > [22mHelper Methods[2m > [22mshould correctly report attempt count
+ [32m✓[39m src/services/RateLimitService.test.ts[2m > [22mRateLimitService[2m > [22mHelper Methods[2m > [22mshould correctly check if account is locked
+ [32m✓[39m src/services/RateLimitService.test.ts[2m > [22mRateLimitService[2m > [22mHelper Methods[2m > [22mshould provide accurate statistics
+ [32m✓[39m src/services/RateLimitService.test.ts[2m > [22mRateLimitService[2m > [22mEdge Cases[2m > [22mshould handle empty username gracefully
+ [32m✓[39m src/services/RateLimitService.test.ts[2m > [22mRateLimitService[2m > [22mEdge Cases[2m > [22mshould handle whitespace in usernames
+ [32m✓[39m src/services/RateLimitService.test.ts[2m > [22mRateLimitService[2m > [22mEdge Cases[2m > [22mshould handle rapid successive attempts
+ [32m✓[39m src/services/RateLimitService.test.ts[2m > [22mRateLimitService[2m > [22mEdge Cases[2m > [22mshould not increment count when already locked
+[90mstdout[2m | src/services/StartupMetrics.test.ts[2m > [22m[2mStartupMetrics[2m > [22m[2mphase deltas[2m > [22m[2mshould calculate phase deltas correctly
+[22m[39m[2025-10-19T17:17:21.275Z][INFO][StartupMetrics] 
+╔════════════════════════════════════════════════════════════╗
+[2025-10-19T17:17:21.276Z][INFO][StartupMetrics] ║              STARTUP PERFORMANCE METRICS                    ║
+[2025-10-19T17:17:21.276Z][INFO][StartupMetrics] ╠════════════════════════════════════════════════════════════╣
+[2025-10-19T17:17:21.276Z][INFO][StartupMetrics] ║                                                              ║
+[2025-10-19T17:17:21.276Z][INFO][StartupMetrics] ║  Phase Timing (from app ready)                              ║
+[2025-10-19T17:17:21.276Z][INFO][StartupMetrics] ║  ─────────────────────────────────                          ║
+[2025-10-19T17:17:21.276Z][INFO][StartupMetrics] ║  Loading window shown:         ✅ 2ms                ║
+[2025-10-19T17:17:21.276Z][INFO][StartupMetrics] ║  Critical services ready:      ✅ 6ms                ║
+[2025-10-19T17:17:21.276Z][INFO][StartupMetrics] ║  Critical handlers registered: N/A                  ║
+[2025-10-19T17:17:21.276Z][INFO][StartupMetrics] ║  Main window created:          N/A                  ║
+[2025-10-19T17:17:21.276Z][INFO][StartupMetrics] ║  Main window shown:            ✅ 22ms               ║
+[2025-10-19T17:17:21.276Z][INFO][StartupMetrics] ║  Non-critical services ready:  N/A                  ║
+[2025-10-19T17:17:21.276Z][INFO][StartupMetrics] ║  All handlers registered:      N/A                  ║
+[2025-10-19T17:17:21.276Z][INFO][StartupMetrics] ║                                                              ║
+[2025-10-19T17:17:21.276Z][INFO][StartupMetrics] ║  Phase Deltas                                                ║
+[2025-10-19T17:17:21.276Z][INFO][StartupMetrics] ║  ─────────────────                                           ║
+[2025-10-19T17:17:21.276Z][INFO][StartupMetrics] ║  Loading → Services:           4ms                  ║
+[2025-10-19T17:17:21.276Z][INFO][StartupMetrics] ║  Services → Handlers:          Error                ║
+[2025-10-19T17:17:21.276Z][INFO][StartupMetrics] ║  Handlers → Main Window:       22ms                 ║
+[2025-10-19T17:17:21.276Z][INFO][StartupMetrics] ║  Main Window → Non-Critical:   Error                ║
+[2025-10-19T17:17:21.276Z][INFO][StartupMetrics] ║  Non-Critical → Complete:      N/A                  ║
+[2025-10-19T17:17:21.277Z][INFO][StartupMetrics] ║                                                              ║
+[2025-10-19T17:17:21.277Z][INFO][StartupMetrics] ║  Summary                                                     ║
+[2025-10-19T17:17:21.277Z][INFO][StartupMetrics] ║  ──────────                                                  ║
+[2025-10-19T17:17:21.277Z][INFO][StartupMetrics] ║  Perceived startup time:       ✅ 22ms               ║
+[2025-10-19T17:17:21.277Z][INFO][StartupMetrics] ║  Total startup time:           ✅ 24ms               ║
+[2025-10-19T17:17:21.277Z][INFO][StartupMetrics] ║                                                              ║
+[2025-10-19T17:17:21.277Z][INFO][StartupMetrics] ╚════════════════════════════════════════════════════════════╝
+[2025-10-19T17:17:21.277Z][INFO][StartupMetrics] 
+Excellent startup performance! Target achieved.
+
+[90mstdout[2m | src/services/StartupMetrics.test.ts[2m > [22m[2mStartupMetrics[2m > [22m[2mphase deltas[2m > [22m[2mshould calculate phase deltas correctly
+[22m[39m[2025-10-19T17:17:21.303Z][INFO][StartupMetrics] 
+╔════════════════════════════════════════════════════════════╗
+[2025-10-19T17:17:21.303Z][INFO][StartupMetrics] ║              STARTUP PERFORMANCE METRICS                    ║
+[2025-10-19T17:17:21.303Z][INFO][StartupMetrics] ╠════════════════════════════════════════════════════════════╣
+[2025-10-19T17:17:21.303Z][INFO][StartupMetrics] ║                                                              ║
+[2025-10-19T17:17:21.303Z][INFO][StartupMetrics] ║  Phase Timing (from app ready)                              ║
+[2025-10-19T17:17:21.303Z][INFO][StartupMetrics] ║  ─────────────────────────────────                          ║
+[2025-10-19T17:17:21.304Z][INFO][StartupMetrics] ║  Loading window shown:         ✅ 30ms               ║
+[2025-10-19T17:17:21.304Z][INFO][StartupMetrics] ║  Critical services ready:      ✅ 6ms                ║
+[2025-10-19T17:17:21.304Z][INFO][StartupMetrics] ║  Critical handlers registered: N/A                  ║
+[2025-10-19T17:17:21.304Z][INFO][StartupMetrics] ║  Main window created:          N/A                  ║
+[2025-10-19T17:17:21.304Z][INFO][StartupMetrics] ║  Main window shown:            ✅ 52ms               ║
+[2025-10-19T17:17:21.304Z][INFO][StartupMetrics] ║  Non-critical services ready:  N/A                  ║
+[2025-10-19T17:17:21.304Z][INFO][StartupMetrics] ║  All handlers registered:      N/A                  ║
+[2025-10-19T17:17:21.304Z][INFO][StartupMetrics] ║                                                              ║
+[2025-10-19T17:17:21.304Z][INFO][StartupMetrics] ║  Phase Deltas                                                ║
+[2025-10-19T17:17:21.304Z][INFO][StartupMetrics] ║  ─────────────────                                           ║
+[2025-10-19T17:17:21.304Z][INFO][StartupMetrics] ║  Loading → Services:           Error                ║
+[2025-10-19T17:17:21.304Z][INFO][StartupMetrics] ║  Services → Handlers:          Error                ║
+[2025-10-19T17:17:21.304Z][INFO][StartupMetrics] ║  Handlers → Main Window:       52ms                 ║
+[2025-10-19T17:17:21.304Z][INFO][StartupMetrics] ║  Main Window → Non-Critical:   Error                ║
+[2025-10-19T17:17:21.304Z][INFO][StartupMetrics] ║  Non-Critical → Complete:      N/A                  ║
+[2025-10-19T17:17:21.304Z][INFO][StartupMetrics] ║                                                              ║
+[2025-10-19T17:17:21.304Z][INFO][StartupMetrics] ║  Summary                                                     ║
+[2025-10-19T17:17:21.304Z][INFO][StartupMetrics] ║  ──────────                                                  ║
+[2025-10-19T17:17:21.304Z][INFO][StartupMetrics] ║  Perceived startup time:       ✅ 52ms               ║
+[2025-10-19T17:17:21.305Z][INFO][StartupMetrics] ║  Total startup time:           ✅ 52ms               ║
+[2025-10-19T17:17:21.305Z][INFO][StartupMetrics] ║                                                              ║
+[2025-10-19T17:17:21.305Z][INFO][StartupMetrics] ╚════════════════════════════════════════════════════════════╝
+[2025-10-19T17:17:21.305Z][INFO][StartupMetrics] 
+Excellent startup performance! Target achieved.
+
+node:events:502
+      throw er; // Unhandled 'error' event
+      ^
+
+Error: Worker exited unexpectedly
+    at ChildProcess.onUnexpectedExit (file:///F:/Justice%20Companion%20take%202/node_modules/.pnpm/tinypool@1.1.1/node_modules/tinypool/dist/index.js:118:30)
+    at ChildProcess.emit (node:events:536:35)
+    at ChildProcess._handle.onexit (node:internal/child_process:293:12)
+Emitted 'error' event on Tinypool instance at:
+    at EventEmitterReferencingAsyncResource.runInAsyncScope (node:async_hooks:206:9)
+    at Tinypool.emit (node:events:170:18)
+    at file:///F:/Justice%20Companion%20take%202/node_modules/.pnpm/tinypool@1.1.1/node_modules/tinypool/dist/index.js:594:30
+    at ChildProcess.<anonymous> (file:///F:/Justice%20Companion%20take%202/node_modules/.pnpm/tinypool@1.1.1/node_modules/tinypool/dist/index.js:162:34)
+    at ChildProcess.emit (node:events:524:28)
+    at ChildProcess.onUnexpectedExit (file:///F:/Justice%20Companion%20take%202/node_modules/.pnpm/tinypool@1.1.1/node_modules/tinypool/dist/index.js:118:16)
+    at ChildProcess.emit (node:events:536:35)
+    at ChildProcess._handle.onexit (node:internal/child_process:293:12)
+
+Node.js v20.19.1
+ ELIFECYCLE  Test failed. See above for more details.

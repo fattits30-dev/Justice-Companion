@@ -47,8 +47,8 @@ function _calculateChecksum(content: string): string {
   return crypto.createHash('sha256').update(content).digest('hex');
 }
 
-console.log('📊 Migration Status Report\n');
-console.log('='.repeat(80));
+console.warn('📊 Migration Status Report\n');
+console.warn('='.repeat(80));
 
 try {
   // Ensure migrations table exists
@@ -87,51 +87,51 @@ try {
 
   // Display applied migrations
   if (status.applied.length > 0) {
-    console.log('\n✅ Applied Migrations:');
-    console.log('-'.repeat(80));
+    console.warn('\n✅ Applied Migrations:');
+    console.warn('-'.repeat(80));
     status.applied.forEach((migration) => {
       const checksumMatch = '✓';
       const duration = migration.duration_ms ? `${migration.duration_ms}ms` : 'N/A';
-      console.log(`  ${checksumMatch} ${migration.name}`);
-      console.log(`     Applied: ${migration.applied_at}`);
-      console.log(`     Duration: ${duration}`);
-      console.log(`     Checksum: ${migration.checksum.substring(0, 16)}...`);
+      console.warn(`  ${checksumMatch} ${migration.name}`);
+      console.warn(`     Applied: ${migration.applied_at}`);
+      console.warn(`     Duration: ${duration}`);
+      console.warn(`     Checksum: ${migration.checksum.substring(0, 16)}...`);
     });
   } else {
-    console.log('\n✅ Applied Migrations: None');
+    console.warn('\n✅ Applied Migrations: None');
   }
 
   // Display pending migrations
   if (status.pending.length > 0) {
-    console.log('\n⏳ Pending Migrations:');
-    console.log('-'.repeat(80));
+    console.warn('\n⏳ Pending Migrations:');
+    console.warn('-'.repeat(80));
     status.pending.forEach((migration) => {
-      console.log(`  • ${migration}`);
+      console.warn(`  • ${migration}`);
     });
   } else {
-    console.log('\n⏳ Pending Migrations: None');
+    console.warn('\n⏳ Pending Migrations: None');
   }
 
   // Display rolled back migrations
   if (status.rolledBack.length > 0) {
-    console.log('\n↩️  Rolled Back Migrations:');
-    console.log('-'.repeat(80));
+    console.warn('\n↩️  Rolled Back Migrations:');
+    console.warn('-'.repeat(80));
     status.rolledBack.forEach((migration) => {
-      console.log(`  • ${migration.name}`);
-      console.log(`     Applied: ${migration.applied_at}`);
-      console.log(`     Rolled back at: (see database for details)`);
+      console.warn(`  • ${migration.name}`);
+      console.warn(`     Applied: ${migration.applied_at}`);
+      console.warn(`     Rolled back at: (see database for details)`);
     });
   } else {
-    console.log('\n↩️  Rolled Back Migrations: None');
+    console.warn('\n↩️  Rolled Back Migrations: None');
   }
 
-  console.log('\n' + '='.repeat(80));
-  console.log(
+  console.warn('\n' + '='.repeat(80));
+  console.warn(
     `\nSummary: ${status.applied.length} applied, ${status.pending.length} pending, ${status.rolledBack.length} rolled back\n`
   );
 
   if (status.pending.length > 0) {
-    console.log('💡 Tip: Run "npm run db:migrate" to apply pending migrations');
+    console.warn('💡 Tip: Run "npm run db:migrate" to apply pending migrations');
   }
 
   db.close();

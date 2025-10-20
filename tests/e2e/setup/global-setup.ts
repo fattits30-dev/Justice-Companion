@@ -6,7 +6,7 @@ import path from 'path';
  * Global setup - runs once before all tests
  */
 async function globalSetup(_config: FullConfig): Promise<void> {
-  console.log('=== E2E Global Setup ===');
+  console.warn('=== E2E Global Setup ===');
 
   // Create test-results directory structure
   const testResultsDir = path.join(process.cwd(), 'test-results');
@@ -17,7 +17,7 @@ async function globalSetup(_config: FullConfig): Promise<void> {
   for (const dir of [testResultsDir, screenshotsDir, artifactsDir, videosDir]) {
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
-      console.log(`Created directory: ${dir}`);
+      console.warn(`Created directory: ${dir}`);
     }
   }
 
@@ -25,7 +25,7 @@ async function globalSetup(_config: FullConfig): Promise<void> {
   const testDataDir = path.join(process.cwd(), 'test-data');
   if (!fs.existsSync(testDataDir)) {
     fs.mkdirSync(testDataDir, { recursive: true });
-    console.log(`Created directory: ${testDataDir}`);
+    console.warn(`Created directory: ${testDataDir}`);
   }
 
   // Clean up old test databases
@@ -36,14 +36,14 @@ async function globalSetup(_config: FullConfig): Promise<void> {
     for (const file of dbFiles) {
       try {
         fs.unlinkSync(path.join(testDataDir, file));
-        console.log(`Cleaned up old test file: ${file}`);
+        console.warn(`Cleaned up old test file: ${file}`);
       } catch (error) {
         console.warn(`Could not delete ${file}:`, error);
       }
     }
   }
 
-  console.log('=== E2E Global Setup Complete ===\n');
+  console.warn('=== E2E Global Setup Complete ===\n');
 }
 
 export default globalSetup;

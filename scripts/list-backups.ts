@@ -13,17 +13,17 @@ import path from 'path';
 
 const BACKUP_DIR = 'backups';
 
-console.log('📋 Database Backups\n');
-console.log('='.repeat(80));
+console.warn('📋 Database Backups\n');
+console.warn('='.repeat(80));
 
 try {
   const backupsDir = path.join(process.cwd(), BACKUP_DIR);
 
   // Check if backups directory exists
   if (!fs.existsSync(backupsDir)) {
-    console.log('\n📁 Backups directory not found.');
-    console.log(`   Expected location: ${backupsDir}`);
-    console.log('\n💡 Tip: Run "npm run db:backup" to create your first backup\n');
+    console.warn('\n📁 Backups directory not found.');
+    console.warn(`   Expected location: ${backupsDir}`);
+    console.warn('\n💡 Tip: Run "npm run db:backup" to create your first backup\n');
     process.exit(0);
   }
 
@@ -48,25 +48,25 @@ try {
     .sort((a, b) => b.created.localeCompare(a.created)); // Most recent first
 
   if (backupFiles.length === 0) {
-    console.log('\n📁 No backups found.');
-    console.log('\n💡 Tip: Run "npm run db:backup" to create a backup\n');
+    console.warn('\n📁 No backups found.');
+    console.warn('\n💡 Tip: Run "npm run db:backup" to create a backup\n');
     process.exit(0);
   }
 
-  console.log(`\nFound ${backupFiles.length} backup(s):\n`);
+  console.warn(`\nFound ${backupFiles.length} backup(s):\n`);
 
   backupFiles.forEach((backup, index) => {
     const isRecent = index === 0;
     const prefix = isRecent ? '🌟' : '  ';
 
-    console.log(`${prefix} ${backup.filename}`);
-    console.log(`     Location: ${backup.filepath}`);
-    console.log(`     Size: ${backup.sizeKB} KB (${backup.sizeMB} MB)`);
-    console.log(`     Created: ${backup.created}`);
-    console.log(`     Modified: ${backup.modified}`);
+    console.warn(`${prefix} ${backup.filename}`);
+    console.warn(`     Location: ${backup.filepath}`);
+    console.warn(`     Size: ${backup.sizeKB} KB (${backup.sizeMB} MB)`);
+    console.warn(`     Created: ${backup.created}`);
+    console.warn(`     Modified: ${backup.modified}`);
 
     if (index < backupFiles.length - 1) {
-      console.log(''); // Add spacing between entries
+      console.warn(''); // Add spacing between entries
     }
   });
 
@@ -75,10 +75,10 @@ try {
   const totalSizeKB = (totalSize / 1024).toFixed(2);
   const totalSizeMB = (totalSize / (1024 * 1024)).toFixed(2);
 
-  console.log('\n' + '='.repeat(80));
-  console.log(`\nTotal: ${backupFiles.length} backup(s), ${totalSizeKB} KB (${totalSizeMB} MB)`);
-  console.log(`Location: ${backupsDir}`);
-  console.log('\n💡 Tip: Run "npm run db:backup" to create a new backup\n');
+  console.warn('\n' + '='.repeat(80));
+  console.warn(`\nTotal: ${backupFiles.length} backup(s), ${totalSizeKB} KB (${totalSizeMB} MB)`);
+  console.warn(`Location: ${backupsDir}`);
+  console.warn('\n💡 Tip: Run "npm run db:backup" to create a new backup\n');
 
   process.exit(0);
 } catch (error) {

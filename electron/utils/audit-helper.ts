@@ -7,53 +7,55 @@
 import type { IpcMainInvokeEvent } from 'electron';
 
 /**
- * Audit event types for Justice Companion
+ * Audit event types for Justice Companion (const object - modern TypeScript best practice)
  */
-export enum AuditEventType {
+export const AuditEventType = {
   // Authentication
-  USER_REGISTERED = 'USER_REGISTERED',
-  USER_LOGGED_IN = 'USER_LOGGED_IN',
-  USER_LOGGED_OUT = 'USER_LOGGED_OUT',
-  LOGIN_FAILED = 'LOGIN_FAILED',
-  SESSION_EXPIRED = 'SESSION_EXPIRED',
-  PASSWORD_CHANGED = 'PASSWORD_CHANGED',
+  USER_REGISTERED: 'USER_REGISTERED',
+  USER_LOGGED_IN: 'USER_LOGGED_IN',
+  USER_LOGGED_OUT: 'USER_LOGGED_OUT',
+  LOGIN_FAILED: 'LOGIN_FAILED',
+  SESSION_EXPIRED: 'SESSION_EXPIRED',
+  PASSWORD_CHANGED: 'PASSWORD_CHANGED',
 
   // Case management
-  CASE_CREATED = 'CASE_CREATED',
-  CASE_VIEWED = 'CASE_VIEWED',
-  CASE_UPDATED = 'CASE_UPDATED',
-  CASE_DELETED = 'CASE_DELETED',
+  CASE_CREATED: 'CASE_CREATED',
+  CASE_VIEWED: 'CASE_VIEWED',
+  CASE_UPDATED: 'CASE_UPDATED',
+  CASE_DELETED: 'CASE_DELETED',
 
   // Evidence
-  EVIDENCE_UPLOADED = 'EVIDENCE_UPLOADED',
-  EVIDENCE_VIEWED = 'EVIDENCE_VIEWED',
-  EVIDENCE_DELETED = 'EVIDENCE_DELETED',
+  EVIDENCE_UPLOADED: 'EVIDENCE_UPLOADED',
+  EVIDENCE_VIEWED: 'EVIDENCE_VIEWED',
+  EVIDENCE_DELETED: 'EVIDENCE_DELETED',
 
   // AI Chat
-  CHAT_MESSAGE_SENT = 'CHAT_MESSAGE_SENT',
-  CHAT_MESSAGE_RECEIVED = 'CHAT_MESSAGE_RECEIVED',
+  CHAT_MESSAGE_SENT: 'CHAT_MESSAGE_SENT',
+  CHAT_MESSAGE_RECEIVED: 'CHAT_MESSAGE_RECEIVED',
 
   // Database
-  DATABASE_MIGRATED = 'DATABASE_MIGRATED',
-  DATABASE_BACKUP_CREATED = 'DATABASE_BACKUP_CREATED',
+  DATABASE_MIGRATED: 'DATABASE_MIGRATED',
+  DATABASE_BACKUP_CREATED: 'DATABASE_BACKUP_CREATED',
 
   // GDPR
-  DATA_EXPORTED = 'DATA_EXPORTED',
-  DATA_DELETED = 'DATA_DELETED',
+  DATA_EXPORTED: 'DATA_EXPORTED',
+  DATA_DELETED: 'DATA_DELETED',
 
   // Security
-  UNAUTHORIZED_ACCESS = 'UNAUTHORIZED_ACCESS',
-  ENCRYPTION_FAILURE = 'ENCRYPTION_FAILURE',
-}
+  UNAUTHORIZED_ACCESS: 'UNAUTHORIZED_ACCESS',
+  ENCRYPTION_FAILURE: 'ENCRYPTION_FAILURE',
+} as const;
+
+export type AuditEventType = (typeof AuditEventType)[keyof typeof AuditEventType];
 
 /**
  * Get AuditLogger instance (lazy-loaded at runtime)
  */
 function getAuditLogger() {
-   
-  const { AuditLogger } = require('../../src/services/AuditLogger');
-   
-  const { getDb } = require('../../src/db/database');
+  // Runtime path: from dist/electron/utils/ to src/ (three levels up)
+  const { AuditLogger } = require('../../../src/services/AuditLogger');
+
+  const { getDb } = require('../../../src/db/database');
 
   const db = getDb();
   return new AuditLogger(db);
