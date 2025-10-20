@@ -1,4 +1,6 @@
-import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
+// CommonJS require for Electron preload (sandboxed context doesn't support ESM)
+const { contextBridge, ipcRenderer } = require('electron');
+import type { IpcRendererEvent } from 'electron';
 import type { Case } from '../src/models/Case';
 import type { Evidence } from '../src/models/Evidence';
 import type { ChatMessage } from '../src/models/ChatConversation';
