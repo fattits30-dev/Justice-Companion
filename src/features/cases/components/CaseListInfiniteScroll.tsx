@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo, memo } from 'react';
 import { useInView } from 'react-intersection-observer';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { usePaginatedCases, flattenPaginatedCases } from '../../../hooks/usePaginatedCases';
@@ -30,12 +30,12 @@ interface CaseListInfiniteScrollProps {
  * />
  * ```
  */
-export function CaseListInfiniteScroll({
+const CaseListInfiniteScrollComponent = ({
   userId,
   status,
   pageSize = 20,
   onCaseClick,
-}: CaseListInfiniteScrollProps): JSX.Element {
+}: CaseListInfiniteScrollProps): JSX.Element => {
   const {
     data,
     fetchNextPage,
@@ -90,8 +90,8 @@ export function CaseListInfiniteScroll({
     );
   }
 
-  // Get all cases from all pages
-  const allCases = flattenPaginatedCases(data);
+  // Get all cases from all pages - memoized to prevent re-flattening on every render
+  const allCases = useMemo(() => flattenPaginatedCases(data), [data]);
 
   // Empty state
   if (allCases.length === 0) {
@@ -161,4 +161,15 @@ export function CaseListInfiniteScroll({
       </div>
     </div>
   );
-}
+};
+
+// Memoize component - only re-render when relevant props change
+export const CaseListInfiniteScroll = memo(CaseListInfiniteScrollComponent, (prevProps, nextProps) => {
+  // Re-render only if userId, status, or pageSize changes
+  // (onCaseClick excluded from comparison - assume parent memoizes it)
+  return (
+    prevProps.userId === nextProps.userId &&
+    prevProps.status === nextProps.status &&
+    prevProps.pageSize === nextProps.pageSize
+  );
+});
