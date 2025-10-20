@@ -37,6 +37,10 @@ if (!gotTheLock) {
    * Create the main application window with security settings
    */
   function createWindow(): void {
+    console.log('[Main] Creating window...');
+    const preloadPath = path.join(__dirname, 'preload.ts');
+    console.log('[Main] Preload path:', preloadPath);
+
     mainWindow = new BrowserWindow({
       width: 1280,
       height: 800,
@@ -44,7 +48,7 @@ if (!gotTheLock) {
       minHeight: 768,
       show: false, // Show after ready-to-show event
       webPreferences: {
-        preload: path.join(__dirname, 'preload.js'),
+        preload: preloadPath,
         contextIsolation: true, // ✅ CRITICAL: Isolate renderer context
         nodeIntegration: false, // ✅ CRITICAL: Disable Node.js in renderer
         sandbox: true, // ✅ CRITICAL: Enable sandbox
@@ -64,7 +68,19 @@ if (!gotTheLock) {
 
     // Show window when ready (prevents flash)
     mainWindow.once('ready-to-show', () => {
+      console.log('[Main] Window ready-to-show event fired');
       mainWindow?.show();
+      console.log('[Main] Window shown');
+    });
+
+    // Debug: Log when page finishes loading
+    mainWindow.webContents.on('did-finish-load', () => {
+      console.log('[Main] Page finished loading');
+    });
+
+    // Debug: Log preload errors
+    mainWindow.webContents.on('preload-error', (event, preloadPath, error) => {
+      console.error('[Main] Preload error:', preloadPath, error);
     });
 
     // Handle window close
