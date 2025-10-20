@@ -27,10 +27,10 @@ describe('ChatConversationRepository - Cursor Pagination', () => {
   // Helper to create test user (satisfies FK constraint)
   const createTestUser = (userId: number): void => {
     const userStmt = db.prepare(`
-      INSERT OR IGNORE INTO users (id, username, password_hash, email, created_at)
-      VALUES (?, ?, ?, ?, datetime('now'))
+      INSERT OR IGNORE INTO users (id, username, password_hash, password_salt, email, created_at)
+      VALUES (?, ?, ?, ?, ?, datetime('now'))
     `);
-    userStmt.run(userId, `testuser${userId}`, 'hash', `test${userId}@example.com`);
+    userStmt.run(userId, `testuser${userId}`, 'hash', 'salt', `test${userId}@example.com`);
   };
 
   // Helper to create test case (optional, for case_id FK)

@@ -278,7 +278,7 @@ describe('EvidenceRepository - Cursor Pagination', () => {
       expect(result.items).toHaveLength(5);
       result.items.forEach((item, index) => {
         expect(item.content).toBeTruthy();
-        expect(item.content).not.toContain('iv'); // Not encrypted JSON
+        expect(item.content).toContain('Sensitive content'); // Decrypted content
       });
     });
   });
