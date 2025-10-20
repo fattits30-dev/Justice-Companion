@@ -6,7 +6,8 @@ import { userProfileService } from './UserProfileService';
 import { AuditLogger } from './AuditLogger';
 import { TestDatabaseHelper } from '../test-utils/database-test-helper';
 import { databaseManager } from '../db/database';
-import { resetRepositories } from '../repositories';
+import { resetRepositories, initializeTestRepositories } from '../repositories';
+import { EncryptionService } from './EncryptionService';
 import type { UpdateUserProfileInput } from '../models/UserProfile';
 
 describe('UserProfileService', () => {
@@ -23,9 +24,6 @@ describe('UserProfileService', () => {
     // Initialize encryption service (32-byte key = 64 hex chars converted to Buffer)
     const testKey = Buffer.from('0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef', 'hex');
 
-    // Set environment variable for getRepositories() to use
-    process.env.ENCRYPTION_KEY_BASE64 = testKey.toString('base64');
-
     // Reset singleton to force re-initialization with test key
     resetRepositories();
 
@@ -34,6 +32,10 @@ describe('UserProfileService', () => {
     (auditLogger as any).getAllLogs = () => {
       return db.prepare('SELECT * FROM audit_logs ORDER by created_at').all();
     };
+
+    // Initialize repositories with test encryption service and audit logger
+    const encryptionService = new EncryptionService(testKey.toString('base64'));
+    initializeTestRepositories(encryptionService, auditLogger);
   });
 
   afterEach(() => {

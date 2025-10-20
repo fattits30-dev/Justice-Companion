@@ -178,7 +178,7 @@ const hasWarning = results.some((item) => item.status === 'warn');
 for (const item of results) {
   const icon = item.status === 'pass' ? '[PASS]' : item.status === 'fail' ? '[FAIL]' : '[WARN]';
 
-  console.log(`${icon} ${item.name} :: ${item.details}`);
+  console.warn(`${icon} ${item.name} :: ${item.details}`);
 }
 
 if (hasFailure) {

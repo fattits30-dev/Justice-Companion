@@ -36,10 +36,10 @@ const dbPath = path.join(
 );
 const db = new Database(dbPath);
 
-console.log(`📂 Using database: ${dbPath}`);
+console.warn(`📂 Using database: ${dbPath}`);
 
 async function createTestData() {
-  console.log('📋 Creating test case with evidence...\n');
+  console.warn('📋 Creating test case with evidence...\n');
 
   // 1. Create test case
   const caseDescription = 'Employment dispute - unfair dismissal. Employee claims they were dismissed without proper process after 3 years of employment at ABC Tech Ltd.';
@@ -58,7 +58,7 @@ const caseResult = insertCase.run(
 );
 
 const caseId = caseResult.lastInsertRowid;
-console.log(`✅ Created case #${caseId}: John Smith v ABC Tech Ltd`);
+console.warn(`✅ Created case #${caseId}: John Smith v ABC Tech Ltd`);
 
 // 2. Create evidence items
 const evidenceItems = [
@@ -186,19 +186,19 @@ for (const item of evidenceItems) {
     item.description
   );
 
-  console.log(`  ✅ Added evidence: ${item.title}`);
+  console.warn(`  ✅ Added evidence: ${item.title}`);
 }
 
-  console.log('\n📊 Test Case Summary:');
-  console.log(`   Case ID: ${caseId}`);
-  console.log(`   Title: John Smith v ABC Tech Ltd - Unfair Dismissal`);
-  console.log(`   Evidence Items: ${evidenceItems.length}`);
-  console.log('\n🤖 Ready to Test AI:');
-  console.log('   1. Open Justice Companion');
-  console.log(`   2. Select case #${caseId} in sidebar`);
-  console.log('   3. Chat with AI about the case');
-  console.log('   4. AI should extract facts from evidence automatically');
-  console.log('   5. Watch post-it notes populate with gathered facts!\n');
+  console.warn('\n📊 Test Case Summary:');
+  console.warn(`   Case ID: ${caseId}`);
+  console.warn(`   Title: John Smith v ABC Tech Ltd - Unfair Dismissal`);
+  console.warn(`   Evidence Items: ${evidenceItems.length}`);
+  console.warn('\n🤖 Ready to Test AI:');
+  console.warn('   1. Open Justice Companion');
+  console.warn(`   2. Select case #${caseId} in sidebar`);
+  console.warn('   3. Chat with AI about the case');
+  console.warn('   4. AI should extract facts from evidence automatically');
+  console.warn('   5. Watch post-it notes populate with gathered facts!\n');
 
   db.close();
 }

@@ -8,27 +8,27 @@
 /**
  * Initialize database and run migrations
  *
- * Uses dynamic require to import from src/ at runtime
+ * Uses dynamic import to load from src/ at runtime (ESM compatible)
  */
 export async function initializeDatabase(): Promise<void> {
   try {
-    console.log('[Database] Initializing database...');
+    console.warn('[Database] Initializing database...');
 
-    // Dynamic require to avoid TypeScript cross-directory issues
-    // Runtime path: from dist/electron/ to src/ (two levels up)
-     
-    const { databaseManager } = require('../../src/db/database');
-     
-    const { runMigrations } = require('../../src/db/migrate');
+    // Dynamic import for ESM compatibility (tsx requires this)
+    // Runtime path: from electron/ to src/ (sibling directory - one level up)
+
+    const { databaseManager } = await import('../src/db/database');
+
+    const { runMigrations } = await import('../src/db/migrate');
 
     // Initialize database connection
     databaseManager.getDatabase();
-    console.log('[Database] Connection established');
+    console.warn('[Database] Connection established');
 
     // Run migrations
-    console.log('[Database] Running migrations...');
+    console.warn('[Database] Running migrations...');
     runMigrations();
-    console.log('[Database] Migrations complete');
+    console.warn('[Database] Migrations complete');
   } catch (error) {
     console.error('[Database] Initialization failed:', error);
     throw error;
@@ -38,14 +38,15 @@ export async function initializeDatabase(): Promise<void> {
 /**
  * Close database connection
  */
-export function closeDatabase(): void {
+export async function closeDatabase(): Promise<void> {
   try {
-    // Runtime path: from dist/electron/ to src/ (two levels up)
-     
-    const { databaseManager } = require('../../src/db/database');
+    // Dynamic import for ESM compatibility (tsx requires this)
+    // Runtime path: from electron/ to src/ (sibling directory - one level up)
+
+    const { databaseManager } = await import('../src/db/database');
 
     databaseManager.close();
-    console.log('[Database] Connection closed');
+    console.warn('[Database] Connection closed');
   } catch (error) {
     console.error('[Database] Error closing connection:', error);
   }

@@ -45,7 +45,7 @@ test.describe('Complete User Journey E2E', () => {
     await window.waitForLoadState('domcontentloaded');
     await window.waitForTimeout(2000);
 
-    console.log('Step 1: App launched successfully');
+    console.warn('Step 1: App launched successfully');
 
     // ============================================
     // STEP 2: Create a new case
@@ -98,7 +98,7 @@ test.describe('Complete User Journey E2E', () => {
     const dbState1 = await verifyDatabaseState(dbPath);
     expect(dbState1.cases, 'Should have 1 case in database').toBe(1);
 
-    console.log('Step 2: Case created successfully');
+    console.warn('Step 2: Case created successfully');
 
     // ============================================
     // STEP 3: Add user facts
@@ -143,7 +143,7 @@ test.describe('Complete User Journey E2E', () => {
     const dbState2 = await verifyDatabaseState(dbPath);
     expect(dbState2.userFacts, 'Should have at least 1 user fact').toBeGreaterThanOrEqual(1);
 
-    console.log('Step 3: User fact added successfully');
+    console.warn('Step 3: User fact added successfully');
 
     // ============================================
     // STEP 4: Upload evidence to case
@@ -196,7 +196,7 @@ test.describe('Complete User Journey E2E', () => {
     const dbState3 = await verifyDatabaseState(dbPath);
     expect(dbState3.evidence, 'Should have at least 1 evidence').toBeGreaterThanOrEqual(1);
 
-    console.log('Step 4: Evidence uploaded successfully');
+    console.warn('Step 4: Evidence uploaded successfully');
 
     // ============================================
     // STEP 5: Add case facts
@@ -240,7 +240,7 @@ test.describe('Complete User Journey E2E', () => {
     const dbState4 = await verifyDatabaseState(dbPath);
     expect(dbState4.caseFacts, 'Should have at least 1 case fact').toBeGreaterThanOrEqual(1);
 
-    console.log('Step 5: Case fact added successfully');
+    console.warn('Step 5: Case fact added successfully');
 
     // ============================================
     // STEP 6: Chat with AI about the case
@@ -271,7 +271,7 @@ test.describe('Complete User Journey E2E', () => {
       }
     }
 
-    console.log('Step 6: AI chat interaction completed');
+    console.warn('Step 6: AI chat interaction completed');
 
     // ============================================
     // STEP 7: View case summary
@@ -296,7 +296,7 @@ test.describe('Complete User Journey E2E', () => {
     expect(summaryTitle, 'Case title should be visible').toBeTruthy();
     expect(summaryEvidence, 'Evidence should be visible').toBeTruthy();
 
-    console.log('Step 7: Case summary verified');
+    console.warn('Step 7: Case summary verified');
 
     // ============================================
     // STEP 8: Verify data persistence
@@ -328,7 +328,7 @@ test.describe('Complete User Journey E2E', () => {
 
     db.close();
 
-    console.log('Step 8: All data persisted successfully');
+    console.warn('Step 8: All data persisted successfully');
 
     // ============================================
     // STEP 9: Verify audit trail
@@ -346,18 +346,18 @@ test.describe('Complete User Journey E2E', () => {
 
     dbAudit.close();
 
-    console.log('Step 9: Audit trail verified');
+    console.warn('Step 9: Audit trail verified');
 
     // ============================================
     // FINAL: Complete workflow verified
     // ============================================
-    console.log('✓ Complete user journey test passed!');
-    console.log('  - Case created');
-    console.log('  - Evidence uploaded');
-    console.log('  - User facts added');
-    console.log('  - Case facts added');
-    console.log('  - AI chat interaction completed');
-    console.log('  - All data persisted to database');
-    console.log('  - Audit trail recorded');
+    console.warn('✓ Complete user journey test passed!');
+    console.warn('  - Case created');
+    console.warn('  - Evidence uploaded');
+    console.warn('  - User facts added');
+    console.warn('  - Case facts added');
+    console.warn('  - AI chat interaction completed');
+    console.warn('  - All data persisted to database');
+    console.warn('  - Audit trail recorded');
   });
 });

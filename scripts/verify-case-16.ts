@@ -22,7 +22,7 @@ const dbPath = path.join(
   'justice-companion.db'
 );
 
-console.log(`📂 Database: ${dbPath}\n`);
+console.warn(`📂 Database: ${dbPath}\n`);
 
 interface CaseRow {
   id: number;
@@ -41,56 +41,56 @@ interface EvidenceRow {
 const db = new Database(dbPath);
 
 // 1. Check if Case #16 exists
-console.log('🔍 Checking for Case #16...');
+console.warn('🔍 Checking for Case #16...');
 const case16 = db.prepare('SELECT * FROM cases WHERE id = ?').get(16);
 
 if (!case16) {
-  console.log('❌ Case #16 NOT FOUND in database\n');
-  console.log('💡 Run this to create it:');
-  console.log('   node --loader ts-node/esm scripts/create-test-case-with-evidence.ts\n');
+  console.warn('❌ Case #16 NOT FOUND in database\n');
+  console.warn('💡 Run this to create it:');
+  console.warn('   node --loader ts-node/esm scripts/create-test-case-with-evidence.ts\n');
 } else {
-  console.log('✅ Case #16 EXISTS');
-  console.log(`   Title: ${case16.title}`);
-  console.log(`   Type: ${case16.case_type}`);
-  console.log(`   Status: ${case16.status}`);
-  console.log(`   Created: ${case16.created_at}\n`);
+  console.warn('✅ Case #16 EXISTS');
+  console.warn(`   Title: ${case16.title}`);
+  console.warn(`   Type: ${case16.case_type}`);
+  console.warn(`   Status: ${case16.status}`);
+  console.warn(`   Created: ${case16.created_at}\n`);
 }
 
 // 2. List ALL cases (simulate what sidebar does)
-console.log('📋 All cases in database (what sidebar should show):');
+console.warn('📋 All cases in database (what sidebar should show):');
 const allCases = db
   .prepare('SELECT id, title, case_type, status, created_at FROM cases ORDER BY created_at DESC')
   .all();
 
 if (allCases.length === 0) {
-  console.log('   ⚠️  No cases found!\n');
+  console.warn('   ⚠️  No cases found!\n');
 } else {
-  console.log(`   Found ${allCases.length} case(s):\n`);
+  console.warn(`   Found ${allCases.length} case(s):\n`);
   allCases.forEach((c: CaseRow) => {
-    console.log(`   • Case #${c.id}: ${c.title}`);
-    console.log(`     Type: ${c.case_type} | Status: ${c.status}`);
-    console.log(`     Created: ${c.created_at}\n`);
+    console.warn(`   • Case #${c.id}: ${c.title}`);
+    console.warn(`     Type: ${c.case_type} | Status: ${c.status}`);
+    console.warn(`     Created: ${c.created_at}\n`);
   });
 }
 
 // 3. Check evidence for Case #16
 if (case16) {
-  console.log('📄 Evidence for Case #16:');
+  console.warn('📄 Evidence for Case #16:');
   const evidence = db
     .prepare('SELECT id, title, evidence_type FROM evidence WHERE case_id = ?')
     .all(16);
 
   if (evidence.length === 0) {
-    console.log('   ⚠️  No evidence found for this case\n');
+    console.warn('   ⚠️  No evidence found for this case\n');
   } else {
-    console.log(`   Found ${evidence.length} evidence item(s):\n`);
+    console.warn(`   Found ${evidence.length} evidence item(s):\n`);
     evidence.forEach((e: EvidenceRow) => {
-      console.log(`   • Evidence #${e.id}: ${e.title}`);
-      console.log(`     Type: ${e.evidence_type}\n`);
+      console.warn(`   • Evidence #${e.id}: ${e.title}`);
+      console.warn(`     Type: ${e.evidence_type}\n`);
     });
   }
 }
 
 db.close();
 
-console.log('✅ Diagnostic complete');
+console.warn('✅ Diagnostic complete');

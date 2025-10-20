@@ -226,9 +226,10 @@ describe('RateLimitService', () => {
         service.recordFailedAttempt(username);
       }
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        expect.stringContaining('BRUTE FORCE DETECTED for testuser')
-      );
+      // Structured logger combines all args into single formatted string
+      expect(consoleErrorSpy).toHaveBeenCalled();
+      const lastCall = consoleErrorSpy.mock.calls[consoleErrorSpy.mock.calls.length - 1][0];
+      expect(lastCall).toContain('BRUTE FORCE DETECTED for testuser');
     });
 
     it('should log rate limit violations', () => {
@@ -242,9 +243,10 @@ describe('RateLimitService', () => {
       // Try to login while locked
       service.checkRateLimit(username);
 
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Rate limit exceeded for testuser')
-      );
+      // Structured logger combines all args into single formatted string
+      expect(consoleWarnSpy).toHaveBeenCalled();
+      const lastCall = consoleWarnSpy.mock.calls[consoleWarnSpy.mock.calls.length - 1][0];
+      expect(lastCall).toContain('Rate limit exceeded for testuser');
     });
   });
 

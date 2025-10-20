@@ -84,7 +84,7 @@ export class RateLimitService {
       const remainingSeconds = Math.ceil((attempt.lockedUntil.getTime() - now.getTime()) / 1000);
 
       // Log rate limit violation for monitoring
-      logger.warn('RateLimitService', 'Rate limit exceeded for ${normalizedUsername}. Attempts: ${attempt.count}, Lock time remaining: ${remainingSeconds}s');
+      logger.warn('RateLimitService', `Rate limit exceeded for ${normalizedUsername}. Attempts: ${attempt.count}, Lock time remaining: ${remainingSeconds}s`);
 
       return {
         allowed: false,
@@ -111,7 +111,7 @@ export class RateLimitService {
       attempt.lockedUntil = new Date(now.getTime() + this.LOCK_DURATION_MS);
 
       // Log account lockout for monitoring
-      logger.warn('RateLimitService', 'Account locked for ${normalizedUsername}. Attempts: ${attempt.count}, Lock duration: ${this.LOCK_DURATION_MS / 1000}s');
+      logger.warn('RateLimitService', `Account locked for ${normalizedUsername}. Attempts: ${attempt.count}, Lock duration: ${this.LOCK_DURATION_MS / 1000}s`);
 
       const remainingSeconds = Math.ceil(this.LOCK_DURATION_MS / 1000);
       return {
@@ -178,7 +178,7 @@ export class RateLimitService {
         if (attempt.count >= this.MAX_ATTEMPTS && !attempt.lockedUntil) {
           attempt.lockedUntil = new Date(now.getTime() + this.LOCK_DURATION_MS);
 
-          logger.error('RateLimitService', 'BRUTE FORCE DETECTED for ${normalizedUsername}. Account locked for ${this.LOCK_DURATION_MS / 1000}s');
+          logger.error('RateLimitService', `BRUTE FORCE DETECTED for ${normalizedUsername}. Account locked for ${this.LOCK_DURATION_MS / 1000}s`);
         }
       }
 

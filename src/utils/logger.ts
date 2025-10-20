@@ -33,17 +33,18 @@ class Logger {
   private maxBufferSize: number = 1000;
 
   constructor() {
-    // Vite provides import.meta.env.PROD as a boolean (always defined)
-    // DEV mode: PROD = false, DEV = true
-    // PROD mode: PROD = true, DEV = false
-    this.isProduction = import.meta.env.PROD;
+    // Vite provides import.meta.env.PROD in browser/renderer (bundled code)
+    // Node.js/tsx uses process.env.NODE_ENV (main process)
+    // Use optional chaining and fallback for cross-environment compatibility
+    this.isProduction = import.meta.env?.PROD ?? (process.env.NODE_ENV === 'production');
 
     // Logger initialized - console allowed for initialization diagnostics
     /* eslint-disable no-console */
-    console.log('[LOGGER INIT]', {
-      'import.meta.env.PROD': import.meta.env.PROD,
-      'import.meta.env.DEV': import.meta.env.DEV,
-      'import.meta.env.MODE': import.meta.env.MODE,
+    console.warn('[LOGGER INIT]', {
+      'import.meta.env?.PROD': import.meta.env?.PROD,
+      'import.meta.env?.DEV': import.meta.env?.DEV,
+      'import.meta.env?.MODE': import.meta.env?.MODE,
+      'process.env.NODE_ENV': process.env.NODE_ENV,
       isProduction: this.isProduction,
     });
     /* eslint-enable no-console */

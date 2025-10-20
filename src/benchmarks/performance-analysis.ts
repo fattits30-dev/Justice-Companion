@@ -16,10 +16,6 @@ import { DecryptionCache } from '../services/DecryptionCache';
 import { AuditLogger } from '../services/AuditLogger';
 import { CaseRepository } from '../repositories/CaseRepository';
 import { EvidenceRepository } from '../repositories/EvidenceRepository';
-import { NotesRepository } from '../repositories/NotesRepository';
-import { CaseFactsRepository } from '../repositories/CaseFactsRepository';
-import { UserFactsRepository } from '../repositories/UserFactsRepository';
-import { TimelineRepository } from '../repositories/TimelineRepository';
 import type { Case } from '../models/Case';
 
 interface PerformanceMetrics {
@@ -153,7 +149,7 @@ class PerformanceAnalyzer {
    * Test 1: Encryption/Decryption Performance
    */
   async testEncryptionPerformance(): Promise<void> {
-    console.log('\n=== Testing Encryption/Decryption Performance ===');
+    console.warn('\n=== Testing Encryption/Decryption Performance ===');
 
     const testData = [
       { size: 'small', text: 'Short legal note' },
@@ -185,7 +181,7 @@ class PerformanceAnalyzer {
         count: text.length
       });
 
-      console.log(`${size} (${text.length} chars): Encrypt=${encryptTime.toFixed(2)}ms, Decrypt=${decryptTime.toFixed(2)}ms`);
+      console.warn(`${size} (${text.length} chars): Encrypt=${encryptTime.toFixed(2)}ms, Decrypt=${decryptTime.toFixed(2)}ms`);
     }
   }
 
@@ -193,7 +189,7 @@ class PerformanceAnalyzer {
    * Test 2: DecryptionCache Effectiveness
    */
   async testCachePerformance(): Promise<void> {
-    console.log('\n=== Testing DecryptionCache Performance ===');
+    console.warn('\n=== Testing DecryptionCache Performance ===');
 
     const cache = new DecryptionCache(this.auditLogger);
     const testKey = 'test:1:field';
@@ -230,16 +226,16 @@ class PerformanceAnalyzer {
       averageTime: avgHitTime
     });
 
-    console.log(`Cache miss + set: ${missTime.toFixed(2)}ms`);
-    console.log(`Cache hit (avg of ${hits}): ${avgHitTime.toFixed(4)}ms`);
-    console.log(`Cache speedup: ${(missTime / avgHitTime).toFixed(0)}x faster`);
+    console.warn(`Cache miss + set: ${missTime.toFixed(2)}ms`);
+    console.warn(`Cache hit (avg of ${hits}): ${avgHitTime.toFixed(4)}ms`);
+    console.warn(`Cache speedup: ${(missTime / avgHitTime).toFixed(0)}x faster`);
   }
 
   /**
    * Test 3: Repository Performance WITH and WITHOUT Cache
    */
   async testRepositoryPerformance(): Promise<void> {
-    console.log('\n=== Testing Repository Performance (Cache vs No Cache) ===');
+    console.warn('\n=== Testing Repository Performance (Cache vs No Cache) ===');
 
     // Create test data
     const caseCount = 100;
@@ -249,9 +245,7 @@ class PerformanceAnalyzer {
     const repoNoCache = new CaseRepository(this.encryptionService, this.auditLogger);
     const evidenceRepoNoCache = new EvidenceRepository(this.encryptionService, this.auditLogger);
 
-    // Repository with cache
-    const cache = new DecryptionCache(this.auditLogger);
-    // Note: Current repositories don't accept cache in constructor - this is the problem!
+    // Note: Repositories don't currently support cache injection in constructor
 
     // Insert test cases
     const cases: Case[] = [];
@@ -289,7 +283,7 @@ class PerformanceAnalyzer {
       memoryUsed: memAfter - memBefore
     });
 
-    console.log(`Load ${caseCount} cases (no cache): ${noCacheTime.toFixed(2)}ms, ${(noCacheTime/caseCount).toFixed(2)}ms/case`);
+    console.warn(`Load ${caseCount} cases (no cache): ${noCacheTime.toFixed(2)}ms, ${(noCacheTime/caseCount).toFixed(2)}ms/case`);
 
     // Test 2: N+1 Query Pattern Detection
     const [, n1Time] = this.measureTime(() => {
@@ -309,15 +303,15 @@ class PerformanceAnalyzer {
       overhead: n1Time / noCacheTime
     });
 
-    console.log(`N+1 Query Pattern: ${n1Time.toFixed(2)}ms for ${caseCount} cases + evidence`);
-    console.log(`N+1 Overhead: ${(n1Time / noCacheTime).toFixed(1)}x slower than just cases`);
+    console.warn(`N+1 Query Pattern: ${n1Time.toFixed(2)}ms for ${caseCount} cases + evidence`);
+    console.warn(`N+1 Overhead: ${(n1Time / noCacheTime).toFixed(1)}x slower than just cases`);
   }
 
   /**
    * Test 4: Database Index Effectiveness
    */
   async testIndexPerformance(): Promise<void> {
-    console.log('\n=== Testing Database Index Performance ===');
+    console.warn('\n=== Testing Database Index Performance ===');
 
     // Test query with index (case_id on evidence)
     const [, withIndexTime] = this.measureTime(() => {
@@ -340,16 +334,16 @@ class PerformanceAnalyzer {
       overhead: withoutIndexTime / withIndexTime
     });
 
-    console.log(`Query with index: ${withIndexTime.toFixed(2)}ms`);
-    console.log(`Query without index: ${withoutIndexTime.toFixed(2)}ms`);
-    console.log(`Index speedup: ${(withoutIndexTime / withIndexTime).toFixed(1)}x faster`);
+    console.warn(`Query with index: ${withIndexTime.toFixed(2)}ms`);
+    console.warn(`Query without index: ${withoutIndexTime.toFixed(2)}ms`);
+    console.warn(`Index speedup: ${(withoutIndexTime / withIndexTime).toFixed(1)}x faster`);
   }
 
   /**
    * Test 5: Bulk Operations Performance
    */
   async testBulkOperations(): Promise<void> {
-    console.log('\n=== Testing Bulk Operations Performance ===');
+    console.warn('\n=== Testing Bulk Operations Performance ===');
 
     const repo = new CaseRepository(this.encryptionService, this.auditLogger);
     const bulkSize = 50;
@@ -394,21 +388,21 @@ class PerformanceAnalyzer {
       overhead: singleTime / batchTime
     });
 
-    console.log(`Single transactions (${bulkSize} inserts): ${singleTime.toFixed(2)}ms`);
-    console.log(`Batch transaction (${bulkSize} inserts): ${batchTime.toFixed(2)}ms`);
-    console.log(`Batch speedup: ${(singleTime / batchTime).toFixed(1)}x faster`);
+    console.warn(`Single transactions (${bulkSize} inserts): ${singleTime.toFixed(2)}ms`);
+    console.warn(`Batch transaction (${bulkSize} inserts): ${batchTime.toFixed(2)}ms`);
+    console.warn(`Batch speedup: ${(singleTime / batchTime).toFixed(1)}x faster`);
   }
 
   /**
    * Generate Performance Report
    */
   generateReport(): void {
-    console.log('\n' + '='.repeat(80));
-    console.log('PERFORMANCE ANALYSIS REPORT - JUSTICE COMPANION');
-    console.log('='.repeat(80));
+    console.warn('\n' + '='.repeat(80));
+    console.warn('PERFORMANCE ANALYSIS REPORT - JUSTICE COMPANION');
+    console.warn('='.repeat(80));
 
     // Critical Bottlenecks Identified
-    console.log('\n### CRITICAL BOTTLENECKS IDENTIFIED ###\n');
+    console.warn('\n### CRITICAL BOTTLENECKS IDENTIFIED ###\n');
 
     // 1. Missing DecryptionCache Integration
     const decryptMetrics = this.metrics.filter(m => m.operation.includes('decrypt'));
@@ -416,79 +410,79 @@ class PerformanceAnalyzer {
     const cacheHitTime = this.metrics.find(m => m.operation === 'cache_hit')?.averageTime || 0;
     const cacheSpeedup = avgDecryptTime / cacheHitTime;
 
-    console.log(`1. NO DECRYPTION CACHING (HIGH PRIORITY)`);
-    console.log(`   - Current decrypt time: ${avgDecryptTime.toFixed(2)}ms average`);
-    console.log(`   - With cache: ${cacheHitTime.toFixed(4)}ms`);
-    console.log(`   - Potential speedup: ${cacheSpeedup.toFixed(0)}x faster`);
-    console.log(`   - Estimated overhead reduction: 60-80%`);
-    console.log(`   - STATUS: DecryptionCache exists but NOT integrated in repositories!`);
+    console.warn(`1. NO DECRYPTION CACHING (HIGH PRIORITY)`);
+    console.warn(`   - Current decrypt time: ${avgDecryptTime.toFixed(2)}ms average`);
+    console.warn(`   - With cache: ${cacheHitTime.toFixed(4)}ms`);
+    console.warn(`   - Potential speedup: ${cacheSpeedup.toFixed(0)}x faster`);
+    console.warn(`   - Estimated overhead reduction: 60-80%`);
+    console.warn(`   - STATUS: DecryptionCache exists but NOT integrated in repositories!`);
 
     // 2. N+1 Query Problems
     const n1Metric = this.metrics.find(m => m.operation === 'n_plus_1_query_pattern');
     if (n1Metric) {
-      console.log(`\n2. N+1 QUERY PATTERNS DETECTED`);
-      console.log(`   - Loading cases + evidence: ${n1Metric.duration.toFixed(2)}ms`);
-      console.log(`   - Overhead: ${n1Metric.overhead?.toFixed(1)}x slower`);
-      console.log(`   - Solution: Implement eager loading or batch queries`);
+      console.warn(`\n2. N+1 QUERY PATTERNS DETECTED`);
+      console.warn(`   - Loading cases + evidence: ${n1Metric.duration.toFixed(2)}ms`);
+      console.warn(`   - Overhead: ${n1Metric.overhead?.toFixed(1)}x slower`);
+      console.warn(`   - Solution: Implement eager loading or batch queries`);
     }
 
     // 3. Synchronous SQLite Operations
-    console.log(`\n3. SYNCHRONOUS SQLITE OPERATIONS`);
-    console.log(`   - All DB operations block main thread`);
-    console.log(`   - WAL mode enabled: Yes (good for concurrency)`);
-    console.log(`   - Cache size: 40MB (adequate)`);
-    console.log(`   - Constraint: better-sqlite3 is synchronous-only (Electron requirement)`);
+    console.warn(`\n3. SYNCHRONOUS SQLITE OPERATIONS`);
+    console.warn(`   - All DB operations block main thread`);
+    console.warn(`   - WAL mode enabled: Yes (good for concurrency)`);
+    console.warn(`   - Cache size: 40MB (adequate)`);
+    console.warn(`   - Constraint: better-sqlite3 is synchronous-only (Electron requirement)`);
 
     // 4. Bulk Operations
     const bulkSingle = this.metrics.find(m => m.operation === 'bulk_insert_single_transactions');
     const bulkBatch = this.metrics.find(m => m.operation === 'bulk_insert_batch_transaction');
     if (bulkSingle && bulkBatch) {
-      console.log(`\n4. BULK OPERATIONS OPTIMIZATION AVAILABLE`);
-      console.log(`   - Single transactions: ${bulkSingle.averageTime?.toFixed(2)}ms per insert`);
-      console.log(`   - Batch transaction: ${bulkBatch.averageTime?.toFixed(2)}ms per insert`);
-      console.log(`   - Speedup available: ${bulkSingle.overhead?.toFixed(1)}x`);
+      console.warn(`\n4. BULK OPERATIONS OPTIMIZATION AVAILABLE`);
+      console.warn(`   - Single transactions: ${bulkSingle.averageTime?.toFixed(2)}ms per insert`);
+      console.warn(`   - Batch transaction: ${bulkBatch.averageTime?.toFixed(2)}ms per insert`);
+      console.warn(`   - Speedup available: ${bulkSingle.overhead?.toFixed(1)}x`);
     }
 
     // Performance Metrics Summary
-    console.log('\n### PERFORMANCE METRICS SUMMARY ###\n');
-    console.log('Operation                          | Time (ms) | Count | Avg (ms)');
-    console.log('-----------------------------------|-----------|-------|----------');
+    console.warn('\n### PERFORMANCE METRICS SUMMARY ###\n');
+    console.warn('Operation                          | Time (ms) | Count | Avg (ms)');
+    console.warn('-----------------------------------|-----------|-------|----------');
 
     for (const metric of this.metrics) {
       const op = metric.operation.padEnd(34);
       const time = metric.duration.toFixed(2).padStart(9);
       const count = (metric.count || '-').toString().padStart(5);
       const avg = metric.averageTime ? metric.averageTime.toFixed(2).padStart(8) : '-'.padStart(8);
-      console.log(`${op} | ${time} | ${count} | ${avg}`);
+      console.warn(`${op} | ${time} | ${count} | ${avg}`);
     }
 
     // Recommendations
-    console.log('\n### RECOMMENDATIONS (PRIORITY ORDER) ###\n');
-    console.log('1. **IMMEDIATE: Integrate DecryptionCache**');
-    console.log('   - Modify repository constructors to accept DecryptionCache');
-    console.log('   - Update initializeRepositories() to create and inject cache');
-    console.log('   - Estimated gain: 60-80% reduction in decryption overhead\n');
+    console.warn('\n### RECOMMENDATIONS (PRIORITY ORDER) ###\n');
+    console.warn('1. **IMMEDIATE: Integrate DecryptionCache**');
+    console.warn('   - Modify repository constructors to accept DecryptionCache');
+    console.warn('   - Update initializeRepositories() to create and inject cache');
+    console.warn('   - Estimated gain: 60-80% reduction in decryption overhead\n');
 
-    console.log('2. **HIGH: Eliminate N+1 Queries**');
-    console.log('   - Implement getCaseWithRelatedData() method');
-    console.log('   - Use JOIN queries for eager loading');
-    console.log('   - Consider implementing DataLoader pattern\n');
+    console.warn('2. **HIGH: Eliminate N+1 Queries**');
+    console.warn('   - Implement getCaseWithRelatedData() method');
+    console.warn('   - Use JOIN queries for eager loading');
+    console.warn('   - Consider implementing DataLoader pattern\n');
 
-    console.log('3. **MEDIUM: React Component Optimization**');
-    console.log('   - Add React.memo to list components');
-    console.log('   - Use useMemo for expensive computations');
-    console.log('   - Implement virtualization for large lists\n');
+    console.warn('3. **MEDIUM: React Component Optimization**');
+    console.warn('   - Add React.memo to list components');
+    console.warn('   - Use useMemo for expensive computations');
+    console.warn('   - Implement virtualization for large lists\n');
 
-    console.log('4. **LOW: Database Optimizations**');
-    console.log('   - Indexes are properly configured');
-    console.log('   - Consider ANALYZE command periodically');
-    console.log('   - Monitor for missing indexes on audit_logs, consents tables\n');
+    console.warn('4. **LOW: Database Optimizations**');
+    console.warn('   - Indexes are properly configured');
+    console.warn('   - Consider ANALYZE command periodically');
+    console.warn('   - Monitor for missing indexes on audit_logs, consents tables\n');
 
-    console.log('='.repeat(80));
+    console.warn('='.repeat(80));
   }
 
   async runAllTests(): Promise<void> {
-    console.log('Starting Performance Analysis...\n');
+    console.warn('Starting Performance Analysis...\n');
 
     await this.testEncryptionPerformance();
     await this.testCachePerformance();

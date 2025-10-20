@@ -1,3 +1,17 @@
 {
-  "outputStyle": "forge-mode"
+  "permissions": {
+    "allow": [
+      "Read(//f/codebase-guardian/**)",
+      "Bash(findstr /V \"test_\")",
+      "Bash(findstr /V \".venv\")",
+      "mcp__MCP_DOCKER__search_repositories",
+      "mcp__MCP_DOCKER__get_file_contents",
+      "mcp__MCP_DOCKER__model_search",
+      "mcp__MCP_DOCKER__space_search",
+      "mcp__MCP_DOCKER__dataset_search"
+    ]
+  },
+  "model": "claude-sonnet-4-5-20250929",
+  "outputStyle": "forge-mode",
+  "alwaysThinkingEnabled": true
 }

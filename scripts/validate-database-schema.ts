@@ -34,19 +34,19 @@ function warn(category: string, message: string, details?: string): void {
 }
 
 function printResults(): void {
-  console.log('\n=== DATABASE SCHEMA VALIDATION REPORT ===\n');
+  console.warn('\n=== DATABASE SCHEMA VALIDATION REPORT ===\n');
 
   const categories = [...new Set(results.map((r) => r.category))];
 
   categories.forEach((category) => {
-    console.log(`\n${category}:`);
+    console.warn(`\n${category}:`);
     const categoryResults = results.filter((r) => r.category === category);
 
     categoryResults.forEach((result) => {
       const icon = result.status === 'PASS' ? '✅' : result.status === 'WARN' ? '⚠️' : '❌';
-      console.log(`  ${icon} ${result.message}`);
+      console.warn(`  ${icon} ${result.message}`);
       if (result.details) {
-        console.log(`     ${result.details}`);
+        console.warn(`     ${result.details}`);
       }
     });
   });
@@ -56,26 +56,26 @@ function printResults(): void {
   const warned = results.filter((r) => r.status === 'WARN').length;
   const total = results.length;
 
-  console.log(`\n=== SUMMARY ===`);
-  console.log(`Total Checks: ${total}`);
-  console.log(`Passed: ${passed} (${((passed / total) * 100).toFixed(1)}%)`);
-  console.log(`Failed: ${failed} (${((failed / total) * 100).toFixed(1)}%)`);
-  console.log(`Warnings: ${warned} (${((warned / total) * 100).toFixed(1)}%)`);
+  console.warn(`\n=== SUMMARY ===`);
+  console.warn(`Total Checks: ${total}`);
+  console.warn(`Passed: ${passed} (${((passed / total) * 100).toFixed(1)}%)`);
+  console.warn(`Failed: ${failed} (${((failed / total) * 100).toFixed(1)}%)`);
+  console.warn(`Warnings: ${warned} (${((warned / total) * 100).toFixed(1)}%)`);
 
   if (failed === 0) {
-    console.log('\n🎉 ALL CRITICAL CHECKS PASSED!');
+    console.warn('\n🎉 ALL CRITICAL CHECKS PASSED!');
   } else {
-    console.log('\n⚠️ SOME CHECKS FAILED - Review DATABASE_AUDIT_REPORT.md for fixes');
+    console.warn('\n⚠️ SOME CHECKS FAILED - Review DATABASE_AUDIT_REPORT.md for fixes');
   }
 
-  console.log('\n');
+  console.warn('\n');
 }
 
 async function validateSchema(): Promise<void> {
   const db = getDb();
 
   // 1. Check all expected tables exist
-  console.log('Checking tables...');
+  console.warn('Checking tables...');
   const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all() as Array<{ name: string }>;
   const tableNames = tables.map((t) => t.name);
 
@@ -107,7 +107,7 @@ async function validateSchema(): Promise<void> {
   });
 
   // 2. Check evidence_type constraint
-  console.log('Checking constraints...');
+  console.warn('Checking constraints...');
   const evidenceSchema = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='evidence'").get() as { sql: string } | undefined;
 
   if (!evidenceSchema) {
@@ -130,7 +130,7 @@ async function validateSchema(): Promise<void> {
   }
 
   // 3. Check indexes
-  console.log('Checking indexes...');
+  console.warn('Checking indexes...');
   const indexes = db.prepare("SELECT name FROM sqlite_master WHERE type='index'").all() as Array<{ name: string }>;
   const indexNames = indexes.map((i) => i.name);
 
@@ -187,7 +187,7 @@ async function validateSchema(): Promise<void> {
   });
 
   // 4. Check triggers
-  console.log('Checking triggers...');
+  console.warn('Checking triggers...');
   const triggers = db.prepare("SELECT name FROM sqlite_master WHERE type='trigger'").all() as Array<{ name: string }>;
   const triggerNames = triggers.map((t) => t.name);
 
@@ -234,7 +234,7 @@ async function validateSchema(): Promise<void> {
   });
 
   // 5. Check columns for updated_at
-  console.log('Checking columns...');
+  console.warn('Checking columns...');
   const legalIssuesColumns = db.prepare("PRAGMA table_info(legal_issues)").all() as Array<{ name: string }>;
   const legalIssuesHasUpdatedAt = legalIssuesColumns.some((c) => c.name === 'updated_at');
 
@@ -272,7 +272,7 @@ async function validateSchema(): Promise<void> {
   }
 
   // 6. Check encryption_metadata
-  console.log('Checking encryption metadata...');
+  console.warn('Checking encryption metadata...');
 
   let encryptionMetadata: Array<{ table_name: string; column_name: string }> = [];
 
@@ -322,7 +322,7 @@ async function validateSchema(): Promise<void> {
   }
 
   // 7. Check migrations table
-  console.log('Checking migrations...');
+  console.warn('Checking migrations...');
 
   let migrations: Array<{ name: string; status: string }> = [];
 
@@ -355,7 +355,7 @@ async function validateSchema(): Promise<void> {
   }
 
   // 8. Check repository coverage
-  console.log('Checking repository coverage...');
+  console.warn('Checking repository coverage...');
   warn(
     'Repository Coverage',
     'ActionRepository is MISSING (actions table has no repository)',
@@ -363,7 +363,7 @@ async function validateSchema(): Promise<void> {
   );
 
   // 9. Check junction table usage
-  console.log('Checking junction tables...');
+  console.warn('Checking junction tables...');
   warn(
     'Junction Tables',
     'event_evidence table has NO repository methods',

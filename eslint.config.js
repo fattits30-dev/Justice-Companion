@@ -15,6 +15,7 @@ export default tseslint.config(
       '*.config.ts',
       'mcp-server/**/*',  // MCP server has its own tsconfig
       'scripts/**/*',     // Scripts run outside main project
+      'src/test-utils/**/*',  // Test utilities not in main tsconfig
     ]
   },
   {

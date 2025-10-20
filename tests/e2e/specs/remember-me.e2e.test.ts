@@ -153,11 +153,11 @@ async function restartApp(currentApp: ElectronTestApp): Promise<ElectronTestApp>
 
   // Close current app
   await currentApp.app.close();
-  console.log('[restartApp] App closed, waiting for cleanup...');
+  console.warn('[restartApp] App closed, waiting for cleanup...');
   await new Promise(resolve => setTimeout(resolve, 2000));
 
   // Launch new app instance with same database
-  console.log('[restartApp] Launching new app instance...');
+  console.warn('[restartApp] Launching new app instance...');
   const newApp = await launchElectronApp({ seedData: false });
 
   // Override database path to use the same one
@@ -206,12 +206,12 @@ test.describe('Remember Me E2E', () => {
     db.close();
 
     // 5. Close app
-    console.log('[Test] Closing app to simulate restart...');
+    console.warn('[Test] Closing app to simulate restart...');
     await testApp.app.close();
     await new Promise(resolve => setTimeout(resolve, 2000));
 
     // 6. Reopen app (session should be restored)
-    console.log('[Test] Reopening app...');
+    console.warn('[Test] Reopening app...');
     testApp = await launchElectronApp({ seedData: false });
     // Use same database
     testApp.dbPath = dbPath;
@@ -257,12 +257,12 @@ test.describe('Remember Me E2E', () => {
     db.close();
 
     // 5. Close app
-    console.log('[Test] Closing app to simulate restart...');
+    console.warn('[Test] Closing app to simulate restart...');
     await testApp.app.close();
     await new Promise(resolve => setTimeout(resolve, 2000));
 
     // 6. Reopen app
-    console.log('[Test] Reopening app...');
+    console.warn('[Test] Reopening app...');
     testApp = await launchElectronApp({ seedData: false });
     testApp.dbPath = dbPath;
 
@@ -324,11 +324,11 @@ test.describe('Remember Me E2E', () => {
     db.close();
 
     // 8. Close and reopen app
-    console.log('[Test] Closing app to verify session not restored...');
+    console.warn('[Test] Closing app to verify session not restored...');
     await testApp.app.close();
     await new Promise(resolve => setTimeout(resolve, 2000));
 
-    console.log('[Test] Reopening app...');
+    console.warn('[Test] Reopening app...');
     testApp = await launchElectronApp({ seedData: false });
     testApp.dbPath = dbPath;
 
@@ -369,11 +369,11 @@ test.describe('Remember Me E2E', () => {
     db.close();
 
     // 5. Close and reopen app
-    console.log('[Test] Closing app with expired session...');
+    console.warn('[Test] Closing app with expired session...');
     await testApp.app.close();
     await new Promise(resolve => setTimeout(resolve, 2000));
 
-    console.log('[Test] Reopening app...');
+    console.warn('[Test] Reopening app...');
     testApp = await launchElectronApp({ seedData: false });
     testApp.dbPath = dbPath;
 
@@ -456,7 +456,7 @@ test.describe('Remember Me E2E', () => {
     const wrongPassword = 'WrongPassword123!';
 
     for (let i = 0; i < 5; i++) {
-      console.log(`[Test] Failed login attempt ${i + 1}/5`);
+      console.warn(`[Test] Failed login attempt ${i + 1}/5`);
 
       await window.fill('#username', username);
       await window.fill('#password', wrongPassword);

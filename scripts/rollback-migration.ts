@@ -45,8 +45,8 @@ const migrationName = process.argv[2];
 
 if (!migrationName) {
   console.error('❌ Error: Migration name is required\n');
-  console.log('Usage: npm run db:migrate:rollback -- <migration-name>');
-  console.log('Example: npm run db:migrate:rollback -- 003_audit_logs.sql\n');
+  console.warn('Usage: npm run db:migrate:rollback -- <migration-name>');
+  console.warn('Example: npm run db:migrate:rollback -- 003_audit_logs.sql\n');
 
   // Display available migrations
   try {
@@ -67,12 +67,12 @@ if (!migrationName) {
       .all('applied') as MigrationRow[];
 
     if (applied.length > 0) {
-      console.log('Available migrations to rollback:');
+      console.warn('Available migrations to rollback:');
       applied.forEach((migration: MigrationRow) => {
-        console.log(`  • ${migration.name}`);
+        console.warn(`  • ${migration.name}`);
       });
     } else {
-      console.log('No applied migrations available to rollback.');
+      console.warn('No applied migrations available to rollback.');
     }
   } catch (error) {
     console.error(error);
@@ -82,9 +82,9 @@ if (!migrationName) {
   process.exit(1);
 }
 
-console.log(`🔄 Rolling back migration: ${migrationName}\n`);
-console.log('⚠️  WARNING: This will execute the DOWN section of the migration');
-console.log('⚠️  WARNING: A backup will be created automatically before rollback\n');
+console.warn(`🔄 Rolling back migration: ${migrationName}\n`);
+console.warn('⚠️  WARNING: This will execute the DOWN section of the migration');
+console.warn('⚠️  WARNING: A backup will be created automatically before rollback\n');
 
 try {
   // Ensure migrations table exists
@@ -123,7 +123,7 @@ try {
   }
 
   // Create backup before rollback
-  console.log('📦 Creating backup before rollback...');
+  console.warn('📦 Creating backup before rollback...');
   const backupsDir = path.join(process.cwd(), 'backups');
   if (!fs.existsSync(backupsDir)) {
     fs.mkdirSync(backupsDir, { recursive: true });
@@ -131,9 +131,9 @@ try {
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
   const backupPath = path.join(backupsDir, `pre_rollback_${timestamp}.db`);
   fs.copyFileSync(dbPath, backupPath);
-  console.log(`✅ Backup created: ${backupPath}\n`);
+  console.warn(`✅ Backup created: ${backupPath}\n`);
 
-  console.log('🔄 Executing rollback...');
+  console.warn('🔄 Executing rollback...');
   const startTime = Date.now();
 
   // Execute rollback in a transaction
@@ -153,8 +153,8 @@ try {
 
   const duration = Date.now() - startTime;
 
-  console.log(`\n✅ Migration rolled back successfully: ${migrationName} (${duration}ms)`);
-  console.log('\n💡 Tip: Run "npm run db:migrate:status" to verify migration status');
+  console.warn(`\n✅ Migration rolled back successfully: ${migrationName} (${duration}ms)`);
+  console.warn('\n💡 Tip: Run "npm run db:migrate:status" to verify migration status');
 
   db.close();
   process.exit(0);

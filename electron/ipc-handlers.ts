@@ -1,4 +1,4 @@
-import { ipcMain, IpcMainInvokeEvent } from 'electron';
+import { ipcMain, type IpcMainInvokeEvent } from 'electron';
 import {
   successResponse,
   errorResponse,
@@ -30,7 +30,7 @@ import {
  * Initialize all IPC handlers
  */
 export function setupIpcHandlers(): void {
-  console.log('[IPC] Setting up IPC handlers...');
+  console.warn('[IPC] Setting up IPC handlers...');
 
   // Authentication handlers
   setupAuthHandlers();
@@ -50,7 +50,7 @@ export function setupIpcHandlers(): void {
   // GDPR handlers
   setupGdprHandlers();
 
-  console.log('[IPC] All IPC handlers registered');
+  console.warn('[IPC] All IPC handlers registered');
 }
 
 /**
@@ -78,7 +78,7 @@ function setupAuthHandlers(): void {
     'auth:register',
     async (_event: IpcMainInvokeEvent, data: unknown): Promise<IPCResponse> => {
       try {
-        console.log('[IPC] auth:register called');
+        console.warn('[IPC] auth:register called');
 
         // Validate input with Zod
         const schemas = getAuthSchemas();
@@ -91,7 +91,7 @@ function setupAuthHandlers(): void {
         // Log audit event
         logAuthEvent(AuditEventType.USER_REGISTERED, result.userId, true);
 
-        console.log('[IPC] User registered successfully:', result.userId);
+        console.warn('[IPC] User registered successfully:', result.userId);
         return successResponse(result);
       } catch (error) {
         console.error('[IPC] auth:register error:', error);
@@ -109,7 +109,7 @@ function setupAuthHandlers(): void {
     'auth:login',
     async (_event: IpcMainInvokeEvent, data: unknown): Promise<IPCResponse> => {
       try {
-        console.log('[IPC] auth:login called');
+        console.warn('[IPC] auth:login called');
 
         // Validate input with Zod
         const schemas = getAuthSchemas();
@@ -126,7 +126,7 @@ function setupAuthHandlers(): void {
         // Log successful login
         logAuthEvent(AuditEventType.USER_LOGGED_IN, result.userId, true);
 
-        console.log('[IPC] User logged in successfully:', result.userId);
+        console.warn('[IPC] User logged in successfully:', result.userId);
         return successResponse(result);
       } catch (error) {
         console.error('[IPC] auth:login error:', error);
@@ -144,7 +144,7 @@ function setupAuthHandlers(): void {
     'auth:logout',
     async (_event: IpcMainInvokeEvent, sessionId: string): Promise<IPCResponse> => {
       try {
-        console.log('[IPC] auth:logout called');
+        console.warn('[IPC] auth:logout called');
 
         if (!sessionId) {
           return errorResponse(IPCErrorCode.VALIDATION_ERROR, 'Session ID is required');
@@ -157,7 +157,7 @@ function setupAuthHandlers(): void {
         // Log logout (we don't know userId at this point, so pass null)
         logAuthEvent(AuditEventType.USER_LOGGED_OUT, null, true);
 
-        console.log('[IPC] User logged out successfully');
+        console.warn('[IPC] User logged out successfully');
         return successResponse({ success: true });
       } catch (error) {
         console.error('[IPC] auth:logout error:', error);
@@ -171,7 +171,7 @@ function setupAuthHandlers(): void {
     'auth:session',
     async (_event: IpcMainInvokeEvent, sessionId: string): Promise<IPCResponse> => {
       try {
-        console.log('[IPC] auth:session called');
+        console.warn('[IPC] auth:session called');
 
         if (!sessionId) {
           return errorResponse(IPCErrorCode.NOT_AUTHENTICATED, 'No session ID provided');
@@ -185,7 +185,7 @@ function setupAuthHandlers(): void {
           return errorResponse(IPCErrorCode.SESSION_EXPIRED, 'Session not found or expired');
         }
 
-        console.log('[IPC] Session retrieved:', session.userId);
+        console.warn('[IPC] Session retrieved:', session.userId);
         return successResponse(session);
       } catch (error) {
         console.error('[IPC] auth:session error:', error);
@@ -219,7 +219,7 @@ function setupCaseHandlers(): void {
     async (_event: IpcMainInvokeEvent, data: unknown, sessionId: string): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.log('[IPC] case:create called by user:', userId);
+          console.warn('[IPC] case:create called by user:', userId);
 
           // Validate input with Zod (schema expects { input: { ...fields } })
           const schemas = getCaseSchemas();
@@ -249,7 +249,7 @@ function setupCaseHandlers(): void {
             success: true,
           });
 
-          console.log('[IPC] Case created successfully:', result.id);
+          console.warn('[IPC] Case created successfully:', result.id);
           return result;
         } catch (error) {
           console.error('[IPC] case:create error:', error);
@@ -275,7 +275,7 @@ function setupCaseHandlers(): void {
   ipcMain.handle('case:list', async (_event: IpcMainInvokeEvent, sessionId: string): Promise<IPCResponse> => {
     return withAuthorization(sessionId, async (userId) => {
       try {
-        console.log('[IPC] case:list called by user:', userId);
+        console.warn('[IPC] case:list called by user:', userId);
 
         // Get only cases belonging to the authenticated user
         const caseService = getCaseService();
@@ -284,7 +284,7 @@ function setupCaseHandlers(): void {
         // Filter cases by userId
         const userCases = allCases.filter((c) => c.userId === userId);
 
-        console.log('[IPC] Retrieved', userCases.length, 'cases for user:', userId);
+        console.warn('[IPC] Retrieved', userCases.length, 'cases for user:', userId);
         return userCases;
       } catch (error) {
         console.error('[IPC] case:list error:', error);
@@ -299,7 +299,7 @@ function setupCaseHandlers(): void {
     async (_event: IpcMainInvokeEvent, id: unknown, sessionId: string): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.log('[IPC] case:get called by user:', userId, 'for case:', id);
+          console.warn('[IPC] case:get called by user:', userId, 'for case:', id);
 
           // Validate ID with Zod
           const schemas = getCaseSchemas();
@@ -327,7 +327,7 @@ function setupCaseHandlers(): void {
             success: true,
           });
 
-          console.log('[IPC] Case retrieved:', caseData.id);
+          console.warn('[IPC] Case retrieved:', caseData.id);
           return caseData;
         } catch (error) {
           console.error('[IPC] case:get error:', error);
@@ -343,7 +343,7 @@ function setupCaseHandlers(): void {
     async (_event: IpcMainInvokeEvent, id: unknown, data: unknown, sessionId: string): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.log('[IPC] case:update called by user:', userId, 'for case:', id);
+          console.warn('[IPC] case:update called by user:', userId, 'for case:', id);
 
           // Validate input with Zod (schema expects { id, input: { ...fields } })
           const schemas = getCaseSchemas();
@@ -374,7 +374,7 @@ function setupCaseHandlers(): void {
             success: true,
           });
 
-          console.log('[IPC] Case updated successfully:', result.id);
+          console.warn('[IPC] Case updated successfully:', result.id);
           return result;
         } catch (error) {
           console.error('[IPC] case:update error:', error);
@@ -402,7 +402,7 @@ function setupCaseHandlers(): void {
     async (_event: IpcMainInvokeEvent, id: unknown, sessionId: string): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.log('[IPC] case:delete called by user:', userId, 'for case:', id);
+          console.warn('[IPC] case:delete called by user:', userId, 'for case:', id);
 
           // Validate ID with Zod
           const schemas = getCaseSchemas();
@@ -430,7 +430,7 @@ function setupCaseHandlers(): void {
             success: true,
           });
 
-          console.log('[IPC] Case deleted successfully:', id);
+          console.warn('[IPC] Case deleted successfully:', id);
           return { success: true };
         } catch (error) {
           console.error('[IPC] case:delete error:', error);
@@ -477,7 +477,7 @@ function setupEvidenceHandlers(): void {
     async (_event: IpcMainInvokeEvent, caseId: unknown, data: unknown, sessionId: string): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.log('[IPC] evidence:upload called by user:', userId, 'for case:', caseId);
+          console.warn('[IPC] evidence:upload called by user:', userId, 'for case:', caseId);
 
           // Validate input with Zod (schema expects { input: { caseId, ...fields } })
           const schemas = getEvidenceSchemas();
@@ -512,7 +512,7 @@ function setupEvidenceHandlers(): void {
             success: true,
           });
 
-          console.log('[IPC] Evidence created successfully:', result.id);
+          console.warn('[IPC] Evidence created successfully:', result.id);
           return result;
         } catch (error) {
           console.error('[IPC] evidence:upload error:', error);
@@ -540,7 +540,7 @@ function setupEvidenceHandlers(): void {
     async (_event: IpcMainInvokeEvent, caseId: unknown, sessionId: string): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.log('[IPC] evidence:list called by user:', userId, 'for case:', caseId);
+          console.warn('[IPC] evidence:list called by user:', userId, 'for case:', caseId);
 
           // Validate caseId
           const schemas = getEvidenceSchemas();
@@ -554,7 +554,7 @@ function setupEvidenceHandlers(): void {
           const evidenceRepo = getEvidenceRepository();
           const evidence = evidenceRepo.findByCaseId(validatedData.caseId);
 
-          console.log('[IPC] Retrieved', evidence.length, 'evidence items for case', caseId);
+          console.warn('[IPC] Retrieved', evidence.length, 'evidence items for case', caseId);
           return evidence;
         } catch (error) {
           console.error('[IPC] evidence:list error:', error);
@@ -570,7 +570,7 @@ function setupEvidenceHandlers(): void {
     async (_event: IpcMainInvokeEvent, id: unknown, sessionId: string): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.log('[IPC] evidence:delete called by user:', userId, 'for evidence:', id);
+          console.warn('[IPC] evidence:delete called by user:', userId, 'for evidence:', id);
 
           // Validate ID
           const schemas = getEvidenceSchemas();
@@ -597,7 +597,7 @@ function setupEvidenceHandlers(): void {
             success: true,
           });
 
-          console.log('[IPC] Evidence deleted successfully:', id);
+          console.warn('[IPC] Evidence deleted successfully:', id);
           return { success: true };
         } catch (error) {
           console.error('[IPC] evidence:delete error:', error);
@@ -630,7 +630,7 @@ function setupChatHandlers(): void {
     async (_event: IpcMainInvokeEvent, message: string, caseId: string | undefined, sessionId: string): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.log('[IPC] chat:send called by user:', userId, caseId ? `with case ${caseId}` : 'without case');
+          console.warn('[IPC] chat:send called by user:', userId, caseId ? `with case ${caseId}` : 'without case');
 
           // Validate message
           if (!message || message.trim().length === 0) {
@@ -678,7 +678,7 @@ function setupChatHandlers(): void {
             disclaimer: 'This is information, not legal advice. Consult a qualified solicitor for legal advice.',
           };
 
-          console.log('[IPC] Chat message processed (placeholder)');
+          console.warn('[IPC] Chat message processed (placeholder)');
           return response;
         } catch (error) {
           console.error('[IPC] chat:send error:', error);
@@ -708,7 +708,7 @@ function setupDatabaseHandlers(): void {
   // Run database migrations
   ipcMain.handle('db:migrate', async (_event: IpcMainInvokeEvent): Promise<IPCResponse> => {
     try {
-      console.log('[IPC] db:migrate called');
+      console.warn('[IPC] db:migrate called');
 
       // TODO: Create backup before migration
       // TODO: Call runMigrations() from migrate.ts
@@ -724,7 +724,7 @@ function setupDatabaseHandlers(): void {
         success: true,
       });
 
-      console.log('[IPC] Migrations placeholder - full implementation pending');
+      console.warn('[IPC] Migrations placeholder - full implementation pending');
       return successResponse({
         migrationsRun: 0,
         message: 'Migration system integration pending',
@@ -738,7 +738,7 @@ function setupDatabaseHandlers(): void {
   // Create database backup
   ipcMain.handle('db:backup', async (_event: IpcMainInvokeEvent): Promise<IPCResponse> => {
     try {
-      console.log('[IPC] db:backup called');
+      console.warn('[IPC] db:backup called');
 
       // TODO: Implement backup functionality
       // TODO: Copy database file with timestamp
@@ -754,7 +754,7 @@ function setupDatabaseHandlers(): void {
         success: true,
       });
 
-      console.log('[IPC] Backup placeholder - full implementation pending');
+      console.warn('[IPC] Backup placeholder - full implementation pending');
       return successResponse({
         backupPath: null,
         message: 'Backup system integration pending',
@@ -768,13 +768,13 @@ function setupDatabaseHandlers(): void {
   // Get migration status
   ipcMain.handle('db:status', async (_event: IpcMainInvokeEvent): Promise<IPCResponse> => {
     try {
-      console.log('[IPC] db:status called');
+      console.warn('[IPC] db:status called');
 
       // TODO: Query migrations table
       // TODO: Check for pending migrations
       // TODO: Return current schema version
 
-      console.log('[IPC] Status check placeholder - full implementation pending');
+      console.warn('[IPC] Status check placeholder - full implementation pending');
       return successResponse({
         currentVersion: 0,
         pendingMigrations: [],
@@ -795,7 +795,7 @@ function setupGdprHandlers(): void {
   ipcMain.handle('gdpr:export', async (_event: IpcMainInvokeEvent, sessionId: string): Promise<IPCResponse> => {
     return withAuthorization(sessionId, async (userId) => {
       try {
-        console.log('[IPC] gdpr:export called by user:', userId);
+        console.warn('[IPC] gdpr:export called by user:', userId);
 
         // TODO: Collect all user data (cases, evidence, messages, etc.) for this userId
         // TODO: Decrypt all encrypted fields
@@ -812,7 +812,7 @@ function setupGdprHandlers(): void {
           success: true,
         });
 
-        console.log('[IPC] GDPR export placeholder - full implementation pending');
+        console.warn('[IPC] GDPR export placeholder - full implementation pending');
         return {
           exportPath: null,
           message: 'GDPR export system integration pending',
@@ -840,7 +840,7 @@ function setupGdprHandlers(): void {
   ipcMain.handle('gdpr:delete', async (_event: IpcMainInvokeEvent, sessionId: string): Promise<IPCResponse> => {
     return withAuthorization(sessionId, async (userId) => {
       try {
-        console.log('[IPC] gdpr:delete called by user:', userId);
+        console.warn('[IPC] gdpr:delete called by user:', userId);
 
         // TODO: Confirm deletion (should be handled in renderer with double-confirmation)
         // TODO: Delete all user data (cases, evidence, sessions, audit logs, etc.) for this userId
@@ -857,7 +857,7 @@ function setupGdprHandlers(): void {
           success: true,
         });
 
-        console.log('[IPC] GDPR deletion placeholder - full implementation pending');
+        console.warn('[IPC] GDPR deletion placeholder - full implementation pending');
         return {
           success: true,
           message: 'GDPR deletion system integration pending',

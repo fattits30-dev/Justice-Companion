@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { logger } from '@/utils/logger';
+import { logger } from '../utils/logger';
 import path from 'path';
 import crypto from 'crypto';
 import { getDb } from './database';
@@ -295,8 +295,8 @@ export function validateMigration(migrationName: string): {
   return { valid: errors.length === 0, errors };
 }
 
-// Run migrations when script is executed directly
-if (require.main === module) {
+// Run migrations when script is executed directly (ESM version)
+if (import.meta.url === `file://${process.argv[1]}`) {
   try {
     runMigrations();
     process.exit(0);

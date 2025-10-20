@@ -470,7 +470,7 @@ export async function exampleUsage() {
     priority: 'high',
   });
 
-  console.log('Created project:', project.id);
+  console.warn('Created project:', project.id);
 
   // 2. Generate AI task breakdown
   const aiBreakdown = await client.generateAITaskBreakdown({
@@ -487,12 +487,12 @@ export async function exampleUsage() {
     maxSubtasks: 12,
   });
 
-  console.log(`AI generated ${aiBreakdown.subtasks.length} subtasks!`);
-  console.log(`Total estimate: ${aiBreakdown.parentTask.totalEstimatedHours} hours`);
+  console.warn(`AI generated ${aiBreakdown.subtasks.length} subtasks!`);
+  console.warn(`Total estimate: ${aiBreakdown.parentTask.totalEstimatedHours} hours`);
 
   // 3. List AI-generated tasks
   const aiTasks = await client.listTasks(project.id, { aiGenerated: true });
-  console.log(`Found ${aiTasks.length} AI-generated tasks`);
+  console.warn(`Found ${aiTasks.length} AI-generated tasks`);
 
   // 4. Sync to GitHub
   const syncResult = await client.syncToGitHub(
@@ -500,15 +500,15 @@ export async function exampleUsage() {
     'your-username',
     'Justice-Companion'
   );
-  console.log(`Synced to GitHub issue #${syncResult.result.githubIssueNumber}`);
+  console.warn(`Synced to GitHub issue #${syncResult.result.githubIssueNumber}`);
 
   // 5. Get project progress
   const progress = await client.getProjectProgress(project.id);
-  console.log(`Project is ${progress.completion_percentage}% complete`);
+  console.warn(`Project is ${progress.completion_percentage}% complete`);
 
   // 6. Search tasks
   const searchResults = await client.searchTasks('encryption security');
-  console.log(`Found ${searchResults.length} matching tasks`);
+  console.warn(`Found ${searchResults.length} matching tasks`);
 }
 
 // Export singleton instance

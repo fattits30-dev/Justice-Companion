@@ -6,6 +6,7 @@ import type { AuditLogger } from '../services/AuditLogger.js';
 import { DecryptionCache } from '../services/DecryptionCache';
 import { BaseRepository } from './BaseRepository';
 import type { PaginationParams, PaginatedResult } from '../types/pagination';
+import { PaginationParamsSchema } from '../types/pagination';
 
 /**
  * Case Repository with pagination and caching support
@@ -417,7 +418,6 @@ export class CaseRepositoryPaginated extends BaseRepository<Case> {
    * Helper: Validate pagination params
    */
   private validatePaginationParams(params: PaginationParams) {
-    const { PaginationParamsSchema } = require('../types/pagination');
     return PaginationParamsSchema.parse(params);
   }
 

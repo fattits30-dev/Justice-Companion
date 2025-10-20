@@ -14,7 +14,7 @@ import path from 'path';
 const DB_NAME = 'justice.db';
 const BACKUP_DIR = 'backups';
 
-console.log('📦 Creating database backup...\n');
+console.warn('📦 Creating database backup...\n');
 
 try {
   // Determine database path (current directory for development)
@@ -28,7 +28,7 @@ try {
   const backupsDir = path.join(process.cwd(), BACKUP_DIR);
   if (!fs.existsSync(backupsDir)) {
     fs.mkdirSync(backupsDir, { recursive: true });
-    console.log(`📁 Created backups directory: ${backupsDir}`);
+    console.warn(`📁 Created backups directory: ${backupsDir}`);
   }
 
   // Generate backup filename with timestamp
@@ -44,14 +44,14 @@ try {
   const sizeKB = (stats.size / 1024).toFixed(2);
   const sizeMB = (stats.size / (1024 * 1024)).toFixed(2);
 
-  console.log('✅ Backup created successfully!\n');
-  console.log('='.repeat(80));
-  console.log(`  Filename: ${backupFilename}`);
-  console.log(`  Location: ${backupPath}`);
-  console.log(`  Size: ${sizeKB} KB (${sizeMB} MB)`);
-  console.log(`  Created: ${new Date().toISOString()}`);
-  console.log('='.repeat(80));
-  console.log('\n💡 Tip: Run "npm run db:backup:list" to view all backups\n');
+  console.warn('✅ Backup created successfully!\n');
+  console.warn('='.repeat(80));
+  console.warn(`  Filename: ${backupFilename}`);
+  console.warn(`  Location: ${backupPath}`);
+  console.warn(`  Size: ${sizeKB} KB (${sizeMB} MB)`);
+  console.warn(`  Created: ${new Date().toISOString()}`);
+  console.warn('='.repeat(80));
+  console.warn('\n💡 Tip: Run "npm run db:backup:list" to view all backups\n');
 
   process.exit(0);
 } catch (error) {
