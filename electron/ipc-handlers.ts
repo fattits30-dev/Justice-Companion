@@ -1,4 +1,5 @@
 import { ipcMain, type IpcMainInvokeEvent } from 'electron';
+import * as path from 'path';
 import {
   successResponse,
   errorResponse,
@@ -59,18 +60,15 @@ export function setupIpcHandlers(): void {
 function setupAuthHandlers(): void {
   // Lazy-load services to avoid circular dependencies
   const getAuthService = () => {
-    // Runtime path: from dist/electron/ to src/ (two levels up)
-     
-    const { AuthenticationService } = require('../../src/services/AuthenticationService');
-     
-    const { getDb } = require('../../src/db/database');
+    // Use absolute paths to prevent path traversal (CVSS 8.8 fix)
+    const { AuthenticationService } = require(path.join(__dirname, '../src/services/AuthenticationService'));
+    const { getDb } = require(path.join(__dirname, '../src/db/database'));
     return new AuthenticationService(getDb());
   };
 
   const getAuthSchemas = () => {
-    // Runtime path: from dist/electron/ to src/ (two levels up)
-     
-    return require('../../src/middleware/schemas/auth-schemas');
+    // Use absolute paths to prevent path traversal (CVSS 8.8 fix)
+    return require(path.join(__dirname, '../src/middleware/schemas/auth-schemas'));
   };
 
   // Register new user
@@ -201,16 +199,14 @@ function setupAuthHandlers(): void {
 function setupCaseHandlers(): void {
   // Lazy-load services
   const getCaseService = () => {
-    // Runtime path: from dist/electron/ to src/ (two levels up)
-     
-    const { caseService } = require('../../src/features/cases/services/CaseService');
+    // Use absolute paths to prevent path traversal (CVSS 8.8 fix)
+    const { caseService } = require(path.join(__dirname, '../src/features/cases/services/CaseService'));
     return caseService;
   };
 
   const getCaseSchemas = () => {
-    // Runtime path: from dist/electron/ to src/ (two levels up)
-     
-    return require('../../src/middleware/schemas/case-schemas');
+    // Use absolute paths to prevent path traversal (CVSS 8.8 fix)
+    return require(path.join(__dirname, '../src/middleware/schemas/case-schemas'));
   };
 
   // Create new case
@@ -459,16 +455,14 @@ function setupCaseHandlers(): void {
 function setupEvidenceHandlers(): void {
   // Lazy-load repository
   const getEvidenceRepository = () => {
-    // Runtime path: from dist/electron/ to src/ (two levels up)
-     
-    const { evidenceRepository } = require('../../src/repositories/EvidenceRepository');
+    // Use absolute paths to prevent path traversal (CVSS 8.8 fix)
+    const { evidenceRepository } = require(path.join(__dirname, '../src/repositories/EvidenceRepository'));
     return evidenceRepository;
   };
 
   const getEvidenceSchemas = () => {
-    // Runtime path: from dist/electron/ to src/ (two levels up)
-     
-    return require('../../src/middleware/schemas/evidence-schemas');
+    // Use absolute paths to prevent path traversal (CVSS 8.8 fix)
+    return require(path.join(__dirname, '../src/middleware/schemas/evidence-schemas'));
   };
 
   // Upload/create evidence
@@ -793,11 +787,12 @@ function setupDatabaseHandlers(): void {
 function setupGdprHandlers(): void {
   // Lazy-load GDPR service to avoid circular dependencies
   const getGdprService = () => {
-    const { GdprService } = require('../../src/services/gdpr/GdprService');
-    const { EncryptionService } = require('../../src/services/EncryptionService');
-    const { AuditLogger } = require('../../src/services/AuditLogger');
-    const { getDb } = require('../../src/db/database');
-    const { getKeyManager } = require('./main');
+    // Use absolute paths to prevent path traversal (CVSS 8.8 fix)
+    const { GdprService } = require(path.join(__dirname, '../src/services/gdpr/GdprService'));
+    const { EncryptionService } = require(path.join(__dirname, '../src/services/EncryptionService'));
+    const { AuditLogger } = require(path.join(__dirname, '../src/services/AuditLogger'));
+    const { getDb } = require(path.join(__dirname, '../src/db/database'));
+    const { getKeyManager } = require(path.join(__dirname, 'main'));
 
     const db = getDb();
     const keyManager = getKeyManager();
