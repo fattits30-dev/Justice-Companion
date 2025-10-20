@@ -33,12 +33,12 @@ import * as path from 'path';
 export class GdprService {
   private exporter: DataExporter;
   private deleter: DataDeleter;
-  private rateLimitMap: Map<number, { count: number; resetAt: number }> =
+  private rateLimitMap: Map<string, { count: number; resetAt: number }> =
     new Map();
 
   constructor(
     private db: Database.Database,
-    private encryptionService: EncryptionService,
+    encryptionService: EncryptionService,
     private auditLogger: AuditLogger
   ) {
     this.exporter = new DataExporter(db, encryptionService);
@@ -231,11 +231,11 @@ export class GdprService {
     };
 
     const limit = limits[operation];
-    const userLimit = this.rateLimitMap.get(userId);
+    const userLimit = this.rateLimitMap.get(key);
 
     // Reset window if expired
     if (!userLimit || now > userLimit.resetAt) {
-      this.rateLimitMap.set(userId, {
+      this.rateLimitMap.set(key, {
         count: 0,
         resetAt: now + limit.windowMs,
       });
@@ -245,7 +245,7 @@ export class GdprService {
     // Check if limit exceeded
     if (userLimit.count >= limit.max) {
       const resetIn = Math.ceil((userLimit.resetAt - now) / 1000 / 60); // minutes
-      throw new (RateLimitError as any)(
+      throw new RateLimitError(
         `Rate limit exceeded for ${operation}. Try again in ${resetIn} minutes.`
       );
     }
@@ -255,7 +255,8 @@ export class GdprService {
    * Increment rate limit counter
    */
   private incrementRateLimit(userId: number, operation: 'export' | 'delete'): void {
-    const userLimit = this.rateLimitMap.get(userId);
+    const key = `${userId}_${operation}`;
+    const userLimit = this.rateLimitMap.get(key);
     if (userLimit) {
       userLimit.count++;
     }
