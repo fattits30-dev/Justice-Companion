@@ -152,9 +152,9 @@ export class DataDeleter {
 
       // Step 3: Count preserved records (legal requirement)
       const auditLogsStmt = this.db.prepare(
-        'SELECT COUNT(*) as count FROM audit_logs WHERE userId = ?'
+        'SELECT COUNT(*) as count FROM audit_logs WHERE user_id = ?'
       );
-      const preservedAuditLogs = (auditLogsStmt.get(userId) as any).count;
+      const preservedAuditLogs = (auditLogsStmt.get(userId.toString()) as any).count;
 
       const consentsStmt = this.db.prepare(
         'SELECT COUNT(*) as count FROM consent_records WHERE userId = ?'
