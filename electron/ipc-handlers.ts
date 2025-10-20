@@ -6,13 +6,13 @@ import {
   formatError,
   IPCErrorCode,
   type IPCResponse,
-} from './utils/ipc-response';
-import { logAuditEvent, logAuthEvent, AuditEventType } from './utils/audit-helper';
+} from './utils/ipc-response.ts';
+import { logAuditEvent, logAuthEvent, AuditEventType } from './utils/audit-helper.ts';
 import {
   withAuthorization,
   getAuthorizationMiddleware,
   verifyEvidenceOwnership,
-} from './utils/authorization-wrapper';
+} from './utils/authorization-wrapper.ts';
 
 /**
  * Setup all IPC handlers for Electron main process
