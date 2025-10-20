@@ -43,7 +43,22 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  /**
+   * Load session from localStorage on mount
+   */
+  useEffect(() => {
+    try {
+      const storedSessionId = localStorage.getItem('sessionId');
+      if (storedSessionId) {
+        setSessionId(storedSessionId);
+      }
+    } catch (error) {
+      logger.error('AuthContext', 'Failed to load sessionId from localStorage:', { error });
+    }
+  }, []);
 
   /**
    * Check if user is already logged in on app start
@@ -57,19 +72,34 @@ export function AuthProvider({ children }: AuthProviderProps) {
           return;
         }
 
-        const result = await window.justiceAPI.getCurrentUser();
+        // No sessionId = not logged in
+        if (!sessionId) {
+          setIsLoading(false);
+          return;
+        }
+
+        const result = await window.justiceAPI.getCurrentUser(sessionId);
         if (result.success && result.data) {
           setUser(result.data);
+        } else {
+          // Session invalid - clear it
+          setSessionId(null);
+          localStorage.removeItem('sessionId');
+          setUser(null);
         }
       } catch (error) {
         logger.error('AuthContext', 'Failed to check auth status:', { error: error });
+        // Clear invalid session
+        setSessionId(null);
+        localStorage.removeItem('sessionId');
+        setUser(null);
       } finally {
         setIsLoading(false);
       }
     };
 
     void checkAuth(); // Async call in useEffect - errors handled internally
-  }, []);
+  }, [sessionId]);
 
   /**
    * Login user with username and password
@@ -86,7 +116,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
           throw new Error(result.error || 'Login failed');
         }
 
+        // Store BOTH user and sessionId
         setUser(result.data.user);
+        setSessionId(result.data.sessionId);
+
+        // Persist sessionId to localStorage
+        localStorage.setItem('sessionId', result.data.sessionId);
 
         // Force a small delay to ensure state update propagates
         await new Promise((resolve) => setTimeout(resolve, 0));
@@ -103,16 +138,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const logout = useCallback(async (): Promise<void> => {
     setIsLoading(true);
     try {
-      await window.justiceAPI.logoutUser();
+      if (sessionId) {
+        await window.justiceAPI.logoutUser(sessionId);
+      }
       setUser(null);
+      setSessionId(null);
+      localStorage.removeItem('sessionId');
     } catch (error) {
       logger.error('App', 'Logout failed:', { error: error });
       // Clear user state anyway on logout failure
       setUser(null);
+      setSessionId(null);
+      localStorage.removeItem('sessionId');
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [sessionId]);
 
   /**
    * Register new user
@@ -141,17 +182,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
    */
   const refreshUser = useCallback(async (): Promise<void> => {
     try {
-      const result = await window.justiceAPI.getCurrentUser();
+      if (!sessionId) {
+        setUser(null);
+        return;
+      }
+
+      const result = await window.justiceAPI.getCurrentUser(sessionId);
       if (result.success && result.data) {
         setUser(result.data);
       } else {
+        // Session invalid - clear everything
         setUser(null);
+        setSessionId(null);
+        localStorage.removeItem('sessionId');
       }
     } catch (error) {
       logger.error('App', 'Failed to refresh user:', { error: error });
       setUser(null);
+      setSessionId(null);
+      localStorage.removeItem('sessionId');
     }
-  }, []);
+  }, [sessionId]);
 
   // Memoize context value to ensure new reference on state changes
   // This is critical for triggering re-renders in consuming components
