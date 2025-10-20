@@ -9,6 +9,12 @@ import type {
 import type { AuditLogger } from '../services/AuditLogger.js';
 import { EncryptionService, type EncryptedData } from '../services/EncryptionService.js';
 import { errorLogger } from '../utils/error-logger';
+import {
+  encodeSimpleCursor,
+  decodeSimpleCursor,
+  generateCursorWhereClause,
+  type PaginatedResult,
+} from '../utils/cursor-pagination';
 
 /**
  * Repository for managing chat conversations with encryption for message content
@@ -140,6 +146,8 @@ class ChatConversationRepository {
 
   /**
    * Get conversation with all its messages
+   * @deprecated Use findWithMessagesPaginated for better performance with large conversations
+   * @warning This method loads ALL messages into memory
    */
   findWithMessages(conversationId: number): ConversationWithMessages | null {
     const db = getDb();
@@ -189,6 +197,92 @@ class ChatConversationRepository {
     } catch (error) {
       errorLogger.logError(error as Error, {
         context: 'ChatConversationRepository.findWithMessages',
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Get conversation with paginated messages using cursor pagination
+   * @param conversationId - Conversation ID
+   * @param limit - Maximum number of messages to return (default: 50)
+   * @param cursor - Opaque cursor string for pagination (null for first page)
+   * @returns Paginated result with conversation metadata and messages
+   */
+  findWithMessagesPaginated(
+    conversationId: number,
+    limit: number = 50,
+    cursor: string | null = null
+  ): (ConversationWithMessages & { nextCursor: string | null; hasMore: boolean }) | null {
+    const db = getDb();
+
+    try {
+      const conversation = this.findById(conversationId);
+      if (!conversation) {
+        return null;
+      }
+
+      // Generate WHERE clause for cursor
+      const cursorWhere = generateCursorWhereClause(cursor, 'ASC');
+      const whereClause = cursorWhere
+        ? `WHERE conversation_id = ? AND rowid > ${decodeSimpleCursor(cursor!).rowid}`
+        : 'WHERE conversation_id = ?';
+
+      const stmt = db.prepare(`
+        SELECT rowid, id, conversation_id as conversationId, role, content,
+               thinking_content as thinkingContent, timestamp, token_count as tokenCount
+        FROM chat_messages
+        ${whereClause}
+        ORDER BY rowid ASC
+        LIMIT ?
+      `);
+
+      const rows = stmt.all(conversationId, limit + 1) as (ChatMessage & { rowid: number })[];
+
+      // Check if there are more results
+      const hasMore = rows.length > limit;
+      const items = hasMore ? rows.slice(0, limit) : rows;
+
+      // Generate next cursor from last item's rowid
+      const nextCursor = hasMore && items.length > 0
+        ? encodeSimpleCursor(items[items.length - 1].rowid)
+        : null;
+
+      // Decrypt all message content and thinking content
+      const decryptedMessages = items.map((msg) => {
+        const { rowid, ...message } = msg;
+        return {
+          ...message,
+          content: this.decryptField(msg.content) ?? msg.content,
+          thinkingContent: this.decryptField(msg.thinkingContent),
+        };
+      });
+
+      // Audit: PII accessed (encrypted message content)
+      if (decryptedMessages.length > 0) {
+        this.auditLogger?.log({
+          eventType: 'message.content_access',
+          resourceType: 'chat_message',
+          resourceId: conversationId.toString(),
+          action: 'read',
+          details: {
+            messageCount: decryptedMessages.length,
+            encrypted: true,
+            paginated: true,
+          },
+          success: true,
+        });
+      }
+
+      return {
+        ...conversation,
+        messages: decryptedMessages as unknown as ChatMessage[],
+        nextCursor,
+        hasMore,
+      };
+    } catch (error) {
+      errorLogger.logError(error as Error, {
+        context: 'ChatConversationRepository.findWithMessagesPaginated',
       });
       throw error;
     }

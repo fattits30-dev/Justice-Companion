@@ -2,6 +2,12 @@ import { getDb } from '../db/database';
 import type { Evidence, CreateEvidenceInput, UpdateEvidenceInput } from '../models/Evidence';
 import { EncryptionService, type EncryptedData } from '../services/EncryptionService.js';
 import type { AuditLogger } from '../services/AuditLogger.js';
+import {
+  encodeSimpleCursor,
+  decodeSimpleCursor,
+  generateCursorWhereClause,
+  type PaginatedResult,
+} from '../utils/cursor-pagination';
 
 /**
  * Repository for managing evidence (documents, photos, emails, recordings, notes)
@@ -125,6 +131,8 @@ export class EvidenceRepository {
 
   /**
    * Find all evidence for a case with decrypted content
+   * @deprecated Use findByCaseIdPaginated for better performance with large datasets
+   * @warning This method loads ALL evidence for the case into memory
    */
   findByCaseId(caseId: number): Evidence[] {
     const db = getDb();
@@ -145,7 +153,45 @@ export class EvidenceRepository {
 
     const rows = stmt.all(caseId) as Evidence[];
 
-    // Decrypt all content
+    // Use batch decryption if enabled and encryption service is available
+    const useBatchEncryption = process.env.ENABLE_BATCH_ENCRYPTION !== 'false';
+
+    if (useBatchEncryption && this.encryptionService && rows.length > 0) {
+      // Collect all encrypted content for batch decryption
+      const encryptedContents = rows.map(row => {
+        if (!row.content) return null;
+
+        try {
+          const encryptedData = JSON.parse(row.content) as EncryptedData;
+          return this.encryptionService!.isEncrypted(encryptedData) ? encryptedData : null;
+        } catch {
+          return null; // Legacy plaintext
+        }
+      });
+
+      // Batch decrypt all encrypted content
+      const decryptedContents = this.encryptionService.batchDecrypt(encryptedContents);
+
+      // Map decrypted content back to rows
+      return rows.map((row, index) => {
+        let content: string | null = row.content;
+
+        // If we have a decrypted value from batch, use it
+        if (encryptedContents[index] !== null) {
+          content = decryptedContents[index];
+        } else if (row.content && !encryptedContents[index]) {
+          // Legacy plaintext or failed parse - keep original
+          content = row.content;
+        }
+
+        return {
+          ...row,
+          content,
+        };
+      });
+    }
+
+    // Fallback to individual decryption
     return rows.map((row) => ({
       ...row,
       content: this.decryptContent(row.content),
@@ -153,7 +199,108 @@ export class EvidenceRepository {
   }
 
   /**
+   * Find evidence for a case with cursor-based pagination
+   * @param caseId - Case ID to filter by
+   * @param limit - Maximum number of items to return (default: 50)
+   * @param cursor - Opaque cursor string for pagination (null for first page)
+   * @returns Paginated result with evidence items and cursor metadata
+   */
+  findByCaseIdPaginated(
+    caseId: number,
+    limit: number = 50,
+    cursor: string | null = null
+  ): PaginatedResult<Evidence> {
+    const db = getDb();
+
+    // Generate WHERE clause for cursor
+    const cursorWhere = generateCursorWhereClause(cursor, 'DESC');
+    const whereClause = cursorWhere
+      ? `WHERE case_id = ? AND rowid < ${decodeSimpleCursor(cursor).rowid}`
+      : 'WHERE case_id = ?';
+
+    const stmt = db.prepare(`
+      SELECT
+        rowid,
+        id,
+        case_id as caseId,
+        title,
+        file_path as filePath,
+        content,
+        evidence_type as evidenceType,
+        obtained_date as obtainedDate,
+        created_at as createdAt
+      FROM evidence
+      ${whereClause}
+      ORDER BY rowid DESC
+      LIMIT ?
+    `);
+
+    const rows = stmt.all(caseId, limit + 1) as (Evidence & { rowid: number })[];
+
+    // Check if there are more results
+    const hasMore = rows.length > limit;
+    const items = hasMore ? rows.slice(0, limit) : rows;
+
+    // Generate next cursor from last item's rowid
+    const nextCursor = hasMore && items.length > 0
+      ? encodeSimpleCursor(items[items.length - 1].rowid)
+      : null;
+
+    // Use batch decryption if enabled
+    const useBatchEncryption = process.env.ENABLE_BATCH_ENCRYPTION !== 'false';
+
+    if (useBatchEncryption && this.encryptionService && items.length > 0) {
+      const encryptedContents = items.map(row => {
+        if (!row.content) return null;
+        try {
+          const encryptedData = JSON.parse(row.content) as EncryptedData;
+          return this.encryptionService!.isEncrypted(encryptedData) ? encryptedData : null;
+        } catch {
+          return null;
+        }
+      });
+
+      const decryptedContents = this.encryptionService.batchDecrypt(encryptedContents);
+
+      const decryptedItems = items.map((row, index) => {
+        const { rowid, ...evidence } = row;
+        return {
+          ...evidence,
+          content: encryptedContents[index] !== null
+            ? decryptedContents[index]
+            : row.content,
+        };
+      });
+
+      return {
+        items: decryptedItems,
+        nextCursor,
+        hasMore,
+        totalReturned: items.length,
+      };
+    }
+
+    // Fallback: individual decryption
+    const decryptedItems = items.map((row) => {
+      const { rowid, ...evidence } = row;
+      return {
+        ...evidence,
+        content: this.decryptContent(row.content),
+      };
+    });
+
+    return {
+      items: decryptedItems,
+      nextCursor,
+      hasMore,
+      totalReturned: items.length,
+    };
+  }
+
+  /**
    * Find all evidence with optional type filter
+   * @deprecated Use findAllPaginated for better performance with large datasets
+   * @warning This method loads ALL evidence into memory
    */
   findAll(evidenceType?: string): Evidence[] {
     const db = getDb();
@@ -181,11 +328,163 @@ export class EvidenceRepository {
       rows = db.prepare(query).all() as Evidence[];
     }
 
-    // Decrypt all content
+    // Use batch decryption if enabled and encryption service is available
+    const useBatchEncryption = process.env.ENABLE_BATCH_ENCRYPTION !== 'false';
+
+    if (useBatchEncryption && this.encryptionService && rows.length > 0) {
+      // Collect all encrypted content for batch decryption
+      const encryptedContents = rows.map(row => {
+        if (!row.content) return null;
+
+        try {
+          const encryptedData = JSON.parse(row.content) as EncryptedData;
+          return this.encryptionService!.isEncrypted(encryptedData) ? encryptedData : null;
+        } catch {
+          return null; // Legacy plaintext
+        }
+      });
+
+      // Batch decrypt all encrypted content
+      const decryptedContents = this.encryptionService.batchDecrypt(encryptedContents);
+
+      // Map decrypted content back to rows
+      return rows.map((row, index) => {
+        let content: string | null = row.content;
+
+        // If we have a decrypted value from batch, use it
+        if (encryptedContents[index] !== null) {
+          content = decryptedContents[index];
+        } else if (row.content && !encryptedContents[index]) {
+          // Legacy plaintext or failed parse - keep original
+          content = row.content;
+        }
+
+        return {
+          ...row,
+          content,
+        };
+      });
+    }
+
+    // Fallback to individual decryption
     return rows.map((row) => ({
       ...row,
       content: this.decryptContent(row.content),
     }));
+  }
+
+  /**
+   * Find all evidence with cursor-based pagination
+   * @param evidenceType - Optional type filter ('document', 'photo', 'email', 'recording', 'note')
+   * @param limit - Maximum number of items to return (default: 50)
+   * @param cursor - Opaque cursor string for pagination (null for first page)
+   * @returns Paginated result with evidence items and cursor metadata
+   */
+  findAllPaginated(
+    evidenceType?: string,
+    limit: number = 50,
+    cursor: string | null = null
+  ): PaginatedResult<Evidence> {
+    const db = getDb();
+
+    // Build WHERE clause
+    let whereClause = '';
+    const params: any[] = [];
+
+    if (cursor) {
+      const { rowid } = decodeSimpleCursor(cursor);
+      if (evidenceType) {
+        whereClause = 'WHERE evidence_type = ? AND rowid < ?';
+        params.push(evidenceType, rowid);
+      } else {
+        whereClause = 'WHERE rowid < ?';
+        params.push(rowid);
+      }
+    } else {
+      if (evidenceType) {
+        whereClause = 'WHERE evidence_type = ?';
+        params.push(evidenceType);
+      }
+    }
+
+    const stmt = db.prepare(`
+      SELECT
+        rowid,
+        id,
+        case_id as caseId,
+        title,
+        file_path as filePath,
+        content,
+        evidence_type as evidenceType,
+        obtained_date as obtainedDate,
+        created_at as createdAt
+      FROM evidence
+      ${whereClause}
+      ORDER BY rowid DESC
+      LIMIT ?
+    `);
+
+    params.push(limit + 1);
+    const rows = stmt.all(...params) as (Evidence & { rowid: number })[];
+
+    // Check if there are more results
+    const hasMore = rows.length > limit;
+    const items = hasMore ? rows.slice(0, limit) : rows;
+
+    // Generate next cursor from last item's rowid
+    const nextCursor = hasMore && items.length > 0
+      ? encodeSimpleCursor(items[items.length - 1].rowid)
+      : null;
+
+    // Use batch decryption if enabled
+    const useBatchEncryption = process.env.ENABLE_BATCH_ENCRYPTION !== 'false';
+
+    if (useBatchEncryption && this.encryptionService && items.length > 0) {
+      const encryptedContents = items.map(row => {
+        if (!row.content) return null;
+        try {
+          const encryptedData = JSON.parse(row.content) as EncryptedData;
+          return this.encryptionService!.isEncrypted(encryptedData) ? encryptedData : null;
+        } catch {
+          return null;
+        }
+      });
+
+      const decryptedContents = this.encryptionService.batchDecrypt(encryptedContents);
+
+      const decryptedItems = items.map((row, index) => {
+        const { rowid, ...evidence } = row;
+        return {
+          ...evidence,
+          content: encryptedContents[index] !== null
+            ? decryptedContents[index]
+            : row.content,
+        };
+      });
+
+      return {
+        items: decryptedItems,
+        nextCursor,
+        hasMore,
+        totalReturned: items.length,
+      };
+    }
+
+    // Fallback: individual decryption
+    const decryptedItems = items.map((row) => {
+      const { rowid, ...evidence } = row;
+      return {
+        ...evidence,
+        content: this.decryptContent(row.content),
+      };
+    });
+
+    return {
+      items: decryptedItems,
+      nextCursor,
+      hasMore,
+      totalReturned: items.length,
+    };
   }
 
   /**
