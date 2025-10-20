@@ -1,12 +1,12 @@
 import type { TimelineEvent } from '@/models/TimelineEvent';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback, memo } from 'react';
 import { useTimeline } from '../hooks/useTimeline';
 
 export interface TimelineViewProps {
   caseId: number;
 }
 
-export function TimelineView({ caseId }: TimelineViewProps) {
+const TimelineViewComponent = ({ caseId }: TimelineViewProps) => {
   const {
     timelineEvents,
     loading,
@@ -29,7 +29,7 @@ export function TimelineView({ caseId }: TimelineViewProps) {
     description: '',
   });
 
-  const handleCreate = async () => {
+  const handleCreate = useCallback(async () => {
     if (newEvent.title.trim() && newEvent.eventDate) {
       await createTimelineEvent({
         caseId,
@@ -40,9 +40,9 @@ export function TimelineView({ caseId }: TimelineViewProps) {
       setNewEvent({ title: '', eventDate: '', description: '' });
       setIsCreating(false);
     }
-  };
+  }, [caseId, newEvent, createTimelineEvent]);
 
-  const handleUpdate = async (id: number) => {
+  const handleUpdate = useCallback(async (id: number) => {
     if (editEvent.title.trim() && editEvent.eventDate) {
       await updateTimelineEvent(id, {
         title: editEvent.title,
@@ -51,7 +51,13 @@ export function TimelineView({ caseId }: TimelineViewProps) {
       });
       setEditingId(null);
     }
-  };
+  }, [editEvent, updateTimelineEvent]);
+
+  const handleDelete = useCallback((id: number) => {
+    if (window.confirm('Delete this event?')) {
+      void deleteTimelineEvent(id);
+    }
+  }, [deleteTimelineEvent]);
 
   if (loading) {
     return (
@@ -251,11 +257,7 @@ export function TimelineView({ caseId }: TimelineViewProps) {
                             Edit
                           </button>
                           <button
-                            onClick={() => {
-                              if (window.confirm('Delete this event?')) {
-                                void deleteTimelineEvent(event.id);
-                              }
-                            }}
+                            onClick={() => handleDelete(event.id)}
                             className="px-3 py-1.5 bg-red-700 text-white border-0 rounded text-xs font-bold cursor-pointer transition-colors hover:bg-red-800"
                           >
                             Delete
@@ -277,4 +279,9 @@ export function TimelineView({ caseId }: TimelineViewProps) {
       )}
     </div>
   );
-}
+};
+
+// Memoize component - only re-render when caseId changes
+export const TimelineView = memo(TimelineViewComponent, (prevProps, nextProps) => {
+  return prevProps.caseId === nextProps.caseId;
+});
