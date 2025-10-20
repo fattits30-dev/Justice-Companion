@@ -791,93 +791,110 @@ function setupDatabaseHandlers(): void {
  * ===== GDPR HANDLERS =====
  */
 function setupGdprHandlers(): void {
-  // Export all user data
-  ipcMain.handle('gdpr:export', async (_event: IpcMainInvokeEvent, sessionId: string): Promise<IPCResponse> => {
-    return withAuthorization(sessionId, async (userId) => {
-      try {
-        console.warn('[IPC] gdpr:export called by user:', userId);
+  // Lazy-load GDPR service to avoid circular dependencies
+  const getGdprService = () => {
+    const { GdprService } = require('../../src/services/gdpr/GdprService');
+    const { EncryptionService } = require('../../src/services/EncryptionService');
+    const { AuditLogger } = require('../../src/services/AuditLogger');
+    const { getDb } = require('../../src/db/database');
 
-        // TODO: Collect all user data (cases, evidence, messages, etc.) for this userId
-        // TODO: Decrypt all encrypted fields
-        // TODO: Export to JSON file in user-selected location
-        // TODO: Include metadata (export date, schema version)
+    const db = getDb();
+    const encryptionService = new EncryptionService();
+    const auditLogger = new AuditLogger(db);
 
-        // Log audit event
-        logAuditEvent({
-          eventType: AuditEventType.DATA_EXPORTED,
-          userId,
-          resourceType: 'user_data',
-          resourceId: 'all',
-          action: 'export',
-          success: true,
-        });
+    return new GdprService(db, encryptionService, auditLogger);
+  };
 
-        console.warn('[IPC] GDPR export placeholder - full implementation pending');
-        return {
-          exportPath: null,
-          message: 'GDPR export system integration pending',
-        };
-      } catch (error) {
-        console.error('[IPC] gdpr:export error:', error);
+  // Export all user data (GDPR Article 20)
+  ipcMain.handle(
+    'gdpr:export',
+    async (
+      _event: IpcMainInvokeEvent,
+      sessionId: string,
+      options?: { format?: 'json' | 'csv' }
+    ): Promise<IPCResponse> => {
+      return withAuthorization(sessionId, async (userId) => {
+        try {
+          console.warn('[IPC] gdpr:export called by user:', userId);
 
-        // Log failed export
-        logAuditEvent({
-          eventType: AuditEventType.DATA_EXPORTED,
-          userId,
-          resourceType: 'user_data',
-          resourceId: 'all',
-          action: 'export',
-          success: false,
-          errorMessage: String(error),
-        });
+          // Export all user data with decryption
+          const gdprService = getGdprService();
+          const result = await gdprService.exportUserData(userId, options || {});
 
-        throw error; // withAuthorization will handle error formatting
-      }
-    });
-  });
+          console.warn('[IPC] GDPR export complete:', {
+            userId,
+            totalRecords: result.metadata.totalRecords,
+            filePath: result.filePath,
+          });
 
-  // Delete all user data
-  ipcMain.handle('gdpr:delete', async (_event: IpcMainInvokeEvent, sessionId: string): Promise<IPCResponse> => {
-    return withAuthorization(sessionId, async (userId) => {
-      try {
-        console.warn('[IPC] gdpr:delete called by user:', userId);
+          return successResponse({
+            filePath: result.filePath,
+            totalRecords: result.metadata.totalRecords,
+            exportDate: result.metadata.exportDate,
+            format: result.metadata.format,
+          });
+        } catch (error) {
+          console.error('[IPC] gdpr:export error:', error);
+          return errorResponse(
+            formatError(error, IPCErrorCode.INTERNAL_ERROR),
+            IPCErrorCode.INTERNAL_ERROR
+          );
+        }
+      });
+    }
+  );
 
-        // TODO: Confirm deletion (should be handled in renderer with double-confirmation)
-        // TODO: Delete all user data (cases, evidence, sessions, audit logs, etc.) for this userId
-        // TODO: Logout user after deletion
-        // TODO: Optionally export data before deletion
+  // Delete all user data (GDPR Article 17)
+  ipcMain.handle(
+    'gdpr:delete',
+    async (
+      _event: IpcMainInvokeEvent,
+      sessionId: string,
+      options?: { confirmed: boolean; exportBeforeDelete?: boolean; reason?: string }
+    ): Promise<IPCResponse> => {
+      return withAuthorization(sessionId, async (userId) => {
+        try {
+          console.warn('[IPC] gdpr:delete called by user:', userId);
 
-        // Log audit event (this is the last event before deletion)
-        logAuditEvent({
-          eventType: AuditEventType.DATA_DELETED,
-          userId,
-          resourceType: 'user_data',
-          resourceId: 'all',
-          action: 'delete',
-          success: true,
-        });
+          // Safety check: Explicit confirmation required
+          if (!options?.confirmed) {
+            return errorResponse(
+              'GDPR deletion requires explicit confirmation',
+              IPCErrorCode.VALIDATION_ERROR
+            );
+          }
 
-        console.warn('[IPC] GDPR deletion placeholder - full implementation pending');
-        return {
-          success: true,
-          message: 'GDPR deletion system integration pending',
-        };
-      } catch (error) {
-        console.error('[IPC] gdpr:delete error:', error);
+          // Delete all user data (preserves audit logs + consents)
+          const gdprService = getGdprService();
+          const result = await gdprService.deleteUserData(userId, {
+            confirmed: true,
+            exportBeforeDelete: options.exportBeforeDelete || false,
+            reason: options.reason,
+          });
 
-        // Log failed deletion
-        logAuditEvent({
-          eventType: AuditEventType.DATA_DELETED,
-          userId,
-          resourceType: 'user_data',
-          resourceId: 'all',
-          action: 'delete',
-          success: false,
-          errorMessage: String(error),
-        });
+          console.warn('[IPC] GDPR deletion complete:', {
+            userId,
+            deletedTables: Object.keys(result.deletedCounts).length,
+            preservedAuditLogs: result.preservedAuditLogs,
+            preservedConsents: result.preservedConsents,
+          });
 
-        throw error; // withAuthorization will handle error formatting
-      }
-    });
-  });
+          return successResponse({
+            success: result.success,
+            deletedCounts: result.deletedCounts,
+            preservedAuditLogs: result.preservedAuditLogs,
+            preservedConsents: result.preservedConsents,
+            deletionDate: result.deletionDate,
+            exportPath: result.exportPath,
+          });
+        } catch (error) {
+          console.error('[IPC] gdpr:delete error:', error);
+          return errorResponse(
+            formatError(error, IPCErrorCode.INTERNAL_ERROR),
+            IPCErrorCode.INTERNAL_ERROR
+          );
+        }
+      });
+    }
+  );
 }
