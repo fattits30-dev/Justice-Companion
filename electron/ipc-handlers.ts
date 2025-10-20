@@ -65,19 +65,77 @@ export function setupIpcHandlers(): void {
 function setupAuthHandlers(): void {
   // Lazy-load services to avoid circular dependencies
   const getAuthService = async () => {
-    // Use absolute paths to prevent path traversal (CVSS 8.8 fix)
-    // Convert Windows paths to file:// URLs for ESM dynamic imports
-    // Add .ts extension for tsx to resolve TypeScript modules
-    const { AuthenticationService } = await import(pathToFileURL(path.join(__dirname, '../src/services/AuthenticationService.ts')).href);
-    const { getDb } = await import(pathToFileURL(path.join(__dirname, '../src/db/database.ts')).href);
-    return new AuthenticationService(getDb());
+    try {
+      // Use absolute paths to prevent path traversal (CVSS 8.8 fix)
+      // Convert Windows paths to file:// URLs for ESM dynamic imports
+      // Add .ts extension for tsx to resolve TypeScript modules
+      const authServicePath = path.join(__dirname, '../src/services/AuthenticationService.ts');
+      const dbPath = path.join(__dirname, '../src/db/database.ts');
+      const authServiceUrl = pathToFileURL(authServicePath).href;
+      const dbUrl = pathToFileURL(dbPath).href;
+
+      console.warn('[IPC] Importing AuthenticationService from:', authServiceUrl);
+      console.warn('[IPC] __dirname:', __dirname);
+      console.warn('[IPC] authServicePath:', authServicePath);
+
+      const authModule = await import(authServiceUrl);
+      console.warn('[IPC] AuthenticationService module imported successfully');
+
+      const dbModule = await import(dbUrl);
+      console.warn('[IPC] Database module imported successfully');
+
+      const { AuthenticationService } = authModule;
+      const { getDb } = dbModule;
+
+      if (!AuthenticationService) {
+        throw new Error('AuthenticationService not found in module exports');
+      }
+      if (!getDb) {
+        throw new Error('getDb not found in database module exports');
+      }
+
+      const db = getDb();
+      console.warn('[IPC] Database instance obtained');
+
+      const authService = new AuthenticationService(db);
+      console.warn('[IPC] AuthenticationService instance created');
+
+      return authService;
+    } catch (error) {
+      console.error('[IPC] FATAL: Failed to load AuthenticationService');
+      console.error('[IPC] Error details:', {
+        name: (error as Error).name,
+        message: (error as Error).message,
+        stack: (error as Error).stack,
+        cause: (error as any).cause,
+      });
+      throw new Error(`Failed to load AuthenticationService: ${(error as Error).message}\nStack: ${(error as Error).stack}`);
+    }
   };
 
   const getAuthSchemas = async () => {
-    // Use absolute paths to prevent path traversal (CVSS 8.8 fix)
-    // Convert Windows paths to file:// URLs for ESM dynamic imports
-    // Add .ts extension for tsx to resolve TypeScript modules
-    return await import(pathToFileURL(path.join(__dirname, '../src/middleware/schemas/auth-schemas.ts')).href);
+    try {
+      // Use absolute paths to prevent path traversal (CVSS 8.8 fix)
+      // Convert Windows paths to file:// URLs for ESM dynamic imports
+      // Add .ts extension for tsx to resolve TypeScript modules
+      const schemasPath = path.join(__dirname, '../src/middleware/schemas/auth-schemas.ts');
+      const schemasUrl = pathToFileURL(schemasPath).href;
+
+      console.warn('[IPC] Importing auth schemas from:', schemasUrl);
+
+      const schemas = await import(schemasUrl);
+      console.warn('[IPC] Auth schemas imported successfully');
+
+      return schemas;
+    } catch (error) {
+      console.error('[IPC] FATAL: Failed to load auth schemas');
+      console.error('[IPC] Error details:', {
+        name: (error as Error).name,
+        message: (error as Error).message,
+        stack: (error as Error).stack,
+      });
+      throw new Error(`Failed to load auth schemas: ${(error as Error).message}`);
+    }
   };
 
   // Register new user
