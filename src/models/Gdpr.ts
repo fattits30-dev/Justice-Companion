@@ -23,13 +23,17 @@ export interface GdprExportOptions {
   };
 }
 
-export interface GdprExportResult {
-  /** Exported user data */
-  userData: UserDataExport;
-
-  /** Export metadata */
-  metadata: ExportMetadata;
-
+/**
+ * GDPR export result extends UserDataExport with optional file path.
+ *
+ * Structure after spreading UserDataExport:
+ * {
+ *   metadata: ExportMetadata,
+ *   userData: { profile, cases, evidence, ... },
+ *   filePath?: string
+ * }
+ */
+export interface GdprExportResult extends UserDataExport {
   /** File path if saved to disk */
   filePath?: string;
 }

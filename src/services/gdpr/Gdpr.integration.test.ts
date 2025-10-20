@@ -8,8 +8,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import Database from 'better-sqlite3';
 import { GdprService } from './GdprService';
-import { DataExporter } from './DataExporter';
-import { DataDeleter } from './DataDeleter';
 import { EncryptionService } from '../EncryptionService';
 import { AuditLogger } from '../AuditLogger';
 import * as fs from 'fs';
