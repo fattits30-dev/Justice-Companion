@@ -5,7 +5,6 @@ import type { AuditLogger } from '../services/AuditLogger.js';
 import {
   encodeSimpleCursor,
   decodeSimpleCursor,
-  generateCursorWhereClause,
   type PaginatedResult,
 } from '../utils/cursor-pagination';
 
@@ -213,14 +212,12 @@ export class EvidenceRepository {
     const db = getDb();
 
     // Generate WHERE clause for cursor
-    const cursorWhere = generateCursorWhereClause(cursor, 'DESC');
-    const whereClause = cursorWhere
-      ? `WHERE case_id = ? AND rowid < ${decodeSimpleCursor(cursor).rowid}`
+    const whereClause = cursor
+      ? `WHERE case_id = ? AND id < ${decodeSimpleCursor(cursor).rowid}`
       : 'WHERE case_id = ?';
 
     const stmt = db.prepare(`
       SELECT
-        rowid,
         id,
         case_id as caseId,
         title,
@@ -231,19 +228,19 @@ export class EvidenceRepository {
         created_at as createdAt
       FROM evidence
       ${whereClause}
-      ORDER BY rowid DESC
+      ORDER BY id DESC
       LIMIT ?
     `);
 
-    const rows = stmt.all(caseId, limit + 1) as (Evidence & { rowid: number })[];
+    const rows = stmt.all(caseId, limit + 1) as (Evidence & { id: number })[];
 
     // Check if there are more results
     const hasMore = rows.length > limit;
     const items = hasMore ? rows.slice(0, limit) : rows;
 
-    // Generate next cursor from last item's rowid
+    // Generate next cursor from last item's id
     const nextCursor = hasMore && items.length > 0
-      ? encodeSimpleCursor(items[items.length - 1].rowid)
+      ? encodeSimpleCursor(items[items.length - 1].id)
       : null;
 
     // Use batch decryption if enabled
@@ -263,7 +260,7 @@ export class EvidenceRepository {
       const decryptedContents = this.encryptionService.batchDecrypt(encryptedContents);
 
       const decryptedItems = items.map((row, index) => {
-        const { rowid, ...evidence } = row;
+        const { id: _id, ...evidence } = row;
         return {
           ...evidence,
           content: encryptedContents[index] !== null
@@ -282,7 +279,7 @@ export class EvidenceRepository {
 
     // Fallback: individual decryption
     const decryptedItems = items.map((row) => {
-      const { rowid, ...evidence } = row;
+      const { id: _id, ...evidence } = row;
       return {
         ...evidence,
         content: this.decryptContent(row.content),
@@ -394,10 +391,10 @@ export class EvidenceRepository {
     if (cursor) {
       const { rowid } = decodeSimpleCursor(cursor);
       if (evidenceType) {
-        whereClause = 'WHERE evidence_type = ? AND rowid < ?';
+        whereClause = 'WHERE evidence_type = ? AND id < ?';
         params.push(evidenceType, rowid);
       } else {
-        whereClause = 'WHERE rowid < ?';
+        whereClause = 'WHERE id < ?';
         params.push(rowid);
       }
     } else {
@@ -409,7 +406,6 @@ export class EvidenceRepository {
 
     const stmt = db.prepare(`
       SELECT
-        rowid,
         id,
         case_id as caseId,
         title,
@@ -420,20 +416,20 @@ export class EvidenceRepository {
         created_at as createdAt
       FROM evidence
       ${whereClause}
-      ORDER BY rowid DESC
+      ORDER BY id DESC
       LIMIT ?
     `);
 
     params.push(limit + 1);
-    const rows = stmt.all(...params) as (Evidence & { rowid: number })[];
+    const rows = stmt.all(...params) as (Evidence & { id: number })[];
 
     // Check if there are more results
     const hasMore = rows.length > limit;
     const items = hasMore ? rows.slice(0, limit) : rows;
 
-    // Generate next cursor from last item's rowid
+    // Generate next cursor from last item's id
     const nextCursor = hasMore && items.length > 0
-      ? encodeSimpleCursor(items[items.length - 1].rowid)
+      ? encodeSimpleCursor(items[items.length - 1].id)
       : null;
 
     // Use batch decryption if enabled
@@ -453,7 +449,7 @@ export class EvidenceRepository {
       const decryptedContents = this.encryptionService.batchDecrypt(encryptedContents);
 
       const decryptedItems = items.map((row, index) => {
-        const { rowid, ...evidence } = row;
+        const { id: _id, ...evidence } = row;
         return {
           ...evidence,
           content: encryptedContents[index] !== null
@@ -472,7 +468,7 @@ export class EvidenceRepository {
 
     // Fallback: individual decryption
     const decryptedItems = items.map((row) => {
-      const { rowid, ...evidence } = row;
+      const { id: _id, ...evidence } = row;
       return {
         ...evidence,
         content: this.decryptContent(row.content),

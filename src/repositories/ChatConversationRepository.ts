@@ -12,7 +12,6 @@ import { errorLogger } from '../utils/error-logger';
 import {
   encodeSimpleCursor,
   decodeSimpleCursor,
-  generateCursorWhereClause,
   type PaginatedResult,
 } from '../utils/cursor-pagination';
 
@@ -223,34 +222,33 @@ class ChatConversationRepository {
       }
 
       // Generate WHERE clause for cursor
-      const cursorWhere = generateCursorWhereClause(cursor, 'ASC');
-      const whereClause = cursorWhere
-        ? `WHERE conversation_id = ? AND rowid > ${decodeSimpleCursor(cursor!).rowid}`
+      const whereClause = cursor
+        ? `WHERE conversation_id = ? AND id > ${decodeSimpleCursor(cursor).rowid}`
         : 'WHERE conversation_id = ?';
 
       const stmt = db.prepare(`
-        SELECT rowid, id, conversation_id as conversationId, role, content,
+        SELECT id, conversation_id as conversationId, role, content,
                thinking_content as thinkingContent, timestamp, token_count as tokenCount
         FROM chat_messages
         ${whereClause}
-        ORDER BY rowid ASC
+        ORDER BY id ASC
         LIMIT ?
       `);
 
-      const rows = stmt.all(conversationId, limit + 1) as (ChatMessage & { rowid: number })[];
+      const rows = stmt.all(conversationId, limit + 1) as (ChatMessage & { id: number })[];
 
       // Check if there are more results
       const hasMore = rows.length > limit;
       const items = hasMore ? rows.slice(0, limit) : rows;
 
-      // Generate next cursor from last item's rowid
+      // Generate next cursor from last item's id
       const nextCursor = hasMore && items.length > 0
-        ? encodeSimpleCursor(items[items.length - 1].rowid)
+        ? encodeSimpleCursor(items[items.length - 1].id)
         : null;
 
       // Decrypt all message content and thinking content
       const decryptedMessages = items.map((msg) => {
-        const { rowid, ...message } = msg;
+        const { id: _id, ...message } = msg;
         return {
           ...message,
           content: this.decryptField(msg.content) ?? msg.content,
