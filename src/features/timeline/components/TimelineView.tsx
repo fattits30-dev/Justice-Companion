@@ -55,21 +55,13 @@ export function TimelineView({ caseId }: TimelineViewProps) {
 
   if (loading) {
     return (
-      <div style={{ padding: '24px', textAlign: 'center', color: '#666' }}>Loading timeline...</div>
+      <div className="p-6 text-center text-gray-600">Loading timeline...</div>
     );
   }
 
   if (error) {
     return (
-      <div
-        style={{
-          padding: '24px',
-          textAlign: 'center',
-          color: '#d32f2f',
-          background: '#ffebee',
-          borderRadius: '4px',
-        }}
-      >
+      <div className="p-6 text-center text-red-700 bg-red-50 rounded">
         Error: {error}
       </div>
     );
@@ -81,39 +73,16 @@ export function TimelineView({ caseId }: TimelineViewProps) {
   );
 
   return (
-    <div style={{ padding: '24px' }}>
+    <div className="p-6">
       {/* Header */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '24px',
-        }}
-      >
-        <h2 style={{ margin: 0, color: '#333', fontSize: '24px' }}>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="m-0 text-gray-800 text-2xl font-medium">
           Timeline ({timelineEvents.length} events)
         </h2>
 
         <button
           onClick={() => setIsCreating(true)}
-          style={{
-            padding: '10px 20px',
-            background: '#c2185b',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            fontSize: '14px',
-            fontWeight: 'bold',
-            cursor: 'pointer',
-            transition: 'background 0.2s ease',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = '#ad1457';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = '#c2185b';
-          }}
+          className="px-5 py-2.5 bg-pink-700 text-white border-0 rounded cursor-pointer font-bold text-sm transition-colors hover:bg-pink-800"
         >
           + Add Event
         </button>
@@ -121,24 +90,9 @@ export function TimelineView({ caseId }: TimelineViewProps) {
 
       {/* New Event Creator */}
       {isCreating && (
-        <div
-          style={{
-            marginBottom: '24px',
-            padding: '16px',
-            background: '#fce4ec',
-            border: '2px solid #c2185b',
-            borderRadius: '8px',
-          }}
-        >
-          <div style={{ marginBottom: '12px' }}>
-            <label
-              style={{
-                display: 'block',
-                marginBottom: '8px',
-                fontWeight: 'bold',
-                color: '#333',
-              }}
-            >
+        <div className="mb-6 p-4 bg-pink-50 border-2 border-pink-700 rounded-lg">
+          <div className="mb-3">
+            <label className="block mb-2 font-bold text-gray-800">
               Event Title:
             </label>
             <input
@@ -146,83 +100,39 @@ export function TimelineView({ caseId }: TimelineViewProps) {
               value={newEvent.title}
               onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
               placeholder="Enter event title..."
-              style={{
-                width: '100%',
-                padding: '8px 12px',
-                border: '1px solid #ccc',
-                borderRadius: '4px',
-                fontSize: '14px',
-              }}
+              className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
               autoFocus
             />
           </div>
 
-          <div style={{ marginBottom: '12px' }}>
-            <label
-              style={{
-                display: 'block',
-                marginBottom: '8px',
-                fontWeight: 'bold',
-                color: '#333',
-              }}
-            >
+          <div className="mb-3">
+            <label className="block mb-2 font-bold text-gray-800">
               Event Date:
             </label>
             <input
               type="date"
               value={newEvent.eventDate}
               onChange={(e) => setNewEvent({ ...newEvent, eventDate: e.target.value })}
-              style={{
-                width: '100%',
-                padding: '8px 12px',
-                border: '1px solid #ccc',
-                borderRadius: '4px',
-                fontSize: '14px',
-              }}
+              className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
             />
           </div>
 
-          <div style={{ marginBottom: '12px' }}>
-            <label
-              style={{
-                display: 'block',
-                marginBottom: '8px',
-                fontWeight: 'bold',
-                color: '#333',
-              }}
-            >
+          <div className="mb-3">
+            <label className="block mb-2 font-bold text-gray-800">
               Description (optional):
             </label>
             <textarea
               value={newEvent.description}
               onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
               placeholder="Enter event description..."
-              style={{
-                width: '100%',
-                minHeight: '100px',
-                padding: '12px',
-                border: '1px solid #ccc',
-                borderRadius: '4px',
-                fontSize: '14px',
-                fontFamily: 'inherit',
-                resize: 'vertical',
-              }}
+              className="w-full min-h-[100px] px-3 py-3 border border-gray-300 rounded text-sm font-[inherit] resize-y"
             />
           </div>
 
-          <div style={{ display: 'flex', gap: '12px' }}>
+          <div className="flex gap-3">
             <button
               onClick={handleCreate}
-              style={{
-                padding: '8px 16px',
-                background: '#388e3c',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                fontSize: '14px',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-              }}
+              className="px-4 py-2 bg-green-700 text-white border-0 rounded text-sm font-bold cursor-pointer transition-colors hover:bg-green-800"
             >
               Save
             </button>
@@ -231,16 +141,7 @@ export function TimelineView({ caseId }: TimelineViewProps) {
                 setIsCreating(false);
                 setNewEvent({ title: '', eventDate: '', description: '' });
               }}
-              style={{
-                padding: '8px 16px',
-                background: '#757575',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                fontSize: '14px',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-              }}
+              className="px-4 py-2 bg-gray-600 text-white border-0 rounded text-sm font-bold cursor-pointer transition-colors hover:bg-gray-700"
             >
               Cancel
             </button>
@@ -250,30 +151,13 @@ export function TimelineView({ caseId }: TimelineViewProps) {
 
       {/* Vertical Timeline */}
       {sortedEvents.length === 0 ? (
-        <div
-          style={{
-            padding: '48px',
-            textAlign: 'center',
-            color: '#999',
-            background: '#f5f5f5',
-            borderRadius: '8px',
-          }}
-        >
+        <div className="p-12 text-center text-gray-500 bg-gray-100 rounded-lg">
           No timeline events yet. Click "Add Event" to create one.
         </div>
       ) : (
-        <div style={{ position: 'relative', paddingLeft: '40px' }}>
+        <div className="relative pl-10">
           {/* Vertical Line */}
-          <div
-            style={{
-              position: 'absolute',
-              left: '15px',
-              top: '0',
-              bottom: '0',
-              width: '3px',
-              background: 'linear-gradient(180deg, #c2185b 0%, #e91e63 100%)',
-            }}
-          />
+          <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gradient-to-b from-pink-700 to-pink-500" />
 
           {/* Timeline Events */}
           {sortedEvents.map((event: TimelineEvent) => {
@@ -282,53 +166,24 @@ export function TimelineView({ caseId }: TimelineViewProps) {
             return (
               <div
                 key={event.id}
-                style={{
-                  position: 'relative',
-                  marginBottom: '32px',
-                }}
+                className="relative mb-8"
               >
                 {/* Timeline Dot */}
-                <div
-                  style={{
-                    position: 'absolute',
-                    left: '-33px',
-                    top: '8px',
-                    width: '16px',
-                    height: '16px',
-                    borderRadius: '50%',
-                    background: '#c2185b',
-                    border: '3px solid white',
-                    boxShadow: '0 0 0 3px #c2185b',
-                  }}
-                />
+                <div className="absolute -left-8 top-2 w-4 h-4 rounded-full bg-pink-700 border-[3px] border-white shadow-[0_0_0_3px_#c2185b]" />
 
                 {/* Event Card */}
-                <div
-                  style={{
-                    padding: '16px',
-                    background: 'white',
-                    border: '1px solid #e0e0e0',
-                    borderRadius: '8px',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                  }}
-                >
+                <div className="p-4 bg-white border border-gray-200 rounded-lg shadow-sm">
                   {isEditing ? (
                     <div>
-                      <div style={{ marginBottom: '12px' }}>
+                      <div className="mb-3">
                         <input
                           type="text"
                           value={editEvent.title}
                           onChange={(e) => setEditEvent({ ...editEvent, title: e.target.value })}
-                          style={{
-                            width: '100%',
-                            padding: '8px 12px',
-                            border: '1px solid #ccc',
-                            borderRadius: '4px',
-                            fontSize: '14px',
-                          }}
+                          className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
                         />
                       </div>
-                      <div style={{ marginBottom: '12px' }}>
+                      <div className="mb-3">
                         <input
                           type="date"
                           value={editEvent.eventDate}
@@ -338,16 +193,10 @@ export function TimelineView({ caseId }: TimelineViewProps) {
                               eventDate: e.target.value,
                             })
                           }
-                          style={{
-                            width: '100%',
-                            padding: '8px 12px',
-                            border: '1px solid #ccc',
-                            borderRadius: '4px',
-                            fontSize: '14px',
-                          }}
+                          className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
                         />
                       </div>
-                      <div style={{ marginBottom: '12px' }}>
+                      <div className="mb-3">
                         <textarea
                           value={editEvent.description || ''}
                           onChange={(e) =>
@@ -356,46 +205,19 @@ export function TimelineView({ caseId }: TimelineViewProps) {
                               description: e.target.value,
                             })
                           }
-                          style={{
-                            width: '100%',
-                            minHeight: '80px',
-                            padding: '12px',
-                            border: '1px solid #ccc',
-                            borderRadius: '4px',
-                            fontSize: '14px',
-                            fontFamily: 'inherit',
-                            resize: 'vertical',
-                          }}
+                          className="w-full min-h-[80px] px-3 py-3 border border-gray-300 rounded text-sm font-[inherit] resize-y"
                         />
                       </div>
-                      <div style={{ display: 'flex', gap: '8px' }}>
+                      <div className="flex gap-2">
                         <button
                           onClick={() => handleUpdate(event.id)}
-                          style={{
-                            padding: '6px 12px',
-                            background: '#388e3c',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                            fontSize: '12px',
-                            fontWeight: 'bold',
-                            cursor: 'pointer',
-                          }}
+                          className="px-3 py-1.5 bg-green-700 text-white border-0 rounded text-xs font-bold cursor-pointer transition-colors hover:bg-green-800"
                         >
                           Save
                         </button>
                         <button
                           onClick={() => setEditingId(null)}
-                          style={{
-                            padding: '6px 12px',
-                            background: '#757575',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                            fontSize: '12px',
-                            fontWeight: 'bold',
-                            cursor: 'pointer',
-                          }}
+                          className="px-3 py-1.5 bg-gray-600 text-white border-0 rounded text-xs font-bold cursor-pointer transition-colors hover:bg-gray-700"
                         >
                           Cancel
                         </button>
@@ -403,36 +225,16 @@ export function TimelineView({ caseId }: TimelineViewProps) {
                     </div>
                   ) : (
                     <div>
-                      <div
-                        style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'flex-start',
-                          marginBottom: '8px',
-                        }}
-                      >
+                      <div className="flex justify-between items-start mb-2">
                         <div>
-                          <div
-                            style={{
-                              fontWeight: 'bold',
-                              color: '#333',
-                              fontSize: '16px',
-                              marginBottom: '4px',
-                            }}
-                          >
+                          <div className="font-bold text-gray-800 text-base mb-1">
                             {event.title}
                           </div>
-                          <div
-                            style={{
-                              fontSize: '13px',
-                              color: '#c2185b',
-                              fontWeight: 'bold',
-                            }}
-                          >
+                          <div className="text-[13px] text-pink-700 font-bold">
                             {new Date(event.eventDate).toLocaleDateString()}
                           </div>
                         </div>
-                        <div style={{ display: 'flex', gap: '8px' }}>
+                        <div className="flex gap-2">
                           <button
                             onClick={() => {
                               setEditingId(event.id);
@@ -442,52 +244,24 @@ export function TimelineView({ caseId }: TimelineViewProps) {
                                 description: event.description || '',
                               });
                             }}
-                            style={{
-                              padding: '6px 12px',
-                              background: '#1976d2',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '4px',
-                              fontSize: '12px',
-                              fontWeight: 'bold',
-                              cursor: 'pointer',
-                            }}
+                            className="px-3 py-1.5 bg-blue-600 text-white border-0 rounded text-xs font-bold cursor-pointer transition-colors hover:bg-blue-700"
                           >
                             Edit
                           </button>
                           <button
                             onClick={() => {
-                               
                               if (window.confirm('Delete this event?')) {
                                 void deleteTimelineEvent(event.id);
                               }
                             }}
-                            style={{
-                              padding: '6px 12px',
-                              background: '#d32f2f',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '4px',
-                              fontSize: '12px',
-                              fontWeight: 'bold',
-                              cursor: 'pointer',
-                            }}
+                            className="px-3 py-1.5 bg-red-700 text-white border-0 rounded text-xs font-bold cursor-pointer transition-colors hover:bg-red-800"
                           >
                             Delete
                           </button>
                         </div>
                       </div>
                       {event.description && (
-                        <div
-                          style={{
-                            whiteSpace: 'pre-wrap',
-                            wordBreak: 'break-word',
-                            color: '#555',
-                            fontSize: '14px',
-                            lineHeight: '1.6',
-                            marginTop: '8px',
-                          }}
-                        >
+                        <div className="whitespace-pre-wrap break-words text-gray-600 text-sm leading-relaxed mt-2">
                           {event.description}
                         </div>
                       )}
