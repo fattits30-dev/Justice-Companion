@@ -1,20 +1,13 @@
 import { useState, useCallback, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext.tsx';
 import type { Evidence, CreateEvidenceInput, UpdateEvidenceInput } from '@/models/Evidence';
-import type {
-  IPCResponse,
-  EvidenceCreateResponse,
-  EvidenceGetByIdResponse,
-  EvidenceGetAllResponse,
-  EvidenceGetByCaseResponse,
-  EvidenceUpdateResponse,
-  EvidenceDeleteResponse,
-} from '@/types/ipc';
 
 /**
  * React hook for evidence management operations
  * Provides type-safe access to evidence database via IPC
  */
 export function useEvidence() {
+  const { sessionId } = useAuth();
   const [evidence, setEvidence] = useState<Evidence[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -23,12 +16,16 @@ export function useEvidence() {
    * Fetch all evidence from database
    */
   const fetchEvidence = useCallback(async (evidenceType?: string) => {
+    if (!sessionId) {
+      setError('No active session');
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
     try {
-      const response: IPCResponse<EvidenceGetAllResponse> =
-        await window.justiceAPI.getAllEvidence(evidenceType);
+      const response = await window.justiceAPI.getAllEvidence(evidenceType, sessionId);
 
       if (response.success) {
         setEvidence(response.data);
@@ -40,19 +37,23 @@ export function useEvidence() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [sessionId]);
 
   /**
    * Create new evidence
    */
   const createEvidence = useCallback(
     async (input: CreateEvidenceInput): Promise<Evidence | null> => {
+      if (!sessionId) {
+        setError('No active session');
+        return null;
+      }
+
       setLoading(true);
       setError(null);
 
       try {
-        const response: IPCResponse<EvidenceCreateResponse> =
-          await window.justiceAPI.createEvidence(input);
+        const response = await window.justiceAPI.createEvidence(input, sessionId);
 
         if (response.success) {
           // Refresh evidence list
@@ -71,19 +72,23 @@ export function useEvidence() {
         setLoading(false);
       }
     },
-    [fetchEvidence],
+    [sessionId, fetchEvidence],
   );
 
   /**
    * Get evidence by ID
    */
   const getEvidenceById = useCallback(async (id: number): Promise<Evidence | null> => {
+    if (!sessionId) {
+      setError('No active session');
+      return null;
+    }
+
     setLoading(true);
     setError(null);
 
     try {
-      const response: IPCResponse<EvidenceGetByIdResponse> =
-        await window.justiceAPI.getEvidenceById(id);
+      const response = await window.justiceAPI.getEvidenceById(id, sessionId);
 
       if (response.success) {
         return response.data;
@@ -99,18 +104,22 @@ export function useEvidence() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [sessionId]);
 
   /**
    * Get evidence by case ID
    */
   const getEvidenceByCaseId = useCallback(async (caseId: number): Promise<Evidence[]> => {
+    if (!sessionId) {
+      setError('No active session');
+      return [];
+    }
+
     setLoading(true);
     setError(null);
 
     try {
-      const response: IPCResponse<EvidenceGetByCaseResponse> =
-        await window.justiceAPI.getEvidenceByCaseId(caseId);
+      const response = await window.justiceAPI.getEvidenceByCaseId(caseId, sessionId);
 
       if (response.success) {
         return response.data;
@@ -126,19 +135,23 @@ export function useEvidence() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [sessionId]);
 
   /**
    * Update evidence
    */
   const updateEvidence = useCallback(
     async (id: number, input: UpdateEvidenceInput): Promise<Evidence | null> => {
+      if (!sessionId) {
+        setError('No active session');
+        return null;
+      }
+
       setLoading(true);
       setError(null);
 
       try {
-        const response: IPCResponse<EvidenceUpdateResponse> =
-          await window.justiceAPI.updateEvidence(id, input);
+        const response = await window.justiceAPI.updateEvidence(id, input, sessionId);
 
         if (response.success) {
           // Refresh evidence list
@@ -157,7 +170,7 @@ export function useEvidence() {
         setLoading(false);
       }
     },
-    [fetchEvidence],
+    [sessionId, fetchEvidence],
   );
 
   /**
@@ -165,12 +178,16 @@ export function useEvidence() {
    */
   const deleteEvidence = useCallback(
     async (id: number): Promise<boolean> => {
+      if (!sessionId) {
+        setError('No active session');
+        return false;
+      }
+
       setLoading(true);
       setError(null);
 
       try {
-        const response: IPCResponse<EvidenceDeleteResponse> =
-          await window.justiceAPI.deleteEvidence(id);
+        const response = await window.justiceAPI.deleteEvidence(id, sessionId);
 
         if (response.success) {
           // Refresh evidence list
@@ -189,7 +206,7 @@ export function useEvidence() {
         setLoading(false);
       }
     },
-    [fetchEvidence],
+    [sessionId, fetchEvidence],
   );
 
   // Fetch evidence on mount

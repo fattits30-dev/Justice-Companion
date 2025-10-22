@@ -142,9 +142,6 @@ export class CacheService {
           }
         }
       },
-
-      // Size calculation (1 unit per item for simplicity)
-      sizeCalculation: () => 1,
     });
 
     this.caches.set(config.name, cache);
@@ -255,6 +252,8 @@ export class CacheService {
       : Array.from(this.caches.values());
 
     for (const cache of cachesToCheck) {
+      if (!cache) continue; // Skip undefined caches
+
       // Get all keys and filter by pattern
       const keys = Array.from(cache.keys());
       for (const key of keys) {

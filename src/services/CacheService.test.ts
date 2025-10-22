@@ -15,7 +15,9 @@ describe('CacheService', () => {
 
   afterEach(() => {
     // Clean up after each test
-    cacheService.clear();
+    if (cacheService) {
+      cacheService.clear();
+    }
     vi.clearAllMocks();
   });
 
@@ -192,10 +194,10 @@ describe('CacheService', () => {
       const fetchFn = vi.fn().mockImplementation((key) => `new-${key}`);
 
       // Check that only case:123:evidence:* keys were invalidated
-      const result1 = await cacheService.getCached('case:123:evidence:1', () => fetchFn('case:123:evidence:1'));
+      const _result1 = await cacheService.getCached('case:123:evidence:1', () => fetchFn('case:123:evidence:1'));
       expect(fetchFn).toHaveBeenCalledWith('case:123:evidence:1');
 
-      const result2 = await cacheService.getCached('case:456:evidence:1', () => fetchFn('case:456:evidence:1'));
+      const _result2 = await cacheService.getCached('case:456:evidence:1', () => fetchFn('case:456:evidence:1'));
       expect(fetchFn).not.toHaveBeenCalledWith('case:456:evidence:1');
     });
   });

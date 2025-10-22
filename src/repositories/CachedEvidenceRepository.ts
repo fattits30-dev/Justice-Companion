@@ -191,8 +191,6 @@ export class CachedEvidenceRepository {
    * Batch find evidence by IDs with caching
    */
   async findByIdsAsync(ids: number[]): Promise<(Evidence | null)[]> {
-    const results: (Evidence | null)[] = [];
-
     // Process each ID through cache
     const promises = ids.map(id => this.findByIdAsync(id));
     const evidenceList = await Promise.all(promises);

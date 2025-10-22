@@ -364,7 +364,7 @@ describe('Cursor Pagination Utilities', () => {
 
     it('should handle large rowid values', () => {
       const cursor: SimpleCursor = { rowid: 999999999 };
-      const { clause, params } = buildSimpleWhereClause(cursor, 'desc');
+      const { clause: _clause, params } = buildSimpleWhereClause(cursor, 'desc');
 
       expect(params).toEqual([999999999]);
     });
@@ -454,7 +454,7 @@ describe('Cursor Pagination Utilities', () => {
       });
 
       it('should return undefined for empty array', () => {
-        const cursor = getPrevCursor([], item => item.id, 'desc');
+        const cursor = getPrevCursor([] as any[], (item: any) => item.id, 'desc');
         expect(cursor).toBeUndefined();
       });
     });
@@ -475,7 +475,7 @@ describe('Cursor Pagination Utilities', () => {
       });
 
       it('should return undefined for empty array', () => {
-        const cursor = getNextCursor([], item => item.id, 'desc');
+        const cursor = getNextCursor([] as any[], (item: any) => item.id, 'desc');
         expect(cursor).toBeUndefined();
       });
     });

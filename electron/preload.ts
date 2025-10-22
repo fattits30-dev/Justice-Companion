@@ -311,6 +311,20 @@ const justiceAPI = {
   exportUserData: (sessionId: string, options?: any) =>
     ipcRenderer.invoke('gdpr:export', sessionId, options),
 
+  // ===== CONSENT MANAGEMENT (flat methods) =====
+  grantConsent: (consentType: string, sessionId: string) =>
+    ipcRenderer.invoke('consent:grant', consentType, sessionId),
+
+  hasConsent: (consentType: string, sessionId: string) =>
+    ipcRenderer.invoke('consent:hasConsent', consentType, sessionId),
+
+  getUserConsents: (sessionId: string) =>
+    ipcRenderer.invoke('consent:getUserConsents', sessionId),
+
+  // ===== UI ERROR LOGGING =====
+  logUIError: (errorData: any) =>
+    ipcRenderer.invoke('ui:logError', errorData),
+
   // ===== PLACEHOLDER METHODS (add as needed) =====
   // These will be implemented as the corresponding IPC handlers are created
   changePassword: () => Promise.reject(new Error('Not implemented')),
@@ -327,10 +341,7 @@ const justiceAPI = {
   getEvidenceById: () => Promise.reject(new Error('Not implemented')),
   getFacts: () => Promise.reject(new Error('Not implemented')),
   getRecentConversations: () => Promise.reject(new Error('Not implemented')),
-  getUserConsents: () => Promise.reject(new Error('Not implemented')),
   getUserProfile: () => Promise.reject(new Error('Not implemented')),
-  grantConsent: () => Promise.reject(new Error('Not implemented')),
-  hasConsent: () => Promise.reject(new Error('Not implemented')),
   onAIStatusUpdate: () => Promise.reject(new Error('Not implemented')),
   onAIStreamSources: () => Promise.reject(new Error('Not implemented')),
   onAIStreamThinkToken: () => Promise.reject(new Error('Not implemented')),

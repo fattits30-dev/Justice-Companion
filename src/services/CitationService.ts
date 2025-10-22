@@ -1,3 +1,4 @@
+// @ts-expect-error - Optional dependency for legal citation extraction, types not available
 import { getCitations, cleanText, annotateCitations, type Citation } from '@beshkenadze/eyecite';
 import { logger } from '../utils/logger.ts';
 
@@ -54,7 +55,7 @@ export class CitationService {
       });
 
       // Convert to our format
-      return citations.map((citation) => this.convertCitation(citation));
+      return citations.map((citation: Citation) => this.convertCitation(citation));
     } catch (error) {
       logger.error('CitationService', 'Failed to extract citations', { error });
       return [];
@@ -141,7 +142,7 @@ export class CitationService {
       // Add <mark> tags with data attributes for styling
       return annotateCitations(
         cleaned,
-        citations.map((c) => [
+        citations.map((c: Citation) => [
           c.span(),
           '<mark class="legal-citation" data-citation-type="' + c.constructor.name + '">',
           '</mark>',

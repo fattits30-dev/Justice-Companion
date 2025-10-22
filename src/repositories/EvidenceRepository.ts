@@ -5,8 +5,8 @@ import type { AuditLogger } from '../services/AuditLogger.js';
 import {
   encodeSimpleCursor,
   decodeSimpleCursor,
-  type PaginatedResult,
 } from '../utils/cursor-pagination.ts';
+import type { PaginatedResult } from '../types/pagination.ts';
 
 /**
  * Repository for managing evidence (documents, photos, emails, recordings, notes)

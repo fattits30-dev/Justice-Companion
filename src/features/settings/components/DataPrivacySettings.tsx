@@ -225,7 +225,7 @@ export function DataPrivacySettings({ toast }: DataPrivacySettingsProps): JSX.El
 
       // Get all conversations
       const conversationsResponse = await window.justiceAPI.getAllConversations();
-      if (conversationsResponse.success && conversationsResponse.data.length > 0) {
+      if (conversationsResponse.success && conversationsResponse.data && conversationsResponse.data.length > 0) {
         // Delete each conversation
         for (const conversation of conversationsResponse.data) {
           await window.justiceAPI.deleteConversation(conversation.id);

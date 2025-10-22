@@ -7,8 +7,8 @@ import type {
 import { errorLogger } from '@/utils/error-logger';
 
 export class TimelineService {
-  private get timelineRepository() {
-    return getRepositories().timelineRepository;
+  private get timelineEventRepository() {
+    return getRepositories().timelineEventRepository;
   }
 
   /**
@@ -33,7 +33,7 @@ export class TimelineService {
         throw new Error('Timeline event description must be 10000 characters or less');
       }
 
-      return this.timelineRepository.create(input);
+      return this.timelineEventRepository.create(input);
     } catch (error) {
       errorLogger.logError(error as Error, {
         context: 'createTimelineEvent',
@@ -48,7 +48,7 @@ export class TimelineService {
    */
   getTimelineEventById(id: number): TimelineEvent | null {
     try {
-      return this.timelineRepository.findById(id);
+      return this.timelineEventRepository.findById(id);
     } catch (error) {
       errorLogger.logError(error as Error, { context: 'getTimelineEventById', id });
       throw error;
@@ -60,7 +60,7 @@ export class TimelineService {
    */
   getTimelineEventsByCaseId(caseId: number): TimelineEvent[] {
     try {
-      return this.timelineRepository.findByCaseId(caseId);
+      return this.timelineEventRepository.findByCaseId(caseId);
     } catch (error) {
       errorLogger.logError(error as Error, { context: 'getTimelineEventsByCaseId', caseId });
       throw error;
@@ -85,7 +85,7 @@ export class TimelineService {
         throw new Error('Timeline event description must be 10000 characters or less');
       }
 
-      const timelineEvent = this.timelineRepository.update(id, input);
+      const timelineEvent = this.timelineEventRepository.update(id, input);
 
       if (!timelineEvent) {
         throw new Error('Timeline event not found');
@@ -107,7 +107,7 @@ export class TimelineService {
    */
   deleteTimelineEvent(id: number): void {
     try {
-      this.timelineRepository.delete(id);
+      this.timelineEventRepository.delete(id);
     } catch (error) {
       errorLogger.logError(error as Error, {
         context: 'deleteTimelineEvent',

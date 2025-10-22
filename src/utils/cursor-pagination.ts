@@ -431,7 +431,7 @@ export function reverseDirection(direction: 'asc' | 'desc'): 'asc' | 'desc' {
 export function getPrevCursor<T>(
   items: T[],
   getRowid: (item: T) => number,
-  direction: 'asc' | 'desc',
+  _direction: 'asc' | 'desc',
 ): string | undefined {
   if (items.length === 0) {
     return undefined;
@@ -458,7 +458,7 @@ export function getPrevCursor<T>(
 export function getNextCursor<T>(
   items: T[],
   getRowid: (item: T) => number,
-  direction: 'asc' | 'desc',
+  _direction: 'asc' | 'desc',
 ): string | undefined {
   if (items.length === 0) {
     return undefined;

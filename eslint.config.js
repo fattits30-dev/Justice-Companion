@@ -2,6 +2,7 @@ import js from '@eslint/js';
 import globals from 'globals';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
+import importPlugin from 'eslint-plugin-import';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
@@ -16,6 +17,7 @@ export default tseslint.config(
       'mcp-server/**/*',  // MCP server has its own tsconfig
       'scripts/**/*',     // Scripts run outside main project
       'src/test-utils/**/*',  // Test utilities not in main tsconfig
+      'e2e/**/*',         // Legacy Playwright recordings (superseded by tests/e2e)
     ]
   },
   {
@@ -25,17 +27,30 @@ export default tseslint.config(
       ecmaVersion: 2020,
       globals: globals.browser,
       parserOptions: {
-        project: ['./tsconfig.json', './tsconfig.electron.json'],
+        project: ['./tsconfig.json', './tsconfig.electron.json', './tests/e2e/tsconfig.json'],
         tsconfigRootDir: import.meta.dirname,
       },
     },
     plugins: {
       'react-hooks': reactHooks,
       'react-refresh': reactRefresh,
+      'import': importPlugin,
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
+
+      // Import/Export rules
+      'import/extensions': [
+        'error',
+        'ignorePackages',
+        {
+          ts: 'always',   // Require .ts for TypeScript files
+          tsx: 'always',  // Require .tsx for React TypeScript files
+          js: 'never',    // No .js extension for JavaScript imports
+          jsx: 'never',
+        },
+      ],
 
       // TypeScript-specific rules
       '@typescript-eslint/no-unused-vars': [

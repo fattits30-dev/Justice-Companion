@@ -1,3 +1,4 @@
+import Database from 'better-sqlite3';
 import fs from 'fs';
 import path from 'path';
 
@@ -22,6 +23,10 @@ export interface TestDatabaseConfig {
  * - Copies pre-migrated database template
  * - Template includes: schema, test user, and consent
  * - NO better-sqlite3 usage (file copy only)
+ *
+ * NOTE: Downstream helpers such as getTestDatabase() do use better-sqlite3 for verification queries.
+ * The library ships Node.js prebuilds, so Playwright's Node runtime can read the database as long as
+ * dependencies have been installed (pnpm install). No better-sqlite3 calls run in the Electron context.
  */
 export async function setupTestDatabase(config?: Partial<TestDatabaseConfig>): Promise<string> {
   const testDataDir = path.join(process.cwd(), 'test-data');
@@ -141,3 +146,104 @@ export const TEST_USER_CREDENTIALS = {
   password: 'TestPassword123!',
   userId: 1,
 };
+
+/**
+ * Lightweight handle to the test database using better-sqlite3.
+ * Caller is responsible for closing the connection when done.
+ */
+export function getTestDatabase(dbPath: string): Database.Database {
+  if (!dbPath) {
+    throw new Error('Test database path is required');
+  }
+
+  if (!fs.existsSync(dbPath)) {
+    throw new Error(`Test database not found at ${dbPath}`);
+  }
+
+  const db = new Database(dbPath, { readonly: false });
+  db.pragma('journal_mode = WAL');
+  db.pragma('foreign_keys = ON');
+
+  return db;
+}
+
+/**
+ * Grant required consent records to a user for authentication-focused tests.
+ * Uses an UPSERT so repeated calls remain idempotent.
+ */
+export function seedUserConsents(
+  db: Database.Database,
+  userId: number,
+  options?: { includeOptional?: boolean; version?: string }
+): void {
+  if (!db) {
+    throw new Error('Database connection is required to seed user consents');
+  }
+
+  const consentVersion = options?.version ?? '1.0';
+  const grantedAt = new Date().toISOString();
+
+  const consentTypes = ['data_processing'];
+
+  if (options?.includeOptional) {
+    consentTypes.push('encryption', 'ai_processing');
+  }
+
+  const statement = db.prepare(`
+    INSERT INTO consents (user_id, consent_type, granted, granted_at, version, revoked_at)
+    VALUES (@userId, @consentType, 1, @grantedAt, @version, NULL)
+    ON CONFLICT(user_id, consent_type) DO UPDATE SET
+      granted = excluded.granted,
+      granted_at = excluded.granted_at,
+      revoked_at = NULL,
+      version = excluded.version
+  `);
+
+  for (const consentType of consentTypes) {
+    statement.run({
+      userId,
+      consentType,
+      grantedAt,
+      version: consentVersion,
+    });
+  }
+}
+
+/**
+ * Snapshot of key table counts to verify persistence throughout a test.
+ */
+export interface DatabaseStateSummary {
+  users: number;
+  sessions: number;
+  consents: number;
+  cases: number;
+  userFacts: number;
+  caseFacts: number;
+  evidence: number;
+}
+
+/**
+ * Return aggregate row counts for critical tables to assert against in E2E specs.
+ */
+export async function verifyDatabaseState(dbPath: string): Promise<DatabaseStateSummary> {
+  const db = getTestDatabase(dbPath);
+
+  const count = (table: string): number => {
+    const result = db.prepare(`SELECT COUNT(*) as count FROM ${table}`).get() as { count: number };
+    return result?.count ?? 0;
+  };
+
+  try {
+    return {
+      users: count('users'),
+      sessions: count('sessions'),
+      consents: count('consents'),
+      cases: count('cases'),
+      userFacts: count('user_facts'),
+      caseFacts: count('case_facts'),
+      evidence: count('evidence'),
+    };
+  } finally {
+    db.close();
+  }
+}

@@ -40,9 +40,9 @@ interface SessionData {
 function getAuthService() {
   // Runtime path: from dist/electron/utils/ to src/ (three levels up)
 
-  const { AuthenticationService } = require('../../../src/services/AuthenticationService');
+  const { AuthenticationService } = require('../../../src/services/AuthenticationService.ts');
 
-  const { getDb } = require('../../../src/db/database');
+  const { getDb } = require('../../../src/db/database.ts');
   return new AuthenticationService(getDb());
 }
 
@@ -139,11 +139,11 @@ export async function withAuthorization<T>(
  */
 export function getAuthorizationMiddleware() {
 
-  const { AuthorizationMiddleware } = require('../../../src/middleware/AuthorizationMiddleware');
+  const { AuthorizationMiddleware } = require('../../../src/middleware/AuthorizationMiddleware.ts');
 
-  const { caseRepository } = require('../../../src/repositories/CaseRepository');
+  const { caseRepository } = require('../../../src/repositories/CaseRepository.ts');
 
-  const { auditLogger } = require('../../../src/services/AuditLogger');
+  const { auditLogger } = require('../../../src/services/AuditLogger.ts');
 
   return new AuthorizationMiddleware(caseRepository, auditLogger);
 }
@@ -153,7 +153,7 @@ export function getAuthorizationMiddleware() {
  */
 export function getEvidenceRepository() {
 
-  const { evidenceRepository } = require('../../../src/repositories/EvidenceRepository');
+  const { evidenceRepository } = require('../../../src/repositories/EvidenceRepository.ts');
   return evidenceRepository;
 }
 

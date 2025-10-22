@@ -123,15 +123,15 @@ export function FloatingChatInput({
         properties: ['openFile'],
       });
 
-      if (selectResult.success && !selectResult.canceled && selectResult.filePaths.length > 0) {
+      if (selectResult.success && !selectResult.canceled && selectResult.filePaths && selectResult.filePaths.length > 0) {
         const filePath = selectResult.filePaths[0];
 
         const uploadResult = await window.justiceAPI.uploadFile(filePath);
 
         if (uploadResult.success) {
           setUploadedFile({
-            fileName: uploadResult.fileName,
-            fileSize: uploadResult.fileSize,
+            fileName: uploadResult.fileName ?? '',
+            fileSize: uploadResult.fileSize ?? 0,
             extractedText: uploadResult.extractedText,
           });
         } else {

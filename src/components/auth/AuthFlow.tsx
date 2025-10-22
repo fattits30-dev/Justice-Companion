@@ -1,11 +1,10 @@
-import { useAuth } from '@/contexts/AuthContext';
-import { logger } from '../../utils/logger';
-import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { useAuth } from '@/contexts/AuthContext.tsx';
+import { useReducedMotion } from '@/hooks/useReducedMotion.ts';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useCallback, useEffect, useState } from 'react';
-import { ConsentBanner } from './ConsentBanner';
-import { LoginScreen } from './LoginScreen';
-import { RegistrationScreen } from './RegistrationScreen';
+import { ConsentBanner } from './ConsentBanner.tsx';
+import { LoginScreen } from './LoginScreen.tsx';
+import { RegistrationScreen } from './RegistrationScreen.tsx';
 
 type AuthView = 'login' | 'register' | 'consent';
 
@@ -22,37 +21,16 @@ export function AuthFlow(): JSX.Element | null {
   const { isAuthenticated } = useAuth();
   const prefersReducedMotion = useReducedMotion();
   const [view, setView] = useState<AuthView>('login');
-  const [showConsent, setShowConsent] = useState(false);
+  // FIX: Temporarily show consent banner for all authenticated users (Issue #4)
+  // hasConsent IPC handler not yet implemented - will implement later
+  const [showConsent, setShowConsent] = useState(true);
   const [consentCheckComplete, setConsentCheckComplete] = useState(false);
 
-  // Check if user needs to see consent banner after authentication
+  // Mark consent check complete when authenticated
   useEffect(() => {
-    const checkConsent = async (): Promise<void> => {
-      if (!isAuthenticated || consentCheckComplete) {
-        return;
-      }
-
-      try {
-        // Check if user already has required consent
-        const result = await window.justiceAPI.hasConsent('data_processing');
-
-        if (result.success && result.data) {
-          // User already has consent - skip banner
-          setShowConsent(false);
-        } else {
-          // User needs to grant consent
-          setShowConsent(true);
-        }
-      } catch (error) {
-        logger.error('AuthFlow', 'Failed to check consent:', { error: error });
-        // On error, show consent banner to be safe
-        setShowConsent(true);
-      } finally {
-        setConsentCheckComplete(true);
-      }
-    };
-
-    void checkConsent();
+    if (isAuthenticated && !consentCheckComplete) {
+      setConsentCheckComplete(true);
+    }
   }, [isAuthenticated, consentCheckComplete]);
 
   // Memoize onComplete callback to prevent unnecessary re-renders

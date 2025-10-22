@@ -1,29 +1,29 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
-import { logger } from '@/utils/logger';
-import { AuthFlow } from './components/auth';
-import { ErrorBoundary } from './components/ErrorBoundary';
-import { Sidebar } from './components/Sidebar';
-import { ThemeProvider } from './components/ThemeProvider';
-import { Toaster } from './components/ui/sonner';
-import { ViewErrorBoundary } from './components/ViewErrorBoundary';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { DebugProvider } from './contexts/DebugContext';
-import { migrateToSecureStorage } from './utils/migrate-to-secure-storage';
+import { logger } from '@/utils/logger.ts';
+import { AuthFlow } from './components/auth/index.ts';
+import { ErrorBoundary } from './components/ErrorBoundary.tsx';
+import { Sidebar } from './components/Sidebar.tsx';
+import { ThemeProvider } from './components/ThemeProvider.tsx';
+import { Toaster } from './components/ui/sonner.tsx';
+import { ViewErrorBoundary } from './components/ViewErrorBoundary.tsx';
+import { AuthProvider, useAuth } from './contexts/AuthContext.tsx';
+import { DebugProvider } from './contexts/DebugContext.tsx';
+import { migrateToSecureStorage } from './utils/migrate-to-secure-storage.ts';
 
 // Lazy-loaded view components for code splitting
-const ChatWindow = lazy(() => import('@/features/chat').then((m) => ({ default: m.ChatWindow })));
-const CasesView = lazy(() => import('@/features/cases').then((m) => ({ default: m.CasesView })));
+const ChatWindow = lazy(() => import('@/features/chat/index.ts').then((m) => ({ default: m.ChatWindow })));
+const CasesView = lazy(() => import('@/features/cases/index.ts').then((m) => ({ default: m.CasesView })));
 const CaseDetailView = lazy(() =>
-  import('@/features/cases').then((m) => ({ default: m.CaseDetailView })),
+  import('@/features/cases/index.ts').then((m) => ({ default: m.CaseDetailView })),
 );
 const DocumentsView = lazy(() =>
-  import('@/features/documents').then((m) => ({ default: m.DocumentsView })),
+  import('@/features/documents/index.ts').then((m) => ({ default: m.DocumentsView })),
 );
 const DashboardView = lazy(() =>
-  import('@/features/dashboard').then((m) => ({ default: m.DashboardView })),
+  import('@/features/dashboard/index.ts').then((m) => ({ default: m.DashboardView })),
 );
 const SettingsView = lazy(() =>
-  import('@/features/settings').then((m) => ({ default: m.SettingsView })),
+  import('@/features/settings/index.ts').then((m) => ({ default: m.SettingsView })),
 );
 
 type ViewType = 'dashboard' | 'chat' | 'cases' | 'case-detail' | 'documents' | 'settings';
@@ -246,6 +246,7 @@ function AuthenticatedApp(): JSX.Element {
 
 /**
  * Root App component with providers
+ * FIX: ErrorBoundary moved to wrap ALL components including AuthFlow (Issue #3)
  */
 function App(): JSX.Element {
   return (

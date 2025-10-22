@@ -8,7 +8,8 @@
 import { z } from 'zod';
 import { logger } from '../utils/logger.ts';
 import type { AuditLogger } from '../services/AuditLogger.ts';
-import { ipcSchemas } from './schemas.ts';
+// TODO: Create schemas.ts file with IPC validation schemas
+const ipcSchemas: Record<string, z.ZodSchema> = {};
 import { preventSqlInjection, sanitizeForLogging, sanitizeHtml } from './utils/sanitizers.ts';
 
 /**

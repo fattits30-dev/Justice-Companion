@@ -1,22 +1,13 @@
-import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll } from 'vitest';
 import { EvidenceRepository } from './EvidenceRepository';
 import { EncryptionService } from '../services/EncryptionService';
 import { AuditLogger } from '../services/AuditLogger';
 import { createTestDatabase } from '../test-utils/database-test-helper';
+import { databaseManager } from '../db/database.ts';
 import type { CreateEvidenceInput } from '../models/Evidence';
-import type Database from 'better-sqlite3';
 
 // Create test database instance at module level
 const testDb = createTestDatabase();
-let db: Database.Database;
-
-// Mock the database module at module level (hoisted by Vitest)
-vi.mock('../db/database', () => ({
-  databaseManager: {
-    getDatabase: () => db,
-  },
-  getDb: () => db,
-}));
 
 describe('EvidenceRepository - Cursor Pagination', () => {
   let encryptionService: EncryptionService;
@@ -26,7 +17,7 @@ describe('EvidenceRepository - Cursor Pagination', () => {
 
   // Helper to create test case (satisfies FK constraint)
   const createTestCase = (caseId: number): void => {
-    const caseStmt = db.prepare(`
+    const caseStmt = testDb.getDatabase().prepare(`
       INSERT OR IGNORE INTO cases (id, title, description, case_type, status, created_at)
       VALUES (?, ?, ?, ?, ?, datetime('now'))
     `);
@@ -35,11 +26,15 @@ describe('EvidenceRepository - Cursor Pagination', () => {
 
   beforeAll(() => {
     // Initialize test database with all migrations
-    db = testDb.initialize();
+    const testDatabase = testDb.initialize();
+
+    // Inject test database into the singleton (NO MOCKING NEEDED!)
+    databaseManager.setTestDatabase(testDatabase);
   });
 
   afterAll(() => {
-    // Cleanup test database
+    // Reset database singleton and cleanup
+    databaseManager.resetDatabase();
     testDb.cleanup();
   });
 
@@ -49,7 +44,7 @@ describe('EvidenceRepository - Cursor Pagination', () => {
     encryptionService = new EncryptionService(testKey);
 
     // Create audit logger with the same encryption service
-    auditLogger = new AuditLogger(db, encryptionService);
+    auditLogger = new AuditLogger(testDb.getDatabase(), encryptionService);
 
     repository = new EvidenceRepository(encryptionService, auditLogger);
 
@@ -146,7 +141,7 @@ describe('EvidenceRepository - Cursor Pagination', () => {
       const result = repository.findByCaseIdPaginated(100, 10);
 
       // All content should be decrypted
-      result.items.forEach((item, index) => {
+      result.items.forEach((item: any, index: number) => {
         expect(item.content).toBe(`Encrypted content ${3 - index}`);
       });
     });
@@ -225,7 +220,7 @@ describe('EvidenceRepository - Cursor Pagination', () => {
 
       // Should return 5 documents (15 total / 3 types = 5 each)
       expect(result.items).toHaveLength(5);
-      expect(result.items.every(item => item.evidenceType === 'document')).toBe(true);
+      expect(result.items.every((item: any) => item.evidenceType === 'document')).toBe(true);
     });
 
     it('should paginate through filtered results', () => {
@@ -276,7 +271,7 @@ describe('EvidenceRepository - Cursor Pagination', () => {
 
       // All content should be decrypted
       expect(result.items).toHaveLength(5);
-      result.items.forEach((item, index) => {
+      result.items.forEach((item: any) => {
         expect(item.content).toBeTruthy();
         expect(item.content).toContain('Sensitive content'); // Decrypted content
       });
