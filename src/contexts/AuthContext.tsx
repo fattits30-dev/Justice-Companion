@@ -7,8 +7,8 @@ import {
   useCallback,
   ReactNode,
 } from 'react';
-import type { User } from '@/models/User';
-import { logger } from '../utils/logger';
+import type { User } from '@/models/User.ts';
+import { logger } from '../utils/logger.ts';
 
 /**
  * Authentication Context for managing user authentication state globally.
@@ -27,6 +27,7 @@ import { logger } from '../utils/logger';
 
 interface AuthContextType {
   user: User | null;
+  sessionId: string | null;
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (username: string, password: string, rememberMe?: boolean) => Promise<void>;
@@ -47,59 +48,44 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [isLoading, setIsLoading] = useState(true);
 
   /**
-   * Load session from localStorage on mount
+   * Load session from localStorage and check auth on mount
+   * FIX: Combined effects to prevent race condition (Issue #2)
    */
   useEffect(() => {
-    try {
-      const storedSessionId = localStorage.getItem('sessionId');
-      if (storedSessionId) {
-        setSessionId(storedSessionId);
-      }
-    } catch (error) {
-      logger.error('AuthContext', 'Failed to load sessionId from localStorage:', { error });
-    }
-  }, []);
-
-  /**
-   * Check if user is already logged in on app start
-   */
-  useEffect(() => {
-    const checkAuth = async () => {
+    const loadSession = async () => {
       try {
-        // Wait for justiceAPI to be available
+        // FIX: Add IPC validation guard (Issue #5)
         if (typeof window === 'undefined' || !window.justiceAPI) {
+          logger.error('AuthContext', 'IPC API not available');
           setIsLoading(false);
           return;
         }
 
-        // No sessionId = not logged in
-        if (!sessionId) {
-          setIsLoading(false);
-          return;
-        }
-
-        const result = await window.justiceAPI.getCurrentUser(sessionId);
-        if (result.success && result.data) {
-          setUser(result.data);
-        } else {
-          // Session invalid - clear it
-          setSessionId(null);
-          localStorage.removeItem('sessionId');
-          setUser(null);
+        const storedSessionId = localStorage.getItem('sessionId');
+        if (storedSessionId) {
+          setSessionId(storedSessionId);
+          // Check auth immediately to avoid login screen flash
+          const result = await window.justiceAPI.getCurrentUser(storedSessionId);
+          if (result.success && result.data) {
+            // getCurrentUser returns a full User object
+            setUser(result.data);
+          } else {
+            // Session invalid - clear it
+            localStorage.removeItem('sessionId');
+            setSessionId(null);
+          }
         }
       } catch (error) {
-        logger.error('AuthContext', 'Failed to check auth status:', { error: error });
-        // Clear invalid session
-        setSessionId(null);
+        logger.error('AuthContext', 'Session load failed:', { error });
         localStorage.removeItem('sessionId');
-        setUser(null);
+        setSessionId(null);
       } finally {
         setIsLoading(false);
       }
     };
 
-    void checkAuth(); // Async call in useEffect - errors handled internally
-  }, [sessionId]);
+    void loadSession();
+  }, []); // Run once on mount
 
   /**
    * Login user with username and password
@@ -116,12 +102,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
           throw new Error(result.error || 'Login failed');
         }
 
-        // Store BOTH user and sessionId
-        setUser(result.data.user);
-        setSessionId(result.data.sessionId);
+        if (!result.data) {
+          logger.error('AuthContext', 'Login response missing data');
+          throw new Error('Login failed: no data returned');
+        }
+
+        const { user: authenticatedUser, session } = result.data;
+        if (!authenticatedUser || !session?.id) {
+          logger.error('AuthContext', 'Login response missing user or session data');
+          throw new Error('Login failed: invalid response');
+        }
+
+        setUser(authenticatedUser);
+        setSessionId(session.id);
 
         // Persist sessionId to localStorage
-        localStorage.setItem('sessionId', result.data.sessionId);
+        localStorage.setItem('sessionId', session.id);
 
         // Force a small delay to ensure state update propagates
         await new Promise((resolve) => setTimeout(resolve, 0));
@@ -189,6 +185,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       const result = await window.justiceAPI.getCurrentUser(sessionId);
       if (result.success && result.data) {
+        // getCurrentUser returns a full User object
         setUser(result.data);
       } else {
         // Session invalid - clear everything
@@ -209,6 +206,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const value: AuthContextType = useMemo(
     () => ({
       user,
+      sessionId,
       isLoading,
       isAuthenticated: user !== null,
       login,
@@ -216,7 +214,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       register,
       refreshUser,
     }),
-    [user, isLoading, login, logout, register, refreshUser],
+    [user, sessionId, isLoading, login, logout, register, refreshUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

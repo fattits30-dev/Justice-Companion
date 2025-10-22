@@ -94,7 +94,7 @@ export function FileUploadModal({
         properties: ['openFile'],
       });
 
-      if (result.success && !result.canceled && result.filePaths.length > 0) {
+      if (result.success && !result.canceled && result.filePaths && result.filePaths.length > 0) {
         const filePath = result.filePaths[0];
         const fileName = filePath.split(/[\\/]/).pop() || 'Unknown';
         const fileExtension = getFileExtension(fileName);
@@ -114,7 +114,7 @@ export function FileUploadModal({
         }
 
         // Check file size
-        if (uploadResult.fileSize > MAX_FILE_SIZE) {
+        if (uploadResult.fileSize && uploadResult.fileSize > MAX_FILE_SIZE) {
           setError(`File too large. Maximum size is ${formatFileSize(MAX_FILE_SIZE)}.`);
           return;
         }
@@ -122,7 +122,7 @@ export function FileUploadModal({
         setSelectedFile({
           path: filePath,
           name: fileName,
-          size: uploadResult.fileSize,
+          size: uploadResult.fileSize ?? 0,
         });
 
         // Auto-populate title if empty

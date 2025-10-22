@@ -1,21 +1,12 @@
-import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll } from 'vitest';
+import { createTestDatabase } from '../test-utils/database-test-helper';
+import { databaseManager } from '../db/database.ts';
 import { CaseRepository } from './CaseRepository';
 import { EncryptionService } from '../services/EncryptionService';
-import { createTestDatabase } from '../test-utils/database-test-helper';
 import type { CreateCaseInput } from '../models/Case';
-import type Database from 'better-sqlite3';
 
-// Create test database instance at module level
-const testDb = createTestDatabase();
-let db: Database.Database;
-
-// Mock the database module at module level (hoisted by Vitest)
-vi.mock('../db/database', () => ({
-  databaseManager: {
-    getDatabase: () => db,
-  },
-  getDb: () => db,
-}));
+// Create test database helper at module level
+const testDbHelper = createTestDatabase();
 
 describe('CaseRepository with Encryption', () => {
   let repository: CaseRepository;
@@ -24,12 +15,16 @@ describe('CaseRepository with Encryption', () => {
 
   beforeAll(() => {
     // Initialize test database with all migrations
-    db = testDb.initialize();
+    const testDb = testDbHelper.initialize();
+
+    // Inject test database into the singleton (NO MOCKING NEEDED!)
+    databaseManager.setTestDatabase(testDb);
   });
 
   afterAll(() => {
-    // Cleanup test database
-    testDb.cleanup();
+    // Reset database singleton and cleanup
+    databaseManager.resetDatabase();
+    testDbHelper.cleanup();
   });
 
   beforeEach(() => {
@@ -41,7 +36,7 @@ describe('CaseRepository with Encryption', () => {
     repository = new CaseRepository(encryptionService);
 
     // Clear data for test isolation
-    testDb.clearAllTables();
+    testDbHelper.clearAllTables();
   });
 
   afterEach(() => {
@@ -59,7 +54,7 @@ describe('CaseRepository with Encryption', () => {
       const createdCase = repository.create(caseInput);
 
       // Query database directly to verify encryption
-      const rawRow = db
+      const rawRow = testDbHelper.getDatabase()
         .prepare('SELECT description FROM cases WHERE id = ?')
         .get(createdCase.id) as {
         description: string | null;
@@ -88,7 +83,7 @@ describe('CaseRepository with Encryption', () => {
 
       const createdCase = repository.create(caseInput);
 
-      const rawRow = db
+      const rawRow = testDbHelper.getDatabase()
         .prepare('SELECT description FROM cases WHERE id = ?')
         .get(createdCase.id) as {
         description: string | null;
@@ -113,7 +108,7 @@ describe('CaseRepository with Encryption', () => {
       expect(updated).toBeTruthy();
 
       // Verify encryption in database
-      const rawRow = db
+      const rawRow = testDbHelper.getDatabase()
         .prepare('SELECT description FROM cases WHERE id = ?')
         .get(createdCase.id) as {
         description: string | null;
@@ -178,7 +173,7 @@ describe('CaseRepository with Encryption', () => {
   describe('Backward Compatibility', () => {
     it('should handle legacy plaintext descriptions', () => {
       // Manually insert plaintext description (simulating legacy data)
-      const result = db
+      const result = testDbHelper.getDatabase()
         .prepare(
           `INSERT INTO cases (title, case_type, description, status)
          VALUES (?, ?, ?, ?)`
@@ -223,10 +218,10 @@ describe('CaseRepository with Encryption', () => {
         description,
       });
 
-      const row1 = db.prepare('SELECT description FROM cases WHERE id = ?').get(case1.id) as {
+      const row1 = testDbHelper.getDatabase().prepare('SELECT description FROM cases WHERE id = ?').get(case1.id) as {
         description: string;
       };
-      const row2 = db.prepare('SELECT description FROM cases WHERE id = ?').get(case2.id) as {
+      const row2 = testDbHelper.getDatabase().prepare('SELECT description FROM cases WHERE id = ?').get(case2.id) as {
         description: string;
       };
 

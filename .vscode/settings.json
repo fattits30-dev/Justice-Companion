@@ -12,6 +12,8 @@
   // TypeScript
   "typescript.tsdk": "node_modules/typescript/lib",
   "typescript.enablePromptUseWorkspaceTsdk": true,
+  "typescript.preferences.importModuleSpecifierEnding": "ts",
+  "javascript.preferences.importModuleSpecifierEnding": "js",
 
   // ESLint
   "eslint.validate": [

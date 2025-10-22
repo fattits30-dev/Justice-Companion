@@ -1,3 +1,23 @@
+import type { User } from '../models/User.ts';
+import type { Session } from '../models/Session.ts';
+import type { IPCResponse } from './ipc.ts';
+import type {
+  CaseGetAllResponse,
+  CaseCreateResponse,
+  CaseGetByIdResponse,
+  CaseUpdateResponse,
+  CaseDeleteResponse,
+  CaseCloseResponse,
+  AuthLoginResponse,
+  AuthRegisterResponse,
+  AuthLogoutResponse,
+  AuthGetCurrentUserResponse,
+  ConsentGrantResponse,
+  ConsentHasConsentResponse,
+  ConsentGetUserConsentsResponse,
+  GDPRExportUserDataResponse,
+} from './ipc.ts';
+
 /**
  * TypeScript definitions for Electron preload APIs exposed via contextBridge
  *
@@ -18,18 +38,14 @@ export interface ElectronAPI {
       username: string;
       email: string;
       password: string;
-    }) => Promise<{
-      success: boolean;
-      data?: { userId: string; sessionId: string; username: string };
-      error?: string;
-    }>;
+    }) => Promise<{ success: boolean; data?: User; error?: string }>;
     login: (data: {
       username: string;
       password: string;
       rememberMe?: boolean;
     }) => Promise<{
       success: boolean;
-      data?: { userId: string; sessionId: string; username: string };
+      data?: { user: User; session: Session };
       error?: string;
     }>;
     logout: (sessionId: string) => Promise<{ success: boolean; error?: string }>;
@@ -125,102 +141,128 @@ export interface ElectronAPI {
  */
 export interface JusticeAPI {
   // ===== AUTHENTICATION =====
-  loginUser: (username: string, password: string, rememberMe?: boolean) => Promise<{
-    success: boolean;
-    data?: { userId: string; sessionId: string; username: string };
-    error?: string;
-  }>;
+  loginUser: (username: string, password: string, rememberMe?: boolean) => Promise<IPCResponse<AuthLoginResponse>>;
 
-  registerUser: (username: string, password: string, email: string) => Promise<{
-    success: boolean;
-    data?: { userId: string; sessionId: string; username: string };
-    error?: string;
-  }>;
+  registerUser: (username: string, password: string, email: string) => Promise<IPCResponse<AuthRegisterResponse>>;
 
-  logoutUser: (sessionId: string) => Promise<{ success: boolean; error?: string }>;
+  logoutUser: (sessionId: string) => Promise<IPCResponse<AuthLogoutResponse>>;
 
-  getCurrentUser: (sessionId: string) => Promise<{
-    success: boolean;
-    data?: { userId: string; username: string; email: string };
-    error?: string;
-  }>;
+  getCurrentUser: (sessionId: string) => Promise<IPCResponse<AuthGetCurrentUserResponse>>;
 
   // ===== CASE MANAGEMENT =====
-  createCase: (data: any, sessionId: string) => Promise<{ success: boolean; data?: any; error?: string }>;
+  createCase: (data: any, sessionId: string) => Promise<IPCResponse<CaseCreateResponse>>;
 
-  getAllCases: (sessionId: string) => Promise<{ success: boolean; data?: any[]; error?: string }>;
+  getAllCases: () => Promise<IPCResponse<CaseGetAllResponse>>;
 
   getAllCasesPaginated: (sessionId: string, page: number, pageSize: number) => Promise<{ success: boolean; data?: any[]; error?: string }>;
 
-  getCaseById: (id: string, sessionId: string) => Promise<{ success: boolean; data?: any; error?: string }>;
+  getCaseById: (id: string, sessionId: string) => Promise<IPCResponse<CaseGetByIdResponse>>;
 
-  updateCase: (id: string, data: any, sessionId: string) => Promise<{ success: boolean; data?: any; error?: string }>;
+  updateCase: (id: string, data: any, sessionId: string) => Promise<IPCResponse<CaseUpdateResponse>>;
 
-  deleteCase: (id: string, sessionId: string) => Promise<{ success: boolean; error?: string }>;
+  deleteCase: (id: number) => Promise<IPCResponse<CaseDeleteResponse>>;
 
-  closeCase: (id: string, sessionId: string) => Promise<{ success: boolean; data?: any; error?: string }>;
+  closeCase: (id: string, sessionId: string) => Promise<IPCResponse<CaseCloseResponse>>;
 
   // ===== EVIDENCE/DOCUMENTS =====
-  uploadFile: (caseId: string, file: File, sessionId: string) => Promise<{ success: boolean; data?: any; error?: string }>;
+  // File validation (returns file metadata without storing)
+  uploadFile: (filePath: string) => Promise<{ success: boolean; fileName?: string; fileSize?: number; extractedText?: string; error?: string }>;
 
-  getAllEvidence: (caseId: string, sessionId: string) => Promise<{ success: boolean; data?: any[]; error?: string }>;
+  // Actual file upload with case association
+  uploadFileToCase: (caseId: string, file: File, sessionId: string) => Promise<{ success: boolean; data?: any; error?: string }>;
 
-  getEvidenceByCaseId: (caseId: string, sessionId: string) => Promise<{ success: boolean; data?: any[]; error?: string }>;
+  createEvidence: (input: any, sessionId: string) => Promise<IPCResponse<{ success: true; data: any }>>;
 
-  deleteEvidence: (id: string, sessionId: string) => Promise<{ success: boolean; error?: string }>;
+  getEvidenceById: (id: number, sessionId: string) => Promise<IPCResponse<{ success: true; data: any | null }>>;
+
+  getAllEvidence: (evidenceType: string | undefined, sessionId: string) => Promise<IPCResponse<{ success: true; data: any[] }>>;
+
+  getEvidenceByCaseId: (caseId: number, sessionId: string) => Promise<IPCResponse<{ success: true; data: any[] }>>;
+
+  updateEvidence: (id: number, input: any, sessionId: string) => Promise<IPCResponse<{ success: true; data: any | null }>>;
+
+  deleteEvidence: (id: number, sessionId: string) => Promise<IPCResponse<{ success: true }>>;
 
   // ===== AI CHAT =====
   createConversation: (message: string, caseId: string | undefined, sessionId: string) => Promise<{ success: boolean; data?: any; error?: string }>;
 
-  onAIStreamToken: (callback: (event: any, data: string) => void) => void;
-  onAIStreamComplete: (callback: (event: any, data: string) => void) => void;
-  onAIStreamError: (callback: (event: any, data: string) => void) => void;
+  // Event listeners return cleanup functions
+  onAIStreamToken: (callback: (event: any, data: string) => void) => () => void;
+  onAIStreamThinkToken: (callback: (event: any, data: string) => void) => () => void;
+  onAIStreamSources: (callback: (event: any, data: any) => void) => () => void;
+  onAIStatusUpdate: (callback: (event: any, data: any) => void) => () => void;
+  onAIStreamComplete: (callback: (event: any, data: string) => void) => () => void;
+  onAIStreamError: (callback: (event: any, data: string) => void) => () => void;
+
+  // AI status and config
+  checkAIStatus: () => Promise<IPCResponse<{ success: true; connected: boolean; endpoint: string; model?: string; error?: string }>>;
+  configureAI: (config: any) => Promise<{ success: boolean; error?: string }>;
+  testAIConnection: (request: { apiKey: string; model?: 'gpt-4o' | 'gpt-4o-mini' | 'gpt-3.5-turbo' }) => Promise<{ success: boolean; connected?: boolean; endpoint?: string; model?: string; error?: string }>;
+  aiStreamStart: (params: { messages: any[]; caseId?: number }) => Promise<IPCResponse<{ success: true; streamId: string }>>;
 
   // ===== GDPR =====
-  exportUserData: (sessionId: string, options?: any) => Promise<{
+  exportUserData: () => Promise<IPCResponse<GDPRExportUserDataResponse>>;
+
+  // ===== CONSENT MANAGEMENT =====
+  // Moved to newer definitions below (lines 245-248) without sessionId
+  hasConsent: (consentType: string, sessionId: string) => Promise<IPCResponse<ConsentHasConsentResponse>>;
+
+  // ===== UI ERROR LOGGING =====
+  logUIError: (errorData: {
+    error: string;
+    errorInfo: string;
+    componentStack: string;
+    timestamp: string;
+    url?: string;
+    userAgent?: string;
+  }) => Promise<{
     success: boolean;
-    data?: {
-      filePath?: string;
-      totalRecords: number;
-      exportDate: string;
-      format: 'json' | 'csv';
-    };
+    logged?: boolean;
     error?: string;
   }>;
 
-  // ===== PLACEHOLDER METHODS =====
+  // ===== FILE OPERATIONS (Placeholder) =====
+  viewFile: (filePath: string) => Promise<{ success: boolean; error?: string }>;
+  downloadFile: (filePath: string, fileName: string) => Promise<{ success: boolean; savedPath?: string; error?: string }>;
+  printFile: (filePath: string) => Promise<{ success: boolean; error?: string }>;
+  emailFiles: (filePaths: string[], subject: string, body: string) => Promise<{ success: boolean; error?: string }>;
+  selectFile: (options?: { filters?: any[]; properties?: string[] }) => Promise<{ success: boolean; canceled?: boolean; filePaths?: string[]; error?: string }>;
+
+  // User Profile operations
+  getUserProfile: () => Promise<{ success: boolean; data?: { id: number; name: string; email: string | null; avatarUrl: string | null; createdAt: string; updatedAt: string }; error?: string }>;
+  updateUserProfile: (input: { name?: string; email?: string | null; avatarUrl?: string | null }) => Promise<{ success: boolean; data?: { id: number; name: string; email: string | null; avatarUrl: string | null; createdAt: string; updatedAt: string }; error?: string }>;
+
+  // Password change
+  changePassword: (oldPassword: string, newPassword: string) => Promise<{ success: boolean; error?: string }>;
+
+  // Conversation operations
+  getAllConversations: (caseId?: number | null) => Promise<{ success: boolean; data?: Array<{ id: number; title?: string; caseId?: number; createdAt?: string }>; error?: string }>;
+  deleteConversation: (id: number) => Promise<{ success: boolean; error?: string }>;
+
+  // Consent operations
+  grantConsent: (consentType: 'data_processing' | 'encryption' | 'ai_processing' | 'marketing') => Promise<{ success: boolean; data?: { id: number; userId: number; consentType: string; granted: boolean; grantedAt?: string }; error?: string }>;
+  revokeConsent: (consentType: 'data_processing' | 'encryption' | 'ai_processing' | 'marketing') => Promise<{ success: boolean; error?: string }>;
+  getUserConsents: () => Promise<{ success: boolean; data?: Array<{ id: number; userId: number; consentType: string; granted: boolean; grantedAt?: string }>; error?: string }>;
+
+  // ===== REMAINING PLACEHOLDER METHODS =====
   // These will be implemented as corresponding IPC handlers are created
-  changePassword: () => Promise<never>;
-  checkAIStatus: () => Promise<never>;
-  configureAI: () => Promise<never>;
-  createEvidence: () => Promise<never>;
-  deleteConversation: () => Promise<never>;
-  downloadFile: () => Promise<never>;
-  getAllConversations: () => Promise<never>;
   getCaseFacts: () => Promise<never>;
   getCasesByStatusPaginated: () => Promise<never>;
   getCasesByUserPaginated: () => Promise<never>;
   getCaseStatistics: () => Promise<never>;
-  getEvidenceById: () => Promise<never>;
   getFacts: () => Promise<never>;
   getRecentConversations: () => Promise<never>;
-  getUserConsents: () => Promise<never>;
-  getUserProfile: () => Promise<never>;
-  grantConsent: () => Promise<never>;
-  hasConsent: () => Promise<never>;
-  onAIStatusUpdate: () => Promise<never>;
-  onAIStreamSources: () => Promise<never>;
-  onAIStreamThinkToken: () => Promise<never>;
-  printFile: () => Promise<never>;
-  revokeConsent: () => Promise<never>;
-  secureStorage: () => Promise<never>;
-  selectFile: () => Promise<never>;
+
+  // Secure Storage API (for storing API keys securely)
+  secureStorage: {
+    isEncryptionAvailable: () => Promise<boolean>;
+    set: (key: string, value: string) => Promise<void>;
+    get: (key: string) => Promise<string | null>;
+    delete: (key: string) => Promise<void>;
+    clearAll: () => Promise<void>;
+  };
+
   storeFact: () => Promise<never>;
-  testAIConnection: () => Promise<never>;
-  updateEvidence: () => Promise<never>;
-  updateUserProfile: () => Promise<never>;
-  viewFile: () => Promise<never>;
-  aiStreamStart: () => Promise<never>;
 }
 
 /**

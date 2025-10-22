@@ -1,22 +1,13 @@
-import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll } from 'vitest';
 import { EvidenceRepository } from './EvidenceRepository';
 import { CaseRepository } from './CaseRepository';
 import { EncryptionService } from '../services/EncryptionService';
 import { createTestDatabase } from '../test-utils/database-test-helper';
+import { databaseManager } from '../db/database.ts';
 import type { CreateEvidenceInput } from '../models/Evidence';
-import type Database from 'better-sqlite3';
 
 // Create test database instance at module level
 const testDb = createTestDatabase();
-let db: Database.Database;
-
-// Mock the database module at module level (hoisted by Vitest)
-vi.mock('../db/database', () => ({
-  databaseManager: {
-    getDatabase: () => db,
-  },
-  getDb: () => db,
-}));
 
 describe('EvidenceRepository with Encryption', () => {
   let evidenceRepo: EvidenceRepository;
@@ -27,11 +18,15 @@ describe('EvidenceRepository with Encryption', () => {
 
   beforeAll(() => {
     // Initialize test database with all migrations
-    db = testDb.initialize();
+    const testDatabase = testDb.initialize();
+
+    // Inject test database into the singleton (NO MOCKING NEEDED!)
+    databaseManager.setTestDatabase(testDatabase);
   });
 
   afterAll(() => {
-    // Cleanup test database
+    // Reset database singleton and cleanup
+    databaseManager.resetDatabase();
     testDb.cleanup();
   });
 
@@ -73,7 +68,10 @@ describe('EvidenceRepository with Encryption', () => {
       const created = evidenceRepo.create(evidenceInput);
 
       // Query database directly to verify encryption
-      const rawRow = db.prepare('SELECT content FROM evidence WHERE id = ?').get(created.id) as {
+      const rawRow = testDb
+        .getDatabase()
+        .prepare('SELECT content FROM evidence WHERE id = ?')
+        .get(created.id) as {
         content: string | null;
       };
 
@@ -101,7 +99,8 @@ describe('EvidenceRepository with Encryption', () => {
 
       const created = evidenceRepo.create(evidenceInput);
 
-      const rawRow = db
+      const rawRow = testDb
+        .getDatabase()
         .prepare('SELECT file_path, content FROM evidence WHERE id = ?')
         .get(created.id) as {
         file_path: string | null;
@@ -128,7 +127,10 @@ describe('EvidenceRepository with Encryption', () => {
       expect(updated).toBeTruthy();
 
       // Verify encryption in database
-      const rawRow = db.prepare('SELECT content FROM evidence WHERE id = ?').get(created.id) as {
+      const rawRow = testDb
+        .getDatabase()
+        .prepare('SELECT content FROM evidence WHERE id = ?')
+        .get(created.id) as {
         content: string | null;
       };
 
@@ -149,7 +151,10 @@ describe('EvidenceRepository with Encryption', () => {
 
       const created = evidenceRepo.create(evidenceInput);
 
-      const rawRow = db.prepare('SELECT content FROM evidence WHERE id = ?').get(created.id) as {
+      const rawRow = testDb
+        .getDatabase()
+        .prepare('SELECT content FROM evidence WHERE id = ?')
+        .get(created.id) as {
         content: string | null;
       };
 
@@ -243,7 +248,8 @@ describe('EvidenceRepository with Encryption', () => {
   describe('Backward Compatibility', () => {
     it('should handle legacy plaintext content', () => {
       // Manually insert plaintext content (simulating legacy data)
-      const result = db
+      const result = testDb
+        .getDatabase()
         .prepare(
           `INSERT INTO evidence (case_id, title, evidence_type, content)
          VALUES (?, ?, ?, ?)`
@@ -278,10 +284,16 @@ describe('EvidenceRepository with Encryption', () => {
         content,
       });
 
-      const row1 = db.prepare('SELECT content FROM evidence WHERE id = ?').get(evidence1.id) as {
+      const row1 = testDb
+        .getDatabase()
+        .prepare('SELECT content FROM evidence WHERE id = ?')
+        .get(evidence1.id) as {
         content: string;
       };
-      const row2 = db.prepare('SELECT content FROM evidence WHERE id = ?').get(evidence2.id) as {
+      const row2 = testDb
+        .getDatabase()
+        .prepare('SELECT content FROM evidence WHERE id = ?')
+        .get(evidence2.id) as {
         content: string;
       };
 

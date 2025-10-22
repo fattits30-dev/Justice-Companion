@@ -1,22 +1,13 @@
-import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll } from 'vitest';
 import { ChatConversationRepository } from './ChatConversationRepository';
 import { EncryptionService } from '../services/EncryptionService';
 import { AuditLogger } from '../services/AuditLogger';
 import { createTestDatabase } from '../test-utils/database-test-helper';
+import { databaseManager } from '../db/database.ts';
 import type { CreateConversationInput, CreateMessageInput } from '../models/ChatConversation';
-import type Database from 'better-sqlite3';
 
 // Create test database instance at module level
 const testDb = createTestDatabase();
-let db: Database.Database;
-
-// Mock the database module at module level (hoisted by Vitest)
-vi.mock('../db/database', () => ({
-  databaseManager: {
-    getDatabase: () => db,
-  },
-  getDb: () => db,
-}));
 
 describe('ChatConversationRepository - Cursor Pagination', () => {
   let encryptionService: EncryptionService;
@@ -26,7 +17,7 @@ describe('ChatConversationRepository - Cursor Pagination', () => {
 
   // Helper to create test user (satisfies FK constraint)
   const createTestUser = (userId: number): void => {
-    const userStmt = db.prepare(`
+    const userStmt = testDb.getDatabase().prepare(`
       INSERT OR IGNORE INTO users (id, username, password_hash, password_salt, email, created_at)
       VALUES (?, ?, ?, ?, ?, datetime('now'))
     `);
@@ -36,7 +27,7 @@ describe('ChatConversationRepository - Cursor Pagination', () => {
   // Helper to create test case (optional, for case_id FK)
   const createTestCase = (caseId: number, userId: number = 1): void => {
     createTestUser(userId);
-    const caseStmt = db.prepare(`
+    const caseStmt = testDb.getDatabase().prepare(`
       INSERT OR IGNORE INTO cases (id, title, description, case_type, status, user_id, created_at)
       VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
     `);
@@ -45,11 +36,15 @@ describe('ChatConversationRepository - Cursor Pagination', () => {
 
   beforeAll(() => {
     // Initialize test database with all migrations
-    db = testDb.initialize();
+    const testDatabase = testDb.initialize();
+
+    // Inject test database into the singleton (NO MOCKING NEEDED!)
+    databaseManager.setTestDatabase(testDatabase);
   });
 
   afterAll(() => {
-    // Cleanup test database
+    // Reset database singleton and cleanup
+    databaseManager.resetDatabase();
     testDb.cleanup();
   });
 
@@ -59,7 +54,7 @@ describe('ChatConversationRepository - Cursor Pagination', () => {
     encryptionService = new EncryptionService(testKey);
 
     // Create audit logger with the same encryption service
-    auditLogger = new AuditLogger(db, encryptionService);
+    auditLogger = new AuditLogger(testDb.getDatabase(), encryptionService);
 
     repository = new ChatConversationRepository(encryptionService, auditLogger);
 

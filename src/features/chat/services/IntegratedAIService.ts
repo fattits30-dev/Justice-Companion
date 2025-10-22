@@ -102,6 +102,7 @@ export class IntegratedAIService {
       });
 
       // Dynamic import for ESM module
+      // @ts-expect-error - Optional dependency, types not available in dev environment
       const { getLlama, LlamaLogLevel } = await import('node-llama-cpp');
 
       errorLogger.logError('Initializing Llama with AMD GPU detection', {
@@ -409,6 +410,7 @@ Use these facts as your memory. Reference them in your responses.`;
       }
 
       // Import session class
+      // @ts-expect-error - Optional dependency, types not available in dev environment
       const { LlamaChatSession } = await import('node-llama-cpp');
 
       // Build system prompt
@@ -598,6 +600,7 @@ Use these facts as your memory. Reference them in your responses.`;
       }
 
       // Import required classes
+      // @ts-expect-error - Optional dependency, types not available in dev environment
       const { LlamaChatSession } = await import('node-llama-cpp');
       const { aiFunctions } = await import('../../../services/ai-functions.js');
 

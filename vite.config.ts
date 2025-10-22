@@ -14,6 +14,16 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
+
+    // Run repository tests sequentially to avoid database singleton conflicts
+    // Other tests can still run in parallel for speed
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        singleFork: true, // Run all tests in single fork (sequential)
+      },
+    },
+
     exclude: [
       '**/node_modules/**',
       '**/dist/**',

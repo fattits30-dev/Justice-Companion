@@ -14,11 +14,41 @@ export class TestDatabaseHelper {
    * Initialize an in-memory test database with schema
    */
   initialize(): Database.Database {
+    console.log('[TestDatabaseHelper] Initializing in-memory database...');
+
     // Create in-memory database
     this.db = new Database(':memory:');
 
     // Enable foreign keys
     this.db.pragma('foreign_keys = ON');
+
+    console.log('[TestDatabaseHelper] Finding migrations directory...');
+    console.log('[TestDatabaseHelper] process.cwd():', process.cwd());
+    console.log('[TestDatabaseHelper] __dirname:', __dirname);
+
+    // Try multiple paths to find migrations (same logic as migrate.ts)
+    const possiblePaths = [
+      path.join(process.cwd(), 'src', 'db', 'migrations'), // Development source (most common for tests)
+      path.join(__dirname, '..', 'db', 'migrations'), // Relative from test-utils
+      path.join(process.cwd(), 'dist-electron', 'migrations'), // Development bundled
+      path.join(process.resourcesPath || '', 'migrations'), // Production (unlikely in tests)
+    ];
+
+    let migrationsDir = '';
+    for (const dir of possiblePaths) {
+      console.log(`[TestDatabaseHelper] Checking path: ${dir}`);
+      if (require('fs').existsSync(dir)) {
+        migrationsDir = dir;
+        console.log(`[TestDatabaseHelper] ✅ Found migrations at: ${dir}`);
+        break;
+      }
+    }
+
+    if (!migrationsDir) {
+      throw new Error(
+        `[TestDatabaseHelper] Migrations directory not found! Searched paths: ${possiblePaths.join(', ')}`
+      );
+    }
 
     // Load ALL migrations in order (not just 001)
     const migrations = [
@@ -34,11 +64,16 @@ export class TestDatabaseHelper {
       '014_remove_unused_remember_me_index.sql',
     ];
 
-    for (const migration of migrations) {
-      // Use process.cwd() to get project root, then navigate to migrations
-      const projectRoot = process.cwd();
-      const migrationPath = path.join(projectRoot, 'src/db/migrations', migration);
+    console.log(`[TestDatabaseHelper] Running ${migrations.length} migrations...`);
 
+    for (const migration of migrations) {
+      const migrationPath = path.join(migrationsDir, migration);
+
+      if (!require('fs').existsSync(migrationPath)) {
+        throw new Error(`[TestDatabaseHelper] Migration file not found: ${migrationPath}`);
+      }
+
+      console.log(`[TestDatabaseHelper] Running migration: ${migration}`);
       const migrationSQL = readFileSync(migrationPath, 'utf-8');
 
       // Extract UP section only (ignore DOWN for tests)
@@ -47,8 +82,10 @@ export class TestDatabaseHelper {
 
       // Execute the UP migration
       this.db.exec(upSection);
+      console.log(`[TestDatabaseHelper] ✅ ${migration} completed`);
     }
 
+    console.log('[TestDatabaseHelper] ✅ All migrations completed successfully');
     return this.db;
   }
 

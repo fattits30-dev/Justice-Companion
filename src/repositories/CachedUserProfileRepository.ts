@@ -158,7 +158,7 @@ export class CachedUserProfileRepository {
    * Update only the name field
    */
   async updateNameAsync(name: string | null): Promise<UserProfile> {
-    return this.updateAsync({ name });
+    return this.updateAsync({ name: name ?? undefined });
   }
 
   /**
@@ -180,9 +180,9 @@ export class CachedUserProfileRepository {
    */
   async clearAsync(): Promise<UserProfile> {
     return this.updateAsync({
-      name: null,
-      email: null,
-      avatarUrl: null,
+      name: undefined,
+      email: undefined,
+      avatarUrl: undefined,
     });
   }
 

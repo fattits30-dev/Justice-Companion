@@ -1,7 +1,7 @@
-import { Button } from '@/components/ui/button';
-import { FormField } from '@/components/ui/form-field';
-import { useAuth } from '@/contexts/AuthContext';
-import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { Button } from '@/components/ui/button.tsx';
+import { FormField } from '@/components/ui/form-field.tsx';
+import { useAuth } from '@/contexts/AuthContext.tsx';
+import { useReducedMotion } from '@/hooks/useReducedMotion.ts';
 import { motion } from 'framer-motion';
 import { AlertTriangle, Scale } from 'lucide-react';
 import { useState } from 'react';
@@ -37,8 +37,9 @@ export function LoginScreen({ onSwitchToRegister }: LoginScreenProps): JSX.Eleme
       return;
     }
 
-    if (!password) {
-      setError('Password is required');
+    // FIX: Add password length validation consistent with registration (Issue #6)
+    if (!password || password.length < 8) {
+      setError('Password must be at least 8 characters');
       return;
     }
 

@@ -1,6 +1,7 @@
-import type { ConsentType } from '@/models/Consent';
-import { logger } from '../../utils/logger';
+import type { ConsentType } from '@/models/Consent.ts';
+import { logger } from '../../utils/logger.ts';
 import { useEffect, useState } from 'react';
+import { useAuth } from '../../contexts/AuthContext.tsx';
 
 /**
  * GDPR Consent Banner
@@ -14,6 +15,7 @@ interface ConsentBannerProps {
 }
 
 export function ConsentBanner({ onComplete }: ConsentBannerProps): JSX.Element {
+  const { sessionId } = useAuth();
   const [consents, setConsents] = useState({
     data_processing: false,
     encryption: false,
@@ -26,8 +28,13 @@ export function ConsentBanner({ onComplete }: ConsentBannerProps): JSX.Element {
   // Check if required consents are already granted
   useEffect(() => {
     const checkConsents = async (): Promise<void> => {
+      if (!sessionId) {
+        logger.error('App', 'No session ID available for consent check');
+        return;
+      }
+
       try {
-        const result = await window.justiceAPI.hasConsent('data_processing');
+        const result = await window.justiceAPI.hasConsent('data_processing', sessionId);
         if (result.success && result.data) {
           // User already has required consent - skip banner
           onComplete();
@@ -38,7 +45,7 @@ export function ConsentBanner({ onComplete }: ConsentBannerProps): JSX.Element {
     };
 
     void checkConsents(); // Async call in useEffect - errors handled internally
-  }, [onComplete]);
+  }, [onComplete, sessionId]);
 
   const handleSubmit = async (): Promise<void> => {
     setError(null);
@@ -46,6 +53,11 @@ export function ConsentBanner({ onComplete }: ConsentBannerProps): JSX.Element {
     // Validate required consents
     if (!consents.data_processing) {
       setError('Data processing consent is required to use this application');
+      return;
+    }
+
+    if (!sessionId) {
+      setError('No session available. Please log in again.');
       return;
     }
 

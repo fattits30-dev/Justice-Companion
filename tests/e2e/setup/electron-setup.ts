@@ -1,7 +1,7 @@
-import { expect } from '@playwright/test';
+import { expect, _electron as electron } from '@playwright/test';
+import type { ElectronApplication, Page } from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
-import { _electron as electron, ElectronApplication, Page } from 'playwright';
 import { cleanupTestDatabase, setupTestDatabase } from './test-database.js';
 
 /**

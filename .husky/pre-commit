@@ -1,1 +1,126 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+# ==============================================================================
+# Justice Companion Pre-Commit Hook
+# ==============================================================================
+# This hook prevents commits that would break production builds
+# ==============================================================================
+
+echo "🔍 Pre-commit validation started..."
+
+# ------------------------------------------------------------------------------
+# 1. Node Version Enforcement (CRITICAL)
+# ------------------------------------------------------------------------------
+# Electron 38.x requires Node 20.18.0 LTS (NOT 22.x)
+# better-sqlite3 native module must be built for exact Node version
+
+REQUIRED_NODE_MAJOR="20"
+REQUIRED_NODE_MINOR="18"
+
+CURRENT_NODE_VERSION=$(node -v | sed 's/v//')
+CURRENT_NODE_MAJOR=$(echo "$CURRENT_NODE_VERSION" | cut -d. -f1)
+CURRENT_NODE_MINOR=$(echo "$CURRENT_NODE_VERSION" | cut -d. -f2)
+
+if [ "$CURRENT_NODE_MAJOR" != "$REQUIRED_NODE_MAJOR" ] || [ "$CURRENT_NODE_MINOR" -lt "$REQUIRED_NODE_MINOR" ]; then
+  echo ""
+  echo "❌ COMMIT BLOCKED: Wrong Node.js version"
+  echo ""
+  echo "   Current: v$CURRENT_NODE_VERSION"
+  echo "   Required: v${REQUIRED_NODE_MAJOR}.${REQUIRED_NODE_MINOR}.x"
+  echo ""
+  echo "   Fix with:"
+  echo "   nvm use $REQUIRED_NODE_MAJOR  # or fnm use $REQUIRED_NODE_MAJOR"
+  echo "   pnpm install               # Rebuild better-sqlite3"
+  echo ""
+  exit 1
+fi
+
+echo "✓ Node version: v$CURRENT_NODE_VERSION (OK)"
+
+# ------------------------------------------------------------------------------
+# 2. better-sqlite3 Native Module Verification
+# ------------------------------------------------------------------------------
+# Verify better-sqlite3 is compiled for current Node version
+# Prevents: NODE_MODULE_VERSION mismatch errors
+
+if [ -f "node_modules/better-sqlite3/build/Release/better_sqlite3.node" ]; then
+  # Check if module can load (basic smoke test)
+  if ! node -e "require('better-sqlite3')" 2>/dev/null; then
+    echo ""
+    echo "⚠️  WARNING: better-sqlite3 module version mismatch detected"
+    echo ""
+    echo "   Rebuilding for Node v$CURRENT_NODE_VERSION..."
+    echo ""
+
+    # Auto-rebuild (safer than blocking commit)
+    pnpm rebuild better-sqlite3 2>&1 | tail -5
+
+    if [ $? -ne 0 ]; then
+      echo ""
+      echo "❌ COMMIT BLOCKED: better-sqlite3 rebuild failed"
+      echo ""
+      echo "   Manual fix:"
+      echo "   pnpm install               # Full reinstall"
+      echo "   pnpm rebuild better-sqlite3 # Or just rebuild"
+      echo ""
+      exit 1
+    fi
+
+    echo "✓ better-sqlite3 rebuilt successfully"
+  else
+    echo "✓ better-sqlite3 native module (OK)"
+  fi
+else
+  echo "⚠️  better-sqlite3 not found (skipping check)"
+fi
+
+# ------------------------------------------------------------------------------
+# 3. TypeScript Type Checking
+# ------------------------------------------------------------------------------
+# Catch type errors before CI fails 10 minutes later
+
+echo "🔍 Running TypeScript type check..."
+
+if ! pnpm type-check; then
+  echo ""
+  echo "❌ COMMIT BLOCKED: TypeScript type errors detected"
+  echo ""
+  echo "   Fix type errors before committing"
+  echo "   Or bypass (not recommended): git commit --no-verify"
+  echo ""
+  exit 1
+fi
+
+echo "✓ TypeScript type check passed"
+
+# ------------------------------------------------------------------------------
+# 4. Lint Staged Files (ESLint + Prettier)
+# ------------------------------------------------------------------------------
+# Auto-fix linting issues on staged files
+
+echo "🔍 Running lint-staged..."
+
 npx lint-staged
+
+if [ $? -ne 0 ]; then
+  echo ""
+  echo "❌ COMMIT BLOCKED: Linting failed"
+  echo ""
+  echo "   Some issues may have been auto-fixed"
+  echo "   Review changes and try again: git add . && git commit"
+  echo ""
+  exit 1
+fi
+
+echo "✓ Lint-staged passed"
+
+# ------------------------------------------------------------------------------
+# All Checks Passed
+# ------------------------------------------------------------------------------
+
+echo ""
+echo "✅ All pre-commit checks passed - proceeding with commit"
+echo ""
+
+exit 0

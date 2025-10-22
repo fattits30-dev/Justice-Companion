@@ -18,6 +18,7 @@ import type { TimelineEvent } from '../models/TimelineEvent.ts';
 import type { User } from '../models/User.ts';
 import type { Consent, ConsentType } from '../models/Consent.ts';
 import type { PaginationParams, PaginatedResult } from './pagination.ts';
+import type { Session } from '../models/Session.ts';
 
 /**
  * IPC Channel definitions for type-safe communication
@@ -530,7 +531,7 @@ export interface AuthLoginResponse {
   success: true;
   data: {
     user: User;
-    sessionId: string;
+    session: Session;
   };
 }
 

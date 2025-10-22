@@ -1,11 +1,12 @@
 #!/usr/bin/env tsx
 
 import { performance } from 'perf_hooks';
-import { initDb } from '../db/database.ts';
+import { databaseManager } from '../db/database.ts';
 import { EncryptionService } from '../services/EncryptionService.ts';
 import { AuditLogger } from '../services/AuditLogger.ts';
 import { getCacheService, resetCacheService } from '../services/CacheService.ts';
 import { getCacheMetrics } from '../utils/cache-metrics.ts';
+import type Database from 'better-sqlite3';
 
 // Import base repositories
 import { CaseRepository } from '../repositories/CaseRepository.ts';
@@ -42,12 +43,14 @@ class CachePerformanceBenchmark {
   private encryptionService: EncryptionService;
   private auditLogger: AuditLogger;
   private results: BenchmarkResult[] = [];
+  private _db: Database.Database; // Prefix with _ to indicate intentionally unused
 
-  constructor() {
+  constructor(db: Database.Database) {
     // Initialize services
     const encryptionKey = Buffer.from('test-key-for-benchmarking-only!!').toString('base64');
     this.encryptionService = new EncryptionService(encryptionKey);
-    this.auditLogger = new AuditLogger();
+    this.auditLogger = new AuditLogger(db);
+    this._db = db;
   }
 
   /**
@@ -114,7 +117,7 @@ class CachePerformanceBenchmark {
     const testCase: CreateCaseInput = {
       title: 'Benchmark Test Case',
       description: 'This is a test case for benchmarking cache performance',
-      caseType: 'civil',
+      caseType: 'employment',
     };
 
     const createdCase = baseRepo.create(testCase);
@@ -161,7 +164,7 @@ class CachePerformanceBenchmark {
     // Create test case and evidence
     const testCase = caseRepo.create({
       title: 'Evidence Benchmark Case',
-      caseType: 'criminal',
+      caseType: 'housing',
     });
 
     const testEvidence: CreateEvidenceInput = {
@@ -335,7 +338,7 @@ class CachePerformanceBenchmark {
       const testCase = baseRepo.create({
         title: `Stress Test Case ${i}`,
         description: `Description for stress test case ${i}`,
-        caseType: i % 2 === 0 ? 'civil' : 'criminal',
+        caseType: i % 2 === 0 ? 'employment' : 'housing',
       });
       caseIds.push(testCase.id);
     }
@@ -469,13 +472,13 @@ async function main() {
   try {
     // Initialize database
     console.log('Initializing database...');
-    await initDb();
+    const db = databaseManager.getDatabase();
 
     // Reset cache service
     resetCacheService();
 
     // Run benchmarks
-    const benchmark = new CachePerformanceBenchmark();
+    const benchmark = new CachePerformanceBenchmark(db);
     await benchmark.runAll();
 
     process.exit(0);

@@ -12,8 +12,8 @@ import { errorLogger } from '../utils/error-logger.ts';
 import {
   encodeSimpleCursor,
   decodeSimpleCursor,
-  type PaginatedResult,
 } from '../utils/cursor-pagination.ts';
+import type { PaginatedResult } from '../types/pagination.ts';
 
 /**
  * Repository for managing chat conversations with encryption for message content

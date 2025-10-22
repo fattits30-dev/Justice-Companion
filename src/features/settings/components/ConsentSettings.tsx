@@ -95,8 +95,8 @@ export function ConsentSettings({ toast }: ConsentSettingsProps): JSX.Element {
     setIsLoadingConsents(true);
     try {
       const result = await window.justiceAPI.getUserConsents();
-      if (result.success) {
-        setConsents(result.data);
+      if (result.success && result.data) {
+        setConsents(result.data as Consent[]);
       }
     } catch (error) {
       logger.error('App', 'Failed to load consents:', { error: error });

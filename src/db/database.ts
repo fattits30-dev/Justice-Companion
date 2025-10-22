@@ -1,7 +1,6 @@
 import Database from 'better-sqlite3';
 import fs from 'fs';
 import path from 'path';
-import { app } from 'electron';
 import { errorLogger } from '../utils/error-logger.ts';
 
 const resolveDatabasePath = (): string => {
@@ -9,9 +8,14 @@ const resolveDatabasePath = (): string => {
     return process.env.JUSTICE_DB_PATH;
   }
 
-  if (process.versions?.electron && app && typeof app.getPath === 'function') {
+  // Conditional import of electron to avoid hanging in Node.js test environment
+  if (process.versions?.electron) {
     try {
-      return path.join(app.getPath('userData'), 'justice.db');
+      // Dynamic import only when running in Electron
+      const { app } = require('electron');
+      if (app && typeof app.getPath === 'function') {
+        return path.join(app.getPath('userData'), 'justice.db');
+      }
     } catch (error) {
       errorLogger.logError(error as Error, { context: 'database-path-resolution' });
     }

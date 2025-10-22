@@ -36,6 +36,24 @@ This native SQLite module must be rebuilt for different environments:
 
 The postinstall script automatically rebuilds for Electron after installation.
 
+## Critical: TSX Import Resolution
+
+**IMPORTANT:** All relative imports in TypeScript files MUST have explicit `.ts` extensions.
+
+```typescript
+// ✅ Correct
+import { UserRepository } from '../repositories/UserRepository.ts';
+import type { User } from '../models/User.ts';
+
+// ❌ Wrong - will fail with TSX transpiler
+import { UserRepository } from '../repositories/UserRepository';
+import type { User } from '../models/User';
+```
+
+**Why:** Justice Companion uses `tsx` for development which requires explicit file extensions for ESM module resolution. See [TSX Import Resolution Guide](docs/TSX-IMPORT-RESOLUTION-GUIDE.md) for comprehensive details.
+
+**Quick Fix:** Run `node fix-imports-simple.mjs` to automatically add `.ts` extensions.
+
 ## Common Commands
 
 ### Development
@@ -345,6 +363,19 @@ console.log('Preserved audit logs:', deleteResult.preservedAuditLogs);
 - AI chat messages (optional, based on user consent)
 
 ## Known Issues & Troubleshooting
+
+### TSX "Cannot find module" Errors (FIXED)
+**Symptom:** `Error [ERR_MODULE_NOT_FOUND]: Cannot find module 'F:\...\src\db\database'`
+**Cause:** Missing `.ts` extensions on relative imports
+**Fix:**
+```bash
+# Automated fix (adds .ts extensions to all relative imports)
+node fix-imports-simple.mjs
+
+# Verify fix
+pnpm electron:dev
+```
+**See:** [TSX Import Resolution Guide](docs/TSX-IMPORT-RESOLUTION-GUIDE.md) for complete documentation.
 
 ### better-sqlite3 Module Version Mismatch
 **Symptom:** `NODE_MODULE_VERSION mismatch` error

@@ -1,4 +1,4 @@
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext.tsx';
 import { useState } from 'react';
 
 interface RegistrationScreenProps {
