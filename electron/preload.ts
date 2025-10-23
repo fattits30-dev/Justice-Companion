@@ -347,7 +347,43 @@ const justiceAPI = {
   onAIStreamThinkToken: () => Promise.reject(new Error('Not implemented')),
   printFile: () => Promise.reject(new Error('Not implemented')),
   revokeConsent: () => Promise.reject(new Error('Not implemented')),
-  secureStorage: () => Promise.reject(new Error('Not implemented')),
+  secureStorage: {
+    isEncryptionAvailable: async () => {
+      const response = await ipcRenderer.invoke('secure-storage:isEncryptionAvailable');
+      if (!response.success) {
+        throw new Error(response.error);
+      }
+      return response.data.available;
+    },
+    set: async (key: string, value: string) => {
+      const response = await ipcRenderer.invoke('secure-storage:set', key, value);
+      if (!response.success) {
+        throw new Error(response.error);
+      }
+      return response.data.success;
+    },
+    get: async (key: string) => {
+      const response = await ipcRenderer.invoke('secure-storage:get', key);
+      if (!response.success) {
+        throw new Error(response.error);
+      }
+      return response.data.value;
+    },
+    delete: async (key: string) => {
+      const response = await ipcRenderer.invoke('secure-storage:delete', key);
+      if (!response.success) {
+        throw new Error(response.error);
+      }
+      return response.data.success;
+    },
+    clearAll: async () => {
+      const response = await ipcRenderer.invoke('secure-storage:clearAll');
+      if (!response.success) {
+        throw new Error(response.error);
+      }
+      return response.data.success;
+    },
+  },
   selectFile: () => Promise.reject(new Error('Not implemented')),
   storeFact: () => Promise.reject(new Error('Not implemented')),
   testAIConnection: () => Promise.reject(new Error('Not implemented')),

@@ -1,4 +1,4 @@
-import { ipcMain, type IpcMainInvokeEvent } from 'electron';
+import { ipcMain, safeStorage, type IpcMainInvokeEvent } from 'electron';
 import * as path from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 import {
@@ -14,6 +14,13 @@ import {
   getAuthorizationMiddleware,
   verifyEvidenceOwnership,
 } from './utils/authorization-wrapper.ts';
+
+// SIMPLE: Import services at top (no lazy loading)
+import { getDb } from '../src/db/database.ts';
+import { UserRepository } from '../src/repositories/UserRepository.ts';
+import { SessionRepository } from '../src/repositories/SessionRepository.ts';
+import { AuditLogger } from '../src/services/AuditLogger.ts';
+import { AuthenticationService } from '../src/services/AuthenticationService.ts';
 
 // ESM equivalent of __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -56,62 +63,37 @@ export function setupIpcHandlers(): void {
   // GDPR handlers
   setupGdprHandlers();
 
+  // Secure storage handlers
+  setupSecureStorageHandlers();
+
   console.warn('[IPC] All IPC handlers registered');
+}
+
+// SIMPLE: Create singletons (initialized once, reused forever)
+let authService: AuthenticationService | null = null;
+
+function getAuthService(): AuthenticationService {
+  if (!authService) {
+    const db = getDb();
+    const auditLogger = new AuditLogger(db);
+    const userRepository = new UserRepository(auditLogger);
+    const sessionRepository = new SessionRepository();
+
+    authService = new AuthenticationService(
+      userRepository,
+      sessionRepository,
+      auditLogger
+    );
+
+    console.warn('[IPC] AuthenticationService initialized');
+  }
+  return authService;
 }
 
 /**
  * ===== AUTHENTICATION HANDLERS =====
  */
 function setupAuthHandlers(): void {
-  // Lazy-load services to avoid circular dependencies
-  const getAuthService = async () => {
-    try {
-      // Use absolute paths to prevent path traversal (CVSS 8.8 fix)
-      // Convert Windows paths to file:// URLs for ESM dynamic imports
-      // Add .ts extension for tsx to resolve TypeScript modules
-      const authServicePath = path.join(__dirname, '../src/services/AuthenticationService.ts');
-      const dbPath = path.join(__dirname, '../src/db/database.ts');
-      const authServiceUrl = pathToFileURL(authServicePath).href;
-      const dbUrl = pathToFileURL(dbPath).href;
-
-      console.warn('[IPC] Importing AuthenticationService from:', authServiceUrl);
-      console.warn('[IPC] __dirname:', __dirname);
-      console.warn('[IPC] authServicePath:', authServicePath);
-
-      const authModule = await import(authServiceUrl);
-      console.warn('[IPC] AuthenticationService module imported successfully');
-
-      const dbModule = await import(dbUrl);
-      console.warn('[IPC] Database module imported successfully');
-
-      const { AuthenticationService } = authModule;
-      const { getDb } = dbModule;
-
-      if (!AuthenticationService) {
-        throw new Error('AuthenticationService not found in module exports');
-      }
-      if (!getDb) {
-        throw new Error('getDb not found in database module exports');
-      }
-
-      const db = getDb();
-      console.warn('[IPC] Database instance obtained');
-
-      const authService = new AuthenticationService(db);
-      console.warn('[IPC] AuthenticationService instance created');
-
-      return authService;
-    } catch (error) {
-      console.error('[IPC] FATAL: Failed to load AuthenticationService');
-      console.error('[IPC] Error details:', {
-        name: (error as Error).name,
-        message: (error as Error).message,
-        stack: (error as Error).stack,
-        cause: (error as any).cause,
-      });
-      throw new Error(`Failed to load AuthenticationService: ${(error as Error).message}\nStack: ${(error as Error).stack}`);
-    }
-  };
 
   const getAuthSchemas = async () => {
     try {
@@ -143,20 +125,24 @@ function setupAuthHandlers(): void {
     'auth:register',
     async (_event: IpcMainInvokeEvent, data: unknown): Promise<IPCResponse> => {
       try {
-        console.warn('[IPC] auth:register called');
+        console.warn('[IPC] auth:register called with:', data);
 
         // Validate input with Zod
         const schemas = await getAuthSchemas();
         const validatedData = schemas.authRegisterSchema.parse(data);
 
-        // Call AuthenticationService.register()
-        const authService = await getAuthService();
-        const result = await authService.register(validatedData);
+        // SIMPLE: Get service synchronously, call register with proper params
+        const authSvc = getAuthService();
+        const result = await authSvc.register(
+          validatedData.username,
+          validatedData.password,
+          validatedData.email
+        );
 
         // Log audit event
-        logAuthEvent(AuditEventType.USER_REGISTERED, result.userId, true);
+        logAuthEvent(AuditEventType.USER_REGISTERED, result.id, true);
 
-        console.warn('[IPC] User registered successfully:', result.userId);
+        console.warn('[IPC] User registered successfully:', result.id);
         return successResponse(result);
       } catch (error) {
         console.error('[IPC] auth:register error:', error);
@@ -174,15 +160,15 @@ function setupAuthHandlers(): void {
     'auth:login',
     async (_event: IpcMainInvokeEvent, data: unknown): Promise<IPCResponse> => {
       try {
-        console.warn('[IPC] auth:login called');
+        console.warn('[IPC] auth:login called with:', data);
 
         // Validate input with Zod
         const schemas = await getAuthSchemas();
         const validatedData = schemas.authLoginSchema.parse(data);
 
-        // Call AuthenticationService.login()
-        const authService = await getAuthService();
-        const result = await authService.login(
+        // SIMPLE: Get service synchronously
+        const authSvc = getAuthService();
+        const result = await authSvc.login(
           validatedData.username,
           validatedData.password,
           validatedData.rememberMe
@@ -215,9 +201,9 @@ function setupAuthHandlers(): void {
           return errorResponse(IPCErrorCode.VALIDATION_ERROR, 'Session ID is required');
         }
 
-        // Call AuthenticationService.logout()
-        const authService = await getAuthService();
-        await authService.logout(sessionId);
+        // SIMPLE: Get service synchronously
+        const authSvc = getAuthService();
+        await authSvc.logout(sessionId);
 
         // Log logout (we don't know userId at this point, so pass null)
         logAuthEvent(AuditEventType.USER_LOGGED_OUT, null, true);
@@ -242,9 +228,9 @@ function setupAuthHandlers(): void {
           return errorResponse(IPCErrorCode.NOT_AUTHENTICATED, 'No session ID provided');
         }
 
-        // Call AuthenticationService.getSession()
-        const authService = await getAuthService();
-        const session = await authService.getSession(sessionId);
+        // SIMPLE: Get service synchronously
+        const authSvc = getAuthService();
+        const session = await authSvc.getSession(sessionId);
 
         if (!session) {
           return errorResponse(IPCErrorCode.SESSION_EXPIRED, 'Session not found or expired');
@@ -960,6 +946,126 @@ function setupGdprHandlers(): void {
           );
         }
       });
+    }
+  );
+}
+
+/**
+ * Setup secure storage IPC handlers
+ * Uses Electron safeStorage API for OS-native encryption
+ */
+function setupSecureStorageHandlers(): void {
+  // Check if encryption is available
+  ipcMain.handle(
+    'secure-storage:isEncryptionAvailable',
+    async (_event: IpcMainInvokeEvent): Promise<IPCResponse> => {
+      try {
+        const available = safeStorage.isEncryptionAvailable();
+        return successResponse({ available });
+      } catch (error) {
+        console.error('[IPC] secure-storage:isEncryptionAvailable error:', error);
+        return errorResponse(
+          formatError(error, IPCErrorCode.INTERNAL_ERROR),
+          IPCErrorCode.INTERNAL_ERROR
+        );
+      }
+    }
+  );
+
+  // Securely store a value
+  ipcMain.handle(
+    'secure-storage:set',
+    async (_event: IpcMainInvokeEvent, key: string, value: string): Promise<IPCResponse> => {
+      try {
+        if (!safeStorage.isEncryptionAvailable()) {
+          return errorResponse('Encryption not available on this system', IPCErrorCode.INTERNAL_ERROR);
+        }
+
+        // Encrypt the value
+        const encrypted = safeStorage.encryptString(value);
+
+        // Store in a Map (in-memory for now, could be persisted to file)
+        if (!global.secureStorageMap) {
+          global.secureStorageMap = new Map<string, Buffer>();
+        }
+        global.secureStorageMap.set(key, encrypted);
+
+        console.log(`[IPC] Securely stored key: ${key}`);
+        return successResponse({ success: true });
+      } catch (error) {
+        console.error('[IPC] secure-storage:set error:', error);
+        return errorResponse(
+          formatError(error, IPCErrorCode.INTERNAL_ERROR),
+          IPCErrorCode.INTERNAL_ERROR
+        );
+      }
+    }
+  );
+
+  // Retrieve a securely stored value
+  ipcMain.handle(
+    'secure-storage:get',
+    async (_event: IpcMainInvokeEvent, key: string): Promise<IPCResponse> => {
+      try {
+        if (!global.secureStorageMap || !global.secureStorageMap.has(key)) {
+          return successResponse({ value: null });
+        }
+
+        const encrypted = global.secureStorageMap.get(key);
+        if (!encrypted) {
+          return successResponse({ value: null });
+        }
+
+        // Decrypt the value
+        const decrypted = safeStorage.decryptString(encrypted);
+        return successResponse({ value: decrypted });
+      } catch (error) {
+        console.error('[IPC] secure-storage:get error:', error);
+        return errorResponse(
+          formatError(error, IPCErrorCode.INTERNAL_ERROR),
+          IPCErrorCode.INTERNAL_ERROR
+        );
+      }
+    }
+  );
+
+  // Delete a securely stored value
+  ipcMain.handle(
+    'secure-storage:delete',
+    async (_event: IpcMainInvokeEvent, key: string): Promise<IPCResponse> => {
+      try {
+        if (global.secureStorageMap) {
+          global.secureStorageMap.delete(key);
+        }
+        console.log(`[IPC] Deleted secure storage key: ${key}`);
+        return successResponse({ success: true });
+      } catch (error) {
+        console.error('[IPC] secure-storage:delete error:', error);
+        return errorResponse(
+          formatError(error, IPCErrorCode.INTERNAL_ERROR),
+          IPCErrorCode.INTERNAL_ERROR
+        );
+      }
+    }
+  );
+
+  // Clear all securely stored values
+  ipcMain.handle(
+    'secure-storage:clearAll',
+    async (_event: IpcMainInvokeEvent): Promise<IPCResponse> => {
+      try {
+        if (global.secureStorageMap) {
+          global.secureStorageMap.clear();
+        }
+        console.log('[IPC] Cleared all secure storage');
+        return successResponse({ success: true });
+      } catch (error) {
+        console.error('[IPC] secure-storage:clearAll error:', error);
+        return errorResponse(
+          formatError(error, IPCErrorCode.INTERNAL_ERROR),
+          IPCErrorCode.INTERNAL_ERROR
+        );
+      }
     }
   );
 }
