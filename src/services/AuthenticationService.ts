@@ -1,13 +1,13 @@
-import crypto from 'crypto';
-import { logger } from '../utils/logger.ts';
-import { promisify } from 'util';
-import { v4 as uuidv4 } from 'uuid';
-import { UserRepository } from '../repositories/UserRepository.ts';
-import { SessionRepository } from '../repositories/SessionRepository.ts';
-import { AuditLogger } from './AuditLogger.ts';
-import { RateLimitService } from './RateLimitService.ts';
-import type { User } from '../models/User.ts';
-import type { Session } from '../models/Session.ts';
+import crypto from "crypto";
+import { logger } from "../utils/logger.ts";
+import { promisify } from "util";
+import { v4 as uuidv4 } from "uuid";
+import { UserRepository } from "../repositories/UserRepository.ts";
+import { SessionRepository } from "../repositories/SessionRepository.ts";
+import { AuditLogger } from "./AuditLogger.ts";
+import { RateLimitService } from "./RateLimitService.ts";
+import type { User } from "../models/User.ts";
+import type { Session } from "../models/Session.ts";
 
 const scrypt = promisify(crypto.scrypt);
 
@@ -17,7 +17,7 @@ const scrypt = promisify(crypto.scrypt);
 export class AuthenticationError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = 'AuthenticationError';
+    this.name = "AuthenticationError";
   }
 }
 
@@ -87,41 +87,51 @@ export class AuthenticationService {
    * - At least one lowercase letter
    * - At least one number
    */
-  async register(username: string, password: string, email: string): Promise<User> {
+  async register(
+    username: string,
+    password: string,
+    email: string,
+  ): Promise<User> {
     // Validate username
     if (!username || username.trim().length === 0) {
-      throw new AuthenticationError('Username cannot be empty');
+      throw new AuthenticationError("Username cannot be empty");
     }
 
     // Validate password strength
     if (password.length < 12) {
       throw new AuthenticationError(
-        'Password must be at least 12 characters (OWASP requirement)',
+        "Password must be at least 12 characters (OWASP requirement)",
       );
     }
 
     if (!/[A-Z]/.test(password)) {
-      throw new AuthenticationError('Password must contain at least one uppercase letter');
+      throw new AuthenticationError(
+        "Password must contain at least one uppercase letter",
+      );
     }
 
     if (!/[a-z]/.test(password)) {
-      throw new AuthenticationError('Password must contain at least one lowercase letter');
+      throw new AuthenticationError(
+        "Password must contain at least one lowercase letter",
+      );
     }
 
     if (!/[0-9]/.test(password)) {
-      throw new AuthenticationError('Password must contain at least one number');
+      throw new AuthenticationError(
+        "Password must contain at least one number",
+      );
     }
 
     // Check if username already exists
     const existingUser = this.userRepository.findByUsername(username);
     if (existingUser) {
-      throw new AuthenticationError('Username already exists');
+      throw new AuthenticationError("Username already exists");
     }
 
     // Check if email already exists
     const existingEmail = this.userRepository.findByEmail(email);
     if (existingEmail) {
-      throw new AuthenticationError('Email already exists');
+      throw new AuthenticationError("Email already exists");
     }
 
     // Generate salt and hash password
@@ -131,17 +141,17 @@ export class AuthenticationService {
     const user = this.userRepository.create({
       username,
       email,
-      passwordHash: hash.toString('hex'),
-      passwordSalt: salt.toString('hex'),
-      role: 'user',
+      passwordHash: hash.toString("hex"),
+      passwordSalt: salt.toString("hex"),
+      role: "user",
     });
 
     this.auditLogger?.log({
-      eventType: 'user.register',
+      eventType: "user.register",
       userId: user.id.toString(),
-      resourceType: 'user',
+      resourceType: "user",
       resourceId: user.id.toString(),
-      action: 'create',
+      action: "create",
       details: { username, email },
       success: true,
     });
@@ -170,22 +180,22 @@ export class AuthenticationService {
     if (!rateLimitResult.allowed) {
       // Account is locked due to too many failed attempts
       this.auditLogger?.log({
-        eventType: 'user.login',
+        eventType: "user.login",
         userId: undefined,
-        resourceType: 'user',
-        resourceId: 'unknown',
-        action: 'read',
+        resourceType: "user",
+        resourceId: "unknown",
+        action: "read",
         success: false,
         details: {
           username,
-          reason: 'Rate limit exceeded',
+          reason: "Rate limit exceeded",
           remainingTime: rateLimitResult.remainingTime,
         },
       });
 
       const errorMessage = rateLimitResult.remainingTime
         ? `Account temporarily locked. Please try again in ${Math.ceil(rateLimitResult.remainingTime / 60)} minutes.`
-        : 'Too many failed login attempts. Please try again later.';
+        : "Too many failed login attempts. Please try again later.";
 
       throw new AuthenticationError(errorMessage);
     }
@@ -197,15 +207,15 @@ export class AuthenticationService {
       this.rateLimitService.recordFailedAttempt(username);
 
       this.auditLogger?.log({
-        eventType: 'user.login',
+        eventType: "user.login",
         userId: undefined,
-        resourceType: 'user',
-        resourceId: 'unknown',
-        action: 'read',
+        resourceType: "user",
+        resourceId: "unknown",
+        action: "read",
         success: false,
-        details: { username, reason: 'User not found' },
+        details: { username, reason: "User not found" },
       });
-      throw new AuthenticationError('Invalid credentials');
+      throw new AuthenticationError("Invalid credentials");
     }
 
     // Check if user is active
@@ -214,22 +224,22 @@ export class AuthenticationService {
       this.rateLimitService.recordFailedAttempt(username);
 
       this.auditLogger?.log({
-        eventType: 'user.login',
+        eventType: "user.login",
         userId: user.id.toString(),
-        resourceType: 'user',
+        resourceType: "user",
         resourceId: user.id.toString(),
-        action: 'read',
+        action: "read",
         success: false,
-        details: { username, reason: 'User inactive' },
+        details: { username, reason: "User inactive" },
       });
-      throw new AuthenticationError('Account is inactive');
+      throw new AuthenticationError("Account is inactive");
     }
 
     // Verify password using timing-safe comparison
-    const salt = Buffer.from(user.passwordSalt, 'hex');
+    const salt = Buffer.from(user.passwordSalt, "hex");
     const hash = (await scrypt(password, salt, this.KEY_LENGTH)) as Buffer;
     const isValid = crypto.timingSafeEqual(
-      Buffer.from(user.passwordHash, 'hex'),
+      Buffer.from(user.passwordHash, "hex"),
       hash,
     );
 
@@ -238,15 +248,15 @@ export class AuthenticationService {
       this.rateLimitService.recordFailedAttempt(username);
 
       this.auditLogger?.log({
-        eventType: 'user.login',
+        eventType: "user.login",
         userId: user.id.toString(),
-        resourceType: 'user',
+        resourceType: "user",
         resourceId: user.id.toString(),
-        action: 'read',
+        action: "read",
         success: false,
-        details: { username, reason: 'Invalid password' },
+        details: { username, reason: "Invalid password" },
       });
-      throw new AuthenticationError('Invalid credentials');
+      throw new AuthenticationError("Invalid credentials");
     }
 
     // Login successful - clear rate limit attempts
@@ -257,11 +267,13 @@ export class AuthenticationService {
     const newSessionId = uuidv4();
 
     // Create session with appropriate duration based on rememberMe flag
-    const sessionDuration = rememberMe ? this.REMEMBER_ME_DURATION_MS : this.SESSION_DURATION_MS;
+    const sessionDuration = rememberMe
+      ? this.REMEMBER_ME_DURATION_MS
+      : this.SESSION_DURATION_MS;
     const expiresAt = new Date(Date.now() + sessionDuration);
 
     const session = this.sessionRepository.create({
-      id: newSessionId,  // Force new ID - prevents session fixation
+      id: newSessionId, // Force new ID - prevents session fixation
       userId: user.id,
       expiresAt: expiresAt.toISOString(),
       ipAddress,
@@ -277,36 +289,68 @@ export class AuthenticationService {
           await this.sessionPersistence.storeSessionId(newSessionId);
           sessionPersisted = true;
         } else {
-          logger.warn('AuthenticationService', 'Persistent storage not available, Remember Me will not persist across app restarts');
+          logger.warn(
+            "AuthenticationService",
+            "Persistent storage not available, Remember Me will not persist across app restarts",
+          );
         }
       } catch (error) {
         // Don't fail login if persistence fails - just log the error
-        logger.error('AuthenticationService', 'Failed to persist session:', { error: error });
+        logger.error("AuthenticationService", "Failed to persist session:", {
+          error: error,
+        });
       }
     } else if (rememberMe && !this.sessionPersistence) {
-      logger.warn('AuthenticationService', 'Remember Me requested but no persistence handler configured');
+      logger.warn(
+        "AuthenticationService",
+        "Remember Me requested but no persistence handler configured",
+      );
     }
 
     // Update last login timestamp
     this.userRepository.updateLastLogin(user.id);
 
     this.auditLogger?.log({
-      eventType: 'user.login',
+      eventType: "user.login",
       userId: user.id.toString(),
-      resourceType: 'user',
+      resourceType: "user",
       resourceId: user.id.toString(),
-      action: 'read',
+      action: "read",
       success: true,
       details: {
         username,
         sessionId: newSessionId,
-        rememberMe: rememberMe ? 'enabled' : 'disabled',
+        rememberMe: rememberMe ? "enabled" : "disabled",
         sessionRegenerated: true,
         sessionPersisted: sessionPersisted,
       },
     });
 
     return { user, session };
+  }
+
+  /**
+   * Get session by ID
+   * Verifies session exists and is not expired
+   * @param sessionId - Session UUID to retrieve
+   * @returns Session object if valid, null if not found or expired
+   */
+  async getSession(sessionId: string): Promise<Session | null> {
+    const session = this.sessionRepository.findById(sessionId);
+
+    if (!session) {
+      return null;
+    }
+
+    // Check if session is expired
+    const expiresAt = new Date(session.expiresAt);
+    if (expiresAt < new Date()) {
+      // Session expired - delete it
+      this.sessionRepository.delete(sessionId);
+      return null;
+    }
+
+    return session;
   }
 
   /**
@@ -323,7 +367,11 @@ export class AuthenticationService {
           await this.sessionPersistence.clearSession();
         } catch (error) {
           // Don't fail logout if persistence clear fails
-          logger.error('AuthenticationService', 'Failed to clear persisted session:', { error: error });
+          logger.error(
+            "AuthenticationService",
+            "Failed to clear persisted session:",
+            { error: error },
+          );
         }
       }
 
@@ -331,11 +379,11 @@ export class AuthenticationService {
       this.sessionRepository.delete(sessionId);
 
       this.auditLogger?.log({
-        eventType: 'user.logout',
+        eventType: "user.logout",
         userId: session.userId.toString(),
-        resourceType: 'session',
+        resourceType: "session",
         resourceId: sessionId,
-        action: 'delete',
+        action: "delete",
         success: true,
         details: {
           sessionCleared: true,
@@ -380,66 +428,76 @@ export class AuthenticationService {
     const user = this.userRepository.findById(userId);
 
     if (!user) {
-      throw new AuthenticationError('User not found');
+      throw new AuthenticationError("User not found");
     }
 
     // Verify old password
-    const salt = Buffer.from(user.passwordSalt, 'hex');
+    const salt = Buffer.from(user.passwordSalt, "hex");
     const hash = (await scrypt(oldPassword, salt, this.KEY_LENGTH)) as Buffer;
     const isValid = crypto.timingSafeEqual(
-      Buffer.from(user.passwordHash, 'hex'),
+      Buffer.from(user.passwordHash, "hex"),
       hash,
     );
 
     if (!isValid) {
       this.auditLogger?.log({
-        eventType: 'user.password_change',
+        eventType: "user.password_change",
         userId: userId.toString(),
-        resourceType: 'user',
+        resourceType: "user",
         resourceId: userId.toString(),
-        action: 'update',
+        action: "update",
         success: false,
-        details: { reason: 'Invalid current password' },
+        details: { reason: "Invalid current password" },
       });
-      throw new AuthenticationError('Invalid current password');
+      throw new AuthenticationError("Invalid current password");
     }
 
     // Validate new password strength
     if (newPassword.length < 12) {
-      throw new AuthenticationError('Password must be at least 12 characters');
+      throw new AuthenticationError("Password must be at least 12 characters");
     }
 
     if (!/[A-Z]/.test(newPassword)) {
-      throw new AuthenticationError('Password must contain at least one uppercase letter');
+      throw new AuthenticationError(
+        "Password must contain at least one uppercase letter",
+      );
     }
 
     if (!/[a-z]/.test(newPassword)) {
-      throw new AuthenticationError('Password must contain at least one lowercase letter');
+      throw new AuthenticationError(
+        "Password must contain at least one lowercase letter",
+      );
     }
 
     if (!/[0-9]/.test(newPassword)) {
-      throw new AuthenticationError('Password must contain at least one number');
+      throw new AuthenticationError(
+        "Password must contain at least one number",
+      );
     }
 
     // Hash new password
     const newSalt = crypto.randomBytes(this.SALT_LENGTH);
-    const newHash = (await scrypt(newPassword, newSalt, this.KEY_LENGTH)) as Buffer;
+    const newHash = (await scrypt(
+      newPassword,
+      newSalt,
+      this.KEY_LENGTH,
+    )) as Buffer;
 
     this.userRepository.updatePassword(
       userId,
-      newHash.toString('hex'),
-      newSalt.toString('hex'),
+      newHash.toString("hex"),
+      newSalt.toString("hex"),
     );
 
     // Invalidate all existing sessions for security
     this.sessionRepository.deleteByUserId(userId);
 
     this.auditLogger?.log({
-      eventType: 'user.password_change',
+      eventType: "user.password_change",
       userId: userId.toString(),
-      resourceType: 'user',
+      resourceType: "user",
       resourceId: userId.toString(),
-      action: 'update',
+      action: "update",
       success: true,
     });
   }
@@ -449,7 +507,10 @@ export class AuthenticationService {
    * Called on app startup to restore a previously persisted session
    * @returns User and session if valid persisted session found, null otherwise
    */
-  async restorePersistedSession(): Promise<{ user: User; session: Session } | null> {
+  async restorePersistedSession(): Promise<{
+    user: User;
+    session: Session;
+  } | null> {
     try {
       // Check if persistence handler is configured
       if (!this.sessionPersistence) {
@@ -457,7 +518,7 @@ export class AuthenticationService {
       }
 
       // Check if there's a persisted session
-      if (!await this.sessionPersistence.hasStoredSession()) {
+      if (!(await this.sessionPersistence.hasStoredSession())) {
         return null;
       }
 
@@ -498,11 +559,11 @@ export class AuthenticationService {
 
       // Session is valid - log the successful restoration
       this.auditLogger?.log({
-        eventType: 'user.login',
+        eventType: "user.login",
         userId: user.id.toString(),
-        resourceType: 'session',
+        resourceType: "session",
         resourceId: sessionId,
-        action: 'read',
+        action: "read",
         success: true,
         details: {
           rememberMe: session.rememberMe,
@@ -512,9 +573,12 @@ export class AuthenticationService {
       });
 
       return { user, session };
-
     } catch (error) {
-      logger.error('AuthenticationService', 'Error restoring persisted session:', { error: error });
+      logger.error(
+        "AuthenticationService",
+        "Error restoring persisted session:",
+        { error: error },
+      );
       // Clear any corrupted persisted session
       if (this.sessionPersistence) {
         try {
@@ -535,11 +599,11 @@ export class AuthenticationService {
 
     if (deletedCount > 0) {
       this.auditLogger?.log({
-        eventType: 'session.cleanup',
+        eventType: "session.cleanup",
         userId: undefined,
-        resourceType: 'session',
-        resourceId: 'system',
-        action: 'delete',
+        resourceType: "session",
+        resourceId: "system",
+        action: "delete",
         success: true,
         details: { deletedCount },
       });
