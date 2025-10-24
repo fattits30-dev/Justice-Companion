@@ -1,3 +1,5 @@
+import { SkeletonCard } from '../../../components/ui/Skeleton.tsx';
+
 interface ErrorStateProps {
   message: string;
   onRetry: () => void;
@@ -13,11 +15,10 @@ interface NoCasesProps {
 
 export function DocumentsLoadingState() {
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
-      <div className="text-center" role="status">
-        <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-blue-500" />
-        <p className="text-gray-400">Loading documents...</p>
-      </div>
+    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <SkeletonCard key={i} />
+      ))}
     </div>
   );
 }
