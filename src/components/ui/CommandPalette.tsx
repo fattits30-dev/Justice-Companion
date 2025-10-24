@@ -113,25 +113,25 @@ export function CommandPalette({
               >
                 {/* Search Input */}
                 <div className="flex items-center gap-3 px-4 border-b border-gray-800">
-                  <Search className="w-5 h-5 text-gray-400" />
+                  <Search className="w-5 h-5 text-white/90" />
                   <Command.Input
                     value={search}
                     onValueChange={setSearch}
                     placeholder={placeholder}
                     className={clsx(
                       "flex-1 py-4 bg-transparent",
-                      "text-white placeholder:text-gray-500",
+                      "text-white placeholder:text-white/80",
                       "outline-none",
                     )}
                   />
-                  <kbd className="hidden sm:inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-gray-400 bg-primary-800 rounded border border-gray-700">
+                  <kbd className="hidden sm:inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-white/90 bg-primary-800 rounded border border-gray-700">
                     ESC
                   </kbd>
                 </div>
 
                 {/* Results */}
                 <Command.List className="max-h-[400px] overflow-y-auto p-2">
-                  <Command.Empty className="py-6 text-center text-sm text-gray-500">
+                  <Command.Empty className="py-6 text-center text-sm text-white/80">
                     {emptyMessage}
                   </Command.Empty>
 
@@ -139,7 +139,7 @@ export function CommandPalette({
                   {recentItems.length > 0 && !search && (
                     <Command.Group
                       heading="Recent"
-                      className="mb-2 px-2 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider"
+                      className="mb-2 px-2 py-1.5 text-xs font-semibold text-white/90 uppercase tracking-wider"
                     >
                       {recentItems.map((item) => (
                         <CommandItemComponent
@@ -159,7 +159,7 @@ export function CommandPalette({
                     <Command.Group
                       key={group}
                       heading={group}
-                      className="mb-2 px-2 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider"
+                      className="mb-2 px-2 py-1.5 text-xs font-semibold text-white/90 uppercase tracking-wider"
                     >
                       {items.map((item) => (
                         <CommandItemComponent
@@ -176,7 +176,7 @@ export function CommandPalette({
                 </Command.List>
 
                 {/* Footer */}
-                <div className="flex items-center gap-2 px-4 py-2 border-t border-gray-800 text-xs text-gray-500">
+                <div className="flex items-center gap-2 px-4 py-2 border-t border-gray-800 text-xs text-white/80">
                   <kbd className="px-1.5 py-0.5 bg-primary-800 rounded border border-gray-700">
                     ↑↓
                   </kbd>
@@ -215,19 +215,19 @@ function CommandItemComponent({ item, onSelect }: CommandItemComponentProps) {
         "cursor-pointer transition-colors",
         "data-[selected=true]:bg-primary-500/10",
         "data-[selected=true]:text-white",
-        "text-gray-300",
+        "text-white",
       )}
     >
       {/* Icon */}
       {item.icon && (
-        <span className="flex-shrink-0 w-5 h-5 text-gray-400">{item.icon}</span>
+        <span className="flex-shrink-0 w-5 h-5 text-white/90">{item.icon}</span>
       )}
 
       {/* Content */}
       <div className="flex-1 min-w-0">
         <div className="font-medium">{item.label}</div>
         {item.description && (
-          <div className="text-xs text-gray-500 truncate">
+          <div className="text-xs text-white/80 truncate">
             {item.description}
           </div>
         )}
@@ -235,13 +235,13 @@ function CommandItemComponent({ item, onSelect }: CommandItemComponentProps) {
 
       {/* Shortcut */}
       {item.shortcut && (
-        <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-xs font-mono text-gray-400 bg-primary-800 rounded border border-gray-700">
+        <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-xs font-mono text-white/90 bg-primary-800 rounded border border-gray-700">
           {item.shortcut}
         </kbd>
       )}
 
       {/* Arrow indicator */}
-      <ChevronRight className="w-4 h-4 text-gray-600" />
+      <ChevronRight className="w-4 h-4 text-white/70" />
     </Command.Item>
   );
 }

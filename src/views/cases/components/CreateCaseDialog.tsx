@@ -65,7 +65,7 @@ export function CreateCaseDialog({ onClose, onCreate }: CreateCaseDialogProps) {
           </div>
           <form onSubmit={handleSubmit} className="space-y-4">
             <label className="block text-sm">
-              <span className="mb-2 block font-medium text-gray-300">
+              <span className="mb-2 block font-medium text-white">
                 Case Title *
               </span>
               <input
@@ -79,7 +79,7 @@ export function CreateCaseDialog({ onClose, onCreate }: CreateCaseDialogProps) {
             </label>
 
             <label className="block text-sm">
-              <span className="mb-2 block font-medium text-gray-300">
+              <span className="mb-2 block font-medium text-white">
                 Case Type *
               </span>
               <select
@@ -98,7 +98,7 @@ export function CreateCaseDialog({ onClose, onCreate }: CreateCaseDialogProps) {
             </label>
 
             <label className="block text-sm">
-              <span className="mb-2 block font-medium text-gray-300">
+              <span className="mb-2 block font-medium text-white">
                 Description
               </span>
               <textarea

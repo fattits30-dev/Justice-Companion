@@ -1,10 +1,19 @@
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Trash2, Eye, FileText, Image, Video, File, Calendar, Clock } from 'lucide-react';
-import type { Evidence } from '../../../models/Evidence.ts';
-import { evidenceTypeMetadata } from '../constants.ts';
-import { Card } from '../../../components/ui/Card.tsx';
-import { Badge } from '../../../components/ui/Badge.tsx';
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Trash2,
+  Eye,
+  FileText,
+  Image,
+  Video,
+  File,
+  Calendar,
+  Clock,
+} from "lucide-react";
+import type { Evidence } from "../../../models/Evidence.ts";
+import { evidenceTypeMetadata } from "../constants.ts";
+import { Card } from "../../../components/ui/Card.tsx";
+import { Badge } from "../../../components/ui/Badge.tsx";
 
 interface EvidenceCardProps {
   evidence: Evidence;
@@ -12,7 +21,11 @@ interface EvidenceCardProps {
   onView?: (id: number) => void;
 }
 
-export function EvidenceCard({ evidence, onDelete, onView }: EvidenceCardProps) {
+export function EvidenceCard({
+  evidence,
+  onDelete,
+  onView,
+}: EvidenceCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const metadata = evidenceTypeMetadata[evidence.evidenceType];
 
@@ -32,7 +45,7 @@ export function EvidenceCard({ evidence, onDelete, onView }: EvidenceCardProps) 
           <motion.div
             className={`flex h-12 w-12 items-center justify-center rounded-full text-xs font-semibold ${metadata.accent}`}
             whileHover={{ scale: 1.05, rotate: 5 }}
-            transition={{ type: 'spring', stiffness: 400 }}
+            transition={{ type: "spring", stiffness: 400 }}
           >
             <FileIcon className="h-6 w-6" />
           </motion.div>
@@ -50,7 +63,7 @@ export function EvidenceCard({ evidence, onDelete, onView }: EvidenceCardProps) 
                 {onView && (
                   <motion.button
                     onClick={() => onView(evidence.id)}
-                    className="p-2 text-gray-400 transition-colors hover:text-primary-400 rounded-lg hover:bg-white/5"
+                    className="p-2 text-white/90 transition-colors hover:text-cyan-400 rounded-lg hover:bg-white/5"
                     title="View evidence"
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.95 }}
@@ -60,7 +73,7 @@ export function EvidenceCard({ evidence, onDelete, onView }: EvidenceCardProps) 
                 )}
                 <motion.button
                   onClick={() => onDelete(evidence.id)}
-                  className="p-2 text-gray-400 transition-colors hover:text-danger-400 rounded-lg hover:bg-white/5"
+                  className="p-2 text-white/90 transition-colors hover:text-danger-400 rounded-lg hover:bg-white/5"
                   title="Delete evidence"
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.95 }}
@@ -74,7 +87,9 @@ export function EvidenceCard({ evidence, onDelete, onView }: EvidenceCardProps) 
 
         {/* Content */}
         <div className="flex-1">
-          <h3 className="text-lg font-semibold text-white mb-2">{evidence.title}</h3>
+          <h3 className="text-lg font-semibold text-white mb-2">
+            {evidence.title}
+          </h3>
 
           <Badge variant="info" size="sm" className="mb-3">
             {metadata.label}
@@ -84,20 +99,24 @@ export function EvidenceCard({ evidence, onDelete, onView }: EvidenceCardProps) 
         </div>
 
         {/* Footer Metadata */}
-        <dl className="mt-4 pt-4 border-t border-white/5 space-y-2 text-xs text-gray-400">
+        <dl className="mt-4 pt-4 border-t border-white/5 space-y-2 text-xs text-white/90">
           <div className="flex items-center justify-between">
             <dt className="flex items-center gap-1.5">
               <Calendar className="h-3.5 w-3.5" />
               <span>Obtained</span>
             </dt>
-            <dd className="font-medium text-gray-300">{formatDate(evidence.obtainedDate)}</dd>
+            <dd className="font-medium text-white">
+              {formatDate(evidence.obtainedDate)}
+            </dd>
           </div>
           <div className="flex items-center justify-between">
             <dt className="flex items-center gap-1.5">
               <Clock className="h-3.5 w-3.5" />
               <span>Uploaded</span>
             </dt>
-            <dd className="font-medium text-gray-300">{formatDate(evidence.createdAt)}</dd>
+            <dd className="font-medium text-white">
+              {formatDate(evidence.createdAt)}
+            </dd>
           </div>
         </dl>
       </div>
@@ -124,7 +143,7 @@ function getFileTypeIcon(evidenceType: string) {
 function renderEvidenceDetails(evidence: Evidence) {
   if (evidence.content) {
     return (
-      <p className="line-clamp-3 text-sm text-gray-300 leading-relaxed">
+      <p className="line-clamp-3 text-sm text-white leading-relaxed">
         {evidence.content}
       </p>
     );
@@ -132,9 +151,9 @@ function renderEvidenceDetails(evidence: Evidence) {
 
   if (evidence.filePath) {
     return (
-      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary-500/10 border border-primary-500/20">
-        <FileText className="h-4 w-4 text-primary-400 flex-shrink-0" />
-        <p className="text-sm text-primary-300 font-mono truncate">
+      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
+        <FileText className="h-4 w-4 text-cyan-400 flex-shrink-0" />
+        <p className="text-sm text-white font-mono truncate">
           {evidence.filePath.split(/[\\/]/).pop()}
         </p>
       </div>
@@ -142,7 +161,7 @@ function renderEvidenceDetails(evidence: Evidence) {
   }
 
   return (
-    <p className="text-sm text-gray-500 italic">
+    <p className="text-sm text-white/80 italic">
       No additional details provided.
     </p>
   );
@@ -150,15 +169,15 @@ function renderEvidenceDetails(evidence: Evidence) {
 
 function formatDate(value: string | null | undefined) {
   if (!value) {
-    return 'Unknown';
+    return "Unknown";
   }
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) {
-    return 'Unknown';
+    return "Unknown";
   }
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric'
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
   });
 }

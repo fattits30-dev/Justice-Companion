@@ -96,7 +96,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       ),
       ghost: clsx(
         "bg-white/5 backdrop-blur-sm",
-        "text-gray-200 border border-white/10",
+        "text-white border border-white/10",
         "hover:bg-white/10 hover:border-white/20",
         "active:bg-white/5",
         "disabled:bg-white/5 disabled:border-white/5",

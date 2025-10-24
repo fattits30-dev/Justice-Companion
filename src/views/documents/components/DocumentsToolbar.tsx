@@ -26,12 +26,12 @@ export function DocumentsToolbar({
     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-8">
       <div>
         <h1 className="text-3xl font-bold mb-1">Evidence & Documents</h1>
-        <p className="text-gray-400">
+        <p className="text-white/90">
           Keep track of every document, note and supporting item for your cases.
         </p>
       </div>
       <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-        <label className="flex flex-col text-sm text-gray-400">
+        <label className="flex flex-col text-sm text-white/90">
           <span className="mb-1">Case</span>
           <select
             value={selectedCaseId ?? ""}
@@ -50,7 +50,7 @@ export function DocumentsToolbar({
           </select>
         </label>
 
-        <label className="flex flex-col text-sm text-gray-400">
+        <label className="flex flex-col text-sm text-white/90">
           <span className="mb-1">Type</span>
           <select
             value={filterType}

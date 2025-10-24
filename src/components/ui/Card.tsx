@@ -133,7 +133,7 @@ export const CardHeader = forwardRef<HTMLDivElement, CardHeaderProps>(
             <h3 className="text-lg font-semibold text-white">{title}</h3>
           )}
           {description && (
-            <p className="mt-1 text-sm text-gray-400">{description}</p>
+            <p className="mt-1 text-sm text-white/90">{description}</p>
           )}
           {children}
         </div>

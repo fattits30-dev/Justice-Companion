@@ -156,7 +156,7 @@ export function RegistrationScreen({
           <h2 className="text-3xl font-bold text-center text-white">
             Create Account
           </h2>
-          <p className="mt-2 text-center text-gray-400">
+          <p className="mt-2 text-center text-white/90">
             Join Justice Companion
           </p>
         </div>
@@ -173,7 +173,7 @@ export function RegistrationScreen({
           <div>
             <label
               htmlFor="username"
-              className="block text-sm font-medium text-gray-300 mb-1"
+              className="block text-sm font-medium text-white mb-1"
             >
               Username
             </label>
@@ -197,7 +197,7 @@ export function RegistrationScreen({
           <div>
             <label
               htmlFor="email"
-              className="block text-sm font-medium text-gray-300 mb-1"
+              className="block text-sm font-medium text-white mb-1"
             >
               Email
             </label>
@@ -221,7 +221,7 @@ export function RegistrationScreen({
           <div>
             <label
               htmlFor="password"
-              className="block text-sm font-medium text-gray-300 mb-1"
+              className="block text-sm font-medium text-white mb-1"
             >
               Password
             </label>
@@ -238,7 +238,7 @@ export function RegistrationScreen({
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-white/90 hover:text-white"
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? (
@@ -289,7 +289,7 @@ export function RegistrationScreen({
           <div>
             <label
               htmlFor="confirm-password"
-              className="block text-sm font-medium text-gray-300 mb-1"
+              className="block text-sm font-medium text-white mb-1"
             >
               Confirm Password
             </label>
@@ -306,7 +306,7 @@ export function RegistrationScreen({
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-white/90 hover:text-white"
                 aria-label={
                   showConfirmPassword ? "Hide password" : "Show password"
                 }
@@ -365,7 +365,7 @@ export function RegistrationScreen({
               disabled={isLoading}
               className="w-4 h-4 mt-1 text-primary-600 bg-primary-700 border-gray-600 rounded focus:ring-primary-500 focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
             />
-            <label htmlFor="terms" className="ml-2 text-sm text-gray-300">
+            <label htmlFor="terms" className="ml-2 text-sm text-white">
               I agree to the Terms and Conditions
             </label>
           </div>
@@ -387,12 +387,12 @@ export function RegistrationScreen({
 
         {/* Login link */}
         <div className="text-center">
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-white/90">
             Already have an account?{" "}
             <button
               type="button"
               onClick={onLoginClick}
-              className="text-primary-400 hover:text-primary-300 font-medium"
+              className="text-cyan-400 hover:text-cyan-300 font-medium"
             >
               Sign in
             </button>

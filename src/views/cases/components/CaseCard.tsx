@@ -1,10 +1,10 @@
-import { useState } from 'react';
-import type { Case } from '../../../models/Case.ts';
-import { caseTypeMetadata } from '../constants.ts';
-import { Card } from '../../../components/ui/Card';
-import { Badge } from '../../../components/ui/Badge';
-import { Trash2, Eye, Edit, Clock, Calendar } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState } from "react";
+import type { Case } from "../../../models/Case.ts";
+import { caseTypeMetadata } from "../constants.ts";
+import { Card } from "../../../components/ui/Card.tsx";
+import { Badge } from "../../../components/ui/Badge.tsx";
+import { Trash2, Eye, Edit, Clock, Calendar } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface CaseCardProps {
   caseItem: Case;
@@ -13,29 +13,34 @@ interface CaseCardProps {
   onEdit?: (caseId: number) => void;
 }
 
-export function CaseCard({ caseItem, onDelete, onView, onEdit }: CaseCardProps) {
+export function CaseCard({
+  caseItem,
+  onDelete,
+  onView,
+  onEdit,
+}: CaseCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const metadata = caseTypeMetadata[caseItem.caseType];
 
   // Map status to badge variant
   const statusVariant = {
-    active: 'success' as const,
-    pending: 'warning' as const,
-    closed: 'neutral' as const
+    active: "success" as const,
+    pending: "warning" as const,
+    closed: "neutral" as const,
   };
 
   // Map status to icon indicator
   const statusDot = {
     active: true,
     pending: false,
-    closed: false
+    closed: false,
   };
 
   // Map status to pulse animation
   const statusPulse = {
     active: true,
     pending: true,
-    closed: false
+    closed: false,
   };
 
   return (
@@ -85,7 +90,7 @@ export function CaseCard({ caseItem, onDelete, onView, onEdit }: CaseCardProps) 
                       p-2 rounded-lg
                       bg-white/5 hover:bg-white/10
                       border border-white/10 hover:border-white/20
-                      text-gray-400 hover:text-white
+                      text-white/90 hover:text-white
                       transition-all duration-200
                     "
                     title="Edit case"
@@ -100,7 +105,7 @@ export function CaseCard({ caseItem, onDelete, onView, onEdit }: CaseCardProps) 
                       p-2 rounded-lg
                       bg-white/5 hover:bg-white/10
                       border border-white/10 hover:border-white/20
-                      text-gray-400 hover:text-white
+                      text-white/90 hover:text-white
                       transition-all duration-200
                     "
                     title="View case"
@@ -137,7 +142,7 @@ export function CaseCard({ caseItem, onDelete, onView, onEdit }: CaseCardProps) 
               variant={statusVariant[caseItem.status]}
               dot={statusDot[caseItem.status]}
               pulse={statusPulse[caseItem.status]}
-              glow={caseItem.status === 'active'}
+              glow={caseItem.status === "active"}
               className="capitalize"
             >
               {caseItem.status}
@@ -146,11 +151,11 @@ export function CaseCard({ caseItem, onDelete, onView, onEdit }: CaseCardProps) 
 
           {/* Description */}
           {caseItem.description ? (
-            <p className="mb-4 line-clamp-3 text-sm text-gray-400 leading-relaxed">
+            <p className="mb-4 line-clamp-3 text-sm text-white/90 leading-relaxed">
               {caseItem.description}
             </p>
           ) : (
-            <p className="mb-4 text-sm text-gray-500 italic">
+            <p className="mb-4 text-sm text-white/80 italic">
               No description provided.
             </p>
           )}
@@ -160,24 +165,28 @@ export function CaseCard({ caseItem, onDelete, onView, onEdit }: CaseCardProps) 
         <div className="mt-auto pt-4 border-t border-white/5">
           <div className="grid grid-cols-2 gap-3 text-xs">
             {/* Type */}
-            <div className="flex items-center gap-2 text-gray-400">
+            <div className="flex items-center gap-2 text-white/90">
               <div className="w-1 h-1 rounded-full bg-gray-500" />
               <span className="font-medium">Type:</span>
-              <span className="text-gray-300">{metadata.displayLabel}</span>
+              <span className="text-white">{metadata.displayLabel}</span>
             </div>
 
             {/* Created Date */}
-            <div className="flex items-center gap-2 text-gray-400">
+            <div className="flex items-center gap-2 text-white/90">
               <Calendar className="w-3 h-3" />
               <span className="font-medium">Created:</span>
-              <span className="text-gray-300">{formatDate(caseItem.createdAt)}</span>
+              <span className="text-white">
+                {formatDate(caseItem.createdAt)}
+              </span>
             </div>
 
             {/* Updated Date */}
-            <div className="flex items-center gap-2 text-gray-400 col-span-2">
+            <div className="flex items-center gap-2 text-white/90 col-span-2">
               <Clock className="w-3 h-3" />
               <span className="font-medium">Updated:</span>
-              <span className="text-gray-300">{formatDate(caseItem.updatedAt)}</span>
+              <span className="text-white">
+                {formatDate(caseItem.updatedAt)}
+              </span>
             </div>
           </div>
         </div>
@@ -189,11 +198,11 @@ export function CaseCard({ caseItem, onDelete, onView, onEdit }: CaseCardProps) 
 function formatDate(value: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) {
-    return 'Unknown';
+    return "Unknown";
   }
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric'
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
   });
 }
