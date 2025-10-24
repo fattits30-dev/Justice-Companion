@@ -1,4 +1,8 @@
 import { useState } from 'react';
+import { motion } from 'framer-motion';
+import { X, Upload } from 'lucide-react';
+import { Card } from '../../../components/ui/Card.tsx';
+import { Button } from '../../../components/ui/Button.tsx';
 import type { EvidenceType } from '../../../models/Evidence.ts';
 import { evidenceTypeMetadata } from '../constants.ts';
 import { showWarning } from '../../../components/ui/Toast.tsx';
@@ -42,28 +46,35 @@ export function UploadEvidenceDialog({ onClose, onUpload }: UploadEvidenceDialog
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div
-        className="w-full max-w-lg rounded-lg border border-gray-700 bg-gray-800"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="upload-evidence-dialog-title"
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.9, y: 20 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+        className="w-full max-w-lg"
       >
-        <div className="flex items-center justify-between border-b border-gray-700 p-6">
-          <h2 id="upload-evidence-dialog-title" className="text-2xl font-bold text-white">
-            Upload Evidence
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-500 transition-colors hover:text-gray-300"
-            aria-label="Close upload evidence dialog"
-          >
-            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        <form onSubmit={handleSubmit} className="space-y-4 p-6">
+        <Card
+          variant="glass"
+          className="overflow-visible"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="upload-evidence-dialog-title"
+        >
+          <div className="flex items-center justify-between border-b border-gray-700/50 pb-4 mb-4">
+            <h2 id="upload-evidence-dialog-title" className="text-2xl font-bold text-white">
+              Upload Evidence
+            </h2>
+            <Button
+              onClick={onClose}
+              variant="ghost"
+              size="sm"
+              icon={<X />}
+              aria-label="Close upload evidence dialog"
+              className="rounded-full"
+            />
+          </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
           <label className="block text-sm">
             <span className="mb-2 block font-medium text-gray-300">File *</span>
             <input
@@ -112,22 +123,29 @@ export function UploadEvidenceDialog({ onClose, onUpload }: UploadEvidenceDialog
           </label>
 
           <div className="flex gap-3 pt-4">
-            <button
+            <Button
               type="button"
               onClick={onClose}
-              className="flex-1 rounded-lg bg-gray-700 px-4 py-2 font-medium text-white transition-colors hover:bg-gray-600"
+              variant="ghost"
+              size="md"
+              fullWidth
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
-              className="flex-1 rounded-lg bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700"
+              variant="primary"
+              size="md"
+              icon={<Upload />}
+              iconPosition="left"
+              fullWidth
             >
               Upload
-            </button>
+            </Button>
           </div>
         </form>
-      </div>
+        </Card>
+      </motion.div>
     </div>
   );
 }

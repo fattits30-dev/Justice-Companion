@@ -6,19 +6,19 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Primary - Blue (existing, expanded)
+        // Primary - Calming Royal Blue (professional, trustworthy)
         primary: {
-          50: '#eff6ff',
-          100: '#dbeafe',
-          200: '#bfdbfe',
-          300: '#93c5fd',
-          400: '#60a5fa',
-          500: '#3b82f6',
-          600: '#2563eb',
-          700: '#1d4ed8',
-          800: '#1e40af',
-          900: '#1e3a8a',
-          950: '#172554'
+          50: '#f0f4ff',
+          100: '#e0e9ff',
+          200: '#c7d7fe',
+          300: '#a4b9fc',
+          400: '#7d96f8',
+          500: '#5b7ff2',  // Core calming royal blue
+          600: '#4864e6',
+          700: '#3b4fd3',
+          800: '#3342ab',
+          900: '#2e3a87',
+          950: '#1e2555'
         },
         // Secondary - Purple/Indigo for accents
         secondary: {

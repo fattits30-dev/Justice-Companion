@@ -1,3 +1,5 @@
+import { Plus } from 'lucide-react';
+import { Button } from '../../../components/ui/Button.tsx';
 import type { CaseStatus, CaseType } from '../../../models/Case.ts';
 import { statusFilterOptions, typeFilterOptions } from '../constants.ts';
 
@@ -51,12 +53,15 @@ export function CaseToolbar({
             ))}
           </select>
         </label>
-        <button
+        <Button
           onClick={onCreateCase}
-          className="rounded-lg bg-blue-600 px-6 py-2 font-medium text-white transition-colors hover:bg-blue-700"
+          variant="primary"
+          size="md"
+          icon={<Plus />}
+          iconPosition="left"
         >
           New Case
-        </button>
+        </Button>
       </div>
     </div>
   );
