@@ -9,6 +9,7 @@ import {
 } from './components/CaseStates.tsx';
 import { CaseList } from './components/CaseList.tsx';
 import { CreateCaseDialog } from './components/CreateCaseDialog.tsx';
+import { showSuccess, showError } from '../../components/ui/Toast.tsx';
 
 type LoadState = 'idle' | 'loading' | 'error' | 'ready';
 
@@ -54,12 +55,17 @@ export function CasesView() {
         if (response.success && response.data) {
           setCases((previous) => [response.data, ...previous]);
           setShowCreateDialog(false);
+          showSuccess(`${input.title} has been added to your cases`, {
+            title: 'Case created successfully',
+          });
           return;
         }
 
         throw new Error(response.error || 'Failed to create case');
       } catch (err) {
-        alert(`Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
+        showError(err instanceof Error ? err.message : 'Unknown error', {
+          title: 'Failed to create case',
+        });
       }
     },
     []
@@ -76,12 +82,17 @@ export function CasesView() {
       const response = await window.justiceAPI.deleteCase(caseId.toString(), sessionId);
       if (response.success) {
         setCases((previous) => previous.filter((item) => item.id !== caseId));
+        showSuccess('The case has been permanently removed', {
+          title: 'Case deleted',
+        });
         return;
       }
 
       throw new Error(response.error || 'Failed to delete case');
     } catch (err) {
-      alert(`Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      showError(err instanceof Error ? err.message : 'Unknown error', {
+        title: 'Failed to delete case',
+      });
     }
   }, []);
 

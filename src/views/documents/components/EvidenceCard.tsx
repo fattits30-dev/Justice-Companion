@@ -1,70 +1,151 @@
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Trash2, Eye, FileText, Image, Video, File, Calendar, Clock } from 'lucide-react';
 import type { Evidence } from '../../../models/Evidence.ts';
 import { evidenceTypeMetadata } from '../constants.ts';
+import { Card } from '../../../components/ui/Card.tsx';
+import { Badge } from '../../../components/ui/Badge.tsx';
 
 interface EvidenceCardProps {
   evidence: Evidence;
   onDelete: (id: number) => void;
+  onView?: (id: number) => void;
 }
 
-export function EvidenceCard({ evidence, onDelete }: EvidenceCardProps) {
+export function EvidenceCard({ evidence, onDelete, onView }: EvidenceCardProps) {
+  const [isHovered, setIsHovered] = useState(false);
   const metadata = evidenceTypeMetadata[evidence.evidenceType];
 
+  // Get file type icon
+  const FileIcon = getFileTypeIcon(evidence.evidenceType);
+
   return (
-    <div className="flex flex-col justify-between rounded-lg border border-gray-800 bg-gray-900/60 p-6 transition-colors hover:border-gray-700 hover:bg-gray-900">
-      <div className="mb-4 flex items-center justify-between gap-4">
-        <span
-          className={`flex h-12 w-12 items-center justify-center rounded-full text-xs font-semibold ${metadata.accent}`}
-        >
-          {metadata.shortLabel}
-        </span>
-        <button
-          onClick={() => onDelete(evidence.id)}
-          className="text-gray-500 transition-colors hover:text-red-400"
-          title="Delete evidence"
-        >
-          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-            />
-          </svg>
-        </button>
-      </div>
-      <div>
-        <h3 className="text-lg font-semibold text-white">{evidence.title}</h3>
-        <p className="mt-1 text-sm text-gray-400">{metadata.label}</p>
-        {renderEvidenceDetails(evidence)}
-      </div>
-      <dl className="mt-auto text-xs text-gray-500">
-        <div className="flex items-center justify-between">
-          <dt>Obtained</dt>
-          <dd>{formatDate(evidence.obtainedDate)}</dd>
+    <Card
+      variant="glass"
+      className="group"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <div className="flex flex-col justify-between h-full">
+        {/* Header */}
+        <div className="mb-4 flex items-center justify-between gap-4">
+          <motion.div
+            className={`flex h-12 w-12 items-center justify-center rounded-full text-xs font-semibold ${metadata.accent}`}
+            whileHover={{ scale: 1.05, rotate: 5 }}
+            transition={{ type: 'spring', stiffness: 400 }}
+          >
+            <FileIcon className="h-6 w-6" />
+          </motion.div>
+
+          {/* Hover Actions */}
+          <AnimatePresence>
+            {isHovered && (
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ duration: 0.2 }}
+                className="flex items-center gap-2"
+              >
+                {onView && (
+                  <motion.button
+                    onClick={() => onView(evidence.id)}
+                    className="p-2 text-gray-400 transition-colors hover:text-primary-400 rounded-lg hover:bg-white/5"
+                    title="View evidence"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Eye className="h-4 w-4" />
+                  </motion.button>
+                )}
+                <motion.button
+                  onClick={() => onDelete(evidence.id)}
+                  className="p-2 text-gray-400 transition-colors hover:text-danger-400 rounded-lg hover:bg-white/5"
+                  title="Delete evidence"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </motion.button>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-        <div className="flex items-center justify-between">
-          <dt>Uploaded</dt>
-          <dd>{formatDate(evidence.createdAt)}</dd>
+
+        {/* Content */}
+        <div className="flex-1">
+          <h3 className="text-lg font-semibold text-white mb-2">{evidence.title}</h3>
+
+          <Badge variant="info" size="sm" className="mb-3">
+            {metadata.label}
+          </Badge>
+
+          {renderEvidenceDetails(evidence)}
         </div>
-      </dl>
-    </div>
+
+        {/* Footer Metadata */}
+        <dl className="mt-4 pt-4 border-t border-white/5 space-y-2 text-xs text-gray-400">
+          <div className="flex items-center justify-between">
+            <dt className="flex items-center gap-1.5">
+              <Calendar className="h-3.5 w-3.5" />
+              <span>Obtained</span>
+            </dt>
+            <dd className="font-medium text-gray-300">{formatDate(evidence.obtainedDate)}</dd>
+          </div>
+          <div className="flex items-center justify-between">
+            <dt className="flex items-center gap-1.5">
+              <Clock className="h-3.5 w-3.5" />
+              <span>Uploaded</span>
+            </dt>
+            <dd className="font-medium text-gray-300">{formatDate(evidence.createdAt)}</dd>
+          </div>
+        </dl>
+      </div>
+    </Card>
   );
+}
+
+function getFileTypeIcon(evidenceType: string) {
+  const iconMap: Record<string, typeof FileText> = {
+    document: FileText,
+    photo: Image,
+    video: Video,
+    audio: File,
+    physical: File,
+    digital: FileText,
+    witness_statement: FileText,
+    expert_report: FileText,
+    correspondence: FileText,
+  };
+
+  return iconMap[evidenceType] || File;
 }
 
 function renderEvidenceDetails(evidence: Evidence) {
   if (evidence.content) {
-    return <p className="mt-3 line-clamp-3 text-sm text-gray-300">{evidence.content}</p>;
-  }
-
-  if (evidence.filePath) {
     return (
-      <p className="mt-3 text-sm text-blue-300">
-        File: <span className="font-mono">{evidence.filePath}</span>
+      <p className="line-clamp-3 text-sm text-gray-300 leading-relaxed">
+        {evidence.content}
       </p>
     );
   }
 
-  return <p className="mt-3 text-sm text-gray-500 italic">No additional details provided.</p>;
+  if (evidence.filePath) {
+    return (
+      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary-500/10 border border-primary-500/20">
+        <FileText className="h-4 w-4 text-primary-400 flex-shrink-0" />
+        <p className="text-sm text-primary-300 font-mono truncate">
+          {evidence.filePath.split(/[\\/]/).pop()}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <p className="text-sm text-gray-500 italic">
+      No additional details provided.
+    </p>
+  );
 }
 
 function formatDate(value: string | null | undefined) {
@@ -75,5 +156,9 @@ function formatDate(value: string | null | undefined) {
   if (Number.isNaN(date.getTime())) {
     return 'Unknown';
   }
-  return date.toLocaleDateString();
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  });
 }

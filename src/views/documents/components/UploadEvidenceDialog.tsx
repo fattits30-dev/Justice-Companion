@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { EvidenceType } from '../../../models/Evidence.ts';
 import { evidenceTypeMetadata } from '../constants.ts';
+import { showWarning } from '../../../components/ui/Toast.tsx';
 
 export interface UploadEvidenceInput {
   file: File;
@@ -24,11 +25,11 @@ export function UploadEvidenceDialog({ onClose, onUpload }: UploadEvidenceDialog
     event.preventDefault();
 
     if (!file) {
-      alert('Please select a file');
+      showWarning('Please select a file');
       return;
     }
     if (!title.trim()) {
-      alert('Please enter a title');
+      showWarning('Please enter a title');
       return;
     }
 

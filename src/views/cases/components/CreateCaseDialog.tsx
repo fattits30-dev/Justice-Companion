@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { CaseType, CreateCaseInput } from '../../../models/Case.ts';
 import { caseTypeMetadata } from '../constants.ts';
+import { showWarning } from '../../../components/ui/Toast.tsx';
 
 interface CreateCaseDialogProps {
   onClose: () => void;
@@ -15,7 +16,7 @@ export function CreateCaseDialog({ onClose, onCreate }: CreateCaseDialogProps) {
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     if (!title.trim()) {
-      alert('Please enter a case title');
+      showWarning('Please enter a case title');
       return;
     }
 
