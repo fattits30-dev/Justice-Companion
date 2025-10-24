@@ -190,7 +190,7 @@ export class CaseRepository {
     if (useBatchEncryption && this.encryptionService && rows.length > 0) {
       // Collect all encrypted descriptions for batch decryption
       const encryptedDescriptions = rows.map(row => {
-        if (!row.description) return null;
+        if (!row.description) {return null;}
 
         try {
           const encryptedData = JSON.parse(row.description) as EncryptedData;

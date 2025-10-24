@@ -124,13 +124,13 @@ test.describe('Complete User Journey E2E', () => {
         await window.waitForTimeout(500);
 
         const typeSelect = await window.$('[name="factType"]');
-        if (typeSelect) await typeSelect.selectOption(userFactData.factType);
+        if (typeSelect) {await typeSelect.selectOption(userFactData.factType);}
 
         const contentInput = await window.$('[name="factContent"]');
-        if (contentInput) await contentInput.fill(userFactData.factContent);
+        if (contentInput) {await contentInput.fill(userFactData.factContent);}
 
         const importanceSelect = await window.$('[name="importance"]');
-        if (importanceSelect) await importanceSelect.selectOption(userFactData.importance);
+        if (importanceSelect) {await importanceSelect.selectOption(userFactData.importance);}
 
         const saveFactBtn = await window.$('button:has-text("Save")');
         if (saveFactBtn) {
@@ -175,10 +175,10 @@ test.describe('Complete User Journey E2E', () => {
       await window.waitForTimeout(500);
 
       const titleInput = await window.$('[name="evidenceTitle"]');
-      if (titleInput) await titleInput.fill(evidenceData.title);
+      if (titleInput) {await titleInput.fill(evidenceData.title);}
 
       const descInput = await window.$('[name="evidenceDescription"]');
-      if (descInput) await descInput.fill(evidenceData.description);
+      if (descInput) {await descInput.fill(evidenceData.description);}
 
       const fileInput = await window.$('input[type="file"]');
       if (fileInput) {
@@ -221,13 +221,13 @@ test.describe('Complete User Journey E2E', () => {
         await window.waitForTimeout(500);
 
         const categorySelect = await window.$('[name="category"]');
-        if (categorySelect) await categorySelect.selectOption(caseFactData.category);
+        if (categorySelect) {await categorySelect.selectOption(caseFactData.category);}
 
         const factContent = await window.$('[name="factContent"]');
-        if (factContent) await factContent.fill(caseFactData.factContent);
+        if (factContent) {await factContent.fill(caseFactData.factContent);}
 
         const factImportance = await window.$('[name="importance"]');
-        if (factImportance) await factImportance.selectOption(caseFactData.importance);
+        if (factImportance) {await factImportance.selectOption(caseFactData.importance);}
 
         const saveCaseFactBtn = await window.$('button:has-text("Save")');
         if (saveCaseFactBtn) {

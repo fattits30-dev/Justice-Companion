@@ -1,98 +1,205 @@
+# ============================================================================
+# Dependencies & Package Managers
+# ============================================================================
+node_modules/
+.pnpm-debug.log*
+.yarn/
+.pnp.*
+
+# ============================================================================
 # Logs
-logs
+# ============================================================================
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+electron-debug.log*
 
-# Dependencies
-node_modules
-dist
-dist-ssr
-*.local
-
-# Electron
-release
-out
-
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-!.vscode/launch.json
-!.vscode/tasks.json
-!.vscode/settings.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-
-# Environment
-.env
-.env.local
-.env.production
-
-# Database
-*.db
-*.db-shm
-*.db-wal
-backups/
-
-# Test
-coverage
-test-results
-.playwright
-
-# Build
+# ============================================================================
+# Build & Distribution
+# ============================================================================
+dist/
+dist-ssr/
+out/
+release/
+build/
 *.js.map
+.vite/
+.cache/
 
-# TypeScript compiled output (src should only contain .ts files)
+# TypeScript compiled output (src should only contain .ts/.tsx files)
 src/**/*.js
 src/**/*.d.ts
 !src/types/**/*.d.ts
 !src/**/*.test.js
 !src/**/*.spec.js
-build
-dist
 
-# OS
-Thumbs.db
-.DS_Store
+# Electron Builder output
+*.exe
+*.dmg
+*.AppImage
+*.deb
+*.snap
+*.msi
+*.pkg
+*.zip
+*.tar.gz
 
-# IDE
-.idea
+# ============================================================================
+# Database & User Data
+# ============================================================================
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+backups/
+exports/
+.encryption-key
+
+# ============================================================================
+# Environment & Secrets
+# ============================================================================
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+*.pem
+*.key
+*.cert
+*.crt
+secrets/
+
+# ============================================================================
+# Testing
+# ============================================================================
+coverage/
+coverage-*.txt
+.nyc_output/
+test-results/
+.playwright/
+playwright-report/
+test-coverage-output.txt
+test-verbose-output.txt
+*.spec.js.snap
+*.test.js.snap
+test_*.py
+test_*.js
+
+# ============================================================================
+# IDE & Editor Files
+# ============================================================================
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
+!.vscode/settings.json
+.idea/
 *.swp
 *.swo
+*.swn
 *~
+.project
+.classpath
+.settings/
+*.sublime-project
+*.sublime-workspace
 
-# Temporary files
-tmp
-temp
+# ============================================================================
+# OS Files
+# ============================================================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ============================================================================
+# Temporary Files
+# ============================================================================
+tmp/
+temp/
 *.tmp
+*.temp
 .aider*
 .tmp-*
 *.old
 *.bak
+*.backup
 *~
 nul
 
-# Analysis and reports (keep docs/ only)
+# ============================================================================
+# Analysis & Reports (keep docs/ directory only)
+# ============================================================================
 *REPORT*.md
 *ANALYSIS*.md
 *ASSESSMENT*.md
 *REVIEW*.md
+*SUMMARY*.md
 audit-results.json
 test-results.json
-test-coverage-output.txt
-test-verbose-output.txt
+security-audit-*.json
+performance-report-*.json
+.guardian/
+.aider/
+.cursor/
 
-# Fix scripts (keep scripts/ only)
+# ============================================================================
+# Fix Scripts (keep in scripts/ directory only)
+# ============================================================================
 fix-*.ps1
+fix-*.sh
+fix-*.mjs
 *-fix.ps1
+*-fix.sh
 
-# Claude settings (keep in global config)
+# ============================================================================
+# Claude Code Local Settings
+# ============================================================================
 .claude/settings.local.json
+.claude/commands/*.md
+!.claude/commands/README.md
+
+# ============================================================================
+# Debug & Development
+# ============================================================================
+debug.log
+error.log
+combined.log
+.webpack/
+.parcel-cache/
+
+# ============================================================================
+# GDPR & Privacy
+# ============================================================================
+user-exports/
+gdpr-exports/
+data-deletion-logs/
+
+# ============================================================================
+# Session & Cache
+# ============================================================================
+sessions/
+.session-*
+.cache/
+*.cache
+
+# ============================================================================
+# Miscellaneous
+# ============================================================================
+*.local
+.vscode-test
+.turbo
+.next/
+.nuxt/
+.output/
+.vercel

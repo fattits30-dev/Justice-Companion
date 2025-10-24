@@ -120,10 +120,10 @@ test.describe('Evidence Upload E2E', () => {
 
       // Fill form
       const titleInput = await window.$('[name="evidenceTitle"]');
-      if (titleInput) await titleInput.fill(evidenceData.title);
+      if (titleInput) {await titleInput.fill(evidenceData.title);}
 
       const descInput = await window.$('[name="evidenceDescription"]');
-      if (descInput) await descInput.fill(evidenceData.description);
+      if (descInput) {await descInput.fill(evidenceData.description);}
 
       // Upload image
       const fileInput = await window.$('input[type="file"]');

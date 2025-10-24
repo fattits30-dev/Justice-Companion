@@ -195,7 +195,7 @@ export class EvidenceRepository {
     if (useBatchEncryption && this.encryptionService && rows.length > 0) {
       // Collect all encrypted content for batch decryption
       const encryptedContents = rows.map(row => {
-        if (!row.content) return null;
+        if (!row.content) {return null;}
 
         try {
           const encryptedData = JSON.parse(row.content) as EncryptedData;
@@ -286,7 +286,7 @@ export class EvidenceRepository {
 
     if (useBatchEncryption && this.encryptionService && items.length > 0) {
       const encryptedContents = items.map(row => {
-        if (!row.content) return null;
+        if (!row.content) {return null;}
         try {
           const encryptedData = JSON.parse(row.content) as EncryptedData;
           return this.encryptionService!.isEncrypted(encryptedData) ? encryptedData : null;
@@ -374,7 +374,7 @@ export class EvidenceRepository {
     if (useBatchEncryption && this.encryptionService && rows.length > 0) {
       // Collect all encrypted content for batch decryption
       const encryptedContents = rows.map(row => {
-        if (!row.content) return null;
+        if (!row.content) {return null;}
 
         try {
           const encryptedData = JSON.parse(row.content) as EncryptedData;
@@ -481,7 +481,7 @@ export class EvidenceRepository {
 
     if (useBatchEncryption && this.encryptionService && items.length > 0) {
       const encryptedContents = items.map(row => {
-        if (!row.content) return null;
+        if (!row.content) {return null;}
         try {
           const encryptedData = JSON.parse(row.content) as EncryptedData;
           return this.encryptionService!.isEncrypted(encryptedData) ? encryptedData : null;
