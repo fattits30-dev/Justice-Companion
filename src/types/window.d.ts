@@ -28,6 +28,13 @@ interface JusticeAPI {
   getAllEvidence(caseId: string, sessionId: string): Promise<{ success: boolean; data?: any; error?: any }>;
   deleteEvidence(id: string, sessionId: string): Promise<{ success: boolean; error?: any }>;
 
+  // Deadlines
+  getDeadlines(sessionId: string, caseId?: number): Promise<{ success: boolean; data?: any; error?: any }>;
+  createDeadline(data: any, sessionId: string): Promise<{ success: boolean; data?: any; error?: any }>;
+  updateDeadline(id: number, data: any, sessionId: string): Promise<{ success: boolean; data?: any; error?: any }>;
+  completeDeadline(id: number, sessionId: string): Promise<{ success: boolean; data?: any; error?: any }>;
+  deleteDeadline(id: number, sessionId: string): Promise<{ success: boolean; error?: any }>;
+
   // AI Configuration
   configureAI(config: { apiKey: string; provider?: 'openai' | 'groq' | 'anthropic' | 'google' | 'cohere' | 'mistral'; model?: string; organization?: string }): Promise<{ success: boolean; data?: any; error?: any }>;
 

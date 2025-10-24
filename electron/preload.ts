@@ -335,6 +335,22 @@ const justiceAPI = {
   exportUserData: (sessionId: string, options?: any) =>
     ipcRenderer.invoke('gdpr:export', sessionId, options),
 
+  // ===== DEADLINE MANAGEMENT (flat methods) =====
+  getDeadlines: (sessionId: string, caseId?: number) =>
+    ipcRenderer.invoke('deadline:getAll', sessionId, caseId),
+
+  createDeadline: (data: any, sessionId: string) =>
+    ipcRenderer.invoke('deadline:create', data, sessionId),
+
+  updateDeadline: (id: number, data: any, sessionId: string) =>
+    ipcRenderer.invoke('deadline:update', id, data, sessionId),
+
+  completeDeadline: (id: number, sessionId: string) =>
+    ipcRenderer.invoke('deadline:complete', id, sessionId),
+
+  deleteDeadline: (id: number, sessionId: string) =>
+    ipcRenderer.invoke('deadline:delete', id, sessionId),
+
   // ===== CONSENT MANAGEMENT (flat methods) =====
   // TODO: Implement consent IPC handlers in electron/ipc-handlers.ts
   grantConsent: async (consentType: string, sessionId: string) => ({
