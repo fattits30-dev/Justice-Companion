@@ -26,10 +26,16 @@ export class AuthorizationError extends Error {
  * - Prevents vertical privilege escalation (user accessing admin features)
  */
 export class AuthorizationMiddleware {
+  private caseRepository: CaseRepository;
+  private auditLogger?: AuditLogger;
+
   constructor(
-    private caseRepository: CaseRepository,
-    private auditLogger?: AuditLogger,
-  ) {}
+    caseRepository: CaseRepository,
+    auditLogger?: AuditLogger,
+  ) {
+    this.caseRepository = caseRepository;
+    this.auditLogger = auditLogger;
+  }
 
   /**
    * Verify user owns a case

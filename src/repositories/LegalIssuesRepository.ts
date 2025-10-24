@@ -16,10 +16,16 @@ import type { AuditLogger } from '../services/AuditLogger.ts';
  * - Backward compatibility with legacy plaintext descriptions
  */
 export class LegalIssuesRepository {
+  private encryptionService: EncryptionService;
+  private auditLogger?: AuditLogger;
+
   constructor(
-    private encryptionService: EncryptionService,
-    private auditLogger?: AuditLogger,
-  ) {}
+    encryptionService: EncryptionService,
+    auditLogger?: AuditLogger,
+  ) {
+    this.encryptionService = encryptionService;
+    this.auditLogger = auditLogger;
+  }
 
   /**
    * Create a new legal issue

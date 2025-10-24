@@ -13,10 +13,16 @@ import type { AuditLogger } from '../services/AuditLogger.ts';
  * - Backward compatibility with legacy plaintext notes
  */
 export class NotesRepository {
+  private encryptionService: EncryptionService;
+  private auditLogger?: AuditLogger;
+
   constructor(
-    private encryptionService: EncryptionService,
-    private auditLogger?: AuditLogger,
-  ) {}
+    encryptionService: EncryptionService,
+    auditLogger?: AuditLogger,
+  ) {
+    this.encryptionService = encryptionService;
+    this.auditLogger = auditLogger;
+  }
 
   /**
    * Create a new note
