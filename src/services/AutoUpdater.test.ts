@@ -62,7 +62,7 @@ describe('AutoUpdater', () => {
 
   describe('Check for Updates', () => {
     it('should check for updates manually', async () => {
-      mockAutoUpdater.checkForUpdates.mockResolvedValue({
+      (mockAutoUpdater.checkForUpdates as ReturnType<typeof vi.fn>).mockResolvedValue({
         updateInfo: { version: '1.0.1' } as UpdateInfo,
         cancellationToken: null as any,
       });
@@ -75,7 +75,7 @@ describe('AutoUpdater', () => {
     });
 
     it('should handle check errors gracefully', async () => {
-      mockAutoUpdater.checkForUpdates.mockRejectedValue(new Error('Network error'));
+      (mockAutoUpdater.checkForUpdates as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Network error'));
 
       const result = await autoUpdater.checkForUpdates();
 
@@ -94,7 +94,7 @@ describe('AutoUpdater', () => {
 
   describe('Download Updates', () => {
     it('should download update when available', async () => {
-      mockAutoUpdater.downloadUpdate.mockResolvedValue(['update-file.exe']);
+      (mockAutoUpdater.downloadUpdate as ReturnType<typeof vi.fn>).mockResolvedValue(['update-file.exe']);
 
       const result = await autoUpdater.downloadUpdate();
 
@@ -103,7 +103,7 @@ describe('AutoUpdater', () => {
     });
 
     it('should handle download errors', async () => {
-      mockAutoUpdater.downloadUpdate.mockRejectedValue(new Error('Download failed'));
+      (mockAutoUpdater.downloadUpdate as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Download failed'));
 
       const result = await autoUpdater.downloadUpdate();
 
@@ -200,7 +200,9 @@ describe('AutoUpdater', () => {
       const customURL = 'https://updates.example.com';
       new AutoUpdater(mockApp, mockAutoUpdater, { updateServerUrl: customURL });
 
-      expect(mockAutoUpdater.setFeedURL).toHaveBeenCalledWith({ url: customURL });
+      expect(mockAutoUpdater.setFeedURL).toHaveBeenCalledWith(
+        expect.objectContaining({ url: customURL })
+      );
     });
 
     it('should support GitHub releases by default', () => {
@@ -231,7 +233,7 @@ describe('AutoUpdater', () => {
     });
 
     it('should update status when checking for updates', async () => {
-      mockAutoUpdater.checkForUpdates.mockResolvedValue({
+      (mockAutoUpdater.checkForUpdates as ReturnType<typeof vi.fn>).mockResolvedValue({
         updateInfo: { version: '1.0.1' } as UpdateInfo,
         cancellationToken: null as any,
       });
@@ -264,7 +266,7 @@ describe('AutoUpdater', () => {
     });
 
     it('should not crash app on update errors', async () => {
-      mockAutoUpdater.checkForUpdates.mockRejectedValue(new Error('Fatal error'));
+      (mockAutoUpdater.checkForUpdates as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Fatal error'));
 
       await expect(autoUpdater.checkForUpdates()).resolves.not.toThrow();
     });

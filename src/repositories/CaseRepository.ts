@@ -82,6 +82,7 @@ export class CaseRepository {
         description,
         case_type as caseType,
         status,
+        user_id as userId,
         created_at as createdAt,
         updated_at as updatedAt
       FROM cases
@@ -168,6 +169,7 @@ export class CaseRepository {
         description,
         case_type as caseType,
         status,
+        user_id as userId,
         created_at as createdAt,
         updated_at as updatedAt
       FROM cases

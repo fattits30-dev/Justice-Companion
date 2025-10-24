@@ -9,6 +9,18 @@ const mockApp = {
   on: vi.fn(),
 } as unknown as App;
 
+async function withMockedPlatform<T>(
+  platform: NodeJS.Platform,
+  callback: () => Promise<T> | T
+): Promise<T> {
+  const platformSpy = vi.spyOn(process, 'platform', 'get').mockReturnValue(platform);
+  try {
+    return await callback();
+  } finally {
+    platformSpy.mockRestore();
+  }
+}
+
 describe('ProcessManager', () => {
   let processManager: ProcessManager;
 
@@ -104,7 +116,7 @@ describe('ProcessManager', () => {
     });
 
     it('should handle errors gracefully during cleanup', async () => {
-      const spy = vi.spyOn(processManager, 'killProcessOnPort').mockRejectedValue(new Error('Access denied'));
+      vi.spyOn(processManager, 'killProcessOnPort').mockRejectedValue(new Error('Access denied'));
 
       await expect(processManager.cleanupOnStartup()).resolves.not.toThrow();
     });
@@ -189,45 +201,33 @@ describe('ProcessManager', () => {
 
   describe('Windows-Specific', () => {
     it('should use netstat on Windows', async () => {
-      const originalPlatform = process.platform;
-      Object.defineProperty(process, 'platform', { value: 'win32' });
-
-      const result = await processManager.findProcessByPort(5176);
-      expect(result).toHaveProperty('pid');
-
-      Object.defineProperty(process, 'platform', { value: originalPlatform });
+      await withMockedPlatform('win32', async () => {
+        const result = await processManager.findProcessByPort(5176);
+        expect(result).toHaveProperty('pid');
+      });
     });
 
     it('should use taskkill on Windows', async () => {
-      const originalPlatform = process.platform;
-      Object.defineProperty(process, 'platform', { value: 'win32' });
-
-      const killed = await processManager.killProcessById(12345);
-      expect(typeof killed).toBe('boolean');
-
-      Object.defineProperty(process, 'platform', { value: originalPlatform });
+      await withMockedPlatform('win32', async () => {
+        const killed = await processManager.killProcessById(12345);
+        expect(typeof killed).toBe('boolean');
+      });
     });
   });
 
   describe('Unix-Specific', () => {
     it('should use lsof on Unix', async () => {
-      const originalPlatform = process.platform;
-      Object.defineProperty(process, 'platform', { value: 'linux' });
-
-      const result = await processManager.findProcessByPort(5176);
-      expect(result).toHaveProperty('pid');
-
-      Object.defineProperty(process, 'platform', { value: originalPlatform });
+      await withMockedPlatform('linux', async () => {
+        const result = await processManager.findProcessByPort(5176);
+        expect(result).toHaveProperty('pid');
+      });
     });
 
     it('should use kill on Unix', async () => {
-      const originalPlatform = process.platform;
-      Object.defineProperty(process, 'platform', { value: 'linux' });
-
-      const killed = await processManager.killProcessById(12345);
-      expect(typeof killed).toBe('boolean');
-
-      Object.defineProperty(process, 'platform', { value: originalPlatform });
+      await withMockedPlatform('linux', async () => {
+        const killed = await processManager.killProcessById(12345);
+        expect(typeof killed).toBe('boolean');
+      });
     });
   });
 });

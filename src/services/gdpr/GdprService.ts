@@ -33,14 +33,17 @@ import * as path from 'path';
 export class GdprService {
   private exporter: DataExporter;
   private deleter: DataDeleter;
-  private rateLimitMap: Map<string, { count: number; resetAt: number }> =
-    new Map();
+  private rateLimitMap: Map<string, { count: number; resetAt: number }> = new Map();
+  private db: Database.Database;
+  private auditLogger: AuditLogger;
 
   constructor(
-    private db: Database.Database,
+    db: Database.Database,
     encryptionService: EncryptionService,
-    private auditLogger: AuditLogger
+    auditLogger: AuditLogger
   ) {
+    this.db = db;
+    this.auditLogger = auditLogger;
     this.exporter = new DataExporter(db, encryptionService);
     this.deleter = new DataDeleter(db);
   }
