@@ -22,7 +22,7 @@ export function ChatView() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [currentStreamingMessage, setCurrentStreamingMessage] = useState('');
   const [_showThinking, _setShowThinking] = useState(false); // Reserved for showing AI thinking process
-  const [currentThinking, setCurrentThinking] = useState('');
+  const [_currentThinking, setCurrentThinking] = useState(''); // Reserved for AI thinking display
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -55,6 +55,9 @@ export function ChatView() {
         throw new Error('No active session');
       }
 
+      let streamedContent = '';
+      let streamedThinking = '';
+
       await window.justiceAPI.streamChat(
         {
           sessionId,
@@ -63,19 +66,21 @@ export function ChatView() {
         },
         (token: string) => {
           // Each token from AI response
-          setCurrentStreamingMessage(prev => prev + token);
+          streamedContent += token;
+          setCurrentStreamingMessage(streamedContent);
         },
         (thinking: string) => {
           // AI's thinking process (optional)
-          setCurrentThinking(prev => prev + thinking);
+          streamedThinking += thinking;
+          setCurrentThinking(streamedThinking);
         },
         () => {
           // Streaming complete
           const assistantMessage: Message = {
             id: `assistant-${Date.now()}`,
             role: 'assistant',
-            content: currentStreamingMessage,
-            thinking: currentThinking || undefined,
+            content: streamedContent,
+            thinking: streamedThinking || undefined,
             timestamp: new Date(),
           };
 
