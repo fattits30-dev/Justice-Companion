@@ -12,18 +12,36 @@
  * - /settings - Settings (requires auth)
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { LoginScreen } from './components/auth/LoginScreen';
 import { RegistrationScreen } from './components/auth/RegistrationScreen';
 import { MainLayout } from './components/layouts/MainLayout';
-import { Dashboard } from './components/Dashboard';
-import { CasesView } from './views/CasesView';
-import { DocumentsView } from './views/DocumentsView';
-import { ChatView } from './views/ChatView';
-import { SettingsView } from './views/SettingsView';
 import { ToastProvider } from './components/ui';
+import { SkeletonCard } from './components/ui/Skeleton.tsx';
+
+// Lazy load views for code splitting
+const Dashboard = lazy(() => import('./components/Dashboard').then(m => ({ default: m.Dashboard })));
+const CasesView = lazy(() => import('./views/CasesView').then(m => ({ default: m.CasesView })));
+const DocumentsView = lazy(() => import('./views/DocumentsView').then(m => ({ default: m.DocumentsView })));
+const ChatView = lazy(() => import('./views/ChatView').then(m => ({ default: m.ChatView })));
+const SettingsView = lazy(() => import('./views/SettingsView').then(m => ({ default: m.SettingsView })));
+
+/**
+ * PageLoader - Loading fallback for lazy-loaded pages
+ */
+function PageLoader() {
+  return (
+    <div className="min-h-screen bg-gray-900 p-8">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <SkeletonCard key={i} lines={3} />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 /**
  * ProtectedRoute - Redirects to login if not authenticated
@@ -32,14 +50,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
-          <p className="text-gray-300 text-lg">Loading...</p>
-        </div>
-      </div>
-    );
+    return <PageLoader />;
   }
 
   if (!isAuthenticated) {
@@ -56,14 +67,7 @@ function AuthRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
-          <p className="text-gray-300 text-lg">Loading...</p>
-        </div>
-      </div>
-    );
+    return <PageLoader />;
   }
 
   if (isAuthenticated) {
@@ -124,19 +128,12 @@ function DashboardWrapper() {
   }, []);
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
-          <p className="text-gray-300 text-lg">Loading dashboard...</p>
-        </div>
-      </div>
-    );
+    return <PageLoader />;
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-gray-900 p-8">
         <div className="text-center">
           <div className="p-4 text-red-300 bg-red-900/50 rounded-md border border-red-700">
             {error}
@@ -212,11 +209,46 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       >
-        <Route path="/dashboard" element={<DashboardWrapper />} />
-        <Route path="/cases" element={<CasesView />} />
-        <Route path="/documents" element={<DocumentsView />} />
-        <Route path="/chat" element={<ChatView />} />
-        <Route path="/settings" element={<SettingsView />} />
+        <Route
+          path="/dashboard"
+          element={
+            <Suspense fallback={<PageLoader />}>
+              <DashboardWrapper />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/cases"
+          element={
+            <Suspense fallback={<PageLoader />}>
+              <CasesView />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/documents"
+          element={
+            <Suspense fallback={<PageLoader />}>
+              <DocumentsView />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/chat"
+          element={
+            <Suspense fallback={<PageLoader />}>
+              <ChatView />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <Suspense fallback={<PageLoader />}>
+              <SettingsView />
+            </Suspense>
+          }
+        />
       </Route>
 
       {/* Root route - redirect based on auth state */}

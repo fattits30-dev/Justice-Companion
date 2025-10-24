@@ -1,3 +1,5 @@
+import { Upload } from 'lucide-react';
+import { Button } from '../../../components/ui/Button.tsx';
 import type { EvidenceType } from '../../../models/Evidence.ts';
 import { evidenceFilterOptions } from '../constants.ts';
 
@@ -63,13 +65,16 @@ export function DocumentsToolbar({
           </select>
         </label>
 
-        <button
+        <Button
           onClick={onUploadClick}
-          className="rounded-lg bg-blue-600 px-6 py-2 font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-700"
+          variant="primary"
+          size="md"
+          icon={<Upload />}
+          iconPosition="left"
           disabled={isUploadDisabled}
         >
           Upload Evidence
-        </button>
+        </Button>
       </div>
     </div>
   );

@@ -14,6 +14,12 @@
  * - Accessible headings and landmarks
  */
 
+import { TrendingUp, Briefcase, FileText, Activity, Plus, Upload, MessageSquare, AlertCircle, Info, Lightbulb } from 'lucide-react';
+import { Card } from './ui/Card.tsx';
+import { Button } from './ui/Button.tsx';
+import { Badge } from './ui/Badge.tsx';
+import { SkeletonCard } from './ui/Skeleton.tsx';
+
 interface Stats {
   totalCases: number;
   activeCases: number;
@@ -61,27 +67,36 @@ export function Dashboard({
     });
   };
 
-  // Status badge color mapping
-  const getStatusColor = (status: string): string => {
+  // Status badge variant mapping
+  const getStatusVariant = (status: string): 'success' | 'warning' | 'neutral' => {
     switch (status) {
       case 'active':
-        return 'bg-green-500 text-white';
-      case 'closed':
-        return 'bg-gray-500 text-white';
+        return 'success';
       case 'pending':
-        return 'bg-yellow-500 text-white';
+        return 'warning';
+      case 'closed':
       default:
-        return 'bg-gray-500 text-white';
+        return 'neutral';
     }
   };
 
   // Loading state
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
-          <p className="text-gray-300 text-lg">Loading dashboard data...</p>
+      <div className="min-h-screen bg-gray-900 text-white p-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">Welcome back, {username}</h1>
+          <p className="text-gray-400">Loading your dashboard...</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <SkeletonCard key={i} lines={1} />
+          ))}
+        </div>
+        <div className="grid grid-cols-1 gap-6">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <SkeletonCard key={i} lines={2} />
+          ))}
         </div>
       </div>
     );
@@ -90,16 +105,14 @@ export function Dashboard({
   // Error state
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900">
-        <div className="text-center max-w-md">
-          <div className="bg-red-900/20 border border-red-700 rounded-lg p-6">
-            <svg className="w-12 h-12 text-red-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+      <div className="flex items-center justify-center min-h-screen bg-gray-900 p-8">
+        <Card variant="glass" className="max-w-md">
+          <div className="text-center">
+            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
             <h2 className="text-xl font-semibold text-red-400 mb-2">Error Loading Dashboard</h2>
             <p className="text-gray-300">{error}</p>
           </div>
-        </div>
+        </Card>
       </div>
     );
   }
@@ -107,11 +120,9 @@ export function Dashboard({
   return (
     <div className="min-h-screen bg-gray-900 text-white p-8">
       {/* Legal Disclaimer Banner - ALWAYS VISIBLE */}
-      <div className="mb-6 bg-amber-900/30 border-l-4 border-amber-500 rounded-lg p-4">
+      <Card variant="glass" className="mb-6 bg-amber-900/30 border-l-4 border-amber-500">
         <div className="flex items-start gap-3">
-          <svg className="w-6 h-6 text-amber-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
+          <Info className="w-6 h-6 text-amber-500 flex-shrink-0 mt-0.5" />
           <div>
             <p className="font-semibold text-amber-200 mb-1">This app provides information, not legal advice</p>
             <p className="text-sm text-amber-100/80">
@@ -121,7 +132,7 @@ export function Dashboard({
             </p>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Welcome Section */}
       <div className="mb-8">
@@ -132,7 +143,7 @@ export function Dashboard({
       {/* Stats Grid - People-friendly language */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {/* Total Cases */}
-        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+        <Card variant="glass" hoverable shine>
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-400 text-sm mb-1">Your Cases</p>
@@ -141,14 +152,12 @@ export function Dashboard({
                 {stats.totalCases === 0 ? 'Ready to start' : 'Cases you\'re tracking'}
               </p>
             </div>
-            <svg className="w-12 h-12 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
+            <Briefcase className="w-12 h-12 text-blue-500" />
           </div>
-        </div>
+        </Card>
 
         {/* Active Cases */}
-        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+        <Card variant="glass" hoverable shine>
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-400 text-sm mb-1">Currently Active</p>
@@ -157,14 +166,12 @@ export function Dashboard({
                 {stats.activeCases === 0 ? 'All caught up' : 'Ongoing matters'}
               </p>
             </div>
-            <svg className="w-12 h-12 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+            <TrendingUp className="w-12 h-12 text-green-500" />
           </div>
-        </div>
+        </Card>
 
         {/* Total Evidence */}
-        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+        <Card variant="glass" hoverable shine>
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-400 text-sm mb-1">Evidence Collected</p>
@@ -173,14 +180,12 @@ export function Dashboard({
                 {stats.totalEvidence === 0 ? 'Start gathering proof' : 'Documents & records'}
               </p>
             </div>
-            <svg className="w-12 h-12 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-            </svg>
+            <FileText className="w-12 h-12 text-purple-500" />
           </div>
-        </div>
+        </Card>
 
         {/* Recent Activity */}
-        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+        <Card variant="glass" hoverable shine>
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-400 text-sm mb-1">Recent Activity</p>
@@ -189,46 +194,45 @@ export function Dashboard({
                 {stats.recentActivity === 0 ? 'No recent changes' : 'Updates this week'}
               </p>
             </div>
-            <svg className="w-12 h-12 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
+            <Activity className="w-12 h-12 text-yellow-500" />
           </div>
-        </div>
+        </Card>
       </div>
 
       {/* Quick Actions */}
       <div className="mb-8">
         <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
         <div className="flex flex-wrap gap-4">
-          <button
+          <Button
             onClick={onNewCase}
-            className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-colors"
+            variant="primary"
+            size="lg"
+            icon={<Plus />}
+            iconPosition="left"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
             New Case
-          </button>
+          </Button>
 
-          <button
+          <Button
             onClick={onUploadEvidence}
-            className="flex items-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg font-medium transition-colors"
+            variant="secondary"
+            size="lg"
+            icon={<Upload />}
+            iconPosition="left"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-            </svg>
             Upload Evidence
-          </button>
+          </Button>
 
-          <button
+          <Button
             onClick={onStartChat}
-            className="flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 rounded-lg font-medium transition-colors"
+            variant="primary"
+            size="lg"
+            icon={<MessageSquare />}
+            iconPosition="left"
+            className="bg-gradient-to-br from-green-500 to-green-600 hover:from-green-400 hover:to-green-500"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-            </svg>
             Start Chat
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -237,19 +241,21 @@ export function Dashboard({
         <h2 className="text-xl font-semibold mb-4">Your Recent Cases</h2>
 
         {recentCases.length === 0 ? (
-          <div className="bg-gray-800 rounded-lg p-8 border border-gray-700 text-center">
-            <svg className="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <p className="text-gray-400 text-lg mb-2">Ready to start your first case?</p>
-            <p className="text-gray-500 mb-4">Click "New Case" above to begin organizing your evidence and building your record.</p>
-            <p className="text-sm text-gray-600">Remember: Start documenting early. Evidence collected at the time is more credible than memories later.</p>
-          </div>
+          <Card variant="glass">
+            <div className="text-center">
+              <Briefcase className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+              <p className="text-gray-400 text-lg mb-2">Ready to start your first case?</p>
+              <p className="text-gray-500 mb-4">Click "New Case" above to begin organizing your evidence and building your record.</p>
+              <p className="text-sm text-gray-600">Remember: Start documenting early. Evidence collected at the time is more credible than memories later.</p>
+            </div>
+          </Card>
         ) : (
           <div className="space-y-4">
             {recentCases.map((case_) => (
-              <div
+              <Card
                 key={case_.id}
+                variant="glass"
+                hoverable
                 role="button"
                 tabIndex={0}
                 onClick={() => onCaseClick && onCaseClick(case_.id)}
@@ -258,7 +264,7 @@ export function Dashboard({
                     onCaseClick && onCaseClick(case_.id);
                   }
                 }}
-                className="bg-gray-800 rounded-lg p-4 border border-gray-700 hover:border-blue-500 cursor-pointer transition-colors"
+                className="cursor-pointer"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
@@ -267,22 +273,20 @@ export function Dashboard({
                       Last updated: {formatDate(case_.lastUpdated)}
                     </p>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-xs font-semibold uppercase ${getStatusColor(case_.status)}`}>
-                    {case_.status}
-                  </span>
+                  <Badge variant={getStatusVariant(case_.status)} size="md" dot pulse>
+                    {case_.status.toUpperCase()}
+                  </Badge>
                 </div>
-              </div>
+              </Card>
             ))}
           </div>
         )}
       </div>
 
       {/* When to Get a Lawyer - Practical Advice */}
-      <div className="bg-blue-900/20 border border-blue-700/50 rounded-lg p-6">
+      <Card variant="glass" className="bg-blue-900/20 border-blue-700/50">
         <div className="flex items-start gap-3">
-          <svg className="w-6 h-6 text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-          </svg>
+          <Lightbulb className="w-6 h-6 text-blue-400 flex-shrink-0 mt-0.5" />
           <div className="flex-1">
             <h3 className="font-semibold text-blue-300 mb-2">When You Should Get Professional Legal Advice</h3>
             <div className="text-sm text-blue-100/80 space-y-2">
@@ -294,14 +298,17 @@ export function Dashboard({
                 <li>If you're facing legal action from your employer</li>
                 <li>When you need representation at a hearing</li>
               </ul>
-              <p className="mt-3 text-xs text-blue-200/60">
-                💡 Tip: Many solicitors offer free initial consultations. Some trade unions provide free legal advice to members.
-                Citizens Advice Bureau can also help point you to free or low-cost legal support.
+              <p className="mt-3 text-xs text-blue-200/60 flex items-start gap-2">
+                <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                <span>
+                  Tip: Many solicitors offer free initial consultations. Some trade unions provide free legal advice to members.
+                  Citizens Advice Bureau can also help point you to free or low-cost legal support.
+                </span>
               </p>
             </div>
           </div>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }
