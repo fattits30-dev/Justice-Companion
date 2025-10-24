@@ -13,24 +13,32 @@
  * - Accessible (ARIA)
  */
 
-import { useState } from 'react';
+import { useState } from "react";
 
 interface ConsentBannerProps {
-  consentType: 'data_processing' | 'marketing' | 'analytics';
+  consentType: "data_processing" | "marketing" | "analytics";
   onAccept?: () => void;
   onDecline?: () => void;
   onDismiss?: () => void;
 }
 
 const CONSENT_MESSAGES = {
-  data_processing: 'We collect and process your personal data to provide our legal case management services. Your data is stored locally and encrypted.',
-  marketing: 'We would like to send you promotional emails and newsletters about our services. You can opt out at any time.',
-  analytics: 'We use analytics to improve our application. This helps us understand how users interact with our features.'
+  data_processing:
+    "We collect and process your personal data to provide our legal case management services. Your data is stored locally and encrypted.",
+  marketing:
+    "We would like to send you promotional emails and newsletters about our services. You can opt out at any time.",
+  analytics:
+    "We use analytics to improve our application. This helps us understand how users interact with our features.",
 };
 
-export function ConsentBanner({ consentType, onAccept, onDecline, onDismiss }: ConsentBannerProps) {
+export function ConsentBanner({
+  consentType,
+  onAccept,
+  onDecline,
+  onDismiss,
+}: ConsentBannerProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [isVisible, setIsVisible] = useState(true);
 
   const message = CONSENT_MESSAGES[consentType];
@@ -39,7 +47,7 @@ export function ConsentBanner({ consentType, onAccept, onDecline, onDismiss }: C
    * Handle Accept action
    */
   const handleAccept = async () => {
-    setError('');
+    setError("");
     setIsLoading(true);
 
     try {
@@ -51,10 +59,10 @@ export function ConsentBanner({ consentType, onAccept, onDecline, onDismiss }: C
           onAccept();
         }
       } else {
-        setError(response.error || 'Failed to save consent');
+        setError(response.error || "Failed to save consent");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setIsLoading(false);
     }
@@ -64,7 +72,7 @@ export function ConsentBanner({ consentType, onAccept, onDecline, onDismiss }: C
    * Handle Decline action
    */
   const handleDecline = async () => {
-    setError('');
+    setError("");
     setIsLoading(true);
 
     try {
@@ -76,10 +84,10 @@ export function ConsentBanner({ consentType, onAccept, onDecline, onDismiss }: C
           onDecline();
         }
       } else {
-        setError(response.error || 'Failed to save consent');
+        setError(response.error || "Failed to save consent");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setIsLoading(false);
     }
@@ -108,16 +116,10 @@ export function ConsentBanner({ consentType, onAccept, onDecline, onDismiss }: C
       <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
         {/* Message */}
         <div className="flex-1">
-          <p className="text-sm text-gray-300">
-            {message}
-          </p>
+          <p className="text-sm text-gray-300">{message}</p>
 
           {/* Error message */}
-          {error && (
-            <p className="mt-2 text-sm text-red-400">
-              {error}
-            </p>
-          )}
+          {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
         </div>
 
         {/* Actions */}
@@ -137,9 +139,9 @@ export function ConsentBanner({ consentType, onAccept, onDecline, onDismiss }: C
             type="button"
             onClick={handleAccept}
             disabled={isLoading}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {isLoading ? 'Saving...' : 'Accept'}
+            {isLoading ? "Saving..." : "Accept"}
           </button>
 
           {/* Close/Dismiss button */}
@@ -150,8 +152,18 @@ export function ConsentBanner({ consentType, onAccept, onDecline, onDismiss }: C
             className="p-2 text-gray-400 hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="Close consent banner"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>

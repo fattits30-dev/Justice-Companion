@@ -1,13 +1,13 @@
-import { Plus } from 'lucide-react';
-import { Button } from '../../../components/ui/Button.tsx';
-import type { CaseStatus, CaseType } from '../../../models/Case.ts';
-import { statusFilterOptions, typeFilterOptions } from '../constants.ts';
+import { Plus } from "lucide-react";
+import { Button } from "../../../components/ui/Button.tsx";
+import type { CaseStatus, CaseType } from "../../../models/Case.ts";
+import { statusFilterOptions, typeFilterOptions } from "../constants.ts";
 
 interface CaseToolbarProps {
-  filterStatus: CaseStatus | 'all';
-  filterType: CaseType | 'all';
-  onStatusChange: (value: CaseStatus | 'all') => void;
-  onTypeChange: (value: CaseType | 'all') => void;
+  filterStatus: CaseStatus | "all";
+  filterType: CaseType | "all";
+  onStatusChange: (value: CaseStatus | "all") => void;
+  onTypeChange: (value: CaseType | "all") => void;
   onCreateCase: () => void;
 }
 
@@ -29,8 +29,10 @@ export function CaseToolbar({
           <span className="mb-1">Status</span>
           <select
             value={filterStatus}
-            onChange={(event) => onStatusChange(event.target.value as CaseStatus | 'all')}
-            className="min-w-[150px] rounded-lg border border-gray-700 bg-gray-900 px-4 py-2 text-white focus:border-blue-500 focus:outline-none"
+            onChange={(event) =>
+              onStatusChange(event.target.value as CaseStatus | "all")
+            }
+            className="min-w-[150px] rounded-lg border border-gray-700 bg-gray-900 px-4 py-2 text-white focus:border-primary-500 focus:outline-none"
           >
             {statusFilterOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -43,8 +45,10 @@ export function CaseToolbar({
           <span className="mb-1">Type</span>
           <select
             value={filterType}
-            onChange={(event) => onTypeChange(event.target.value as CaseType | 'all')}
-            className="min-w-[160px] rounded-lg border border-gray-700 bg-gray-900 px-4 py-2 text-white focus:border-blue-500 focus:outline-none"
+            onChange={(event) =>
+              onTypeChange(event.target.value as CaseType | "all")
+            }
+            className="min-w-[160px] rounded-lg border border-gray-700 bg-gray-900 px-4 py-2 text-white focus:border-primary-500 focus:outline-none"
           >
             {typeFilterOptions.map((option) => (
               <option key={option.value} value={option.value}>

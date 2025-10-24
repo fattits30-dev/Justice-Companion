@@ -1,14 +1,14 @@
-import { Upload } from 'lucide-react';
-import { Button } from '../../../components/ui/Button.tsx';
-import type { EvidenceType } from '../../../models/Evidence.ts';
-import { evidenceFilterOptions } from '../constants.ts';
+import { Upload } from "lucide-react";
+import { Button } from "../../../components/ui/Button.tsx";
+import type { EvidenceType } from "../../../models/Evidence.ts";
+import { evidenceFilterOptions } from "../constants.ts";
 
 interface DocumentsToolbarProps {
   cases: Array<{ id: number; title: string }>;
   selectedCaseId: number | null;
   onCaseSelect: (id: number | null) => void;
-  filterType: EvidenceType | 'all';
-  onFilterChange: (value: EvidenceType | 'all') => void;
+  filterType: EvidenceType | "all";
+  onFilterChange: (value: EvidenceType | "all") => void;
   onUploadClick: () => void;
   isUploadDisabled: boolean;
 }
@@ -34,12 +34,12 @@ export function DocumentsToolbar({
         <label className="flex flex-col text-sm text-gray-400">
           <span className="mb-1">Case</span>
           <select
-            value={selectedCaseId ?? ''}
+            value={selectedCaseId ?? ""}
             onChange={(event) => {
               const value = event.target.value;
               onCaseSelect(value ? Number(value) : null);
             }}
-            className="min-w-[200px] rounded-lg border border-gray-700 bg-gray-900 px-4 py-2 text-white focus:border-blue-500 focus:outline-none"
+            className="min-w-[200px] rounded-lg border border-gray-700 bg-gray-900 px-4 py-2 text-white focus:border-primary-500 focus:outline-none"
           >
             <option value="">Select a case</option>
             {cases.map((caseItem) => (
@@ -54,8 +54,10 @@ export function DocumentsToolbar({
           <span className="mb-1">Type</span>
           <select
             value={filterType}
-            onChange={(event) => onFilterChange(event.target.value as EvidenceType | 'all')}
-            className="min-w-[160px] rounded-lg border border-gray-700 bg-gray-900 px-4 py-2 text-white focus:border-blue-500 focus:outline-none"
+            onChange={(event) =>
+              onFilterChange(event.target.value as EvidenceType | "all")
+            }
+            className="min-w-[160px] rounded-lg border border-gray-700 bg-gray-900 px-4 py-2 text-white focus:border-primary-500 focus:outline-none"
           >
             {evidenceFilterOptions.map((option) => (
               <option key={option.value} value={option.value}>

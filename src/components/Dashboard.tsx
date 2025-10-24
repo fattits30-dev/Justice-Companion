@@ -14,11 +14,22 @@
  * - Accessible headings and landmarks
  */
 
-import { TrendingUp, Briefcase, FileText, Activity, Plus, Upload, MessageSquare, AlertCircle, Info, Lightbulb } from 'lucide-react';
-import { Card } from './ui/Card.tsx';
-import { Button } from './ui/Button.tsx';
-import { Badge } from './ui/Badge.tsx';
-import { SkeletonCard } from './ui/Skeleton.tsx';
+import {
+  TrendingUp,
+  Briefcase,
+  FileText,
+  Activity,
+  Plus,
+  Upload,
+  MessageSquare,
+  AlertCircle,
+  Info,
+  Lightbulb,
+} from "lucide-react";
+import { Card } from "./ui/Card.tsx";
+import { Button } from "./ui/Button.tsx";
+import { Badge } from "./ui/Badge.tsx";
+import { SkeletonCard } from "./ui/Skeleton.tsx";
 
 interface Stats {
   totalCases: number;
@@ -30,7 +41,7 @@ interface Stats {
 interface RecentCase {
   id: string;
   title: string;
-  status: 'active' | 'closed' | 'pending';
+  status: "active" | "closed" | "pending";
   lastUpdated: string;
 }
 
@@ -48,35 +59,42 @@ interface DashboardProps {
 
 export function Dashboard({
   username,
-  stats = { totalCases: 0, activeCases: 0, totalEvidence: 0, recentActivity: 0 },
+  stats = {
+    totalCases: 0,
+    activeCases: 0,
+    totalEvidence: 0,
+    recentActivity: 0,
+  },
   recentCases = [],
   isLoading = false,
   error,
   onNewCase,
   onUploadEvidence,
   onStartChat,
-  onCaseClick
+  onCaseClick,
 }: DashboardProps) {
   // Format date for display
   const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-GB', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
+    return date.toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
     });
   };
 
   // Status badge variant mapping
-  const getStatusVariant = (status: string): 'success' | 'warning' | 'neutral' => {
+  const getStatusVariant = (
+    status: string,
+  ): "success" | "warning" | "neutral" => {
     switch (status) {
-      case 'active':
-        return 'success';
-      case 'pending':
-        return 'warning';
-      case 'closed':
+      case "active":
+        return "success";
+      case "pending":
+        return "warning";
+      case "closed":
       default:
-        return 'neutral';
+        return "neutral";
     }
   };
 
@@ -109,7 +127,9 @@ export function Dashboard({
         <Card variant="glass" className="max-w-md">
           <div className="text-center">
             <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-red-400 mb-2">Error Loading Dashboard</h2>
+            <h2 className="text-xl font-semibold text-red-400 mb-2">
+              Error Loading Dashboard
+            </h2>
             <p className="text-gray-300">{error}</p>
           </div>
         </Card>
@@ -120,15 +140,21 @@ export function Dashboard({
   return (
     <div className="min-h-screen bg-gray-900 text-white p-8">
       {/* Legal Disclaimer Banner - ALWAYS VISIBLE */}
-      <Card variant="glass" className="mb-6 bg-amber-900/30 border-l-4 border-amber-500">
+      <Card
+        variant="glass"
+        className="mb-6 bg-amber-900/30 border-l-4 border-amber-500"
+      >
         <div className="flex items-start gap-3">
           <Info className="w-6 h-6 text-amber-500 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="font-semibold text-amber-200 mb-1">This app provides information, not legal advice</p>
+            <p className="font-semibold text-amber-200 mb-1">
+              This app provides information, not legal advice
+            </p>
             <p className="text-sm text-amber-100/80">
-              Justice Companion helps you organize your case and understand legal concepts.
-              It's NOT a replacement for a qualified lawyer. For legal advice specific to your situation,
-              please consult a solicitor or legal professional.
+              Justice Companion helps you organize your case and understand
+              legal concepts. It's NOT a replacement for a qualified lawyer. For
+              legal advice specific to your situation, please consult a
+              solicitor or legal professional.
             </p>
           </div>
         </div>
@@ -137,7 +163,9 @@ export function Dashboard({
       {/* Welcome Section */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Welcome back, {username}</h1>
-        <p className="text-gray-400">You're building your case. Here's where you stand.</p>
+        <p className="text-gray-400">
+          You're building your case. Here's where you stand.
+        </p>
       </div>
 
       {/* Stats Grid - People-friendly language */}
@@ -149,10 +177,12 @@ export function Dashboard({
               <p className="text-gray-400 text-sm mb-1">Your Cases</p>
               <p className="text-3xl font-bold">{stats.totalCases}</p>
               <p className="text-xs text-gray-500 mt-1">
-                {stats.totalCases === 0 ? 'Ready to start' : 'Cases you\'re tracking'}
+                {stats.totalCases === 0
+                  ? "Ready to start"
+                  : "Cases you're tracking"}
               </p>
             </div>
-            <Briefcase className="w-12 h-12 text-blue-500" />
+            <Briefcase className="w-12 h-12 text-primary-500" />
           </div>
         </Card>
 
@@ -163,7 +193,7 @@ export function Dashboard({
               <p className="text-gray-400 text-sm mb-1">Currently Active</p>
               <p className="text-3xl font-bold">{stats.activeCases}</p>
               <p className="text-xs text-gray-500 mt-1">
-                {stats.activeCases === 0 ? 'All caught up' : 'Ongoing matters'}
+                {stats.activeCases === 0 ? "All caught up" : "Ongoing matters"}
               </p>
             </div>
             <TrendingUp className="w-12 h-12 text-green-500" />
@@ -177,7 +207,9 @@ export function Dashboard({
               <p className="text-gray-400 text-sm mb-1">Evidence Collected</p>
               <p className="text-3xl font-bold">{stats.totalEvidence}</p>
               <p className="text-xs text-gray-500 mt-1">
-                {stats.totalEvidence === 0 ? 'Start gathering proof' : 'Documents & records'}
+                {stats.totalEvidence === 0
+                  ? "Start gathering proof"
+                  : "Documents & records"}
               </p>
             </div>
             <FileText className="w-12 h-12 text-purple-500" />
@@ -191,7 +223,9 @@ export function Dashboard({
               <p className="text-gray-400 text-sm mb-1">Recent Activity</p>
               <p className="text-3xl font-bold">{stats.recentActivity}</p>
               <p className="text-xs text-gray-500 mt-1">
-                {stats.recentActivity === 0 ? 'No recent changes' : 'Updates this week'}
+                {stats.recentActivity === 0
+                  ? "No recent changes"
+                  : "Updates this week"}
               </p>
             </div>
             <Activity className="w-12 h-12 text-yellow-500" />
@@ -244,9 +278,17 @@ export function Dashboard({
           <Card variant="glass">
             <div className="text-center">
               <Briefcase className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-              <p className="text-gray-400 text-lg mb-2">Ready to start your first case?</p>
-              <p className="text-gray-500 mb-4">Click "New Case" above to begin organizing your evidence and building your record.</p>
-              <p className="text-sm text-gray-600">Remember: Start documenting early. Evidence collected at the time is more credible than memories later.</p>
+              <p className="text-gray-400 text-lg mb-2">
+                Ready to start your first case?
+              </p>
+              <p className="text-gray-500 mb-4">
+                Click "New Case" above to begin organizing your evidence and
+                building your record.
+              </p>
+              <p className="text-sm text-gray-600">
+                Remember: Start documenting early. Evidence collected at the
+                time is more credible than memories later.
+              </p>
             </div>
           </Card>
         ) : (
@@ -260,20 +302,29 @@ export function Dashboard({
                 tabIndex={0}
                 onClick={() => onCaseClick && onCaseClick(case_.id)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    onCaseClick && onCaseClick(case_.id);
+                  if (e.key === "Enter" || e.key === " ") {
+                    if (onCaseClick) {
+                      onCaseClick(case_.id);
+                    }
                   }
                 }}
                 className="cursor-pointer"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <h3 className="font-semibold text-lg mb-1">{case_.title}</h3>
+                    <h3 className="font-semibold text-lg mb-1">
+                      {case_.title}
+                    </h3>
                     <p className="text-gray-400 text-sm">
                       Last updated: {formatDate(case_.lastUpdated)}
                     </p>
                   </div>
-                  <Badge variant={getStatusVariant(case_.status)} size="md" dot pulse>
+                  <Badge
+                    variant={getStatusVariant(case_.status)}
+                    size="md"
+                    dot
+                    pulse
+                  >
                     {case_.status.toUpperCase()}
                   </Badge>
                 </div>
@@ -284,13 +335,18 @@ export function Dashboard({
       </div>
 
       {/* When to Get a Lawyer - Practical Advice */}
-      <Card variant="glass" className="bg-blue-900/20 border-blue-700/50">
+      <Card variant="glass" className="bg-primary-900/20 border-primary-700/50">
         <div className="flex items-start gap-3">
-          <Lightbulb className="w-6 h-6 text-blue-400 flex-shrink-0 mt-0.5" />
+          <Lightbulb className="w-6 h-6 text-primary-400 flex-shrink-0 mt-0.5" />
           <div className="flex-1">
-            <h3 className="font-semibold text-blue-300 mb-2">When You Should Get Professional Legal Advice</h3>
-            <div className="text-sm text-blue-100/80 space-y-2">
-              <p>This app helps you organize your case, but some situations need a qualified solicitor:</p>
+            <h3 className="font-semibold text-primary-300 mb-2">
+              When You Should Get Professional Legal Advice
+            </h3>
+            <div className="text-sm text-primary-100/80 space-y-2">
+              <p>
+                This app helps you organize your case, but some situations need
+                a qualified solicitor:
+              </p>
               <ul className="list-disc list-inside space-y-1 ml-2">
                 <li>Employment tribunals or court proceedings</li>
                 <li>Negotiating settlements or redundancy packages</li>
@@ -298,11 +354,13 @@ export function Dashboard({
                 <li>If you're facing legal action from your employer</li>
                 <li>When you need representation at a hearing</li>
               </ul>
-              <p className="mt-3 text-xs text-blue-200/60 flex items-start gap-2">
+              <p className="mt-3 text-xs text-primary-200/60 flex items-start gap-2">
                 <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
                 <span>
-                  Tip: Many solicitors offer free initial consultations. Some trade unions provide free legal advice to members.
-                  Citizens Advice Bureau can also help point you to free or low-cost legal support.
+                  Tip: Many solicitors offer free initial consultations. Some
+                  trade unions provide free legal advice to members. Citizens
+                  Advice Bureau can also help point you to free or low-cost
+                  legal support.
                 </span>
               </p>
             </div>
