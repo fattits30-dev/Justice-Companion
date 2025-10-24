@@ -73,7 +73,7 @@ export function CreateCaseDialog({ onClose, onCreate }: CreateCaseDialogProps) {
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
                 placeholder="e.g., Unfair Dismissal - Smith v. Acme Corp"
-                className="w-full rounded-lg border border-gray-700 bg-gray-900 px-4 py-2 text-white placeholder-gray-500 focus:border-primary-500 focus:outline-none"
+                className="w-full rounded-lg border border-gray-700 bg-primary-900 px-4 py-2 text-white placeholder-gray-500 focus:border-primary-500 focus:outline-none"
                 required
               />
             </label>
@@ -87,7 +87,7 @@ export function CreateCaseDialog({ onClose, onCreate }: CreateCaseDialogProps) {
                 onChange={(event) =>
                   setCaseType(event.target.value as CaseType)
                 }
-                className="w-full rounded-lg border border-gray-700 bg-gray-900 px-4 py-2 text-white focus:border-primary-500 focus:outline-none"
+                className="w-full rounded-lg border border-gray-700 bg-primary-900 px-4 py-2 text-white focus:border-primary-500 focus:outline-none"
               >
                 {Object.entries(caseTypeMetadata).map(([value, meta]) => (
                   <option key={value} value={value}>
@@ -106,7 +106,7 @@ export function CreateCaseDialog({ onClose, onCreate }: CreateCaseDialogProps) {
                 onChange={(event) => setDescription(event.target.value)}
                 placeholder="Brief description of the case..."
                 rows={4}
-                className="w-full resize-none rounded-lg border border-gray-700 bg-gray-900 px-4 py-2 text-white placeholder-gray-500 focus:border-primary-500 focus:outline-none"
+                className="w-full resize-none rounded-lg border border-gray-700 bg-primary-900 px-4 py-2 text-white placeholder-gray-500 focus:border-primary-500 focus:outline-none"
               />
             </label>
 
@@ -122,7 +122,7 @@ export function CreateCaseDialog({ onClose, onCreate }: CreateCaseDialogProps) {
               </Button>
               <Button
                 type="submit"
-                variant="primary"
+                variant="secondary"
                 size="md"
                 icon={<Check />}
                 iconPosition="left"

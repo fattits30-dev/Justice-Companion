@@ -101,7 +101,7 @@ export function Dashboard({
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-900 text-white p-8">
+      <div className="min-h-screen bg-primary-900 text-white p-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Welcome back, {username}</h1>
           <p className="text-gray-400">Loading your dashboard...</p>
@@ -123,7 +123,7 @@ export function Dashboard({
   // Error state
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900 p-8">
+      <div className="flex items-center justify-center min-h-screen bg-primary-900 p-8">
         <Card variant="glass" className="max-w-md">
           <div className="text-center">
             <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
@@ -138,7 +138,7 @@ export function Dashboard({
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-8">
+    <div className="min-h-screen bg-primary-900 text-white p-8">
       {/* Legal Disclaimer Banner - ALWAYS VISIBLE */}
       <Card
         variant="glass"
@@ -239,7 +239,7 @@ export function Dashboard({
         <div className="flex flex-wrap gap-4">
           <Button
             onClick={onNewCase}
-            variant="primary"
+            variant="secondary"
             size="lg"
             icon={<Plus />}
             iconPosition="left"
@@ -259,7 +259,7 @@ export function Dashboard({
 
           <Button
             onClick={onStartChat}
-            variant="primary"
+            variant="secondary"
             size="lg"
             icon={<MessageSquare />}
             iconPosition="left"

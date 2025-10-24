@@ -165,7 +165,7 @@ export function Sidebar({
 
   return (
     <nav
-      className={`flex flex-col h-screen bg-gray-800 border-r border-gray-700 transition-all duration-300 ${
+      className={`flex flex-col h-screen bg-primary-800 border-r border-gray-700 transition-all duration-300 ${
         isCollapsed ? "w-16" : "w-64"
       }`}
       role="navigation"
@@ -179,7 +179,7 @@ export function Sidebar({
         {onToggleCollapse && (
           <button
             onClick={onToggleCollapse}
-            className="p-2 text-gray-400 hover:text-white rounded-md hover:bg-gray-700 transition-colors"
+            className="p-2 text-gray-400 hover:text-white rounded-md hover:bg-primary-700 transition-colors"
             aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
             <svg
@@ -222,7 +222,7 @@ export function Sidebar({
                   className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
                     isActive
                       ? "bg-primary-600 text-white"
-                      : "text-gray-300 hover:bg-gray-700 hover:text-white"
+                      : "text-gray-300 hover:bg-primary-700 hover:text-white"
                   }`}
                   aria-current={isActive ? "page" : undefined}
                 >
@@ -253,7 +253,7 @@ export function Sidebar({
           )}
           <button
             onClick={onLogout}
-            className="flex items-center gap-3 w-full px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors"
+            className="flex items-center gap-3 w-full px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-primary-700 rounded-md transition-colors"
             aria-label="Logout"
           >
             <svg

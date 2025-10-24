@@ -229,7 +229,7 @@ export function SettingsView() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-8">
+    <div className="min-h-screen bg-primary-900 text-white p-8">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -267,7 +267,7 @@ export function SettingsView() {
         </div>
 
         {/* AI Provider Selection */}
-        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700 mb-6">
+        <div className="bg-primary-800 rounded-lg p-6 border border-gray-700 mb-6">
           <h2 className="text-xl font-semibold mb-4">
             Choose Your AI Provider
           </h2>
@@ -284,7 +284,7 @@ export function SettingsView() {
                   className={`p-4 rounded-lg border-2 text-left transition-all ${
                     isSelected
                       ? "border-primary-500 bg-primary-500/20"
-                      : "border-gray-700 bg-gray-900 hover:border-gray-600"
+                      : "border-gray-700 bg-primary-900 hover:border-gray-600"
                   }`}
                 >
                   <div className="font-semibold mb-1">{config.name}</div>
@@ -307,7 +307,7 @@ export function SettingsView() {
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
                 placeholder={currentProvider.apiKeyPlaceholder}
-                className="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-white placeholder-gray-500 focus:outline-none focus:border-primary-500"
+                className="w-full bg-primary-900 border border-gray-700 rounded-lg p-3 text-white placeholder-gray-500 focus:outline-none focus:border-primary-500"
               />
               <p className="mt-2 text-sm text-gray-500">
                 Get your API key from{" "}
@@ -328,7 +328,7 @@ export function SettingsView() {
               <select
                 value={model}
                 onChange={(e) => setModel(e.target.value)}
-                className="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-white focus:outline-none focus:border-primary-500"
+                className="w-full bg-primary-900 border border-gray-700 rounded-lg p-3 text-white focus:outline-none focus:border-primary-500"
               >
                 {currentProvider.models.map((m) => (
                   <option key={m} value={m}>
@@ -349,7 +349,7 @@ export function SettingsView() {
                   value={organization}
                   onChange={(e) => setOrganization(e.target.value)}
                   placeholder="org-..."
-                  className="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-white placeholder-gray-500 focus:outline-none focus:border-primary-500"
+                  className="w-full bg-primary-900 border border-gray-700 rounded-lg p-3 text-white placeholder-gray-500 focus:outline-none focus:border-primary-500"
                 />
               </div>
             )}
@@ -385,14 +385,14 @@ export function SettingsView() {
               <button
                 onClick={handleSave}
                 disabled={isSaving}
-                className="flex-1 bg-primary-600 hover:bg-primary-700 disabled:bg-gray-700 disabled:cursor-not-allowed px-6 py-3 rounded-lg font-medium transition-colors"
+                className="flex-1 bg-primary-600 hover:bg-primary-700 disabled:bg-primary-700 disabled:cursor-not-allowed px-6 py-3 rounded-lg font-medium transition-colors"
               >
                 {isSaving ? "Saving..." : "Save Configuration"}
               </button>
               <button
                 onClick={handleTest}
                 disabled={isTesting}
-                className="px-6 py-3 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:cursor-not-allowed rounded-lg font-medium transition-colors"
+                className="px-6 py-3 bg-primary-700 hover:bg-primary-600 disabled:bg-primary-800 disabled:cursor-not-allowed rounded-lg font-medium transition-colors"
               >
                 {isTesting ? "Testing..." : "Test Connection"}
               </button>
@@ -401,7 +401,7 @@ export function SettingsView() {
         </div>
 
         {/* Profile Settings (Future) */}
-        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700 mb-6">
+        <div className="bg-primary-800 rounded-lg p-6 border border-gray-700 mb-6">
           <h2 className="text-xl font-semibold mb-4">Your Profile</h2>
           <div className="space-y-4">
             <div>
@@ -410,7 +410,7 @@ export function SettingsView() {
                 type="text"
                 value={user?.username || ""}
                 disabled
-                className="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-gray-500 cursor-not-allowed"
+                className="w-full bg-primary-900 border border-gray-700 rounded-lg p-3 text-gray-500 cursor-not-allowed"
               />
             </div>
             <div>
@@ -419,7 +419,7 @@ export function SettingsView() {
                 type="email"
                 value={user?.email || ""}
                 disabled
-                className="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-gray-500 cursor-not-allowed"
+                className="w-full bg-primary-900 border border-gray-700 rounded-lg p-3 text-gray-500 cursor-not-allowed"
               />
             </div>
             <p className="text-sm text-gray-500">Profile updates coming soon</p>
@@ -427,7 +427,7 @@ export function SettingsView() {
         </div>
 
         {/* About */}
-        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+        <div className="bg-primary-800 rounded-lg p-6 border border-gray-700">
           <h2 className="text-xl font-semibold mb-4">
             About Justice Companion
           </h2>
