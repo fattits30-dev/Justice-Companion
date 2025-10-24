@@ -1,66 +1,187 @@
+import { useState } from 'react';
 import type { Case } from '../../../models/Case.ts';
-import { caseTypeMetadata, statusStyles } from '../constants.ts';
+import { caseTypeMetadata } from '../constants.ts';
+import { Card } from '../../../components/ui/Card';
+import { Badge } from '../../../components/ui/Badge';
+import { Trash2, Eye, Edit, Clock, Calendar } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface CaseCardProps {
   caseItem: Case;
   onDelete: (caseId: number) => void;
+  onView?: (caseId: number) => void;
+  onEdit?: (caseId: number) => void;
 }
 
-export function CaseCard({ caseItem, onDelete }: CaseCardProps) {
+export function CaseCard({ caseItem, onDelete, onView, onEdit }: CaseCardProps) {
+  const [isHovered, setIsHovered] = useState(false);
   const metadata = caseTypeMetadata[caseItem.caseType];
 
+  // Map status to badge variant
+  const statusVariant = {
+    active: 'success' as const,
+    pending: 'warning' as const,
+    closed: 'neutral' as const
+  };
+
+  // Map status to icon indicator
+  const statusDot = {
+    active: true,
+    pending: false,
+    closed: false
+  };
+
+  // Map status to pulse animation
+  const statusPulse = {
+    active: true,
+    pending: true,
+    closed: false
+  };
+
   return (
-    <div className="flex flex-col justify-between rounded-lg border border-gray-800 bg-gray-900/60 p-6 transition-colors hover:border-gray-700 hover:bg-gray-900">
-      <div className="mb-4 flex items-center justify-between gap-4">
-        <span
-          className={`flex h-12 w-12 items-center justify-center rounded-full text-xs font-semibold ${metadata.accent}`}
-        >
-          {metadata.shortLabel}
-        </span>
-        <button
-          onClick={() => onDelete(caseItem.id)}
-          className="text-gray-500 transition-colors hover:text-red-400"
-          title="Delete case"
-        >
-          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-            />
-          </svg>
-        </button>
-      </div>
-      <div>
-        <div className="mb-3">
-          <h3 className="text-lg font-semibold text-white">{caseItem.title}</h3>
-          <span
-            className={`mt-2 inline-block rounded px-2 py-1 text-xs font-medium border ${statusStyles[caseItem.status]}`}
+    <div
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className="relative group"
+    >
+      <Card
+        variant="glass"
+        gradientBorder={isHovered}
+        shine
+        hoverable
+        className="h-full"
+      >
+        {/* Header with case type badge and actions */}
+        <div className="flex items-start justify-between gap-4 mb-4">
+          {/* Case Type Badge */}
+          <div
+            className={`
+              flex h-12 w-12 items-center justify-center rounded-xl
+              text-xs font-bold tracking-wider
+              ${metadata.accent}
+              border border-white/10
+              shadow-lg
+              transition-transform duration-300
+              group-hover:scale-110
+            `}
           >
-            {caseItem.status}
-          </span>
+            {metadata.shortLabel}
+          </div>
+
+          {/* Actions - show on hover */}
+          <AnimatePresence>
+            {isHovered && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ duration: 0.2 }}
+                className="flex items-center gap-2"
+              >
+                {onEdit && (
+                  <button
+                    onClick={() => onEdit(caseItem.id)}
+                    className="
+                      p-2 rounded-lg
+                      bg-white/5 hover:bg-white/10
+                      border border-white/10 hover:border-white/20
+                      text-gray-400 hover:text-white
+                      transition-all duration-200
+                    "
+                    title="Edit case"
+                  >
+                    <Edit className="w-4 h-4" />
+                  </button>
+                )}
+                {onView && (
+                  <button
+                    onClick={() => onView(caseItem.id)}
+                    className="
+                      p-2 rounded-lg
+                      bg-white/5 hover:bg-white/10
+                      border border-white/10 hover:border-white/20
+                      text-gray-400 hover:text-white
+                      transition-all duration-200
+                    "
+                    title="View case"
+                  >
+                    <Eye className="w-4 h-4" />
+                  </button>
+                )}
+                <button
+                  onClick={() => onDelete(caseItem.id)}
+                  className="
+                    p-2 rounded-lg
+                    bg-danger-500/10 hover:bg-danger-500/20
+                    border border-danger-500/20 hover:border-danger-500/40
+                    text-danger-400 hover:text-danger-300
+                    transition-all duration-200
+                  "
+                  title="Delete case"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-        {caseItem.description ? (
-          <p className="mb-4 line-clamp-3 text-sm text-gray-400">{caseItem.description}</p>
-        ) : (
-          <p className="mb-4 text-sm text-gray-500 italic">No description provided.</p>
-        )}
-      </div>
-      <dl className="mt-auto text-xs text-gray-500">
-        <div className="flex items-center justify-between">
-          <dt>Type</dt>
-          <dd>{metadata.displayLabel}</dd>
+
+        {/* Content */}
+        <div className="flex-1">
+          {/* Title and Status */}
+          <div className="mb-3">
+            <h3 className="text-lg font-semibold text-white mb-2 line-clamp-2">
+              {caseItem.title}
+            </h3>
+            <Badge
+              variant={statusVariant[caseItem.status]}
+              dot={statusDot[caseItem.status]}
+              pulse={statusPulse[caseItem.status]}
+              glow={caseItem.status === 'active'}
+              className="capitalize"
+            >
+              {caseItem.status}
+            </Badge>
+          </div>
+
+          {/* Description */}
+          {caseItem.description ? (
+            <p className="mb-4 line-clamp-3 text-sm text-gray-400 leading-relaxed">
+              {caseItem.description}
+            </p>
+          ) : (
+            <p className="mb-4 text-sm text-gray-500 italic">
+              No description provided.
+            </p>
+          )}
         </div>
-        <div className="flex items-center justify-between">
-          <dt>Created</dt>
-          <dd>{formatDate(caseItem.createdAt)}</dd>
+
+        {/* Footer - Metadata */}
+        <div className="mt-auto pt-4 border-t border-white/5">
+          <div className="grid grid-cols-2 gap-3 text-xs">
+            {/* Type */}
+            <div className="flex items-center gap-2 text-gray-400">
+              <div className="w-1 h-1 rounded-full bg-gray-500" />
+              <span className="font-medium">Type:</span>
+              <span className="text-gray-300">{metadata.displayLabel}</span>
+            </div>
+
+            {/* Created Date */}
+            <div className="flex items-center gap-2 text-gray-400">
+              <Calendar className="w-3 h-3" />
+              <span className="font-medium">Created:</span>
+              <span className="text-gray-300">{formatDate(caseItem.createdAt)}</span>
+            </div>
+
+            {/* Updated Date */}
+            <div className="flex items-center gap-2 text-gray-400 col-span-2">
+              <Clock className="w-3 h-3" />
+              <span className="font-medium">Updated:</span>
+              <span className="text-gray-300">{formatDate(caseItem.updatedAt)}</span>
+            </div>
+          </div>
         </div>
-        <div className="flex items-center justify-between">
-          <dt>Updated</dt>
-          <dd>{formatDate(caseItem.updatedAt)}</dd>
-        </div>
-      </dl>
+      </Card>
     </div>
   );
 }
@@ -70,5 +191,9 @@ function formatDate(value: string) {
   if (Number.isNaN(date.getTime())) {
     return 'Unknown';
   }
-  return date.toLocaleDateString();
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  });
 }

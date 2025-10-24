@@ -23,6 +23,7 @@ import { CasesView } from './views/CasesView';
 import { DocumentsView } from './views/DocumentsView';
 import { ChatView } from './views/ChatView';
 import { SettingsView } from './views/SettingsView';
+import { ToastProvider } from './components/ui';
 
 /**
  * ProtectedRoute - Redirects to login if not authenticated
@@ -250,6 +251,7 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <ToastProvider />
         <AppRoutes />
       </AuthProvider>
     </BrowserRouter>
