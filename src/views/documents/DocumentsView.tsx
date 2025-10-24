@@ -14,6 +14,7 @@ import {
   UploadEvidenceDialog,
   type UploadEvidenceInput,
 } from './components/UploadEvidenceDialog.tsx';
+import { showSuccess, showError } from '../../components/ui/Toast.tsx';
 
 type LoadState = 'idle' | 'loading' | 'error' | 'ready';
 
@@ -116,8 +117,13 @@ export function DocumentsView() {
 
         setEvidence((previous) => [response.data as Evidence, ...previous]);
         setShowUploadDialog(false);
+        showSuccess(`${input.file.name} has been added to evidence`, {
+          title: 'Evidence uploaded',
+        });
       } catch (err) {
-        alert(`Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
+        showError(err instanceof Error ? err.message : 'Unknown error', {
+          title: 'Failed to upload evidence',
+        });
       }
     },
     [selectedCaseId]
@@ -138,8 +144,13 @@ export function DocumentsView() {
       }
 
       setEvidence((previous) => previous.filter((item) => item.id !== evidenceId));
+      showSuccess('The evidence has been permanently removed', {
+        title: 'Evidence deleted',
+      });
     } catch (err) {
-      alert(`Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      showError(err instanceof Error ? err.message : 'Unknown error', {
+        title: 'Failed to delete evidence',
+      });
     }
   }, []);
 
