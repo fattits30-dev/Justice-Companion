@@ -22,10 +22,10 @@ export function CaseToolbar({
     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-8">
       <div>
         <h1 className="text-3xl font-bold mb-1">Cases</h1>
-        <p className="text-gray-400">Manage your legal cases</p>
+        <p className="text-white/90">Manage your legal cases</p>
       </div>
       <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-        <label className="flex flex-col text-sm text-gray-400">
+        <label className="flex flex-col text-sm text-white/90">
           <span className="mb-1">Status</span>
           <select
             value={filterStatus}
@@ -41,7 +41,7 @@ export function CaseToolbar({
             ))}
           </select>
         </label>
-        <label className="flex flex-col text-sm text-gray-400">
+        <label className="flex flex-col text-sm text-white/90">
           <span className="mb-1">Type</span>
           <select
             value={filterType}

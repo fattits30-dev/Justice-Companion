@@ -82,9 +82,7 @@ export function UploadEvidenceDialog({
           </div>
           <form onSubmit={handleSubmit} className="space-y-4">
             <label className="block text-sm">
-              <span className="mb-2 block font-medium text-gray-300">
-                File *
-              </span>
+              <span className="mb-2 block font-medium text-white">File *</span>
               <input
                 type="file"
                 onChange={(event) => setFile(event.target.files?.[0] ?? null)}
@@ -94,9 +92,7 @@ export function UploadEvidenceDialog({
             </label>
 
             <label className="block text-sm">
-              <span className="mb-2 block font-medium text-gray-300">
-                Title *
-              </span>
+              <span className="mb-2 block font-medium text-white">Title *</span>
               <input
                 type="text"
                 value={title}
@@ -108,7 +104,7 @@ export function UploadEvidenceDialog({
             </label>
 
             <label className="block text-sm">
-              <span className="mb-2 block font-medium text-gray-300">
+              <span className="mb-2 block font-medium text-white">
                 Evidence Type *
               </span>
               <select
@@ -127,7 +123,7 @@ export function UploadEvidenceDialog({
             </label>
 
             <label className="block text-sm">
-              <span className="mb-2 block font-medium text-gray-300">
+              <span className="mb-2 block font-medium text-white">
                 Date Obtained
               </span>
               <input

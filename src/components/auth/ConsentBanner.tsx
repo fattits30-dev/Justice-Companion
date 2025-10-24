@@ -116,7 +116,7 @@ export function ConsentBanner({
       <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
         {/* Message */}
         <div className="flex-1">
-          <p className="text-sm text-gray-300">{message}</p>
+          <p className="text-sm text-white">{message}</p>
 
           {/* Error message */}
           {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
@@ -129,7 +129,7 @@ export function ConsentBanner({
             type="button"
             onClick={handleDecline}
             disabled={isLoading}
-            className="px-4 py-2 text-sm font-medium text-gray-300 bg-secondary-700 rounded-md hover:bg-secondary-600 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-4 py-2 text-sm font-medium text-white bg-secondary-700 rounded-md hover:bg-secondary-600 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             Decline
           </button>
@@ -149,7 +149,7 @@ export function ConsentBanner({
             type="button"
             onClick={handleDismiss}
             disabled={isLoading}
-            className="p-2 text-gray-400 hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+            className="p-2 text-white/90 hover:text-white focus:outline-none focus:ring-2 focus:ring-gray-500 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="Close consent banner"
           >
             <svg

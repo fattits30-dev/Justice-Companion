@@ -26,7 +26,7 @@ export function CasesErrorState({ message, onRetry }: ErrorStateProps) {
         <h2 className="mb-2 text-xl font-bold text-red-400">
           Error Loading Cases
         </h2>
-        <p className="text-gray-300">{message}</p>
+        <p className="text-white">{message}</p>
         <button
           onClick={onRetry}
           className="mt-4 rounded bg-red-600 px-4 py-2 font-medium text-white transition-colors hover:bg-red-700"
@@ -42,7 +42,7 @@ export function CasesEmptyState({ onCreateCase }: EmptyStateProps) {
   return (
     <div className="rounded-lg border border-dashed border-gray-700 bg-primary-900/40 p-16 text-center">
       <h2 className="mb-2 text-2xl font-semibold text-white">No cases yet</h2>
-      <p className="mb-6 text-gray-400">
+      <p className="mb-6 text-white/90">
         Create your first case to keep everything organised.
       </p>
       <button
@@ -57,7 +57,7 @@ export function CasesEmptyState({ onCreateCase }: EmptyStateProps) {
 
 export function CasesFilteredEmptyState() {
   return (
-    <div className="rounded-lg border border-gray-800 bg-primary-900/30 p-12 text-center text-gray-400">
+    <div className="rounded-lg border border-gray-800 bg-primary-900/30 p-12 text-center text-white/90">
       <h3 className="text-xl font-semibold text-white">
         No cases match your filters
       </h3>

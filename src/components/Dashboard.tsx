@@ -104,7 +104,7 @@ export function Dashboard({
       <div className="min-h-screen bg-primary-900 text-white p-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Welcome back, {username}</h1>
-          <p className="text-gray-400">Loading your dashboard...</p>
+          <p className="text-white/90">Loading your dashboard...</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {Array.from({ length: 4 }).map((_, i) => (
@@ -130,7 +130,7 @@ export function Dashboard({
             <h2 className="text-xl font-semibold text-red-400 mb-2">
               Error Loading Dashboard
             </h2>
-            <p className="text-gray-300">{error}</p>
+            <p className="text-white">{error}</p>
           </div>
         </Card>
       </div>
@@ -163,7 +163,7 @@ export function Dashboard({
       {/* Welcome Section */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Welcome back, {username}</h1>
-        <p className="text-gray-400">
+        <p className="text-white/90">
           You're building your case. Here's where you stand.
         </p>
       </div>
@@ -174,15 +174,15 @@ export function Dashboard({
         <Card variant="glass" hoverable shine>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-400 text-sm mb-1">Your Cases</p>
+              <p className="text-white/90 text-sm mb-1">Your Cases</p>
               <p className="text-3xl font-bold">{stats.totalCases}</p>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-white/80 mt-1">
                 {stats.totalCases === 0
                   ? "Ready to start"
                   : "Cases you're tracking"}
               </p>
             </div>
-            <Briefcase className="w-12 h-12 text-primary-500" />
+            <Briefcase className="w-12 h-12 text-cyan-400" />
           </div>
         </Card>
 
@@ -190,13 +190,13 @@ export function Dashboard({
         <Card variant="glass" hoverable shine>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-400 text-sm mb-1">Currently Active</p>
+              <p className="text-white/90 text-sm mb-1">Currently Active</p>
               <p className="text-3xl font-bold">{stats.activeCases}</p>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-white/80 mt-1">
                 {stats.activeCases === 0 ? "All caught up" : "Ongoing matters"}
               </p>
             </div>
-            <TrendingUp className="w-12 h-12 text-green-500" />
+            <TrendingUp className="w-12 h-12 text-green-400" />
           </div>
         </Card>
 
@@ -204,15 +204,15 @@ export function Dashboard({
         <Card variant="glass" hoverable shine>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-400 text-sm mb-1">Evidence Collected</p>
+              <p className="text-white/90 text-sm mb-1">Evidence Collected</p>
               <p className="text-3xl font-bold">{stats.totalEvidence}</p>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-white/80 mt-1">
                 {stats.totalEvidence === 0
                   ? "Start gathering proof"
                   : "Documents & records"}
               </p>
             </div>
-            <FileText className="w-12 h-12 text-purple-500" />
+            <FileText className="w-12 h-12 text-pink-400" />
           </div>
         </Card>
 
@@ -220,15 +220,15 @@ export function Dashboard({
         <Card variant="glass" hoverable shine>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-400 text-sm mb-1">Recent Activity</p>
+              <p className="text-white/90 text-sm mb-1">Recent Activity</p>
               <p className="text-3xl font-bold">{stats.recentActivity}</p>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-white/80 mt-1">
                 {stats.recentActivity === 0
                   ? "No recent changes"
                   : "Updates this week"}
               </p>
             </div>
-            <Activity className="w-12 h-12 text-yellow-500" />
+            <Activity className="w-12 h-12 text-yellow-400" />
           </div>
         </Card>
       </div>
@@ -277,15 +277,15 @@ export function Dashboard({
         {recentCases.length === 0 ? (
           <Card variant="glass">
             <div className="text-center">
-              <Briefcase className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-              <p className="text-gray-400 text-lg mb-2">
+              <Briefcase className="w-16 h-16 text-white/70 mx-auto mb-4" />
+              <p className="text-white/90 text-lg mb-2">
                 Ready to start your first case?
               </p>
-              <p className="text-gray-500 mb-4">
+              <p className="text-white/80 mb-4">
                 Click "New Case" above to begin organizing your evidence and
                 building your record.
               </p>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-white/70">
                 Remember: Start documenting early. Evidence collected at the
                 time is more credible than memories later.
               </p>
@@ -315,7 +315,7 @@ export function Dashboard({
                     <h3 className="font-semibold text-lg mb-1">
                       {case_.title}
                     </h3>
-                    <p className="text-gray-400 text-sm">
+                    <p className="text-white/90 text-sm">
                       Last updated: {formatDate(case_.lastUpdated)}
                     </p>
                   </div>
@@ -337,12 +337,12 @@ export function Dashboard({
       {/* When to Get a Lawyer - Practical Advice */}
       <Card variant="glass" className="bg-primary-900/20 border-primary-700/50">
         <div className="flex items-start gap-3">
-          <Lightbulb className="w-6 h-6 text-primary-400 flex-shrink-0 mt-0.5" />
+          <Lightbulb className="w-6 h-6 text-amber-400 flex-shrink-0 mt-0.5" />
           <div className="flex-1">
-            <h3 className="font-semibold text-primary-300 mb-2">
+            <h3 className="font-semibold text-white mb-2">
               When You Should Get Professional Legal Advice
             </h3>
-            <div className="text-sm text-primary-100/80 space-y-2">
+            <div className="text-sm text-white/90 space-y-2">
               <p>
                 This app helps you organize your case, but some situations need
                 a qualified solicitor:
@@ -354,7 +354,7 @@ export function Dashboard({
                 <li>If you're facing legal action from your employer</li>
                 <li>When you need representation at a hearing</li>
               </ul>
-              <p className="mt-3 text-xs text-primary-200/60 flex items-start gap-2">
+              <p className="mt-3 text-xs text-white/70 flex items-start gap-2">
                 <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
                 <span>
                   Tip: Many solicitors offer free initial consultations. Some

@@ -160,9 +160,9 @@ export function ChatView() {
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
         {messages.length === 0 && !isStreaming && (
           <div className="max-w-3xl mx-auto mt-12 text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-500/20 rounded-full mb-6">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-cyan-500/20 rounded-full mb-6">
               <svg
-                className="w-8 h-8 text-primary-400"
+                className="w-8 h-8 text-cyan-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -178,7 +178,7 @@ export function ChatView() {
             <h2 className="text-2xl font-bold mb-3">
               How can I help you today?
             </h2>
-            <p className="text-gray-400 mb-8">
+            <p className="text-white/90 mb-8">
               Ask me about UK employment law, case precedents, or help
               organizing your case.
             </p>
@@ -191,7 +191,7 @@ export function ChatView() {
                 className="p-4 bg-primary-800 hover:bg-gray-750 border border-gray-700 rounded-lg transition-colors text-left"
               >
                 <p className="font-medium mb-1">Workplace Rights</p>
-                <p className="text-sm text-gray-400">
+                <p className="text-sm text-white/90">
                   Understand your protections against bullying
                 </p>
               </button>
@@ -205,7 +205,7 @@ export function ChatView() {
                 className="p-4 bg-primary-800 hover:bg-gray-750 border border-gray-700 rounded-lg transition-colors text-left"
               >
                 <p className="font-medium mb-1">Building Your Case</p>
-                <p className="text-sm text-gray-400">
+                <p className="text-sm text-white/90">
                   Learn what evidence you need
                 </p>
               </button>
@@ -215,7 +215,7 @@ export function ChatView() {
                 className="p-4 bg-primary-800 hover:bg-gray-750 border border-gray-700 rounded-lg transition-colors text-left"
               >
                 <p className="font-medium mb-1">Legal Concepts</p>
-                <p className="text-sm text-gray-400">
+                <p className="text-sm text-white/90">
                   Get clear explanations of legal terms
                 </p>
               </button>
@@ -229,7 +229,7 @@ export function ChatView() {
                 className="p-4 bg-primary-800 hover:bg-gray-750 border border-gray-700 rounded-lg transition-colors text-left"
               >
                 <p className="font-medium mb-1">Discrimination</p>
-                <p className="text-sm text-gray-400">
+                <p className="text-sm text-white/90">
                   Know your rights and next steps
                 </p>
               </button>
@@ -250,7 +250,7 @@ export function ChatView() {
               } p-4`}
             >
               {message.role === "assistant" && (
-                <div className="flex items-center gap-2 mb-2 text-sm text-gray-400">
+                <div className="flex items-center gap-2 mb-2 text-sm text-white/90">
                   <svg
                     className="w-4 h-4"
                     fill="none"
@@ -274,18 +274,18 @@ export function ChatView() {
 
               {message.thinking && _showThinking && (
                 <details className="mt-3 text-sm">
-                  <summary className="cursor-pointer text-gray-400 hover:text-gray-300">
+                  <summary className="cursor-pointer text-white/90 hover:text-white">
                     View AI reasoning process
                   </summary>
                   <div className="mt-2 p-3 bg-primary-900/50 rounded border border-gray-700">
-                    <p className="text-gray-400 whitespace-pre-wrap">
+                    <p className="text-white/90 whitespace-pre-wrap">
                       {message.thinking}
                     </p>
                   </div>
                 </details>
               )}
 
-              <div className="mt-2 text-xs text-gray-500">
+              <div className="mt-2 text-xs text-white/80">
                 {message.timestamp.toLocaleTimeString()}
               </div>
             </div>
@@ -296,7 +296,7 @@ export function ChatView() {
         {isStreaming && currentStreamingMessage && (
           <div className="flex justify-start">
             <div className="max-w-3xl bg-primary-800 border border-gray-700 rounded-2xl rounded-tl-sm p-4">
-              <div className="flex items-center gap-2 mb-2 text-sm text-gray-400">
+              <div className="flex items-center gap-2 mb-2 text-sm text-white/90">
                 <svg
                   className="w-4 h-4 animate-pulse"
                   fill="none"
@@ -376,7 +376,7 @@ export function ChatView() {
               )}
             </button>
           </div>
-          <div className="mt-2 text-xs text-gray-500">
+          <div className="mt-2 text-xs text-white/80">
             Press Enter to send, Shift+Enter for new line
           </div>
         </div>

@@ -234,14 +234,14 @@ export function SettingsView() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Settings</h1>
-          <p className="text-gray-400">Configure your AI assistant</p>
+          <p className="text-white/90">Configure your AI assistant</p>
         </div>
 
         {/* People-friendly reminder */}
-        <div className="mb-8 bg-primary-900/30 border-l-4 border-primary-500 rounded-lg p-4">
+        <div className="mb-8 bg-primary-900/30 border-l-4 border-cyan-500 rounded-lg p-4">
           <div className="flex items-start gap-3">
             <svg
-              className="w-6 h-6 text-primary-500 flex-shrink-0 mt-0.5"
+              className="w-6 h-6 text-cyan-400 flex-shrink-0 mt-0.5"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -254,10 +254,10 @@ export function SettingsView() {
               />
             </svg>
             <div>
-              <p className="font-semibold text-primary-200 mb-1">
+              <p className="font-semibold text-white mb-1">
                 Your API keys stay private
               </p>
-              <p className="text-sm text-primary-100/80">
+              <p className="text-sm text-white/90">
                 All API keys are encrypted and stored locally on YOUR computer.
                 We don't send them anywhere except to the AI provider you
                 choose.
@@ -288,7 +288,7 @@ export function SettingsView() {
                   }`}
                 >
                   <div className="font-semibold mb-1">{config.name}</div>
-                  <div className="text-sm text-gray-400">
+                  <div className="text-sm text-white/90">
                     {config.description}
                   </div>
                 </button>
@@ -309,13 +309,13 @@ export function SettingsView() {
                 placeholder={currentProvider.apiKeyPlaceholder}
                 className="w-full bg-primary-900 border border-gray-700 rounded-lg p-3 text-white placeholder-gray-500 focus:outline-none focus:border-primary-500"
               />
-              <p className="mt-2 text-sm text-gray-500">
+              <p className="mt-2 text-sm text-white/80">
                 Get your API key from{" "}
                 <a
                   href={currentProvider.docsUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-primary-400 hover:text-primary-300 underline"
+                  className="text-cyan-400 hover:text-cyan-300 underline"
                 >
                   {currentProvider.name} dashboard
                 </a>
@@ -410,7 +410,7 @@ export function SettingsView() {
                 type="text"
                 value={user?.username || ""}
                 disabled
-                className="w-full bg-primary-900 border border-gray-700 rounded-lg p-3 text-gray-500 cursor-not-allowed"
+                className="w-full bg-primary-900 border border-gray-700 rounded-lg p-3 text-white/80 cursor-not-allowed"
               />
             </div>
             <div>
@@ -419,10 +419,10 @@ export function SettingsView() {
                 type="email"
                 value={user?.email || ""}
                 disabled
-                className="w-full bg-primary-900 border border-gray-700 rounded-lg p-3 text-gray-500 cursor-not-allowed"
+                className="w-full bg-primary-900 border border-gray-700 rounded-lg p-3 text-white/80 cursor-not-allowed"
               />
             </div>
-            <p className="text-sm text-gray-500">Profile updates coming soon</p>
+            <p className="text-sm text-white/80">Profile updates coming soon</p>
           </div>
         </div>
 
@@ -431,12 +431,12 @@ export function SettingsView() {
           <h2 className="text-xl font-semibold mb-4">
             About Justice Companion
           </h2>
-          <p className="text-gray-400 mb-4">
+          <p className="text-white/90 mb-4">
             Justice Companion helps you organize your legal case and understand
             UK employment law. It's built for real people dealing with real
             problems—not lawyers in fancy suits.
           </p>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-white/80">
             Version 1.0.0 • Built with privacy first • All your data stays on
             YOUR computer
           </p>
