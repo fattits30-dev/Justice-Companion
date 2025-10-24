@@ -239,7 +239,7 @@ export class DatabaseTestHelper {
    */
   static verifyPasswordHashed(username: string): boolean {
     const user = this.getUserByUsername(username);
-    if (!user) return false;
+    if (!user) {return false;}
 
     // Hashed password should be 128 hex characters (64 bytes)
     // Salt should be 32 hex characters (16 bytes)

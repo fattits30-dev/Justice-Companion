@@ -184,7 +184,7 @@ export class DataDeleter {
    * Helper: Delete records from a table by case IDs
    */
   private deleteByCase(caseIds: number[], tableName: string): number {
-    if (caseIds.length === 0) return 0;
+    if (caseIds.length === 0) {return 0;}
 
     const placeholders = caseIds.map(() => '?').join(',');
     const deleteStmt = this.db.prepare(

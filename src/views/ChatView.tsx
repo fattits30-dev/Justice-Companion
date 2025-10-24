@@ -33,7 +33,7 @@ export function ChatView() {
   }, [messages, currentStreamingMessage]);
 
   const handleSend = async () => {
-    if (!input.trim() || isStreaming) return;
+    if (!input.trim() || isStreaming) {return;}
 
     const userMessage: Message = {
       id: `user-${Date.now()}`,

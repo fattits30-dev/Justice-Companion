@@ -219,7 +219,7 @@ export class CacheService {
    * @param cacheName - Optional specific cache, otherwise checks all
    */
   invalidate(key: string, cacheName?: string): void {
-    if (!this.enabled) return;
+    if (!this.enabled) {return;}
 
     if (cacheName) {
       const cache = this.caches.get(cacheName);
@@ -242,7 +242,7 @@ export class CacheService {
    * @param cacheName - Optional specific cache, otherwise checks all
    */
   invalidatePattern(pattern: string, cacheName?: string): void {
-    if (!this.enabled) return;
+    if (!this.enabled) {return;}
 
     // Convert pattern to regex
     const regex = new RegExp('^' + pattern.replace(/\*/g, '.*') + '$');
@@ -252,7 +252,7 @@ export class CacheService {
       : Array.from(this.caches.values());
 
     for (const cache of cachesToCheck) {
-      if (!cache) continue; // Skip undefined caches
+      if (!cache) {continue;} // Skip undefined caches
 
       // Get all keys and filter by pattern
       const keys = Array.from(cache.keys());
@@ -270,7 +270,7 @@ export class CacheService {
    * @param cacheName - Optional cache name, clears all if not specified
    */
   clear(cacheName?: string): void {
-    if (!this.enabled) return;
+    if (!this.enabled) {return;}
 
     if (cacheName) {
       const cache = this.caches.get(cacheName);
@@ -329,13 +329,13 @@ export class CacheService {
    */
   inspect(cacheName: string, limit: number = 10): Array<{ key: string; entry: CacheEntry<any> }> {
     const cache = this.caches.get(cacheName);
-    if (!cache) return [];
+    if (!cache) {return [];}
 
     const entries: Array<{ key: string; entry: CacheEntry<any> }> = [];
     let count = 0;
 
     for (const [key, entry] of cache.entries()) {
-      if (count >= limit) break;
+      if (count >= limit) {break;}
       entries.push({ key, entry });
       count++;
     }
@@ -394,7 +394,7 @@ export class CacheService {
     entries: Array<{ key: string; fetchFn: () => Promise<T> }>,
     cacheName: string = 'default'
   ): Promise<void> {
-    if (!this.enabled) return;
+    if (!this.enabled) {return;}
 
     const promises = entries.map(({ key, fetchFn }) =>
       this.getCached(key, fetchFn, cacheName)

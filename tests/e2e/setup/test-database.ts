@@ -86,8 +86,8 @@ export async function cleanupTestDatabase(dbPath: string): Promise<void> {
     // Also cleanup WAL and SHM files (SQLite journal files)
     const walPath = `${dbPath}-wal`;
     const shmPath = `${dbPath}-shm`;
-    if (fs.existsSync(walPath)) fs.unlinkSync(walPath);
-    if (fs.existsSync(shmPath)) fs.unlinkSync(shmPath);
+    if (fs.existsSync(walPath)) {fs.unlinkSync(walPath);}
+    if (fs.existsSync(shmPath)) {fs.unlinkSync(shmPath);}
   } catch (error) {
     console.error('Failed to cleanup test database:', error);
     // Don't throw - cleanup is best effort

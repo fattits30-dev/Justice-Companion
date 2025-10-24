@@ -39,7 +39,7 @@ class Logger {
     this.isProduction = import.meta.env?.PROD ?? (process.env.NODE_ENV === 'production');
 
     // Logger initialized - console allowed for initialization diagnostics
-    /* eslint-disable no-console */
+     
     console.warn('[LOGGER INIT]', {
       'import.meta.env?.PROD': import.meta.env?.PROD,
       'import.meta.env?.DEV': import.meta.env?.DEV,
@@ -47,7 +47,7 @@ class Logger {
       'process.env.NODE_ENV': process.env.NODE_ENV,
       isProduction: this.isProduction,
     });
-    /* eslint-enable no-console */
+     
   }
 
   /**
@@ -81,7 +81,7 @@ class Logger {
    */
   error(component: string, message: string, data?: unknown): void {
     const formattedMessage = this.formatMessage('error', component, message, data);
-    /* eslint-disable-next-line no-console */
+     
     console.error(formattedMessage);
 
     // Buffer for analysis
@@ -100,7 +100,7 @@ class Logger {
    */
   warn(component: string, message: string, data?: unknown): void {
     const formattedMessage = this.formatMessage('warn', component, message, data);
-    /* eslint-disable-next-line no-console */
+     
     console.warn(formattedMessage);
 
     // Buffer for analysis

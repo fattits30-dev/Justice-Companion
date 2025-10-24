@@ -377,7 +377,7 @@ describe('ChatConversationRepository - Cursor Pagination', () => {
         pageCount++;
 
         // Safety: prevent infinite loops in tests
-        if (pageCount > 10) break;
+        if (pageCount > 10) {break;}
       } while (cursor !== null);
 
       // Should have loaded all 25 messages in 3 pages
