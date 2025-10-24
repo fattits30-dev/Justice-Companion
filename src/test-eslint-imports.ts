@@ -3,7 +3,7 @@
 // @ts-nocheck - This file is for ESLint testing only
 
 // ❌ Should error - missing .ts extension
-import { UserRepository } from '../repositories/UserRepository';
+import { UserRepository } from '../repositories/UserRepository.ts';
 
 // ✅ Should pass - correct .ts extension
 import { AuditLogger } from '../services/AuditLogger.ts';

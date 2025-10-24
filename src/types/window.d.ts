@@ -17,8 +17,16 @@ interface JusticeAPI {
   getDashboardStats(sessionId: string): Promise<{ success: boolean; data?: any; error?: any }>;
 
   // Cases
-  getAllCases(): Promise<{ success: boolean; data?: any; error?: any }>;
+  getAllCases(sessionId: string): Promise<{ success: boolean; data?: any; error?: any }>;
+  createCase(data: any, sessionId: string): Promise<{ success: boolean; data?: any; error?: any }>;
+  updateCase(id: string, data: any, sessionId: string): Promise<{ success: boolean; data?: any; error?: any }>;
+  deleteCase(id: string, sessionId: string): Promise<{ success: boolean; error?: any }>;
   getCaseFacts(caseId: number): Promise<{ success: boolean; data?: any; error?: any }>;
+
+  // Evidence/Documents
+  uploadFile(caseId: string, file: File, sessionId: string): Promise<{ success: boolean; data?: any; error?: any }>;
+  getAllEvidence(caseId: string, sessionId: string): Promise<{ success: boolean; data?: any; error?: any }>;
+  deleteEvidence(id: string, sessionId: string): Promise<{ success: boolean; error?: any }>;
 
   // AI Configuration
   configureAI(config: { apiKey: string; provider?: 'openai' | 'groq' | 'anthropic' | 'google' | 'cohere' | 'mistral'; model?: string; organization?: string }): Promise<{ success: boolean; data?: any; error?: any }>;

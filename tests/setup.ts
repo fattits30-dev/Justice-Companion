@@ -50,6 +50,10 @@ beforeEach(() => {
       success: true,
       data: { id: '1', title: 'Test Case', status: 'open' }
     }),
+    getAllCases: vi.fn().mockResolvedValue({
+      success: true,
+      data: []
+    }),
     getCases: vi.fn().mockResolvedValue({
       success: true,
       data: []
@@ -60,6 +64,9 @@ beforeEach(() => {
     }),
     updateCase: vi.fn().mockResolvedValue({ success: true }),
     deleteCase: vi.fn().mockResolvedValue({ success: true }),
+    getAllEvidence: vi.fn().mockResolvedValue({ success: true, data: [] }),
+    uploadFile: vi.fn().mockResolvedValue({ success: true, data: { id: '1' } }),
+    deleteEvidence: vi.fn().mockResolvedValue({ success: true }),
 
     // Chat
     chatSend: vi.fn().mockResolvedValue({

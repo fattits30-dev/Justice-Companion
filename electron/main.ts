@@ -7,6 +7,10 @@ import { fileURLToPath } from 'url';
 import { setupIpcHandlers } from './ipc-handlers.ts';
 import { initializeDatabase, closeDatabase } from './database-init.ts';
 import { KeyManager } from '../src/services/KeyManager.ts';
+import { ProcessManager } from '../src/services/ProcessManager.ts';
+import { AutoUpdater } from '../src/services/AutoUpdater.ts';
+import pkg from 'electron-updater';
+const { autoUpdater } = pkg;
 
 // ESM equivalent of __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -19,11 +23,15 @@ if (process.env.NODE_ENV !== 'production') {
   console.log('[Main] Running in development mode (manual restart required for main process changes)');
 }
 
-// Single instance lock (disabled in test mode to allow parallel test suites)
-const gotTheLock = process.env.NODE_ENV === 'test' ? true : app.requestSingleInstanceLock();
+// Initialize ProcessManager (disabled in test mode to allow parallel test suites)
+const processManager = new ProcessManager(app);
+const gotTheLock = process.env.NODE_ENV === 'test' ? true : processManager.enforceSingleInstance();
 
 // Global KeyManager instance (initialized in app.ready)
 let keyManager: KeyManager | null = null;
+
+// Global AutoUpdater instance (initialized in app.ready)
+let autoUpdaterService: AutoUpdater | null = null;
 
 /**
  * Get KeyManager instance (throws if not initialized)
@@ -298,6 +306,11 @@ if (!gotTheLock) {
     try {
       console.warn('[Main] App ready - starting initialization...');
 
+      // Cleanup any stale processes from previous runs
+      if (process.env.NODE_ENV !== 'test') {
+        await processManager.cleanupOnStartup();
+      }
+
       // Initialize KeyManager with health checks (skip in test mode where safeStorage may not be available)
       if (process.env.NODE_ENV !== 'test') {
         await initializeKeyManager();
@@ -322,6 +335,33 @@ if (!gotTheLock) {
       // Create window and setup IPC
       createWindow();
       setupIpcHandlers();
+
+      // Initialize AutoUpdater (skip in test/dev mode)
+      if (process.env.NODE_ENV === 'production') {
+        autoUpdaterService = new AutoUpdater(app, autoUpdater, {
+          checkOnStartup: true,
+          channel: 'stable',
+        });
+
+        if (mainWindow) {
+          autoUpdaterService.setMainWindow(mainWindow);
+        }
+
+        await autoUpdaterService.initialize();
+        console.log('[Main] ✓ AutoUpdater initialized');
+      } else {
+        console.log('[Main] ⚠️  AutoUpdater disabled in development/test mode');
+      }
+
+      // Track ports we're using
+      await processManager.trackPort(5176, 'Vite Dev Server');
+
+      // Register shutdown handlers
+      processManager.registerShutdownHandlers();
+      processManager.onShutdown(async () => {
+        await closeDatabase();
+        console.log('[Main] Database connections closed');
+      });
 
       console.warn('[Main] ✅ Application startup complete');
     } catch (error) {
@@ -364,7 +404,7 @@ if (!gotTheLock) {
   /**
    * Second instance attempted - focus existing window
    */
-  app.on('second-instance', () => {
+  processManager.onSecondInstance(() => {
     if (mainWindow) {
       if (mainWindow.isMinimized()) {
         mainWindow.restore();
