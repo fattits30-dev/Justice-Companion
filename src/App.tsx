@@ -45,6 +45,11 @@ const ChatView = lazy(() =>
 const SettingsView = lazy(() =>
   import("./views/SettingsView.tsx").then((m) => ({ default: m.SettingsView })),
 );
+const TimelineView = lazy(() =>
+  import("./views/timeline/TimelineView.tsx").then((m) => ({
+    default: m.TimelineView,
+  })),
+);
 
 /**
  * PageLoader - Loading fallback for lazy-loaded pages
@@ -273,6 +278,14 @@ function AppRoutes() {
           element={
             <Suspense fallback={<PageLoader />}>
               <ChatView />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/timeline"
+          element={
+            <Suspense fallback={<PageLoader />}>
+              <TimelineView />
             </Suspense>
           }
         />
