@@ -43,14 +43,12 @@ class CachePerformanceBenchmark {
   private encryptionService: EncryptionService;
   private auditLogger: AuditLogger;
   private results: BenchmarkResult[] = [];
-  private _db: Database.Database; // Prefix with _ to indicate intentionally unused
 
   constructor(db: Database.Database) {
     // Initialize services
     const encryptionKey = Buffer.from('test-key-for-benchmarking-only!!').toString('base64');
     this.encryptionService = new EncryptionService(encryptionKey);
     this.auditLogger = new AuditLogger(db);
-    this._db = db;
   }
 
   /**

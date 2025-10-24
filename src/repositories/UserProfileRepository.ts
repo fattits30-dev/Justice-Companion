@@ -1,7 +1,7 @@
 import { getDb } from '../db/database.ts';
 import type { UserProfile, UpdateUserProfileInput } from '../models/UserProfile.ts';
-import { EncryptionService, type EncryptedData } from '../services/EncryptionService.js';
-import type { AuditLogger } from '../services/AuditLogger.js';
+import { EncryptionService, type EncryptedData } from '../services/EncryptionService.ts';
+import type { AuditLogger } from '../services/AuditLogger.ts';
 import { errorLogger } from '../utils/error-logger.ts';
 
 /**

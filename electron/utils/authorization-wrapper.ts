@@ -37,13 +37,24 @@ interface SessionData {
 /**
  * Lazy-load AuthenticationService to avoid circular dependencies
  */
-function getAuthService() {
-  // Runtime path: from dist/electron/utils/ to src/ (three levels up)
+async function getAuthService() {
+  // ESM dynamic imports (tsx handles .ts extensions)
+  const { AuthenticationService } = await import('../../src/services/AuthenticationService.ts');
+  const { getDb } = await import('../../src/db/database.ts');
+  const { AuditLogger } = await import('../../src/services/AuditLogger.ts');
+  const { UserRepository } = await import('../../src/repositories/UserRepository.ts');
+  const { SessionRepository } = await import('../../src/repositories/SessionRepository.ts');
 
-  const { AuthenticationService } = require('../../../src/services/AuthenticationService.ts');
+  const db = getDb();
+  const auditLogger = new AuditLogger(db);
+  const userRepository = new UserRepository(auditLogger);
+  const sessionRepository = new SessionRepository();
 
-  const { getDb } = require('../../../src/db/database.ts');
-  return new AuthenticationService(getDb());
+  return new AuthenticationService(
+    userRepository,
+    sessionRepository,
+    auditLogger
+  );
 }
 
 /**
@@ -79,7 +90,7 @@ export async function withAuthorization<T>(
     }
 
     // 2. Validate session exists and is not expired
-    const authService = getAuthService();
+    const authService = await getAuthService();
     const session = await authService.getSession(sessionId);
 
     if (!session) {
@@ -139,11 +150,11 @@ export async function withAuthorization<T>(
  */
 export function getAuthorizationMiddleware() {
 
-  const { AuthorizationMiddleware } = require('../../../src/middleware/AuthorizationMiddleware.ts');
+  const { AuthorizationMiddleware } = require('../../src/middleware/AuthorizationMiddleware.ts');
 
-  const { caseRepository } = require('../../../src/repositories/CaseRepository.ts');
+  const { caseRepository } = require('../../src/repositories/CaseRepository.ts');
 
-  const { auditLogger } = require('../../../src/services/AuditLogger.ts');
+  const { auditLogger } = require('../../src/services/AuditLogger.ts');
 
   return new AuthorizationMiddleware(caseRepository, auditLogger);
 }
@@ -153,7 +164,7 @@ export function getAuthorizationMiddleware() {
  */
 export function getEvidenceRepository() {
 
-  const { evidenceRepository } = require('../../../src/repositories/EvidenceRepository.ts');
+  const { evidenceRepository } = require('../../src/repositories/EvidenceRepository.ts');
   return evidenceRepository;
 }
 

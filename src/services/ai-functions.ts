@@ -13,7 +13,7 @@
  * - Multi-turn conversation management
  */
 
-import type { CaseFact, CreateCaseFactInput } from '../models/CaseFact.js';
+import type { CaseFact, CreateCaseFactInput } from '../models/CaseFact.ts';
 
 /**
  * Store a case fact (persistent memory)
@@ -228,7 +228,7 @@ This ensures you have the latest stored facts and can reference them accurately.
  * Usage in IntegratedAIService:
  * ```ts
  * import { LlamaChatSession } from 'node-llama-cpp';
- * import { aiFunctions } from './ai-functions.js';
+ * import { aiFunctions } from './ai-functions.ts';
  *
  * const chatSession = new LlamaChatSession({
  *   contextSequence,

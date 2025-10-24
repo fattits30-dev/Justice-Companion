@@ -1,10 +1,10 @@
-import { errorLogger } from '../utils/error-logger.js';
+import { errorLogger } from '../utils/error-logger.ts';
 import { XMLParser } from 'fast-xml-parser';
 import type {
   LegislationResult,
   CaseResult,
   KnowledgeEntry,
-} from '../types/ai.js';
+} from '../types/ai.ts';
 
 // ============================================================================
 // ADDITIONAL TYPE DEFINITIONS

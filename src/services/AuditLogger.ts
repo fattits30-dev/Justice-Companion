@@ -6,7 +6,7 @@ import type {
   AuditLogEntry,
   AuditQueryFilters,
   IntegrityReport,
-} from '../models/AuditLog.js';
+} from '../models/AuditLog.ts';
 
 /**
  * AuditLogger - Blockchain-style immutable audit trail

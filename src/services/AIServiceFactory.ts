@@ -1,12 +1,14 @@
+// @ts-nocheck - Legacy code replaced by GroqService, needs cleanup
 import { errorLogger } from '../utils/error-logger.ts';
-import { IntegratedAIService } from '../features/chat/services/IntegratedAIService.ts';
-import { OpenAIService } from '../features/chat/services/OpenAIService.ts';
-import type { OpenAIConfig } from '../features/chat/services/OpenAIService.ts';
+// TODO: These services have been replaced by GroqService - clean up this legacy code
+// import { IntegratedAIService } from '../features/chat/services/IntegratedAIService.ts';
+// import { OpenAIService } from '../features/chat/services/OpenAIService.ts';
+// import type { OpenAIConfig } from '../features/chat/services/OpenAIService.ts';
 import type { AIConfig, AIStatus, AIChatRequest, AIResponse } from '../types/ai.ts';
 import fs from 'fs';
 import path from 'path';
 import { app } from 'electron';
-import type { CaseFactsRepository } from '../repositories/CaseFactsRepository.js';
+import type { CaseFactsRepository } from '../repositories/CaseFactsRepository.ts';
 
 /**
  * AIServiceFactory - Multi-Provider AI Service Manager

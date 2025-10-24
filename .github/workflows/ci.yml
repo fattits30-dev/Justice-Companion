@@ -8,7 +8,7 @@ on:
 
 env:
   NODE_VERSION: '20.18.0'
-  PNPM_VERSION: '9.15.0'
+  PNPM_VERSION: '10.18.3'
 
 jobs:
   # Job 1: Code Quality & Security Checks

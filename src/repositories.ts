@@ -92,3 +92,29 @@ export function getRepositories(): RepositoryContainer {
 export function resetRepositories(): void {
   repositoryContainer = null;
 }
+
+/**
+ * Initialize repositories with test dependencies (for testing only)
+ * Allows injecting mock encryption service and audit logger
+ */
+export function initializeTestRepositories(
+  encryptionService: EncryptionService,
+  auditLogger: AuditLogger
+): RepositoryContainer {
+  // Initialize all repositories with test dependencies
+  repositoryContainer = {
+    caseRepository: new CaseRepository(encryptionService, auditLogger),
+    evidenceRepository: new EvidenceRepository(encryptionService, auditLogger),
+    userRepository: new UserRepository(auditLogger),
+    sessionRepository: new SessionRepository(),
+    userProfileRepository: new UserProfileRepository(encryptionService, auditLogger),
+    chatConversationRepository: new ChatConversationRepository(encryptionService, auditLogger),
+    consentRepository: new ConsentRepository(),
+    notesRepository: new NotesRepository(encryptionService, auditLogger),
+    legalIssuesRepository: new LegalIssuesRepository(encryptionService, auditLogger),
+    timelineEventRepository: new TimelineRepository(encryptionService, auditLogger),
+    caseFactsRepository: new CaseFactsRepository(encryptionService, auditLogger),
+    userFactsRepository: new UserFactsRepository(encryptionService, auditLogger),
+  };
+  return repositoryContainer;
+}

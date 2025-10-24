@@ -1,266 +1,258 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
-import { logger } from '@/utils/logger.ts';
-import { AuthFlow } from './components/auth/index.ts';
-import { ErrorBoundary } from './components/ErrorBoundary.tsx';
-import { Sidebar } from './components/Sidebar.tsx';
-import { ThemeProvider } from './components/ThemeProvider.tsx';
-import { Toaster } from './components/ui/sonner.tsx';
-import { ViewErrorBoundary } from './components/ViewErrorBoundary.tsx';
-import { AuthProvider, useAuth } from './contexts/AuthContext.tsx';
-import { DebugProvider } from './contexts/DebugContext.tsx';
-import { migrateToSecureStorage } from './utils/migrate-to-secure-storage.ts';
+/**
+ * App - Main application component with routing
+ *
+ * Routes:
+ * - /login - Login screen
+ * - /register - Registration screen
+ * - / - Redirects to /dashboard if authenticated, /login if not
+ * - /dashboard - Main dashboard (requires auth)
+ * - /cases - Cases list (requires auth)
+ * - /documents - Documents list (requires auth)
+ * - /chat - AI chat (requires auth)
+ * - /settings - Settings (requires auth)
+ */
 
-// Lazy-loaded view components for code splitting
-const ChatWindow = lazy(() => import('@/features/chat/index.ts').then((m) => ({ default: m.ChatWindow })));
-const CasesView = lazy(() => import('@/features/cases/index.ts').then((m) => ({ default: m.CasesView })));
-const CaseDetailView = lazy(() =>
-  import('@/features/cases/index.ts').then((m) => ({ default: m.CaseDetailView })),
-);
-const DocumentsView = lazy(() =>
-  import('@/features/documents/index.ts').then((m) => ({ default: m.DocumentsView })),
-);
-const DashboardView = lazy(() =>
-  import('@/features/dashboard/index.ts').then((m) => ({ default: m.DashboardView })),
-);
-const SettingsView = lazy(() =>
-  import('@/features/settings/index.ts').then((m) => ({ default: m.SettingsView })),
-);
-
-type ViewType = 'dashboard' | 'chat' | 'cases' | 'case-detail' | 'documents' | 'settings';
+import { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { LoginScreen } from './components/auth/LoginScreen';
+import { RegistrationScreen } from './components/auth/RegistrationScreen';
+import { MainLayout } from './components/layouts/MainLayout';
+import { Dashboard } from './components/Dashboard';
+import { CasesView } from './views/CasesView';
+import { DocumentsView } from './views/DocumentsView';
+import { ChatView } from './views/ChatView';
+import { SettingsView } from './views/SettingsView';
 
 /**
- * Loading fallback for lazy-loaded views
+ * ProtectedRoute - Redirects to login if not authenticated
  */
-function ViewLoadingFallback(): JSX.Element {
-  return (
-    <div className="flex items-center justify-center h-full">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
-        <p className="text-sm text-blue-300">Loading view...</p>
-      </div>
-    </div>
-  );
-}
-
-/**
- * Main application component (requires authentication)
- */
-function AuthenticatedApp(): JSX.Element {
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
-  const [activeView, setActiveView] = useState<ViewType>('dashboard');
-  const [sidebarExpanded, setSidebarExpanded] = useState(false);
-  const [activeCaseId, setActiveCaseId] = useState<number | null>(null);
-  const [selectedCaseForDetail, setSelectedCaseForDetail] = useState<number | null>(null);
 
-  // Dummy conversation load handler (ChatWindow will handle its own state)
-  const handleConversationLoad = (_conversationId: number): Promise<void> => {
-    // Switch to chat view when loading a conversation
-    setActiveView('chat');
-    return Promise.resolve();
-  };
-
-  // Run API key migration once after authentication
-  useEffect(() => {
-    if (isAuthenticated && !isLoading) {
-      // Run migration in the background, don't block the UI
-      migrateToSecureStorage()
-        .then((summary) => {
-          if (summary.failedKeys > 0) {
-            logger.error('App', 'Failed to migrate ${summary.failedKeys} API key(s)');
-          }
-        })
-        .catch((error) => {
-          logger.error('App', 'API key migration failed:', { error: error });
-        });
-    }
-  }, [isAuthenticated, isLoading]);
-
-  // Global keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent): void => {
-      // Toggle sidebar with Ctrl+B
-      if (e.ctrlKey && e.key === 'b') {
-        e.preventDefault();
-        setSidebarExpanded((prev) => !prev);
-      }
-      // Escape to minimize sidebar
-      if (e.key === 'Escape' && sidebarExpanded) {
-        e.preventDefault();
-        setSidebarExpanded(false);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [sidebarExpanded]);
-
-  // Show loading spinner while checking auth
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950">
+      <div className="flex items-center justify-center min-h-screen bg-gray-900">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-blue-300">Loading...</p>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
+          <p className="text-gray-300 text-lg">Loading...</p>
         </div>
       </div>
     );
   }
 
-  // Show auth flow if not authenticated
   if (!isAuthenticated) {
-    return <AuthFlow />;
+    return <Navigate to="/login" replace />;
   }
 
-  // Render the appropriate view wrapped in ViewErrorBoundary
-  const renderView = (): JSX.Element => {
-    switch (activeView) {
-      case 'dashboard':
-        return (
-          <ViewErrorBoundary
-            viewName="Dashboard"
-            onNavigateToDashboard={() => setActiveView('dashboard')}
-          >
-            <DashboardView onViewChange={setActiveView} />
-          </ViewErrorBoundary>
-        );
-      case 'chat':
-        return (
-          <ViewErrorBoundary
-            viewName="Chat"
-            onNavigateToDashboard={() => setActiveView('dashboard')}
-          >
-            <ChatWindow sidebarExpanded={sidebarExpanded} caseId={activeCaseId} />
-          </ViewErrorBoundary>
-        );
-      case 'cases':
-        return (
-          <ViewErrorBoundary
-            viewName="Cases"
-            onNavigateToDashboard={() => setActiveView('dashboard')}
-          >
-            <CasesView
-              onCaseSelect={(caseId) => {
-                setSelectedCaseForDetail(caseId);
-                setActiveView('case-detail');
-              }}
-            />
-          </ViewErrorBoundary>
-        );
-      case 'case-detail':
-        return selectedCaseForDetail ? (
-          <ViewErrorBoundary
-            viewName="Case Detail"
-            onNavigateToDashboard={() => setActiveView('dashboard')}
-          >
-            <CaseDetailView
-              caseId={selectedCaseForDetail}
-              onBack={() => {
-                setActiveView('cases');
-                setSelectedCaseForDetail(null);
-              }}
-            />
-          </ViewErrorBoundary>
-        ) : (
-          <ViewErrorBoundary
-            viewName="Cases"
-            onNavigateToDashboard={() => setActiveView('dashboard')}
-          >
-            <CasesView
-              onCaseSelect={(caseId) => {
-                setSelectedCaseForDetail(caseId);
-                setActiveView('case-detail');
-              }}
-            />
-          </ViewErrorBoundary>
-        );
-      case 'documents':
-        return (
-          <ViewErrorBoundary
-            viewName="Documents"
-            onNavigateToDashboard={() => setActiveView('dashboard')}
-          >
-            <DocumentsView />
-          </ViewErrorBoundary>
-        );
-      case 'settings':
-        return (
-          <ViewErrorBoundary
-            viewName="Settings"
-            onNavigateToDashboard={() => setActiveView('dashboard')}
-          >
-            <SettingsView />
-          </ViewErrorBoundary>
-        );
-      default:
-        return (
-          <ViewErrorBoundary
-            viewName="Dashboard"
-            onNavigateToDashboard={() => setActiveView('dashboard')}
-          >
-            <DashboardView onViewChange={setActiveView} />
-          </ViewErrorBoundary>
-        );
-    }
-  };
+  return <>{children}</>;
+}
 
-  // Authenticated - show main app
-  return (
-    <div className="flex h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950">
-      {/* Sidebar */}
-      <Sidebar
-        isExpanded={sidebarExpanded}
-        onToggle={() => setSidebarExpanded(!sidebarExpanded)}
-        onConversationLoad={handleConversationLoad}
-        activeView={activeView}
-        onViewChange={(view) => {
-          setActiveView(view);
-          setSidebarExpanded(false); // Minimize sidebar after navigation
-        }}
-        activeCaseId={activeCaseId}
-        onActiveCaseIdChange={setActiveCaseId}
-      />
+/**
+ * AuthRoute - Redirects to dashboard if already authenticated
+ */
+function AuthRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, isLoading } = useAuth();
 
-      {/* Main Content Area - Positioned to account for fixed sidebar */}
-      <div
-        className="flex flex-1 flex-col overflow-hidden transition-all duration-300 ease-in-out"
-        style={{
-          marginLeft: sidebarExpanded ? '256px' : '48px',
-        }}
-        role="main"
-      >
-        {/* Top bar - no menu button, just title */}
-        <header className="flex h-14 items-center gap-3 border-b border-blue-800/30 bg-slate-900/50 px-4">
-          <div className="flex items-center gap-2">
-            <span className="font-medium capitalize text-blue-300">{activeView}</span>
-          </div>
-        </header>
-
-        {/* View Content */}
-        <div className="flex flex-1 flex-col overflow-hidden">
-          <Suspense fallback={<ViewLoadingFallback />}>{renderView()}</Suspense>
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-900">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
+          <p className="text-gray-300 text-lg">Loading...</p>
         </div>
       </div>
-    </div>
+    );
+  }
+
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return <>{children}</>;
+}
+
+/**
+ * DashboardWrapper - Fetches real dashboard stats and wires up navigation
+ */
+function DashboardWrapper() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [dashboardStats, setDashboardStats] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        // Get sessionId from localStorage
+        const sessionId = localStorage.getItem('sessionId');
+        console.log('[DashboardWrapper] sessionId from localStorage:', sessionId);
+
+        if (!sessionId) {
+          console.error('[DashboardWrapper] No sessionId found in localStorage!');
+          setError('No active session');
+          return;
+        }
+
+        // Fetch dashboard stats from backend
+        console.log('[DashboardWrapper] Fetching stats for sessionId:', sessionId);
+        const response = await window.justiceAPI.getDashboardStats(sessionId);
+        console.log('[DashboardWrapper] Stats response:', response);
+
+        if (response.success && response.data) {
+          setDashboardStats(response.data);
+        } else {
+          const errorMsg = typeof response.error === 'string'
+            ? response.error
+            : response.error?.message || 'Failed to load dashboard stats';
+          setError(errorMsg);
+        }
+      } catch (err) {
+        console.error('Failed to fetch dashboard stats:', err);
+        setError(err instanceof Error ? err.message : 'An error occurred');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
+          <p className="text-gray-300 text-lg">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="p-4 text-red-300 bg-red-900/50 rounded-md border border-red-700">
+            {error}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <Dashboard
+      username={user?.username || 'User'}
+      stats={dashboardStats || {
+        totalCases: 0,
+        activeCases: 0,
+        totalEvidence: 0,
+        recentActivity: 0
+      }}
+      recentCases={dashboardStats?.recentCases || []}
+      onNewCase={() => navigate('/cases')}
+      onUploadEvidence={() => navigate('/documents')}
+      onStartChat={() => navigate('/chat')}
+      onCaseClick={(caseId) => navigate(`/cases/${caseId}`)}
+    />
   );
 }
 
 /**
- * Root App component with providers
- * FIX: ErrorBoundary moved to wrap ALL components including AuthFlow (Issue #3)
+ * AppRoutes - All application routes
  */
-function App(): JSX.Element {
+function AppRoutes() {
+  const { user } = useAuth();
+
   return (
-    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-      <ErrorBoundary>
-        <AuthProvider>
-          <DebugProvider>
-            <AuthenticatedApp />
-            {/* Global Toast Notifications */}
-            <Toaster />
-          </DebugProvider>
-        </AuthProvider>
-      </ErrorBoundary>
-    </ThemeProvider>
+    <Routes>
+      {/* Public routes (redirect to dashboard if authenticated) */}
+      <Route
+        path="/login"
+        element={
+          <AuthRoute>
+            <LoginScreen
+              onSuccess={() => {
+                // Navigation handled by AuthRoute
+              }}
+              onRegisterClick={() => {
+                window.location.href = '/register';
+              }}
+            />
+          </AuthRoute>
+        }
+      />
+      <Route
+        path="/register"
+        element={
+          <AuthRoute>
+            <RegistrationScreen
+              onSuccess={() => {
+                window.location.href = '/login';
+              }}
+              onLoginClick={() => {
+                window.location.href = '/login';
+              }}
+            />
+          </AuthRoute>
+        }
+      />
+
+      {/* Protected routes (require authentication) */}
+      <Route
+        element={
+          <ProtectedRoute>
+            <MainLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="/dashboard" element={<DashboardWrapper />} />
+        <Route path="/cases" element={<CasesView />} />
+        <Route path="/documents" element={<DocumentsView />} />
+        <Route path="/chat" element={<ChatView />} />
+        <Route path="/settings" element={<SettingsView />} />
+      </Route>
+
+      {/* Root route - redirect based on auth state */}
+      <Route
+        path="/"
+        element={
+          <Navigate
+            to={user ? '/dashboard' : '/login'}
+            replace
+          />
+        }
+      />
+
+      {/* Catch-all route - redirect to dashboard or login */}
+      <Route
+        path="*"
+        element={
+          <Navigate
+            to={user ? '/dashboard' : '/login'}
+            replace
+          />
+        }
+      />
+    </Routes>
+  );
+}
+
+/**
+ * App - Root component
+ */
+function App() {
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
 

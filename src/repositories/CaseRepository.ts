@@ -1,13 +1,19 @@
 import { getDb } from '../db/database.ts';
 import type { Case, CreateCaseInput, UpdateCaseInput, CaseStatus } from '../models/Case.ts';
-import { EncryptionService, type EncryptedData } from '../services/EncryptionService.js';
-import type { AuditLogger } from '../services/AuditLogger.js';
+import { EncryptionService, type EncryptedData } from '../services/EncryptionService.ts';
+import type { AuditLogger } from '../services/AuditLogger.ts';
 
 export class CaseRepository {
+  private encryptionService: EncryptionService;
+  private auditLogger?: AuditLogger;
+
   constructor(
-    private encryptionService: EncryptionService,
-    private auditLogger?: AuditLogger,
-  ) {}
+    encryptionService: EncryptionService,
+    auditLogger?: AuditLogger,
+  ) {
+    this.encryptionService = encryptionService;
+    this.auditLogger = auditLogger;
+  }
   /**
    * Create a new case
    */
@@ -103,6 +109,50 @@ export class CaseRepository {
     }
 
     return row ?? null;
+  }
+
+  /**
+   * Find all cases belonging to a specific user
+   */
+  findByUserId(userId: number): Case[] {
+    const db = getDb();
+
+    const query = `
+      SELECT
+        id,
+        title,
+        description,
+        case_type as caseType,
+        status,
+        user_id as userId,
+        created_at as createdAt,
+        updated_at as updatedAt
+      FROM cases
+      WHERE user_id = ?
+    `;
+
+    const rows = db.prepare(query).all(userId) as Case[];
+
+    // Decrypt descriptions if encryption service is available
+    return rows.map(row => {
+      let description: string | null = row.description;
+
+      if (description && this.encryptionService) {
+        try {
+          const encryptedData = JSON.parse(description) as EncryptedData;
+          if (this.encryptionService.isEncrypted(encryptedData)) {
+            description = this.encryptionService.decrypt(encryptedData);
+          }
+        } catch {
+          // Legacy plaintext or decryption failure - keep as-is
+        }
+      }
+
+      return {
+        ...row,
+        description,
+      };
+    });
   }
 
   /**

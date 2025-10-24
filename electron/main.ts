@@ -19,8 +19,8 @@ if (process.env.NODE_ENV !== 'production') {
   console.log('[Main] Running in development mode (manual restart required for main process changes)');
 }
 
-// Single instance lock
-const gotTheLock = app.requestSingleInstanceLock();
+// Single instance lock (disabled in test mode to allow parallel test suites)
+const gotTheLock = process.env.NODE_ENV === 'test' ? true : app.requestSingleInstanceLock();
 
 // Global KeyManager instance (initialized in app.ready)
 let keyManager: KeyManager | null = null;
@@ -66,9 +66,12 @@ if (!gotTheLock) {
     });
 
     // Load app (dev server or production build)
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
+      // Test mode and dev mode both use Vite dev server
       mainWindow.loadURL('http://localhost:5176');
-      mainWindow.webContents.openDevTools(); // Open DevTools in development
+      if (process.env.NODE_ENV === 'development') {
+        mainWindow.webContents.openDevTools(); // Open DevTools only in development
+      }
     } else {
       mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
     }
@@ -295,8 +298,23 @@ if (!gotTheLock) {
     try {
       console.warn('[Main] App ready - starting initialization...');
 
-      // Initialize KeyManager with health checks (must be after app.ready for safeStorage)
-      await initializeKeyManager();
+      // Initialize KeyManager with health checks (skip in test mode where safeStorage may not be available)
+      if (process.env.NODE_ENV !== 'test') {
+        await initializeKeyManager();
+      } else {
+        console.warn('[Main] ⚠️  Skipping KeyManager initialization in test mode');
+        // Create a mock KeyManager for tests that just reads from .env
+        const crypto = await import('crypto');
+        const envKey = process.env.ENCRYPTION_KEY_BASE64;
+        if (!envKey) {
+          throw new Error('ENCRYPTION_KEY_BASE64 required in test mode');
+        }
+        keyManager = {
+          getKey: () => Buffer.from(envKey, 'base64'),
+          hasKey: () => true,
+          clearCache: () => {},
+        } as any;
+      }
 
       // Initialize database
       await initializeDatabase();

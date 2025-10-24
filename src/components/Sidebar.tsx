@@ -1,431 +1,195 @@
-import {
-  Briefcase,
-  ChevronLeft,
-  FileText,
-  LayoutDashboard,
-  LogOut,
-  Menu,
-  MessageSquare,
-  Settings,
-  User,
-} from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { logger } from '../utils/logger';
-import { useAuth } from '../contexts/AuthContext';
-import SidebarCaseContext from '../features/chat/components/SidebarCaseContext';
-import type { ChatConversation } from '../models/ChatConversation';
-import type { UserProfile } from '../models/UserProfile';
-import { ConfirmDialog } from './ConfirmDialog';
+/**
+ * Sidebar Component
+ *
+ * Built with TDD - All tests written FIRST
+ *
+ * Features:
+ * - Navigation links with icons
+ * - Active route highlighting
+ * - User info display
+ * - Logout functionality
+ * - Collapse/expand
+ * - Notification badges
+ * - Accessible navigation
+ */
 
 interface SidebarProps {
-  isExpanded: boolean;
-  onToggle: () => void;
-  onConversationLoad: (conversationId: number) => Promise<void>;
-  activeView: 'dashboard' | 'chat' | 'cases' | 'case-detail' | 'documents' | 'settings';
-  onViewChange: (
-    view: 'dashboard' | 'chat' | 'cases' | 'case-detail' | 'documents' | 'settings'
-  ) => void;
-  activeCaseId: number | null;
-  onActiveCaseIdChange: (caseId: number | null) => void;
+  currentRoute: string;
+  user?: {
+    username: string;
+    email: string;
+  } | null;
+  onLogout?: () => void;
+  onNavigate?: (route: string) => void;
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
+  notifications?: {
+    cases?: number;
+    documents?: number;
+    chat?: number;
+  };
 }
 
-const navigationItems = [
-  { id: 'dashboard' as const, label: 'Dashboard', icon: LayoutDashboard },
-  { id: 'chat' as const, label: 'Chat', icon: MessageSquare },
-  { id: 'cases' as const, label: 'Cases', icon: Briefcase },
-  { id: 'documents' as const, label: 'Documents', icon: FileText },
-  { id: 'settings' as const, label: 'Settings', icon: Settings },
-];
+interface NavItem {
+  name: string;
+  href: string;
+  icon: JSX.Element;
+  badge?: number;
+}
 
 export function Sidebar({
-  isExpanded,
-  onToggle,
-  onConversationLoad,
-  activeView,
-  onViewChange,
-  activeCaseId,
-  onActiveCaseIdChange,
-}: SidebarProps): JSX.Element {
-  const { user, logout } = useAuth();
-  const [activeConversationId, setActiveConversationId] = useState<number | null>(null);
-  const [recentChats, setRecentChats] = useState<ChatConversation[]>([]);
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [conversationToDelete, setConversationToDelete] = useState<number | null>(null);
-  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
-
-  // Data loading when expanded
-  useEffect(() => {
-    const loadInitialData = async (): Promise<void> => {
-      if (!window.justiceAPI) {
-        return;
-      }
-
-      try {
-        const profileResult = await window.justiceAPI.getUserProfile();
-        if (profileResult.success && profileResult.data) {
-          setUserProfile(profileResult.data);
-        }
-
-        // Note: getRecentConversations is not implemented in window.d.ts
-        // This functionality needs to be added to the IPC layer
-        // For now, skip loading recent conversations
-        // const conversationsResult = await window.justiceAPI.getRecentConversations(null, 10);
-        // if (conversationsResult.success) {
-        //   setRecentChats(conversationsResult.data);
-        // }
-      } catch (error) {
-        logger.error('App', 'Failed to load sidebar data:', { error: error });
-      }
-    };
-
-    if (isExpanded) {
-      void loadInitialData();
+  currentRoute,
+  user = null,
+  onLogout,
+  onNavigate,
+  isCollapsed = false,
+  onToggleCollapse,
+  notifications = {}
+}: SidebarProps) {
+  const navItems: NavItem[] = [
+    {
+      name: 'Dashboard',
+      href: '/dashboard',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+        </svg>
+      )
+    },
+    {
+      name: 'Cases',
+      href: '/cases',
+      badge: notifications.cases,
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      )
+    },
+    {
+      name: 'Documents',
+      href: '/documents',
+      badge: notifications.documents,
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+        </svg>
+      )
+    },
+    {
+      name: 'Chat',
+      href: '/chat',
+      badge: notifications.chat,
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+        </svg>
+      )
+    },
+    {
+      name: 'Settings',
+      href: '/settings',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+      )
     }
-  }, [isExpanded]);
+  ];
 
-  const handleCaseChange = async (caseId: number | null): Promise<void> => {
-    onActiveCaseIdChange(caseId);
-    if (!window.justiceAPI) {
-      return;
-    }
-
-    try {
-      // Note: getRecentConversations is not implemented in window.d.ts
-      // This functionality needs to be added to the IPC layer
-      // For now, skip loading recent conversations
-      // const result = await window.justiceAPI.getRecentConversations(caseId, 10);
-      // if (result.success) {
-      //   setRecentChats(result.data);
-      // }
-    } catch (error) {
-      logger.error('App', 'Failed to load conversations for case:', { caseId, error });
-    }
-  };
-
-  const handleConversationSelect = (conversationId: number): void => {
-    setActiveConversationId(conversationId);
-    void onConversationLoad(conversationId);
-  };
-
-  const handleNewChat = async (): Promise<void> => {
-    if (!window.justiceAPI || !user) {
-      return;
-    }
-
-    try {
-      // createConversation signature: (message: string, caseId: string | undefined, sessionId: string)
-      // Note: This may need to be updated to match the new signature
-      // For now, we'll skip this until the IPC layer is updated
-      logger.info('App', 'Create new chat - functionality pending IPC update');
-
-      // const result = await window.justiceAPI.createConversation({
-      //   caseId: activeCaseId,
-      //   userId: user.id,
-      //   title: `New Chat - ${new Date().toLocaleString()}`,
-      // });
-
-      // if (result.success) {
-      //   setRecentChats((prev) => [result.data, ...prev]);
-      //   setActiveConversationId(result.data.id);
-      // }
-    } catch (error) {
-      logger.error('App', 'Failed to create new chat:', { error: error });
-    }
-  };
-
-  const handleDeleteConversation = (conversationId: number): void => {
-    setConversationToDelete(conversationId);
-    setDeleteConfirmOpen(true);
-  };
-
-  const confirmDelete = async (): Promise<void> => {
-    if (!window.justiceAPI || conversationToDelete === null) {
-      setDeleteConfirmOpen(false);
-      setConversationToDelete(null);
-      return;
-    }
-
-    try {
-      const result = await window.justiceAPI.deleteConversation(conversationToDelete);
-      if (result.success) {
-        setRecentChats((prev) => prev.filter((chat) => chat.id !== conversationToDelete));
-        if (activeConversationId === conversationToDelete) {
-          setActiveConversationId(null);
-        }
-      }
-    } catch (error) {
-      logger.error('App', 'Error deleting conversation:', { error: error });
-    } finally {
-      setDeleteConfirmOpen(false);
-      setConversationToDelete(null);
-    }
-  };
-
-  const handleRenameConversation = async (
-    conversationId: number,
-    newTitle: string,
-  ): Promise<void> => {
-    if (!window.justiceAPI || !newTitle.trim()) {
-      return;
-    }
-
-    try {
-      setRecentChats((prev) =>
-        prev.map((chat) => (chat.id === conversationId ? { ...chat, title: newTitle } : chat)),
-      );
-    } catch (error) {
-      logger.error('App', 'Error renaming conversation:', { error: error });
-    }
-  };
-
-  // Get user initials from auth user or profile
-  const getUserInitials = (): string => {
-    if (user?.username) {
-      return user.username.slice(0, 2).toUpperCase();
-    }
-    if (userProfile?.name) {
-      return userProfile.name
-        .split(' ')
-        .map((n) => n[0])
-        .join('')
-        .toUpperCase()
-        .slice(0, 2);
-    }
-    return 'U';
-  };
-
-  // Handle logout
-  const handleLogout = async (): Promise<void> => {
-    try {
-      await logout();
-      // App will automatically redirect to login screen via AuthContext
-    } catch (error) {
-      logger.error('App', 'Logout failed:', { error: error });
-    } finally {
-      setLogoutConfirmOpen(false);
+  const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (onNavigate) {
+      e.preventDefault();
+      onNavigate(href);
     }
   };
 
   return (
-    <>
-      {/* Sidebar - Modern 2025 Design: Ultra-compact collapsed (48px), sleek expanded (256px) */}
-      <aside
-        className={`fixed inset-y-0 left-0 z-50 flex flex-col ${
-          isExpanded ? 'w-64' : 'w-12'
-        } bg-gradient-to-b from-slate-900/95 via-blue-950/95 to-slate-900/95 border-r border-white/5 shadow-2xl backdrop-blur-xl transition-[width] duration-300 ease-in-out`}
-        aria-label="Main navigation"
-      >
-        {/* Logo - Minimal and modern */}
-        <header
-          className={`flex items-center justify-center h-14 ${
-            isExpanded ? 'px-3' : 'px-0'
-          } bg-slate-900/30 border-b border-blue-800/20 transition-[padding] duration-300`}
-        >
-          {isExpanded ? (
-            <div className="flex items-center gap-2.5 w-full">
-              <div className="w-7 h-7 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center shadow-lg ring-1 ring-blue-400/30 transition-transform hover:scale-105">
-                <span className="text-white font-bold text-xs">⚖️</span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <h1 className="text-xs font-bold text-white tracking-tight truncate">
-                  Justice Companion
-                </h1>
-                <p className="text-[10px] text-blue-300/80 truncate">Legal Assistant</p>
-              </div>
-            </div>
-          ) : (
-            <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center shadow-lg ring-1 ring-blue-400/30 transition-transform hover:scale-110">
-              <span className="text-white text-[10px] font-bold">⚖️</span>
-            </div>
-          )}
-        </header>
-
-        {/* Navigation - Refined spacing and hover effects */}
-        <nav
-          className={`flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-blue-800/50 scrollbar-track-transparent ${
-            isExpanded ? 'px-2 py-3' : 'px-1 py-3'
-          }`}
-          role="navigation"
-          aria-label="Main menu"
-        >
-          {/* Toggle Button - Sleek and minimal */}
+    <nav
+      className={`flex flex-col h-screen bg-gray-800 border-r border-gray-700 transition-all duration-300 ${
+        isCollapsed ? 'w-16' : 'w-64'
+      }`}
+      role="navigation"
+      aria-label="Main navigation"
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between p-4 border-b border-gray-700">
+        {!isCollapsed && (
+          <h1 className="text-lg font-bold text-white">Justice Companion</h1>
+        )}
+        {onToggleCollapse && (
           <button
-            type="button"
-            onClick={onToggle}
-            className={`group mb-3 flex w-full items-center rounded-md border-b border-blue-800/10 pb-3 text-blue-100/90 transition-[background-color,transform,color] duration-200 hover:bg-blue-800/25 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/50 active:scale-95 ${
-              isExpanded ? 'gap-2.5 px-2.5 py-2.5' : 'justify-center py-2.5'
-            }`}
-            aria-label={isExpanded ? 'Minimize sidebar' : 'Expand sidebar'}
-            title={isExpanded ? 'Minimize sidebar (Ctrl+B)' : 'Expand sidebar (Ctrl+B)'}
+            onClick={onToggleCollapse}
+            className="p-2 text-gray-400 hover:text-white rounded-md hover:bg-gray-700 transition-colors"
+            aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
-            {isExpanded ? (
-              <>
-                <ChevronLeft
-                  size={18}
-                  className="flex-shrink-0 transition-transform group-hover:-translate-x-0.5"
-                  aria-hidden="true"
-                />
-                <span className="text-xs font-medium">Minimize</span>
-              </>
-            ) : (
-              <Menu
-                size={18}
-                className="flex-shrink-0 transition-transform group-hover:scale-110"
-                aria-hidden="true"
-              />
-            )}
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {isCollapsed ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+              )}
+            </svg>
           </button>
+        )}
+      </div>
 
-          {/* Navigation Items - Modern hover states and active indicators */}
-          {navigationItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeView === item.id;
+      {/* Navigation Links */}
+      <div className="flex-1 overflow-y-auto py-4">
+        <ul className="space-y-1 px-2">
+          {navItems.map((item) => {
+            const isActive = currentRoute === item.href;
 
             return (
-              <button
-                type="button"
-                key={item.id}
-                onClick={() => onViewChange(item.id)}
-                className={`group mb-1 flex w-full items-center rounded-md transition-[background-color,box-shadow,transform,color] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/50 active:scale-95 ${
-                  isActive
-                    ? 'bg-gradient-to-r from-blue-600/25 to-blue-500/20 text-blue-200 shadow-md ring-1 ring-blue-500/20'
-                    : 'text-blue-100/80 hover:bg-blue-800/20 hover:text-white'
-                } ${isExpanded ? 'gap-2.5 px-2.5 py-2' : 'justify-center py-2.5'}`}
-                aria-label={item.label}
-                aria-current={isActive ? 'page' : undefined}
-                title={isExpanded ? undefined : item.label}
-              >
-                <Icon
-                  size={18}
-                  className={`flex-shrink-0 transition-transform ${
-                    isActive ? 'text-blue-300' : 'group-hover:scale-110'
+              <li key={item.href}>
+                <a
+                  href={item.href}
+                  onClick={(e) => handleLinkClick(e, item.href)}
+                  className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
+                    isActive
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-300 hover:bg-gray-700 hover:text-white'
                   }`}
-                  aria-hidden="true"
-                />
-                {isExpanded && <span className="truncate text-xs font-medium">{item.label}</span>}
-                {isActive && !isExpanded && (
-                  <div
-                    className="absolute left-0 h-5 w-0.5 rounded-r-full bg-blue-400"
-                    aria-hidden="true"
-                  />
-                )}
-              </button>
+                  aria-current={isActive ? 'page' : undefined}
+                >
+                  {item.icon}
+                  {!isCollapsed && (
+                    <span className="flex-1">{item.name}</span>
+                  )}
+                  {!isCollapsed && item.badge && item.badge > 0 && (
+                    <span className="px-2 py-0.5 text-xs font-semibold text-white bg-red-500 rounded-full">
+                      {item.badge}
+                    </span>
+                  )}
+                </a>
+              </li>
             );
           })}
+        </ul>
+      </div>
 
-          {/* Case Context - only when expanded */}
-          {isExpanded && (
-            <div className="mt-3 border-t border-blue-800/10 pt-3">
-              <SidebarCaseContext
-                activeCaseId={activeCaseId}
-                activeConversationId={activeConversationId}
-                recentChats={recentChats}
-                onCaseChange={handleCaseChange}
-                onConversationSelect={handleConversationSelect}
-                onNewChat={handleNewChat}
-                onDeleteConversation={handleDeleteConversation}
-                onRenameConversation={handleRenameConversation}
-              />
+      {/* User Info & Logout */}
+      {user && (
+        <div className="border-t border-gray-700 p-4">
+          {!isCollapsed && (
+            <div className="mb-3">
+              <p className="text-sm font-medium text-white truncate">{user.username}</p>
+              <p className="text-xs text-gray-400 truncate">{user.email}</p>
             </div>
           )}
-        </nav>
-
-        {/* Profile - Polished and compact */}
-        <footer
-          className={`border-t border-blue-800/20 bg-slate-900/30 transition-[padding] duration-300 ${
-            isExpanded ? 'px-2 py-2.5' : 'px-1 py-2.5'
-          }`}
-          role="contentinfo"
-        >
-          {isExpanded ? (
-            <div className="space-y-1">
-              {/* User Info - Compact and modern */}
-              <button
-                type="button"
-                onClick={() => onViewChange('settings')}
-                className="group flex w-full items-center gap-2 rounded-md p-1.5 transition-[background-color,transform] duration-200 hover:bg-blue-800/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/50 active:scale-95"
-                aria-label="Open user settings"
-                title="Open Settings"
-              >
-                {/* Profile Picture/Initials - Smaller and refined */}
-                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-[10px] font-bold text-white shadow-md ring-1 ring-blue-400/30 transition-transform group-hover:scale-105">
-                  {getUserInitials()}
-                </div>
-                <div className="min-w-0 flex-1 text-left">
-                  <div className="truncate text-[11px] font-semibold text-white">
-                    {user?.username ?? 'User'}
-                  </div>
-                  <div className="truncate text-[10px] text-blue-300/70">
-                    {user?.email ?? userProfile?.email ?? 'user@example.com'}
-                  </div>
-                </div>
-                <User
-                  size={14}
-                  className="flex-shrink-0 text-blue-300/60 transition-transform group-hover:scale-110"
-                  aria-hidden="true"
-                />
-              </button>
-
-              {/* Logout Button - Refined danger state */}
-              <button
-                type="button"
-                onClick={() => setLogoutConfirmOpen(true)}
-                className="group flex w-full items-center gap-2 rounded-md p-1.5 text-red-300/80 transition-[background-color,transform,color] duration-200 hover:bg-red-900/20 hover:text-red-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400/50 active:scale-95"
-                aria-label="Logout"
-                title="Logout"
-              >
-                <LogOut
-                  size={16}
-                  className="flex-shrink-0 transition-transform group-hover:scale-110"
-                  aria-hidden="true"
-                />
-                <span className="text-[11px] font-medium">Logout</span>
-              </button>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={onToggle}
-              className="group flex w-full items-center justify-center rounded-md py-1.5 transition-[background-color,transform] duration-200 hover:bg-blue-800/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/50 active:scale-95"
-              aria-label={`${user?.username ?? 'User Profile'} - Click to expand`}
-              title={`${user?.username ?? 'User Profile'} - Click to expand`}
-            >
-              {/* Profile Picture/Initials - Compact collapsed state */}
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-[10px] font-bold text-white shadow-md ring-1 ring-blue-400/30 transition-transform group-hover:scale-110">
-                {getUserInitials()}
-              </div>
-            </button>
-          )}
-        </footer>
-      </aside>
-
-      {/* Delete Confirmation Dialog */}
-      <ConfirmDialog
-        isOpen={deleteConfirmOpen}
-        title="Delete Chat"
-        message="Are you sure you want to delete this chat? This action cannot be undone."
-        confirmText="Delete"
-        cancelText="Cancel"
-        variant="danger"
-        onConfirm={confirmDelete}
-        onCancel={() => {
-          setDeleteConfirmOpen(false);
-          setConversationToDelete(null);
-        }}
-      />
-
-      {/* Logout Confirmation Dialog */}
-      <ConfirmDialog
-        isOpen={logoutConfirmOpen}
-        title="Logout"
-        message="Are you sure you want to logout? Any unsaved work will be lost."
-        confirmText="Logout"
-        cancelText="Cancel"
-        variant="danger"
-        onConfirm={handleLogout}
-        onCancel={() => setLogoutConfirmOpen(false)}
-      />
-    </>
+          <button
+            onClick={onLogout}
+            className="flex items-center gap-3 w-full px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors"
+            aria-label="Logout"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            {!isCollapsed && <span>Logout</span>}
+          </button>
+        </div>
+      )}
+    </nav>
   );
 }

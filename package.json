@@ -72,8 +72,10 @@
     "dompurify": "^3.3.0",
     "dotenv": "^17.2.3",
     "drizzle-orm": "^0.37.0",
+    "electron-updater": "^6.3.9",
     "fast-xml-parser": "^5.3.0",
     "framer-motion": "^11.15.0",
+    "groq-sdk": "^0.34.0",
     "html2pdf.js": "^0.12.1",
     "lru-cache": "^11.2.2",
     "lucide-react": "^0.468.0",
@@ -112,7 +114,7 @@
     "autoprefixer": "^10.4.20",
     "concurrently": "^9.1.2",
     "drizzle-kit": "^0.30.2",
-    "electron": "^38.3.0",
+    "electron": "38.3.0",
     "electron-builder": "^25.1.8",
     "electron-rebuild": "^3.2.9",
     "electron-reloader": "^1.2.3",
@@ -138,6 +140,10 @@
     "appId": "com.justicecompanion.app",
     "productName": "Justice Companion",
     "asar": true,
+    "publish": {
+      "provider": "github",
+      "releaseType": "release"
+    },
     "asarUnpack": [
       "node_modules/node-llama-cpp/**/*"
     ],
@@ -170,6 +176,31 @@
       ],
       "icon": "build/icon.png",
       "category": "Office"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Justice Companion"
+    },
+    "dmg": {
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ],
+      "window": {
+        "width": 540,
+        "height": 380
+      }
     }
   }
 }

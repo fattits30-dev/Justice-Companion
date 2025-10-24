@@ -253,7 +253,7 @@ describe('KeyManager - Encryption Key Security', () => {
       // Create existing key file
       fs.writeFileSync(testKeyPath, ENCRYPTED_KEY);
 
-      const _newKey = keyManager.rotateKey();
+      keyManager.rotateKey();
 
       // Should create backup file
       const backupFiles = fs

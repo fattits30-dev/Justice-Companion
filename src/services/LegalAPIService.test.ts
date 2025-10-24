@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { LegalAPIService } from './LegalAPIService.js';
+import { LegalAPIService } from './LegalAPIService.ts';
 
 describe('LegalAPIService', () => {
   let service: LegalAPIService;

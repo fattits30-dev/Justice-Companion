@@ -7,8 +7,8 @@ import Database from 'better-sqlite3';
 import { UserProfileRepository } from './UserProfileRepository';
 import { LegalIssuesRepository } from './LegalIssuesRepository';
 import { TimelineRepository } from './TimelineRepository';
-import { EncryptionService } from '../services/EncryptionService.js';
-import { AuditLogger } from '../services/AuditLogger.js';
+import { EncryptionService } from '../services/EncryptionService.ts';
+import { AuditLogger } from '../services/AuditLogger.ts';
 import * as databaseModule from '../db/database';
 
 let db: Database.Database;

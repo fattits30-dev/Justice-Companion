@@ -7,6 +7,7 @@ import {
 } from '@playwright/test';
 import path from 'path';
 import fs from 'fs';
+import crypto from 'crypto';
 
 /**
  * Authentication Fixes Validation Test Suite
@@ -31,6 +32,13 @@ let electronApp: ElectronApplication;
 let window: Page;
 
 const TEST_DB_PATH = path.join(process.cwd(), '.test-e2e-fixes', 'justice-test.db');
+
+/**
+ * Generate a random 32-byte encryption key for testing
+ */
+function generateTestEncryptionKey(): string {
+  return crypto.randomBytes(32).toString('base64');
+}
 
 function generateTestUser() {
   const timestamp = Date.now();
@@ -65,6 +73,12 @@ test.describe('Fix #1: IPC Response Structure', () => {
       launchArgs = ['--require', path.join(process.cwd(), 'node_modules', 'tsx', 'dist', 'loader.mjs'), mainPath];
     }
 
+    // Generate test encryption key and write to .env
+    const testEncryptionKey = generateTestEncryptionKey();
+    const envPath = path.join(process.cwd(), '.env');
+    fs.writeFileSync(envPath, `ENCRYPTION_KEY_BASE64=${testEncryptionKey}\n`, 'utf8');
+    console.log('[E2E] Created .env with test encryption key');
+
     electronApp = await electron.launch({
       executablePath: path.join(process.cwd(), 'node_modules', '.bin', 'electron.cmd'),
       args: launchArgs,
@@ -72,6 +86,7 @@ test.describe('Fix #1: IPC Response Structure', () => {
         ...process.env,
         JUSTICE_DB_PATH: TEST_DB_PATH,
         NODE_ENV: 'test',
+        ENCRYPTION_KEY_BASE64: testEncryptionKey, // ← Critical: Provide test encryption key
         ELECTRON_DISABLE_GPU: '1',
       },
       timeout: 60000,
@@ -92,6 +107,13 @@ test.describe('Fix #1: IPC Response Structure', () => {
     const testDbDir = path.dirname(TEST_DB_PATH);
     if (fs.existsSync(testDbDir)) {
       fs.rmSync(testDbDir, { recursive: true });
+    }
+
+    // Clean up test .env file
+    const envPath = path.join(process.cwd(), '.env');
+    if (fs.existsSync(envPath)) {
+      fs.unlinkSync(envPath);
+      console.log('[E2E] Cleaned up test .env file');
     }
   });
 

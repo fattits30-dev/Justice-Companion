@@ -1,8 +1,9 @@
-import { expect, _electron as electron } from '@playwright/test';
-import type { ElectronApplication, Page } from '@playwright/test';
-import fs from 'fs';
-import path from 'path';
-import { cleanupTestDatabase, setupTestDatabase } from './test-database.js';
+import { expect, _electron as electron } from "@playwright/test";
+import type { ElectronApplication, Page } from "@playwright/test";
+import crypto from "crypto";
+import fs from "fs";
+import path from "path";
+import { cleanupTestDatabase, setupTestDatabase } from "./test-database.js";
 
 /**
  * Electron app instance with test database and page
@@ -31,12 +32,11 @@ export async function launchElectronApp(options?: {
   const dbPath = await setupTestDatabase({ seedData });
 
   // Determine electron main file path
-  const electronMainPath = path.join(process.cwd(), 'dist-electron', 'main.js');
-
-  // Check if dist-electron exists, if not use electron directory
-  const mainPath = fs.existsSync(electronMainPath)
-    ? electronMainPath
-    : path.join(process.cwd(), 'electron', 'main.ts');
+  const projectRoot = process.cwd();
+  const compiledMainPath = path.join(projectRoot, "dist-electron", "main.js");
+  const sourceMainPath = path.join(projectRoot, "electron", "main.ts");
+  const useCompiledMain = fs.existsSync(compiledMainPath);
+  const mainPath = useCompiledMain ? compiledMainPath : sourceMainPath;
 
   console.warn(`Launching Electron from: ${mainPath}`);
   console.warn(`Using test database: ${dbPath}`);
@@ -44,20 +44,43 @@ export async function launchElectronApp(options?: {
   try {
     // Launch Electron with Electron 38+ compatibility
     // Playwright needs to add --user-data-dir for Electron 38+ due to Chromium security changes
-    const userDataDir = path.join(process.cwd(), 'test-data', `electron-user-data-${Date.now()}`);
+    const userDataDir = path.join(
+      process.cwd(),
+      "test-data",
+      `electron-user-data-${Date.now()}`
+    );
     fs.mkdirSync(userDataDir, { recursive: true });
 
+    const electronBinary = path.join(
+      projectRoot,
+      "node_modules",
+      ".bin",
+      process.platform === "win32" ? "electron.cmd" : "electron"
+    );
+
+    if (!fs.existsSync(electronBinary)) {
+      throw new Error(
+        `Electron binary not found at ${electronBinary}. Did you run pnpm install?`
+      );
+    }
+
+    const launchArgs = [mainPath, `--user-data-dir=${userDataDir}`];
+
+    const encryptionKey =
+      process.env.ENCRYPTION_KEY_BASE64 ??
+      crypto.randomBytes(32).toString("base64");
+    process.env.ENCRYPTION_KEY_BASE64 = encryptionKey;
+
     const app = await electron.launch({
-      args: [
-        mainPath,
-        `--user-data-dir=${userDataDir}`, // Required for Electron 38+ remote debugging
-      ],
+      executablePath: electronBinary,
+      args: launchArgs,
       env: {
         ...process.env,
-        NODE_ENV: 'test',
+        NODE_ENV: "test",
         JUSTICE_DB_PATH: dbPath,
+        ENCRYPTION_KEY_BASE64: encryptionKey,
         // Disable dev server in test mode
-        VITE_DEV_SERVER_URL: '',
+        VITE_DEV_SERVER_URL: "",
       },
       timeout,
     });
@@ -68,7 +91,7 @@ export async function launchElectronApp(options?: {
     });
 
     // ✅ FIX #1: Capture renderer process console output for debugging
-    window.on('console', msg => {
+    window.on("console", (msg) => {
       const type = msg.type();
       const text = msg.text();
       console.warn(`[Renderer ${type}] ${text}`);
@@ -76,17 +99,17 @@ export async function launchElectronApp(options?: {
 
     // Wait for app to be fully loaded
     // We'll wait for the main content area to be visible
-    await window.waitForLoadState('domcontentloaded', { timeout });
-    await window.waitForSelector('body', { timeout });
+    await window.waitForLoadState("domcontentloaded", { timeout });
+    await window.waitForSelector("body", { timeout });
 
     // Give React time to hydrate
     await window.waitForTimeout(2000);
 
-    console.warn('Electron app launched successfully');
+    console.warn("Electron app launched successfully");
 
     return { app, window, dbPath };
   } catch (error) {
-    console.error('Failed to launch Electron app:', error);
+    console.error("Failed to launch Electron app:", error);
     // Cleanup database on failure
     await cleanupTestDatabase(dbPath);
     throw error;
@@ -96,15 +119,17 @@ export async function launchElectronApp(options?: {
 /**
  * Close Electron app and cleanup test database
  */
-export async function closeElectronApp(testApp: ElectronTestApp): Promise<void> {
+export async function closeElectronApp(
+  testApp: ElectronTestApp
+): Promise<void> {
   const { app, dbPath } = testApp;
 
   try {
     // Close Electron app
     await app.close();
-    console.warn('Electron app closed');
+    console.warn("Electron app closed");
   } catch (error) {
-    console.error('Error closing Electron app:', error);
+    console.error("Error closing Electron app:", error);
   }
 
   // Cleanup test database
@@ -114,8 +139,12 @@ export async function closeElectronApp(testApp: ElectronTestApp): Promise<void> 
 /**
  * Wait for element to be visible and return it
  */
-export async function waitForElement(page: Page, selector: string, timeout = 5000): Promise<void> {
-  await page.waitForSelector(selector, { state: 'visible', timeout });
+export async function waitForElement(
+  page: Page,
+  selector: string,
+  timeout = 5000
+): Promise<void> {
+  await page.waitForSelector(selector, { state: "visible", timeout });
 }
 
 /**
@@ -129,7 +158,10 @@ export async function clickAndWait(
   const { timeout = 5000, waitForNavigation = false } = options || {};
 
   if (waitForNavigation) {
-    await Promise.all([page.waitForNavigation({ timeout }), page.click(selector, { timeout })]);
+    await Promise.all([
+      page.waitForNavigation({ timeout }),
+      page.click(selector, { timeout }),
+    ]);
   } else {
     await page.click(selector, { timeout });
     // Small delay to allow UI to update
@@ -168,7 +200,12 @@ export async function selectOption(
  * Take screenshot for debugging
  */
 export async function takeScreenshot(page: Page, name: string): Promise<void> {
-  const screenshotPath = path.join(process.cwd(), 'test-results', 'screenshots', `${name}.png`);
+  const screenshotPath = path.join(
+    process.cwd(),
+    "test-results",
+    "screenshots",
+    `${name}.png`
+  );
   const screenshotDir = path.dirname(screenshotPath);
 
   // Create screenshots directory if it doesn't exist
@@ -183,16 +220,24 @@ export async function takeScreenshot(page: Page, name: string): Promise<void> {
 /**
  * Get text content of element
  */
-export async function getTextContent(page: Page, selector: string): Promise<string | null> {
+export async function getTextContent(
+  page: Page,
+  selector: string
+): Promise<string | null> {
   const element = await page.$(selector);
-  if (!element) return null;
+  if (!element) {
+    return null;
+  }
   return element.textContent();
 }
 
 /**
  * Check if element exists
  */
-export async function elementExists(page: Page, selector: string): Promise<boolean> {
+export async function elementExists(
+  page: Page,
+  selector: string
+): Promise<boolean> {
   const element = await page.$(selector);
   return element !== null;
 }
@@ -205,7 +250,7 @@ export async function waitForElementToDisappear(
   selector: string,
   timeout = 5000
 ): Promise<void> {
-  await page.waitForSelector(selector, { state: 'hidden', timeout });
+  await page.waitForSelector(selector, { state: "hidden", timeout });
 }
 
 /**
@@ -230,38 +275,55 @@ export async function authenticateTestUser(
     console.warn(`[authenticateTestUser] Waiting for login screen...`);
 
     // ✅ Web-first assertion: Wait for login screen to be visible
-    await expect(page.getByText('Sign In')).toBeVisible({ timeout });
+    await expect(page.getByText("Sign In")).toBeVisible({ timeout });
     console.warn(`[authenticateTestUser] Login screen found`);
 
     // Fill login form
-    console.warn(`[authenticateTestUser] Filling username: ${credentials.username}`);
-    await page.fill('#username', credentials.username);
+    console.warn(
+      `[authenticateTestUser] Filling username: ${credentials.username}`
+    );
+    await page.fill("#username", credentials.username);
 
     console.warn(`[authenticateTestUser] Filling password`);
-    await page.fill('#password', credentials.password);
+    await page.fill("#password", credentials.password);
 
     // ✅ Click login button using role-based selector (more reliable)
     console.warn(`[authenticateTestUser] Clicking Login button`);
-    await page.getByRole('button', { name: 'Login' }).click();
+    await page.getByRole("button", { name: "Login" }).click();
 
     // ✅ Web-first assertion: Wait for post-login element to appear
     // The app shows the Dashboard with "Welcome to Justice Companion" heading after successful login
-    console.warn(`[authenticateTestUser] Waiting for authentication to complete...`);
+    console.warn(
+      `[authenticateTestUser] Waiting for authentication to complete...`
+    );
 
     // Wait for the Dashboard welcome heading (most reliable post-login indicator)
-    await expect(page.getByText('Welcome to Justice Companion')).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText("Welcome to Justice Companion")).toBeVisible({
+      timeout: 15000,
+    });
     console.warn(`[authenticateTestUser] ✅ Dashboard loaded`);
 
-    console.warn(`[authenticateTestUser] ✅ Authenticated as ${credentials.username}`);
+    console.warn(
+      `[authenticateTestUser] ✅ Authenticated as ${credentials.username}`
+    );
   } catch (error) {
-    console.error('[authenticateTestUser] ❌ Failed to authenticate test user:', error);
+    console.error(
+      "[authenticateTestUser] ❌ Failed to authenticate test user:",
+      error
+    );
 
     // Take screenshot for debugging
     try {
       const screenshot = await page.screenshot();
-      console.error('[authenticateTestUser] Screenshot saved (base64 length):', screenshot.length);
+      console.error(
+        "[authenticateTestUser] Screenshot saved (base64 length):",
+        screenshot.length
+      );
     } catch (screenshotError) {
-      console.error('[authenticateTestUser] Failed to take screenshot:', screenshotError);
+      console.error(
+        "[authenticateTestUser] Failed to take screenshot:",
+        screenshotError
+      );
     }
 
     throw error;

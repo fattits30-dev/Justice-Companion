@@ -36,6 +36,9 @@ export interface PaginatedResult<T> {
   /** Total count across all pages (expensive, optional) */
   totalCount?: number;
 
+  /** Number of items returned in current page */
+  totalReturned: number;
+
   /** Cursor for next page (undefined if last page) */
   nextCursor?: string;
 
