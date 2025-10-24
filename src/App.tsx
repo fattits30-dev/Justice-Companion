@@ -24,7 +24,7 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext.tsx";
 import { LoginScreen } from "./components/auth/LoginScreen.tsx";
 import { RegistrationScreen } from "./components/auth/RegistrationScreen.tsx";
 import { MainLayout } from "./components/layouts/MainLayout.tsx";
-import { ToastProvider } from "./components/ui/index.tsx";
+import { ToastProvider } from "./components/ui/index.ts";
 import { SkeletonCard } from "./components/ui/Skeleton.tsx";
 
 // Lazy load views for code splitting
