@@ -145,12 +145,17 @@ export class ConsentRequiredError extends Error {
 
 /** Error thrown when data export/deletion fails */
 export class GdprOperationError extends Error {
+  public readonly operation: 'export' | 'delete';
+  public readonly cause?: Error;
+
   constructor(
     message: string,
-    public readonly operation: 'export' | 'delete',
-    public readonly cause?: Error
+    operation: 'export' | 'delete',
+    cause?: Error
   ) {
     super(message);
     this.name = 'GdprOperationError';
+    this.operation = operation;
+    this.cause = cause;
   }
 }

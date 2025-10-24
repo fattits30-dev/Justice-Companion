@@ -10,10 +10,16 @@ import { EncryptionService } from '../EncryptionService.ts';
 import type { UserDataExport, TableExport, GdprExportOptions } from '../../models/Gdpr.ts';
 
 export class DataExporter {
+  private db: Database.Database;
+  private encryptionService: EncryptionService;
+
   constructor(
-    private db: Database.Database,
-    private encryptionService: EncryptionService
-  ) {}
+    db: Database.Database,
+    encryptionService: EncryptionService
+  ) {
+    this.db = db;
+    this.encryptionService = encryptionService;
+  }
 
   /**
    * Export all user data across 15 tables with decryption

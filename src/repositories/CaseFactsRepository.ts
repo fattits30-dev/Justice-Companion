@@ -13,10 +13,16 @@ import { EncryptionService, type EncryptedData } from '../services/EncryptionSer
  * - Backward compatibility with legacy plaintext facts
  */
 export class CaseFactsRepository {
+  private encryptionService: EncryptionService;
+  private auditLogger?: AuditLogger;
+
   constructor(
-    private encryptionService: EncryptionService,
-    private auditLogger?: AuditLogger,
-  ) {}
+    encryptionService: EncryptionService,
+    auditLogger?: AuditLogger,
+  ) {
+    this.encryptionService = encryptionService;
+    this.auditLogger = auditLogger;
+  }
 
   /**
    * Create a new case fact

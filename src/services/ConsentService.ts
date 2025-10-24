@@ -20,11 +20,16 @@ import type { ConsentType, Consent } from '../models/Consent.ts';
  */
 export class ConsentService {
   private readonly CURRENT_PRIVACY_VERSION = '1.0';
+  private consentRepository: ConsentRepository;
+  private auditLogger?: AuditLogger;
 
   constructor(
-    private consentRepository: ConsentRepository,
-    private auditLogger?: AuditLogger,
-  ) {}
+    consentRepository: ConsentRepository,
+    auditLogger?: AuditLogger,
+  ) {
+    this.consentRepository = consentRepository;
+    this.auditLogger = auditLogger;
+  }
 
   /**
    * Grant consent for specific type
