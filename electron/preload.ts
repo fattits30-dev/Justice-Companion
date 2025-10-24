@@ -371,6 +371,24 @@ const justiceAPI = {
   createEvidence: () => Promise.reject(new Error('Not implemented')),
   deleteConversation: () => Promise.reject(new Error('Not implemented')),
   downloadFile: () => Promise.reject(new Error('Not implemented')),
+  secureStorageSet: async (key: string, value: string) =>
+    ipcRenderer.invoke('secure-storage:set', key, value),
+  secureStorageGet: async (key: string) => {
+    const response = await ipcRenderer.invoke('secure-storage:get', key);
+    if (!response.success) {
+      return { success: false, error: response.error };
+    }
+    return { success: true, data: response.data?.value ?? null };
+  },
+  secureStorageDelete: async (key: string) =>
+    ipcRenderer.invoke('secure-storage:delete', key),
+  secureStorageHas: async (key: string) => {
+    const response = await ipcRenderer.invoke('secure-storage:get', key);
+    if (!response.success) {
+      return { success: false, error: response.error };
+    }
+    return { success: true, data: response.data?.value != null };
+  },
   // Return empty conversations list (chat history feature pending)
   getAllConversations: async () => ({
     success: true,

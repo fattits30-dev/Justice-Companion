@@ -24,6 +24,13 @@ import { EvidenceRepository } from '../src/repositories/EvidenceRepository.ts';
 import { AuditLogger } from '../src/services/AuditLogger.ts';
 import { AuthenticationService } from '../src/services/AuthenticationService.ts';
 import { GroqService } from '../src/services/GroqService.ts';
+import { caseService } from '../src/services/CaseService.ts';
+import * as caseSchemas from '../src/middleware/schemas/case-schemas.ts';
+import * as evidenceSchemas from '../src/middleware/schemas/evidence-schemas.ts';
+import { getRepositories } from '../src/repositories.ts';
+import { GdprService } from '../src/services/gdpr/GdprService.ts';
+import { EncryptionService } from '../src/services/EncryptionService.ts';
+import { getKeyManager } from './main.ts';
 
 // ESM equivalent of __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -368,18 +375,6 @@ function setupDashboardHandlers(): void {
  * ===== CASE MANAGEMENT HANDLERS =====
  */
 function setupCaseHandlers(): void {
-  // Lazy-load services
-  const getCaseService = () => {
-    // Use absolute paths to prevent path traversal (CVSS 8.8 fix)
-    const { caseService } = require(path.join(__dirname, '../src/features/cases/services/CaseService'));
-    return caseService;
-  };
-
-  const getCaseSchemas = () => {
-    // Use absolute paths to prevent path traversal (CVSS 8.8 fix)
-    return require(path.join(__dirname, '../src/middleware/schemas/case-schemas'));
-  };
-
   // Create new case
   ipcMain.handle(
     'case:create',
@@ -389,8 +384,7 @@ function setupCaseHandlers(): void {
           console.warn('[IPC] case:create called by user:', userId);
 
           // Validate input with Zod (schema expects { input: { ...fields } })
-          const schemas = getCaseSchemas();
-          const validatedData = schemas.caseCreateSchema.parse({ input: data });
+          const validatedData = caseSchemas.caseCreateSchema.parse({ input: data });
 
           // Add userId to the case data
           const caseData = {
@@ -399,7 +393,6 @@ function setupCaseHandlers(): void {
           };
 
           // Call CaseService.createCase()
-          const caseService = getCaseService();
           const result = caseService.createCase(caseData);
 
           // Log audit event
@@ -445,7 +438,6 @@ function setupCaseHandlers(): void {
         console.warn('[IPC] case:list called by user:', userId);
 
         // Get only cases belonging to the authenticated user
-        const caseService = getCaseService();
         const allCases = caseService.getAllCases();
 
         // Filter cases by userId
@@ -469,15 +461,13 @@ function setupCaseHandlers(): void {
           console.warn('[IPC] case:get called by user:', userId, 'for case:', id);
 
           // Validate ID with Zod
-          const schemas = getCaseSchemas();
-          const validatedData = schemas.caseGetByIdSchema.parse({ id });
+          const validatedData = caseSchemas.caseGetByIdSchema.parse({ id });
 
           // Verify user owns this case
           const authMiddleware = getAuthorizationMiddleware();
           authMiddleware.verifyCaseOwnership(validatedData.id, userId);
 
           // Call CaseService.getCaseById()
-          const caseService = getCaseService();
           const caseData = caseService.getCaseById(validatedData.id);
 
           if (!caseData) {
@@ -513,15 +503,13 @@ function setupCaseHandlers(): void {
           console.warn('[IPC] case:update called by user:', userId, 'for case:', id);
 
           // Validate input with Zod (schema expects { id, input: { ...fields } })
-          const schemas = getCaseSchemas();
-          const validatedData = schemas.caseUpdateSchema.parse({ id, input: data });
+          const validatedData = caseSchemas.caseUpdateSchema.parse({ id, input: data });
 
           // Verify user owns this case before update
           const authMiddleware = getAuthorizationMiddleware();
           authMiddleware.verifyCaseOwnership(validatedData.id, userId);
 
           // Call CaseService.updateCase()
-          const caseService = getCaseService();
           const result = caseService.updateCase(validatedData.id, validatedData.input);
 
           if (!result) {
@@ -572,15 +560,13 @@ function setupCaseHandlers(): void {
           console.warn('[IPC] case:delete called by user:', userId, 'for case:', id);
 
           // Validate ID with Zod
-          const schemas = getCaseSchemas();
-          const validatedData = schemas.caseDeleteSchema.parse({ id });
+          const validatedData = caseSchemas.caseDeleteSchema.parse({ id });
 
           // Verify user owns this case before deletion
           const authMiddleware = getAuthorizationMiddleware();
           authMiddleware.verifyCaseOwnership(validatedData.id, userId);
 
           // Call CaseService.deleteCase()
-          const caseService = getCaseService();
           const deleted = caseService.deleteCase(validatedData.id);
 
           if (!deleted) {
@@ -624,17 +610,7 @@ function setupCaseHandlers(): void {
  * ===== EVIDENCE HANDLERS =====
  */
 function setupEvidenceHandlers(): void {
-  // Lazy-load repository
-  const getEvidenceRepository = () => {
-    // Use absolute paths to prevent path traversal (CVSS 8.8 fix)
-    const { evidenceRepository } = require(path.join(__dirname, '../src/repositories/EvidenceRepository'));
-    return evidenceRepository;
-  };
-
-  const getEvidenceSchemas = () => {
-    // Use absolute paths to prevent path traversal (CVSS 8.8 fix)
-    return require(path.join(__dirname, '../src/middleware/schemas/evidence-schemas'));
-  };
+  const getEvidenceRepository = () => getRepositories().evidenceRepository;
 
   // Upload/create evidence
   ipcMain.handle(
@@ -645,7 +621,7 @@ function setupEvidenceHandlers(): void {
           console.warn('[IPC] evidence:upload called by user:', userId, 'for case:', caseId);
 
           // Validate input with Zod (schema expects { input: { caseId, ...fields } })
-          const schemas = getEvidenceSchemas();
+          const schemas = evidenceSchemas;
           const inputData = { caseId, ...(data as Record<string, unknown>) };
           const validatedData = schemas.evidenceCreateSchema.parse({
             input: inputData,
@@ -708,7 +684,7 @@ function setupEvidenceHandlers(): void {
           console.warn('[IPC] evidence:list called by user:', userId, 'for case:', caseId);
 
           // Validate caseId
-          const schemas = getEvidenceSchemas();
+          const schemas = evidenceSchemas;
           const validatedData = schemas.evidenceGetByCaseSchema.parse({ caseId });
 
           // Verify user owns the case
@@ -738,7 +714,7 @@ function setupEvidenceHandlers(): void {
           console.warn('[IPC] evidence:delete called by user:', userId, 'for evidence:', id);
 
           // Validate ID
-          const schemas = getEvidenceSchemas();
+          const schemas = evidenceSchemas;
           const validatedData = schemas.evidenceDeleteSchema.parse({ id });
 
           // Verify user owns the case this evidence belongs to
@@ -1149,13 +1125,6 @@ function setupDatabaseHandlers(): void {
 function setupGdprHandlers(): void {
   // Lazy-load GDPR service to avoid circular dependencies
   const getGdprService = () => {
-    // Use absolute paths to prevent path traversal (CVSS 8.8 fix)
-    const { GdprService } = require(path.join(__dirname, '../src/services/gdpr/GdprService'));
-    const { EncryptionService } = require(path.join(__dirname, '../src/services/EncryptionService'));
-    const { AuditLogger } = require(path.join(__dirname, '../src/services/AuditLogger'));
-    const { getDb } = require(path.join(__dirname, '../src/db/database'));
-    const { getKeyManager } = require(path.join(__dirname, 'main'));
-
     const db = getDb();
     const keyManager = getKeyManager();
     const encryptionKey = keyManager.getKey();

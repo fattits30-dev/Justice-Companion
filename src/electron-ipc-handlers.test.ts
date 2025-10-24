@@ -17,7 +17,7 @@
  
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { IPC_CHANNELS } from '../src/types/ipc';
+import { IPC_CHANNELS } from '../src/types/ipc.ts';
 import type {
   CaseCreateRequest,
   CaseGetByIdRequest,
@@ -73,6 +73,10 @@ const mockCaseService = {
   deleteCase: vi.fn(),
   closeCase: vi.fn(),
 };
+
+vi.mock('../src/services/CaseService.ts', () => ({
+  caseService: mockCaseService,
+}));
 
 const mockCaseRepository = {
   findById: vi.fn(),

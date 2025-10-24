@@ -14,10 +14,16 @@ import { errorLogger } from '../utils/error-logger.ts';
  * - Backward compatibility with legacy plaintext data
  */
 export class UserProfileRepository {
+  private encryptionService: EncryptionService;
+  private auditLogger?: AuditLogger;
+
   constructor(
-    private encryptionService: EncryptionService,
-    private auditLogger?: AuditLogger,
-  ) {}
+    encryptionService: EncryptionService,
+    auditLogger?: AuditLogger,
+  ) {
+    this.encryptionService = encryptionService;
+    this.auditLogger = auditLogger;
+  }
 
   /**
    * Get the user profile (always ID = 1)

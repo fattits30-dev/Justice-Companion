@@ -115,7 +115,12 @@ beforeEach(() => {
       data: []
     }),
 
-    // SecureStorage
+    // SecureStorage (flat helpers used by SettingsView)
+    secureStorageSet: vi.fn().mockResolvedValue({ success: true }),
+    secureStorageGet: vi.fn().mockResolvedValue({ success: true, data: null }),
+    secureStorageDelete: vi.fn().mockResolvedValue({ success: true }),
+    secureStorageHas: vi.fn().mockResolvedValue({ success: true, data: false }),
+    // SecureStorage (nested)
     secureStorage: {
       isEncryptionAvailable: vi.fn().mockResolvedValue(true),
       set: vi.fn().mockResolvedValue(true),
