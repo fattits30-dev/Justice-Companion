@@ -48,12 +48,22 @@ export interface IRepository<T> {
  * ```
  */
 export abstract class BaseRepository<T> implements IRepository<T> {
+  protected db: Database.Database;
+  protected encryptionService: EncryptionService;
+  protected auditLogger?: AuditLogger;
+  protected cache?: DecryptionCache;
+
   constructor(
-    protected db: Database.Database,
-    protected encryptionService: EncryptionService,
-    protected auditLogger?: AuditLogger,
-    protected cache?: DecryptionCache,
-  ) {}
+    db: Database.Database,
+    encryptionService: EncryptionService,
+    auditLogger?: AuditLogger,
+    cache?: DecryptionCache,
+  ) {
+    this.db = db;
+    this.encryptionService = encryptionService;
+    this.auditLogger = auditLogger;
+    this.cache = cache;
+  }
 
   /**
    * Abstract method: Define table name
