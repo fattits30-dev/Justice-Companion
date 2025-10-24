@@ -93,8 +93,8 @@ export function LoginScreen({ onSuccess, onRegisterClick }: LoginScreenProps) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-900">
-      <div className="w-full max-w-md p-8 space-y-6 bg-gray-800 rounded-lg shadow-xl">
+    <div className="min-h-screen flex items-center justify-center bg-primary-900">
+      <div className="w-full max-w-md p-8 space-y-6 bg-primary-800 rounded-lg shadow-xl">
         <div>
           <h2 className="text-3xl font-bold text-center text-white">Sign In</h2>
           <p className="mt-2 text-center text-gray-400">
@@ -124,7 +124,7 @@ export function LoginScreen({ onSuccess, onRegisterClick }: LoginScreenProps) {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               disabled={isLoading}
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full px-3 py-2 bg-primary-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
               placeholder="Enter your username"
             />
             {validationErrors.username && (
@@ -149,7 +149,7 @@ export function LoginScreen({ onSuccess, onRegisterClick }: LoginScreenProps) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isLoading}
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed pr-10"
+                className="w-full px-3 py-2 bg-primary-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed pr-10"
                 placeholder="Enter your password"
               />
               <button
@@ -210,7 +210,7 @@ export function LoginScreen({ onSuccess, onRegisterClick }: LoginScreenProps) {
               checked={rememberMe}
               onChange={(e) => setRememberMe(e.target.checked)}
               disabled={isLoading}
-              className="w-4 h-4 text-primary-600 bg-gray-700 border-gray-600 rounded focus:ring-primary-500 focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-4 h-4 text-primary-600 bg-primary-700 border-gray-600 rounded focus:ring-primary-500 focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
             />
             <label htmlFor="remember-me" className="ml-2 text-sm text-gray-300">
               Remember me
@@ -221,7 +221,7 @@ export function LoginScreen({ onSuccess, onRegisterClick }: LoginScreenProps) {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="w-full px-4 py-2 text-sm font-medium text-white bg-secondary-600 rounded-md hover:bg-secondary-700 focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:ring-offset-2 focus:ring-offset-primary-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {isLoading ? "Logging in..." : "Sign In"}
           </button>

@@ -1,41 +1,41 @@
-import { HTMLAttributes, forwardRef } from 'react';
-import { clsx } from 'clsx';
+import { HTMLAttributes, forwardRef } from "react";
+import { clsx } from "clsx";
 
 export interface SkeletonProps extends HTMLAttributes<HTMLDivElement> {
-  variant?: 'text' | 'circular' | 'rectangular' | 'rounded';
+  variant?: "text" | "circular" | "rectangular" | "rounded";
   width?: string | number;
   height?: string | number;
   count?: number;
-  animation?: 'pulse' | 'shimmer' | 'none';
+  animation?: "pulse" | "shimmer" | "none";
 }
 
 export const Skeleton = forwardRef<HTMLDivElement, SkeletonProps>(
   (
     {
-      variant = 'rectangular',
+      variant = "rectangular",
       width,
       height,
       count = 1,
-      animation = 'shimmer',
+      animation = "shimmer",
       className,
       style,
       ...props
     },
-    ref
+    ref,
   ) => {
     // Variant styles
     const variantStyles = {
-      text: 'h-4 rounded',
-      circular: 'rounded-full',
-      rectangular: 'rounded-none',
-      rounded: 'rounded-lg'
+      text: "h-4 rounded",
+      circular: "rounded-full",
+      rectangular: "rounded-none",
+      rounded: "rounded-lg",
     };
 
     // Animation styles
     const animationStyles = {
-      pulse: 'animate-pulse',
-      shimmer: 'relative overflow-hidden',
-      none: ''
+      pulse: "animate-pulse",
+      shimmer: "relative overflow-hidden",
+      none: "",
     };
 
     const skeletonElement = (
@@ -43,29 +43,29 @@ export const Skeleton = forwardRef<HTMLDivElement, SkeletonProps>(
         ref={count === 1 ? ref : undefined}
         className={clsx(
           // Base styles
-          'bg-gradient-to-r from-gray-800/50 via-gray-700/50 to-gray-800/50',
+          "bg-gradient-to-r from-gray-800/50 via-gray-700/50 to-gray-800/50",
           // Variant
           variantStyles[variant],
           // Animation
           animationStyles[animation],
           // Custom
-          className
+          className,
         )}
         style={{
-          width: width || (variant === 'text' ? '100%' : undefined),
+          width: width || (variant === "text" ? "100%" : undefined),
           height:
             height ||
-            (variant === 'text'
-              ? '1rem'
-              : variant === 'circular'
-              ? width || '3rem'
-              : undefined),
-          ...style
+            (variant === "text"
+              ? "1rem"
+              : variant === "circular"
+                ? width || "3rem"
+                : undefined),
+          ...style,
         }}
         {...props}
       >
         {/* Shimmer effect */}
-        {animation === 'shimmer' && (
+        {animation === "shimmer" && (
           <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/5 to-transparent" />
         )}
       </div>
@@ -83,10 +83,10 @@ export const Skeleton = forwardRef<HTMLDivElement, SkeletonProps>(
     }
 
     return skeletonElement;
-  }
+  },
 );
 
-Skeleton.displayName = 'Skeleton';
+Skeleton.displayName = "Skeleton";
 
 // Preset skeleton components
 
@@ -96,34 +96,34 @@ export interface SkeletonTextProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 export const SkeletonText = forwardRef<HTMLDivElement, SkeletonTextProps>(
-  ({ lines = 3, lastLineWidth = '60%', className, ...props }, ref) => {
+  ({ lines = 3, lastLineWidth = "60%", className, ...props }, ref) => {
     return (
-      <div ref={ref} className={clsx('space-y-2', className)} {...props}>
+      <div ref={ref} className={clsx("space-y-2", className)} {...props}>
         {Array.from({ length: lines }).map((_, i) => (
           <Skeleton
             key={i}
             variant="text"
-            width={i === lines - 1 ? lastLineWidth : '100%'}
+            width={i === lines - 1 ? lastLineWidth : "100%"}
           />
         ))}
       </div>
     );
-  }
+  },
 );
 
-SkeletonText.displayName = 'SkeletonText';
+SkeletonText.displayName = "SkeletonText";
 
 export interface SkeletonAvatarProps extends HTMLAttributes<HTMLDivElement> {
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: "sm" | "md" | "lg" | "xl";
 }
 
 export const SkeletonAvatar = forwardRef<HTMLDivElement, SkeletonAvatarProps>(
-  ({ size = 'md', className, ...props }, ref) => {
+  ({ size = "md", className, ...props }, ref) => {
     const sizeMap = {
-      sm: 'w-8 h-8',
-      md: 'w-10 h-10',
-      lg: 'w-12 h-12',
-      xl: 'w-16 h-16'
+      sm: "w-8 h-8",
+      md: "w-10 h-10",
+      lg: "w-12 h-12",
+      xl: "w-16 h-16",
     };
 
     return (
@@ -134,10 +134,10 @@ export const SkeletonAvatar = forwardRef<HTMLDivElement, SkeletonAvatarProps>(
         {...props}
       />
     );
-  }
+  },
 );
 
-SkeletonAvatar.displayName = 'SkeletonAvatar';
+SkeletonAvatar.displayName = "SkeletonAvatar";
 
 export interface SkeletonCardProps extends HTMLAttributes<HTMLDivElement> {
   showAvatar?: boolean;
@@ -150,8 +150,8 @@ export const SkeletonCard = forwardRef<HTMLDivElement, SkeletonCardProps>(
       <div
         ref={ref}
         className={clsx(
-          'p-6 rounded-xl border border-gray-800 bg-gray-900/60',
-          className
+          "p-6 rounded-xl border border-gray-800 bg-primary-900/60",
+          className,
         )}
         {...props}
       >
@@ -179,10 +179,10 @@ export const SkeletonCard = forwardRef<HTMLDivElement, SkeletonCardProps>(
         </div>
       </div>
     );
-  }
+  },
 );
 
-SkeletonCard.displayName = 'SkeletonCard';
+SkeletonCard.displayName = "SkeletonCard";
 
 export interface SkeletonListProps extends HTMLAttributes<HTMLDivElement> {
   items?: number;
@@ -192,7 +192,7 @@ export interface SkeletonListProps extends HTMLAttributes<HTMLDivElement> {
 export const SkeletonList = forwardRef<HTMLDivElement, SkeletonListProps>(
   ({ items = 3, showAvatar = false, className, ...props }, ref) => {
     return (
-      <div ref={ref} className={clsx('space-y-3', className)} {...props}>
+      <div ref={ref} className={clsx("space-y-3", className)} {...props}>
         {Array.from({ length: items }).map((_, i) => (
           <div key={i} className="flex items-center gap-3">
             {showAvatar && <SkeletonAvatar size="md" />}
@@ -204,10 +204,10 @@ export const SkeletonList = forwardRef<HTMLDivElement, SkeletonListProps>(
         ))}
       </div>
     );
-  }
+  },
 );
 
-SkeletonList.displayName = 'SkeletonList';
+SkeletonList.displayName = "SkeletonList";
 
 // Example usage:
 // <Skeleton variant="rectangular" width="100%" height="200px" />

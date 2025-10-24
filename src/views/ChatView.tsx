@@ -120,9 +120,9 @@ export function ChatView() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-900 text-white">
+    <div className="flex flex-col h-screen bg-primary-900 text-white">
       {/* Header with BIG legal disclaimer */}
-      <div className="flex-shrink-0 border-b border-gray-700 bg-gray-800">
+      <div className="flex-shrink-0 border-b border-gray-700 bg-primary-800">
         <div className="p-6">
           <h1 className="text-3xl font-bold mb-3">AI Legal Assistant</h1>
           <div className="bg-amber-900/30 border-l-4 border-amber-500 rounded-lg p-4">
@@ -188,7 +188,7 @@ export function ChatView() {
                 onClick={() =>
                   setInput("What are my rights if I'm being bullied at work?")
                 }
-                className="p-4 bg-gray-800 hover:bg-gray-750 border border-gray-700 rounded-lg transition-colors text-left"
+                className="p-4 bg-primary-800 hover:bg-gray-750 border border-gray-700 rounded-lg transition-colors text-left"
               >
                 <p className="font-medium mb-1">Workplace Rights</p>
                 <p className="text-sm text-gray-400">
@@ -202,7 +202,7 @@ export function ChatView() {
                     "How do I gather evidence for an unfair dismissal claim?",
                   )
                 }
-                className="p-4 bg-gray-800 hover:bg-gray-750 border border-gray-700 rounded-lg transition-colors text-left"
+                className="p-4 bg-primary-800 hover:bg-gray-750 border border-gray-700 rounded-lg transition-colors text-left"
               >
                 <p className="font-medium mb-1">Building Your Case</p>
                 <p className="text-sm text-gray-400">
@@ -212,7 +212,7 @@ export function ChatView() {
 
               <button
                 onClick={() => setInput("What is constructive dismissal?")}
-                className="p-4 bg-gray-800 hover:bg-gray-750 border border-gray-700 rounded-lg transition-colors text-left"
+                className="p-4 bg-primary-800 hover:bg-gray-750 border border-gray-700 rounded-lg transition-colors text-left"
               >
                 <p className="font-medium mb-1">Legal Concepts</p>
                 <p className="text-sm text-gray-400">
@@ -226,7 +226,7 @@ export function ChatView() {
                     "What should I do if I'm being discriminated against?",
                   )
                 }
-                className="p-4 bg-gray-800 hover:bg-gray-750 border border-gray-700 rounded-lg transition-colors text-left"
+                className="p-4 bg-primary-800 hover:bg-gray-750 border border-gray-700 rounded-lg transition-colors text-left"
               >
                 <p className="font-medium mb-1">Discrimination</p>
                 <p className="text-sm text-gray-400">
@@ -246,7 +246,7 @@ export function ChatView() {
               className={`max-w-3xl ${
                 message.role === "user"
                   ? "bg-primary-600 text-white rounded-2xl rounded-tr-sm"
-                  : "bg-gray-800 border border-gray-700 rounded-2xl rounded-tl-sm"
+                  : "bg-primary-800 border border-gray-700 rounded-2xl rounded-tl-sm"
               } p-4`}
             >
               {message.role === "assistant" && (
@@ -277,7 +277,7 @@ export function ChatView() {
                   <summary className="cursor-pointer text-gray-400 hover:text-gray-300">
                     View AI reasoning process
                   </summary>
-                  <div className="mt-2 p-3 bg-gray-900/50 rounded border border-gray-700">
+                  <div className="mt-2 p-3 bg-primary-900/50 rounded border border-gray-700">
                     <p className="text-gray-400 whitespace-pre-wrap">
                       {message.thinking}
                     </p>
@@ -295,7 +295,7 @@ export function ChatView() {
         {/* Streaming message */}
         {isStreaming && currentStreamingMessage && (
           <div className="flex justify-start">
-            <div className="max-w-3xl bg-gray-800 border border-gray-700 rounded-2xl rounded-tl-sm p-4">
+            <div className="max-w-3xl bg-primary-800 border border-gray-700 rounded-2xl rounded-tl-sm p-4">
               <div className="flex items-center gap-2 mb-2 text-sm text-gray-400">
                 <svg
                   className="w-4 h-4 animate-pulse"
@@ -327,7 +327,7 @@ export function ChatView() {
       </div>
 
       {/* Input area */}
-      <div className="flex-shrink-0 border-t border-gray-700 bg-gray-800 p-6">
+      <div className="flex-shrink-0 border-t border-gray-700 bg-primary-800 p-6">
         <div className="max-w-4xl mx-auto">
           <div className="flex gap-3">
             <textarea
@@ -337,13 +337,13 @@ export function ChatView() {
               onKeyDown={handleKeyDown}
               placeholder="Ask me anything about UK employment law..."
               disabled={isStreaming}
-              className="flex-1 bg-gray-900 border border-gray-700 rounded-lg p-3 text-white placeholder-gray-500 focus:outline-none focus:border-primary-500 resize-none"
+              className="flex-1 bg-primary-900 border border-gray-700 rounded-lg p-3 text-white placeholder-gray-500 focus:outline-none focus:border-primary-500 resize-none"
               rows={3}
             />
             <button
               onClick={handleSend}
               disabled={!input.trim() || isStreaming}
-              className="px-6 bg-primary-600 hover:bg-primary-700 disabled:bg-gray-700 disabled:cursor-not-allowed rounded-lg font-medium transition-colors"
+              className="px-6 bg-primary-600 hover:bg-primary-700 disabled:bg-primary-700 disabled:cursor-not-allowed rounded-lg font-medium transition-colors"
             >
               {isStreaming ? (
                 <svg

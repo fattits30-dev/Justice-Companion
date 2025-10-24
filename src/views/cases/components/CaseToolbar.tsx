@@ -32,7 +32,7 @@ export function CaseToolbar({
             onChange={(event) =>
               onStatusChange(event.target.value as CaseStatus | "all")
             }
-            className="min-w-[150px] rounded-lg border border-gray-700 bg-gray-900 px-4 py-2 text-white focus:border-primary-500 focus:outline-none"
+            className="min-w-[150px] rounded-lg border border-gray-700 bg-primary-900 px-4 py-2 text-white focus:border-primary-500 focus:outline-none"
           >
             {statusFilterOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -48,7 +48,7 @@ export function CaseToolbar({
             onChange={(event) =>
               onTypeChange(event.target.value as CaseType | "all")
             }
-            className="min-w-[160px] rounded-lg border border-gray-700 bg-gray-900 px-4 py-2 text-white focus:border-primary-500 focus:outline-none"
+            className="min-w-[160px] rounded-lg border border-gray-700 bg-primary-900 px-4 py-2 text-white focus:border-primary-500 focus:outline-none"
           >
             {typeFilterOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -59,7 +59,7 @@ export function CaseToolbar({
         </label>
         <Button
           onClick={onCreateCase}
-          variant="primary"
+          variant="secondary"
           size="md"
           icon={<Plus />}
           iconPosition="left"

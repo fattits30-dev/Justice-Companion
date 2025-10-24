@@ -1,11 +1,8 @@
-import { useEffect, useState, useCallback } from 'react';
-import { Command } from 'cmdk';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Search,
-  ChevronRight
-} from 'lucide-react';
-import { clsx } from 'clsx';
+import { useEffect, useState, useCallback } from "react";
+import { Command } from "cmdk";
+import { motion, AnimatePresence } from "framer-motion";
+import { Search, ChevronRight } from "lucide-react";
+import { clsx } from "clsx";
 
 export interface CommandItem {
   id: string;
@@ -31,12 +28,12 @@ export function CommandPalette({
   items,
   open: controlledOpen,
   onOpenChange,
-  placeholder = 'Search or type a command...',
-  emptyMessage = 'No results found.',
-  recentItems = []
+  placeholder = "Search or type a command...",
+  emptyMessage = "No results found.",
+  recentItems = [],
 }: CommandPaletteProps) {
   const [internalOpen, setInternalOpen] = useState(false);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
 
   const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
   const setOpen = onOpenChange || setInternalOpen;
@@ -44,37 +41,42 @@ export function CommandPalette({
   // Keyboard shortcut (Cmd+K / Ctrl+K)
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
-      if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
+      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         if (onOpenChange) {
           onOpenChange(!open);
         } else {
-          setInternalOpen(prev => !prev);
+          setInternalOpen((prev) => !prev);
         }
       }
     };
 
-    document.addEventListener('keydown', down);
-    return () => document.removeEventListener('keydown', down);
+    document.addEventListener("keydown", down);
+    return () => document.removeEventListener("keydown", down);
   }, [open, onOpenChange]);
 
   // Group items
-  const groupedItems = items.reduce((acc, item) => {
-    const group = item.group || 'Other';
-    if (!acc[group]) acc[group] = [];
-    acc[group].push(item);
-    return acc;
-  }, {} as Record<string, CommandItem[]>);
+  const groupedItems = items.reduce(
+    (acc, item) => {
+      const group = item.group || "Other";
+      if (!acc[group]) {
+        acc[group] = [];
+      }
+      acc[group].push(item);
+      return acc;
+    },
+    {} as Record<string, CommandItem[]>,
+  );
 
   // Close on escape
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         e.preventDefault();
         setOpen(false);
       }
     },
-    [setOpen]
+    [setOpen],
   );
 
   return (
@@ -97,15 +99,15 @@ export function CommandPalette({
               initial={{ opacity: 0, scale: 0.95, y: -20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -20 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
               className="w-full max-w-2xl"
               onClick={(e) => e.stopPropagation()}
             >
               <Command
                 className={clsx(
-                  'rounded-xl border border-gray-700 shadow-glass-lg',
-                  'bg-gray-900/95 backdrop-blur-xl',
-                  'overflow-hidden'
+                  "rounded-xl border border-gray-700 shadow-glass-lg",
+                  "bg-primary-900/95 backdrop-blur-xl",
+                  "overflow-hidden",
                 )}
                 onKeyDown={handleKeyDown}
               >
@@ -117,12 +119,12 @@ export function CommandPalette({
                     onValueChange={setSearch}
                     placeholder={placeholder}
                     className={clsx(
-                      'flex-1 py-4 bg-transparent',
-                      'text-white placeholder:text-gray-500',
-                      'outline-none'
+                      "flex-1 py-4 bg-transparent",
+                      "text-white placeholder:text-gray-500",
+                      "outline-none",
                     )}
                   />
-                  <kbd className="hidden sm:inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-gray-400 bg-gray-800 rounded border border-gray-700">
+                  <kbd className="hidden sm:inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-gray-400 bg-primary-800 rounded border border-gray-700">
                     ESC
                   </kbd>
                 </div>
@@ -140,10 +142,14 @@ export function CommandPalette({
                       className="mb-2 px-2 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider"
                     >
                       {recentItems.map((item) => (
-                        <CommandItemComponent key={item.id} item={item} onSelect={() => {
-                          item.onSelect();
-                          setOpen(false);
-                        }} />
+                        <CommandItemComponent
+                          key={item.id}
+                          item={item}
+                          onSelect={() => {
+                            item.onSelect();
+                            setOpen(false);
+                          }}
+                        />
                       ))}
                     </Command.Group>
                   )}
@@ -156,10 +162,14 @@ export function CommandPalette({
                       className="mb-2 px-2 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider"
                     >
                       {items.map((item) => (
-                        <CommandItemComponent key={item.id} item={item} onSelect={() => {
-                          item.onSelect();
-                          setOpen(false);
-                        }} />
+                        <CommandItemComponent
+                          key={item.id}
+                          item={item}
+                          onSelect={() => {
+                            item.onSelect();
+                            setOpen(false);
+                          }}
+                        />
                       ))}
                     </Command.Group>
                   ))}
@@ -167,15 +177,15 @@ export function CommandPalette({
 
                 {/* Footer */}
                 <div className="flex items-center gap-2 px-4 py-2 border-t border-gray-800 text-xs text-gray-500">
-                  <kbd className="px-1.5 py-0.5 bg-gray-800 rounded border border-gray-700">
+                  <kbd className="px-1.5 py-0.5 bg-primary-800 rounded border border-gray-700">
                     ↑↓
                   </kbd>
                   <span>Navigate</span>
-                  <kbd className="px-1.5 py-0.5 bg-gray-800 rounded border border-gray-700 ml-2">
+                  <kbd className="px-1.5 py-0.5 bg-primary-800 rounded border border-gray-700 ml-2">
                     ↵
                   </kbd>
                   <span>Select</span>
-                  <kbd className="px-1.5 py-0.5 bg-gray-800 rounded border border-gray-700 ml-2">
+                  <kbd className="px-1.5 py-0.5 bg-primary-800 rounded border border-gray-700 ml-2">
                     ESC
                   </kbd>
                   <span>Close</span>
@@ -198,21 +208,19 @@ interface CommandItemComponentProps {
 function CommandItemComponent({ item, onSelect }: CommandItemComponentProps) {
   return (
     <Command.Item
-      value={`${item.label} ${item.description || ''} ${item.keywords?.join(' ') || ''}`}
+      value={`${item.label} ${item.description || ""} ${item.keywords?.join(" ") || ""}`}
       onSelect={onSelect}
       className={clsx(
-        'flex items-center gap-3 px-3 py-2.5 rounded-lg',
-        'cursor-pointer transition-colors',
-        'data-[selected=true]:bg-primary-500/10',
-        'data-[selected=true]:text-white',
-        'text-gray-300'
+        "flex items-center gap-3 px-3 py-2.5 rounded-lg",
+        "cursor-pointer transition-colors",
+        "data-[selected=true]:bg-primary-500/10",
+        "data-[selected=true]:text-white",
+        "text-gray-300",
       )}
     >
       {/* Icon */}
       {item.icon && (
-        <span className="flex-shrink-0 w-5 h-5 text-gray-400">
-          {item.icon}
-        </span>
+        <span className="flex-shrink-0 w-5 h-5 text-gray-400">{item.icon}</span>
       )}
 
       {/* Content */}
@@ -227,7 +235,7 @@ function CommandItemComponent({ item, onSelect }: CommandItemComponentProps) {
 
       {/* Shortcut */}
       {item.shortcut && (
-        <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-xs font-mono text-gray-400 bg-gray-800 rounded border border-gray-700">
+        <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-xs font-mono text-gray-400 bg-primary-800 rounded border border-gray-700">
           {item.shortcut}
         </kbd>
       )}

@@ -39,7 +39,7 @@ export function DocumentsToolbar({
               const value = event.target.value;
               onCaseSelect(value ? Number(value) : null);
             }}
-            className="min-w-[200px] rounded-lg border border-gray-700 bg-gray-900 px-4 py-2 text-white focus:border-primary-500 focus:outline-none"
+            className="min-w-[200px] rounded-lg border border-gray-700 bg-primary-900 px-4 py-2 text-white focus:border-primary-500 focus:outline-none"
           >
             <option value="">Select a case</option>
             {cases.map((caseItem) => (
@@ -57,7 +57,7 @@ export function DocumentsToolbar({
             onChange={(event) =>
               onFilterChange(event.target.value as EvidenceType | "all")
             }
-            className="min-w-[160px] rounded-lg border border-gray-700 bg-gray-900 px-4 py-2 text-white focus:border-primary-500 focus:outline-none"
+            className="min-w-[160px] rounded-lg border border-gray-700 bg-primary-900 px-4 py-2 text-white focus:border-primary-500 focus:outline-none"
           >
             {evidenceFilterOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -69,7 +69,7 @@ export function DocumentsToolbar({
 
         <Button
           onClick={onUploadClick}
-          variant="primary"
+          variant="secondary"
           size="md"
           icon={<Upload />}
           iconPosition="left"

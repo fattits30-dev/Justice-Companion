@@ -10,19 +10,19 @@
  * - Responsive layout
  */
 
-import { useState, useEffect } from 'react';
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Sidebar } from '../Sidebar';
-import { useAuth } from '../../contexts/AuthContext';
-import { CommandPalette } from '../ui/CommandPalette.tsx';
+import { useState, useEffect } from "react";
+import { Outlet, useNavigate, useLocation } from "react-router-dom";
+import { Sidebar } from "../Sidebar.tsx";
+import { useAuth } from "../../contexts/AuthContext.tsx";
+import { CommandPalette } from "../ui/CommandPalette.tsx";
 import {
   LayoutDashboard,
   Briefcase,
   FileText,
   MessageSquare,
   Settings,
-  LogOut
-} from 'lucide-react';
+  LogOut,
+} from "lucide-react";
 
 export function MainLayout() {
   const navigate = useNavigate();
@@ -38,7 +38,7 @@ export function MainLayout() {
 
   const handleLogout = async () => {
     await logout();
-    navigate('/login');
+    navigate("/login");
   };
 
   const handleToggleCollapse = () => {
@@ -48,82 +48,82 @@ export function MainLayout() {
   // Command palette keyboard shortcut (Cmd/Ctrl+K)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
         setCommandPaletteOpen(true);
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
   // Command palette items
   const commandItems = [
     {
-      id: 'dashboard',
-      label: 'Dashboard',
+      id: "dashboard",
+      label: "Dashboard",
       icon: <LayoutDashboard className="h-4 w-4" />,
-      shortcut: 'D',
+      shortcut: "D",
       onSelect: () => {
-        navigate('/dashboard');
+        navigate("/dashboard");
         setCommandPaletteOpen(false);
-      }
+      },
     },
     {
-      id: 'cases',
-      label: 'Cases',
+      id: "cases",
+      label: "Cases",
       icon: <Briefcase className="h-4 w-4" />,
-      shortcut: 'C',
+      shortcut: "C",
       onSelect: () => {
-        navigate('/cases');
+        navigate("/cases");
         setCommandPaletteOpen(false);
-      }
+      },
     },
     {
-      id: 'documents',
-      label: 'Documents & Evidence',
+      id: "documents",
+      label: "Documents & Evidence",
       icon: <FileText className="h-4 w-4" />,
-      shortcut: 'E',
+      shortcut: "E",
       onSelect: () => {
-        navigate('/documents');
+        navigate("/documents");
         setCommandPaletteOpen(false);
-      }
+      },
     },
     {
-      id: 'chat',
-      label: 'AI Legal Assistant',
+      id: "chat",
+      label: "AI Legal Assistant",
       icon: <MessageSquare className="h-4 w-4" />,
-      shortcut: 'A',
+      shortcut: "A",
       onSelect: () => {
-        navigate('/chat');
+        navigate("/chat");
         setCommandPaletteOpen(false);
-      }
+      },
     },
     {
-      id: 'settings',
-      label: 'Settings',
+      id: "settings",
+      label: "Settings",
       icon: <Settings className="h-4 w-4" />,
-      shortcut: 'S',
+      shortcut: "S",
       onSelect: () => {
-        navigate('/settings');
+        navigate("/settings");
         setCommandPaletteOpen(false);
-      }
+      },
     },
     {
-      id: 'logout',
-      label: 'Logout',
+      id: "logout",
+      label: "Logout",
       icon: <LogOut className="h-4 w-4" />,
-      shortcut: '⌘Q',
+      shortcut: "⌘Q",
       onSelect: () => {
         handleLogout();
         setCommandPaletteOpen(false);
-      }
-    }
+      },
+    },
   ];
 
   return (
-    <div className="flex h-screen bg-gray-900 overflow-hidden">
+    <div className="flex h-screen bg-primary-900 overflow-hidden">
       {/* Sidebar */}
       <Sidebar
         currentRoute={location.pathname}
@@ -135,7 +135,7 @@ export function MainLayout() {
         notifications={{
           cases: 0,
           documents: 0,
-          chat: 0
+          chat: 0,
         }}
       />
 

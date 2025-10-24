@@ -1,22 +1,22 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { Evidence, EvidenceType } from '../../models/Evidence.ts';
-import type { Case } from '../../models/Case.ts';
-import { DocumentsToolbar } from './components/DocumentsToolbar.tsx';
+import { useCallback, useEffect, useMemo, useState } from "react";
+import type { Evidence, EvidenceType } from "../../models/Evidence.ts";
+import type { Case } from "../../models/Case.ts";
+import { DocumentsToolbar } from "./components/DocumentsToolbar.tsx";
 import {
   DocumentsEmptyEvidenceState,
   DocumentsErrorState,
   DocumentsFilteredEmptyState,
   DocumentsLoadingState,
   DocumentsNoCasesState,
-} from './components/DocumentsStates.tsx';
-import { EvidenceList } from './components/EvidenceList.tsx';
+} from "./components/DocumentsStates.tsx";
+import { EvidenceList } from "./components/EvidenceList.tsx";
 import {
   UploadEvidenceDialog,
   type UploadEvidenceInput,
-} from './components/UploadEvidenceDialog.tsx';
-import { showSuccess, showError } from '../../components/ui/Toast.tsx';
+} from "./components/UploadEvidenceDialog.tsx";
+import { showSuccess, showError } from "../../components/ui/Toast.tsx";
 
-type LoadState = 'idle' | 'loading' | 'error' | 'ready';
+type LoadState = "idle" | "loading" | "error" | "ready";
 
 interface LightweightCase {
   id: number;
@@ -26,25 +26,25 @@ interface LightweightCase {
 export function DocumentsView() {
   const [cases, setCases] = useState<LightweightCase[]>([]);
   const [selectedCaseId, setSelectedCaseId] = useState<number | null>(null);
-  const [casesState, setCasesState] = useState<LoadState>('loading');
+  const [casesState, setCasesState] = useState<LoadState>("loading");
   const [casesError, setCasesError] = useState<string | null>(null);
 
   const [evidence, setEvidence] = useState<Evidence[]>([]);
-  const [evidenceState, setEvidenceState] = useState<LoadState>('idle');
+  const [evidenceState, setEvidenceState] = useState<LoadState>("idle");
   const [evidenceError, setEvidenceError] = useState<string | null>(null);
 
-  const [filterType, setFilterType] = useState<EvidenceType | 'all'>('all');
+  const [filterType, setFilterType] = useState<EvidenceType | "all">("all");
   const [showUploadDialog, setShowUploadDialog] = useState(false);
 
   const loadCases = useCallback(async () => {
     try {
-      setCasesState('loading');
+      setCasesState("loading");
       setCasesError(null);
       const sessionId = getSessionId();
       const response = await window.justiceAPI.getAllCases(sessionId);
 
       if (!response.success || !response.data) {
-        throw new Error(response.error || 'Failed to load cases');
+        throw new Error(response.error || "Failed to load cases");
       }
 
       const mappedCases = (response.data as Case[]).map((caseItem) => ({
@@ -53,37 +53,40 @@ export function DocumentsView() {
       }));
 
       setCases(mappedCases);
-      setCasesState('ready');
+      setCasesState("ready");
 
       if (mappedCases.length > 0) {
         setSelectedCaseId(mappedCases[0].id);
       } else {
         setSelectedCaseId(null);
         setEvidence([]);
-        setEvidenceState('idle');
+        setEvidenceState("idle");
       }
     } catch (err) {
-      setCasesError(err instanceof Error ? err.message : 'Unknown error');
-      setCasesState('error');
+      setCasesError(err instanceof Error ? err.message : "Unknown error");
+      setCasesState("error");
     }
   }, []);
 
   const loadEvidence = useCallback(async (caseId: number) => {
     try {
-      setEvidenceState('loading');
+      setEvidenceState("loading");
       setEvidenceError(null);
       const sessionId = getSessionId();
-      const response = await window.justiceAPI.getAllEvidence(caseId.toString(), sessionId);
+      const response = await window.justiceAPI.getAllEvidence(
+        caseId.toString(),
+        sessionId,
+      );
 
       if (!response.success || !response.data) {
-        throw new Error(response.error || 'Failed to load evidence');
+        throw new Error(response.error || "Failed to load evidence");
       }
 
       setEvidence(response.data);
-      setEvidenceState('ready');
+      setEvidenceState("ready");
     } catch (err) {
-      setEvidenceError(err instanceof Error ? err.message : 'Unknown error');
-      setEvidenceState('error');
+      setEvidenceError(err instanceof Error ? err.message : "Unknown error");
+      setEvidenceState("error");
     }
   }, []);
 
@@ -101,71 +104,78 @@ export function DocumentsView() {
     async (input: UploadEvidenceInput) => {
       try {
         if (selectedCaseId === null) {
-          throw new Error('No case selected');
+          throw new Error("No case selected");
         }
 
         const sessionId = getSessionId();
         const response = await window.justiceAPI.uploadFile(
           selectedCaseId.toString(),
           input.file,
-          sessionId
+          sessionId,
         );
 
         if (!response.success || !response.data) {
-          throw new Error(response.error || 'Failed to upload evidence');
+          throw new Error(response.error || "Failed to upload evidence");
         }
 
         setEvidence((previous) => [response.data as Evidence, ...previous]);
         setShowUploadDialog(false);
         showSuccess(`${input.file.name} has been added to evidence`, {
-          title: 'Evidence uploaded',
+          title: "Evidence uploaded",
         });
       } catch (err) {
-        showError(err instanceof Error ? err.message : 'Unknown error', {
-          title: 'Failed to upload evidence',
+        showError(err instanceof Error ? err.message : "Unknown error", {
+          title: "Failed to upload evidence",
         });
       }
     },
-    [selectedCaseId]
+    [selectedCaseId],
   );
 
   const handleDeleteEvidence = useCallback(async (evidenceId: number) => {
-    const confirmed = confirm('Are you sure you want to delete this evidence? This cannot be undone.');
+    const confirmed = confirm(
+      "Are you sure you want to delete this evidence? This cannot be undone.",
+    );
     if (!confirmed) {
       return;
     }
 
     try {
       const sessionId = getSessionId();
-      const response = await window.justiceAPI.deleteEvidence(evidenceId.toString(), sessionId);
+      const response = await window.justiceAPI.deleteEvidence(
+        evidenceId.toString(),
+        sessionId,
+      );
 
       if (!response.success) {
-        throw new Error(response.error || 'Failed to delete evidence');
+        throw new Error(response.error || "Failed to delete evidence");
       }
 
-      setEvidence((previous) => previous.filter((item) => item.id !== evidenceId));
-      showSuccess('The evidence has been permanently removed', {
-        title: 'Evidence deleted',
+      setEvidence((previous) =>
+        previous.filter((item) => item.id !== evidenceId),
+      );
+      showSuccess("The evidence has been permanently removed", {
+        title: "Evidence deleted",
       });
     } catch (err) {
-      showError(err instanceof Error ? err.message : 'Unknown error', {
-        title: 'Failed to delete evidence',
+      showError(err instanceof Error ? err.message : "Unknown error", {
+        title: "Failed to delete evidence",
       });
     }
   }, []);
 
   const filteredEvidence = useMemo(() => {
-    if (filterType === 'all') {
+    if (filterType === "all") {
       return evidence;
     }
     return evidence.filter((item) => item.evidenceType === filterType);
   }, [evidence, filterType]);
 
-  if (casesState === 'loading') {
+  if (casesState === "loading") {
     return <DocumentsLoadingState />;
   }
 
-  if (casesState === 'error' && casesError) {
+  if (casesState === "error" && casesError) {
     return <DocumentsErrorState message={casesError} onRetry={loadCases} />;
   }
 
@@ -177,19 +187,25 @@ export function DocumentsView() {
     return <DocumentsNoCasesState onReload={loadCases} />;
   }
 
-  if (evidenceState === 'loading') {
+  if (evidenceState === "loading") {
     return <DocumentsLoadingState />;
   }
 
-  if (evidenceState === 'error' && evidenceError) {
-    return <DocumentsErrorState message={evidenceError} onRetry={() => loadEvidence(selectedCaseId)} />;
+  if (evidenceState === "error" && evidenceError) {
+    return (
+      <DocumentsErrorState
+        message={evidenceError}
+        onRetry={() => loadEvidence(selectedCaseId)}
+      />
+    );
   }
 
-  const showFilteredEmpty = evidence.length > 0 && filteredEvidence.length === 0;
+  const showFilteredEmpty =
+    evidence.length > 0 && filteredEvidence.length === 0;
   const showEmptyEvidence = evidence.length === 0;
 
   return (
-    <div className="min-h-screen bg-gray-900 p-8 text-white">
+    <div className="min-h-screen bg-primary-900 p-8 text-white">
       <DocumentsToolbar
         cases={cases}
         selectedCaseId={selectedCaseId}
@@ -201,11 +217,16 @@ export function DocumentsView() {
       />
 
       {showEmptyEvidence ? (
-        <DocumentsEmptyEvidenceState onUpload={() => setShowUploadDialog(true)} />
+        <DocumentsEmptyEvidenceState
+          onUpload={() => setShowUploadDialog(true)}
+        />
       ) : showFilteredEmpty ? (
         <DocumentsFilteredEmptyState />
       ) : (
-        <EvidenceList evidence={filteredEvidence} onDelete={handleDeleteEvidence} />
+        <EvidenceList
+          evidence={filteredEvidence}
+          onDelete={handleDeleteEvidence}
+        />
       )}
 
       {showUploadDialog && (
@@ -219,9 +240,9 @@ export function DocumentsView() {
 }
 
 function getSessionId(): string {
-  const sessionId = localStorage.getItem('sessionId');
+  const sessionId = localStorage.getItem("sessionId");
   if (!sessionId) {
-    throw new Error('No session');
+    throw new Error("No session");
   }
   return sessionId;
 }

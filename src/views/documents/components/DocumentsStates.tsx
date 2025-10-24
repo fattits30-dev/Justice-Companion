@@ -25,7 +25,7 @@ export function DocumentsLoadingState() {
 
 export function DocumentsErrorState({ message, onRetry }: ErrorStateProps) {
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
+    <div className="min-h-screen bg-primary-900 text-white flex items-center justify-center">
       <div className="max-w-md rounded-lg border border-red-500 bg-red-900/20 p-6">
         <h2 className="mb-2 text-xl font-bold text-red-400">
           Error Loading Documents
@@ -44,7 +44,7 @@ export function DocumentsErrorState({ message, onRetry }: ErrorStateProps) {
 
 export function DocumentsNoCasesState({ onReload }: NoCasesProps) {
   return (
-    <div className="rounded-lg border border-dashed border-gray-700 bg-gray-900/40 p-16 text-center text-white">
+    <div className="rounded-lg border border-dashed border-gray-700 bg-primary-900/40 p-16 text-center text-white">
       <h2 className="mb-2 text-2xl font-semibold">No cases available</h2>
       <p className="text-gray-400">
         Create a case first to start uploading evidence and documents.
@@ -61,7 +61,7 @@ export function DocumentsNoCasesState({ onReload }: NoCasesProps) {
 
 export function DocumentsEmptyEvidenceState({ onUpload }: EmptyEvidenceProps) {
   return (
-    <div className="rounded-lg border border-gray-800 bg-gray-900/30 p-12 text-center text-white">
+    <div className="rounded-lg border border-gray-800 bg-primary-900/30 p-12 text-center text-white">
       <h3 className="text-xl font-semibold">No evidence yet</h3>
       <p className="mt-2 text-gray-400">
         Upload files, notes, or other supporting material.
@@ -78,7 +78,7 @@ export function DocumentsEmptyEvidenceState({ onUpload }: EmptyEvidenceProps) {
 
 export function DocumentsFilteredEmptyState() {
   return (
-    <div className="rounded-lg border border-gray-800 bg-gray-900/30 p-12 text-center text-gray-400">
+    <div className="rounded-lg border border-gray-800 bg-primary-900/30 p-12 text-center text-gray-400">
       <h3 className="text-xl font-semibold text-white">
         No evidence matches the selected type
       </h3>
