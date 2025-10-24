@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, afterAll, beforeAll } from 'vitest';
-import { AuditLogger } from './AuditLogger.js';
-import { EncryptionService, type EncryptedData } from './EncryptionService.js';
+import { AuditLogger } from './AuditLogger.ts';
+import { EncryptionService, type EncryptedData } from './EncryptionService.ts';
 import Database from 'better-sqlite3';
-import type { CreateCaseInput, UpdateCaseInput, Case } from '../models/Case.js';
-import type { CreateEvidenceInput, UpdateEvidenceInput, Evidence } from '../models/Evidence.js';
+import type { CreateCaseInput, UpdateCaseInput, Case } from '../models/Case.ts';
+import type { CreateEvidenceInput, UpdateEvidenceInput, Evidence } from '../models/Evidence.ts';
 
 /**
  * End-to-End Audit Logger Verification Suite

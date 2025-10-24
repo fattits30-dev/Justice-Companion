@@ -19,8 +19,11 @@ import {
 import { getDb } from '../src/db/database.ts';
 import { UserRepository } from '../src/repositories/UserRepository.ts';
 import { SessionRepository } from '../src/repositories/SessionRepository.ts';
+import { CaseRepository } from '../src/repositories/CaseRepository.ts';
+import { EvidenceRepository } from '../src/repositories/EvidenceRepository.ts';
 import { AuditLogger } from '../src/services/AuditLogger.ts';
 import { AuthenticationService } from '../src/services/AuthenticationService.ts';
+import { GroqService } from '../src/services/GroqService.ts';
 
 // ESM equivalent of __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -48,6 +51,9 @@ export function setupIpcHandlers(): void {
   // Authentication handlers
   setupAuthHandlers();
 
+  // Dashboard handlers
+  setupDashboardHandlers();
+
   // Case management handlers
   setupCaseHandlers();
 
@@ -65,6 +71,12 @@ export function setupIpcHandlers(): void {
 
   // Secure storage handlers
   setupSecureStorageHandlers();
+
+  // UI error logging handlers
+  setupUIHandlers();
+
+  // AI configuration handlers
+  setupAIConfigHandlers();
 
   console.warn('[IPC] All IPC handlers registered');
 }
@@ -88,6 +100,37 @@ function getAuthService(): AuthenticationService {
     console.warn('[IPC] AuthenticationService initialized');
   }
   return authService;
+}
+
+// Groq AI service singleton
+let groqService: GroqService | null = null;
+
+function getGroqService(): GroqService {
+  if (!groqService) {
+    groqService = new GroqService(); // Initialize without key
+    console.warn('[IPC] GroqService created (API key will be loaded from SecureStorage)');
+
+    // Try to load API key from SecureStorage
+    if (global.secureStorageMap && global.secureStorageMap.has('groq_api_key')) {
+      try {
+        const encrypted = global.secureStorageMap.get('groq_api_key');
+        if (encrypted) {
+          const apiKey = safeStorage.decryptString(encrypted);
+          groqService.setApiKey(apiKey);
+          console.warn('[IPC] Groq API key loaded from SecureStorage');
+        }
+      } catch (error) {
+        console.error('[IPC] Failed to load Groq API key from SecureStorage:', error);
+      }
+    }
+  }
+  return groqService;
+}
+
+// Reset Groq service singleton (used when API key changes)
+function resetGroqService(): void {
+  groqService = null;
+  console.warn('[IPC] GroqService reset');
 }
 
 /**
@@ -236,12 +279,87 @@ function setupAuthHandlers(): void {
           return errorResponse(IPCErrorCode.SESSION_EXPIRED, 'Session not found or expired');
         }
 
+        // Fetch user data for session restoration
+        const db = getDb();
+        const userRepo = new UserRepository(db);
+        const user = userRepo.findById(session.userId);
+
+        if (!user) {
+          return errorResponse(IPCErrorCode.NOT_FOUND, 'User not found');
+        }
+
         console.warn('[IPC] Session retrieved:', session.userId);
-        return successResponse(session);
+        return successResponse({
+          userId: user.id,
+          username: user.username,
+          email: user.email
+        });
       } catch (error) {
         console.error('[IPC] auth:session error:', error);
         return formatError(error);
       }
+    }
+  );
+}
+
+/**
+ * ===== DASHBOARD HANDLERS =====
+ */
+function setupDashboardHandlers(): void {
+  // Get dashboard stats (case counts, evidence counts, recent activity)
+  ipcMain.handle(
+    'dashboard:stats',
+    async (_event: IpcMainInvokeEvent, sessionId: string): Promise<IPCResponse> => {
+      return withAuthorization(sessionId, async (userId) => {
+        try {
+          console.warn('[IPC] dashboard:stats called by user:', userId);
+
+          const db = getDb();
+          const caseRepo = new CaseRepository(db);
+          const evidenceRepo = new EvidenceRepository(db);
+
+          // Get all cases for user
+          const allCases = caseRepo.findByUserId(userId);
+
+          // Count active cases (status = 'active')
+          const activeCases = allCases.filter(c => c.status === 'active').length;
+
+          // Get evidence count for user
+          const allEvidence = evidenceRepo.findByUserId(userId);
+
+          // Calculate recent activity (cases updated in last 7 days)
+          const sevenDaysAgo = new Date();
+          sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+          const recentActivity = allCases.filter(c =>
+            new Date(c.updatedAt) > sevenDaysAgo
+          ).length;
+
+          // Get recent 5 cases (sorted by updatedAt descending)
+          const recentCases = allCases
+            .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+            .slice(0, 5)
+            .map(c => ({
+              id: String(c.id),
+              title: c.caseTitle,
+              status: c.status,
+              lastUpdated: c.updatedAt
+            }));
+
+          const stats = {
+            totalCases: allCases.length,
+            activeCases,
+            totalEvidence: allEvidence.length,
+            recentActivity,
+            recentCases
+          };
+
+          console.warn('[IPC] Dashboard stats:', stats);
+          return successResponse(stats);
+        } catch (error) {
+          console.error('[IPC] dashboard:stats error:', error);
+          return formatError(error);
+        }
+      });
     }
   );
 }
@@ -671,7 +789,142 @@ function setupEvidenceHandlers(): void {
  * ===== AI CHAT HANDLERS =====
  */
 function setupChatHandlers(): void {
-  // Send chat message
+  // ===== STREAMING CHAT (NEW) =====
+  ipcMain.handle(
+    'chat:stream',
+    async (
+      event: IpcMainInvokeEvent,
+      request: { sessionId: string; message: string; conversationId?: number | null; requestId: string }
+    ): Promise<void> => {
+      return withAuthorization(request.sessionId, async (userId) => {
+        try {
+          console.log('[IPC] chat:stream called by user:', userId, 'requestId:', request.requestId);
+
+          // Validate message
+          if (!request.message || request.message.trim().length === 0) {
+            throw new Error('Message cannot be empty');
+          }
+
+          if (request.message.length > 10000) {
+            throw new Error('Message too long (max 10000 characters)');
+          }
+
+          // Get Groq service
+          const groqService = getGroqService();
+          if (!groqService.isConfigured()) {
+            event.sender.send('chat:stream:error', {
+              requestId: request.requestId,
+              error: 'AI service not configured. Please set your Groq API key in Settings.',
+            });
+            return;
+          }
+
+          // Build chat messages with system prompt
+          const systemPrompt = `You are a legal assistant for Justice Companion, a UK legal case management system.
+
+**Important Guidelines:**
+- Provide clear, practical legal information for UK law
+- Always clarify that your responses are informational, not legal advice
+- Encourage users to consult a qualified solicitor for legal advice
+- Be empathetic and supportive - users may be in stressful situations
+- Focus on UK law (England & Wales unless otherwise specified)
+- Break down complex legal concepts into plain English
+
+**Response Format:**
+- Start with a brief, direct answer
+- Provide relevant details and context
+- End with next steps or recommendations
+- Include a legal disclaimer at the end`;
+
+          const chatMessages = [
+            { role: 'system' as const, content: systemPrompt },
+            { role: 'user' as const, content: request.message },
+          ];
+
+          // Stream response with Groq
+          let fullResponse = '';
+
+          await groqService.streamChat(
+            chatMessages,
+            (token: string) => {
+              // Emit each token
+              event.sender.send('chat:stream:token', {
+                requestId: request.requestId,
+                token,
+              });
+              fullResponse += token;
+            },
+            (response: string) => {
+              // Add legal disclaimer to final response
+              const disclaimer = '\n\n---\n\n**⚖️ Legal Disclaimer:** This is information, not legal advice. Please consult a qualified solicitor for advice specific to your situation.';
+              const finalResponse = response + disclaimer;
+
+              // Emit completion
+              event.sender.send('chat:stream:complete', {
+                requestId: request.requestId,
+              });
+
+              // Log audit event
+              logAuditEvent({
+                eventType: AuditEventType.CHAT_MESSAGE_SENT,
+                userId,
+                resourceType: 'chat_message',
+                resourceId: request.requestId,
+                action: 'create',
+                details: {
+                  conversationId: request.conversationId ?? null,
+                  messageLength: request.message.length,
+                  responseLength: finalResponse.length,
+                },
+                success: true,
+              });
+
+              console.log('[IPC] Chat stream completed for request:', request.requestId);
+            },
+            (error: Error) => {
+              // Emit error
+              event.sender.send('chat:stream:error', {
+                requestId: request.requestId,
+                error: error.message,
+              });
+
+              // Log failed message
+              logAuditEvent({
+                eventType: AuditEventType.CHAT_MESSAGE_SENT,
+                userId,
+                resourceType: 'chat_message',
+                resourceId: request.requestId,
+                action: 'create',
+                success: false,
+                errorMessage: error.message,
+              });
+            }
+          );
+        } catch (error) {
+          console.error('[IPC] chat:stream error:', error);
+
+          // Send error event
+          event.sender.send('chat:stream:error', {
+            requestId: request.requestId,
+            error: error instanceof Error ? error.message : 'Unknown error',
+          });
+
+          // Log failed message
+          logAuditEvent({
+            eventType: AuditEventType.CHAT_MESSAGE_SENT,
+            userId,
+            resourceType: 'chat_message',
+            resourceId: request.requestId,
+            action: 'create',
+            success: false,
+            errorMessage: String(error),
+          });
+        }
+      });
+    }
+  );
+
+  // Send chat message (OLD - keep for backwards compatibility)
   ipcMain.handle(
     'chat:send',
     async (_event: IpcMainInvokeEvent, message: string, caseId: string | undefined, sessionId: string): Promise<IPCResponse> => {
@@ -694,39 +947,95 @@ function setupChatHandlers(): void {
             authMiddleware.verifyCaseOwnership(parseInt(caseId), userId);
           }
 
-          // TODO: Check AI consent
+          // Get Groq service (initialized with API key from secure storage)
+          const groqService = getGroqService();
+          if (!groqService.isConfigured()) {
+            throw new Error('AI service not configured. Please set your Groq API key in Settings.');
+          }
+
           // TODO: Retrieve case context if caseId provided
           // TODO: Search UK legal APIs (RAG)
-          // TODO: Assemble context with retrieved documents
-          // TODO: Stream OpenAI response (emit 'chat:stream' events)
-          // TODO: Extract citations
-          // TODO: Append legal disclaimer
-          // TODO: Save message (encrypted if consented)
 
-          // Log audit event
-          logAuditEvent({
-            eventType: AuditEventType.CHAT_MESSAGE_SENT,
-            userId,
-            resourceType: 'chat_message',
-            resourceId: 'temp-message-id',
-            action: 'send',
-            details: {
-              caseId: caseId ?? null,
-              messageLength: message.length,
+          // Build chat messages with system prompt
+          const systemPrompt = `You are a legal assistant for Justice Companion, a UK legal case management system.
+
+**Important Guidelines:**
+- Provide clear, practical legal information for UK law
+- Always clarify that your responses are informational, not legal advice
+- Encourage users to consult a qualified solicitor for legal advice
+- Be empathetic and supportive - users may be in stressful situations
+- Focus on UK law (England & Wales unless otherwise specified)
+- Break down complex legal concepts into plain English
+
+**Response Format:**
+- Start with a brief, direct answer
+- Provide relevant details and context
+- End with next steps or recommendations
+- Include a legal disclaimer at the end`;
+
+          const chatMessages = [
+            { role: 'system' as const, content: systemPrompt },
+            { role: 'user' as const, content: message },
+          ];
+
+          // Stream response with Groq
+          let fullResponse = '';
+          const messageId = `msg_${Date.now()}_${userId}`;
+
+          await groqService.streamChat(
+            chatMessages,
+            (token: string) => {
+              // Emit token to renderer process
+              _event.sender.send('chat:stream', { type: 'token', data: token });
+              fullResponse += token;
             },
-            success: true,
-          });
+            (response: string) => {
+              // Append legal disclaimer
+              const disclaimer = '\n\n---\n\n**⚖️ Legal Disclaimer:** This is information, not legal advice. Please consult a qualified solicitor for advice specific to your situation.';
+              const finalResponse = response + disclaimer;
 
-          // Placeholder response
-          const response = {
-            messageId: 'temp-message-id',
-            response: 'AI legal assistant integration pending. Full implementation coming soon.',
-            citations: [],
-            disclaimer: 'This is information, not legal advice. Consult a qualified solicitor for legal advice.',
+              // Emit completion
+              _event.sender.send('chat:stream', { type: 'complete', data: finalResponse });
+
+              // Log audit event
+              logAuditEvent({
+                eventType: AuditEventType.CHAT_MESSAGE_SENT,
+                userId,
+                resourceType: 'chat_message',
+                resourceId: messageId,
+                action: 'create',
+                details: {
+                  caseId: caseId ?? null,
+                  messageLength: message.length,
+                  responseLength: finalResponse.length,
+                },
+                success: true,
+              });
+
+              console.log('[IPC] Chat message streamed successfully');
+            },
+            (error: Error) => {
+              // Emit error
+              _event.sender.send('chat:stream', { type: 'error', data: error.message });
+
+              // Log failed message
+              logAuditEvent({
+                eventType: AuditEventType.CHAT_MESSAGE_SENT,
+                userId,
+                resourceType: 'chat_message',
+                resourceId: messageId,
+                action: 'create',
+                success: false,
+                errorMessage: error.message,
+              });
+            }
+          );
+
+          // Return immediate acknowledgment (streaming happens via events)
+          return {
+            messageId,
+            streaming: true,
           };
-
-          console.warn('[IPC] Chat message processed (placeholder)');
-          return response;
         } catch (error) {
           console.error('[IPC] chat:send error:', error);
 
@@ -1065,6 +1374,189 @@ function setupSecureStorageHandlers(): void {
           formatError(error, IPCErrorCode.INTERNAL_ERROR),
           IPCErrorCode.INTERNAL_ERROR
         );
+      }
+    }
+  );
+}
+
+/**
+ * ===== UI ERROR LOGGING HANDLERS =====
+ * Handlers for logging UI errors to main process
+ */
+function setupUIHandlers(): void {
+  // Log UI errors to console and audit log
+  ipcMain.handle(
+    'ui:logError',
+    async (_event: IpcMainInvokeEvent, errorData: any): Promise<IPCResponse> => {
+      try {
+        const { error, errorInfo, componentStack, location } = errorData;
+
+        // Log to console
+        console.error('[UI Error]', {
+          message: error?.message || 'Unknown error',
+          stack: error?.stack,
+          componentStack,
+          location,
+        });
+
+        // Log to audit log if available
+        if (errorData.userId) {
+          logAuditEvent({
+            eventType: AuditEventType.UI_ERROR,
+            userId: errorData.userId,
+            resourceType: 'ui',
+            resourceId: 'error',
+            action: 'read',
+            success: false,
+            errorMessage: error?.message || 'UI component error',
+            details: {
+              componentStack,
+              location,
+            },
+          });
+        }
+
+        return successResponse({ logged: true });
+      } catch (err) {
+        console.error('[IPC] ui:logError error:', err);
+        return errorResponse(
+          formatError(err, IPCErrorCode.INTERNAL_ERROR),
+          IPCErrorCode.INTERNAL_ERROR
+        );
+      }
+    }
+  );
+}
+
+/**
+ * ===== AI CONFIGURATION HANDLERS =====
+ * Handlers for configuring and testing AI service (Groq)
+ */
+function setupAIConfigHandlers(): void {
+  // Configure AI service (save API key)
+  ipcMain.handle(
+    'ai:configure',
+    async (
+      _event: IpcMainInvokeEvent,
+      config: { apiKey: string; provider?: 'openai' | 'groq' | 'anthropic' | 'google' | 'cohere' | 'mistral'; model?: string; organization?: string }
+    ): Promise<IPCResponse> => {
+      try {
+        const { apiKey, provider = 'groq', model, organization } = config;
+
+        // Validate API key
+        if (!apiKey || apiKey.trim().length === 0) {
+          throw new Error('API key is required');
+        }
+
+        // Note: For now, only Groq has full streaming implementation
+        // Other providers will be added as needed
+        console.warn(`[IPC] Configuring AI provider: ${provider}`);
+
+        // Save to SecureStorage with provider-specific keys
+        if (!safeStorage.isEncryptionAvailable()) {
+          throw new Error('Encryption not available on this system');
+        }
+
+        if (!global.secureStorageMap) {
+          global.secureStorageMap = new Map<string, Buffer>();
+        }
+
+        // Save API key with provider-specific key
+        const apiKeyStorageKey = `${provider}_api_key`;
+        const encryptedApiKey = safeStorage.encryptString(apiKey);
+        global.secureStorageMap.set(apiKeyStorageKey, encryptedApiKey);
+
+        // Save model if provided
+        if (model) {
+          const modelStorageKey = `${provider}_model`;
+          const encryptedModel = safeStorage.encryptString(model);
+          global.secureStorageMap.set(modelStorageKey, encryptedModel);
+        }
+
+        // Save organization if provided (for OpenAI)
+        if (organization) {
+          const orgStorageKey = `${provider}_organization`;
+          const encryptedOrg = safeStorage.encryptString(organization);
+          global.secureStorageMap.set(orgStorageKey, encryptedOrg);
+        }
+
+        // Reset Groq service so it will reload the new key (only for Groq)
+        if (provider === 'groq') {
+          resetGroqService();
+        }
+
+        console.warn(`[IPC] ${provider} API key configured successfully`);
+        return successResponse({
+          success: true,
+          message: 'API key saved successfully',
+        });
+      } catch (error) {
+        console.error('[IPC] ai:configure error:', error);
+        return errorResponse(
+          formatError(error, IPCErrorCode.INTERNAL_ERROR),
+          IPCErrorCode.INTERNAL_ERROR
+        );
+      }
+    }
+  );
+
+  // Test AI connection
+  ipcMain.handle(
+    'ai:testConnection',
+    async (_event: IpcMainInvokeEvent): Promise<IPCResponse> => {
+      try {
+        // Get Groq service
+        const groqService = getGroqService();
+
+        // Check if configured
+        if (!groqService.isConfigured()) {
+          return successResponse({
+            success: false,
+            message: 'AI service not configured. Please set your API key first.',
+            connected: false,
+          });
+        }
+
+        // Test connection with a minimal API call
+        console.warn('[IPC] Testing Groq connection...');
+        const testMessage = 'Hello';
+        const response = await groqService.chat([
+          { role: 'user', content: testMessage },
+        ]);
+
+        if (response && response.length > 0) {
+          console.warn('[IPC] Groq connection test successful');
+          return successResponse({
+            success: true,
+            message: 'Connection successful! AI service is ready.',
+            connected: true,
+          });
+        } else {
+          throw new Error('Empty response from AI service');
+        }
+      } catch (error) {
+        console.error('[IPC] ai:testConnection error:', error);
+
+        // Provide user-friendly error messages
+        let errorMessage = 'Connection failed';
+        if (error instanceof Error) {
+          if (error.message.includes('401') || error.message.includes('Unauthorized')) {
+            errorMessage = 'Invalid API key. Please check your API key and try again.';
+          } else if (error.message.includes('429') || error.message.includes('rate limit')) {
+            errorMessage = 'Rate limit exceeded. Please try again later.';
+          } else if (error.message.includes('network') || error.message.includes('ENOTFOUND')) {
+            errorMessage = 'Network error. Please check your internet connection.';
+          } else {
+            errorMessage = `Connection failed: ${error.message}`;
+          }
+        }
+
+        return successResponse({
+          success: false,
+          message: errorMessage,
+          connected: false,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
       }
     }
   );

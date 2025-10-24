@@ -1,4 +1,4 @@
-import { logger } from '@/utils/logger';
+import { logger } from '../utils/logger.ts';
 
 /**
  * Represents a login attempt record for rate limiting

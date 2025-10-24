@@ -12,32 +12,32 @@
       "description": "[OPTIONAL] Deep reasoning for complex problems (32K tokens, ~$0.10/use)"
     },
     "playwright": {
-      "command": "npx",
-      "args": ["-y", "@playwright/mcp@latest"],
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@playwright/mcp@latest"],
       "description": "E2E testing with accessibility tree (Microsoft official)"
     },
     "context7": {
-      "command": "npx",
-      "args": ["-y", "@upstash/context7-mcp@latest"],
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@upstash/context7-mcp@latest"],
       "description": "Live documentation lookup for libraries and frameworks"
     },
     "github": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@modelcontextprotocol/server-github"],
       "description": "GitHub API integration (stdio transport - requires GITHUB_PERSONAL_ACCESS_TOKEN env var)"
     },
     "puppeteer": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-puppeteer"],
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@modelcontextprotocol/server-puppeteer"],
       "description": "Browser automation for web scraping and testing"
     }
   },
   "metadata": {
     "project": "Justice Companion",
     "purpose": "Production MCP configuration - 6 MCPs for development, testing, and AI assistance",
-    "version": "5.0.0",
-    "last_updated": "2025-10-21",
-    "platform": "Windows 11 (hybrid: direct install for core, npx for specialized)",
+    "version": "5.1.0",
+    "last_updated": "2025-10-22",
+    "platform": "Windows 11 (hybrid: direct install for core, npx for specialized - all use cmd /c wrapper)",
     "installation_method": "npm install -g (all packages installed globally)",
 
     "built_in_tools_no_mcp_needed": {

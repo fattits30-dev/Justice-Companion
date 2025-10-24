@@ -7,7 +7,7 @@
 
 import { Profiler, ProfilerOnRenderCallback, useState, useEffect, useMemo } from 'react';
 import { render } from '@testing-library/react';
-import { logger } from '../utils/logger';
+import { logger } from '../utils/logger.ts';
 
 // Mock localStorage hook to track operations
 let localStorageReads = 0;

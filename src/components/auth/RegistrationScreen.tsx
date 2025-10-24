@@ -1,347 +1,348 @@
-import { useAuth } from '@/contexts/AuthContext.tsx';
-import { useState } from 'react';
+/**
+ * RegistrationScreen Component
+ *
+ * Built with TDD - All tests written FIRST
+ *
+ * Features:
+ * - Form validation (username, email, password strength, password match, terms)
+ * - IPC communication with main process
+ * - Loading states
+ * - Error handling
+ * - Password visibility toggles (2 independent)
+ * - Accessible form labels
+ */
+
+import { useState, FormEvent } from 'react';
 
 interface RegistrationScreenProps {
-  onSwitchToLogin: () => void;
+  onSuccess?: (data: { user: any }) => void;
+  onLoginClick?: () => void;
 }
 
-/**
- * Calculate password strength (0-4)
- * 0 = Very Weak, 1 = Weak, 2 = Fair, 3 = Good, 4 = Strong
- */
-function calculatePasswordStrength(password: string): number {
-  let strength = 0;
-
-  if (password.length >= 12) {
-    strength++;
-  }
-  if (password.length >= 16) {
-    strength++;
-  }
-  if (/[a-z]/.test(password) && /[A-Z]/.test(password)) {
-    strength++;
-  }
-  if (/[0-9]/.test(password)) {
-    strength++;
-  }
-  if (/[^a-zA-Z0-9]/.test(password)) {
-    strength++;
-  }
-
-  return Math.min(strength, 4);
-}
-
-function getStrengthLabel(strength: number): string {
-  const labels = ['Very Weak', 'Weak', 'Fair', 'Good', 'Strong'];
-  return labels[strength] || 'Very Weak';
-}
-
-function getStrengthColor(strength: number): string {
-  const colors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-lime-500', 'bg-green-500'];
-  return colors[strength] || 'bg-red-500';
-}
-
-export function RegistrationScreen({ onSwitchToLogin }: RegistrationScreenProps): JSX.Element {
-  const { register } = useAuth();
+export function RegistrationScreen({ onSuccess, onLoginClick }: RegistrationScreenProps) {
+  // Form state
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // UI state
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [validationErrors, setValidationErrors] = useState<{
+    username?: string;
+    email?: string;
+    password?: string;
+    confirmPassword?: string;
+    terms?: string;
+  }>({});
 
-  const passwordStrength = calculatePasswordStrength(password);
+  /**
+   * Validate email format
+   */
+  const isValidEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
 
-  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
-    e.preventDefault();
-    setError(null);
+  /**
+   * Validate form inputs
+   */
+  const validate = (): boolean => {
+    const errors: {
+      username?: string;
+      email?: string;
+      password?: string;
+      confirmPassword?: string;
+      terms?: string;
+    } = {};
 
-    // Validation
+    // Username validation
     if (!username.trim()) {
-      setError('Username is required');
-      return;
+      errors.username = 'Username is required';
+    } else if (username.trim().length < 3) {
+      errors.username = 'Username must be at least 3 characters';
     }
 
-    if (username.length < 3) {
-      setError('Username must be at least 3 characters');
-      return;
-    }
-
+    // Email validation
     if (!email.trim()) {
-      setError('Email is required');
-      return;
+      errors.email = 'Email is required';
+    } else if (!isValidEmail(email)) {
+      errors.email = 'Please enter a valid email';
     }
 
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError('Please enter a valid email address');
-      return;
+    // Password validation
+    if (!password.trim()) {
+      errors.password = 'Password is required';
+    } else if (password.length < 8) {
+      errors.password = 'Password must be at least 8 characters';
     }
 
-    if (!password) {
-      setError('Password is required');
-      return;
-    }
-
-    if (password.length < 12) {
-      setError('Password must be at least 12 characters (OWASP requirement)');
-      return;
-    }
-
-    if (!/[A-Z]/.test(password)) {
-      setError('Password must contain at least one uppercase letter');
-      return;
-    }
-
-    if (!/[a-z]/.test(password)) {
-      setError('Password must contain at least one lowercase letter');
-      return;
-    }
-
-    if (!/[0-9]/.test(password)) {
-      setError('Password must contain at least one number');
-      return;
-    }
-
+    // Confirm password validation
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      errors.confirmPassword = 'Passwords do not match';
+    }
+
+    // Terms validation
+    if (!acceptedTerms) {
+      errors.terms = 'You must accept the terms and conditions';
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  /**
+   * Handle form submission
+   */
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setValidationErrors({});
+
+    // Validate inputs
+    if (!validate()) {
       return;
     }
 
     setIsLoading(true);
 
     try {
-      await register(username.trim(), password, email.trim());
-      // Registration successful - AuthContext will handle auto-login
+      // Call IPC handler
+      const response = await window.justiceAPI.register(
+        username,
+        password,
+        email
+      );
+
+      if (response.success && response.data) {
+        // Clear form on success
+        setUsername('');
+        setEmail('');
+        setPassword('');
+        setConfirmPassword('');
+        setAcceptedTerms(false);
+
+        // Call success callback
+        if (onSuccess) {
+          onSuccess(response.data);
+        }
+      } else {
+        // Show error message - extract message if error is an object
+        const errorMsg = typeof response.error === 'string'
+          ? response.error
+          : response.error?.message || 'Registration failed';
+        setError(errorMsg);
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Registration failed');
+      setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 p-6">
-      <div className="w-full max-w-md">
-        {/* Logo/Title */}
-        <div className="text-center mb-24">
-          <h1 className="text-5xl font-bold text-white mb-6 drop-shadow-lg">Justice Companion</h1>
-          <p className="text-lg text-blue-300">Create Your Account</p>
+    <div className="min-h-screen flex items-center justify-center bg-gray-900">
+      <div className="w-full max-w-md p-8 space-y-6 bg-gray-800 rounded-lg shadow-xl">
+        <div>
+          <h2 className="text-3xl font-bold text-center text-white">
+            Create Account
+          </h2>
+          <p className="mt-2 text-center text-gray-400">
+            Join Justice Companion
+          </p>
         </div>
 
-        {/* Registration Form */}
-        <div>
-          <h2 className="text-3xl font-bold text-white mb-20 text-center">Create Account</h2>
+        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+          {/* Error message */}
+          {error && (
+            <div className="p-3 text-sm text-red-300 bg-red-900/50 rounded-md border border-red-700">
+              {error}
+            </div>
+          )}
 
-          <form onSubmit={handleSubmit} className="space-y-16" aria-label="Registration form">
-            {/* Error Display */}
-            {error && (
-              <div
-                className="bg-red-900/30 border border-red-500/50 text-red-200 px-4 py-3 rounded-lg text-sm"
-                role="alert"
-                aria-live="polite"
-              >
-                {error}
-              </div>
+          {/* Username field */}
+          <div>
+            <label
+              htmlFor="username"
+              className="block text-sm font-medium text-gray-300 mb-1"
+            >
+              Username
+            </label>
+            <input
+              id="username"
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              disabled={isLoading}
+              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+              placeholder="Enter your username"
+            />
+            {validationErrors.username && (
+              <p className="mt-1 text-sm text-red-400">
+                {validationErrors.username}
+              </p>
             )}
+          </div>
 
-            {/* Username Field */}
-            <div>
-              <label htmlFor="username" className="block text-sm font-medium text-blue-200 mb-6">
-                Username
-              </label>
-              <input
-                id="username"
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-800/80 border border-blue-700/40 rounded-xl text-white placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                placeholder="Choose a username"
-                autoFocus
-                disabled={isLoading}
-                aria-required="true"
-                aria-invalid={error ? 'true' : undefined}
-                aria-describedby={
-                  username.length > 0 && username.length < 3 ? 'username-error' : undefined
-                }
-              />
-              {username.length > 0 && username.length < 3 && (
-                <p id="username-error" className="text-xs text-red-400 mt-1">
-                  Username must be at least 3 characters
-                </p>
-              )}
-            </div>
+          {/* Email field */}
+          <div>
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-300 mb-1"
+            >
+              Email
+            </label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={isLoading}
+              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+              placeholder="Enter your email"
+            />
+            {validationErrors.email && (
+              <p className="mt-1 text-sm text-red-400">
+                {validationErrors.email}
+              </p>
+            )}
+          </div>
 
-            {/* Email Field */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-blue-200 mb-6">
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-800/80 border border-blue-700/40 rounded-xl text-white placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                placeholder="your@email.com"
-                disabled={isLoading}
-                aria-required="true"
-                aria-invalid={
-                  error && email.length > 0 && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
-                    ? 'true'
-                    : undefined
-                }
-              />
-            </div>
-
-            {/* Password Field */}
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-blue-200 mb-6">
-                Password
-              </label>
+          {/* Password field */}
+          <div>
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-gray-300 mb-1"
+            >
+              Password
+            </label>
+            <div className="relative">
               <input
                 id="password"
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-800/80 border border-blue-700/40 rounded-xl text-white placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                placeholder="At least 12 characters"
                 disabled={isLoading}
-                aria-required="true"
-                aria-invalid={
-                  error && password.length > 0 && password.length < 12 ? 'true' : undefined
-                }
-                aria-describedby={password ? 'password-requirements' : undefined}
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed pr-10"
+                placeholder="Enter your password"
               />
-
-              {/* Password Strength Indicator */}
-              {password && (
-                <div className="mt-3" id="password-requirements">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full transition-all duration-300 ${getStrengthColor(
-                          passwordStrength,
-                        )}`}
-                        style={{ width: `${(passwordStrength / 4) * 100}%` }}
-                        role="progressbar"
-                        aria-valuenow={passwordStrength}
-                        aria-valuemin={0}
-                        aria-valuemax={4}
-                        aria-label="Password strength"
-                      />
-                    </div>
-                    <span
-                      className="text-xs text-slate-300 font-medium min-w-[70px]"
-                      aria-live="polite"
-                    >
-                      {getStrengthLabel(passwordStrength)}
-                    </span>
-                  </div>
-                  <ul
-                    className="text-xs text-slate-300 space-y-1"
-                    aria-label="Password requirements"
-                  >
-                    <li className={password.length >= 12 ? 'text-green-400' : ''}>
-                      {password.length >= 12 ? '✓' : '○'} At least 12 characters
-                    </li>
-                    <li className={/[A-Z]/.test(password) ? 'text-green-400' : ''}>
-                      {/[A-Z]/.test(password) ? '✓' : '○'} One uppercase letter
-                    </li>
-                    <li className={/[a-z]/.test(password) ? 'text-green-400' : ''}>
-                      {/[a-z]/.test(password) ? '✓' : '○'} One lowercase letter
-                    </li>
-                    <li className={/[0-9]/.test(password) ? 'text-green-400' : ''}>
-                      {/[0-9]/.test(password) ? '✓' : '○'} One number
-                    </li>
-                  </ul>
-                </div>
-              )}
-            </div>
-
-            {/* Confirm Password Field */}
-            <div>
-              <label
-                htmlFor="confirmPassword"
-                className="block text-sm font-medium text-blue-200 mb-6"
-              >
-                Confirm Password
-              </label>
-              <input
-                id="confirmPassword"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-800/80 border border-blue-700/40 rounded-xl text-white placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                placeholder="Re-enter your password"
-                disabled={isLoading}
-              />
-              {confirmPassword && password !== confirmPassword && (
-                <p className="text-xs text-red-400 mt-1">Passwords do not match</p>
-              )}
-            </div>
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full mt-10 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:from-blue-800 disabled:to-blue-900 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-xl transition-all shadow-lg hover:shadow-xl"
-              aria-busy={isLoading ? 'true' : undefined}
-            >
-              {isLoading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <svg
-                    className="animate-spin h-5 w-5"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  Creating Account...
-                </span>
-              ) : (
-                'Create Account'
-              )}
-            </button>
-          </form>
-
-          {/* Login Link */}
-          <div className="mt-20 text-center">
-            <p className="text-sm text-slate-300">
-              Already have an account?{' '}
               <button
                 type="button"
-                onClick={onSwitchToLogin}
-                className="text-blue-400 hover:text-blue-300 font-semibold transition-colors"
-                disabled={isLoading}
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
-                Sign In
+                {showPassword ? (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                )}
               </button>
-            </p>
+            </div>
+            {validationErrors.password && (
+              <p className="mt-1 text-sm text-red-400">
+                {validationErrors.password}
+              </p>
+            )}
           </div>
 
-          {/* Local Storage Notice */}
-          <div className="mt-20 pt-20 border-t border-blue-800/30">
-            <div className="flex items-start gap-3 justify-center">
-              <span className="text-xl">🔒</span>
-              <p className="text-xs text-slate-300 leading-relaxed">
-                All data is stored locally on your device. No data is sent to external servers.
-              </p>
+          {/* Confirm Password field */}
+          <div>
+            <label
+              htmlFor="confirm-password"
+              className="block text-sm font-medium text-gray-300 mb-1"
+            >
+              Confirm Password
+            </label>
+            <div className="relative">
+              <input
+                id="confirm-password"
+                type={showConfirmPassword ? 'text' : 'password'}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                disabled={isLoading}
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed pr-10"
+                placeholder="Confirm your password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300"
+                aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+              >
+                {showConfirmPassword ? (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                )}
+              </button>
             </div>
+            {validationErrors.confirmPassword && (
+              <p className="mt-1 text-sm text-red-400">
+                {validationErrors.confirmPassword}
+              </p>
+            )}
           </div>
+
+          {/* Terms & Conditions checkbox */}
+          <div className="flex items-start">
+            <input
+              id="terms"
+              type="checkbox"
+              checked={acceptedTerms}
+              onChange={(e) => setAcceptedTerms(e.target.checked)}
+              disabled={isLoading}
+              className="w-4 h-4 mt-1 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500 focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            />
+            <label
+              htmlFor="terms"
+              className="ml-2 text-sm text-gray-300"
+            >
+              I agree to the Terms and Conditions
+            </label>
+          </div>
+          {validationErrors.terms && (
+            <p className="mt-1 text-sm text-red-400">
+              {validationErrors.terms}
+            </p>
+          )}
+
+          {/* Submit button */}
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {isLoading ? 'Creating account...' : 'Sign Up'}
+          </button>
+        </form>
+
+        {/* Login link */}
+        <div className="text-center">
+          <p className="text-sm text-gray-400">
+            Already have an account?{' '}
+            <button
+              type="button"
+              onClick={onLoginClick}
+              className="text-blue-400 hover:text-blue-300 font-medium"
+            >
+              Sign in
+            </button>
+          </p>
         </div>
       </div>
     </div>

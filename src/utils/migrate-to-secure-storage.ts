@@ -8,7 +8,7 @@
  */
 
 import { secureStorage } from '@/services/SecureStorageService';
-import { logger } from '@/utils/logger';
+import { logger } from '@/utils/logger.ts';
 
 /**
  * Storage keys that need migration

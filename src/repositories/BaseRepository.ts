@@ -228,6 +228,7 @@ export abstract class BaseRepository<T> implements IRepository<T> {
       prevCursor,
       hasMore,
       pageSize: limit,
+      totalReturned: items.length,
       // totalCount omitted by default (expensive to calculate)
     };
   }

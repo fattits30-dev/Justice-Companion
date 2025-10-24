@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterAll, beforeAll } from 'vitest';
-import { AuditLogger } from './AuditLogger.js';
-import { createTestDatabase, type TestDatabaseHelper } from '../test-utils/database-test-helper.js';
+import { AuditLogger } from './AuditLogger.ts';
+import { createTestDatabase, type TestDatabaseHelper } from '../test-utils/database-test-helper.ts';
 import type Database from 'better-sqlite3';
 
 // Force tests to run sequentially to avoid database conflicts

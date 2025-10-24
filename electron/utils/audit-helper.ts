@@ -61,9 +61,9 @@ async function getAuditLogger() {
   // Use absolute paths to prevent path traversal (CVSS 8.8 fix)
   // Convert Windows paths to file:// URLs for ESM dynamic imports
   // Add .ts extension for tsx to resolve TypeScript modules
-  const { AuditLogger } = await import(pathToFileURL(path.join(__dirname, '../../../src/services/AuditLogger.ts')).href);
+  const { AuditLogger } = await import(pathToFileURL(path.join(__dirname, '../../src/services/AuditLogger.ts')).href);
 
-  const { getDb } = await import(pathToFileURL(path.join(__dirname, '../../../src/db/database.ts')).href);
+  const { getDb } = await import(pathToFileURL(path.join(__dirname, '../../src/db/database.ts')).href);
 
   const db = getDb();
   return new AuditLogger(db);

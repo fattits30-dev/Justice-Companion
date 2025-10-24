@@ -15,7 +15,7 @@
  */
 
 import { createHash, randomUUID } from 'node:crypto';
-import { logger } from '@/utils/logger';
+import { logger } from '../utils/logger.ts';
 import { EventEmitter } from 'node:events';
 import type {
   ErrorData,
@@ -24,8 +24,8 @@ import type {
   ErrorMetrics,
   ErrorTrackerConfig,
   ErrorTrackerStats,
-} from '../types/error-tracking.js';
-import { errorLogger } from '../utils/error-logger.js';
+} from '../types/error-tracking.ts';
+import { errorLogger } from '../utils/error-logger.ts';
 
 export class EnhancedErrorTracker extends EventEmitter {
   private errorGroups: Map<string, ErrorGroup> = new Map();

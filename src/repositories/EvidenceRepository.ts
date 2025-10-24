@@ -1,7 +1,7 @@
 import { getDb } from '../db/database.ts';
 import type { Evidence, CreateEvidenceInput, UpdateEvidenceInput } from '../models/Evidence.ts';
-import { EncryptionService, type EncryptedData } from '../services/EncryptionService.js';
-import type { AuditLogger } from '../services/AuditLogger.js';
+import { EncryptionService, type EncryptedData } from '../services/EncryptionService.ts';
+import type { AuditLogger } from '../services/AuditLogger.ts';
 import {
   encodeSimpleCursor,
   decodeSimpleCursor,
@@ -13,10 +13,16 @@ import type { PaginatedResult } from '../types/pagination.ts';
  * with built-in encryption for sensitive content
  */
 export class EvidenceRepository {
+  private encryptionService: EncryptionService;
+  private auditLogger?: AuditLogger;
+
   constructor(
-    private encryptionService: EncryptionService,
-    private auditLogger?: AuditLogger,
-  ) {}
+    encryptionService: EncryptionService,
+    auditLogger?: AuditLogger,
+  ) {
+    this.encryptionService = encryptionService;
+    this.auditLogger = auditLogger;
+  }
 
   /**
    * Create new evidence with encrypted content
@@ -95,7 +101,8 @@ export class EvidenceRepository {
         content,
         evidence_type as evidenceType,
         obtained_date as obtainedDate,
-        created_at as createdAt
+        created_at as createdAt,
+        updated_at as updatedAt
       FROM evidence
       WHERE id = ?
     `);
@@ -129,6 +136,35 @@ export class EvidenceRepository {
   }
 
   /**
+   * Find all evidence belonging to a specific user
+   */
+  findByUserId(userId: number): Evidence[] {
+    const db = getDb();
+    const stmt = db.prepare(`
+      SELECT
+        id,
+        case_id as caseId,
+        title,
+        file_path as filePath,
+        content,
+        evidence_type as evidenceType,
+        obtained_date as obtainedDate,
+        user_id as userId,
+        created_at as createdAt
+      FROM evidence
+      WHERE user_id = ?
+    `);
+
+    const rows = stmt.all(userId) as Evidence[];
+
+    // Decrypt content for each evidence
+    return rows.map(row => ({
+      ...row,
+      content: this.decryptContent(row.content),
+    }));
+  }
+
+  /**
    * Find all evidence for a case with decrypted content
    * @deprecated Use findByCaseIdPaginated for better performance with large datasets
    * @warning This method loads ALL evidence for the case into memory
@@ -144,7 +180,8 @@ export class EvidenceRepository {
         content,
         evidence_type as evidenceType,
         obtained_date as obtainedDate,
-        created_at as createdAt
+        created_at as createdAt,
+        updated_at as updatedAt
       FROM evidence
       WHERE case_id = ?
       ORDER BY created_at DESC
@@ -225,7 +262,8 @@ export class EvidenceRepository {
         content,
         evidence_type as evidenceType,
         obtained_date as obtainedDate,
-        created_at as createdAt
+        created_at as createdAt,
+        updated_at as updatedAt
       FROM evidence
       ${whereClause}
       ORDER BY id DESC
@@ -241,7 +279,7 @@ export class EvidenceRepository {
     // Generate next cursor from last item's id
     const nextCursor = hasMore && items.length > 0
       ? encodeSimpleCursor(items[items.length - 1].id)
-      : null;
+      : undefined;
 
     // Use batch decryption if enabled
     const useBatchEncryption = process.env.ENABLE_BATCH_ENCRYPTION !== 'false';
@@ -260,36 +298,40 @@ export class EvidenceRepository {
       const decryptedContents = this.encryptionService.batchDecrypt(encryptedContents);
 
       const decryptedItems = items.map((row, index) => {
-        const { id: _id, ...evidence } = row;
         return {
-          ...evidence,
+          ...row,
           content: encryptedContents[index] !== null
             ? decryptedContents[index]
             : row.content,
+          updatedAt: row.updatedAt ?? undefined,
         };
       });
 
       return {
-        items: decryptedItems,
+        items: decryptedItems as Evidence[],
         nextCursor,
+        prevCursor: undefined,
         hasMore,
+        pageSize: limit,
         totalReturned: items.length,
       };
     }
 
     // Fallback: individual decryption
     const decryptedItems = items.map((row) => {
-      const { id: _id, ...evidence } = row;
       return {
-        ...evidence,
+        ...row,
         content: this.decryptContent(row.content),
+        updatedAt: row.updatedAt ?? undefined,
       };
     });
 
     return {
-      items: decryptedItems,
+      items: decryptedItems as Evidence[],
       nextCursor,
+      prevCursor: undefined,
       hasMore,
+      pageSize: limit,
       totalReturned: items.length,
     };
   }
@@ -311,7 +353,8 @@ export class EvidenceRepository {
         content,
         evidence_type as evidenceType,
         obtained_date as obtainedDate,
-        created_at as createdAt
+        created_at as createdAt,
+        updated_at as updatedAt
       FROM evidence
     `;
 
@@ -413,7 +456,8 @@ export class EvidenceRepository {
         content,
         evidence_type as evidenceType,
         obtained_date as obtainedDate,
-        created_at as createdAt
+        created_at as createdAt,
+        updated_at as updatedAt
       FROM evidence
       ${whereClause}
       ORDER BY id DESC
@@ -430,7 +474,7 @@ export class EvidenceRepository {
     // Generate next cursor from last item's id
     const nextCursor = hasMore && items.length > 0
       ? encodeSimpleCursor(items[items.length - 1].id)
-      : null;
+      : undefined;
 
     // Use batch decryption if enabled
     const useBatchEncryption = process.env.ENABLE_BATCH_ENCRYPTION !== 'false';
@@ -449,36 +493,40 @@ export class EvidenceRepository {
       const decryptedContents = this.encryptionService.batchDecrypt(encryptedContents);
 
       const decryptedItems = items.map((row, index) => {
-        const { id: _id, ...evidence } = row;
         return {
-          ...evidence,
+          ...row,
           content: encryptedContents[index] !== null
             ? decryptedContents[index]
             : row.content,
+          updatedAt: row.updatedAt ?? undefined,
         };
       });
 
       return {
-        items: decryptedItems,
+        items: decryptedItems as Evidence[],
         nextCursor,
+        prevCursor: undefined,
         hasMore,
+        pageSize: limit,
         totalReturned: items.length,
       };
     }
 
     // Fallback: individual decryption
     const decryptedItems = items.map((row) => {
-      const { id: _id, ...evidence } = row;
       return {
-        ...evidence,
+        ...row,
         content: this.decryptContent(row.content),
+        updatedAt: row.updatedAt ?? undefined,
       };
     });
 
     return {
-      items: decryptedItems,
+      items: decryptedItems as Evidence[],
       nextCursor,
+      prevCursor: undefined,
       hasMore,
+      pageSize: limit,
       totalReturned: items.length,
     };
   }

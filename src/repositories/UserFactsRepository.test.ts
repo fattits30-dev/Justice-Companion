@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import Database from 'better-sqlite3';
 import { UserFactsRepository } from './UserFactsRepository';
-import { EncryptionService } from '../services/EncryptionService.js';
-import { AuditLogger } from '../services/AuditLogger.js';
+import { EncryptionService } from '../services/EncryptionService.ts';
+import { AuditLogger } from '../services/AuditLogger.ts';
 import * as databaseModule from '../db/database';
 
 describe('UserFactsRepository', () => {

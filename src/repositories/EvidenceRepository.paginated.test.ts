@@ -43,8 +43,8 @@ describe('EvidenceRepository - Cursor Pagination', () => {
     testKey = EncryptionService.generateKey();
     encryptionService = new EncryptionService(testKey);
 
-    // Create audit logger with the same encryption service
-    auditLogger = new AuditLogger(testDb.getDatabase(), encryptionService);
+    // Create audit logger
+    auditLogger = new AuditLogger(testDb.getDatabase());
 
     repository = new EvidenceRepository(encryptionService, auditLogger);
 

@@ -48,6 +48,14 @@ test-results
 .playwright
 
 # Build
+*.js.map
+
+# TypeScript compiled output (src should only contain .ts files)
+src/**/*.js
+src/**/*.d.ts
+!src/types/**/*.d.ts
+!src/**/*.test.js
+!src/**/*.spec.js
 build
 dist
 

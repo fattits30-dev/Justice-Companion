@@ -4,8 +4,8 @@ import type {
   CreateLegalIssueInput,
   UpdateLegalIssueInput,
 } from '../models/LegalIssue.ts';
-import { EncryptionService, type EncryptedData } from '../services/EncryptionService.js';
-import type { AuditLogger } from '../services/AuditLogger.js';
+import { EncryptionService, type EncryptedData } from '../services/EncryptionService.ts';
+import type { AuditLogger } from '../services/AuditLogger.ts';
 
 /**
  * Repository for managing legal issues with encryption

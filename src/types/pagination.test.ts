@@ -127,6 +127,7 @@ describe('Pagination Types', () => {
         prevCursor: undefined,
         hasMore: true,
         pageSize: 20,
+        totalReturned: 2,
       };
 
       expect(result.items).toHaveLength(2);
@@ -134,6 +135,7 @@ describe('Pagination Types', () => {
       expect(result.prevCursor).toBeUndefined();
       expect(result.hasMore).toBe(true);
       expect(result.pageSize).toBe(20);
+      expect(result.totalReturned).toBe(2);
     });
 
     it('should allow totalCount to be optional', () => {
@@ -143,6 +145,7 @@ describe('Pagination Types', () => {
         prevCursor: undefined,
         hasMore: false,
         pageSize: 20,
+        totalReturned: 0,
         // totalCount is optional
       };
 
@@ -156,6 +159,7 @@ describe('Pagination Types', () => {
         prevCursor: undefined,
         hasMore: false,
         pageSize: 20,
+        totalReturned: 0,
         totalCount: 1000,
       };
 
@@ -171,6 +175,7 @@ describe('Pagination Types', () => {
         prevCursor: undefined,
         hasMore: true,
         pageSize: 20,
+        totalReturned: 20,
       };
 
       expect(result.hasMore).toBe(true);
@@ -184,6 +189,7 @@ describe('Pagination Types', () => {
         prevCursor: 'prev-page-cursor',
         hasMore: false,
         pageSize: 20,
+        totalReturned: 2,
       };
 
       expect(result.hasMore).toBe(false);
@@ -232,6 +238,7 @@ describe('Pagination Types', () => {
         prevCursor: undefined,
         hasMore: false,
         pageSize: 20,
+        totalReturned: 0,
       };
 
       expect(result.items).toHaveLength(0);
@@ -245,6 +252,7 @@ describe('Pagination Types', () => {
         prevCursor: undefined,
         hasMore: false,
         pageSize: 20,
+        totalReturned: 1,
       };
 
       expect(result.items).toHaveLength(1);
@@ -259,6 +267,7 @@ describe('Pagination Types', () => {
         prevCursor: 'prev',
         hasMore: true,
         pageSize: 20,
+        totalReturned: 20,
       };
 
       expect(result.items).toHaveLength(20);

@@ -6,14 +6,13 @@ import type {
   CreateConversationInput,
   CreateMessageInput,
 } from '../models/ChatConversation.ts';
-import type { AuditLogger } from '../services/AuditLogger.js';
-import { EncryptionService, type EncryptedData } from '../services/EncryptionService.js';
+import type { AuditLogger } from '../services/AuditLogger.ts';
+import { EncryptionService, type EncryptedData } from '../services/EncryptionService.ts';
 import { errorLogger } from '../utils/error-logger.ts';
 import {
   encodeSimpleCursor,
   decodeSimpleCursor,
 } from '../utils/cursor-pagination.ts';
-import type { PaginatedResult } from '../types/pagination.ts';
 
 /**
  * Repository for managing chat conversations with encryption for message content

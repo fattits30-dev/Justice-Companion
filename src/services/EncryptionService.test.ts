@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { EncryptionService, EncryptedData } from './EncryptionService.js';
+import { EncryptionService, EncryptedData } from './EncryptionService.ts';
 
 describe('EncryptionService', () => {
   let service: EncryptionService;
