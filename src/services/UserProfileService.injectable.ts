@@ -152,4 +152,3 @@ class UserProfileServiceSingleton {
 }
 
 export const userProfileService = new UserProfileServiceSingleton();
-export { UserProfileServiceInjectable };

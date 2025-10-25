@@ -318,4 +318,3 @@ class ChatConversationServiceSingleton {
 }
 
 export const chatConversationService = new ChatConversationServiceSingleton();
-export { ChatConversationServiceInjectable };
