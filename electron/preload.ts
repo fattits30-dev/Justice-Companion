@@ -410,7 +410,11 @@ const justiceAPI = {
     success: true,
     data: [], // No conversations yet - chat history feature pending
   }),
-  getCaseFacts: () => Promise.reject(new Error('Not implemented')),
+  getCaseFacts: (caseId: number, sessionId: string) =>
+    ipcRenderer.invoke('case-fact:list', caseId, sessionId),
+
+  createCaseFact: (data: any, sessionId: string) =>
+    ipcRenderer.invoke('case-fact:create', data, sessionId),
   getCasesByStatusPaginated: () => Promise.reject(new Error('Not implemented')),
   getCasesByUserPaginated: () => Promise.reject(new Error('Not implemented')),
   getCaseStatistics: () => Promise.reject(new Error('Not implemented')),

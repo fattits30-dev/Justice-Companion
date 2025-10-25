@@ -1,5 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../contexts/AuthContext.tsx";
+import { SaveToCaseDialog } from "./chat/SaveToCaseDialog.tsx";
+import { toast } from 'sonner';
+import { Save } from 'lucide-react';
 
 interface Message {
   id: string;
@@ -23,6 +26,10 @@ export function ChatView() {
   const [currentStreamingMessage, setCurrentStreamingMessage] = useState("");
   const [_showThinking, _setShowThinking] = useState(false); // Reserved for showing AI thinking process
   const [_currentThinking, setCurrentThinking] = useState(""); // Reserved for AI thinking display
+
+  // Save to case state
+  const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
+  const [messageToSave, setMessageToSave] = useState<Message | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -116,6 +123,51 @@ export function ChatView() {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
+    }
+  };
+
+  const handleSaveToCase = (message: Message) => {
+    setMessageToSave(message);
+    setIsSaveDialogOpen(true);
+  };
+
+  const handleSaveConfirm = async (caseId: number, title: string) => {
+    if (!messageToSave) {
+      return { success: false, error: 'No message selected' };
+    }
+
+    try {
+      const sessionId = localStorage.getItem("sessionId");
+      if (!sessionId) {
+        return { success: false, error: 'No active session' };
+      }
+
+      // Format the AI response as a case fact
+      // Combine title and content for fact_content field
+      const factContent = `${title}\n\n${messageToSave.content}\n\n[Source: AI Legal Assistant]`;
+
+      // Save the AI response as a case fact
+      const result = await window.justiceAPI.createCaseFact({
+        caseId,
+        factContent,
+        factCategory: 'other', // AI responses don't fit standard categories
+        importance: 'medium',
+      }, sessionId);
+
+      if (result.success) {
+        toast.success('AI response saved to case', {
+          description: `Saved to ${title}`,
+        });
+        return { success: true };
+      }
+
+      return { success: false, error: result.error };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to save';
+      toast.error('Failed to save to case', {
+        description: errorMessage,
+      });
+      return { success: false, error: errorMessage };
     }
   };
 
@@ -285,6 +337,18 @@ export function ChatView() {
                 </details>
               )}
 
+              {/* Save to Case Button (for assistant messages only) */}
+              {message.role === "assistant" && (
+                <button
+                  onClick={() => handleSaveToCase(message)}
+                  className="mt-3 flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors border border-white/10 hover:border-white/20"
+                  type="button"
+                >
+                  <Save className="w-4 h-4" />
+                  Save to Case
+                </button>
+              )}
+
               <div className="mt-2 text-xs text-white/80">
                 {message.timestamp.toLocaleTimeString()}
               </div>
@@ -381,6 +445,15 @@ export function ChatView() {
           </div>
         </div>
       </div>
+
+      {/* Save to Case Dialog */}
+      <SaveToCaseDialog
+        open={isSaveDialogOpen}
+        onClose={() => setIsSaveDialogOpen(false)}
+        onSave={handleSaveConfirm}
+        messageContent={messageToSave?.content || ''}
+        sessionId={localStorage.getItem('sessionId') || ''}
+      />
     </div>
   );
 }
