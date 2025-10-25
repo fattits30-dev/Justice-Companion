@@ -4,7 +4,7 @@ import type {
   CaseStatus,
   CaseType,
   CreateCaseInput,
-} from "../../models/Case.ts";
+} from "../../domains/cases/entities/Case.ts";
 import { CaseToolbar } from "./components/CaseToolbar.tsx";
 import {
   CasesEmptyState,
@@ -35,13 +35,14 @@ export function CasesView() {
       const sessionId = getSessionId();
       const response = await window.justiceAPI.getAllCases(sessionId);
 
-      if (response.success && response.data) {
-        setCases(response.data);
-        setLoadState("ready");
-        return;
+      if (!response.success) {
+        throw new Error(response.error || "Failed to load cases");
       }
 
-      throw new Error(response.error || "Failed to load cases");
+      if (response.data) {
+        setCases(response.data);
+        setLoadState("ready");
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
       setLoadState("error");
@@ -57,16 +58,18 @@ export function CasesView() {
       const sessionId = getSessionId();
       const response = await window.justiceAPI.createCase(input, sessionId);
 
-      if (response.success && response.data) {
-        setCases((previous) => [response.data, ...previous]);
+      if (!response.success) {
+        throw new Error(response.error || "Failed to create case");
+      }
+
+      if (response.data) {
+        const newCase = response.data;
+        setCases((previous) => [newCase, ...previous]);
         setShowCreateDialog(false);
         showSuccess(`${input.title} has been added to your cases`, {
           title: "Case created successfully",
         });
-        return;
       }
-
-      throw new Error(response.error || "Failed to create case");
     } catch (err) {
       showError(err instanceof Error ? err.message : "Unknown error", {
         title: "Failed to create case",

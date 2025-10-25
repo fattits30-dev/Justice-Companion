@@ -5,6 +5,12 @@
  */
 
 import { ZodError } from 'zod';
+import {
+  DomainError,
+  isDomainError,
+  toDomainError,
+  ValidationError
+} from '../../src/errors/DomainErrors.ts';
 
 /**
  * Standard IPC response type
@@ -107,76 +113,33 @@ export function zodErrorResponse(error: ZodError): IPCResponse {
  * Maps common error patterns to appropriate error codes
  */
 export function formatError(error: unknown): IPCResponse {
+  // Domain errors - already structured
+  if (isDomainError(error)) {
+    return {
+      success: false,
+      error: {
+        code: error.code,
+        message: error.message,
+        details: error.context,
+      },
+    };
+  }
+
   // Zod validation errors
   if (error instanceof ZodError) {
     return zodErrorResponse(error);
   }
 
-  // Standard Error objects
-  if (error instanceof Error) {
-    const message = error.message;
-
-    // Authentication errors
-    if (
-      message.includes('not authenticated') ||
-      message.includes('login required') ||
-      message.includes('session')
-    ) {
-      return errorResponse(IPCErrorCode.NOT_AUTHENTICATED, message);
-    }
-
-    if (message.includes('invalid credentials') || message.includes('password')) {
-      return errorResponse(IPCErrorCode.INVALID_CREDENTIALS, message);
-    }
-
-    // Authorization errors
-    if (message.includes('not authorized') || message.includes('permission')) {
-      return errorResponse(IPCErrorCode.PERMISSION_ERROR, message);
-    }
-
-    if (message.includes('ownership') || message.includes('not yours')) {
-      return errorResponse(IPCErrorCode.OWNERSHIP_REQUIRED, message);
-    }
-
-    // Resource errors
-    if (message.includes('not found')) {
-      return errorResponse(IPCErrorCode.NOT_FOUND, message);
-    }
-
-    if (message.includes('already exists') || message.includes('duplicate')) {
-      return errorResponse(IPCErrorCode.ALREADY_EXISTS, message);
-    }
-
-    // Database errors
-    if (message.includes('database') || message.includes('SQLITE')) {
-      return errorResponse(IPCErrorCode.DATABASE_ERROR, message);
-    }
-
-    // Encryption errors
-    if (message.includes('encryption') || message.includes('decrypt')) {
-      return errorResponse(IPCErrorCode.ENCRYPTION_ERROR, message);
-    }
-
-    // Rate limiting
-    if (message.includes('rate limit') || message.includes('too many')) {
-      return errorResponse(IPCErrorCode.RATE_LIMIT_EXCEEDED, message);
-    }
-
-    // Consent
-    if (message.includes('consent')) {
-      return errorResponse(IPCErrorCode.CONSENT_REQUIRED, message);
-    }
-
-    // Generic error
-    return errorResponse(IPCErrorCode.INTERNAL_ERROR, message);
-  }
-
-  // Unknown error types
-  return errorResponse(
-    IPCErrorCode.INTERNAL_ERROR,
-    'An unexpected error occurred',
-    error
-  );
+  // Convert to domain error for consistent handling
+  const domainError = toDomainError(error);
+  return {
+    success: false,
+    error: {
+      code: domainError.code,
+      message: domainError.message,
+      details: domainError.context,
+    },
+  };
 }
 
 /**

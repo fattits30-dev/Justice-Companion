@@ -59,8 +59,22 @@ export function TimelineView() {
         throw new Error(casesResult.error || 'Failed to fetch cases');
       }
 
-      setDeadlines(deadlinesResult.data || []);
-      setCases(casesResult.data || []);
+      const deadlinesData = deadlinesResult.data || [];
+      const casesData = casesResult.data || [];
+
+      // Transform Deadline[] to DeadlineWithCase[] by joining with case data
+      const casesMap = new Map(casesData.map(c => [c.id, c]));
+      const deadlinesWithCase: DeadlineWithCase[] = deadlinesData.map(deadline => {
+        const caseData = casesMap.get(deadline.caseId);
+        return {
+          ...deadline,
+          caseTitle: caseData?.title || 'Unknown Case',
+          caseStatus: caseData?.status || 'active',
+        };
+      });
+
+      setDeadlines(deadlinesWithCase);
+      setCases(casesData);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {

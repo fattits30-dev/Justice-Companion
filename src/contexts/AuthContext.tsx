@@ -68,17 +68,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const response = await window.justiceAPI.getSession(sessionId);
         console.log('[AuthContext] getSession response:', response);
 
-        if (response.success && response.data) {
-          console.log('[AuthContext] Session restored successfully:', response.data);
-          setUser({
-            id: String(response.data.userId),
-            username: response.data.username,
-            email: response.data.email
-          });
-        } else {
+        if (!response.success) {
           console.warn('[AuthContext] Session invalid - clearing');
           // Session invalid - clear it
           localStorage.removeItem('sessionId');
+          return;
+        }
+
+        if (response.data) {
+          console.log('[AuthContext] Session restored successfully:', response.data);
+          setUser({
+            id: String(response.data.id),
+            username: response.data.username,
+            email: response.data.email
+          });
         }
       } catch (err) {
         // Silently fail - no session to restore
@@ -102,7 +105,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       console.log('[AuthContext] Login response:', response);
 
-      if (response.success && response.data) {
+      if (!response.success) {
+        setError(response.error || 'Login failed');
+        return;
+      }
+
+      if (response.data) {
         console.log('[AuthContext] Response data:', response.data);
         console.log('[AuthContext] Session object:', response.data.session);
 
@@ -121,12 +129,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
           username: response.data.user.username,
           email: response.data.user.email
         });
-      } else {
-        // Show error message - extract message if error is an object
-        const errorMsg = typeof response.error === 'string'
-          ? response.error
-          : response.error?.message || 'Login failed';
-        setError(errorMsg);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');

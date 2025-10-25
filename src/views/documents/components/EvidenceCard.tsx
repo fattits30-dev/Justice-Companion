@@ -10,7 +10,7 @@ import {
   Calendar,
   Clock,
 } from "lucide-react";
-import type { Evidence } from "../../../models/Evidence.ts";
+import type { Evidence } from "../../../domains/evidence/entities/Evidence.ts";
 import { evidenceTypeMetadata } from "../constants.ts";
 import { Card } from "../../../components/ui/Card.tsx";
 import { Badge } from "../../../components/ui/Badge.tsx";

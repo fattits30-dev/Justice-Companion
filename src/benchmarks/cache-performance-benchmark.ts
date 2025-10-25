@@ -20,9 +20,9 @@ import { CachedEvidenceRepository } from '../repositories/CachedEvidenceReposito
 import { CachedSessionRepository } from '../repositories/CachedSessionRepository.ts';
 import { CachedUserProfileRepository } from '../repositories/CachedUserProfileRepository.ts';
 
-import type { CreateCaseInput } from '../models/Case.ts';
-import type { CreateEvidenceInput } from '../models/Evidence.ts';
-import type { CreateSessionInput } from '../models/Session.ts';
+import type { CreateCaseInput } from '../domains/cases/entities/Case.ts';
+import type { CreateEvidenceInput } from '../domains/evidence/entities/Evidence.ts';
+import type { CreateSessionInput } from '../domains/auth/entities/Session.ts';
 import { v4 as uuidv4 } from 'uuid';
 
 /**

@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { X, Upload } from "lucide-react";
 import { Card } from "../../../components/ui/Card.tsx";
 import { Button } from "../../../components/ui/Button.tsx";
-import type { EvidenceType } from "../../../models/Evidence.ts";
+import type { EvidenceType } from "../../../domains/evidence/entities/Evidence.ts";
 import { evidenceTypeMetadata } from "../constants.ts";
 import { showWarning } from "../../../components/ui/Toast.tsx";
 

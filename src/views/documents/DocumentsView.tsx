@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { Evidence, EvidenceType } from "../../models/Evidence.ts";
-import type { Case } from "../../models/Case.ts";
+import type { Evidence, EvidenceType } from "../../domains/evidence/entities/Evidence.ts";
+import type { Case } from "../../domains/cases/entities/Case.ts";
 import { DocumentsToolbar } from "./components/DocumentsToolbar.tsx";
 import {
   DocumentsEmptyEvidenceState,
@@ -43,8 +43,12 @@ export function DocumentsView() {
       const sessionId = getSessionId();
       const response = await window.justiceAPI.getAllCases(sessionId);
 
-      if (!response.success || !response.data) {
+      if (!response.success) {
         throw new Error(response.error || "Failed to load cases");
+      }
+
+      if (!response.data) {
+        throw new Error("No data returned from getAllCases");
       }
 
       const mappedCases = (response.data as Case[]).map((caseItem) => ({
@@ -78,8 +82,12 @@ export function DocumentsView() {
         sessionId,
       );
 
-      if (!response.success || !response.data) {
+      if (!response.success) {
         throw new Error(response.error || "Failed to load evidence");
+      }
+
+      if (!response.data) {
+        throw new Error("No data returned from getAllEvidence");
       }
 
       setEvidence(response.data);
@@ -114,8 +122,12 @@ export function DocumentsView() {
           sessionId,
         );
 
-        if (!response.success || !response.data) {
+        if (!response.success) {
           throw new Error(response.error || "Failed to upload evidence");
+        }
+
+        if (!response.data) {
+          throw new Error("No data returned from uploadFile");
         }
 
         setEvidence((previous) => [response.data as Evidence, ...previous]);
@@ -205,29 +217,35 @@ export function DocumentsView() {
   const showEmptyEvidence = evidence.length === 0;
 
   return (
-    <div className="min-h-screen bg-primary-900 p-8 text-white">
-      <DocumentsToolbar
-        cases={cases}
-        selectedCaseId={selectedCaseId}
-        onCaseSelect={setSelectedCaseId}
-        filterType={filterType}
-        onFilterChange={setFilterType}
-        onUploadClick={() => setShowUploadDialog(true)}
-        isUploadDisabled={selectedCaseId === null}
-      />
+    <div className="h-screen flex flex-col overflow-hidden bg-primary-900 text-white">
+      {/* Fixed Toolbar */}
+      <div className="flex-shrink-0 p-8 pb-4">
+        <DocumentsToolbar
+          cases={cases}
+          selectedCaseId={selectedCaseId}
+          onCaseSelect={setSelectedCaseId}
+          filterType={filterType}
+          onFilterChange={setFilterType}
+          onUploadClick={() => setShowUploadDialog(true)}
+          isUploadDisabled={selectedCaseId === null}
+        />
+      </div>
 
-      {showEmptyEvidence ? (
-        <DocumentsEmptyEvidenceState
-          onUpload={() => setShowUploadDialog(true)}
-        />
-      ) : showFilteredEmpty ? (
-        <DocumentsFilteredEmptyState />
-      ) : (
-        <EvidenceList
-          evidence={filteredEvidence}
-          onDelete={handleDeleteEvidence}
-        />
-      )}
+      {/* Scrollable Content Area */}
+      <div className="flex-1 overflow-y-auto px-8 pb-8">
+        {showEmptyEvidence ? (
+          <DocumentsEmptyEvidenceState
+            onUpload={() => setShowUploadDialog(true)}
+          />
+        ) : showFilteredEmpty ? (
+          <DocumentsFilteredEmptyState />
+        ) : (
+          <EvidenceList
+            evidence={filteredEvidence}
+            onDelete={handleDeleteEvidence}
+          />
+        )}
+      </div>
 
       {showUploadDialog && (
         <UploadEvidenceDialog

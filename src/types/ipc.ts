@@ -1,5 +1,5 @@
-import type { Case, CreateCaseInput, UpdateCaseInput } from '../models/Case.ts';
-import type { CaseStatus } from '../models/Case.ts';
+import type { Case, CreateCaseInput, UpdateCaseInput } from '../domains/cases/entities/Case.ts';
+import type { CaseStatus } from '../domains/cases/entities/Case.ts';
 import type {
   ChatConversation,
   ChatMessage,
@@ -7,18 +7,18 @@ import type {
   CreateMessageInput,
   ConversationWithMessages,
 } from '../models/ChatConversation.ts';
-import type { UserProfile, UpdateUserProfileInput } from '../models/UserProfile.ts';
-import type { Evidence, CreateEvidenceInput, UpdateEvidenceInput } from '../models/Evidence.ts';
+import type { UserProfile, UpdateUserProfileInput } from '../domains/settings/entities/UserProfile.ts';
+import type { Evidence, CreateEvidenceInput, UpdateEvidenceInput } from '../domains/evidence/entities/Evidence.ts';
 import type { LegalContext } from './ai.ts';
-import type { CaseFact } from '../models/CaseFact.ts';
+import type { CaseFact } from '../domains/cases/entities/CaseFact.ts';
 import type { UserFact } from '../models/UserFact.ts';
 import type { Note } from '../models/Note.ts';
-import type { LegalIssue } from '../models/LegalIssue.ts';
-import type { TimelineEvent } from '../models/TimelineEvent.ts';
-import type { User } from '../models/User.ts';
-import type { Consent, ConsentType } from '../models/Consent.ts';
+import type { LegalIssue } from '../domains/legal-research/entities/LegalIssue.ts';
+import type { TimelineEvent } from '../domains/timeline/entities/TimelineEvent.ts';
+import type { User } from '../domains/auth/entities/User.ts';
+import type { Consent, ConsentType } from '../domains/settings/entities/Consent.ts';
 import type { PaginationParams, PaginatedResult } from './pagination.ts';
-import type { Session } from '../models/Session.ts';
+import type { Session } from '../domains/auth/entities/Session.ts';
 
 /**
  * IPC Channel definitions for type-safe communication

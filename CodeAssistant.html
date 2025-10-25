@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visual Code Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #1e1e1e;
+            color: #fff;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: #2d2d2d;
+            padding: 1rem 2rem;
+            border-bottom: 1px solid #404040;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .main {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .canvas {
+            flex: 1;
+            position: relative;
+            background: #252526;
+            overflow: auto;
+        }
+
+        .sidebar {
+            width: 400px;
+            background: #1e1e1e;
+            border-left: 1px solid #404040;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Nodes */
+        .node {
+            position: absolute;
+            background: #2d2d2d;
+            border: 2px solid #404040;
+            border-radius: 8px;
+            padding: 1rem;
+            min-width: 150px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .node:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .node.active {
+            border-color: #007acc;
+            box-shadow: 0 0 20px rgba(0, 122, 204, 0.5);
+            animation: pulse 2s infinite;
+        }
+
+        .node.completed {
+            border-color: #4caf50;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .node-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .node-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .node-status {
+            font-size: 0.75rem;
+            color: #888;
+            text-transform: uppercase;
+        }
+
+        /* Connections */
+        svg.connections {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .connection {
+            stroke: #404040;
+            stroke-width: 2;
+            fill: none;
+            transition: all 0.3s ease;
+        }
+
+        .connection.active {
+            stroke: #007acc;
+            stroke-width: 3;
+            animation: dash 1s linear infinite;
+        }
+
+        @keyframes dash {
+            to {
+                stroke-dashoffset: -20;
+            }
+        }
+
+        /* Prompt Input */
+        .prompt-section {
+            padding: 1rem;
+            border-bottom: 1px solid #404040;
+        }
+
+        .prompt-section textarea {
+            width: 100%;
+            background: #2d2d2d;
+            border: 1px solid #404040;
+            border-radius: 4px;
+            color: #fff;
+            padding: 0.75rem;
+            font-family: inherit;
+            font-size: 0.9rem;
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .prompt-section textarea:focus {
+            outline: none;
+            border-color: #007acc;
+        }
+
+        .prompt-section button {
+            margin-top: 0.5rem;
+            width: 100%;
+            background: #007acc;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 0.75rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .prompt-section button:hover {
+            background: #005a9e;
+        }
+
+        .prompt-section button:disabled {
+            background: #404040;
+            cursor: not-allowed;
+        }
+
+        /* Output Panel */
+        .output-section {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+        }
+
+        .output-item {
+            background: #2d2d2d;
+            border-left: 3px solid #404040;
+            border-radius: 4px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .output-item.orchestrator { border-left-color: #9b59b6; }
+        .output-item.frontend { border-left-color: #3498db; }
+        .output-item.backend { border-left-color: #2ecc71; }
+        .output-item.test { border-left-color: #f39c12; }
+        .output-item.docs { border-left-color: #e74c3c; }
+
+        .output-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .output-agent {
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+        }
+
+        .output-time {
+            color: #888;
+            font-size: 0.75rem;
+        }
+
+        .output-content {
+            color: #ccc;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+
+        .status-bar {
+            background: #007acc;
+            color: #fff;
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+            text-align: center;
+        }
+
+        .nodes-container {
+            position: relative;
+            min-height: 600px;
+            padding: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🤖 Visual Code Assistant</h1>
+    </div>
+
+    <div class="main">
+        <div class="canvas">
+            <div class="nodes-container" id="nodesContainer">
+                <svg class="connections" id="connections"></svg>
+
+                <!-- Orchestrator -->
+                <div class="node" id="orchestrator" style="left: 50%; top: 50px; transform: translateX(-50%);">
+                    <div class="node-icon">🧠</div>
+                    <div class="node-title">Orchestrator</div>
+                    <div class="node-status">idle</div>
+                </div>
+
+                <!-- Frontend Agent -->
+                <div class="node" id="frontend" style="left: 15%; top: 300px;">
+                    <div class="node-icon">🎨</div>
+                    <div class="node-title">Frontend</div>
+                    <div class="node-status">idle</div>
+                </div>
+
+                <!-- Backend Agent -->
+                <div class="node" id="backend" style="left: 35%; top: 300px;">
+                    <div class="node-icon">⚙️</div>
+                    <div class="node-title">Backend</div>
+                    <div class="node-status">idle</div>
+                </div>
+
+                <!-- Test Agent -->
+                <div class="node" id="test" style="left: 55%; top: 300px;">
+                    <div class="node-icon">🧪</div>
+                    <div class="node-title">Test</div>
+                    <div class="node-status">idle</div>
+                </div>
+
+                <!-- Docs Agent -->
+                <div class="node" id="docs" style="left: 75%; top: 300px;">
+                    <div class="node-icon">📚</div>
+                    <div class="node-title">Docs</div>
+                    <div class="node-status">idle</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <div class="prompt-section">
+                <textarea id="promptInput" placeholder="Describe what you want to build...
+
+Examples:
+• Build a todo app with React
+• Create a REST API for users
+• Write tests for authentication"></textarea>
+                <button id="executeBtn">Execute</button>
+            </div>
+
+            <div class="output-section" id="outputSection">
+                <div style="color: #888; text-align: center; padding: 2rem;">
+                    Enter a prompt above to start
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="status-bar" id="statusBar">Ready</div>
+
+    <script>
+        // Node positions and connections
+        const nodes = ['orchestrator', 'frontend', 'backend', 'test', 'docs'];
+        const agents = ['frontend', 'backend', 'test', 'docs'];
+
+        // Draw connections
+        function drawConnections() {
+            const svg = document.getElementById('connections');
+            const container = document.getElementById('nodesContainer');
+            const orchestrator = document.getElementById('orchestrator');
+            const orchRect = orchestrator.getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
+
+            agents.forEach(agentId => {
+                const agent = document.getElementById(agentId);
+                const agentRect = agent.getBoundingClientRect();
+
+                const x1 = orchRect.left + orchRect.width / 2 - containerRect.left;
+                const y1 = orchRect.bottom - containerRect.top;
+                const x2 = agentRect.left + agentRect.width / 2 - containerRect.left;
+                const y2 = agentRect.top - containerRect.top;
+
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                const d = `M ${x1} ${y1} Q ${x1} ${(y1 + y2) / 2} ${x2} ${y2}`;
+                path.setAttribute('d', d);
+                path.setAttribute('class', 'connection');
+                path.setAttribute('id', `connection-${agentId}`);
+                path.setAttribute('stroke-dasharray', '5,5');
+                svg.appendChild(path);
+            });
+        }
+
+        // Update node status
+        function setNodeStatus(nodeId, status) {
+            const node = document.getElementById(nodeId);
+            const statusEl = node.querySelector('.node-status');
+
+            node.classList.remove('active', 'completed');
+            if (status === 'working') {
+                node.classList.add('active');
+                statusEl.textContent = 'working';
+            } else if (status === 'completed') {
+                node.classList.add('completed');
+                statusEl.textContent = 'completed';
+            } else {
+                statusEl.textContent = 'idle';
+            }
+        }
+
+        // Update connection
+        function setConnectionActive(agentId, active) {
+            const connection = document.getElementById(`connection-${agentId}`);
+            if (connection) {
+                if (active) {
+                    connection.classList.add('active');
+                } else {
+                    connection.classList.remove('active');
+                }
+            }
+        }
+
+        // Add output message
+        function addOutput(agent, message) {
+            const outputSection = document.getElementById('outputSection');
+
+            // Clear placeholder on first message
+            if (outputSection.children[0]?.textContent?.includes('Enter a prompt')) {
+                outputSection.innerHTML = '';
+            }
+
+            const outputItem = document.createElement('div');
+            outputItem.className = `output-item ${agent}`;
+            outputItem.innerHTML = `
+                <div class="output-header">
+                    <div class="output-agent">${agent}</div>
+                    <div class="output-time">${new Date().toLocaleTimeString()}</div>
+                </div>
+                <div class="output-content">${message}</div>
+            `;
+            outputSection.appendChild(outputItem);
+            outputSection.scrollTop = outputSection.scrollHeight;
+        }
+
+        // Update status bar
+        function setStatus(message) {
+            document.getElementById('statusBar').textContent = message;
+        }
+
+        // Simulate agent workflow
+        async function executePrompt(prompt) {
+            const executeBtn = document.getElementById('executeBtn');
+            const promptInput = document.getElementById('promptInput');
+
+            executeBtn.disabled = true;
+            promptInput.disabled = true;
+
+            // Reset all nodes
+            nodes.forEach(node => setNodeStatus(node, 'idle'));
+            agents.forEach(agent => setConnectionActive(agent, false));
+
+            try {
+                // Step 1: Orchestrator analyzes
+                setStatus('Orchestrator analyzing...');
+                setNodeStatus('orchestrator', 'working');
+                await sleep(1000);
+                addOutput('orchestrator', `Analyzing request: "${prompt}"\n\nI'll coordinate the following agents:\n- Frontend: UI components\n- Backend: API endpoints\n- Test: Unit tests\n- Docs: Documentation`);
+                await sleep(1500);
+                setNodeStatus('orchestrator', 'completed');
+
+                // Step 2: Delegate to agents
+                for (const agent of agents) {
+                    setStatus(`${agent} agent working...`);
+                    setNodeStatus('orchestrator', 'active');
+                    setConnectionActive(agent, true);
+                    setNodeStatus(agent, 'working');
+                    await sleep(800);
+
+                    const messages = {
+                        frontend: `Creating React components for: ${prompt}\n\n✓ App.jsx\n✓ TodoList.jsx\n✓ TodoItem.jsx\n✓ Styles with Tailwind`,
+                        backend: `Building Express API for: ${prompt}\n\n✓ GET /api/todos\n✓ POST /api/todos\n✓ PUT /api/todos/:id\n✓ DELETE /api/todos/:id`,
+                        test: `Writing tests for: ${prompt}\n\n✓ Component tests (Jest)\n✓ API tests (Supertest)\n✓ E2E tests (Playwright)\nCoverage: 87%`,
+                        docs: `Generating documentation for: ${prompt}\n\n✓ README.md\n✓ API.md\n✓ Setup instructions\n✓ Usage examples`
+                    };
+
+                    await sleep(2000);
+                    addOutput(agent, messages[agent]);
+                    setNodeStatus(agent, 'completed');
+                    setConnectionActive(agent, false);
+                }
+
+                // Step 3: Orchestrator synthesizes
+                setStatus('Synthesizing results...');
+                setNodeStatus('orchestrator', 'working');
+                await sleep(1000);
+                addOutput('orchestrator', `✅ Task completed successfully!\n\nAll components ready:\n- Frontend: 3 React components\n- Backend: 4 API endpoints\n- Tests: 15 tests passing\n- Docs: Complete documentation\n\nReady to build!`);
+                setNodeStatus('orchestrator', 'completed');
+                setStatus('✅ Completed');
+
+            } catch (error) {
+                setStatus('❌ Error occurred');
+                addOutput('orchestrator', `Error: ${error.message}`);
+            } finally {
+                executeBtn.disabled = false;
+                promptInput.disabled = false;
+            }
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // Event listeners
+        document.getElementById('executeBtn').addEventListener('click', () => {
+            const prompt = document.getElementById('promptInput').value.trim();
+            if (prompt) {
+                executePrompt(prompt);
+            }
+        });
+
+        document.getElementById('promptInput').addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'Enter') {
+                document.getElementById('executeBtn').click();
+            }
+        });
+
+        // Initialize
+        window.addEventListener('load', () => {
+            drawConnections();
+        });
+
+        window.addEventListener('resize', () => {
+            const svg = document.getElementById('connections');
+            svg.innerHTML = '';
+            drawConnections();
+        });
+    </script>
+</body>
+</html>

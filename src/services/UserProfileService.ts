@@ -1,5 +1,5 @@
 import { getRepositories } from '../repositories.ts';
-import type { UserProfile, UpdateUserProfileInput } from '../models/UserProfile.ts';
+import type { UserProfile, UpdateUserProfileInput } from '../domains/settings/entities/UserProfile.ts';
 import { errorLogger } from '../utils/error-logger.ts';
 
 class UserProfileService {

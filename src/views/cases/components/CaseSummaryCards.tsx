@@ -1,4 +1,4 @@
-import type { Case } from "../../../models/Case.ts";
+import type { Case } from "../../../domains/cases/entities/Case.ts";
 import { Card } from "../../../components/ui/Card.tsx";
 import {
   Briefcase,

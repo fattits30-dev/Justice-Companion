@@ -1,4 +1,4 @@
-import type { Case } from '../../../models/Case.ts';
+import type { Case } from '../../../domains/cases/entities/Case.ts';
 import { CaseCard } from './CaseCard.tsx';
 
 interface CaseListProps {

@@ -1,5 +1,5 @@
 import { getDb } from '../db/database.ts';
-import type { Case, CreateCaseInput, UpdateCaseInput, CaseStatus } from '../models/Case.ts';
+import type { Case, CreateCaseInput, UpdateCaseInput, CaseStatus } from '../domains/cases/entities/Case.ts';
 import { EncryptionService, type EncryptedData } from '../services/EncryptionService.ts';
 import type { AuditLogger } from '../services/AuditLogger.ts';
 
@@ -421,6 +421,99 @@ export class CaseRepository {
       throw new Error('EncryptionService not configured for CaseRepository');
     }
     return this.encryptionService;
+  }
+
+  /**
+   * Search cases by query string and filters
+   */
+  async searchCases(userId: number, query: string, filters?: any): Promise<Case[]> {
+    const db = getDb();
+    const conditions: string[] = [];
+    const params: any[] = [];
+
+    // User filter
+    conditions.push('user_id = ?');
+    params.push(userId);
+
+    // Text search
+    if (query) {
+      conditions.push('(title LIKE ? OR description LIKE ?)');
+      params.push(`%${query}%`, `%${query}%`);
+    }
+
+    // Status filter
+    if (filters?.caseStatus && filters.caseStatus.length > 0) {
+      const placeholders = filters.caseStatus.map(() => '?').join(',');
+      conditions.push(`status IN (${placeholders})`);
+      params.push(...filters.caseStatus);
+    }
+
+    // Date range filter
+    if (filters?.dateRange) {
+      conditions.push('created_at >= ? AND created_at <= ?');
+      params.push(filters.dateRange.from.toISOString(), filters.dateRange.to.toISOString());
+    }
+
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+    const stmt = db.prepare(`
+      SELECT
+        id,
+        title,
+        description,
+        case_type as caseType,
+        status,
+        user_id as userId,
+        created_at as createdAt,
+        updated_at as updatedAt
+      FROM cases
+      ${whereClause}
+      ORDER BY created_at DESC
+    `);
+
+    const rows = stmt.all(...params) as Case[];
+
+    // Decrypt descriptions
+    return rows.map(row => {
+      row.description = this.decryptDescription(row.description);
+      return row;
+    });
+  }
+
+  /**
+   * Get cases by user ID
+   */
+  async getByUserId(userId: number): Promise<Case[]> {
+    const db = getDb();
+    const stmt = db.prepare(`
+      SELECT
+        id,
+        title,
+        description,
+        case_type as caseType,
+        status,
+        user_id as userId,
+        created_at as createdAt,
+        updated_at as updatedAt
+      FROM cases
+      WHERE user_id = ?
+      ORDER BY created_at DESC
+    `);
+
+    const rows = stmt.all(userId) as Case[];
+
+    // Decrypt descriptions
+    return rows.map(row => {
+      row.description = this.decryptDescription(row.description);
+      return row;
+    });
+  }
+
+  /**
+   * Get case by ID (async version for consistency)
+   */
+  async get(id: number): Promise<Case | null> {
+    return this.findById(id);
   }
 
 }

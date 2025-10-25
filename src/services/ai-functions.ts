@@ -13,7 +13,7 @@
  * - Multi-turn conversation management
  */
 
-import type { CaseFact, CreateCaseFactInput } from '../models/CaseFact.ts';
+import type { CaseFact, CreateCaseFactInput } from '../domains/cases/entities/CaseFact.ts';
 
 /**
  * Store a case fact (persistent memory)

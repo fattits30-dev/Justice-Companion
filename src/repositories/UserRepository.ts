@@ -1,5 +1,5 @@
 import { getDb } from '../db/database.ts';
-import type { User, CreateUserInput, UpdateUserInput } from '../models/User.ts';
+import type { User, CreateUserInput, UpdateUserInput } from '../domains/auth/entities/User.ts';
 import type { AuditLogger } from '../services/AuditLogger.ts';
 
 /**

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, waitFor, fireEvent, within } from '@testing-library/react';
 import { CasesView } from './CasesView.tsx';
-import type { Case } from '../models/Case.ts';
+import type { Case } from '../domains/cases/entities/Case.ts';
 
 const baseCases: Case[] = [
   {

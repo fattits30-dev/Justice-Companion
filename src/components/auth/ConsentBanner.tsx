@@ -16,7 +16,7 @@
 import { useState } from "react";
 
 interface ConsentBannerProps {
-  consentType: "data_processing" | "marketing" | "analytics";
+  consentType: "data_processing" | "marketing" | "ai_processing";
   onAccept?: () => void;
   onDecline?: () => void;
   onDismiss?: () => void;
@@ -27,7 +27,7 @@ const CONSENT_MESSAGES = {
     "We collect and process your personal data to provide our legal case management services. Your data is stored locally and encrypted.",
   marketing:
     "We would like to send you promotional emails and newsletters about our services. You can opt out at any time.",
-  analytics:
+  ai_processing:
     "We use analytics to improve our application. This helps us understand how users interact with our features.",
 };
 

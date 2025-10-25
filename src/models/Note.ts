@@ -1,7 +1,10 @@
 export interface Note {
   id: number;
-  caseId: number;
+  caseId: number | null;
+  userId: number;
+  title?: string | null;
   content: string;
+  isPinned?: boolean;
   createdAt: string;
   updatedAt: string;
 }

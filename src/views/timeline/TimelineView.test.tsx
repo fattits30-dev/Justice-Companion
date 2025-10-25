@@ -45,7 +45,7 @@ describe('TimelineView', () => {
       mockJusticeAPI.getDeadlines.mockResolvedValue({ success: true, data: [] });
       mockJusticeAPI.getAllCases.mockResolvedValue({ success: true, data: [] });
 
-      render(<TimelineView sessionId={mockSessionId} />);
+      render(<TimelineView />);
 
       expect(screen.getByText('Timeline Tracker')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /add deadline/i })).toBeInTheDocument();
@@ -55,7 +55,7 @@ describe('TimelineView', () => {
       mockJusticeAPI.getDeadlines.mockResolvedValue({ success: true, data: [] });
       mockJusticeAPI.getAllCases.mockResolvedValue({ success: true, data: [] });
 
-      render(<TimelineView sessionId={mockSessionId} />);
+      render(<TimelineView />);
 
       await waitFor(() => {
         expect(screen.getByText(/no deadlines yet/i)).toBeInTheDocument();
@@ -66,7 +66,7 @@ describe('TimelineView', () => {
       mockJusticeAPI.getDeadlines.mockReturnValue(new Promise(() => {})); // Never resolves
       mockJusticeAPI.getAllCases.mockResolvedValue({ success: true, data: [] });
 
-      render(<TimelineView sessionId={mockSessionId} />);
+      render(<TimelineView />);
 
       expect(screen.getByText(/loading/i)).toBeInTheDocument();
     });
@@ -78,7 +78,7 @@ describe('TimelineView', () => {
       });
       mockJusticeAPI.getAllCases.mockResolvedValue({ success: true, data: [] });
 
-      render(<TimelineView sessionId={mockSessionId} />);
+      render(<TimelineView />);
 
       await waitFor(() => {
         expect(screen.getByText(/failed to fetch deadlines/i)).toBeInTheDocument();
@@ -97,7 +97,7 @@ describe('TimelineView', () => {
       mockJusticeAPI.getDeadlines.mockResolvedValue({ success: true, data: deadlines });
       mockJusticeAPI.getAllCases.mockResolvedValue({ success: true, data: [] });
 
-      render(<TimelineView sessionId={mockSessionId} />);
+      render(<TimelineView />);
 
       await waitFor(() => {
         expect(screen.getByText('Submit ET1 Form')).toBeInTheDocument();
@@ -116,7 +116,7 @@ describe('TimelineView', () => {
       mockJusticeAPI.getDeadlines.mockResolvedValue({ success: true, data: deadlines });
       mockJusticeAPI.getAllCases.mockResolvedValue({ success: true, data: [] });
 
-      render(<TimelineView sessionId={mockSessionId} />);
+      render(<TimelineView />);
 
       await waitFor(() => {
         const items = screen.getAllByTestId(/^timeline-item-/);
@@ -137,7 +137,7 @@ describe('TimelineView', () => {
       mockJusticeAPI.getDeadlines.mockResolvedValue({ success: true, data: [deadline] });
       mockJusticeAPI.getAllCases.mockResolvedValue({ success: true, data: [] });
 
-      render(<TimelineView sessionId={mockSessionId} />);
+      render(<TimelineView />);
 
       await waitFor(() => {
         expect(screen.getByText('Unfair Dismissal Case')).toBeInTheDocument();
@@ -165,7 +165,7 @@ describe('TimelineView', () => {
       mockJusticeAPI.getDeadlines.mockResolvedValue({ success: true, data: [deadline] });
       mockJusticeAPI.getAllCases.mockResolvedValue({ success: true, data: [] });
 
-      render(<TimelineView sessionId={mockSessionId} />);
+      render(<TimelineView />);
 
       await waitFor(() => {
         const item = screen.getByTestId('timeline-item-1');
@@ -182,7 +182,7 @@ describe('TimelineView', () => {
       mockJusticeAPI.getDeadlines.mockResolvedValue({ success: true, data: [deadline] });
       mockJusticeAPI.getAllCases.mockResolvedValue({ success: true, data: [] });
 
-      render(<TimelineView sessionId={mockSessionId} />);
+      render(<TimelineView />);
 
       await waitFor(() => {
         const item = screen.getByTestId('timeline-item-1');
@@ -199,7 +199,7 @@ describe('TimelineView', () => {
       mockJusticeAPI.getDeadlines.mockResolvedValue({ success: true, data: [deadline] });
       mockJusticeAPI.getAllCases.mockResolvedValue({ success: true, data: [] });
 
-      render(<TimelineView sessionId={mockSessionId} />);
+      render(<TimelineView />);
 
       await waitFor(() => {
         const item = screen.getByTestId('timeline-item-1');
@@ -217,7 +217,7 @@ describe('TimelineView', () => {
       mockJusticeAPI.getDeadlines.mockResolvedValue({ success: true, data: [deadline] });
       mockJusticeAPI.getAllCases.mockResolvedValue({ success: true, data: [] });
 
-      render(<TimelineView sessionId={mockSessionId} />);
+      render(<TimelineView />);
 
       await waitFor(() => {
         const item = screen.getByTestId('timeline-item-1');
@@ -232,7 +232,7 @@ describe('TimelineView', () => {
       mockJusticeAPI.getAllCases.mockResolvedValue({ success: true, data: [] });
 
       const user = userEvent.setup();
-      render(<TimelineView sessionId={mockSessionId} />);
+      render(<TimelineView />);
 
       const addButton = screen.getByRole('button', { name: /add deadline/i });
       await user.click(addButton);
@@ -253,7 +253,7 @@ describe('TimelineView', () => {
       });
 
       const user = userEvent.setup();
-      render(<TimelineView sessionId={mockSessionId} />);
+      render(<TimelineView />);
 
       // Open dialog
       const addButton = screen.getByRole('button', { name: /add deadline/i });
@@ -283,7 +283,7 @@ describe('TimelineView', () => {
       mockJusticeAPI.getAllCases.mockResolvedValue({ success: true, data: [] });
 
       const user = userEvent.setup();
-      render(<TimelineView sessionId={mockSessionId} />);
+      render(<TimelineView />);
 
       await waitFor(() => {
         expect(screen.getByText('Submit ET1 Form')).toBeInTheDocument();
@@ -306,7 +306,7 @@ describe('TimelineView', () => {
       });
 
       const user = userEvent.setup();
-      render(<TimelineView sessionId={mockSessionId} />);
+      render(<TimelineView />);
 
       await waitFor(() => {
         expect(screen.getByText('Old Title')).toBeInTheDocument();
@@ -343,7 +343,7 @@ describe('TimelineView', () => {
       });
 
       const user = userEvent.setup();
-      render(<TimelineView sessionId={mockSessionId} />);
+      render(<TimelineView />);
 
       await waitFor(() => {
         expect(screen.getByText('Submit ET1 Form')).toBeInTheDocument();
@@ -371,7 +371,7 @@ describe('TimelineView', () => {
       });
 
       const user = userEvent.setup();
-      render(<TimelineView sessionId={mockSessionId} />);
+      render(<TimelineView />);
 
       await waitFor(() => {
         expect(screen.getByText('Submit ET1 Form')).toBeInTheDocument();
@@ -397,7 +397,7 @@ describe('TimelineView', () => {
       mockJusticeAPI.getAllCases.mockResolvedValue({ success: true, data: [] });
 
       const user = userEvent.setup();
-      render(<TimelineView sessionId={mockSessionId} />);
+      render(<TimelineView />);
 
       await waitFor(() => {
         expect(screen.getByText('Submit ET1 Form')).toBeInTheDocument();
@@ -416,7 +416,7 @@ describe('TimelineView', () => {
       mockJusticeAPI.deleteDeadline.mockResolvedValue({ success: true });
 
       const user = userEvent.setup();
-      render(<TimelineView sessionId={mockSessionId} />);
+      render(<TimelineView />);
 
       await waitFor(() => {
         expect(screen.getByText('Submit ET1 Form')).toBeInTheDocument();
@@ -445,7 +445,7 @@ describe('TimelineView', () => {
       mockJusticeAPI.getAllCases.mockResolvedValue({ success: true, data: cases });
 
       const user = userEvent.setup();
-      render(<TimelineView sessionId={mockSessionId} />);
+      render(<TimelineView />);
 
       await waitFor(() => {
         expect(screen.getByRole('combobox')).toBeInTheDocument();
@@ -473,7 +473,7 @@ describe('TimelineView', () => {
       mockJusticeAPI.getAllCases.mockResolvedValue({ success: true, data: cases });
 
       const user = userEvent.setup();
-      render(<TimelineView sessionId={mockSessionId} />);
+      render(<TimelineView />);
 
       await waitFor(() => {
         expect(screen.getByText('Deadline 1')).toBeInTheDocument();
@@ -499,8 +499,7 @@ describe('TimelineView', () => {
       mockJusticeAPI.getDeadlines.mockResolvedValue({ success: true, data: deadlines });
       mockJusticeAPI.getAllCases.mockResolvedValue({ success: true, data: [] });
 
-      const user = userEvent.setup();
-      render(<TimelineView sessionId={mockSessionId} />);
+      render(<TimelineView />);
 
       await waitFor(() => {
         expect(screen.getByText('Deadline 1')).toBeInTheDocument();
@@ -519,7 +518,7 @@ describe('TimelineView', () => {
       mockJusticeAPI.getDeadlines.mockResolvedValue({ success: true, data: [deadline] });
       mockJusticeAPI.getAllCases.mockResolvedValue({ success: true, data: [] });
 
-      render(<TimelineView sessionId={mockSessionId} />);
+      render(<TimelineView />);
 
       await waitFor(() => {
         expect(screen.getByText('High')).toBeInTheDocument();
@@ -531,7 +530,7 @@ describe('TimelineView', () => {
       mockJusticeAPI.getDeadlines.mockResolvedValue({ success: true, data: [deadline] });
       mockJusticeAPI.getAllCases.mockResolvedValue({ success: true, data: [] });
 
-      render(<TimelineView sessionId={mockSessionId} />);
+      render(<TimelineView />);
 
       await waitFor(() => {
         expect(screen.getByText('Medium')).toBeInTheDocument();
@@ -543,7 +542,7 @@ describe('TimelineView', () => {
       mockJusticeAPI.getDeadlines.mockResolvedValue({ success: true, data: [deadline] });
       mockJusticeAPI.getAllCases.mockResolvedValue({ success: true, data: [] });
 
-      render(<TimelineView sessionId={mockSessionId} />);
+      render(<TimelineView />);
 
       await waitFor(() => {
         expect(screen.getByText('Low')).toBeInTheDocument();
@@ -570,7 +569,7 @@ describe('TimelineView', () => {
       mockJusticeAPI.getDeadlines.mockResolvedValue({ success: true, data: [deadline] });
       mockJusticeAPI.getAllCases.mockResolvedValue({ success: true, data: [] });
 
-      render(<TimelineView sessionId={mockSessionId} />);
+      render(<TimelineView />);
 
       await waitFor(() => {
         expect(screen.getByText(/overdue by 4 days/i)).toBeInTheDocument();
@@ -586,7 +585,7 @@ describe('TimelineView', () => {
       mockJusticeAPI.getDeadlines.mockResolvedValue({ success: true, data: [deadline] });
       mockJusticeAPI.getAllCases.mockResolvedValue({ success: true, data: [] });
 
-      render(<TimelineView sessionId={mockSessionId} />);
+      render(<TimelineView />);
 
       await waitFor(() => {
         expect(screen.getByText(/14 days away/i)).toBeInTheDocument();
@@ -602,7 +601,7 @@ describe('TimelineView', () => {
       mockJusticeAPI.getDeadlines.mockResolvedValue({ success: true, data: [deadline] });
       mockJusticeAPI.getAllCases.mockResolvedValue({ success: true, data: [] });
 
-      render(<TimelineView sessionId={mockSessionId} />);
+      render(<TimelineView />);
 
       await waitFor(() => {
         expect(screen.getByText(/completed/i)).toBeInTheDocument();
@@ -615,7 +614,7 @@ describe('TimelineView', () => {
       mockJusticeAPI.getDeadlines.mockResolvedValue({ success: true, data: [] });
       mockJusticeAPI.getAllCases.mockResolvedValue({ success: true, data: [] });
 
-      const { container } = render(<TimelineView sessionId={mockSessionId} />);
+      const { container } = render(<TimelineView />);
 
       const mainContainer = container.firstChild as HTMLElement;
       expect(mainContainer).toHaveClass('h-screen');

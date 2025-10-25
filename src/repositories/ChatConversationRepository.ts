@@ -453,6 +453,108 @@ class ChatConversationRepository {
       throw error;
     }
   }
+
+  /**
+   * Search conversations by query string and filters
+   */
+  async searchConversations(userId: number, query: string, filters?: any): Promise<ChatConversation[]> {
+    const db = getDb();
+    const conditions: string[] = [];
+    const params: any[] = [];
+
+    // User filter
+    conditions.push('user_id = ?');
+    params.push(userId);
+
+    // Text search in title
+    if (query) {
+      conditions.push('title LIKE ?');
+      params.push(`%${query}%`);
+    }
+
+    // Case IDs filter
+    if (filters?.caseIds && filters.caseIds.length > 0) {
+      const placeholders = filters.caseIds.map(() => '?').join(',');
+      conditions.push(`case_id IN (${placeholders})`);
+      params.push(...filters.caseIds);
+    }
+
+    // Date range filter
+    if (filters?.dateRange) {
+      conditions.push('created_at >= ? AND created_at <= ?');
+      params.push(filters.dateRange.from.toISOString(), filters.dateRange.to.toISOString());
+    }
+
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+    const stmt = db.prepare(`
+      SELECT
+        id,
+        case_id as caseId,
+        user_id as userId,
+        title,
+        created_at as createdAt,
+        updated_at as updatedAt,
+        (SELECT COUNT(*) FROM chat_messages WHERE conversation_id = cc.id) as messageCount
+      FROM chat_conversations cc
+      ${whereClause}
+      ORDER BY updated_at DESC
+    `);
+
+    return stmt.all(...params) as ChatConversation[];
+  }
+
+  /**
+   * Get all conversations for a user
+   */
+  async getUserConversations(userId: number): Promise<ChatConversation[]> {
+    const db = getDb();
+
+    const stmt = db.prepare(`
+      SELECT
+        id,
+        case_id as caseId,
+        user_id as userId,
+        title,
+        created_at as createdAt,
+        updated_at as updatedAt,
+        (SELECT COUNT(*) FROM chat_messages WHERE conversation_id = cc.id) as messageCount
+      FROM chat_conversations cc
+      WHERE user_id = ?
+      ORDER BY updated_at DESC
+    `);
+
+    return stmt.all(userId) as ChatConversation[];
+  }
+
+  /**
+   * Get conversation by ID (async version for consistency)
+   */
+  async getConversation(id: number): Promise<ChatConversation | null> {
+    const db = getDb();
+
+    const stmt = db.prepare(`
+      SELECT
+        id,
+        case_id as caseId,
+        user_id as userId,
+        title,
+        created_at as createdAt,
+        updated_at as updatedAt,
+        (SELECT COUNT(*) FROM chat_messages WHERE conversation_id = cc.id) as messageCount
+      FROM chat_conversations cc
+      WHERE id = ?
+    `);
+
+    return stmt.get(id) as ChatConversation | null;
+  }
+
+  /**
+   * Get messages for a conversation
+   */
+  async getConversationMessages(conversationId: number): Promise<ChatMessage[]> {
+    return this.getMessages(conversationId);
+  }
 }
 
 export { ChatConversationRepository };

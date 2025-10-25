@@ -2,7 +2,7 @@ import { CaseRepository } from './CaseRepository.ts';
 import { getCacheService, type CacheService } from '../services/CacheService.ts';
 import { EncryptionService } from '../services/EncryptionService.ts';
 import type { AuditLogger } from '../services/AuditLogger.ts';
-import type { Case, CreateCaseInput, UpdateCaseInput, CaseStatus } from '../models/Case.ts';
+import type { Case, CreateCaseInput, UpdateCaseInput, CaseStatus } from '../domains/cases/entities/Case.ts';
 
 /**
  * Cached wrapper for CaseRepository

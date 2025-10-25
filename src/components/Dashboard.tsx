@@ -101,20 +101,22 @@ export function Dashboard({
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-primary-900 text-white p-8">
-        <div className="mb-8">
+      <div className="h-screen flex flex-col overflow-hidden bg-primary-900 text-white">
+        <div className="flex-shrink-0 p-8 pb-4">
           <h1 className="text-3xl font-bold mb-2">Welcome back, {username}</h1>
           <p className="text-white/90">Loading your dashboard...</p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <SkeletonCard key={i} lines={1} />
-          ))}
-        </div>
-        <div className="grid grid-cols-1 gap-6">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <SkeletonCard key={i} lines={2} />
-          ))}
+        <div className="flex-1 overflow-y-auto px-8 pb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <SkeletonCard key={i} lines={1} />
+            ))}
+          </div>
+          <div className="grid grid-cols-1 gap-6">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <SkeletonCard key={i} lines={2} />
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -123,7 +125,7 @@ export function Dashboard({
   // Error state
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-primary-900 p-8">
+      <div className="flex items-center justify-center h-screen bg-primary-900 p-8">
         <Card variant="glass" className="max-w-md">
           <div className="text-center">
             <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
@@ -138,35 +140,41 @@ export function Dashboard({
   }
 
   return (
-    <div className="min-h-screen bg-primary-900 text-white p-8">
-      {/* Legal Disclaimer Banner - ALWAYS VISIBLE */}
-      <Card
-        variant="glass"
-        className="mb-6 bg-amber-900/30 border-l-4 border-amber-500"
-      >
-        <div className="flex items-start gap-3">
-          <Info className="w-6 h-6 text-amber-500 flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="font-semibold text-amber-200 mb-1">
-              This app provides information, not legal advice
-            </p>
-            <p className="text-sm text-amber-100/80">
-              Justice Companion helps you organize your case and understand
-              legal concepts. It's NOT a replacement for a qualified lawyer. For
-              legal advice specific to your situation, please consult a
-              solicitor or legal professional.
-            </p>
+    <div className="h-screen flex flex-col overflow-hidden bg-primary-900 text-white">
+      {/* Fixed Header Section */}
+      <div className="flex-shrink-0 p-8 pb-0">
+        {/* Legal Disclaimer Banner */}
+        <Card
+          variant="glass"
+          className="mb-6 bg-amber-900/30 border-l-4 border-amber-500"
+        >
+          <div className="flex items-start gap-3">
+            <Info className="w-6 h-6 text-amber-500 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-amber-200 mb-1">
+                This app provides information, not legal advice
+              </p>
+              <p className="text-sm text-amber-100/80">
+                Justice Companion helps you organize your case and understand
+                legal concepts. It's NOT a replacement for a qualified lawyer. For
+                legal advice specific to your situation, please consult a
+                solicitor or legal professional.
+              </p>
+            </div>
           </div>
-        </div>
-      </Card>
+        </Card>
 
-      {/* Welcome Section */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Welcome back, {username}</h1>
-        <p className="text-white/90">
-          You're building your case. Here's where you stand.
-        </p>
+        {/* Welcome Section */}
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold mb-2">Welcome back, {username}</h1>
+          <p className="text-white/90">
+            You're building your case. Here's where you stand.
+          </p>
+        </div>
       </div>
+
+      {/* Scrollable Content Area */}
+      <div className="flex-1 overflow-y-auto px-8 pb-8">
 
       {/* Stats Grid - People-friendly language */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -367,6 +375,7 @@ export function Dashboard({
           </div>
         </div>
       </Card>
+      </div>
     </div>
   );
 }

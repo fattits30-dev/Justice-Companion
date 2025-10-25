@@ -15,8 +15,8 @@
 
 import { useState, FormEvent } from "react";
 import { useAuth } from "../../contexts/AuthContext.tsx";
-import type { User } from "../../models/User.ts";
-import type { Session } from "../../models/Session.ts";
+import type { User } from "../../domains/auth/entities/User.ts";
+import type { Session } from "../../domains/auth/entities/Session.ts";
 
 interface LoginScreenProps {
   onSuccess?: (data: { user: User | null; session: Session | null }) => void;

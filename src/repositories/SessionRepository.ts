@@ -1,5 +1,5 @@
 import { getDb } from '../db/database.ts';
-import type { Session, CreateSessionInput } from '../models/Session.ts';
+import type { Session, CreateSessionInput } from '../domains/auth/entities/Session.ts';
 import { getCacheService, type CacheService } from '../services/CacheService.ts';
 
 /**

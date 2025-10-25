@@ -1,6 +1,6 @@
 import { getDb } from '../db/database.ts';
 import type Database from 'better-sqlite3';
-import type { Case, CreateCaseInput, UpdateCaseInput, CaseStatus, CaseType } from '../models/Case.ts';
+import type { Case, CreateCaseInput, UpdateCaseInput, CaseStatus, CaseType } from '../domains/cases/entities/Case.ts';
 import { EncryptionService } from '../services/EncryptionService.ts';
 import type { AuditLogger } from '../services/AuditLogger.ts';
 import { DecryptionCache } from '../services/DecryptionCache.ts';

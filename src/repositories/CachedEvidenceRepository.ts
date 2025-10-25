@@ -2,7 +2,7 @@ import { EvidenceRepository } from './EvidenceRepository.ts';
 import { getCacheService, type CacheService } from '../services/CacheService.ts';
 import { EncryptionService } from '../services/EncryptionService.ts';
 import type { AuditLogger } from '../services/AuditLogger.ts';
-import type { Evidence, CreateEvidenceInput, UpdateEvidenceInput } from '../models/Evidence.ts';
+import type { Evidence, CreateEvidenceInput, UpdateEvidenceInput } from '../domains/evidence/entities/Evidence.ts';
 
 /**
  * Cached wrapper for EvidenceRepository

@@ -1,6 +1,6 @@
 import { SessionRepository } from './SessionRepository.ts';
 import { getCacheService, type CacheService } from '../services/CacheService.ts';
-import type { Session, CreateSessionInput } from '../models/Session.ts';
+import type { Session, CreateSessionInput } from '../domains/auth/entities/Session.ts';
 
 /**
  * Cached wrapper for SessionRepository

@@ -108,7 +108,7 @@ interface DashboardStats {
   activeCases: number;
   totalEvidence: number;
   recentActivity: number;
-  recentCases: Array<{
+  recentCases?: Array<{
     id: string;
     title: string;
     status: "active" | "closed" | "pending";
@@ -145,14 +145,13 @@ function DashboardWrapper() {
         // Fetch dashboard stats from backend
         const response = await window.justiceAPI.getDashboardStats(sessionId);
 
-        if (response.success && response.data) {
+        if (!response.success) {
+          setError(response.error || "Failed to load dashboard stats");
+          return;
+        }
+
+        if (response.data) {
           setDashboardStats(response.data);
-        } else {
-          const errorMsg =
-            typeof response.error === "string"
-              ? response.error
-              : response.error?.message || "Failed to load dashboard stats";
-          setError(errorMsg);
         }
       } catch (err) {
         console.error("Failed to fetch dashboard stats:", err);

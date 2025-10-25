@@ -1,4 +1,4 @@
-import type { Evidence } from '../../../models/Evidence.ts';
+import type { Evidence } from '../../../domains/evidence/entities/Evidence.ts';
 import { EvidenceCard } from './EvidenceCard.tsx';
 
 interface EvidenceListProps {

@@ -47,6 +47,16 @@ interface ElectronAPI {
     export: (sessionId: string, options?: { format?: 'json' | 'csv' }) => Promise<GdprExportResponse>;
     delete: (sessionId: string, options?: { confirmed: boolean; exportBeforeDelete?: boolean; reason?: string }) => Promise<GdprDeleteResponse>;
   };
+  export: {
+    caseToPdf: (caseId: number, userId: number, options?: any) => Promise<any>;
+    caseToWord: (caseId: number, userId: number, options?: any) => Promise<any>;
+    evidenceListToPdf: (caseId: number, userId: number) => Promise<any>;
+    timelineReportToPdf: (caseId: number, userId: number) => Promise<any>;
+    caseNotesToPdf: (caseId: number, userId: number) => Promise<any>;
+    caseNotesToWord: (caseId: number, userId: number) => Promise<any>;
+    getTemplates: () => Promise<any>;
+    custom: (caseId: number, userId: number, options: any) => Promise<any>;
+  };
 }
 
 // Type definitions (placeholder - will be replaced with actual types)
@@ -234,6 +244,26 @@ const electronAPI: ElectronAPI = {
       ipcRenderer.invoke('gdpr:export', sessionId, options),
     delete: (sessionId: string, options?: { confirmed: boolean; exportBeforeDelete?: boolean; reason?: string }) =>
       ipcRenderer.invoke('gdpr:delete', sessionId, options)
+  },
+
+  // ===== EXPORT =====
+  export: {
+    caseToPdf: (caseId: number, userId: number, options?: any) =>
+      ipcRenderer.invoke('export:case-to-pdf', caseId, userId, options),
+    caseToWord: (caseId: number, userId: number, options?: any) =>
+      ipcRenderer.invoke('export:case-to-word', caseId, userId, options),
+    evidenceListToPdf: (caseId: number, userId: number) =>
+      ipcRenderer.invoke('export:evidence-list-to-pdf', caseId, userId),
+    timelineReportToPdf: (caseId: number, userId: number) =>
+      ipcRenderer.invoke('export:timeline-report-to-pdf', caseId, userId),
+    caseNotesToPdf: (caseId: number, userId: number) =>
+      ipcRenderer.invoke('export:case-notes-to-pdf', caseId, userId),
+    caseNotesToWord: (caseId: number, userId: number) =>
+      ipcRenderer.invoke('export:case-notes-to-word', caseId, userId),
+    getTemplates: () =>
+      ipcRenderer.invoke('export:get-templates'),
+    custom: (caseId: number, userId: number, options: any) =>
+      ipcRenderer.invoke('export:custom', caseId, userId, options)
   }
 };
 
@@ -590,6 +620,119 @@ const justiceAPI = {
         reject(error);
       });
     });
+  },
+
+  // ===== SEARCH =====
+  search: {
+    // Perform a comprehensive search across all entities
+    query: (query: any) =>
+      ipcRenderer.invoke('search:query', query),
+
+    // Save a search query for later reuse
+    save: (name: string, query: any) =>
+      ipcRenderer.invoke('search:save', name, query),
+
+    // Get all saved searches for the current user
+    listSaved: () =>
+      ipcRenderer.invoke('search:list-saved'),
+
+    // Delete a saved search
+    deleteSaved: (searchId: number) =>
+      ipcRenderer.invoke('search:delete-saved', searchId),
+
+    // Execute a previously saved search
+    executeSaved: (searchId: number) =>
+      ipcRenderer.invoke('search:execute-saved', searchId),
+
+    // Get search suggestions based on prefix
+    suggestions: (prefix: string, limit?: number) =>
+      ipcRenderer.invoke('search:suggestions', prefix, limit),
+
+    // Rebuild the entire search index (admin operation)
+    rebuildIndex: () =>
+      ipcRenderer.invoke('search:rebuild-index'),
+
+    // Get search index statistics
+    indexStats: () =>
+      ipcRenderer.invoke('search:index-stats'),
+
+    // Update search index for a specific entity
+    updateIndex: (entityType: string, entityId: number) =>
+      ipcRenderer.invoke('search:update-index', entityType, entityId),
+  },
+
+  // ===== TAG MANAGEMENT =====
+  tags: {
+    // List all tags for the current user
+    list: (sessionId: string) =>
+      ipcRenderer.invoke('tags:list', sessionId),
+
+    // Create a new tag
+    create: (input: any, sessionId: string) =>
+      ipcRenderer.invoke('tags:create', input, sessionId),
+
+    // Update an existing tag
+    update: (tagId: number, input: any, sessionId: string) =>
+      ipcRenderer.invoke('tags:update', tagId, input, sessionId),
+
+    // Delete a tag (removes from all evidence)
+    delete: (tagId: number, sessionId: string) =>
+      ipcRenderer.invoke('tags:delete', tagId, sessionId),
+
+    // Apply tag to evidence
+    tagEvidence: (evidenceId: number, tagId: number, sessionId: string) =>
+      ipcRenderer.invoke('tags:tagEvidence', evidenceId, tagId, sessionId),
+
+    // Remove tag from evidence
+    untagEvidence: (evidenceId: number, tagId: number, sessionId: string) =>
+      ipcRenderer.invoke('tags:untagEvidence', evidenceId, tagId, sessionId),
+
+    // Get tags for specific evidence
+    getForEvidence: (evidenceId: number, sessionId: string) =>
+      ipcRenderer.invoke('tags:getForEvidence', evidenceId, sessionId),
+
+    // Search evidence by tags (AND logic - must have all specified tags)
+    searchByTags: (tagIds: number[], sessionId: string) =>
+      ipcRenderer.invoke('tags:searchByTags', tagIds, sessionId),
+
+    // Get tag statistics for the current user
+    statistics: (sessionId: string) =>
+      ipcRenderer.invoke('tags:statistics', sessionId),
+  },
+
+  // ===== NOTIFICATIONS =====
+  notifications: {
+    // Get notifications with optional filters
+    list: (sessionId: string, filters?: any) =>
+      ipcRenderer.invoke('notifications:list', sessionId, filters),
+
+    // Get unread notification count
+    unreadCount: (sessionId: string) =>
+      ipcRenderer.invoke('notifications:unread-count', sessionId),
+
+    // Mark a notification as read
+    markRead: (sessionId: string, notificationId: number) =>
+      ipcRenderer.invoke('notifications:mark-read', sessionId, notificationId),
+
+    // Mark all notifications as read
+    markAllRead: (sessionId: string) =>
+      ipcRenderer.invoke('notifications:mark-all-read', sessionId),
+
+    // Dismiss a notification
+    dismiss: (sessionId: string, notificationId: number) =>
+      ipcRenderer.invoke('notifications:dismiss', sessionId, notificationId),
+
+    // Get notification preferences
+    preferences: (sessionId: string) =>
+      ipcRenderer.invoke('notifications:preferences', sessionId),
+
+    // Update notification preferences
+    updatePreferences: (sessionId: string, preferences: any) =>
+      ipcRenderer.invoke('notifications:update-preferences', sessionId, preferences),
+
+    // Get notification statistics
+    stats: (sessionId: string) =>
+      ipcRenderer.invoke('notifications:stats', sessionId),
   },
 };
 
