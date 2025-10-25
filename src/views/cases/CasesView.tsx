@@ -14,6 +14,7 @@ import {
 } from "./components/CaseStates.tsx";
 import { CaseList } from "./components/CaseList.tsx";
 import { CreateCaseDialog } from "./components/CreateCaseDialog.tsx";
+import { CaseSummaryCards } from "./components/CaseSummaryCards.tsx";
 import { showSuccess, showError } from "../../components/ui/Toast.tsx";
 
 type LoadState = "idle" | "loading" | "error" | "ready";
@@ -127,22 +128,36 @@ export function CasesView() {
   const hasFilteredResults = filteredCases.length > 0;
 
   return (
-    <div className="min-h-screen bg-primary-900 p-8 text-white">
-      <CaseToolbar
-        filterStatus={filterStatus}
-        filterType={filterType}
-        onStatusChange={setFilterStatus}
-        onTypeChange={setFilterType}
-        onCreateCase={() => setShowCreateDialog(true)}
-      />
+    <div className="h-screen flex flex-col overflow-hidden bg-primary-900 text-white">
+      {/* Fixed Toolbar */}
+      <div className="flex-shrink-0 p-8 pb-4">
+        <CaseToolbar
+          filterStatus={filterStatus}
+          filterType={filterType}
+          onStatusChange={setFilterStatus}
+          onTypeChange={setFilterType}
+          onCreateCase={() => setShowCreateDialog(true)}
+        />
+      </div>
 
-      {!hasCases ? (
-        <CasesEmptyState onCreateCase={() => setShowCreateDialog(true)} />
-      ) : !hasFilteredResults ? (
-        <CasesFilteredEmptyState />
-      ) : (
-        <CaseList cases={filteredCases} onDelete={handleDeleteCase} />
-      )}
+      {/* Scrollable Content Area */}
+      <div className="flex-1 overflow-y-auto px-8 pb-8">
+        {!hasCases ? (
+          <CasesEmptyState onCreateCase={() => setShowCreateDialog(true)} />
+        ) : (
+          <>
+            {/* Summary Statistics Cards */}
+            <CaseSummaryCards cases={cases} />
+
+            {/* Case List or Filtered Empty State */}
+            {!hasFilteredResults ? (
+              <CasesFilteredEmptyState />
+            ) : (
+              <CaseList cases={filteredCases} onDelete={handleDeleteCase} />
+            )}
+          </>
+        )}
+      </div>
 
       {showCreateDialog && (
         <CreateCaseDialog
