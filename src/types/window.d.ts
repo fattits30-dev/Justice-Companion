@@ -21,7 +21,8 @@ interface JusticeAPI {
   createCase(data: any, sessionId: string): Promise<{ success: boolean; data?: any; error?: any }>;
   updateCase(id: string, data: any, sessionId: string): Promise<{ success: boolean; data?: any; error?: any }>;
   deleteCase(id: string, sessionId: string): Promise<{ success: boolean; error?: any }>;
-  getCaseFacts(caseId: number): Promise<{ success: boolean; data?: any; error?: any }>;
+  getCaseFacts(caseId: number, sessionId: string): Promise<{ success: boolean; data?: any; error?: any }>;
+  createCaseFact(data: any, sessionId: string): Promise<{ success: boolean; data?: any; error?: any }>;
 
   // Evidence/Documents
   uploadFile(caseId: string, file: File, sessionId: string): Promise<{ success: boolean; data?: any; error?: any }>;

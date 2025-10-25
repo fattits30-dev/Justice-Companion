@@ -20,6 +20,7 @@ import { getDb } from '../src/db/database.ts';
 import { UserRepository } from '../src/repositories/UserRepository.ts';
 import { SessionRepository } from '../src/repositories/SessionRepository.ts';
 import { CaseRepository } from '../src/repositories/CaseRepository.ts';
+import { CaseFactsRepository } from '../src/repositories/CaseFactsRepository.ts';
 import { EvidenceRepository } from '../src/repositories/EvidenceRepository.ts';
 import { DeadlineRepository } from '../src/repositories/DeadlineRepository.ts';
 import { AuditLogger } from '../src/services/AuditLogger.ts';
@@ -603,6 +604,93 @@ function setupCaseHandlers(): void {
             errorMessage: String(error),
           });
 
+          throw error; // withAuthorization will handle error formatting
+        }
+      });
+    }
+  );
+
+  // Create case fact
+  ipcMain.handle(
+    'case-fact:create',
+    async (_event: IpcMainInvokeEvent, data: unknown, sessionId: string): Promise<IPCResponse> => {
+      return withAuthorization(sessionId, async (userId) => {
+        try {
+          console.warn('[IPC] case-fact:create called by user:', userId);
+
+          // Get repositories and encryption service
+          const db = getDb();
+          const auditLogger = new AuditLogger(db);
+          const keyManager = getKeyManager();
+          const encryptionService = new EncryptionService(keyManager);
+          const caseFactsRepository = new CaseFactsRepository(encryptionService, auditLogger);
+
+          // Validate that the case belongs to the user
+          const caseRepository = new CaseRepository(encryptionService, auditLogger);
+          const caseData = data as { caseId: number; factContent: string; factCategory: string; importance?: string };
+          const caseRecord = caseRepository.findById(caseData.caseId);
+
+          if (!caseRecord || caseRecord.userId !== userId) {
+            throw new Error('Case not found or unauthorized');
+          }
+
+          // Create the case fact
+          const result = caseFactsRepository.create(caseData);
+
+          // Log audit event
+          logAuditEvent({
+            eventType: 'case_fact.create' as AuditEventType,
+            userId,
+            resourceType: 'case_fact',
+            resourceId: result.id.toString(),
+            action: 'create',
+            details: {
+              caseId: caseData.caseId,
+              category: caseData.factCategory,
+            },
+            success: true,
+          });
+
+          console.warn('[IPC] Case fact created successfully:', result.id);
+          return successResponse(result);
+        } catch (error) {
+          console.error('[IPC] case-fact:create error:', error);
+          throw error; // withAuthorization will handle error formatting
+        }
+      });
+    }
+  );
+
+  // List case facts
+  ipcMain.handle(
+    'case-fact:list',
+    async (_event: IpcMainInvokeEvent, caseId: number, sessionId: string): Promise<IPCResponse> => {
+      return withAuthorization(sessionId, async (userId) => {
+        try {
+          console.warn('[IPC] case-fact:list called by user:', userId, 'for case:', caseId);
+
+          // Get repositories
+          const db = getDb();
+          const auditLogger = new AuditLogger(db);
+          const keyManager = getKeyManager();
+          const encryptionService = new EncryptionService(keyManager);
+          const caseFactsRepository = new CaseFactsRepository(encryptionService, auditLogger);
+
+          // Validate that the case belongs to the user
+          const caseRepository = new CaseRepository(encryptionService, auditLogger);
+          const caseRecord = caseRepository.findById(caseId);
+
+          if (!caseRecord || caseRecord.userId !== userId) {
+            throw new Error('Case not found or unauthorized');
+          }
+
+          // Get case facts
+          const facts = caseFactsRepository.findByCaseId(caseId);
+
+          console.warn('[IPC] Retrieved', facts.length, 'case facts');
+          return successResponse(facts);
+        } catch (error) {
+          console.error('[IPC] case-fact:list error:', error);
           throw error; // withAuthorization will handle error formatting
         }
       });
