@@ -1,0 +1,208 @@
+{
+  "projectName": "justice-companion",
+  "projectPath": "F:\\Justice Companion take 2",
+  "createdAt": "2025-10-25T13:55:41.514Z",
+  "updatedAt": "2025-10-25T13:55:51.137Z",
+  "userGoal": "Implement workflow builder system for task management",
+  "techStack": {
+    "languages": [
+      "TypeScript",
+      "JavaScript",
+      "Python"
+    ],
+    "frameworks": [
+      "React",
+      "Electron"
+    ],
+    "buildTools": [
+      "npm/pnpm/yarn"
+    ],
+    "packageManager": "pnpm",
+    "runtime": "Node.js >=20.18.0 <21.0.0",
+    "database": [
+      "SQLite",
+      "Drizzle ORM"
+    ],
+    "testing": [
+      "Vitest",
+      "Playwright"
+    ]
+  },
+  "phases": [
+    {
+      "name": "Setup & Infrastructure",
+      "description": "Initialize development environment and configure tools",
+      "tasks": [
+        {
+          "id": "setup-1",
+          "title": "Verify development environment",
+          "description": "Check Node.js Node.js >=20.18.0 <21.0.0, pnpm, and all required tools are installed",
+          "category": "setup",
+          "priority": "high",
+          "status": "completed",
+          "dependencies": [],
+          "createdAt": "2025-10-25T13:55:41.514Z",
+          "startedAt": "2025-10-25T13:55:51.134Z",
+          "completedAt": "2025-10-25T13:55:51.135Z",
+          "actualHours": 2.7777777777777776e-7,
+          "notes": "Task completed successfully via automated test"
+        },
+        {
+          "id": "setup-2",
+          "title": "Install project dependencies",
+          "description": "Run pnpm install to install all dependencies",
+          "category": "setup",
+          "priority": "high",
+          "status": "pending",
+          "dependencies": [
+            "setup-1"
+          ],
+          "createdAt": "2025-10-25T13:55:41.514Z"
+        },
+        {
+          "id": "setup-lib-1",
+          "title": "Configure @anthropic-ai/claude-agent-sdk",
+          "description": "Set up @anthropic-ai/claude-agent-sdk according to best practices",
+          "category": "setup",
+          "priority": "medium",
+          "status": "pending",
+          "dependencies": [
+            "setup-2"
+          ],
+          "createdAt": "2025-10-25T13:55:41.514Z"
+        },
+        {
+          "id": "setup-lib-2",
+          "title": "Configure @modelcontextprotocol/sdk",
+          "description": "Set up @modelcontextprotocol/sdk according to best practices",
+          "category": "setup",
+          "priority": "medium",
+          "status": "pending",
+          "dependencies": [
+            "setup-2"
+          ],
+          "createdAt": "2025-10-25T13:55:41.514Z"
+        },
+        {
+          "id": "setup-lib-3",
+          "title": "Configure @radix-ui/react-dialog",
+          "description": "Set up @radix-ui/react-dialog according to best practices",
+          "category": "setup",
+          "priority": "medium",
+          "status": "pending",
+          "dependencies": [
+            "setup-2"
+          ],
+          "createdAt": "2025-10-25T13:55:41.514Z"
+        },
+        {
+          "id": "setup-lib-4",
+          "title": "Configure @radix-ui/react-icons",
+          "description": "Set up @radix-ui/react-icons according to best practices",
+          "category": "setup",
+          "priority": "medium",
+          "status": "pending",
+          "dependencies": [
+            "setup-2"
+          ],
+          "createdAt": "2025-10-25T13:55:41.514Z"
+        },
+        {
+          "id": "setup-lib-5",
+          "title": "Configure @tanstack/react-query",
+          "description": "Set up @tanstack/react-query according to best practices",
+          "category": "setup",
+          "priority": "medium",
+          "status": "pending",
+          "dependencies": [
+            "setup-2"
+          ],
+          "createdAt": "2025-10-25T13:55:41.514Z"
+        }
+      ],
+      "order": 1
+    },
+    {
+      "name": "Core Features",
+      "description": "Implement main application features",
+      "tasks": [
+        {
+          "id": "feature-1",
+          "title": "Implement workflow builder system for task management",
+          "description": "Implement: Implement workflow builder system for task management",
+          "category": "feature",
+          "priority": "high",
+          "status": "pending",
+          "dependencies": [],
+          "createdAt": "2025-10-25T13:55:41.515Z"
+        }
+      ],
+      "order": 2
+    },
+    {
+      "name": "Testing & Quality",
+      "description": "Ensure code quality and test coverage",
+      "tasks": [
+        {
+          "id": "test-1",
+          "title": "Set up testing framework",
+          "description": "Configure Vitest for unit testing",
+          "category": "testing",
+          "priority": "high",
+          "status": "pending",
+          "dependencies": [],
+          "createdAt": "2025-10-25T13:55:41.515Z"
+        },
+        {
+          "id": "test-2",
+          "title": "Write unit tests for core features",
+          "description": "Achieve 80%+ code coverage",
+          "category": "testing",
+          "priority": "high",
+          "status": "pending",
+          "dependencies": [
+            "test-1"
+          ],
+          "createdAt": "2025-10-25T13:55:41.515Z"
+        },
+        {
+          "id": "manual-12",
+          "title": "Test automated task creation",
+          "description": "Verify that tasks can be added programmatically",
+          "category": "testing",
+          "priority": "low",
+          "status": "pending",
+          "dependencies": [],
+          "acceptanceCriteria": [
+            "Task appears in TODO list",
+            "Task can be completed"
+          ],
+          "phase": "Testing & Quality",
+          "createdAt": "2025-10-25T13:55:51.137Z"
+        }
+      ],
+      "order": 3
+    },
+    {
+      "name": "Documentation",
+      "description": "Create comprehensive project documentation",
+      "tasks": [
+        {
+          "id": "docs-2",
+          "title": "Add inline code documentation",
+          "description": "Document all public APIs and complex logic",
+          "category": "docs",
+          "priority": "low",
+          "status": "pending",
+          "dependencies": [],
+          "createdAt": "2025-10-25T13:55:41.515Z"
+        }
+      ],
+      "order": 4
+    }
+  ],
+  "metadata": {
+    "totalTasks": 12,
+    "completedTasks": 1
+  }
+}

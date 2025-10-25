@@ -5,7 +5,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import pkg from 'electron-updater';
 
-import { setupIpcHandlers } from './ipc-handlers.ts';
+import { setupIpcHandlers } from './ipc-handlers/index.ts';
 import { initializeDatabase, closeDatabase } from './database-init.ts';
 import { KeyManager } from '../src/services/KeyManager.ts';
 import { ProcessManager } from '../src/services/ProcessManager.ts';

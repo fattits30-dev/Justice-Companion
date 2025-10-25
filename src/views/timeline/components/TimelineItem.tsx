@@ -5,7 +5,6 @@ import { Badge } from '../../../components/ui/Badge';
 import { Button } from '../../../components/ui/Button';
 import type { DeadlineWithCase } from '../../../models/Deadline';
 import {
-  getDaysUntilDeadline,
   formatDeadlineStatus,
   isDeadlineUrgent,
 } from '../../../models/Deadline';
@@ -30,7 +29,6 @@ export function TimelineItem({
     if (deadline.status === 'completed') return 'completed';
     if (deadline.status === 'overdue') return 'overdue';
 
-    const daysUntil = getDaysUntilDeadline(deadline.deadlineDate);
     if (isDeadlineUrgent(deadline.deadlineDate)) return 'urgent';
     return 'future';
   };

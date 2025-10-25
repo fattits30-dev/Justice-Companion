@@ -1,4 +1,4 @@
-import type { CaseStatus, CaseType } from '../../models/Case.ts';
+import type { CaseStatus, CaseType } from '../../domains/cases/entities/Case.ts';
 
 export const statusStyles: Record<CaseStatus, string> = {
   active: 'bg-green-500/20 text-green-200 border-green-500/40',

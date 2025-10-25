@@ -1,5 +1,5 @@
 import { getDb } from '../db/database.ts';
-import type { Evidence, CreateEvidenceInput, UpdateEvidenceInput } from '../models/Evidence.ts';
+import type { Evidence, CreateEvidenceInput, UpdateEvidenceInput } from '../domains/evidence/entities/Evidence.ts';
 import { EncryptionService, type EncryptedData } from '../services/EncryptionService.ts';
 import type { AuditLogger } from '../services/AuditLogger.ts';
 import {
@@ -738,6 +738,120 @@ export class EvidenceRepository {
       throw new Error('EncryptionService not configured for EvidenceRepository');
     }
     return this.encryptionService;
+  }
+
+  /**
+   * Search evidence by query string and filters
+   */
+  async searchEvidence(userId: number, query: string, filters?: any): Promise<Evidence[]> {
+    const db = getDb();
+    const conditions: string[] = [];
+    const params: any[] = [];
+
+    // Get user's cases first
+    const userCases = db.prepare('SELECT id FROM cases WHERE user_id = ?').all(userId) as { id: number }[];
+    const caseIds = userCases.map(c => c.id);
+
+    if (caseIds.length === 0) {
+      return [];
+    }
+
+    // Case filter
+    const placeholders = caseIds.map(() => '?').join(',');
+    conditions.push(`case_id IN (${placeholders})`);
+    params.push(...caseIds);
+
+    // Text search
+    if (query) {
+      conditions.push('(title LIKE ? OR content LIKE ?)');
+      params.push(`%${query}%`, `%${query}%`);
+    }
+
+    // Date range filter
+    if (filters?.dateRange) {
+      conditions.push('created_at >= ? AND created_at <= ?');
+      params.push(filters.dateRange.from.toISOString(), filters.dateRange.to.toISOString());
+    }
+
+    // Specific case IDs filter
+    if (filters?.caseIds && filters.caseIds.length > 0) {
+      const casePlaceholders = filters.caseIds.map(() => '?').join(',');
+      conditions.push(`case_id IN (${casePlaceholders})`);
+      params.push(...filters.caseIds);
+    }
+
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+    const stmt = db.prepare(`
+      SELECT
+        id,
+        case_id as caseId,
+        title,
+        file_path as filePath,
+        content,
+        evidence_type as evidenceType,
+        obtained_date as obtainedDate,
+        created_at as createdAt,
+        updated_at as updatedAt
+      FROM evidence
+      ${whereClause}
+      ORDER BY created_at DESC
+    `);
+
+    const rows = stmt.all(...params) as Evidence[];
+
+    // Decrypt content
+    return rows.map(row => {
+      row.content = this.decryptContent(row.content);
+      return row;
+    });
+  }
+
+  /**
+   * Get all evidence for a user across all their cases
+   */
+  async getAllForUser(userId: number): Promise<Evidence[]> {
+    const db = getDb();
+
+    // Get user's cases
+    const userCases = db.prepare('SELECT id FROM cases WHERE user_id = ?').all(userId) as { id: number }[];
+    const caseIds = userCases.map(c => c.id);
+
+    if (caseIds.length === 0) {
+      return [];
+    }
+
+    const placeholders = caseIds.map(() => '?').join(',');
+    const stmt = db.prepare(`
+      SELECT
+        id,
+        case_id as caseId,
+        title,
+        file_path as filePath,
+        content,
+        evidence_type as evidenceType,
+        obtained_date as obtainedDate,
+        created_at as createdAt,
+        updated_at as updatedAt
+      FROM evidence
+      WHERE case_id IN (${placeholders})
+      ORDER BY created_at DESC
+    `);
+
+    const rows = stmt.all(...caseIds) as Evidence[];
+
+    // Decrypt content
+    return rows.map(row => {
+      row.content = this.decryptContent(row.content);
+      return row;
+    });
+  }
+
+  /**
+   * Get evidence by ID (async version for consistency)
+   */
+  async get(id: number): Promise<Evidence | null> {
+    return this.findById(id);
   }
 
 }

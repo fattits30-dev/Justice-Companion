@@ -3,7 +3,7 @@ import type {
   LegalIssue,
   CreateLegalIssueInput,
   UpdateLegalIssueInput,
-} from '../models/LegalIssue.ts';
+} from '../domains/legal-research/entities/LegalIssue.ts';
 import { EncryptionService, type EncryptedData } from '../services/EncryptionService.ts';
 import type { AuditLogger } from '../services/AuditLogger.ts';
 

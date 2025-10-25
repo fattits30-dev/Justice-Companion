@@ -1,6 +1,9 @@
+import { injectable, inject } from 'inversify';
+import { TYPES } from '../shared/infrastructure/di/types.ts';
 import { ConsentRepository } from '../repositories/ConsentRepository.ts';
 import { AuditLogger } from './AuditLogger.ts';
-import type { ConsentType, Consent } from '../models/Consent.ts';
+import type { ConsentType, Consent } from '../domains/settings/entities/Consent.ts';
+import type { IConsentRepository, IAuditLogger } from '../shared/infrastructure/di/interfaces.ts';
 
 /**
  * Service for managing GDPR consent
@@ -18,18 +21,14 @@ import type { ConsentType, Consent } from '../models/Consent.ts';
  * - ai_processing: Consent to use AI features (optional)
  * - marketing: Consent to receive marketing communications (optional)
  */
+@injectable()
 export class ConsentService {
   private readonly CURRENT_PRIVACY_VERSION = '1.0';
-  private consentRepository: ConsentRepository;
-  private auditLogger?: AuditLogger;
 
   constructor(
-    consentRepository: ConsentRepository,
-    auditLogger?: AuditLogger,
-  ) {
-    this.consentRepository = consentRepository;
-    this.auditLogger = auditLogger;
-  }
+    @inject(TYPES.ConsentRepository) private consentRepository: IConsentRepository,
+    @inject(TYPES.AuditLogger) private auditLogger: IAuditLogger
+  ) {}
 
   /**
    * Grant consent for specific type

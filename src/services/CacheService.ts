@@ -1,3 +1,4 @@
+import { injectable } from 'inversify';
 import { LRUCache } from 'lru-cache';
 import { errorLogger } from '../utils/error-logger.ts';
 
@@ -60,6 +61,7 @@ interface CacheEntry<T> {
  * cacheService.invalidatePattern(`case:user:${userId}:*`);
  * ```
  */
+@injectable()
 export class CacheService {
   private caches: Map<string, LRUCache<string, CacheEntry<any>>>;
   private stats: Map<string, { hits: number; misses: number; evictions: number }>;

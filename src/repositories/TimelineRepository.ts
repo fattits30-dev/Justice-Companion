@@ -3,7 +3,7 @@ import type {
   TimelineEvent,
   CreateTimelineEventInput,
   UpdateTimelineEventInput,
-} from '../models/TimelineEvent.ts';
+} from '../domains/timeline/entities/TimelineEvent.ts';
 import { EncryptionService, type EncryptedData } from '../services/EncryptionService.ts';
 import type { AuditLogger } from '../services/AuditLogger.ts';
 

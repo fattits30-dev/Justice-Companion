@@ -13,7 +13,7 @@
  */
 
 import { useState, FormEvent } from "react";
-import type { User } from "../../models/User.ts";
+import type { User } from "../../domains/auth/entities/User.ts";
 
 interface RegistrationScreenProps {
   onSuccess?: (data: { user: User }) => void;
@@ -122,7 +122,12 @@ export function RegistrationScreen({
         email,
       );
 
-      if (response.success && response.data) {
+      if (!response.success) {
+        setError(response.error || "Registration failed");
+        return;
+      }
+
+      if (response.data) {
         // Clear form on success
         setUsername("");
         setEmail("");
@@ -132,15 +137,8 @@ export function RegistrationScreen({
 
         // Call success callback
         if (onSuccess) {
-          onSuccess(response.data);
+          onSuccess({ user: response.data });
         }
-      } else {
-        // Show error message - extract message if error is an object
-        const errorMsg =
-          typeof response.error === "string"
-            ? response.error
-            : response.error?.message || "Registration failed";
-        setError(errorMsg);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");

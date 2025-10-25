@@ -1,3 +1,4 @@
+import { injectable } from 'inversify';
 import { app, safeStorage } from 'electron';
 import fs from 'fs/promises';
 import path from 'path';
@@ -15,6 +16,7 @@ import { logger } from '../utils/logger.ts';
  * - Handles encryption unavailability gracefully
  * - Cleans up on logout
  */
+@injectable()
 export class SessionPersistenceService {
   private static readonly FILE_NAME = 'session.enc';
   private static readonly UUID_V4_VERSION = 4;

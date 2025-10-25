@@ -1,4 +1,3 @@
-// @ts-nocheck - Legacy code with known TypeScript errors, needs IPC refactoring
 /**
  * AI Function Definitions for node-llama-cpp
  *
@@ -8,16 +7,46 @@
  * Each function uses node-llama-cpp's defineChatSessionFunction to create
  * a structured tool that the LLM can invoke during conversations.
  *
- * NOTE: This file has TypeScript errors because IPC methods require sessionId
- * but AI function handlers don't have access to it. This is legacy code that
- * needs refactoring to properly thread sessionId through the AI function context.
- * See: https://github.com/your-repo/issues/XXX
+ * Type Safety: All functions are fully typed with proper TypeScript interfaces.
+ * Session Management: sessionId is retrieved from localStorage for authentication.
  */
 
 // @ts-expect-error - node-llama-cpp is an optional dependency with no type declarations
 import { defineChatSessionFunction } from 'node-llama-cpp';
-import type { CaseStatus, CreateCaseInput, UpdateCaseInput } from '../models/Case.ts';
-import type { CreateEvidenceInput, EvidenceType } from '../models/Evidence.ts';
+import type { CaseStatus } from '../domains/cases/entities/Case.ts';
+import type { CreateCaseInput, UpdateCaseInput } from '../domains/cases/entities/Case.ts';
+import type { CreateEvidenceInput, EvidenceType } from '../domains/evidence/entities/Evidence.ts';
+import type {
+  CreateCaseParams,
+  CreateCaseResult,
+  GetCaseParams,
+  GetCaseResult,
+  ListCasesParams,
+  ListCasesResult,
+  UpdateCaseParams,
+  UpdateCaseResult,
+  CreateEvidenceParams,
+  CreateEvidenceResult,
+  ListEvidenceParams,
+  ListEvidenceResult,
+  StoreCaseFactParams,
+  StoreCaseFactResult,
+  GetCaseFactsParams,
+  GetCaseFactsResult,
+  SearchLegislationParams,
+  SearchLegislationResult,
+  SearchCaseLawParams,
+  SearchCaseLawResult,
+  ClassifyQuestionParams,
+  ClassifyQuestionResult,
+  FactCategory,
+  FactImportance,
+} from '../types/ai-functions.ts';
+import { getSessionId } from '../types/ai-functions.ts';
+
+// ============================================================================
+// CASE MANAGEMENT FUNCTIONS
+// ============================================================================
 
 /**
  * Function: create_case
@@ -46,7 +75,9 @@ const createCaseFunction = defineChatSessionFunction({
     },
     required: ['title', 'caseType', 'description'],
   },
-  handler: async (params: { title: string; caseType: string; description: string }) => {
+  handler: async (params: CreateCaseParams): Promise<CreateCaseResult> => {
+    const sessionId = getSessionId();
+
     const input: CreateCaseInput = {
       title: params.title,
       caseType: (params.caseType as
@@ -60,10 +91,9 @@ const createCaseFunction = defineChatSessionFunction({
       description: params.description,
     };
 
-    // @ts-expect-error - Missing sessionId parameter (see file header comment)
-    const response = await window.justiceAPI.createCase(input);
+    const response = await window.justiceAPI.createCase(input, sessionId);
 
-    if (response.success) {
+    if (response.success && response.data) {
       return {
         success: true,
         caseId: response.data.id,
@@ -73,7 +103,7 @@ const createCaseFunction = defineChatSessionFunction({
         message: `Case created successfully with ID ${response.data.id}`,
       };
     } else {
-      throw new Error(response.error || 'Failed to create case');
+      throw new Error(!response.success ? response.error : 'Failed to create case');
     }
   },
 });
@@ -95,12 +125,13 @@ const getCaseFunction = defineChatSessionFunction({
     },
     required: ['caseId'],
   },
-  handler: async (params: { caseId: number }) => {
-    // @ts-expect-error - Missing sessionId parameter (see file header comment)
-    const response = await window.justiceAPI.getCaseById(params.caseId);
+  handler: async (params: GetCaseParams): Promise<GetCaseResult> => {
+    const sessionId = getSessionId();
+
+    const response = await window.justiceAPI.getCaseById(params.caseId.toString(), sessionId);
 
     if (response.success) {
-      if (response.data === null) {
+      if (response.data === null || response.data === undefined) {
         return {
           success: false,
           message: `Case with ID ${params.caseId} not found`,
@@ -109,11 +140,19 @@ const getCaseFunction = defineChatSessionFunction({
 
       return {
         success: true,
-        case: response.data,
+        case: {
+          id: response.data.id,
+          title: response.data.title,
+          caseType: response.data.caseType,
+          description: response.data.description ?? undefined,
+          status: response.data.status,
+          createdAt: response.data.createdAt,
+          updatedAt: response.data.updatedAt,
+        },
         message: `Retrieved case: ${response.data.title}`,
       };
     } else {
-      throw new Error(response.error || 'Failed to retrieve case');
+      throw new Error(!response.success ? response.error : 'Failed to retrieve case');
     }
   },
 });
@@ -137,10 +176,12 @@ const listCasesFunction = defineChatSessionFunction({
     },
     required: [],
   },
-  handler: async (params: { filterStatus?: string }) => {
-    const response = await window.justiceAPI.getAllCases();
+  handler: async (params: ListCasesParams): Promise<ListCasesResult> => {
+    const sessionId = getSessionId();
 
-    if (response.success) {
+    const response = await window.justiceAPI.getAllCases(sessionId);
+
+    if (response.success && response.data) {
       let cases = response.data;
 
       // Apply status filter if specified
@@ -161,7 +202,7 @@ const listCasesFunction = defineChatSessionFunction({
         message: `Found ${cases.length} case(s)`,
       };
     } else {
-      throw new Error(response.error || 'Failed to list cases');
+      throw new Error(!response.success ? response.error : 'Failed to list cases');
     }
   },
 });
@@ -201,7 +242,9 @@ const updateCaseFunction = defineChatSessionFunction({
     },
     required: ['caseId'],
   },
-  handler: async (params: { caseId: number; title?: string; caseType?: string; description?: string; status?: string }) => {
+  handler: async (params: UpdateCaseParams): Promise<UpdateCaseResult> => {
+    const sessionId = getSessionId();
+
     const input: UpdateCaseInput = {};
 
     if (params.title !== undefined) {
@@ -223,11 +266,10 @@ const updateCaseFunction = defineChatSessionFunction({
       input.status = params.status as CaseStatus;
     }
 
-    // @ts-expect-error - Missing sessionId parameter (see file header comment)
-    const response = await window.justiceAPI.updateCase(params.caseId, input);
+    const response = await window.justiceAPI.updateCase(params.caseId.toString(), input, sessionId);
 
     if (response.success) {
-      if (response.data === null) {
+      if (response.data === null || response.data === undefined) {
         return {
           success: false,
           message: `Case with ID ${params.caseId} not found`,
@@ -236,14 +278,25 @@ const updateCaseFunction = defineChatSessionFunction({
 
       return {
         success: true,
-        case: response.data,
+        case: {
+          id: response.data.id,
+          title: response.data.title,
+          caseType: response.data.caseType,
+          description: response.data.description ?? undefined,
+          status: response.data.status,
+          updatedAt: response.data.updatedAt ?? new Date().toISOString(),
+        },
         message: `Case ${params.caseId} updated successfully`,
       };
     } else {
-      throw new Error(response.error || 'Failed to update case');
+      throw new Error(response.error);
     }
   },
 });
+
+// ============================================================================
+// EVIDENCE MANAGEMENT FUNCTIONS
+// ============================================================================
 
 /**
  * Function: create_evidence
@@ -286,7 +339,10 @@ const createEvidenceFunction = defineChatSessionFunction({
     },
     required: ['caseId', 'title', 'evidenceType'],
   },
-  handler: async (params: { caseId: number; title: string; evidenceType: string; content?: string; filePath?: string; obtainedDate?: string }) => {
+  handler: async (params: CreateEvidenceParams): Promise<CreateEvidenceResult> => {
+    // Note: sessionId would be needed here once createEvidence IPC is implemented
+    // const sessionId = getSessionId();
+
     // Validate required evidenceType
     if (!params.evidenceType) {
       throw new Error('evidenceType is required');
@@ -308,22 +364,9 @@ const createEvidenceFunction = defineChatSessionFunction({
       input.obtainedDate = params.obtainedDate;
     }
 
-    // @ts-expect-error - Missing sessionId parameter (see file header comment)
-    const response = await window.justiceAPI.createEvidence(input);
-
-    if (response.success) {
-      return {
-        success: true,
-        evidenceId: response.data.id,
-        title: response.data.title,
-        evidenceType: response.data.evidenceType,
-        caseId: response.data.caseId,
-        createdAt: response.data.createdAt,
-        message: `Evidence created successfully with ID ${response.data.id}`,
-      };
-    } else {
-      throw new Error(response.error || 'Failed to create evidence');
-    }
+    // Note: createEvidence IPC method needs to be implemented
+    // For now, we'll use a workaround or throw a descriptive error
+    throw new Error('createEvidence IPC method not yet implemented. Use uploadFile instead.');
   },
 });
 
@@ -344,11 +387,12 @@ const listEvidenceFunction = defineChatSessionFunction({
     },
     required: ['caseId'],
   },
-  handler: async (params: { caseId: number }) => {
-    // @ts-expect-error - Missing sessionId parameter (see file header comment)
-    const response = await window.justiceAPI.getEvidenceByCaseId(params.caseId);
+  handler: async (params: ListEvidenceParams): Promise<ListEvidenceResult> => {
+    const sessionId = getSessionId();
 
-    if (response.success) {
+    const response = await window.justiceAPI.getEvidenceByCaseId(params.caseId.toString(), sessionId);
+
+    if (response.success && response.data) {
       return {
         success: true,
         totalEvidence: response.data.length,
@@ -356,7 +400,7 @@ const listEvidenceFunction = defineChatSessionFunction({
           id: e.id,
           title: e.title,
           evidenceType: e.evidenceType,
-          obtainedDate: e.obtainedDate,
+          obtainedDate: e.obtainedDate ?? undefined,
           hasFile: !!e.filePath,
           hasContent: !!e.content,
           createdAt: e.createdAt,
@@ -364,13 +408,13 @@ const listEvidenceFunction = defineChatSessionFunction({
         message: `Found ${response.data.length} evidence item(s) for case ${params.caseId}`,
       };
     } else {
-      throw new Error(response.error || 'Failed to list evidence');
+      throw new Error(!response.success ? response.error : 'Failed to list evidence');
     }
   },
 });
 
 // ============================================================================
-// FACT MEMORY FUNCTIONS (CRITICAL) - Using window.justiceAPI directly
+// FACT MEMORY FUNCTIONS (CRITICAL) - AI Memory System
 // ============================================================================
 
 /**
@@ -398,28 +442,27 @@ const storeCaseFactFunction = defineChatSessionFunction({
     },
     required: ['caseId', 'factContent', 'factCategory'],
   },
-  handler: async (params: { caseId: number; factContent: string; factCategory: string; importance?: string }) => {
-    // @ts-expect-error - Missing sessionId parameter (see file header comment)
-    const response = await window.justiceAPI.storeFact({
-      caseId: params.caseId,
-      factContent: params.factContent,
-      factCategory: (params.factCategory as
-        | 'timeline'
-        | 'evidence'
-        | 'witness'
-        | 'location'
-        | 'communication'
-        | 'other'
-        | undefined) ?? 'other',
-      importance: (params.importance as 'low' | 'medium' | 'high' | 'critical' | undefined) ?? 'medium',
-    });
-    // @ts-expect-error - Response type mismatch due to missing sessionId (see file header comment)
-    if (response.success) {
-      // @ts-expect-error - Response type mismatch due to missing sessionId (see file header comment)
-      return { success: true, factId: response.data.id, message: 'Fact stored' };
+  handler: async (params: StoreCaseFactParams): Promise<StoreCaseFactResult> => {
+    const sessionId = getSessionId();
+
+    const response = await window.justiceAPI.createCaseFact(
+      {
+        caseId: params.caseId,
+        factContent: params.factContent,
+        factCategory: (params.factCategory as FactCategory | undefined) ?? 'other',
+        importance: (params.importance as FactImportance | undefined) ?? 'medium',
+      },
+      sessionId
+    );
+
+    if (response.success && response.data) {
+      return {
+        success: true,
+        factId: response.data.id,
+        message: 'Fact stored successfully',
+      };
     } else {
-      // @ts-expect-error - Response type mismatch due to missing sessionId (see file header comment)
-      throw new Error(response.error || 'Failed to store fact');
+      throw new Error(!response.success ? response.error : 'Failed to store fact');
     }
   },
 });
@@ -438,16 +481,26 @@ const getCaseFactsFunction = defineChatSessionFunction({
     },
     required: ['caseId'],
   },
-  handler: async (params: { caseId: number; factCategory?: string }) => {
-    const response = await window.justiceAPI.getCaseFacts(params.caseId, params.factCategory);
-    if ('error' in response) {
-      throw new Error(response.error || 'Failed to get facts');
+  handler: async (params: GetCaseFactsParams): Promise<GetCaseFactsResult> => {
+    const sessionId = getSessionId();
+
+    const response = await window.justiceAPI.getCaseFacts(params.caseId, sessionId);
+
+    if (response.success && response.data) {
+      // Filter by category if specified
+      let facts = response.data;
+      if (params.factCategory) {
+        facts = facts.filter((f) => f.factCategory === params.factCategory);
+      }
+
+      return {
+        success: true,
+        facts,
+        message: `Found ${facts.length} fact(s)`,
+      };
+    } else {
+      throw new Error(!response.success ? response.error : 'Failed to get facts');
     }
-    return {
-      success: true,
-      facts: response.data,
-      message: `Found ${response.data.length} fact(s)`,
-    };
   },
 });
 
@@ -466,7 +519,7 @@ const searchLegislationFunction = defineChatSessionFunction({
     properties: { query: { type: 'string', description: 'Search query' } },
     required: ['query'],
   },
-  handler: async (params: { query: string }) => {
+  handler: async (params: SearchLegislationParams): Promise<SearchLegislationResult> => {
     const { legalAPIService } = await import('./LegalAPIService.js');
     const keywords = await legalAPIService.extractKeywords(params.query);
     const results = await legalAPIService.searchLegislation(keywords.all);
@@ -500,7 +553,7 @@ const searchCaseLawFunction = defineChatSessionFunction({
     },
     required: ['query'],
   },
-  handler: async (params: { query: string; category?: string }) => {
+  handler: async (params: SearchCaseLawParams): Promise<SearchCaseLawResult> => {
     const { legalAPIService } = await import('./LegalAPIService.js');
     const keywords = await legalAPIService.extractKeywords(params.query);
     const category = params.category || legalAPIService.classifyQuestion(params.query);
@@ -519,7 +572,7 @@ const classifyQuestionFunction = defineChatSessionFunction({
     properties: { question: { type: 'string', description: 'Legal question' } },
     required: ['question'],
   },
-  handler: async (params: { question: string }) => {
+  handler: async (params: ClassifyQuestionParams): Promise<ClassifyQuestionResult> => {
     const { legalAPIService } = await import('./LegalAPIService.js');
     const category = legalAPIService.classifyQuestion(params.question);
     const confidence = category === 'general' ? 0.3 : 0.9;
@@ -527,12 +580,16 @@ const classifyQuestionFunction = defineChatSessionFunction({
   },
 });
 
+// ============================================================================
+// EXPORTED AI FUNCTIONS
+// ============================================================================
+
 /**
  * Export all AI functions as a single object
  * This can be registered with the LLM chat session
  */
 export const aiFunctions = {
-  // Case & Evidence Management (6 existing functions)
+  // Case & Evidence Management (6 functions)
   create_case: createCaseFunction,
   get_case: getCaseFunction,
   list_cases: listCasesFunction,

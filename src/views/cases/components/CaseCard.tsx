@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { Case } from "../../../models/Case.ts";
+import type { Case } from "../../../domains/cases/entities/Case.ts";
 import { caseTypeMetadata } from "../constants.ts";
 import { Card } from "../../../components/ui/Card.tsx";
 import { Badge } from "../../../components/ui/Badge.tsx";

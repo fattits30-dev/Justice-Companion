@@ -6,8 +6,8 @@ import { UserRepository } from "../repositories/UserRepository.ts";
 import { SessionRepository } from "../repositories/SessionRepository.ts";
 import { AuditLogger } from "./AuditLogger.ts";
 import { RateLimitService } from "./RateLimitService.ts";
-import type { User } from "../models/User.ts";
-import type { Session } from "../models/Session.ts";
+import type { User } from "../domains/auth/entities/User.ts";
+import type { Session } from "../domains/auth/entities/Session.ts";
 
 const scrypt = promisify(crypto.scrypt);
 

@@ -1,4 +1,4 @@
-import type { EvidenceType } from '../../models/Evidence.ts';
+import type { EvidenceType } from '../../domains/evidence/entities/Evidence.ts';
 
 export const evidenceTypeMetadata: Record<
   EvidenceType,

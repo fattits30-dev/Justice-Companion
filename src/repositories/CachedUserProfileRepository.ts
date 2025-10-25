@@ -2,7 +2,7 @@ import { UserProfileRepository } from './UserProfileRepository.ts';
 import { getCacheService, type CacheService } from '../services/CacheService.ts';
 import { EncryptionService } from '../services/EncryptionService.ts';
 import type { AuditLogger } from '../services/AuditLogger.ts';
-import type { UserProfile, UpdateUserProfileInput } from '../models/UserProfile.ts';
+import type { UserProfile, UpdateUserProfileInput } from '../domains/settings/entities/UserProfile.ts';
 
 /**
  * Cached wrapper for UserProfileRepository

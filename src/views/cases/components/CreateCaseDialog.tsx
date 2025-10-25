@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { X, Check } from "lucide-react";
 import { Card } from "../../../components/ui/Card.tsx";
 import { Button } from "../../../components/ui/Button.tsx";
-import type { CaseType, CreateCaseInput } from "../../../models/Case.ts";
+import type { CaseType, CreateCaseInput } from "../../../domains/cases/entities/Case.ts";
 import { caseTypeMetadata } from "../constants.ts";
 import { showWarning } from "../../../components/ui/Toast.tsx";
 

@@ -1,6 +1,6 @@
 import { Plus } from "lucide-react";
 import { Button } from "../../../components/ui/Button.tsx";
-import type { CaseStatus, CaseType } from "../../../models/Case.ts";
+import type { CaseStatus, CaseType } from "../../../domains/cases/entities/Case.ts";
 import { statusFilterOptions, typeFilterOptions } from "../constants.ts";
 
 interface CaseToolbarProps {

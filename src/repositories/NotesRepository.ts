@@ -272,4 +272,116 @@ export class NotesRepository {
     return this.encryptionService;
   }
 
+  /**
+   * Search notes by query string and filters
+   */
+  async searchNotes(userId: number, query: string, filters?: any): Promise<Note[]> {
+    const db = getDb();
+    const conditions: string[] = [];
+    const params: any[] = [];
+
+    // Get user's cases first to ensure access control
+    const userCases = db.prepare('SELECT id FROM cases WHERE user_id = ?').all(userId) as { id: number }[];
+    const caseIds = userCases.map(c => c.id);
+
+    if (caseIds.length === 0) {
+      return [];
+    }
+
+    // Case filter
+    const placeholders = caseIds.map(() => '?').join(',');
+    conditions.push(`case_id IN (${placeholders})`);
+    params.push(...caseIds);
+
+    // Text search in content
+    if (query) {
+      conditions.push('content LIKE ?');
+      params.push(`%${query}%`);
+    }
+
+    // Specific case IDs filter
+    if (filters?.caseIds && filters.caseIds.length > 0) {
+      const casePlaceholders = filters.caseIds.map(() => '?').join(',');
+      conditions.push(`case_id IN (${casePlaceholders})`);
+      params.push(...filters.caseIds);
+    }
+
+    // Date range filter
+    if (filters?.dateRange) {
+      conditions.push('created_at >= ? AND created_at <= ?');
+      params.push(filters.dateRange.from.toISOString(), filters.dateRange.to.toISOString());
+    }
+
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+    const stmt = db.prepare(`
+      SELECT
+        id,
+        case_id as caseId,
+        user_id as userId,
+        title,
+        content,
+        is_pinned as isPinned,
+        created_at as createdAt,
+        updated_at as updatedAt
+      FROM notes
+      ${whereClause}
+      ORDER BY is_pinned DESC, created_at DESC
+    `);
+
+    const rows = stmt.all(...params) as Note[];
+
+    // Decrypt content
+    return rows.map(row => {
+      row.content = this.decryptContent(row.content);
+      return row;
+    });
+  }
+
+  /**
+   * Get all notes for a user across all their cases
+   */
+  async getUserNotes(userId: number): Promise<Note[]> {
+    const db = getDb();
+
+    // Get user's cases
+    const userCases = db.prepare('SELECT id FROM cases WHERE user_id = ?').all(userId) as { id: number }[];
+    const caseIds = userCases.map(c => c.id);
+
+    if (caseIds.length === 0) {
+      return [];
+    }
+
+    const placeholders = caseIds.map(() => '?').join(',');
+    const stmt = db.prepare(`
+      SELECT
+        id,
+        case_id as caseId,
+        user_id as userId,
+        title,
+        content,
+        is_pinned as isPinned,
+        created_at as createdAt,
+        updated_at as updatedAt
+      FROM notes
+      WHERE case_id IN (${placeholders})
+      ORDER BY is_pinned DESC, created_at DESC
+    `);
+
+    const rows = stmt.all(...caseIds) as Note[];
+
+    // Decrypt content
+    return rows.map(row => {
+      row.content = this.decryptContent(row.content);
+      return row;
+    });
+  }
+
+  /**
+   * Get note by ID (async version for consistency)
+   */
+  async getNote(id: number): Promise<Note | null> {
+    return this.findById(id);
+  }
+
 }

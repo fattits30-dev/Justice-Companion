@@ -1,6 +1,6 @@
 import { AuditLogger } from '../services/AuditLogger.ts';
 import { CaseRepository } from '../repositories/CaseRepository.ts';
-import type { User } from '../models/User.ts';
+import type { User } from '../domains/auth/entities/User.ts';
 
 /**
  * Authorization error class

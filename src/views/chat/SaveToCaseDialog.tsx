@@ -50,7 +50,12 @@ export function SaveToCaseDialog({
     try {
       const result = await window.justiceAPI.getAllCases(sessionId);
 
-      if (result.success && result.data) {
+      if (!result.success) {
+        setError(result.error || 'Failed to load cases');
+        return;
+      }
+
+      if (result.data) {
         const activeCases = result.data.filter((c: Case) => c.status === 'active');
         setCases(activeCases);
 
@@ -59,8 +64,6 @@ export function SaveToCaseDialog({
         } else {
           setError('No active cases found. Please create a case first.');
         }
-      } else {
-        setError(result.error || 'Failed to load cases');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');

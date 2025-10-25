@@ -1,3 +1,4 @@
+import { injectable } from 'inversify';
 import { errorLogger } from '../utils/error-logger.ts';
 import { XMLParser } from 'fast-xml-parser';
 import type {
@@ -296,6 +297,7 @@ function sleep(ms: number): Promise<void> {
  * Service for interacting with UK Legal APIs
  * Handles legislation.gov.uk and Find Case Law API with caching and error handling
  */
+@injectable()
 export class LegalAPIService {
   private cache: Map<string, CacheEntry<unknown>>;
 

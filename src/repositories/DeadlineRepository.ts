@@ -4,7 +4,7 @@ import type {
   CreateDeadlineInput,
   UpdateDeadlineInput,
   DeadlineWithCase,
-} from '../models/Deadline.ts';
+} from '../domains/timeline/entities/Deadline.ts';
 import type { AuditLogger } from '../services/AuditLogger.ts';
 
 /**
@@ -44,11 +44,12 @@ export class DeadlineRepository {
 
     if (this.auditLogger) {
       this.auditLogger.log({
-        userId: input.userId,
-        action: 'deadline.create',
-        entityType: 'deadline',
-        entityId: id.toString(),
-        details: `Created deadline: ${input.title}`,
+        userId: input.userId.toString(),
+        eventType: 'timeline_event.create',
+        resourceType: 'deadline',
+        resourceId: id.toString(),
+        action: 'create',
+        details: { title: input.title },
       });
     }
 
@@ -218,11 +219,12 @@ export class DeadlineRepository {
 
     if (this.auditLogger) {
       this.auditLogger.log({
-        userId,
-        action: 'deadline.update',
-        entityType: 'deadline',
-        entityId: id.toString(),
-        details: `Updated deadline: ${current.title}`,
+        userId: userId.toString(),
+        eventType: 'timeline_event.update',
+        resourceType: 'deadline',
+        resourceId: id.toString(),
+        action: 'update',
+        details: { title: current.title },
       });
     }
 
@@ -263,11 +265,12 @@ export class DeadlineRepository {
 
     if (this.auditLogger && result.changes > 0) {
       this.auditLogger.log({
-        userId,
-        action: 'deadline.delete',
-        entityType: 'deadline',
-        entityId: id.toString(),
-        details: `Deleted deadline: ${current.title}`,
+        userId: userId.toString(),
+        eventType: 'timeline_event.delete',
+        resourceType: 'deadline',
+        resourceId: id.toString(),
+        action: 'delete',
+        details: { title: current.title },
       });
     }
 
@@ -324,5 +327,52 @@ export class DeadlineRepository {
       overdue: result.overdue || 0,
       completed: result.completed || 0,
     };
+  }
+
+  /**
+   * Get upcoming deadlines for a specific user within a certain number of days
+   * Used by the notification scheduler
+   */
+  getUpcomingForUser(userId: number, daysAhead: number): any[] {
+    const stmt = this.db.prepare(`
+      SELECT
+        d.*,
+        c.title as case_title,
+        c.case_number
+      FROM deadlines d
+      LEFT JOIN cases c ON d.case_id = c.id
+      WHERE d.user_id = ?
+        AND d.deleted_at IS NULL
+        AND d.status != 'completed'
+        AND date(d.deadline) <= date('now', '+' || ? || ' days')
+        AND date(d.deadline) >= date('now')
+      ORDER BY d.deadline ASC
+    `);
+
+    const rows = stmt.all(userId, daysAhead) as any[];
+    return rows.map(this.mapToDeadline.bind(this));
+  }
+
+  /**
+   * Get all upcoming deadlines within a certain number of days
+   * Used by the system-wide notification scheduler
+   */
+  getUpcoming(daysAhead: number): any[] {
+    const stmt = this.db.prepare(`
+      SELECT
+        d.*,
+        c.title as case_title,
+        c.case_number
+      FROM deadlines d
+      LEFT JOIN cases c ON d.case_id = c.id
+      WHERE d.deleted_at IS NULL
+        AND d.status != 'completed'
+        AND date(d.deadline) <= date('now', '+' || ? || ' days')
+        AND date(d.deadline) >= date('now')
+      ORDER BY d.deadline ASC
+    `);
+
+    const rows = stmt.all(daysAhead) as any[];
+    return rows.map(this.mapToDeadline.bind(this));
   }
 }

@@ -10,3 +10,5 @@ export * from './AuditLog.ts';
 export * from './User.ts';
 export * from './Session.ts';
 export * from './Consent.ts';
+export * from './Notification.ts';
+export * from './NotificationPreferences.ts';

@@ -1,6 +1,6 @@
 import { getDb } from '../db/database.ts';
 import { getRepositories } from '../repositories.ts';
-import type { Case, CreateCaseInput, UpdateCaseInput } from '../models/Case.ts';
+import type { Case, CreateCaseInput, UpdateCaseInput } from '../domains/cases/entities/Case.ts';
 
 interface CreateCaseWithUser extends CreateCaseInput {
   userId: number;

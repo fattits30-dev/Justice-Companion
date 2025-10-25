@@ -1,3 +1,4 @@
+import { injectable } from 'inversify';
 import { logger } from '../utils/logger.ts';
 
 /**
@@ -24,6 +25,7 @@ export interface RateLimitResult {
  * Rate limiting service to prevent brute force attacks on login endpoint
  * Implements sliding window rate limiting with automatic lockout
  */
+@injectable()
 export class RateLimitService {
   private static instance: RateLimitService | null = null;
   private attempts: Map<string, LoginAttempt> = new Map();
@@ -297,6 +299,37 @@ export class RateLimitService {
       this.cleanupTimer = null;
     }
     this.attempts.clear();
+  }
+
+  /**
+   * Check if request is within rate limit (simplified interface method)
+   */
+  public checkLimit(
+    key: string,
+    limit: number,
+    windowMs: number
+  ): { allowed: boolean; remaining: number; resetAt: Date } {
+    // For now, delegate to checkRateLimit with a simplified response
+    const result = this.checkRateLimit(key);
+    return {
+      allowed: result.allowed,
+      remaining: result.attemptsRemaining || 0,
+      resetAt: new Date(Date.now() + (result.remainingTime ? result.remainingTime * 1000 : windowMs))
+    };
+  }
+
+  /**
+   * Consume a rate limit attempt (interface method)
+   */
+  public consume(key: string): void {
+    this.recordFailedAttempt(key);
+  }
+
+  /**
+   * Reset rate limit for a key (interface method)
+   */
+  public reset(key: string): void {
+    this.clearAttempts(key);
   }
 
   /**
