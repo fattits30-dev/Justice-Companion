@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { List, useListCallbackRef } from 'react-window';
 import { useAuth } from "../contexts/AuthContext.tsx";
 import { SaveToCaseDialog } from "./chat/SaveToCaseDialog.tsx";
+import { MessageItem } from './chat/MessageItem.tsx';
 import { toast } from 'sonner';
-import { Save } from 'lucide-react';
 
 interface Message {
   id: string;
@@ -31,13 +32,22 @@ export function ChatView() {
   const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
   const [messageToSave, setMessageToSave] = useState<Message | null>(null);
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [listRef, setListRef] = useListCallbackRef();
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, currentStreamingMessage]);
+    if (listRef) {
+      const itemCount = messages.length + (isStreaming && currentStreamingMessage ? 1 : 0);
+      if (itemCount > 0) {
+        listRef.scrollToRow({
+          index: itemCount - 1,
+          align: "end",
+          behavior: "smooth"
+        });
+      }
+    }
+  }, [messages.length, isStreaming, currentStreamingMessage, listRef]);
 
   // Handlers - wrapped in useCallback to preserve memoization benefits
   const handleSend = useCallback(async () => {
@@ -210,160 +220,13 @@ export function ChatView() {
       </div>
 
       {/* Messages area */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-6">
+      <div className="flex-1 overflow-hidden">
         {messages.length === 0 && !isStreaming && (
-          <div className="max-w-3xl mx-auto mt-12 text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-cyan-500/20 rounded-full mb-6">
-              <svg
-                className="w-8 h-8 text-cyan-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
-                />
-              </svg>
-            </div>
-            <h2 className="text-2xl font-bold mb-3">
-              How can I help you today?
-            </h2>
-            <p className="text-white/90 mb-8">
-              Ask me about UK employment law, case precedents, or help
-              organizing your case.
-            </p>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
-              <button
-                onClick={() =>
-                  setInput("What are my rights if I'm being bullied at work?")
-                }
-                className="p-4 bg-primary-800 hover:bg-gray-750 border border-gray-700 rounded-lg transition-colors text-left"
-              >
-                <p className="font-medium mb-1">Workplace Rights</p>
-                <p className="text-sm text-white/90">
-                  Understand your protections against bullying
-                </p>
-              </button>
-
-              <button
-                onClick={() =>
-                  setInput(
-                    "How do I gather evidence for an unfair dismissal claim?",
-                  )
-                }
-                className="p-4 bg-primary-800 hover:bg-gray-750 border border-gray-700 rounded-lg transition-colors text-left"
-              >
-                <p className="font-medium mb-1">Building Your Case</p>
-                <p className="text-sm text-white/90">
-                  Learn what evidence you need
-                </p>
-              </button>
-
-              <button
-                onClick={() => setInput("What is constructive dismissal?")}
-                className="p-4 bg-primary-800 hover:bg-gray-750 border border-gray-700 rounded-lg transition-colors text-left"
-              >
-                <p className="font-medium mb-1">Legal Concepts</p>
-                <p className="text-sm text-white/90">
-                  Get clear explanations of legal terms
-                </p>
-              </button>
-
-              <button
-                onClick={() =>
-                  setInput(
-                    "What should I do if I'm being discriminated against?",
-                  )
-                }
-                className="p-4 bg-primary-800 hover:bg-gray-750 border border-gray-700 rounded-lg transition-colors text-left"
-              >
-                <p className="font-medium mb-1">Discrimination</p>
-                <p className="text-sm text-white/90">
-                  Know your rights and next steps
-                </p>
-              </button>
-            </div>
-          </div>
-        )}
-
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
-          >
-            <div
-              className={`max-w-3xl ${
-                message.role === "user"
-                  ? "bg-primary-600 text-white rounded-2xl rounded-tr-sm"
-                  : "bg-primary-800 border border-gray-700 rounded-2xl rounded-tl-sm"
-              } p-4`}
-            >
-              {message.role === "assistant" && (
-                <div className="flex items-center gap-2 mb-2 text-sm text-white/90">
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                    />
-                  </svg>
-                  <span>AI Assistant</span>
-                </div>
-              )}
-
-              <div className="prose prose-invert max-w-none">
-                <p className="whitespace-pre-wrap">{message.content}</p>
-              </div>
-
-              {message.thinking && _showThinking && (
-                <details className="mt-3 text-sm">
-                  <summary className="cursor-pointer text-white/90 hover:text-white">
-                    View AI reasoning process
-                  </summary>
-                  <div className="mt-2 p-3 bg-primary-900/50 rounded border border-gray-700">
-                    <p className="text-white/90 whitespace-pre-wrap">
-                      {message.thinking}
-                    </p>
-                  </div>
-                </details>
-              )}
-
-              {/* Save to Case Button (for assistant messages only) */}
-              {message.role === "assistant" && (
-                <button
-                  onClick={() => handleSaveToCase(message)}
-                  className="mt-3 flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors border border-white/10 hover:border-white/20"
-                  type="button"
-                >
-                  <Save className="w-4 h-4" />
-                  Save to Case
-                </button>
-              )}
-
-              <div className="mt-2 text-xs text-white/80">
-                {message.timestamp.toLocaleTimeString()}
-              </div>
-            </div>
-          </div>
-        ))}
-
-        {/* Streaming message */}
-        {isStreaming && currentStreamingMessage && (
-          <div className="flex justify-start">
-            <div className="max-w-3xl bg-primary-800 border border-gray-700 rounded-2xl rounded-tl-sm p-4">
-              <div className="flex items-center gap-2 mb-2 text-sm text-white/90">
+          <div className="p-6">
+            <div className="max-w-3xl mx-auto mt-12 text-center">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-cyan-500/20 rounded-full mb-6">
                 <svg
-                  className="w-4 h-4 animate-pulse"
+                  className="w-8 h-8 text-cyan-400"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -372,23 +235,130 @@ export function ChatView() {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                    d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
                   />
                 </svg>
-                <span>AI Assistant</span>
-                <span className="ml-2 text-green-400">● Responding...</span>
               </div>
-              <div className="prose prose-invert max-w-none">
-                <p className="whitespace-pre-wrap">
-                  {currentStreamingMessage}
-                  <span className="animate-pulse">▊</span>
-                </p>
+              <h2 className="text-2xl font-bold mb-3">
+                How can I help you today?
+              </h2>
+              <p className="text-white/90 mb-8">
+                Ask me about UK employment law, case precedents, or help
+                organizing your case.
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+                <button
+                  onClick={() =>
+                    setInput("What are my rights if I'm being bullied at work?")
+                  }
+                  className="p-4 bg-primary-800 hover:bg-gray-750 border border-gray-700 rounded-lg transition-colors text-left"
+                >
+                  <p className="font-medium mb-1">Workplace Rights</p>
+                  <p className="text-sm text-white/90">
+                    Understand your protections against bullying
+                  </p>
+                </button>
+
+                <button
+                  onClick={() =>
+                    setInput(
+                      "How do I gather evidence for an unfair dismissal claim?",
+                    )
+                  }
+                  className="p-4 bg-primary-800 hover:bg-gray-750 border border-gray-700 rounded-lg transition-colors text-left"
+                >
+                  <p className="font-medium mb-1">Building Your Case</p>
+                  <p className="text-sm text-white/90">
+                    Learn what evidence you need
+                  </p>
+                </button>
+
+                <button
+                  onClick={() => setInput("What is constructive dismissal?")}
+                  className="p-4 bg-primary-800 hover:bg-gray-750 border border-gray-700 rounded-lg transition-colors text-left"
+                >
+                  <p className="font-medium mb-1">Legal Concepts</p>
+                  <p className="text-sm text-white/90">
+                    Get clear explanations of legal terms
+                  </p>
+                </button>
+
+                <button
+                  onClick={() =>
+                    setInput(
+                      "What should I do if I'm being discriminated against?",
+                    )
+                  }
+                  className="p-4 bg-primary-800 hover:bg-gray-750 border border-gray-700 rounded-lg transition-colors text-left"
+                >
+                  <p className="font-medium mb-1">Discrimination</p>
+                  <p className="text-sm text-white/90">
+                    Know your rights and next steps
+                  </p>
+                </button>
               </div>
             </div>
           </div>
         )}
 
-        <div ref={messagesEndRef} />
+        {(messages.length > 0 || isStreaming) && (
+          <List
+            listRef={setListRef}
+            defaultHeight={window.innerHeight - 400} // Adjust based on header + input area height
+            rowCount={messages.length + (isStreaming && currentStreamingMessage ? 1 : 0)}
+            rowHeight={220} // Fixed height per message (generous for variable content)
+            overscanCount={5}
+            rowProps={{}}
+            rowComponent={({ index, style }) => {
+              // Regular message
+              if (index < messages.length) {
+                return (
+                  <MessageItem
+                    key={messages[index].id}
+                    message={messages[index]}
+                    onSaveToCase={handleSaveToCase}
+                    showThinking={_showThinking}
+                    style={style}
+                  />
+                );
+              }
+
+              // Streaming message
+              return (
+                <div key="streaming" style={style}>
+                  <div className="flex justify-start px-6">
+                    <div className="max-w-3xl bg-primary-800 border border-gray-700 rounded-2xl rounded-tl-sm p-4">
+                      <div className="flex items-center gap-2 mb-2 text-sm text-white/90">
+                        <svg
+                          className="w-4 h-4 animate-pulse"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                          />
+                        </svg>
+                        <span>AI Assistant</span>
+                        <span className="ml-2 text-green-400">● Responding...</span>
+                      </div>
+                      <div className="prose prose-invert max-w-none">
+                        <p className="whitespace-pre-wrap">
+                          {currentStreamingMessage}
+                          <span className="animate-pulse">▊</span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            }}
+          />
+        )}
       </div>
 
       {/* Input area */}
