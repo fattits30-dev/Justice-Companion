@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Trash2,
@@ -21,7 +21,7 @@ interface EvidenceCardProps {
   onView?: (id: number) => void;
 }
 
-export function EvidenceCard({
+function EvidenceCardComponent({
   evidence,
   onDelete,
   onView,
@@ -181,3 +181,6 @@ function formatDate(value: string | null | undefined) {
     year: "numeric",
   });
 }
+
+// Export memoized component to prevent unnecessary re-renders
+export const EvidenceCard = memo(EvidenceCardComponent);

@@ -840,6 +840,70 @@ export interface IStartupMetrics {
   clear(): void;
 }
 
+/**
+ * Interface for Event Bus
+ * Event-driven architecture with pub/sub pattern
+ */
+export interface IEventBus {
+  /**
+   * Subscribe to an event type
+   * @param eventType - Event type to subscribe to (e.g., 'case.created')
+   * @param handler - Handler function to execute when event is published
+   * @returns Unsubscribe function
+   */
+  subscribe<T = unknown>(
+    eventType: string,
+    handler: (event: T) => void | Promise<void>
+  ): () => void;
+
+  /**
+   * Publish an event to all subscribers
+   * @param event - Event object to publish
+   */
+  publish<T = unknown>(event: T): Promise<void>;
+
+  /**
+   * Get all persisted events for an aggregate
+   * @param aggregateId - Aggregate ID (e.g., 'case-123')
+   * @param options - Query options
+   * @returns Array of events
+   */
+  getEvents(
+    aggregateId: string,
+    options?: {
+      fromDate?: Date;
+      toDate?: Date;
+      eventTypes?: string[];
+      limit?: number;
+    }
+  ): Promise<Array<{
+    id: number;
+    aggregateId: string;
+    eventType: string;
+    eventData: string;
+    occurredAt: Date;
+  }>>;
+
+  /**
+   * Replay events for an aggregate
+   * @param aggregateId - Aggregate ID to replay events for
+   * @param options - Replay options
+   */
+  replay(
+    aggregateId: string,
+    options?: {
+      fromDate?: Date;
+      toDate?: Date;
+      eventTypes?: string[];
+    }
+  ): Promise<void>;
+
+  /**
+   * Clear all subscribers (for testing)
+   */
+  clearSubscribers(): void;
+}
+
 // =============================================================================
 // ALL INTERFACES EXPORTED INLINE ABOVE
 // =============================================================================
