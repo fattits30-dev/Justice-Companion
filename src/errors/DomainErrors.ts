@@ -9,18 +9,20 @@
  * Base domain error class with structured error information
  */
 export class DomainError extends Error {
+  public readonly code: string;
   public readonly statusCode: number;
   public readonly timestamp: Date;
   public readonly context?: Record<string, unknown>;
 
   constructor(
-    public readonly code: string,
+    code: string,
     message: string,
     statusCode: number = 500,
     context?: Record<string, unknown>
   ) {
     super(message);
     this.name = this.constructor.name;
+    this.code = code;
     this.statusCode = statusCode;
     this.timestamp = new Date();
     this.context = context;

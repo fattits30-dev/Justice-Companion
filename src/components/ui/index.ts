@@ -1,14 +1,14 @@
 // UI Component Library - Modern Design System for Justice Companion
 // Export all UI components from a single entry point
 
-export { Button } from './Button.ts';
-export type { ButtonProps } from './Button.ts';
+export { Button } from './Button.tsx';
+export type { ButtonProps } from './Button.tsx';
 
-export { Badge } from './Badge.ts';
-export type { BadgeProps } from './Badge.ts';
+export { Badge } from './Badge.tsx';
+export type { BadgeProps } from './Badge.tsx';
 
-export { Card, CardHeader, CardFooter } from './Card.ts';
-export type { CardProps, CardHeaderProps, CardFooterProps } from './Card.ts';
+export { Card, CardHeader, CardFooter } from './Card.tsx';
+export type { CardProps, CardHeaderProps, CardFooterProps } from './Card.tsx';
 
 export {
   ToastProvider,
@@ -19,7 +19,7 @@ export {
   showPromise,
   dismissAll,
   toast
-} from './Toast.ts';
+} from './Toast.tsx';
 
 export {
   Skeleton,
@@ -27,14 +27,14 @@ export {
   SkeletonAvatar,
   SkeletonCard,
   SkeletonList
-} from './Skeleton.ts';
+} from './Skeleton.tsx';
 export type {
   SkeletonProps,
   SkeletonTextProps,
   SkeletonAvatarProps,
   SkeletonCardProps,
   SkeletonListProps
-} from './Skeleton.ts';
+} from './Skeleton.tsx';
 
-export { CommandPalette, useCommandPalette } from './CommandPalette.ts';
-export type { CommandItem, CommandPaletteProps } from './CommandPalette.ts';
+export { CommandPalette, useCommandPalette } from './CommandPalette.tsx';
+export type { CommandItem, CommandPaletteProps } from './CommandPalette.tsx';
