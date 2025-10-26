@@ -59,12 +59,18 @@ importers:
       groq-sdk:
         specifier: ^0.34.0
         version: 0.34.0(encoding@0.1.13)
+      html2canvas:
+        specifier: ^1.4.1
+        version: 1.4.1
       html2pdf.js:
         specifier: ^0.12.1
         version: 0.12.1
       inversify:
         specifier: ^7.10.3
         version: 7.10.3(reflect-metadata@0.2.2)
+      jspdf:
+        specifier: ^3.0.3
+        version: 3.0.3
       lru-cache:
         specifier: ^11.2.2
         version: 11.2.2

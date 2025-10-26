@@ -1,8 +1,10 @@
+import type { DomainEvent } from '../../../shared/infrastructure/events/DomainEvent.ts';
+
 /**
  * CaseCreated Domain Event
  * Fired when a new case is created in the system
  */
-export class CaseCreated {
+export class CaseCreated implements DomainEvent {
   public readonly eventType = 'case.created' as const;
   public readonly occurredAt: Date;
 

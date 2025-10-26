@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, memo } from "react";
 import type { Case } from "../../../domains/cases/entities/Case.ts";
 import { caseTypeMetadata } from "../constants.ts";
 import { Card } from "../../../components/ui/Card.tsx";
@@ -13,7 +13,7 @@ interface CaseCardProps {
   onEdit?: (caseId: number) => void;
 }
 
-export function CaseCard({
+function CaseCardComponent({
   caseItem,
   onDelete,
   onView,
@@ -206,3 +206,6 @@ function formatDate(value: string) {
     year: "numeric",
   });
 }
+
+// Export memoized component to prevent unnecessary re-renders
+export const CaseCard = memo(CaseCardComponent);

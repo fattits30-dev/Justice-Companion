@@ -82,6 +82,8 @@ export const TYPES = {
   RateLimitService: Symbol.for('RateLimitService'),
   SecureStorageService: Symbol.for('SecureStorageService'),
   SessionPersistenceService: Symbol.for('SessionPersistenceService'),
+  EventBus: Symbol.for('EventBus'),
+  AuthorizationService: Symbol.for('AuthorizationService'),
 
   // Search Services
   SearchService: Symbol.for('SearchService'),

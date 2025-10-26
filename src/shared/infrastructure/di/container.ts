@@ -77,6 +77,12 @@ import { ChatConversationServiceInjectable } from '../../../services/ChatConvers
 import { ConsentService } from '../../../services/ConsentService.ts';
 import { LegalAPIService } from '../../../services/LegalAPIService.ts';
 
+// Event Bus
+import { EventBus } from '../events/EventBus.ts';
+
+// Authorization
+import { AuthorizationService } from '../../../services/AuthorizationService.ts';
+
 /**
  * Container Configuration Options
  */
@@ -292,6 +298,12 @@ export function createContainer(options: ContainerOptions = {}): Container {
 
   // UserProfileService - Transient (stateless service)
   container.bind<IUserProfileService>(TYPES.UserProfileService).to(UserProfileServiceInjectable).inTransientScope();
+
+  // EventBus - Singleton (stateful, manages subscribers and event history)
+  container.bind(TYPES.EventBus).to(EventBus).inSingletonScope();
+
+  // AuthorizationService - Singleton (permission checks)
+  container.bind(TYPES.AuthorizationService).to(AuthorizationService).inSingletonScope();
 
   // ==========================================
   // Batch 2: Chat & AI Services

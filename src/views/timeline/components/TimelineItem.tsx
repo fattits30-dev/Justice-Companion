@@ -1,5 +1,6 @@
 import { Edit2, Trash2, CheckCircle, Circle, FolderOpen } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { memo } from 'react';
 import { Card } from '../../../components/ui/Card';
 import { Badge } from '../../../components/ui/Badge';
 import { Button } from '../../../components/ui/Button';
@@ -9,6 +10,38 @@ import {
   isDeadlineUrgent,
 } from '../../../models/Deadline';
 
+// Constant color mappings (moved outside component to prevent recreation)
+const urgencyColors = {
+  overdue: {
+    dot: 'bg-danger-500',
+    line: 'bg-danger-500/30',
+    glow: 'shadow-danger',
+  },
+  urgent: {
+    dot: 'bg-warning-500',
+    line: 'bg-warning-500/30',
+    glow: 'shadow-warning',
+  },
+  future: {
+    dot: 'bg-success-500',
+    line: 'bg-success-500/30',
+    glow: 'shadow-success',
+  },
+  completed: {
+    dot: 'bg-gray-500',
+    line: 'bg-gray-500/30',
+    glow: '',
+  },
+};
+
+// Constant priority badge variant mapping
+const priorityVariant: Record<'high' | 'medium' | 'low' | 'critical', 'danger' | 'warning' | 'neutral'> = {
+  critical: 'danger' as const,
+  high: 'danger' as const,
+  medium: 'warning' as const,
+  low: 'neutral' as const,
+};
+
 interface TimelineItemProps {
   deadline: DeadlineWithCase;
   onEdit: (deadline: DeadlineWithCase) => void;
@@ -17,7 +50,7 @@ interface TimelineItemProps {
   onCaseClick: (caseId: number) => void;
 }
 
-export function TimelineItem({
+function TimelineItemComponent({
   deadline,
   onEdit,
   onComplete,
@@ -34,37 +67,6 @@ export function TimelineItem({
   };
 
   const urgency = getUrgency();
-
-  // Color mapping for urgency
-  const urgencyColors = {
-    overdue: {
-      dot: 'bg-danger-500',
-      line: 'bg-danger-500/30',
-      glow: 'shadow-danger',
-    },
-    urgent: {
-      dot: 'bg-warning-500',
-      line: 'bg-warning-500/30',
-      glow: 'shadow-warning',
-    },
-    future: {
-      dot: 'bg-success-500',
-      line: 'bg-success-500/30',
-      glow: 'shadow-success',
-    },
-    completed: {
-      dot: 'bg-gray-500',
-      line: 'bg-gray-500/30',
-      glow: '',
-    },
-  };
-
-  // Priority badge variant
-  const priorityVariant = {
-    high: 'danger' as const,
-    medium: 'warning' as const,
-    low: 'neutral' as const,
-  };
 
   // Format date
   const formatDate = (dateString: string) => {
@@ -216,3 +218,6 @@ export function TimelineItem({
     </motion.div>
   );
 }
+
+// Export memoized component to prevent unnecessary re-renders
+export const TimelineItem = memo(TimelineItemComponent);

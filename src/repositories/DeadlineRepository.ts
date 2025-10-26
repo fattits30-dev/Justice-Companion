@@ -5,6 +5,12 @@ import type {
   UpdateDeadlineInput,
   DeadlineWithCase,
 } from '../domains/timeline/entities/Deadline.ts';
+import type {
+  DeadlineDependency,
+  CreateDeadlineDependencyInput,
+  UpdateDeadlineDependencyInput,
+  DeadlineWithDependencies,
+} from '../domains/timeline/entities/DeadlineDependency.ts';
 import type { AuditLogger } from '../services/AuditLogger.ts';
 
 /**
@@ -374,5 +380,286 @@ export class DeadlineRepository {
 
     const rows = stmt.all(daysAhead) as any[];
     return rows.map(this.mapToDeadline.bind(this));
+  }
+
+  // ============================================
+  // Dependency Management (Wave 6 Task 3: Gantt Chart)
+  // ============================================
+
+  /**
+   * Create a dependency between two deadlines
+   */
+  createDependency(input: CreateDeadlineDependencyInput): DeadlineDependency {
+    const stmt = this.db.prepare(`
+      INSERT INTO deadline_dependencies (
+        source_deadline_id,
+        target_deadline_id,
+        dependency_type,
+        lag_days,
+        created_by
+      ) VALUES (@sourceDeadlineId, @targetDeadlineId, @dependencyType, @lagDays, @createdBy)
+    `);
+
+    const result = stmt.run({
+      sourceDeadlineId: input.sourceDeadlineId,
+      targetDeadlineId: input.targetDeadlineId,
+      dependencyType: input.dependencyType,
+      lagDays: input.lagDays || 0,
+      createdBy: input.createdBy || null,
+    });
+
+    const id = result.lastInsertRowid as number;
+
+    if (this.auditLogger) {
+      this.auditLogger.log({
+        userId: input.createdBy?.toString() || 'system',
+        eventType: 'deadline_dependency.create',
+        resourceType: 'deadline_dependency',
+        resourceId: id.toString(),
+        action: 'create',
+        details: {
+          sourceDeadlineId: input.sourceDeadlineId,
+          targetDeadlineId: input.targetDeadlineId,
+          dependencyType: input.dependencyType,
+        },
+      });
+    }
+
+    return this.findDependencyById(id)!;
+  }
+
+  /**
+   * Find dependency by ID
+   */
+  findDependencyById(id: number): DeadlineDependency | null {
+    const stmt = this.db.prepare(`
+      SELECT
+        id,
+        source_deadline_id as sourceDeadlineId,
+        target_deadline_id as targetDeadlineId,
+        dependency_type as dependencyType,
+        lag_days as lagDays,
+        created_at as createdAt,
+        created_by as createdBy
+      FROM deadline_dependencies
+      WHERE id = ?
+    `);
+
+    const result = stmt.get(id) as DeadlineDependency | undefined;
+    return result || null;
+  }
+
+  /**
+   * Get all dependencies for a deadline (outgoing dependencies)
+   */
+  findDependenciesByDeadlineId(deadlineId: number): DeadlineDependency[] {
+    const stmt = this.db.prepare(`
+      SELECT
+        id,
+        source_deadline_id as sourceDeadlineId,
+        target_deadline_id as targetDeadlineId,
+        dependency_type as dependencyType,
+        lag_days as lagDays,
+        created_at as createdAt,
+        created_by as createdBy
+      FROM deadline_dependencies
+      WHERE source_deadline_id = ?
+    `);
+
+    return stmt.all(deadlineId) as DeadlineDependency[];
+  }
+
+  /**
+   * Get all dependents for a deadline (incoming dependencies)
+   */
+  findDependentsByDeadlineId(deadlineId: number): DeadlineDependency[] {
+    const stmt = this.db.prepare(`
+      SELECT
+        id,
+        source_deadline_id as sourceDeadlineId,
+        target_deadline_id as targetDeadlineId,
+        dependency_type as dependencyType,
+        lag_days as lagDays,
+        created_at as createdAt,
+        created_by as createdBy
+      FROM deadline_dependencies
+      WHERE target_deadline_id = ?
+    `);
+
+    return stmt.all(deadlineId) as DeadlineDependency[];
+  }
+
+  /**
+   * Get deadline with all its dependencies and dependents
+   */
+  findByIdWithDependencies(id: number): DeadlineWithDependencies | null {
+    const deadline = this.findById(id);
+    if (!deadline) {
+      return null;
+    }
+
+    const dependencies = this.findDependenciesByDeadlineId(id);
+    const dependents = this.findDependentsByDeadlineId(id);
+
+    return {
+      ...deadline,
+      dependencies,
+      dependents,
+      dependenciesCount: dependencies.length,
+      dependentsCount: dependents.length,
+    };
+  }
+
+  /**
+   * Get all deadlines for a user with dependencies (for Gantt chart)
+   */
+  findByUserIdWithDependencies(userId: number): DeadlineWithDependencies[] {
+    const deadlines = this.findByUserId(userId);
+
+    return deadlines.map((deadline) => {
+      const dependencies = this.findDependenciesByDeadlineId(deadline.id);
+      const dependents = this.findDependentsByDeadlineId(deadline.id);
+
+      return {
+        ...deadline,
+        caseTitle: deadline.caseTitle,
+        caseStatus: deadline.caseStatus,
+        dependencies,
+        dependents,
+        dependenciesCount: dependencies.length,
+        dependentsCount: dependents.length,
+      };
+    });
+  }
+
+  /**
+   * Get all deadlines for a case with dependencies (for Gantt chart)
+   */
+  findByCaseIdWithDependencies(caseId: number, userId: number): DeadlineWithDependencies[] {
+    const deadlines = this.findByCaseId(caseId, userId);
+
+    return deadlines.map((deadline) => {
+      const dependencies = this.findDependenciesByDeadlineId(deadline.id);
+      const dependents = this.findDependentsByDeadlineId(deadline.id);
+
+      return {
+        ...deadline,
+        dependencies,
+        dependents,
+        dependenciesCount: dependencies.length,
+        dependentsCount: dependents.length,
+      };
+    });
+  }
+
+  /**
+   * Update a dependency
+   */
+  updateDependency(
+    id: number,
+    input: UpdateDeadlineDependencyInput,
+  ): DeadlineDependency | null {
+    const current = this.findDependencyById(id);
+    if (!current) {
+      return null;
+    }
+
+    const updates: string[] = [];
+    const params: Record<string, unknown> = { id };
+
+    if (input.dependencyType !== undefined) {
+      updates.push('dependency_type = @dependencyType');
+      params.dependencyType = input.dependencyType;
+    }
+    if (input.lagDays !== undefined) {
+      updates.push('lag_days = @lagDays');
+      params.lagDays = input.lagDays;
+    }
+
+    if (updates.length === 0) {
+      return current;
+    }
+
+    const stmt = this.db.prepare(`
+      UPDATE deadline_dependencies
+      SET ${updates.join(', ')}
+      WHERE id = @id
+    `);
+
+    stmt.run(params);
+
+    if (this.auditLogger) {
+      this.auditLogger.log({
+        userId: 'system',
+        eventType: 'deadline_dependency.update',
+        resourceType: 'deadline_dependency',
+        resourceId: id.toString(),
+        action: 'update',
+        details: { fieldsUpdated: Object.keys(input) },
+      });
+    }
+
+    return this.findDependencyById(id);
+  }
+
+  /**
+   * Delete a dependency
+   */
+  deleteDependency(id: number): boolean {
+    const current = this.findDependencyById(id);
+    if (!current) {
+      return false;
+    }
+
+    const stmt = this.db.prepare('DELETE FROM deadline_dependencies WHERE id = ?');
+    const result = stmt.run(id);
+
+    if (this.auditLogger && result.changes > 0) {
+      this.auditLogger.log({
+        userId: 'system',
+        eventType: 'deadline_dependency.delete',
+        resourceType: 'deadline_dependency',
+        resourceId: id.toString(),
+        action: 'delete',
+        details: {
+          sourceDeadlineId: current.sourceDeadlineId,
+          targetDeadlineId: current.targetDeadlineId,
+        },
+      });
+    }
+
+    return result.changes > 0;
+  }
+
+  /**
+   * Check for circular dependencies (prevents infinite loops in Gantt chart)
+   * Returns true if adding this dependency would create a cycle
+   */
+  wouldCreateCircularDependency(
+    sourceDeadlineId: number,
+    targetDeadlineId: number,
+  ): boolean {
+    // Use a recursive CTE to check if there's already a path from target to source
+    const stmt = this.db.prepare(`
+      WITH RECURSIVE dependency_chain AS (
+        -- Start from the target deadline
+        SELECT target_deadline_id as deadline_id
+        FROM deadline_dependencies
+        WHERE source_deadline_id = ?
+
+        UNION ALL
+
+        -- Recursively follow dependencies
+        SELECT dd.target_deadline_id
+        FROM deadline_dependencies dd
+        INNER JOIN dependency_chain dc ON dd.source_deadline_id = dc.deadline_id
+      )
+      SELECT COUNT(*) as count
+      FROM dependency_chain
+      WHERE deadline_id = ?
+    `);
+
+    const result = stmt.get(targetDeadlineId, sourceDeadlineId) as { count: number };
+    return result.count > 0;
   }
 }

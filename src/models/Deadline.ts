@@ -12,7 +12,7 @@ export interface Deadline {
   title: string;
   description?: string | null;
   deadlineDate: string; // ISO 8601 date (YYYY-MM-DD)
-  priority: 'high' | 'medium' | 'low';
+  priority: 'low' | 'medium' | 'high' | 'critical';
   status: 'upcoming' | 'overdue' | 'completed';
   completedAt?: string | null;
   createdAt: string;
@@ -26,14 +26,14 @@ export interface CreateDeadlineInput {
   title: string;
   description?: string;
   deadlineDate: string; // ISO 8601 date (YYYY-MM-DD)
-  priority?: 'high' | 'medium' | 'low';
+  priority?: 'low' | 'medium' | 'high' | 'critical';
 }
 
 export interface UpdateDeadlineInput {
   title?: string;
   description?: string | null;
   deadlineDate?: string;
-  priority?: 'high' | 'medium' | 'low';
+  priority?: 'low' | 'medium' | 'high' | 'critical';
   status?: 'upcoming' | 'overdue' | 'completed';
 }
 
@@ -50,6 +50,7 @@ export interface DeadlineWithCase extends Deadline {
  * Priority levels for deadlines
  */
 export const DeadlinePriority = {
+  CRITICAL: 'critical' as const,
   HIGH: 'high' as const,
   MEDIUM: 'medium' as const,
   LOW: 'low' as const,
