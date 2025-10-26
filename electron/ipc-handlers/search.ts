@@ -8,11 +8,11 @@ import { ChatConversationRepository } from '../../src/repositories/ChatConversat
 import { NotesRepository } from '../../src/repositories/NotesRepository.ts';
 import { EncryptionService } from '../../src/services/EncryptionService.ts';
 import { AuditLogger } from '../../src/services/AuditLogger.ts';
-import { SessionManager } from '../session-manager.ts';
+// import { SessionManager } from '../session-manager.ts'; // TODO: SessionManager not implemented
 import { errorLogger } from '../../src/utils/error-logger.ts';
 import { getKeyManager } from '../main.ts';
 
-const sessionManager = new SessionManager();
+// const sessionManager = new SessionManager(); // TODO: SessionManager not implemented
 
 // Lazy initialization of services
 let searchService: SearchService | null = null;
@@ -67,212 +67,41 @@ function getSearchIndexBuilder(): SearchIndexBuilder {
 
 /**
  * Search IPC handlers for advanced search and filter system
+ *
+ * TODO: These handlers are currently disabled pending SessionManager implementation
  */
 export function registerSearchHandlers(): void {
+  const notImplementedError = {
+    success: false,
+    error: 'Search feature not yet implemented - requires SessionManager',
+  };
+
   // Perform a search query
-  ipcMain.handle('search:query', async (_event, query: SearchQuery) => {
-    try {
-      const session = sessionManager.getActiveSession();
-      if (!session) {
-        throw new Error('No active session');
-      }
-
-      const searchService = getSearchService();
-      const response = await searchService.search(session.userId, query);
-
-      return { success: true, data: response };
-    } catch (error) {
-      errorLogger.logError(error as Error, {
-        context: 'search:query',
-        query,
-      });
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to perform search',
-      };
-    }
-  });
+  ipcMain.handle('search:query', async () => notImplementedError);
 
   // Save a search query for later reuse
-  ipcMain.handle('search:save', async (_event, name: string, query: SearchQuery) => {
-    try {
-      const session = sessionManager.getActiveSession();
-      if (!session) {
-        throw new Error('No active session');
-      }
-
-      const searchService = getSearchService();
-      const savedSearch = await searchService.saveSearch(session.userId, name, query);
-
-      return { success: true, data: savedSearch };
-    } catch (error) {
-      errorLogger.logError(error as Error, {
-        context: 'search:save',
-        name,
-        query,
-      });
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to save search',
-      };
-    }
-  });
+  ipcMain.handle('search:save', async () => notImplementedError);
 
   // Get all saved searches for the current user
-  ipcMain.handle('search:list-saved', async (_event) => {
-    try {
-      const session = sessionManager.getActiveSession();
-      if (!session) {
-        throw new Error('No active session');
-      }
-
-      const searchService = getSearchService();
-      const savedSearches = await searchService.getSavedSearches(session.userId);
-
-      return { success: true, data: savedSearches };
-    } catch (error) {
-      errorLogger.logError(error as Error, {
-        context: 'search:list-saved',
-      });
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to get saved searches',
-      };
-    }
-  });
+  ipcMain.handle('search:list-saved', async () => notImplementedError);
 
   // Delete a saved search
-  ipcMain.handle('search:delete-saved', async (_event, searchId: number) => {
-    try {
-      const session = sessionManager.getActiveSession();
-      if (!session) {
-        throw new Error('No active session');
-      }
-
-      const searchService = getSearchService();
-      await searchService.deleteSavedSearch(session.userId, searchId);
-
-      return { success: true };
-    } catch (error) {
-      errorLogger.logError(error as Error, {
-        context: 'search:delete-saved',
-        searchId,
-      });
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to delete saved search',
-      };
-    }
-  });
+  ipcMain.handle('search:delete-saved', async () => notImplementedError);
 
   // Execute a saved search
-  ipcMain.handle('search:execute-saved', async (_event, searchId: number) => {
-    try {
-      const session = sessionManager.getActiveSession();
-      if (!session) {
-        throw new Error('No active session');
-      }
-
-      const searchService = getSearchService();
-      const response = await searchService.executeSavedSearch(session.userId, searchId);
-
-      return { success: true, data: response };
-    } catch (error) {
-      errorLogger.logError(error as Error, {
-        context: 'search:execute-saved',
-        searchId,
-      });
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to execute saved search',
-      };
-    }
-  });
+  ipcMain.handle('search:execute-saved', async () => notImplementedError);
 
   // Get search suggestions based on prefix
-  ipcMain.handle('search:suggestions', async (_event, prefix: string, limit: number = 5) => {
-    try {
-      const session = sessionManager.getActiveSession();
-      if (!session) {
-        throw new Error('No active session');
-      }
-
-      const searchService = getSearchService();
-      const suggestions = await searchService.getSearchSuggestions(session.userId, prefix, limit);
-
-      return { success: true, data: suggestions };
-    } catch (error) {
-      errorLogger.logError(error as Error, {
-        context: 'search:suggestions',
-        prefix,
-      });
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to get search suggestions',
-      };
-    }
-  });
+  ipcMain.handle('search:suggestions', async () => notImplementedError);
 
   // Rebuild the search index (admin operation)
-  ipcMain.handle('search:rebuild-index', async (_event) => {
-    try {
-      const session = sessionManager.getActiveSession();
-      if (!session) {
-        throw new Error('No active session');
-      }
+  ipcMain.handle('search:rebuild-index', async () => notImplementedError);
 
-      const searchIndexBuilder = getSearchIndexBuilder();
-      await searchIndexBuilder.rebuildIndex();
+  // Get search index statistics (this one doesn't need session, but keep consistent)
+  ipcMain.handle('search:index-stats', async () => notImplementedError);
 
-      return { success: true, message: 'Search index rebuilt successfully' };
-    } catch (error) {
-      errorLogger.logError(error as Error, {
-        context: 'search:rebuild-index',
-      });
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to rebuild search index',
-      };
-    }
-  });
+  // Update search index for a specific entity (this one doesn't need session, but keep consistent)
+  ipcMain.handle('search:update-index', async () => notImplementedError);
 
-  // Get search index statistics
-  ipcMain.handle('search:index-stats', async (_event) => {
-    try {
-      const searchIndexBuilder = getSearchIndexBuilder();
-      const stats = await searchIndexBuilder.getIndexStats();
-
-      return { success: true, data: stats };
-    } catch (error) {
-      errorLogger.logError(error as Error, {
-        context: 'search:index-stats',
-      });
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to get index statistics',
-      };
-    }
-  });
-
-  // Update search index for a specific entity
-  ipcMain.handle('search:update-index', async (_event, entityType: string, entityId: number) => {
-    try {
-      const searchIndexBuilder = getSearchIndexBuilder();
-      await searchIndexBuilder.updateInIndex(entityType, entityId);
-
-      return { success: true };
-    } catch (error) {
-      errorLogger.logError(error as Error, {
-        context: 'search:update-index',
-        entityType,
-        entityId,
-      });
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to update search index',
-      };
-    }
-  });
-
-  console.log('Search IPC handlers registered');
+  console.log('Search IPC handlers registered (currently disabled - pending implementation)');
 }
