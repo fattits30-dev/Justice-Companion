@@ -121,9 +121,121 @@ export const TimelineItem = memo(TimelineItemComponent);
 
 ---
 
+## ✅ Completed Work (Continued)
+
+### 4. Add useCallback() to Parent Components ✅ (COMPLETE)
+
+**Task:** Wrap all callback props in useCallback() to preserve memoization benefits
+
+**Files Modified:**
+
+#### ✅ TimelineView.tsx (`src/views/timeline/TimelineView.tsx`)
+
+**Changes Made:**
+```typescript
+import { useState, useEffect, useMemo, useCallback } from 'react';
+
+// Load deadlines and cases - wrapped in useCallback to stabilize reference
+const loadData = useCallback(async () => {
+  // ... async data loading logic
+}, []); // No dependencies - uses only setState functions and getSessionId
+
+useEffect(() => {
+  loadData();
+}, [loadData]);
+
+// Handlers - all wrapped in useCallback to preserve memo benefits
+const handleAddDeadline = useCallback(async (input: CreateDeadlineInput) => {
+  // ... create deadline logic
+}, [loadData]);
+
+const handleEditDeadline = useCallback((deadline: DeadlineWithCase) => {
+  setEditingDeadline(deadline);
+}, []);
+
+const handleUpdateDeadline = useCallback(async (input: UpdateDeadlineInput) => {
+  // ... update deadline logic
+}, [editingDeadline, loadData]);
+
+const handleCompleteDeadline = useCallback(async (deadline: DeadlineWithCase) => {
+  // ... complete deadline logic
+}, [loadData]);
+
+const handleDeleteDeadline = useCallback((deadline: DeadlineWithCase) => {
+  setDeletingDeadline(deadline);
+}, []);
+
+const handleConfirmDelete = useCallback(async () => {
+  // ... delete deadline logic
+}, [deletingDeadline, loadData]);
+
+const handleCaseClick = useCallback((caseId: number) => {
+  console.log('Navigate to case:', caseId);
+}, []);
+```
+
+**Handlers Wrapped:** 7 total (loadData + 6 event handlers)
+
+**Expected Impact:** 10-15% additional improvement by preserving memo benefits
+
+---
+
+#### ✅ CasesView.tsx / DocumentsView.tsx (Already Optimized)
+
+**Status:** Both files already had useCallback() implemented for all handlers:
+
+**CasesView.tsx:**
+- `loadCases` - useCallback with `[]` deps
+- `handleCreateCase` - useCallback with `[]` deps
+- `handleDeleteCase` - useCallback with `[]` deps
+
+**DocumentsView.tsx:**
+- `loadCases` - useCallback with `[]` deps
+- `loadEvidence` - useCallback with `[]` deps
+- `handleUploadEvidence` - useCallback with `[selectedCaseId]` deps
+- `handleDeleteEvidence` - useCallback with `[]` deps
+
+**No Changes Required** ✅
+
+---
+
+#### ✅ ChatView.tsx (`src/views/ChatView.tsx`)
+
+**Changes Made:**
+```typescript
+import { useState, useEffect, useRef, useCallback } from "react";
+
+// Handlers - wrapped in useCallback to preserve memoization benefits
+const handleSend = useCallback(async () => {
+  // ... send message logic with streaming
+}, [input, isStreaming]);
+
+const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    handleSend();
+  }
+}, [handleSend]);
+
+const handleSaveToCase = useCallback((message: Message) => {
+  setMessageToSave(message);
+  setIsSaveDialogOpen(true);
+}, []);
+
+const handleSaveConfirm = useCallback(async (caseId: number, title: string) => {
+  // ... save to case logic
+}, [messageToSave]);
+```
+
+**Handlers Wrapped:** 4 total (handleSend, handleKeyDown, handleSaveToCase, handleSaveConfirm)
+
+**Expected Impact:** 10-15% additional improvement
+
+---
+
 ## ⏳ Remaining Work
 
-### 3. Extract ChatView MessageItem Component (Pending)
+### 3. Extract ChatView MessageItem Component (Optional - Deferred)
 
 **Task:** Create separate memoized MessageItem component
 
@@ -133,45 +245,10 @@ export const TimelineItem = memo(TimelineItemComponent);
 - Wrap with React.memo()
 - Update ChatView to use new component
 
+**Status:** DEFERRED - Not critical for performance gains. Virtualization provides more benefit.
+
 **Estimated Time:** 30-45 minutes
-**Expected Impact:** 20-30% improvement for ChatView
-
----
-
-### 4. Add useCallback() to Parent Components (Pending)
-
-**Task:** Wrap all callback props in useCallback() to preserve memoization benefits
-
-**Files to Modify:**
-
-#### TimelineView.tsx (6 handlers)
-```typescript
-// Need to wrap in useCallback():
-- handleAddDeadline (line 105)
-- handleEditDeadline (line 124)
-- handleUpdateDeadline (line 128)
-- handleCompleteDeadline (line 154)
-- handleDeleteDeadline (line 173)
-- handleCaseClick (line 197)
-```
-
-#### CasesView.tsx / DocumentsView.tsx
-```typescript
-// Need to wrap onDelete callbacks
-const handleDelete = useCallback((id: number) => {
-  // deletion logic
-}, [dependencies]);
-```
-
-#### ChatView.tsx
-```typescript
-// Need to wrap:
-- handleSend
-- handleSaveToCase
-```
-
-**Estimated Time:** 1 hour
-**Expected Impact:** Additional 10-15% improvement
+**Expected Impact:** 20-30% improvement for ChatView (but virtualization gives 60-70%)
 
 ---
 
@@ -237,7 +314,7 @@ import { FixedSizeList } from 'react-window';
 
 ## Overall Progress
 
-**Phase 5 Status:** 50% Complete
+**Phase 5 Status:** 75% Complete
 
 ### Completed ✅
 - [x] Performance profiling and analysis
@@ -245,35 +322,40 @@ import { FixedSizeList } from 'react-window';
 - [x] React.memo() for EvidenceCard
 - [x] React.memo() for TimelineItem
 - [x] Constant hoisting (urgencyColors, priorityVariant)
+- [x] Add useCallback() to TimelineView (7 handlers)
+- [x] Verify CasesView/DocumentsView already optimized
+- [x] Add useCallback() to ChatView (4 handlers)
 
 ### In Progress / Pending ⏳
-- [ ] Extract ChatView MessageItem component
-- [ ] Add useCallback() to parent components
-- [ ] Implement react-window virtualization
+- [ ] Extract ChatView MessageItem component (DEFERRED - optional)
+- [ ] Implement react-window virtualization (HIGH PRIORITY)
 - [ ] Performance benchmarking
 
 ### Time Spent vs Remaining
-- **Time Spent:** ~2 hours (profiling + memoization)
-- **Remaining:** ~4-5 hours (extraction + callbacks + virtualization + benchmarks)
+- **Time Spent:** ~3 hours (profiling + memoization + useCallback)
+- **Remaining:** ~3-4 hours (virtualization + benchmarks)
 - **Total Estimated:** ~6-7 hours (within 1-day estimate from plan)
 
 ---
 
 ## Files Modified
 
-### Completed
+### Completed ✅
 1. ✅ `docs/performance/PHASE-5-REACT-OPTIMIZATION-ANALYSIS.md` (created)
 2. ✅ `src/views/cases/components/CaseCard.tsx` (added memo)
 3. ✅ `src/views/documents/components/EvidenceCard.tsx` (added memo)
 4. ✅ `src/views/timeline/components/TimelineItem.tsx` (added memo + hoisted constants)
-5. ✅ `docs/performance/PHASE-5-PROGRESS.md` (this file)
+5. ✅ `src/views/timeline/TimelineView.tsx` (added useCallback for 7 handlers)
+6. ✅ `src/views/ChatView.tsx` (added useCallback for 4 handlers)
+7. ✅ `docs/performance/PHASE-5-PROGRESS.md` (this file - updated)
 
-### Pending
-- `src/views/chat/MessageItem.tsx` (to be created)
-- `src/views/ChatView.tsx` (extract message rendering)
-- `src/views/timeline/TimelineView.tsx` (add useCallback for 6 handlers)
-- `src/views/cases/CasesView.tsx` (add useCallback)
-- `src/views/documents/DocumentsView.tsx` (add useCallback)
+### Verified (Already Optimized) ✅
+- ✅ `src/views/cases/CasesView.tsx` (already had useCallback)
+- ✅ `src/views/documents/DocumentsView.tsx` (already had useCallback)
+
+### Pending ⏳
+- `src/views/ChatView.tsx` (implement react-window virtualization)
+- `src/views/chat/MessageItem.tsx` (optional - extract component for virtualization)
 
 ---
 

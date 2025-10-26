@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "../contexts/AuthContext.tsx";
 import { SaveToCaseDialog } from "./chat/SaveToCaseDialog.tsx";
 import { toast } from 'sonner';
@@ -39,7 +39,8 @@ export function ChatView() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, currentStreamingMessage]);
 
-  const handleSend = async () => {
+  // Handlers - wrapped in useCallback to preserve memoization benefits
+  const handleSend = useCallback(async () => {
     if (!input.trim() || isStreaming) {
       return;
     }
@@ -117,21 +118,21 @@ export function ChatView() {
       console.error("[ChatView] Send error:", error);
       setIsStreaming(false);
     }
-  };
+  }, [input, isStreaming]);
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
-  };
+  }, [handleSend]);
 
-  const handleSaveToCase = (message: Message) => {
+  const handleSaveToCase = useCallback((message: Message) => {
     setMessageToSave(message);
     setIsSaveDialogOpen(true);
-  };
+  }, []);
 
-  const handleSaveConfirm = async (caseId: number, title: string) => {
+  const handleSaveConfirm = useCallback(async (caseId: number, title: string) => {
     if (!messageToSave) {
       return { success: false, error: 'No message selected' };
     }
@@ -169,7 +170,7 @@ export function ChatView() {
       });
       return { success: false, error: errorMessage };
     }
-  };
+  }, [messageToSave]);
 
   return (
     <div className="flex flex-col h-screen bg-primary-900 text-white">
