@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Plus, Calendar } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '../../components/ui/Button';
@@ -34,13 +34,8 @@ export function TimelineView() {
   const [editingDeadline, setEditingDeadline] = useState<DeadlineWithCase | null>(null);
   const [deletingDeadline, setDeletingDeadline] = useState<DeadlineWithCase | null>(null);
 
-  // Load deadlines and cases
-  useEffect(() => {
-    loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const loadData = async () => {
+  // Load deadlines and cases - wrapped in useCallback to stabilize reference
+  const loadData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
@@ -80,7 +75,11 @@ export function TimelineView() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []); // No dependencies - uses only setState functions and getSessionId
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   // Filter and sort deadlines
   const filteredDeadlines = useMemo(() => {
@@ -101,8 +100,8 @@ export function TimelineView() {
     return filtered;
   }, [deadlines, selectedCaseId]);
 
-  // Handlers
-  const handleAddDeadline = async (input: CreateDeadlineInput) => {
+  // Handlers - all wrapped in useCallback to preserve memo benefits
+  const handleAddDeadline = useCallback(async (input: CreateDeadlineInput) => {
     try {
       const sessionId = getSessionId();
       const result = await window.justiceAPI.createDeadline(input, sessionId);
@@ -119,13 +118,13 @@ export function TimelineView() {
         error: err instanceof Error ? err.message : 'Failed to create deadline',
       };
     }
-  };
+  }, [loadData]);
 
-  const handleEditDeadline = (deadline: DeadlineWithCase) => {
+  const handleEditDeadline = useCallback((deadline: DeadlineWithCase) => {
     setEditingDeadline(deadline);
-  };
+  }, []);
 
-  const handleUpdateDeadline = async (input: UpdateDeadlineInput) => {
+  const handleUpdateDeadline = useCallback(async (input: UpdateDeadlineInput) => {
     if (!editingDeadline) return { success: false, error: 'No deadline selected' };
 
     try {
@@ -149,9 +148,9 @@ export function TimelineView() {
         error: err instanceof Error ? err.message : 'Failed to update deadline',
       };
     }
-  };
+  }, [editingDeadline, loadData]);
 
-  const handleCompleteDeadline = async (deadline: DeadlineWithCase) => {
+  const handleCompleteDeadline = useCallback(async (deadline: DeadlineWithCase) => {
     const newStatus = deadline.status === 'completed' ? 'upcoming' : 'completed';
 
     try {
@@ -168,13 +167,13 @@ export function TimelineView() {
     } catch (err) {
       console.error('Failed to update deadline status:', err);
     }
-  };
+  }, [loadData]);
 
-  const handleDeleteDeadline = (deadline: DeadlineWithCase) => {
+  const handleDeleteDeadline = useCallback((deadline: DeadlineWithCase) => {
     setDeletingDeadline(deadline);
-  };
+  }, []);
 
-  const handleConfirmDelete = async () => {
+  const handleConfirmDelete = useCallback(async () => {
     if (!deletingDeadline) return;
 
     try {
@@ -192,12 +191,12 @@ export function TimelineView() {
     } finally {
       setDeletingDeadline(null);
     }
-  };
+  }, [deletingDeadline, loadData]);
 
-  const handleCaseClick = (caseId: number) => {
+  const handleCaseClick = useCallback((caseId: number) => {
     // TODO: Navigate to case detail view
     console.log('Navigate to case:', caseId);
-  };
+  }, []);
 
   // Get userId from first deadline or default to 1
   const userId = deadlines[0]?.userId || 1;
