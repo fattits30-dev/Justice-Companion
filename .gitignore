@@ -152,6 +152,7 @@ performance-report-*.json
 .guardian/
 .aider/
 .cursor/
+.codac/
 
 # ============================================================================
 # Fix Scripts (keep in scripts/ directory only)
