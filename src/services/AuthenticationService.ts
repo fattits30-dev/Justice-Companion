@@ -91,7 +91,7 @@ export class AuthenticationService {
     username: string,
     password: string,
     email: string,
-  ): Promise<User> {
+  ): Promise<{ user: User; session: Session }> {
     // Validate username
     if (!username || username.trim().length === 0) {
       throw new AuthenticationError("Username cannot be empty");
@@ -156,7 +156,24 @@ export class AuthenticationService {
       success: true,
     });
 
-    return user;
+    // AUTO-LOGIN: Create session immediately after registration
+    // Users should not have to manually login after registration (better UX)
+    const session = this.sessionRepository.create({
+      userId: user.id,
+      expiresAt: new Date(Date.now() + this.SESSION_EXPIRY_MS).toISOString(),
+    });
+
+    this.auditLogger?.log({
+      eventType: "user.login",
+      userId: user.id.toString(),
+      resourceType: "session",
+      resourceId: session.id,
+      action: "create",
+      details: { reason: "auto-login-after-registration" },
+      success: true,
+    });
+
+    return { user, session };
   }
 
   /**
