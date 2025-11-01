@@ -198,49 +198,26 @@ test.describe.serial('Authentication Flow', () => {
     const submitButton = window.locator('button[type="submit"], button:has-text("Create")').first();
     await submitButton.click();
 
-    // BUG: Auto-login after registration fails silently - app shows login screen instead
-    // Check if we got consent banner (success) or login screen (auto-login failed)
-    await window.waitForTimeout(3000); // Wait for any async operations
-
-    const hasConsentBanner = (await window.locator('text=/Privacy.*Consent/i').count()) > 0;
-    const hasLoginScreen = (await window.locator('text=/Sign In/i').count()) > 0;
-
-    if (hasConsentBanner) {
+    // EXPECT: Auto-login after registration should show consent banner
+    // If we see login screen instead, auto-login is broken - FAIL THE TEST
+    try {
+      await window.waitForSelector('text=/Privacy.*Consent/i', {
+        timeout: 10000,
+        state: 'visible'
+      });
       console.log('[E2E] ✅ Registration + auto-login successful - Consent banner shown');
-    } else if (hasLoginScreen) {
-      console.warn('[E2E] ⚠️  Auto-login failed - Manually logging in to test login flow');
+    } catch (error) {
+      // If consent banner not shown, check if we see login screen (bug indicator)
+      const hasLoginScreen = (await window.locator('text=/Sign In/i').count()) > 0;
 
-      // Auto-login failed - manually log in with the same credentials
-      const usernameInput = window.locator('#username').first();
-      await usernameInput.fill(username);
-
-      await window.locator('#password').fill(password);
-
-      const loginButton = window.locator('button[type="submit"], button:has-text("Login")').first();
-      await loginButton.click();
-
-      // Wait for consent banner after manual login
-      try {
-        await window.waitForSelector('text=/Privacy.*Consent/i', {
-          timeout: 10000,
-        });
-        console.log('[E2E] ✅ Manual login successful - Consent banner shown');
-      } catch (error) {
-        console.error('[E2E] ❌ Manual login FAILED');
-
-        const errorMessages = await window.locator('[role="alert"]').allTextContents();
-        console.log('[E2E] Error messages:', errorMessages);
-
-        const bodyText = await window.locator('body').textContent();
-        console.log('[E2E] Page text:', bodyText?.slice(0, 600));
-
-        await window.screenshot({ path: 'test-results/manual-login-failure.png' });
-        console.log('[E2E] Screenshot: test-results/manual-login-failure.png');
-
-        throw error;
+      if (hasLoginScreen) {
+        console.error('[E2E] ❌ AUTO-LOGIN BUG: Registration succeeded but user was redirected to login screen instead of being auto-logged in');
+        await window.screenshot({ path: 'test-results/auto-login-failure.png' });
+        throw new Error('Auto-login after registration failed - user sent to login screen. This is a production bug that needs to be fixed.');
       }
-    } else {
-      throw new Error('Unexpected state: no consent banner or login screen found');
+
+      // Re-throw original error if it's something else
+      throw error;
     }
   });
 
