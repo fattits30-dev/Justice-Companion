@@ -181,6 +181,85 @@ contextBridge.exposeInMainWorld('justiceAPI', {
   getSession: (sessionId: string) =>
     ipcRenderer.invoke('auth:session', sessionId),
 
-  // TODO: Add remaining API methods as needed
-  // This is a stub implementation - full API should be generated from window.d.ts
+  // ===== DASHBOARD =====
+  getDashboardStats: (sessionId: string) =>
+    ipcRenderer.invoke('dashboard:get-stats', sessionId),
+
+  // ===== CASE MANAGEMENT =====
+  getAllCases: (sessionId: string) =>
+    ipcRenderer.invoke('case:get-all', sessionId),
+
+  getCaseById: (id: string, sessionId: string) =>
+    ipcRenderer.invoke('case:get', id, sessionId),
+
+  createCase: (data: any, sessionId: string) =>
+    ipcRenderer.invoke('case:create', data, sessionId),
+
+  updateCase: (id: string, data: any, sessionId: string) =>
+    ipcRenderer.invoke('case:update', id, data, sessionId),
+
+  deleteCase: (id: string, sessionId: string) =>
+    ipcRenderer.invoke('case:delete', id, sessionId),
+
+  getCaseFacts: (caseId: number, sessionId: string) =>
+    ipcRenderer.invoke('case-fact:get-all', caseId, sessionId),
+
+  createCaseFact: (data: any, sessionId: string) =>
+    ipcRenderer.invoke('case-fact:create', data, sessionId),
+
+  // ===== EVIDENCE/DOCUMENTS =====
+  uploadFile: (caseId: string, file: File, sessionId: string) =>
+    ipcRenderer.invoke('evidence:upload', caseId, file, sessionId),
+
+  getAllEvidence: (caseId: string, sessionId: string) =>
+    ipcRenderer.invoke('evidence:get-all', caseId, sessionId),
+
+  getEvidenceByCaseId: (caseId: string, sessionId: string) =>
+    ipcRenderer.invoke('evidence:get-all', caseId, sessionId),
+
+  deleteEvidence: (id: string, sessionId: string) =>
+    ipcRenderer.invoke('evidence:delete', id, sessionId),
+
+  // ===== DEADLINES =====
+  getDeadlines: (sessionId: string, caseId?: number) =>
+    ipcRenderer.invoke('deadline:get-all', sessionId, caseId),
+
+  createDeadline: (data: any, sessionId: string) =>
+    ipcRenderer.invoke('deadline:create', data, sessionId),
+
+  updateDeadline: (id: number, data: any, sessionId: string) =>
+    ipcRenderer.invoke('deadline:update', id, data, sessionId),
+
+  completeDeadline: (id: number, sessionId: string) =>
+    ipcRenderer.invoke('deadline:complete', id, sessionId),
+
+  deleteDeadline: (id: number, sessionId: string) =>
+    ipcRenderer.invoke('deadline:delete', id, sessionId),
+
+  // ===== SECURE STORAGE =====
+  secureStorageSet: (key: string, value: string) =>
+    ipcRenderer.invoke('secure-storage:set', key, value),
+
+  secureStorageGet: (key: string) =>
+    ipcRenderer.invoke('secure-storage:get', key),
+
+  secureStorageDelete: (key: string) =>
+    ipcRenderer.invoke('secure-storage:delete', key),
+
+  secureStorageHas: (key: string) =>
+    ipcRenderer.invoke('secure-storage:has', key),
+
+  secureStorage: {
+    isEncryptionAvailable: () => ipcRenderer.invoke('secure-storage:is-available'),
+    set: (key: string, value: string) => ipcRenderer.invoke('secure-storage:set', key, value),
+    get: (key: string) => ipcRenderer.invoke('secure-storage:get', key),
+    delete: (key: string) => ipcRenderer.invoke('secure-storage:delete', key),
+    clearAll: () => ipcRenderer.invoke('secure-storage:clear-all'),
+  },
+
+  // ===== AI CONFIG =====
+  configureAI: (config: any) =>
+    ipcRenderer.invoke('ai:configure', config),
+
+  // TODO: Add remaining API methods as needed (chat streaming, tags, notifications, search, etc.)
 });
