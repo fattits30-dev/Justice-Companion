@@ -3,7 +3,7 @@ import { X, Plus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '../../../components/ui/Button';
 import { Card } from '../../../components/ui/Card';
-import type { CreateDeadlineInput } from '../../../models/Deadline';
+import type { CreateDeadlineInput } from '../../../domains/timeline/entities/Deadline';
 
 interface AddDeadlineDialogProps {
   open: boolean;

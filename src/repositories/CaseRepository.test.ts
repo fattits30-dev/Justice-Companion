@@ -3,7 +3,7 @@ import { createTestDatabase } from '../test-utils/database-test-helper';
 import { databaseManager } from '../db/database.ts';
 import { CaseRepository } from './CaseRepository';
 import { EncryptionService } from '../services/EncryptionService';
-import type { CreateCaseInput } from '../models/Case';
+import type { CreateCaseInput } from '../domains/cases/entities/Case';
 
 // Create test database helper at module level
 const testDbHelper = createTestDatabase();

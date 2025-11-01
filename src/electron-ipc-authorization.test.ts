@@ -23,9 +23,9 @@
  */
 
 import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
-import type { Session } from './models/Session';
-import type { Case } from './models/Case';
-import type { Evidence } from './models/Evidence';
+import type { Session } from './domains/auth/entities/Session';
+import type { Case } from './domains/cases/entities/Case';
+import type { Evidence } from './domains/evidence/entities/Evidence';
 import type { ChatConversation } from './models/ChatConversation';
 
 // ============================================================================

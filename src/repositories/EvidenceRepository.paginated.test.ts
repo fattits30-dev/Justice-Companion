@@ -4,7 +4,7 @@ import { EncryptionService } from '../services/EncryptionService';
 import { AuditLogger } from '../services/AuditLogger';
 import { createTestDatabase } from '../test-utils/database-test-helper';
 import { databaseManager } from '../db/database.ts';
-import type { CreateEvidenceInput } from '../models/Evidence';
+import type { CreateEvidenceInput } from '../domains/evidence/entities/Evidence';
 
 // Create test database instance at module level
 const testDb = createTestDatabase();

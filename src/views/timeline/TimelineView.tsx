@@ -5,7 +5,7 @@ import { Button } from '../../components/ui/Button';
 import { TimelineItem } from './components/TimelineItem';
 import { TimelineEmpty } from './components/TimelineEmpty';
 import { AddDeadlineDialog } from './components/AddDeadlineDialog';
-import type { DeadlineWithCase, CreateDeadlineInput, UpdateDeadlineInput } from '../../models/Deadline';
+import type { DeadlineWithCase, CreateDeadlineInput, UpdateDeadlineInput } from '../../domains/timeline/entities/Deadline';
 
 interface Case {
   id: number;
