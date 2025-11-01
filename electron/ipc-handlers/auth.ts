@@ -64,7 +64,9 @@ export function setupAuthHandlers(): void {
   ipcMain.handle('auth:login', async (_event, credentials) => {
     try {
       const authService = getAuthService();
-      const { user, session } = await authService.login(credentials);
+      // AuthenticationService.login expects (username, password, rememberMe) as separate params
+      const { username, password, rememberMe = false } = credentials;
+      const { user, session } = await authService.login(username, password, rememberMe);
       return successResponse({ user, session });
     } catch (_error) {
       return errorResponse(IPCErrorCode.UNKNOWN_ERROR, 'Login failed');
