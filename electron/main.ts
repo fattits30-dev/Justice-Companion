@@ -3,7 +3,7 @@ import 'dotenv/config';
 import { app, BrowserWindow, dialog, safeStorage } from 'electron';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import pkg from 'electron-updater';
+import { autoUpdater } from 'electron-updater';
 
 import { setupIpcHandlers } from './ipc-handlers/index.ts';
 import { initializeDatabase, closeDatabase } from './database-init.ts';
@@ -11,8 +11,6 @@ import { KeyManager } from '../src/services/KeyManager.ts';
 import { ProcessManager } from '../src/services/ProcessManager.ts';
 import { AutoUpdater } from '../src/services/AutoUpdater.ts';
 import { MainApplication } from './runtime/MainApplication.ts';
-
-const { autoUpdater } = pkg;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
