@@ -13,6 +13,63 @@ Justice Companion is a privacy-first desktop application for managing legal case
 - GDPR-compliant with immutable audit logs
 - AI legal assistant powered by OpenAI with RAG
 
+## 6 Engineering Principles (NON-NEGOTIABLE)
+
+Every code change MUST follow these principles. No exceptions.
+
+### 1. IT FUCKING WORKS
+- Tests pass ✓
+- Types pass ✓
+- Real users can use it ✓
+
+**Rule:** If it doesn't work, don't ship it. Period.
+
+### 2. YOU CAN BREAK IT SAFELY
+- Test suite catches breaks (unit + E2E)
+- Fast feedback loop (< 30s for unit tests)
+- Safe to refactor, safe to ship
+
+**Rule:** If you can't test it, you can't change it confidently.
+
+### 3. READS LIKE ENGLISH
+- Function names tell you what they do
+- No "utils" folders with 47 random functions
+- Code explains itself, comments explain WHY
+
+**Rule:** If it needs a paragraph comment to explain WHAT it does, refactor it.
+
+### 4. FAILS FAST, FAILS LOUD
+- Bad data → immediate error, not silent corruption
+- Clear error messages ("Password must be 12+ chars" not "Invalid input")
+- Validation at the edges (API boundaries, file inputs, user inputs)
+
+**Rule:** Never let invalid data enter the system. Catch it at the door.
+
+### 5. TESTED WHERE IT MATTERS
+- Auth flows? E2E tests. Always.
+- Business logic? Unit tests with real scenarios.
+- Not "test everything" - test what breaks users.
+
+**Rule:** Test what users actually do, not what makes coverage % look good.
+
+### 6. ONE TRUTH
+- Database is source of truth
+- No duplicate logic scattered across 8 files
+- Change it once, it changes everywhere
+
+**Rule:** If you're copying code, you're doing it wrong. Extract it.
+
+**Consequences of Violating These Rules:**
+- Silent bugs that corrupt user data
+- Hours wasted debugging "why doesn't this work?"
+- Fear of refactoring (technical debt compounds)
+- Users lose trust
+
+**When in Doubt:**
+- Does this make the system MORE reliable? Ship it.
+- Does this make the system LESS reliable? Don't ship it.
+- Not sure? Write a test that proves it.
+
 ## Critical Requirements
 
 ### Package Manager
