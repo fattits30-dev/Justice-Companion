@@ -5,7 +5,7 @@ This will read the main.ts file and update all handlers that don't have validati
 """
 
 import re
-import sys
+
 
 def update_handler(content, channel_name, field_replacements):
     """Update a specific handler with validation middleware."""
@@ -153,7 +153,7 @@ handlers_to_update = [
 
 # Read the file
 print("Reading electron/main.ts...")
-with open('electron/main.ts', 'r', encoding='utf-8') as f:
+with open('electron/main.ts', encoding='utf-8') as f:
     content = f.read()
 
 print(f"\nProcessing {len(handlers_to_update)} handlers...\n")
@@ -176,7 +176,7 @@ for channel_name, field_replacements in handlers_to_update:
         failed_count += 1
 
 # Write the updated content back
-print(f"\nWriting updated content back to electron/main.ts...")
+print("\nWriting updated content back to electron/main.ts...")
 with open('electron/main.ts', 'w', encoding='utf-8') as f:
     f.write(content)
 

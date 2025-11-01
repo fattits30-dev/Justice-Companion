@@ -24,19 +24,19 @@ export function setupTagHandlers(): void {
   ipcMain.handle(
     'tags:list',
     async (_event: IpcMainInvokeEvent, sessionId: string): Promise<IPCResponse> => {
-      return withAuthorization(sessionId, async (userId) => {
+      return withAuthorization(sessionId, async (_userId) => {
         try {
-          const tags = tagService.getTags(userId);
+          const tags = tagService.getTags(_userId);
 
           return {
             success: true,
             data: tags,
           };
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.error('[IPC] tags:list error:', error);
           return {
             success: false,
-            error: error.message || 'Failed to list tags',
+            error: (error as Error).message || 'Failed to list tags',
           };
         }
       });
@@ -49,7 +49,7 @@ export function setupTagHandlers(): void {
   ipcMain.handle(
     'tags:create',
     async (_event: IpcMainInvokeEvent, input: CreateTagInput, sessionId: string): Promise<IPCResponse> => {
-      return withAuthorization(sessionId, async (userId) => {
+      return withAuthorization(sessionId, async (_userId) => {
         try {
           // Validate input
           if (!input.name || input.name.trim().length === 0) {
@@ -66,17 +66,17 @@ export function setupTagHandlers(): void {
             };
           }
 
-          const tag = tagService.createTag(userId, input);
+          const tag = tagService.createTag(_userId, input);
 
           return {
             success: true,
             data: tag,
           };
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.error('[IPC] tags:create error:', error);
           return {
             success: false,
-            error: error.message || 'Failed to create tag',
+            error: (error as Error).message || 'Failed to create tag',
           };
         }
       });
@@ -88,44 +88,35 @@ export function setupTagHandlers(): void {
    */
   ipcMain.handle(
     'tags:update',
-    async (_event: IpcMainInvokeEvent, tagId: number, input: UpdateTagInput, sessionId: string): Promise<IPCResponse> => {
-      return withAuthorization(sessionId, async (userId) => {
+    async (_event: IpcMainInvokeEvent, id: string, input: UpdateTagInput, sessionId: string): Promise<IPCResponse> => {
+      return withAuthorization(sessionId, async (_userId) => {
         try {
-          // Verify tag ownership
-          const tag = tagService.getTagById(tagId);
-          if (!tag) {
+          // Validate input
+          if (!input.name || input.name.trim().length === 0) {
             return {
               success: false,
-              error: 'Tag not found',
+              error: 'Tag name is required',
             };
           }
 
-          if (tag.userId !== userId) {
-            return {
-              success: false,
-              error: 'Unauthorized: You do not own this tag',
-            };
-          }
-
-          // Validate color if provided
-          if (input.color && !/^#[0-9A-Fa-f]{6}$/.test(input.color)) {
+          if (!input.color || !/^#[0-9A-Fa-f]{6}$/.test(input.color)) {
             return {
               success: false,
               error: 'Valid hex color is required (e.g., #FF0000)',
             };
           }
 
-          const updatedTag = tagService.updateTag(tagId, input);
+          const tag = tagService.updateTag(_userId, id, input);
 
           return {
             success: true,
-            data: updatedTag,
+            data: tag,
           };
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.error('[IPC] tags:update error:', error);
           return {
             success: false,
-            error: error.message || 'Failed to update tag',
+            error: (error as Error).message || 'Failed to update tag',
           };
         }
       });
@@ -137,36 +128,19 @@ export function setupTagHandlers(): void {
    */
   ipcMain.handle(
     'tags:delete',
-    async (_event: IpcMainInvokeEvent, tagId: number, sessionId: string): Promise<IPCResponse> => {
-      return withAuthorization(sessionId, async (userId) => {
+    async (_event: IpcMainInvokeEvent, id: string, sessionId: string): Promise<IPCResponse> => {
+      return withAuthorization(sessionId, async (_userId) => {
         try {
-          // Verify tag ownership
-          const tag = tagService.getTagById(tagId);
-          if (!tag) {
-            return {
-              success: false,
-              error: 'Tag not found',
-            };
-          }
-
-          if (tag.userId !== userId) {
-            return {
-              success: false,
-              error: 'Unauthorized: You do not own this tag',
-            };
-          }
-
-          tagService.deleteTag(tagId);
+          await tagService.deleteTag(_userId, id);
 
           return {
             success: true,
-            data: { deleted: true },
           };
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.error('[IPC] tags:delete error:', error);
           return {
             success: false,
-            error: error.message || 'Failed to delete tag',
+            error: (error as Error).message || 'Failed to delete tag',
           };
         }
       });
@@ -174,43 +148,23 @@ export function setupTagHandlers(): void {
   );
 
   /**
-   * Apply tag to evidence
+   * Tag evidence
    */
   ipcMain.handle(
     'tags:tagEvidence',
-    async (_event: IpcMainInvokeEvent, evidenceId: number, tagId: number, sessionId: string): Promise<IPCResponse> => {
-      return withAuthorization(sessionId, async (userId) => {
+    async (_event: IpcMainInvokeEvent, tagId: string, evidenceId: string, sessionId: string): Promise<IPCResponse> => {
+      return withAuthorization(sessionId, async (_userId) => {
         try {
-          // Verify tag ownership
-          const tag = tagService.getTagById(tagId);
-          if (!tag) {
-            return {
-              success: false,
-              error: 'Tag not found',
-            };
-          }
-
-          if (tag.userId !== userId) {
-            return {
-              success: false,
-              error: 'Unauthorized: You do not own this tag',
-            };
-          }
-
-          // TODO: Verify evidence ownership
-          // For now, TagService will check via SQL joins
-
-          tagService.tagEvidence(evidenceId, tagId, userId);
+          await tagService.tagEvidence(_userId, tagId, evidenceId);
 
           return {
             success: true,
-            data: { tagged: true },
           };
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.error('[IPC] tags:tagEvidence error:', error);
           return {
             success: false,
-            error: error.message || 'Failed to tag evidence',
+            error: (error as Error).message || 'Failed to tag evidence',
           };
         }
       });
@@ -218,40 +172,23 @@ export function setupTagHandlers(): void {
   );
 
   /**
-   * Remove tag from evidence
+   * Untag evidence
    */
   ipcMain.handle(
     'tags:untagEvidence',
-    async (_event: IpcMainInvokeEvent, evidenceId: number, tagId: number, sessionId: string): Promise<IPCResponse> => {
-      return withAuthorization(sessionId, async (userId) => {
+    async (_event: IpcMainInvokeEvent, tagId: string, evidenceId: string, sessionId: string): Promise<IPCResponse> => {
+      return withAuthorization(sessionId, async (_userId) => {
         try {
-          // Verify tag ownership
-          const tag = tagService.getTagById(tagId);
-          if (!tag) {
-            return {
-              success: false,
-              error: 'Tag not found',
-            };
-          }
-
-          if (tag.userId !== userId) {
-            return {
-              success: false,
-              error: 'Unauthorized: You do not own this tag',
-            };
-          }
-
-          tagService.untagEvidence(evidenceId, tagId, userId);
+          await tagService.untagEvidence(_userId, tagId, evidenceId);
 
           return {
             success: true,
-            data: { untagged: true },
           };
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.error('[IPC] tags:untagEvidence error:', error);
           return {
             success: false,
-            error: error.message || 'Failed to untag evidence',
+            error: (error as Error).message || 'Failed to untag evidence',
           };
         }
       });
@@ -259,25 +196,24 @@ export function setupTagHandlers(): void {
   );
 
   /**
-   * Get tags for specific evidence
+   * Get tags for evidence
    */
   ipcMain.handle(
     'tags:getForEvidence',
-    async (_event: IpcMainInvokeEvent, evidenceId: number, sessionId: string): Promise<IPCResponse> => {
-      return withAuthorization(sessionId, async (userId) => {
+    async (_event: IpcMainInvokeEvent, evidenceId: string, sessionId: string): Promise<IPCResponse> => {
+      return withAuthorization(sessionId, async (_userId) => {
         try {
-          // TODO: Verify evidence ownership
-          const tags = tagService.getEvidenceTags(evidenceId);
+          const tags = tagService.getTagsForEvidence(_userId, evidenceId);
 
           return {
             success: true,
             data: tags,
           };
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.error('[IPC] tags:getForEvidence error:', error);
           return {
             success: false,
-            error: error.message || 'Failed to get evidence tags',
+            error: (error as Error).message || 'Failed to get tags for evidence',
           };
         }
       });
@@ -285,24 +221,24 @@ export function setupTagHandlers(): void {
   );
 
   /**
-   * Search evidence by tags
+   * Search by tags
    */
   ipcMain.handle(
     'tags:searchByTags',
-    async (_event: IpcMainInvokeEvent, tagIds: number[], sessionId: string): Promise<IPCResponse> => {
-      return withAuthorization(sessionId, async (userId) => {
+    async (_event: IpcMainInvokeEvent, tagIds: string[], sessionId: string): Promise<IPCResponse> => {
+      return withAuthorization(sessionId, async (_userId) => {
         try {
-          const evidenceIds = tagService.searchByTags(userId, tagIds);
+          const results = tagService.searchByTags(_userId, tagIds);
 
           return {
             success: true,
-            data: evidenceIds,
+            data: results,
           };
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.error('[IPC] tags:searchByTags error:', error);
           return {
             success: false,
-            error: error.message || 'Failed to search by tags',
+            error: (error as Error).message || 'Failed to search by tags',
           };
         }
       });
@@ -315,19 +251,19 @@ export function setupTagHandlers(): void {
   ipcMain.handle(
     'tags:statistics',
     async (_event: IpcMainInvokeEvent, sessionId: string): Promise<IPCResponse> => {
-      return withAuthorization(sessionId, async (userId) => {
+      return withAuthorization(sessionId, async (_userId) => {
         try {
-          const stats = tagService.getTagStatistics(userId);
+          const stats = tagService.getTagStatistics(_userId);
 
           return {
             success: true,
             data: stats,
           };
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.error('[IPC] tags:statistics error:', error);
           return {
             success: false,
-            error: error.message || 'Failed to get tag statistics',
+            error: (error as Error).message || 'Failed to get tag statistics',
           };
         }
       });

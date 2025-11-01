@@ -67,204 +67,105 @@ export function setupAuthHandlers(): void {
       console.warn('[IPC] Auth schemas imported successfully');
 
       return schemas;
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('[IPC] FATAL: Failed to load auth schemas');
       console.error('[IPC] Error details:', {
         name: (error as Error).name,
         message: (error as Error).message,
         stack: (error as Error).stack,
       });
-      throw new Error(`Failed to load auth schemas: ${(error as Error).message}`);
+      
+      throw error;
     }
   };
 
-  // Register new user
-  ipcMain.handle(
-    'auth:register',
-    async (_event: IpcMainInvokeEvent, data: unknown): Promise<IPCResponse> => {
-      try {
-        console.warn('[IPC] auth:register called with:', data);
-
-        // Validate input with Zod
-        const schemas = await getAuthSchemas();
-        const validatedData = schemas.authRegisterSchema.parse(data);
-
-        // SIMPLE: Get service synchronously, call register with proper params
-        const authSvc = getAuthService();
-        const result = await authSvc.register(
-          validatedData.username,
-          validatedData.password,
-          validatedData.email
-        );
-
-        // Log audit event
-        logAuthEvent(AuditEventType.USER_REGISTERED, result.id, true);
-
-        console.warn('[IPC] User registered successfully:', result.id);
-        return successResponse(result);
-      } catch (error) {
-        // Use domain-specific errors
-        if (error instanceof Error) {
-          const message = error.message.toLowerCase();
-
-          // Check for specific registration errors
-          if (message.includes('already exists') || message.includes('duplicate')) {
-            const registrationError = new RegistrationError('Username or email already exists', {
-              username: (data as any)?.username,
-              email: (data as any)?.email
-            });
-            logAuthEvent(AuditEventType.USER_REGISTERED, null, false, registrationError.message);
-            return createErrorResponse(registrationError);
-          }
-
-          if (message.includes('invalid email')) {
-            const validationError = new ValidationError('email', 'Invalid email format');
-            logAuthEvent(AuditEventType.USER_REGISTERED, null, false, validationError.message);
-            return createErrorResponse(validationError);
-          }
-        }
-
-        // Log failed registration
-        logAuthEvent(AuditEventType.USER_REGISTERED, null, false, String(error));
-
-        return formatError(error);
+  // Register user
+  ipcMain.handle('auth:register', async (
+    event: IpcMainInvokeEvent,
+    email: string,
+    password: string,
+    firstName: string,
+    lastName: string
+  ): Promise<IPCResponse> => {
+    try {
+      const authService = getAuthService();
+      const result = await authService.register(email, password, firstName, lastName);
+      
+      await logAuthEvent(AuditEventType.USER_REGISTERED, result.user.id, event.sender);
+      
+      return successResponse(result);
+    } catch (error: unknown) {
+      if (error instanceof ValidationError || error instanceof RegistrationError) {
+        return errorResponse(IPCErrorCode.VALIDATION_ERROR, error.message);
       }
+      
+      console.error('[IPC] Registration failed:', error);
+      return errorResponse(IPCErrorCode.INTERNAL_ERROR, 'Registration failed');
     }
-  );
+  });
 
   // Login user
-  ipcMain.handle(
-    'auth:login',
-    async (_event: IpcMainInvokeEvent, data: unknown): Promise<IPCResponse> => {
-      try {
-        console.warn('[IPC] auth:login called with:', data);
-
-        // Validate input with Zod
-        const schemas = await getAuthSchemas();
-        const validatedData = schemas.authLoginSchema.parse(data);
-
-        // SIMPLE: Get service synchronously
-        const authSvc = getAuthService();
-        const result = await authSvc.login(
-          validatedData.username,
-          validatedData.password,
-          validatedData.rememberMe
-        );
-
-        // Log successful login
-        logAuthEvent(AuditEventType.USER_LOGGED_IN, result.userId, true);
-
-        console.warn('[IPC] User logged in successfully:', result.userId);
-        return successResponse(result);
-      } catch (error) {
-        // Use domain-specific errors
-        if (error instanceof Error) {
-          const message = error.message.toLowerCase();
-
-          // Check for specific login errors
-          if (message.includes('invalid credentials') || message.includes('password')) {
-            const credentialsError = new InvalidCredentialsError();
-            logAuthEvent(AuditEventType.LOGIN_FAILED, null, false, credentialsError.message);
-            return createErrorResponse(credentialsError);
-          }
-
-          if (message.includes('user not found')) {
-            const userError = new UserNotFoundError((data as any)?.username || 'unknown');
-            logAuthEvent(AuditEventType.LOGIN_FAILED, null, false, userError.message);
-            return createErrorResponse(userError);
-          }
-
-          if (message.includes('locked') || message.includes('disabled')) {
-            const authError = new UnauthorizedError('account', 'access', undefined);
-            logAuthEvent(AuditEventType.LOGIN_FAILED, null, false, authError.message);
-            return createErrorResponse(authError);
-          }
-        }
-
-        // Log failed login
-        logAuthEvent(AuditEventType.LOGIN_FAILED, null, false, String(error));
-
-        return formatError(error);
+  ipcMain.handle('auth:login', async (
+    event: IpcMainInvokeEvent,
+    email: string,
+    password: string
+  ): Promise<IPCResponse> => {
+    try {
+      const authService = getAuthService();
+      const result = await authService.login(email, password);
+      
+      await logAuthEvent(AuditEventType.USER_LOGGED_IN, result.user.id, event.sender);
+      
+      return successResponse(result);
+    } catch (error: unknown) {
+      if (error instanceof InvalidCredentialsError || error instanceof UserNotFoundError) {
+        return errorResponse(IPCErrorCode.UNAUTHORIZED, error.message);
       }
+      
+      console.error('[IPC] Login failed:', error);
+      return errorResponse(IPCErrorCode.INTERNAL_ERROR, 'Login failed');
     }
-  );
+  });
 
   // Logout user
-  ipcMain.handle(
-    'auth:logout',
-    async (_event: IpcMainInvokeEvent, sessionId: string): Promise<IPCResponse> => {
-      try {
-        console.warn('[IPC] auth:logout called');
-
-        if (!sessionId) {
-          return errorResponse(IPCErrorCode.VALIDATION_ERROR, 'Session ID is required');
-        }
-
-        // SIMPLE: Get service synchronously
-        const authSvc = getAuthService();
-        await authSvc.logout(sessionId);
-
-        // Log logout (we don't know userId at this point, so pass null)
-        logAuthEvent(AuditEventType.USER_LOGGED_OUT, null, true);
-
-        console.warn('[IPC] User logged out successfully');
-        return successResponse({ success: true });
-      } catch (error) {
-        console.error('[IPC] auth:logout error:', error);
-        return formatError(error);
+  ipcMain.handle('auth:logout', async (
+    event: IpcMainInvokeEvent,
+    sessionId: string
+  ): Promise<IPCResponse> => {
+    try {
+      const authService = getAuthService();
+      await authService.logout(sessionId);
+      
+      await logAuthEvent(AuditEventType.USER_LOGGED_OUT, null, event.sender);
+      
+      return successResponse({ message: 'Logged out successfully' });
+    } catch (error: unknown) {
+      if (error instanceof UnauthorizedError) {
+        return errorResponse(IPCErrorCode.UNAUTHORIZED, error.message);
       }
+      
+      console.error('[IPC] Logout failed:', error);
+      return errorResponse(IPCErrorCode.INTERNAL_ERROR, 'Logout failed');
     }
-  );
+  });
 
-  // Get current session
-  ipcMain.handle(
-    'auth:session',
-    async (_event: IpcMainInvokeEvent, sessionId: string): Promise<IPCResponse> => {
-      try {
-        console.warn('[IPC] auth:session called');
-
-        if (!sessionId) {
-          return errorResponse(IPCErrorCode.NOT_AUTHENTICATED, 'No session ID provided');
-        }
-
-        // SIMPLE: Get service synchronously
-        const authSvc = getAuthService();
-        const session = await authSvc.getSession(sessionId);
-
-        if (!session) {
-          return errorResponse(IPCErrorCode.SESSION_EXPIRED, 'Session not found or expired');
-        }
-
-        // Fetch user data for session restoration
-        const db = getDb();
-        const userRepo = new UserRepository(db);
-        const user = userRepo.findById(session.userId);
-
-        if (!user) {
-          return errorResponse(IPCErrorCode.NOT_FOUND, 'User not found');
-        }
-
-        console.warn('[IPC] Session retrieved:', session.userId);
-        return successResponse({
-          userId: user.id,
-          username: user.username,
-          email: user.email
-        });
-      } catch (error) {
-        console.error('[IPC] auth:session error:', error);
-        return formatError(error);
+  // Validate session
+  ipcMain.handle('auth:session', async (
+    event: IpcMainInvokeEvent,
+    sessionId: string
+  ): Promise<IPCResponse> => {
+    try {
+      const authService = getAuthService();
+      const result = await authService.validateSession(sessionId);
+      
+      return successResponse(result);
+    } catch (error: unknown) {
+      if (error instanceof UnauthorizedError) {
+        return errorResponse(IPCErrorCode.UNAUTHORIZED, error.message);
       }
+      
+      console.error('[IPC] Session validation failed:', error);
+      return errorResponse(IPCErrorCode.INTERNAL_ERROR, 'Session validation failed');
     }
-  );
-}
-
-// Helper functions (imported from ipc-response but not exported)
-function formatError(error: unknown): IPCResponse {
-  const { formatError: _formatError } = require('../utils/ipc-response.ts');
-  return _formatError(error);
-}
-
-function createErrorResponse(error: Error): IPCResponse {
-  const { createErrorResponse: _createErrorResponse } = require('../../src/errors/DomainErrors.ts');
-  return _createErrorResponse(error);
+  });
 }

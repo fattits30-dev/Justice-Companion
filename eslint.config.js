@@ -78,20 +78,4 @@ export default tseslint.config(
       'react-hooks/exhaustive-deps': 'warn',
     },
   },
-  {
-    // Test files - more lenient rules
-    files: ['**/*.test.{ts,tsx}', '**/*.spec.{ts,tsx}', '**/test-utils/**/*.{ts,tsx}'],
-    rules: {
-      '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-unused-vars': 'off',
-      'no-console': 'off',
-    },
-  },
-  {
-    // Electron main process - allow require() for dynamic imports
-    files: ['electron/**/*.ts'],
-    rules: {
-      '@typescript-eslint/no-require-imports': 'off',
-    },
-  },
 );

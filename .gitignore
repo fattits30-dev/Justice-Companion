@@ -204,3 +204,24 @@ sessions/
 .nuxt/
 .output/
 .vercel
+
+# Temporary output files (prevent root pollution)
+*-output.txt
+*-output-*.txt
+coverage-*.txt
+coverage-*.log
+benchmark-*.txt
+perf-*.txt
+dev.*.log
+test-results.json
+tsc-check.txt
+type-check-output.txt
+lint-output.txt
+
+# Backup files
+*.backup
+
+# Test databases
+mydatabase.db
+test.db
+

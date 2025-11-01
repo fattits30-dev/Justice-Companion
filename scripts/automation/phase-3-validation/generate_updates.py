@@ -3,8 +3,6 @@
 Generate update commands for all remaining IPC handlers.
 """
 
-import json
-
 # Handlers already updated
 updated = ['CASE_CREATE', 'CASE_GET_BY_ID', 'CASE_GET_ALL', 'CASE_UPDATE']
 
@@ -47,30 +45,6 @@ handlers = [
     ('AUTH_CHANGE_PASSWORD', ['request.currentPassword', 'request.newPassword']),
 
     # Consent handlers
-    ('CONSENT_GRANT', ['request.consentType']),
-    ('CONSENT_REVOKE', ['request.consentType']),
-    ('CONSENT_HAS_CONSENT', ['request.consentType']),
-
-    # No-param handlers
-    ('CASE_GET_STATISTICS', []),
-    ('AI_CHECK_STATUS', []),
-    ('FILE_SELECT', []),
-    ('PROFILE_GET', []),
-    ('GDPR_EXPORT_USER_DATA', []),
-    ('AUTH_LOGOUT', []),
+    ('CONSENT_GRANT', ['request.consentType', 'request.userId']),
+    ('CONSENT_REVOKE', ['request.consentType', 'request.userId']),
 ]
-
-print(f"Total handlers to update: {len(handlers)}")
-print(f"Already updated: {updated}")
-print("")
-
-# Generate replacements for each handler
-for handler_name, fields in handlers:
-    if handler_name in updated:
-        continue
-
-    print(f"\n# {handler_name}")
-    print("Fields to replace:")
-    for field in fields:
-        new_field = field.replace('request.', 'validationResult.data.')
-        print(f"  {field} -> {new_field}")
