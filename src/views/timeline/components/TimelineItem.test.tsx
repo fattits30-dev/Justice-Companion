@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { TimelineItem } from './TimelineItem';
-import type { DeadlineWithCase } from '../../../models/Deadline';
+import type { DeadlineWithCase } from '../../../domains/timeline/entities/Deadline';
 
 const createMockDeadline = (overrides: Partial<DeadlineWithCase> = {}): DeadlineWithCase => ({
   id: 1,

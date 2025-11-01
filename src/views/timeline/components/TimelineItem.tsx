@@ -4,11 +4,11 @@ import { memo } from 'react';
 import { Card } from '../../../components/ui/Card';
 import { Badge } from '../../../components/ui/Badge';
 import { Button } from '../../../components/ui/Button';
-import type { DeadlineWithCase } from '../../../models/Deadline';
+import type { DeadlineWithCase } from '../../../domains/timeline/entities/Deadline';
 import {
   formatDeadlineStatus,
   isDeadlineUrgent,
-} from '../../../models/Deadline';
+} from '../../../domains/timeline/entities/Deadline';
 
 // Constant color mappings (moved outside component to prevent recreation)
 const urgencyColors = {

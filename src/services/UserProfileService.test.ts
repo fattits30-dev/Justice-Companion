@@ -8,7 +8,7 @@ import { TestDatabaseHelper } from '../test-utils/database-test-helper';
 import { databaseManager } from '../db/database';
 import { resetRepositories, initializeTestRepositories } from '../repositories';
 import { EncryptionService } from './EncryptionService';
-import type { UpdateUserProfileInput } from '../models/UserProfile';
+import type { UpdateUserProfileInput } from '../domains/settings/entities/UserProfile';
 
 describe('UserProfileService', () => {
   let auditLogger: AuditLogger;

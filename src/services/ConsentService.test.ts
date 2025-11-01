@@ -7,7 +7,7 @@ import { ConsentRepository } from '../repositories/ConsentRepository';
 import { AuditLogger } from './AuditLogger';
 import { TestDatabaseHelper } from '../test-utils/database-test-helper';
 import { databaseManager } from '../db/database';
-import type { ConsentType } from '../models/Consent';
+import type { ConsentType } from '../domains/settings/entities/Consent';
 
 describe('ConsentService', () => {
   let consentService: ConsentService;

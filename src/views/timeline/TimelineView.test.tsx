@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { TimelineView } from './TimelineView';
-import type { DeadlineWithCase } from '../../models/Deadline';
+import type { DeadlineWithCase } from '../../domains/timeline/entities/Deadline';
 
 // Mock the window.justiceAPI
 const mockJusticeAPI = {
