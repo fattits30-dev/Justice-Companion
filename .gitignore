@@ -225,3 +225,23 @@ lint-output.txt
 mydatabase.db
 test.db
 
+
+# AI Tool Directories (local only, not committed)
+.agent/
+.codac/
+.guardian/
+.localclaude/
+.justice-companion/
+
+# Python (shouldn't be in TypeScript project)
+.venv/
+.pytest_cache/
+.ruff_cache/
+__pycache__/
+*.pyc
+
+# Environment (secrets)
+.env
+.env.local
+.env.*.local
+
