@@ -157,6 +157,140 @@ export function SettingsView() {
   );
 }
 
+// AI Provider Configurations
+const AI_PROVIDERS = {
+  openai: {
+    name: 'OpenAI',
+    icon: Sparkles,
+    description: 'GPT-4, GPT-3.5 - Industry-leading models',
+    apiKeyLabel: 'OpenAI API Key',
+    apiKeyPlaceholder: 'sk-...',
+    endpoint: 'https://api.openai.com/v1',
+    models: [
+      { value: 'gpt-4-turbo', label: 'GPT-4 Turbo (Recommended)', description: 'Most capable, 128K context' },
+      { value: 'gpt-4', label: 'GPT-4', description: 'High quality, 8K context' },
+      { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo', description: 'Fast and affordable' },
+    ],
+  },
+  anthropic: {
+    name: 'Anthropic',
+    icon: Brain,
+    description: 'Claude 3.5 Sonnet, Opus - Long context specialists',
+    apiKeyLabel: 'Anthropic API Key',
+    apiKeyPlaceholder: 'sk-ant-...',
+    endpoint: 'https://api.anthropic.com/v1',
+    models: [
+      { value: 'claude-3-5-sonnet-20241022', label: 'Claude 3.5 Sonnet (Recommended)', description: 'Best performance, 200K context' },
+      { value: 'claude-3-opus-20240229', label: 'Claude 3 Opus', description: 'Most intelligent, 200K context' },
+      { value: 'claude-3-sonnet-20240229', label: 'Claude 3 Sonnet', description: 'Balanced, 200K context' },
+    ],
+  },
+  groq: {
+    name: 'Groq',
+    icon: Zap,
+    description: 'Ultra-fast inference with Llama, Mixtral',
+    apiKeyLabel: 'Groq API Key',
+    apiKeyPlaceholder: 'gsk_...',
+    endpoint: 'https://api.groq.com/openai/v1',
+    models: [
+      { value: 'llama-3.3-70b-versatile', label: 'Llama 3.3 70B (Recommended)', description: 'Latest, fastest inference' },
+      { value: 'llama-3.1-70b-versatile', label: 'Llama 3.1 70B', description: 'High quality, very fast' },
+      { value: 'mixtral-8x7b-32768', label: 'Mixtral 8x7B', description: '32K context, fast' },
+    ],
+  },
+  huggingface: {
+    name: 'Hugging Face',
+    icon: Sparkles,
+    description: 'Access 350K+ models via Inference API',
+    apiKeyLabel: 'Hugging Face Token',
+    apiKeyPlaceholder: 'hf_...',
+    endpoint: 'https://api-inference.huggingface.co',
+    models: [
+      { value: 'meta-llama/Meta-Llama-3.1-70B-Instruct', label: 'Llama 3.1 70B (Recommended)', description: '128K context, affordable' },
+      { value: 'Qwen/Qwen2.5-72B-Instruct', label: 'Qwen 2.5 72B', description: 'Best performance' },
+      { value: 'mistralai/Mixtral-8x22B-Instruct-v0.1', label: 'Mixtral 8x22B', description: 'Multilingual' },
+    ],
+  },
+  google: {
+    name: 'Google AI',
+    icon: Sparkles,
+    description: 'Gemini Pro, Flash - Multimodal capabilities',
+    apiKeyLabel: 'Google AI API Key',
+    apiKeyPlaceholder: 'AIza...',
+    endpoint: 'https://generativelanguage.googleapis.com/v1',
+    models: [
+      { value: 'gemini-2.0-flash-exp', label: 'Gemini 2.0 Flash (Recommended)', description: 'Latest, fastest' },
+      { value: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro', description: '2M context window' },
+      { value: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash', description: 'Fast and efficient' },
+    ],
+  },
+  cohere: {
+    name: 'Cohere',
+    icon: Brain,
+    description: 'Command R+ - Enterprise-grade models',
+    apiKeyLabel: 'Cohere API Key',
+    apiKeyPlaceholder: 'co_...',
+    endpoint: 'https://api.cohere.com/v1',
+    models: [
+      { value: 'command-r-plus', label: 'Command R+ (Recommended)', description: 'Most capable' },
+      { value: 'command-r', label: 'Command R', description: 'Fast and efficient' },
+      { value: 'command-light', label: 'Command Light', description: 'Lightweight' },
+    ],
+  },
+  together: {
+    name: 'Together AI',
+    icon: Zap,
+    description: 'Llama, Mixtral, Qwen - Fast and affordable',
+    apiKeyLabel: 'Together AI API Key',
+    apiKeyPlaceholder: 'together-...',
+    endpoint: 'https://api.together.xyz/v1',
+    models: [
+      { value: 'meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo', label: 'Llama 3.1 70B Turbo', description: 'Ultra-fast' },
+      { value: 'Qwen/Qwen2.5-72B-Instruct-Turbo', label: 'Qwen 2.5 72B', description: 'Best quality' },
+      { value: 'mistralai/Mixtral-8x22B-Instruct-v0.1', label: 'Mixtral 8x22B', description: 'Large context' },
+    ],
+  },
+  anyscale: {
+    name: 'Anyscale',
+    icon: Zap,
+    description: 'Managed Llama models at scale',
+    apiKeyLabel: 'Anyscale API Key',
+    apiKeyPlaceholder: 'esecret_...',
+    endpoint: 'https://api.endpoints.anyscale.com/v1',
+    models: [
+      { value: 'meta-llama/Meta-Llama-3.1-70B-Instruct', label: 'Llama 3.1 70B', description: 'Recommended' },
+      { value: 'meta-llama/Meta-Llama-3.1-8B-Instruct', label: 'Llama 3.1 8B', description: 'Fast and cheap' },
+    ],
+  },
+  mistral: {
+    name: 'Mistral AI',
+    icon: Sparkles,
+    description: 'Mistral Large, Medium - European models',
+    apiKeyLabel: 'Mistral AI API Key',
+    apiKeyPlaceholder: 'msk_...',
+    endpoint: 'https://api.mistral.ai/v1',
+    models: [
+      { value: 'mistral-large-latest', label: 'Mistral Large (Recommended)', description: 'Most capable' },
+      { value: 'mistral-medium-latest', label: 'Mistral Medium', description: 'Balanced' },
+      { value: 'mistral-small-latest', label: 'Mistral Small', description: 'Fast and efficient' },
+    ],
+  },
+  perplexity: {
+    name: 'Perplexity',
+    icon: Brain,
+    description: 'Sonar models - Real-time web search',
+    apiKeyLabel: 'Perplexity API Key',
+    apiKeyPlaceholder: 'pplx-...',
+    endpoint: 'https://api.perplexity.ai',
+    models: [
+      { value: 'llama-3.1-sonar-large-128k-online', label: 'Sonar Large Online', description: 'Real-time web data' },
+      { value: 'llama-3.1-sonar-small-128k-online', label: 'Sonar Small Online', description: 'Fast with web access' },
+    ],
+  },
+} as const;
+
+type AIProviderKey = keyof typeof AI_PROVIDERS;
+
 // AI Provider Tab
 function AIProviderTab({
   apiKey,
@@ -169,8 +303,20 @@ function AIProviderTab({
   showApiKey: boolean;
   setShowApiKey: (show: boolean) => void;
 }) {
+  const [selectedProvider, setSelectedProvider] = useState<AIProviderKey>('openai');
+  const [selectedModel, setSelectedModel] = useState('');
+  const [customEndpoint, setCustomEndpoint] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+
+  const currentProvider = AI_PROVIDERS[selectedProvider];
+  const ProviderIcon = currentProvider.icon;
+
+  // Update selected model when provider changes
+  React.useEffect(() => {
+    setSelectedModel(currentProvider.models[0].value);
+    setCustomEndpoint(currentProvider.endpoint);
+  }, [selectedProvider]);
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -190,34 +336,43 @@ function AIProviderTab({
 
       <Card className="bg-blue-900/30 border-white/10 backdrop-blur-md">
         <div className="p-6 space-y-6">
-          {/* Provider Selection */}
+          {/* Provider Selection Dropdown */}
           <div>
-            <label className="block text-sm font-medium text-white mb-3">AI Provider</label>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <button className="p-4 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 border-2 border-purple-400 text-left group hover:shadow-lg hover:shadow-purple-500/50 transition-all">
-                <div className="flex items-center gap-3 mb-2">
-                  <Sparkles className="w-5 h-5 text-white" />
-                  <span className="font-semibold text-white">OpenAI</span>
-                  <Badge variant="success" className="ml-auto">Active</Badge>
-                </div>
-                <p className="text-xs text-white/80">GPT-4 Turbo for advanced legal research</p>
-              </button>
+            <label htmlFor="ai-provider" className="block text-sm font-medium text-white mb-2">
+              AI Provider
+            </label>
+            <div className="relative">
+              <select
+                id="ai-provider"
+                value={selectedProvider}
+                onChange={(e) => setSelectedProvider(e.target.value as AIProviderKey)}
+                className="w-full px-4 py-3 bg-blue-950/50 border border-white/10 rounded-lg text-white appearance-none focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent cursor-pointer"
+                aria-label="Select AI Provider"
+              >
+                {Object.entries(AI_PROVIDERS).map(([key, provider]) => (
+                  <option key={key} value={key}>
+                    {provider.name} - {provider.description}
+                  </option>
+                ))}
+              </select>
+              <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50 pointer-events-none rotate-90" />
+            </div>
 
-              <button className="p-4 rounded-lg bg-white/5 border-2 border-white/10 text-left group hover:bg-white/10 hover:border-white/20 transition-all">
-                <div className="flex items-center gap-3 mb-2">
-                  <Zap className="w-5 h-5 text-white/60" />
-                  <span className="font-semibold text-white/60">Local Model</span>
-                  <Badge variant="neutral" className="ml-auto bg-white/10 text-white/60">Coming Soon</Badge>
-                </div>
-                <p className="text-xs text-white/50">Run AI models locally for privacy</p>
-              </button>
+            {/* Selected Provider Info */}
+            <div className="mt-3 p-3 rounded-lg bg-white/5 border border-white/10">
+              <div className="flex items-center gap-2">
+                <ProviderIcon className="w-5 h-5 text-purple-400" />
+                <span className="text-sm font-medium text-white">{currentProvider.name}</span>
+                <Badge variant="success" className="ml-auto">Selected</Badge>
+              </div>
+              <p className="text-xs text-white/60 mt-1">{currentProvider.description}</p>
             </div>
           </div>
 
           {/* API Key Input */}
           <div>
             <label htmlFor="api-key" className="block text-sm font-medium text-white mb-2">
-              OpenAI API Key
+              {currentProvider.apiKeyLabel}
             </label>
             <div className="relative">
               <input
@@ -225,9 +380,9 @@ function AIProviderTab({
                 type={showApiKey ? 'text' : 'password'}
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
-                placeholder="sk-..."
+                placeholder={currentProvider.apiKeyPlaceholder}
                 className="w-full px-4 py-3 pr-12 bg-blue-950/50 border border-white/10 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                aria-label="OpenAI API Key"
+                aria-label={currentProvider.apiKeyLabel}
               />
               <button
                 type="button"
@@ -250,13 +405,37 @@ function AIProviderTab({
             </label>
             <select
               id="model"
+              value={selectedModel}
+              onChange={(e) => setSelectedModel(e.target.value)}
               className="w-full px-4 py-3 bg-blue-950/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               aria-label="AI Model"
             >
-              <option value="gpt-4-turbo">GPT-4 Turbo (Recommended)</option>
-              <option value="gpt-4">GPT-4</option>
-              <option value="gpt-3.5-turbo">GPT-3.5 Turbo (Faster, cheaper)</option>
+              {currentProvider.models.map((model) => (
+                <option key={model.value} value={model.value}>
+                  {model.label} - {model.description}
+                </option>
+              ))}
             </select>
+          </div>
+
+          {/* Custom API Endpoint (Advanced) */}
+          <div>
+            <label htmlFor="endpoint" className="block text-sm font-medium text-white mb-2">
+              API Endpoint
+              <Badge variant="neutral" className="ml-2 bg-white/10 text-white/60 text-xs">Advanced</Badge>
+            </label>
+            <input
+              id="endpoint"
+              type="text"
+              value={customEndpoint}
+              onChange={(e) => setCustomEndpoint(e.target.value)}
+              placeholder={currentProvider.endpoint}
+              className="w-full px-4 py-3 bg-blue-950/50 border border-white/10 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent font-mono text-sm"
+              aria-label="API Endpoint"
+            />
+            <p className="text-xs text-white/40 mt-2">
+              Leave default unless using a custom endpoint or proxy
+            </p>
           </div>
 
           {/* Save Button */}
