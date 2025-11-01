@@ -30,6 +30,7 @@
     "build:mac": "pnpm build:electron && electron-builder --mac",
     "build:linux": "pnpm build:electron && electron-builder --linux",
     "preview": "vite preview",
+    "pretest": "pnpm rebuild:node",
     "test": "vitest",
     "test:coverage": "vitest run --coverage || true",
     "test:e2e": "playwright test",
