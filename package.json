@@ -22,7 +22,7 @@
     "dev:electron": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
     "build:preload": "tsc --module CommonJS --target ES2022 --outDir dist/electron --skipLibCheck electron/preload.ts",
     "watch:preload": "tsc --module CommonJS --target ES2022 --outDir dist/electron --skipLibCheck --watch electron/preload.ts",
-    "electron:dev": "pnpm build:preload && concurrently --names \"PRELOAD,VITE,ELECTRON\" -c \"yellow,cyan,magenta\" \"npm:watch:preload\" \"vite\" \"wait-on http://localhost:5176 && cross-env NODE_OPTIONS='--loader=tsx' electron electron/main.ts\"",
+    "electron:dev": "pnpm build:preload && concurrently --names \"PRELOAD,VITE,ELECTRON\" -c \"yellow,cyan,magenta\" \"npm:watch:preload\" \"vite\" \"wait-on http://localhost:5176 && cross-env NODE_OPTIONS='--import=tsx' electron electron/main.ts\"",
     "build": "tsc && vite build",
     "build:electron": "tsc -p tsconfig.electron.json && vite build",
     "electron:build": "pnpm build:electron && electron-builder",
