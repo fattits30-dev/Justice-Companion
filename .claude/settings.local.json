@@ -14,7 +14,7 @@
     "deny": [],
     "ask": []
   },
-  "outputStyle": "orchestrator",
+  "outputStyle": "justice-companion-strict",
   "mcpSettings": {
     "autoConnect": true,
     "description": "Production MCP setup - 6 MCPs for development, testing, and AI assistance"

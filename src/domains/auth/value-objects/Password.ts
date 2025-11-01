@@ -109,23 +109,23 @@ export class Password {
     let score = 0;
 
     // Length scoring
-    if (this.value.length >= 16) score += 2;
-    else if (this.value.length >= 12) score += 1;
+    if (this.value.length >= 16) {score += 2;}
+    else if (this.value.length >= 12) {score += 1;}
 
     // Complexity scoring
-    if (Password.LOWERCASE_REGEX.test(this.value)) score += 1;
-    if (Password.UPPERCASE_REGEX.test(this.value)) score += 1;
-    if (Password.NUMBER_REGEX.test(this.value)) score += 1;
-    if (Password.SPECIAL_CHAR_REGEX.test(this.value)) score += 2;
+    if (Password.LOWERCASE_REGEX.test(this.value)) {score += 1;}
+    if (Password.UPPERCASE_REGEX.test(this.value)) {score += 1;}
+    if (Password.NUMBER_REGEX.test(this.value)) {score += 1;}
+    if (Password.SPECIAL_CHAR_REGEX.test(this.value)) {score += 2;}
 
     // Entropy estimation
     const uniqueChars = new Set(this.value.split('')).size;
-    if (uniqueChars >= 10) score += 1;
-    if (uniqueChars >= 15) score += 1;
+    if (uniqueChars >= 10) {score += 1;}
+    if (uniqueChars >= 15) {score += 1;}
 
-    if (score >= 8) return 'very_strong';
-    if (score >= 6) return 'strong';
-    if (score >= 4) return 'medium';
+    if (score >= 8) {return 'very_strong';}
+    if (score >= 6) {return 'strong';}
+    if (score >= 4) {return 'medium';}
     return 'weak';
   }
 }

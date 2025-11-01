@@ -216,7 +216,7 @@ export class ProjectPlanner {
           const relativePath = path.relative(this.projectDir, fullPath);
 
           if (entry.isDirectory()) {
-            if (skipDirs.has(entry.name)) continue;
+            if (skipDirs.has(entry.name)) {continue;}
 
             structure.directories.push(relativePath);
             structure.dirCount++;
@@ -230,9 +230,9 @@ export class ProjectPlanner {
             }
 
             // Check for special files
-            if (entry.name === 'package.json') structure.hasPackageJson = true;
-            if (entry.name.toLowerCase().startsWith('readme')) structure.hasReadme = true;
-            if (entry.name === 'tsconfig.json') structure.hasTsConfig = true;
+            if (entry.name === 'package.json') {structure.hasPackageJson = true;}
+            if (entry.name.toLowerCase().startsWith('readme')) {structure.hasReadme = true;}
+            if (entry.name === 'tsconfig.json') {structure.hasTsConfig = true;}
             if (entry.name.includes('test') || entry.name.includes('spec')) {
               structure.hasTests = true;
             }
@@ -260,30 +260,30 @@ export class ProjectPlanner {
       buildTools: [],
     };
 
-    if (!this.structure) return stack;
+    if (!this.structure) {return stack;}
 
     const fileTypes = this.structure.filesByType;
 
     // Detect languages
-    if (fileTypes['.ts'] || fileTypes['.tsx']) stack.languages.push('TypeScript');
-    if (fileTypes['.js'] || fileTypes['.jsx']) stack.languages.push('JavaScript');
-    if (fileTypes['.py']) stack.languages.push('Python');
-    if (fileTypes['.rs']) stack.languages.push('Rust');
-    if (fileTypes['.go']) stack.languages.push('Go');
-    if (fileTypes['.java']) stack.languages.push('Java');
+    if (fileTypes['.ts'] || fileTypes['.tsx']) {stack.languages.push('TypeScript');}
+    if (fileTypes['.js'] || fileTypes['.jsx']) {stack.languages.push('JavaScript');}
+    if (fileTypes['.py']) {stack.languages.push('Python');}
+    if (fileTypes['.rs']) {stack.languages.push('Rust');}
+    if (fileTypes['.go']) {stack.languages.push('Go');}
+    if (fileTypes['.java']) {stack.languages.push('Java');}
 
     // Detect frameworks from package.json
     if (this.packageJson?.dependencies) {
       const deps = { ...this.packageJson.dependencies, ...this.packageJson.devDependencies };
 
-      if (deps['react']) stack.frameworks.push('React');
-      if (deps['next']) stack.frameworks.push('Next.js');
-      if (deps['vue']) stack.frameworks.push('Vue');
-      if (deps['angular']) stack.frameworks.push('Angular');
-      if (deps['electron']) stack.frameworks.push('Electron');
-      if (deps['express']) stack.frameworks.push('Express');
-      if (deps['fastify']) stack.frameworks.push('Fastify');
-      if (deps['nestjs']) stack.frameworks.push('NestJS');
+      if (deps['react']) {stack.frameworks.push('React');}
+      if (deps['next']) {stack.frameworks.push('Next.js');}
+      if (deps['vue']) {stack.frameworks.push('Vue');}
+      if (deps['angular']) {stack.frameworks.push('Angular');}
+      if (deps['electron']) {stack.frameworks.push('Electron');}
+      if (deps['express']) {stack.frameworks.push('Express');}
+      if (deps['fastify']) {stack.frameworks.push('Fastify');}
+      if (deps['nestjs']) {stack.frameworks.push('NestJS');}
     }
 
     // Detect build tools
@@ -291,7 +291,7 @@ export class ProjectPlanner {
       stack.buildTools.push('npm/pnpm/yarn');
       stack.packageManager = this.detectPackageManager();
     }
-    if (fileTypes['.toml']) stack.buildTools.push('Cargo');
+    if (fileTypes['.toml']) {stack.buildTools.push('Cargo');}
     if (fs.existsSync(path.join(this.projectDir, 'go.mod'))) {
       stack.buildTools.push('Go modules');
     }
@@ -306,13 +306,13 @@ export class ProjectPlanner {
       const deps = { ...this.packageJson.dependencies };
       const databases: string[] = [];
 
-      if (deps['better-sqlite3'] || deps['sqlite3']) databases.push('SQLite');
-      if (deps['pg'] || deps['postgres']) databases.push('PostgreSQL');
-      if (deps['mysql'] || deps['mysql2']) databases.push('MySQL');
-      if (deps['mongodb']) databases.push('MongoDB');
-      if (deps['drizzle-orm']) databases.push('Drizzle ORM');
+      if (deps['better-sqlite3'] || deps['sqlite3']) {databases.push('SQLite');}
+      if (deps['pg'] || deps['postgres']) {databases.push('PostgreSQL');}
+      if (deps['mysql'] || deps['mysql2']) {databases.push('MySQL');}
+      if (deps['mongodb']) {databases.push('MongoDB');}
+      if (deps['drizzle-orm']) {databases.push('Drizzle ORM');}
 
-      if (databases.length > 0) stack.database = databases;
+      if (databases.length > 0) {stack.database = databases;}
     }
 
     // Detect testing
@@ -320,12 +320,12 @@ export class ProjectPlanner {
       const devDeps = this.packageJson.devDependencies;
       const testing: string[] = [];
 
-      if (devDeps['vitest']) testing.push('Vitest');
-      if (devDeps['jest']) testing.push('Jest');
-      if (devDeps['@playwright/test']) testing.push('Playwright');
-      if (devDeps['cypress']) testing.push('Cypress');
+      if (devDeps['vitest']) {testing.push('Vitest');}
+      if (devDeps['jest']) {testing.push('Jest');}
+      if (devDeps['@playwright/test']) {testing.push('Playwright');}
+      if (devDeps['cypress']) {testing.push('Cypress');}
 
-      if (testing.length > 0) stack.testing = testing;
+      if (testing.length > 0) {stack.testing = testing;}
     }
 
     return stack;
@@ -335,9 +335,9 @@ export class ProjectPlanner {
    * Detect package manager from lock files
    */
   private detectPackageManager(): string {
-    if (fs.existsSync(path.join(this.projectDir, 'pnpm-lock.yaml'))) return 'pnpm';
-    if (fs.existsSync(path.join(this.projectDir, 'yarn.lock'))) return 'yarn';
-    if (fs.existsSync(path.join(this.projectDir, 'package-lock.json'))) return 'npm';
+    if (fs.existsSync(path.join(this.projectDir, 'pnpm-lock.yaml'))) {return 'pnpm';}
+    if (fs.existsSync(path.join(this.projectDir, 'yarn.lock'))) {return 'yarn';}
+    if (fs.existsSync(path.join(this.projectDir, 'package-lock.json'))) {return 'npm';}
     return 'npm';
   }
 
@@ -364,7 +364,7 @@ export class ProjectPlanner {
    * Extract existing features from README
    */
   private extractExistingFeatures(): string[] {
-    if (!this.readme) return [];
+    if (!this.readme) {return [];}
 
     const features: string[] = [];
     const lines = this.readme.split('\n');
@@ -396,7 +396,7 @@ export class ProjectPlanner {
             .replace(/^#{4}\s+/, '')
             .replace(/[🔐📁🤖📝📊]/g, '')
             .trim();
-          if (feature) features.push(feature);
+          if (feature) {features.push(feature);}
         }
       }
     }
@@ -410,7 +410,7 @@ export class ProjectPlanner {
   private suggestImprovements(): string[] {
     const suggestions: string[] = [];
 
-    if (!this.structure) return suggestions;
+    if (!this.structure) {return suggestions;}
 
     // Test coverage
     if (!this.structure.hasTests) {
@@ -621,7 +621,7 @@ export class ProjectPlanner {
    * Extract tasks from README TODO/Roadmap sections
    */
   private extractTasksFromReadme(): WorkflowTask[] {
-    if (!this.readme) return [];
+    if (!this.readme) {return [];}
 
     const tasks: WorkflowTask[] = [];
     const lines = this.readme.split('\n');

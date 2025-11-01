@@ -99,7 +99,7 @@ export function SaveToCaseDialog({
     }
   };
 
-  if (!open) return null;
+  if (!open) {return null;}
 
   return (
     <AnimatePresence>

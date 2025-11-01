@@ -33,7 +33,7 @@ export function EvidenceTagSelector({
   const loadTags = async () => {
     try {
       const sessionId = window.sessionManager?.getSessionId();
-      if (!sessionId) return;
+      if (!sessionId) {return;}
 
       const result = await window.api.tags.list(sessionId);
       if (result.success && result.data) {
@@ -48,7 +48,7 @@ export function EvidenceTagSelector({
     setIsLoading(true);
     try {
       const sessionId = window.sessionManager?.getSessionId();
-      if (!sessionId) return;
+      if (!sessionId) {return;}
 
       const result = await window.api.tags.getForEvidence(evidenceId, sessionId);
       if (result.success && result.data) {
@@ -65,7 +65,7 @@ export function EvidenceTagSelector({
   const handleAddTag = async (tagId: number) => {
     try {
       const sessionId = window.sessionManager?.getSessionId();
-      if (!sessionId) return;
+      if (!sessionId) {return;}
 
       const result = await window.api.tags.tagEvidence(evidenceId, tagId, sessionId);
       if (result.success) {
@@ -82,7 +82,7 @@ export function EvidenceTagSelector({
   const handleRemoveTag = async (tagId: number) => {
     try {
       const sessionId = window.sessionManager?.getSessionId();
-      if (!sessionId) return;
+      if (!sessionId) {return;}
 
       const result = await window.api.tags.untagEvidence(evidenceId, tagId, sessionId);
       if (result.success) {

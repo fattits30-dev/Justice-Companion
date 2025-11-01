@@ -223,7 +223,7 @@ export class NotificationPreferencesRepository {
     `);
 
     const row = stmt.get(userId) as any;
-    if (!row) return true; // Default to enabled if no preferences exist
+    if (!row) {return true;} // Default to enabled if no preferences exist
 
     return (
       row.deadline_reminders_enabled === 1 ||

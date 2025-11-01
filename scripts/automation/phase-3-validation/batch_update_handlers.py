@@ -4,7 +4,6 @@ Batch update all IPC handlers with ValidationMiddleware.
 This script will read the current main.ts and output the update commands.
 """
 
-import re
 
 # Map of handlers and their request usage patterns
 handler_configs = {
@@ -36,34 +35,5 @@ handler_configs = {
     'MODEL_IS_DOWNLOADED': {'uses': ['request.modelId']},
     'MODEL_DELETE': {'uses': ['request.modelId']},
     'GDPR_EXPORT_USER_DATA': {'uses': []},
-    'GDPR_DELETE_USER_DATA': {'uses': ['request.confirmation']},
-    'AUTH_REGISTER': {'uses': ['request.username', 'request.email', 'request.password']},
-    'AUTH_LOGIN': {'uses': ['request.username', 'request.password', 'request.rememberMe']},
-    'AUTH_LOGOUT': {'uses': []},
-    'AUTH_CHANGE_PASSWORD': {'uses': ['request.currentPassword', 'request.newPassword']},
-    'CONSENT_GRANT': {'uses': ['request.consentType']},
-    'CONSENT_REVOKE': {'uses': ['request.consentType']},
-    'CONSENT_HAS_CONSENT': {'uses': ['request.consentType']},
+    'GDPR_DELETE_USER_DATA': {'uses': []}
 }
-
-print("Handler configuration mapping created.")
-print(f"Total handlers to update: {len(handler_configs)}")
-
-# Generate the validation integration template for each
-for channel, config in handler_configs.items():
-    uses = config['uses']
-
-    # Determine how to replace request references
-    replacements = []
-    for use in uses:
-        # Convert request.X to validationResult.data.X
-        old_ref = use
-        new_ref = use.replace('request.', 'validationResult.data.')
-        replacements.append((old_ref, new_ref))
-
-    print(f"\n{channel}:")
-    print(f"  Uses: {uses}")
-    if replacements:
-        print(f"  Replace:")
-        for old, new in replacements:
-            print(f"    {old} -> {new}")

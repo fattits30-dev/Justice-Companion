@@ -20,13 +20,13 @@ export function formatRelativeTime(dateString: string | Date): string {
   const diffMonths = Math.floor(diffMs / 2592000000);
   const diffYears = Math.floor(diffMs / 31536000000);
 
-  if (diffSecs < 10) return 'Just now';
-  if (diffSecs < 60) return `${diffSecs} second${diffSecs > 1 ? 's' : ''} ago`;
-  if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
-  if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-  if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-  if (diffWeeks < 4) return `${diffWeeks} week${diffWeeks > 1 ? 's' : ''} ago`;
-  if (diffMonths < 12) return `${diffMonths} month${diffMonths > 1 ? 's' : ''} ago`;
+  if (diffSecs < 10) {return 'Just now';}
+  if (diffSecs < 60) {return `${diffSecs} second${diffSecs > 1 ? 's' : ''} ago`;}
+  if (diffMins < 60) {return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;}
+  if (diffHours < 24) {return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;}
+  if (diffDays < 7) {return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;}
+  if (diffWeeks < 4) {return `${diffWeeks} week${diffWeeks > 1 ? 's' : ''} ago`;}
+  if (diffMonths < 12) {return `${diffMonths} month${diffMonths > 1 ? 's' : ''} ago`;}
   return `${diffYears} year${diffYears > 1 ? 's' : ''} ago`;
 }
 
@@ -37,8 +37,8 @@ export function formatRelativeTime(dateString: string | Date): string {
  * @returns Formatted file size (e.g., "2.3 MB", "156.2 KB")
  */
 export function formatFileSize(bytes: number, decimals: number = 1): string {
-  if (bytes === 0) return '0 B';
-  if (bytes < 0) return 'Invalid size';
+  if (bytes === 0) {return '0 B';}
+  if (bytes < 0) {return 'Invalid size';}
 
   const k = 1024;
   const dm = decimals < 0 ? 0 : decimals;
@@ -152,7 +152,7 @@ export function formatPercentage(value: number, decimals: number = 0): string {
  * @returns Truncated string
  */
 export function truncate(str: string, maxLength: number = 50): string {
-  if (str.length <= maxLength) return str;
+  if (str.length <= maxLength) {return str;}
   return `${str.substring(0, maxLength - 3)}...`;
 }
 
@@ -198,7 +198,7 @@ export function formatPhoneNumber(phoneNumber: string): string {
  * @returns Capitalized string
  */
 export function capitalize(str: string): string {
-  if (!str) return '';
+  if (!str) {return '';}
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 }
 

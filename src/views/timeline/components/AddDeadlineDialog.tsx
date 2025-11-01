@@ -142,7 +142,7 @@ export function AddDeadlineDialog({
     onClose();
   };
 
-  if (!open) return null;
+  if (!open) {return null;}
 
   const noCasesAvailable = cases.length === 0;
 
