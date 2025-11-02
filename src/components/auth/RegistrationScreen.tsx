@@ -118,8 +118,8 @@ export function RegistrationScreen({
       // Call IPC handler
       const response = await window.justiceAPI.register(
         username,
-        password,
         email,
+        password,
       );
 
       if (!response.success) {
