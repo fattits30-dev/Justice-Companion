@@ -7,8 +7,8 @@ export type { ButtonProps } from './Button.tsx';
 export { Badge } from './Badge.tsx';
 export type { BadgeProps } from './Badge.tsx';
 
-export { Card, CardHeader, CardFooter } from './Card.tsx';
-export type { CardProps, CardHeaderProps, CardFooterProps } from './Card.tsx';
+export { Card } from './Card.tsx';
+export type { CardProps } from './Card.tsx';
 
 export {
   ToastProvider,
