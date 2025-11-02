@@ -61,136 +61,115 @@ export class DataDeleter {
     const deleteTransaction = this.db.transaction(() => {
       // Step 1: Get counts BEFORE deletion (for reporting)
       const casesStmt = this.db.prepare('SELECT id FROM cases WHERE userId = ?');
-      const caseIds = (casesStmt.all(userId) as any[]).map((c) => c.id);
+      const caseIds = casesStmt.all(userId).map((c: { id: number }) => c.id);
 
       const conversationsStmt = this.db.prepare(
         'SELECT id FROM chat_conversations WHERE userId = ?'
       );
-      const conversationIds = (conversationsStmt.all(userId) as any[]).map(
-        (c) => c.id
+      const conversationIds = conversationsStmt.all(userId).map((c: { id: number }) => c.id);
+
+      // Step 2: Delete in bottom-up order (child tables first)
+      // event_evidence (FK → timeline_events)
+      const deleteEventEvidence = this.db.prepare(
+        'DELETE FROM event_evidence WHERE eventId IN (SELECT id FROM timeline_events WHERE caseId IN (?))'
       );
-
-      // Step 2: Delete in bottom-up order (children before parents)
-
-      // 2.1: event_evidence (child of timeline_events)
-      if (caseIds.length > 0) {
-        const eventIdsStmt = this.db.prepare(
-          `SELECT id FROM timeline_events WHERE caseId IN (${caseIds.map(() => '?').join(',')})`
-        );
-        const eventIds = (eventIdsStmt.all(...caseIds) as any[]).map((e) => e.id);
-
-        if (eventIds.length > 0) {
-          const deleteEventEvidence = this.db.prepare(
-            `DELETE FROM event_evidence WHERE eventId IN (${eventIds.map(() => '?').join(',')})`
-          );
-          const result = deleteEventEvidence.run(...eventIds);
-          deletedCounts.event_evidence = result.changes;
-        } else {
-          deletedCounts.event_evidence = 0;
-        }
-      } else {
-        deletedCounts.event_evidence = 0;
-      }
-
-      // 2.2: case_facts
-      deletedCounts.case_facts = this.deleteByCase(caseIds, 'case_facts');
-
-      // 2.3: legal_issues
-      deletedCounts.legal_issues = this.deleteByCase(caseIds, 'legal_issues');
-
-      // 2.4: actions
-      deletedCounts.actions = this.deleteByCase(caseIds, 'actions');
-
-      // 2.5: notes
-      deletedCounts.notes = this.deleteByCase(caseIds, 'notes');
-
-      // 2.6: evidence
-      deletedCounts.evidence = this.deleteByCase(caseIds, 'evidence');
-
-      // 2.7: timeline_events
-      deletedCounts.timeline_events = this.deleteByCase(
-        caseIds,
-        'timeline_events'
+      deleteEventEvidence.run(caseIds);
+      
+      // timeline_events (FK → cases)
+      const deleteTimelineEvents = this.db.prepare(
+        'DELETE FROM timeline_events WHERE caseId IN (?)'
       );
-
-      // 2.8: chat_messages (child of chat_conversations)
-      if (conversationIds.length > 0) {
-        const deleteChatMessages = this.db.prepare(
-          `DELETE FROM chat_messages WHERE conversationId IN (${conversationIds.map(() => '?').join(',')})`
-        );
-        const result = deleteChatMessages.run(...conversationIds);
-        deletedCounts.chat_messages = result.changes;
-      } else {
-        deletedCounts.chat_messages = 0;
-      }
-
-      // 2.9: chat_conversations
-      const deleteConversations = this.db.prepare(
+      deleteTimelineEvents.run(caseIds);
+      
+      // case_facts (FK → cases)
+      const deleteCaseFacts = this.db.prepare(
+        'DELETE FROM case_facts WHERE caseId IN (?)'
+      );
+      deleteCaseFacts.run(caseIds);
+      
+      // legal_issues (FK → cases)
+      const deleteLegalIssues = this.db.prepare(
+        'DELETE FROM legal_issues WHERE caseId IN (?)'
+      );
+      deleteLegalIssues.run(caseIds);
+      
+      // actions (FK → cases)
+      const deleteActions = this.db.prepare(
+        'DELETE FROM actions WHERE caseId IN (?)'
+      );
+      deleteActions.run(caseIds);
+      
+      // notes (FK → cases)
+      const deleteNotes = this.db.prepare(
+        'DELETE FROM notes WHERE caseId IN (?)'
+      );
+      deleteNotes.run(caseIds);
+      
+      // evidence (FK → cases)
+      const deleteEvidence = this.db.prepare(
+        'DELETE FROM evidence WHERE caseId IN (?)'
+      );
+      deleteEvidence.run(caseIds);
+      
+      // chat_messages (FK → chat_conversations)
+      const deleteChatMessages = this.db.prepare(
+        'DELETE FROM chat_messages WHERE conversationId IN (?)'
+      );
+      deleteChatMessages.run(conversationIds);
+      
+      // chat_conversations (FK → users)
+      const deleteChatConversations = this.db.prepare(
         'DELETE FROM chat_conversations WHERE userId = ?'
       );
-      deletedCounts.chat_conversations = deleteConversations.run(userId).changes;
-
-      // 2.10: cases
-      if (caseIds.length > 0) {
-        const deleteCases = this.db.prepare(
-          `DELETE FROM cases WHERE id IN (${caseIds.map(() => '?').join(',')})`
-        );
-        deletedCounts.cases = deleteCases.run(...caseIds).changes;
-      } else {
-        deletedCounts.cases = 0;
-      }
-
-      // 2.11: user_facts
+      deleteChatConversations.run(userId);
+      
+      // cases (FK → users)
+      const deleteCases = this.db.prepare(
+        'DELETE FROM cases WHERE userId = ?'
+      );
+      deleteCases.run(userId);
+      
+      // user_facts (FK → users)
       const deleteUserFacts = this.db.prepare(
         'DELETE FROM user_facts WHERE userId = ?'
       );
-      deletedCounts.user_facts = deleteUserFacts.run(userId).changes;
-
-      // 2.12: sessions
+      deleteUserFacts.run(userId);
+      
+      // sessions (FK → users)
       const deleteSessions = this.db.prepare(
         'DELETE FROM sessions WHERE userId = ?'
       );
-      deletedCounts.sessions = deleteSessions.run(userId).changes;
-
-      // 2.13: users (root table)
-      const deleteUser = this.db.prepare('DELETE FROM users WHERE id = ?');
-      deletedCounts.users = deleteUser.run(userId).changes;
+      deleteSessions.run(userId);
+      
+      // users (root table)
+      const deleteUser = this.db.prepare(
+        'DELETE FROM users WHERE id = ?'
+      );
+      deleteUser.run(userId);
+      
+      // Step 3: Update counts for reporting
+      deletedCounts['event_evidence'] = deleteEventEvidence.changes;
+      deletedCounts['timeline_events'] = deleteTimelineEvents.changes;
+      deletedCounts['case_facts'] = deleteCaseFacts.changes;
+      deletedCounts['legal_issues'] = deleteLegalIssues.changes;
+      deletedCounts['actions'] = deleteActions.changes;
+      deletedCounts['notes'] = deleteNotes.changes;
+      deletedCounts['evidence'] = deleteEvidence.changes;
+      deletedCounts['chat_messages'] = deleteChatMessages.changes;
+      deletedCounts['chat_conversations'] = deleteChatConversations.changes;
+      deletedCounts['cases'] = deleteCases.changes;
+      deletedCounts['user_facts'] = deleteUserFacts.changes;
+      deletedCounts['sessions'] = deleteSessions.changes;
+      deletedCounts['users'] = deleteUser.changes;
     });
 
-    // Execute transaction
+    // Execute the transaction
     deleteTransaction();
-
-    // Step 3: Count preserved records AFTER transaction (legal requirement)
-    const auditLogsStmt = this.db.prepare(
-      'SELECT COUNT(*) as count FROM audit_logs WHERE user_id = ?'
-    );
-    const preservedAuditLogs = (auditLogsStmt.get(userId.toString()) as any).count;
-
-    const consentsStmt = this.db.prepare(
-      'SELECT COUNT(*) as count FROM consent_records WHERE userId = ?'
-    );
-    const preservedConsents = (consentsStmt.get(userId) as any).count;
 
     return {
       success: true,
-      deletedCounts,
-      preservedAuditLogs,
-      preservedConsents,
-      deletionDate,
+      deletedAt: deletionDate,
+      counts: deletedCounts
     };
-  }
-
-  /**
-   * Helper: Delete records from a table by case IDs
-   */
-  private deleteByCase(caseIds: number[], tableName: string): number {
-    if (caseIds.length === 0) {return 0;}
-
-    const placeholders = caseIds.map(() => '?').join(',');
-    const deleteStmt = this.db.prepare(
-      `DELETE FROM ${tableName} WHERE caseId IN (${placeholders})`
-    );
-    const result = deleteStmt.run(...caseIds);
-    return result.changes;
   }
 }

@@ -32,7 +32,7 @@ export class UserProfileServiceInjectable implements IUserProfileService {
   /**
    * Create user profile (internal implementation)
    */
-  createProfile(input: any): UserProfile {
+  createProfile(input: Partial<UserProfile>): UserProfile {
     try {
       // Validate name if provided
       if (input.name !== undefined && input.name.trim().length === 0) {
@@ -83,72 +83,4 @@ export class UserProfileServiceInjectable implements IUserProfileService {
       throw error;
     }
   }
-
-  /**
-   * Delete user profile
-   */
-  deleteProfile(userId: number): boolean {
-    try {
-      return this.userProfileRepository.delete(userId);
-    } catch (error) {
-      errorLogger.logError(error as Error, {
-        context: 'UserProfileService.deleteProfile',
-        userId: userId.toString()
-      });
-      throw error;
-    }
-  }
 }
-
-// For backward compatibility - keep the singleton instance
-// This will be replaced in the future with pure DI
-import { getRepositories } from '../repositories.ts';
-
-class UserProfileServiceSingleton {
-  private get userProfileRepository() {
-    return getRepositories().userProfileRepository;
-  }
-
-  /**
-   * Get the current user profile
-   */
-  getProfile(): UserProfile {
-    try {
-      return this.userProfileRepository.get();
-    } catch (error) {
-      errorLogger.logError(error as Error, {
-        context: 'UserProfileService.getProfile',
-      });
-      throw error;
-    }
-  }
-
-  /**
-   * Update user profile
-   */
-  updateProfile(input: UpdateUserProfileInput): UserProfile {
-    try {
-      // Validate name if provided
-      if (input.name !== undefined && input.name.trim().length === 0) {
-        throw new Error('Name cannot be empty');
-      }
-
-      // Validate email if provided
-      if (input.email !== undefined && input.email !== null) {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(input.email)) {
-          throw new Error('Invalid email format');
-        }
-      }
-
-      return this.userProfileRepository.update(input);
-    } catch (error) {
-      errorLogger.logError(error as Error, {
-        context: 'UserProfileService.updateProfile',
-      });
-      throw error;
-    }
-  }
-}
-
-export const userProfileService = new UserProfileServiceSingleton();

@@ -35,7 +35,10 @@ async function runSQL() {
     console.log('\n✅ SQL executed successfully!');
     if (result.rows && result.rows.length > 0) {
       console.log('\n📋 Results:');
-      console.table(result.rows);
+      // Using console.log instead of console.table for better compatibility
+      result.rows.forEach(row => {
+        console.log(row);
+      });
     }
   } catch (error) {
     console.error('❌ Error executing SQL:', error.message);

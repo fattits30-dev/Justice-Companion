@@ -59,10 +59,10 @@ function TimelineItemComponent({
 }: TimelineItemProps) {
   // Determine urgency level
   const getUrgency = (): 'overdue' | 'urgent' | 'future' | 'completed' => {
-    if (deadline.status === 'completed') return 'completed';
-    if (deadline.status === 'overdue') return 'overdue';
+    if (deadline.status === 'completed') {return 'completed';}
+    if (deadline.status === 'overdue') {return 'overdue';}
 
-    if (isDeadlineUrgent(deadline.deadlineDate)) return 'urgent';
+    if (isDeadlineUrgent(deadline.deadlineDate)) {return 'urgent';}
     return 'future';
   };
 

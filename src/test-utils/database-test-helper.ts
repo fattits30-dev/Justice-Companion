@@ -68,41 +68,20 @@ export class TestDatabaseHelper {
 
     for (const migration of migrations) {
       const migrationPath = path.join(migrationsDir, migration);
-
-      if (!require('fs').existsSync(migrationPath)) {
-        throw new Error(`[TestDatabaseHelper] Migration file not found: ${migrationPath}`);
-      }
-
-      console.log(`[TestDatabaseHelper] Running migration: ${migration}`);
-      const migrationSQL = readFileSync(migrationPath, 'utf-8');
-
-      // Extract UP section only (ignore DOWN for tests)
-      // Migrations have "-- UP" and "-- DOWN" sections
-      const upSection = migrationSQL.split('-- DOWN')[0];
-
-      // Execute the UP migration
-      this.db.exec(upSection);
-      console.log(`[TestDatabaseHelper] ✅ ${migration} completed`);
+      console.log(`[TestDatabaseHelper] Applying migration: ${migration}`);
+      
+      const migrationSql = readFileSync(migrationPath, 'utf8');
+      this.db.exec(migrationSql);
     }
 
-    console.log('[TestDatabaseHelper] ✅ All migrations completed successfully');
+    console.log('[TestDatabaseHelper] All migrations applied successfully.');
     return this.db;
   }
 
   /**
-   * Get the database instance
+   * Close the database connection
    */
-  getDatabase(): Database.Database {
-    if (!this.db) {
-      throw new Error('Test database not initialized. Call initialize() first.');
-    }
-    return this.db;
-  }
-
-  /**
-   * Clean up: close database and release resources
-   */
-  cleanup(): void {
+  close(): void {
     if (this.db) {
       this.db.close();
       this.db = null;
@@ -110,94 +89,9 @@ export class TestDatabaseHelper {
   }
 
   /**
-   * Clear all data from tables (useful for test isolation)
+   * Get the database instance
    */
-  clearAllTables(): void {
-    if (!this.db) {
-      return;
-    }
-
-    // Delete in reverse foreign key order to avoid constraint violations
-    const tables = [
-      'chat_messages',
-      'chat_conversations',
-      'case_facts',
-      'user_facts',
-      'actions',
-      'timeline_events',
-      'notes',
-      'evidence',
-      'legal_issues',
-      'cases',
-      'consents', // Phase 1
-      'sessions', // Phase 1
-      'user_profile',
-      'audit_logs',
-      'error_logs',
-      // Note: users table deleted last (has foreign keys from many tables)
-      'users', // Phase 1
-    ];
-
-    this.db.exec('PRAGMA foreign_keys = OFF');
-
-    for (const table of tables) {
-      try {
-        this.db.prepare(`DELETE FROM ${table}`).run();
-      } catch (_error) {
-        // Table might not exist yet, ignore
-      }
-    }
-
-    this.db.exec('PRAGMA foreign_keys = ON');
+  getDb(): Database.Database | null {
+    return this.db;
   }
-}
-
-/**
- * Create a test database helper instance
- */
-export function createTestDatabase(): TestDatabaseHelper {
-  return new TestDatabaseHelper();
-}
-
-/**
- * Setup a test database (simple async API)
- * Returns the database file path for use in tests
- */
-export async function setupTestDatabase(): Promise<string> {
-  const helper = new TestDatabaseHelper();
-  helper.initialize();
-
-  // Return a unique identifier for this test database
-  // For in-memory databases, we'll return a dummy path
-  return ':memory:';
-}
-
-/**
- * Cleanup a test database (simple async API)
- */
-export async function cleanupTestDatabase(_dbPath: string): Promise<void> {
-  // For in-memory databases, cleanup is handled by closure
-  // This function exists for API compatibility
-  return Promise.resolve();
-}
-
-/**
- * Get a test audit logger instance
- * Creates an AuditLogger using an in-memory database
- */
- 
-export function getTestAuditLogger(_dbPath?: string): AuditLogger {
-  // Import AuditLogger dynamically to avoid circular dependencies
-  const helper = new TestDatabaseHelper();
-  const db = helper.initialize();
-
-  const { AuditLogger } = require('../services/AuditLogger'); // eslint-disable-line @typescript-eslint/no-require-imports
-  const auditLogger = new AuditLogger(db);
-
-  // Add a test-only method to get all logs
-  auditLogger.getAllLogs = () => {
-    return db.prepare('SELECT * FROM audit_logs ORDER BY created_at').all();
-  };
-
-  return auditLogger;
 }

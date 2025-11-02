@@ -79,7 +79,7 @@ export class AutoUpdater {
     // Just log that we're configured
     this.updater.logger = this.updater.logger || console;
 
-    console.log('[AutoUpdater] Configured for', this.getUpdateSource());
+    console.warn('[AutoUpdater] Configured for', this.getUpdateSource());
   }
 
   /**
@@ -87,152 +87,135 @@ export class AutoUpdater {
    */
   private registerListeners(): void {
     this.updater.on('checking-for-update', () => {
-      console.log('[AutoUpdater] Checking for updates...');
+      console.warn('[AutoUpdater] Checking for updates...');
       this.status.checking = true;
       this.notifyWindow('app-update:checking');
     });
 
     this.updater.on('update-available', (info: UpdateInfo) => {
-      console.log('[AutoUpdater] Update available:', info.version);
-      this.status.checking = false;
+      console.warn('[AutoUpdater] Update available:', info.version);
       this.status.updateAvailable = true;
       this.status.latestVersion = info.version;
-      this.notifyWindow('app-update:available', { version: info.version });
+      this.notifyWindow('app-update:available', info);
     });
 
     this.updater.on('update-not-available', (info: UpdateInfo) => {
-      console.log('[AutoUpdater] No update available. Current version:', info.version);
+      console.warn('[AutoUpdater] No update available:', info.version);
       this.status.checking = false;
-      this.status.updateAvailable = false;
-      this.notifyWindow('app-update:not-available');
+      this.notifyWindow('app-update:not-available', info);
     });
 
     this.updater.on('download-progress', (progress: ProgressInfo) => {
+      const percent = Math.round((progress.transferred / progress.total) * 100);
+      this.status.downloadProgress = percent;
       this.status.downloading = true;
-      this.status.downloadProgress = progress.percent;
-
-      console.log(`[AutoUpdater] Download progress: ${progress.percent.toFixed(2)}%`);
-
-      // Notify callbacks
-      for (const callback of this.downloadProgressCallbacks) {
-        callback(progress.percent);
-      }
-
-      // Notify window
-      this.notifyWindow('app-update:download-progress', {
-        percent: progress.percent,
-        bytesPerSecond: progress.bytesPerSecond,
-        transferred: progress.transferred,
-        total: progress.total,
-      });
+      this.notifyWindow('app-update:download-progress', progress);
+      
+      // Notify any registered callbacks
+      this.downloadProgressCallbacks.forEach(callback => callback(percent));
     });
 
     this.updater.on('update-downloaded', (info: UpdateInfo) => {
-      console.log('[AutoUpdater] Update downloaded:', info.version);
+      console.warn('[AutoUpdater] Update downloaded:', info.version);
       this.status.downloading = false;
       this.status.updateDownloaded = true;
-      this.notifyWindow('app-update:downloaded', { version: info.version });
+      this.status.latestVersion = info.version;
+      this.notifyWindow('app-update:downloaded', info);
     });
 
     this.updater.on('error', (error: Error) => {
-      console.error('[AutoUpdater] Error:', error);
+      console.error('[AutoUpdater] Update error:', error);
       this.status.checking = false;
       this.status.downloading = false;
       this.status.error = error.message;
-      this.notifyWindow('app-update:error', { error: error.message });
+      this.notifyWindow('app-update:error', error);
     });
   }
 
   /**
-   * Initialize the auto-updater
+   * Get the update source information
    */
-  public async initialize(): Promise<void> {
-    if (!this.isEnabled()) {
-      console.log('[AutoUpdater] Disabled in development mode');
-      return;
+  private getUpdateSource(): string {
+    if (this.config.updateServerUrl) {
+      return `custom server ${this.config.updateServerUrl}`;
     }
+    return 'default server';
+  }
 
-    if (this.config.checkOnStartup) {
-      // Check for updates on startup (but don't auto-download)
-      await this.updater.checkForUpdatesAndNotify();
+  /**
+   * Notify the main window of update events
+   */
+  private notifyWindow(channel: string, data?: any): void {
+    if (this.mainWindow && !this.mainWindow.isDestroyed()) {
+      this.mainWindow.webContents.send(channel, data);
     }
   }
 
   /**
-   * Manually check for updates
+   * Check for updates manually
    */
   public async checkForUpdates(): Promise<UpdateCheckResult> {
     try {
-      console.log('[AutoUpdater] Manual update check requested');
-
+      this.status.checking = true;
+      this.status.error = undefined;
+      
       const result = await this.updater.checkForUpdates();
-
-      if (result && result.updateInfo) {
-        // Update internal status
+      
+      if (result.updateInfo) {
         this.status.updateAvailable = true;
         this.status.latestVersion = result.updateInfo.version;
-
-        return {
-          updateAvailable: true,
-          currentVersion: this.status.currentVersion,
-          latestVersion: result.updateInfo.version,
-        };
+      } else {
+        this.status.updateAvailable = false;
       }
-
+      
+      this.status.checking = false;
+      
       return {
-        updateAvailable: false,
+        updateAvailable: this.status.updateAvailable,
         currentVersion: this.status.currentVersion,
+        latestVersion: this.status.latestVersion,
       };
     } catch (error) {
-      console.error('[AutoUpdater] Check failed:', error);
+      this.status.checking = false;
+      this.status.error = (error as Error).message;
+      
       return {
         updateAvailable: false,
         currentVersion: this.status.currentVersion,
-        error: error instanceof Error ? error.message : String(error),
+        error: (error as Error).message,
       };
     }
   }
 
   /**
-   * Download the available update
+   * Download the update
    */
   public async downloadUpdate(): Promise<UpdateDownloadResult> {
     try {
-      console.log('[AutoUpdater] Starting update download...');
+      this.status.downloading = true;
+      this.status.error = undefined;
+      
       await this.updater.downloadUpdate();
-
+      
+      this.status.downloading = false;
       return { success: true };
     } catch (error) {
-      console.error('[AutoUpdater] Download failed:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : String(error),
-      };
+      this.status.downloading = false;
+      this.status.error = (error as Error).message;
+      
+      return { success: false, error: (error as Error).message };
     }
   }
 
   /**
-   * Quit and install the downloaded update
+   * Quit and install the update
    */
   public quitAndInstall(): void {
-    console.log('[AutoUpdater] Quitting and installing update...');
-
-    // Notify window before quitting
-    this.notifyWindow('app-update:installing');
-
-    // Quit and install (silent, force restart)
-    this.updater.quitAndInstall(true, true);
+    this.updater.quitAndInstall();
   }
 
   /**
-   * Set the main window for notifications
-   */
-  public setMainWindow(window: BrowserWindow): void {
-    this.mainWindow = window;
-  }
-
-  /**
-   * Register callback for download progress
+   * Subscribe to download progress updates
    */
   public onDownloadProgress(callback: (percent: number) => void): void {
     this.downloadProgressCallbacks.push(callback);
@@ -243,33 +226,5 @@ export class AutoUpdater {
    */
   public getStatus(): UpdateStatus {
     return { ...this.status };
-  }
-
-  /**
-   * Get update source (github, custom, etc.)
-   */
-  public getUpdateSource(): string {
-    return this.config.updateServerUrl ? 'custom' : 'github';
-  }
-
-  /**
-   * Check if auto-updater is enabled (only in production)
-   */
-  public isEnabled(): boolean {
-    return process.env.NODE_ENV === 'production';
-  }
-
-  /**
-   * Notify main window of update events
-   */
-  private notifyWindow(channel: string, data?: unknown): void {
-    if (this.mainWindow && !this.mainWindow.isDestroyed()) {
-      // Only send data if provided
-      if (data !== undefined) {
-        this.mainWindow.webContents.send(channel, data);
-      } else {
-        this.mainWindow.webContents.send(channel);
-      }
-    }
   }
 }

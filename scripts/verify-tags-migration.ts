@@ -26,7 +26,7 @@ if (tagsTable) {
 
   // Get column info
   const columns = db.prepare('PRAGMA table_info(tags)').all();
-  console.log('  Columns:', columns.map((c: any) => c.name).join(', '));
+  console.log('  Columns:', columns.map((c) => c.name).join(', '));
 } else {
   console.log('✗ Tags table NOT found');
 }
@@ -42,7 +42,7 @@ if (evidenceTagsTable) {
 
   // Get column info
   const columns = db.prepare('PRAGMA table_info(evidence_tags)').all();
-  console.log('  Columns:', columns.map((c: any) => c.name).join(', '));
+  console.log('  Columns:', columns.map((c) => c.name).join(', '));
 } else {
   console.log('✗ Evidence_tags table NOT found');
 }
@@ -57,7 +57,7 @@ const indexes = db.prepare(`
 `).all();
 
 console.log('\n✓ Indexes created:', indexes.length);
-indexes.forEach((idx: any) => {
+indexes.forEach((idx) => {
   console.log('  -', idx.name);
 });
 

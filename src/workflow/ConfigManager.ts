@@ -102,7 +102,7 @@ export class ConfigManager {
    */
   async markIndexed(documentCount: number, collectionName: string): Promise<void> {
     const config = await this.loadConfig();
-    if (!config) throw new Error('Config not found');
+    if (!config) {throw new Error('Config not found');}
 
     config.indexed = true;
     config.indexedAt = new Date().toISOString();

@@ -92,5 +92,3 @@ if (case16) {
 }
 
 db.close();
-
-console.warn('✅ Diagnostic complete');

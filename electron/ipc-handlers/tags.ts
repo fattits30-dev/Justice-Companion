@@ -88,10 +88,17 @@ export function setupTagHandlers(): void {
    */
   ipcMain.handle(
     'tags:update',
-    async (_event: IpcMainInvokeEvent, id: string, input: UpdateTagInput, sessionId: string): Promise<IPCResponse> => {
+    async (_event: IpcMainInvokeEvent, input: UpdateTagInput, sessionId: string): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (_userId) => {
         try {
           // Validate input
+          if (!input.id) {
+            return {
+              success: false,
+              error: 'Tag ID is required',
+            };
+          }
+
           if (!input.name || input.name.trim().length === 0) {
             return {
               success: false,
@@ -106,7 +113,7 @@ export function setupTagHandlers(): void {
             };
           }
 
-          const tag = tagService.updateTag(_userId, id, input);
+          const tag = tagService.updateTag(_userId, input);
 
           return {
             success: true,
@@ -128,10 +135,10 @@ export function setupTagHandlers(): void {
    */
   ipcMain.handle(
     'tags:delete',
-    async (_event: IpcMainInvokeEvent, id: string, sessionId: string): Promise<IPCResponse> => {
+    async (_event: IpcMainInvokeEvent, tagId: string, sessionId: string): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (_userId) => {
         try {
-          await tagService.deleteTag(_userId, id);
+          await tagService.deleteTag(_userId, tagId);
 
           return {
             success: true,
@@ -152,10 +159,15 @@ export function setupTagHandlers(): void {
    */
   ipcMain.handle(
     'tags:tagEvidence',
-    async (_event: IpcMainInvokeEvent, tagId: string, evidenceId: string, sessionId: string): Promise<IPCResponse> => {
+    async (
+      _event: IpcMainInvokeEvent,
+      evidenceId: string,
+      tagIds: string[],
+      sessionId: string
+    ): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (_userId) => {
         try {
-          await tagService.tagEvidence(_userId, tagId, evidenceId);
+          await tagService.tagEvidence(_userId, evidenceId, tagIds);
 
           return {
             success: true,
@@ -176,10 +188,15 @@ export function setupTagHandlers(): void {
    */
   ipcMain.handle(
     'tags:untagEvidence',
-    async (_event: IpcMainInvokeEvent, tagId: string, evidenceId: string, sessionId: string): Promise<IPCResponse> => {
+    async (
+      _event: IpcMainInvokeEvent,
+      evidenceId: string,
+      tagIds: string[],
+      sessionId: string
+    ): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (_userId) => {
         try {
-          await tagService.untagEvidence(_userId, tagId, evidenceId);
+          await tagService.untagEvidence(_userId, evidenceId, tagIds);
 
           return {
             success: true,
@@ -221,24 +238,24 @@ export function setupTagHandlers(): void {
   );
 
   /**
-   * Search by tags
+   * Search evidence by tags
    */
   ipcMain.handle(
     'tags:searchByTags',
     async (_event: IpcMainInvokeEvent, tagIds: string[], sessionId: string): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (_userId) => {
         try {
-          const results = tagService.searchByTags(_userId, tagIds);
+          const evidence = tagService.searchEvidenceByTags(_userId, tagIds);
 
           return {
             success: true,
-            data: results,
+            data: evidence,
           };
         } catch (error: unknown) {
           console.error('[IPC] tags:searchByTags error:', error);
           return {
             success: false,
-            error: (error as Error).message || 'Failed to search by tags',
+            error: (error as Error).message || 'Failed to search evidence by tags',
           };
         }
       });

@@ -64,7 +64,9 @@ console.log('\n## File System\n');
           if (s.isFile()) { size += s.size; count++; }
           else if (s.isDirectory() && !f.startsWith('.') && f !== 'node_modules') walk(p);
         });
-      } catch {}
+      } catch (error) {
+        // Silently handle directory read errors
+      }
     };
     walk(dir);
     console.log(`${dir}: ${count} files, ${(size/1024/1024).toFixed(2)} MB`);
@@ -75,9 +77,3 @@ console.log('\n## File System\n');
 console.log('\n## Performance Score: 53/100\n');
 console.log('🔴 Critical Issues:');
 console.log('- IPC lazy loading (50-100ms overhead)');
-console.log('- Missing DB indexes');
-console.log('🟡 Major Issues:');
-console.log('- No React virtualization');
-console.log('- 4.5GB node-llama-cpp dependency');
-
-console.log('\n=== END ===');

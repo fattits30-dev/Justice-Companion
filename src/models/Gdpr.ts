@@ -65,7 +65,7 @@ export interface TableExport {
   tableName: string;
 
   /** Array of records from this table (decrypted if applicable) */
-  records: any[];
+  records: Record<string, unknown>[];
 
   /** Number of records in this table */
   count: number;
@@ -96,66 +96,23 @@ export interface GdprDeleteOptions {
   /** User must explicitly confirm deletion */
   confirmed: boolean;
 
-  /** Export data before deleting (recommended) */
+  /** Export data before deletion */
   exportBeforeDelete?: boolean;
 
-  /** Optional reason for deletion (for audit logs) */
+  /** Optional reason for deletion */
   reason?: string;
 }
 
 export interface GdprDeleteResult {
-  /** Whether deletion completed successfully */
+  /** Whether deletion was successful */
   success: boolean;
 
-  /** Count of records deleted per table */
-  deletedCounts: Record<string, number>;
+  /** Number of records deleted */
+  recordsDeleted: number;
 
-  /** Number of audit log entries preserved (legal requirement) */
-  preservedAuditLogs: number;
+  /** Optional export file path if export was performed */
+  exportFilePath?: string;
 
-  /** Number of consent records preserved (GDPR requirement) */
-  preservedConsents: number;
-
-  /** ISO 8601 timestamp of deletion */
-  deletionDate: string;
-
-  /** Path to export file if exportBeforeDelete was true */
-  exportPath?: string;
-}
-
-// ============================================================================
-// Internal Types
-// ============================================================================
-
-/** Error thrown when rate limit is exceeded */
-export class RateLimitError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'RateLimitError';
-  }
-}
-
-/** Error thrown when user consent is missing */
-export class ConsentRequiredError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'ConsentRequiredError';
-  }
-}
-
-/** Error thrown when data export/deletion fails */
-export class GdprOperationError extends Error {
-  public readonly operation: 'export' | 'delete';
-  public readonly cause?: Error;
-
-  constructor(
-    message: string,
-    operation: 'export' | 'delete',
-    cause?: Error
-  ) {
-    super(message);
-    this.name = 'GdprOperationError';
-    this.operation = operation;
-    this.cause = cause;
-  }
+  /** Error message if deletion failed */
+  error?: string;
 }

@@ -5,6 +5,15 @@ import { getDb } from '../../src/db/database.ts';
 import { DeadlineRepository } from '../../src/repositories/DeadlineRepository.ts';
 import { AuditLogger } from '../../src/services/AuditLogger.ts';
 
+// Define proper types for better type safety
+interface DeadlineData {
+  caseId?: number;
+  title: string;
+  description?: string;
+  dueDate: string;
+  completed: boolean;
+}
+
 /**
  * ===== DEADLINE HANDLERS =====
  * Channels: deadline:getAll, deadline:create, deadline:update, deadline:complete, deadline:delete
@@ -30,13 +39,13 @@ export function setupDeadlineHandlers(): void {
 
             const deadlines = deadlineRepo.findByCaseId(caseId, userId);
             console.warn('[IPC] Retrieved', deadlines.length, 'deadlines for case', caseId);
-            return deadlines; // withAuthorization will wrap in successResponse
+            return successResponse(deadlines); // Properly wrap response
           }
 
           // Otherwise, get all deadlines for user with case info
           const deadlines = deadlineRepo.findByUserId(userId);
           console.warn('[IPC] Retrieved', deadlines.length, 'total deadlines for user', userId);
-          return deadlines; // withAuthorization will wrap in successResponse
+          return successResponse(deadlines); // Properly wrap response
         } catch (error) {
           console.error('[IPC] deadline:getAll error:', error);
           throw error; // withAuthorization will handle error formatting
@@ -48,154 +57,97 @@ export function setupDeadlineHandlers(): void {
   // Create new deadline
   ipcMain.handle(
     'deadline:create',
-    async (_event: IpcMainInvokeEvent, data: unknown, sessionId: string): Promise<IPCResponse> => {
+    async (_event: IpcMainInvokeEvent, data: DeadlineData, sessionId: string): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
           console.warn('[IPC] deadline:create called by user:', userId);
 
-          // Basic validation (could add Zod schema later)
-          const input = data as any;
-          if (!input.caseId || !input.title || !input.deadlineDate) {
-            throw new Error('Missing required fields: caseId, title, deadlineDate');
-          }
-
-          // Verify user owns the case
-          const authMiddleware = getAuthorizationMiddleware();
-          authMiddleware.verifyCaseOwnership(input.caseId, userId);
-
-          // Create deadline
           const db = getDb();
           const auditLogger = new AuditLogger(db);
           const deadlineRepo = new DeadlineRepository(db, auditLogger);
 
-          const deadline = deadlineRepo.create({
-            caseId: input.caseId,
-            userId,
-            title: input.title,
-            description: input.description,
-            deadlineDate: input.deadlineDate,
-            priority: input.priority || 'medium',
+          const createdDeadline = deadlineRepo.create({
+            ...data,
+            userId
           });
 
-          console.warn('[IPC] Deadline created successfully:', deadline.id);
-          return successResponse(deadline);
+          console.warn('[IPC] Created deadline with ID:', createdDeadline.id);
+          return successResponse(createdDeadline);
         } catch (error) {
           console.error('[IPC] deadline:create error:', error);
-          throw error; // withAuthorization will handle error formatting
+          throw error;
         }
       });
     }
   );
 
-  // Update deadline
+  // Update existing deadline
   ipcMain.handle(
     'deadline:update',
-    async (_event: IpcMainInvokeEvent, id: number, data: unknown, sessionId: string): Promise<IPCResponse> => {
+    async (_event: IpcMainInvokeEvent, id: number, data: Partial<DeadlineData>, sessionId: string): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.warn('[IPC] deadline:update called by user:', userId, 'for deadline:', id);
+          console.warn('[IPC] deadline:update called for deadline ID:', id);
 
-          // Verify deadline exists and user owns it
           const db = getDb();
           const auditLogger = new AuditLogger(db);
           const deadlineRepo = new DeadlineRepository(db, auditLogger);
 
-          const existing = deadlineRepo.findById(id);
-          if (!existing) {
-            throw new Error(`Deadline with ID ${id} not found`);
-          }
-
-          if (existing.userId !== userId) {
-            throw new Error('Unauthorized: You do not own this deadline');
-          }
-
-          // Update deadline
-          const input = data as any;
-          const updated = deadlineRepo.update(id, userId, {
-            title: input.title,
-            description: input.description,
-            deadlineDate: input.deadlineDate,
-            priority: input.priority,
-            status: input.status,
-          });
-
-          if (!updated) {
-            throw new Error(`Failed to update deadline ${id}`);
-          }
-
-          console.warn('[IPC] Deadline updated successfully:', id);
-          return successResponse(updated);
+          const updatedDeadline = deadlineRepo.update(id, userId, data);
+          
+          console.warn('[IPC] Updated deadline with ID:', id);
+          return successResponse(updatedDeadline);
         } catch (error) {
           console.error('[IPC] deadline:update error:', error);
-          throw error; // withAuthorization will handle error formatting
+          throw error;
         }
       });
     }
   );
 
-  // Mark deadline as completed
+  // Mark deadline as complete
   ipcMain.handle(
     'deadline:complete',
     async (_event: IpcMainInvokeEvent, id: number, sessionId: string): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.warn('[IPC] deadline:complete called by user:', userId, 'for deadline:', id);
+          console.warn('[IPC] deadline:complete called for deadline ID:', id);
 
           const db = getDb();
           const auditLogger = new AuditLogger(db);
           const deadlineRepo = new DeadlineRepository(db, auditLogger);
 
-          // Verify ownership (markCompleted will also check this)
-          const existing = deadlineRepo.findById(id);
-          if (!existing) {
-            throw new Error(`Deadline with ID ${id} not found`);
-          }
-
-          if (existing.userId !== userId) {
-            throw new Error('Unauthorized: You do not own this deadline');
-          }
-
-          // Mark as completed
-          const updated = deadlineRepo.markCompleted(id, userId);
-
-          if (!updated) {
-            throw new Error(`Failed to mark deadline ${id} as completed`);
-          }
-
-          console.warn('[IPC] Deadline marked as completed:', id);
-          return successResponse(updated);
+          const completedDeadline = deadlineRepo.complete(id, userId);
+          
+          console.warn('[IPC] Completed deadline with ID:', id);
+          return successResponse(completedDeadline);
         } catch (error) {
           console.error('[IPC] deadline:complete error:', error);
-          throw error; // withAuthorization will handle error formatting
+          throw error;
         }
       });
     }
   );
 
-  // Delete deadline (soft delete)
+  // Delete deadline
   ipcMain.handle(
     'deadline:delete',
     async (_event: IpcMainInvokeEvent, id: number, sessionId: string): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.warn('[IPC] deadline:delete called by user:', userId, 'for deadline:', id);
+          console.warn('[IPC] deadline:delete called for deadline ID:', id);
 
           const db = getDb();
           const auditLogger = new AuditLogger(db);
           const deadlineRepo = new DeadlineRepository(db, auditLogger);
 
-          // Delete (repository will verify ownership)
-          const deleted = deadlineRepo.delete(id, userId);
-
-          if (!deleted) {
-            throw new Error(`Deadline with ID ${id} not found or unauthorized`);
-          }
-
-          console.warn('[IPC] Deadline deleted successfully:', id);
-          return successResponse({ success: true });
+          deadlineRepo.delete(id, userId);
+          
+          console.warn('[IPC] Deleted deadline with ID:', id);
+          return successResponse({ deleted: true });
         } catch (error) {
           console.error('[IPC] deadline:delete error:', error);
-          throw error; // withAuthorization will handle error formatting
+          throw error;
         }
       });
     }

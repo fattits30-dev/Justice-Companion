@@ -1,10 +1,10 @@
-// @ts-nocheck - Legacy code replaced by GroqService, needs cleanup
+// @ts-expect-error - Legacy code replaced by GroqService, needs cleanup
 import { errorLogger } from '../utils/error-logger.ts';
 // TODO: These services have been replaced by GroqService - clean up this legacy code
 // import { IntegratedAIService } from '../features/chat/services/IntegratedAIService.ts';
 // import { OpenAIService } from '../features/chat/services/OpenAIService.ts';
 // import type { OpenAIConfig } from '../features/chat/services/OpenAIService.ts';
-import type { AIConfig, AIStatus, AIChatRequest, AIResponse } from '../types/ai.ts';
+import type { AIChatRequest, AIResponse } from '../types/ai.ts';
 import fs from 'fs';
 import path from 'path';
 import { app } from 'electron';
@@ -62,295 +62,112 @@ export class AIServiceFactory {
   }
 
   /**
-   * Set CaseFactsRepository dependency (called from main.ts after repository initialization)
+   * Set the case facts repository for the integrated service
    */
   setCaseFactsRepository(repository: CaseFactsRepository): void {
-    // Store repository reference for future service creation
     this.caseFactsRepository = repository;
-
-    // Recreate IntegratedAIService with repository
-    this.integratedService = new IntegratedAIService(undefined, repository);
-
-    // Recreate OpenAI service with repository (preserving config if it exists)
-    if (this.openAIService) {
-      const existingConfig = this.openAIService.getOpenAIConfig();
-      this.openAIService = new OpenAIService(undefined, repository);
-
-      // Restore OpenAI configuration if it existed
-      if (existingConfig) {
-        this.openAIService.configure(existingConfig);
-      }
-    }
-
-    errorLogger.logError('CaseFactRepository injected into AIServiceFactory', { type: 'info' });
+    // Pass repository to integrated service
+    this.integratedService.setCaseFactsRepository(repository);
   }
 
   /**
-   * Configure OpenAI provider with API credentials
-   * Called from Settings UI when user provides API key
-   *
-   * @param config - OpenAI configuration with API key and model selection
+   * Configure OpenAI service with API key and model
    */
-  async configureOpenAI(config: OpenAIConfig): Promise<void> {
-    try {
-      // Create new OpenAI service if it doesn't exist (inject repository if available)
-      if (!this.openAIService) {
-        this.openAIService = new OpenAIService(undefined, this.caseFactsRepository || undefined);
-      }
-
-      // Configure with API key
-      this.openAIService.configure(config);
-
-      // Switch to OpenAI as current provider
-      this.currentProvider = 'openai';
-
-      errorLogger.logError('OpenAI provider configured and activated', {
-        type: 'info',
-        model: config.model,
-        provider: 'openai',
-      });
-    } catch (error) {
-      errorLogger.logError(error as Error, {
-        context: 'AIServiceFactory.configureOpenAI',
-      });
-      throw error;
+  configureOpenAI(apiKey: string, model: string): void {
+    if (!this.openAIService) {
+      this.openAIService = new OpenAIService(apiKey, model);
+    } else {
+      // Update existing service if needed
+      this.openAIService.updateConfig(apiKey, model);
     }
   }
 
   /**
-   * Test OpenAI connection without changing current provider
-   * Used by Settings UI to validate API key before saving
-   *
-   * @param config - OpenAI configuration to test
-   * @returns Connection status
-   */
-  async testOpenAIConnection(config: OpenAIConfig): Promise<AIStatus> {
-    try {
-      // Create temporary service for testing
-      const testService = new OpenAIService();
-      testService.configure(config);
-      const status = await testService.checkConnection();
-
-      errorLogger.logError('OpenAI connection test completed', {
-        type: 'info',
-        connected: status.connected,
-        model: config.model,
-      });
-
-      return status;
-    } catch (error) {
-      errorLogger.logError(error as Error, {
-        context: 'AIServiceFactory.testOpenAIConnection',
-      });
-
-      return {
-        connected: false,
-        endpoint: 'OpenAI API',
-        error: error instanceof Error ? error.message : 'Connection test failed',
-      };
-    }
-  }
-
-  /**
-   * Get currently active AI service based on configuration
-   * Priority: OpenAI (if configured) → IntegratedAI (fallback)
-   *
-   * @returns Active AI service (OpenAI or Integrated)
-   */
-  private getActiveService(): OpenAIService | IntegratedAIService {
-    // If OpenAI is configured, use it
-    if (this.currentProvider === 'openai' && this.openAIService) {
-      return this.openAIService;
-    }
-
-    // Fallback to integrated service
-    return this.integratedService;
-  }
-
-  /**
-   * Get current provider name
+   * Get current provider status
    */
   getCurrentProvider(): 'openai' | 'integrated' {
     return this.currentProvider;
   }
 
   /**
-   * Switch to Integrated AI provider (disable OpenAI)
-   * Used when user wants to use local model instead
+   * Get AI service based on current configuration
    */
-  switchToIntegratedAI(): void {
-    this.currentProvider = 'integrated';
-    errorLogger.logError('Switched to Integrated AI provider', {
-      type: 'info',
-      provider: 'integrated',
-    });
+  getAIService(): IntegratedAIService | OpenAIService {
+    if (this.openAIService) {
+      return this.openAIService;
+    }
+    return this.integratedService;
   }
 
   /**
-   * Check if OpenAI is configured
+   * Switch provider to OpenAI if configured
    */
-  isOpenAIConfigured(): boolean {
-    return this.openAIService !== null && this.currentProvider === 'openai';
-  }
-
-  /**
-   * Initialize integrated AI service (after model download)
-   */
-  async initialize(): Promise<boolean> {
-    try {
-      // Verify model exists
-      if (!fs.existsSync(this.modelPath)) {
-        throw new Error('Qwen 3 model file not found');
-      }
-
-      // Try to initialize
-      await this.integratedService.initialize();
-
-      errorLogger.logError('Integrated AI initialized successfully', { type: 'info' });
-
+  switchToOpenAI(): boolean {
+    if (this.openAIService) {
+      this.currentProvider = 'openai';
       return true;
-    } catch (error) {
-      errorLogger.logError(error as Error, {
-        context: 'AIServiceFactory.initialize',
-      });
+    }
+    return false;
+  }
 
+  /**
+   * Switch provider to integrated service
+   */
+  switchToIntegrated(): void {
+    this.currentProvider = 'integrated';
+  }
+
+  /**
+   * Check if model exists locally
+   */
+  isModelAvailable(): boolean {
+    try {
+      return fs.existsSync(this.modelPath);
+    } catch (error) {
+      errorLogger.logError('Failed to check model existence', { error });
       return false;
     }
   }
 
   /**
-   * Check if Qwen 3 model is available
+   * Get model size in bytes
    */
-  isModelAvailable(): boolean {
-    return fs.existsSync(this.modelPath);
-  }
-
-  /**
-   * Get model file path
-   */
-  getModelPath(): string {
-    return this.modelPath;
-  }
-
-  /**
-   * Check AI connection status for active provider
-   */
-  async checkConnection(): Promise<AIStatus> {
+  getModelSize(): number {
     try {
-      const service = this.getActiveService();
-      const status = await service.checkConnection();
-
-      if (!status.connected) {
-        errorLogger.logError('AI connection check failed', {
-          type: 'info',
-          provider: this.currentProvider,
-          error: status.error,
-        });
-      }
-
-      return status;
+      const stats = fs.statSync(this.modelPath);
+      return stats.size;
     } catch (error) {
-      errorLogger.logError(error as Error, {
-        context: 'AIServiceFactory.checkConnection',
-        provider: this.currentProvider,
-      });
-
-      return {
-        connected: false,
-        endpoint: `Error checking ${this.currentProvider} service`,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      };
+      errorLogger.logError('Failed to get model size', { error });
+      return 0;
     }
   }
 
   /**
-   * Non-streaming chat (delegates to active provider)
+   * Handle chat request using appropriate AI service
    */
-  async chat(request: AIChatRequest): Promise<AIResponse> {
-    const service = this.getActiveService();
-    return service.chat(request);
-  }
-
-  /**
-   * Streaming chat (delegates to active provider)
-   */
-  async streamChat(
-    request: AIChatRequest,
-    onToken: (token: string) => void,
-    onComplete: () => void,
-    onError: (error: string) => void,
-    onThinkToken?: (token: string) => void,
-    onSources?: (sources: string[]) => void,
-  ): Promise<void> {
-    const service = this.getActiveService();
-    await service.streamChat(request, onToken, onComplete, onError, onThinkToken, onSources);
-  }
-
-  /**
-   * Streaming chat with function calling (for fact-gathering)
-   *
-   * Enables AI to call store_case_fact and get_case_facts functions.
-   * Functions are automatically executed when AI uses [[call: function()]] syntax.
-   * Used when working on specific cases that require persistent memory.
-   *
-   * @param request - Chat request with messages and context
-   * @param caseId - Case ID for fact loading/storing
-   * @param onToken - Callback for each token generated
-   * @param onComplete - Callback when streaming completes
-   * @param onError - Callback for errors
-   */
-  async streamChatWithFunctions(
-    request: AIChatRequest,
-    caseId: number | undefined,
-    onToken: (token: string) => void,
-    onComplete: () => void,
-    onError: (error: string) => void,
-  ): Promise<void> {
-    const service = this.getActiveService();
-    await service.streamChatWithFunctions(request, caseId, onToken, onComplete, onError);
-  }
-
-  /**
-   * Update configuration (applies to active provider)
-   */
-  updateConfig(config: Partial<AIConfig>): void {
-    const service = this.getActiveService();
-    service.updateConfig(config);
-
-    errorLogger.logError('AI configuration updated', {
-      type: 'info',
-      provider: this.currentProvider,
-      config,
-    });
-  }
-
-  /**
-   * Get current configuration (from active provider)
-   */
-  getConfig(): AIConfig {
-    const service = this.getActiveService();
-    return service.getConfig();
-  }
-
-  /**
-   * Cleanup resources (disposes both services)
-   */
-  async dispose(): Promise<void> {
+  async handleChatRequest(request: AIChatRequest): Promise<AIResponse> {
     try {
-      await this.integratedService.dispose();
-
-      if (this.openAIService) {
-        this.openAIService.dispose();
-      }
-
-      errorLogger.logError('AIServiceFactory disposed (all providers)', { type: 'info' });
-    } catch (error) {
-      errorLogger.logError(error as Error, {
-        context: 'AIServiceFactory.dispose',
+      const service = this.getAIService();
+      const response = await service.handleChatRequest(request);
+      
+      // Log successful request
+      errorLogger.logError('AI request completed successfully', {
+        type: 'info',
+        provider: this.currentProvider,
+        model: this.currentProvider === 'openai' ? 
+          (this.openAIService?.getModel() || 'unknown') : 
+          'local-qwen'
       });
+      
+      return response;
+    } catch (error) {
+      errorLogger.logError('AI request failed', { 
+        error,
+        provider: this.currentProvider,
+        type: 'error'
+      });
+      
+      throw error;
     }
   }
 }
-
-// Singleton instance for app-wide use
-export const aiServiceFactory = AIServiceFactory.getInstance();

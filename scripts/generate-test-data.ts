@@ -80,46 +80,63 @@ async function generateTestData() {
 
     // Family Law Case
     await createCase({
-      title: 'Child Custody Arrangement',
+      title: 'Child Custody Dispute',
       caseType: 'family',
       description:
-        "Establishing fair custody arrangement after separation. Focus on child's best interests.",
+        'Disagreement over custody arrangements. Both parents have equal rights but cannot agree on schedule.',
       status: 'active',
     });
 
-    // Civil Law Case
+    // Immigration Law Cases
     await createCase({
-      title: 'Contract Breach - Freelance Work',
+      title: 'Asylum Application - Refugee Status',
+      caseType: 'immigration',
+      description:
+        'Seeking asylum due to political persecution in home country. Documentation of threats provided.',
+      status: 'active',
+    });
+
+    await createCase({
+      title: 'Green Card Application - Family Sponsorship',
+      caseType: 'immigration',
+      description:
+        'Petition for family-based green card. Sponsor has been approved and documents submitted.',
+      status: 'active',
+    });
+
+    // Criminal Law Cases
+    await createCase({
+      title: 'Traffic Violation - DUI Charge',
+      caseType: 'criminal',
+      description:
+        'Arrested for driving under influence. Client has prior offense history and is facing enhanced penalties.',
+      status: 'active',
+    });
+
+    // Civil Law Cases
+    await createCase({
+      title: 'Personal Injury - Car Accident',
       caseType: 'civil',
       description:
-        'Client refusing to pay for completed work. Contract clearly outlines payment terms.',
+        'Injured in car accident due to another driver\'s negligence. Seeking compensation for medical bills and lost wages.',
       status: 'active',
     });
 
-    // Closed Cases (for testing closed status)
+    // Other Legal Cases
     await createCase({
-      title: 'Resolved Employment Matter',
-      caseType: 'employment',
-      description: 'Successfully negotiated settlement for unpaid wages.',
-      status: 'closed',
+      title: 'Contract Dispute - Service Agreement',
+      caseType: 'other',
+      description:
+        'Dispute over service agreement terms. Client paid upfront but services were not delivered as promised.',
+      status: 'active',
     });
 
-    await createCase({
-      title: 'Completed Housing Case',
-      caseType: 'housing',
-      description: 'Deposit recovered through alternative dispute resolution.',
-      status: 'closed',
-    });
-
-    console.warn('\n✅ Test data generation complete!');
-    console.warn('📊 Created 8 test cases (6 active, 2 closed)');
-    console.warn('\n💡 Refresh the app to see the test data');
+    console.warn('\n✅ Test data generation completed successfully!');
   } catch (error) {
     console.error('❌ Error generating test data:', error);
-    console.error('\n💡 Make sure the dev server is running: npm run dev');
     process.exit(1);
   }
 }
 
-// Run the script
+// Run the test data generation
 generateTestData();

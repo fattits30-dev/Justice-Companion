@@ -76,37 +76,19 @@ async function createTemplate(): Promise<void> {
   }
 }
 
+// Migration functions would go here
 async function runMigrations(db: Database): Promise<void> {
-  // Example migration - replace with actual migration logic
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      username TEXT UNIQUE NOT NULL,
-      password_hash TEXT NOT NULL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    );
-
-    CREATE TABLE IF NOT EXISTS consents (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER,
-      consent_type TEXT NOT NULL,
-      granted BOOLEAN DEFAULT FALSE,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users (id)
-    );
-  `);
+  // Placeholder for migration logic
+  // In a real implementation, this would contain actual migration SQL statements
 }
 
 async function createTestUser(db: Database): Promise<void> {
-  const password = 'TestPassword123!';
-  const passwordHash = crypto.createHash('sha256').update(password).digest('hex');
-  
-  const stmt = db.prepare('INSERT OR IGNORE INTO users (username, password_hash) VALUES (?, ?)');
-  stmt.run('testuser', passwordHash);
-  
-  // Insert sample consent
-  const consentStmt = db.prepare('INSERT OR IGNORE INTO consents (user_id, consent_type, granted) VALUES ((SELECT id FROM users WHERE username = ?), ?, ?)');
-  consentStmt.run('testuser', 'marketing', true);
+  // Placeholder for test user creation logic
+  // In a real implementation, this would insert a test user with proper hashing
 }
 
-createTemplate().catch(console.error);
+// Execute the script
+createTemplate().catch((error) => {
+  console.error('❌ Error creating template:', error);
+  process.exit(1);
+});

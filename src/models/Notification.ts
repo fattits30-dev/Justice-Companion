@@ -22,7 +22,7 @@ export interface NotificationMetadata {
   daysUntil?: number;
   oldStatus?: string;
   newStatus?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface Notification {

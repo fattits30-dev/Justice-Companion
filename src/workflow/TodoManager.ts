@@ -45,7 +45,7 @@ export class TodoManager {
    */
   async getNextTask(): Promise<WorkflowTask | null> {
     const plan = await this.getPlan();
-    if (!plan) return null;
+    if (!plan) {return null;}
 
     for (const phase of plan.phases) {
       for (const task of phase.tasks) {
@@ -70,7 +70,7 @@ export class TodoManager {
    * Get task by ID
    */
   getTaskById(taskId: string): WorkflowTask | null {
-    if (!this.plan) return null;
+    if (!this.plan) {return null;}
 
     for (const phase of this.plan.phases) {
       for (const task of phase.tasks) {
@@ -88,7 +88,7 @@ export class TodoManager {
    */
   async startTask(taskId: string): Promise<WorkflowTask | null> {
     const task = this.getTaskById(taskId);
-    if (!task) return null;
+    if (!task) {return null;}
 
     task.status = 'in_progress';
     task.startedAt = new Date().toISOString();
@@ -106,7 +106,7 @@ export class TodoManager {
    */
   async completeTask(taskId: string, result?: TaskExecutionResult): Promise<WorkflowTask | null> {
     const task = this.getTaskById(taskId);
-    if (!task) return null;
+    if (!task) {return null;}
 
     task.status = 'completed';
     task.completedAt = new Date().toISOString();
@@ -143,7 +143,7 @@ export class TodoManager {
    */
   async failTask(taskId: string, reason: string, error?: string): Promise<WorkflowTask | null> {
     const task = this.getTaskById(taskId);
-    if (!task) return null;
+    if (!task) {return null;}
 
     task.status = 'failed';
     task.failedAt = new Date().toISOString();
@@ -164,7 +164,7 @@ export class TodoManager {
    */
   async blockTask(taskId: string, reason: string): Promise<WorkflowTask | null> {
     const task = this.getTaskById(taskId);
-    if (!task) return null;
+    if (!task) {return null;}
 
     task.status = 'blocked';
     task.notes = `Blocked: ${reason}`;
@@ -192,7 +192,7 @@ export class TodoManager {
     }
   ): Promise<WorkflowTask> {
     const plan = await this.getPlan();
-    if (!plan) throw new Error('No plan loaded');
+    if (!plan) {throw new Error('No plan loaded');}
 
     // Find or create phase
     let targetPhase = plan.phases.find((p) => p.name === phase);
@@ -248,7 +248,7 @@ export class TodoManager {
     for (const phase of plan.phases) {
       const phaseTasks = showAll ? phase.tasks : phase.tasks.filter((t) => t.status !== 'completed');
 
-      if (phaseTasks.length === 0) continue;
+      if (phaseTasks.length === 0) {continue;}
 
       console.log(`\n📦 ${phase.name}:`);
       if (phase.description) {
@@ -401,7 +401,7 @@ export class TodoManager {
    * Save plan to config
    */
   private async savePlan(): Promise<void> {
-    if (!this.plan) return;
+    if (!this.plan) {return;}
 
     this.plan.updatedAt = new Date().toISOString();
 
@@ -426,7 +426,7 @@ export class TodoManager {
    * Get tasks by status
    */
   getTasksByStatus(status: WorkflowTask['status']): WorkflowTask[] {
-    if (!this.plan) return [];
+    if (!this.plan) {return [];}
 
     return this.plan.phases.flatMap((phase) => phase.tasks).filter((task) => task.status === status);
   }
@@ -435,7 +435,7 @@ export class TodoManager {
    * Get tasks by phase
    */
   getTasksByPhase(phaseName: string): WorkflowTask[] {
-    if (!this.plan) return [];
+    if (!this.plan) {return [];}
 
     const phase = this.plan.phases.find((p) => p.name === phaseName);
     return phase ? phase.tasks : [];

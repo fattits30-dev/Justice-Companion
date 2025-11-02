@@ -87,210 +87,32 @@ export class DeadlineReminderScheduler {
       // Get users with deadline reminders enabled
       const usersWithReminders = this.preferencesRepo.getUsersWithDeadlineReminders();
 
-      if (usersWithReminders.length === 0) {
-        logger.info("No users have deadline reminders enabled");
-        return;
+      // Process each user with reminders enabled
+      for (const user of usersWithReminders) {
+        // Get upcoming deadlines for this user
+        const deadlines = await this.deadlineRepo.getUpcomingDeadlinesForUser(user.id);
+        
+        for (const deadline of deadlines) {
+          // Check if we've already sent a reminder for this deadline
+          const reminderKey = `${user.id}-${deadline.id}`;
+          const lastSent = this.sentReminders.get(reminderKey);
+          
+          // Send reminder if not already sent
+          if (!lastSent) {
+            await this.notificationService.sendDeadlineReminder(
+              user,
+              deadline
+            );
+            
+            // Mark as sent
+            this.sentReminders.set(reminderKey, new Date());
+          }
+        }
       }
-
-      // Check deadlines for each user
-      for (const { userId, reminderDays } of usersWithReminders) {
-        await this.checkUserDeadlines(userId, reminderDays);
-      }
-
-      // Clean up old sent reminder tracking (older than 30 days)
-      this.cleanupOldReminders();
-
+      
       logger.info("Completed deadline check");
     } catch (error) {
-      logger.error("Error checking deadlines", error);
+      logger.error("Error checking deadlines", { error });
     }
-  }
-
-  /**
-   * Check deadlines for a specific user
-   */
-  private async checkUserDeadlines(userId: number, reminderDays: number): Promise<void> {
-    try {
-      // Get upcoming deadlines for this user within their reminder window
-      const upcomingDeadlines = await this.deadlineRepo.getUpcomingForUser(
-        userId,
-        reminderDays
-      );
-
-      if (upcomingDeadlines.length === 0) {
-        return;
-      }
-
-      logger.info(`Found ${upcomingDeadlines.length} upcoming deadlines for user ${userId}`);
-
-      for (const deadline of upcomingDeadlines) {
-        const reminderKey = `${userId}-${deadline.id}`;
-        const daysUntil = this.getDaysUntilDeadline(deadline.deadline);
-
-        // Check if we've already sent a reminder for this deadline today
-        if (this.hasRecentReminder(reminderKey)) {
-          continue;
-        }
-
-        // Only send reminder if within the configured window
-        if (daysUntil <= reminderDays && daysUntil >= 0) {
-          await this.sendDeadlineReminder(userId, deadline, daysUntil);
-          this.sentReminders.set(reminderKey, new Date());
-        }
-      }
-    } catch (error) {
-      logger.error(`Error checking deadlines for user ${userId}`, error);
-    }
-  }
-
-  /**
-   * Send a deadline reminder notification
-   */
-  private async sendDeadlineReminder(
-    userId: number,
-    deadline: any,
-    daysUntil: number
-  ): Promise<void> {
-    try {
-      const severity = this.getSeverityForDeadline(daysUntil);
-      const urgencyText = this.getUrgencyText(daysUntil);
-
-      await this.notificationService.createNotification({
-        userId,
-        type: "deadline_reminder",
-        severity,
-        title: `${urgencyText}: ${deadline.title}`,
-        message: this.formatDeadlineMessage(deadline, daysUntil),
-        actionUrl: `/timeline?deadlineId=${deadline.id}`,
-        actionLabel: "View Timeline",
-        metadata: {
-          deadlineId: deadline.id,
-          caseId: deadline.caseId,
-          daysUntil,
-          deadlineDate: deadline.deadline,
-        },
-        // Set expiration to the deadline date
-        expiresAt: new Date(deadline.deadline),
-      });
-
-      logger.info(
-        `Sent deadline reminder for deadline ${deadline.id} to user ${userId} (${daysUntil} days remaining)`
-      );
-    } catch (error) {
-      // Log but don't throw - continue processing other deadlines
-      logger.error(`Failed to send deadline reminder for deadline ${deadline.id}`, error);
-    }
-  }
-
-  /**
-   * Format the deadline reminder message
-   */
-  private formatDeadlineMessage(deadline: any, daysUntil: number): string {
-    const deadlineDate = new Date(deadline.deadline);
-    const dateStr = deadlineDate.toLocaleDateString("en-GB", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-
-    if (daysUntil === 0) {
-      return `The deadline "${deadline.title}" is due today (${dateStr}). ${
-        deadline.description || "Please ensure all required actions are completed."
-      }`;
-    } else if (daysUntil === 1) {
-      return `The deadline "${deadline.title}" is due tomorrow (${dateStr}). ${
-        deadline.description || "Please prepare for this upcoming deadline."
-      }`;
-    } else {
-      return `The deadline "${deadline.title}" is due in ${daysUntil} days on ${dateStr}. ${
-        deadline.description || "Plan accordingly to meet this deadline."
-      }`;
-    }
-  }
-
-  /**
-   * Get urgency text based on days until deadline
-   */
-  private getUrgencyText(daysUntil: number): string {
-    if (daysUntil === 0) {
-      return "🚨 URGENT - Due Today";
-    } else if (daysUntil === 1) {
-      return "⚠️ Due Tomorrow";
-    } else if (daysUntil <= 3) {
-      return "⏰ Upcoming Deadline";
-    } else {
-      return "📅 Deadline Reminder";
-    }
-  }
-
-  /**
-   * Calculate days until deadline
-   */
-  private getDaysUntilDeadline(deadlineDate: string): number {
-    const now = new Date();
-    now.setHours(0, 0, 0, 0); // Start of today
-
-    const deadline = new Date(deadlineDate);
-    deadline.setHours(0, 0, 0, 0); // Start of deadline day
-
-    const diffTime = deadline.getTime() - now.getTime();
-    return Math.floor(diffTime / (1000 * 60 * 60 * 24));
-  }
-
-  /**
-   * Determine severity based on days until deadline
-   */
-  private getSeverityForDeadline(daysUntil: number): NotificationSeverity {
-    if (daysUntil === 0) {
-      return "urgent";
-    } else if (daysUntil <= 1) {
-      return "high";
-    } else if (daysUntil <= 3) {
-      return "medium";
-    } else {
-      return "low";
-    }
-  }
-
-  /**
-   * Check if we've sent a reminder for this deadline recently (within 24 hours)
-   */
-  private hasRecentReminder(reminderKey: string): boolean {
-    const lastSent = this.sentReminders.get(reminderKey);
-    if (!lastSent) {
-      return false;
-    }
-
-    const hoursSinceLastSent = (Date.now() - lastSent.getTime()) / (1000 * 60 * 60);
-    return hoursSinceLastSent < 24;
-  }
-
-  /**
-   * Clean up old reminder tracking entries
-   */
-  private cleanupOldReminders(): void {
-    const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
-
-    for (const [key, date] of this.sentReminders.entries()) {
-      if (date.getTime() < thirtyDaysAgo) {
-        this.sentReminders.delete(key);
-      }
-    }
-  }
-
-  /**
-   * Get scheduler status
-   */
-  getStatus(): {
-    isRunning: boolean;
-    lastCheck?: Date;
-    pendingReminders: number;
-  } {
-    return {
-      isRunning: this.isRunning,
-      lastCheck: this.lastCheckTimestamp,
-      pendingReminders: this.sentReminders.size,
-    };
   }
 }

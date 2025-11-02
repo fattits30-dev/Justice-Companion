@@ -71,339 +71,133 @@ export interface UpdateChatConversationInput {
 
 export interface CreateChatConversationInput {
   userId: number;
-  caseId?: number | null;
   title: string;
-  messages: string;
+  lastMessage?: string;
 }
 
-export interface ConsentRecord extends Consent {
-  timestamp: string;
-}
-
-export interface PaginationOptions {
-  page?: number;
-  limit?: number;
-  sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
-}
-
-export interface CreateTimelineInput {
-  caseId: number;
-  title: string;
-  description?: string;
-  date: string;
-}
-
-export interface UpdateTimelineInput {
+export interface UpdateChatConversationInput {
   title?: string;
-  description?: string;
-  date?: string;
+  lastMessage?: string;
 }
 
-// ==========================================
-// Infrastructure Interfaces
-// ==========================================
-
-export interface IDatabase extends Database.Database {}
-
-export interface IEncryptionService {
-  encrypt(plainText: string): string;
-  decrypt(encryptedData: string): string;
-  encryptBatch(texts: string[]): string[];
-  decryptBatch(encryptedTexts: string[]): string[];
-  getEncryptedFieldsForTable(tableName: string): string[];
+export interface AuditLogRepository {
+  createAuditLog(input: CreateAuditLogInput): Promise<AuditLog>;
+  getAuditLogsByUserId(userId: number): Promise<AuditLog[]>;
+  getAuditLogsByEntityId(entityId: number): Promise<AuditLog[]>;
+  getAuditLogById(id: number): Promise<AuditLog | null>;
 }
 
-export interface IAuditLogger {
-  log(input: CreateAuditLogInput): AuditLog;
-  getLogsForUser(userId: string, limit?: number): AuditLog[];
-  getLogsForResource(resourceType: string, resourceId: string, limit?: number): AuditLog[];
-  verifyIntegrity(): boolean;
+export interface UserRepository {
+  createUser(input: CreateUserInput): Promise<User>;
+  getUserById(id: number): Promise<User | null>;
+  getUserByEmail(email: string): Promise<User | null>;
+  updateUser(id: number, input: UpdateUserInput): Promise<User>;
+  deleteUser(id: number): Promise<void>;
+  getUsers(): Promise<User[]>;
+  getUserWithProfile(id: number): Promise<UserWithProfile | null>;
 }
 
-export interface IKeyManager {
-  getKey(): Buffer;
-  migrateFromEnv(envKey: string): void;
-  generateNewKey(): string;
-  rotateKey(): void;
-  clearCache(): void;
+export interface UserProfileRepository {
+  createUserProfile(input: CreateUserProfileInput): Promise<UserProfile>;
+  getUserProfileByUserId(userId: number): Promise<UserProfile | null>;
+  updateUserProfile(userId: number, input: UpdateUserProfileInput): Promise<UserProfile>;
+  deleteUserProfile(userId: number): Promise<void>;
 }
 
-// ==========================================
-// Repository Interfaces (Data Access Layer)
-// ==========================================
-
-export interface ICaseRepository {
-  findById(id: number): Case | null;
-  findAll(): Case[];
-  findByUserId(userId: number): Case[];
-  findWithEvidence(id: number): CaseWithEvidence | null;
-  search(criteria: CaseSearchCriteria): Case[];
-  create(input: CreateCaseInput): Case;
-  update(id: number, input: UpdateCaseInput): Case | null;
-  delete(id: number): boolean;
-  getStats(userId: number): { total: number; active: number; closed: number };
+export interface CaseRepository {
+  createCase(input: CreateCaseInput): Promise<Case>;
+  getCaseById(id: number): Promise<Case | null>;
+  updateCase(id: number, input: UpdateCaseInput): Promise<Case>;
+  deleteCase(id: number): Promise<void>;
+  getCasesByUserId(userId: number): Promise<Case[]>;
+  searchCases(criteria: CaseSearchCriteria): Promise<PaginatedResult<Case>>;
+  getCaseWithEvidence(id: number): Promise<CaseWithEvidence | null>;
 }
 
-export interface IEvidenceRepository {
-  findById(id: number): Evidence | null;
-  findByCaseId(caseId: number): Evidence[];
-  findByUserId(userId: number): Evidence[];
-  create(input: CreateEvidenceInput): Evidence;
-  update(id: number, input: UpdateEvidenceInput): Evidence | null;
-  delete(id: number): boolean;
+export interface EvidenceRepository {
+  createEvidence(input: CreateEvidenceInput): Promise<Evidence>;
+  getEvidenceById(id: number): Promise<Evidence | null>;
+  updateEvidence(id: number, input: UpdateEvidenceInput): Promise<Evidence>;
+  deleteEvidence(id: number): Promise<void>;
+  getEvidenceByCaseId(caseId: number): Promise<Evidence[]>;
 }
 
-export interface IUserRepository {
-  findById(id: number): User | null;
-  findByEmail(email: string): User | null;
-  findAll(): User[];
-  findWithProfile(id: number): UserWithProfile | null;
-  create(input: CreateUserInput): User;
-  update(id: number, input: UpdateUserInput): User | null;
-  delete(id: number): boolean;
-  verifyPassword(user: User, password: string): boolean;
+export interface ChatConversationRepository {
+  createConversation(input: CreateConversationInput): Promise<ChatConversation>;
+  getConversationById(id: number): Promise<ChatConversation | null>;
+  updateConversation(id: number, input: UpdateChatConversationInput): Promise<ChatConversation>;
+  deleteConversation(id: number): Promise<void>;
+  getConversationsByUserId(userId: number): Promise<ChatConversation[]>;
+  getConversationWithMessages(conversationId: number): Promise<ChatConversation | null>;
 }
 
-export interface ISessionRepository {
-  findById(id: string): Session | null;
-  findByUserId(userId: number): Session[];
-  findActiveByUserId(userId: number): Session | null;
-  create(userId: number): Session;
-  refresh(id: string): Session | null;
-  revoke(id: string): boolean;
-  revokeAllForUser(userId: number): number;
-  cleanupExpired(): number;
+export interface ConsentRepository {
+  createConsent(consentType: ConsentType, userId: number): Promise<Consent>;
+  getConsentByTypeAndUserId(consentType: ConsentType, userId: number): Promise<Consent | null>;
+  updateConsent(consentType: ConsentType, userId: number, consented: boolean): Promise<Consent>;
+  deleteConsent(consentType: ConsentType, userId: number): Promise<void>;
+  getAllConsentsByUserId(userId: number): Promise<Consent[]>;
 }
 
-export interface IUserProfileRepository {
-  findByUserId(userId: number): UserProfile | null;
-  create(input: CreateUserProfileInput): UserProfile;
-  update(userId: number, input: UpdateUserProfileInput): UserProfile | null;
-  delete(userId: number): boolean;
+export interface NoteRepository {
+  createNote(input: CreateNoteInput): Promise<Note>;
+  getNoteById(id: number): Promise<Note | null>;
+  updateNote(id: number, input: UpdateNoteInput): Promise<Note>;
+  deleteNote(id: number): Promise<void>;
+  getNotesByCaseId(caseId: number): Promise<Note[]>;
+  getNotesByUserId(userId: number): Promise<Note[]>;
 }
 
-export interface IChatConversationRepository {
-  findById(id: number): ChatConversation | null;
-  findByUserId(userId: number): ChatConversation[];
-  findByCaseId(caseId: number): ChatConversation[];
-  create(input: CreateChatConversationInput): ChatConversation;
-  update(id: number, input: UpdateChatConversationInput): ChatConversation | null;
-  delete(id: number): boolean;
+export interface LegalIssueRepository {
+  createLegalIssue(input: CreateLegalIssueInput): Promise<LegalIssue>;
+  getLegalIssueById(id: number): Promise<LegalIssue | null>;
+  updateLegalIssue(id: number, input: UpdateLegalIssueInput): Promise<LegalIssue>;
+  deleteLegalIssue(id: number): Promise<void>;
+  getLegalIssuesByCaseId(caseId: number): Promise<LegalIssue[]>;
 }
 
-export interface IConsentRepository {
-  findByUserId(userId: number): Consent[];
-  getActiveConsents(userId: number): ConsentRecord[];
-  hasConsent(userId: number, consentType: string): boolean;
-  grantConsent(userId: number, consentType: string): Consent;
-  revokeConsent(userId: number, consentType: string): boolean;
+export interface TimelineEventRepository {
+  createTimelineEvent(input: CreateTimelineEventInput): Promise<TimelineEvent>;
+  getTimelineEventById(id: number): Promise<TimelineEvent | null>;
+  updateTimelineEvent(id: number, input: UpdateTimelineEventInput): Promise<TimelineEvent>;
+  deleteTimelineEvent(id: number): Promise<void>;
+  getTimelineEventsByCaseId(caseId: number): Promise<TimelineEvent[]>;
 }
 
-export interface INotesRepository {
-  findById(id: number): Note | null;
-  findByCaseId(caseId: number): Note[];
-  findByUserId(userId: number): Note[];
-  create(input: CreateNoteInput): Note;
-  update(id: number, input: UpdateNoteInput): Note | null;
-  delete(id: number): boolean;
+export interface CaseFactRepository {
+  createCaseFact(input: CreateCaseFactInput): Promise<CaseFact>;
+  getCaseFactById(id: number): Promise<CaseFact | null>;
+  updateCaseFact(id: number, input: UpdateCaseFactInput): Promise<CaseFact>;
+  deleteCaseFact(id: number): Promise<void>;
+  getCaseFactsByCaseId(caseId: number): Promise<CaseFact[]>;
 }
 
-export interface ILegalIssuesRepository {
-  findById(id: number): LegalIssue | null;
-  findByCaseId(caseId: number): LegalIssue[];
-  findByUserId(userId: number): LegalIssue[];
-  create(input: CreateLegalIssueInput): LegalIssue;
-  update(id: number, input: UpdateLegalIssueInput): LegalIssue | null;
-  delete(id: number): boolean;
+export interface UserFactRepository {
+  createUserFact(input: CreateUserFactInput): Promise<UserFact>;
+  getUserFactById(id: number): Promise<UserFact | null>;
+  updateUserFact(id: number, input: UpdateUserFactInput): Promise<UserFact>;
+  deleteUserFact(id: number): Promise<void>;
+  getUserFactsByUserId(userId: number): Promise<UserFact[]>;
 }
 
-export interface ITimelineRepository {
-  findById(id: number): TimelineEvent | null;
-  findByCaseId(caseId: number): TimelineEvent[];
-  findByUserId(userId: number): TimelineEvent[];
-  create(input: CreateTimelineInput): TimelineEvent;
-  update(id: number, input: UpdateTimelineInput): TimelineEvent | null;
-  delete(id: number): boolean;
+export interface DeadlineRepository {
+  createDeadline(input: CreateDeadlineInput): Promise<Deadline>;
+  getDeadlineById(id: number): Promise<Deadline | null>;
+  updateDeadline(id: number, input: UpdateDeadlineInput): Promise<Deadline>;
+  deleteDeadline(id: number): Promise<void>;
+  getDeadlinesByCaseId(caseId: number): Promise<Deadline[]>;
+  getDeadlinesByUserId(userId: number): Promise<Deadline[]>;
+  getUpcomingDeadlines(limit?: number): Promise<DeadlineWithCase[]>;
 }
 
-export interface ICaseFactsRepository {
-  findById(id: number): CaseFact | null;
-  findByCaseId(caseId: number): CaseFact[];
-  create(input: CreateCaseFactInput): CaseFact;
-  update(id: number, input: UpdateCaseFactInput): CaseFact | null;
-  delete(id: number): boolean;
+export interface GdprRepository {
+  exportUserData(userId: number): Promise<GdprExportResult>;
+  deleteUserData(userId: number): Promise<GdprDeleteResult>;
 }
 
-export interface IUserFactsRepository {
-  findById(id: number): UserFact | null;
-  findByUserId(userId: number): UserFact[];
-  create(input: CreateUserFactInput): UserFact;
-  update(id: number, input: UpdateUserFactInput): UserFact | null;
-  delete(id: number): boolean;
-}
-
-export interface IDeadlineRepository {
-  findById(id: number): Deadline | null;
-  findByCaseId(caseId: number, userId: number): Deadline[];
-  findByUserId(userId: number): DeadlineWithCase[];
-  findUpcoming(userId: number, limit?: number): DeadlineWithCase[];
-  findOverdue(userId: number): DeadlineWithCase[];
-  create(input: CreateDeadlineInput): Deadline;
-  update(id: number, userId: number, input: UpdateDeadlineInput): Deadline | null;
-  markCompleted(id: number, userId: number): Deadline | null;
-  markUpcoming(id: number, userId: number): Deadline | null;
-  delete(id: number, userId: number): boolean;
-  checkAndUpdateOverdue(): number;
-  getStats(userId: number): {
-    total: number;
-    upcoming: number;
-    overdue: number;
-    completed: number;
-  };
-}
-
-// ==========================================
-// Service Interfaces (Business Logic Layer)
-// ==========================================
-
-export interface ICaseService {
-  createCase(input: CreateCaseInput & { userId: number }): Case;
-  getAllCases(): Case[];
-  getCaseById(id: number): Case | null;
-  updateCase(id: number, input: UpdateCaseInput): Case | null;
-  closeCase(id: number): Case | null;
-  deleteCase(id: number): boolean;
-}
-
-export interface IAuthenticationService {
-  register(email: string, password: string, username?: string): Promise<User>;
-  login(email: string, password: string): Promise<{ user: User; session: Session }>;
-  logout(sessionId: string): Promise<boolean>;
-  validateSession(sessionId: string): Promise<Session | null>;
-  refreshSession(sessionId: string): Promise<Session | null>;
-  changePassword(userId: number, currentPassword: string, newPassword: string): Promise<boolean>;
-}
-
-export interface IUserProfileService {
-  getProfile(userId: number): UserProfile | null;
-  createProfile(input: CreateUserProfileInput): UserProfile;
-  updateProfile(userId: number, input: UpdateUserProfileInput): UserProfile | null;
-  deleteProfile(userId: number): boolean;
-}
-
-export interface IConsentService {
-  getConsents(userId: number): Consent[];
-  hasConsent(userId: number, consentType: string): boolean;
-  grantConsent(userId: number, consentType: string): Consent;
-  revokeConsent(userId: number, consentType: string): boolean;
-  requireConsent(userId: number, consentType: string): void;
-}
-
-export interface IChatConversationService {
-  createConversation(input: any): any;
-  getConversation(id: number): any | null;
-  deleteConversation(id: number): boolean;
-}
-
-export interface ILegalAPIService {
-  searchLegislation(query: string): Promise<any>;
-  searchCaseLaw(query: string): Promise<any>;
-  searchKnowledgeBase(query: string): Promise<any>;
-  searchAll(query: string): Promise<any>;
-}
-
-export interface IGdprService {
-  exportUserData(
-    userId: number,
-    options?: { format?: 'json' | 'csv'; outputPath?: string }
-  ): Promise<GdprExportResult>;
-  deleteUserData(
-    userId: number,
-    options?: { confirmed?: boolean; exportBeforeDelete?: boolean; reason?: string }
-  ): Promise<GdprDeleteResult>;
-  getDataRetentionPolicy(): { description: string; retentionDays: number };
-  anonymizeUserData(userId: number): Promise<boolean>;
-}
-
-export interface ICacheService {
-  get<T>(key: string): T | null;
-  set<T>(key: string, value: T, ttlSeconds?: number): void;
-  delete(key: string): boolean;
-  clear(): void;
-  has(key: string): boolean;
-  getStats(): { hits: number; misses: number; size: number };
-}
-
-export interface IRateLimitService {
-  checkLimit(
-    key: string,
-    limit: number,
-    windowMs: number
-  ): { allowed: boolean; remaining: number; resetAt: Date };
-  checkRateLimit(identifier: string): {
-    allowed: boolean;
-    remainingTime?: number;
-    attemptsRemaining?: number;
-    message?: string;
-  };
-  recordFailedAttempt(identifier: string): void;
-  clearAttempts(identifier: string): void;
-  consume(key: string): void;
-  reset(key: string): void;
-}
-
-// ==========================================
-// Paginated Repository Interfaces
-// ==========================================
-
-export interface IPaginatedRepository<T, TCreate, TUpdate> {
-  findPaginated(options: PaginationOptions): Promise<PaginatedResult<T>>;
-  findById(id: number): T | null;
-  create(input: TCreate): T;
-  update(id: number, input: TUpdate): T | null;
-  delete(id: number): boolean;
-}
-
-export interface ICaseRepositoryPaginated
-  extends IPaginatedRepository<Case, CreateCaseInput, UpdateCaseInput> {
-  findByUserIdPaginated(
-    userId: number,
-    options: PaginationOptions
-  ): Promise<PaginatedResult<Case>>;
-  searchPaginated(
-    criteria: CaseSearchCriteria,
-    options: PaginationOptions
-  ): Promise<PaginatedResult<Case>>;
-}
-
-// ==========================================
-// Factory Interfaces
-// ==========================================
-
-export interface IRepositoryFactory {
-  createCaseRepository(): ICaseRepository;
-  createEvidenceRepository(): IEvidenceRepository;
-  createUserRepository(): IUserRepository;
-  createSessionRepository(): ISessionRepository;
-  createUserProfileRepository(): IUserProfileRepository;
-  createChatConversationRepository(): IChatConversationRepository;
-  createConsentRepository(): IConsentRepository;
-  createNotesRepository(): INotesRepository;
-  createLegalIssuesRepository(): ILegalIssuesRepository;
-  createTimelineRepository(): ITimelineRepository;
-  createCaseFactsRepository(): ICaseFactsRepository;
-  createUserFactsRepository(): IUserFactsRepository;
-  createDeadlineRepository(): IDeadlineRepository;
-}
-
-export interface IServiceFactory {
-  createCaseService(): ICaseService;
-  createAuthenticationService(): IAuthenticationService;
-  createUserProfileService(): IUserProfileService;
-  createConsentService(): IConsentService;
-  createChatConversationService(): IChatConversationService;
-  createGdprService(): IGdprService;
-  createCacheService(): ICacheService;
-  createRateLimitService(): IRateLimitService;
+export interface SessionRepository {
+  createSession(userId: number, token: string, expiresAt: Date): Promise<Session>;
+  getSessionByToken(token: string): Promise<Session | null>;
+  deleteSession(token: string): Promise<void>;
+  deleteExpiredSessions(): Promise<void>;
 }

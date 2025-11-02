@@ -79,16 +79,29 @@ function analyzeDatabasePerformance() {
 
       console.log('Test database created successfully with 10 users, 1000 cases, and 50000 pieces of evidence.\n');
       
-      // Close the database connection
+      // Perform performance tests
+      const startTime = performance.now();
+      
+      // Test query performance
+      const selectCases = db.prepare('SELECT * FROM cases WHERE user_id = ?');
+      for (let userId = 1; userId <= 10; userId++) {
+        const cases = selectCases.all(userId);
+      }
+      
+      const endTime = performance.now();
+      console.log(`Query performance test completed in ${(endTime - startTime).toFixed(2)} milliseconds.\n`);
+      
       db.close();
+    } else {
+      console.log('Using existing database at:', dbPath);
     }
   } catch (error) {
-    console.error('Error during database analysis:', error.message);
+    console.error('Error during database performance analysis:', error);
   }
 }
 
 // Run the analysis
 analyzeDatabasePerformance();
 
-// Additional performance analysis could go here
-console.log('Performance analysis completed.');
+// Additional performance analysis could be added here
+console.log('Performance analysis complete.');

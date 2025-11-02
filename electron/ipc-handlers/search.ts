@@ -9,7 +9,6 @@ import { NotesRepository } from '../../src/repositories/NotesRepository.ts';
 import { EncryptionService } from '../../src/services/EncryptionService.ts';
 import { AuditLogger } from '../../src/services/AuditLogger.ts';
 // import { SessionManager } from '../session-manager.ts'; // TODO: SessionManager not implemented
-import { errorLogger } from '../../src/utils/error-logger.ts';
 import { getKeyManager } from '../main.ts';
 
 // const sessionManager = new SessionManager(); // TODO: SessionManager not implemented
@@ -18,7 +17,7 @@ import { getKeyManager } from '../main.ts';
 let searchService: SearchService | null = null;
 let searchIndexBuilder: SearchIndexBuilder | null = null;
 
-function getSearchService(): SearchService {
+function _getSearchService(): SearchService {
   if (!searchService) {
     const keyManager = getKeyManager();
     const encryptionService = new EncryptionService(keyManager.getKey());
@@ -42,7 +41,7 @@ function getSearchService(): SearchService {
   return searchService;
 }
 
-function getSearchIndexBuilder(): SearchIndexBuilder {
+function _getSearchIndexBuilder(): SearchIndexBuilder {
   if (!searchIndexBuilder) {
     const keyManager = getKeyManager();
     const encryptionService = new EncryptionService(keyManager.getKey());
@@ -59,49 +58,31 @@ function getSearchIndexBuilder(): SearchIndexBuilder {
       evidenceRepo,
       chatRepo,
       notesRepo,
-      encryptionService
+      encryptionService,
+      auditLogger
     );
   }
   return searchIndexBuilder;
 }
 
-/**
- * Search IPC handlers for advanced search and filter system
- *
- * TODO: These handlers are currently disabled pending SessionManager implementation
- */
-export function registerSearchHandlers(): void {
-  const notImplementedError = {
-    success: false,
-    error: 'Search feature not yet implemented - requires SessionManager',
-  };
+ipcMain.handle('search', async (_event, query: SearchQuery) => {
+  try {
+    const searchService = _getSearchService();
+    const results = await searchService.search(query);
+    return results;
+  } catch (error) {
+    console.error('Search error:', error);
+    throw error;
+  }
+});
 
-  // Perform a search query
-  ipcMain.handle('search:query', async () => notImplementedError);
-
-  // Save a search query for later reuse
-  ipcMain.handle('search:save', async () => notImplementedError);
-
-  // Get all saved searches for the current user
-  ipcMain.handle('search:list-saved', async () => notImplementedError);
-
-  // Delete a saved search
-  ipcMain.handle('search:delete-saved', async () => notImplementedError);
-
-  // Execute a saved search
-  ipcMain.handle('search:execute-saved', async () => notImplementedError);
-
-  // Get search suggestions based on prefix
-  ipcMain.handle('search:suggestions', async () => notImplementedError);
-
-  // Rebuild the search index (admin operation)
-  ipcMain.handle('search:rebuild-index', async () => notImplementedError);
-
-  // Get search index statistics (this one doesn't need session, but keep consistent)
-  ipcMain.handle('search:index-stats', async () => notImplementedError);
-
-  // Update search index for a specific entity (this one doesn't need session, but keep consistent)
-  ipcMain.handle('search:update-index', async () => notImplementedError);
-
-  console.log('Search IPC handlers registered (currently disabled - pending implementation)');
-}
+ipcMain.handle('rebuild-search-index', async () => {
+  try {
+    const searchIndexBuilder = _getSearchIndexBuilder();
+    await searchIndexBuilder.buildIndex();
+    return { success: true };
+  } catch (error) {
+    console.error('Search index rebuild error:', error);
+    throw error;
+  }
+});

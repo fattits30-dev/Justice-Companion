@@ -89,7 +89,15 @@ export class LoggingDecorator<T> extends RepositoryDecorator<T> {
 
       return result;
     } catch (error) {
-      this.logError(operation, error, { id });
+      if (this.options.logErrors) {
+        this.logOperation({
+          operation,
+          entityId: id.toString(),
+          success: false,
+          error: error.message,
+          duration: this.options.logPerformance ? Date.now() - startTime : undefined
+        });
+      }
       throw error;
     }
   }
@@ -111,46 +119,20 @@ export class LoggingDecorator<T> extends RepositoryDecorator<T> {
       this.logOperation({
         operation,
         success: true,
-        resultCount: result.length,
+        count: result.length,
         duration: this.options.logPerformance ? Date.now() - startTime : undefined
       });
 
       return result;
     } catch (error) {
-      this.logError(operation, error);
-      throw error;
-    }
-  }
-
-  /**
-   * Log and execute findByUserId
-   */
-  async findByUserId(userId: number): Promise<any[]> {
-    if (!this.hasMethod('findByUserId')) {
-      return this.forwardCall('findByUserId', userId);
-    }
-
-    if (!this.options.logReads) {
-      return await (this.repository as any).findByUserId(userId);
-    }
-
-    const startTime = Date.now();
-    const operation = 'findByUserId';
-
-    try {
-      const result = await (this.repository as any).findByUserId(userId);
-
-      this.logOperation({
-        operation,
-        userId: userId.toString(),
-        success: true,
-        resultCount: result.length,
-        duration: this.options.logPerformance ? Date.now() - startTime : undefined
-      });
-
-      return result;
-    } catch (error) {
-      this.logError(operation, error, { userId });
+      if (this.options.logErrors) {
+        this.logOperation({
+          operation,
+          success: false,
+          error: error.message,
+          duration: this.options.logPerformance ? Date.now() - startTime : undefined
+        });
+      }
       throw error;
     }
   }
@@ -158,29 +140,34 @@ export class LoggingDecorator<T> extends RepositoryDecorator<T> {
   /**
    * Log and execute create
    */
-  async create(input: any): Promise<any> {
+  async create(data: any): Promise<any> {
     if (!this.options.logWrites) {
-      return await (this.repository as any).create(input);
+      return await (this.repository as any).create(data);
     }
 
     const startTime = Date.now();
     const operation = 'create';
-    const sanitizedInput = this.sanitizeData(input);
 
     try {
-      const result = await (this.repository as any).create(input);
+      const result = await (this.repository as any).create(data);
 
       this.logOperation({
         operation,
-        entityId: result?.id?.toString(),
+        entityId: result.id?.toString(),
         success: true,
-        inputSummary: this.summarizeInput(sanitizedInput),
         duration: this.options.logPerformance ? Date.now() - startTime : undefined
       });
 
       return result;
     } catch (error) {
-      this.logError(operation, error, { input: sanitizedInput });
+      if (this.options.logErrors) {
+        this.logOperation({
+          operation,
+          success: false,
+          error: error.message,
+          duration: this.options.logPerformance ? Date.now() - startTime : undefined
+        });
+      }
       throw error;
     }
   }
@@ -188,29 +175,35 @@ export class LoggingDecorator<T> extends RepositoryDecorator<T> {
   /**
    * Log and execute update
    */
-  async update(id: number, input: any): Promise<any> {
+  async update(id: number, data: any): Promise<any> {
     if (!this.options.logWrites) {
-      return await (this.repository as any).update(id, input);
+      return await (this.repository as any).update(id, data);
     }
 
     const startTime = Date.now();
     const operation = 'update';
-    const sanitizedInput = this.sanitizeData(input);
 
     try {
-      const result = await (this.repository as any).update(id, input);
+      const result = await (this.repository as any).update(id, data);
 
       this.logOperation({
         operation,
         entityId: id.toString(),
         success: true,
-        fieldsUpdated: Object.keys(sanitizedInput),
         duration: this.options.logPerformance ? Date.now() - startTime : undefined
       });
 
       return result;
     } catch (error) {
-      this.logError(operation, error, { id, input: sanitizedInput });
+      if (this.options.logErrors) {
+        this.logOperation({
+          operation,
+          entityId: id.toString(),
+          success: false,
+          error: error.message,
+          duration: this.options.logPerformance ? Date.now() - startTime : undefined
+        });
+      }
       throw error;
     }
   }
@@ -232,151 +225,37 @@ export class LoggingDecorator<T> extends RepositoryDecorator<T> {
       this.logOperation({
         operation,
         entityId: id.toString(),
-        success: result,
-        duration: this.options.logPerformance ? Date.now() - startTime : undefined
-      });
-
-      return result;
-    } catch (error) {
-      this.logError(operation, error, { id });
-      throw error;
-    }
-  }
-
-  /**
-   * Log and execute batch create
-   */
-  async createBatch(items: any[]): Promise<any[]> {
-    if (!this.hasMethod('createBatch')) {
-      return this.forwardCall('createBatch', items);
-    }
-
-    if (!this.options.logWrites) {
-      return await (this.repository as any).createBatch(items);
-    }
-
-    const startTime = Date.now();
-    const operation = 'createBatch';
-
-    try {
-      const result = await (this.repository as any).createBatch(items);
-
-      this.logOperation({
-        operation,
         success: true,
-        itemCount: items.length,
-        createdCount: result.length,
+        deleted: result,
         duration: this.options.logPerformance ? Date.now() - startTime : undefined
       });
 
       return result;
     } catch (error) {
-      this.logError(operation, error, { itemCount: items.length });
-      throw error;
-    }
-  }
-
-  /**
-   * Log and execute batch delete
-   */
-  async deleteBatch(ids: number[]): Promise<number> {
-    if (!this.hasMethod('deleteBatch')) {
-      return this.forwardCall('deleteBatch', ids);
-    }
-
-    if (!this.options.logWrites) {
-      return await (this.repository as any).deleteBatch(ids);
-    }
-
-    const startTime = Date.now();
-    const operation = 'deleteBatch';
-
-    try {
-      const result = await (this.repository as any).deleteBatch(ids);
-
-      this.logOperation({
-        operation,
-        success: true,
-        requestedCount: ids.length,
-        deletedCount: result,
-        duration: this.options.logPerformance ? Date.now() - startTime : undefined
-      });
-
-      return result;
-    } catch (error) {
-      this.logError(operation, error, { ids });
-      throw error;
-    }
-  }
-
-  /**
-   * Log a successful operation
-   */
-  private logOperation(details: Record<string, any>): void {
-    this.auditLogger.log({
-      eventType: `repository:${details.operation}`,
-      resourceType: this.getRepositoryName(),
-      resourceId: details.entityId || 'batch',
-      action: details.operation,
-      details,
-      success: true
-    });
-  }
-
-  /**
-   * Log an error
-   */
-  private logError(operation: string, error: any, context?: any): void {
-    if (!this.options.logErrors) {
-      return;
-    }
-
-    this.auditLogger.log({
-      eventType: `repository:error`,
-      resourceType: this.getRepositoryName(),
-      resourceId: context?.id?.toString() || 'unknown',
-      action: operation,
-      details: {
-        error: error.message,
-        errorName: error.name,
-        errorCode: error.code,
-        context: this.sanitizeData(context)
-      },
-      success: false,
-      errorMessage: error.message
-    });
-  }
-
-  /**
-   * Sanitize data by removing sensitive fields
-   */
-  private sanitizeData(data: any): any {
-    if (!data || typeof data !== 'object') {
-      return data;
-    }
-
-    const sanitized = { ...data };
-    for (const field of this.options.sensitiveFields) {
-      if (field in sanitized) {
-        sanitized[field] = '[REDACTED]';
+      if (this.options.logErrors) {
+        this.logOperation({
+          operation,
+          entityId: id.toString(),
+          success: false,
+          error: error.message,
+          duration: this.options.logPerformance ? Date.now() - startTime : undefined
+        });
       }
+      throw error;
     }
-
-    return sanitized;
   }
 
   /**
-   * Create a summary of input data for logging
+   * Common logging method for all operations
    */
-  private summarizeInput(input: any): Record<string, any> {
-    if (!input || typeof input !== 'object') {
-      return { type: typeof input };
-    }
-
-    return {
-      fields: Object.keys(input),
-      hasPassword: 'password' in input,
-      hasToken: 'token' in input || 'apiKey' in input
-    };
+  private logOperation(logData: any): void {
+    // Implementation would depend on your audit logger requirements
+    // This is a placeholder for actual logging logic
+    this.auditLogger.log({
+      ...logData,
+      timestamp: new Date().toISOString(),
+      service: 'repository',
+      module: 'logging-decorator'
+    });
   }
 }

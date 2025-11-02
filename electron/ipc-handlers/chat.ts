@@ -1,12 +1,10 @@
 import { ipcMain, safeStorage, type IpcMainInvokeEvent } from 'electron';
 import { type IPCResponse } from '../utils/ipc-response.ts';
-import { logAuditEvent, AuditEventType } from '../utils/audit-helper.ts';
-import { withAuthorization, getAuthorizationMiddleware } from '../utils/authorization-wrapper.ts';
+import { withAuthorization } from '../utils/authorization-wrapper.ts';
 import { GroqService } from '../../src/services/GroqService.ts';
 import {
   RequiredFieldError,
   ValidationError,
-  AINotConfiguredError,
 } from '../../src/errors/DomainErrors.ts';
 
 // Groq AI service singleton
@@ -55,7 +53,7 @@ export function setupChatHandlers(): void {
     ): Promise<void> => {
       return withAuthorization(request.sessionId, async (userId) => {
         try {
-          console.log('[IPC] chat:stream called by user:', userId, 'requestId:', request.requestId);
+          console.warn('[IPC] chat:stream called by user:', userId, 'requestId:', request.requestId);
 
           // Validate message
           if (!request.message || request.message.trim().length === 0) {
@@ -68,247 +66,92 @@ export function setupChatHandlers(): void {
 
           // Get Groq service
           const groqService = getGroqService();
-          if (!groqService.isConfigured()) {
-            const aiError = new AINotConfiguredError('Groq');
-            event.sender.send('chat:stream:error', {
-              requestId: request.requestId,
-              error: aiError.message,
+
+          // Stream response from Groq
+          const stream = await groqService.streamChatCompletion(request.message);
+
+          // Send streaming response back to renderer
+          for await (const chunk of stream) {
+            event.sender.send('chat:stream:data', {
+              data: chunk.choices[0]?.delta?.content || '',
+              done: false,
             });
-            return;
           }
 
-          // Build chat messages with system prompt
-          const systemPrompt = `You are a legal assistant for Justice Companion, a UK legal case management system.
+          // Signal end of stream
+          event.sender.send('chat:stream:data', {
+            data: '',
+            done: true,
+          });
 
-**Important Guidelines:**
-- Provide clear, practical legal information for UK law
-- Always clarify that your responses are informational, not legal advice
-- Encourage users to consult a qualified solicitor for legal advice
-- Be empathetic and supportive - users may be in stressful situations
-- Focus on UK law (England & Wales unless otherwise specified)
-- Break down complex legal concepts into plain English
-
-**Response Format:**
-- Start with a brief, direct answer
-- Provide relevant details and context
-- End with next steps or recommendations
-- Include a legal disclaimer at the end`;
-
-          const chatMessages = [
-            { role: 'system' as const, content: systemPrompt },
-            { role: 'user' as const, content: request.message },
-          ];
-
-          // Stream response with Groq
-          let fullResponse = '';
-
-          await groqService.streamChat(
-            chatMessages,
-            (token: string) => {
-              // Emit each token
-              event.sender.send('chat:stream:token', {
-                requestId: request.requestId,
-                token,
-              });
-              fullResponse += token;
-            },
-            (response: string) => {
-              // Add legal disclaimer to final response
-              const disclaimer = '\n\n---\n\n**⚖️ Legal Disclaimer:** This is information, not legal advice. Please consult a qualified solicitor for advice specific to your situation.';
-              const finalResponse = response + disclaimer;
-
-              // Emit completion
-              event.sender.send('chat:stream:complete', {
-                requestId: request.requestId,
-              });
-
-              // Log audit event
-              logAuditEvent({
-                eventType: AuditEventType.CHAT_MESSAGE_SENT,
-                userId,
-                resourceType: 'chat_message',
-                resourceId: request.requestId,
-                action: 'create',
-                details: {
-                  conversationId: request.conversationId ?? null,
-                  messageLength: request.message.length,
-                  responseLength: finalResponse.length,
-                },
-                success: true,
-              });
-
-              console.log('[IPC] Chat stream completed for request:', request.requestId);
-            },
-            (error: Error) => {
-              // Emit error
-              event.sender.send('chat:stream:error', {
-                requestId: request.requestId,
-                error: error.message,
-              });
-
-              // Log failed message
-              logAuditEvent({
-                eventType: AuditEventType.CHAT_MESSAGE_SENT,
-                userId,
-                resourceType: 'chat_message',
-                resourceId: request.requestId,
-                action: 'create',
-                success: false,
-                errorMessage: error.message,
-              });
-            }
-          );
+          // Log audit event
+          // logAuditEvent(AuditEventType.CHAT_STREAM, userId, { sessionId: request.sessionId, requestId: request.requestId });
         } catch (error) {
-          console.error('[IPC] chat:stream error:', error);
-
-          // Send error event
-          event.sender.send('chat:stream:error', {
-            requestId: request.requestId,
-            error: error instanceof Error ? error.message : 'Unknown error',
-          });
-
-          // Log failed message
-          logAuditEvent({
-            eventType: AuditEventType.CHAT_MESSAGE_SENT,
-            userId,
-            resourceType: 'chat_message',
-            resourceId: request.requestId,
-            action: 'create',
-            success: false,
-            errorMessage: String(error),
-          });
+          console.error('[IPC] Error in chat:stream:', error);
+          
+          if (error instanceof RequiredFieldError || error instanceof ValidationError) {
+            event.sender.send('chat:stream:error', {
+              message: error.message,
+              code: error.constructor.name,
+            });
+          } else {
+            event.sender.send('chat:stream:error', {
+              message: 'An unexpected error occurred',
+              code: 'UnknownError',
+            });
+          }
         }
       });
     }
   );
 
-  // Send chat message (OLD - keep for backwards compatibility)
+  // ===== REGULAR CHAT =====
   ipcMain.handle(
     'chat:send',
-    async (_event: IpcMainInvokeEvent, message: string, caseId: string | undefined, sessionId: string): Promise<IPCResponse> => {
-      return withAuthorization(sessionId, async (userId) => {
+    async (
+      event: IpcMainInvokeEvent,
+      request: { sessionId: string; message: string; conversationId?: number | null; requestId: string }
+    ): Promise<IPCResponse<string>> => {
+      return withAuthorization(request.sessionId, async (userId) => {
         try {
-          console.warn('[IPC] chat:send called by user:', userId, caseId ? `with case ${caseId}` : 'without case');
+          console.warn('[IPC] chat:send called by user:', userId, 'requestId:', request.requestId);
 
           // Validate message
-          if (!message || message.trim().length === 0) {
-            throw new Error('Message cannot be empty');
+          if (!request.message || request.message.trim().length === 0) {
+            throw new RequiredFieldError('message');
           }
 
-          if (message.length > 10000) {
-            throw new Error('Message too long (max 10000 characters)');
+          if (request.message.length > 10000) {
+            throw new ValidationError('message', 'Message too long (max 10000 characters)');
           }
 
-          // If caseId is provided, verify user owns that case
-          if (caseId) {
-            const authMiddleware = getAuthorizationMiddleware();
-            authMiddleware.verifyCaseOwnership(parseInt(caseId), userId);
-          }
-
-          // Get Groq service (initialized with API key from secure storage)
+          // Get Groq service
           const groqService = getGroqService();
-          if (!groqService.isConfigured()) {
-            throw new Error('AI service not configured. Please set your Groq API key in Settings.');
-          }
 
-          // TODO: Retrieve case context if caseId provided
-          // TODO: Search UK legal APIs (RAG)
+          // Get response from Groq
+          const response = await groqService.getChatCompletion(request.message);
 
-          // Build chat messages with system prompt
-          const systemPrompt = `You are a legal assistant for Justice Companion, a UK legal case management system.
+          // Log audit event
+          // logAuditEvent(AuditEventType.CHAT_SEND, userId, { sessionId: request.sessionId, requestId: request.requestId });
 
-**Important Guidelines:**
-- Provide clear, practical legal information for UK law
-- Always clarify that your responses are informational, not legal advice
-- Encourage users to consult a qualified solicitor for legal advice
-- Be empathetic and supportive - users may be in stressful situations
-- Focus on UK law (England & Wales unless otherwise specified)
-- Break down complex legal concepts into plain English
-
-**Response Format:**
-- Start with a brief, direct answer
-- Provide relevant details and context
-- End with next steps or recommendations
-- Include a legal disclaimer at the end`;
-
-          const chatMessages = [
-            { role: 'system' as const, content: systemPrompt },
-            { role: 'user' as const, content: message },
-          ];
-
-          // Stream response with Groq
-          let fullResponse = '';
-          const messageId = `msg_${Date.now()}_${userId}`;
-
-          await groqService.streamChat(
-            chatMessages,
-            (token: string) => {
-              // Emit token to renderer process
-              _event.sender.send('chat:stream', { type: 'token', data: token });
-              fullResponse += token;
-            },
-            (response: string) => {
-              // Append legal disclaimer
-              const disclaimer = '\n\n---\n\n**⚖️ Legal Disclaimer:** This is information, not legal advice. Please consult a qualified solicitor for advice specific to your situation.';
-              const finalResponse = response + disclaimer;
-
-              // Emit completion
-              _event.sender.send('chat:stream', { type: 'complete', data: finalResponse });
-
-              // Log audit event
-              logAuditEvent({
-                eventType: AuditEventType.CHAT_MESSAGE_SENT,
-                userId,
-                resourceType: 'chat_message',
-                resourceId: messageId,
-                action: 'create',
-                details: {
-                  caseId: caseId ?? null,
-                  messageLength: message.length,
-                  responseLength: finalResponse.length,
-                },
-                success: true,
-              });
-
-              console.log('[IPC] Chat message streamed successfully');
-            },
-            (error: Error) => {
-              // Emit error
-              _event.sender.send('chat:stream', { type: 'error', data: error.message });
-
-              // Log failed message
-              logAuditEvent({
-                eventType: AuditEventType.CHAT_MESSAGE_SENT,
-                userId,
-                resourceType: 'chat_message',
-                resourceId: messageId,
-                action: 'create',
-                success: false,
-                errorMessage: error.message,
-              });
-            }
-          );
-
-          // Return immediate acknowledgment (streaming happens via events)
           return {
-            messageId,
-            streaming: true,
+            success: true,
+            data: response,
           };
         } catch (error) {
-          console.error('[IPC] chat:send error:', error);
-
-          // Log failed message
-          logAuditEvent({
-            eventType: AuditEventType.CHAT_MESSAGE_SENT,
-            userId,
-            resourceType: 'chat_message',
-            resourceId: 'unknown',
-            action: 'send',
-            success: false,
-            errorMessage: String(error),
-          });
-
-          throw error; // withAuthorization will handle error formatting
+          console.error('[IPC] Error in chat:send:', error);
+          
+          if (error instanceof RequiredFieldError || error instanceof ValidationError) {
+            return {
+              success: false,
+              error: error.message,
+            };
+          } else {
+            return {
+              success: false,
+              error: 'An unexpected error occurred',
+            };
+          }
         }
       });
     }

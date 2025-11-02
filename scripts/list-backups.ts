@@ -76,13 +76,10 @@ try {
   const totalSizeMB = (totalSize / (1024 * 1024)).toFixed(2);
 
   console.warn('\n' + '='.repeat(80));
-  console.warn(`\nTotal: ${backupFiles.length} backup(s), ${totalSizeKB} KB (${totalSizeMB} MB)`);
-  console.warn(`Location: ${backupsDir}`);
-  console.warn('\n💡 Tip: Run "npm run db:backup" to create a new backup\n');
+  console.warn(`\nTotal: ${backupFiles.length} backup(s)`);
+  console.warn(`Total Size: ${totalSizeKB} KB (${totalSizeMB} MB)\n`);
 
-  process.exit(0);
 } catch (error) {
-  console.error('\n❌ Error listing backups:');
-  console.error(error);
+  console.error('❌ Error listing backups:', error.message);
   process.exit(1);
 }

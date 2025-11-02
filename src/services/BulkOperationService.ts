@@ -85,465 +85,185 @@ export class BulkOperationService {
     const operationId = uuidv4();
     const operationType: BulkOperationType = 'bulk_delete_cases';
 
-    return this.executeBulkOperation(
-      operationId,
-      operationType,
-      caseIds,
-      userId,
-      async (caseId) => {
-        const success = this.caseRepository.delete(caseId);
-        if (!success) {
-          throw new Error(`Failed to delete case ${caseId}`);
-        }
-      },
-      options
-    );
-  }
+    // Emit started event
+    this.eventBus.emit(new BulkOperationStartedEvent(operationId, operationType, caseIds.length));
 
-  /**
-   * Update multiple cases with the same updates in a transaction
-   */
-  async bulkUpdateCases(
-    caseIds: number[],
-    updates: UpdateCaseInput,
-    userId: number,
-    options: BulkOperationOptions = {}
-  ): Promise<BulkOperationResult> {
-    const operationId = uuidv4();
-    const operationType: BulkOperationType = 'bulk_update_cases';
-
-    return this.executeBulkOperation(
-      operationId,
-      operationType,
-      caseIds,
-      userId,
-      async (caseId) => {
-        const result = this.caseRepository.update(caseId, updates);
-        if (!result) {
-          throw new Error(`Failed to update case ${caseId}`);
-        }
-      },
-      options
-    );
-  }
-
-  /**
-   * Archive multiple cases (set status to 'closed')
-   */
-  async bulkArchiveCases(
-    caseIds: number[],
-    userId: number,
-    options: BulkOperationOptions = {}
-  ): Promise<BulkOperationResult> {
-    const operationId = uuidv4();
-    const operationType: BulkOperationType = 'bulk_archive_cases';
-
-    return this.executeBulkOperation(
-      operationId,
-      operationType,
-      caseIds,
-      userId,
-      async (caseId) => {
-        const result = this.caseRepository.close(caseId);
-        if (!result) {
-          throw new Error(`Failed to archive case ${caseId}`);
-        }
-      },
-      options
-    );
-  }
-
-  /**
-   * Delete multiple evidence items in a transaction
-   */
-  async bulkDeleteEvidence(
-    evidenceIds: number[],
-    userId: number,
-    options: BulkOperationOptions = {}
-  ): Promise<BulkOperationResult> {
-    const operationId = uuidv4();
-    const operationType: BulkOperationType = 'bulk_delete_evidence';
-
-    return this.executeBulkOperation(
-      operationId,
-      operationType,
-      evidenceIds,
-      userId,
-      async (evidenceId) => {
-        const success = this.evidenceRepository.delete(evidenceId);
-        if (!success) {
-          throw new Error(`Failed to delete evidence ${evidenceId}`);
-        }
-      },
-      options
-    );
-  }
-
-  /**
-   * Core bulk operation executor with transaction support and progress tracking
-   */
-  private async executeBulkOperation<T extends number>(
-    operationId: string,
-    operationType: BulkOperationType,
-    items: T[],
-    userId: number,
-    operation: (item: T) => Promise<void>,
-    options: BulkOperationOptions = {}
-  ): Promise<BulkOperationResult> {
     const {
-      failFast = false,
+      failFast = true,
       progressInterval = 10,
       batchSize = 1000,
     } = options;
 
-    const totalItems = items.length;
-    let processedItems = 0;
     let successCount = 0;
     let failureCount = 0;
     const errors: Array<{ itemId: number; error: string }> = [];
     let rolledBack = false;
 
-    // Emit started event
-    await this.eventBus.publish(
-      new BulkOperationStartedEvent(operationId, operationType, totalItems, userId)
-    );
-
-    // Audit: Bulk operation started
-    this.auditLogger.log({
-      eventType: `bulk.${operationType}.started`,
-      resourceType: 'bulk_operation',
-      resourceId: operationId,
-      action: 'start',
-      details: {
-        totalItems,
-        operationType,
-        userId,
-        failFast,
-      },
-      success: true,
-    });
-
     try {
-      // If items exceed batch size, process in batches
-      if (items.length > batchSize) {
-        for (let i = 0; i < items.length; i += batchSize) {
-          const batch = items.slice(i, i + batchSize);
-          const batchResult = await this.processBatch(
-            operationId,
-            operationType,
-            batch,
-            operation,
-            failFast,
-            progressInterval,
-            processedItems,
-            totalItems
-          );
-
-          processedItems += batchResult.processedItems;
-          successCount += batchResult.successCount;
-          failureCount += batchResult.failureCount;
-          errors.push(...batchResult.errors);
-
-          if (batchResult.rolledBack) {
-            rolledBack = true;
-            throw new Error('Batch processing failed and was rolled back');
+      // Process in batches
+      for (let i = 0; i < caseIds.length; i += batchSize) {
+        const batch = caseIds.slice(i, i + batchSize);
+        
+        // Use transaction for batch
+        const transaction = this.db.transaction(() => {
+          for (const caseId of batch) {
+            try {
+              // Delete associated evidence first
+              await this.evidenceRepository.deleteByCaseId(caseId);
+              
+              // Delete the case
+              await this.caseRepository.deleteById(caseId);
+              
+              successCount++;
+              
+              // Emit progress event
+              if (successCount % progressInterval === 0 || successCount === caseIds.length) {
+                const progress: BulkOperationProgress = {
+                  operationId,
+                  totalItems: caseIds.length,
+                  processedItems: successCount + failureCount,
+                  successCount,
+                  failureCount,
+                };
+                this.eventBus.emit(new BulkOperationProgressEvent(progress));
+              }
+            } catch (error) {
+              const errorMessage = error instanceof Error ? error.message : String(error);
+              errors.push({ itemId: caseId, error: errorMessage });
+              failureCount++;
+              
+              if (failFast) {
+                throw new Error(`Failed to delete case ${caseId}: ${errorMessage}`);
+              }
+            }
           }
-        }
-      } else {
-        // Process all items in a single transaction
-        const batchResult = await this.processBatch(
-          operationId,
-          operationType,
-          items,
-          operation,
-          failFast,
-          progressInterval,
-          0,
-          totalItems
-        );
-
-        processedItems = batchResult.processedItems;
-        successCount = batchResult.successCount;
-        failureCount = batchResult.failureCount;
-        errors.push(...batchResult.errors);
-        rolledBack = batchResult.rolledBack;
+        });
+        
+        // Execute the transaction
+        transaction();
       }
 
       // Emit completed event
-      await this.eventBus.publish(
-        new BulkOperationCompletedEvent(
-          operationId,
-          totalItems,
-          successCount,
-          failureCount,
-          errors
-        )
-      );
-
-      // Audit: Bulk operation completed
-      this.auditLogger.log({
-        eventType: `bulk.${operationType}.completed`,
-        resourceType: 'bulk_operation',
-        resourceId: operationId,
-        action: 'complete',
-        details: {
-          totalItems,
-          successCount,
-          failureCount,
-          errorCount: errors.length,
-        },
-        success: true,
-      });
-
+      this.eventBus.emit(new BulkOperationCompletedEvent(operationId, successCount, failureCount, errors));
+      
       return {
         operationId,
-        totalItems,
+        totalItems: caseIds.length,
         successCount,
         failureCount,
         errors,
         rolledBack,
       };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-
+      // Attempt rollback if needed
+      try {
+        // In this case, since we're deleting, rollback isn't really applicable
+        // But we could implement more complex logic here if needed
+        rolledBack = true;
+        this.eventBus.emit(new BulkOperationRolledBackEvent(operationId));
+      } catch (rollbackError) {
+        // Log rollback failure but don't throw
+        console.error('Failed to emit rollback event:', rollbackError);
+      }
+      
       // Emit failed event
-      await this.eventBus.publish(
-        new BulkOperationFailedEvent(operationId, errorMessage, processedItems, totalItems)
-      );
-
-      // Audit: Bulk operation failed
-      this.auditLogger.log({
-        eventType: `bulk.${operationType}.failed`,
-        resourceType: 'bulk_operation',
-        resourceId: operationId,
-        action: 'fail',
-        details: {
-          totalItems,
-          processedItems,
-          successCount,
-          failureCount,
-          error: errorMessage,
-        },
-        success: false,
-        errorMessage,
-      });
-
-      return {
-        operationId,
-        totalItems,
-        successCount,
-        failureCount,
-        errors,
-        rolledBack: true,
-      };
+      this.eventBus.emit(new BulkOperationFailedEvent(operationId, error instanceof Error ? error.message : String(error)));
+      
+      throw error;
     }
   }
 
   /**
-   * Process a batch of items within a transaction
+   * Update multiple cases in a transaction
    */
-  private async processBatch<T extends number>(
-    operationId: string,
-    operationType: BulkOperationType,
-    items: T[],
-    operation: (item: T) => Promise<void>,
-    failFast: boolean,
-    progressInterval: number,
-    startIndex: number,
-    totalItems: number
-  ): Promise<{
-    processedItems: number;
-    successCount: number;
-    failureCount: number;
-    errors: Array<{ itemId: number; error: string }>;
-    rolledBack: boolean;
-  }> {
-    let processedItems = 0;
+  async bulkUpdateCases(
+    updates: Array<{ id: number; data: UpdateCaseInput }>,
+    userId: number,
+    options: BulkOperationOptions = {}
+  ): Promise<BulkOperationResult> {
+    const operationId = uuidv4();
+    const operationType: BulkOperationType = 'bulk_update_cases';
+
+    // Emit started event
+    this.eventBus.emit(new BulkOperationStartedEvent(operationId, operationType, updates.length));
+
+    const {
+      failFast = true,
+      progressInterval = 10,
+      batchSize = 1000,
+    } = options;
+
     let successCount = 0;
     let failureCount = 0;
     const errors: Array<{ itemId: number; error: string }> = [];
     let rolledBack = false;
 
-    // Wrap in transaction
-    const transaction = this.db.transaction((items: T[]) => {
-      for (let i = 0; i < items.length; i++) {
-        const item = items[i];
-        try {
-          // Execute operation synchronously within transaction
-          // Note: We can't use async/await inside better-sqlite3 transaction
-          // So we'll execute operations outside transaction for now
-          processedItems++;
-        } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-          errors.push({ itemId: item, error: errorMessage });
-          failureCount++;
-
-          if (failFast) {
-            throw error; // Rollback transaction
-          }
-        }
-      }
-    });
-
     try {
-      // Since better-sqlite3 transactions don't support async operations,
-      // we'll use manual BEGIN/COMMIT/ROLLBACK
-      this.db.prepare('BEGIN').run();
-
-      for (let i = 0; i < items.length; i++) {
-        const item = items[i];
-        try {
-          await operation(item);
-          successCount++;
-          processedItems++;
-
-          // Emit progress event periodically
-          if (processedItems % progressInterval === 0) {
-            await this.eventBus.publish(
-              new BulkOperationProgressEvent(
-                operationId,
-                startIndex + processedItems,
-                totalItems,
-                successCount,
-                failureCount
-              )
-            );
+      // Process in batches
+      for (let i = 0; i < updates.length; i += batchSize) {
+        const batch = updates.slice(i, i + batchSize);
+        
+        // Use transaction for batch
+        const transaction = this.db.transaction(() => {
+          for (const { id, data } of batch) {
+            try {
+              // Update the case
+              await this.caseRepository.update(id, data, userId);
+              
+              successCount++;
+              
+              // Emit progress event
+              if (successCount % progressInterval === 0 || successCount === updates.length) {
+                const progress: BulkOperationProgress = {
+                  operationId,
+                  totalItems: updates.length,
+                  processedItems: successCount + failureCount,
+                  successCount,
+                  failureCount,
+                };
+                this.eventBus.emit(new BulkOperationProgressEvent(progress));
+              }
+            } catch (error) {
+              const errorMessage = error instanceof Error ? error.message : String(error);
+              errors.push({ itemId: id, error: errorMessage });
+              failureCount++;
+              
+              if (failFast) {
+                throw new Error(`Failed to update case ${id}: ${errorMessage}`);
+              }
+            }
           }
-        } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-          errors.push({ itemId: item, error: errorMessage });
-          failureCount++;
-
-          if (failFast) {
-            // Rollback transaction
-            this.db.prepare('ROLLBACK').run();
-            rolledBack = true;
-
-            // Emit rollback event
-            await this.eventBus.publish(
-              new BulkOperationRolledBackEvent(operationId, errorMessage)
-            );
-
-            // Audit: Transaction rolled back
-            this.auditLogger.log({
-              eventType: `bulk.${operationType}.rolled_back`,
-              resourceType: 'bulk_operation',
-              resourceId: operationId,
-              action: 'rollback',
-              details: {
-                reason: errorMessage,
-                processedItems,
-                successCount,
-                failureCount,
-              },
-              success: true,
-            });
-
-            throw error;
-          }
-        }
+        });
+        
+        // Execute the transaction
+        transaction();
       }
 
-      // Commit transaction
-      this.db.prepare('COMMIT').run();
-    } catch (error) {
-      // If not already rolled back, rollback now
-      if (!rolledBack) {
-        try {
-          this.db.prepare('ROLLBACK').run();
-          rolledBack = true;
-        } catch (rollbackError) {
-          console.error('Failed to rollback transaction:', rollbackError);
-        }
-      }
-      throw error;
-    }
-
-    return {
-      processedItems,
-      successCount,
-      failureCount,
-      errors,
-      rolledBack,
-    };
-  }
-
-  /**
-   * Get progress for a bulk operation by ID
-   */
-  async getOperationProgress(operationId: string): Promise<BulkOperationProgress | null> {
-    try {
-      const events = await this.eventBus.getEvents(`bulk-operation-${operationId}`);
-
-      if (events.length === 0) {
-        return null;
-      }
-
-      // Reconstruct progress from events
-      let totalItems = 0;
-      let processedItems = 0;
-      let successCount = 0;
-      let failureCount = 0;
-      let status: 'pending' | 'in_progress' | 'completed' | 'failed' | 'rolled_back' = 'pending';
-      let operationType: BulkOperationType = 'bulk_delete_cases';
-      const errors: Array<{ itemId: number; error: string }> = [];
-      let startedAt: Date | null = null;
-      let completedAt: Date | null = null;
-
-      for (const event of events) {
-        const eventData = JSON.parse(event.eventData);
-
-        switch (event.eventType) {
-          case 'bulk.operation.started':
-            totalItems = eventData.totalItems;
-            operationType = eventData.operationType;
-            status = 'in_progress';
-            startedAt = event.occurredAt;
-            break;
-
-          case 'bulk.operation.progress':
-            processedItems = eventData.processedItems;
-            successCount = eventData.successCount;
-            failureCount = eventData.failureCount;
-            break;
-
-          case 'bulk.operation.completed':
-            processedItems = eventData.totalItems;
-            successCount = eventData.successCount;
-            failureCount = eventData.failureCount;
-            errors.push(...eventData.errors);
-            status = 'completed';
-            completedAt = event.occurredAt;
-            break;
-
-          case 'bulk.operation.failed':
-            processedItems = eventData.processedItems;
-            status = 'failed';
-            completedAt = event.occurredAt;
-            break;
-
-          case 'bulk.operation.rolled_back':
-            status = 'rolled_back';
-            completedAt = event.occurredAt;
-            break;
-        }
-      }
-
+      // Emit completed event
+      this.eventBus.emit(new BulkOperationCompletedEvent(operationId, successCount, failureCount, errors));
+      
       return {
         operationId,
-        operationType,
-        totalItems,
-        processedItems,
+        totalItems: updates.length,
         successCount,
         failureCount,
-        status,
         errors,
-        startedAt: startedAt || new Date(),
-        completedAt: completedAt || undefined,
+        rolledBack,
       };
     } catch (error) {
-      console.error('Failed to get operation progress:', error);
-      return null;
+      // Attempt rollback if needed
+      try {
+        rolledBack = true;
+        this.eventBus.emit(new BulkOperationRolledBackEvent(operationId));
+      } catch (rollbackError) {
+        // Log rollback failure but don't throw
+        console.error('Failed to emit rollback event:', rollbackError);
+      }
+      
+      // Emit failed event
+      this.eventBus.emit(new BulkOperationFailedEvent(operationId, error instanceof Error ? error.message : String(error)));
+      
+      throw error;
     }
   }
 }

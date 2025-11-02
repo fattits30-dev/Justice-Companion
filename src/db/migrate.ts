@@ -3,7 +3,7 @@ import { logger } from '../utils/logger.ts';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import crypto from 'crypto';
-import { DatabaseManager } from './database.ts';
+import { databaseManager } from './database.ts';
 import { errorLogger } from '../utils/error-logger.ts';
 
 // ESM equivalent of __dirname
@@ -32,7 +32,7 @@ export interface MigrationRecord {
  * Enhanced migration table with checksum, duration, and status tracking
  */
 function ensureMigrationsTable(): void {
-  const db = DatabaseManager.getInstance().getDatabase();
+  const db = databaseManager.getDatabase();
 
   db.exec(`
     CREATE TABLE IF NOT EXISTS migrations (
@@ -71,7 +71,7 @@ export function parseMigration(content: string): { up: string; down: string } {
  * Run all pending migrations
  */
 export function runMigrations(): void {
-  const db = DatabaseManager.getInstance().getDatabase();
+  const db = databaseManager.getDatabase();
   // Try multiple paths to find migrations
   const possiblePaths = [
     path.join(__dirname, 'migrations'), // Bundled: dist-electron/migrations
@@ -177,7 +177,7 @@ export function runMigrations(): void {
  * Rollback a specific migration by name
  */
 export function rollbackMigration(migrationName: string): void {
-  const db = DatabaseManager.getInstance().getDatabase();
+  const db = databaseManager.getDatabase();
   const migrationsDir = path.join(__dirname, 'migrations');
 
   try {
@@ -239,7 +239,7 @@ export function getMigrationStatus(): {
   pending: string[];
   rolledBack: MigrationRecord[];
   } {
-  const db = DatabaseManager.getInstance().getDatabase();
+  const db = databaseManager.getDatabase();
   const migrationsDir = path.join(__dirname, 'migrations');
 
   ensureMigrationsTable();

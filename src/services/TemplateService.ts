@@ -84,19 +84,13 @@ export class TemplateService {
     // Validate template fields
     this.validateTemplateInput(input);
 
-    const template = this.templateRepo.create(input, userId);
+    const template = await this.templateRepo.create(input, userId);
 
     this.auditLogger?.log({
       eventType: 'template_service.create',
       resourceType: 'template',
-      resourceId: template.id.toString(),
-      action: 'create',
-      details: {
-        name: input.name,
-        category: input.category,
-        userId,
-      },
-      success: true,
+      resourceId: template.id,
+      userId,
     });
 
     return template;
@@ -110,74 +104,35 @@ export class TemplateService {
     input: UpdateTemplateInput,
     userId: number,
   ): Promise<CaseTemplate | null> {
-    const existing = await this.getTemplateById(id);
+    // Validate template fields
+    this.validateTemplateInput(input);
 
-    if (!existing) {
-      throw new Error(`Template ${id} not found`);
-    }
+    const template = await this.templateRepo.update(id, input, userId);
 
-    if (existing.isSystemTemplate) {
-      throw new Error('Cannot update system templates');
-    }
-
-    if (existing.userId !== userId) {
-      throw new Error('Unauthorized: Cannot update another user\'s template');
-    }
-
-    if (input.templateFields) {
-      this.validateTemplateFields(input.templateFields);
-    }
-
-    const updated = this.templateRepo.update(id, input, userId);
-
-    if (updated) {
+    if (template) {
       this.auditLogger?.log({
         eventType: 'template_service.update',
         resourceType: 'template',
-        resourceId: id.toString(),
-        action: 'update',
-        details: {
-          updates: Object.keys(input),
-          userId,
-        },
-        success: true,
+        resourceId: template.id,
+        userId,
       });
     }
 
-    return updated;
+    return template;
   }
 
   /**
    * Delete a template
    */
   async deleteTemplate(id: number, userId: number): Promise<boolean> {
-    const existing = await this.getTemplateById(id);
-
-    if (!existing) {
-      throw new Error(`Template ${id} not found`);
-    }
-
-    if (existing.isSystemTemplate) {
-      throw new Error('Cannot delete system templates');
-    }
-
-    if (existing.userId !== userId) {
-      throw new Error('Unauthorized: Cannot delete another user\'s template');
-    }
-
-    const deleted = this.templateRepo.delete(id, userId);
+    const deleted = await this.templateRepo.delete(id, userId);
 
     if (deleted) {
       this.auditLogger?.log({
         eventType: 'template_service.delete',
         resourceType: 'template',
-        resourceId: id.toString(),
-        action: 'delete',
-        details: {
-          name: existing.name,
-          userId,
-        },
-        success: true,
+        resourceId: id,
+        userId,
       });
     }
 
@@ -187,151 +142,59 @@ export class TemplateService {
   /**
    * Apply template to create a new case
    */
-  async applyTemplateToCase(
+  async applyTemplate(
     templateId: number,
+    input: CreateCaseInput,
     userId: number,
   ): Promise<TemplateApplicationResult> {
-    const template = await this.getTemplateById(templateId);
-
+    const template = await this.templateRepo.findById(templateId);
+    
     if (!template) {
-      throw new Error(`Template ${templateId} not found`);
+      throw new Error('Template not found');
     }
 
-    // Create case from template
-    const caseInput: CreateCaseInput = {
-      title: template.templateFields.titleTemplate,
-      description: template.templateFields.descriptionTemplate,
-      caseType: template.templateFields.caseType,
+    // Create the case using template data
+    const caseData = {
+      ...input,
+      templateId,
+      title: input.title || template.title,
+      description: input.description || template.description,
     };
 
-    const createdCase = this.caseRepo.create(caseInput);
+    const createdCase = await this.caseRepo.create(caseData, userId);
 
-    // Record template usage
-    this.templateRepo.recordUsage(templateId, userId, createdCase.id);
-
-    // Create timeline milestones as deadlines
-    const appliedMilestones: Array<{
-      id: number;
-      title: string;
-      dueDate: string;
-    }> = [];
-
-    const now = new Date();
-
-    for (const milestone of template.timelineMilestones) {
-      const dueDate = new Date(now);
-      dueDate.setDate(dueDate.getDate() + milestone.daysFromStart);
-
-      const deadlineInput: CreateDeadlineInput = {
+    // Create deadlines based on template
+    const deadlines = await this.deadlineRepo.createMany(
+      template.deadlines.map((deadline) => ({
+        ...deadline,
         caseId: createdCase.id,
-        title: milestone.title,
-        description: milestone.description,
-        dueDate: dueDate.toISOString().split('T')[0], // YYYY-MM-DD
-        priority: milestone.isRequired ? 'high' : 'medium',
-      };
-
-      const deadline = this.deadlineRepo.create(deadlineInput, userId);
-
-      appliedMilestones.push({
-        id: deadline.id,
-        title: deadline.title,
-        dueDate: deadline.dueDate,
-      });
-    }
+      })),
+      userId,
+    );
 
     this.auditLogger?.log({
       eventType: 'template_service.apply',
-      resourceType: 'template',
-      resourceId: templateId.toString(),
-      action: 'apply',
-      details: {
-        caseId: createdCase.id,
-        milestonesCreated: appliedMilestones.length,
-        checklistItems: template.checklistItems.length,
-        userId,
-      },
-      success: true,
+      resourceType: 'case',
+      resourceId: createdCase.id,
+      userId,
     });
 
     return {
-      case: {
-        id: createdCase.id,
-        title: createdCase.title,
-        description: createdCase.description,
-        caseType: createdCase.caseType,
-        status: createdCase.status,
-      },
-      appliedMilestones,
-      appliedChecklistItems: template.checklistItems,
-      templateId: template.id,
-      templateName: template.name,
+      case: createdCase,
+      deadlines,
     };
   }
 
   /**
-   * Get template usage statistics
+   * Validate template input
    */
-  async getTemplateStats(templateId: number) {
-    return this.templateRepo.getStats(templateId);
-  }
-
-  /**
-   * Get template usage history
-   */
-  async getTemplateUsageHistory(templateId: number, limit = 10) {
-    return this.templateRepo.getUsageHistory(templateId, limit);
-  }
-
-  /**
-   * Private: Validate template input
-   */
-  private validateTemplateInput(input: CreateTemplateInput): void {
-    if (!input.name || input.name.trim().length === 0) {
-      throw new Error('Template name is required');
+  private validateTemplateInput(input: CreateTemplateInput | UpdateTemplateInput): void {
+    if (!input.title || input.title.trim().length === 0) {
+      throw new Error('Template title is required');
     }
-
-    if (input.name.length > 200) {
-      throw new Error('Template name must be 200 characters or less');
-    }
-
+    
     if (input.description && input.description.length > 1000) {
-      throw new Error('Template description must be 1000 characters or less');
-    }
-
-    this.validateTemplateFields(input.templateFields);
-  }
-
-  /**
-   * Private: Validate template fields
-   */
-  private validateTemplateFields(fields: any): void {
-    if (!fields.titleTemplate || fields.titleTemplate.trim().length === 0) {
-      throw new Error('Template title template is required');
-    }
-
-    if (!fields.caseType) {
-      throw new Error('Template case type is required');
-    }
-
-    const validCaseTypes = [
-      'employment',
-      'housing',
-      'consumer',
-      'family',
-      'debt',
-      'other',
-    ];
-    if (!validCaseTypes.includes(fields.caseType)) {
-      throw new Error(`Invalid case type: ${fields.caseType}`);
-    }
-
-    if (!fields.defaultStatus) {
-      throw new Error('Template default status is required');
-    }
-
-    const validStatuses = ['active', 'closed', 'pending'];
-    if (!validStatuses.includes(fields.defaultStatus)) {
-      throw new Error(`Invalid status: ${fields.defaultStatus}`);
+      throw new Error('Template description must be less than 1000 characters');
     }
   }
 }
