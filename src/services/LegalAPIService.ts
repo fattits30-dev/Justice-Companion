@@ -342,8 +342,8 @@ export class LegalAPIService {
 
       // Fetch from APIs in parallel
       const [legislation, cases, knowledgeBase] = await Promise.all([
-        this.searchLegislation(keywords.all),
-        this.searchCaseLaw(keywords.all, category), // Pass category for court filtering
+        this.searchLegislationInternal(keywords.all),
+        this.searchCaseLawInternal(keywords.all, category), // Pass category for court filtering
         this.searchKnowledgeBase(keywords.all),
       ]);
 
@@ -474,10 +474,27 @@ export class LegalAPIService {
   // ==========================================================================
 
   /**
-   * Search legislation.gov.uk API
+   * Search legislation by query (interface compliance)
+   */
+  async searchLegislation(query: string | string[]): Promise<unknown> {
+    try {
+      // Handle both string and array inputs
+      const keywords = Array.isArray(query) ? query : [query];
+      return await this.searchLegislationInternal(keywords);
+    } catch (error) {
+      errorLogger.logError(error as Error, {
+        context: 'searchLegislation',
+        query,
+      });
+      return [];
+    }
+  }
+
+  /**
+   * Search legislation.gov.uk API (internal implementation)
    * Queries UK statutes, regulations, and statutory instruments
    */
-  async searchLegislation(keywords: string[]): Promise<LegislationResult[]> {
+  private async searchLegislationInternal(keywords: string[]): Promise<LegislationResult[]> {
     try {
       const query = keywords.join(' ');
       // Use Atom feed endpoint for UK Public General Acts
@@ -501,7 +518,7 @@ export class LegalAPIService {
       return this.parseAtomFeedToLegislation(xmlText, query);
     } catch (error) {
       errorLogger.logError(error as Error, {
-        context: 'searchLegislation',
+        context: 'searchLegislationInternal',
         keywords,
         isOffline: isNetworkError(error),
       });
@@ -510,10 +527,28 @@ export class LegalAPIService {
   }
 
   /**
-   * Search Find Case Law API
+   * Search case law by query (interface compliance)
+   */
+  async searchCaseLaw(query: string | string[], category?: string): Promise<unknown> {
+    try {
+      // Handle both string and array inputs
+      const keywords = Array.isArray(query) ? query : [query];
+      return await this.searchCaseLawInternal(keywords, category);
+    } catch (error) {
+      errorLogger.logError(error as Error, {
+        context: 'searchCaseLaw',
+        query,
+        category,
+      });
+      return [];
+    }
+  }
+
+  /**
+   * Search Find Case Law API (internal implementation)
    * Queries tribunal decisions, court judgments, and precedents with intelligent court filtering
    */
-  async searchCaseLaw(
+  private async searchCaseLawInternal(
     keywords: string[],
     category: string = 'general',
   ): Promise<CaseResult[]> {
@@ -558,12 +593,74 @@ export class LegalAPIService {
       return this.parseAtomFeedToCaseLaw(xmlText, query);
     } catch (error) {
       errorLogger.logError(error as Error, {
-        context: 'searchCaseLaw',
+        context: 'searchCaseLawInternal',
         keywords,
         category,
         isOffline: isNetworkError(error),
       });
       return [];
+    }
+  }
+
+  /**
+   * Get legislation by ID
+   */
+  async getLegislation(id: string): Promise<unknown> {
+    try {
+      const url = `${API_CONFIG.LEGISLATION_BASE_URL}/${id}/data.xml`;
+
+      errorLogger.logError('Fetching legislation by ID', {
+        type: 'info',
+        id,
+        url,
+      });
+
+      const response = await this.fetchWithRetry(url);
+
+      if (!response.ok) {
+        throw new Error(`Legislation API returned ${response.status}`);
+      }
+
+      const xmlText = await response.text();
+      return xmlText;
+    } catch (error) {
+      errorLogger.logError(error as Error, {
+        context: 'getLegislation',
+        id,
+        isOffline: isNetworkError(error),
+      });
+      return null;
+    }
+  }
+
+  /**
+   * Get case law by ID
+   */
+  async getCaseLaw(id: string): Promise<unknown> {
+    try {
+      const url = `${API_CONFIG.CASELAW_BASE_URL}/${id}`;
+
+      errorLogger.logError('Fetching case law by ID', {
+        type: 'info',
+        id,
+        url,
+      });
+
+      const response = await this.fetchWithRetry(url);
+
+      if (!response.ok) {
+        throw new Error(`Case Law API returned ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      errorLogger.logError(error as Error, {
+        context: 'getCaseLaw',
+        id,
+        isOffline: isNetworkError(error),
+      });
+      return null;
     }
   }
 

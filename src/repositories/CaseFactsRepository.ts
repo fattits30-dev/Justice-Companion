@@ -4,6 +4,19 @@ import type { AuditLogger } from '../services/AuditLogger.ts';
 import { EncryptionService, type EncryptedData } from '../services/EncryptionService.ts';
 
 /**
+ * Database row type for case_facts table
+ */
+interface CaseFactRow {
+  id: number;
+  case_id: number;
+  fact_content: string;
+  fact_category: string;
+  importance: string;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
  * Repository for managing case facts with encryption
  *
  * Security:
@@ -75,6 +88,7 @@ export class CaseFactsRepository {
       this.auditLogger?.log({
         eventType: 'case_fact.create',
         resourceType: 'case_fact',
+        resourceId: 'unknown',
         action: 'create',
         details: {
           caseId: input.caseId,
@@ -84,7 +98,7 @@ export class CaseFactsRepository {
         },
         success: false,
       });
-      
+
       throw _error;
     }
   }
@@ -94,19 +108,19 @@ export class CaseFactsRepository {
    */
   findById(id: number): CaseFact | null {
     const db = getDb();
-    
+
     const stmt = db.prepare(`
       SELECT id, case_id, fact_content, fact_category, importance, created_at, updated_at
       FROM case_facts
       WHERE id = ?
     `);
-    
-    const row = stmt.get(id);
-    
+
+    const row = stmt.get(id) as CaseFactRow | undefined;
+
     if (!row) {
       return null;
     }
-    
+
     // Decrypt fact_content if needed (backward compatibility)
     let decryptedContent: string;
     try {
@@ -123,15 +137,15 @@ export class CaseFactsRepository {
       // Fallback to plaintext if decryption fails
       decryptedContent = row.fact_content;
     }
-    
+
     return {
       id: row.id,
       caseId: row.case_id,
       factContent: decryptedContent,
       factCategory: row.fact_category,
       importance: row.importance,
-      createdAt: new Date(row.created_at),
-      updatedAt: new Date(row.updated_at),
+      createdAt: new Date(row.created_at).toISOString(),
+      updatedAt: new Date(row.updated_at).toISOString(),
     };
   }
 
@@ -206,15 +220,15 @@ export class CaseFactsRepository {
       this.auditLogger?.log({
         eventType: 'case_fact.update',
         resourceType: 'case_fact',
+        resourceId: id.toString(),
         action: 'update',
         details: {
-          caseId: input.caseId,
           factCategory: input.factCategory,
           importance: input.importance,
         },
         success: false,
       });
-      
+
       throw _error;
     }
   }
@@ -257,15 +271,12 @@ export class CaseFactsRepository {
       this.auditLogger?.log({
         eventType: 'case_fact.delete',
         resourceType: 'case_fact',
+        resourceId: id.toString(),
         action: 'delete',
-        details: {
-          caseId: null,
-          factCategory: null,
-          importance: null,
-        },
+        details: {},
         success: false,
       });
-      
+
       throw _error;
     }
   }
@@ -275,16 +286,16 @@ export class CaseFactsRepository {
    */
   findByCaseId(caseId: number): CaseFact[] {
     const db = getDb();
-    
+
     const stmt = db.prepare(`
       SELECT id, case_id, fact_content, fact_category, importance, created_at, updated_at
       FROM case_facts
       WHERE case_id = ?
       ORDER BY created_at DESC
     `);
-    
-    const rows = stmt.all(caseId);
-    
+
+    const rows = stmt.all(caseId) as CaseFactRow[];
+
     return rows.map(row => {
       // Decrypt fact_content if needed (backward compatibility)
       let decryptedContent: string;
@@ -302,15 +313,15 @@ export class CaseFactsRepository {
         // Fallback to plaintext if decryption fails
         decryptedContent = row.fact_content;
       }
-      
+
       return {
         id: row.id,
         caseId: row.case_id,
         factContent: decryptedContent,
         factCategory: row.fact_category,
         importance: row.importance,
-        createdAt: new Date(row.created_at),
-        updatedAt: new Date(row.updated_at),
+        createdAt: new Date(row.created_at).toISOString(),
+        updatedAt: new Date(row.updated_at).toISOString(),
       };
     });
   }

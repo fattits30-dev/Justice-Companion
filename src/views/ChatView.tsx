@@ -172,7 +172,10 @@ export function ChatView() {
         return { success: true };
       }
 
-      return { success: false, error: result.error };
+      const errorMsg = typeof result.error === 'string'
+        ? result.error
+        : result.error?.message || 'Failed to save';
+      return { success: false, error: errorMsg };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to save';
       toast.error('Failed to save to case', {

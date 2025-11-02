@@ -51,7 +51,10 @@ export function SaveToCaseDialog({
       const result = await window.justiceAPI.getAllCases(sessionId);
 
       if (!result.success) {
-        setError(result.error || 'Failed to load cases');
+        const errorMsg = typeof result.error === 'string'
+          ? result.error
+          : result.error?.message || 'Failed to load cases';
+        setError(errorMsg);
         return;
       }
 
