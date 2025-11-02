@@ -17,11 +17,12 @@ export async function initializeDatabase(): Promise<void> {
     // Dynamic import for ESM compatibility (tsx requires this)
     // Runtime path: from electron/ to src/ (sibling directory - one level up)
 
-    const { databaseManager } = await import('../src/db/database.ts');
+    const { DatabaseManager } = await import('../src/db/database.ts');
 
     const { runMigrations } = await import('../src/db/migrate.ts');
 
     // Initialize database connection
+    const databaseManager = DatabaseManager.getInstance();
     databaseManager.getDatabase();
     console.warn('[Database] Connection established');
 
@@ -43,8 +44,9 @@ export async function closeDatabase(): Promise<void> {
     // Dynamic import for ESM compatibility (tsx requires this)
     // Runtime path: from electron/ to src/ (sibling directory - one level up)
 
-    const { databaseManager } = await import('../src/db/database.ts');
+    const { DatabaseManager } = await import('../src/db/database.ts');
 
+    const databaseManager = DatabaseManager.getInstance();
     databaseManager.close();
     console.warn('[Database] Connection closed');
   } catch (error) {
