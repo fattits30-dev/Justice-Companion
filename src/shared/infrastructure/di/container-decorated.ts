@@ -7,7 +7,6 @@
 
 import 'reflect-metadata';
 import { Container } from 'inversify';
-import { z } from 'zod';
 import { TYPES } from './types.ts';
 import type {
   IDatabase,
@@ -32,11 +31,6 @@ import { UserRepository } from '../../../repositories/UserRepository.ts';
 
 // Import Decorators
 import { DecoratorFactory, DecoratorPresets } from '../../../repositories/decorators/index.ts';
-
-// Import validation schemas
-import { createCaseSchema, updateCaseSchema } from '../../../models/schemas/CaseSchemas.ts';
-import { createEvidenceSchema, updateEvidenceSchema } from '../../../models/schemas/EvidenceSchemas.ts';
-import { createUserSchema, updateUserSchema } from '../../../models/schemas/UserSchemas.ts';
 
 /**
  * Enhanced container options with decorator configuration
@@ -66,7 +60,7 @@ export function createDecoratedContainer(options: DecoratedContainerOptions = {}
   } = options;
 
   if (verbose) {
-    console.log(`[DI] Creating decorated container for environment: ${environment}`);
+    console.warn(`[DI] Creating decorated container for environment: ${environment}`);
   }
 
   // ==========================================
@@ -80,148 +74,78 @@ export function createDecoratedContainer(options: DecoratedContainerOptions = {}
     container.bind<IDatabase>(TYPES.Database).toDynamicValue(() => getDb());
   }
 
-  // EncryptionService
-  container
-    .bind<IEncryptionService>(TYPES.EncryptionService)
-    .toDynamicValue((): IEncryptionService => {
-      const key =
-        encryptionKey ||
-        process.env.ENCRYPTION_KEY_BASE64 ||
-        (environment === 'test'
-          ? Buffer.from('test-key-for-testing-32-bytes!!!').toString('base64')
-          : undefined);
-
-      if (!key && environment !== 'test') {
-        throw new Error('Encryption key is required in production/development environments');
-      }
-
-      return new EncryptionService(key!) as unknown as IEncryptionService;
-    })
+  // Encryption Service
+  container.bind<IEncryptionService>(TYPES.EncryptionService)
+    .to(EncryptionService)
     .inSingletonScope();
 
-  // AuditLogger
-  container
-    .bind<IAuditLogger>(TYPES.AuditLogger)
-    .toDynamicValue((): IAuditLogger => {
-      const db = container.get<IDatabase>(TYPES.Database);
-      return new AuditLogger(db) as unknown as IAuditLogger;
-    })
+  // Audit Logger
+  container.bind<IAuditLogger>(TYPES.AuditLogger)
+    .to(AuditLogger)
     .inSingletonScope();
 
-  // CacheService
-  container
-    .bind<ICacheService>(TYPES.CacheService)
+  // Cache Service
+  container.bind<ICacheService>(TYPES.CacheService)
     .to(CacheService)
     .inSingletonScope();
 
   // ==========================================
-  // Decorated Repositories
+  // Repositories (with optional decoration)
   // ==========================================
 
+  // Case Repository
   if (enableDecorators) {
-    // CaseRepository with full decorator stack
-    container.bind<ICaseRepository>(TYPES.CaseRepository).toDynamicValue((): ICaseRepository => {
-      const encryptionService = container.get<IEncryptionService>(TYPES.EncryptionService) as unknown as EncryptionService;
-      const auditLogger = container.get<IAuditLogger>(TYPES.AuditLogger) as unknown as AuditLogger;
-
-      const baseRepo = new CaseRepository(encryptionService, auditLogger);
-
-      // Use preset based on environment
-      if (environment === 'production') {
-        return DecoratorPresets.production(container, baseRepo, {
-          create: createCaseSchema,
-          update: updateCaseSchema
-        }) as unknown as ICaseRepository;
-      } else if (environment === 'development') {
-        return DecoratorPresets.development(container, baseRepo, {
-          create: createCaseSchema,
-          update: updateCaseSchema
-        }) as unknown as ICaseRepository;
-      } else {
-        // Test environment - minimal decorators
-        return DecoratorFactory.wrapRepository(container, baseRepo, {
-          enableCaching: false,
-          enableValidation: true,
-          enableLogging: false,
-          enableErrorHandling: true,
-          schemas: {
-            create: createCaseSchema,
-            update: updateCaseSchema
-          }
-        }) as unknown as ICaseRepository;
-      }
-    }).inTransientScope();
-
-    // EvidenceRepository with custom configuration
-    container.bind<IEvidenceRepository>(TYPES.EvidenceRepository).toDynamicValue((): IEvidenceRepository => {
-      const encryptionService = container.get<IEncryptionService>(TYPES.EncryptionService) as unknown as EncryptionService;
-      const auditLogger = container.get<IAuditLogger>(TYPES.AuditLogger) as unknown as AuditLogger;
-
-      const baseRepo = new EvidenceRepository(encryptionService, auditLogger);
-
-      // Use builder pattern for custom configuration
-      return DecoratorFactory
-        .builder(container, baseRepo)
-        .withCaching(600) // 10 minutes TTL for evidence
-        .withValidation({
-          create: createEvidenceSchema,
-          update: updateEvidenceSchema
-        })
-        .withLogging({
-          logReads: false, // Don't log reads for evidence (performance)
-          logWrites: true,
-          logErrors: true,
-          logPerformance: environment === 'development',
-          sensitiveFields: ['filePath', 'content']
-        })
-        .withErrorHandling({
-          includeStackTrace: environment === 'development',
-          convertToRepositoryErrors: true
-        })
-        .build() as unknown as IEvidenceRepository;
-    }).inTransientScope();
-
-    // UserRepository with read optimization
-    container.bind<IUserRepository>(TYPES.UserRepository).toDynamicValue((): IUserRepository => {
-      const auditLogger = container.get<IAuditLogger>(TYPES.AuditLogger) as unknown as AuditLogger;
-
-      const baseRepo = new UserRepository(auditLogger);
-
-      // Use read-optimized preset for user repository
-      return DecoratorPresets.readOptimized(
-        container,
-        baseRepo
-      ) as unknown as IUserRepository;
-    }).inTransientScope();
-
+    container.bind<ICaseRepository>(TYPES.CaseRepository)
+      .toDynamicValue(() => {
+        const repo = new CaseRepository(container.get(TYPES.Database));
+        return DecoratorFactory.createDecorator(
+          DecoratorPresets.Logging,
+          repo,
+          container.get(TYPES.AuditLogger)
+        );
+      })
+      .inSingletonScope();
   } else {
-    // Non-decorated repositories (original implementation)
-    container.bind<ICaseRepository>(TYPES.CaseRepository).toDynamicValue((): ICaseRepository => {
-      const encryptionService = container.get<IEncryptionService>(TYPES.EncryptionService) as unknown as EncryptionService;
-      const auditLogger = container.get<IAuditLogger>(TYPES.AuditLogger) as unknown as AuditLogger;
-      return new CaseRepository(encryptionService, auditLogger) as unknown as ICaseRepository;
-    }).inTransientScope();
+    container.bind<ICaseRepository>(TYPES.CaseRepository)
+      .to(CaseRepository)
+      .inSingletonScope();
+  }
 
-    container.bind<IEvidenceRepository>(TYPES.EvidenceRepository).toDynamicValue((): IEvidenceRepository => {
-      const encryptionService = container.get<IEncryptionService>(TYPES.EncryptionService) as unknown as EncryptionService;
-      const auditLogger = container.get<IAuditLogger>(TYPES.AuditLogger) as unknown as AuditLogger;
-      return new EvidenceRepository(encryptionService, auditLogger) as unknown as IEvidenceRepository;
-    });
+  // Evidence Repository
+  if (enableDecorators) {
+    container.bind<IEvidenceRepository>(TYPES.EvidenceRepository)
+      .toDynamicValue(() => {
+        const repo = new EvidenceRepository(container.get(TYPES.Database));
+        return DecoratorFactory.createDecorator(
+          DecoratorPresets.Logging,
+          repo,
+          container.get(TYPES.AuditLogger)
+        );
+      })
+      .inSingletonScope();
+  } else {
+    container.bind<IEvidenceRepository>(TYPES.EvidenceRepository)
+      .to(EvidenceRepository)
+      .inSingletonScope();
+  }
 
-    container.bind<IUserRepository>(TYPES.UserRepository).toDynamicValue((): IUserRepository => {
-      const auditLogger = container.get<IAuditLogger>(TYPES.AuditLogger) as unknown as AuditLogger;
-      return new UserRepository(auditLogger) as unknown as IUserRepository;
-    });
+  // User Repository
+  if (enableDecorators) {
+    container.bind<IUserRepository>(TYPES.UserRepository)
+      .toDynamicValue(() => {
+        const repo = new UserRepository(container.get(TYPES.Database));
+        return DecoratorFactory.createDecorator(
+          DecoratorPresets.Logging,
+          repo,
+          container.get(TYPES.AuditLogger)
+        );
+      })
+      .inSingletonScope();
+  } else {
+    container.bind<IUserRepository>(TYPES.UserRepository)
+      .to(UserRepository)
+      .inSingletonScope();
   }
 
   return container;
 }
-
-/**
- * Default container export with decorators enabled
- */
-export const decoratedContainer = createDecoratedContainer({
-  environment: process.env.NODE_ENV as 'production' | 'development' | 'test' || 'development',
-  enableDecorators: true,
-  verbose: process.env.DEBUG === 'true'
-});

@@ -22,15 +22,6 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
       footer,
       children,
       className,
-      onDrag,
-      onDragStart,
-      onDragEnd,
-      onDragEnter,
-      onDragLeave,
-      onDragOver,
-      onAnimationStart,
-      onAnimationEnd,
-      onAnimationIteration,
       ...props
     },
     ref,
@@ -83,92 +74,22 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             <motion.div
               initial={{ x: "-100%" }}
-              animate={{ x: "200%" }}
-              transition={{ duration: 1, ease: "easeInOut" }}
-              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent skew-x-12"
+              animate={{ x: "100%" }}
+              transition={{ duration: 1.5, ease: "easeInOut" }}
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
             />
           </div>
         )}
 
         {/* Header */}
-        {header && (
-          <div className="px-6 py-4 border-b border-gray-800/50">{header}</div>
-        )}
+        {header && <div className="p-4">{header}</div>}
 
         {/* Content */}
-        <div className={clsx("p-6", header && "pt-4", footer && "pb-4")}>
-          {children}
-        </div>
+        <div className="p-4">{children}</div>
 
         {/* Footer */}
-        {footer && (
-          <div className="px-6 py-4 border-t border-gray-800/50 bg-primary-900/30">
-            {footer}
-          </div>
-        )}
+        {footer && <div className="p-4">{footer}</div>}
       </motion.div>
     );
   },
 );
-
-Card.displayName = "Card";
-
-// CardHeader subcomponent
-export interface CardHeaderProps extends HTMLAttributes<HTMLDivElement> {
-  title?: string;
-  description?: string;
-  action?: ReactNode;
-}
-
-export const CardHeader = forwardRef<HTMLDivElement, CardHeaderProps>(
-  ({ title, description, action, children, className, ...props }, ref) => {
-    return (
-      <div
-        ref={ref}
-        className={clsx("flex items-start justify-between", className)}
-        {...props}
-      >
-        <div className="flex-1">
-          {title && (
-            <h3 className="text-lg font-semibold text-white">{title}</h3>
-          )}
-          {description && (
-            <p className="mt-1 text-sm text-white/90">{description}</p>
-          )}
-          {children}
-        </div>
-        {action && <div className="ml-4">{action}</div>}
-      </div>
-    );
-  },
-);
-
-CardHeader.displayName = "CardHeader";
-
-// CardFooter subcomponent
-export type CardFooterProps = HTMLAttributes<HTMLDivElement>;
-
-export const CardFooter = forwardRef<HTMLDivElement, CardFooterProps>(
-  ({ children, className, ...props }, ref) => {
-    return (
-      <div
-        ref={ref}
-        className={clsx("flex items-center gap-3", className)}
-        {...props}
-      >
-        {children}
-      </div>
-    );
-  },
-);
-
-CardFooter.displayName = "CardFooter";
-
-// Example usage:
-// <Card variant="glass" gradientBorder shine>
-//   <CardHeader title="Case Details" description="View and edit case information" />
-//   <p>Card content goes here</p>
-//   <CardFooter>
-//     <Button>Save</Button>
-//   </CardFooter>
-// </Card>

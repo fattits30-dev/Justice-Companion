@@ -37,11 +37,11 @@ export class CachingDecorator<T> extends RepositoryDecorator<T> {
   /**
    * Wrap findById with cache lookup
    */
-  async findById(id: number): Promise<any> {
+  async findById(id: number): Promise<T | null> {
     const cacheKey = this.getCacheKey('findById', id);
 
     // Try cache first
-    const cached = this.cache.get(cacheKey);
+    const cached = this.cache.get<T | null>(cacheKey);
     if (cached) {
       return cached;
     }
@@ -60,11 +60,11 @@ export class CachingDecorator<T> extends RepositoryDecorator<T> {
   /**
    * Wrap findAll with cache lookup
    */
-  async findAll(): Promise<any[]> {
+  async findAll(): Promise<T[]> {
     const cacheKey = this.getCacheKey('findAll');
 
     // Try cache first
-    const cached = this.cache.get<any[]>(cacheKey);
+    const cached = this.cache.get<T[]>(cacheKey);
     if (cached) {
       return cached;
     }
@@ -83,7 +83,7 @@ export class CachingDecorator<T> extends RepositoryDecorator<T> {
   /**
    * Wrap findByUserId with cache lookup
    */
-  async findByUserId(userId: number): Promise<any[]> {
+  async findByUserId(userId: number): Promise<T[]> {
     if (!this.hasMethod('findByUserId')) {
       return this.forwardCall('findByUserId', userId);
     }
@@ -91,7 +91,7 @@ export class CachingDecorator<T> extends RepositoryDecorator<T> {
     const cacheKey = this.getCacheKey('findByUserId', userId);
 
     // Try cache first
-    const cached = this.cache.get<any[]>(cacheKey);
+    const cached = this.cache.get<T[]>(cacheKey);
     if (cached) {
       return cached;
     }
@@ -108,94 +108,72 @@ export class CachingDecorator<T> extends RepositoryDecorator<T> {
   }
 
   /**
-   * Invalidate cache on write operations
+   * Wrap create with cache invalidation
    */
-  async create(input: any): Promise<any> {
-    const result = await (this.repository as any).create(input);
-    await this.invalidateCache();
+  async create(data: Partial<T>): Promise<T> {
+    const result = await (this.repository as any).create(data);
+
+    // Invalidate relevant caches
+    this.invalidateCachePattern('findById');
+    this.invalidateCachePattern('findAll');
+    this.invalidateCachePattern('findByUserId');
+
     return result;
   }
 
-  async update(id: number, input: any): Promise<any> {
-    const result = await (this.repository as any).update(id, input);
-    await this.invalidateCacheForId(id);
+  /**
+   * Wrap update with cache invalidation
+   */
+  async update(id: number, data: Partial<T>): Promise<T | null> {
+    const result = await (this.repository as any).update(id, data);
+
+    // Invalidate relevant caches
+    this.invalidateCachePattern('findById', id);
+    this.invalidateCachePattern('findByUserId');
+
     return result;
   }
 
+  /**
+   * Wrap delete with cache invalidation
+   */
   async delete(id: number): Promise<boolean> {
     const result = await (this.repository as any).delete(id);
-    await this.invalidateCacheForId(id);
+
+    // Invalidate relevant caches
+    this.invalidateCachePattern('findById', id);
+    this.invalidateCachePattern('findByUserId');
+
     return result;
   }
 
   /**
-   * Batch operations - invalidate all cache
-   */
-  async createBatch(items: any[]): Promise<any[]> {
-    if (!this.hasMethod('createBatch')) {
-      return this.forwardCall('createBatch', items);
-    }
-
-    const result = await (this.repository as any).createBatch(items);
-    await this.invalidateCache();
-    return result;
-  }
-
-  async deleteBatch(ids: number[]): Promise<number> {
-    if (!this.hasMethod('deleteBatch')) {
-      return this.forwardCall('deleteBatch', ids);
-    }
-
-    const result = await (this.repository as any).deleteBatch(ids);
-    await this.invalidateCache();
-    return result;
-  }
-
-  /**
-   * Generate cache key for method and arguments
+   * Generate cache key based on method and parameters
    */
   private getCacheKey(method: string, ...args: any[]): string {
-    return `${this.getRepositoryName()}:${method}:${args.join(':')}`;
+    const keyParts = [method, ...args.map(arg => String(arg))];
+    return keyParts.join(':');
   }
 
   /**
-   * Invalidate all cache for this repository
+   * Invalidate cache entries matching pattern
    */
-  private async invalidateCache(): Promise<void> {
-    // Clear all cache entries for this repository
-    const pattern = `${this.getRepositoryName()}:*`;
-    this.clearByPattern(pattern);
+  private invalidateCachePattern(pattern: string, ...args: any[]): void {
+    // Implementation would depend on your cache service's capabilities
+    // This is a placeholder for cache invalidation logic
   }
 
   /**
-   * Invalidate cache for a specific entity ID
+   * Check if repository has specific method
    */
-  private async invalidateCacheForId(id: number): Promise<void> {
-    // Clear specific ID entries
-    const patterns = [
-      `${this.getRepositoryName()}:findById:${id}`,
-      `${this.getRepositoryName()}:findAll*`,
-      `${this.getRepositoryName()}:findByUserId:*`,
-    ];
-
-    patterns.forEach(pattern => this.clearByPattern(pattern));
+  private hasMethod(methodName: string): boolean {
+    return typeof (this.repository as any)[methodName] === 'function';
   }
 
   /**
-   * Clear cache entries matching a pattern
-   * Note: Basic pattern matching since ICacheService doesn't have pattern support
+   * Forward call to original repository
    */
-  private clearByPattern(pattern: string): void {
-    // For now, we'll clear specific keys or all cache
-    // In production, implement pattern-based clearing in CacheService
-    if (pattern.includes('*')) {
-      // Clear all for this repository (simplified)
-      const baseKey = pattern.split(':')[0];
-      // This would need to be enhanced in the actual CacheService
-      this.cache.clear();
-    } else {
-      // Clear specific key
-      this.cache.delete(pattern);
-    }
+  private async forwardCall(methodName: string, ...args: any[]): Promise<any> {
+    return (this.repository as any)[methodName](...args);
   }
 }

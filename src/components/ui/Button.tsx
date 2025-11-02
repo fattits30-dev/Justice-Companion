@@ -32,6 +32,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       children,
       className,
       onClick,
+      /* eslint-disable @typescript-eslint/no-unused-vars */
       onDrag,
       onDragStart,
       onDragEnd,
@@ -41,6 +42,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       onAnimationStart,
       onAnimationEnd,
       onAnimationIteration,
+      /* eslint-enable @typescript-eslint/no-unused-vars */
       ...props
     },
     ref,
@@ -95,19 +97,19 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         "disabled:border-gray-700 disabled:cursor-not-allowed disabled:opacity-50",
       ),
       ghost: clsx(
-        "bg-white/5 backdrop-blur-sm",
-        "text-white border border-white/10",
-        "hover:bg-white/10 hover:border-white/20",
-        "active:bg-white/5",
-        "disabled:bg-white/5 disabled:border-white/5",
-        "disabled:cursor-not-allowed disabled:opacity-50",
+        "bg-transparent",
+        "text-gray-700 dark:text-gray-300",
+        "hover:bg-gray-100 dark:hover:bg-gray-800",
+        "active:bg-gray-200 dark:active:bg-gray-700",
+        "border border-gray-300 dark:border-gray-600",
+        "disabled:bg-transparent disabled:cursor-not-allowed disabled:opacity-50",
       ),
       danger: clsx(
-        "bg-gradient-to-br from-danger-500 to-danger-600",
-        "text-white shadow-danger",
-        "hover:shadow-danger hover:from-danger-400 hover:to-danger-500",
-        "active:from-danger-600 active:to-danger-700",
-        "border border-danger-400/20",
+        "bg-gradient-to-br from-red-500 to-red-600",
+        "text-white shadow-red",
+        "hover:shadow-red-lg hover:from-red-400 hover:to-red-500",
+        "active:from-red-600 active:to-red-700",
+        "border border-red-400/20",
         "disabled:from-gray-700 disabled:to-gray-800 disabled:shadow-none",
         "disabled:border-gray-700 disabled:cursor-not-allowed disabled:opacity-50",
       ),
@@ -115,79 +117,55 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
     // Size styles
     const sizeStyles = {
-      sm: "h-8 px-3 text-sm gap-1.5",
-      md: "h-10 px-4 text-base gap-2",
-      lg: "h-12 px-6 text-lg gap-2.5",
-    };
-
-    // Icon size
-    const iconSize = {
-      sm: "w-4 h-4",
-      md: "w-5 h-5",
-      lg: "w-6 h-6",
+      sm: "px-3 py-1.5 text-xs",
+      md: "px-4 py-2 text-sm",
+      lg: "px-6 py-3 text-base",
     };
 
     return (
       <motion.button
         ref={ref}
-        whileHover={{ scale: disabled || loading ? 1 : 1.02 }}
-        whileTap={{ scale: disabled || loading ? 1 : 0.98 }}
-        transition={{ type: "spring", stiffness: 400, damping: 17 }}
+        type="button"
+        disabled={disabled || loading}
         className={clsx(
-          // Base styles
-          "relative inline-flex items-center justify-center",
-          "font-medium rounded-lg",
-          "transition-all duration-200",
-          "focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-gray-900",
-          "overflow-hidden",
-          // Variant
+          "relative overflow-hidden rounded-lg font-medium transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900",
           variantStyles[variant],
-          // Size
           sizeStyles[size],
-          // Full width
           fullWidth && "w-full",
-          // Custom
           className,
         )}
-        disabled={disabled || loading}
         onClick={handleClick}
         {...props}
       >
-        {/* Ripple effect */}
+        {loading ? (
+          <div className="flex items-center justify-center">
+            <Loader2 className="h-4 w-4 animate-spin" />
+          </div>
+        ) : (
+          <div className="flex items-center justify-center gap-2">
+            {icon && iconPosition === "left" && icon}
+            {children}
+            {icon && iconPosition === "right" && icon}
+          </div>
+        )}
+
+        {/* Ripples */}
         {ripples.map((ripple) => (
-          <span
+          <motion.span
             key={ripple.id}
-            className="absolute rounded-full bg-white/30 pointer-events-none animate-ping"
+            className="absolute rounded-full bg-white/30"
             style={{
               left: ripple.x,
               top: ripple.y,
               width: ripple.size,
               height: ripple.size,
             }}
+            initial={{ scale: 0, opacity: 0.7 }}
+            animate={{ scale: 2, opacity: 0 }}
+            transition={{ duration: 0.6 }}
           />
         ))}
-
-        {/* Content */}
-        <span className="relative flex items-center justify-center gap-inherit">
-          {loading && (
-            <Loader2 className={clsx("animate-spin", iconSize[size])} />
-          )}
-          {!loading && icon && iconPosition === "left" && (
-            <span className={iconSize[size]}>{icon}</span>
-          )}
-          {children}
-          {!loading && icon && iconPosition === "right" && (
-            <span className={iconSize[size]}>{icon}</span>
-          )}
-        </span>
       </motion.button>
     );
   },
 );
-
-Button.displayName = "Button";
-
-// Example usage:
-// <Button variant="secondary" size="md" loading={false} icon={<Plus />}>
-//   Create Case
-// </Button>

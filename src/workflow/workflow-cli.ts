@@ -166,7 +166,7 @@ async function interactiveLoop(todoManager: TodoManager, configManager: ConfigMa
   while (true) {
     const command = await question('\n> ');
 
-    if (!command) continue;
+    if (!command) {continue;}
 
     const [cmd, ...args] = command.split(' ');
 

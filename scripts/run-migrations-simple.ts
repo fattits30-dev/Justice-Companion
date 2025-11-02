@@ -84,11 +84,10 @@ for (const file of pending) {
 
     console.log(`  ✓ Success (${duration}ms)\n`);
   } catch (error) {
-    console.error(`  ✗ Failed:`, error);
+    console.error(`  ✗ Failed: ${error.message}\n`);
     db.close();
     process.exit(1);
   }
 }
 
-console.log(`\n✓ All ${pending.length} migrations applied successfully!`);
 db.close();

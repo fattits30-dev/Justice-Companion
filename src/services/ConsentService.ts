@@ -82,65 +82,14 @@ export class ConsentService {
   /**
    * Check if user has active consent for a specific type
    */
-  hasConsent(userId: number, consentType: ConsentType): boolean {
-    const consent = this.consentRepository.findActiveConsent(userId, consentType);
-    return consent !== null && consent.granted === true && consent.revokedAt === null;
+  hasActiveConsent(userId: number, consentType: ConsentType): boolean {
+    return this.consentRepository.hasActiveConsent(userId, consentType);
   }
 
   /**
-   * Get all consents for user (for privacy dashboard)
+   * Get all active consents for a user
    */
-  getUserConsents(userId: number): Consent[] {
-    return this.consentRepository.listByUser(userId);
-  }
-
-  /**
-   * Check if user has granted all required consents
-   * Required: data_processing
-   */
-  hasRequiredConsents(userId: number): boolean {
-    return this.hasConsent(userId, 'data_processing');
-  }
-
-  /**
-   * Grant all consents (convenience method for onboarding)
-   */
-  grantAllConsents(userId: number): void {
-    const consentTypes: ConsentType[] = [
-      'data_processing',
-      'encryption',
-      'ai_processing',
-      'marketing',
-    ];
-
-    for (const type of consentTypes) {
-      // Only grant if not already granted
-      if (!this.hasConsent(userId, type)) {
-        this.grantConsent(userId, type);
-      }
-    }
-  }
-
-  /**
-   * Revoke all consents (for account deletion or privacy reasons)
-   */
-  revokeAllConsents(userId: number): void {
-    const consents = this.consentRepository.listByUser(userId);
-
-    for (const consent of consents) {
-      if (!consent.revokedAt) {
-        this.consentRepository.revoke(consent.id);
-      }
-    }
-
-    this.auditLogger?.log({
-      eventType: 'consent.revoked',
-      userId: userId.toString(),
-      resourceType: 'consent',
-      resourceId: 'all',
-      action: 'update',
-      success: true,
-      details: { reason: 'All consents revoked' },
-    });
+  getActiveConsents(userId: number): Consent[] {
+    return this.consentRepository.getActiveConsents(userId);
   }
 }

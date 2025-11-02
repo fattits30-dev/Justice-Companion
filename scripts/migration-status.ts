@@ -83,62 +83,35 @@ try {
   const appliedNames = applied.map((m) => m.name);
   const pending = migrationFiles.filter((file) => !appliedNames.includes(file));
 
-  const status = { applied, pending, rolledBack };
-
-  // Display applied migrations
-  if (status.applied.length > 0) {
-    console.warn('\n✅ Applied Migrations:');
-    console.warn('-'.repeat(80));
-    status.applied.forEach((migration) => {
-      const checksumMatch = '✓';
-      const duration = migration.duration_ms ? `${migration.duration_ms}ms` : 'N/A';
-      console.warn(`  ${checksumMatch} ${migration.name}`);
-      console.warn(`     Applied: ${migration.applied_at}`);
-      console.warn(`     Duration: ${duration}`);
-      console.warn(`     Checksum: ${migration.checksum.substring(0, 16)}...`);
+  console.log(`✅ Applied Migrations (${applied.length}):`);
+  if (applied.length > 0) {
+    applied.forEach((migration) => {
+      console.log(`  • ${migration.name} (${migration.applied_at})`);
     });
   } else {
-    console.warn('\n✅ Applied Migrations: None');
+    console.log('  No migrations applied');
   }
 
-  // Display pending migrations
-  if (status.pending.length > 0) {
-    console.warn('\n⏳ Pending Migrations:');
-    console.warn('-'.repeat(80));
-    status.pending.forEach((migration) => {
-      console.warn(`  • ${migration}`);
+  console.log(`\n🔄 Rolled Back Migrations (${rolledBack.length}):`);
+  if (rolledBack.length > 0) {
+    rolledBack.forEach((migration) => {
+      console.log(`  • ${migration.name} (${migration.applied_at})`);
     });
   } else {
-    console.warn('\n⏳ Pending Migrations: None');
+    console.log('  No migrations rolled back');
   }
 
-  // Display rolled back migrations
-  if (status.rolledBack.length > 0) {
-    console.warn('\n↩️  Rolled Back Migrations:');
-    console.warn('-'.repeat(80));
-    status.rolledBack.forEach((migration) => {
-      console.warn(`  • ${migration.name}`);
-      console.warn(`     Applied: ${migration.applied_at}`);
-      console.warn(`     Rolled back at: (see database for details)`);
+  console.log(`\n⏳ Pending Migrations (${pending.length}):`);
+  if (pending.length > 0) {
+    pending.forEach((file) => {
+      console.log(`  • ${file}`);
     });
   } else {
-    console.warn('\n↩️  Rolled Back Migrations: None');
+    console.log('  All migrations applied');
   }
 
   console.warn('\n' + '='.repeat(80));
-  console.warn(
-    `\nSummary: ${status.applied.length} applied, ${status.pending.length} pending, ${status.rolledBack.length} rolled back\n`
-  );
-
-  if (status.pending.length > 0) {
-    console.warn('💡 Tip: Run "npm run db:migrate" to apply pending migrations');
-  }
-
-  db.close();
-  process.exit(0);
 } catch (error) {
-  console.error('\n❌ Error retrieving migration status:');
-  console.error(error);
-  db.close();
+  console.error('❌ Error running migration status:', error);
   process.exit(1);
 }

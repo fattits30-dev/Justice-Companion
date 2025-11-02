@@ -1,6 +1,6 @@
 import 'dotenv/config';
 
-import { app, BrowserWindow, dialog, safeStorage } from 'electron';
+import { app, BrowserWindow, safeStorage } from 'electron';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -17,22 +17,18 @@ const env = { NODE_ENV: process.env.NODE_ENV };
 
 const logger = {
   info(message: string, meta?: Record<string, unknown>) {
-    // eslint-disable-next-line no-console
     console.log('[Main]', message, meta ?? '');
   },
   warn(message: string, meta?: Record<string, unknown>) {
-    // eslint-disable-next-line no-console
     console.warn('[Main]', message, meta ?? '');
   },
   error(message: string, meta?: Record<string, unknown>) {
-    // eslint-disable-next-line no-console
     console.error('[Main]', message, meta ?? '');
   },
 };
 
 let keyManager: KeyManager | null = null;
 let _mainWindow: BrowserWindow | null = null;
-let autoUpdaterService: AutoUpdater | null = null;
 
 export function getKeyManager(): KeyManager {
   if (!keyManager) {
@@ -85,39 +81,37 @@ function createMainWindow(): BrowserWindow {
     event.preventDefault();
   });
 
-  window.on('closed', () => {
-    _mainWindow = null;
-  });
-
   return window;
 }
 
 app.whenReady().then(async () => {
   logger.info('App is ready');
+  
+  try {
+    await initializeDatabase();
+    logger.info('Database initialized');
 
-  // Initialize KeyManager with proper arguments (AFTER app.ready())
-  keyManager = new KeyManager(safeStorage, app.getPath('userData'));
-  logger.info('KeyManager initialized');
-
-  await initializeDatabase();
-  setupIpcHandlers();
-
-  _mainWindow = createMainWindow();
-
-  const mainApp = new MainApplication();
-  mainApp.initialize();
+    keyManager = new KeyManager(safeStorage, app.getPath('userData'));
+    const _autoUpdater = new AutoUpdater(); // Renamed to start with underscore
+    const _mainApp = new MainApplication(); // Renamed to start with underscore
+    
+    setupIpcHandlers();
+    
+    _mainWindow = createMainWindow();
+  } catch (error) {
+    logger.error('Failed to initialize app', { error });
+    app.quit();
+  }
 });
 
 app.on('window-all-closed', () => {
-  logger.info('All windows closed');
   if (process.platform !== 'darwin') {
     app.quit();
   }
 });
 
 app.on('activate', () => {
-  logger.info('App activated');
-  if (_mainWindow === null) {
+  if (BrowserWindow.getAllWindows().length === 0) {
     _mainWindow = createMainWindow();
   }
 });

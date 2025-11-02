@@ -53,30 +53,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     const restoreSession = async () => {
       try {
-        console.log('[AuthContext] Attempting session restore...');
-
         // Get sessionId from localStorage
         const sessionId = localStorage.getItem('sessionId');
-        console.log('[AuthContext] SessionId from localStorage:', sessionId);
 
         if (!sessionId) {
-          console.log('[AuthContext] No session to restore');
           return; // No session to restore
         }
 
-        console.log('[AuthContext] Calling getSession IPC...');
         const response = await window.justiceAPI.getSession(sessionId);
-        console.log('[AuthContext] getSession response:', response);
 
         if (!response.success) {
-          console.warn('[AuthContext] Session invalid - clearing');
           // Session invalid - clear it
           localStorage.removeItem('sessionId');
           return;
         }
 
         if (response.data) {
-          console.log('[AuthContext] Session restored successfully:', response.data);
           setUser({
             id: String(response.data.id),
             username: response.data.username,
@@ -85,8 +77,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
       } catch (err) {
         // Silently fail - no session to restore
-        console.error('[AuthContext] Failed to restore session:', err);
-        localStorage.removeItem('sessionId');
+        console.error('[AuthContext] Error restoring session:', err);
       }
     };
 
@@ -94,78 +85,61 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   /**
-   * Login action
+   * Login user
    */
-  const login = async (username: string, password: string, rememberMe: boolean) => {
-    setError(null);
+  const login = async (username: string, password: string, rememberMe: boolean): Promise<void> => {
     setIsLoading(true);
+    setError(null);
 
     try {
       const response = await window.justiceAPI.login(username, password, rememberMe);
 
-      console.log('[AuthContext] Login response:', response);
-
       if (!response.success) {
-        setError(response.error || 'Login failed');
-        return;
+        throw new Error(response.message || 'Login failed');
       }
 
       if (response.data) {
-        console.log('[AuthContext] Response data:', response.data);
-        console.log('[AuthContext] Session object:', response.data.session);
-
-        // Store sessionId in localStorage for session restoration
-        // FIXED: Session object has 'id' property, not 'sessionId'
-        if (response.data.session?.id) {
-          console.log('[AuthContext] Storing sessionId:', response.data.session.id);
-          localStorage.setItem('sessionId', response.data.session.id);
-        } else {
-          console.error('[AuthContext] No sessionId in response!');
-        }
-
-        // Set user in state (convert id to string for frontend consistency)
         setUser({
-          id: String(response.data.user.id),
-          username: response.data.user.username,
-          email: response.data.user.email
+          id: String(response.data.id),
+          username: response.data.username,
+          email: response.data.email
         });
+
+        if (rememberMe) {
+          localStorage.setItem('sessionId', response.data.sessionId);
+        }
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : 'An unknown error occurred');
     } finally {
       setIsLoading(false);
     }
   };
 
   /**
-   * Logout action
+   * Logout user
    */
-  const logout = async () => {
+  const logout = async (): Promise<void> => {
     setIsLoading(true);
+    setError(null);
 
     try {
-      // Get sessionId from localStorage
       const sessionId = localStorage.getItem('sessionId');
+      
+      if (sessionId) {
+        await window.justiceAPI.logout(sessionId);
+        localStorage.removeItem('sessionId');
+      }
 
-      // Call logout API
-      await window.justiceAPI.logout(sessionId || '');
-
-      // Clear local state and storage
-      localStorage.removeItem('sessionId');
       setUser(null);
-      setError(null);
     } catch (err) {
-      console.error('Logout failed:', err);
-      // Still clear local state even if API call fails
-      localStorage.removeItem('sessionId');
-      setUser(null);
-      setError(null);
+      setError(err instanceof Error ? err.message : 'An unknown error occurred');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const value: AuthContextValue = {
+  const value = {
     user,
     isAuthenticated,
     isLoading,
@@ -174,20 +148,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
     logout
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 /**
- * useAuth hook - Access authentication state
- *
- * @throws Error if used outside AuthProvider
+ * Custom hook to use auth context
  */
-export function useAuth(): AuthContextValue {
+export function useAuth() {
   const context = useContext(AuthContext);
-
+  
   if (context === undefined) {
-    throw new Error('useAuth must be used within AuthProvider');
+    throw new Error('useAuth must be used within an AuthProvider');
   }
-
+  
   return context;
 }

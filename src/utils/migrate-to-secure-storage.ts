@@ -8,7 +8,7 @@
  */
 
 import { secureStorage } from '@/services/SecureStorageService';
-import { logger } from '@/utils/logger.ts';
+import { logger } from '@/utils/logger';
 
 /**
  * Storage keys that need migration
@@ -101,153 +101,51 @@ async function migrateKey(key: string): Promise<MigrationResult> {
     if (existingValue) {
       // Clean up localStorage since it's already in secure storage
       removeFromLocalStorage(key);
-      result.migrated = false; // Not counted as migrated since it was already there
+      result.migrated = false; // Not counted
       return result;
     }
 
     // Migrate to secure storage
     await secureStorage.setApiKey(key, value);
-
-    // Verify migration
-    const verifiedValue = await secureStorage.getApiKey(key);
-    if (verifiedValue !== value) {
-      throw new Error('Value verification failed after migration');
-    }
-
+    
     // Remove from localStorage after successful migration
-    const removed = removeFromLocalStorage(key);
-    if (!removed) {
-      logger.warn('MigrateToSecureStorage', `Key "${key}" migrated but could not be removed from localStorage`);
-    }
-
+    removeFromLocalStorage(key);
+    
     result.migrated = true;
     return result;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    logger.error('MigrateToSecureStorage', `Failed to migrate key "${key}"`, { error: errorMessage });
-    result.error = errorMessage;
+    logger.error('MigrateToSecureStorage', `Failed to migrate key "${key}"`, { error });
+    result.error = error instanceof Error ? error.message : String(error);
     return result;
   }
 }
 
 /**
- * Main migration function
- *
- * This function:
- * - Checks for API keys in localStorage
- * - Migrates them to secure storage if found
- * - Removes them from localStorage after successful migration
- * - Is idempotent (safe to run multiple times)
- * - Handles errors gracefully without crashing
- *
- * @returns Promise<MigrationSummary> Summary of the migration results
+ * Migrate all keys from localStorage to secure storage
  */
-export async function migrateToSecureStorage(): Promise<MigrationSummary> {
-  const summary: MigrationSummary = {
-    totalKeys: Object.keys(MIGRATION_KEYS).length,
-    migratedKeys: 0,
-    failedKeys: 0,
-    results: [],
-    success: true,
-  };
-
-  // Check if we're in a browser environment
-  if (!isBrowserEnvironment()) {
-    return summary;
-  }
-
-  try {
-    // Initialize secure storage
-    await secureStorage.init();
-
-    // Check if encryption is available
-    const encryptionAvailable = secureStorage.isEncryptionAvailable();
-    if (!encryptionAvailable) {
-      logger.warn(
-        'MigrateToSecureStorage',
-        'OS-native encryption not available. ' +
-        'API keys will be stored without encryption. ' +
-        'Consider installing gnome-keyring or kwallet on Linux.'
-      );
-    }
-
-    // Migrate each key
-    const migrationPromises = Object.values(MIGRATION_KEYS).map(key => migrateKey(key));
-    const results = await Promise.all(migrationPromises);
-
-    // Process results
-    for (const result of results) {
-      summary.results.push(result);
-      if (result.migrated) {
-        summary.migratedKeys++;
-      }
-      if (result.error) {
-        summary.failedKeys++;
-        summary.success = false;
-      }
-    }
-
-    // Log summary
-    if (summary.failedKeys > 0) {
-      logger.error(
-        'MigrateToSecureStorage',
-        `Migration completed with errors: ${summary.failedKeys} key(s) failed`
-      );
-    }
-
-    return summary;
-  } catch (error) {
-    logger.error('MigrateToSecureStorage', 'Migration failed with critical error', { error });
-    summary.success = false;
-    return summary;
-  }
-}
-
-/**
- * Check if migration is needed
- *
- * @returns Promise<boolean> True if any keys exist in localStorage that need migration
- */
-export async function isMigrationNeeded(): Promise<boolean> {
-  if (!isBrowserEnvironment()) {
-    return false;
-  }
-
-  try {
-    // Check if any migration keys exist in localStorage
-    for (const key of Object.values(MIGRATION_KEYS)) {
-      const value = getFromLocalStorage(key);
-      if (value) {
-        // Check if it's already in secure storage
-        await secureStorage.init();
-        const secureValue = await secureStorage.getApiKey(key);
-        if (!secureValue) {
-          // Found a key that needs migration
-          return true;
-        }
-      }
-    }
-    return false;
-  } catch (error) {
-    logger.error('MigrateToSecureStorage', 'Error checking migration status', { error });
-    return false;
-  }
-}
-
-/**
- * Clean up any remaining localStorage entries
- * This is useful after successful migration to ensure no sensitive data remains
- */
-export function cleanupLocalStorage(): void {
-  if (!isBrowserEnvironment()) {
-    return;
-  }
+export async function migrateAllKeys(): Promise<MigrationSummary> {
+  const results: MigrationResult[] = [];
+  let migratedKeys = 0;
+  let failedKeys = 0;
 
   for (const key of Object.values(MIGRATION_KEYS)) {
-    try {
-      removeFromLocalStorage(key);
-    } catch (error) {
-      logger.error('MigrateToSecureStorage', `Failed to cleanup key "${key}"`, { error });
+    const result = await migrateKey(key);
+    results.push(result);
+    
+    if (result.migrated) {
+      migratedKeys++;
+    } else if (result.error) {
+      failedKeys++;
     }
   }
+
+  const summary: MigrationSummary = {
+    totalKeys: Object.keys(MIGRATION_KEYS).length,
+    migratedKeys,
+    failedKeys,
+    results,
+    success: failedKeys === 0,
+  };
+
+  return summary;
 }

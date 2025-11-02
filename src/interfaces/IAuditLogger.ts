@@ -4,7 +4,7 @@ export interface AuditLogEntry {
   action: string;
   resourceType: string;
   resourceId: number | string;
-  details?: any;
+  details?: Record<string, unknown>;
   timestamp?: Date;
 }
 

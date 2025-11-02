@@ -91,13 +91,6 @@ export class CacheMetrics {
     // Calculate cache efficiency
     const cacheEfficiency = this.calculateEfficiency(averageHitRate, memoryUtilization);
 
-    // Generate recommendations
-    const recommendedActions = this.generateRecommendations(
-      averageHitRate,
-      memoryUtilization,
-      stats
-    );
-
     return {
       timestamp: Date.now(),
       uptime: Date.now() - this.startTime,
@@ -107,197 +100,68 @@ export class CacheMetrics {
         totalHits,
         totalMisses,
         totalEvictions,
-        averageHitRate: Math.round(averageHitRate * 100) / 100,
+        averageHitRate,
         totalSize,
         totalMaxSize,
-        memoryUtilization: Math.round(memoryUtilization * 100) / 100,
+        memoryUtilization
       },
       performance: {
-        estimatedMemoryMB: Math.round(estimatedMemoryMB * 100) / 100,
-        cacheEfficiency: Math.round(cacheEfficiency * 100) / 100,
-        recommendedActions,
-      },
+        estimatedMemoryMB,
+        cacheEfficiency,
+        recommendedActions: this.generateRecommendations(averageHitRate, memoryUtilization)
+      }
     };
   }
 
-  /**
-   * Update time series data for a cache
-   */
   private updateTimeSeries(cache: CacheStats): void {
-    const key = cache.name;
-    if (!this.timeSeriesData.has(key)) {
-      this.timeSeriesData.set(key, []);
+    const cacheKey = cache.name || 'default';
+    const now = Date.now();
+    
+    if (!this.timeSeriesData.has(cacheKey)) {
+      this.timeSeriesData.set(cacheKey, []);
     }
-
-    const series = this.timeSeriesData.get(key)!;
-    series.push({
-      timestamp: Date.now(),
-      hitRate: cache.hitRate,
+    
+    const dataPoints = this.timeSeriesData.get(cacheKey)!;
+    
+    // Remove oldest data point if we've reached the limit
+    if (dataPoints.length >= this.maxDataPoints) {
+      dataPoints.shift();
+    }
+    
+    // Add new data point
+    dataPoints.push({
+      timestamp: now,
+      hitRate: cache.hits + cache.misses > 0 ? (cache.hits / (cache.hits + cache.misses)) * 100 : 0,
       size: cache.size,
-      evictions: cache.evictions,
+      evictions: cache.evictions
     });
-
-    // Keep only last N data points
-    if (series.length > this.maxDataPoints) {
-      series.shift();
-    }
   }
 
-  /**
-   * Get time series data for a specific cache
-   */
-  getTimeSeries(cacheName: string): CacheMetricsDataPoint[] {
-    return this.timeSeriesData.get(cacheName) || [];
+  private calculateEfficiency(hitRate: number, memoryUtilization: number): number {
+    // Simple efficiency calculation based on hit rate and memory utilization
+    // This is a placeholder implementation - actual logic may vary
+    const normalizedHitRate = hitRate / 100;
+    const normalizedMemory = 1 - (memoryUtilization / 100);
+    
+    // Weighted average (adjust weights as needed)
+    return (normalizedHitRate * 0.7 + normalizedMemory * 0.3) * 100;
   }
 
-  /**
-   * Calculate cache efficiency score (0-100)
-   */
-  private calculateEfficiency(hitRate: number, utilization: number): number {
-    // Weight factors
-    const hitRateWeight = 0.7; // Hit rate is more important
-    const utilizationWeight = 0.3;
-
-    // Ideal utilization is around 70-80%
-    const utilizationScore = utilization > 80
-      ? 100 - (utilization - 80) // Penalty for over-utilization
-      : utilization * 1.25; // Boost for good utilization
-
-    return hitRateWeight * hitRate + utilizationWeight * utilizationScore;
-  }
-
-  /**
-   * Generate performance recommendations based on metrics
-   */
-  private generateRecommendations(
-    hitRate: number,
-    utilization: number,
-    caches: CacheStats[]
-  ): string[] {
+  private generateRecommendations(hitRate: number, memoryUtilization: number): string[] {
     const recommendations: string[] = [];
-
-    // Overall hit rate recommendations
+    
     if (hitRate < 50) {
-      recommendations.push('Low hit rate detected. Consider increasing TTL or cache size.');
-    } else if (hitRate > 90) {
-      recommendations.push('Excellent hit rate! Cache is performing optimally.');
+      recommendations.push('Consider increasing cache size or improving cache warming strategy');
     }
-
-    // Memory utilization recommendations
-    if (utilization > 90) {
-      recommendations.push('High memory utilization. Consider increasing cache size to prevent evictions.');
-    } else if (utilization < 20) {
-      recommendations.push('Low memory utilization. Consider reducing cache size to save memory.');
+    
+    if (memoryUtilization > 80) {
+      recommendations.push('Consider increasing max cache size or implementing more aggressive eviction policies');
     }
-
-    // Per-cache recommendations
-    for (const cache of caches) {
-      if (cache.evictions > cache.size * 0.1) {
-        recommendations.push(
-          `High eviction rate in "${cache.name}" cache. Consider increasing its size.`
-        );
-      }
-
-      if (cache.hitRate < 30 && cache.misses > 100) {
-        recommendations.push(
-          `Poor performance in "${cache.name}" cache. Review access patterns or TTL settings.`
-        );
-      }
+    
+    if (hitRate > 90 && memoryUtilization < 30) {
+      recommendations.push('Consider reducing cache size to save memory resources');
     }
-
-    // Session cache specific recommendations
-    const sessionCache = caches.find(c => c.name === 'sessions');
-    if (sessionCache && sessionCache.hitRate < 70) {
-      recommendations.push('Session cache hit rate is low. This may impact authentication performance.');
-    }
-
+    
     return recommendations;
   }
-
-  /**
-   * Export metrics in a format suitable for IPC transmission
-   */
-  export(): string {
-    const metrics = this.collect();
-    return JSON.stringify(metrics, null, 2);
-  }
-
-  /**
-   * Get a human-readable summary of cache performance
-   */
-  getSummary(): string {
-    const metrics = this.collect();
-    const { overall, performance } = metrics;
-
-    const lines = [
-      '=== Cache Performance Summary ===',
-      `Status: ${metrics.enabled ? 'Enabled' : 'Disabled'}`,
-      `Uptime: ${Math.round(metrics.uptime / 1000)}s`,
-      '',
-      '--- Overall Statistics ---',
-      `Hit Rate: ${overall.averageHitRate}%`,
-      `Total Hits: ${overall.totalHits}`,
-      `Total Misses: ${overall.totalMisses}`,
-      `Total Evictions: ${overall.totalEvictions}`,
-      `Memory Usage: ${performance.estimatedMemoryMB}MB`,
-      `Memory Utilization: ${overall.memoryUtilization}%`,
-      `Efficiency Score: ${performance.cacheEfficiency}/100`,
-      '',
-      '--- Per-Cache Statistics ---',
-    ];
-
-    for (const cache of metrics.caches) {
-      lines.push(
-        `${cache.name}: ${cache.hitRate}% hit rate, ${cache.size}/${cache.maxSize} entries, ${cache.evictions} evictions`
-      );
-    }
-
-    if (performance.recommendedActions.length > 0) {
-      lines.push('', '--- Recommendations ---');
-      performance.recommendedActions.forEach(action => {
-        lines.push(`• ${action}`);
-      });
-    }
-
-    return lines.join('\n');
-  }
-
-  /**
-   * Reset all metrics
-   */
-  reset(): void {
-    this.startTime = Date.now();
-    this.timeSeriesData.clear();
-    getCacheService().resetStats();
-  }
-}
-
-// Singleton instance
-let metricsInstance: CacheMetrics | null = null;
-
-/**
- * Get or create the global cache metrics instance
- */
-export function getCacheMetrics(): CacheMetrics {
-  if (!metricsInstance) {
-    metricsInstance = new CacheMetrics();
-  }
-  return metricsInstance;
-}
-
-/**
- * Log cache metrics to console (for debugging)
- */
-export function logCacheMetrics(): void {
-  const metrics = getCacheMetrics();
-  console.log(metrics.getSummary());
-}
-
-/**
- * Start periodic metrics logging (for development)
- */
-export function startMetricsLogging(intervalMs: number = 60000): NodeJS.Timeout {
-  return setInterval(() => {
-    logCacheMetrics();
-  }, intervalMs);
 }

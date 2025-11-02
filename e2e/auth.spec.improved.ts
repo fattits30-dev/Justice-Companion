@@ -72,20 +72,18 @@ test.describe('Authentication Flow', () => {
       ];
     }
 
+    // Launch the Electron application
     electronApp = await electron.launch({
       args: launchArgs,
-      env: {
-        ...process.env,
-        NODE_ENV: 'test',
-        DATABASE_URL: `file:${TEST_DB_PATH}`,
-      },
     });
-
     window = await electronApp.firstWindow();
   });
 
   test.afterAll(async () => {
-    await electronApp?.close();
+    // Close the Electron application
+    if (electronApp) {
+      await electronApp.close();
+    }
   });
 
   test('should allow user registration and login', async () => {
@@ -103,8 +101,8 @@ test.describe('Authentication Flow', () => {
     // Submit registration
     await window.getByTestId('register-button').click();
 
-    // Wait for login page or dashboard
-    await expect(window).toHaveURL(/\/dashboard/);
+    // Verify successful registration
+    await expect(window.getByTestId('welcome-message')).toBeVisible();
 
     // Logout
     await window.getByTestId('logout-button').click();
@@ -116,11 +114,11 @@ test.describe('Authentication Flow', () => {
     await window.getByTestId('login-button').click();
 
     // Verify successful login
-    await expect(window).toHaveURL(/\/dashboard/);
+    await expect(window.getByTestId('dashboard')).toBeVisible();
   });
 
   test('should handle invalid login attempts', async () => {
-    // Try to login with wrong credentials
+    // Try to login with invalid credentials
     await window.getByTestId('login-link').click();
     await window.getByTestId('email-input').fill('invalid@example.com');
     await window.getByTestId('password-input').fill('wrongpassword');
@@ -131,7 +129,7 @@ test.describe('Authentication Flow', () => {
   });
 
   test('should persist session after app restart', async () => {
-    // First login
+    // First, register and login
     const user = generateTestUser();
     
     await window.getByTestId('register-link').click();
@@ -141,22 +139,21 @@ test.describe('Authentication Flow', () => {
     await window.getByTestId('confirm-password-input').fill(user.password);
     await window.getByTestId('register-button').click();
     
-    // Wait for dashboard
-    await expect(window).toHaveURL(/\/dashboard/);
+    await window.getByTestId('logout-button').click();
     
-    // Close and reopen app
+    await window.getByTestId('login-link').click();
+    await window.getByTestId('email-input').fill(user.email);
+    await window.getByTestId('password-input').fill(user.password);
+    await window.getByTestId('login-button').click();
+    
+    // Restart the app
     await electronApp.close();
     electronApp = await electron.launch({
-      args: [path.join(process.cwd(), 'dist', 'electron', 'main.js')],
-      env: {
-        ...process.env,
-        NODE_ENV: 'test',
-        DATABASE_URL: `file:${TEST_DB_PATH}`,
-      },
+      args: launchArgs,
     });
     window = await electronApp.firstWindow();
     
-    // Should still be logged in
-    await expect(window).toHaveURL(/\/dashboard/);
+    // Check if user is still logged in
+    await expect(window.getByTestId('dashboard')).toBeVisible();
   });
 });

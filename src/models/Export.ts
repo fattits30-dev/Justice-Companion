@@ -85,11 +85,11 @@ export interface ExportResult {
 export interface ExportError {
   code: 'PERMISSION_DENIED' | 'CASE_NOT_FOUND' | 'EXPORT_FAILED' | 'INVALID_TEMPLATE';
   message: string;
-  details?: any;
+  details?: string;
 }
 
 export interface TemplateData {
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface DocumentStyles {
@@ -111,46 +111,6 @@ export interface DocumentStyles {
   };
   body?: {
     fontSize?: number;
-    lineHeight?: number;
-  };
-  footer?: {
-    fontSize?: number;
-    italic?: boolean;
     color?: string;
   };
 }
-
-export const DEFAULT_EXPORT_OPTIONS: Partial<ExportOptions> = {
-  format: 'pdf',
-  template: 'case-summary',
-  includeEvidence: true,
-  includeTimeline: true,
-  includeNotes: true,
-  includeFacts: true,
-  includeDocuments: true,
-};
-
-export const EXPORT_TEMPLATES = {
-  'case-summary': {
-    name: 'Case Summary',
-    description: 'Complete case details with evidence, timeline, and notes',
-    sections: ['case', 'evidence', 'timeline', 'notes', 'facts'],
-  },
-  'evidence-list': {
-    name: 'Evidence List',
-    description: 'Detailed inventory of all case evidence',
-    sections: ['evidence'],
-  },
-  'timeline-report': {
-    name: 'Timeline Report',
-    description: 'Chronological timeline with deadlines and events',
-    sections: ['timeline', 'deadlines'],
-  },
-  'case-notes': {
-    name: 'Case Notes',
-    description: 'All notes and observations for the case',
-    sections: ['notes'],
-  },
-} as const;
-
-export type ExportTemplate = keyof typeof EXPORT_TEMPLATES;

@@ -4,16 +4,15 @@ import Database from 'better-sqlite3';
 import { runMigrations } from '../src/db/migrate';
 
 // Force Electron app paths before running
-if (!app.isReady()) {
-  app.setPath('userData', path.join(process.env.APPDATA || '', 'justice-companion'));
-}
+const appDataPath = process.env.APPDATA || path.join(process.env.HOME || '', 'AppData', 'Roaming');
+app.setPath('userData', path.join(appDataPath, 'justice-companion'));
 
 // Set database path to Electron's UserData
-process.env.JUSTICE_DB_PATH = path.join(
-  process.env.APPDATA || '',
-  'justice-companion',
+const dbPath = path.join(
+  app.getPath('userData'),
   'justice.db'
 );
+process.env.JUSTICE_DB_PATH = dbPath;
 
 console.warn('🔄 Force-running migrations...');
 console.warn('📂 Database path:', process.env.JUSTICE_DB_PATH);

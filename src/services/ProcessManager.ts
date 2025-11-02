@@ -41,7 +41,7 @@ export class ProcessManager {
     const gotLock = this.app.requestSingleInstanceLock();
 
     if (!gotLock) {
-      console.log('[ProcessManager] Another instance is already running. Quitting...');
+      console.error('[ProcessManager] Another instance is already running. Quitting...');
       this.app.quit();
       return false;
     }
@@ -55,7 +55,7 @@ export class ProcessManager {
    */
   public onSecondInstance(callback: () => void): void {
     this.app.on('second-instance', (_event, _commandLine, _workingDirectory) => {
-      console.log('[ProcessManager] Second instance detected, focusing main window...');
+      console.warn('[ProcessManager] Second instance detected, focusing main window...');
       callback();
     });
   }
@@ -67,12 +67,9 @@ export class ProcessManager {
     return new Promise((resolve) => {
       const server = net.createServer();
 
-      server.once('error', (err: NodeJS.ErrnoException) => {
-        if (err.code === 'EADDRINUSE') {
-          resolve(true);
-        } else {
-          resolve(false);
-        }
+      server.once('error', (_err: NodeJS.ErrnoException) => {
+        // eslint-disable-line no-unused-vars
+        resolve(true);
       });
 
       server.once('listening', () => {
@@ -99,177 +96,61 @@ export class ProcessManager {
             return { pid: parseInt(match[1], 10) };
           }
         }
-      } else {
-        // Unix-like systems (macOS, Linux)
+      } else if (process.platform === 'linux' || process.platform === 'darwin') {
         const { stdout } = await execAsync(`lsof -i :${port} -t`);
-        const pid = parseInt(stdout.trim(), 10);
-        if (!isNaN(pid)) {
-          return { pid };
+        const pid = stdout.trim();
+        if (pid) {
+          return { pid: parseInt(pid, 10) };
         }
       }
-    } catch (error) {
-      // Process not found or command failed
-      console.log(`[ProcessManager] No process found on port ${port}`);
-    }
-
-    return { pid: null };
-  }
-
-  /**
-   * Kill a process by ID
-   */
-  public async killProcessById(pid: number): Promise<boolean> {
-    try {
-      if (process.platform === 'win32') {
-        await execAsync(`powershell -Command "Stop-Process -Id ${pid} -Force"`);
-      } else {
-        await execAsync(`kill -9 ${pid}`);
-      }
-
-      console.log(`[ProcessManager] Killed process ${pid}`);
-      return true;
-    } catch (error) {
-      console.error(`[ProcessManager] Failed to kill process ${pid}:`, error);
-      return false;
+      return { pid: null };
+    } catch {
+      return { pid: null };
     }
   }
 
   /**
-   * Kill process using a specific port
+   * Get process status information
    */
-  public async killProcessOnPort(port: number): Promise<boolean> {
-    const processInfo = await this.findProcessByPort(port);
-
-    if (processInfo.pid) {
-      console.log(`[ProcessManager] Killing process ${processInfo.pid} on port ${port}`);
-      return this.killProcessById(processInfo.pid);
-    }
-
-    console.log(`[ProcessManager] No process to kill on port ${port}`);
-    return false;
-  }
-
-  /**
-   * Ensure port is available, with retries
-   */
-  public async ensurePortAvailable(port: number, maxRetries: number = 3): Promise<boolean> {
-    for (let attempt = 0; attempt < maxRetries; attempt++) {
-      const inUse = await this.isPortInUse(port);
-
-      if (!inUse) {
-        console.log(`[ProcessManager] Port ${port} is available`);
-        return true;
-      }
-
-      console.log(`[ProcessManager] Port ${port} in use, attempting to free (${attempt + 1}/${maxRetries})`);
-      const killed = await this.killProcessOnPort(port);
-
-      if (!killed) {
-        console.warn(`[ProcessManager] Failed to free port ${port} on attempt ${attempt + 1}`);
-      }
-
-      // Wait 1 second between retries
-      await new Promise(resolve => setTimeout(resolve, 1000));
-    }
-
-    console.error(`[ProcessManager] Failed to free port ${port} after ${maxRetries} attempts`);
-    return false;
-  }
-
-  /**
-   * Cleanup on startup - kill any stale processes
-   */
-  public async cleanupOnStartup(): Promise<void> {
-    console.log('[ProcessManager] Running startup cleanup...');
-
-    const ports = [
-      { port: 5176, name: 'Vite Dev Server' },
-      { port: 5177, name: 'Vite HMR' },
-    ];
-
-    for (const { port, name } of ports) {
-      try {
-        const inUse = await this.isPortInUse(port);
-        if (inUse) {
-          console.log(`[ProcessManager] Found stale ${name} on port ${port}, cleaning up...`);
-          await this.killProcessOnPort(port);
-        }
-      } catch (error) {
-        console.error(`[ProcessManager] Error cleaning up port ${port}:`, error);
-      }
-    }
-
-    console.log('[ProcessManager] Startup cleanup complete');
-  }
-
-  /**
-   * Track a port as managed by this process
-   */
-  public async trackPort(port: number, name: string): Promise<void> {
-    this.managedPorts.set(port, name);
-    console.log(`[ProcessManager] Tracking port ${port} (${name})`);
-  }
-
-  /**
-   * Register graceful shutdown handlers
-   */
-  public registerShutdownHandlers(): void {
-    this.app.on('before-quit', async () => {
-      console.log('[ProcessManager] App shutting down, running cleanup...');
-
-      for (const handler of this.shutdownHandlers) {
-        try {
-          await handler();
-        } catch (error) {
-          console.error('[ProcessManager] Shutdown handler error:', error);
-        }
-      }
-    });
-
-    // Handle SIGTERM and SIGINT
-    process.on('SIGTERM', () => {
-      console.log('[ProcessManager] Received SIGTERM, shutting down gracefully...');
-      this.app.quit();
-    });
-
-    process.on('SIGINT', () => {
-      console.log('[ProcessManager] Received SIGINT, shutting down gracefully...');
-      this.app.quit();
-    });
-  }
-
-  /**
-   * Register a shutdown handler
-   */
-  public onShutdown(handler: () => void | Promise<void>): void {
-    this.shutdownHandlers.push(handler);
-  }
-
-  /**
-   * Get current process status
-   */
-  public getStatus(): ProcessStatus {
+  public async getProcessStatus(): Promise<ProcessStatus> {
     const ports: PortStatus[] = [];
-
+    
     for (const [port, name] of this.managedPorts.entries()) {
-      ports.push({
-        port,
-        name,
-        inUse: false, // Will be checked async if needed
-      });
+      const inUse = await this.isPortInUse(port);
+      ports.push({ port, name, inUse });
     }
 
     return {
       isRunning: true,
       startTime: this.startTime,
-      ports,
+      ports
     };
   }
 
   /**
-   * Log error with context
+   * Register a port to be managed by this process
    */
-  public logError(message: string, context?: Record<string, unknown>): void {
-    console.error('[ProcessManager]', message, context || '');
+  public registerManagedPort(port: number, name: string): void {
+    this.managedPorts.set(port, name);
+  }
+
+  /**
+   * Add shutdown handler to be called on app quit
+   */
+  public addShutdownHandler(handler: () => void | Promise<void>): void {
+    this.shutdownHandlers.push(handler);
+  }
+
+  /**
+   * Execute all shutdown handlers
+   */
+  public async executeShutdownHandlers(): Promise<void> {
+    for (const handler of this.shutdownHandlers) {
+      try {
+        await handler();
+      } catch (error) {
+        console.error('[ProcessManager] Error in shutdown handler:', error);
+      }
+    }
   }
 }

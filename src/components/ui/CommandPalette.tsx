@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { Command } from "cmdk";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, ChevronRight } from "lucide-react";
+import { Search } from "lucide-react";
 import { clsx } from "clsx";
 
 export interface CommandItem {
@@ -30,7 +30,7 @@ export function CommandPalette({
   onOpenChange,
   placeholder = "Search or type a command...",
   emptyMessage = "No results found.",
-  recentItems = [],
+  _recentItems = [],
 }: CommandPaletteProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -94,101 +94,61 @@ export function CommandPalette({
           />
 
           {/* Command Dialog */}
-          <div className="fixed inset-0 z-50 flex items-start justify-center pt-[20vh]">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: -20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: -20 }}
-              transition={{ type: "spring", stiffness: 300, damping: 25 }}
-              className="w-full max-w-2xl"
-              onClick={(e) => e.stopPropagation()}
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="w-full max-w-2xl bg-white dark:bg-gray-900 rounded-xl shadow-xl overflow-hidden"
             >
-              <Command
-                className={clsx(
-                  "rounded-xl border border-gray-700 shadow-glass-lg",
-                  "bg-primary-900/95 backdrop-blur-xl",
-                  "overflow-hidden",
-                )}
-                onKeyDown={handleKeyDown}
-              >
-                {/* Search Input */}
-                <div className="flex items-center gap-3 px-4 border-b border-gray-800">
-                  <Search className="w-5 h-5 text-white/90" />
+              <Command shouldFilter={false} onKeyDown={handleKeyDown}>
+                <div className="relative">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
                   <Command.Input
+                    placeholder={placeholder}
                     value={search}
                     onValueChange={setSearch}
-                    placeholder={placeholder}
-                    className={clsx(
-                      "flex-1 py-4 bg-transparent",
-                      "text-white placeholder:text-white/80",
-                      "outline-none",
-                    )}
+                    className="w-full px-10 py-4 bg-transparent border-b border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-0 text-lg"
                   />
-                  <kbd className="hidden sm:inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-white/90 bg-primary-800 rounded border border-gray-700">
-                    ESC
-                  </kbd>
                 </div>
 
-                {/* Results */}
-                <Command.List className="max-h-[400px] overflow-y-auto p-2">
-                  <Command.Empty className="py-6 text-center text-sm text-white/80">
-                    {emptyMessage}
-                  </Command.Empty>
-
-                  {/* Recent Items */}
-                  {recentItems.length > 0 && !search && (
-                    <Command.Group
-                      heading="Recent"
-                      className="mb-2 px-2 py-1.5 text-xs font-semibold text-white/90 uppercase tracking-wider"
-                    >
-                      {recentItems.map((item) => (
-                        <CommandItemComponent
+                <div className="max-h-96 overflow-y-auto">
+                  {Object.entries(groupedItems).map(([group, groupItems]) => (
+                    <Command.Group key={group} heading={group}>
+                      {groupItems.map((item) => (
+                        <Command.Item
                           key={item.id}
-                          item={item}
                           onSelect={() => {
                             item.onSelect();
                             setOpen(false);
                           }}
-                        />
-                      ))}
-                    </Command.Group>
-                  )}
-
-                  {/* Grouped Items */}
-                  {Object.entries(groupedItems).map(([group, items]) => (
-                    <Command.Group
-                      key={group}
-                      heading={group}
-                      className="mb-2 px-2 py-1.5 text-xs font-semibold text-white/90 uppercase tracking-wider"
-                    >
-                      {items.map((item) => (
-                        <CommandItemComponent
-                          key={item.id}
-                          item={item}
-                          onSelect={() => {
-                            item.onSelect();
-                            setOpen(false);
-                          }}
-                        />
+                          className="px-4 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-3"
+                        >
+                          {item.icon && <span>{item.icon}</span>}
+                          <div className="flex-1">
+                            <div className="font-medium">{item.label}</div>
+                            {item.description && (
+                              <div className="text-sm text-gray-500 dark:text-gray-400">
+                                {item.description}
+                              </div>
+                            )}
+                          </div>
+                          {item.shortcut && (
+                            <kbd className="text-xs bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+                              {item.shortcut}
+                            </kbd>
+                          )}
+                        </Command.Item>
                       ))}
                     </Command.Group>
                   ))}
-                </Command.List>
 
-                {/* Footer */}
-                <div className="flex items-center gap-2 px-4 py-2 border-t border-gray-800 text-xs text-white/80">
-                  <kbd className="px-1.5 py-0.5 bg-primary-800 rounded border border-gray-700">
-                    ↑↓
-                  </kbd>
-                  <span>Navigate</span>
-                  <kbd className="px-1.5 py-0.5 bg-primary-800 rounded border border-gray-700 ml-2">
-                    ↵
-                  </kbd>
-                  <span>Select</span>
-                  <kbd className="px-1.5 py-0.5 bg-primary-800 rounded border border-gray-700 ml-2">
-                    ESC
-                  </kbd>
-                  <span>Close</span>
+                  {Object.keys(groupedItems).length === 0 && (
+                    <div className="px-4 py-6 text-center text-gray-500">
+                      {emptyMessage}
+                    </div>
+                  )}
                 </div>
               </Command>
             </motion.div>
@@ -198,86 +158,3 @@ export function CommandPalette({
     </AnimatePresence>
   );
 }
-
-// Command Item Component
-interface CommandItemComponentProps {
-  item: CommandItem;
-  onSelect: () => void;
-}
-
-function CommandItemComponent({ item, onSelect }: CommandItemComponentProps) {
-  return (
-    <Command.Item
-      value={`${item.label} ${item.description || ""} ${item.keywords?.join(" ") || ""}`}
-      onSelect={onSelect}
-      className={clsx(
-        "flex items-center gap-3 px-3 py-2.5 rounded-lg",
-        "cursor-pointer transition-colors",
-        "data-[selected=true]:bg-primary-500/10",
-        "data-[selected=true]:text-white",
-        "text-white",
-      )}
-    >
-      {/* Icon */}
-      {item.icon && (
-        <span className="flex-shrink-0 w-5 h-5 text-white/90">{item.icon}</span>
-      )}
-
-      {/* Content */}
-      <div className="flex-1 min-w-0">
-        <div className="font-medium">{item.label}</div>
-        {item.description && (
-          <div className="text-xs text-white/80 truncate">
-            {item.description}
-          </div>
-        )}
-      </div>
-
-      {/* Shortcut */}
-      {item.shortcut && (
-        <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-xs font-mono text-white/90 bg-primary-800 rounded border border-gray-700">
-          {item.shortcut}
-        </kbd>
-      )}
-
-      {/* Arrow indicator */}
-      <ChevronRight className="w-4 h-4 text-white/70" />
-    </Command.Item>
-  );
-}
-
-// Hook to control command palette
-export function useCommandPalette() {
-  const [open, setOpen] = useState(false);
-
-  const toggle = useCallback(() => setOpen((o) => !o), []);
-  const show = useCallback(() => setOpen(true), []);
-  const hide = useCallback(() => setOpen(false), []);
-
-  return { open, setOpen, toggle, show, hide };
-}
-
-// Example usage:
-// const { open, setOpen } = useCommandPalette();
-//
-// const items: CommandItem[] = [
-//   {
-//     id: 'new-case',
-//     label: 'Create New Case',
-//     description: 'Start a new legal case',
-//     icon: <Plus />,
-//     group: 'Actions',
-//     shortcut: 'Ctrl+N',
-//     onSelect: () => navigate('/cases/new')
-//   },
-//   {
-//     id: 'view-cases',
-//     label: 'View Cases',
-//     description: 'Browse all cases',
-//     icon: <Briefcase />,
-//     group: 'Navigation',
-//     onSelect: () => navigate('/cases')
-//   }
-// ];
-//
-// <CommandPalette items={items} open={open} onOpenChange={setOpen} />

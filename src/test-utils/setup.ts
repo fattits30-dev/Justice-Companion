@@ -21,7 +21,7 @@ import { vi, beforeEach } from 'vitest';
 // Using beforeEach to ensure mock persists after Vitest's mockReset between tests
 beforeEach(() => {
   // Only mock in jsdom environment (not in node environment)
-  if (typeof window !== 'undefined') {
+  if (typeof window !== 'undefined' && typeof window.matchMedia === 'undefined') {
     Object.defineProperty(window, 'matchMedia', {
       writable: true,
       configurable: true,
@@ -58,7 +58,10 @@ class IntersectionObserverMock {
   unobserve(): void {}
 }
 
-global.IntersectionObserver = IntersectionObserverMock as unknown as typeof IntersectionObserver;
+// Use window.IntersectionObserver instead of global for better compatibility
+if (typeof window !== 'undefined' && typeof window.IntersectionObserver === 'undefined') {
+  (window as any).IntersectionObserver = IntersectionObserverMock;
+}
 
 // Mock ResizeObserver (used by some UI libraries)
 class ResizeObserverMock {
@@ -71,4 +74,7 @@ class ResizeObserverMock {
   unobserve(): void {}
 }
 
-global.ResizeObserver = ResizeObserverMock as unknown as typeof ResizeObserver;
+// Use window.ResizeObserver instead of global for better compatibility
+if (typeof window !== 'undefined' && typeof window.ResizeObserver === 'undefined') {
+  (window as any).ResizeObserver = ResizeObserverMock;
+}

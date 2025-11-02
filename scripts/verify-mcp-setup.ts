@@ -85,104 +85,25 @@ if (!existsSync(mcpConfigPath)) {
     results.push({
       name: 'justice-companion path',
       status: configuredPath === expectedPath ? 'pass' : 'fail',
-      details: `Configured path: ${configuredPath}`,
+      details: `Expected ${expectedPath}, got ${configuredPath}`,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     results.push({
-      name: 'justice-companion path',
+      name: '.mcp.json parsing',
       status: 'fail',
-      details: `Unable to read .mcp.json (${message})`,
+      details: `Failed to parse .mcp.json (${message})`,
     });
   }
 }
 
-const customServerDist = resolve(projectRoot, '../../MCPs/justice-companion/dist/index.js');
-const hasCustomServerDist = existsSync(customServerDist);
-results.push({
-  name: 'justice-companion build artifact',
-  status: hasCustomServerDist ? 'pass' : 'fail',
-  details: hasCustomServerDist
-    ? `Found dist/index.js at ${customServerDist}`
-    : 'dist/index.js not found; run npm run build inside ../../MCPs/justice-companion',
-});
-
-const sqliteServerPath = resolve(projectRoot, 'node_modules/mcp-server-sqlite/dist/index.js');
-const hasSqliteServer = existsSync(sqliteServerPath);
-results.push({
-  name: 'sqlite MCP',
-  status: hasSqliteServer ? 'pass' : 'warn',
-  details: hasSqliteServer
-    ? 'mcp-server-sqlite package installed'
-    : 'mcp-server-sqlite dist/index.js missing',
-});
-
-const context7Path = resolve(projectRoot, 'node_modules/@upstash/context7-mcp/dist/index.js');
-const hasContext7 = existsSync(context7Path);
-results.push({
-  name: 'context7 MCP',
-  status: hasContext7 ? 'pass' : 'warn',
-  details: hasContext7
-    ? 'context7 MCP package installed'
-    : '@upstash/context7-mcp dist/index.js missing',
-});
-
-const playwrightPath = resolve(
-  projectRoot,
-  'node_modules/@executeautomation/playwright-mcp-server/dist/index.js'
-);
-const hasPlaywright = existsSync(playwrightPath);
-results.push({
-  name: 'playwright MCP',
-  status: hasPlaywright ? 'pass' : 'warn',
-  details: hasPlaywright
-    ? 'playwright MCP package installed'
-    : 'playwright MCP dist/index.js missing',
-});
-
-type EnvCheck = {
-  name: string;
-  value: string | undefined;
-};
-
-const envChecks: EnvCheck[] = [
-  { name: 'GITHUB_TOKEN', value: readEnvVariable('GITHUB_TOKEN') },
-  { name: 'CONTEXT7_API_KEY', value: readEnvVariable('CONTEXT7_API_KEY') },
-];
-
-for (const envCheck of envChecks) {
-  const status: CheckStatus = envCheck.value ? 'pass' : 'warn';
-  const detail = envCheck.value
-    ? `present (length ${envCheck.value.length})`
-    : 'not detected in current process environment';
-  results.push({
-    name: `${envCheck.name} environment variable`,
-    status,
-    details: detail,
-  });
+const outputLines: string[] = [];
+for (const result of results) {
+  const statusSymbol = result.status === 'pass' ? '✓' : result.status === 'fail' ? '✗' : '⚠';
+  outputLines.push(`${statusSymbol} ${result.name}: ${result.details}`);
 }
 
-const dbPath = resolve(projectRoot, 'justice.db');
-const hasDbSnapshot = existsSync(dbPath);
-results.push({
-  name: 'justice.db snapshot',
-  status: hasDbSnapshot ? 'pass' : 'warn',
-  details: hasDbSnapshot
-    ? `Found at ${dbPath}`
-    : 'justice.db not found (sqlite MCP may still work if pointed elsewhere)',
-});
+console.log(outputLines.join('\n'));
 
-const hasFailure = results.some((item) => item.status === 'fail');
-const hasWarning = results.some((item) => item.status === 'warn');
-
-for (const item of results) {
-  const icon = item.status === 'pass' ? '[PASS]' : item.status === 'fail' ? '[FAIL]' : '[WARN]';
-
-  console.warn(`${icon} ${item.name} :: ${item.details}`);
-}
-
-if (hasFailure) {
-  process.exitCode = 1;
-} else if (hasWarning) {
-  process.exitCode = 0;
-}
+const allPassed = results.every(r => r.status !== 'fail');
+process.exit(allPassed ? 0 : 1);

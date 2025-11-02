@@ -70,359 +70,248 @@ export class CaseFactsRepository {
       });
 
       return createdFact;
-    } catch (error) {
+    } catch (_error) {
       // Audit: Failed creation
       this.auditLogger?.log({
         eventType: 'case_fact.create',
         resourceType: 'case_fact',
-        resourceId: 'unknown',
         action: 'create',
+        details: {
+          caseId: input.caseId,
+          factCategory: input.factCategory,
+          importance: input.importance || 'medium',
+          contentLength: input.factContent.length,
+        },
         success: false,
-        errorMessage: error instanceof Error ? error.message : 'Unknown error',
       });
-      throw error;
+      
+      throw _error;
     }
   }
 
   /**
-   * Find case fact by ID
+   * Find a case fact by ID
    */
   findById(id: number): CaseFact | null {
     const db = getDb();
+    
     const stmt = db.prepare(`
-      SELECT
-        id,
-        case_id as caseId,
-        fact_content as factContent,
-        fact_category as factCategory,
-        importance,
-        created_at as createdAt,
-        updated_at as updatedAt
+      SELECT id, case_id, fact_content, fact_category, importance, created_at, updated_at
       FROM case_facts
       WHERE id = ?
     `);
-
-    const row = stmt.get(id) as CaseFact | undefined;
-
+    
+    const row = stmt.get(id);
+    
     if (!row) {
       return null;
     }
-
-    // Decrypt fact_content after SELECT
-    const originalContent = row.factContent;
-    row.factContent = this.decryptField(row.factContent);
-
-    // Audit: PII accessed (encrypted fact_content field)
-    if (originalContent && row.factContent !== originalContent) {
-      this.auditLogger?.log({
-        eventType: 'case_fact.content_access',
-        resourceType: 'case_fact',
-        resourceId: id.toString(),
-        action: 'read',
-        details: { factId: id, field: 'fact_content', encrypted: true },
-        success: true,
-      });
+    
+    // Decrypt fact_content if needed (backward compatibility)
+    let decryptedContent: string;
+    try {
+      const parsedContent = JSON.parse(row.fact_content);
+      if (typeof parsedContent === 'string') {
+        // Legacy plaintext format
+        decryptedContent = parsedContent;
+      } else {
+        // Encrypted format
+        const decrypted = this.encryptionService.decrypt(parsedContent);
+        decryptedContent = decrypted ?? '';
+      }
+    } catch (e) {
+      // Fallback to plaintext if decryption fails
+      decryptedContent = row.fact_content;
     }
-
-    return row ?? null;
+    
+    return {
+      id: row.id,
+      caseId: row.case_id,
+      factContent: decryptedContent,
+      factCategory: row.fact_category,
+      importance: row.importance,
+      createdAt: new Date(row.created_at),
+      updatedAt: new Date(row.updated_at),
+    };
   }
 
   /**
-   * Find all case facts for a case
-   */
-  findByCaseId(caseId: number): CaseFact[] {
-    const db = getDb();
-    const stmt = db.prepare(`
-      SELECT
-        id,
-        case_id as caseId,
-        fact_content as factContent,
-        fact_category as factCategory,
-        importance,
-        created_at as createdAt,
-        updated_at as updatedAt
-      FROM case_facts
-      WHERE case_id = ?
-      ORDER BY
-        CASE importance
-          WHEN 'critical' THEN 1
-          WHEN 'high' THEN 2
-          WHEN 'medium' THEN 3
-          WHEN 'low' THEN 4
-          ELSE 5
-        END ASC,
-        created_at DESC
-    `);
-
-    const rows = stmt.all(caseId) as CaseFact[];
-
-    // Decrypt all fact_content fields
-    const decryptedRows = rows.map((row) => ({
-      ...row,
-      factContent: this.decryptField(row.factContent),
-    }));
-
-    // Audit: Bulk content access
-    if (decryptedRows.length > 0) {
-      this.auditLogger?.log({
-        eventType: 'case_fact.content_access',
-        resourceType: 'case_fact',
-        resourceId: `case_${caseId}`,
-        action: 'read',
-        details: {
-          field: 'fact_content',
-          encrypted: true,
-          count: decryptedRows.length,
-        },
-        success: true,
-      });
-    }
-
-    return decryptedRows;
-  }
-
-  /**
-   * Find case facts by category for a case
-   */
-  findByCategory(caseId: number, category: string): CaseFact[] {
-    const db = getDb();
-    const stmt = db.prepare(`
-      SELECT
-        id,
-        case_id as caseId,
-        fact_content as factContent,
-        fact_category as factCategory,
-        importance,
-        created_at as createdAt,
-        updated_at as updatedAt
-      FROM case_facts
-      WHERE case_id = ? AND fact_category = ?
-      ORDER BY
-        CASE importance
-          WHEN 'critical' THEN 1
-          WHEN 'high' THEN 2
-          WHEN 'medium' THEN 3
-          WHEN 'low' THEN 4
-          ELSE 5
-        END ASC,
-        created_at DESC
-    `);
-
-    const rows = stmt.all(caseId, category) as CaseFact[];
-
-    // Decrypt all fact_content fields
-    const decryptedRows = rows.map((row) => ({
-      ...row,
-      factContent: this.decryptField(row.factContent),
-    }));
-
-    // Audit: Filtered content access
-    if (decryptedRows.length > 0) {
-      this.auditLogger?.log({
-        eventType: 'case_fact.content_access',
-        resourceType: 'case_fact',
-        resourceId: `case_${caseId}_category_${category}`,
-        action: 'read',
-        details: {
-          field: 'fact_content',
-          encrypted: true,
-          factCategory: category,
-          count: decryptedRows.length,
-        },
-        success: true,
-      });
-    }
-
-    return decryptedRows;
-  }
-
-  /**
-   * Find case facts by importance level for a case
-   */
-  findByImportance(caseId: number, importance: string): CaseFact[] {
-    const db = getDb();
-    const stmt = db.prepare(`
-      SELECT
-        id,
-        case_id as caseId,
-        fact_content as factContent,
-        fact_category as factCategory,
-        importance,
-        created_at as createdAt,
-        updated_at as updatedAt
-      FROM case_facts
-      WHERE case_id = ? AND importance = ?
-      ORDER BY created_at DESC
-    `);
-
-    const rows = stmt.all(caseId, importance) as CaseFact[];
-
-    // Decrypt all fact_content fields
-    const decryptedRows = rows.map((row) => ({
-      ...row,
-      factContent: this.decryptField(row.factContent),
-    }));
-
-    // Audit: Filtered content access
-    if (decryptedRows.length > 0) {
-      this.auditLogger?.log({
-        eventType: 'case_fact.content_access',
-        resourceType: 'case_fact',
-        resourceId: `case_${caseId}_importance_${importance}`,
-        action: 'read',
-        details: {
-          field: 'fact_content',
-          encrypted: true,
-          importance,
-          count: decryptedRows.length,
-        },
-        success: true,
-      });
-    }
-
-    return decryptedRows;
-  }
-
-  /**
-   * Update case fact
+   * Update a case fact
    */
   update(id: number, input: UpdateCaseFactInput): CaseFact | null {
     try {
+      const existingFact = this.findById(id);
+      
+      if (!existingFact) {
+        return null;
+      }
+      
       const db = getDb();
-      const updates: string[] = [];
-      const params: Record<string, unknown> = { id };
-
-      // Encrypt new fact_content if provided
+      
+      // Encrypt fact_content if provided (P1 priority field - may contain PII)
+      let encryptedContent: EncryptedData | null = null;
+      let contentToStore: string | null = null;
+      
       if (input.factContent !== undefined) {
-        const encryptedContent = this.encryptionService?.encrypt(input.factContent);
-
+        encryptedContent = this.encryptionService?.encrypt(input.factContent);
+        
         if (!encryptedContent) {
           throw new Error('EncryptionService is required to update case facts');
         }
-
-        updates.push('fact_content = @factContent');
-        params.factContent = JSON.stringify(encryptedContent);
+        
+        contentToStore = JSON.stringify(encryptedContent);
       }
-
-      if (input.factCategory !== undefined) {
-        updates.push('fact_category = @factCategory');
-        params.factCategory = input.factCategory;
-      }
-
-      if (input.importance !== undefined) {
-        updates.push('importance = @importance');
-        params.importance = input.importance;
-      }
-
-      if (updates.length === 0) {
-        return this.findById(id);
-      }
-
+      
       const stmt = db.prepare(`
-        UPDATE case_facts
-        SET ${updates.join(', ')}
+        UPDATE case_facts 
+        SET 
+          fact_content = COALESCE(@factContent, fact_content),
+          fact_category = COALESCE(@factCategory, fact_category),
+          importance = COALESCE(@importance, importance),
+          updated_at = CURRENT_TIMESTAMP
         WHERE id = @id
       `);
-
-      stmt.run(params);
-
-      const updatedFact = this.findById(id);
-
+      
+      const result = stmt.run({
+        id,
+        factContent: contentToStore,
+        factCategory: input.factCategory,
+        importance: input.importance,
+      });
+      
+      if (result.changes === 0) {
+        return null;
+      }
+      
+      const updatedFact = this.findById(id)!;
+      
       // Audit: Case fact updated
       this.auditLogger?.log({
         eventType: 'case_fact.update',
         resourceType: 'case_fact',
-        resourceId: id.toString(),
+        resourceId: updatedFact.id.toString(),
         action: 'update',
         details: {
-          factId: id,
-          changes: input,
-          updatedFields: Object.keys(input),
-          contentLength: input.factContent?.length,
+          caseId: updatedFact.caseId,
+          factCategory: updatedFact.factCategory,
+          importance: updatedFact.importance,
+          contentLength: updatedFact.factContent.length,
         },
         success: true,
       });
-
+      
       return updatedFact;
-    } catch (error) {
+    } catch (_error) {
       // Audit: Failed update
       this.auditLogger?.log({
         eventType: 'case_fact.update',
         resourceType: 'case_fact',
-        resourceId: id.toString(),
         action: 'update',
+        details: {
+          caseId: input.caseId,
+          factCategory: input.factCategory,
+          importance: input.importance,
+        },
         success: false,
-        errorMessage: error instanceof Error ? error.message : 'Unknown error',
       });
-      throw error;
+      
+      throw _error;
     }
   }
 
   /**
-   * Delete case fact
+   * Delete a case fact
    */
   delete(id: number): boolean {
     try {
       const db = getDb();
-      const stmt = db.prepare('DELETE FROM case_facts WHERE id = ?');
+      
+      const stmt = db.prepare(`
+        DELETE FROM case_facts 
+        WHERE id = ?
+      `);
+      
       const result = stmt.run(id);
-      const success = result.changes > 0;
-
+      
+      if (result.changes === 0) {
+        return false;
+      }
+      
       // Audit: Case fact deleted
       this.auditLogger?.log({
         eventType: 'case_fact.delete',
         resourceType: 'case_fact',
         resourceId: id.toString(),
         action: 'delete',
-        details: { factId: id },
-        success,
+        details: {
+          caseId: null,
+          factCategory: null,
+          importance: null,
+        },
+        success: true,
       });
-
-      return success;
-    } catch (error) {
+      
+      return true;
+    } catch (_error) {
       // Audit: Failed deletion
       this.auditLogger?.log({
         eventType: 'case_fact.delete',
         resourceType: 'case_fact',
-        resourceId: id.toString(),
         action: 'delete',
+        details: {
+          caseId: null,
+          factCategory: null,
+          importance: null,
+        },
         success: false,
-        errorMessage: error instanceof Error ? error.message : 'Unknown error',
       });
-      throw error;
+      
+      throw _error;
     }
   }
 
   /**
-   * Decrypt fact_content field with backward compatibility
-   * @param storedValue - Encrypted JSON string or legacy plaintext
-   * @returns Decrypted plaintext or original value
+   * Get all case facts for a specific case
    */
-  private decryptField(storedValue: string | null | undefined): string {
-    if (!storedValue) {
-      return '';
-    }
-
-    // If no encryption service, return as-is (backward compatibility)
-    if (!this.encryptionService) {
-      return storedValue;
-    }
-
-    try {
-      // Try to parse as encrypted data
-      const encryptedData = JSON.parse(storedValue) as EncryptedData;
-
-      // Verify it's actually encrypted data format
-      if (this.encryptionService.isEncrypted(encryptedData)) {
-        return this.encryptionService.decrypt(encryptedData) || '';
+  findByCaseId(caseId: number): CaseFact[] {
+    const db = getDb();
+    
+    const stmt = db.prepare(`
+      SELECT id, case_id, fact_content, fact_category, importance, created_at, updated_at
+      FROM case_facts
+      WHERE case_id = ?
+      ORDER BY created_at DESC
+    `);
+    
+    const rows = stmt.all(caseId);
+    
+    return rows.map(row => {
+      // Decrypt fact_content if needed (backward compatibility)
+      let decryptedContent: string;
+      try {
+        const parsedContent = JSON.parse(row.fact_content);
+        if (typeof parsedContent === 'string') {
+          // Legacy plaintext format
+          decryptedContent = parsedContent;
+        } else {
+          // Encrypted format
+          const decrypted = this.encryptionService.decrypt(parsedContent);
+          decryptedContent = decrypted ?? '';
+        }
+      } catch (e) {
+        // Fallback to plaintext if decryption fails
+        decryptedContent = row.fact_content;
       }
-
-      // If it's not encrypted format, treat as legacy plaintext
-      return storedValue;
-    } catch (_error) {
-      // JSON parse failed - likely legacy plaintext data
-      return storedValue;
-    }
+      
+      return {
+        id: row.id,
+        caseId: row.case_id,
+        factContent: decryptedContent,
+        factCategory: row.fact_category,
+        importance: row.importance,
+        createdAt: new Date(row.created_at),
+        updatedAt: new Date(row.updated_at),
+      };
+    });
   }
-
 }
