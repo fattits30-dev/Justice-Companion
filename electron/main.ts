@@ -1,6 +1,7 @@
 import 'dotenv/config';
 
 import { app, BrowserWindow, safeStorage } from 'electron';
+import { autoUpdater } from 'electron-updater';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -92,7 +93,7 @@ app.whenReady().then(async () => {
     logger.info('Database initialized');
 
     keyManager = new KeyManager(safeStorage, app.getPath('userData'));
-    const _autoUpdater = new AutoUpdater(); // Renamed to start with underscore
+    const _autoUpdater = new AutoUpdater(app, autoUpdater); // Renamed to start with underscore
     const _mainApp = new MainApplication(); // Renamed to start with underscore
     
     setupIpcHandlers();
