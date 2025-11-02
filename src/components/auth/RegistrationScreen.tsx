@@ -123,7 +123,7 @@ export function RegistrationScreen({
       );
 
       if (!response.success) {
-        setError(response.error || "Registration failed");
+        setError(response.error?.message || "Registration failed");
         return;
       }
 

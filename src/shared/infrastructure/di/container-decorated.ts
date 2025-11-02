@@ -30,7 +30,7 @@ import { EvidenceRepository } from '../../../repositories/EvidenceRepository.ts'
 import { UserRepository } from '../../../repositories/UserRepository.ts';
 
 // Import Decorators
-import { DecoratorFactory, DecoratorPresets } from '../../../repositories/decorators/index.ts';
+import { DecoratorFactory } from '../../../repositories/decorators/index.ts';
 
 /**
  * Enhanced container options with decorator configuration
@@ -98,11 +98,9 @@ export function createDecoratedContainer(options: DecoratedContainerOptions = {}
     container.bind<ICaseRepository>(TYPES.CaseRepository)
       .toDynamicValue(() => {
         const repo = new CaseRepository(container.get(TYPES.Database));
-        return DecoratorFactory.createDecorator(
-          DecoratorPresets.Logging,
-          repo,
-          container.get(TYPES.AuditLogger)
-        );
+        return DecoratorFactory.wrapRepository(container, repo, {
+          enableLogging: true,
+        });
       })
       .inSingletonScope();
   } else {
@@ -116,11 +114,9 @@ export function createDecoratedContainer(options: DecoratedContainerOptions = {}
     container.bind<IEvidenceRepository>(TYPES.EvidenceRepository)
       .toDynamicValue(() => {
         const repo = new EvidenceRepository(container.get(TYPES.Database));
-        return DecoratorFactory.createDecorator(
-          DecoratorPresets.Logging,
-          repo,
-          container.get(TYPES.AuditLogger)
-        );
+        return DecoratorFactory.wrapRepository(container, repo, {
+          enableLogging: true,
+        });
       })
       .inSingletonScope();
   } else {
@@ -134,14 +130,12 @@ export function createDecoratedContainer(options: DecoratedContainerOptions = {}
     container.bind<IUserRepository>(TYPES.UserRepository)
       .toDynamicValue(() => {
         const repo = new UserRepository(container.get(TYPES.Database));
-        return DecoratorFactory.createDecorator(
-          DecoratorPresets.Logging,
-          repo,
-          container.get(TYPES.AuditLogger)
-        );
+        return DecoratorFactory.wrapRepository(container, repo, {
+          enableLogging: true,
+        });
       })
       .inSingletonScope();
-  } else {
+  } else{
     container.bind<IUserRepository>(TYPES.UserRepository)
       .to(UserRepository)
       .inSingletonScope();

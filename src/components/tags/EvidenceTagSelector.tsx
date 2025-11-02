@@ -72,7 +72,7 @@ export function EvidenceTagSelector({
         await loadEvidenceTags();
         setIsSelecting(false);
       } else {
-        alert('Failed to add tag: ' + result.error);
+        alert('Failed to add tag: ' + (result.error?.message || 'Unknown error'));
       }
     } catch (error: unknown) {
       alert('Error adding tag: ' + (error as Error).message);
@@ -88,7 +88,7 @@ export function EvidenceTagSelector({
       if (result.success) {
         await loadEvidenceTags();
       } else {
-        alert('Failed to remove tag: ' + result.error);
+        alert('Failed to remove tag: ' + (result.error?.message || 'Unknown error'));
       }
     } catch (error: unknown) {
       alert('Error removing tag: ' + (error as Error).message);

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Shield, Users, Key } from 'lucide-react';
-import type { Role, Permission } from '../../domains/auth/entities/Role.ts';
+import type { Role } from '../../domains/auth/entities/Role.ts';
+import type { Permission } from '../../domains/auth/entities/Permission.ts';
 
 /**
  * Role Management Tab (Admin Only)

@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search,
   Plus,
@@ -53,16 +53,6 @@ export const TemplateLibrary: React.FC<TemplateLibraryProps> = ({
     { value: 'other', label: 'Other' },
   ];
 
-  // Load templates on mount
-  useEffect(() => {
-    loadTemplates();
-  }, [sessionId, loadTemplates]);
-
-  // Filter templates when search or filters change
-  useEffect(() => {
-    filterTemplates();
-  }, [templates, searchQuery, selectedCategory, showSystemOnly, filterTemplates]);
-
   const loadTemplates = useCallback(async () => {
     try {
       setLoading(true);
@@ -70,10 +60,12 @@ export const TemplateLibrary: React.FC<TemplateLibraryProps> = ({
 
       const response = await window.justiceAPI.templates.getAllWithStats(sessionId);
 
-      if (response.success && response.data) {
-        setTemplates(response.data);
+      if (response.success) {
+        if (response.data) {
+          setTemplates(response.data);
+        }
       } else {
-        setError(response.error || 'Failed to load templates');
+        setError(response.error?.message || 'Failed to load templates');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred');
@@ -89,8 +81,8 @@ export const TemplateLibrary: React.FC<TemplateLibraryProps> = ({
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       result = result.filter(template =>
-        template.title.toLowerCase().includes(query) ||
-        template.description.toLowerCase().includes(query)
+        template.name.toLowerCase().includes(query) ||
+        (template.description?.toLowerCase() || '').includes(query)
       );
     }
 
@@ -106,6 +98,16 @@ export const TemplateLibrary: React.FC<TemplateLibraryProps> = ({
 
     setFilteredTemplates(result);
   }, [templates, searchQuery, selectedCategory, showSystemOnly]);
+
+  // Load templates on mount
+  useEffect(() => {
+    loadTemplates();
+  }, [loadTemplates]);
+
+  // Filter templates when search or filters change
+  useEffect(() => {
+    filterTemplates();
+  }, [filterTemplates]);
 
   return (
     <div className="flex flex-col h-full">
@@ -203,9 +205,9 @@ export const TemplateLibrary: React.FC<TemplateLibraryProps> = ({
                 <TemplateCard
                   key={template.id}
                   template={template}
-                  onView={onPreviewTemplate}
-                  onUse={onUseTemplate}
-                  viewMode={viewMode}
+                  onPreview={onPreviewTemplate}
+                  onUseTemplate={onUseTemplate}
+                  showStats={true}
                 />
               ))}
             </AnimatePresence>

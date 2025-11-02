@@ -70,6 +70,103 @@ Every code change MUST follow these principles. No exceptions.
 - Does this make the system LESS reliable? Don't ship it.
 - Not sure? Write a test that proves it.
 
+## MCP Servers (Model Context Protocol)
+
+**STATUS: ALL 7 SERVERS CONFIGURED AND OPERATIONAL**
+
+Justice Companion has 7 MCP servers providing 73 specialized tools for development, legal research, and automation.
+
+### Server Status
+```
+✓ Playwright (14 tools)           - Browser automation for UK legal sites
+✓ Puppeteer (7 tools)             - Chrome-based web scraping
+✓ GitHub (26 tools)               - Complete repository management
+✓ Memory (9 tools)                - Knowledge graph persistence
+✓ Sequential Thinking (1 tool)    - Deep reasoning (32K tokens)
+✓ Filesystem (14 tools)           - C:\ drive access
+✓ Context7 (2 tools)              - Up-to-date library docs
+```
+
+### Configuration Location
+All MCP servers are configured in `.mcp.json` at project root using Windows-compatible command format:
+
+```json
+{
+  "mcpServers": {
+    "server-name": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@package/name"]
+    }
+  }
+}
+```
+
+### Key Capabilities
+
+**Legal Research Automation:**
+- Playwright MCP: Navigate legislation.gov.uk and caselaw.nationalarchives.gov.uk
+- Puppeteer MCP: Scrape UK legal databases and capture screenshots
+- Memory MCP: Store research findings in persistent knowledge graph
+
+**Development & Code Management:**
+- GitHub MCP: Create issues, PRs, manage repository operations
+- Filesystem MCP: Read/write case files, search evidence documents
+- Context7 MCP: Get current docs for OpenAI, Electron, React, TypeScript
+
+**Advanced Analysis:**
+- Sequential Thinking MCP: Multi-step reasoning for complex architectural decisions
+- Memory MCP: Track project relationships and architectural decisions
+
+### Usage Examples
+
+**Legal Research Workflow:**
+```
+1. Use Playwright to search legislation.gov.uk for specific statute
+2. Capture screenshots of relevant sections
+3. Store findings in Memory MCP knowledge graph
+4. Generate case notes using stored context
+```
+
+**Development Workflow:**
+```
+1. Use Context7 to get current Electron IPC documentation
+2. Implement feature following latest best practices
+3. Use GitHub MCP to create PR with detailed description
+4. Use Memory MCP to store architectural decision
+```
+
+**Complex Problem Solving:**
+```
+1. Use Sequential Thinking for multi-step analysis
+2. Explore alternative approaches with branching
+3. Store final decision in Memory MCP
+4. Document in GitHub issue using GitHub MCP
+```
+
+### Verification Commands
+
+Check MCP server status:
+```bash
+claude mcp list
+```
+
+Test specific server:
+```bash
+claude mcp get playwright
+```
+
+### Troubleshooting
+
+If servers show as disconnected:
+1. Verify Node.js 20.x is active: `node --version`
+2. Check `.mcp.json` syntax (must use `cmd /c` format on Windows)
+3. Restart Claude Code completely (close and relaunch)
+
+Common issues:
+- Context7 may occasionally fail to reconnect (non-critical)
+- GitHub requires valid GITHUB_PERSONAL_ACCESS_TOKEN in env
+- Filesystem requires explicit directory paths (currently: C:\)
+
 ## Critical Requirements
 
 ### Package Manager

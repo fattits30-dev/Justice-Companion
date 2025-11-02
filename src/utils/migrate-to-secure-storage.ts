@@ -131,7 +131,7 @@ export async function migrateAllKeys(): Promise<MigrationSummary> {
   for (const key of Object.values(MIGRATION_KEYS)) {
     const result = await migrateKey(key);
     results.push(result);
-    
+
     if (result.migrated) {
       migratedKeys++;
     } else if (result.error) {
@@ -148,4 +148,39 @@ export async function migrateAllKeys(): Promise<MigrationSummary> {
   };
 
   return summary;
+}
+
+/**
+ * Alias for migrateAllKeys for backward compatibility
+ */
+export const migrateToSecureStorage = migrateAllKeys;
+
+/**
+ * Check if migration is needed (if any keys exist in localStorage)
+ */
+export function isMigrationNeeded(): boolean {
+  if (!isBrowserEnvironment()) {
+    return false;
+  }
+
+  for (const key of Object.values(MIGRATION_KEYS)) {
+    if (getFromLocalStorage(key)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Clean up all migration keys from localStorage
+ */
+export function cleanupLocalStorage(): void {
+  if (!isBrowserEnvironment()) {
+    return;
+  }
+
+  for (const key of Object.values(MIGRATION_KEYS)) {
+    removeFromLocalStorage(key);
+  }
 }

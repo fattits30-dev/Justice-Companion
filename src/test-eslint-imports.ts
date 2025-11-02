@@ -2,10 +2,10 @@
 // This file contains intentional errors to verify the rule works
 
 // ❌ Should error - missing .ts extension
-import { UserRepository } from '../repositories/UserRepository.ts';
+import { UserRepository } from './repositories/UserRepository.ts';
 
 // ✅ Should pass - correct .ts extension
-import { AuditLogger } from '../services/AuditLogger.ts';
+import { AuditLogger } from './services/AuditLogger.ts';
 
 // ✅ Should pass - npm package (no extension)
 import _z from 'zod';

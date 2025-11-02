@@ -16,9 +16,7 @@ export {
   showError,
   showWarning,
   showInfo,
-  showPromise,
-  dismissAll,
-  toast
+  showPromise
 } from './Toast.tsx';
 
 export {
@@ -36,5 +34,5 @@ export type {
   SkeletonListProps
 } from './Skeleton.tsx';
 
-export { CommandPalette, useCommandPalette } from './CommandPalette.tsx';
+export { CommandPalette } from './CommandPalette.tsx';
 export type { CommandItem, CommandPaletteProps } from './CommandPalette.tsx';

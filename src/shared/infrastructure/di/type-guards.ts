@@ -30,10 +30,8 @@ import type {
   IEncryptionService,
   IAuditLogger,
 } from './service-interfaces.ts';
-import type {
-  IDatabase,
-  IDatabaseManager,
-} from './infrastructure-interfaces.ts';
+import type { IDatabase } from '../../../interfaces/IDatabase.ts';
+// IDatabaseManager doesn't exist - removed import
 
 // =============================================================================
 // BASE TYPE GUARDS

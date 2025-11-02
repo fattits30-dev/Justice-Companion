@@ -17,7 +17,7 @@ interface Case {
 function getSessionId(): string {
   const sessionId = localStorage.getItem('sessionId');
   if (!sessionId) {
-    throw new Error('No session');
+    throw new Error('No active session - please log in again');
   }
   return sessionId;
 }

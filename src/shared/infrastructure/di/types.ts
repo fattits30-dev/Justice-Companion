@@ -41,10 +41,10 @@ export const TYPES = {
   CachedCaseRepository: Symbol.for('CachedCaseRepository'),
   CachedEvidenceRepository: Symbol.for('CachedEvidenceRepository'),
   CachedSessionRepository: Symbol.for('CachedSessionRepository'),
-  CachedUserProfileRepository: Symbol.for('CachedUserProfileRepository'),
+  // CachedUserProfileRepository: Symbol.for('CachedUserProfileRepository'), // DELETED FILE
 
   // Paginated Repositories
-  CaseRepositoryPaginated: Symbol.for('CaseRepositoryPaginated'),
+  // CaseRepositoryPaginated: Symbol.for('CaseRepositoryPaginated'), // DELETED FILE
 
   // ==========================================
   // Services (Business Logic Layer)
