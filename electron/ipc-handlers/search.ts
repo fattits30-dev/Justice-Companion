@@ -1,7 +1,7 @@
 import { ipcMain } from 'electron';
 import { SearchService, type SearchQuery } from '../../src/services/SearchService.ts';
 import { SearchIndexBuilder } from '../../src/services/SearchIndexBuilder.ts';
-import { getDb } from '../../src/db/database.ts';
+import { databaseManager } from '../../src/db/database.ts';
 import { CaseRepository } from '../../src/repositories/CaseRepository.ts';
 import { EvidenceRepository } from '../../src/repositories/EvidenceRepository.ts';
 import { ChatConversationRepository } from '../../src/repositories/ChatConversationRepository.ts';
@@ -21,7 +21,7 @@ function _getSearchService(): SearchService {
   if (!searchService) {
     const keyManager = getKeyManager();
     const encryptionService = new EncryptionService(keyManager.getKey());
-    const auditLogger = new AuditLogger(getDb(), encryptionService);
+    const auditLogger = new AuditLogger(databaseManager.getDatabase(), encryptionService);
 
     const caseRepo = new CaseRepository(encryptionService, auditLogger);
     const evidenceRepo = new EvidenceRepository(encryptionService, auditLogger);
@@ -29,7 +29,7 @@ function _getSearchService(): SearchService {
     const notesRepo = new NotesRepository(encryptionService, auditLogger);
 
     searchService = new SearchService(
-      getDb(),
+      databaseManager.getDatabase(),
       caseRepo,
       evidenceRepo,
       chatRepo,
@@ -45,7 +45,7 @@ function _getSearchIndexBuilder(): SearchIndexBuilder {
   if (!searchIndexBuilder) {
     const keyManager = getKeyManager();
     const encryptionService = new EncryptionService(keyManager.getKey());
-    const auditLogger = new AuditLogger(getDb(), encryptionService);
+    const auditLogger = new AuditLogger(databaseManager.getDatabase(), encryptionService);
 
     const caseRepo = new CaseRepository(encryptionService, auditLogger);
     const evidenceRepo = new EvidenceRepository(encryptionService, auditLogger);
@@ -53,7 +53,7 @@ function _getSearchIndexBuilder(): SearchIndexBuilder {
     const notesRepo = new NotesRepository(encryptionService, auditLogger);
 
     searchIndexBuilder = new SearchIndexBuilder(
-      getDb(),
+      databaseManager.getDatabase(),
       caseRepo,
       evidenceRepo,
       chatRepo,
@@ -65,24 +65,26 @@ function _getSearchIndexBuilder(): SearchIndexBuilder {
   return searchIndexBuilder;
 }
 
-ipcMain.handle('search', async (_event, query: SearchQuery) => {
-  try {
-    const searchService = _getSearchService();
-    const results = await searchService.search(query);
-    return results;
-  } catch (error) {
-    console.error('Search error:', error);
-    throw error;
-  }
-});
+export function registerSearchHandlers(): void {
+  ipcMain.handle('search', async (_event, query: SearchQuery) => {
+    try {
+      const searchService = _getSearchService();
+      const results = await searchService.search(query);
+      return results;
+    } catch (error) {
+      console.error('Search error:', error);
+      throw error;
+    }
+  });
 
-ipcMain.handle('rebuild-search-index', async () => {
-  try {
-    const searchIndexBuilder = _getSearchIndexBuilder();
-    await searchIndexBuilder.buildIndex();
-    return { success: true };
-  } catch (error) {
-    console.error('Search index rebuild error:', error);
-    throw error;
-  }
-});
+  ipcMain.handle('rebuild-search-index', async () => {
+    try {
+      const searchIndexBuilder = _getSearchIndexBuilder();
+      await searchIndexBuilder.buildIndex();
+      return { success: true };
+    } catch (error) {
+      console.error('Search index rebuild error:', error);
+      throw error;
+    }
+  });
+}

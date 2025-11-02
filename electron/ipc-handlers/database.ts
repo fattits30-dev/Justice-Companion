@@ -7,7 +7,7 @@ import {
   type IPCResponse,
 } from '../utils/ipc-response.ts';
 import { logAuditEvent, AuditEventType } from '../utils/audit-helper.ts';
-import { getDb } from '../../src/db/database.ts';
+import { databaseManager } from '../../src/db/database.ts';
 import { CaseRepository } from '../../src/repositories/CaseRepository.ts';
 import { EvidenceRepository } from '../../src/repositories/EvidenceRepository.ts';
 
@@ -85,8 +85,8 @@ export function setupDatabaseHandlers(): void {
   ipcMain.handle('db:status', async (_event: IpcMainInvokeEvent): Promise<IPCResponse> => {
     try {
       console.warn('[IPC] db:status called');
-      
-      const db = getDb();
+
+      const db = databaseManager.getDatabase();
       const isConnected = db ? true : false;
       
       return successResponse({
@@ -190,9 +190,9 @@ export function setupDatabaseHandlers(): void {
   ipcMain.handle('dashboard:stats', async (_event: IpcMainInvokeEvent): Promise<IPCResponse> => {
     try {
       console.warn('[IPC] dashboard:stats called');
-      
-      const caseRepo = new CaseRepository(getDb());
-      const evidenceRepo = new EvidenceRepository(getDb());
+
+      const caseRepo = new CaseRepository(databaseManager.getDatabase());
+      const evidenceRepo = new EvidenceRepository(databaseManager.getDatabase());
       
       const totalCases = await caseRepo.count();
       const totalEvidence = await evidenceRepo.count();
@@ -211,7 +211,7 @@ export function setupDatabaseHandlers(): void {
   ipcMain.handle('ui:logError', async (_event: IpcMainInvokeEvent, error: Error): Promise<IPCResponse> => {
     try {
       console.error('[IPC] ui:logError called with error:', error);
-      
+
       // Log the error to audit system
       logAuditEvent({
         eventType: AuditEventType.ERROR_LOGGED,
@@ -225,7 +225,7 @@ export function setupDatabaseHandlers(): void {
           stack: error.stack,
         },
       });
-      
+
       return successResponse({
         logged: true,
         message: 'Error logged successfully',
@@ -235,4 +235,27 @@ export function setupDatabaseHandlers(): void {
       return formatError(logError);
     }
   });
+}
+
+// Export stub functions for handlers that are already included in setupDatabaseHandlers
+// These are called separately in index.ts for organization purposes
+export function setupDashboardHandlers(): void {
+  // Dashboard handler already registered in setupDatabaseHandlers
+  // This is a stub to satisfy the import in index.ts
+}
+
+export function setupSecureStorageHandlers(): void {
+  // Secure storage handlers already registered in setupDatabaseHandlers
+  // This is a stub to satisfy the import in index.ts
+}
+
+export function setupUIHandlers(): void {
+  // UI handler already registered in setupDatabaseHandlers
+  // This is a stub to satisfy the import in index.ts
+}
+
+export function setupAIConfigHandlers(): void {
+  // AI configuration handlers not yet implemented
+  // This is a stub to satisfy the import in index.ts
+  console.warn('[IPC] AI configuration handlers not yet implemented');
 }

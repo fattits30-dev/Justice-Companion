@@ -1,7 +1,7 @@
 import { ipcMain, type IpcMainInvokeEvent } from 'electron';
 import { successResponse, errorResponse, type IPCResponse } from '../utils/ipc-response.ts';
 import { withAuthorization } from '../utils/authorization-wrapper.ts';
-import { getDb } from '../../src/db/database.ts';
+import { databaseManager } from '../../src/db/database.ts';
 import { NotificationService } from '../../src/services/NotificationService.ts';
 import { NotificationRepository } from '../../src/repositories/NotificationRepository.ts';
 import { NotificationPreferencesRepository } from '../../src/repositories/NotificationPreferencesRepository.ts';
@@ -31,7 +31,7 @@ export function setupNotificationHandlers(): void {
         try {
           console.warn('[IPC] notifications:list called by user:', userId, 'with filters:', filters);
 
-          const db = getDb();
+          const db = databaseManager.getDatabase();
           const notificationRepo = new NotificationRepository(db);
           const preferencesRepo = new NotificationPreferencesRepository(db);
           const auditLogger = new AuditLogger(db);
@@ -57,7 +57,7 @@ export function setupNotificationHandlers(): void {
         try {
           console.warn('[IPC] notifications:unread-count called by user:', userId);
 
-          const db = getDb();
+          const db = databaseManager.getDatabase();
           const notificationRepo = new NotificationRepository(db);
           const preferencesRepo = new NotificationPreferencesRepository(db);
           const auditLogger = new AuditLogger(db);
@@ -83,7 +83,7 @@ export function setupNotificationHandlers(): void {
         try {
           console.warn('[IPC] notifications:mark-read called by user:', userId, 'for notification:', notificationId);
 
-          const db = getDb();
+          const db = databaseManager.getDatabase();
           const notificationRepo = new NotificationRepository(db);
           const preferencesRepo = new NotificationPreferencesRepository(db);
           const auditLogger = new AuditLogger(db);
@@ -115,7 +115,7 @@ export function setupNotificationHandlers(): void {
         try {
           console.warn('[IPC] notifications:mark-all-read called by user:', userId);
 
-          const db = getDb();
+          const db = databaseManager.getDatabase();
           const notificationRepo = new NotificationRepository(db);
           const preferencesRepo = new NotificationPreferencesRepository(db);
           const auditLogger = new AuditLogger(db);
@@ -141,7 +141,7 @@ export function setupNotificationHandlers(): void {
         try {
           console.warn('[IPC] notifications:dismiss called by user:', userId, 'for notification:', notificationId);
 
-          const db = getDb();
+          const db = databaseManager.getDatabase();
           const notificationRepo = new NotificationRepository(db);
           const preferencesRepo = new NotificationPreferencesRepository(db);
           const auditLogger = new AuditLogger(db);
@@ -173,7 +173,7 @@ export function setupNotificationHandlers(): void {
         try {
           console.warn('[IPC] notifications:preferences called by user:', userId);
 
-          const db = getDb();
+          const db = databaseManager.getDatabase();
           const notificationRepo = new NotificationRepository(db);
           const preferencesRepo = new NotificationPreferencesRepository(db);
           const auditLogger = new AuditLogger(db);
@@ -203,7 +203,7 @@ export function setupNotificationHandlers(): void {
         try {
           console.warn('[IPC] notifications:update-preferences called by user:', userId, 'with:', preferences);
 
-          const db = getDb();
+          const db = databaseManager.getDatabase();
           const notificationRepo = new NotificationRepository(db);
           const preferencesRepo = new NotificationPreferencesRepository(db);
           const auditLogger = new AuditLogger(db);
@@ -229,7 +229,7 @@ export function setupNotificationHandlers(): void {
         try {
           console.warn('[IPC] notifications:stats called by user:', userId);
 
-          const db = getDb();
+          const db = databaseManager.getDatabase();
           const notificationRepo = new NotificationRepository(db);
           const preferencesRepo = new NotificationPreferencesRepository(db);
           const auditLogger = new AuditLogger(db);

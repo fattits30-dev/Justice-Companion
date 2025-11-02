@@ -4,7 +4,7 @@
  */
 
 import { ipcMain } from 'electron';
-import { getDb } from '../../src/db/database.ts';
+import { databaseManager } from '../../src/db/database.ts';
 import { EncryptionService } from '../../src/services/EncryptionService.ts';
 import { AuditLogger } from '../../src/services/AuditLogger.ts';
 import { TemplateRepository } from '../../src/repositories/TemplateRepository.ts';
@@ -23,7 +23,7 @@ let templateSeeder: TemplateSeeder | null = null;
 
 function getTemplateService(): TemplateService {
   if (!templateService) {
-    const db = getDb();
+    const db = databaseManager.getDatabase();
     const encryptionService = new EncryptionService();
     const auditLogger = new AuditLogger(db);
 
@@ -43,7 +43,7 @@ function getTemplateService(): TemplateService {
 
 function getTemplateSeeder(): TemplateSeeder {
   if (!templateSeeder) {
-    const db = getDb();
+    const db = databaseManager.getDatabase();
     const encryptionService = new EncryptionService();
     const auditLogger = new AuditLogger(db);
     const templateRepo = new TemplateRepository(db, encryptionService, auditLogger);

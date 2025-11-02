@@ -8,7 +8,7 @@ import {
   withAuthorization,
   getAuthorizationMiddleware,
 } from '../utils/authorization-wrapper.ts';
-import { getDb } from '../../src/db/database.ts';
+import { databaseManager } from '../../src/db/database.ts';
 import { CaseRepository } from '../../src/repositories/CaseRepository.ts';
 import { CaseFactsRepository } from '../../src/repositories/CaseFactsRepository.ts';
 import { AuditLogger } from '../../src/services/AuditLogger.ts';
@@ -299,7 +299,7 @@ export function setupCaseHandlers(): void {
           console.warn('[IPC] case-fact:create called by user:', userId);
 
           // Get repositories and encryption service
-          const db = getDb();
+          const db = databaseManager.getDatabase();
           const auditLogger = new AuditLogger(db);
           const keyManager = getKeyManager();
           const encryptionService = new EncryptionService(keyManager);
@@ -350,7 +350,7 @@ export function setupCaseHandlers(): void {
           console.warn('[IPC] case-fact:list called by user:', userId, 'for case:', caseId);
 
           // Get repositories
-          const db = getDb();
+          const db = databaseManager.getDatabase();
           const auditLogger = new AuditLogger(db);
           const keyManager = getKeyManager();
           const encryptionService = new EncryptionService(keyManager);
