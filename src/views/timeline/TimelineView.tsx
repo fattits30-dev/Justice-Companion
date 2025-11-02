@@ -45,13 +45,19 @@ export function TimelineView() {
       // Load deadlines
       const deadlinesResult = await window.justiceAPI.getDeadlines(sessionId);
       if (!deadlinesResult.success) {
-        throw new Error(deadlinesResult.error || 'Failed to fetch deadlines');
+        const errorMsg = typeof deadlinesResult.error === 'string'
+          ? deadlinesResult.error
+          : deadlinesResult.error?.message || 'Failed to fetch deadlines';
+        throw new Error(errorMsg);
       }
 
       // Load cases
       const casesResult = await window.justiceAPI.getAllCases(sessionId);
       if (!casesResult.success) {
-        throw new Error(casesResult.error || 'Failed to fetch cases');
+        const errorMsg = typeof casesResult.error === 'string'
+          ? casesResult.error
+          : casesResult.error?.message || 'Failed to fetch cases';
+        throw new Error(errorMsg);
       }
 
       const deadlinesData = deadlinesResult.data || [];
@@ -111,7 +117,10 @@ export function TimelineView() {
         return { success: true };
       }
 
-      return { success: false, error: result.error };
+      const errorMsg = typeof result.error === 'string'
+        ? result.error
+        : result.error?.message || 'Failed to create deadline';
+      return { success: false, error: errorMsg };
     } catch (err) {
       return {
         success: false,
@@ -141,7 +150,10 @@ export function TimelineView() {
         return { success: true };
       }
 
-      return { success: false, error: result.error };
+      const errorMsg = typeof result.error === 'string'
+        ? result.error
+        : result.error?.message || 'Failed to update deadline';
+      return { success: false, error: errorMsg };
     } catch (err) {
       return {
         success: false,
