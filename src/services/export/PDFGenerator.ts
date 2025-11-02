@@ -1,7 +1,5 @@
 // src/services/export/PDFGenerator.ts
 import PDFDocument from 'pdfkit';
-import { promises as fs } from 'fs';
-import path from 'path';
 import type {
   CaseExportData,
   EvidenceExportData,
@@ -78,7 +76,7 @@ export class PDFGenerator {
 
         // Deadlines Section
         if (caseData.deadlines.length > 0) {
-          if (doc.y > 500) doc.addPage();
+          if (doc.y > 500) {doc.addPage();}
           this.addDeadlinesSection(doc, caseData.deadlines);
         }
 
@@ -90,7 +88,7 @@ export class PDFGenerator {
 
         // Facts Section
         if (caseData.facts.length > 0) {
-          if (doc.y > 500) doc.addPage();
+          if (doc.y > 500) {doc.addPage();}
           this.addFactsSection(doc, caseData.facts);
         }
 
@@ -198,7 +196,7 @@ export class PDFGenerator {
 
         // Timeline Events
         if (timelineData.events.length > 0) {
-          if (doc.y > 500) doc.addPage();
+          if (doc.y > 500) {doc.addPage();}
 
           doc.fontSize(this.styles.heading1.fontSize!)
             .fillColor(this.styles.heading1.color!)
@@ -209,7 +207,7 @@ export class PDFGenerator {
 
         // Completed Events
         if (timelineData.completedEvents.length > 0) {
-          if (doc.y > 500) doc.addPage();
+          if (doc.y > 500) {doc.addPage();}
 
           doc.fontSize(this.styles.heading1.fontSize!)
             .fillColor('#10b981') // Green for completed
@@ -360,7 +358,7 @@ export class PDFGenerator {
     doc.fontSize(this.styles.body.fontSize!)
       .fillColor('#000000');
 
-    timeline.forEach((event, index) => {
+    timeline.forEach((event) => {
       if (doc.y > 650) {
         doc.addPage();
       }

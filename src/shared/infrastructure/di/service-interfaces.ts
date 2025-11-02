@@ -876,13 +876,7 @@ export interface IEventBus {
       eventTypes?: string[];
       limit?: number;
     }
-  ): Promise<Array<{
-    id: number;
-    aggregateId: string;
-    eventType: string;
-    eventData: string;
-    occurredAt: Date;
-  }>>;
+  ): Promise<DomainEvent[]>;
 
   /**
    * Replay events for an aggregate

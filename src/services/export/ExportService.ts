@@ -1,6 +1,6 @@
 // src/services/export/ExportService.ts
 import { injectable, inject } from 'inversify';
-import { app, dialog } from 'electron';
+import { app } from 'electron';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { TYPES } from '../../shared/infrastructure/di/types.ts';
@@ -45,7 +45,6 @@ export interface IExportService {
 export class ExportService implements IExportService {
   private pdfGenerator: PDFGenerator;
   private docxGenerator: DOCXGenerator;
-  private templateEngine: TemplateEngine;
   private exportDir: string;
 
   constructor(

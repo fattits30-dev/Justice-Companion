@@ -108,7 +108,7 @@ export function TagManagerDialog({ open, onClose }: TagManagerDialogProps) {
   };
 
   const handleCreateOrUpdate = async () => {
-    if (!validate()) return;
+    if (!validate()) {return;}
 
     setIsSubmitting(true);
     setErrors({});
@@ -160,18 +160,18 @@ export function TagManagerDialog({ open, onClose }: TagManagerDialogProps) {
 
   const handleDeleteTag = async (tagId: number) => {
     const tag = tags.find((t) => t.id === tagId);
-    if (!tag) return;
+    if (!tag) {return;}
 
     const confirmMessage =
       tag.usageCount && tag.usageCount > 0
         ? `Delete "${tag.name}"? It will be removed from ${tag.usageCount} evidence item${tag.usageCount !== 1 ? 's' : ''}.`
         : `Delete "${tag.name}"?`;
 
-    if (!confirm(confirmMessage)) return;
+    if (!confirm(confirmMessage)) {return;}
 
     try {
       const sessionId = window.sessionManager?.getSessionId();
-      if (!sessionId) return;
+      if (!sessionId) {return;}
 
       const result = await window.api.tags.delete(tagId, sessionId);
       if (result.success) {
@@ -208,7 +208,7 @@ export function TagManagerDialog({ open, onClose }: TagManagerDialogProps) {
     setErrors({});
   };
 
-  if (!open) return null;
+  if (!open) {return null;}
 
   return (
     <AnimatePresence>

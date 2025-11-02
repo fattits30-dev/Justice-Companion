@@ -306,8 +306,8 @@ export class RateLimitService {
    */
   public checkLimit(
     key: string,
-    limit: number,
-    windowMs: number
+    _limit: number,
+    _windowMs: number
   ): { allowed: boolean; remaining: number; resetAt: Date } {
     // For now, delegate to checkRateLimit with a simplified response
     const result = this.checkRateLimit(key);

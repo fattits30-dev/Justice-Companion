@@ -1,9 +1,6 @@
 // src/services/export/ExportService.test.ts
 import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
 import { ExportService } from './ExportService.ts';
-import { PDFGenerator } from './PDFGenerator.ts';
-import { DOCXGenerator } from './DOCXGenerator.ts';
-import { TemplateEngine } from './TemplateEngine.ts';
 import type { IDatabase } from '../../interfaces/IDatabase.ts';
 import type { ICaseRepository } from '../../interfaces/ICaseRepository.ts';
 import type { IEvidenceRepository } from '../../interfaces/IEvidenceRepository.ts';
@@ -18,7 +15,6 @@ import type { Evidence } from '../../domains/evidence/entities/Evidence.ts';
 import type { Deadline } from '../../domains/timeline/entities/Deadline.ts';
 import type { Note } from '../../models/Note.ts';
 import type { User } from '../../domains/auth/entities/User.ts';
-import type { ExportOptions } from '../../models/Export.ts';
 
 // Mock electron
 vi.mock('electron', () => ({

@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Download, ZoomIn, ZoomOut, FileImage, FileText } from 'lucide-react';
+import { ZoomIn, ZoomOut, FileImage, FileText } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import type { DeadlineWithDependencies } from '../../../domains/timeline/entities/DeadlineDependency';
@@ -13,12 +13,11 @@ interface GanttChartProps {
 
 const PIXELS_PER_DAY = 40;
 const ROW_HEIGHT = 60;
-const HEADER_HEIGHT = 80;
 const LABEL_WIDTH = 250;
 
 export function GanttChart({ deadlines, onDeadlineUpdate, onDependencyClick }: GanttChartProps) {
   const chartRef = useRef<HTMLDivElement>(null);
-  const [draggingDeadlineId, setDraggingDeadlineId] = useState<number | null>(null);
+  const [, setDraggingDeadlineId] = useState<number | null>(null);
   const [zoom, setZoom] = useState(1);
   const [isExporting, setIsExporting] = useState(false);
 
@@ -87,7 +86,7 @@ export function GanttChart({ deadlines, onDeadlineUpdate, onDependencyClick }: G
 
   // Export to PNG
   const exportToPNG = useCallback(async () => {
-    if (!chartRef.current) return;
+    if (!chartRef.current) {return;}
 
     setIsExporting(true);
     try {
@@ -109,7 +108,7 @@ export function GanttChart({ deadlines, onDeadlineUpdate, onDependencyClick }: G
 
   // Export to PDF
   const exportToPDF = useCallback(async () => {
-    if (!chartRef.current) return;
+    if (!chartRef.current) {return;}
 
     setIsExporting(true);
     try {
@@ -259,9 +258,8 @@ export function GanttChart({ deadlines, onDeadlineUpdate, onDependencyClick }: G
 
           {/* Deadline Rows */}
           <div className="relative">
-            {deadlines.map((deadline, index) => {
+            {deadlines.map((deadline) => {
               const x = getPositionForDate(new Date(deadline.deadlineDate));
-              const y = index * ROW_HEIGHT;
 
               return (
                 <div key={deadline.id} className="flex border-b border-white/5">
@@ -341,7 +339,7 @@ export function GanttChart({ deadlines, onDeadlineUpdate, onDependencyClick }: G
               {deadlines.flatMap((deadline, index) =>
                 deadline.dependencies.map((dep) => {
                   const targetIndex = deadlines.findIndex((d) => d.id === dep.targetDeadlineId);
-                  if (targetIndex === -1) return null;
+                  if (targetIndex === -1) {return null;}
 
                   const sourceX = LABEL_WIDTH + getPositionForDate(new Date(deadline.deadlineDate));
                   const sourceY = index * ROW_HEIGHT + ROW_HEIGHT / 2;

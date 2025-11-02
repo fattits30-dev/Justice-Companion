@@ -249,7 +249,7 @@ export class TagService {
    * Search evidence by tags (AND logic - must have all specified tags)
    */
   searchByTags(userId: number, tagIds: number[]): number[] {
-    if (tagIds.length === 0) return [];
+    if (tagIds.length === 0) {return [];}
 
     const placeholders = tagIds.map(() => '?').join(',');
 

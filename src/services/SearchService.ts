@@ -402,7 +402,7 @@ export class SearchService {
    * Extract an excerpt from content around the query terms
    */
   private extractExcerpt(content: string, query: string, maxLength: number = 150): string {
-    if (!content) return '';
+    if (!content) {return '';}
 
     const lowerContent = content.toLowerCase();
     const lowerQuery = query.toLowerCase();
@@ -429,8 +429,8 @@ export class SearchService {
     let excerpt = content.substring(start, end);
 
     // Add ellipsis if needed
-    if (start > 0) excerpt = '...' + excerpt;
-    if (end < content.length) excerpt = excerpt + '...';
+    if (start > 0) {excerpt = '...' + excerpt;}
+    if (end < content.length) {excerpt = excerpt + '...';}
 
     return excerpt;
   }

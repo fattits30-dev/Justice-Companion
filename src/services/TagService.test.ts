@@ -479,7 +479,7 @@ describe('TagService', () => {
     it('should return correct statistics', () => {
       const tag1 = tagService.createTag(testUserId, { name: 'Tag1', color: '#EF4444' });
       const tag2 = tagService.createTag(testUserId, { name: 'Tag2', color: '#10B981' });
-      const tag3 = tagService.createTag(testUserId, { name: 'Unused', color: '#3B82F6' });
+      tagService.createTag(testUserId, { name: 'Unused', color: '#3B82F6' });
 
       // Create evidence
       db.prepare('INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)').run(

@@ -8,10 +8,9 @@
 import 'reflect-metadata';
 import { Container } from 'inversify';
 import { TYPES } from './types.ts';
+
+// Import repository interfaces with I prefix from repository-interfaces.ts
 import type {
-  IDatabase,
-  IEncryptionService,
-  IAuditLogger,
   ICaseRepository,
   IEvidenceRepository,
   IUserRepository,
@@ -25,6 +24,12 @@ import type {
   ICaseFactsRepository,
   IUserFactsRepository,
   IDeadlineRepository,
+} from './repository-interfaces.ts';
+
+// Import service interfaces with I prefix from service-interfaces.ts
+import type {
+  IEncryptionService,
+  IAuditLogger,
   ICaseService,
   IGdprService,
   IAuthenticationService,
@@ -34,8 +39,13 @@ import type {
   IChatConversationService,
   IConsentService,
   ILegalAPIService,
-} from './interfaces.ts';
-import type { IDataExporter, IDataDeleter, ISessionPersistenceHandler } from './service-interfaces.ts';
+  IDataExporter,
+  IDataDeleter,
+  ISessionPersistenceHandler,
+} from './service-interfaces.ts';
+
+// Import IDatabase from interfaces directory
+import type { IDatabase } from '../../../interfaces/IDatabase.ts';
 
 // Import implementations
 import { getDb } from '../../../db/database.ts';
@@ -156,7 +166,7 @@ export function createContainer(options: ContainerOptions = {}): Container {
   container
     .bind<IAuditLogger>(TYPES.AuditLogger)
     .toDynamicValue((): IAuditLogger => {
-      const db = container.get<IDatabase>(TYPES.Database);
+      const db = container.get<IDatabase>(TYPES.Database) as any; // Cast IDatabase to Database.Database
       return new AuditLogger(db) as unknown as IAuditLogger;
     })
     .inSingletonScope();
@@ -236,13 +246,13 @@ export function createContainer(options: ContainerOptions = {}): Container {
   });
 
   container.bind<IDeadlineRepository>(TYPES.DeadlineRepository).toDynamicValue((): IDeadlineRepository => {
-    const db = container.get<IDatabase>(TYPES.Database);
+    const db = container.get<IDatabase>(TYPES.Database) as any; // Cast IDatabase to Database.Database
     const auditLogger = container.get<IAuditLogger>(TYPES.AuditLogger) as unknown as AuditLogger;
     return new DeadlineRepository(db, auditLogger) as unknown as IDeadlineRepository;
   });
 
   container.bind(TYPES.TemplateRepository).toDynamicValue(() => {
-    const db = container.get<IDatabase>(TYPES.Database);
+    const db = container.get<IDatabase>(TYPES.Database) as any; // Cast IDatabase to Database.Database
     const encryptionService = container.get<IEncryptionService>(TYPES.EncryptionService) as unknown as EncryptionService;
     const auditLogger = container.get<IAuditLogger>(TYPES.AuditLogger) as unknown as AuditLogger;
     return new TemplateRepository(db, encryptionService, auditLogger);
@@ -257,20 +267,20 @@ export function createContainer(options: ContainerOptions = {}): Container {
 
   // GDPR Services
   container.bind<IGdprService>(TYPES.GdprService).toDynamicValue((): IGdprService => {
-    const db = container.get<IDatabase>(TYPES.Database);
+    const db = container.get<IDatabase>(TYPES.Database) as any; // Cast IDatabase to Database.Database
     const encryptionService = container.get<IEncryptionService>(TYPES.EncryptionService) as unknown as EncryptionService;
     const auditLogger = container.get<IAuditLogger>(TYPES.AuditLogger) as unknown as AuditLogger;
     return new GdprService(db, encryptionService, auditLogger) as unknown as IGdprService;
   });
 
   container.bind<IDataExporter>(TYPES.DataExporter).toDynamicValue((): IDataExporter => {
-    const db = container.get<IDatabase>(TYPES.Database);
+    const db = container.get<IDatabase>(TYPES.Database) as any; // Cast IDatabase to Database.Database
     const encryptionService = container.get<IEncryptionService>(TYPES.EncryptionService) as unknown as EncryptionService;
     return new DataExporter(db, encryptionService) as unknown as IDataExporter;
   });
 
   container.bind<IDataDeleter>(TYPES.DataDeleter).toDynamicValue((): IDataDeleter => {
-    const db = container.get<IDatabase>(TYPES.Database);
+    const db = container.get<IDatabase>(TYPES.Database) as any; // Cast IDatabase to Database.Database
     return new DataDeleter(db) as unknown as IDataDeleter;
   });
 

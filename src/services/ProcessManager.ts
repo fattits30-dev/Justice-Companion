@@ -68,7 +68,7 @@ export class ProcessManager {
       const server = net.createServer();
 
       server.once('error', (_err: NodeJS.ErrnoException) => {
-        // eslint-disable-line no-unused-vars
+         
         resolve(true);
       });
 

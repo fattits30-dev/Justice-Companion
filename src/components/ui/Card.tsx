@@ -1,14 +1,15 @@
-import { HTMLAttributes, forwardRef, ReactNode, useState } from "react";
-import { motion } from "framer-motion";
+import { forwardRef, ReactNode, useState } from "react";
+import { motion, HTMLMotionProps } from "framer-motion";
 import { clsx } from "clsx";
 
-export interface CardProps extends HTMLAttributes<HTMLDivElement> {
+export interface CardProps extends Omit<HTMLMotionProps<"div">, "ref" | "children"> {
   variant?: "default" | "glass" | "elevated";
   hoverable?: boolean;
   gradientBorder?: boolean;
   shine?: boolean;
   header?: ReactNode;
   footer?: ReactNode;
+  children?: ReactNode;
 }
 
 export const Card = forwardRef<HTMLDivElement, CardProps>(

@@ -16,7 +16,6 @@ import type {
   TemplateApplicationResult,
 } from '../models/CaseTemplate.ts';
 import type { CreateCaseInput } from '../domains/cases/entities/Case.ts';
-import type { CreateDeadlineInput } from '../domains/timeline/entities/Deadline.ts';
 
 export class TemplateService {
   constructor(

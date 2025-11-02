@@ -296,33 +296,95 @@ export class CaseFactsRepository {
 
     const rows = stmt.all(caseId) as CaseFactRow[];
 
-    return rows.map(row => {
-      // Decrypt fact_content if needed (backward compatibility)
-      let decryptedContent: string;
-      try {
-        const parsedContent = JSON.parse(row.fact_content);
-        if (typeof parsedContent === 'string') {
-          // Legacy plaintext format
-          decryptedContent = parsedContent;
-        } else {
-          // Encrypted format
-          const decrypted = this.encryptionService.decrypt(parsedContent);
-          decryptedContent = decrypted ?? '';
-        }
-      } catch (e) {
-        // Fallback to plaintext if decryption fails
-        decryptedContent = row.fact_content;
-      }
+    return rows.map(row => this.mapRowToCaseFact(row));
+  }
 
-      return {
-        id: row.id,
-        caseId: row.case_id,
-        factContent: decryptedContent,
-        factCategory: row.fact_category,
-        importance: row.importance,
-        createdAt: new Date(row.created_at).toISOString(),
-        updatedAt: new Date(row.updated_at).toISOString(),
-      };
+  /**
+   * Find case facts by category
+   */
+  findByCategory(
+    caseId: number,
+    category: 'timeline' | 'evidence' | 'witness' | 'location' | 'communication' | 'other'
+  ): CaseFact[] {
+    const db = getDb();
+
+    const stmt = db.prepare(`
+      SELECT id, case_id, fact_content, fact_category, importance, created_at, updated_at
+      FROM case_facts
+      WHERE case_id = ? AND fact_category = ?
+      ORDER BY created_at DESC
+    `);
+
+    const rows = stmt.all(caseId, category) as CaseFactRow[];
+
+    const facts = rows.map(row => this.mapRowToCaseFact(row));
+
+    // Audit: Content access for filtered facts
+    this.auditLogger?.log({
+      eventType: 'case_fact.content_access',
+      resourceType: 'case_fact',
+      resourceId: caseId.toString(),
+      action: 'read',
+      details: {
+        factCategory: category,
+        factsRetrieved: facts.length,
+      },
+      success: true,
     });
+
+    return facts;
+  }
+
+  /**
+   * Find case facts by importance level
+   */
+  findByImportance(
+    caseId: number,
+    importance: 'low' | 'medium' | 'high' | 'critical'
+  ): CaseFact[] {
+    const db = getDb();
+
+    const stmt = db.prepare(`
+      SELECT id, case_id, fact_content, fact_category, importance, created_at, updated_at
+      FROM case_facts
+      WHERE case_id = ? AND importance = ?
+      ORDER BY created_at DESC
+    `);
+
+    const rows = stmt.all(caseId, importance) as CaseFactRow[];
+
+    return rows.map(row => this.mapRowToCaseFact(row));
+  }
+
+  /**
+   * Helper method to map database row to CaseFact entity
+   */
+  private mapRowToCaseFact(row: CaseFactRow): CaseFact {
+    // Decrypt fact_content if needed (backward compatibility)
+    let decryptedContent: string;
+    try {
+      const parsedContent = JSON.parse(row.fact_content);
+      if (typeof parsedContent === 'string') {
+        // Legacy plaintext format
+        decryptedContent = parsedContent;
+      } else {
+        // Encrypted format
+        const decrypted = this.encryptionService.decrypt(parsedContent);
+        decryptedContent = decrypted ?? '';
+      }
+    } catch (e) {
+      // Fallback to plaintext if decryption fails
+      decryptedContent = row.fact_content;
+    }
+
+    return {
+      id: row.id,
+      caseId: row.case_id,
+      factContent: decryptedContent,
+      factCategory: row.fact_category as CaseFact['factCategory'],
+      importance: row.importance as CaseFact['importance'],
+      createdAt: new Date(row.created_at).toISOString(),
+      updatedAt: new Date(row.updated_at).toISOString(),
+    };
   }
 }

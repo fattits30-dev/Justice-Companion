@@ -25,7 +25,6 @@ import type {
 import {
   RateLimitError,
   ConsentRequiredError,
-  GdprOperationError,
 } from '../../models/Gdpr.ts';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -34,7 +33,6 @@ export class GdprService {
   private exporter: DataExporter;
   private deleter: DataDeleter;
   private rateLimitMap: Map<string, { count: number; resetAt: number }> = new Map();
-  private db: Database.Database;
   private auditLogger: AuditLogger;
 
   constructor(
@@ -42,7 +40,6 @@ export class GdprService {
     encryptionService: EncryptionService,
     auditLogger: AuditLogger
   ) {
-    this.db = db;
     this.auditLogger = auditLogger;
     this.exporter = new DataExporter(db, encryptionService);
     this.deleter = new DataDeleter(db);
@@ -186,11 +183,11 @@ export class GdprService {
   /**
    * Check user consent
    */
-  private checkConsent(userId: number, consentType: string): void {
+  private checkConsent(_userId: number, consentType: string): void {
     // This would typically query the database for consent records
     // For now, we'll assume consent exists for demonstration
     const consentExists = true; // Replace with actual DB query
-    
+
     if (!consentExists) {
       throw new ConsentRequiredError(`Consent required for ${consentType}`);
     }

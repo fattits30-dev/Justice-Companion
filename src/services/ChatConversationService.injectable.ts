@@ -1,6 +1,7 @@
 import { injectable, inject } from 'inversify';
 import { TYPES } from '../shared/infrastructure/di/types.ts';
-import type { IChatConversationRepository, IChatConversationService } from '../shared/infrastructure/di/interfaces.ts';
+import type { IChatConversationRepository } from '../shared/infrastructure/di/repository-interfaces.ts';
+import type { IChatConversationService } from '../shared/infrastructure/di/service-interfaces.ts';
 import type {
   ChatConversation,
   ChatMessage,

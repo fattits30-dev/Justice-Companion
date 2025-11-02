@@ -189,7 +189,7 @@ export class TemplateRepository extends BaseRepository<CaseTemplate> {
   /**
    * Get template usage statistics
    */
-  public getTemplateUsageStats(templateId: number): TemplateUsage {
+  public getTemplateUsageStats(_templateId: number): TemplateUsage {
     // This method would be implemented based on actual usage tracking logic
     // For now, returning empty object to satisfy type requirements
     return {} as TemplateUsage;
@@ -198,7 +198,7 @@ export class TemplateRepository extends BaseRepository<CaseTemplate> {
   /**
    * Get template statistics
    */
-  public getTemplateStats(templateId: number): TemplateStats {
+  public getTemplateStats(_templateId: number): TemplateStats {
     // This method would be implemented based on actual statistics tracking logic
     // For now, returning empty object to satisfy type requirements
     return {} as TemplateStats;

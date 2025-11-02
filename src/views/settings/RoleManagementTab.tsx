@@ -24,7 +24,7 @@ export const RoleManagementTab: React.FC = () => {
       setError(null);
 
       // Call IPC to get all roles
-      const rolesData = await window.electron.invoke('rbac:getAllRoles');
+      const rolesData = await window.electron.invoke('rbac:getAllRoles') as Role[];
       setRoles(rolesData);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load roles');
@@ -35,7 +35,7 @@ export const RoleManagementTab: React.FC = () => {
 
   const loadRolePermissions = async (roleId: number) => {
     try {
-      const perms = await window.electron.invoke('rbac:getRolePermissions', roleId);
+      const perms = await window.electron.invoke('rbac:getRolePermissions', roleId) as Permission[];
       setPermissions(perms);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load permissions');

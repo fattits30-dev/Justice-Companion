@@ -1,6 +1,7 @@
 import { injectable, inject } from 'inversify';
 import { TYPES } from '../shared/infrastructure/di/types.ts';
-import type { IUserProfileRepository, IUserProfileService } from '../shared/infrastructure/di/interfaces.ts';
+import type { IUserProfileRepository } from '../shared/infrastructure/di/repository-interfaces.ts';
+import type { IUserProfileService } from '../shared/infrastructure/di/service-interfaces.ts';
 import type { UserProfile, UpdateUserProfileInput } from '../domains/settings/entities/UserProfile.ts';
 import { errorLogger } from '../utils/error-logger.ts';
 

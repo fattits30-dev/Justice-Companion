@@ -1,7 +1,6 @@
 import Database from 'better-sqlite3';
 import { readFileSync } from 'fs';
 import path from 'path';
-import type { AuditLogger } from '../services/AuditLogger.ts';
 
 /**
  * Test database helper for running integration tests
@@ -89,10 +88,52 @@ export class TestDatabaseHelper {
   }
 
   /**
-   * Get the database instance
+   * Get the database instance (throws if not initialized)
+   */
+  getDatabase(): Database.Database {
+    if (!this.db) {
+      throw new Error('Database not initialized. Call initialize() first.');
+    }
+    return this.db;
+  }
+
+  /**
+   * Get the database instance (legacy method, returns null if not initialized)
    */
   getDb(): Database.Database | null {
     return this.db;
+  }
+
+  /**
+   * Clear all tables for test isolation
+   */
+  clearAllTables(): void {
+    if (!this.db) {
+      throw new Error('Database not initialized. Call initialize() first.');
+    }
+
+    // Disable foreign keys temporarily to avoid constraint errors
+    this.db.pragma('foreign_keys = OFF');
+
+    // Get all table names
+    const tables = this.db
+      .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")
+      .all() as { name: string }[];
+
+    // Clear all tables
+    for (const { name } of tables) {
+      this.db.prepare(`DELETE FROM ${name}`).run();
+    }
+
+    // Re-enable foreign keys
+    this.db.pragma('foreign_keys = ON');
+  }
+
+  /**
+   * Cleanup: close the database connection (alias for close)
+   */
+  cleanup(): void {
+    this.close();
   }
 }
 

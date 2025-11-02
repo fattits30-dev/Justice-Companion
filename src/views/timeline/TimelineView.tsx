@@ -134,7 +134,7 @@ export function TimelineView() {
   }, []);
 
   const handleUpdateDeadline = useCallback(async (input: UpdateDeadlineInput) => {
-    if (!editingDeadline) return { success: false, error: 'No deadline selected' };
+    if (!editingDeadline) {return { success: false, error: 'No deadline selected' };}
 
     try {
       const sessionId = getSessionId();
@@ -186,7 +186,7 @@ export function TimelineView() {
   }, []);
 
   const handleConfirmDelete = useCallback(async () => {
-    if (!deletingDeadline) return;
+    if (!deletingDeadline) {return;}
 
     try {
       const sessionId = getSessionId();

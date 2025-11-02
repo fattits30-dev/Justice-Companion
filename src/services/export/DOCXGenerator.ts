@@ -5,12 +5,10 @@ import {
   TextRun,
   HeadingLevel,
   AlignmentType,
-  BorderStyle,
   PageBreak,
   Header,
   Footer,
   PageNumber,
-  NumberFormat,
 } from 'docx';
 import type {
   CaseExportData,

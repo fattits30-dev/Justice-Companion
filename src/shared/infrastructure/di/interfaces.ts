@@ -5,7 +5,6 @@
  * proper dependency injection and testing.
  */
 
-import type Database from 'better-sqlite3';
 import type {
   Case,
   CreateCaseInput,

@@ -31,7 +31,6 @@ import type {
   IAuditLogger,
 } from './service-interfaces.ts';
 import type { IDatabase } from '../../../interfaces/IDatabase.ts';
-// IDatabaseManager doesn't exist - removed import
 
 // =============================================================================
 // BASE TYPE GUARDS
@@ -267,11 +266,12 @@ export function isDatabase(obj: unknown): obj is IDatabase {
 }
 
 /**
- * Check if object implements IDatabaseManager
+ * Check if object implements DatabaseManager (basic interface)
+ * Note: This is a basic check without a specific interface type
  * @param obj - Object to check
- * @returns true if object implements IDatabaseManager
+ * @returns true if object has database manager methods
  */
-export function isDatabaseManager(obj: unknown): obj is IDatabaseManager {
+export function isDatabaseManager(obj: unknown): boolean {
   const managerMethods = [
     'getDatabase',
     'closeDatabase',

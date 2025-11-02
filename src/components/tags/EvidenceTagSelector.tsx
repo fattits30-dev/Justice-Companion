@@ -4,9 +4,6 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Tag as TagIcon } from 'lucide-react';
-import { TagBadge } from '../ui/TagBadge';
-import { Button } from '../ui/Button';
 import type { Tag } from '../../models/Tag';
 
 interface EvidenceTagSelectorProps {
@@ -20,10 +17,9 @@ export function EvidenceTagSelector({
   onTagsChange,
   className = '',
 }: EvidenceTagSelectorProps) {
-  const [allTags, setAllTags] = useState<Tag[]>([]);
-  const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
-  const [isSelecting, setIsSelecting] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [, setAllTags] = useState<Tag[]>([]);
+  const [, setSelectedTags] = useState<Tag[]>([]);
+  const [, setIsLoading] = useState(false);
 
   const loadTags = useCallback(async () => {
     try {
@@ -62,38 +58,39 @@ export function EvidenceTagSelector({
     loadEvidenceTags();
   }, [loadTags, loadEvidenceTags]);
 
-  const handleAddTag = async (tagId: number) => {
-    try {
-      const sessionId = window.sessionManager?.getSessionId();
-      if (!sessionId) {return;}
-
-      const result = await window.api.tags.tagEvidence(evidenceId, tagId, sessionId);
-      if (result.success) {
-        await loadEvidenceTags();
-        setIsSelecting(false);
-      } else {
-        alert('Failed to add tag: ' + (result.error?.message || 'Unknown error'));
-      }
-    } catch (error: unknown) {
-      alert('Error adding tag: ' + (error as Error).message);
-    }
-  };
-
-  const handleRemoveTag = async (tagId: number) => {
-    try {
-      const sessionId = window.sessionManager?.getSessionId();
-      if (!sessionId) {return;}
-
-      const result = await window.api.tags.untagEvidence(evidenceId, tagId, sessionId);
-      if (result.success) {
-        await loadEvidenceTags();
-      } else {
-        alert('Failed to remove tag: ' + (result.error?.message || 'Unknown error'));
-      }
-    } catch (error: unknown) {
-      alert('Error removing tag: ' + (error as Error).message);
-    }
-  };
+  // Commented out - not used in incomplete component
+  // const handleAddTag = async (tagId: number) => {
+  //   try {
+  //     const sessionId = window.sessionManager?.getSessionId();
+  //     if (!sessionId) {return;}
+  //
+  //     const result = await window.api.tags.tagEvidence(evidenceId, tagId, sessionId);
+  //     if (result.success) {
+  //       await loadEvidenceTags();
+  //       setIsSelecting(false);
+  //     } else {
+  //       alert('Failed to add tag: ' + (result.error?.message || 'Unknown error'));
+  //     }
+  //   } catch (error: unknown) {
+  //     alert('Error adding tag: ' + (error as Error).message);
+  //   }
+  // };
+  //
+  // const handleRemoveTag = async (tagId: number) => {
+  //   try {
+  //     const sessionId = window.sessionManager?.getSessionId();
+  //     if (!sessionId) {return;}
+  //
+  //     const result = await window.api.tags.untagEvidence(evidenceId, tagId, sessionId);
+  //     if (result.success) {
+  //       await loadEvidenceTags();
+  //     } else {
+  //       alert('Failed to remove tag: ' + (result.error?.message || 'Unknown error'));
+  //     }
+  //   } catch (error: unknown) {
+  //     alert('Error removing tag: ' + (error as Error).message);
+  //   }
+  // };
 
   // ... rest of component implementation would go here
   // Since the original code was cut off, I'll assume the render logic continues

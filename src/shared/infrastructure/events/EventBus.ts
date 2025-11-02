@@ -83,6 +83,107 @@ export class EventBus implements IEventBus {
   }
 
   /**
+   * Get events for an aggregate (for replay/debugging)
+   * @param aggregateId - Aggregate ID to filter events
+   * @param options - Optional filters (date range, event types)
+   */
+  async getEvents(
+    aggregateId: string,
+    options?: {
+      fromDate?: Date;
+      toDate?: Date;
+      eventTypes?: string[];
+    }
+  ): Promise<DomainEvent[]> {
+    let sql = 'SELECT * FROM events WHERE aggregate_id = ?';
+    const params: (string | number)[] = [aggregateId];
+
+    if (options?.fromDate) {
+      sql += ' AND occurred_at >= ?';
+      params.push(options.fromDate.toISOString());
+    }
+
+    if (options?.toDate) {
+      sql += ' AND occurred_at <= ?';
+      params.push(options.toDate.toISOString());
+    }
+
+    if (options?.eventTypes && options.eventTypes.length > 0) {
+      sql += ` AND event_type IN (${options.eventTypes.map(() => '?').join(',')})`;
+      params.push(...options.eventTypes);
+    }
+
+    sql += ' ORDER BY occurred_at ASC';
+
+    const stmt = this.db.prepare(sql);
+    const rows = stmt.all(...params) as Array<{
+      id: number;
+      aggregate_id: string;
+      event_type: string;
+      event_data: string;
+      occurred_at: string;
+    }>;
+
+    return rows.map(row => {
+      const payload = JSON.parse(row.event_data);
+      return {
+        eventType: row.event_type,
+        aggregateId: row.aggregate_id,
+        occurredAt: new Date(row.occurred_at),
+        getEventName: () => row.event_type,
+        getAggregateId: () => row.aggregate_id,
+        getPayload: () => payload,
+        ...payload,
+      } as DomainEvent;
+    });
+  }
+
+  /**
+   * Clear all subscribers (for testing)
+   */
+  clearSubscribers(): void {
+    this.subscribers.clear();
+  }
+
+  /**
+   * Replay events for an aggregate (for event sourcing)
+   * @param aggregateId - Aggregate ID to replay events for
+   * @param options - Optional filters (same as getEvents)
+   */
+  async replay(
+    aggregateId: string,
+    options?: {
+      fromDate?: Date;
+      toDate?: Date;
+      eventTypes?: string[];
+    }
+  ): Promise<void> {
+    const events = await this.getEvents(aggregateId, options);
+
+    for (const event of events) {
+      const eventType = event.getEventName();
+      const handlers = this.subscribers.get(eventType);
+
+      if (handlers) {
+        const promises: Promise<void>[] = [];
+
+        for (const handler of handlers) {
+          try {
+            const result = handler(event);
+            if (result instanceof Promise) {
+              promises.push(result);
+            }
+          } catch (error) {
+            console.error('Error in event replay handler:', error);
+          }
+        }
+
+        await Promise.all(promises);
+      }
+    }
+  }
+
+  /**
    * Check if object is a DomainEvent
    */
   private isDomainEvent(event: unknown): event is DomainEvent {

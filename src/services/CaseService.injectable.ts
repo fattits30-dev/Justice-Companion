@@ -7,10 +7,9 @@
 
 import { injectable, inject } from 'inversify';
 import { TYPES } from '../shared/infrastructure/di/types.ts';
-import type { IDatabase } from '../shared/infrastructure/di/interfaces.ts';
-import type { ICaseRepository } from '../shared/infrastructure/di/interfaces.ts';
-import type { IAuditLogger } from '../shared/infrastructure/di/interfaces.ts';
-import type { ICaseService } from '../shared/infrastructure/di/interfaces.ts';
+import type { IDatabase } from '../../../interfaces/IDatabase.ts';
+import type { ICaseRepository } from '../shared/infrastructure/di/repository-interfaces.ts';
+import type { IAuditLogger, ICaseService } from '../shared/infrastructure/di/service-interfaces.ts';
 import type { Case, CreateCaseInput, UpdateCaseInput } from '../domains/cases/entities/Case.ts';
 
 interface CreateCaseWithUser extends CreateCaseInput {

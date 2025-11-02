@@ -5,11 +5,11 @@
  * in the settings module components.
  */
 
-import { Profiler, ProfilerOnRenderCallback, useState, useMemo } from 'react';
-import { logger } from '../utils/logger.ts';
+import { ProfilerOnRenderCallback, useState, useMemo } from 'react';
+import type React from 'react';
 
 // Mock localStorage hook to track operations
-let localStorageData: Record<string, any> = {};
+const localStorageData: Record<string, any> = {};
 
 function useLocalStorageMock<T>(key: string, defaultValue: T): [T, (value: T) => void] {
   const [value, setValue] = useState<T>(() => {
@@ -93,12 +93,12 @@ function AppearanceSettings() {
 }
 
 // Mock Profiler component for testing
-function MockProfiler({ children, id, onRender }: { children: React.ReactNode; id: string; onRender: ProfilerOnRenderCallback }) {
+function MockProfiler({ children }: { children: React.ReactNode; id: string; onRender: ProfilerOnRenderCallback }) {
   return <>{children}</>;
 }
 
 // Mock render function for testing
-function mockRender(component: React.ReactElement) {
+function mockRender(_component: React.ReactElement) {
   return { container: document.createElement('div') };
 }
 

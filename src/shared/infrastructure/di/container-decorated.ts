@@ -8,15 +8,23 @@
 import 'reflect-metadata';
 import { Container } from 'inversify';
 import { TYPES } from './types.ts';
+
+// Import repository interfaces from repository-interfaces.ts
 import type {
-  IDatabase,
-  IEncryptionService,
-  IAuditLogger,
   ICaseRepository,
   IEvidenceRepository,
   IUserRepository,
+} from './repository-interfaces.ts';
+
+// Import service interfaces from service-interfaces.ts
+import type {
+  IEncryptionService,
+  IAuditLogger,
   ICacheService,
-} from './interfaces.ts';
+} from './service-interfaces.ts';
+
+// Import IDatabase
+import type { IDatabase } from '../../../interfaces/IDatabase.ts';
 
 // Import implementations
 import { getDb } from '../../../db/database.ts';
@@ -53,7 +61,6 @@ export function createDecoratedContainer(options: DecoratedContainerOptions = {}
 
   const {
     environment = 'production',
-    encryptionKey,
     database,
     verbose = false,
     enableDecorators = true

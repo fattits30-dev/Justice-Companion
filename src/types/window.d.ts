@@ -902,6 +902,9 @@ declare global {
     sessionManager?: {
       getSessionId(): string | null;
     };
+    electron: {
+      invoke(channel: string, ...args: unknown[]): Promise<unknown>;
+    };
   }
 }
 

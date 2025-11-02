@@ -1,3 +1,5 @@
+import type { Permission } from './Permission.ts';
+
 /**
  * Role Entity
  * Represents a role in the RBAC system
@@ -10,6 +12,7 @@ export interface Role {
   isSystemRole: boolean;
   createdAt: Date;
   updatedAt: Date;
+  permissions: Permission[]; // Associated permissions (loaded via join)
 }
 
 /**
