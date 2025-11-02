@@ -5,7 +5,7 @@ import {
   errorResponse,
   IPCErrorCode,
 } from '../utils/ipc-response.ts';
-import { getDb } from '../../src/db/database.ts';
+import { databaseManager } from '../../src/db/database.ts';
 import { UserRepository } from '../../src/repositories/UserRepository.ts';
 import { SessionRepository } from '../../src/repositories/SessionRepository.ts';
 import { AuditLogger } from '../../src/services/AuditLogger.ts';
@@ -28,7 +28,7 @@ let authService: AuthenticationService | null = null;
 
 function getAuthService(): AuthenticationService {
   if (!authService) {
-    const db = getDb();
+    const db = databaseManager.getDatabase();
     const auditLogger = new AuditLogger(db);
     const userRepository = new UserRepository(auditLogger);
     const sessionRepository = new SessionRepository();

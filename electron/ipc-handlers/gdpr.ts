@@ -1,7 +1,7 @@
 import { ipcMain, type IpcMainInvokeEvent } from 'electron';
 import { successResponse, type IPCResponse } from '../utils/ipc-response.ts';
 import { withAuthorization } from '../utils/authorization-wrapper.ts';
-import { getDb } from '../../src/db/database.ts';
+import { databaseManager } from '../../src/db/database.ts';
 import { GdprService } from '../../src/services/gdpr/GdprService.ts';
 import { EncryptionService } from '../../src/services/EncryptionService.ts';
 import { AuditLogger } from '../../src/services/AuditLogger.ts';
@@ -21,7 +21,7 @@ import {
 export function setupGdprHandlers(): void {
   // Lazy-load GDPR service to avoid circular dependencies
   const getGdprService = () => {
-    const db = getDb();
+    const db = databaseManager.getDatabase();
     const keyManager = getKeyManager();
     const encryptionKey = keyManager.getKey();
     const encryptionService = new EncryptionService(encryptionKey);

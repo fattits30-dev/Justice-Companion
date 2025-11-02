@@ -1,7 +1,7 @@
 import { ipcMain, type IpcMainInvokeEvent } from 'electron';
 import { successResponse, type IPCResponse } from '../utils/ipc-response.ts';
 import { withAuthorization, getAuthorizationMiddleware } from '../utils/authorization-wrapper.ts';
-import { getDb } from '../../src/db/database.ts';
+import { databaseManager } from '../../src/db/database.ts';
 import { DeadlineRepository } from '../../src/repositories/DeadlineRepository.ts';
 import { AuditLogger } from '../../src/services/AuditLogger.ts';
 
@@ -28,7 +28,7 @@ export function setupDeadlineHandlers(): void {
         try {
           console.warn('[IPC] deadline:getAll called by user:', userId, caseId ? `for case ${caseId}` : 'all cases');
 
-          const db = getDb();
+          const db = databaseManager.getDatabase();
           const auditLogger = new AuditLogger(db);
           const deadlineRepo = new DeadlineRepository(db, auditLogger);
 
@@ -62,7 +62,7 @@ export function setupDeadlineHandlers(): void {
         try {
           console.warn('[IPC] deadline:create called by user:', userId);
 
-          const db = getDb();
+          const db = databaseManager.getDatabase();
           const auditLogger = new AuditLogger(db);
           const deadlineRepo = new DeadlineRepository(db, auditLogger);
 
@@ -89,7 +89,7 @@ export function setupDeadlineHandlers(): void {
         try {
           console.warn('[IPC] deadline:update called for deadline ID:', id);
 
-          const db = getDb();
+          const db = databaseManager.getDatabase();
           const auditLogger = new AuditLogger(db);
           const deadlineRepo = new DeadlineRepository(db, auditLogger);
 
@@ -113,7 +113,7 @@ export function setupDeadlineHandlers(): void {
         try {
           console.warn('[IPC] deadline:complete called for deadline ID:', id);
 
-          const db = getDb();
+          const db = databaseManager.getDatabase();
           const auditLogger = new AuditLogger(db);
           const deadlineRepo = new DeadlineRepository(db, auditLogger);
 
@@ -137,7 +137,7 @@ export function setupDeadlineHandlers(): void {
         try {
           console.warn('[IPC] deadline:delete called for deadline ID:', id);
 
-          const db = getDb();
+          const db = databaseManager.getDatabase();
           const auditLogger = new AuditLogger(db);
           const deadlineRepo = new DeadlineRepository(db, auditLogger);
 
