@@ -135,9 +135,8 @@ function DashboardWrapper() {
         const sessionId = localStorage.getItem("sessionId");
 
         if (!sessionId) {
-          console.error(
-            "[DashboardWrapper] No sessionId found in localStorage!",
-          );
+          // No session - ProtectedRoute will handle redirect to login
+          console.log("[DashboardWrapper] No sessionId found - user not authenticated");
           setError("No active session");
           return;
         }
@@ -146,7 +145,7 @@ function DashboardWrapper() {
         const response = await window.justiceAPI.getDashboardStats(sessionId);
 
         if (!response.success) {
-          setError(response.error || "Failed to load dashboard stats");
+          setError(response.error?.message || "Failed to load dashboard stats");
           return;
         }
 

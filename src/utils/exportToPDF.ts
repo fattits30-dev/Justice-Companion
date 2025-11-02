@@ -167,7 +167,7 @@ function buildPDFHTML(messages: ChatMessage[], sources: string[]): string {
       <p class="subtitle">UK Legal Information Assistant - Conversation Export</p>
 
       <div class="disclaimer">
-        <strong>� Legal Disclaimer:</strong> This document contains general legal information only.
+        <strong>Legal Disclaimer:</strong> This document contains general legal information only.
         It is not legal advice and does not create a solicitor-client relationship.
         Always consult a qualified solicitor for advice specific to your situation.
       </div>

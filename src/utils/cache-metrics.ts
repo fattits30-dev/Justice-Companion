@@ -161,7 +161,13 @@ export class CacheMetrics {
     if (hitRate > 90 && memoryUtilization < 30) {
       recommendations.push('Consider reducing cache size to save memory resources');
     }
-    
+
     return recommendations;
   }
 }
+
+// Helper function for legacy imports
+const metricsInstance = new CacheMetrics();
+export const getCacheMetrics = (): DetailedCacheMetrics => {
+  return metricsInstance.collect();
+};

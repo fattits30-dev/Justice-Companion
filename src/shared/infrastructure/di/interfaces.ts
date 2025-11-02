@@ -201,3 +201,20 @@ export interface SessionRepository {
   deleteSession(token: string): Promise<void>;
   deleteExpiredSessions(): Promise<void>;
 }
+
+// Re-export service interfaces from service-interfaces.ts
+export type {
+  IAuditLogger,
+  IAuthenticationService,
+  IEncryptionService,
+  ICacheService,
+  IRateLimitService,
+  ICaseService,
+  IChatConversationService,
+  IUserProfileService,
+  IGdprService,
+  ILegalAPIService,
+} from './service-interfaces.ts';
+
+// Re-export IDatabase from interfaces directory
+export type { IDatabase } from '../../../interfaces/IDatabase.ts';

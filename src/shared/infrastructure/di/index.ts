@@ -104,33 +104,34 @@ export type {
 // INFRASTRUCTURE INTERFACES
 // =============================================================================
 
-export type {
-  // Database
-  IDatabase,
-  IStatement,
-  IDatabaseManager,
-
-  // Electron
-  IElectronApp,
-  IElectronSafeStorage,
-  IElectronIpcMain,
-  IElectronIpcRenderer,
-
-  // External API Clients
-  IHttpClient,
-  IOpenAIClient,
-
-  // File System
-  IFileSystem,
-
-  // Logging
-  ILogger,
-  IErrorLogger,
-
-  // Environment & Configuration
-  IEnvironment,
-  IConfiguration,
-} from './infrastructure-interfaces.ts';
+// Commented out - infrastructure-interfaces.ts file doesn't exist and types are unused
+// export type {
+//   // Database
+//   IDatabase,
+//   IStatement,
+//   IDatabaseManager,
+//
+//   // Electron
+//   IElectronApp,
+//   IElectronSafeStorage,
+//   IElectronIpcMain,
+//   IElectronIpcRenderer,
+//
+//   // External API Clients
+//   IHttpClient,
+//   IOpenAIClient,
+//
+//   // File System
+//   IFileSystem,
+//
+//   // Logging
+//   ILogger,
+//   IErrorLogger,
+//
+//   // Environment & Configuration
+//   IEnvironment,
+//   IConfiguration,
+// } from './infrastructure-interfaces.ts';
 
 // =============================================================================
 // TYPE GUARDS & UTILITIES

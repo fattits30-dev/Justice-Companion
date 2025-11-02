@@ -1,58 +1,20 @@
 {
   "permissions": {
     "allow": [
-      "WebSearch",
-      "Bash(cat \"F:\\\\Justice Companion take 2\\\\package.json\")",
-      "mcp__memory__*",
-      "mcp__sequential-thinking__*",
-      "mcp__playwright__*",
-      "mcp__context7__*",
-      "mcp__github__*",
-      "mcp__puppeteer__*",
-      "mcp__sequential-thinking__sequentialthinking"
-    ],
-    "deny": [],
-    "ask": []
-  },
-  "outputStyle": "justice-companion-strict",
-  "mcpSettings": {
-    "autoConnect": true,
-    "description": "Production MCP setup - 6 MCPs for development, testing, and AI assistance"
-  },
-  "workflowHints": {
-    "builtInTools": [
-      "Use Read/Write/Edit for files (not filesystem MCP)",
-      "Use Bash for git commands (not git MCP)",
-      "Use WebSearch for research (not brave-search MCP)",
-      "Use WebFetch for web pages (not fetch MCP)"
-    ],
-    "whenToUseMCPs": {
-      "memory": "Store/recall architectural decisions, past bug fixes, project context",
-      "sequential-thinking": "Only for very complex reasoning (costs ~$0.10 per 32K tokens)",
-      "playwright": "E2E testing with accessibility tree, automated UI testing",
-      "context7": "Get live documentation for React, Electron, Drizzle, TypeScript, any library",
-      "github": "GitHub API operations (requires GITHUB_TOKEN) - issues, PRs, repos",
-      "puppeteer": "Browser automation, scrape UK legal sites (legislation.gov.uk, caselaw.nationalarchives.gov.uk)"
-    },
-    "githubOperations": [
-      "Option 1: Use github MCP (requires GITHUB_TOKEN env var)",
-      "Option 2: Use Bash tool with gh CLI:",
-      "  gh issue list --state open",
-      "  gh pr create --title 'Title' --body 'Body'",
-      "  gh pr list --state open",
-      "  gh repo view --web"
-    ],
-    "beforeCommit": [
-      "Run pnpm lint:fix for ESLint auto-fixes",
-      "Run pnpm type-check for TypeScript validation",
-      "Run pnpm test for unit test verification",
-      "Use mcp__memory to store architectural decisions"
-    ],
-    "testingWorkflow": [
-      "Use playwright MCP for E2E tests (accessibility-based, no screenshots)",
-      "Use puppeteer MCP for browser automation and web scraping",
-      "playwright is faster and more reliable for structured UI testing",
-      "puppeteer is better for dynamic content and JavaScript-heavy sites"
+      "Bash(test -d \"C:/.claude/agents\")",
+      "Bash(echo $HOME)",
+      "Bash(cat C:/.mcp.json)",
+      "Bash(where claude)",
+      "Bash(cat ~/.claude/settings.json)",
+      "Bash(find \"$HOME/.claude\" -type f -name \"*.json\")",
+      "Bash(cat C:/.claude/settings.json)",
+      "Bash(cat \"$HOME/.claude/settings.json\")"
     ]
-  }
+  },
+  "allowedTools": [
+    "Read(*)",
+    "Grep(*)",
+    "Edit(*)",
+    "Bash(*)"
+  ]
 }

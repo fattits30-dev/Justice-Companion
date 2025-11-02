@@ -12,7 +12,5 @@ export { LoggingDecorator, type LoggingOptions, LogLevel } from './LoggingDecora
 export { ErrorHandlingDecorator, type ErrorHandlingOptions } from './ErrorHandlingDecorator.ts';
 export {
   DecoratorFactory,
-  DecoratorBuilder,
-  DecoratorPresets,
   type DecoratorConfig
 } from './DecoratorFactory.ts';

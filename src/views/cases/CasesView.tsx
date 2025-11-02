@@ -36,7 +36,7 @@ export function CasesView() {
       const response = await window.justiceAPI.getAllCases(sessionId);
 
       if (!response.success) {
-        throw new Error(response.error || "Failed to load cases");
+        throw new Error(response.error?.message || "Failed to load cases");
       }
 
       if (response.data) {
@@ -59,7 +59,7 @@ export function CasesView() {
       const response = await window.justiceAPI.createCase(input, sessionId);
 
       if (!response.success) {
-        throw new Error(response.error || "Failed to create case");
+        throw new Error(response.error?.message || "Failed to create case");
       }
 
       if (response.data) {
@@ -99,7 +99,7 @@ export function CasesView() {
         return;
       }
 
-      throw new Error(response.error || "Failed to delete case");
+      throw new Error(response.error?.message || "Failed to delete case");
     } catch (err) {
       showError(err instanceof Error ? err.message : "Unknown error", {
         title: "Failed to delete case",
@@ -175,7 +175,7 @@ export function CasesView() {
 function getSessionId(): string {
   const sessionId = localStorage.getItem("sessionId");
   if (!sessionId) {
-    throw new Error("No session");
+    throw new Error("No active session - please log in again");
   }
   return sessionId;
 }

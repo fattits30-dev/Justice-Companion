@@ -34,9 +34,9 @@ import { setupGdprHandlers } from './gdpr.ts';
 import { registerSearchHandlers } from './search.ts';
 import { setupTagHandlers } from './tags.ts';
 import { setupNotificationHandlers } from './notifications.ts';
+import { setupDashboardHandlers } from './dashboard.ts';
 import {
   setupDatabaseHandlers,
-  setupDashboardHandlers,
   setupSecureStorageHandlers,
   setupUIHandlers,
   setupAIConfigHandlers,

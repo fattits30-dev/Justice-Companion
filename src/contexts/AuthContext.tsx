@@ -10,6 +10,7 @@
  * - Loading states
  * - Error handling
  * - Type-safe context hook
+ * - Persistent session support
  */
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
@@ -42,7 +43,7 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
  */
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Start as true to prevent flash
   const [error, setError] = useState<string | null>(null);
 
   const isAuthenticated = user !== null;
@@ -55,20 +56,28 @@ export function AuthProvider({ children }: AuthProviderProps) {
       try {
         // Get sessionId from localStorage
         const sessionId = localStorage.getItem('sessionId');
+        console.log('[AuthContext] Restoring session, sessionId:', sessionId);
 
         if (!sessionId) {
+          console.log('[AuthContext] No sessionId found in localStorage');
+          setIsLoading(false);
           return; // No session to restore
         }
 
+        console.log('[AuthContext] Calling getSession with sessionId:', sessionId);
         const response = await window.justiceAPI.getSession(sessionId);
+        console.log('[AuthContext] getSession response:', response);
 
         if (!response.success) {
           // Session invalid - clear it
+          console.log('[AuthContext] Session invalid, removing from localStorage');
           localStorage.removeItem('sessionId');
+          setIsLoading(false);
           return;
         }
 
         if (response.data) {
+          console.log('[AuthContext] Setting user from session:', response.data);
           setUser({
             id: String(response.data.id),
             username: response.data.username,
@@ -78,6 +87,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       } catch (err) {
         // Silently fail - no session to restore
         console.error('[AuthContext] Error restoring session:', err);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -100,14 +111,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       if (response.data) {
         setUser({
-          id: String(response.data.id),
-          username: response.data.username,
-          email: response.data.email
+          id: String(response.data.user.id),
+          username: response.data.user.username,
+          email: response.data.user.email
         });
 
-        if (rememberMe) {
-          localStorage.setItem('sessionId', response.data.sessionId);
-        }
+        // Always save sessionId to localStorage (rememberMe controls session duration on backend)
+        localStorage.setItem('sessionId', response.data.session.id);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred');

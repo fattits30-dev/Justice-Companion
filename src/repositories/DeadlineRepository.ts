@@ -105,6 +105,25 @@ export class DeadlineRepository {
   }
 
   /**
+   * Find all deadlines for a specific user (across all cases)
+   */
+  findByUserId(userId: number): Deadline[] {
+    const stmt = this.db.prepare(`
+      SELECT
+        id, case_id as caseId, user_id as userId,
+        title, description, deadline_date as deadlineDate,
+        priority, status, completed_at as completedAt,
+        created_at as createdAt, updated_at as updatedAt,
+        deleted_at as deletedAt
+      FROM deadlines
+      WHERE user_id = ? AND deleted_at IS NULL
+      ORDER BY deadline_date ASC
+    `);
+
+    return stmt.all(userId) as Deadline[];
+  }
+
+  /**
    * Update a deadline
    */
   update(id: number, input: UpdateDeadlineInput): Deadline | null {

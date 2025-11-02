@@ -95,3 +95,11 @@ export class TestDatabaseHelper {
     return this.db;
   }
 }
+
+/**
+ * Convenience function to create a test database helper
+ * @returns TestDatabaseHelper instance
+ */
+export function createTestDatabase(): TestDatabaseHelper {
+  return new TestDatabaseHelper();
+}

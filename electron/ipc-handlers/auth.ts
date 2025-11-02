@@ -86,11 +86,43 @@ export function setupAuthHandlers(): void {
 
   // Register handler for auth:session
   ipcMain.handle('auth:session', async (_event, sessionId) => {
+    console.log('[IPC] auth:session called with sessionId:', sessionId);
     try {
       const authService = getAuthService();
       const session = await authService.getSession(sessionId);
-      return successResponse(session);
-    } catch (_error) {
+      console.log('[IPC] auth:session - session from db:', session);
+
+      if (!session) {
+        console.log('[IPC] auth:session - session not found');
+        return errorResponse(IPCErrorCode.UNKNOWN_ERROR, 'Session not found');
+      }
+
+      // Fetch user information to include username and email
+      const db = databaseManager.getDatabase();
+      const auditLogger = new AuditLogger(db);
+      const userRepository = new UserRepository(auditLogger);
+      const user = await userRepository.findById(session.userId);
+      console.log('[IPC] auth:session - user from db:', user ? `id=${user.id}, username=${user.username}` : 'null');
+
+      if (!user) {
+        console.log('[IPC] auth:session - user not found');
+        return errorResponse(IPCErrorCode.UNKNOWN_ERROR, 'User not found');
+      }
+
+      // Return session with user information (nested user object to match SessionResponse interface)
+      const response = successResponse({
+        id: session.id,
+        user: {
+          id: String(session.userId),
+          username: user.username,
+          email: user.email
+        },
+        expiresAt: session.expiresAt
+      });
+      console.log('[IPC] auth:session - returning success response with user:', response.data);
+      return response;
+    } catch (error) {
+      console.error('[IPC] auth:session - error:', error);
       return errorResponse(IPCErrorCode.UNKNOWN_ERROR, 'Session check failed');
     }
   });

@@ -136,3 +136,7 @@ export interface IntegrityReport {
   brokenLog?: AuditLogEntry;
   error?: string;
 }
+
+// Type aliases for compatibility with legacy code
+export type AuditLog = AuditLogEntry;
+export type CreateAuditLogInput = Omit<AuditLogEntry, 'id' | 'createdAt' | 'integrityHash' | 'previousLogHash'>;

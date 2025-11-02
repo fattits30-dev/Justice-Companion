@@ -85,4 +85,9 @@ class DatabaseManager {
 // Export singleton instance (for easier imports)
 const databaseManager = DatabaseManager.getInstance();
 
+// Helper function for legacy imports
+export const getDb = (): Database.Database => {
+  return databaseManager.getDatabase();
+};
+
 export { DatabaseManager, databaseManager };

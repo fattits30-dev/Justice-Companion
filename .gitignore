@@ -245,3 +245,7 @@ __pycache__/
 .env.local
 .env.*.local
 
+
+# MCP Configuration (contains secrets)
+.mcp.json
+.claude/mcp.json

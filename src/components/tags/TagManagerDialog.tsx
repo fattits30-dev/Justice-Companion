@@ -76,10 +76,12 @@ export function TagManagerDialog({ open, onClose }: TagManagerDialogProps) {
       }
 
       const result = await window.api.tags.list(sessionId);
-      if (result.success && result.data) {
-        setTags(result.data);
+      if (result.success) {
+        if (result.data) {
+          setTags(result.data);
+        }
       } else {
-        console.error('Failed to load tags:', result.error);
+        console.error('Failed to load tags:', result.error?.message || 'Unknown error');
       }
     } catch (error) {
       console.error('Error loading tags:', error);
@@ -147,7 +149,7 @@ export function TagManagerDialog({ open, onClose }: TagManagerDialogProps) {
         setEditingTag(null);
         await loadTags();
       } else {
-        setErrors({ submit: result.error || 'Failed to save tag' });
+        setErrors({ submit: result.error?.message || 'Failed to save tag' });
       }
     } catch (error: any) {
       setErrors({ submit: error.message || 'An error occurred' });
@@ -179,7 +181,7 @@ export function TagManagerDialog({ open, onClose }: TagManagerDialogProps) {
           cancelEdit();
         }
       } else {
-        alert('Failed to delete tag: ' + result.error);
+        alert('Failed to delete tag: ' + (result.error?.message || 'Unknown error'));
       }
     } catch (error: any) {
       alert('Error deleting tag: ' + error.message);

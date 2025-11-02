@@ -1,4 +1,4 @@
-/**
+/*/**
  * Performance Benchmark: Pagination vs Full Load
  *
  * Validates 60-80% improvement target for Phase 2 pagination optimization
@@ -19,7 +19,7 @@ import Database from 'better-sqlite3';
 import { EncryptionService } from '../services/EncryptionService.ts';
 import { AuditLogger } from '../services/AuditLogger.ts';
 import { DecryptionCache } from '../services/DecryptionCache.ts';
-import { CaseRepositoryPaginated } from '../repositories/CaseRepositoryPaginated.ts';
+// import { CaseRepositoryPaginated } from '../repositories/CaseRepositoryPaginated.ts'; // DELETED FILE
 import { logger } from '../utils/logger.ts';
 
 // Benchmark configuration
@@ -221,7 +221,7 @@ function printResults(results: ReturnType<typeof runBenchmark>[]): void {
     logger.info('BenchmarkResults', `  Decryptions:     ${result.findPaginated.decryptionCount}`);
     logger.info('BenchmarkResults', `  Memory Used:     ${result.findPaginated.memoryUsedMB} MB`);
 
-    const improvementColor = result.improvement >= 60 ? '🟢' : result.improvement >= 40 ? '🟡' : '🔴';
+    const improvementColor = result.improvement >= 60 ? '??' : result.improvement >= 40 ? '??' : '??';
     logger.info('BenchmarkResults', `\n${improvementColor} Performance Improvement: ${result.improvement}%`);
 
     if (result.improvement >= 60) {
@@ -280,3 +280,4 @@ if (require.main === module) {
 }
 
 export { runBenchmark, DATASET_SIZES, PAGE_SIZE };
+*/

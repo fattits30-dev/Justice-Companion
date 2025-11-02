@@ -39,7 +39,11 @@ interface IPCSuccessResponse<T> {
 
 interface IPCErrorResponse {
   success: false;
-  error: string; // Always present on error
+  error?: {
+    code: string;
+    message: string;
+    details?: unknown;
+  };
   message?: string;
 }
 

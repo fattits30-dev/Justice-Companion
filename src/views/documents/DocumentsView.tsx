@@ -44,7 +44,7 @@ export function DocumentsView() {
       const response = await window.justiceAPI.getAllCases(sessionId);
 
       if (!response.success) {
-        throw new Error(response.error || "Failed to load cases");
+        throw new Error(response.error?.message || "Failed to load cases");
       }
 
       if (!response.data) {
@@ -83,7 +83,7 @@ export function DocumentsView() {
       );
 
       if (!response.success) {
-        throw new Error(response.error || "Failed to load evidence");
+        throw new Error(response.error?.message || "Failed to load evidence");
       }
 
       if (!response.data) {
@@ -123,7 +123,7 @@ export function DocumentsView() {
         );
 
         if (!response.success) {
-          throw new Error(response.error || "Failed to upload evidence");
+          throw new Error(response.error?.message || "Failed to upload evidence");
         }
 
         if (!response.data) {
@@ -160,7 +160,7 @@ export function DocumentsView() {
       );
 
       if (!response.success) {
-        throw new Error(response.error || "Failed to delete evidence");
+        throw new Error(response.error?.message || "Failed to delete evidence");
       }
 
       setEvidence((previous) =>
@@ -260,7 +260,7 @@ export function DocumentsView() {
 function getSessionId(): string {
   const sessionId = localStorage.getItem("sessionId");
   if (!sessionId) {
-    throw new Error("No session");
+    throw new Error("No active session - please log in again");
   }
   return sessionId;
 }

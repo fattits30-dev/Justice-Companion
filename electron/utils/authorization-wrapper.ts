@@ -76,10 +76,15 @@ export async function withAuthorization(
 ): Promise<IPCResponse> {
   try {
     const authService = await getAuthService();
-    
-    // Validate session and get user ID
-    const sessionData = await authService.validateSession(sessionId);
-    const userId = sessionData.userId;
+
+    // Validate session and get user (validateSession returns User | null)
+    const user = await authService.validateSession(sessionId);
+
+    if (!user) {
+      return errorResponse(IPCErrorCode.UNAUTHORIZED, 'Invalid or expired session');
+    }
+
+    const userId = user.id;  // User object has 'id' property, not 'userId'
 
     // Execute handler with validated user ID
     return await handler(userId);

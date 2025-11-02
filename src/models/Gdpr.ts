@@ -116,3 +116,37 @@ export interface GdprDeleteResult {
   /** Error message if deletion failed */
   error?: string;
 }
+
+// ============================================================================
+// GDPR Error Classes
+// ============================================================================
+
+/**
+ * Error thrown when rate limit is exceeded for GDPR operations
+ */
+export class RateLimitError extends Error {
+  constructor(message: string = 'Rate limit exceeded for GDPR operation') {
+    super(message);
+    this.name = 'RateLimitError';
+  }
+}
+
+/**
+ * Error thrown when required consent is missing
+ */
+export class ConsentRequiredError extends Error {
+  constructor(message: string = 'User consent required for this operation') {
+    super(message);
+    this.name = 'ConsentRequiredError';
+  }
+}
+
+/**
+ * General error for GDPR operations
+ */
+export class GdprOperationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'GdprOperationError';
+  }
+}

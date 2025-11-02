@@ -59,7 +59,7 @@ export function ConsentBanner({
           onAccept();
         }
       } else {
-        setError(response.error || "Failed to save consent");
+        setError(response.error?.message || "Failed to save consent");
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
@@ -84,7 +84,7 @@ export function ConsentBanner({
           onDecline();
         }
       } else {
-        setError(response.error || "Failed to save consent");
+        setError(response.error?.message || "Failed to save consent");
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
