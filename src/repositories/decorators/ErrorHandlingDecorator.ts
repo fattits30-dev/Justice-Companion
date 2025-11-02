@@ -8,7 +8,6 @@
 import { injectable } from 'inversify';
 import { RepositoryDecorator } from './RepositoryDecorator.ts';
 import { RepositoryError, NotFoundError } from '../../errors/RepositoryErrors.ts';
-import { DatabaseError } from '../../errors/DomainErrors.ts';
 
 /**
  * Configuration options for error handling

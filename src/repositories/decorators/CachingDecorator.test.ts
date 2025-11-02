@@ -33,7 +33,7 @@ class MockRepository {
     return { id, ...input };
   }
 
-  async delete(id: number) {
+  async delete(_id: number) {
     return true;
   }
 }
@@ -54,7 +54,7 @@ class MockCacheService implements ICacheService {
     return null;
   }
 
-  set<T>(key: string, value: T, ttlSeconds?: number): void {
+  set<T>(key: string, value: T, _ttlSeconds?: number): void {
     this.cache.set(key, value);
   }
 

@@ -2,7 +2,7 @@
  * Unit tests for ValidationDecorator
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { z } from 'zod';
 import { ValidationDecorator } from './ValidationDecorator.ts';
 import { ValidationError } from '../../errors/DomainErrors.ts';
@@ -21,7 +21,7 @@ class MockRepository {
     return { id, ...input };
   }
 
-  async delete(id: number) {
+  async delete(_id: number) {
     return true;
   }
 

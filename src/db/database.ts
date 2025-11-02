@@ -80,6 +80,24 @@ class DatabaseManager {
       }
     }
   }
+
+  /**
+   * Test helper: Set a test database instance (for unit tests)
+   * @param testDb - Test database instance to use
+   */
+  public setTestDatabase(testDb: Database.Database): void {
+    if (this.db && this.db !== testDb) {
+      this.close();
+    }
+    this.db = testDb;
+  }
+
+  /**
+   * Test helper: Reset database to null (for test cleanup)
+   */
+  public resetDatabase(): void {
+    this.db = null;
+  }
 }
 
 // Export singleton instance (for easier imports)

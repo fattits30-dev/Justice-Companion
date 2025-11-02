@@ -1,9 +1,8 @@
 import { injectable, inject } from 'inversify';
 import { TYPES } from '../shared/infrastructure/di/types.ts';
-import { ConsentRepository } from '../repositories/ConsentRepository.ts';
-import { AuditLogger } from './AuditLogger.ts';
 import type { ConsentType, Consent } from '../domains/settings/entities/Consent.ts';
-import type { IConsentRepository, IAuditLogger } from '../shared/infrastructure/di/interfaces.ts';
+import type { IConsentRepository } from '../shared/infrastructure/di/repository-interfaces.ts';
+import type { IAuditLogger } from '../shared/infrastructure/di/service-interfaces.ts';
 
 /**
  * Service for managing GDPR consent

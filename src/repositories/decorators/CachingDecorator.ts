@@ -158,7 +158,7 @@ export class CachingDecorator<T> extends RepositoryDecorator<T> {
   /**
    * Invalidate cache entries matching pattern
    */
-  private invalidateCachePattern(pattern: string, ...args: any[]): void {
+  private invalidateCachePattern(_pattern: string, ..._args: any[]): void {
     // Implementation would depend on your cache service's capabilities
     // This is a placeholder for cache invalidation logic
   }

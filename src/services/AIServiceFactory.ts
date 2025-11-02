@@ -30,7 +30,6 @@ export class AIServiceFactory {
   private openAIService: OpenAIService | null = null;
   private modelPath: string;
   private currentProvider: 'openai' | 'integrated' = 'integrated';
-  private caseFactsRepository: CaseFactsRepository | null = null;
 
   private constructor() {
     // IntegratedService created without repository initially

@@ -4,6 +4,7 @@ import { CaseFactsRepository } from './CaseFactsRepository';
 import { EncryptionService } from '../services/EncryptionService';
 import { AuditLogger } from '../services/AuditLogger';
 import * as databaseModule from '../db/database';
+import type { CaseFact } from '../domains/cases/entities/CaseFact.ts';
 
 describe('CaseFactsRepository', () => {
   let db: Database.Database;
@@ -323,8 +324,8 @@ describe('CaseFactsRepository', () => {
 
       expect(timelineFacts).toHaveLength(2);
       expect(witnessFacts).toHaveLength(1);
-      expect(timelineFacts.every((f) => f.factCategory === 'timeline')).toBe(true);
-      expect(witnessFacts.every((f) => f.factCategory === 'witness')).toBe(true);
+      expect(timelineFacts.every((f: CaseFact) => f.factCategory === 'timeline')).toBe(true);
+      expect(witnessFacts.every((f: CaseFact) => f.factCategory === 'witness')).toBe(true);
     });
 
     it('should return empty array for category with no facts', () => {
@@ -383,8 +384,8 @@ describe('CaseFactsRepository', () => {
 
       expect(criticalFacts).toHaveLength(2);
       expect(lowFacts).toHaveLength(1);
-      expect(criticalFacts.every((f) => f.importance === 'critical')).toBe(true);
-      expect(lowFacts.every((f) => f.importance === 'low')).toBe(true);
+      expect(criticalFacts.every((f: CaseFact) => f.importance === 'critical')).toBe(true);
+      expect(lowFacts.every((f: CaseFact) => f.importance === 'low')).toBe(true);
     });
 
     it('should return empty array for importance level with no facts', () => {

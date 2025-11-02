@@ -4,7 +4,8 @@ import { TYPES } from '../shared/infrastructure/di/types.ts';
 import { logger } from "../utils/logger.ts";
 import { promisify } from "util";
 import { v4 as uuidv4 } from "uuid";
-import type { IUserRepository, ISessionRepository, IAuditLogger, IRateLimitService, IAuthenticationService } from '../shared/infrastructure/di/interfaces.ts';
+import type { IUserRepository, ISessionRepository } from '../shared/infrastructure/di/repository-interfaces.ts';
+import type { IAuditLogger, IRateLimitService, IAuthenticationService } from '../shared/infrastructure/di/service-interfaces.ts';
 import type { User } from "../domains/auth/entities/User.ts";
 import type { Session } from "../domains/auth/entities/Session.ts";
 
@@ -56,7 +57,6 @@ export class AuthenticationServiceInjectable implements IAuthenticationService {
   private readonly SALT_LENGTH = 16;
   private readonly KEY_LENGTH = 64;
   private readonly SESSION_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
-  private readonly REMEMBER_ME_DURATION_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
   constructor(
     @inject(TYPES.UserRepository) private userRepository: IUserRepository,

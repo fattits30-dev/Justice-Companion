@@ -47,6 +47,9 @@ export interface DeadlineWithDependencies {
   updatedAt: string;
   deletedAt: string | null;
 
+  // Additional UI metadata
+  caseTitle?: string; // Optional case title for Gantt chart display
+
   // Dependency information
   dependencies: DeadlineDependency[];  // Outgoing dependencies (this deadline depends on...)
   dependents: DeadlineDependency[];    // Incoming dependencies (other deadlines depend on this)

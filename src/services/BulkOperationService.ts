@@ -58,20 +58,18 @@ export class BulkOperationService {
   private eventBus: IEventBus;
   private caseRepository: CaseRepository;
   private evidenceRepository: EvidenceRepository;
-  private auditLogger: AuditLogger;
 
   constructor(
     db: Database.Database,
     eventBus: IEventBus,
     caseRepository: CaseRepository,
     evidenceRepository: EvidenceRepository,
-    auditLogger: AuditLogger
+    _auditLogger: AuditLogger
   ) {
     this.db = db;
     this.eventBus = eventBus;
     this.caseRepository = caseRepository;
     this.evidenceRepository = evidenceRepository;
-    this.auditLogger = auditLogger;
   }
 
   /**
@@ -79,7 +77,7 @@ export class BulkOperationService {
    */
   async bulkDeleteCases(
     caseIds: number[],
-    userId: number,
+    _userId: number,
     options: BulkOperationOptions = {}
   ): Promise<BulkOperationResult> {
     const operationId = uuidv4();

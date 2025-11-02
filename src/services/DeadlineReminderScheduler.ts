@@ -2,7 +2,6 @@ import { logger } from "../utils/logger.ts";
 import { NotificationService } from "./NotificationService.ts";
 import { DeadlineRepository } from "../repositories/DeadlineRepository.ts";
 import { NotificationPreferencesRepository } from "../repositories/NotificationPreferencesRepository.ts";
-import type { NotificationSeverity } from "../models/Notification.ts";
 
 /**
  * DeadlineReminderScheduler
@@ -17,7 +16,6 @@ import type { NotificationSeverity } from "../models/Notification.ts";
 export class DeadlineReminderScheduler {
   private intervalId?: NodeJS.Timeout;
   private isRunning = false;
-  private lastCheckTimestamp?: Date;
   private sentReminders = new Map<string, Date>(); // Track sent reminders to prevent duplicates
 
   constructor(

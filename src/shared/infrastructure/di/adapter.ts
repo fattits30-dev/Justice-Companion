@@ -43,7 +43,7 @@ export function createSingletonProxy<T>(serviceType: symbol): T {
   let instance: T | null = null;
 
   return new Proxy({} as T, {
-    get(target, prop, receiver) {
+    get(_target, prop, receiver) {
       if (!instance) {
         instance = getService<T>(serviceType);
       }

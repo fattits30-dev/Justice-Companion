@@ -9,13 +9,19 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import Database from 'better-sqlite3';
 import { createTestContainer, resetContainer } from './container.ts';
 import { TYPES } from './types.ts';
+
+// Import repository interfaces
+import type { ICaseRepository } from './repository-interfaces.ts';
+
+// Import service interfaces
 import type {
   ICaseService,
-  ICaseRepository,
-  IDatabase,
   IEncryptionService,
   IAuditLogger,
-} from './interfaces.ts';
+} from './service-interfaces.ts';
+
+// Import IDatabase
+import type { IDatabase } from '../../../interfaces/IDatabase.ts';
 
 describe('DI Container', () => {
   let testDb: Database.Database;

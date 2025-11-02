@@ -6,10 +6,6 @@ import type {
   NotesExportData,
   TemplateData
 } from '../../models/Export.ts';
-import type { Case } from '../../domains/cases/entities/Case.ts';
-import type { Evidence } from '../../domains/evidence/entities/Evidence.ts';
-import type { Note } from '../../models/Note.ts';
-import type { Deadline } from '../../domains/timeline/entities/Deadline.ts';
 
 export interface Template {
   name: string;
@@ -75,28 +71,28 @@ export class TemplateEngine {
     return template.format(data);
   }
 
-  private formatCaseSummary(data: CaseExportData): Record<string, unknown> {
+  private formatCaseSummary(_data: CaseExportData): Record<string, unknown> {
     const formatted: Record<string, unknown> = {};
-    
+
     // Implementation would go here
     return formatted;
   }
 
-  private formatEvidenceList(data: EvidenceExportData): Record<string, unknown> {
+  private formatEvidenceList(_data: EvidenceExportData): Record<string, unknown> {
     const formatted: Record<string, unknown> = {};
-    
+
     // Implementation would go here
     return formatted;
   }
 
-  private formatTimelineReport(data: TimelineExportData): Record<string, unknown> {
+  private formatTimelineReport(_data: TimelineExportData): Record<string, unknown> {
     const formatted: Record<string, unknown> = {};
-    
+
     // Implementation would go here
     return formatted;
   }
 
-  private formatCaseNotes(data: NotesExportData): Record<string, unknown> {
+  private formatCaseNotes(_data: NotesExportData): Record<string, unknown> {
     const formatted: Record<string, unknown> = {};
     
     // Implementation would go here

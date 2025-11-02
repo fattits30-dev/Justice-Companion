@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import Database from 'better-sqlite3';
 import { BulkOperationService } from './BulkOperationService.ts';
 import { CaseRepository } from '../repositories/CaseRepository.ts';

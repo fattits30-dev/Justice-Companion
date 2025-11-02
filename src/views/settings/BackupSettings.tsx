@@ -32,13 +32,6 @@ export interface Backup {
   };
 }
 
-interface AutoBackupSettings {
-  enabled: boolean;
-  frequency: 'daily' | 'weekly' | 'monthly';
-  keepCount: number;
-  time?: string;
-}
-
 export function BackupSettingsTab() {
   const [backups, setBackups] = useState<Backup[]>([]);
   const [isCreating, setIsCreating] = useState(false);
@@ -251,16 +244,16 @@ export function BackupSettingsTab() {
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
-    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-    if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+    if (diffMins < 1) {return 'Just now';}
+    if (diffMins < 60) {return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;}
+    if (diffHours < 24) {return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;}
+    if (diffDays < 7) {return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;}
     return date.toLocaleDateString();
   }
 
   function formatFileSize(bytes: number): string {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    if (bytes < 1024) {return `${bytes} B`;}
+    if (bytes < 1024 * 1024) {return `${(bytes / 1024).toFixed(1)} KB`;}
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   }
 
@@ -558,16 +551,16 @@ function BackupListItem({ backup, isExpanded, onToggle, onRestore, onExport, onD
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
-    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-    if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+    if (diffMins < 1) {return 'Just now';}
+    if (diffMins < 60) {return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;}
+    if (diffHours < 24) {return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;}
+    if (diffDays < 7) {return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;}
     return date.toLocaleDateString();
   }
 
   function formatFileSize(bytes: number): string {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    if (bytes < 1024) {return `${bytes} B`;}
+    if (bytes < 1024 * 1024) {return `${(bytes / 1024).toFixed(1)} KB`;}
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   }
 

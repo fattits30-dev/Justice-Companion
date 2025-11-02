@@ -2,7 +2,6 @@ import { useEffect, useState, useCallback } from "react";
 import { Command } from "cmdk";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search } from "lucide-react";
-import { clsx } from "clsx";
 
 export interface CommandItem {
   id: string;
@@ -30,7 +29,7 @@ export function CommandPalette({
   onOpenChange,
   placeholder = "Search or type a command...",
   emptyMessage = "No results found.",
-  _recentItems = [],
+  recentItems: _recentItems,
 }: CommandPaletteProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const [search, setSearch] = useState("");

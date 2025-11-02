@@ -124,7 +124,7 @@ export class SearchIndexBuilder {
     try {
       // Get the associated case to determine user
       const caseItem = await this.caseRepo.get(evidence.caseId);
-      if (!caseItem) return;
+      if (!caseItem) {return;}
 
       // Decrypt sensitive fields if needed
       const title = await this.decryptIfNeeded(evidence.title);
@@ -241,19 +241,19 @@ export class SearchIndexBuilder {
       switch (entityType) {
         case 'case':
           const caseItem = await this.caseRepo.get(entityId);
-          if (caseItem) await this.indexCase(caseItem);
+          if (caseItem) {await this.indexCase(caseItem);}
           break;
         case 'evidence':
           const evidence = await this.evidenceRepo.get(entityId);
-          if (evidence) await this.indexEvidence(evidence);
+          if (evidence) {await this.indexEvidence(evidence);}
           break;
         case 'conversation':
           const conversation = await this.chatRepo.getConversation(entityId);
-          if (conversation) await this.indexConversation(conversation);
+          if (conversation) {await this.indexConversation(conversation);}
           break;
         case 'note':
           const note = await this.notesRepo.getNote(entityId);
-          if (note) await this.indexNote(note);
+          if (note) {await this.indexNote(note);}
           break;
       }
     } catch (error) {
