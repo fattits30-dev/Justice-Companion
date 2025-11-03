@@ -5,6 +5,7 @@ import type {
   CaseType,
   CreateCaseInput,
 } from "../../domains/cases/entities/Case.ts";
+import { useAuth } from "../../contexts/AuthContext.tsx";
 import { CaseToolbar } from "./components/CaseToolbar.tsx";
 import {
   CasesEmptyState,
@@ -20,6 +21,7 @@ import { showSuccess, showError } from "../../components/ui/Toast.tsx";
 type LoadState = "idle" | "loading" | "error" | "ready";
 
 export function CasesView() {
+  const { sessionId, isLoading: authLoading } = useAuth();
   const [cases, setCases] = useState<Case[]>([]);
   const [loadState, setLoadState] = useState<LoadState>("idle");
   const [error, setError] = useState<string | null>(null);
@@ -28,12 +30,17 @@ export function CasesView() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
 
   const loadCases = useCallback(async () => {
+    if (!sessionId) {
+      setError("No active session");
+      setLoadState("error");
+      return;
+    }
+
     try {
       setLoadState("loading");
       setError(null);
 
-      const sessionId = getSessionId();
-      const response = await window.justiceAPI.getAllCases(sessionId);
+      const response = await globalThis.window.justiceAPI.getAllCases(sessionId);
 
       if (!response.success) {
         throw new Error(response.error?.message || "Failed to load cases");
@@ -47,16 +54,22 @@ export function CasesView() {
       setError(err instanceof Error ? err.message : "Unknown error");
       setLoadState("error");
     }
-  }, []);
+  }, [sessionId]);
 
   useEffect(() => {
-    loadCases();
-  }, [loadCases]);
+    if (!authLoading) {
+      loadCases();
+    }
+  }, [loadCases, authLoading]);
 
   const handleCreateCase = useCallback(async (input: CreateCaseInput) => {
+    if (!sessionId) {
+      showError("No active session", { title: "Failed to create case" });
+      return;
+    }
+
     try {
-      const sessionId = getSessionId();
-      const response = await window.justiceAPI.createCase(input, sessionId);
+      const response = await globalThis.window.justiceAPI.createCase(input, sessionId);
 
       if (!response.success) {
         throw new Error(response.error?.message || "Failed to create case");
@@ -75,9 +88,14 @@ export function CasesView() {
         title: "Failed to create case",
       });
     }
-  }, []);
+  }, [sessionId]);
 
   const handleDeleteCase = useCallback(async (caseId: number) => {
+    if (!sessionId) {
+      showError("No active session", { title: "Failed to delete case" });
+      return;
+    }
+
     const confirmed = confirm(
       "Are you sure you want to delete this case? This cannot be undone.",
     );
@@ -86,8 +104,7 @@ export function CasesView() {
     }
 
     try {
-      const sessionId = getSessionId();
-      const response = await window.justiceAPI.deleteCase(
+      const response = await globalThis.window.justiceAPI.deleteCase(
         caseId.toString(),
         sessionId,
       );
@@ -105,7 +122,7 @@ export function CasesView() {
         title: "Failed to delete case",
       });
     }
-  }, []);
+  }, [sessionId]);
 
   const filteredCases = useMemo(() => {
     return cases.filter((caseItem) => {
@@ -131,20 +148,22 @@ export function CasesView() {
   const hasFilteredResults = filteredCases.length > 0;
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-primary-900 text-white">
-      {/* Fixed Toolbar */}
-      <div className="flex-shrink-0 p-8 pb-4">
-        <CaseToolbar
-          filterStatus={filterStatus}
-          filterType={filterType}
-          onStatusChange={setFilterStatus}
-          onTypeChange={setFilterType}
-          onCreateCase={() => setShowCreateDialog(true)}
-        />
+    <div className="h-full flex flex-col bg-gradient-to-br from-gray-900 via-primary-900 to-gray-900">
+      {/* Sticky Header with Toolbar */}
+      <div className="sticky top-0 z-30 bg-gray-900/80 backdrop-blur-md border-b border-white/10">
+        <div className="px-8 py-6">
+          <CaseToolbar
+            filterStatus={filterStatus}
+            filterType={filterType}
+            onStatusChange={setFilterStatus}
+            onTypeChange={setFilterType}
+            onCreateCase={() => setShowCreateDialog(true)}
+          />
+        </div>
       </div>
 
       {/* Scrollable Content Area */}
-      <div className="flex-1 overflow-y-auto px-8 pb-8">
+      <div className="flex-1 overflow-y-auto px-8 py-8">
         {!hasCases ? (
           <CasesEmptyState onCreateCase={() => setShowCreateDialog(true)} />
         ) : (
@@ -170,12 +189,4 @@ export function CasesView() {
       )}
     </div>
   );
-}
-
-function getSessionId(): string {
-  const sessionId = localStorage.getItem("sessionId");
-  if (!sessionId) {
-    throw new Error("No active session - please log in again");
-  }
-  return sessionId;
 }

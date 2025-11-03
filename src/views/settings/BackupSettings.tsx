@@ -17,6 +17,7 @@ import {
 import { Card } from '../../components/ui/Card.tsx';
 import { Button } from '../../components/ui/Button.tsx';
 import { Badge } from '../../components/ui/Badge.tsx';
+import { useAuth } from '../../contexts/AuthContext.tsx';
 
 export interface Backup {
   id: number;
@@ -33,6 +34,7 @@ export interface Backup {
 }
 
 export function BackupSettingsTab() {
+  const { user } = useAuth();
   const [backups, setBackups] = useState<Backup[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -52,55 +54,21 @@ export function BackupSettingsTab() {
   const loadBackups = async () => {
     setIsLoading(true);
     try {
-      // TODO: Replace with actual IPC call when backend is ready
-      // const result = await window.justiceAPI.db.listBackups();
-      // if (result.success) {
-      //   setBackups(result.data);
-      // }
-
-      // Mock data for demonstration
-      const mockBackups: Backup[] = [
-        {
-          id: 1,
-          filename: 'backup_2025-10-25_15-30.db',
-          path: 'F:\\Justice Companion\\backups\\backup_2025-10-25_15-30.db',
-          size: 2411520,
-          created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-          is_valid: true,
-          metadata: {
-            version: '1.0.0',
-            record_count: 1247,
-            tables: ['users', 'cases', 'evidence', 'deadlines'],
-          },
-        },
-        {
-          id: 2,
-          filename: 'backup_2025-10-24_03-00.db',
-          path: 'F:\\Justice Companion\\backups\\backup_2025-10-24_03-00.db',
-          size: 2201600,
-          created_at: new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString(),
-          is_valid: true,
-          metadata: {
-            version: '1.0.0',
-            record_count: 1189,
-          },
-        },
-        {
-          id: 3,
-          filename: 'backup_2025-10-23_03-00.db',
-          path: 'F:\\Justice Companion\\backups\\backup_2025-10-23_03-00.db',
-          size: 2097152,
-          created_at: new Date(Date.now() - 49 * 60 * 60 * 1000).toISOString(),
-          is_valid: true,
-          metadata: {
-            version: '1.0.0',
-            record_count: 1156,
-          },
-        },
-      ];
-      setBackups(mockBackups);
+      const result = await globalThis.window.justiceAPI.listBackups();
+      if (result.success && result.data) {
+        // Add ID field for list rendering (use index as unique key)
+        const backupsWithIds = result.data.backups.map((backup, index) => ({
+          ...backup,
+          id: index + 1,
+        }));
+        setBackups(backupsWithIds);
+      } else {
+        console.error('Failed to load backups:', result.error);
+        showToast(result.error?.message || 'Failed to load backups', 'error');
+      }
     } catch (error) {
       console.error('Failed to load backups:', error);
+      showToast('Failed to load backups', 'error');
     } finally {
       setIsLoading(false);
     }
@@ -108,13 +76,14 @@ export function BackupSettingsTab() {
 
   const loadSettings = async () => {
     try {
-      // TODO: Replace with actual IPC call when backend is ready
-      // const result = await window.justiceAPI.db.getBackupSettings();
-      // if (result.success) {
-      //   setAutoBackupEnabled(result.data.enabled);
-      //   setFrequency(result.data.frequency);
-      //   setKeepCount(result.data.keepCount);
-      // }
+      if (!user?.id) {return;}
+      const result = await globalThis.window.justiceAPI.getBackupSettings(Number(user.id));
+      if (result.success && result.data) {
+        setAutoBackupEnabled(result.data.enabled);
+        setFrequency(result.data.frequency);
+        setKeepCount(result.data.keep_count);
+        setBackupTime(result.data.backup_time);
+      }
     } catch (error) {
       console.error('Failed to load settings:', error);
     }
@@ -123,20 +92,15 @@ export function BackupSettingsTab() {
   const handleCreateBackup = async () => {
     setIsCreating(true);
     try {
-      // TODO: Replace with actual IPC call when backend is ready
-      // const result = await window.justiceAPI.db.createBackup();
-      // if (result.success) {
-      //   showSuccess('Backup created successfully');
-      //   await loadBackups();
-      // } else {
-      //   showError(result.error);
-      // }
-
-      // Mock success
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      await loadBackups();
-      showToast('Backup created successfully', 'success');
+      const result = await globalThis.window.justiceAPI.createBackup();
+      if (result.success && result.data) {
+        showToast('Backup created successfully', 'success');
+        await loadBackups();
+      } else {
+        showToast(result.error?.message || 'Failed to create backup', 'error');
+      }
     } catch (error) {
+      console.error('Failed to create backup:', error);
       showToast('Failed to create backup', 'error');
     } finally {
       setIsCreating(false);
@@ -152,17 +116,18 @@ export function BackupSettingsTab() {
 
     if (confirmed) {
       try {
-        // TODO: Replace with actual IPC call when backend is ready
-        // const result = await window.justiceAPI.db.restoreBackup(backup.id);
-        // if (result.success) {
-        //   showSuccess('Database restored successfully');
-        //   window.location.reload();
-        // } else {
-        //   showError(result.error);
-        // }
-
-        showToast('Restore functionality will be available soon', 'info');
+        const result = await globalThis.window.justiceAPI.restoreBackup(backup.filename);
+        if (result.success) {
+          showToast('Database restored successfully - Application will reload', 'success');
+          // Wait a moment for the toast to show, then reload
+          setTimeout(() => {
+            globalThis.location.reload();
+          }, 1500);
+        } else {
+          showToast(result.error?.message || 'Failed to restore backup', 'error');
+        }
       } catch (error) {
+        console.error('Failed to restore backup:', error);
         showToast('Failed to restore backup', 'error');
       }
     }
@@ -180,11 +145,12 @@ export function BackupSettingsTab() {
 
       showToast(`Exported ${backup.filename} to Downloads`, 'success');
     } catch (error) {
+      console.error('[BackupSettings] Export error:', error);
       showToast('Failed to export backup', 'error');
     }
   };
 
-  const handleDelete = async (backupId: number) => {
+  const handleDelete = async (backupFilename: string) => {
     const confirmed = await showConfirmDialog({
       title: 'Delete Backup',
       message: 'This cannot be undone. Are you sure?',
@@ -193,18 +159,15 @@ export function BackupSettingsTab() {
 
     if (confirmed) {
       try {
-        // TODO: Replace with actual IPC call when backend is ready
-        // const result = await window.justiceAPI.db.deleteBackup(backupId);
-        // if (result.success) {
-        //   showSuccess('Backup deleted');
-        //   await loadBackups();
-        // } else {
-        //   showError(result.error);
-        // }
-
-        setBackups((prev) => prev.filter((b) => b.id !== backupId));
-        showToast('Backup deleted', 'success');
+        const result = await globalThis.window.justiceAPI.deleteBackup(backupFilename);
+        if (result.success) {
+          showToast('Backup deleted', 'success');
+          await loadBackups();
+        } else {
+          showToast(result.error?.message || 'Failed to delete backup', 'error');
+        }
       } catch (error) {
+        console.error('Failed to delete backup:', error);
         showToast('Failed to delete backup', 'error');
       }
     }
@@ -212,25 +175,27 @@ export function BackupSettingsTab() {
 
   const handleSaveAutoBackup = async () => {
     try {
-      // TODO: Replace with actual IPC call when backend is ready
-      // const result = await window.justiceAPI.db.updateBackupSettings({
-      //   enabled: autoBackupEnabled,
-      //   frequency,
-      //   keepCount,
-      //   time: backupTime,
-      // });
+      if (!user?.id) {
+        showToast('User not authenticated', 'error');
+        return;
+      }
 
-      // if (result.success) {
-      //   setSaveSuccess(true);
-      //   setTimeout(() => setSaveSuccess(false), 3000);
-      // } else {
-      //   showError(result.error);
-      // }
+      const result = await globalThis.window.justiceAPI.updateBackupSettings(Number(user.id), {
+        enabled: autoBackupEnabled,
+        frequency,
+        backup_time: backupTime,
+        keep_count: keepCount,
+      });
 
-      setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 3000);
-      showToast('Auto-backup settings saved', 'success');
+      if (result.success) {
+        setSaveSuccess(true);
+        setTimeout(() => setSaveSuccess(false), 3000);
+        showToast('Auto-backup settings saved', 'success');
+      } else {
+        showToast(result.error?.message || 'Failed to save settings', 'error');
+      }
     } catch (error) {
+      console.error('Failed to save settings:', error);
       showToast('Failed to save settings', 'error');
     }
   };
@@ -263,7 +228,7 @@ export function BackupSettingsTab() {
     confirmText: string;
   }): Promise<boolean> {
     // TODO: Implement proper modal dialog
-    return window.confirm(`${options.title}\n\n${options.message}`);
+    return globalThis.confirm(`${options.title}\n\n${options.message}`);
   }
 
   function showToast(message: string, type: 'success' | 'error' | 'info') {
@@ -443,7 +408,7 @@ export function BackupSettingsTab() {
                       min="1"
                       max="30"
                       value={keepCount}
-                      onChange={(e) => setKeepCount(parseInt(e.target.value))}
+                      onChange={(e) => setKeepCount(Number.parseInt(e.target.value))}
                       className="flex-1 h-2 bg-blue-950/50 rounded-lg appearance-none cursor-pointer accent-purple-500"
                       aria-label="Number of backups to keep"
                     />
@@ -522,7 +487,7 @@ export function BackupSettingsTab() {
                   onToggle={() => setExpandedBackup(expandedBackup === backup.id ? null : backup.id)}
                   onRestore={() => handleRestore(backup)}
                   onExport={() => handleExport(backup)}
-                  onDelete={() => handleDelete(backup.id)}
+                  onDelete={() => handleDelete(backup.filename)}
                 />
               ))}
             </div>

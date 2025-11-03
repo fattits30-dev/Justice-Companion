@@ -1,6 +1,6 @@
 import { test, expect, _electron as electron } from '@playwright/test';
 import { ElectronApplication, Page } from 'playwright';
-import path from 'path';
+import path from 'node:path';
 
 /**
  * E2E Test: Chat Streaming with Groq
@@ -52,7 +52,7 @@ test.describe('Chat Streaming with Groq', () => {
 
     // Step 2: Configure Groq API key
     const configResult = await page.evaluate(async () => {
-      return await window.justiceAPI.configureAI({
+      return await globalThis.window.justiceAPI.configureAI({
         apiKey: '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',
         provider: 'groq',
         model: 'llama-3.3-70b-versatile',
@@ -122,7 +122,7 @@ test.describe('Chat Streaming with Groq', () => {
     // Clear the API key to simulate misconfiguration
     await page.evaluate(async () => {
       // This will cause an error because no API key
-      return await window.justiceAPI.configureAI({
+      return await globalThis.window.justiceAPI.configureAI({
         apiKey: '',
         provider: 'groq',
       });
@@ -141,7 +141,7 @@ test.describe('Chat Streaming with Groq', () => {
   test('should show thinking process when available', async () => {
     // Re-configure API key (in case previous test cleared it)
     await page.evaluate(async () => {
-      return await window.justiceAPI.configureAI({
+      return await globalThis.window.justiceAPI.configureAI({
         apiKey: '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',
         provider: 'groq',
         model: 'llama-3.3-70b-versatile',

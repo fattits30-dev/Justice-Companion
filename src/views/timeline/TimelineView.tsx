@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Plus, Calendar } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '../../contexts/AuthContext.tsx';
 import { Button } from '../../components/ui/Button';
 import { TimelineItem } from './components/TimelineItem';
 import { TimelineEmpty } from './components/TimelineEmpty';
@@ -13,16 +14,8 @@ interface Case {
   status: 'active' | 'pending' | 'closed';
 }
 
-// Helper to get session ID from localStorage
-function getSessionId(): string {
-  const sessionId = localStorage.getItem('sessionId');
-  if (!sessionId) {
-    throw new Error('No active session - please log in again');
-  }
-  return sessionId;
-}
-
 export function TimelineView() {
+  const { sessionId, isLoading: authLoading } = useAuth();
   const [deadlines, setDeadlines] = useState<DeadlineWithCase[]>([]);
   const [cases, setCases] = useState<Case[]>([]);
   const [selectedCaseId, setSelectedCaseId] = useState<number | null>(null);
@@ -36,14 +29,19 @@ export function TimelineView() {
 
   // Load deadlines and cases - wrapped in useCallback to stabilize reference
   const loadData = useCallback(async () => {
+    if (!sessionId) {
+      setError('No active session');
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
     try {
-      const sessionId = getSessionId();
 
       // Load deadlines
-      const deadlinesResult = await window.justiceAPI.getDeadlines(sessionId);
+      const deadlinesResult = await globalThis.window.justiceAPI.getDeadlines(sessionId);
       if (!deadlinesResult.success) {
         const errorMsg = typeof deadlinesResult.error === 'string'
           ? deadlinesResult.error
@@ -52,7 +50,7 @@ export function TimelineView() {
       }
 
       // Load cases
-      const casesResult = await window.justiceAPI.getAllCases(sessionId);
+      const casesResult = await globalThis.window.justiceAPI.getAllCases(sessionId);
       if (!casesResult.success) {
         const errorMsg = typeof casesResult.error === 'string'
           ? casesResult.error
@@ -81,11 +79,13 @@ export function TimelineView() {
     } finally {
       setIsLoading(false);
     }
-  }, []); // No dependencies - uses only setState functions and getSessionId
+  }, [sessionId]);
 
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    if (!authLoading) {
+      loadData();
+    }
+  }, [loadData, authLoading]);
 
   // Filter and sort deadlines
   const filteredDeadlines = useMemo(() => {
@@ -108,9 +108,12 @@ export function TimelineView() {
 
   // Handlers - all wrapped in useCallback to preserve memo benefits
   const handleAddDeadline = useCallback(async (input: CreateDeadlineInput) => {
+    if (!sessionId) {
+      return { success: false, error: 'No active session' };
+    }
+
     try {
-      const sessionId = getSessionId();
-      const result = await window.justiceAPI.createDeadline(input, sessionId);
+      const result = await globalThis.window.justiceAPI.createDeadline(input, sessionId);
 
       if (result.success) {
         await loadData(); // Reload to get updated data
@@ -127,7 +130,7 @@ export function TimelineView() {
         error: err instanceof Error ? err.message : 'Failed to create deadline',
       };
     }
-  }, [loadData]);
+  }, [sessionId, loadData]);
 
   const handleEditDeadline = useCallback((deadline: DeadlineWithCase) => {
     setEditingDeadline(deadline);
@@ -136,9 +139,12 @@ export function TimelineView() {
   const handleUpdateDeadline = useCallback(async (input: UpdateDeadlineInput) => {
     if (!editingDeadline) {return { success: false, error: 'No deadline selected' };}
 
+    if (!sessionId) {
+      return { success: false, error: 'No active session' };
+    }
+
     try {
-      const sessionId = getSessionId();
-      const result = await window.justiceAPI.updateDeadline(
+      const result = await globalThis.window.justiceAPI.updateDeadline(
         editingDeadline.id,
         input,
         sessionId,
@@ -160,14 +166,18 @@ export function TimelineView() {
         error: err instanceof Error ? err.message : 'Failed to update deadline',
       };
     }
-  }, [editingDeadline, loadData]);
+  }, [editingDeadline, sessionId, loadData]);
 
   const handleCompleteDeadline = useCallback(async (deadline: DeadlineWithCase) => {
+    if (!sessionId) {
+      console.error('No active session');
+      return;
+    }
+
     const newStatus = deadline.status === 'completed' ? 'upcoming' : 'completed';
 
     try {
-      const sessionId = getSessionId();
-      const result = await window.justiceAPI.updateDeadline(
+      const result = await globalThis.window.justiceAPI.updateDeadline(
         deadline.id,
         { status: newStatus },
         sessionId,
@@ -179,7 +189,7 @@ export function TimelineView() {
     } catch (err) {
       console.error('Failed to update deadline status:', err);
     }
-  }, [loadData]);
+  }, [sessionId, loadData]);
 
   const handleDeleteDeadline = useCallback((deadline: DeadlineWithCase) => {
     setDeletingDeadline(deadline);
@@ -188,9 +198,13 @@ export function TimelineView() {
   const handleConfirmDelete = useCallback(async () => {
     if (!deletingDeadline) {return;}
 
+    if (!sessionId) {
+      console.error('No active session');
+      return;
+    }
+
     try {
-      const sessionId = getSessionId();
-      const result = await window.justiceAPI.deleteDeadline(
+      const result = await globalThis.window.justiceAPI.deleteDeadline(
         deletingDeadline.id,
         sessionId,
       );
@@ -203,7 +217,7 @@ export function TimelineView() {
     } finally {
       setDeletingDeadline(null);
     }
-  }, [deletingDeadline, loadData]);
+  }, [deletingDeadline, sessionId, loadData]);
 
   const handleCaseClick = useCallback((caseId: number) => {
     // TODO: Navigate to case detail view
@@ -238,10 +252,10 @@ export function TimelineView() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-gradient-to-br from-gray-900 via-primary-900 to-gray-900">
-      {/* Fixed Header */}
-      <div className="fixed top-0 left-0 right-0 z-30 bg-gray-900/80 backdrop-blur-md border-b border-white/10">
-        <div className="max-w-6xl mx-auto px-6 py-4">
+    <div className="h-full flex flex-col bg-gradient-to-br from-gray-900 via-primary-900 to-gray-900">
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-30 bg-gray-900/80 backdrop-blur-md border-b border-white/10">
+        <div className="px-8 py-6">
           <div className="flex items-center justify-between">
             {/* Title */}
             <div className="flex items-center gap-3">
@@ -255,7 +269,7 @@ export function TimelineView() {
               <select
                 value={selectedCaseId || ''}
                 onChange={(e) =>
-                  setSelectedCaseId(e.target.value ? parseInt(e.target.value, 10) : null)
+                  setSelectedCaseId(e.target.value ? Number.parseInt(e.target.value, 10) : null)
                 }
                 className="
                   px-4 py-2 bg-white/5 border border-white/10 rounded-lg
@@ -263,7 +277,7 @@ export function TimelineView() {
                   focus:outline-none focus:ring-2 focus:ring-primary-500
                   transition-all
                 "
-                role="combobox"
+                aria-label="Filter deadlines by case"
               >
                 <option value="">All Cases</option>
                 {cases.map((c) => (
@@ -287,7 +301,7 @@ export function TimelineView() {
       </div>
 
       {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto pt-20">
+      <div className="flex-1 overflow-y-auto">
         <div className="max-w-4xl mx-auto px-6 py-8">
           {filteredDeadlines.length === 0 ? (
             <TimelineEmpty onAddClick={() => setIsAddDialogOpen(true)} />

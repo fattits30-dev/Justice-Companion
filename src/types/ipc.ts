@@ -1,5 +1,4 @@
-import type { Case, CreateCaseInput, UpdateCaseInput } from '../domains/cases/entities/Case.ts';
-import type { CaseStatus } from '../domains/cases/entities/Case.ts';
+import type { Case, CreateCaseInput, UpdateCaseInput, CaseStatus } from '../domains/cases/entities/Case.ts';
 import type {
   ChatConversation,
   ChatMessage,
@@ -8,6 +7,7 @@ import type {
   ConversationWithMessages,
 } from '../models/ChatConversation.ts';
 import type { UserProfile, UpdateUserProfileInput } from '../domains/settings/entities/UserProfile.ts';
+import type { AIProviderType } from './ai-providers.ts';
 import type { Evidence, CreateEvidenceInput, UpdateEvidenceInput } from '../domains/evidence/entities/Evidence.ts';
 import type { LegalContext } from './ai.ts';
 import type { CaseFact } from '../domains/cases/entities/CaseFact.ts';
@@ -278,9 +278,13 @@ export interface AIStreamStartResponse {
 }
 
 export interface AIConfigureRequest {
+  provider: AIProviderType;
   apiKey: string;
-  model: 'gpt-4o' | 'gpt-4o-mini' | 'gpt-3.5-turbo';
-  organization?: string;
+  model: string;
+  endpoint?: string;
+  temperature?: number;
+  maxTokens?: number;
+  topP?: number;
 }
 
 export interface AIConfigureResponse {

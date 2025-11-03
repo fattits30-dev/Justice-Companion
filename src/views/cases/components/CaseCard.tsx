@@ -7,10 +7,10 @@ import { Trash2, Eye, Edit, Clock, Calendar } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface CaseCardProps {
-  caseItem: Case;
-  onDelete: (caseId: number) => void;
-  onView?: (caseId: number) => void;
-  onEdit?: (caseId: number) => void;
+  readonly caseItem: Case;
+  readonly onDelete: (caseId: number) => void;
+  readonly onView?: (caseId: number) => void;
+  readonly onEdit?: (caseId: number) => void;
 }
 
 function CaseCardComponent({
@@ -45,6 +45,8 @@ function CaseCardComponent({
 
   return (
     <div
+      role="group"
+      aria-label={`Case: ${caseItem.title}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       className="relative group"
