@@ -573,6 +573,7 @@ function BackupListItem({ backup, isExpanded, onToggle, onRestore, onExport, onD
               <Trash2 className="w-4 h-4" />
             </Button>
             <button
+              type="button"
               onClick={onToggle}
               className="p-2 text-white/60 hover:text-white transition-colors"
               aria-label={isExpanded ? 'Collapse details' : 'Expand details'}
