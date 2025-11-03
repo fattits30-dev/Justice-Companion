@@ -1,5 +1,6 @@
 import { getDb } from '../db/database.ts';
 import type { CaseFact, CreateCaseFactInput, UpdateCaseFactInput } from '../domains/cases/entities/CaseFact.ts';
+import type { FactCategory, FactImportance } from '../types/ai-functions.ts';
 import type { AuditLogger } from '../services/AuditLogger.ts';
 import { EncryptionService, type EncryptedData } from '../services/EncryptionService.ts';
 
@@ -142,8 +143,8 @@ export class CaseFactsRepository {
       id: row.id,
       caseId: row.case_id,
       factContent: decryptedContent,
-      factCategory: row.fact_category,
-      importance: row.importance,
+      factCategory: row.fact_category as FactCategory,
+      importance: row.importance as FactImportance,
       createdAt: new Date(row.created_at).toISOString(),
       updatedAt: new Date(row.updated_at).toISOString(),
     };
