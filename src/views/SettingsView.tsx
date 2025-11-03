@@ -757,9 +757,9 @@ function AppearanceTab({
         <div className="p-6 space-y-6">
           {/* Theme Selection */}
           <div>
-            <label className="block text-sm font-medium text-white mb-3">
+            <div className="block text-sm font-medium text-white mb-3">
               Theme
-            </label>
+            </div>
             <div className="grid grid-cols-3 gap-3">
               {themeOptions.map((option) => {
                 const Icon = option.icon;
@@ -779,7 +779,7 @@ function AppearanceTab({
                       }
                     `}
                     aria-label={`${option.label} theme`}
-                    aria-pressed={isActive ? 'true' : 'false'}
+                    aria-pressed={isActive ? "true" : "false"}
                   >
                     <Icon className="w-6 h-6 text-white mx-auto mb-2" />
                     <div className="text-sm font-medium text-white">
