@@ -39,8 +39,8 @@ import {
   setupDatabaseHandlers,
   setupSecureStorageHandlers,
   setupUIHandlers,
-  setupAIConfigHandlers,
 } from './database.ts';
+import { setupAIConfigHandlers } from './ai-config.ts';
 
 /**
  * Initialize all IPC handlers

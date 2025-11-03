@@ -1,5 +1,6 @@
 import type { App, BrowserWindow } from 'electron';
 import type { AppUpdater, UpdateInfo, ProgressInfo } from 'electron-updater';
+import { errorLogger } from '../utils/error-logger.ts';
 
 export interface AutoUpdaterConfig {
   checkOnStartup?: boolean;
@@ -124,7 +125,11 @@ export class AutoUpdater {
     });
 
     this.updater.on('error', (error: Error) => {
-      console.error('[AutoUpdater] Update error:', error);
+      errorLogger.logError(error, {
+        service: 'AutoUpdater',
+        operation: 'update',
+        currentVersion: this.status.currentVersion,
+      });
       this.status.checking = false;
       this.status.downloading = false;
       this.status.error = error.message;

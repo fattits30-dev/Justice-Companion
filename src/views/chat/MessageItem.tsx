@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { Save } from 'lucide-react';
+import { Save, Plus, FileText } from 'lucide-react';
 
 interface Message {
   id: string;
@@ -7,16 +7,21 @@ interface Message {
   content: string;
   timestamp: Date;
   thinking?: string;
+  documentAnalysis?: {
+    filename: string;
+    suggestedCaseData?: any;
+  };
 }
 
 interface MessageItemProps {
   message: Message;
   onSaveToCase: (message: Message) => void;
+  onCreateCase?: (suggestedData: any) => void;
   showThinking: boolean;
-  style: React.CSSProperties; // For react-window positioning
+  style?: React.CSSProperties; // Optional: for react-window positioning (no longer used)
 }
 
-function MessageItemComponent({ message, onSaveToCase, showThinking, style }: MessageItemProps) {
+function MessageItemComponent({ message, onSaveToCase, onCreateCase, showThinking, style = {} }: MessageItemProps) {
   return (
     <div style={style}>
       <div
@@ -48,6 +53,16 @@ function MessageItemComponent({ message, onSaveToCase, showThinking, style }: Me
             </div>
           )}
 
+          {/* Document Analysis Badge */}
+          {message.documentAnalysis && (
+            <div className="mb-3 inline-flex items-center gap-2 px-3 py-1.5 bg-blue-500/20 border border-blue-500/30 rounded-lg text-sm">
+              <FileText className="w-4 h-4 text-blue-400" />
+              <span className="text-blue-200">
+                Document Analysis: {message.documentAnalysis.filename}
+              </span>
+            </div>
+          )}
+
           <div className="prose prose-invert max-w-none">
             <p className="whitespace-pre-wrap">{message.content}</p>
           </div>
@@ -65,16 +80,30 @@ function MessageItemComponent({ message, onSaveToCase, showThinking, style }: Me
             </details>
           )}
 
-          {/* Save to Case Button (for assistant messages only) */}
+          {/* Action Buttons (for assistant messages only) */}
           {message.role === "assistant" && (
-            <button
-              onClick={() => onSaveToCase(message)}
-              className="mt-3 flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors border border-white/10 hover:border-white/20"
-              type="button"
-            >
-              <Save className="w-4 h-4" />
-              Save to Case
-            </button>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                onClick={() => onSaveToCase(message)}
+                className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors border border-white/10 hover:border-white/20"
+                type="button"
+              >
+                <Save className="w-4 h-4" />
+                Save to Case
+              </button>
+
+              {/* Create Case Button (shown when AI suggests case creation) */}
+              {message.documentAnalysis?.suggestedCaseData && onCreateCase && (
+                <button
+                  onClick={() => onCreateCase(message.documentAnalysis!.suggestedCaseData)}
+                  className="flex items-center gap-2 px-3 py-2 text-sm text-green-300 hover:text-white bg-green-500/20 hover:bg-green-500/30 rounded-lg transition-colors border border-green-500/30 hover:border-green-500/50"
+                  type="button"
+                >
+                  <Plus className="w-4 h-4" />
+                  Create Case from Analysis
+                </button>
+              )}
+            </div>
           )}
 
           <div className="mt-2 text-xs text-white/80">

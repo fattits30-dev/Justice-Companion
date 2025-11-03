@@ -8,6 +8,7 @@ import type { Case } from '../domains/cases/entities/Case.ts';
 import type { Evidence } from '../domains/evidence/entities/Evidence.ts';
 import type { ChatConversation } from '../models/ChatConversation.ts';
 import type { Note } from '../models/Note.ts';
+import { errorLogger } from '../utils/error-logger.ts';
 
 export class SearchIndexBuilder {
   constructor(
@@ -69,7 +70,10 @@ export class SearchIndexBuilder {
     } catch (error) {
       // Rollback on error
       this.db.prepare('ROLLBACK').run();
-      console.error('Search index rebuild failed:', error);
+      errorLogger.logError(error instanceof Error ? error : new Error(String(error)), {
+        service: 'SearchIndexBuilder',
+        operation: 'rebuildIndex',
+      });
       throw error;
     }
   }
@@ -113,7 +117,11 @@ export class SearchIndexBuilder {
         caseItem.caseType
       );
     } catch (error) {
-      console.error(`Failed to index case ${caseItem.id}:`, error);
+      errorLogger.logError(error instanceof Error ? error : new Error(String(error)), {
+        service: 'SearchIndexBuilder',
+        operation: 'indexCase',
+        caseId: caseItem.id,
+      });
     }
   }
 
@@ -153,7 +161,12 @@ export class SearchIndexBuilder {
         filePath
       );
     } catch (error) {
-      console.error(`Failed to index evidence ${evidence.id}:`, error);
+      errorLogger.logError(error instanceof Error ? error : new Error(String(error)), {
+        service: 'SearchIndexBuilder',
+        operation: 'indexEvidence',
+        evidenceId: evidence.id,
+        caseId: evidence.caseId,
+      });
     }
   }
 
@@ -187,7 +200,12 @@ export class SearchIndexBuilder {
         conversation.messageCount
       );
     } catch (error) {
-      console.error(`Failed to index conversation ${conversation.id}:`, error);
+      errorLogger.logError(error instanceof Error ? error : new Error(String(error)), {
+        service: 'SearchIndexBuilder',
+        operation: 'indexConversation',
+        conversationId: conversation.id,
+        caseId: conversation.caseId,
+      });
     }
   }
 
@@ -221,7 +239,12 @@ export class SearchIndexBuilder {
         note.isPinned ? 1 : 0
       );
     } catch (error) {
-      console.error(`Failed to index note ${note.id}:`, error);
+      errorLogger.logError(error instanceof Error ? error : new Error(String(error)), {
+        service: 'SearchIndexBuilder',
+        operation: 'indexNote',
+        noteId: note.id,
+        caseId: note.caseId,
+      });
     }
   }
 
@@ -257,7 +280,12 @@ export class SearchIndexBuilder {
           break;
       }
     } catch (error) {
-      console.error(`Failed to update ${entityType} ${entityId} in index:`, error);
+      errorLogger.logError(error instanceof Error ? error : new Error(String(error)), {
+        service: 'SearchIndexBuilder',
+        operation: 'updateInIndex',
+        entityType,
+        entityId,
+      });
     }
   }
 
@@ -315,7 +343,10 @@ export class SearchIndexBuilder {
 
       console.log('Search index optimized successfully');
     } catch (error) {
-      console.error('Failed to optimize search index:', error);
+      errorLogger.logError(error instanceof Error ? error : new Error(String(error)), {
+        service: 'SearchIndexBuilder',
+        operation: 'optimizeIndex',
+      });
       throw error;
     }
   }

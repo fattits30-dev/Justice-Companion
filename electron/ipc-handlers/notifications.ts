@@ -1,5 +1,5 @@
 import { ipcMain, type IpcMainInvokeEvent } from 'electron';
-import { successResponse, errorResponse, type IPCResponse } from '../utils/ipc-response.ts';
+import { successResponse, type IPCResponse } from '../utils/ipc-response.ts';
 import { withAuthorization } from '../utils/authorization-wrapper.ts';
 import { databaseManager } from '../../src/db/database.ts';
 import { NotificationService } from '../../src/services/NotificationService.ts';
@@ -8,6 +8,12 @@ import { NotificationPreferencesRepository } from '../../src/repositories/Notifi
 import { AuditLogger } from '../../src/services/AuditLogger.ts';
 import type { NotificationFilters } from '../../src/models/Notification.ts';
 import type { UpdateNotificationPreferencesInput } from '../../src/models/NotificationPreferences.ts';
+import {
+  DatabaseError,
+  NotificationNotFoundError,
+  UnauthorizedError,
+  ValidationError,
+} from '../../src/errors/DomainErrors.ts';
 
 /**
  * ===== NOTIFICATION HANDLERS =====
@@ -43,7 +49,16 @@ export function setupNotificationHandlers(): void {
           return successResponse(notifications);
         } catch (error) {
           console.error('[IPC] notifications:list error:', error);
-          return errorResponse('NOTIFICATIONS_LIST_FAILED', error instanceof Error ? error.message : 'Failed to retrieve notifications');
+
+          // Wrap generic errors in DomainErrors
+          if (error instanceof Error) {
+            const message = error.message.toLowerCase();
+            if (message.includes('database') || message.includes('sqlite')) {
+              throw new DatabaseError('list notifications', error.message);
+            }
+          }
+
+          throw error;
         }
       });
     }
@@ -69,7 +84,12 @@ export function setupNotificationHandlers(): void {
           return successResponse(count);
         } catch (error) {
           console.error('[IPC] notifications:unread-count error:', error);
-          return errorResponse('UNREAD_COUNT_FAILED', error instanceof Error ? error.message : 'Failed to get unread count');
+
+          if (error instanceof Error) {
+            const message = error.message.toLowerCase();
+            if (message.includes('database') || message.includes('sqlite')) {throw new DatabaseError('get unread count', error.message);}
+          }
+          throw error;
         }
       });
     }
@@ -92,7 +112,7 @@ export function setupNotificationHandlers(): void {
           // Verify notification belongs to user
           const notification = await service.getNotificationById(notificationId);
           if (!notification || notification.userId !== userId) {
-            throw new Error('Notification not found or access denied');
+            throw new NotificationNotFoundError('Notification not found or access denied');
           }
 
           await service.markAsRead(notificationId);
@@ -101,7 +121,13 @@ export function setupNotificationHandlers(): void {
           return successResponse(null);
         } catch (error) {
           console.error('[IPC] notifications:mark-read error:', error);
-          return errorResponse('MARK_READ_FAILED', error instanceof Error ? error.message : 'Failed to mark as read');
+
+          if (error instanceof Error) {
+            const message = error.message.toLowerCase();
+            if (message.includes('database') || message.includes('sqlite')) {throw new DatabaseError('mark notification as read', error.message);}
+            if (message.includes('not found') || message.includes('access denied')) {throw new NotificationNotFoundError(`Notification ${notificationId} not found`);}
+          }
+          throw error;
         }
       });
     }
@@ -127,7 +153,12 @@ export function setupNotificationHandlers(): void {
           return successResponse({ count });
         } catch (error) {
           console.error('[IPC] notifications:mark-all-read error:', error);
-          return errorResponse('MARK_ALL_READ_FAILED', error instanceof Error ? error.message : 'Failed to mark all as read');
+
+          if (error instanceof Error) {
+            const message = error.message.toLowerCase();
+            if (message.includes('database') || message.includes('sqlite')) {throw new DatabaseError('mark all as read', error.message);}
+          }
+          throw error;
         }
       });
     }
@@ -150,7 +181,7 @@ export function setupNotificationHandlers(): void {
           // Verify notification belongs to user
           const notification = await service.getNotificationById(notificationId);
           if (!notification || notification.userId !== userId) {
-            throw new Error('Notification not found or access denied');
+            throw new NotificationNotFoundError('Notification not found or access denied');
           }
 
           await service.dismiss(notificationId);
@@ -159,7 +190,13 @@ export function setupNotificationHandlers(): void {
           return successResponse(null);
         } catch (error) {
           console.error('[IPC] notifications:dismiss error:', error);
-          return errorResponse('DISMISS_FAILED', error instanceof Error ? error.message : 'Failed to dismiss notification');
+
+          if (error instanceof Error) {
+            const message = error.message.toLowerCase();
+            if (message.includes('database') || message.includes('sqlite')) {throw new DatabaseError('dismiss notification', error.message);}
+            if (message.includes('not found') || message.includes('access denied')) {throw new NotificationNotFoundError(`Notification ${notificationId} not found`);}
+          }
+          throw error;
         }
       });
     }
@@ -185,7 +222,12 @@ export function setupNotificationHandlers(): void {
           return successResponse(prefs);
         } catch (error) {
           console.error('[IPC] notifications:preferences error:', error);
-          return errorResponse('GET_PREFERENCES_FAILED', error instanceof Error ? error.message : 'Failed to get preferences');
+
+          if (error instanceof Error) {
+            const message = error.message.toLowerCase();
+            if (message.includes('database') || message.includes('sqlite')) {throw new DatabaseError('get notification preferences', error.message);}
+          }
+          throw error;
         }
       });
     }
@@ -215,7 +257,13 @@ export function setupNotificationHandlers(): void {
           return successResponse(updated);
         } catch (error) {
           console.error('[IPC] notifications:update-preferences error:', error);
-          return errorResponse('UPDATE_PREFERENCES_FAILED', error instanceof Error ? error.message : 'Failed to update preferences');
+
+          if (error instanceof Error) {
+            const message = error.message.toLowerCase();
+            if (message.includes('database') || message.includes('sqlite')) {throw new DatabaseError('update notification preferences', error.message);}
+            if (message.includes('invalid') || message.includes('validation')) {throw new ValidationError(error.message);}
+          }
+          throw error;
         }
       });
     }
@@ -241,7 +289,12 @@ export function setupNotificationHandlers(): void {
           return successResponse(stats);
         } catch (error) {
           console.error('[IPC] notifications:stats error:', error);
-          return errorResponse('GET_STATS_FAILED', error instanceof Error ? error.message : 'Failed to get statistics');
+
+          if (error instanceof Error) {
+            const message = error.message.toLowerCase();
+            if (message.includes('database') || message.includes('sqlite')) {throw new DatabaseError('get notification statistics', error.message);}
+          }
+          throw error;
         }
       });
     }

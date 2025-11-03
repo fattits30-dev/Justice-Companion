@@ -10,6 +10,8 @@ import { initializeDatabase } from './database-init.ts';
 import { KeyManager } from '../src/services/KeyManager.ts';
 import { AutoUpdater } from '../src/services/AutoUpdater.ts';
 import { MainApplication } from './runtime/MainApplication.ts';
+import { BackupScheduler } from '../src/services/backup/BackupScheduler.ts';
+import { databaseManager } from '../src/db/database.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -30,6 +32,7 @@ const logger = {
 
 let keyManager: KeyManager | null = null;
 let _mainWindow: BrowserWindow | null = null;
+let backupScheduler: BackupScheduler | null = null;
 
 export function getKeyManager(): KeyManager {
   if (!keyManager) {
@@ -87,7 +90,7 @@ function createMainWindow(): BrowserWindow {
 
 app.whenReady().then(async () => {
   logger.info('App is ready');
-  
+
   try {
     await initializeDatabase();
     logger.info('Database initialized');
@@ -95,9 +98,19 @@ app.whenReady().then(async () => {
     keyManager = new KeyManager(safeStorage, app.getPath('userData'));
     const _autoUpdater = new AutoUpdater(app, autoUpdater); // Renamed to start with underscore
     const _mainApp = new MainApplication(); // Renamed to start with underscore
-    
+
     setupIpcHandlers();
-    
+
+    // Initialize backup scheduler
+    try {
+      backupScheduler = BackupScheduler.getInstance(databaseManager.getDatabase());
+      await backupScheduler.start();
+      logger.info('Backup scheduler started');
+    } catch (error) {
+      logger.error('Failed to start backup scheduler', { error });
+      // Don't crash the app if scheduler fails to start
+    }
+
     _mainWindow = createMainWindow();
   } catch (error) {
     logger.error('Failed to initialize app', { error });
@@ -114,5 +127,17 @@ app.on('window-all-closed', () => {
 app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     _mainWindow = createMainWindow();
+  }
+});
+
+app.on('before-quit', async () => {
+  // Gracefully stop backup scheduler
+  if (backupScheduler) {
+    try {
+      await backupScheduler.stop();
+      logger.info('Backup scheduler stopped');
+    } catch (error) {
+      logger.error('Error stopping backup scheduler', { error });
+    }
   }
 });

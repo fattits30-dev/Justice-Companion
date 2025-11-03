@@ -28,6 +28,13 @@ interface SidebarProps {
     documents?: number;
     chat?: number;
   };
+  cases?: Array<{
+    id: string;
+    title: string;
+    status: string;
+  }>;
+  selectedCaseId?: string | null;
+  onCaseSelect?: (caseId: string | null) => void;
 }
 
 interface NavItem {
@@ -45,6 +52,9 @@ export function Sidebar({
   isCollapsed = false,
   onToggleCollapse,
   notifications = {},
+  cases = [],
+  selectedCaseId = null,
+  onCaseSelect,
 }: SidebarProps) {
   const navItems: NavItem[] = [
     {
@@ -184,21 +194,21 @@ export function Sidebar({
 
   return (
     <nav
-      className={`flex flex-col h-screen bg-primary-800 border-r border-gray-700 transition-all duration-300 ${
+      className={`flex flex-col h-screen bg-gray-900 border-r border-white/10 transition-all duration-300 ${
         isCollapsed ? "w-16" : "w-64"
       }`}
       role="navigation"
       aria-label="Main navigation"
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-700">
+      <div className="flex items-center justify-between p-4 border-b border-white/10">
         {!isCollapsed && (
           <h1 className="text-lg font-bold text-white">Justice Companion</h1>
         )}
         {onToggleCollapse && (
           <button
             onClick={onToggleCollapse}
-            className="p-2 text-white/90 hover:text-white rounded-md hover:bg-primary-700 transition-colors"
+            className="p-2 text-white/90 hover:text-white rounded-md hover:bg-white/10 transition-colors"
             aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
             <svg
@@ -227,6 +237,28 @@ export function Sidebar({
         )}
       </div>
 
+      {/* Case Selector */}
+      {!isCollapsed && onCaseSelect && (
+        <div className="px-4 py-3 border-b border-white/10">
+          <label htmlFor="case-selector" className="block text-xs font-medium text-white/70 mb-2">
+            Active Case
+          </label>
+          <select
+            id="case-selector"
+            value={selectedCaseId || ''}
+            onChange={(e) => onCaseSelect(e.target.value || null)}
+            className="w-full bg-white/5 border border-white/10 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+          >
+            <option value="">No case selected</option>
+            {cases.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.title} ({c.status})
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
       {/* Navigation Links */}
       <div className="flex-1 overflow-y-auto py-4">
         <ul className="space-y-1 px-2">
@@ -240,8 +272,8 @@ export function Sidebar({
                   onClick={(e) => handleLinkClick(e, item.href)}
                   className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
                     isActive
-                      ? "bg-primary-600 text-white"
-                      : "text-white hover:bg-primary-700 hover:text-white"
+                      ? "bg-primary-500/20 text-white border border-primary-500/30"
+                      : "text-white/80 hover:bg-white/10 hover:text-white"
                   }`}
                   aria-current={isActive ? "page" : undefined}
                 >
@@ -271,7 +303,7 @@ export function Sidebar({
               title={`${user.username}\n${user.email}\nClick for settings`}
             >
               {user.username.substring(0, 2).toUpperCase()}
-              <span className="absolute top-0 right-0 w-3 h-3 bg-green-400 border-2 border-primary-800 rounded-full"></span>
+              <span className="absolute top-0 right-0 w-3 h-3 bg-green-400 border-2 border-gray-900 rounded-full"></span>
             </button>
           ) : (
             /* Expanded: Full Profile Card */
@@ -281,7 +313,7 @@ export function Sidebar({
                   <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-secondary-500 to-secondary-600 rounded-full text-white font-semibold text-sm shadow-lg">
                     {user.username.substring(0, 2).toUpperCase()}
                   </div>
-                  <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-primary-800 rounded-full"></span>
+                  <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-gray-900 rounded-full"></span>
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-white truncate">

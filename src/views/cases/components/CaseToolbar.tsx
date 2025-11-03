@@ -1,4 +1,4 @@
-import { Plus } from "lucide-react";
+import { Plus, Briefcase } from "lucide-react";
 import { Button } from "../../../components/ui/Button.tsx";
 import type { CaseStatus, CaseType } from "../../../domains/cases/entities/Case.ts";
 import { statusFilterOptions, typeFilterOptions } from "../constants.ts";
@@ -19,50 +19,47 @@ export function CaseToolbar({
   onCreateCase,
 }: CaseToolbarProps) {
   return (
-    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-8">
-      <div>
-        <h1 className="text-3xl font-bold mb-1">Cases</h1>
-        <p className="text-white/90">Manage your legal cases</p>
+    <div className="flex items-center justify-between">
+      {/* Title */}
+      <div className="flex items-center gap-3">
+        <Briefcase className="w-6 h-6 text-primary-400" />
+        <h1 className="text-2xl font-bold text-white">Case Management</h1>
       </div>
-      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-        <label className="flex flex-col text-sm text-white/90">
-          <span className="mb-1">Status</span>
-          <select
-            value={filterStatus}
-            onChange={(event) =>
-              onStatusChange(event.target.value as CaseStatus | "all")
-            }
-            className="min-w-[150px] rounded-lg border border-gray-700 bg-primary-900 px-4 py-2 text-white focus:border-primary-500 focus:outline-none"
-          >
-            {statusFilterOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col text-sm text-white/90">
-          <span className="mb-1">Type</span>
-          <select
-            value={filterType}
-            onChange={(event) =>
-              onTypeChange(event.target.value as CaseType | "all")
-            }
-            className="min-w-[160px] rounded-lg border border-gray-700 bg-primary-900 px-4 py-2 text-white focus:border-primary-500 focus:outline-none"
-          >
-            {typeFilterOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
+
+      {/* Actions */}
+      <div className="flex items-center gap-4">
+        <select
+          value={filterStatus}
+          onChange={(event) =>
+            onStatusChange(event.target.value as CaseStatus | "all")
+          }
+          className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all [&>option]:text-gray-900 [&>option]:bg-white"
+        >
+          {statusFilterOptions.map((option) => (
+            <option key={option.value} value={option.value} className="text-gray-900 bg-white">
+              {option.label}
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={filterType}
+          onChange={(event) =>
+            onTypeChange(event.target.value as CaseType | "all")
+          }
+          className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all [&>option]:text-gray-900 [&>option]:bg-white"
+        >
+          {typeFilterOptions.map((option) => (
+            <option key={option.value} value={option.value} className="text-gray-900 bg-white">
+              {option.label}
+            </option>
+          ))}
+        </select>
+
         <Button
-          onClick={onCreateCase}
-          variant="secondary"
-          size="md"
+          variant="primary"
           icon={<Plus />}
-          iconPosition="left"
+          onClick={onCreateCase}
         >
           New Case
         </Button>

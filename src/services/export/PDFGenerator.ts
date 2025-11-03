@@ -45,13 +45,14 @@ export class PDFGenerator {
         this.addHeader(doc, `Case Summary: ${caseData.case.title}`);
 
         // Case Information Section
-        doc.fontSize(this.styles.heading1.fontSize!)
-          .fillColor(this.styles.heading1.color!)
+        doc.fontSize(this.styles.heading1?.fontSize ?? 18)
+          .fillColor(this.styles.heading1?.color ?? '#2c5282')
           .text('Case Information', this.pageMargins.left, doc.y + 20);
 
-        doc.fontSize(this.styles.body.fontSize!)
+        doc.fontSize(this.styles.body?.fontSize ?? 11)
           .fillColor('#000000')
-          .text(`Case Number: ${caseData.case.caseNumber || 'N/A'}`, this.pageMargins.left, doc.y + 10)
+          .text(`Case ID: #${caseData.case.id}`, this.pageMargins.left, doc.y + 10)
+          .text(`Type: ${caseData.case.caseType}`)
           .text(`Status: ${caseData.case.status}`)
           .text(`Created: ${new Date(caseData.case.createdAt).toLocaleDateString()}`)
           .text(`Last Updated: ${new Date(caseData.case.updatedAt).toLocaleDateString()}`);
@@ -120,7 +121,7 @@ export class PDFGenerator {
         this.addHeader(doc, 'Evidence Inventory Report');
 
         // Case info
-        doc.fontSize(this.styles.body.fontSize!)
+        doc.fontSize(this.styles.body?.fontSize ?? 11)
           .fillColor('#000000')
           .text(`Case: ${evidenceData.caseTitle}`, this.pageMargins.left, doc.y + 10)
           .text(`Total Evidence Items: ${evidenceData.totalItems}`)
@@ -129,11 +130,11 @@ export class PDFGenerator {
         // Category Summary
         if (Object.keys(evidenceData.categorySummary).length > 0) {
           doc.moveDown()
-            .fontSize(this.styles.heading2.fontSize!)
-            .fillColor(this.styles.heading2.color!)
+            .fontSize(this.styles.heading2?.fontSize ?? 14)
+            .fillColor(this.styles.heading2?.color ?? '#2d3748')
             .text('Evidence by Category:', this.pageMargins.left, doc.y + 10);
 
-          doc.fontSize(this.styles.body.fontSize!)
+          doc.fontSize(this.styles.body?.fontSize ?? 11)
             .fillColor('#000000');
 
           Object.entries(evidenceData.categorySummary).forEach(([category, count]) => {
@@ -143,8 +144,8 @@ export class PDFGenerator {
 
         // Detailed Evidence List
         doc.moveDown()
-          .fontSize(this.styles.heading1.fontSize!)
-          .fillColor(this.styles.heading1.color!)
+          .fontSize(this.styles.heading1?.fontSize ?? 18)
+          .fillColor(this.styles.heading1?.color ?? '#2c5282')
           .text('Evidence Details', this.pageMargins.left, doc.y + 20);
 
         this.addEvidenceSection(doc, evidenceData.evidence);
@@ -177,7 +178,7 @@ export class PDFGenerator {
         this.addHeader(doc, 'Timeline Report');
 
         // Case info
-        doc.fontSize(this.styles.body.fontSize!)
+        doc.fontSize(this.styles.body?.fontSize ?? 11)
           .fillColor('#000000')
           .text(`Case: ${timelineData.caseTitle}`, this.pageMargins.left, doc.y + 10)
           .text(`Total Events: ${timelineData.events.length}`)
@@ -187,7 +188,7 @@ export class PDFGenerator {
         // Upcoming Deadlines
         if (timelineData.upcomingDeadlines.length > 0) {
           doc.moveDown()
-            .fontSize(this.styles.heading1.fontSize!)
+            .fontSize(this.styles.heading1?.fontSize ?? 18)
             .fillColor('#ef4444') // Red for urgency
             .text('Upcoming Deadlines', this.pageMargins.left, doc.y + 20);
 
@@ -198,8 +199,8 @@ export class PDFGenerator {
         if (timelineData.events.length > 0) {
           if (doc.y > 500) {doc.addPage();}
 
-          doc.fontSize(this.styles.heading1.fontSize!)
-            .fillColor(this.styles.heading1.color!)
+          doc.fontSize(this.styles.heading1?.fontSize ?? 18)
+            .fillColor(this.styles.heading1?.color ?? '#2c5282')
             .text('Timeline Events', this.pageMargins.left, doc.y + 20);
 
           this.addTimelineSection(doc, timelineData.events);
@@ -209,7 +210,7 @@ export class PDFGenerator {
         if (timelineData.completedEvents.length > 0) {
           if (doc.y > 500) {doc.addPage();}
 
-          doc.fontSize(this.styles.heading1.fontSize!)
+          doc.fontSize(this.styles.heading1?.fontSize ?? 18)
             .fillColor('#10b981') // Green for completed
             .text('Completed Events', this.pageMargins.left, doc.y + 20);
 
@@ -244,7 +245,7 @@ export class PDFGenerator {
         this.addHeader(doc, 'Case Notes Report');
 
         // Case info
-        doc.fontSize(this.styles.body.fontSize!)
+        doc.fontSize(this.styles.body?.fontSize ?? 11)
           .fillColor('#000000')
           .text(`Case: ${notesData.caseTitle}`, this.pageMargins.left, doc.y + 10)
           .text(`Total Notes: ${notesData.totalNotes}`)
@@ -252,8 +253,8 @@ export class PDFGenerator {
 
         // Notes Section
         doc.moveDown()
-          .fontSize(this.styles.heading1.fontSize!)
-          .fillColor(this.styles.heading1.color!)
+          .fontSize(this.styles.heading1?.fontSize ?? 18)
+          .fillColor(this.styles.heading1?.color ?? '#2c5282')
           .text('Notes', this.pageMargins.left, doc.y + 20);
 
         this.addNotesSection(doc, notesData.notes);
@@ -269,8 +270,8 @@ export class PDFGenerator {
   }
 
   private addHeader(doc: PDFKit.PDFDocument, title: string): void {
-    doc.fontSize(this.styles.title.fontSize!)
-      .fillColor(this.styles.title.color!)
+    doc.fontSize(this.styles.title?.fontSize ?? 24)
+      .fillColor(this.styles.title?.color ?? '#1a365d')
       .text(title, this.pageMargins.left, this.pageMargins.top, {
         align: 'center',
         width: doc.page.width - this.pageMargins.left - this.pageMargins.right,
@@ -291,8 +292,8 @@ export class PDFGenerator {
       doc.switchToPage(i);
 
       // Add page number
-      doc.fontSize(this.styles.footer.fontSize!)
-        .fillColor(this.styles.footer.color!)
+      doc.fontSize(this.styles.footer?.fontSize ?? 9)
+        .fillColor(this.styles.footer?.color ?? '#718096')
         .text(
           `Page ${i + 1} of ${pages.count}`,
           this.pageMargins.left,
@@ -317,11 +318,11 @@ export class PDFGenerator {
   }
 
   private addEvidenceSection(doc: PDFKit.PDFDocument, evidence: Evidence[]): void {
-    doc.fontSize(this.styles.heading1.fontSize!)
-      .fillColor(this.styles.heading1.color!)
+    doc.fontSize(this.styles.heading1?.fontSize ?? 18)
+      .fillColor(this.styles.heading1?.color ?? '#2c5282')
       .text('Evidence', this.pageMargins.left, doc.y + 10);
 
-    doc.fontSize(this.styles.body.fontSize!)
+    doc.fontSize(this.styles.body?.fontSize ?? 11)
       .fillColor('#000000');
 
     evidence.forEach((item, index) => {
@@ -330,32 +331,30 @@ export class PDFGenerator {
       }
 
       doc.moveDown()
-        .fontSize(this.styles.heading2.fontSize!)
-        .fillColor(this.styles.heading2.color!)
+        .fontSize(this.styles.heading2?.fontSize ?? 14)
+        .fillColor(this.styles.heading2?.color ?? '#2d3748')
         .text(`${index + 1}. ${item.title}`, this.pageMargins.left, doc.y);
 
-      doc.fontSize(this.styles.body.fontSize!)
+      doc.fontSize(this.styles.body?.fontSize ?? 11)
         .fillColor('#000000')
-        .text(`Type: ${item.evidenceType}`)
-        .text(`Status: ${item.status}`)
-        .text(`Date Collected: ${new Date(item.dateCollected).toLocaleDateString()}`);
+        .text(`Type: ${item.evidenceType}`);
 
-      if (item.description) {
-        doc.text(`Description: ${item.description}`);
+      if (item.obtainedDate) {
+        doc.text(`Date Obtained: ${new Date(item.obtainedDate).toLocaleDateString()}`);
       }
 
-      if (item.location) {
-        doc.text(`Location: ${item.location}`);
+      if (item.filePath) {
+        doc.text(`File: ${item.filePath}`);
       }
 
-      if (item.tags?.length > 0) {
-        doc.text(`Tags: ${item.tags.join(', ')}`);
+      if (item.content) {
+        doc.text(`Content: ${item.content}`);
       }
     });
   }
 
   private addTimelineSection(doc: PDFKit.PDFDocument, timeline: any[]): void {
-    doc.fontSize(this.styles.body.fontSize!)
+    doc.fontSize(this.styles.body?.fontSize ?? 11)
       .fillColor('#000000');
 
     timeline.forEach((event) => {
@@ -364,11 +363,11 @@ export class PDFGenerator {
       }
 
       doc.moveDown()
-        .fontSize(this.styles.heading2.fontSize!)
-        .fillColor(this.styles.heading2.color!)
+        .fontSize(this.styles.heading2?.fontSize ?? 14)
+        .fillColor(this.styles.heading2?.color ?? '#2d3748')
         .text(`${new Date(event.eventDate).toLocaleDateString()} - ${event.title}`, this.pageMargins.left, doc.y);
 
-      doc.fontSize(this.styles.body.fontSize!)
+      doc.fontSize(this.styles.body?.fontSize ?? 11)
         .fillColor('#000000');
 
       if (event.description) {
@@ -381,7 +380,7 @@ export class PDFGenerator {
   }
 
   private addDeadlinesSection(doc: PDFKit.PDFDocument, deadlines: Deadline[]): void {
-    doc.fontSize(this.styles.body.fontSize!)
+    doc.fontSize(this.styles.body?.fontSize ?? 11)
       .fillColor('#000000');
 
     deadlines.forEach((deadline) => {
@@ -389,15 +388,15 @@ export class PDFGenerator {
         doc.addPage();
       }
 
-      const isOverdue = new Date(deadline.dueDate) < new Date() && deadline.status !== 'completed';
+      const isOverdue = new Date(deadline.deadlineDate) < new Date() && deadline.status !== 'completed';
       const color = isOverdue ? '#ef4444' : deadline.status === 'completed' ? '#10b981' : '#000000';
 
       doc.moveDown()
-        .fontSize(this.styles.heading2.fontSize!)
+        .fontSize(this.styles.heading2?.fontSize ?? 14)
         .fillColor(color)
-        .text(`${new Date(deadline.dueDate).toLocaleDateString()} - ${deadline.title}`, this.pageMargins.left, doc.y);
+        .text(`${new Date(deadline.deadlineDate).toLocaleDateString()} - ${deadline.title}`, this.pageMargins.left, doc.y);
 
-      doc.fontSize(this.styles.body.fontSize!)
+      doc.fontSize(this.styles.body?.fontSize ?? 11)
         .fillColor('#000000')
         .text(`Priority: ${deadline.priority}`)
         .text(`Status: ${deadline.status}`);
@@ -409,7 +408,7 @@ export class PDFGenerator {
   }
 
   private addNotesSection(doc: PDFKit.PDFDocument, notes: Note[]): void {
-    doc.fontSize(this.styles.body.fontSize!)
+    doc.fontSize(this.styles.body?.fontSize ?? 11)
       .fillColor('#000000');
 
     notes.forEach((note, index) => {
@@ -418,11 +417,11 @@ export class PDFGenerator {
       }
 
       doc.moveDown()
-        .fontSize(this.styles.heading2.fontSize!)
-        .fillColor(this.styles.heading2.color!)
+        .fontSize(this.styles.heading2?.fontSize ?? 14)
+        .fillColor(this.styles.heading2?.color ?? '#2d3748')
         .text(`Note ${index + 1} - ${new Date(note.createdAt).toLocaleDateString()}`, this.pageMargins.left, doc.y);
 
-      doc.fontSize(this.styles.body.fontSize!)
+      doc.fontSize(this.styles.body?.fontSize ?? 11)
         .fillColor('#000000');
 
       if (note.title) {
@@ -430,19 +429,15 @@ export class PDFGenerator {
       }
 
       doc.text(note.content);
-
-      if (note.tags?.length > 0) {
-        doc.text(`Tags: ${note.tags.join(', ')}`);
-      }
     });
   }
 
   private addFactsSection(doc: PDFKit.PDFDocument, facts: any[]): void {
-    doc.fontSize(this.styles.heading1.fontSize!)
-      .fillColor(this.styles.heading1.color!)
+    doc.fontSize(this.styles.heading1?.fontSize ?? 18)
+      .fillColor(this.styles.heading1?.color ?? '#2c5282')
       .text('Case Facts', this.pageMargins.left, doc.y + 10);
 
-    doc.fontSize(this.styles.body.fontSize!)
+    doc.fontSize(this.styles.body?.fontSize ?? 11)
       .fillColor('#000000');
 
     facts.forEach((fact, index) => {

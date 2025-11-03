@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Evidence, EvidenceType } from "../../domains/evidence/entities/Evidence.ts";
 import type { Case } from "../../domains/cases/entities/Case.ts";
+import { useAuth } from "../../contexts/AuthContext.tsx";
 import { DocumentsToolbar } from "./components/DocumentsToolbar.tsx";
 import {
   DocumentsEmptyEvidenceState,
@@ -24,6 +25,7 @@ interface LightweightCase {
 }
 
 export function DocumentsView() {
+  const { sessionId, isLoading: authLoading } = useAuth();
   const [cases, setCases] = useState<LightweightCase[]>([]);
   const [selectedCaseId, setSelectedCaseId] = useState<number | null>(null);
   const [casesState, setCasesState] = useState<LoadState>("loading");
@@ -37,10 +39,15 @@ export function DocumentsView() {
   const [showUploadDialog, setShowUploadDialog] = useState(false);
 
   const loadCases = useCallback(async () => {
+    if (!sessionId) {
+      setCasesError("No active session");
+      setCasesState("error");
+      return;
+    }
+
     try {
       setCasesState("loading");
       setCasesError(null);
-      const sessionId = getSessionId();
       const response = await window.justiceAPI.getAllCases(sessionId);
 
       if (!response.success) {
@@ -70,13 +77,18 @@ export function DocumentsView() {
       setCasesError(err instanceof Error ? err.message : "Unknown error");
       setCasesState("error");
     }
-  }, []);
+  }, [sessionId]);
 
   const loadEvidence = useCallback(async (caseId: number) => {
+    if (!sessionId) {
+      setEvidenceError("No active session");
+      setEvidenceState("error");
+      return;
+    }
+
     try {
       setEvidenceState("loading");
       setEvidenceError(null);
-      const sessionId = getSessionId();
       const response = await window.justiceAPI.getAllEvidence(
         caseId.toString(),
         sessionId,
@@ -96,26 +108,31 @@ export function DocumentsView() {
       setEvidenceError(err instanceof Error ? err.message : "Unknown error");
       setEvidenceState("error");
     }
-  }, []);
+  }, [sessionId]);
 
   useEffect(() => {
-    loadCases();
-  }, [loadCases]);
+    if (!authLoading && sessionId) {
+      loadCases();
+    }
+  }, [loadCases, sessionId, authLoading]);
 
   useEffect(() => {
-    if (selectedCaseId !== null) {
+    if (!authLoading && selectedCaseId !== null && sessionId) {
       loadEvidence(selectedCaseId);
     }
-  }, [selectedCaseId, loadEvidence]);
+  }, [selectedCaseId, loadEvidence, sessionId, authLoading]);
 
   const handleUploadEvidence = useCallback(
     async (input: UploadEvidenceInput) => {
+      if (!sessionId) {
+        showError("No active session", { title: "Failed to upload evidence" });
+        return;
+      }
+
       try {
         if (selectedCaseId === null) {
           throw new Error("No case selected");
         }
-
-        const sessionId = getSessionId();
         const response = await window.justiceAPI.uploadFile(
           selectedCaseId.toString(),
           input.file,
@@ -141,10 +158,15 @@ export function DocumentsView() {
         });
       }
     },
-    [selectedCaseId],
+    [selectedCaseId, sessionId],
   );
 
   const handleDeleteEvidence = useCallback(async (evidenceId: number) => {
+    if (!sessionId) {
+      showError("No active session", { title: "Failed to delete evidence" });
+      return;
+    }
+
     const confirmed = confirm(
       "Are you sure you want to delete this evidence? This cannot be undone.",
     );
@@ -153,7 +175,6 @@ export function DocumentsView() {
     }
 
     try {
-      const sessionId = getSessionId();
       const response = await window.justiceAPI.deleteEvidence(
         evidenceId.toString(),
         sessionId,
@@ -217,22 +238,24 @@ export function DocumentsView() {
   const showEmptyEvidence = evidence.length === 0;
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-primary-900 text-white">
-      {/* Fixed Toolbar */}
-      <div className="flex-shrink-0 p-8 pb-4">
-        <DocumentsToolbar
-          cases={cases}
-          selectedCaseId={selectedCaseId}
-          onCaseSelect={setSelectedCaseId}
-          filterType={filterType}
-          onFilterChange={setFilterType}
-          onUploadClick={() => setShowUploadDialog(true)}
-          isUploadDisabled={selectedCaseId === null}
-        />
+    <div className="h-full flex flex-col bg-gradient-to-br from-gray-900 via-primary-900 to-gray-900">
+      {/* Sticky Header with Toolbar */}
+      <div className="sticky top-0 z-30 bg-gray-900/80 backdrop-blur-md border-b border-white/10">
+        <div className="px-8 py-6">
+          <DocumentsToolbar
+            cases={cases}
+            selectedCaseId={selectedCaseId}
+            onCaseSelect={setSelectedCaseId}
+            filterType={filterType}
+            onFilterChange={setFilterType}
+            onUploadClick={() => setShowUploadDialog(true)}
+            isUploadDisabled={selectedCaseId === null}
+          />
+        </div>
       </div>
 
       {/* Scrollable Content Area */}
-      <div className="flex-1 overflow-y-auto px-8 pb-8">
+      <div className="flex-1 overflow-y-auto px-8 py-8">
         {showEmptyEvidence ? (
           <DocumentsEmptyEvidenceState
             onUpload={() => setShowUploadDialog(true)}
@@ -255,12 +278,4 @@ export function DocumentsView() {
       )}
     </div>
   );
-}
-
-function getSessionId(): string {
-  const sessionId = localStorage.getItem("sessionId");
-  if (!sessionId) {
-    throw new Error("No active session - please log in again");
-  }
-  return sessionId;
 }

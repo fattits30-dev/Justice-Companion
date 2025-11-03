@@ -33,21 +33,21 @@ class Logger {
   private maxBufferSize: number = 1000;
 
   constructor() {
-    // Vite provides import.meta.env.PROD in browser/renderer (bundled code)
-    // Node.js/tsx uses process.env.NODE_ENV (main process)
-    // Use optional chaining and fallback for cross-environment compatibility
-    this.isProduction = import.meta.env?.PROD ?? (process.env.NODE_ENV === 'production');
+    // Environment detection that works in both ESM (Vite) and CommonJS (Node.js)
+    // - Vite/Browser (ESM): import.meta.env available
+    // - Node.js/Electron main (CommonJS): process.env available
+    // Use process.env as primary source (works everywhere), import.meta as fallback
+    const nodeEnv = typeof process !== 'undefined' ? process.env.NODE_ENV : undefined;
+    this.isProduction = nodeEnv === 'production';
 
     // Logger initialized - console allowed for initialization diagnostics
-     
+
     console.warn('[LOGGER INIT]', {
-      'import.meta.env?.PROD': import.meta.env?.PROD,
-      'import.meta.env?.DEV': import.meta.env?.DEV,
-      'import.meta.env?.MODE': import.meta.env?.MODE,
-      'process.env.NODE_ENV': process.env.NODE_ENV,
+      'process.env.NODE_ENV': nodeEnv,
       isProduction: this.isProduction,
+      context: typeof process !== 'undefined' ? 'Node.js/Electron' : 'Browser',
     });
-     
+
   }
 
   /**
@@ -246,6 +246,8 @@ declare global {
   }
 }
 
-if (typeof window !== 'undefined') {
-  window.logger = logger;
+// Expose logger globally in browser context (renderer process only)
+// Use globalThis which is available in both Node.js and browsers
+if (typeof globalThis !== 'undefined' && 'window' in globalThis) {
+  (globalThis as any).window.logger = logger;
 }

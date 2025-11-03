@@ -27,7 +27,7 @@ export class TemplateEngine {
       name: 'Case Summary',
       description: 'Complete case details with evidence, timeline, and notes',
       sections: ['case', 'evidence', 'timeline', 'notes', 'facts'],
-      format: (data: CaseExportData) => this.formatCaseSummary(data),
+      format: (data: TemplateData) => this.formatCaseSummary(data as unknown as CaseExportData),
     });
 
     // Evidence List Template
@@ -35,7 +35,7 @@ export class TemplateEngine {
       name: 'Evidence List',
       description: 'Detailed inventory of all case evidence',
       sections: ['evidence'],
-      format: (data: EvidenceExportData) => this.formatEvidenceList(data),
+      format: (data: TemplateData) => this.formatEvidenceList(data as unknown as EvidenceExportData),
     });
 
     // Timeline Report Template
@@ -43,7 +43,7 @@ export class TemplateEngine {
       name: 'Timeline Report',
       description: 'Chronological timeline with deadlines and events',
       sections: ['timeline', 'deadlines'],
-      format: (data: TimelineExportData) => this.formatTimelineReport(data),
+      format: (data: TemplateData) => this.formatTimelineReport(data as unknown as TimelineExportData),
     });
 
     // Case Notes Template
@@ -51,7 +51,7 @@ export class TemplateEngine {
       name: 'Case Notes',
       description: 'All notes and observations for the case',
       sections: ['notes'],
-      format: (data: NotesExportData) => this.formatCaseNotes(data),
+      format: (data: TemplateData) => this.formatCaseNotes(data as unknown as NotesExportData),
     });
   }
 

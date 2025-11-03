@@ -8,7 +8,7 @@ export class Password {
   private static readonly LOWERCASE_REGEX = /[a-z]/;
   private static readonly UPPERCASE_REGEX = /[A-Z]/;
   private static readonly NUMBER_REGEX = /[0-9]/;
-  private static readonly SPECIAL_CHAR_REGEX = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/;
+  private static readonly SPECIAL_CHAR_REGEX = /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/;
 
   private constructor(private readonly value: string) {}
 

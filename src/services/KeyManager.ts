@@ -196,4 +196,83 @@ export class KeyManager {
       };
     }
   }
+
+  /**
+   * Store an arbitrary key-value pair securely
+   * (For API keys, tokens, etc.)
+   *
+   * @param keyName - Identifier for the key (e.g., 'ai-provider-openai')
+   * @param value - The secret value to store
+   */
+  async storeKey(keyName: string, value: string): Promise<void> {
+    if (!this.safeStorage.isEncryptionAvailable()) {
+      throw new Error('safeStorage encryption is not available. Cannot store key.');
+    }
+
+    // Encrypt the value
+    const encryptedValue = this.safeStorage.encryptString(value);
+
+    // Create keys directory if it doesn't exist
+    const keysDir = path.join(path.dirname(this.keyFilePath), '.keys');
+    if (!fs.existsSync(keysDir)) {
+      fs.mkdirSync(keysDir, { mode: 0o700, recursive: true });
+    }
+
+    // Write encrypted key to file
+    const keyFile = path.join(keysDir, `${keyName}.key`);
+    fs.writeFileSync(keyFile, encryptedValue, { mode: 0o600 });
+  }
+
+  /**
+   * Retrieve a stored key
+   *
+   * @param keyName - Identifier for the key
+   * @returns The decrypted value, or null if not found
+   */
+  async retrieveKey(keyName: string): Promise<string | null> {
+    if (!this.safeStorage.isEncryptionAvailable()) {
+      throw new Error('safeStorage encryption is not available. Cannot retrieve key.');
+    }
+
+    const keysDir = path.join(path.dirname(this.keyFilePath), '.keys');
+    const keyFile = path.join(keysDir, `${keyName}.key`);
+
+    if (!fs.existsSync(keyFile)) {
+      return null;
+    }
+
+    try {
+      const encryptedValue = fs.readFileSync(keyFile);
+      const decryptedValue = this.safeStorage.decryptString(encryptedValue);
+      return decryptedValue;
+    } catch (error) {
+      console.error(`[KeyManager] Failed to decrypt key ${keyName}:`, error);
+      return null;
+    }
+  }
+
+  /**
+   * Delete a stored key
+   *
+   * @param keyName - Identifier for the key to delete
+   */
+  async deleteKey(keyName: string): Promise<void> {
+    const keysDir = path.join(path.dirname(this.keyFilePath), '.keys');
+    const keyFile = path.join(keysDir, `${keyName}.key`);
+
+    if (fs.existsSync(keyFile)) {
+      fs.unlinkSync(keyFile);
+    }
+  }
+
+  /**
+   * Check if a key exists
+   *
+   * @param keyName - Identifier for the key
+   */
+  hasStoredKey(keyName: string): boolean {
+    const keysDir = path.join(path.dirname(this.keyFilePath), '.keys');
+    const keyFile = path.join(keysDir, `${keyName}.key`);
+    return fs.existsSync(keyFile);
+  }
 }

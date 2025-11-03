@@ -1,10 +1,10 @@
 import { ipcMain } from 'electron';
 import {
   successResponse,
-  errorResponse,
-  IPCErrorCode,
+  formatError,
 } from '../utils/ipc-response.ts';
 import { databaseManager } from '../../src/db/database.ts';
+import { DatabaseError } from '../../src/errors/DomainErrors.ts';
 
 /**
  * ===== DASHBOARD HANDLERS =====
@@ -56,7 +56,13 @@ export function setupDashboardHandlers(): void {
       });
     } catch (error) {
       console.error('[IPC] Dashboard stats error:', error);
-      return errorResponse(IPCErrorCode.DATABASE_ERROR, 'Failed to load dashboard stats');
+
+      // Wrap generic errors in DomainErrors
+      if (error instanceof Error) {
+        throw new DatabaseError('load dashboard stats', error.message);
+      }
+
+      throw error;
     }
   });
 }

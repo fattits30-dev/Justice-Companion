@@ -31,6 +31,10 @@ export function MainLayout() {
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [cases, setCases] = useState<Array<{ id: string; title: string; status: string }>>([]);
+  const [selectedCaseId, setSelectedCaseId] = useState<string | null>(() => {
+    return localStorage.getItem('activeCaseId');
+  });
 
   const handleNavigate = (route: string) => {
     navigate(route);
@@ -44,6 +48,43 @@ export function MainLayout() {
   const handleToggleCollapse = () => {
     setIsSidebarCollapsed(!isSidebarCollapsed);
   };
+
+  const handleCaseSelect = (caseId: string | null) => {
+    setSelectedCaseId(caseId);
+    if (caseId) {
+      localStorage.setItem('activeCaseId', caseId);
+    } else {
+      localStorage.removeItem('activeCaseId');
+    }
+    // Trigger storage event for ChatView to reload messages
+    window.dispatchEvent(new Event('storage'));
+  };
+
+  // Fetch cases from backend
+  useEffect(() => {
+    const fetchCases = async () => {
+      try {
+        const sessionId = localStorage.getItem('sessionId');
+        if (!sessionId) return;
+
+        const result = await window.justiceAPI.getAllCases(sessionId);
+        if (result.success && result.data) {
+          setCases(result.data.map((c: any) => ({
+            id: c.id.toString(),
+            title: c.title,
+            status: c.status,
+          })));
+        }
+      } catch (error) {
+        console.error('[MainLayout] Failed to fetch cases:', error);
+      }
+    };
+
+    fetchCases();
+    // Refetch cases every 30 seconds to stay in sync
+    const interval = setInterval(fetchCases, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Command palette keyboard shortcut (Cmd/Ctrl+K)
   useEffect(() => {
@@ -137,6 +178,9 @@ export function MainLayout() {
           documents: 0,
           chat: 0,
         }}
+        cases={cases}
+        selectedCaseId={selectedCaseId}
+        onCaseSelect={handleCaseSelect}
       />
 
       {/* Main content area */}

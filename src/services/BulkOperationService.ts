@@ -9,6 +9,7 @@
  */
 
 import type Database from 'better-sqlite3';
+import { errorLogger } from '../utils/error-logger.ts';
 import { v4 as uuidv4 } from 'uuid';
 import type { IEventBus } from '../shared/infrastructure/di/service-interfaces.ts';
 import type { CaseRepository } from '../repositories/CaseRepository.ts';
@@ -161,7 +162,11 @@ export class BulkOperationService {
         this.eventBus.emit(new BulkOperationRolledBackEvent(operationId));
       } catch (rollbackError) {
         // Log rollback failure but don't throw
-        console.error('Failed to emit rollback event:', rollbackError);
+        errorLogger.logError(rollbackError instanceof Error ? rollbackError : new Error(String(rollbackError)), {
+          service: 'BulkOperationService',
+          operation: 'rollback event',
+          operationId,
+        });
       }
       
       // Emit failed event
@@ -255,7 +260,11 @@ export class BulkOperationService {
         this.eventBus.emit(new BulkOperationRolledBackEvent(operationId));
       } catch (rollbackError) {
         // Log rollback failure but don't throw
-        console.error('Failed to emit rollback event:', rollbackError);
+        errorLogger.logError(rollbackError instanceof Error ? rollbackError : new Error(String(rollbackError)), {
+          service: 'BulkOperationService',
+          operation: 'rollback event',
+          operationId,
+        });
       }
       
       // Emit failed event

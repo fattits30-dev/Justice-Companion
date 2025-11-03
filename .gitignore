@@ -249,3 +249,6 @@ __pycache__/
 # MCP Configuration (contains secrets)
 .mcp.json
 .claude/mcp.json
+
+# Snyk Security Extension - AI Rules (auto-generated)
+.github\instructions\snyk_rules.instructions.md

@@ -412,12 +412,12 @@ export interface IDataDeleter {
 
 /**
  * Interface for AIServiceFactory
- * Creates and configures AI service instances (OpenAI, Groq, local models)
+ * Creates and configures AI service instances (OpenAI, local models, etc.)
  */
 export interface IAIServiceFactory {
   /**
    * Create AI service instance based on configuration
-   * @param provider - AI provider ('openai', 'groq', 'local')
+   * @param provider - AI provider ('openai', 'anthropic', 'local', etc.)
    * @returns Configured AI service
    */
   createService(provider: string): unknown;

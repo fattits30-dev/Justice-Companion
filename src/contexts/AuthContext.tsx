@@ -24,6 +24,7 @@ interface User {
 
 interface AuthContextValue {
   user: User | null;
+  sessionId: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
@@ -43,6 +44,7 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
  */
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true); // Start as true to prevent flash
   const [error, setError] = useState<string | null>(null);
 
@@ -78,11 +80,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
         if (response.data) {
           console.log('[AuthContext] Setting user from session:', response.data);
+          // Session response has nested user object: { id, user: { id, username, email }, expiresAt }
+          const sessionData = response.data;
           setUser({
-            id: String(response.data.id),
-            username: response.data.username,
-            email: response.data.email
+            id: String(sessionData.user.id),
+            username: sessionData.user.username,
+            email: sessionData.user.email
           });
+          setSessionId(sessionId); // Save sessionId to state
         }
       } catch (err) {
         // Silently fail - no session to restore
@@ -117,7 +122,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
         });
 
         // Always save sessionId to localStorage (rememberMe controls session duration on backend)
-        localStorage.setItem('sessionId', response.data.session.id);
+        const newSessionId = response.data.session.id;
+        localStorage.setItem('sessionId', newSessionId);
+        setSessionId(newSessionId); // Save sessionId to state
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred');
@@ -142,6 +149,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
 
       setUser(null);
+      setSessionId(null); // Clear sessionId from state
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred');
     } finally {
@@ -151,6 +159,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const value = {
     user,
+    sessionId,
     isAuthenticated,
     isLoading,
     error,

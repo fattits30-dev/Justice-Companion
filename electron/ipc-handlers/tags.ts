@@ -9,6 +9,13 @@ import { logAuditEvent, AuditEventType } from '../utils/audit-helper.ts';
 import { withAuthorization } from '../utils/authorization-wrapper.ts';
 import { tagService } from '../../src/services/TagService.ts';
 import type { CreateTagInput, UpdateTagInput } from '../../src/models/Tag.ts';
+import {
+  ValidationError,
+  RequiredFieldError,
+  DatabaseError,
+  TagNotFoundError,
+  EvidenceNotFoundError,
+} from '../../src/errors/DomainErrors.ts';
 
 /**
  * ===== TAG HANDLERS =====
@@ -34,10 +41,17 @@ export function setupTagHandlers(): void {
           };
         } catch (error: unknown) {
           console.error('[IPC] tags:list error:', error);
-          return {
-            success: false,
-            error: (error as Error).message || 'Failed to list tags',
-          };
+
+          // Wrap generic errors in DomainErrors
+          if (error instanceof Error) {
+            const message = error.message.toLowerCase();
+
+            if (message.includes('database') || message.includes('sqlite')) {
+              throw new DatabaseError('list tags', error.message);
+            }
+          }
+
+          throw error;
         }
       });
     }
@@ -53,17 +67,11 @@ export function setupTagHandlers(): void {
         try {
           // Validate input
           if (!input.name || input.name.trim().length === 0) {
-            return {
-              success: false,
-              error: 'Tag name is required',
-            };
+            throw new RequiredFieldError('Tag name');
           }
 
           if (!input.color || !/^#[0-9A-Fa-f]{6}$/.test(input.color)) {
-            return {
-              success: false,
-              error: 'Valid hex color is required (e.g., #FF0000)',
-            };
+            throw new ValidationError('Valid hex color is required (e.g., #FF0000)');
           }
 
           const tag = tagService.createTag(_userId, input);
@@ -74,10 +82,21 @@ export function setupTagHandlers(): void {
           };
         } catch (error: unknown) {
           console.error('[IPC] tags:create error:', error);
-          return {
-            success: false,
-            error: (error as Error).message || 'Failed to create tag',
-          };
+
+          // Wrap generic errors in DomainErrors
+          if (error instanceof Error) {
+            const message = error.message.toLowerCase();
+
+            if (message.includes('database') || message.includes('sqlite')) {
+              throw new DatabaseError('create tag', error.message);
+            }
+
+            if (message.includes('duplicate') || message.includes('unique')) {
+              throw new ValidationError('Tag with this name already exists');
+            }
+          }
+
+          throw error;
         }
       });
     }
@@ -93,24 +112,15 @@ export function setupTagHandlers(): void {
         try {
           // Validate input
           if (!input.id) {
-            return {
-              success: false,
-              error: 'Tag ID is required',
-            };
+            throw new RequiredFieldError('Tag ID');
           }
 
           if (!input.name || input.name.trim().length === 0) {
-            return {
-              success: false,
-              error: 'Tag name is required',
-            };
+            throw new RequiredFieldError('Tag name');
           }
 
           if (!input.color || !/^#[0-9A-Fa-f]{6}$/.test(input.color)) {
-            return {
-              success: false,
-              error: 'Valid hex color is required (e.g., #FF0000)',
-            };
+            throw new ValidationError('Valid hex color is required (e.g., #FF0000)');
           }
 
           const tag = tagService.updateTag(_userId, input);
@@ -121,10 +131,25 @@ export function setupTagHandlers(): void {
           };
         } catch (error: unknown) {
           console.error('[IPC] tags:update error:', error);
-          return {
-            success: false,
-            error: (error as Error).message || 'Failed to update tag',
-          };
+
+          // Wrap generic errors in DomainErrors
+          if (error instanceof Error) {
+            const message = error.message.toLowerCase();
+
+            if (message.includes('database') || message.includes('sqlite')) {
+              throw new DatabaseError('update tag', error.message);
+            }
+
+            if (message.includes('not found')) {
+              throw new TagNotFoundError(`Tag ${input.id} not found`);
+            }
+
+            if (message.includes('duplicate') || message.includes('unique')) {
+              throw new ValidationError('Tag with this name already exists');
+            }
+          }
+
+          throw error;
         }
       });
     }
@@ -145,10 +170,21 @@ export function setupTagHandlers(): void {
           };
         } catch (error: unknown) {
           console.error('[IPC] tags:delete error:', error);
-          return {
-            success: false,
-            error: (error as Error).message || 'Failed to delete tag',
-          };
+
+          // Wrap generic errors in DomainErrors
+          if (error instanceof Error) {
+            const message = error.message.toLowerCase();
+
+            if (message.includes('database') || message.includes('sqlite')) {
+              throw new DatabaseError('delete tag', error.message);
+            }
+
+            if (message.includes('not found')) {
+              throw new TagNotFoundError(`Tag ${tagId} not found`);
+            }
+          }
+
+          throw error;
         }
       });
     }
@@ -174,10 +210,25 @@ export function setupTagHandlers(): void {
           };
         } catch (error: unknown) {
           console.error('[IPC] tags:tagEvidence error:', error);
-          return {
-            success: false,
-            error: (error as Error).message || 'Failed to tag evidence',
-          };
+
+          // Wrap generic errors in DomainErrors
+          if (error instanceof Error) {
+            const message = error.message.toLowerCase();
+
+            if (message.includes('database') || message.includes('sqlite')) {
+              throw new DatabaseError('tag evidence', error.message);
+            }
+
+            if (message.includes('evidence') && message.includes('not found')) {
+              throw new EvidenceNotFoundError(`Evidence ${evidenceId} not found`);
+            }
+
+            if (message.includes('tag') && message.includes('not found')) {
+              throw new TagNotFoundError('One or more tags not found');
+            }
+          }
+
+          throw error;
         }
       });
     }
@@ -203,10 +254,25 @@ export function setupTagHandlers(): void {
           };
         } catch (error: unknown) {
           console.error('[IPC] tags:untagEvidence error:', error);
-          return {
-            success: false,
-            error: (error as Error).message || 'Failed to untag evidence',
-          };
+
+          // Wrap generic errors in DomainErrors
+          if (error instanceof Error) {
+            const message = error.message.toLowerCase();
+
+            if (message.includes('database') || message.includes('sqlite')) {
+              throw new DatabaseError('untag evidence', error.message);
+            }
+
+            if (message.includes('evidence') && message.includes('not found')) {
+              throw new EvidenceNotFoundError(`Evidence ${evidenceId} not found`);
+            }
+
+            if (message.includes('tag') && message.includes('not found')) {
+              throw new TagNotFoundError('One or more tags not found');
+            }
+          }
+
+          throw error;
         }
       });
     }
@@ -228,10 +294,21 @@ export function setupTagHandlers(): void {
           };
         } catch (error: unknown) {
           console.error('[IPC] tags:getForEvidence error:', error);
-          return {
-            success: false,
-            error: (error as Error).message || 'Failed to get tags for evidence',
-          };
+
+          // Wrap generic errors in DomainErrors
+          if (error instanceof Error) {
+            const message = error.message.toLowerCase();
+
+            if (message.includes('database') || message.includes('sqlite')) {
+              throw new DatabaseError('get tags for evidence', error.message);
+            }
+
+            if (message.includes('evidence') && message.includes('not found')) {
+              throw new EvidenceNotFoundError(`Evidence ${evidenceId} not found`);
+            }
+          }
+
+          throw error;
         }
       });
     }
@@ -253,10 +330,21 @@ export function setupTagHandlers(): void {
           };
         } catch (error: unknown) {
           console.error('[IPC] tags:searchByTags error:', error);
-          return {
-            success: false,
-            error: (error as Error).message || 'Failed to search evidence by tags',
-          };
+
+          // Wrap generic errors in DomainErrors
+          if (error instanceof Error) {
+            const message = error.message.toLowerCase();
+
+            if (message.includes('database') || message.includes('sqlite')) {
+              throw new DatabaseError('search evidence by tags', error.message);
+            }
+
+            if (message.includes('tag') && message.includes('not found')) {
+              throw new TagNotFoundError('One or more tags not found');
+            }
+          }
+
+          throw error;
         }
       });
     }
@@ -278,10 +366,17 @@ export function setupTagHandlers(): void {
           };
         } catch (error: unknown) {
           console.error('[IPC] tags:statistics error:', error);
-          return {
-            success: false,
-            error: (error as Error).message || 'Failed to get tag statistics',
-          };
+
+          // Wrap generic errors in DomainErrors
+          if (error instanceof Error) {
+            const message = error.message.toLowerCase();
+
+            if (message.includes('database') || message.includes('sqlite')) {
+              throw new DatabaseError('get tag statistics', error.message);
+            }
+          }
+
+          throw error;
         }
       });
     }

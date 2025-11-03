@@ -6,6 +6,7 @@ import type { NotesRepository } from '../repositories/NotesRepository.ts';
 import type { CaseStatus } from '../domains/cases/entities/Case.ts';
 import type { EncryptionService } from './EncryptionService.ts';
 import type { AuditLogger } from './AuditLogger.ts';
+import { errorLogger } from '../utils/error-logger.ts';
 
 export interface SearchQuery {
   query: string;
@@ -207,7 +208,12 @@ export class SearchService {
 
       return { results, total };
     } catch (error) {
-      console.error('FTS5 search error:', error);
+      errorLogger.logError(error instanceof Error ? error : new Error(String(error)), {
+        service: 'SearchService',
+        operation: 'searchWithFTS5',
+        userId,
+        ftsQuery,
+      });
       // Fallback to basic search if FTS5 fails
       return this.fallbackSearch(userId, ftsQuery, filters, entityTypes, limit, offset);
     }
@@ -377,7 +383,12 @@ export class SearchService {
         metadata,
       };
     } catch (error) {
-      console.error('Error transforming search result:', error);
+      errorLogger.logError(error instanceof Error ? error : new Error(String(error)), {
+        service: 'SearchService',
+        operation: 'transformSearchResult',
+        entityType: row?.entity_type,
+        entityId: row?.entity_id,
+      });
       return null;
     }
   }

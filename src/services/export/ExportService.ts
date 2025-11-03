@@ -3,6 +3,7 @@ import { injectable, inject } from 'inversify';
 import { app } from 'electron';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { errorLogger } from '../../utils/error-logger.ts';
 import { TYPES } from '../../shared/infrastructure/di/types.ts';
 import type { IDatabase } from '../../interfaces/IDatabase.ts';
 import type { ICaseRepository } from '../../interfaces/ICaseRepository.ts';
@@ -15,7 +16,6 @@ import type { IAuditLogger } from '../../interfaces/IAuditLogger.ts';
 import type { IUserRepository } from '../../interfaces/IUserRepository.ts';
 import { PDFGenerator } from './PDFGenerator.ts';
 import { DOCXGenerator } from './DOCXGenerator.ts';
-import { TemplateEngine } from './TemplateEngine.ts';
 import type {
   ExportOptions,
   ExportResult,
@@ -48,19 +48,19 @@ export class ExportService implements IExportService {
   private exportDir: string;
 
   constructor(
-    @inject(TYPES.Database) private db: IDatabase,
+    // @ts-expect-error - Parameter required for DI but not currently used
+    @inject(TYPES.Database) private _db: IDatabase,
     @inject(TYPES.CaseRepository) private caseRepo: ICaseRepository,
     @inject(TYPES.EvidenceRepository) private evidenceRepo: IEvidenceRepository,
     @inject(TYPES.DeadlineRepository) private deadlineRepo: IDeadlineRepository,
     @inject(TYPES.DocumentRepository) private documentRepo: IDocumentRepository,
-    @inject(TYPES.NoteRepository) private noteRepo: INoteRepository,
+    @inject(TYPES.NotesRepository) private noteRepo: INoteRepository,
     @inject(TYPES.UserRepository) private userRepo: IUserRepository,
     @inject(TYPES.EncryptionService) private encryption: IEncryptionService,
     @inject(TYPES.AuditLogger) private auditLogger: IAuditLogger
   ) {
     this.pdfGenerator = new PDFGenerator();
     this.docxGenerator = new DOCXGenerator();
-    this.templateEngine = new TemplateEngine();
 
     // Set up export directory
     this.exportDir = path.join(app.getPath('documents'), 'Justice-Companion', 'exports');
@@ -71,7 +71,11 @@ export class ExportService implements IExportService {
     try {
       await fs.mkdir(this.exportDir, { recursive: true });
     } catch (error) {
-      console.error('Failed to create export directory:', error);
+      errorLogger.logError(error instanceof Error ? error : new Error(String(error)), {
+        service: 'ExportService',
+        operation: 'ensureExportDirectory',
+        exportDir: this.exportDir,
+      });
     }
   }
 
@@ -145,7 +149,13 @@ export class ExportService implements IExportService {
         template: fullOptions.template,
       };
     } catch (error) {
-      console.error('Failed to export case to PDF:', error);
+      errorLogger.logError(error instanceof Error ? error : new Error(String(error)), {
+        service: 'ExportService',
+        operation: 'exportCaseToPDF',
+        caseId,
+        userId,
+        template: fullOptions.template,
+      });
       throw error;
     }
   }
@@ -220,7 +230,13 @@ export class ExportService implements IExportService {
         template: fullOptions.template,
       };
     } catch (error) {
-      console.error('Failed to export case to Word:', error);
+      errorLogger.logError(error instanceof Error ? error : new Error(String(error)), {
+        service: 'ExportService',
+        operation: 'exportCaseToWord',
+        caseId,
+        userId,
+        template: fullOptions.template,
+      });
       throw error;
     }
   }
@@ -293,7 +309,7 @@ export class ExportService implements IExportService {
     const decryptedCase: Case = {
       ...caseData,
       title: await this.encryption.decrypt(caseData.title),
-      description: caseData.description ? await this.encryption.decrypt(caseData.description) : undefined,
+      description: caseData.description ? await this.encryption.decrypt(caseData.description) : null,
     };
 
     // Gather evidence if requested
@@ -303,8 +319,7 @@ export class ExportService implements IExportService {
       evidence = await Promise.all(rawEvidence.map(async (e) => ({
         ...e,
         title: await this.encryption.decrypt(e.title),
-        description: e.description ? await this.encryption.decrypt(e.description) : undefined,
-        filePath: e.filePath ? await this.encryption.decrypt(e.filePath) : undefined,
+        filePath: e.filePath ? await this.encryption.decrypt(e.filePath) : null,
       })));
     }
 
@@ -312,13 +327,13 @@ export class ExportService implements IExportService {
     let timeline: TimelineEvent[] = [];
     if (options.includeTimeline) {
       // Since we don't have a timeline repository yet, we'll use deadlines as events
-      const deadlines = await this.deadlineRepo.findByCaseId(caseId, userId);
+      const deadlines = await this.deadlineRepo.findByCaseId(caseId);
       timeline = await Promise.all(deadlines.map(async (d) => ({
         id: d.id,
         caseId: d.caseId,
         title: await this.encryption.decrypt(d.title),
         description: d.description ? await this.encryption.decrypt(d.description) : undefined,
-        eventDate: d.dueDate,
+        eventDate: d.deadlineDate,
         eventType: 'deadline' as const,
         completed: d.status === 'completed',
         createdAt: d.createdAt,
@@ -329,11 +344,11 @@ export class ExportService implements IExportService {
     // Gather deadlines
     let deadlines: Deadline[] = [];
     if (options.includeTimeline) {
-      const rawDeadlines = await this.deadlineRepo.findByCaseId(caseId, userId);
+      const rawDeadlines = await this.deadlineRepo.findByCaseId(caseId);
       deadlines = await Promise.all(rawDeadlines.map(async (d) => ({
         ...d,
         title: await this.encryption.decrypt(d.title),
-        description: d.description ? await this.encryption.decrypt(d.description) : undefined,
+        description: d.description ? await this.encryption.decrypt(d.description) : d.description,
       })));
     }
 
@@ -343,7 +358,7 @@ export class ExportService implements IExportService {
       const rawNotes = await this.noteRepo.findByCaseId(caseId);
       notes = await Promise.all(rawNotes.map(async (n) => ({
         ...n,
-        title: n.title ? await this.encryption.decrypt(n.title) : undefined,
+        title: n.title ? await this.encryption.decrypt(n.title) : null,
         content: await this.encryption.decrypt(n.content),
       })));
     }
@@ -397,7 +412,7 @@ export class ExportService implements IExportService {
   private prepareTimelineData(caseData: CaseExportData): TimelineExportData {
     const now = new Date();
     const upcomingDeadlines = caseData.deadlines.filter(
-      (d) => new Date(d.dueDate) > now && d.status !== 'completed'
+      (d) => new Date(d.deadlineDate) > now && d.status !== 'completed'
     );
     const completedEvents = caseData.timeline.filter((e) => e.completed);
 
@@ -432,7 +447,7 @@ export class ExportService implements IExportService {
     } else {
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
       const fileName = options.fileName ||
-        `${caseData.caseNumber || `case-${caseData.id}`}-${options.template}-${timestamp}.pdf`;
+        `case-${caseData.id}-${options.template}-${timestamp}.pdf`;
 
       filePath = path.join(this.exportDir, fileName);
     }
@@ -455,7 +470,7 @@ export class ExportService implements IExportService {
     } else {
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
       const fileName = options.fileName ||
-        `${caseData.caseNumber || `case-${caseData.id}`}-${options.template}-${timestamp}.docx`;
+        `case-${caseData.id}-${options.template}-${timestamp}.docx`;
 
       filePath = path.join(this.exportDir, fileName);
     }

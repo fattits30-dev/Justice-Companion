@@ -7,6 +7,8 @@
     "outDir": "./dist/electron",
     "skipLibCheck": true,
     "allowJs": true,
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
 
     /* Module Resolution */
     "moduleResolution": "node16",
@@ -31,12 +33,27 @@
     "types": ["node", "better-sqlite3"]
   },
   "include": [
-    "electron/**/*"
+    "electron/**/*",
+    "src/**/*"
   ],
   "exclude": [
     "node_modules",
     "dist",
     "**/*.test.ts",
-    "**/*.spec.ts"
+    "**/*.spec.ts",
+    "src/views/**/*",
+    "src/components/**/*",
+    "src/App.tsx",
+    "src/main.tsx",
+    "src/contexts/**/*",
+    "src/hooks/**/*",
+    "src/features/**/*",
+    "src/workflow/**/*",
+    "src/test-utils/**/*",
+    "src/test/**/*",
+    "src/utils/exportToPDF.ts",
+    "src/utils/migrate-to-secure-storage.ts",
+    "tests/**/*",
+    "e2e/**/*"
   ]
 }

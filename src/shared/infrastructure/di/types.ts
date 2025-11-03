@@ -62,7 +62,6 @@ export const TYPES = {
   LegalAPIService: Symbol.for('LegalAPIService'),
   RAGService: Symbol.for('RAGService'),
   CitationService: Symbol.for('CitationService'),
-  GroqService: Symbol.for('GroqService'),
 
   // GDPR Services
   GdprService: Symbol.for('GdprService'),

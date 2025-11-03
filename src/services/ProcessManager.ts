@@ -2,6 +2,7 @@ import type { App } from 'electron';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import net from 'net';
+import { errorLogger } from '../utils/error-logger.ts';
 
 const execAsync = promisify(exec);
 
@@ -41,7 +42,10 @@ export class ProcessManager {
     const gotLock = this.app.requestSingleInstanceLock();
 
     if (!gotLock) {
-      console.error('[ProcessManager] Another instance is already running. Quitting...');
+      errorLogger.logError(new Error('Another instance is already running'), {
+        service: 'ProcessManager',
+        operation: 'enforceSingleInstance',
+      });
       this.app.quit();
       return false;
     }
@@ -149,7 +153,10 @@ export class ProcessManager {
       try {
         await handler();
       } catch (error) {
-        console.error('[ProcessManager] Error in shutdown handler:', error);
+        errorLogger.logError(error instanceof Error ? error : new Error(String(error)), {
+          service: 'ProcessManager',
+          operation: 'executeShutdownHandlers',
+        });
       }
     }
   }

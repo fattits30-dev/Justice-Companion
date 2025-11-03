@@ -10,6 +10,7 @@ import { EncryptionService } from '../../src/services/EncryptionService.ts';
 import { AuditLogger } from '../../src/services/AuditLogger.ts';
 // import { SessionManager } from '../session-manager.ts'; // TODO: SessionManager not implemented
 import { getKeyManager } from '../main.ts';
+import { DatabaseError, ValidationError } from '../../src/errors/DomainErrors.ts';
 
 // const sessionManager = new SessionManager(); // TODO: SessionManager not implemented
 
@@ -73,6 +74,20 @@ export function registerSearchHandlers(): void {
       return results;
     } catch (error) {
       console.error('Search error:', error);
+
+      // Wrap generic errors in DomainErrors
+      if (error instanceof Error) {
+        const message = error.message.toLowerCase();
+
+        if (message.includes('database') || message.includes('sqlite')) {
+          throw new DatabaseError('search', error.message);
+        }
+
+        if (message.includes('invalid') || message.includes('query')) {
+          throw new ValidationError(`Invalid search query: ${error.message}`);
+        }
+      }
+
       throw error;
     }
   });
@@ -84,6 +99,16 @@ export function registerSearchHandlers(): void {
       return { success: true };
     } catch (error) {
       console.error('Search index rebuild error:', error);
+
+      // Wrap generic errors in DomainErrors
+      if (error instanceof Error) {
+        const message = error.message.toLowerCase();
+
+        if (message.includes('database') || message.includes('sqlite')) {
+          throw new DatabaseError('rebuild search index', error.message);
+        }
+      }
+
       throw error;
     }
   });
