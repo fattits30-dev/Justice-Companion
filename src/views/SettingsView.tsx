@@ -1,35 +1,40 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Settings as SettingsIcon,
-  Palette,
-  Shield,
-  Database,
-  Bell,
-  Info,
-  ChevronRight,
-  Moon,
-  Sun,
-  Monitor,
-  Save,
-  Download,
-  Trash2,
-  Key,
-  Eye,
-  EyeOff,
-  AlertTriangle,
-  CheckCircle2,
-  Sparkles,
-  Brain,
-  Zap,
-  HardDrive,
-} from 'lucide-react';
-import { Card } from '../components/ui/Card.tsx';
-import { Button } from '../components/ui/Button.tsx';
-import { Badge } from '../components/ui/Badge.tsx';
-import { BackupSettingsTab } from './settings/BackupSettings.tsx';
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Settings as SettingsIcon } from "lucide-react";
+import { Palette } from "lucide-react";
+import { Shield } from "lucide-react";
+import { Database } from "lucide-react";
+import { Bell } from "lucide-react";
+import { Info } from "lucide-react";
+import { ChevronRight } from "lucide-react";
+import { Moon } from "lucide-react";
+import { Sun } from "lucide-react";
+import { Monitor } from "lucide-react";
+import { Save } from "lucide-react";
+import { Download } from "lucide-react";
+import { Trash2 } from "lucide-react";
+import { Key } from "lucide-react";
+import { Eye } from "lucide-react";
+import { EyeOff } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
+import { Sparkles } from "lucide-react";
+import { Brain } from "lucide-react";
+import { Zap } from "lucide-react";
+import { HardDrive } from "lucide-react";
+import { Card } from "../components/ui/Card.tsx";
+import { Button } from "../components/ui/Button.tsx";
+import { Badge } from "../components/ui/Badge.tsx";
+import { BackupSettingsTab } from "./settings/BackupSettings.tsx";
 
-type TabId = 'ai-provider' | 'appearance' | 'privacy' | 'backup' | 'data' | 'notifications' | 'about';
+type TabId =
+  | "ai-provider"
+  | "appearance"
+  | "privacy"
+  | "backup"
+  | "data"
+  | "notifications"
+  | "about";
 
 interface Tab {
   id: TabId;
@@ -38,38 +43,41 @@ interface Tab {
 }
 
 const tabs: Tab[] = [
-  { id: 'ai-provider', label: 'AI Provider', icon: Brain },
-  { id: 'appearance', label: 'Appearance', icon: Palette },
-  { id: 'privacy', label: 'Privacy & Security', icon: Shield },
-  { id: 'backup', label: 'Backup & Restore', icon: HardDrive },
-  { id: 'data', label: 'Data Management', icon: Database },
-  { id: 'notifications', label: 'Notifications', icon: Bell },
-  { id: 'about', label: 'About', icon: Info },
+  { id: "ai-provider", label: "AI Provider", icon: Brain },
+  { id: "appearance", label: "Appearance", icon: Palette },
+  { id: "privacy", label: "Privacy & Security", icon: Shield },
+  { id: "backup", label: "Backup & Restore", icon: HardDrive },
+  { id: "data", label: "Data Management", icon: Database },
+  { id: "notifications", label: "Notifications", icon: Bell },
+  { id: "about", label: "About", icon: Info },
 ];
 
 export function SettingsView() {
-  const [activeTab, setActiveTab] = useState<TabId>('ai-provider');
-  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('dark');
+  const [activeTab, setActiveTab] = useState<TabId>("ai-provider");
+  const [theme, setTheme] = useState<"light" | "dark" | "system">("dark");
   const [showApiKey, setShowApiKey] = useState(false);
-  const [apiKey, setApiKey] = useState('');
+  const [apiKey, setApiKey] = useState("");
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
   // Keyboard navigation: Ctrl/Cmd + Arrow keys
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        (e.key === "ArrowLeft" || e.key === "ArrowRight")
+      ) {
         e.preventDefault();
         const currentIndex = tabs.findIndex((tab) => tab.id === activeTab);
         const nextIndex =
-          e.key === 'ArrowRight'
+          e.key === "ArrowRight"
             ? (currentIndex + 1) % tabs.length
             : (currentIndex - 1 + tabs.length) % tabs.length;
         setActiveTab(tabs[nextIndex].id);
       }
     };
 
-    globalThis.addEventListener('keydown', handleKeyDown);
-    return () => globalThis.removeEventListener('keydown', handleKeyDown);
+    globalThis.addEventListener("keydown", handleKeyDown);
+    return () => globalThis.removeEventListener("keydown", handleKeyDown);
   }, [activeTab]);
 
   return (
@@ -85,7 +93,11 @@ export function SettingsView() {
           </div>
 
           {/* Tab Navigation */}
-          <div className="flex gap-2 overflow-x-auto pb-2" role="tablist" aria-label="Settings tabs">
+          <div
+            className="flex gap-2 overflow-x-auto pb-2"
+            role="tablist"
+            aria-label="Settings tabs"
+          >
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -95,7 +107,7 @@ export function SettingsView() {
                   key={tab.id}
                   type="button"
                   role="tab"
-                  aria-selected={isActive ? 'true' : 'false'}
+                  aria-selected={isActive ? "true" : "false"}
                   aria-controls={`${tab.id}-panel`}
                   onClick={() => setActiveTab(tab.id)}
                   className={`
@@ -103,18 +115,24 @@ export function SettingsView() {
                     transition-all duration-200 flex-shrink-0
                     ${
                       isActive
-                        ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/50'
-                        : 'bg-white/5 text-white/70 hover:bg-white/10 hover:text-white'
+                        ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/50"
+                        : "bg-white/5 text-white/70 hover:bg-white/10 hover:text-white"
                     }
                   `}
                 >
                   <Icon className="w-4 h-4" />
-                  <span className="font-medium whitespace-nowrap">{tab.label}</span>
+                  <span className="font-medium whitespace-nowrap">
+                    {tab.label}
+                  </span>
                   {isActive && (
                     <motion.div
                       layoutId="activeTab"
                       className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg -z-10"
-                      transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                      transition={{
+                        type: "spring",
+                        bounce: 0.2,
+                        duration: 0.6,
+                      }}
                     />
                   )}
                 </button>
@@ -143,13 +161,27 @@ export function SettingsView() {
               id={`${activeTab}-panel`}
               aria-labelledby={`${activeTab}-tab`}
             >
-              {activeTab === 'ai-provider' && <AIProviderTab apiKey={apiKey} setApiKey={setApiKey} showApiKey={showApiKey} setShowApiKey={setShowApiKey} />}
-              {activeTab === 'appearance' && <AppearanceTab theme={theme} setTheme={setTheme} />}
-              {activeTab === 'privacy' && <PrivacyTab />}
-              {activeTab === 'backup' && <BackupSettingsTab />}
-              {activeTab === 'data' && <DataManagementTab />}
-              {activeTab === 'notifications' && <NotificationsTab enabled={notificationsEnabled} setEnabled={setNotificationsEnabled} />}
-              {activeTab === 'about' && <AboutTab />}
+              {activeTab === "ai-provider" && (
+                <AIProviderTab
+                  apiKey={apiKey}
+                  setApiKey={setApiKey}
+                  showApiKey={showApiKey}
+                  setShowApiKey={setShowApiKey}
+                />
+              )}
+              {activeTab === "appearance" && (
+                <AppearanceTab theme={theme} setTheme={setTheme} />
+              )}
+              {activeTab === "privacy" && <PrivacyTab />}
+              {activeTab === "backup" && <BackupSettingsTab />}
+              {activeTab === "data" && <DataManagementTab />}
+              {activeTab === "notifications" && (
+                <NotificationsTab
+                  enabled={notificationsEnabled}
+                  setEnabled={setNotificationsEnabled}
+                />
+              )}
+              {activeTab === "about" && <AboutTab />}
             </motion.div>
           </AnimatePresence>
         </div>
@@ -161,142 +193,259 @@ export function SettingsView() {
 // AI Provider Configurations
 const AI_PROVIDERS = {
   openai: {
-    name: 'OpenAI',
+    name: "OpenAI",
     icon: Sparkles,
-    description: 'GPT-4, GPT-3.5 - Industry-leading models',
-    apiKeyLabel: 'OpenAI API Key',
-    apiKeyPlaceholder: 'sk-...',
-    endpoint: 'https://api.openai.com/v1',
+    description: "GPT-4, GPT-3.5 - Industry-leading models",
+    apiKeyLabel: "OpenAI API Key",
+    apiKeyPlaceholder: "sk-...",
+    endpoint: "https://api.openai.com/v1",
     models: [
-      { value: 'gpt-4-turbo', label: 'GPT-4 Turbo (Recommended)', description: 'Most capable, 128K context' },
-      { value: 'gpt-4', label: 'GPT-4', description: 'High quality, 8K context' },
-      { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo', description: 'Fast and affordable' },
+      {
+        value: "gpt-4-turbo",
+        label: "GPT-4 Turbo (Recommended)",
+        description: "Most capable, 128K context",
+      },
+      {
+        value: "gpt-4",
+        label: "GPT-4",
+        description: "High quality, 8K context",
+      },
+      {
+        value: "gpt-3.5-turbo",
+        label: "GPT-3.5 Turbo",
+        description: "Fast and affordable",
+      },
     ],
   },
   anthropic: {
-    name: 'Anthropic',
+    name: "Anthropic",
     icon: Brain,
-    description: 'Claude 3.5 Sonnet, Opus - Long context specialists',
-    apiKeyLabel: 'Anthropic API Key',
-    apiKeyPlaceholder: 'sk-ant-...',
-    endpoint: 'https://api.anthropic.com/v1',
+    description: "Claude 3.5 Sonnet, Opus - Long context specialists",
+    apiKeyLabel: "Anthropic API Key",
+    apiKeyPlaceholder: "sk-ant-...",
+    endpoint: "https://api.anthropic.com/v1",
     models: [
-      { value: 'claude-3-5-sonnet-20241022', label: 'Claude 3.5 Sonnet (Recommended)', description: 'Best performance, 200K context' },
-      { value: 'claude-3-opus-20240229', label: 'Claude 3 Opus', description: 'Most intelligent, 200K context' },
-      { value: 'claude-3-sonnet-20240229', label: 'Claude 3 Sonnet', description: 'Balanced, 200K context' },
+      {
+        value: "claude-3-5-sonnet-20241022",
+        label: "Claude 3.5 Sonnet (Recommended)",
+        description: "Best performance, 200K context",
+      },
+      {
+        value: "claude-3-opus-20240229",
+        label: "Claude 3 Opus",
+        description: "Most intelligent, 200K context",
+      },
+      {
+        value: "claude-3-sonnet-20240229",
+        label: "Claude 3 Sonnet",
+        description: "Balanced, 200K context",
+      },
     ],
   },
   groq: {
-    name: 'Groq',
+    name: "Groq",
     icon: Zap,
-    description: 'Ultra-fast inference with Llama, Mixtral',
-    apiKeyLabel: 'Groq API Key',
-    apiKeyPlaceholder: 'gsk_...',
-    endpoint: 'https://api.groq.com/openai/v1',
+    description: "Ultra-fast inference with Llama, Mixtral",
+    apiKeyLabel: "Groq API Key",
+    apiKeyPlaceholder: "gsk_...",
+    endpoint: "https://api.groq.com/openai/v1",
     models: [
-      { value: 'llama-3.3-70b-versatile', label: 'Llama 3.3 70B (Recommended)', description: 'Latest, fastest inference' },
-      { value: 'llama-3.1-70b-versatile', label: 'Llama 3.1 70B', description: 'High quality, very fast' },
-      { value: 'mixtral-8x7b-32768', label: 'Mixtral 8x7B', description: '32K context, fast' },
+      {
+        value: "llama-3.3-70b-versatile",
+        label: "Llama 3.3 70B (Recommended)",
+        description: "Latest, fastest inference",
+      },
+      {
+        value: "llama-3.1-70b-versatile",
+        label: "Llama 3.1 70B",
+        description: "High quality, very fast",
+      },
+      {
+        value: "mixtral-8x7b-32768",
+        label: "Mixtral 8x7B",
+        description: "32K context, fast",
+      },
     ],
   },
   qwen: {
-    name: 'Qwen 2.5-72B',
+    name: "Qwen 2.5-72B",
     icon: Brain,
-    description: 'Alibaba\'s flagship model - UK legal expertise',
-    apiKeyLabel: 'HuggingFace Token',
-    apiKeyPlaceholder: 'hf_...',
-    endpoint: 'https://api-inference.huggingface.co/models/Qwen/Qwen2.5-72B-Instruct/v1',
+    description: "Alibaba's flagship model - UK legal expertise",
+    apiKeyLabel: "HuggingFace Token",
+    apiKeyPlaceholder: "hf_...",
+    endpoint:
+      "https://api-inference.huggingface.co/models/Qwen/Qwen2.5-72B-Instruct/v1",
     models: [
-      { value: 'Qwen/Qwen2.5-72B-Instruct', label: 'Qwen 2.5 72B Instruct (Recommended)', description: '32K context, excellent reasoning' },
+      {
+        value: "Qwen/Qwen2.5-72B-Instruct",
+        label: "Qwen 2.5 72B Instruct (Recommended)",
+        description: "32K context, excellent reasoning",
+      },
     ],
   },
   huggingface: {
-    name: 'Hugging Face',
+    name: "Hugging Face",
     icon: Sparkles,
-    description: 'Access 350K+ models via Inference API',
-    apiKeyLabel: 'Hugging Face Token',
-    apiKeyPlaceholder: 'hf_...',
-    endpoint: 'https://api-inference.huggingface.co',
+    description: "Access 350K+ models via Inference API",
+    apiKeyLabel: "Hugging Face Token",
+    apiKeyPlaceholder: "hf_...",
+    endpoint: "https://api-inference.huggingface.co",
     models: [
-      { value: 'meta-llama/Meta-Llama-3.1-70B-Instruct', label: 'Llama 3.1 70B (Recommended)', description: '128K context, affordable' },
-      { value: 'Qwen/Qwen2.5-72B-Instruct', label: 'Qwen 2.5 72B', description: 'Best performance' },
-      { value: 'mistralai/Mixtral-8x22B-Instruct-v0.1', label: 'Mixtral 8x22B', description: 'Multilingual' },
+      {
+        value: "meta-llama/Meta-Llama-3.1-70B-Instruct",
+        label: "Llama 3.1 70B (Recommended)",
+        description: "128K context, affordable",
+      },
+      {
+        value: "Qwen/Qwen2.5-72B-Instruct",
+        label: "Qwen 2.5 72B",
+        description: "Best performance",
+      },
+      {
+        value: "mistralai/Mixtral-8x22B-Instruct-v0.1",
+        label: "Mixtral 8x22B",
+        description: "Multilingual",
+      },
     ],
   },
   google: {
-    name: 'Google AI',
+    name: "Google AI",
     icon: Sparkles,
-    description: 'Gemini Pro, Flash - Multimodal capabilities',
-    apiKeyLabel: 'Google AI API Key',
-    apiKeyPlaceholder: 'AIza...',
-    endpoint: 'https://generativelanguage.googleapis.com/v1',
+    description: "Gemini Pro, Flash - Multimodal capabilities",
+    apiKeyLabel: "Google AI API Key",
+    apiKeyPlaceholder: "AIza...",
+    endpoint: "https://generativelanguage.googleapis.com/v1",
     models: [
-      { value: 'gemini-2.0-flash-exp', label: 'Gemini 2.0 Flash (Recommended)', description: 'Latest, fastest' },
-      { value: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro', description: '2M context window' },
-      { value: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash', description: 'Fast and efficient' },
+      {
+        value: "gemini-2.0-flash-exp",
+        label: "Gemini 2.0 Flash (Recommended)",
+        description: "Latest, fastest",
+      },
+      {
+        value: "gemini-1.5-pro",
+        label: "Gemini 1.5 Pro",
+        description: "2M context window",
+      },
+      {
+        value: "gemini-1.5-flash",
+        label: "Gemini 1.5 Flash",
+        description: "Fast and efficient",
+      },
     ],
   },
   cohere: {
-    name: 'Cohere',
+    name: "Cohere",
     icon: Brain,
-    description: 'Command R+ - Enterprise-grade models',
-    apiKeyLabel: 'Cohere API Key',
-    apiKeyPlaceholder: 'co_...',
-    endpoint: 'https://api.cohere.com/v1',
+    description: "Command R+ - Enterprise-grade models",
+    apiKeyLabel: "Cohere API Key",
+    apiKeyPlaceholder: "co_...",
+    endpoint: "https://api.cohere.com/v1",
     models: [
-      { value: 'command-r-plus', label: 'Command R+ (Recommended)', description: 'Most capable' },
-      { value: 'command-r', label: 'Command R', description: 'Fast and efficient' },
-      { value: 'command-light', label: 'Command Light', description: 'Lightweight' },
+      {
+        value: "command-r-plus",
+        label: "Command R+ (Recommended)",
+        description: "Most capable",
+      },
+      {
+        value: "command-r",
+        label: "Command R",
+        description: "Fast and efficient",
+      },
+      {
+        value: "command-light",
+        label: "Command Light",
+        description: "Lightweight",
+      },
     ],
   },
   together: {
-    name: 'Together AI',
+    name: "Together AI",
     icon: Zap,
-    description: 'Llama, Mixtral, Qwen - Fast and affordable',
-    apiKeyLabel: 'Together AI API Key',
-    apiKeyPlaceholder: 'together-...',
-    endpoint: 'https://api.together.xyz/v1',
+    description: "Llama, Mixtral, Qwen - Fast and affordable",
+    apiKeyLabel: "Together AI API Key",
+    apiKeyPlaceholder: "together-...",
+    endpoint: "https://api.together.xyz/v1",
     models: [
-      { value: 'meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo', label: 'Llama 3.1 70B Turbo', description: 'Ultra-fast' },
-      { value: 'Qwen/Qwen2.5-72B-Instruct-Turbo', label: 'Qwen 2.5 72B', description: 'Best quality' },
-      { value: 'mistralai/Mixtral-8x22B-Instruct-v0.1', label: 'Mixtral 8x22B', description: 'Large context' },
+      {
+        value: "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
+        label: "Llama 3.1 70B Turbo",
+        description: "Ultra-fast",
+      },
+      {
+        value: "Qwen/Qwen2.5-72B-Instruct-Turbo",
+        label: "Qwen 2.5 72B",
+        description: "Best quality",
+      },
+      {
+        value: "mistralai/Mixtral-8x22B-Instruct-v0.1",
+        label: "Mixtral 8x22B",
+        description: "Large context",
+      },
     ],
   },
   anyscale: {
-    name: 'Anyscale',
+    name: "Anyscale",
     icon: Zap,
-    description: 'Managed Llama models at scale',
-    apiKeyLabel: 'Anyscale API Key',
-    apiKeyPlaceholder: 'esecret_...',
-    endpoint: 'https://api.endpoints.anyscale.com/v1',
+    description: "Managed Llama models at scale",
+    apiKeyLabel: "Anyscale API Key",
+    apiKeyPlaceholder: "esecret_...",
+    endpoint: "https://api.endpoints.anyscale.com/v1",
     models: [
-      { value: 'meta-llama/Meta-Llama-3.1-70B-Instruct', label: 'Llama 3.1 70B', description: 'Recommended' },
-      { value: 'meta-llama/Meta-Llama-3.1-8B-Instruct', label: 'Llama 3.1 8B', description: 'Fast and cheap' },
+      {
+        value: "meta-llama/Meta-Llama-3.1-70B-Instruct",
+        label: "Llama 3.1 70B",
+        description: "Recommended",
+      },
+      {
+        value: "meta-llama/Meta-Llama-3.1-8B-Instruct",
+        label: "Llama 3.1 8B",
+        description: "Fast and cheap",
+      },
     ],
   },
   mistral: {
-    name: 'Mistral AI',
+    name: "Mistral AI",
     icon: Sparkles,
-    description: 'Mistral Large, Medium - European models',
-    apiKeyLabel: 'Mistral AI API Key',
-    apiKeyPlaceholder: 'msk_...',
-    endpoint: 'https://api.mistral.ai/v1',
+    description: "Mistral Large, Medium - European models",
+    apiKeyLabel: "Mistral AI API Key",
+    apiKeyPlaceholder: "msk_...",
+    endpoint: "https://api.mistral.ai/v1",
     models: [
-      { value: 'mistral-large-latest', label: 'Mistral Large (Recommended)', description: 'Most capable' },
-      { value: 'mistral-medium-latest', label: 'Mistral Medium', description: 'Balanced' },
-      { value: 'mistral-small-latest', label: 'Mistral Small', description: 'Fast and efficient' },
+      {
+        value: "mistral-large-latest",
+        label: "Mistral Large (Recommended)",
+        description: "Most capable",
+      },
+      {
+        value: "mistral-medium-latest",
+        label: "Mistral Medium",
+        description: "Balanced",
+      },
+      {
+        value: "mistral-small-latest",
+        label: "Mistral Small",
+        description: "Fast and efficient",
+      },
     ],
   },
   perplexity: {
-    name: 'Perplexity',
+    name: "Perplexity",
     icon: Brain,
-    description: 'Sonar models - Real-time web search',
-    apiKeyLabel: 'Perplexity API Key',
-    apiKeyPlaceholder: 'pplx-...',
-    endpoint: 'https://api.perplexity.ai',
+    description: "Sonar models - Real-time web search",
+    apiKeyLabel: "Perplexity API Key",
+    apiKeyPlaceholder: "pplx-...",
+    endpoint: "https://api.perplexity.ai",
     models: [
-      { value: 'llama-3.1-sonar-large-128k-online', label: 'Sonar Large Online', description: 'Real-time web data' },
-      { value: 'llama-3.1-sonar-small-128k-online', label: 'Sonar Small Online', description: 'Fast with web access' },
+      {
+        value: "llama-3.1-sonar-large-128k-online",
+        label: "Sonar Large Online",
+        description: "Real-time web data",
+      },
+      {
+        value: "llama-3.1-sonar-small-128k-online",
+        label: "Sonar Small Online",
+        description: "Fast with web access",
+      },
     ],
   },
 } as const;
@@ -315,9 +464,10 @@ function AIProviderTab({
   readonly showApiKey: boolean;
   readonly setShowApiKey: (show: boolean) => void;
 }) {
-  const [selectedProvider, setSelectedProvider] = useState<AIProviderKey>('openai');
-  const [selectedModel, setSelectedModel] = useState('');
-  const [customEndpoint, setCustomEndpoint] = useState('');
+  const [selectedProvider, setSelectedProvider] =
+    useState<AIProviderKey>("openai");
+  const [selectedModel, setSelectedModel] = useState("");
+  const [customEndpoint, setCustomEndpoint] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
@@ -350,14 +500,17 @@ function AIProviderTab({
       if (result.success) {
         setSaveSuccess(true);
         setTimeout(() => setSaveSuccess(false), 3000);
-        console.log('[SettingsView] AI provider configured:', selectedProvider);
+        console.log("[SettingsView] AI provider configured:", selectedProvider);
       } else {
-        console.error('[SettingsView] Failed to save AI config:', result.error);
-        alert('Failed to save configuration: ' + result.error);
+        console.error("[SettingsView] Failed to save AI config:", result.error);
+        alert("Failed to save configuration: " + result.error);
       }
     } catch (error) {
-      console.error('[SettingsView] Error saving AI config:', error);
-      alert('Error saving configuration: ' + (error instanceof Error ? error.message : 'Unknown error'));
+      console.error("[SettingsView] Error saving AI config:", error);
+      alert(
+        "Error saving configuration: " +
+          (error instanceof Error ? error.message : "Unknown error")
+      );
     } finally {
       setIsSaving(false);
     }
@@ -366,27 +519,40 @@ function AIProviderTab({
   return (
     <div className="space-y-6 max-w-4xl">
       <div>
-        <h2 className="text-2xl font-bold text-white mb-2">AI Provider Configuration</h2>
-        <p className="text-white/60">Configure your AI assistant for legal research and analysis</p>
+        <h2 className="text-2xl font-bold text-white mb-2">
+          AI Provider Configuration
+        </h2>
+        <p className="text-white/60">
+          Configure your AI assistant for legal research and analysis
+        </p>
       </div>
 
       <Card className="bg-white/5 border-white/10 backdrop-blur-md">
         <div className="p-6 space-y-6">
           {/* Provider Selection Dropdown */}
           <div>
-            <label htmlFor="ai-provider" className="block text-sm font-medium text-white mb-2">
+            <label
+              htmlFor="ai-provider"
+              className="block text-sm font-medium text-white mb-2"
+            >
               AI Provider
             </label>
             <div className="relative">
               <select
                 id="ai-provider"
                 value={selectedProvider}
-                onChange={(e) => setSelectedProvider(e.target.value as AIProviderKey)}
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white appearance-none focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent cursor-pointer [&>option]:text-gray-900 [&>option]:bg-white"
+                onChange={(e) =>
+                  setSelectedProvider(e.target.value as AIProviderKey)
+                }
+                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white appearance-none focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent [&>option]:text-gray-900 [&>option]:bg-white"
                 aria-label="Select AI Provider"
               >
                 {Object.entries(AI_PROVIDERS).map(([key, provider]) => (
-                  <option key={key} value={key} className="text-gray-900 bg-white">
+                  <option
+                    key={key}
+                    value={key}
+                    className="text-gray-900 bg-white"
+                  >
                     {provider.name} - {provider.description}
                   </option>
                 ))}
@@ -398,22 +564,31 @@ function AIProviderTab({
             <div className="mt-3 p-3 rounded-lg bg-white/5 border border-white/10">
               <div className="flex items-center gap-2">
                 <ProviderIcon className="w-5 h-5 text-purple-400" />
-                <span className="text-sm font-medium text-white">{currentProvider.name}</span>
-                <Badge variant="success" className="ml-auto">Selected</Badge>
+                <span className="text-sm font-medium text-white">
+                  {currentProvider.name}
+                </span>
+                <Badge variant="success" className="ml-auto">
+                  Selected
+                </Badge>
               </div>
-              <p className="text-xs text-white/60 mt-1">{currentProvider.description}</p>
+              <p className="text-xs text-white/60 mt-1">
+                {currentProvider.description}
+              </p>
             </div>
           </div>
 
           {/* API Key Input */}
           <div>
-            <label htmlFor="api-key" className="block text-sm font-medium text-white mb-2">
+            <label
+              htmlFor="api-key"
+              className="block text-sm font-medium text-white mb-2"
+            >
               {currentProvider.apiKeyLabel}
             </label>
             <div className="relative">
               <input
                 id="api-key"
-                type={showApiKey ? 'text' : 'password'}
+                type={showApiKey ? "text" : "password"}
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
                 placeholder={currentProvider.apiKeyPlaceholder}
@@ -424,19 +599,27 @@ function AIProviderTab({
                 type="button"
                 onClick={() => setShowApiKey(!showApiKey)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-white/50 hover:text-white transition-colors"
-                aria-label={showApiKey ? 'Hide API key' : 'Show API key'}
+                aria-label={showApiKey ? "Hide API key" : "Show API key"}
               >
-                {showApiKey ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                {showApiKey ? (
+                  <EyeOff className="w-5 h-5" />
+                ) : (
+                  <Eye className="w-5 h-5" />
+                )}
               </button>
             </div>
             <p className="text-xs text-white/40 mt-2">
-              Your API key is encrypted and stored locally. Never shared with third parties.
+              Your API key is encrypted and stored locally. Never shared with
+              third parties.
             </p>
           </div>
 
           {/* Model Selection */}
           <div>
-            <label htmlFor="model" className="block text-sm font-medium text-white mb-2">
+            <label
+              htmlFor="model"
+              className="block text-sm font-medium text-white mb-2"
+            >
               Model
             </label>
             <select
@@ -447,7 +630,11 @@ function AIProviderTab({
               aria-label="AI Model"
             >
               {currentProvider.models.map((model) => (
-                <option key={model.value} value={model.value} className="text-gray-900 bg-white">
+                <option
+                  key={model.value}
+                  value={model.value}
+                  className="text-gray-900 bg-white"
+                >
                   {model.label} - {model.description}
                 </option>
               ))}
@@ -456,9 +643,17 @@ function AIProviderTab({
 
           {/* Custom API Endpoint (Advanced) */}
           <div>
-            <label htmlFor="endpoint" className="block text-sm font-medium text-white mb-2">
+            <label
+              htmlFor="endpoint"
+              className="block text-sm font-medium text-white mb-2"
+            >
               API Endpoint
-              <Badge variant="neutral" className="ml-2 bg-white/10 text-white/60 text-xs">Advanced</Badge>
+              <Badge
+                variant="neutral"
+                className="ml-2 bg-white/10 text-white/60 text-xs"
+              >
+                Advanced
+              </Badge>
             </label>
             <input
               id="endpoint"
@@ -512,7 +707,9 @@ function AIProviderTab({
       {/* Usage Stats */}
       <Card className="bg-white/5 border-white/10 backdrop-blur-md">
         <div className="p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">API Usage (This Month)</h3>
+          <h3 className="text-lg font-semibold text-white mb-4">
+            API Usage (This Month)
+          </h3>
           <div className="grid grid-cols-3 gap-4">
             <div className="text-center">
               <div className="text-3xl font-bold text-purple-400">1,247</div>
@@ -538,27 +735,31 @@ function AppearanceTab({
   theme,
   setTheme,
 }: {
-  readonly theme: 'light' | 'dark' | 'system';
-  readonly setTheme: (theme: 'light' | 'dark' | 'system') => void;
+  readonly theme: "light" | "dark" | "system";
+  readonly setTheme: (theme: "light" | "dark" | "system") => void;
 }) {
   const themeOptions = [
-    { value: 'light' as const, label: 'Light', icon: Sun },
-    { value: 'dark' as const, label: 'Dark', icon: Moon },
-    { value: 'system' as const, label: 'System', icon: Monitor },
+    { value: "light" as const, label: "Light", icon: Sun },
+    { value: "dark" as const, label: "Dark", icon: Moon },
+    { value: "system" as const, label: "System", icon: Monitor },
   ];
 
   return (
     <div className="space-y-6 max-w-4xl">
       <div>
         <h2 className="text-2xl font-bold text-white mb-2">Appearance</h2>
-        <p className="text-white/60">Customize the look and feel of Justice Companion</p>
+        <p className="text-white/60">
+          Customize the look and feel of Justice Companion
+        </p>
       </div>
 
       <Card className="bg-white/5 border-white/10 backdrop-blur-md">
         <div className="p-6 space-y-6">
           {/* Theme Selection */}
           <div>
-            <label className="block text-sm font-medium text-white mb-3">Theme</label>
+            <label className="block text-sm font-medium text-white mb-3">
+              Theme
+            </label>
             <div className="grid grid-cols-3 gap-3">
               {themeOptions.map((option) => {
                 const Icon = option.icon;
@@ -573,15 +774,17 @@ function AppearanceTab({
                       p-4 rounded-lg border-2 transition-all
                       ${
                         isActive
-                          ? 'bg-gradient-to-br from-purple-500 to-pink-500 border-purple-400 shadow-lg shadow-purple-500/50'
-                          : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20'
+                          ? "bg-gradient-to-br from-purple-500 to-pink-500 border-purple-400 shadow-lg shadow-purple-500/50"
+                          : "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20"
                       }
                     `}
                     aria-label={`${option.label} theme`}
                     aria-pressed={isActive ? 'true' : 'false'}
                   >
                     <Icon className="w-6 h-6 text-white mx-auto mb-2" />
-                    <div className="text-sm font-medium text-white">{option.label}</div>
+                    <div className="text-sm font-medium text-white">
+                      {option.label}
+                    </div>
                   </button>
                 );
               })}
@@ -590,7 +793,10 @@ function AppearanceTab({
 
           {/* Font Size */}
           <div>
-            <label htmlFor="font-size" className="block text-sm font-medium text-white mb-2">
+            <label
+              htmlFor="font-size"
+              className="block text-sm font-medium text-white mb-2"
+            >
               Font Size
             </label>
             <select
@@ -598,9 +804,15 @@ function AppearanceTab({
               className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent [&>option]:text-gray-900 [&>option]:bg-white"
               aria-label="Font size"
             >
-              <option value="small" className="text-gray-900 bg-white">Small</option>
-              <option value="medium" className="text-gray-900 bg-white">Medium (Default)</option>
-              <option value="large" className="text-gray-900 bg-white">Large</option>
+              <option value="small" className="text-gray-900 bg-white">
+                Small
+              </option>
+              <option value="medium" className="text-gray-900 bg-white">
+                Medium (Default)
+              </option>
+              <option value="large" className="text-gray-900 bg-white">
+                Large
+              </option>
             </select>
           </div>
 
@@ -617,7 +829,9 @@ function AppearanceTab({
                 <div className="text-white font-medium group-hover:text-purple-400 transition-colors">
                   Enable Animations
                 </div>
-                <div className="text-sm text-white/60">Smooth transitions and effects</div>
+                <div className="text-sm text-white/60">
+                  Smooth transitions and effects
+                </div>
               </div>
             </label>
           </div>
@@ -634,7 +848,9 @@ function AppearanceTab({
                 <div className="text-white font-medium group-hover:text-purple-400 transition-colors">
                   Compact Mode
                 </div>
-                <div className="text-sm text-white/60">Reduce spacing for more content on screen</div>
+                <div className="text-sm text-white/60">
+                  Reduce spacing for more content on screen
+                </div>
               </div>
             </label>
           </div>
@@ -654,8 +870,12 @@ function PrivacyTab() {
   return (
     <div className="space-y-6 max-w-4xl">
       <div>
-        <h2 className="text-2xl font-bold text-white mb-2">Privacy & Security</h2>
-        <p className="text-white/60">Manage your data privacy and security settings</p>
+        <h2 className="text-2xl font-bold text-white mb-2">
+          Privacy & Security
+        </h2>
+        <p className="text-white/60">
+          Manage your data privacy and security settings
+        </p>
       </div>
 
       {/* Encryption Status */}
@@ -666,10 +886,16 @@ function PrivacyTab() {
               <Shield className="w-6 h-6 text-green-400" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-white">End-to-End Encryption Active</h3>
-              <p className="text-sm text-white/60">AES-256-GCM encryption protects all your data</p>
+              <h3 className="text-lg font-semibold text-white">
+                End-to-End Encryption Active
+              </h3>
+              <p className="text-sm text-white/60">
+                AES-256-GCM encryption protects all your data
+              </p>
             </div>
-            <Badge variant="success" className="ml-auto">Secure</Badge>
+            <Badge variant="success" className="ml-auto">
+              Secure
+            </Badge>
           </div>
 
           <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/10">
@@ -702,7 +928,9 @@ function PrivacyTab() {
                 <div className="text-white font-medium group-hover:text-purple-400 transition-colors">
                   Encrypt AI Chat Messages
                 </div>
-                <div className="text-sm text-white/60">Store chat history with encryption</div>
+                <div className="text-sm text-white/60">
+                  Store chat history with encryption
+                </div>
               </div>
             </label>
 
@@ -717,7 +945,9 @@ function PrivacyTab() {
                 <div className="text-white font-medium group-hover:text-purple-400 transition-colors">
                   Enable Audit Logging
                 </div>
-                <div className="text-sm text-white/60">Track all data access and changes</div>
+                <div className="text-sm text-white/60">
+                  Track all data access and changes
+                </div>
               </div>
             </label>
 
@@ -731,7 +961,9 @@ function PrivacyTab() {
                 <div className="text-white font-medium group-hover:text-purple-400 transition-colors">
                   Allow Anonymous Analytics
                 </div>
-                <div className="text-sm text-white/60">Help improve Justice Companion with usage data</div>
+                <div className="text-sm text-white/60">
+                  Help improve Justice Companion with usage data
+                </div>
               </div>
             </label>
           </div>
@@ -746,10 +978,15 @@ function PrivacyTab() {
       {/* Session Management */}
       <Card className="bg-white/5 border-white/10 backdrop-blur-md">
         <div className="p-6 space-y-4">
-          <h3 className="text-lg font-semibold text-white">Session Management</h3>
+          <h3 className="text-lg font-semibold text-white">
+            Session Management
+          </h3>
 
           <div>
-            <label htmlFor="session-timeout" className="block text-sm font-medium text-white mb-2">
+            <label
+              htmlFor="session-timeout"
+              className="block text-sm font-medium text-white mb-2"
+            >
               Auto-logout After
             </label>
             <select
@@ -757,15 +994,28 @@ function PrivacyTab() {
               className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent [&>option]:text-gray-900 [&>option]:bg-white"
               aria-label="Session timeout"
             >
-              <option value="15" className="text-gray-900 bg-white">15 minutes</option>
-              <option value="30" className="text-gray-900 bg-white">30 minutes</option>
-              <option value="60" className="text-gray-900 bg-white">1 hour</option>
-              <option value="1440" className="text-gray-900 bg-white">24 hours (Default)</option>
-              <option value="0" className="text-gray-900 bg-white">Never</option>
+              <option value="15" className="text-gray-900 bg-white">
+                15 minutes
+              </option>
+              <option value="30" className="text-gray-900 bg-white">
+                30 minutes
+              </option>
+              <option value="60" className="text-gray-900 bg-white">
+                1 hour
+              </option>
+              <option value="1440" className="text-gray-900 bg-white">
+                24 hours (Default)
+              </option>
+              <option value="0" className="text-gray-900 bg-white">
+                Never
+              </option>
             </select>
           </div>
 
-          <Button variant="secondary" className="w-full border-red-500 text-red-400 hover:bg-red-500/10">
+          <Button
+            variant="secondary"
+            className="w-full border-red-500 text-red-400 hover:bg-red-500/10"
+          >
             <Key className="w-4 h-4" />
             Rotate Encryption Key
           </Button>
@@ -797,11 +1047,14 @@ function DataManagementTab() {
         <div className="p-6 space-y-4">
           <div className="flex items-center gap-3 mb-2">
             <Shield className="w-6 h-6 text-purple-400" />
-            <h3 className="text-lg font-semibold text-white">GDPR Compliance</h3>
+            <h3 className="text-lg font-semibold text-white">
+              GDPR Compliance
+            </h3>
           </div>
 
           <p className="text-white/60 text-sm">
-            Justice Companion is fully GDPR-compliant. You have the right to export and delete all your data at any time.
+            Justice Companion is fully GDPR-compliant. You have the right to
+            export and delete all your data at any time.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-4">
@@ -823,7 +1076,10 @@ function DataManagementTab() {
               )}
             </Button>
 
-            <Button variant="secondary" className="border-white/20 text-white hover:bg-white/5">
+            <Button
+              variant="secondary"
+              className="border-white/20 text-white hover:bg-white/5"
+            >
               <Database className="w-4 h-4" />
               View Consent History
             </Button>
@@ -834,7 +1090,9 @@ function DataManagementTab() {
       {/* Storage Usage */}
       <Card className="bg-white/5 border-white/10 backdrop-blur-md">
         <div className="p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">Storage Usage</h3>
+          <h3 className="text-lg font-semibold text-white mb-4">
+            Storage Usage
+          </h3>
 
           {/* Note: Inline styles used for progress bar widths - will be dynamic based on actual storage usage */}
           <div className="space-y-3">
@@ -843,7 +1101,10 @@ function DataManagementTab() {
               <span className="text-white font-medium">24.5 MB</span>
             </div>
             <div className="w-full bg-white/5 rounded-full h-2">
-              <div className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all" style={{ width: '45%' }} />
+              <div
+                className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all"
+                style={{ width: "45%" }}
+              />
             </div>
 
             <div className="flex items-center justify-between">
@@ -851,7 +1112,10 @@ function DataManagementTab() {
               <span className="text-white font-medium">156.2 MB</span>
             </div>
             <div className="w-full bg-white/5 rounded-full h-2">
-              <div className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all" style={{ width: '78%' }} />
+              <div
+                className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all"
+                style={{ width: "78%" }}
+              />
             </div>
 
             <div className="flex items-center justify-between">
@@ -859,7 +1123,10 @@ function DataManagementTab() {
               <span className="text-white font-medium">8.1 MB</span>
             </div>
             <div className="w-full bg-white/5 rounded-full h-2">
-              <div className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all" style={{ width: '15%' }} />
+              <div
+                className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all"
+                style={{ width: "15%" }}
+              />
             </div>
           </div>
 
@@ -879,10 +1146,14 @@ function DataManagementTab() {
           </div>
 
           <p className="text-white/80 text-sm">
-            Permanently delete all your data from Justice Companion. This action cannot be undone.
+            Permanently delete all your data from Justice Companion. This action
+            cannot be undone.
           </p>
 
-          <Button variant="secondary" className="border-red-500 text-red-400 hover:bg-red-500/10">
+          <Button
+            variant="secondary"
+            className="border-red-500 text-red-400 hover:bg-red-500/10"
+          >
             <Trash2 className="w-4 h-4" />
             Delete All Data
           </Button>
@@ -912,8 +1183,12 @@ function NotificationsTab({
           {/* Master Toggle */}
           <div className="flex items-center justify-between pb-4 border-b border-white/10">
             <div>
-              <h3 className="text-lg font-semibold text-white">Enable Notifications</h3>
-              <p className="text-sm text-white/60">Receive alerts for important events</p>
+              <h3 className="text-lg font-semibold text-white">
+                Enable Notifications
+              </h3>
+              <p className="text-sm text-white/60">
+                Receive alerts for important events
+              </p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
@@ -931,7 +1206,7 @@ function NotificationsTab({
           {enabled && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
+              animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
               className="space-y-4"
             >
@@ -948,7 +1223,9 @@ function NotificationsTab({
                   <div className="text-white font-medium group-hover:text-purple-400 transition-colors">
                     Case Updates
                   </div>
-                  <div className="text-sm text-white/60">Notify when case status changes</div>
+                  <div className="text-sm text-white/60">
+                    Notify when case status changes
+                  </div>
                 </div>
               </label>
 
@@ -963,7 +1240,9 @@ function NotificationsTab({
                   <div className="text-white font-medium group-hover:text-purple-400 transition-colors">
                     AI Responses
                   </div>
-                  <div className="text-sm text-white/60">Notify when AI completes analysis</div>
+                  <div className="text-sm text-white/60">
+                    Notify when AI completes analysis
+                  </div>
                 </div>
               </label>
 
@@ -977,7 +1256,9 @@ function NotificationsTab({
                   <div className="text-white font-medium group-hover:text-purple-400 transition-colors">
                     Evidence Uploads
                   </div>
-                  <div className="text-sm text-white/60">Notify when evidence processing completes</div>
+                  <div className="text-sm text-white/60">
+                    Notify when evidence processing completes
+                  </div>
                 </div>
               </label>
 
@@ -991,7 +1272,9 @@ function NotificationsTab({
                   <div className="text-white font-medium group-hover:text-purple-400 transition-colors">
                     System Alerts
                   </div>
-                  <div className="text-sm text-white/60">Important system messages and errors</div>
+                  <div className="text-sm text-white/60">
+                    Important system messages and errors
+                  </div>
                 </div>
               </label>
             </motion.div>
@@ -1011,7 +1294,10 @@ function NotificationsTab({
             <h3 className="text-lg font-semibold text-white">Sound</h3>
 
             <div>
-              <label htmlFor="notification-sound" className="block text-sm font-medium text-white mb-2">
+              <label
+                htmlFor="notification-sound"
+                className="block text-sm font-medium text-white mb-2"
+              >
                 Notification Sound
               </label>
               <select
@@ -1019,11 +1305,21 @@ function NotificationsTab({
                 className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent [&>option]:text-gray-900 [&>option]:bg-white"
                 aria-label="Notification sound"
               >
-                <option value="default" className="text-gray-900 bg-white">Default</option>
-                <option value="chime" className="text-gray-900 bg-white">Chime</option>
-                <option value="bell" className="text-gray-900 bg-white">Bell</option>
-                <option value="pop" className="text-gray-900 bg-white">Pop</option>
-                <option value="none" className="text-gray-900 bg-white">None (Silent)</option>
+                <option value="default" className="text-gray-900 bg-white">
+                  Default
+                </option>
+                <option value="chime" className="text-gray-900 bg-white">
+                  Chime
+                </option>
+                <option value="bell" className="text-gray-900 bg-white">
+                  Bell
+                </option>
+                <option value="pop" className="text-gray-900 bg-white">
+                  Pop
+                </option>
+                <option value="none" className="text-gray-900 bg-white">
+                  None (Silent)
+                </option>
               </select>
             </div>
           </div>
@@ -1038,7 +1334,9 @@ function AboutTab() {
   return (
     <div className="space-y-6 max-w-4xl">
       <div>
-        <h2 className="text-2xl font-bold text-white mb-2">About Justice Companion</h2>
+        <h2 className="text-2xl font-bold text-white mb-2">
+          About Justice Companion
+        </h2>
         <p className="text-white/60">Version information and legal notices</p>
       </div>
 
@@ -1064,7 +1362,9 @@ function AboutTab() {
       {/* System Info */}
       <Card className="bg-white/5 border-white/10 backdrop-blur-md">
         <div className="p-6 space-y-3">
-          <h3 className="text-lg font-semibold text-white mb-4">System Information</h3>
+          <h3 className="text-lg font-semibold text-white mb-4">
+            System Information
+          </h3>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -1092,23 +1392,43 @@ function AboutTab() {
         <div className="p-6 space-y-3">
           <h3 className="text-lg font-semibold text-white mb-4">Resources</h3>
 
-          <button type="button" className="w-full flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors group">
-            <span className="text-white group-hover:text-purple-400 transition-colors">Documentation</span>
+          <button
+            type="button"
+            className="w-full flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors group"
+          >
+            <span className="text-white group-hover:text-purple-400 transition-colors">
+              Documentation
+            </span>
             <ChevronRight className="w-5 h-5 text-white/40 group-hover:text-purple-400 transition-colors" />
           </button>
 
-          <button type="button" className="w-full flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors group">
-            <span className="text-white group-hover:text-purple-400 transition-colors">Privacy Policy</span>
+          <button
+            type="button"
+            className="w-full flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors group"
+          >
+            <span className="text-white group-hover:text-purple-400 transition-colors">
+              Privacy Policy
+            </span>
             <ChevronRight className="w-5 h-5 text-white/40 group-hover:text-purple-400 transition-colors" />
           </button>
 
-          <button type="button" className="w-full flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors group">
-            <span className="text-white group-hover:text-purple-400 transition-colors">Terms of Service</span>
+          <button
+            type="button"
+            className="w-full flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors group"
+          >
+            <span className="text-white group-hover:text-purple-400 transition-colors">
+              Terms of Service
+            </span>
             <ChevronRight className="w-5 h-5 text-white/40 group-hover:text-purple-400 transition-colors" />
           </button>
 
-          <button type="button" className="w-full flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors group">
-            <span className="text-white group-hover:text-purple-400 transition-colors">Open Source Licenses</span>
+          <button
+            type="button"
+            className="w-full flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors group"
+          >
+            <span className="text-white group-hover:text-purple-400 transition-colors">
+              Open Source Licenses
+            </span>
             <ChevronRight className="w-5 h-5 text-white/40 group-hover:text-purple-400 transition-colors" />
           </button>
         </div>
