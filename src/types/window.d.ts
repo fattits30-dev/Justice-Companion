@@ -78,10 +78,10 @@ interface DashboardStats {
 
 /**
  * AI Configuration request
- * Supports 11 AI providers
+ * Supports 10 AI providers
  */
 interface AIConfig {
-  provider: 'openai' | 'anthropic' | 'groq' | 'qwen' | 'huggingface' | 'google' | 'cohere' | 'together' | 'anyscale' | 'mistral' | 'perplexity';
+  provider: 'openai' | 'anthropic' | 'qwen' | 'huggingface' | 'google' | 'cohere' | 'together' | 'anyscale' | 'mistral' | 'perplexity';
   apiKey: string;
   model: string;
   endpoint?: string;

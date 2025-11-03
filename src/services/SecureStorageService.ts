@@ -1,3 +1,5 @@
+import { errorLogger } from '../utils/error-logger.ts';
+
 /**
  * SecureStorageService - Electron safeStorage wrapper for secure API key storage
  *
@@ -49,7 +51,10 @@ export class SecureStorageService {
 
       this.initialized = true;
     } catch (error) {
-      console.error('[SecureStorage] Failed to initialize:', error);
+      errorLogger.logError(error instanceof Error ? error : new Error(String(error)), {
+        service: 'SecureStorageService',
+        operation: 'init',
+      });
       throw new Error('Failed to initialize secure storage');
     }
   }
@@ -80,7 +85,11 @@ export class SecureStorageService {
     try {
       await window.justiceAPI.secureStorage.set(key, value);
     } catch (error) {
-      console.error(`[SecureStorage] Failed to set key "${key}":`, error);
+      errorLogger.logError(error instanceof Error ? error : new Error(String(error)), {
+        service: 'SecureStorageService',
+        operation: 'setApiKey',
+        key,
+      });
       throw new Error(`Failed to store API key: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
@@ -105,7 +114,11 @@ export class SecureStorageService {
       const value = await window.justiceAPI.secureStorage.get(key);
       return value || null;
     } catch (error) {
-      console.error(`[SecureStorage] Failed to get key "${key}":`, error);
+      errorLogger.logError(error instanceof Error ? error : new Error(String(error)), {
+        service: 'SecureStorageService',
+        operation: 'getApiKey',
+        key,
+      });
       throw new Error(`Failed to retrieve API key: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
@@ -128,7 +141,11 @@ export class SecureStorageService {
     try {
       await window.justiceAPI.secureStorage.delete(key);
     } catch (error) {
-      console.error(`[SecureStorage] Failed to delete key "${key}":`, error);
+      errorLogger.logError(error instanceof Error ? error : new Error(String(error)), {
+        service: 'SecureStorageService',
+        operation: 'deleteApiKey',
+        key,
+      });
       throw new Error(`Failed to delete API key: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
@@ -168,7 +185,10 @@ export class SecureStorageService {
     try {
       await window.justiceAPI.secureStorage.clearAll();
     } catch (error) {
-      console.error('[SecureStorage] Failed to clear all keys:', error);
+      errorLogger.logError(error instanceof Error ? error : new Error(String(error)), {
+        service: 'SecureStorageService',
+        operation: 'clearAll',
+      });
       throw new Error('Failed to clear all API keys');
     }
   }

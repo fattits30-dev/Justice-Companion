@@ -35,11 +35,11 @@ export interface TimelineEvent {
   caseId: number;
   title: string;
   description?: string;
-  eventDate: Date;
+  eventDate: string; // ISO 8601 date string
   eventType: 'deadline' | 'hearing' | 'filing' | 'milestone' | 'other';
   completed: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string; // ISO 8601 datetime string
+  updatedAt: string; // ISO 8601 datetime string
 }
 
 export interface EvidenceExportData {
@@ -111,6 +111,12 @@ export interface DocumentStyles {
   };
   body?: {
     fontSize?: number;
+    color?: string;
+    lineHeight?: number;
+  };
+  footer?: {
+    fontSize?: number;
+    italic?: boolean;
     color?: string;
   };
 }

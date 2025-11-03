@@ -242,31 +242,6 @@ const AI_PROVIDERS = {
       },
     ],
   },
-  groq: {
-    name: "Groq",
-    icon: Zap,
-    description: "Ultra-fast inference with Llama, Mixtral",
-    apiKeyLabel: "Groq API Key",
-    apiKeyPlaceholder: "gsk_...",
-    endpoint: "https://api.groq.com/openai/v1",
-    models: [
-      {
-        value: "llama-3.3-70b-versatile",
-        label: "Llama 3.3 70B (Recommended)",
-        description: "Latest, fastest inference",
-      },
-      {
-        value: "llama-3.1-70b-versatile",
-        label: "Llama 3.1 70B",
-        description: "High quality, very fast",
-      },
-      {
-        value: "mixtral-8x7b-32768",
-        label: "Mixtral 8x7B",
-        description: "32K context, fast",
-      },
-    ],
-  },
   qwen: {
     name: "Qwen 2.5-72B",
     icon: Brain,

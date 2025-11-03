@@ -5,6 +5,12 @@ import { TYPES } from '../../src/shared/infrastructure/di/types.ts';
 import type { IExportService } from '../../src/services/export/ExportService.ts';
 import type { ExportOptions } from '../../src/models/Export.ts';
 import path from 'path';
+import {
+  CaseNotFoundError,
+  FileOperationError,
+  ValidationError,
+  DatabaseError,
+} from '../../src/errors/DomainErrors.ts';
 
 export function setupExportHandlers(): void {
   // Export case to PDF
@@ -33,7 +39,25 @@ export function setupExportHandlers(): void {
       return { success: true, data: result };
     } catch (error) {
       console.error('Failed to export case to PDF:', error);
-      return { success: false, error: error instanceof Error ? error.message : 'Export failed' };
+
+      // Wrap generic errors in DomainErrors
+      if (error instanceof Error) {
+        const message = error.message.toLowerCase();
+
+        if (message.includes('not found') && message.includes('case')) {
+          throw new CaseNotFoundError(`Case ${caseId} not found`);
+        }
+
+        if (message.includes('database') || message.includes('sqlite')) {
+          throw new DatabaseError('export case to PDF', error.message);
+        }
+
+        if (message.includes('file') || message.includes('write') || message.includes('permission')) {
+          throw new FileOperationError(`Failed to write PDF file: ${error.message}`);
+        }
+      }
+
+      throw error;
     }
   });
 
@@ -63,7 +87,25 @@ export function setupExportHandlers(): void {
       return { success: true, data: result };
     } catch (error) {
       console.error('Failed to export case to Word:', error);
-      return { success: false, error: error instanceof Error ? error.message : 'Export failed' };
+
+      // Wrap generic errors in DomainErrors
+      if (error instanceof Error) {
+        const message = error.message.toLowerCase();
+
+        if (message.includes('not found') && message.includes('case')) {
+          throw new CaseNotFoundError(`Case ${caseId} not found`);
+        }
+
+        if (message.includes('database') || message.includes('sqlite')) {
+          throw new DatabaseError('export case to Word', error.message);
+        }
+
+        if (message.includes('file') || message.includes('write') || message.includes('permission')) {
+          throw new FileOperationError(`Failed to write Word file: ${error.message}`);
+        }
+      }
+
+      throw error;
     }
   });
 
@@ -88,7 +130,14 @@ export function setupExportHandlers(): void {
       return { success: true, data: exportResult };
     } catch (error) {
       console.error('Failed to export evidence list to PDF:', error);
-      return { success: false, error: error instanceof Error ? error.message : 'Export failed' };
+
+      if (error instanceof Error) {
+        const message = error.message.toLowerCase();
+        if (message.includes('not found') && message.includes('case')) {throw new CaseNotFoundError(`Case ${caseId} not found`);}
+        if (message.includes('database') || message.includes('sqlite')) {throw new DatabaseError('export evidence list', error.message);}
+        if (message.includes('file') || message.includes('write')) {throw new FileOperationError(`Failed to write PDF: ${error.message}`);}
+      }
+      throw error;
     }
   });
 
@@ -113,7 +162,14 @@ export function setupExportHandlers(): void {
       return { success: true, data: exportResult };
     } catch (error) {
       console.error('Failed to export timeline report to PDF:', error);
-      return { success: false, error: error instanceof Error ? error.message : 'Export failed' };
+
+      if (error instanceof Error) {
+        const message = error.message.toLowerCase();
+        if (message.includes('not found') && message.includes('case')) {throw new CaseNotFoundError(`Case ${caseId} not found`);}
+        if (message.includes('database') || message.includes('sqlite')) {throw new DatabaseError('export timeline report', error.message);}
+        if (message.includes('file') || message.includes('write')) {throw new FileOperationError(`Failed to write PDF: ${error.message}`);}
+      }
+      throw error;
     }
   });
 
@@ -138,7 +194,14 @@ export function setupExportHandlers(): void {
       return { success: true, data: exportResult };
     } catch (error) {
       console.error('Failed to export case notes to PDF:', error);
-      return { success: false, error: error instanceof Error ? error.message : 'Export failed' };
+
+      if (error instanceof Error) {
+        const message = error.message.toLowerCase();
+        if (message.includes('not found') && message.includes('case')) {throw new CaseNotFoundError(`Case ${caseId} not found`);}
+        if (message.includes('database') || message.includes('sqlite')) {throw new DatabaseError('export case notes', error.message);}
+        if (message.includes('file') || message.includes('write')) {throw new FileOperationError(`Failed to write PDF: ${error.message}`);}
+      }
+      throw error;
     }
   });
 
@@ -163,7 +226,14 @@ export function setupExportHandlers(): void {
       return { success: true, data: exportResult };
     } catch (error) {
       console.error('Failed to export case notes to Word:', error);
-      return { success: false, error: error instanceof Error ? error.message : 'Export failed' };
+
+      if (error instanceof Error) {
+        const message = error.message.toLowerCase();
+        if (message.includes('not found') && message.includes('case')) {throw new CaseNotFoundError(`Case ${caseId} not found`);}
+        if (message.includes('database') || message.includes('sqlite')) {throw new DatabaseError('export case notes', error.message);}
+        if (message.includes('file') || message.includes('write')) {throw new FileOperationError(`Failed to write Word file: ${error.message}`);}
+      }
+      throw error;
     }
   });
 
@@ -201,7 +271,11 @@ export function setupExportHandlers(): void {
       };
     } catch (error) {
       console.error('Failed to get export templates:', error);
-      return { success: false, error: error instanceof Error ? error.message : 'Failed to get templates' };
+
+      if (error instanceof Error) {
+        throw new DatabaseError('get export templates', error.message);
+      }
+      throw error;
     }
   });
 
@@ -216,13 +290,20 @@ export function setupExportHandlers(): void {
       } else if (options.format === 'docx') {
         result = await service.exportCaseToWord(caseId, userId, options);
       } else {
-        throw new Error(`Unsupported format: ${options.format}`);
+        throw new ValidationError(`Unsupported format: ${options.format}`);
       }
 
       return { success: true, data: result };
     } catch (error) {
       console.error('Failed to export with custom options:', error);
-      return { success: false, error: error instanceof Error ? error.message : 'Export failed' };
+
+      if (error instanceof Error) {
+        const message = error.message.toLowerCase();
+        if (message.includes('not found') && message.includes('case')) {throw new CaseNotFoundError(`Case ${caseId} not found`);}
+        if (message.includes('database') || message.includes('sqlite')) {throw new DatabaseError('custom export', error.message);}
+        if (message.includes('file') || message.includes('write')) {throw new FileOperationError(`Failed to write file: ${error.message}`);}
+      }
+      throw error;
     }
   });
 }

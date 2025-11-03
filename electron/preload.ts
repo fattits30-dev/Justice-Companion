@@ -1,5 +1,6 @@
 // CommonJS require for Electron preload (sandboxed context doesn't support ESM)
 // Using require here is acceptable for preload scripts
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const { contextBridge, ipcRenderer } = require('electron');
 
 // Type definitions for exposed API (not exported - preload can't use ESM export)
@@ -258,9 +259,94 @@ contextBridge.exposeInMainWorld('justiceAPI', {
     clearAll: () => ipcRenderer.invoke('secure-storage:clear-all'),
   },
 
+  // ===== BACKUP & RESTORE =====
+  createBackup: () =>
+    ipcRenderer.invoke('db:backup'),
+
+  listBackups: () =>
+    ipcRenderer.invoke('db:listBackups'),
+
+  restoreBackup: (backupFilename: string) =>
+    ipcRenderer.invoke('db:restore', backupFilename),
+
+  deleteBackup: (backupFilename: string) =>
+    ipcRenderer.invoke('db:deleteBackup', backupFilename),
+
+  // Auto-backup settings
+  getBackupSettings: (userId: number) =>
+    ipcRenderer.invoke('backup:getSettings', userId),
+
+  updateBackupSettings: (userId: number, settings: {
+    enabled: boolean;
+    frequency: 'daily' | 'weekly' | 'monthly';
+    backup_time: string;
+    keep_count: number;
+  }) =>
+    ipcRenderer.invoke('backup:updateSettings', userId, settings),
+
+  cleanupOldBackups: (keepCount: number) =>
+    ipcRenderer.invoke('backup:cleanupOld', keepCount),
+
   // ===== AI CONFIG =====
   configureAI: (config: any) =>
     ipcRenderer.invoke('ai:configure', config),
 
-  // TODO: Add remaining API methods as needed (chat streaming, tags, notifications, search, etc.)
+  getAIConfig: () =>
+    ipcRenderer.invoke('ai:get-config'),
+
+  testAIConnection: (provider: string) =>
+    ipcRenderer.invoke('ai:test-connection', { provider }),
+
+  // ===== AI CHAT STREAMING =====
+  streamChat: (
+    request: any,
+    onToken: (token: string) => void,
+    onThinking: (thinking: string) => void,
+    onComplete: () => void,
+    onError: (error: string) => void
+  ) => {
+    // Set up listeners for streaming events
+    const dataHandler = (_event: any, data: { data: string; done: boolean }) => {
+      if (data.done) {
+        onComplete();
+      } else {
+        onToken(data.data);
+      }
+    };
+
+    const errorHandler = (_event: any, error: { message: string }) => {
+      onError(error.message);
+    };
+
+    // Register listeners
+    ipcRenderer.on('chat:stream:data', dataHandler);
+    ipcRenderer.on('chat:stream:error', errorHandler);
+
+    // Start streaming
+    return ipcRenderer.invoke('chat:stream', request).finally(() => {
+      // Clean up listeners when done
+      ipcRenderer.removeListener('chat:stream:data', dataHandler);
+      ipcRenderer.removeListener('chat:stream:error', errorHandler);
+    });
+  },
+
+  // ===== AI ANALYSIS METHODS =====
+  analyzeCase: (request: any) =>
+    ipcRenderer.invoke('ai:analyze-case', request),
+
+  analyzeEvidence: (request: any) =>
+    ipcRenderer.invoke('ai:analyze-evidence', request),
+
+  draftDocument: (request: any) =>
+    ipcRenderer.invoke('ai:draft-document', request),
+
+  // ===== AI DOCUMENT ANALYSIS =====
+  analyzeDocument: (filePath: string, sessionId: string, userQuestion?: string) =>
+    ipcRenderer.invoke('ai:analyze-document', { filePath, sessionId, userQuestion }),
+
+  // File selection dialog (for document upload)
+  showOpenDialog: (options: any) =>
+    ipcRenderer.invoke('dialog:showOpenDialog', options),
+
+  // TODO: Add remaining API methods as needed (tags, notifications, search, etc.)
 });

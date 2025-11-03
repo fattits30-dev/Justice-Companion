@@ -16,6 +16,12 @@ import type {
   CreateTemplateInput,
   UpdateTemplateInput,
 } from '../../src/models/CaseTemplate.ts';
+import {
+  DatabaseError,
+  TemplateNotFoundError,
+  ValidationError,
+  RequiredFieldError,
+} from '../../src/errors/DomainErrors.ts';
 
 // Initialize services (shared across handlers)
 let templateService: TemplateService | null = null;
@@ -68,10 +74,18 @@ export function setupTemplateHandlers(): void {
 
       return { success: true, data: templates };
     } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'An unknown error occurred',
-      };
+      console.error('[IPC] templates:get-all error:', error);
+
+      // Wrap generic errors in DomainErrors
+      if (error instanceof Error) {
+        const message = error.message.toLowerCase();
+
+        if (message.includes('database') || message.includes('sqlite')) {
+          throw new DatabaseError('get templates', error.message);
+        }
+      }
+
+      throw error;
     }
   });
 
@@ -83,10 +97,26 @@ export function setupTemplateHandlers(): void {
 
       return { success: true, data: template };
     } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'An unknown error occurred',
-      };
+      console.error('[IPC] templates:create error:', error);
+
+      // Wrap generic errors in DomainErrors
+      if (error instanceof Error) {
+        const message = error.message.toLowerCase();
+
+        if (message.includes('database') || message.includes('sqlite')) {
+          throw new DatabaseError('create template', error.message);
+        }
+
+        if (message.includes('required') || message.includes('missing')) {
+          throw new RequiredFieldError('template data');
+        }
+
+        if (message.includes('invalid') || message.includes('validation')) {
+          throw new ValidationError(error.message);
+        }
+      }
+
+      throw error;
     }
   });
 
@@ -98,10 +128,26 @@ export function setupTemplateHandlers(): void {
 
       return { success: true, data: template };
     } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'An unknown error occurred',
-      };
+      console.error('[IPC] templates:update error:', error);
+
+      // Wrap generic errors in DomainErrors
+      if (error instanceof Error) {
+        const message = error.message.toLowerCase();
+
+        if (message.includes('database') || message.includes('sqlite')) {
+          throw new DatabaseError('update template', error.message);
+        }
+
+        if (message.includes('not found')) {
+          throw new TemplateNotFoundError(`Template ${input.id} not found`);
+        }
+
+        if (message.includes('invalid') || message.includes('validation')) {
+          throw new ValidationError(error.message);
+        }
+      }
+
+      throw error;
     }
   });
 
@@ -113,10 +159,22 @@ export function setupTemplateHandlers(): void {
 
       return { success: true };
     } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'An unknown error occurred',
-      };
+      console.error('[IPC] templates:delete error:', error);
+
+      // Wrap generic errors in DomainErrors
+      if (error instanceof Error) {
+        const message = error.message.toLowerCase();
+
+        if (message.includes('database') || message.includes('sqlite')) {
+          throw new DatabaseError('delete template', error.message);
+        }
+
+        if (message.includes('not found')) {
+          throw new TemplateNotFoundError(`Template ${id} not found`);
+        }
+      }
+
+      throw error;
     }
   });
 
@@ -128,10 +186,18 @@ export function setupTemplateHandlers(): void {
 
       return { success: true };
     } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'An unknown error occurred',
-      };
+      console.error('[IPC] templates:seed error:', error);
+
+      // Wrap generic errors in DomainErrors
+      if (error instanceof Error) {
+        const message = error.message.toLowerCase();
+
+        if (message.includes('database') || message.includes('sqlite')) {
+          throw new DatabaseError('seed templates', error.message);
+        }
+      }
+
+      throw error;
     }
   });
 }

@@ -4,6 +4,12 @@ import { withAuthorization, getAuthorizationMiddleware } from '../utils/authoriz
 import { databaseManager } from '../../src/db/database.ts';
 import { DeadlineRepository } from '../../src/repositories/DeadlineRepository.ts';
 import { AuditLogger } from '../../src/services/AuditLogger.ts';
+import {
+  DeadlineNotFoundError,
+  DatabaseError,
+  RequiredFieldError,
+  ValidationError,
+} from '../../src/errors/DomainErrors.ts';
 
 // Define proper types for better type safety
 interface DeadlineData {
@@ -48,7 +54,21 @@ export function setupDeadlineHandlers(): void {
           return successResponse(deadlines); // Properly wrap response
         } catch (error) {
           console.error('[IPC] deadline:getAll error:', error);
-          throw error; // withAuthorization will handle error formatting
+
+          // Wrap generic errors in DomainErrors
+          if (error instanceof Error) {
+            const message = error.message.toLowerCase();
+
+            if (message.includes('database') || message.includes('sqlite')) {
+              throw new DatabaseError('get deadlines', error.message);
+            }
+
+            if (message.includes('not found')) {
+              throw new DeadlineNotFoundError(caseId ? `Deadline not found for case ${caseId}` : 'Deadlines not found');
+            }
+          }
+
+          throw error; // Re-throw if already a DomainError or unknown error
         }
       });
     }
@@ -75,6 +95,24 @@ export function setupDeadlineHandlers(): void {
           return successResponse(createdDeadline);
         } catch (error) {
           console.error('[IPC] deadline:create error:', error);
+
+          // Wrap generic errors in DomainErrors
+          if (error instanceof Error) {
+            const message = error.message.toLowerCase();
+
+            if (message.includes('database') || message.includes('sqlite')) {
+              throw new DatabaseError('create deadline', error.message);
+            }
+
+            if (message.includes('required') || message.includes('missing')) {
+              throw new RequiredFieldError('deadline data');
+            }
+
+            if (message.includes('invalid') || message.includes('validation')) {
+              throw new ValidationError(error.message);
+            }
+          }
+
           throw error;
         }
       });
@@ -94,11 +132,29 @@ export function setupDeadlineHandlers(): void {
           const deadlineRepo = new DeadlineRepository(db, auditLogger);
 
           const updatedDeadline = deadlineRepo.update(id, userId, data);
-          
+
           console.warn('[IPC] Updated deadline with ID:', id);
           return successResponse(updatedDeadline);
         } catch (error) {
           console.error('[IPC] deadline:update error:', error);
+
+          // Wrap generic errors in DomainErrors
+          if (error instanceof Error) {
+            const message = error.message.toLowerCase();
+
+            if (message.includes('database') || message.includes('sqlite')) {
+              throw new DatabaseError('update deadline', error.message);
+            }
+
+            if (message.includes('not found')) {
+              throw new DeadlineNotFoundError(`Deadline ${id} not found`);
+            }
+
+            if (message.includes('invalid') || message.includes('validation')) {
+              throw new ValidationError(error.message);
+            }
+          }
+
           throw error;
         }
       });
@@ -118,11 +174,25 @@ export function setupDeadlineHandlers(): void {
           const deadlineRepo = new DeadlineRepository(db, auditLogger);
 
           const completedDeadline = deadlineRepo.complete(id, userId);
-          
+
           console.warn('[IPC] Completed deadline with ID:', id);
           return successResponse(completedDeadline);
         } catch (error) {
           console.error('[IPC] deadline:complete error:', error);
+
+          // Wrap generic errors in DomainErrors
+          if (error instanceof Error) {
+            const message = error.message.toLowerCase();
+
+            if (message.includes('database') || message.includes('sqlite')) {
+              throw new DatabaseError('complete deadline', error.message);
+            }
+
+            if (message.includes('not found')) {
+              throw new DeadlineNotFoundError(`Deadline ${id} not found`);
+            }
+          }
+
           throw error;
         }
       });
@@ -142,11 +212,25 @@ export function setupDeadlineHandlers(): void {
           const deadlineRepo = new DeadlineRepository(db, auditLogger);
 
           deadlineRepo.delete(id, userId);
-          
+
           console.warn('[IPC] Deleted deadline with ID:', id);
           return successResponse({ deleted: true });
         } catch (error) {
           console.error('[IPC] deadline:delete error:', error);
+
+          // Wrap generic errors in DomainErrors
+          if (error instanceof Error) {
+            const message = error.message.toLowerCase();
+
+            if (message.includes('database') || message.includes('sqlite')) {
+              throw new DatabaseError('delete deadline', error.message);
+            }
+
+            if (message.includes('not found')) {
+              throw new DeadlineNotFoundError(`Deadline ${id} not found`);
+            }
+          }
+
           throw error;
         }
       });

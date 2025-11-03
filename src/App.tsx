@@ -26,6 +26,7 @@ import { RegistrationScreen } from "./components/auth/RegistrationScreen.tsx";
 import { MainLayout } from "./components/layouts/MainLayout.tsx";
 import { ToastProvider } from "./components/ui/index.ts";
 import { SkeletonCard } from "./components/ui/Skeleton.tsx";
+import { ErrorBoundary } from "./components/ErrorBoundary.tsx";
 
 // Lazy load views for code splitting
 const Dashboard = lazy(() =>
@@ -317,12 +318,14 @@ function AppRoutes() {
  */
 function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <ToastProvider />
-        <AppRoutes />
-      </AuthProvider>
-    </BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <AuthProvider>
+          <ToastProvider />
+          <AppRoutes />
+        </AuthProvider>
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 }
 

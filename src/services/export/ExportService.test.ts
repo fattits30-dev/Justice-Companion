@@ -25,11 +25,11 @@ vi.mock('electron', () => ({
 
 // Mock fs
 vi.mock('fs', async () => {
-  const actual = await vi.importActual('fs');
+  const actual = await vi.importActual('fs') as any;
   return {
     ...actual,
     promises: {
-      ...actual.promises,
+      ...(actual.promises || {}),
       mkdir: vi.fn().mockResolvedValue(undefined),
       writeFile: vi.fn().mockResolvedValue(undefined),
     },
@@ -75,11 +75,11 @@ describe('ExportService', () => {
     id: 1,
     userId: 1,
     title: 'encrypted_title',
-    caseNumber: 'CASE-001',
+    caseType: 'employment',
     status: 'active',
     description: 'encrypted_description',
-    createdAt: new Date('2024-01-01'),
-    updatedAt: new Date('2024-01-02'),
+    createdAt: '2024-01-01T00:00:00.000Z',
+    updatedAt: '2024-01-02T00:00:00.000Z',
   };
 
   const mockUser: User = {
@@ -87,9 +87,12 @@ describe('ExportService', () => {
     username: 'testuser',
     email: 'test@example.com',
     passwordHash: 'hash',
-    salt: 'salt',
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    passwordSalt: 'salt',
+    role: 'user',
+    isActive: true,
+    createdAt: '2024-01-01T00:00:00.000Z',
+    updatedAt: '2024-01-01T00:00:00.000Z',
+    lastLoginAt: null,
   };
 
   const mockEvidence: Evidence[] = [
@@ -97,13 +100,12 @@ describe('ExportService', () => {
       id: 1,
       caseId: 1,
       title: 'encrypted_evidence_title',
-      description: 'encrypted_evidence_desc',
-      evidenceType: 'document',
-      status: 'collected',
-      dateCollected: new Date('2024-01-05'),
       filePath: 'encrypted_path',
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      content: null,
+      evidenceType: 'document',
+      obtainedDate: '2024-01-05',
+      createdAt: '2024-01-01T00:00:00.000Z',
+      updatedAt: '2024-01-01T00:00:00.000Z',
     },
   ];
 
@@ -111,13 +113,16 @@ describe('ExportService', () => {
     {
       id: 1,
       caseId: 1,
+      userId: 1,
       title: 'encrypted_deadline_title',
       description: 'encrypted_deadline_desc',
-      dueDate: new Date('2024-02-01'),
+      deadlineDate: '2024-02-01',
       priority: 'high',
-      status: 'pending',
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      status: 'upcoming',
+      completedAt: null,
+      createdAt: '2024-01-01T00:00:00.000Z',
+      updatedAt: '2024-01-01T00:00:00.000Z',
+      deletedAt: null,
     },
   ];
 
@@ -125,11 +130,12 @@ describe('ExportService', () => {
     {
       id: 1,
       caseId: 1,
+      userId: 1,
       title: 'encrypted_note_title',
       content: 'encrypted_note_content',
-      tags: ['important', 'legal'],
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      isPinned: false,
+      createdAt: '2024-01-01T00:00:00.000Z',
+      updatedAt: '2024-01-01T00:00:00.000Z',
     },
   ];
 
@@ -190,6 +196,7 @@ describe('ExportService', () => {
       decrypt: vi.fn((data: string) => data.replace('encrypted_', '')),
       hash: vi.fn(),
       compare: vi.fn(),
+      generateSalt: vi.fn(() => 'mock-salt'),
     } as IEncryptionService;
 
     mockAuditLogger = {

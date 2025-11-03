@@ -1,6 +1,6 @@
-// @ts-expect-error - Legacy code replaced by GroqService, needs cleanup
+// @ts-expect-error - Legacy code replaced by UnifiedAIService, needs cleanup
 import { errorLogger } from '../utils/error-logger.ts';
-// TODO: These services have been replaced by GroqService - clean up this legacy code
+// TODO: These services have been replaced by UnifiedAIService - clean up this legacy code
 // import { IntegratedAIService } from '../features/chat/services/IntegratedAIService.ts';
 // import { OpenAIService } from '../features/chat/services/OpenAIService.ts';
 // import type { OpenAIConfig } from '../features/chat/services/OpenAIService.ts';

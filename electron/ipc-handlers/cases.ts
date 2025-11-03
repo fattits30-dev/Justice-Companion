@@ -129,7 +129,7 @@ export function setupCaseHandlers(): void {
         const userCases = allCases.filter((c) => c.userId === userId);
 
         console.warn('[IPC] Retrieved', userCases.length, 'cases for user:', userId);
-        return userCases;
+        return successResponse(userCases);
       } catch (error) {
         console.error('[IPC] case:list error:', error);
         throw error; // withAuthorization will handle error formatting

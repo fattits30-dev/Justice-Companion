@@ -30,6 +30,29 @@
       }
     },
     {
+      "label": "Start Electron Dev",
+      "type": "shell",
+      "command": "pnpm electron:dev",
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": {
+          "regexp": "^(.*)$",
+          "file": 1,
+          "location": 2,
+          "message": 3
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "Starting",
+          "endsPattern": "Electron.*started"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
       "label": "Kill Vite Dev Server",
       "type": "shell",
       "command": "taskkill /F /IM node.exe /FI \"WINDOWTITLE eq vite*\"",
@@ -47,44 +70,322 @@
       }
     },
     {
-      "label": "Build Electron",
+      "label": "Build: Production",
       "type": "shell",
       "command": "pnpm build",
       "group": {
         "kind": "build",
         "isDefault": true
       },
-      "problemMatcher": ["$tsc"]
+      "problemMatcher": ["$tsc"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "Build: Windows",
+      "type": "shell",
+      "command": "pnpm build:win",
+      "group": "build",
+      "problemMatcher": ["$tsc"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "Build: macOS",
+      "type": "shell",
+      "command": "pnpm build:mac",
+      "group": "build",
+      "problemMatcher": ["$tsc"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "Build: Linux",
+      "type": "shell",
+      "command": "pnpm build:linux",
+      "group": "build",
+      "problemMatcher": ["$tsc"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
     },
     {
       "label": "Type Check",
       "type": "shell",
       "command": "pnpm type-check",
-      "problemMatcher": ["$tsc"]
+      "problemMatcher": ["$tsc"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Type Check: Watch",
+      "type": "shell",
+      "command": "pnpm type-check --watch",
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "typescript",
+        "pattern": "$tsc",
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "Starting compilation",
+          "endsPattern": "(Compilation complete|Found \\d+ errors)"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
     },
     {
       "label": "Lint",
       "type": "shell",
       "command": "pnpm lint",
-      "problemMatcher": ["$eslint-stylish"]
+      "problemMatcher": ["$eslint-stylish"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
     },
     {
-      "label": "Lint Fix",
+      "label": "Lint: Fix All",
       "type": "shell",
       "command": "pnpm lint:fix",
-      "problemMatcher": ["$eslint-stylish"]
+      "problemMatcher": ["$eslint-stylish"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
     },
     {
-      "label": "Run Tests",
+      "label": "Test: Unit",
       "type": "shell",
       "command": "pnpm test",
-      "problemMatcher": []
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
     },
     {
-      "label": "Run Tests with Coverage",
+      "label": "Test: Watch Mode",
+      "type": "shell",
+      "command": "pnpm test --watch",
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": {
+          "regexp": "^(.*)$"
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "Waiting for file changes",
+          "endsPattern": "Test Files.*passed"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "Test: Coverage",
       "type": "shell",
       "command": "pnpm test:coverage",
-      "problemMatcher": []
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "Test: E2E",
+      "type": "shell",
+      "command": "pnpm test:e2e",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "Test: E2E UI Mode",
+      "type": "shell",
+      "command": "pnpm exec playwright test --ui",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "Database: Migrate",
+      "type": "shell",
+      "command": "pnpm db:migrate",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Database: Migration Status",
+      "type": "shell",
+      "command": "pnpm db:migrate:status",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Database: Rollback",
+      "type": "shell",
+      "command": "pnpm db:migrate:rollback",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Database: Backup",
+      "type": "shell",
+      "command": "pnpm db:backup",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Database: List Backups",
+      "type": "shell",
+      "command": "pnpm db:backup:list",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Format: Check",
+      "type": "shell",
+      "command": "pnpm format:check",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Format: Fix All",
+      "type": "shell",
+      "command": "pnpm format",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Clean: Build Artifacts",
+      "type": "shell",
+      "command": "cmd /c \"if exist dist rmdir /S /Q dist && if exist release rmdir /S /Q release\"",
+      "windows": {
+        "command": "cmd /c \"if exist dist rmdir /S /Q dist && if exist release rmdir /S /Q release\""
+      },
+      "linux": {
+        "command": "rm -rf dist release"
+      },
+      "osx": {
+        "command": "rm -rf dist release"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Clean: Node Modules",
+      "type": "shell",
+      "command": "cmd /c \"if exist node_modules rmdir /S /Q node_modules && pnpm install\"",
+      "windows": {
+        "command": "cmd /c \"if exist node_modules rmdir /S /Q node_modules && pnpm install\""
+      },
+      "linux": {
+        "command": "rm -rf node_modules && pnpm install"
+      },
+      "osx": {
+        "command": "rm -rf node_modules && pnpm install"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "Rebuild: Native Modules (Electron)",
+      "type": "shell",
+      "command": "pnpm rebuild:electron",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Rebuild: Native Modules (Node)",
+      "type": "shell",
+      "command": "pnpm rebuild:node",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Pre-Commit: Full Check",
+      "type": "shell",
+      "command": "pnpm lint:fix && pnpm type-check && pnpm test",
+      "problemMatcher": ["$eslint-stylish", "$tsc"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "Security: Audit",
+      "type": "shell",
+      "command": "pnpm audit",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Security: Fix",
+      "type": "shell",
+      "command": "pnpm audit --fix",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
     }
   ]
 }

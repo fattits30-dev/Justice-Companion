@@ -1,28 +1,77 @@
 {
   "recommendations": [
-    // Essential
+    // Essential Core
     "dbaeumer.vscode-eslint",
     "esbenp.prettier-vscode",
     "ms-vscode.vscode-typescript-next",
 
-    // Testing
+    // Testing & Debugging
     "vitest.explorer",
     "ms-playwright.playwright",
+    "ms-vscode.js-debug",
+    "hbenl.vscode-test-explorer",
 
-    // Git
+    // Git & Version Control
     "eamodio.gitlens",
     "mhutchie.git-graph",
+    "donjayamanne.githistory",
 
-    // Database
+    // Database & Data
     "qwtel.sqlite-viewer",
+    "mechatroner.rainbow-csv",
+
+    // Error Detection & Quality
+    "usernamehw.errorlens",
+    "streetsidesoftware.code-spell-checker",
+    "sonarsource.sonarlint-vscode",
+
+    // TypeScript & JavaScript
+    "pmneo.tsimporter",
+    "yoavbls.pretty-ts-errors",
+    "wix.vscode-import-cost",
+
+    // React & Frontend
+    "bradlc.vscode-tailwindcss",
+    "dsznajder.es7-react-js-snippets",
+    "styled-components.vscode-styled-components",
+
+    // Productivity & Utilities
+    "aaron-bond.better-comments",
+    "christian-kohler.path-intellisense",
+    "christian-kohler.npm-intellisense",
+    "formulahendry.auto-rename-tag",
+    "naumovs.color-highlight",
+    "wayou.vscode-todo-highlight",
+    "gruntfuggly.todo-tree",
+
+    // Documentation & Comments
+    "mintlify.document",
+    "stackbuild.vscode-tsconfig-helper",
+
+    // Security & GDPR
+    "snyk-security.snyk-vulnerability-scanner",
 
     // Electron Development
-    "ms-vscode.js-debug",
+    "sburg.vscode-javascript-booster",
 
-    // Utilities
-    "bradlc.vscode-tailwindcss",
-    "aaron-bond.better-comments",
-    "usernamehw.errorlens",
-    "streetsidesoftware.code-spell-checker"
+    // Performance & Profiling
+    "ms-vscode.vscode-node-azure-pack",
+
+    // File Navigation
+    "eamodio.toggle-excluded-files",
+
+    // Code Organization
+    "ms-vsliveshare.vsliveshare",
+
+    // API Development
+    "humao.rest-client",
+
+    // Markdown & Documentation
+    "yzhang.markdown-all-in-one",
+    "bierner.markdown-preview-github-styles"
+  ],
+  "unwantedRecommendations": [
+    "hookyqr.beautify",
+    "ms-vscode.vscode-typescript-tslint-plugin"
   ]
 }
