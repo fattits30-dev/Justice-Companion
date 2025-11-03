@@ -21,7 +21,8 @@
       "env": {
         "NODE_ENV": "development",
         "ELECTRON_ENABLE_LOGGING": "1",
-        "ELECTRON_DISABLE_SECURITY_WARNINGS": "true"
+        "ELECTRON_DISABLE_SECURITY_WARNINGS": "true",
+        "NODE_OPTIONS": "--import=tsx"
       },
       "stopOnEntry": false,
       "autoAttachChildProcesses": true,
@@ -63,7 +64,8 @@
       "env": {
         "NODE_ENV": "development",
         "ELECTRON_ENABLE_LOGGING": "1",
-        "ELECTRON_DISABLE_SECURITY_WARNINGS": "true"
+        "ELECTRON_DISABLE_SECURITY_WARNINGS": "true",
+        "NODE_OPTIONS": "--import=tsx"
       },
       "stopOnEntry": false,
       "autoAttachChildProcesses": true,
