@@ -50,6 +50,15 @@ interface IPCErrorResponse {
 type IPCResponse<T> = IPCSuccessResponse<T> | IPCErrorResponse;
 
 /**
+ * Session response with nested user object
+ */
+interface SessionResponse {
+  id: string;
+  user: User;
+  expiresAt: string;
+}
+
+/**
  * Dashboard statistics response
  */
 interface DashboardStats {
@@ -69,12 +78,16 @@ interface DashboardStats {
 
 /**
  * AI Configuration request
+ * Supports 11 AI providers
  */
 interface AIConfig {
+  provider: 'openai' | 'anthropic' | 'groq' | 'qwen' | 'huggingface' | 'google' | 'cohere' | 'together' | 'anyscale' | 'mistral' | 'perplexity';
   apiKey: string;
-  provider?: 'openai' | 'groq' | 'anthropic' | 'google' | 'cohere' | 'mistral';
-  model?: string;
-  organization?: string;
+  model: string;
+  endpoint?: string;
+  temperature?: number;
+  maxTokens?: number;
+  topP?: number;
 }
 
 /**
@@ -126,9 +139,9 @@ interface JusticeAPI {
 
   /**
    * Get current session information
-   * @returns User data if session is valid
+   * @returns Session data with nested user object if session is valid
    */
-  getSession(sessionId: string): Promise<IPCResponse<User | null>>;
+  getSession(sessionId: string): Promise<IPCResponse<SessionResponse | null>>;
 
   // ===== CONSENT MANAGEMENT (GDPR) =====
   /**
@@ -284,6 +297,55 @@ interface JusticeAPI {
     onError: (error: string) => void
   ): Promise<void>;
 
+  // ===== AI ANALYSIS =====
+  /**
+   * Analyze a legal case and provide structured analysis
+   * @param request - Case analysis request
+   * @returns Comprehensive case analysis
+   */
+  analyzeCase(request: any): Promise<IPCResponse<any>>;
+
+  /**
+   * Analyze evidence and identify gaps
+   * @param request - Evidence analysis request
+   * @returns Evidence analysis with identified gaps
+   */
+  analyzeEvidence(request: any): Promise<IPCResponse<any>>;
+
+  /**
+   * Draft a legal document using AI
+   * @param request - Document drafting request
+   * @returns Generated document
+   */
+  draftDocument(request: any): Promise<IPCResponse<any>>;
+
+  /**
+   * Analyze an uploaded legal document
+   * @param filePath - Path to the document file
+   * @param sessionId - Current session ID
+   * @param userQuestion - Optional question about the document
+   * @returns AI analysis with potential case data
+   */
+  analyzeDocument(
+    filePath: string,
+    sessionId: string,
+    userQuestion?: string
+  ): Promise<IPCResponse<{ analysis: string; suggestedCaseData?: any }>>;
+
+  /**
+   * Show file open dialog
+   * @param options - Dialog options (filters, properties, etc.)
+   * @returns Dialog result with selected file paths
+   */
+  showOpenDialog(options: any): Promise<{ canceled: boolean; filePaths: string[] }>;
+
+  /**
+   * Show file save dialog
+   * @param options - Dialog options (filters, defaultPath, etc.)
+   * @returns Dialog result with selected file path
+   */
+  showSaveDialog(options: any): Promise<{ canceled: boolean; filePath?: string }>;
+
   // ===== SECURE STORAGE (Flat Methods) =====
   /**
    * Set encrypted value in secure storage
@@ -345,52 +407,30 @@ interface JusticeAPI {
 
   // ===== BACKUP & RESTORE =====
   /**
-   * Database backup and restore operations
+   * Create a new backup of the database
+   * @returns Backup metadata including filename and path
    */
-  db?: {
-    /**
-     * Create a new backup of the database
-     * @returns Backup metadata including filename and path
-     */
-    createBackup(): Promise<IPCResponse<Backup>>;
+  createBackup(): Promise<IPCResponse<Backup>>;
 
-    /**
-     * List all available backups
-     * @returns Array of backup metadata
-     */
-    listBackups(): Promise<IPCResponse<Backup[]>>;
+  /**
+   * List all available backups
+   * @returns Array of backup metadata
+   */
+  listBackups(): Promise<IPCResponse<{ backups: Backup[] }>>;
 
-    /**
-     * Restore database from a backup
-     * @param backupId - ID of the backup to restore
-     */
-    restoreBackup(backupId: number): Promise<IPCResponse<void>>;
+  /**
+   * Restore database from a backup file
+   * @param backupFilename - Filename of the backup to restore
+   * @returns Restore operation result
+   */
+  restoreBackup(backupFilename: string): Promise<IPCResponse<{ restored: boolean; message: string; preRestoreBackup: string }>>;
 
-    /**
-     * Export a backup to an external location
-     * @param backupId - ID of the backup to export
-     * @returns Path where the backup was exported
-     */
-    exportBackup(backupId: number): Promise<IPCResponse<{ path: string }>>;
-
-    /**
-     * Delete a backup
-     * @param backupId - ID of the backup to delete
-     */
-    deleteBackup(backupId: number): Promise<IPCResponse<void>>;
-
-    /**
-     * Get current backup settings
-     * @returns Auto-backup configuration
-     */
-    getBackupSettings(): Promise<IPCResponse<AutoBackupSettings>>;
-
-    /**
-     * Update backup settings
-     * @param settings - New backup settings
-     */
-    updateBackupSettings(settings: AutoBackupSettings): Promise<IPCResponse<void>>;
-  };
+  /**
+   * Delete a backup file
+   * @param backupFilename - Filename of the backup to delete
+   * @returns Delete operation result
+   */
+  deleteBackup(backupFilename: string): Promise<IPCResponse<{ deleted: boolean; message: string }>>;
 
   // ===== TAG MANAGEMENT =====
   tags: {
@@ -710,7 +750,7 @@ interface SearchResult {
   caseId?: number;
   caseTitle?: string;
   createdAt: string;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
 }
 
 /**
@@ -812,7 +852,7 @@ interface Notification {
   message: string;
   actionUrl?: string;
   actionLabel?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   isRead: boolean;
   isDismissed: boolean;
   createdAt: string;

@@ -1,5 +1,5 @@
 import { ipcMain } from 'electron';
-import * as path from 'path';
+import * as path from 'node:path';
 import {
   successResponse,
   errorResponse,
@@ -10,16 +10,10 @@ import { UserRepository } from '../../src/repositories/UserRepository.ts';
 import { SessionRepository } from '../../src/repositories/SessionRepository.ts';
 import { AuditLogger } from '../../src/services/AuditLogger.ts';
 import { AuthenticationService } from '../../src/services/AuthenticationService.ts';
-import {
-  _RegistrationError,
-  _ValidationError,
-  _InvalidCredentialsError,
-  _UserNotFoundError,
-  _UnauthorizedError,
-} from '../../src/errors/DomainErrors.ts';
+// Domain errors available if needed for future error handling improvements
 
 // ESM equivalent of __dirname
-import { fileURLToPath } from 'url';
+import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -55,7 +49,8 @@ export function setupAuthHandlers(): void {
       const authService = getAuthService();
       const { user, session } = await authService.register(userData);
       return successResponse({ user, session });
-    } catch (_error) {
+    } catch (error) {
+      console.error('[IPC] auth:register error:', error);
       return errorResponse(IPCErrorCode.UNKNOWN_ERROR, 'Registration failed');
     }
   });
@@ -68,7 +63,8 @@ export function setupAuthHandlers(): void {
       const { username, password, rememberMe = false } = credentials;
       const { user, session } = await authService.login(username, password, rememberMe);
       return successResponse({ user, session });
-    } catch (_error) {
+    } catch (error) {
+      console.error('[IPC] auth:login error:', error);
       return errorResponse(IPCErrorCode.UNKNOWN_ERROR, 'Login failed');
     }
   });
@@ -79,7 +75,8 @@ export function setupAuthHandlers(): void {
       const authService = getAuthService();
       await authService.logout(sessionId);
       return successResponse({ message: 'Logged out successfully' });
-    } catch (_error) {
+    } catch (error) {
+      console.error('[IPC] auth:logout error:', error);
       return errorResponse(IPCErrorCode.UNKNOWN_ERROR, 'Logout failed');
     }
   });

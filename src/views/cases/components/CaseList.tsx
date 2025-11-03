@@ -2,8 +2,8 @@ import type { Case } from '../../../domains/cases/entities/Case.ts';
 import { CaseCard } from './CaseCard.tsx';
 
 interface CaseListProps {
-  cases: Case[];
-  onDelete: (caseId: number) => void;
+  readonly cases: readonly Case[];
+  readonly onDelete: (caseId: number) => void;
 }
 
 export function CaseList({ cases, onDelete }: CaseListProps) {

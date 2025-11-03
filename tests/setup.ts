@@ -23,8 +23,8 @@ afterEach(() => {
  * All methods return resolved promises by default
  */
 beforeEach(() => {
-  // @ts-expect-error - Mocking global window object
-  global.window.justiceAPI = {
+  // @ts-expect-error - Mocking globalThis object
+  globalThis.window.justiceAPI = {
     // Auth
     login: vi.fn().mockResolvedValue({
       success: true,

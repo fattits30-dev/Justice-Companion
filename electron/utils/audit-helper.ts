@@ -5,8 +5,8 @@
  */
 
 import type { IpcMainInvokeEvent } from 'electron';
-import * as path from 'path';
-import { fileURLToPath, pathToFileURL } from 'url';
+import * as path from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 // ESM equivalent of __dirname
 const __filename = fileURLToPath(import.meta.url);

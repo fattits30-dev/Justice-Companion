@@ -68,14 +68,14 @@ export function SettingsView() {
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    globalThis.addEventListener('keydown', handleKeyDown);
+    return () => globalThis.removeEventListener('keydown', handleKeyDown);
   }, [activeTab]);
 
   return (
-    <div className="h-screen flex flex-col bg-gradient-to-br from-blue-950 via-blue-900 to-purple-900">
+    <div className="h-full flex flex-col bg-gradient-to-br from-gray-900 via-primary-900 to-gray-900">
       {/* Fixed Header */}
-      <header className="flex-shrink-0 border-b border-white/10 bg-blue-950/50 backdrop-blur-md">
+      <header className="sticky top-0 z-30 border-b border-white/10 bg-gray-900/80 backdrop-blur-md">
         <div className="px-8 py-6">
           <div className="flex items-center gap-3 mb-6">
             <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500">
@@ -94,7 +94,7 @@ export function SettingsView() {
                 <button
                   key={tab.id}
                   role="tab"
-                  aria-selected={isActive}
+                  aria-selected={isActive ? 'true' : 'false'}
                   aria-controls={`${tab.id}-panel`}
                   onClick={() => setActiveTab(tab.id)}
                   className={`
@@ -198,6 +198,17 @@ const AI_PROVIDERS = {
       { value: 'mixtral-8x7b-32768', label: 'Mixtral 8x7B', description: '32K context, fast' },
     ],
   },
+  qwen: {
+    name: 'Qwen 2.5-72B',
+    icon: Brain,
+    description: 'Alibaba\'s flagship model - UK legal expertise',
+    apiKeyLabel: 'HuggingFace Token',
+    apiKeyPlaceholder: 'hf_...',
+    endpoint: 'https://api-inference.huggingface.co/models/Qwen/Qwen2.5-72B-Instruct/v1',
+    models: [
+      { value: 'Qwen/Qwen2.5-72B-Instruct', label: 'Qwen 2.5 72B Instruct (Recommended)', description: '32K context, excellent reasoning' },
+    ],
+  },
   huggingface: {
     name: 'Hugging Face',
     icon: Sparkles,
@@ -298,10 +309,10 @@ function AIProviderTab({
   showApiKey,
   setShowApiKey,
 }: {
-  apiKey: string;
-  setApiKey: (key: string) => void;
-  showApiKey: boolean;
-  setShowApiKey: (show: boolean) => void;
+  readonly apiKey: string;
+  readonly setApiKey: (key: string) => void;
+  readonly showApiKey: boolean;
+  readonly setShowApiKey: (show: boolean) => void;
 }) {
   const [selectedProvider, setSelectedProvider] = useState<AIProviderKey>('openai');
   const [selectedModel, setSelectedModel] = useState('');
@@ -320,11 +331,35 @@ function AIProviderTab({
 
   const handleSave = async () => {
     setIsSaving(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsSaving(false);
-    setSaveSuccess(true);
-    setTimeout(() => setSaveSuccess(false), 3000);
+
+    try {
+      const providerConfig = AI_PROVIDERS[selectedProvider];
+
+      // Call the actual IPC handler to save configuration
+      const result = await globalThis.window.justiceAPI.configureAI({
+        provider: selectedProvider,
+        apiKey: apiKey.trim(),
+        model: selectedModel || providerConfig.models[0].value,
+        endpoint: customEndpoint || providerConfig.endpoint,
+        temperature: 0.7,
+        maxTokens: 2048,
+        topP: 0.9,
+      });
+
+      if (result.success) {
+        setSaveSuccess(true);
+        setTimeout(() => setSaveSuccess(false), 3000);
+        console.log('[SettingsView] AI provider configured:', selectedProvider);
+      } else {
+        console.error('[SettingsView] Failed to save AI config:', result.error);
+        alert('Failed to save configuration: ' + result.error);
+      }
+    } catch (error) {
+      console.error('[SettingsView] Error saving AI config:', error);
+      alert('Error saving configuration: ' + (error instanceof Error ? error.message : 'Unknown error'));
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -334,7 +369,7 @@ function AIProviderTab({
         <p className="text-white/60">Configure your AI assistant for legal research and analysis</p>
       </div>
 
-      <Card className="bg-blue-900/30 border-white/10 backdrop-blur-md">
+      <Card className="bg-white/5 border-white/10 backdrop-blur-md">
         <div className="p-6 space-y-6">
           {/* Provider Selection Dropdown */}
           <div>
@@ -346,11 +381,11 @@ function AIProviderTab({
                 id="ai-provider"
                 value={selectedProvider}
                 onChange={(e) => setSelectedProvider(e.target.value as AIProviderKey)}
-                className="w-full px-4 py-3 bg-blue-950/50 border border-white/10 rounded-lg text-white appearance-none focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent cursor-pointer"
+                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white appearance-none focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent cursor-pointer [&>option]:text-gray-900 [&>option]:bg-white"
                 aria-label="Select AI Provider"
               >
                 {Object.entries(AI_PROVIDERS).map(([key, provider]) => (
-                  <option key={key} value={key}>
+                  <option key={key} value={key} className="text-gray-900 bg-white">
                     {provider.name} - {provider.description}
                   </option>
                 ))}
@@ -381,7 +416,7 @@ function AIProviderTab({
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
                 placeholder={currentProvider.apiKeyPlaceholder}
-                className="w-full px-4 py-3 pr-12 bg-blue-950/50 border border-white/10 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full px-4 py-3 pr-12 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 aria-label={currentProvider.apiKeyLabel}
               />
               <button
@@ -407,11 +442,11 @@ function AIProviderTab({
               id="model"
               value={selectedModel}
               onChange={(e) => setSelectedModel(e.target.value)}
-              className="w-full px-4 py-3 bg-blue-950/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent [&>option]:text-gray-900 [&>option]:bg-white"
               aria-label="AI Model"
             >
               {currentProvider.models.map((model) => (
-                <option key={model.value} value={model.value}>
+                <option key={model.value} value={model.value} className="text-gray-900 bg-white">
                   {model.label} - {model.description}
                 </option>
               ))}
@@ -430,7 +465,7 @@ function AIProviderTab({
               value={customEndpoint}
               onChange={(e) => setCustomEndpoint(e.target.value)}
               placeholder={currentProvider.endpoint}
-              className="w-full px-4 py-3 bg-blue-950/50 border border-white/10 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent font-mono text-sm"
+              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono text-sm"
               aria-label="API Endpoint"
             />
             <p className="text-xs text-white/40 mt-2">
@@ -474,7 +509,7 @@ function AIProviderTab({
       </Card>
 
       {/* Usage Stats */}
-      <Card className="bg-blue-900/30 border-white/10 backdrop-blur-md">
+      <Card className="bg-white/5 border-white/10 backdrop-blur-md">
         <div className="p-6">
           <h3 className="text-lg font-semibold text-white mb-4">API Usage (This Month)</h3>
           <div className="grid grid-cols-3 gap-4">
@@ -502,8 +537,8 @@ function AppearanceTab({
   theme,
   setTheme,
 }: {
-  theme: 'light' | 'dark' | 'system';
-  setTheme: (theme: 'light' | 'dark' | 'system') => void;
+  readonly theme: 'light' | 'dark' | 'system';
+  readonly setTheme: (theme: 'light' | 'dark' | 'system') => void;
 }) {
   const themeOptions = [
     { value: 'light' as const, label: 'Light', icon: Sun },
@@ -518,7 +553,7 @@ function AppearanceTab({
         <p className="text-white/60">Customize the look and feel of Justice Companion</p>
       </div>
 
-      <Card className="bg-blue-900/30 border-white/10 backdrop-blur-md">
+      <Card className="bg-white/5 border-white/10 backdrop-blur-md">
         <div className="p-6 space-y-6">
           {/* Theme Selection */}
           <div>
@@ -541,7 +576,7 @@ function AppearanceTab({
                       }
                     `}
                     aria-label={`${option.label} theme`}
-                    aria-pressed={isActive}
+                    aria-pressed={isActive ? 'true' : 'false'}
                   >
                     <Icon className="w-6 h-6 text-white mx-auto mb-2" />
                     <div className="text-sm font-medium text-white">{option.label}</div>
@@ -558,12 +593,12 @@ function AppearanceTab({
             </label>
             <select
               id="font-size"
-              className="w-full px-4 py-3 bg-blue-950/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent [&>option]:text-gray-900 [&>option]:bg-white"
               aria-label="Font size"
             >
-              <option value="small">Small</option>
-              <option value="medium">Medium (Default)</option>
-              <option value="large">Large</option>
+              <option value="small" className="text-gray-900 bg-white">Small</option>
+              <option value="medium" className="text-gray-900 bg-white">Medium (Default)</option>
+              <option value="large" className="text-gray-900 bg-white">Large</option>
             </select>
           </div>
 
@@ -573,7 +608,7 @@ function AppearanceTab({
               <input
                 type="checkbox"
                 defaultChecked
-                className="w-5 h-5 rounded bg-blue-950/50 border-white/10 text-purple-500 focus:ring-2 focus:ring-purple-500 focus:ring-offset-0"
+                className="w-5 h-5 rounded bg-white/5 border-white/10 text-purple-500 focus:ring-2 focus:ring-primary-500 focus:ring-offset-0"
                 aria-label="Enable animations"
               />
               <div>
@@ -590,7 +625,7 @@ function AppearanceTab({
             <label className="flex items-center gap-3 cursor-pointer group">
               <input
                 type="checkbox"
-                className="w-5 h-5 rounded bg-blue-950/50 border-white/10 text-purple-500 focus:ring-2 focus:ring-purple-500 focus:ring-offset-0"
+                className="w-5 h-5 rounded bg-white/5 border-white/10 text-purple-500 focus:ring-2 focus:ring-primary-500 focus:ring-offset-0"
                 aria-label="Compact mode"
               />
               <div>
@@ -622,7 +657,7 @@ function PrivacyTab() {
       </div>
 
       {/* Encryption Status */}
-      <Card className="bg-gradient-to-br from-green-900/30 to-blue-900/30 border-green-500/20 backdrop-blur-md">
+      <Card className="bg-gradient-to-br from-green-900/30 to-primary-900/30 border-green-500/20 backdrop-blur-md">
         <div className="p-6">
           <div className="flex items-center gap-3 mb-4">
             <div className="p-2 rounded-lg bg-green-500/20">
@@ -649,7 +684,7 @@ function PrivacyTab() {
       </Card>
 
       {/* Privacy Controls */}
-      <Card className="bg-blue-900/30 border-white/10 backdrop-blur-md">
+      <Card className="bg-white/5 border-white/10 backdrop-blur-md">
         <div className="p-6 space-y-6">
           <h3 className="text-lg font-semibold text-white">Privacy Controls</h3>
 
@@ -658,7 +693,7 @@ function PrivacyTab() {
               <input
                 type="checkbox"
                 defaultChecked
-                className="w-5 h-5 rounded bg-blue-950/50 border-white/10 text-purple-500 focus:ring-2 focus:ring-purple-500 focus:ring-offset-0"
+                className="w-5 h-5 rounded bg-white/5 border-white/10 text-purple-500 focus:ring-2 focus:ring-primary-500 focus:ring-offset-0"
                 aria-label="Encrypt chat messages"
               />
               <div>
@@ -673,7 +708,7 @@ function PrivacyTab() {
               <input
                 type="checkbox"
                 defaultChecked
-                className="w-5 h-5 rounded bg-blue-950/50 border-white/10 text-purple-500 focus:ring-2 focus:ring-purple-500 focus:ring-offset-0"
+                className="w-5 h-5 rounded bg-white/5 border-white/10 text-purple-500 focus:ring-2 focus:ring-primary-500 focus:ring-offset-0"
                 aria-label="Enable audit logging"
               />
               <div>
@@ -687,7 +722,7 @@ function PrivacyTab() {
             <label className="flex items-center gap-3 cursor-pointer group">
               <input
                 type="checkbox"
-                className="w-5 h-5 rounded bg-blue-950/50 border-white/10 text-purple-500 focus:ring-2 focus:ring-purple-500 focus:ring-offset-0"
+                className="w-5 h-5 rounded bg-white/5 border-white/10 text-purple-500 focus:ring-2 focus:ring-primary-500 focus:ring-offset-0"
                 aria-label="Allow analytics"
               />
               <div>
@@ -707,7 +742,7 @@ function PrivacyTab() {
       </Card>
 
       {/* Session Management */}
-      <Card className="bg-blue-900/30 border-white/10 backdrop-blur-md">
+      <Card className="bg-white/5 border-white/10 backdrop-blur-md">
         <div className="p-6 space-y-4">
           <h3 className="text-lg font-semibold text-white">Session Management</h3>
 
@@ -717,14 +752,14 @@ function PrivacyTab() {
             </label>
             <select
               id="session-timeout"
-              className="w-full px-4 py-3 bg-blue-950/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent [&>option]:text-gray-900 [&>option]:bg-white"
               aria-label="Session timeout"
             >
-              <option value="15">15 minutes</option>
-              <option value="30">30 minutes</option>
-              <option value="60">1 hour</option>
-              <option value="1440">24 hours (Default)</option>
-              <option value="0">Never</option>
+              <option value="15" className="text-gray-900 bg-white">15 minutes</option>
+              <option value="30" className="text-gray-900 bg-white">30 minutes</option>
+              <option value="60" className="text-gray-900 bg-white">1 hour</option>
+              <option value="1440" className="text-gray-900 bg-white">24 hours (Default)</option>
+              <option value="0" className="text-gray-900 bg-white">Never</option>
             </select>
           </div>
 
@@ -756,7 +791,7 @@ function DataManagementTab() {
       </div>
 
       {/* GDPR Compliance */}
-      <Card className="bg-blue-900/30 border-white/10 backdrop-blur-md">
+      <Card className="bg-white/5 border-white/10 backdrop-blur-md">
         <div className="p-6 space-y-4">
           <div className="flex items-center gap-3 mb-2">
             <Shield className="w-6 h-6 text-purple-400" />
@@ -795,7 +830,7 @@ function DataManagementTab() {
       </Card>
 
       {/* Storage Usage */}
-      <Card className="bg-blue-900/30 border-white/10 backdrop-blur-md">
+      <Card className="bg-white/5 border-white/10 backdrop-blur-md">
         <div className="p-6">
           <h3 className="text-lg font-semibold text-white mb-4">Storage Usage</h3>
 
@@ -804,7 +839,7 @@ function DataManagementTab() {
               <span className="text-white/60">Cases</span>
               <span className="text-white font-medium">24.5 MB</span>
             </div>
-            <div className="w-full bg-blue-950/50 rounded-full h-2">
+            <div className="w-full bg-white/5 rounded-full h-2">
               <div className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full" style={{ width: '45%' }} />
             </div>
 
@@ -812,7 +847,7 @@ function DataManagementTab() {
               <span className="text-white/60">Evidence Files</span>
               <span className="text-white font-medium">156.2 MB</span>
             </div>
-            <div className="w-full bg-blue-950/50 rounded-full h-2">
+            <div className="w-full bg-white/5 rounded-full h-2">
               <div className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full" style={{ width: '78%' }} />
             </div>
 
@@ -820,7 +855,7 @@ function DataManagementTab() {
               <span className="text-white/60">Chat History</span>
               <span className="text-white font-medium">8.1 MB</span>
             </div>
-            <div className="w-full bg-blue-950/50 rounded-full h-2">
+            <div className="w-full bg-white/5 rounded-full h-2">
               <div className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full" style={{ width: '15%' }} />
             </div>
           </div>
@@ -859,8 +894,8 @@ function NotificationsTab({
   enabled,
   setEnabled,
 }: {
-  enabled: boolean;
-  setEnabled: (enabled: boolean) => void;
+  readonly enabled: boolean;
+  readonly setEnabled: (enabled: boolean) => void;
 }) {
   return (
     <div className="space-y-6 max-w-4xl">
@@ -869,7 +904,7 @@ function NotificationsTab({
         <p className="text-white/60">Manage how you receive notifications</p>
       </div>
 
-      <Card className="bg-blue-900/30 border-white/10 backdrop-blur-md">
+      <Card className="bg-white/5 border-white/10 backdrop-blur-md">
         <div className="p-6 space-y-6">
           {/* Master Toggle */}
           <div className="flex items-center justify-between pb-4 border-b border-white/10">
@@ -885,7 +920,7 @@ function NotificationsTab({
                 className="sr-only peer"
                 aria-label="Enable notifications"
               />
-              <div className="w-11 h-6 bg-white/20 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-500/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-purple-500 peer-checked:to-pink-500"></div>
+              <div className="w-11 h-6 bg-white/20 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-500/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-purple-500 peer-checked:to-pink-500"></div>
             </label>
           </div>
 
@@ -903,7 +938,7 @@ function NotificationsTab({
                 <input
                   type="checkbox"
                   defaultChecked
-                  className="w-5 h-5 rounded bg-blue-950/50 border-white/10 text-purple-500 focus:ring-2 focus:ring-purple-500 focus:ring-offset-0"
+                  className="w-5 h-5 rounded bg-white/5 border-white/10 text-purple-500 focus:ring-2 focus:ring-primary-500 focus:ring-offset-0"
                   aria-label="Case updates"
                 />
                 <div>
@@ -918,7 +953,7 @@ function NotificationsTab({
                 <input
                   type="checkbox"
                   defaultChecked
-                  className="w-5 h-5 rounded bg-blue-950/50 border-white/10 text-purple-500 focus:ring-2 focus:ring-purple-500 focus:ring-offset-0"
+                  className="w-5 h-5 rounded bg-white/5 border-white/10 text-purple-500 focus:ring-2 focus:ring-primary-500 focus:ring-offset-0"
                   aria-label="AI responses"
                 />
                 <div>
@@ -932,7 +967,7 @@ function NotificationsTab({
               <label className="flex items-center gap-3 cursor-pointer group">
                 <input
                   type="checkbox"
-                  className="w-5 h-5 rounded bg-blue-950/50 border-white/10 text-purple-500 focus:ring-2 focus:ring-purple-500 focus:ring-offset-0"
+                  className="w-5 h-5 rounded bg-white/5 border-white/10 text-purple-500 focus:ring-2 focus:ring-primary-500 focus:ring-offset-0"
                   aria-label="Evidence uploads"
                 />
                 <div>
@@ -946,7 +981,7 @@ function NotificationsTab({
               <label className="flex items-center gap-3 cursor-pointer group">
                 <input
                   type="checkbox"
-                  className="w-5 h-5 rounded bg-blue-950/50 border-white/10 text-purple-500 focus:ring-2 focus:ring-purple-500 focus:ring-offset-0"
+                  className="w-5 h-5 rounded bg-white/5 border-white/10 text-purple-500 focus:ring-2 focus:ring-primary-500 focus:ring-offset-0"
                   aria-label="System alerts"
                 />
                 <div>
@@ -968,7 +1003,7 @@ function NotificationsTab({
 
       {/* Notification Sound */}
       {enabled && (
-        <Card className="bg-blue-900/30 border-white/10 backdrop-blur-md">
+        <Card className="bg-white/5 border-white/10 backdrop-blur-md">
           <div className="p-6 space-y-4">
             <h3 className="text-lg font-semibold text-white">Sound</h3>
 
@@ -978,14 +1013,14 @@ function NotificationsTab({
               </label>
               <select
                 id="notification-sound"
-                className="w-full px-4 py-3 bg-blue-950/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent [&>option]:text-gray-900 [&>option]:bg-white"
                 aria-label="Notification sound"
               >
-                <option value="default">Default</option>
-                <option value="chime">Chime</option>
-                <option value="bell">Bell</option>
-                <option value="pop">Pop</option>
-                <option value="none">None (Silent)</option>
+                <option value="default" className="text-gray-900 bg-white">Default</option>
+                <option value="chime" className="text-gray-900 bg-white">Chime</option>
+                <option value="bell" className="text-gray-900 bg-white">Bell</option>
+                <option value="pop" className="text-gray-900 bg-white">Pop</option>
+                <option value="none" className="text-gray-900 bg-white">None (Silent)</option>
               </select>
             </div>
           </div>
@@ -1005,7 +1040,7 @@ function AboutTab() {
       </div>
 
       {/* App Info */}
-      <Card className="bg-gradient-to-br from-blue-900/50 to-purple-900/50 border-white/10 backdrop-blur-md">
+      <Card className="bg-gradient-to-br from-gray-900 via-primary-900/50 to-gray-900 border-white/10 backdrop-blur-md">
         <div className="p-6 text-center space-y-4">
           <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/50">
             <Shield className="w-10 h-10 text-white" />
@@ -1024,7 +1059,7 @@ function AboutTab() {
       </Card>
 
       {/* System Info */}
-      <Card className="bg-blue-900/30 border-white/10 backdrop-blur-md">
+      <Card className="bg-white/5 border-white/10 backdrop-blur-md">
         <div className="p-6 space-y-3">
           <h3 className="text-lg font-semibold text-white mb-4">System Information</h3>
 
@@ -1050,7 +1085,7 @@ function AboutTab() {
       </Card>
 
       {/* Links */}
-      <Card className="bg-blue-900/30 border-white/10 backdrop-blur-md">
+      <Card className="bg-white/5 border-white/10 backdrop-blur-md">
         <div className="p-6 space-y-3">
           <h3 className="text-lg font-semibold text-white mb-4">Resources</h3>
 
