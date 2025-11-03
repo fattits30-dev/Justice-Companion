@@ -147,9 +147,9 @@ export function SaveToCaseDialog({
           <div className="p-6 space-y-6 overflow-y-auto max-h-[calc(90vh-180px)]">
             {/* Message Preview */}
             <div>
-              <label className="block text-sm font-medium text-white/90 mb-2">
+              <div className="block text-sm font-medium text-white/90 mb-2">
                 Content to Save
-              </label>
+              </div>
               <div className="p-4 bg-white/5 border border-white/10 rounded-lg max-h-48 overflow-y-auto">
                 <p className="text-sm text-white/80 whitespace-pre-wrap line-clamp-6">
                   {messageContent}

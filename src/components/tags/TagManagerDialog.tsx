@@ -6,9 +6,9 @@
 import { useState, useEffect } from 'react';
 import { X, Plus, Edit2, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Button } from '../ui/Button';
-import { Card } from '../ui/Card';
-import { TagBadge } from '../ui/TagBadge';
+import { Button } from '../ui/Button.tsx';
+import { Card } from '../ui/Card.tsx';
+import { TagBadge } from '../ui/TagBadge.tsx';
 import type { Tag, CreateTagInput, UpdateTagInput } from '../../models/Tag';
 
 interface TagManagerDialogProps {
@@ -253,9 +253,9 @@ export function TagManagerDialog({ open, onClose }: TagManagerDialogProps) {
                 <div className="space-y-4">
                   {/* Name Input */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-1.5">
+                    <div className="block text-sm font-medium text-gray-300 mb-1.5">
                       Name <span className="text-red-400">*</span>
-                    </label>
+                    </div>
                     <input
                       type="text"
                       value={formData.name}
@@ -271,9 +271,9 @@ export function TagManagerDialog({ open, onClose }: TagManagerDialogProps) {
 
                   {/* Color Picker */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-1.5">
+                    <div className="block text-sm font-medium text-gray-300 mb-1.5">
                       Color <span className="text-red-400">*</span>
-                    </label>
+                    </div>
                     <div className="flex flex-wrap gap-2">
                       {PRESET_COLORS.map((color) => (
                         <button
@@ -296,9 +296,9 @@ export function TagManagerDialog({ open, onClose }: TagManagerDialogProps) {
 
                   {/* Description */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-1.5">
+                    <div className="block text-sm font-medium text-gray-300 mb-1.5">
                       Description (optional)
-                    </label>
+                    </div>
                     <textarea
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
