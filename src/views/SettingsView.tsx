@@ -93,6 +93,7 @@ export function SettingsView() {
               return (
                 <button
                   key={tab.id}
+                  type="button"
                   role="tab"
                   aria-selected={isActive ? 'true' : 'false'}
                   aria-controls={`${tab.id}-panel`}
@@ -566,6 +567,7 @@ function AppearanceTab({
                 return (
                   <button
                     key={option.value}
+                    type="button"
                     onClick={() => setTheme(option.value)}
                     className={`
                       p-4 rounded-lg border-2 transition-all
@@ -834,13 +836,14 @@ function DataManagementTab() {
         <div className="p-6">
           <h3 className="text-lg font-semibold text-white mb-4">Storage Usage</h3>
 
+          {/* Note: Inline styles used for progress bar widths - will be dynamic based on actual storage usage */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-white/60">Cases</span>
               <span className="text-white font-medium">24.5 MB</span>
             </div>
             <div className="w-full bg-white/5 rounded-full h-2">
-              <div className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full" style={{ width: '45%' }} />
+              <div className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all" style={{ width: '45%' }} />
             </div>
 
             <div className="flex items-center justify-between">
@@ -848,7 +851,7 @@ function DataManagementTab() {
               <span className="text-white font-medium">156.2 MB</span>
             </div>
             <div className="w-full bg-white/5 rounded-full h-2">
-              <div className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full" style={{ width: '78%' }} />
+              <div className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all" style={{ width: '78%' }} />
             </div>
 
             <div className="flex items-center justify-between">
@@ -856,7 +859,7 @@ function DataManagementTab() {
               <span className="text-white font-medium">8.1 MB</span>
             </div>
             <div className="w-full bg-white/5 rounded-full h-2">
-              <div className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full" style={{ width: '15%' }} />
+              <div className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all" style={{ width: '15%' }} />
             </div>
           </div>
 
@@ -1089,22 +1092,22 @@ function AboutTab() {
         <div className="p-6 space-y-3">
           <h3 className="text-lg font-semibold text-white mb-4">Resources</h3>
 
-          <button className="w-full flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors group">
+          <button type="button" className="w-full flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors group">
             <span className="text-white group-hover:text-purple-400 transition-colors">Documentation</span>
             <ChevronRight className="w-5 h-5 text-white/40 group-hover:text-purple-400 transition-colors" />
           </button>
 
-          <button className="w-full flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors group">
+          <button type="button" className="w-full flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors group">
             <span className="text-white group-hover:text-purple-400 transition-colors">Privacy Policy</span>
             <ChevronRight className="w-5 h-5 text-white/40 group-hover:text-purple-400 transition-colors" />
           </button>
 
-          <button className="w-full flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors group">
+          <button type="button" className="w-full flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors group">
             <span className="text-white group-hover:text-purple-400 transition-colors">Terms of Service</span>
             <ChevronRight className="w-5 h-5 text-white/40 group-hover:text-purple-400 transition-colors" />
           </button>
 
-          <button className="w-full flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors group">
+          <button type="button" className="w-full flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors group">
             <span className="text-white group-hover:text-purple-400 transition-colors">Open Source Licenses</span>
             <ChevronRight className="w-5 h-5 text-white/40 group-hover:text-purple-400 transition-colors" />
           </button>

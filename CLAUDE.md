@@ -72,9 +72,9 @@ Every code change MUST follow these principles. No exceptions.
 
 ## MCP Servers (Model Context Protocol)
 
-**STATUS: ALL 7 SERVERS CONFIGURED AND OPERATIONAL**
+**STATUS: ALL 8 SERVERS CONFIGURED AND OPERATIONAL**
 
-Justice Companion has 7 MCP servers providing 73 specialized tools for development, legal research, and automation.
+Justice Companion has 8 MCP servers providing 80+ specialized tools for development, legal research, AI integration, and automation.
 
 ### Server Status
 ```
@@ -85,6 +85,7 @@ Justice Companion has 7 MCP servers providing 73 specialized tools for developme
 ✓ Sequential Thinking (1 tool)    - Deep reasoning (32K tokens)
 ✓ Filesystem (14 tools)           - C:\ drive access
 ✓ Context7 (2 tools)              - Up-to-date library docs
+✓ Hugging Face (7+ tools)         - AI models, datasets, inference API
 ```
 
 ### Configuration Location
@@ -112,6 +113,14 @@ All MCP servers are configured in `.mcp.json` at project root using Windows-comp
 - GitHub MCP: Create issues, PRs, manage repository operations
 - Filesystem MCP: Read/write case files, search evidence documents
 - Context7 MCP: Get current docs for OpenAI, Electron, React, TypeScript
+
+**AI Integration & Models:**
+- Hugging Face MCP: Access 500k+ AI models, datasets, and inference API
+  - Model discovery and metadata
+  - Dataset search and download
+  - Inference API for text generation, embeddings, classification
+  - Model hosting and deployment
+  - Use for legal document classification, entity extraction, summarization
 
 **Advanced Analysis:**
 - Sequential Thinking MCP: Multi-step reasoning for complex architectural decisions
@@ -143,6 +152,16 @@ All MCP servers are configured in `.mcp.json` at project root using Windows-comp
 4. Document in GitHub issue using GitHub MCP
 ```
 
+**AI-Powered Legal Analysis:**
+```
+1. Use Hugging Face to find legal document classification models
+2. Download legal-bert or similar fine-tuned models
+3. Use Inference API for document categorization (contracts, briefs, evidence)
+4. Extract entities (parties, dates, citations) from case documents
+5. Generate summaries of lengthy legal texts
+6. Store model IDs and results in Memory MCP
+```
+
 ### Verification Commands
 
 Check MCP server status:
@@ -165,7 +184,24 @@ If servers show as disconnected:
 Common issues:
 - Context7 may occasionally fail to reconnect (non-critical)
 - GitHub requires valid GITHUB_PERSONAL_ACCESS_TOKEN in env
+- Hugging Face requires valid HF_API_TOKEN in env (get from huggingface.co/settings/tokens)
 - Filesystem requires explicit directory paths (currently: C:\)
+
+### Environment Variables for MCP Servers
+
+Add to your system environment variables or `.env` file:
+
+```bash
+# GitHub MCP (required for create/update operations)
+GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxx
+
+# Hugging Face MCP (required for model downloads and inference)
+HF_TOKEN=hf_xxxxxxxxxxxxxxxxxxxx
+```
+
+**Get tokens:**
+- GitHub: https://github.com/settings/tokens (requires `repo` scope)
+- Hugging Face: https://huggingface.co/settings/tokens (read or write access)
 
 ## Critical Requirements
 

@@ -87,6 +87,7 @@ function CaseCardComponent({
               >
                 {onEdit && (
                   <button
+                    type="button"
                     onClick={() => onEdit(caseItem.id)}
                     className="
                       p-2 rounded-lg
@@ -102,6 +103,7 @@ function CaseCardComponent({
                 )}
                 {onView && (
                   <button
+                    type="button"
                     onClick={() => onView(caseItem.id)}
                     className="
                       p-2 rounded-lg
@@ -116,6 +118,7 @@ function CaseCardComponent({
                   </button>
                 )}
                 <button
+                  type="button"
                   onClick={() => onDelete(caseItem.id)}
                   className="
                     p-2 rounded-lg
