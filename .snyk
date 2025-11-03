@@ -1,0 +1,140 @@
+# Snyk Security Policy for Justice Companion
+# Generated: 2025-11-03
+# Policy Version: 1.0.0
+#
+# This file suppresses false positive security warnings in test and development code.
+# All suppressions are documented with clear rationale and expiration dates.
+
+version: v1.25.0
+
+ignore:
+  # =============================================================================
+  # Test Files - Hardcoded Passwords
+  # =============================================================================
+  # Rationale: Test fixtures require hardcoded credentials to validate
+  # authentication flows. These are not production secrets and are necessary
+  # for testing authentication logic.
+  # Review: Annually (expires 2026-12-31)
+
+  'snyk-code:javascript/HardcodedPassword':
+    # E2E Test Specifications
+    - 'e2e/**/*.spec.ts':
+        reason: 'E2E test credentials - non-production test data for authentication flows'
+        expires: '2026-12-31T00:00:00.000Z'
+
+    # Unit Test Files
+    - 'tests/**/*.test.ts':
+        reason: 'Unit test fixtures with intentional hardcoded authentication test values'
+        expires: '2026-12-31T00:00:00.000Z'
+
+    # Test Helpers and Factories
+    - 'tests/helpers/**/*.ts':
+        reason: 'Test helper factories with sample authentication data for test fixtures'
+        expires: '2026-12-31T00:00:00.000Z'
+
+    # Test Setup Files
+    - 'tests/e2e/setup/**/*.ts':
+        reason: 'E2E test database setup with sample user credentials'
+        expires: '2026-12-31T00:00:00.000Z'
+
+    # Source Test Files (co-located with source)
+    - 'src/**/*.test.ts':
+        reason: 'Unit test fixtures co-located with source code'
+        expires: '2026-12-31T00:00:00.000Z'
+
+    - 'src/**/*.test.tsx':
+        reason: 'React component test fixtures'
+        expires: '2026-12-31T00:00:00.000Z'
+
+    # Development Scripts
+    - 'scripts/**/*.js':
+        reason: 'Development scripts, not deployed to production'
+        expires: '2026-12-31T00:00:00.000Z'
+
+    # Test Utility Files
+    - 'src/utils/passwordValidation.test.ts':
+        reason: 'Password validation test requires sample passwords to validate rules'
+        expires: '2026-12-31T00:00:00.000Z'
+
+  # =============================================================================
+  # Test Files - Hardcoded Credentials
+  # =============================================================================
+  # Rationale: Test code requires sample usernames, emails, and other credentials
+  # to test repository patterns and authentication decorators.
+
+  'snyk-code:javascript/HardcodedCredential':
+    # All Test Files
+    - 'tests/**/*':
+        reason: 'Test fixtures with sample credentials for validating authentication logic'
+        expires: '2026-12-31T00:00:00.000Z'
+
+    # Repository Decorator Tests
+    - 'src/repositories/decorators/*.test.ts':
+        reason: 'Repository decorator test fixtures with sample user data'
+        expires: '2026-12-31T00:00:00.000Z'
+
+    # Source Test Files
+    - 'src/**/*.test.ts':
+        reason: 'Source test fixtures with sample credentials'
+        expires: '2026-12-31T00:00:00.000Z'
+
+    # Development Scripts
+    - 'scripts/**/*.js':
+        reason: 'Development scripts with sample database connection credentials'
+        expires: '2026-12-31T00:00:00.000Z'
+
+  # =============================================================================
+  # Hardcoded Non-Cryptographic Secrets
+  # =============================================================================
+  # Rationale: Test API keys and tokens used for testing integrations.
+
+  'snyk-code:javascript/HardcodedNonCryptographicSecret':
+    # E2E Tests
+    - 'e2e/**/*.spec.ts':
+        reason: 'Test API keys for E2E integration tests (non-production)'
+        expires: '2026-12-31T00:00:00.000Z'
+
+    # All Test Files
+    - 'tests/**/*':
+        reason: 'Test tokens and API keys for integration testing'
+        expires: '2026-12-31T00:00:00.000Z'
+
+  # =============================================================================
+  # Development-Only HTTP Content Loading
+  # =============================================================================
+  # Rationale: Electron loads http://localhost:5176 ONLY in development mode
+  # for Vite dev server. Production uses file:// protocol via loadFile().
+  # Conditional logic ensures HTTP is never used in production builds.
+
+  'snyk-code:javascript/ElectronLoadInsecureContent':
+    - 'electron/main.ts':
+        reason: 'Development server loads http://localhost:5176 in dev mode only (line 67). Production uses loadFile() with file:// protocol. Conditional: if (NODE_ENV === "development" || "test")'
+        expires: '2026-12-31T00:00:00.000Z'
+
+# =============================================================================
+# Policy Maintenance Notes
+# =============================================================================
+#
+# Last Updated: 2025-11-03
+# Next Review: 2025-12-31 (quarterly review recommended)
+#
+# When to Update This Policy:
+# 1. New test files added that trigger false positives
+# 2. Test patterns change (e.g., moving from hardcoded to ENV vars)
+# 3. New development scripts added with sample credentials
+# 4. Annual security audit
+#
+# What NOT to Suppress:
+# - Production code with hardcoded secrets
+# - API keys in source files (src/**/*.ts except *.test.ts)
+# - Database credentials in production config
+# - Any secrets that could be used in deployed application
+#
+# Verification Commands:
+#   snyk test --policy-path=.snyk
+#   snyk code test --policy-path=.snyk
+#
+# Related Documentation:
+# - SNYK_SECURITY_REMEDIATION_PLAN.md
+# - SNYK_INVESTIGATION_FINDINGS.md
+# - .github/instructions/snyk_rules.instructions.md
