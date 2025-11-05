@@ -25,6 +25,16 @@ export type AuditEventType =
   | 'timeline_event.create'
   | 'timeline_event.update'
   | 'timeline_event.delete'
+  | 'timeline_event.complete'
+  // Case deadline operations
+  | 'case_deadline.create'
+  | 'case_deadline.update'
+  | 'case_deadline.delete'
+  | 'case_deadline.complete'
+  // ACAS tracking operations
+  | 'acas_tracking.create'
+  | 'acas_tracking.update'
+  | 'acas_tracking.delete'
   // Chat message operations (Phase 3)
   | 'message.create'
   | 'message.content_access'
@@ -93,7 +103,7 @@ export interface AuditLogEntry {
   userId: string | null;
   resourceType: string;
   resourceId: string;
-  action: 'create' | 'read' | 'update' | 'delete' | 'export' | 'decrypt' | 'evict';
+  action: 'create' | 'read' | 'update' | 'delete' | 'export' | 'decrypt' | 'evict' | 'complete';
   details: Record<string, unknown> | null;
   ipAddress: string | null;
   userAgent: string | null;
@@ -109,7 +119,7 @@ export interface AuditEvent {
   userId?: string;
   resourceType: string;
   resourceId: string;
-  action: 'create' | 'read' | 'update' | 'delete' | 'export' | 'decrypt' | 'evict';
+  action: 'create' | 'read' | 'update' | 'delete' | 'export' | 'decrypt' | 'evict' | 'complete';
   details?: Record<string, unknown>;
   ipAddress?: string;
   userAgent?: string;

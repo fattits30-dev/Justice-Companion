@@ -3,12 +3,9 @@ import type {
   Deadline,
   CreateDeadlineInput,
   UpdateDeadlineInput,
-  DeadlineWithCase,
 } from '../domains/timeline/entities/Deadline.ts';
 import type {
   DeadlineDependency,
-  CreateDeadlineDependencyInput,
-  UpdateDeadlineDependencyInput,
   DeadlineWithDependencies,
 } from '../domains/timeline/entities/DeadlineDependency.ts';
 import type { AuditLogger } from '../services/AuditLogger.ts';
@@ -236,6 +233,7 @@ export class DeadlineRepository {
       return null;
     }
 
+    // Get outgoing dependencies (this deadline depends on...)
     const dependenciesStmt = this.db.prepare(`
       SELECT
         id, deadline_id as deadlineId, dependent_deadline_id as dependentDeadlineId,
@@ -243,12 +241,24 @@ export class DeadlineRepository {
       FROM deadline_dependencies
       WHERE deadline_id = ? AND deleted_at IS NULL
     `);
-
     const dependencies = dependenciesStmt.all(id) as DeadlineDependency[];
+
+    // Get incoming dependencies (other deadlines depend on this)
+    const dependentsStmt = this.db.prepare(`
+      SELECT
+        id, deadline_id as deadlineId, dependent_deadline_id as dependentDeadlineId,
+        dependency_type as dependencyType, created_at as createdAt
+      FROM deadline_dependencies
+      WHERE dependent_deadline_id = ? AND deleted_at IS NULL
+    `);
+    const dependents = dependentsStmt.all(id) as DeadlineDependency[];
 
     return {
       ...deadline,
       dependencies,
+      dependents,
+      dependenciesCount: dependencies.length,
+      dependentsCount: dependents.length,
     };
   }
 }

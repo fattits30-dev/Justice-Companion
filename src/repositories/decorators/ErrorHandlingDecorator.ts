@@ -179,14 +179,14 @@ export class ErrorHandlingDecorator<T> extends RepositoryDecorator<T> {
   /**
    * Check if repository has a method
    */
-  private hasMethod(methodName: string): boolean {
+  protected hasMethod(methodName: string): boolean {
     return typeof (this.repository as any)[methodName] === 'function';
   }
 
   /**
    * Forward call to repository if method exists
    */
-  private forwardCall(methodName: string, ...args: any[]): Promise<any> {
+  protected forwardCall(methodName: string, ...args: any[]): Promise<any> {
     const method = (this.repository as any)[methodName];
     if (typeof method !== 'function') {
       throw new Error(`Method ${methodName} not found on repository`);

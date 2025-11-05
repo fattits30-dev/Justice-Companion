@@ -38,14 +38,14 @@ export interface DeadlineWithDependencies {
   caseId: number;
   userId: number;
   title: string;
-  description: string | null;
+  description?: string | null;
   deadlineDate: string;
   priority: 'low' | 'medium' | 'high' | 'critical';
   status: 'upcoming' | 'overdue' | 'completed';
-  completedAt: string | null;
+  completedAt?: string | null;
   createdAt: string;
   updatedAt: string;
-  deletedAt: string | null;
+  deletedAt?: string | null;
 
   // Additional UI metadata
   caseTitle?: string; // Optional case title for Gantt chart display
