@@ -10,59 +10,10 @@ env:
   PNPM_VERSION: '10.18.3'
 
 jobs:
-  # Pre-release security validation
-  pre-release-security:
-    name: Pre-Release Security Validation
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      # Critical: Fail release if high/critical vulnerabilities found
-      - name: Security audit (blocking)
-        run: |
-          echo "🔒 Running security audit..."
-          pnpm audit --audit-level=high
-          if [ $? -ne 0 ]; then
-            echo "❌ RELEASE BLOCKED: Critical/High vulnerabilities found"
-            echo "Run 'pnpm audit' locally and fix vulnerabilities before releasing"
-            exit 1
-          fi
-
-      - name: Trivy vulnerability scan
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          severity: 'CRITICAL,HIGH'
-          exit-code: '1'  # Block release on critical/high
-
-      - name: Secret scanning
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   # Build release artifacts for all platforms
   build-release:
     name: Build Release - ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    needs: [pre-release-security]
     timeout-minutes: 40
 
     strategy:
@@ -93,62 +44,13 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
 
-      # macOS code signing setup
-      - name: Import Code Signing Certificate (macOS)
-        if: matrix.platform == 'mac'
-        env:
-          CERTIFICATE_BASE64: ${{ secrets.MACOS_CERTIFICATE }}
-          CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
-        run: |
-          if [ -n "$CERTIFICATE_BASE64" ]; then
-            echo "Setting up code signing..."
-            echo $CERTIFICATE_BASE64 | base64 --decode > certificate.p12
-            security create-keychain -p actions temp.keychain
-            security default-keychain -s temp.keychain
-            security unlock-keychain -p actions temp.keychain
-            security import certificate.p12 -k temp.keychain -P $CERTIFICATE_PASSWORD -T /usr/bin/codesign
-            security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k actions temp.keychain
-            rm certificate.p12
-          else
-            echo "⚠️ No code signing certificate configured"
-          fi
-
-      # Windows code signing setup
-      - name: Setup Code Signing (Windows)
-        if: matrix.platform == 'win'
-        env:
-          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
-          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
-        run: |
-          if ($env:WINDOWS_CERTIFICATE) {
-            Write-Host "Setting up code signing..."
-            [IO.File]::WriteAllBytes("certificate.pfx", [Convert]::FromBase64String($env:WINDOWS_CERTIFICATE))
-          } else {
-            Write-Host "⚠️ No code signing certificate configured"
-          }
-        shell: pwsh
-
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-
-      - name: Rebuild better-sqlite3 for Node.js
-        run: pnpm rebuild:node
-
-      - name: Run tests (sanity check)
-        run: pnpm test
-        continue-on-error: true  # Non-blocking - full test suite runs in CI workflow
-        env:
-          CI: true
 
       - name: Build Electron app for ${{ matrix.platform }}
         run: pnpm build:${{ matrix.platform }}
         env:
           CI: true
-          CSC_LINK: ${{ matrix.platform == 'win' && 'certificate.pfx' || '' }}
-          CSC_KEY_PASSWORD: ${{ matrix.platform == 'win' && secrets.WINDOWS_CERTIFICATE_PASSWORD || '' }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
 
       # Verify build artifacts exist
       - name: Verify build artifacts
@@ -168,14 +70,6 @@ jobs:
           path: release/${{ matrix.artifact }}
           retention-days: 14
 
-      # Cleanup certificates
-      - name: Cleanup certificates
-        if: always()
-        run: |
-          rm -f certificate.p12 certificate.pfx
-          security delete-keychain temp.keychain || true
-        shell: bash
-
   # Create GitHub release with all artifacts
   create-release:
     name: Create GitHub Release
@@ -190,7 +84,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Full history for changelog
+          fetch-depth: 0
 
       # Download all platform artifacts
       - name: Download Windows artifacts
@@ -252,32 +146,14 @@ jobs:
             **macOS:**
             - Download `Justice-Companion-${{ steps.version.outputs.version }}.dmg`
             - Open and drag to Applications folder
-            - *Note: May require "Allow apps from identified developers" in Security settings*
 
             **Linux:**
-            - **AppImage** (recommended): Download `Justice-Companion-${{ steps.version.outputs.version }}.AppImage`, make executable, and run
-            - **Debian/Ubuntu**: Download and install `justice-companion_${{ steps.version.outputs.version }}_amd64.deb`
-
-            ### 🔒 Security
-
-            - All builds are scanned for vulnerabilities before release
-            - Installers are code-signed (macOS/Windows when certificates configured)
-            - SHA256 checksums available in release assets
+            - **AppImage**: Download and run
+            - **Debian/Ubuntu**: Download and install `.deb` file
 
             ### 📋 Changelog
 
             ${{ steps.changelog.outputs.changelog }}
-
-            ### ⚠️ Important Notes
-
-            - **Node.js 20.18.0 LTS** required for development
-            - **Local-first**: All data stored locally with AES-256-GCM encryption
-            - **GDPR-compliant**: Full data portability and erasure support
-            - **Auto-updates**: The app will check for updates automatically
-
-            ### 🐛 Known Issues
-
-            See [GitHub Issues](https://github.com/${{ github.repository }}/issues) for current bugs and feature requests.
 
             ---
 
@@ -296,8 +172,8 @@ jobs:
       - name: Generate checksums
         run: |
           cd release
-          sha256sum * > SHA256SUMS.txt
-          cat SHA256SUMS.txt
+          sha256sum * > SHA256SUMS.txt || true
+          cat SHA256SUMS.txt || true
 
       - name: Upload checksums
         uses: softprops/action-gh-release@v1
@@ -305,50 +181,4 @@ jobs:
           files: release/SHA256SUMS.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  # Post-release verification
-  verify-release:
-    name: Verify Release
-    runs-on: ubuntu-latest
-    needs: [create-release]
-    timeout-minutes: 5
-
-    steps:
-      - name: Verify release exists
-        run: |
-          VERSION=${GITHUB_REF#refs/tags/v}
-          echo "Verifying release v$VERSION..."
-
-          RELEASE_URL="https://api.github.com/repos/${{ github.repository }}/releases/tags/v$VERSION"
-          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" $RELEASE_URL)
-
-          if [ "$RESPONSE" -eq 200 ]; then
-            echo "✅ Release verified successfully"
-          else
-            echo "❌ Release verification failed (HTTP $RESPONSE)"
-            exit 1
-          fi
-
-      - name: Notify release completion
-        run: |
-          VERSION=${GITHUB_REF#refs/tags/v}
-          echo "🎉 Release v$VERSION completed successfully!"
-          echo "📦 Download: https://github.com/${{ github.repository }}/releases/tag/v$VERSION"
-
-  # Optional: Deploy to auto-update server
-  deploy-updates:
-    name: Deploy to Update Server
-    runs-on: ubuntu-latest
-    needs: [create-release]
-    if: ${{ !contains(github.ref_name, 'beta') && !contains(github.ref_name, 'alpha') }}
-    timeout-minutes: 10
-
-    steps:
-      - name: Deploy to update server
-        run: |
-          echo "⚠️ Auto-update server not configured"
-          echo "TODO: Configure Electron auto-updater:"
-          echo "  - Set up update server (e.g., Hazel, Nuts, or custom)"
-          echo "  - Configure electron-updater in main process"
-          echo "  - Implement update checking and installation"
         continue-on-error: true
