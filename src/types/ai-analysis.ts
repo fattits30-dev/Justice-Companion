@@ -348,3 +348,101 @@ export interface DocumentMetadata {
   /** Case identifier */
   caseId: string;
 }
+
+// ============================================================================
+// DOCUMENT EXTRACTION (AI-Assisted Case Creation)
+// ============================================================================
+
+/**
+ * Field extraction source metadata
+ * Shows where in the document the data came from
+ */
+export interface ExtractionSource {
+  /** Location in document (e.g., "page 1, line 3", "header", "footer") */
+  source: string;
+  /** Exact text extracted */
+  text: string;
+}
+
+/**
+ * Confidence scores for extracted fields
+ * Scale: 0.0 (no confidence) to 1.0 (very confident)
+ */
+export interface FieldConfidence {
+  /** Confidence in case title extraction */
+  title: number;
+  /** Confidence in case type classification */
+  caseType: number;
+  /** Confidence in opposing party identification */
+  opposingParty: number;
+  /** Confidence in case number extraction */
+  caseNumber: number;
+  /** Confidence in court name extraction */
+  courtName: number;
+  /** Confidence in deadline extraction */
+  filingDeadline: number;
+}
+
+/**
+ * Suggested case data extracted from document
+ * Used for AI-assisted case creation with user confirmation
+ */
+export interface SuggestedCaseData {
+  /** WARNING: Document belongs to someone else (name mismatch) */
+  documentOwnershipMismatch?: boolean;
+
+  /** Name found in document (if different from registered user) */
+  documentClaimantName?: string | null;
+
+  /** Suggested case title */
+  title: string;
+
+  /** Suggested case type */
+  caseType: 'employment' | 'housing' | 'consumer' | 'family' | 'other';
+
+  /** Brief description extracted/generated from document */
+  description: string;
+
+  /** Claimant name (auto-filled from user profile, not extracted from document) */
+  claimantName?: string;
+
+  /** Opposing party name (if identifiable) */
+  opposingParty?: string;
+
+  /** Case number (if found in document) */
+  caseNumber?: string;
+
+  /** Court/tribunal name (if found) */
+  courtName?: string;
+
+  /** Filing deadline (if mentioned) */
+  filingDeadline?: string;
+
+  /** Next hearing date (if mentioned) */
+  nextHearingDate?: string;
+
+  /** Confidence scores for each field */
+  confidence: FieldConfidence;
+
+  /** Source metadata showing where data was extracted from */
+  extractedFrom: {
+    title?: ExtractionSource;
+    description?: ExtractionSource;
+    opposingParty?: ExtractionSource;
+    caseNumber?: ExtractionSource;
+    courtName?: ExtractionSource;
+    filingDeadline?: ExtractionSource;
+  };
+}
+
+/**
+ * Document extraction response
+ * Contains both conversational analysis AND structured case data
+ */
+export interface DocumentExtractionResponse {
+  /** Conversational AI analysis (user-friendly explanation) */
+  analysis: string;
+
+  /** Structured case data for pre-filling form */
+  suggestedCaseData: SuggestedCaseData;
+}

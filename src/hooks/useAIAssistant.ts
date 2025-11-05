@@ -63,7 +63,7 @@ export function useAIAssistant(): UseAIAssistantReturn {
       if (response.success && response.data) {
         return response.data;
       } else {
-        const error = !response.success ? response.error.message : 'Failed to analyze case';
+        const error = !response.success ? (response.error?.message || 'Failed to analyze case') : 'Failed to analyze case';
         setCaseAnalysisError(error);
         return null;
       }
@@ -89,7 +89,7 @@ export function useAIAssistant(): UseAIAssistantReturn {
       if (response.success && response.data) {
         return response.data;
       } else {
-        const error = !response.success ? response.error.message : 'Failed to analyze evidence';
+        const error = !response.success ? (response.error?.message || 'Failed to analyze evidence') : 'Failed to analyze evidence';
         setEvidenceAnalysisError(error);
         return null;
       }
@@ -115,7 +115,7 @@ export function useAIAssistant(): UseAIAssistantReturn {
       if (response.success && response.data) {
         return response.data;
       } else {
-        const error = !response.success ? response.error.message : 'Failed to draft document';
+        const error = !response.success ? (response.error?.message || 'Failed to draft document') : 'Failed to draft document';
         setDocumentDraftError(error);
         return null;
       }

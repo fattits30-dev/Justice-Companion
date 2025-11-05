@@ -17,14 +17,26 @@ ignore:
   # Review: Annually (expires 2026-12-31)
 
   'snyk-code:javascript/HardcodedPassword':
-    # E2E Test Specifications
+    # E2E Test Specifications (all patterns)
     - 'e2e/**/*.spec.ts':
         reason: 'E2E test credentials - non-production test data for authentication flows'
         expires: '2026-12-31T00:00:00.000Z'
 
-    # Unit Test Files
+    - 'e2e/**/*.e2e.ts':
+        reason: 'E2E test credentials for end-to-end testing'
+        expires: '2026-12-31T00:00:00.000Z'
+
+    # Unit Test Files (all patterns)
     - 'tests/**/*.test.ts':
         reason: 'Unit test fixtures with intentional hardcoded authentication test values'
+        expires: '2026-12-31T00:00:00.000Z'
+
+    - 'tests/**/*.test.tsx':
+        reason: 'React component test fixtures with sample authentication data'
+        expires: '2026-12-31T00:00:00.000Z'
+
+    - 'tests/**/*.e2e.test.ts':
+        reason: 'E2E test suites in tests directory with sample credentials'
         expires: '2026-12-31T00:00:00.000Z'
 
     # Test Helpers and Factories
@@ -35,6 +47,10 @@ ignore:
     # Test Setup Files
     - 'tests/e2e/setup/**/*.ts':
         reason: 'E2E test database setup with sample user credentials'
+        expires: '2026-12-31T00:00:00.000Z'
+
+    - 'tests/setup/**/*.ts':
+        reason: 'Test setup files with sample configuration and credentials'
         expires: '2026-12-31T00:00:00.000Z'
 
     # Source Test Files (co-located with source)
@@ -51,9 +67,18 @@ ignore:
         reason: 'Development scripts, not deployed to production'
         expires: '2026-12-31T00:00:00.000Z'
 
+    - 'scripts/**/*.ts':
+        reason: 'TypeScript development scripts, not deployed to production'
+        expires: '2026-12-31T00:00:00.000Z'
+
     # Test Utility Files
     - 'src/utils/passwordValidation.test.ts':
         reason: 'Password validation test requires sample passwords to validate rules'
+        expires: '2026-12-31T00:00:00.000Z'
+
+    # Test Database Helpers
+    - 'src/test-utils/**/*.ts':
+        reason: 'Test database helpers with sample data for integration testing'
         expires: '2026-12-31T00:00:00.000Z'
 
   # =============================================================================
@@ -63,9 +88,13 @@ ignore:
   # to test repository patterns and authentication decorators.
 
   'snyk-code:javascript/HardcodedCredential':
-    # All Test Files
+    # All Test Files (comprehensive coverage)
     - 'tests/**/*':
         reason: 'Test fixtures with sample credentials for validating authentication logic'
+        expires: '2026-12-31T00:00:00.000Z'
+
+    - 'e2e/**/*':
+        reason: 'E2E test fixtures with sample user credentials for integration testing'
         expires: '2026-12-31T00:00:00.000Z'
 
     # Repository Decorator Tests
@@ -73,9 +102,13 @@ ignore:
         reason: 'Repository decorator test fixtures with sample user data'
         expires: '2026-12-31T00:00:00.000Z'
 
-    # Source Test Files
+    # All Source Test Files
     - 'src/**/*.test.ts':
         reason: 'Source test fixtures with sample credentials'
+        expires: '2026-12-31T00:00:00.000Z'
+
+    - 'src/**/*.test.tsx':
+        reason: 'React component test fixtures with sample credentials'
         expires: '2026-12-31T00:00:00.000Z'
 
     # Development Scripts
@@ -83,20 +116,61 @@ ignore:
         reason: 'Development scripts with sample database connection credentials'
         expires: '2026-12-31T00:00:00.000Z'
 
+    - 'scripts/**/*.ts':
+        reason: 'TypeScript development scripts with sample configuration'
+        expires: '2026-12-31T00:00:00.000Z'
+
+    # Test Utilities
+    - 'src/test-utils/**/*.ts':
+        reason: 'Test utility functions with sample data and credentials'
+        expires: '2026-12-31T00:00:00.000Z'
+
   # =============================================================================
   # Hardcoded Non-Cryptographic Secrets
   # =============================================================================
   # Rationale: Test API keys and tokens used for testing integrations.
+  # These are mock/sample values, not real production secrets.
 
   'snyk-code:javascript/HardcodedNonCryptographicSecret':
-    # E2E Tests
+    # E2E Tests (all patterns)
     - 'e2e/**/*.spec.ts':
         reason: 'Test API keys for E2E integration tests (non-production)'
+        expires: '2026-12-31T00:00:00.000Z'
+
+    - 'e2e/**/*.e2e.ts':
+        reason: 'E2E test API tokens and keys for integration testing'
+        expires: '2026-12-31T00:00:00.000Z'
+
+    - 'e2e/**/*':
+        reason: 'All E2E test files with mock API keys and tokens'
         expires: '2026-12-31T00:00:00.000Z'
 
     # All Test Files
     - 'tests/**/*':
         reason: 'Test tokens and API keys for integration testing'
+        expires: '2026-12-31T00:00:00.000Z'
+
+    # Source Test Files
+    - 'src/**/*.test.ts':
+        reason: 'Unit test files with mock API tokens'
+        expires: '2026-12-31T00:00:00.000Z'
+
+    - 'src/**/*.test.tsx':
+        reason: 'React component tests with sample API configurations'
+        expires: '2026-12-31T00:00:00.000Z'
+
+    # Test Utilities
+    - 'src/test-utils/**/*.ts':
+        reason: 'Test helper utilities with mock authentication tokens'
+        expires: '2026-12-31T00:00:00.000Z'
+
+    # Development Scripts
+    - 'scripts/**/*.js':
+        reason: 'Development scripts with sample API configurations'
+        expires: '2026-12-31T00:00:00.000Z'
+
+    - 'scripts/**/*.ts':
+        reason: 'TypeScript scripts with mock API keys for testing'
         expires: '2026-12-31T00:00:00.000Z'
 
   # =============================================================================

@@ -44,14 +44,14 @@ class MockCacheService implements ICacheService {
   public hits = 0;
   public misses = 0;
 
-  get<T>(key: string): T | null {
+  get<T>(key: string): T | undefined {
     const value = this.cache.get(key);
     if (value !== undefined) {
       this.hits++;
       return value;
     }
     this.misses++;
-    return null;
+    return undefined;
   }
 
   set<T>(key: string, value: T, _ttlSeconds?: number): void {
@@ -68,6 +68,16 @@ class MockCacheService implements ICacheService {
 
   has(key: string): boolean {
     return this.cache.has(key);
+  }
+
+  invalidate(pattern: string, _namespace?: string): void {
+    // Simple pattern matching for test purposes
+    const keys = Array.from(this.cache.keys());
+    for (const key of keys) {
+      if (key.includes(pattern.replace('*', ''))) {
+        this.cache.delete(key);
+      }
+    }
   }
 
   getStats() {

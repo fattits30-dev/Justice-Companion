@@ -166,14 +166,14 @@ export class CachingDecorator<T> extends RepositoryDecorator<T> {
   /**
    * Check if repository has specific method
    */
-  private hasMethod(methodName: string): boolean {
+  protected hasMethod(methodName: string): boolean {
     return typeof (this.repository as any)[methodName] === 'function';
   }
 
   /**
    * Forward call to original repository
    */
-  private async forwardCall(methodName: string, ...args: any[]): Promise<any> {
+  protected async forwardCall(methodName: string, ...args: any[]): Promise<any> {
     return (this.repository as any)[methodName](...args);
   }
 }
