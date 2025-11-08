@@ -159,8 +159,9 @@ export class AuthenticationService {
     // AUTO-LOGIN: Create session immediately after registration
     // Users should not have to manually login after registration (better UX)
     const session = this.sessionRepository.create({
+      id: uuidv4(), // Generate UUID for session ID
       userId: user.id,
-      expiresAt: new Date(Date.now() + this.SESSION_EXPIRY_MS).toISOString(),
+      expiresAt: new Date(Date.now() + this.SESSION_DURATION_MS).toISOString(),
     });
 
     this.auditLogger?.log({

@@ -1,4 +1,4 @@
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig, devices } from "@playwright/test";
 
 /**
  * Playwright configuration for Justice Companion E2E tests
@@ -6,7 +6,7 @@ import { defineConfig, devices } from '@playwright/test';
  * Tests Electron desktop application with real SQLite database
  */
 export default defineConfig({
-  testDir: './e2e',
+  testDir: "./tests/e2e",
 
   // Maximum time one test can run
   timeout: 60 * 1000,
@@ -24,10 +24,7 @@ export default defineConfig({
   workers: 1, // Important: Sequential execution for database integrity
 
   // Reporter to use
-  reporter: [
-    ['html'],
-    ['list'],
-  ],
+  reporter: [["html"], ["list"]],
 
   // Shared settings for all the projects below
   use: {
@@ -35,23 +32,28 @@ export default defineConfig({
     // Not applicable for Electron
 
     // Collect trace when retrying the failed test
-    trace: 'on-first-retry',
+    trace: "on-first-retry",
 
     // Screenshot on failure
-    screenshot: 'only-on-failure',
+    screenshot: "only-on-failure",
 
     // Video on failure
-    video: 'retain-on-failure',
+    video: "retain-on-failure",
   },
 
   // Configure projects for major browsers
   projects: [
     {
-      name: 'electron',
-      use: {
-        ...devices['Desktop Chrome'],
-        // Electron-specific settings can be added here
-      },
+      name: "chromium",
+      use: { ...devices["Desktop Chrome"] },
+    },
+    {
+      name: "firefox",
+      use: { ...devices["Desktop Firefox"] },
+    },
+    {
+      name: "webkit",
+      use: { ...devices["Desktop Safari"] },
     },
   ],
 });

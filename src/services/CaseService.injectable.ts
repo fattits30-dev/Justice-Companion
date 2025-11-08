@@ -5,12 +5,19 @@
  * This is the migrated version using InversifyJS decorators.
  */
 
-import { injectable, inject } from 'inversify';
-import { TYPES } from '../shared/infrastructure/di/types.ts';
-import type { IDatabase } from '../../../interfaces/IDatabase.ts';
-import type { ICaseRepository } from '../shared/infrastructure/di/repository-interfaces.ts';
-import type { IAuditLogger, ICaseService } from '../shared/infrastructure/di/service-interfaces.ts';
-import type { Case, CreateCaseInput, UpdateCaseInput } from '../domains/cases/entities/Case.ts';
+import { injectable, inject } from "inversify";
+import { TYPES } from "../shared/infrastructure/di/types.ts";
+import type { IDatabase } from "../shared/infrastructure/di/interfaces.ts";
+import type { ICaseRepository } from "../shared/infrastructure/di/repository-interfaces.ts";
+import type {
+  IAuditLogger,
+  ICaseService,
+} from "../shared/infrastructure/di/service-interfaces.ts";
+import type {
+  Case,
+  CreateCaseInput,
+  UpdateCaseInput,
+} from "../domains/cases/entities/Case.ts";
 
 interface CreateCaseWithUser extends CreateCaseInput {
   userId: number;
@@ -37,9 +44,9 @@ export class CaseServiceInjectable implements ICaseService {
     const createdCase = this.caseRepository.create(caseInput);
 
     // Update the user_id field directly (temporary workaround)
-    // TODO: This should be handled by the repository
-    this.db
-      .prepare('UPDATE cases SET user_id = ? WHERE id = ?')
+    // Note: Repository should handle user association in future refactoring
+    (this.db as any)
+      .prepare("UPDATE cases SET user_id = ? WHERE id = ?")
       .run(userId, createdCase.id);
 
     // Fetch the complete case with user_id
@@ -51,10 +58,10 @@ export class CaseServiceInjectable implements ICaseService {
     // Log the case creation
     this.auditLogger.log({
       userId: userId.toString(),
-      eventType: 'case.create',
-      resourceType: 'case',
+      eventType: "case.create",
+      resourceType: "case",
       resourceId: createdCase.id.toString(),
-      action: 'create',
+      action: "create",
       details: {
         title: createdCase.title,
         status: createdCase.status,
@@ -81,18 +88,18 @@ export class CaseServiceInjectable implements ICaseService {
   /**
    * Update a case
    */
-  updateCase(id: number, input: UpdateCaseInput): Case | null {
+  updateCase(id: number, input: UpdateCaseInput, userId: number): Case | null {
     const updatedCase = this.caseRepository.update(id, input);
 
     if (updatedCase) {
       // Log the update
       this.auditLogger.log({
-        userId: 'system', // TODO: Get actual user ID from context
-        eventType: 'case.update',
-        resourceType: 'case',
+        userId: userId.toString(),
+        eventType: "case.update",
+        resourceType: "case",
         resourceId: id.toString(),
-        action: 'update',
-        details: input,
+        action: "update",
+        details: input as Record<string, unknown>,
       });
     }
 
@@ -102,18 +109,18 @@ export class CaseServiceInjectable implements ICaseService {
   /**
    * Close a case
    */
-  closeCase(id: number): Case | null {
-    const closedCase = this.caseRepository.update(id, { status: 'closed' });
+  closeCase(id: number, userId: number): Case | null {
+    const closedCase = this.caseRepository.update(id, { status: "closed" });
 
     if (closedCase) {
       // Log the closure
       this.auditLogger.log({
-        userId: 'system', // TODO: Get actual user ID from context
-        eventType: 'case.close',
-        resourceType: 'case',
+        userId: userId.toString(),
+        eventType: "case.update",
+        resourceType: "case",
         resourceId: id.toString(),
-        action: 'close',
-        details: { status: 'closed' },
+        action: "update",
+        details: { status: "closed" },
       });
     }
 
@@ -123,17 +130,17 @@ export class CaseServiceInjectable implements ICaseService {
   /**
    * Delete a case
    */
-  deleteCase(id: number): boolean {
+  deleteCase(id: number, userId: number): boolean {
     const deleted = this.caseRepository.delete(id);
 
     if (deleted) {
       // Log the deletion
       this.auditLogger.log({
-        userId: 'system', // TODO: Get actual user ID from context
-        eventType: 'case.delete',
-        resourceType: 'case',
+        userId: userId.toString(),
+        eventType: "case.delete",
+        resourceType: "case",
         resourceId: id.toString(),
-        action: 'delete',
+        action: "delete",
         details: {},
       });
     }

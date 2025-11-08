@@ -9,10 +9,13 @@
  * Future support: Images with OCR (.jpg, .png)
  */
 
-import pdf from 'pdf-parse';
-import mammoth from 'mammoth';
-import * as fs from 'fs';
-import * as path from 'path';
+import mammoth from "mammoth";
+import * as fs from "fs";
+import * as path from "path";
+
+// Import pdf-parse using require since it doesn't have proper ES6 exports
+
+const pdfParse = require("pdf-parse");
 
 export interface ParsedDocument {
   text: string;
@@ -37,11 +40,11 @@ export class DocumentParserService {
     const ext = path.extname(filePath).toLowerCase();
 
     switch (ext) {
-      case '.pdf':
+      case ".pdf":
         return this.parsePDF(filePath, filename);
-      case '.docx':
+      case ".docx":
         return this.parseDOCX(filePath, filename);
-      case '.txt':
+      case ".txt":
         return this.parseTXT(filePath, filename);
       default:
         throw new Error(`Unsupported file format: ${ext}`);
@@ -58,11 +61,11 @@ export class DocumentParserService {
     const ext = path.extname(filename).toLowerCase();
 
     switch (ext) {
-      case '.pdf':
+      case ".pdf":
         return this.parsePDFBuffer(buffer, filename);
-      case '.docx':
+      case ".docx":
         return this.parseDOCXBuffer(buffer, filename);
-      case '.txt':
+      case ".txt":
         return this.parseTXTBuffer(buffer, filename);
       default:
         throw new Error(`Unsupported file format: ${ext}`);
@@ -88,12 +91,12 @@ export class DocumentParserService {
     filename: string
   ): Promise<ParsedDocument> {
     try {
-      const data = await pdf(buffer);
+      const data = await pdfParse(buffer);
 
       return {
         text: data.text,
         filename,
-        fileType: 'pdf',
+        fileType: "pdf",
         pageCount: data.numpages,
         wordCount: this.countWords(data.text),
         metadata: {
@@ -105,7 +108,7 @@ export class DocumentParserService {
       };
     } catch (error) {
       throw new Error(
-        `Failed to parse PDF: ${error instanceof Error ? error.message : 'Unknown error'}`
+        `Failed to parse PDF: ${error instanceof Error ? error.message : "Unknown error"}`
       );
     }
   }
@@ -134,7 +137,7 @@ export class DocumentParserService {
       return {
         text: result.value,
         filename,
-        fileType: 'docx',
+        fileType: "docx",
         wordCount: this.countWords(result.value),
         metadata: {
           messages: result.messages, // Parsing warnings/errors
@@ -142,7 +145,7 @@ export class DocumentParserService {
       };
     } catch (error) {
       throw new Error(
-        `Failed to parse DOCX: ${error instanceof Error ? error.message : 'Unknown error'}`
+        `Failed to parse DOCX: ${error instanceof Error ? error.message : "Unknown error"}`
       );
     }
   }
@@ -166,17 +169,17 @@ export class DocumentParserService {
     filename: string
   ): Promise<ParsedDocument> {
     try {
-      const text = buffer.toString('utf-8');
+      const text = buffer.toString("utf-8");
 
       return {
         text,
         filename,
-        fileType: 'txt',
+        fileType: "txt",
         wordCount: this.countWords(text),
       };
     } catch (error) {
       throw new Error(
-        `Failed to parse TXT: ${error instanceof Error ? error.message : 'Unknown error'}`
+        `Failed to parse TXT: ${error instanceof Error ? error.message : "Unknown error"}`
       );
     }
   }
@@ -185,7 +188,10 @@ export class DocumentParserService {
    * Count words in text
    */
   private countWords(text: string): number {
-    return text.trim().split(/\s+/).filter((word) => word.length > 0).length;
+    return text
+      .trim()
+      .split(/\s+/)
+      .filter((word) => word.length > 0).length;
   }
 
   /**
@@ -196,7 +202,7 @@ export class DocumentParserService {
     if (words.length <= maxWords) {
       return text;
     }
-    return words.slice(0, maxWords).join(' ') + '...';
+    return words.slice(0, maxWords).join(" ") + "...";
   }
 
   /**
@@ -219,7 +225,7 @@ export class DocumentParserService {
    * Get supported file extensions
    */
   getSupportedExtensions(): string[] {
-    return ['.pdf', '.docx', '.txt'];
+    return [".pdf", ".docx", ".txt"];
   }
 
   /**

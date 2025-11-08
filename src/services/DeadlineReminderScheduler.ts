@@ -30,12 +30,18 @@ export class DeadlineReminderScheduler {
    */
   start(): void {
     if (this.isRunning) {
-      logger.warn("DeadlineReminderScheduler is already running");
+      logger.warn(
+        "DeadlineReminderScheduler",
+        "DeadlineReminderScheduler is already running"
+      );
       return;
     }
 
     this.isRunning = true;
-    logger.info("Starting DeadlineReminderScheduler");
+    logger.info(
+      "DeadlineReminderScheduler",
+      "Starting DeadlineReminderScheduler"
+    );
 
     // Run immediately on start
     this.checkDeadlines();
@@ -63,7 +69,10 @@ export class DeadlineReminderScheduler {
     }
 
     this.isRunning = false;
-    logger.info("Stopped DeadlineReminderScheduler");
+    logger.info(
+      "DeadlineReminderScheduler",
+      "Stopped DeadlineReminderScheduler"
+    );
   }
 
   /**
@@ -79,38 +88,81 @@ export class DeadlineReminderScheduler {
    */
   private async checkDeadlines(): Promise<void> {
     try {
-      logger.info("Checking for upcoming deadlines");
-      this.lastCheckTimestamp = new Date();
+      logger.info(
+        "DeadlineReminderScheduler",
+        "Checking for upcoming deadlines"
+      );
 
       // Get users with deadline reminders enabled
-      const usersWithReminders = this.preferencesRepo.getUsersWithDeadlineReminders();
+      const usersWithReminders =
+        this.preferencesRepo.getUsersWithDeadlineReminders();
 
       // Process each user with reminders enabled
       for (const user of usersWithReminders) {
-        // Get upcoming deadlines for this user
-        const deadlines = await this.deadlineRepo.getUpcomingDeadlinesForUser(user.id);
-        
-        for (const deadline of deadlines) {
+        // Get all deadlines for this user and filter for upcoming ones
+        const allDeadlines = this.deadlineRepo.findByUserId(user.userId);
+        const now = new Date();
+        const reminderThreshold = new Date(
+          now.getTime() + user.reminderDays * 24 * 60 * 60 * 1000
+        );
+
+        const upcomingDeadlines = allDeadlines.filter((deadline) => {
+          const deadlineDate = new Date(deadline.deadlineDate);
+          return (
+            deadlineDate > now &&
+            deadlineDate <= reminderThreshold &&
+            deadline.status !== "completed"
+          );
+        });
+
+        for (const deadline of upcomingDeadlines) {
           // Check if we've already sent a reminder for this deadline
-          const reminderKey = `${user.id}-${deadline.id}`;
+          const reminderKey = `${user.userId}-${deadline.id}`;
           const lastSent = this.sentReminders.get(reminderKey);
-          
+
           // Send reminder if not already sent
           if (!lastSent) {
-            await this.notificationService.sendDeadlineReminder(
-              user,
+            await this.createDeadlineReminderNotification(
+              user.userId,
               deadline
             );
-            
+
             // Mark as sent
             this.sentReminders.set(reminderKey, new Date());
           }
         }
       }
-      
-      logger.info("Completed deadline check");
+
+      logger.info("DeadlineReminderScheduler", "Completed deadline check");
     } catch (error) {
-      logger.error("Error checking deadlines", { error });
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      logger.error(
+        "DeadlineReminderScheduler",
+        `Error checking deadlines: ${errorMessage}`,
+        { error }
+      );
     }
+  }
+
+  /**
+   * Create a deadline reminder notification
+   */
+  private async createDeadlineReminderNotification(
+    userId: number,
+    deadline: any
+  ): Promise<void> {
+    const daysUntil = Math.ceil(
+      (new Date(deadline.deadlineDate).getTime() - Date.now()) /
+        (1000 * 60 * 60 * 24)
+    );
+
+    await this.notificationService.createNotification({
+      userId,
+      type: "deadline_reminder",
+      severity: daysUntil <= 1 ? "high" : "medium",
+      title: `Deadline Reminder: ${deadline.title}`,
+      message: `Your deadline "${deadline.title}" is due in ${daysUntil} day${daysUntil !== 1 ? "s" : ""}.`,
+    });
   }
 }

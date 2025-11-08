@@ -32,6 +32,7 @@ export interface StreamingCallbacks {
   onThinking?: (thinking: string) => void;
   onComplete: (fullResponse: string) => void;
   onError: (error: Error) => void;
+  onFunctionCall?: (name: string, args: any, result: any) => void;
 }
 
 export interface ChatMessage {

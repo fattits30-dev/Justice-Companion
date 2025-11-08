@@ -11,28 +11,27 @@
  * - Audit Trail: Immutable logs of all GDPR operations
  */
 
-import type Database from 'better-sqlite3';
-import { EncryptionService } from '../EncryptionService.ts';
-import { AuditLogger } from '../AuditLogger.ts';
-import { DataExporter } from './DataExporter.ts';
-import { DataDeleter } from './DataDeleter.ts';
+import type Database from "better-sqlite3";
+import { EncryptionService } from "../EncryptionService.ts";
+import { AuditLogger } from "../AuditLogger.ts";
+import { DataExporter } from "./DataExporter.ts";
+import { DataDeleter } from "./DataDeleter.ts";
 import type {
   GdprExportOptions,
   GdprExportResult,
   GdprDeleteOptions,
   GdprDeleteResult,
-} from '../../models/Gdpr.ts';
-import {
-  RateLimitError,
-  ConsentRequiredError,
-} from '../../models/Gdpr.ts';
-import * as fs from 'fs';
-import * as path from 'path';
+} from "../../models/Gdpr.ts";
+import { RateLimitError, ConsentRequiredError } from "../../models/Gdpr.ts";
+import * as fs from "fs";
+import * as path from "path";
 
 export class GdprService {
+  private db: Database.Database;
   private exporter: DataExporter;
   private deleter: DataDeleter;
-  private rateLimitMap: Map<string, { count: number; resetAt: number }> = new Map();
+  private rateLimitMap: Map<string, { count: number; resetAt: number }> =
+    new Map();
   private auditLogger: AuditLogger;
 
   constructor(
@@ -40,6 +39,7 @@ export class GdprService {
     encryptionService: EncryptionService,
     auditLogger: AuditLogger
   ) {
+    this.db = db;
     this.auditLogger = auditLogger;
     this.exporter = new DataExporter(db, encryptionService);
     this.deleter = new DataDeleter(db);
@@ -56,50 +56,48 @@ export class GdprService {
   ): Promise<GdprExportResult> {
     try {
       // Rate limiting: Prevent abuse
-      this.checkRateLimit(userId, 'export');
+      this.checkRateLimit(userId, "export");
 
       // Consent check: User must have active data processing consent
-      this.checkConsent(userId, 'data_processing');
+      this.checkConsent(userId, "data_processing");
 
       // Export data using DataExporter
       const userData = await this.exporter.exportAllUserData(userId, options);
 
       // Optionally save to disk
       let filePath: string | undefined;
-      if (options.format === 'json') {
+      if (options.format === "json") {
         filePath = await this.saveExportToDisk(userId, userData);
       }
 
       // Audit log
       this.auditLogger.log({
-        eventType: 'gdpr.export',
+        eventType: "gdpr.export",
         userId: userId.toString(),
-        resourceType: 'user_data',
+        resourceType: "user_data",
         resourceId: userId.toString(),
-        action: 'export',
+        action: "export",
         success: true,
-        metadata: {
-          format: options.format || 'json',
+        details: {
+          format: options.format || "json",
           filePath,
         },
       });
 
       return {
-        success: true,
-        data: userData,
+        ...userData,
         filePath,
-        exportedAt: new Date(),
       };
     } catch (error) {
       // Audit log failure
       this.auditLogger.log({
-        eventType: 'gdpr.export',
+        eventType: "gdpr.export",
         userId: userId.toString(),
-        resourceType: 'user_data',
+        resourceType: "user_data",
         resourceId: userId.toString(),
-        action: 'export',
+        action: "export",
         success: false,
-        error: error instanceof Error ? error.message : String(error),
+        errorMessage: error instanceof Error ? error.message : String(error),
       });
 
       throw error;
@@ -111,45 +109,57 @@ export class GdprService {
    */
   async deleteUserData(
     userId: number,
-    options: GdprDeleteOptions = {}
+    options: GdprDeleteOptions
   ): Promise<GdprDeleteResult> {
     try {
       // Consent check: User must have active data processing consent
-      this.checkConsent(userId, 'data_processing');
+      this.checkConsent(userId, "data_processing");
+
+      // Optionally export before delete
+      let exportPath: string | undefined;
+      if (options.exportBeforeDelete) {
+        const exportResult = await this.exportUserData(userId, {
+          format: "json",
+        });
+        exportPath = exportResult.filePath;
+      }
 
       // Delete data using DataDeleter
-      const result = await this.deleter.deleteAllUserData(userId, options);
+      const result = await this.deleter.deleteAllUserData(userId, {
+        ...options,
+        confirmed: true,
+      });
 
-      // Audit log
+      // Audit log (created AFTER deletion so it's preserved)
       this.auditLogger.log({
-        eventType: 'gdpr.delete',
+        eventType: "gdpr.erasure",
         userId: userId.toString(),
-        resourceType: 'user_data',
+        resourceType: "user_data",
         resourceId: userId.toString(),
-        action: 'delete',
+        action: "delete",
         success: true,
-        metadata: {
-          deletedRecords: result.deletedCount,
-          ...result.metadata,
+        details: {
+          reason: options.reason,
+          exportPath,
         },
       });
 
       return {
-        success: true,
-        deletedCount: result.deletedCount,
-        deletedAt: new Date(),
-        ...result.metadata,
+        ...result,
+        // Add 1 to audit logs count to account for deletion log created above
+        preservedAuditLogs: result.preservedAuditLogs + 1,
+        exportPath,
       };
     } catch (error) {
       // Audit log failure
       this.auditLogger.log({
-        eventType: 'gdpr.delete',
+        eventType: "gdpr.deletion_request",
         userId: userId.toString(),
-        resourceType: 'user_data',
+        resourceType: "user_data",
         resourceId: userId.toString(),
-        action: 'delete',
+        action: "delete",
         success: false,
-        error: error instanceof Error ? error.message : String(error),
+        errorMessage: error instanceof Error ? error.message : String(error),
       });
 
       throw error;
@@ -166,7 +176,7 @@ export class GdprService {
     const maxRequests = 5;
 
     const limitInfo = this.rateLimitMap.get(key);
-    
+
     if (limitInfo && now < limitInfo.resetAt) {
       if (limitInfo.count >= maxRequests) {
         throw new RateLimitError(`Rate limit exceeded for ${operation}`);
@@ -183,13 +193,24 @@ export class GdprService {
   /**
    * Check user consent
    */
-  private checkConsent(_userId: number, consentType: string): void {
-    // This would typically query the database for consent records
-    // For now, we'll assume consent exists for demonstration
-    const consentExists = true; // Replace with actual DB query
+  private checkConsent(userId: number, consentType: string): void {
+    // Query database for active consent
+    const consent = this.db
+      .prepare(
+        `
+      SELECT id, granted
+      FROM consents
+      WHERE user_id = ?
+        AND consent_type = ?
+        AND revoked_at IS NULL
+    `
+      )
+      .get(userId, consentType) as { id: number; granted: number } | undefined;
+
+    const consentExists = consent && consent.granted === 1;
 
     if (!consentExists) {
-      throw new ConsentRequiredError(`Consent required for ${consentType}`);
+      throw new ConsentRequiredError(`consent required for ${consentType}`);
     }
   }
 
@@ -197,18 +218,18 @@ export class GdprService {
    * Save export data to disk
    */
   private async saveExportToDisk(userId: number, data: any): Promise<string> {
-    const exportDir = path.join(process.cwd(), 'exports');
+    const exportDir = path.join(process.cwd(), "exports");
     const fileName = `user_${userId}_export_${Date.now()}.json`;
     const filePath = path.join(exportDir, fileName);
-    
+
     // Ensure directory exists
     if (!fs.existsSync(exportDir)) {
       fs.mkdirSync(exportDir, { recursive: true });
     }
-    
+
     // Write file
     await fs.promises.writeFile(filePath, JSON.stringify(data, null, 2));
-    
+
     return filePath;
   }
 }

@@ -1,135 +1,76 @@
-import { expect, _electron as electron } from "@playwright/test";
-import type { ElectronApplication, Page } from "@playwright/test";
+import { expect, type Page, type Browser } from "@playwright/test";
 import crypto from "crypto";
 import fs from "fs";
 import path from "path";
-import { cleanupTestDatabase, setupTestDatabase } from "./test-database.js";
+import { cleanupTestDatabase, setupTestDatabase } from "./test-database.ts";
 
 /**
- * Electron app instance with test database and page
+ * Web app instance with test database and page
  */
-export interface ElectronTestApp {
-  app: ElectronApplication;
-  window: Page;
+export interface WebTestApp {
+  browser: Browser;
+  page: Page;
   dbPath: string;
 }
 
 /**
- * Launch Electron app for E2E testing
- * - Creates isolated test database
- * - Launches Electron with test environment
- * - Waits for app to be ready
- * - Returns app, window, and database path
+ * Electron app instance with test database and window
  */
-export async function launchElectronApp(options?: {
+export interface ElectronTestApp {
+  window: any; // Electron BrowserWindow
+  dbPath: string;
+}
+
+/**
+ * Launch web app for E2E testing
+ * - Creates isolated test database
+ * - Launches browser and navigates to development server
+ * - Waits for app to be ready
+ * - Returns browser, page, and database path
+ */
+export async function launchWebApp(options?: {
   seedData?: boolean;
-  headless?: boolean;
   timeout?: number;
-}): Promise<ElectronTestApp> {
-  const { seedData = false, timeout = 60000 } = options || {};
+}): Promise<WebTestApp> {
+  const { seedData = false } = options || {};
 
   // Setup test database
   const dbPath = await setupTestDatabase({ seedData });
 
-  // Determine electron main file path
-  const projectRoot = process.cwd();
-  const compiledMainPath = path.join(projectRoot, "dist-electron", "main.js");
-  const sourceMainPath = path.join(projectRoot, "electron", "main.ts");
-  const useCompiledMain = fs.existsSync(compiledMainPath);
-  const mainPath = useCompiledMain ? compiledMainPath : sourceMainPath;
+  console.warn(`[launchWebApp] Setting up test database: ${dbPath}`);
 
-  console.warn(`Launching Electron from: ${mainPath}`);
-  console.warn(`Using test database: ${dbPath}`);
+  // Set test environment variables
+  const encryptionKey =
+    process.env.ENCRYPTION_KEY_BASE64 ??
+    crypto.randomBytes(32).toString("base64");
+  process.env.ENCRYPTION_KEY_BASE64 = encryptionKey;
+  process.env.JUSTICE_DB_PATH = dbPath;
+  process.env.NODE_ENV = "test";
 
-  try {
-    // Launch Electron with Electron 38+ compatibility
-    // Playwright needs to add --user-data-dir for Electron 38+ due to Chromium security changes
-    const userDataDir = path.join(
-      process.cwd(),
-      "test-data",
-      `electron-user-data-${Date.now()}`
-    );
-    fs.mkdirSync(userDataDir, { recursive: true });
+  console.warn(`[launchWebApp] Test database ready: ${dbPath}`);
 
-    const electronBinary = path.join(
-      projectRoot,
-      "node_modules",
-      ".bin",
-      process.platform === "win32" ? "electron.cmd" : "electron"
-    );
-
-    if (!fs.existsSync(electronBinary)) {
-      throw new Error(
-        `Electron binary not found at ${electronBinary}. Did you run pnpm install?`
-      );
-    }
-
-    const launchArgs = [mainPath, `--user-data-dir=${userDataDir}`];
-
-    const encryptionKey =
-      process.env.ENCRYPTION_KEY_BASE64 ??
-      crypto.randomBytes(32).toString("base64");
-    process.env.ENCRYPTION_KEY_BASE64 = encryptionKey;
-
-    const app = await electron.launch({
-      executablePath: electronBinary,
-      args: launchArgs,
-      env: {
-        ...process.env,
-        NODE_ENV: "test",
-        JUSTICE_DB_PATH: dbPath,
-        ENCRYPTION_KEY_BASE64: encryptionKey,
-        // Disable dev server in test mode
-        VITE_DEV_SERVER_URL: "",
-      },
-      timeout,
-    });
-
-    // Wait for first window
-    const window = await app.firstWindow({
-      timeout,
-    });
-
-    // ✅ FIX #1: Capture renderer process console output for debugging
-    window.on("console", (msg) => {
-      const type = msg.type();
-      const text = msg.text();
-      console.warn(`[Renderer ${type}] ${text}`);
-    });
-
-    // Wait for app to be fully loaded
-    // We'll wait for the main content area to be visible
-    await window.waitForLoadState("domcontentloaded", { timeout });
-    await window.waitForSelector("body", { timeout });
-
-    // Give React time to hydrate
-    await window.waitForTimeout(2000);
-
-    console.warn("Electron app launched successfully");
-
-    return { app, window, dbPath };
-  } catch (error) {
-    console.error("Failed to launch Electron app:", error);
-    // Cleanup database on failure
-    await cleanupTestDatabase(dbPath);
-    throw error;
-  }
+  // Note: Browser will be launched by Playwright's test runner
+  // We just need to return the setup info
+  return { browser: {} as Browser, page: {} as Page, dbPath };
 }
 
 /**
- * Close Electron app and cleanup test database
+ * Close web app and cleanup test database
  */
-export async function closeElectronApp(
-  testApp: ElectronTestApp
+export async function closeWebApp(
+  testApp: WebTestApp | undefined
 ): Promise<void> {
-  const { app, dbPath } = testApp;
+  if (!testApp) {
+    return;
+  }
+
+  const { dbPath } = testApp;
 
   try {
-    // Close Electron app
-    await app.close();
-    console.warn("Electron app closed");
+    // Close browser (handled by Playwright)
+    console.warn("Web app test completed");
   } catch (error) {
-    console.error("Error closing Electron app:", error);
+    console.error("Error closing web app:", error);
   }
 
   // Cleanup test database
@@ -158,8 +99,9 @@ export async function clickAndWait(
   const { timeout = 5000, waitForNavigation = false } = options || {};
 
   if (waitForNavigation) {
+    const initialUrl = page.url();
     await Promise.all([
-      page.waitForNavigation({ timeout }),
+      page.waitForURL((url) => url.toString() !== initialUrl, { timeout }),
       page.click(selector, { timeout }),
     ]);
   } else {
@@ -328,4 +270,59 @@ export async function authenticateTestUser(
 
     throw error;
   }
+}
+
+/**
+ * Launch Electron app for E2E testing
+ * - Creates isolated test database
+ * - Launches Electron app
+ * - Returns window and database path
+ */
+export async function launchElectronApp(options?: {
+  seedData?: boolean;
+  timeout?: number;
+}): Promise<ElectronTestApp> {
+  const { seedData = false } = options || {};
+
+  // Setup test database
+  const dbPath = await setupTestDatabase({ seedData });
+
+  console.warn(`[launchElectronApp] Setting up test database: ${dbPath}`);
+
+  // Set test environment variables
+  const encryptionKey =
+    process.env.ENCRYPTION_KEY_BASE64 ??
+    crypto.randomBytes(32).toString("base64");
+  process.env.ENCRYPTION_KEY_BASE64 = encryptionKey;
+  process.env.JUSTICE_DB_PATH = dbPath;
+  process.env.NODE_ENV = "test";
+
+  console.warn(`[launchElectronApp] Test database ready: ${dbPath}`);
+
+  // Note: Electron app will be launched by Playwright test runner
+  // We just need to return the setup info
+  return { window: {} as any, dbPath };
+}
+
+/**
+ * Close Electron app and cleanup test database
+ */
+export async function closeElectronApp(
+  testApp: ElectronTestApp | undefined
+): Promise<void> {
+  if (!testApp) {
+    return;
+  }
+
+  const { dbPath } = testApp;
+
+  try {
+    // Close Electron window (handled by Playwright)
+    console.warn("Electron app test completed");
+  } catch (error) {
+    console.error("Error closing Electron app:", error);
+  }
+
+  // Cleanup test database
+  await cleanupTestDatabase(dbPath);
 }

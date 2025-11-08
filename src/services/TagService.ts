@@ -3,17 +3,19 @@
  * Manages tag operations for evidence organization
  */
 
-import { getDb } from '../db/database.ts';
-import { AuditLogger } from './AuditLogger.ts';
-import type { Tag, CreateTagInput, UpdateTagInput } from '../models/Tag.ts';
-import type Database from 'better-sqlite3';
+import { getDb } from "../db/database.ts";
+import { AuditLogger } from "./AuditLogger.ts";
+import type { Tag, CreateTagInput, UpdateTagInput } from "../models/Tag.ts";
+import type Database from "better-sqlite3";
 
 export class TagService {
   private get db(): Database.Database {
     return getDb();
   }
 
-  private auditLogger = new AuditLogger();
+  private get auditLogger(): AuditLogger {
+    return new AuditLogger(this.db);
+  }
 
   /**
    * Create a new tag
@@ -25,28 +27,34 @@ export class TagService {
         VALUES (?, ?, ?, ?)
       `);
 
-      const result = stmt.run(userId, input.name, input.color, input.description || null);
+      const result = stmt.run(
+        userId,
+        input.name,
+        input.color,
+        input.description || null
+      );
       const tagId = result.lastInsertRowid as number;
 
       this.auditLogger.log({
-        action: 'tag:created',
-        userId,
-        resourceType: 'tag',
+        eventType: "tag.create",
+        action: "create",
+        userId: userId.toString(),
+        resourceType: "tag",
         resourceId: tagId.toString(),
         details: { name: input.name, color: input.color },
-        ipAddress: null,
-        userAgent: null,
+        ipAddress: undefined,
+        userAgent: undefined,
       });
 
       const tag = this.getTagById(tagId);
       if (!tag) {
-        throw new Error('Failed to retrieve created tag');
+        throw new Error("Failed to retrieve created tag");
       }
 
       return tag;
     } catch (error: any) {
-      if (error.message.includes('UNIQUE constraint failed')) {
-        throw new Error('A tag with this name already exists');
+      if (error.message.includes("UNIQUE constraint failed")) {
+        throw new Error("A tag with this name already exists");
       }
       throw error;
     }
@@ -97,24 +105,24 @@ export class TagService {
     const params: any[] = [];
 
     if (input.name !== undefined) {
-      updates.push('name = ?');
+      updates.push("name = ?");
       params.push(input.name);
     }
 
     if (input.color !== undefined) {
-      updates.push('color = ?');
+      updates.push("color = ?");
       params.push(input.color);
     }
 
     if (input.description !== undefined) {
-      updates.push('description = ?');
+      updates.push("description = ?");
       params.push(input.description || null);
     }
 
     if (updates.length === 0) {
       const tag = this.getTagById(tagId);
       if (!tag) {
-        throw new Error('Tag not found');
+        throw new Error("Tag not found");
       }
       return tag;
     }
@@ -124,7 +132,7 @@ export class TagService {
 
     const stmt = this.db.prepare(`
       UPDATE tags
-      SET ${updates.join(', ')}
+      SET ${updates.join(", ")}
       WHERE id = ?
     `);
 
@@ -133,17 +141,18 @@ export class TagService {
     // Get user_id for audit log
     const tag = this.getTagById(tagId);
     if (!tag) {
-      throw new Error('Tag not found after update');
+      throw new Error("Tag not found after update");
     }
 
     this.auditLogger.log({
-      action: 'tag:updated',
-      userId: tag.userId,
-      resourceType: 'tag',
+      eventType: "tag.update",
+      action: "update",
+      userId: tag.userId.toString(),
+      resourceType: "tag",
       resourceId: tagId.toString(),
-      details: input,
-      ipAddress: null,
-      userAgent: null,
+      details: input as Record<string, unknown>,
+      ipAddress: undefined,
+      userAgent: undefined,
     });
 
     return tag;
@@ -156,12 +165,14 @@ export class TagService {
     // Get tag info for audit log before deletion
     const tag = this.getTagById(tagId);
     if (!tag) {
-      throw new Error('Tag not found');
+      throw new Error("Tag not found");
     }
 
     // Delete in transaction
-    const deleteJunction = this.db.prepare('DELETE FROM evidence_tags WHERE tag_id = ?');
-    const deleteTag = this.db.prepare('DELETE FROM tags WHERE id = ?');
+    const deleteJunction = this.db.prepare(
+      "DELETE FROM evidence_tags WHERE tag_id = ?"
+    );
+    const deleteTag = this.db.prepare("DELETE FROM tags WHERE id = ?");
 
     const transaction = this.db.transaction(() => {
       deleteJunction.run(tagId);
@@ -171,13 +182,14 @@ export class TagService {
     transaction();
 
     this.auditLogger.log({
-      action: 'tag:deleted',
-      userId: tag.userId,
-      resourceType: 'tag',
+      eventType: "tag.delete",
+      action: "delete",
+      userId: tag.userId.toString(),
+      resourceType: "tag",
       resourceId: tagId.toString(),
       details: { name: tag.name, usageCount: tag.usageCount },
-      ipAddress: null,
-      userAgent: null,
+      ipAddress: undefined,
+      userAgent: undefined,
     });
   }
 
@@ -194,13 +206,14 @@ export class TagService {
 
     if (result.changes > 0) {
       this.auditLogger.log({
-        action: 'evidence:tagged',
-        userId,
-        resourceType: 'evidence',
+        eventType: "tag.apply",
+        action: "create",
+        userId: userId.toString(),
+        resourceType: "evidence",
         resourceId: evidenceId.toString(),
         details: { tagId },
-        ipAddress: null,
-        userAgent: null,
+        ipAddress: undefined,
+        userAgent: undefined,
       });
     }
   }
@@ -218,13 +231,14 @@ export class TagService {
 
     if (result.changes > 0) {
       this.auditLogger.log({
-        action: 'evidence:untagged',
-        userId,
-        resourceType: 'evidence',
+        eventType: "tag.remove",
+        action: "delete",
+        userId: userId.toString(),
+        resourceType: "evidence",
         resourceId: evidenceId.toString(),
         details: { tagId },
-        ipAddress: null,
-        userAgent: null,
+        ipAddress: undefined,
+        userAgent: undefined,
       });
     }
   }
@@ -249,9 +263,11 @@ export class TagService {
    * Search evidence by tags (AND logic - must have all specified tags)
    */
   searchByTags(userId: number, tagIds: number[]): number[] {
-    if (tagIds.length === 0) {return [];}
+    if (tagIds.length === 0) {
+      return [];
+    }
 
-    const placeholders = tagIds.map(() => '?').join(',');
+    const placeholders = tagIds.map(() => "?").join(",");
 
     const stmt = this.db.prepare(`
       SELECT DISTINCT et.evidence_id
@@ -291,7 +307,9 @@ export class TagService {
 
     const mostUsedTag =
       tags.length > 0
-        ? tags.reduce((max, tag) => ((tag.usageCount || 0) > (max.usageCount || 0) ? tag : max))
+        ? tags.reduce((max, tag) =>
+            (tag.usageCount || 0) > (max.usageCount || 0) ? tag : max
+          )
         : null;
 
     return {

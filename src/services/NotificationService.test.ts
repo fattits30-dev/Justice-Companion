@@ -3,7 +3,10 @@ import { NotificationService } from "./NotificationService.ts";
 import { NotificationRepository } from "../repositories/NotificationRepository.ts";
 import { NotificationPreferencesRepository } from "../repositories/NotificationPreferencesRepository.ts";
 import { AuditLogger } from "./AuditLogger.ts";
-import type { CreateNotificationInput, NotificationFilters } from "../models/Notification.ts";
+import type {
+  CreateNotificationInput,
+  NotificationFilters,
+} from "../models/Notification.ts";
 import type { NotificationPreferences } from "../models/NotificationPreferences.ts";
 
 // Mock repositories and services
@@ -16,6 +19,7 @@ describe("NotificationService", () => {
   let notificationRepo: NotificationRepository;
   let preferencesRepo: NotificationPreferencesRepository;
   let auditLogger: AuditLogger;
+  let logSpy: ReturnType<typeof vi.spyOn>;
 
   const mockNotification = {
     id: 1,
@@ -55,15 +59,18 @@ describe("NotificationService", () => {
     notificationRepo = new NotificationRepository({} as any);
     preferencesRepo = new NotificationPreferencesRepository({} as any);
     auditLogger = new AuditLogger({} as any);
-    service = new NotificationService(notificationRepo, preferencesRepo, auditLogger);
+    logSpy = vi.spyOn(auditLogger, "log").mockImplementation(() => {});
+    service = new NotificationService(
+      notificationRepo,
+      preferencesRepo,
+      auditLogger
+    );
   });
 
   describe("createNotification", () => {
     it("should create a notification when type is enabled", async () => {
       vi.spyOn(preferencesRepo, "findByUser").mockReturnValue(mockPreferences);
       vi.spyOn(notificationRepo, "create").mockReturnValue(mockNotification);
-      vi.spyOn(notificationRepo, "findById").mockReturnValue(mockNotification);
-      vi.spyOn(auditLogger, "log").mockResolvedValue();
 
       const input: CreateNotificationInput = {
         userId: 1,
@@ -77,16 +84,26 @@ describe("NotificationService", () => {
 
       expect(result).toEqual(mockNotification);
       expect(notificationRepo.create).toHaveBeenCalledWith(input);
-      expect(auditLogger.log).toHaveBeenCalledWith("notification:created", {
-        notificationId: 1,
-        userId: 1,
-        type: "deadline_reminder",
-        severity: "medium",
-      });
+      expect(logSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          eventType: "notification.create",
+          userId: "1",
+          resourceType: "notification",
+          resourceId: "1",
+          action: "create",
+          details: expect.objectContaining({
+            type: "deadline_reminder",
+            severity: "medium",
+          }),
+        })
+      );
     });
 
     it("should throw error when notification type is disabled", async () => {
-      const disabledPrefs = { ...mockPreferences, deadlineRemindersEnabled: false };
+      const disabledPrefs = {
+        ...mockPreferences,
+        deadlineRemindersEnabled: false,
+      };
       vi.spyOn(preferencesRepo, "findByUser").mockReturnValue(disabledPrefs);
 
       const input: CreateNotificationInput = {
@@ -145,45 +162,52 @@ describe("NotificationService", () => {
 
   describe("markAsRead", () => {
     it("should mark notification as read and log", async () => {
-      vi.spyOn(notificationRepo, "markAsRead").mockImplementation(() => {});
-      vi.spyOn(auditLogger, "log").mockResolvedValue();
-
+      vi.spyOn(notificationRepo, "markAsRead").mockReturnValue(true);
       await service.markAsRead(1);
 
       expect(notificationRepo.markAsRead).toHaveBeenCalledWith(1);
-      expect(auditLogger.log).toHaveBeenCalledWith("notification:read", {
-        notificationId: 1,
-      });
+      expect(logSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          eventType: "notification.read",
+          resourceId: "1",
+          action: "read",
+        })
+      );
     });
   });
 
   describe("markAllAsRead", () => {
     it("should mark all notifications as read", async () => {
       vi.spyOn(notificationRepo, "markAllAsRead").mockReturnValue(5);
-      vi.spyOn(auditLogger, "log").mockResolvedValue();
-
       const result = await service.markAllAsRead(1);
 
       expect(result).toBe(5);
       expect(notificationRepo.markAllAsRead).toHaveBeenCalledWith(1);
-      expect(auditLogger.log).toHaveBeenCalledWith("notification:read_all", {
-        userId: 1,
-        count: 5,
-      });
+      expect(logSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          eventType: "notification.read_all",
+          userId: "1",
+          resourceId: "1",
+          action: "update",
+          details: { count: 5 },
+        })
+      );
     });
   });
 
   describe("dismiss", () => {
     it("should dismiss notification and log", async () => {
-      vi.spyOn(notificationRepo, "dismiss").mockImplementation(() => {});
-      vi.spyOn(auditLogger, "log").mockResolvedValue();
-
+      vi.spyOn(notificationRepo, "dismiss").mockReturnValue(true);
       await service.dismiss(1);
 
       expect(notificationRepo.dismiss).toHaveBeenCalledWith(1);
-      expect(auditLogger.log).toHaveBeenCalledWith("notification:dismissed", {
-        notificationId: 1,
-      });
+      expect(logSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          eventType: "notification.dismiss",
+          resourceId: "1",
+          action: "update",
+        })
+      );
     });
   });
 
@@ -209,7 +233,9 @@ describe("NotificationService", () => {
 
     it("should create default preferences if none exist", async () => {
       vi.spyOn(preferencesRepo, "findByUser").mockReturnValueOnce(null);
-      vi.spyOn(preferencesRepo, "createDefaults").mockReturnValue(mockPreferences);
+      vi.spyOn(preferencesRepo, "createDefaults").mockReturnValue(
+        mockPreferences
+      );
 
       const result = await service.getPreferences(1);
 
@@ -223,41 +249,47 @@ describe("NotificationService", () => {
       const updates = { soundEnabled: false, deadlineReminderDays: 3 };
       const updated = { ...mockPreferences, ...updates };
       vi.spyOn(preferencesRepo, "update").mockReturnValue(updated);
-      vi.spyOn(auditLogger, "log").mockResolvedValue();
-
       const result = await service.updatePreferences(1, updates);
 
       expect(result).toEqual(updated);
       expect(preferencesRepo.update).toHaveBeenCalledWith(1, updates);
-      expect(auditLogger.log).toHaveBeenCalledWith("notification:preferences_updated", {
-        userId: 1,
-        changes: ["soundEnabled", "deadlineReminderDays"],
-      });
+      expect(logSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          eventType: "notification.preferences_update",
+          resourceType: "notification_preferences",
+          resourceId: "1",
+          action: "update",
+          details: { changes: ["soundEnabled", "deadlineReminderDays"] },
+        })
+      );
     });
   });
 
   describe("cleanupExpired", () => {
     it("should cleanup expired notifications and log", async () => {
       vi.spyOn(notificationRepo, "deleteExpired").mockReturnValue(10);
-      vi.spyOn(auditLogger, "log").mockResolvedValue();
 
       const result = await service.cleanupExpired();
 
       expect(result).toBe(10);
       expect(notificationRepo.deleteExpired).toHaveBeenCalled();
-      expect(auditLogger.log).toHaveBeenCalledWith("notification:cleanup", {
-        deletedCount: 10,
-      });
+      expect(logSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          eventType: "notification.cleanup",
+          resourceType: "notification",
+          action: "delete",
+          details: { deletedCount: 10 },
+        })
+      );
     });
 
     it("should not log if no notifications were cleaned", async () => {
       vi.spyOn(notificationRepo, "deleteExpired").mockReturnValue(0);
-      vi.spyOn(auditLogger, "log").mockResolvedValue();
 
       const result = await service.cleanupExpired();
 
       expect(result).toBe(0);
-      expect(auditLogger.log).not.toHaveBeenCalled();
+      expect(logSpy).not.toHaveBeenCalled();
     });
   });
 
@@ -268,11 +300,6 @@ describe("NotificationService", () => {
         ...mockNotification,
         type: "system_warning",
       });
-      vi.spyOn(notificationRepo, "findById").mockReturnValue({
-        ...mockNotification,
-        type: "system_warning",
-      });
-      vi.spyOn(auditLogger, "log").mockResolvedValue();
 
       const result = await service.createSystemNotification(
         1,
@@ -287,6 +314,9 @@ describe("NotificationService", () => {
           type: "system_warning",
           severity: "medium",
         })
+      );
+      expect(logSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ eventType: "notification.create" })
       );
     });
   });

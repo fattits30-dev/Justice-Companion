@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import { Save, Plus, FileText } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 
 interface Message {
   id: string;
@@ -16,7 +17,7 @@ interface Message {
 interface MessageItemProps {
   message: Message;
   onSaveToCase: (message: Message) => void;
-  onCreateCase?: (suggestedData: any) => void;
+  onCreateCase?: (message: Message) => void;
   showThinking: boolean;
   style?: React.CSSProperties; // Optional: for react-window positioning (no longer used)
 }
@@ -64,7 +65,7 @@ function MessageItemComponent({ message, onSaveToCase, onCreateCase, showThinkin
           )}
 
           <div className="prose prose-invert max-w-none">
-            <p className="whitespace-pre-wrap">{message.content}</p>
+            <ReactMarkdown>{message.content}</ReactMarkdown>
           </div>
 
           {message.thinking && showThinking && (
@@ -95,7 +96,7 @@ function MessageItemComponent({ message, onSaveToCase, onCreateCase, showThinkin
               {/* Create Case Button (shown when AI suggests case creation) */}
               {message.documentAnalysis?.suggestedCaseData && onCreateCase && (
                 <button
-                  onClick={() => onCreateCase(message.documentAnalysis!.suggestedCaseData)}
+                  onClick={() => onCreateCase(message)}
                   className="flex items-center gap-2 px-3 py-2 text-sm text-green-300 hover:text-white bg-green-500/20 hover:bg-green-500/30 rounded-lg transition-colors border border-green-500/30 hover:border-green-500/50"
                   type="button"
                 >

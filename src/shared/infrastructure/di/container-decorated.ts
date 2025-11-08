@@ -5,46 +5,42 @@
  * This demonstrates wrapping repositories with decorators for cross-cutting concerns.
  */
 
-import 'reflect-metadata';
-import { Container } from 'inversify';
-import { TYPES } from './types.ts';
+import "reflect-metadata";
+import { Container } from "inversify";
+import { TYPES } from "./types.ts";
 
 // Import repository interfaces from repository-interfaces.ts
 import type {
   ICaseRepository,
   IEvidenceRepository,
   IUserRepository,
-} from './repository-interfaces.ts';
+} from "./repository-interfaces.ts";
 
 // Import service interfaces from service-interfaces.ts
-import type {
-  IEncryptionService,
-  IAuditLogger,
-  ICacheService,
-} from './service-interfaces.ts';
+import type { IEncryptionService, IAuditLogger } from "./service-interfaces.ts";
 
 // Import IDatabase
-import type { IDatabase } from '../../../interfaces/IDatabase.ts';
+import type { IDatabase } from "../../../interfaces/IDatabase.ts";
 
 // Import implementations
-import { getDb } from '../../../db/database.ts';
-import { EncryptionService } from '../../../services/EncryptionService.ts';
-import { AuditLogger } from '../../../services/AuditLogger.ts';
-import { CacheService } from '../../../services/CacheService.ts';
+import { getDb } from "../../../db/database.ts";
+import { EncryptionService } from "../../../services/EncryptionService.ts";
+import { AuditLogger } from "../../../services/AuditLogger.ts";
+import { CacheService } from "../../../services/CacheService.ts";
 
 // Import Repositories
-import { CaseRepository } from '../../../repositories/CaseRepository.ts';
-import { EvidenceRepository } from '../../../repositories/EvidenceRepository.ts';
-import { UserRepository } from '../../../repositories/UserRepository.ts';
+import { CaseRepository } from "../../../repositories/CaseRepository.ts";
+import { EvidenceRepository } from "../../../repositories/EvidenceRepository.ts";
+import { UserRepository } from "../../../repositories/UserRepository.ts";
 
 // Import Decorators
-import { DecoratorFactory } from '../../../repositories/decorators/index.ts';
+import { DecoratorFactory } from "../../../repositories/decorators/index.ts";
 
 /**
  * Enhanced container options with decorator configuration
  */
 export interface DecoratedContainerOptions {
-  environment?: 'production' | 'development' | 'test';
+  environment?: "production" | "development" | "test";
   encryptionKey?: string;
   database?: IDatabase;
   verbose?: boolean;
@@ -54,20 +50,24 @@ export interface DecoratedContainerOptions {
 /**
  * Creates a container with decorated repositories
  */
-export function createDecoratedContainer(options: DecoratedContainerOptions = {}): Container {
+export function createDecoratedContainer(
+  options: DecoratedContainerOptions = {}
+): Container {
   const container = new Container({
-    defaultScope: 'Singleton',
+    defaultScope: "Singleton",
   });
 
   const {
-    environment = 'production',
+    environment = "production",
     database,
     verbose = false,
-    enableDecorators = true
+    enableDecorators = true,
   } = options;
 
   if (verbose) {
-    console.warn(`[DI] Creating decorated container for environment: ${environment}`);
+    console.warn(
+      `[DI] Creating decorated container for environment: ${environment}`
+    );
   }
 
   // ==========================================
@@ -82,19 +82,19 @@ export function createDecoratedContainer(options: DecoratedContainerOptions = {}
   }
 
   // Encryption Service
-  container.bind<IEncryptionService>(TYPES.EncryptionService)
+  container
+    .bind<IEncryptionService>(TYPES.EncryptionService)
     .to(EncryptionService)
     .inSingletonScope();
 
   // Audit Logger
-  container.bind<IAuditLogger>(TYPES.AuditLogger)
+  container
+    .bind<IAuditLogger>(TYPES.AuditLogger)
     .to(AuditLogger)
     .inSingletonScope();
 
   // Cache Service
-  container.bind<ICacheService>(TYPES.CacheService)
-    .to(CacheService)
-    .inSingletonScope();
+  container.bind(TYPES.CacheService).to(CacheService).inSingletonScope();
 
   // ==========================================
   // Repositories (with optional decoration)
@@ -102,7 +102,8 @@ export function createDecoratedContainer(options: DecoratedContainerOptions = {}
 
   // Case Repository
   if (enableDecorators) {
-    container.bind<ICaseRepository>(TYPES.CaseRepository)
+    container
+      .bind<ICaseRepository>(TYPES.CaseRepository)
       .toDynamicValue(() => {
         const repo = new CaseRepository(container.get(TYPES.Database));
         return DecoratorFactory.wrapRepository(container, repo, {
@@ -111,14 +112,16 @@ export function createDecoratedContainer(options: DecoratedContainerOptions = {}
       })
       .inSingletonScope();
   } else {
-    container.bind<ICaseRepository>(TYPES.CaseRepository)
+    container
+      .bind<ICaseRepository>(TYPES.CaseRepository)
       .to(CaseRepository)
       .inSingletonScope();
   }
 
   // Evidence Repository
   if (enableDecorators) {
-    container.bind<IEvidenceRepository>(TYPES.EvidenceRepository)
+    container
+      .bind<IEvidenceRepository>(TYPES.EvidenceRepository)
       .toDynamicValue(() => {
         const repo = new EvidenceRepository(container.get(TYPES.Database));
         return DecoratorFactory.wrapRepository(container, repo, {
@@ -127,14 +130,16 @@ export function createDecoratedContainer(options: DecoratedContainerOptions = {}
       })
       .inSingletonScope();
   } else {
-    container.bind<IEvidenceRepository>(TYPES.EvidenceRepository)
+    container
+      .bind<IEvidenceRepository>(TYPES.EvidenceRepository)
       .to(EvidenceRepository)
       .inSingletonScope();
   }
 
   // User Repository
   if (enableDecorators) {
-    container.bind<IUserRepository>(TYPES.UserRepository)
+    container
+      .bind<IUserRepository>(TYPES.UserRepository)
       .toDynamicValue(() => {
         const repo = new UserRepository(container.get(TYPES.Database));
         return DecoratorFactory.wrapRepository(container, repo, {
@@ -142,8 +147,9 @@ export function createDecoratedContainer(options: DecoratedContainerOptions = {}
         });
       })
       .inSingletonScope();
-  } else{
-    container.bind<IUserRepository>(TYPES.UserRepository)
+  } else {
+    container
+      .bind<IUserRepository>(TYPES.UserRepository)
       .to(UserRepository)
       .inSingletonScope();
   }

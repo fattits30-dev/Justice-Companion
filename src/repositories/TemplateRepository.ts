@@ -3,19 +3,21 @@
  * Data access layer for case templates
  */
 
-import type Database from 'better-sqlite3';
-import { BaseRepository } from './BaseRepository.ts';
-import type { EncryptionService } from '../services/EncryptionService.ts';
-import type { AuditLogger } from '../services/AuditLogger.ts';
-import type { DecryptionCache } from '../services/DecryptionCache.ts';
+import type Database from "better-sqlite3";
+import { BaseRepository } from "./BaseRepository.ts";
+import type { EncryptionService } from "../services/EncryptionService.ts";
+import type { AuditLogger } from "../services/AuditLogger.ts";
+import type { DecryptionCache } from "../services/DecryptionCache.ts";
 import type {
   CaseTemplate,
   CreateTemplateInput,
   UpdateTemplateInput,
-  TemplateFilters,
-  TemplateWithStats,
   TemplateFields,
-} from '../models/CaseTemplate.ts';
+  TimelineMilestone,
+  ChecklistItem,
+  TemplateUsage,
+  TemplateStats,
+} from "../models/CaseTemplate.ts";
 
 interface TemplateRow {
   id: number;
@@ -37,13 +39,13 @@ export class TemplateRepository extends BaseRepository<CaseTemplate> {
     db: Database.Database,
     encryptionService: EncryptionService,
     auditLogger?: AuditLogger,
-    cache?: DecryptionCache,
+    cache?: DecryptionCache
   ) {
     super(db, encryptionService, auditLogger, cache);
   }
 
   protected getTableName(): string {
-    return 'case_templates';
+    return "case_templates";
   }
 
   protected getEncryptedFields(): string[] {
@@ -58,7 +60,7 @@ export class TemplateRepository extends BaseRepository<CaseTemplate> {
       id: r.id,
       name: r.name,
       description: r.description,
-      category: r.category as CaseTemplate['category'],
+      category: r.category as CaseTemplate["category"],
       isSystemTemplate: r.is_system_template === 1,
       userId: r.user_id,
       templateFields: JSON.parse(r.template_fields_json) as TemplateFields,
@@ -120,24 +122,32 @@ export class TemplateRepository extends BaseRepository<CaseTemplate> {
     `;
 
     const now = new Date().toISOString();
-    const result = this.db.prepare(query).run(
-      input.name,
-      input.description,
-      input.category,
-      input.isSystemTemplate ? 1 : 0,
-      input.userId,
-      JSON.stringify(input.templateFields),
-      input.suggestedEvidenceTypes ? JSON.stringify(input.suggestedEvidenceTypes) : null,
-      input.timelineMilestones ? JSON.stringify(input.timelineMilestones) : null,
-      input.checklistItems ? JSON.stringify(input.checklistItems) : null,
-      now,
-      now,
+    const result = this.db
+      .prepare(query)
+      .run(
+        input.name,
+        input.description,
+        input.category,
+        input.isSystemTemplate ? 1 : 0,
+        input.userId,
+        JSON.stringify(input.templateFields),
+        input.suggestedEvidenceTypes
+          ? JSON.stringify(input.suggestedEvidenceTypes)
+          : null,
+        input.timelineMilestones
+          ? JSON.stringify(input.timelineMilestones)
+          : null,
+        input.checklistItems ? JSON.stringify(input.checklistItems) : null,
+        now,
+        now
+      );
+
+    const createdTemplate = this.findTemplateById(
+      result.lastInsertRowid as number
     );
 
-    const createdTemplate = this.findTemplateById(result.lastInsertRowid as number);
-    
     if (!createdTemplate) {
-      throw new Error('Failed to create template');
+      throw new Error("Failed to create template");
     }
 
     return createdTemplate;
@@ -146,10 +156,13 @@ export class TemplateRepository extends BaseRepository<CaseTemplate> {
   /**
    * Update existing template
    */
-  public updateTemplate(id: number, input: UpdateTemplateInput): CaseTemplate | null {
+  public updateTemplate(
+    id: number,
+    input: UpdateTemplateInput
+  ): CaseTemplate | null {
     const query = `
-      UPDATE case_templates 
-      SET 
+      UPDATE case_templates
+      SET
         name = ?,
         description = ?,
         category = ?,
@@ -162,17 +175,23 @@ export class TemplateRepository extends BaseRepository<CaseTemplate> {
     `;
 
     const now = new Date().toISOString();
-    this.db.prepare(query).run(
-      input.name,
-      input.description,
-      input.category,
-      JSON.stringify(input.templateFields),
-      input.suggestedEvidenceTypes ? JSON.stringify(input.suggestedEvidenceTypes) : null,
-      input.timelineMilestones ? JSON.stringify(input.timelineMilestones) : null,
-      input.checklistItems ? JSON.stringify(input.checklistItems) : null,
-      now,
-      id,
-    );
+    this.db
+      .prepare(query)
+      .run(
+        input.name,
+        input.description,
+        input.category,
+        JSON.stringify(input.templateFields),
+        input.suggestedEvidenceTypes
+          ? JSON.stringify(input.suggestedEvidenceTypes)
+          : null,
+        input.timelineMilestones
+          ? JSON.stringify(input.timelineMilestones)
+          : null,
+        input.checklistItems ? JSON.stringify(input.checklistItems) : null,
+        now,
+        id
+      );
 
     return this.findTemplateById(id);
   }

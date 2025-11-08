@@ -1,8 +1,11 @@
-import { injectable, inject } from 'inversify';
-import { TYPES } from '../shared/infrastructure/di/types.ts';
-import type { ConsentType, Consent } from '../domains/settings/entities/Consent.ts';
-import type { IConsentRepository } from '../shared/infrastructure/di/repository-interfaces.ts';
-import type { IAuditLogger } from '../shared/infrastructure/di/service-interfaces.ts';
+import { injectable, inject } from "inversify";
+import { TYPES } from "../shared/infrastructure/di/types.ts";
+import type {
+  ConsentType,
+  Consent,
+} from "../domains/settings/entities/Consent.ts";
+import type { IConsentRepository } from "../shared/infrastructure/di/repository-interfaces.ts";
+import type { IAuditLogger } from "../shared/infrastructure/di/service-interfaces.ts";
 
 /**
  * Service for managing GDPR consent
@@ -22,10 +25,11 @@ import type { IAuditLogger } from '../shared/infrastructure/di/service-interface
  */
 @injectable()
 export class ConsentService {
-  private readonly CURRENT_PRIVACY_VERSION = '1.0';
+  private readonly CURRENT_PRIVACY_VERSION = "1.0";
 
   constructor(
-    @inject(TYPES.ConsentRepository) private consentRepository: IConsentRepository,
+    @inject(TYPES.ConsentRepository)
+    private consentRepository: IConsentRepository,
     @inject(TYPES.AuditLogger) private auditLogger: IAuditLogger
   ) {}
 
@@ -42,11 +46,11 @@ export class ConsentService {
     });
 
     this.auditLogger?.log({
-      eventType: 'consent.granted',
+      eventType: "consent.granted",
       userId: userId.toString(),
-      resourceType: 'consent',
+      resourceType: "consent",
       resourceId: consent.id.toString(),
-      action: 'create',
+      action: "create",
       success: true,
       details: {
         consentType,
@@ -61,17 +65,20 @@ export class ConsentService {
    * Revoke consent (GDPR Article 7.3 - Right to withdraw consent)
    */
   revokeConsent(userId: number, consentType: ConsentType): void {
-    const consent = this.consentRepository.findActiveConsent(userId, consentType);
+    const consent = this.consentRepository.findActiveConsent(
+      userId,
+      consentType
+    );
 
     if (consent) {
       this.consentRepository.revoke(consent.id);
 
       this.auditLogger?.log({
-        eventType: 'consent.revoked',
+        eventType: "consent.revoked",
         userId: userId.toString(),
-        resourceType: 'consent',
+        resourceType: "consent",
         resourceId: consent.id.toString(),
-        action: 'update',
+        action: "update",
         success: true,
         details: { consentType },
       });
@@ -82,13 +89,89 @@ export class ConsentService {
    * Check if user has active consent for a specific type
    */
   hasActiveConsent(userId: number, consentType: ConsentType): boolean {
-    return this.consentRepository.hasActiveConsent(userId, consentType);
+    const consent = this.consentRepository.findActiveConsent(
+      userId,
+      consentType
+    );
+    return consent !== null;
   }
 
   /**
    * Get all active consents for a user
    */
   getActiveConsents(userId: number): Consent[] {
-    return this.consentRepository.getActiveConsents(userId);
+    const allConsents = this.consentRepository.listByUser(userId);
+    return allConsents.filter((consent) => !consent.revokedAt);
+  }
+
+  /**
+   * Alias for hasActiveConsent() - for test compatibility
+   */
+  hasConsent(userId: number, consentType: ConsentType): boolean {
+    return this.hasActiveConsent(userId, consentType);
+  }
+
+  /**
+   * Get all consents for a user (active and revoked)
+   */
+  getUserConsents(userId: number): Consent[] {
+    return this.consentRepository.listByUser(userId);
+  }
+
+  /**
+   * Check if user has all required consents
+   * Required consent: data_processing (legal basis for processing)
+   */
+  hasRequiredConsents(userId: number): boolean {
+    return this.hasActiveConsent(userId, "data_processing");
+  }
+
+  /**
+   * Grant all consent types at once (convenience method)
+   */
+  grantAllConsents(userId: number): Consent[] {
+    const types: ConsentType[] = [
+      "data_processing",
+      "encryption",
+      "ai_processing",
+      "marketing",
+    ];
+    const consents: Consent[] = [];
+
+    for (const type of types) {
+      // Check if consent already exists
+      const existing = this.consentRepository.findActiveConsent(userId, type);
+      if (!existing) {
+        const consent = this.grantConsent(userId, type);
+        consents.push(consent);
+      }
+    }
+
+    return consents;
+  }
+
+  /**
+   * Revoke all consents for a user (GDPR Article 7.3)
+   */
+  revokeAllConsents(userId: number): void {
+    const activeConsents = this.getActiveConsents(userId);
+
+    for (const consent of activeConsents) {
+      this.consentRepository.revoke(consent.id);
+    }
+
+    // Always log revoke all event (even if no consents exist)
+    this.auditLogger?.log({
+      eventType: "consent.revoked",
+      userId: userId.toString(),
+      resourceType: "consent",
+      resourceId: "all",
+      action: "update",
+      success: true,
+      details: {
+        reason: "All consents revoked",
+        revokedCount: activeConsents.length,
+      },
+    });
   }
 }

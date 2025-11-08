@@ -3,8 +3,8 @@
  * Seeds database with built-in system templates
  */
 
-import type { TemplateRepository } from '../repositories/TemplateRepository.ts';
-import type { CreateTemplateInput } from '../models/CaseTemplate.ts';
+import type { TemplateRepository } from "../repositories/TemplateRepository.ts";
+import type { CreateTemplateInput } from "../models/CaseTemplate.ts";
 
 export class TemplateSeeder {
   constructor(private templateRepo: TemplateRepository) {}
@@ -17,13 +17,17 @@ export class TemplateSeeder {
 
     for (const template of templates) {
       // Check if template already exists by name
-      const existing = this.templateRepo.findWithFilters({
-        searchQuery: template.name,
-        isSystemTemplate: true,
-      });
+      const allTemplates = this.templateRepo.findAllTemplates();
+      const existing = allTemplates.find(
+        (t) => t.name === template.name && t.isSystemTemplate
+      );
 
-      if (existing.length === 0) {
-        this.templateRepo.createSystemTemplate(template);
+      if (!existing) {
+        this.templateRepo.createTemplate({
+          ...template,
+          isSystemTemplate: true,
+          userId: null,
+        });
         console.log(`✓ Seeded template: ${template.name}`);
       } else {
         console.log(`⊘ Template already exists: ${template.name}`);
@@ -52,87 +56,85 @@ export class TemplateSeeder {
    */
   private civilLitigationTemplate(): CreateTemplateInput {
     return {
-      name: 'Civil Litigation - Contract Dispute',
+      name: "Civil Litigation - Contract Dispute",
       description:
-        'Standard template for commercial or consumer contract disputes. Includes pre-action protocol steps and court proceedings timeline.',
-      category: 'civil',
+        "Standard template for commercial or consumer contract disputes. Includes pre-action protocol steps and court proceedings timeline.",
+      category: "civil",
       templateFields: {
-        titleTemplate: '[Client Name] v [Defendant] - Contract Dispute',
+        titleTemplate: "[Client Name] v [Defendant] - Contract Dispute",
         descriptionTemplate:
-          'Contract dispute regarding [brief description of contract]. Alleged breach: [describe breach]. Damages sought: £[amount].',
-        caseType: 'consumer',
-        defaultStatus: 'active',
+          "Contract dispute regarding [brief description of contract]. Alleged breach: [describe breach]. Damages sought: £[amount].",
+        caseType: "consumer",
+        defaultStatus: "active",
       },
       suggestedEvidenceTypes: [
-        'Contract documents',
-        'Correspondence (emails, letters)',
-        'Invoice/payment records',
-        'Witness statements',
-        'Expert reports (if applicable)',
+        "Contract documents",
+        "Correspondence (emails, letters)",
+        "Invoice/payment records",
+        "Witness statements",
+        "Expert reports (if applicable)",
       ],
       timelineMilestones: [
         {
-          title: 'Letter Before Claim (Pre-Action)',
+          title: "Letter Before Claim (Pre-Action)",
           description:
-            'Send detailed letter of claim to defendant outlining breach and proposed resolution',
+            "Send detailed letter of claim to defendant outlining breach and proposed resolution",
           daysFromStart: 7,
           isRequired: true,
-          category: 'filing',
+          category: "filing",
         },
         {
-          title: 'Defendant Response Deadline',
-          description: 'Defendant must acknowledge claim within 14 days',
+          title: "Defendant Response Deadline",
+          description: "Defendant must acknowledge claim within 14 days",
           daysFromStart: 21,
           isRequired: true,
-          category: 'deadline',
+          category: "deadline",
         },
         {
-          title: 'Prepare Claim Form (N1)',
-          description:
-            'Draft particulars of claim if settlement not reached',
+          title: "Prepare Claim Form (N1)",
+          description: "Draft particulars of claim if settlement not reached",
           daysFromStart: 30,
           isRequired: false,
-          category: 'filing',
+          category: "filing",
         },
         {
-          title: 'File Court Claim',
-          description: 'Issue claim at county court if no settlement',
+          title: "File Court Claim",
+          description: "Issue claim at county court if no settlement",
           daysFromStart: 45,
           isRequired: false,
-          category: 'filing',
+          category: "filing",
         },
       ],
       checklistItems: [
         {
-          title: 'Gather all contract documents',
+          title: "Gather all contract documents",
           description:
-            'Collect original contract, amendments, and related agreements',
-          category: 'evidence',
-          priority: 'high',
+            "Collect original contract, amendments, and related agreements",
+          category: "evidence",
+          priority: "high",
           daysFromStart: 1,
         },
         {
-          title: 'Calculate damages',
-          description:
-            'Itemize all losses with supporting documentation',
-          category: 'research',
-          priority: 'high',
+          title: "Calculate damages",
+          description: "Itemize all losses with supporting documentation",
+          category: "research",
+          priority: "high",
           daysFromStart: 3,
         },
         {
-          title: 'Check court fees',
+          title: "Check court fees",
           description:
-            'Verify current court fee based on claim value (£25-£10,000)',
-          category: 'filing',
-          priority: 'medium',
+            "Verify current court fee based on claim value (£25-£10,000)",
+          category: "filing",
+          priority: "medium",
           daysFromStart: 5,
         },
         {
-          title: 'Draft witness statements',
+          title: "Draft witness statements",
           description:
-            'Prepare factual witness statements from all relevant parties',
-          category: 'evidence',
-          priority: 'medium',
+            "Prepare factual witness statements from all relevant parties",
+          category: "evidence",
+          priority: "medium",
           daysFromStart: 14,
         },
       ],
@@ -144,90 +146,87 @@ export class TemplateSeeder {
    */
   private personalInjuryTemplate(): CreateTemplateInput {
     return {
-      name: 'Personal Injury Claim',
+      name: "Personal Injury Claim",
       description:
-        'Template for personal injury claims including road traffic accidents, workplace injuries, and public liability claims.',
-      category: 'civil',
+        "Template for personal injury claims including road traffic accidents, workplace injuries, and public liability claims.",
+      category: "civil",
       templateFields: {
-        titleTemplate: '[Claimant Name] - Personal Injury Claim',
+        titleTemplate: "[Claimant Name] - Personal Injury Claim",
         descriptionTemplate:
-          'Personal injury claim arising from [incident type] on [date]. Injuries sustained: [list injuries]. Liable party: [defendant name].',
-        caseType: 'other',
-        defaultStatus: 'active',
+          "Personal injury claim arising from [incident type] on [date]. Injuries sustained: [list injuries]. Liable party: [defendant name].",
+        caseType: "other",
+        defaultStatus: "active",
       },
       suggestedEvidenceTypes: [
-        'Medical records and reports',
-        'Accident report',
-        'Photographs of injuries/accident scene',
-        'Witness statements',
-        'Pay slips (for loss of earnings)',
-        'Receipts for expenses',
+        "Medical records and reports",
+        "Accident report",
+        "Photographs of injuries/accident scene",
+        "Witness statements",
+        "Pay slips (for loss of earnings)",
+        "Receipts for expenses",
       ],
       timelineMilestones: [
         {
-          title: 'Obtain medical records',
+          title: "Obtain medical records",
           description:
-            'Request GP notes and hospital records with patient consent',
+            "Request GP notes and hospital records with patient consent",
           daysFromStart: 7,
           isRequired: true,
-          category: 'other',
+          category: "other",
         },
         {
-          title: 'Instruct medical expert',
+          title: "Instruct medical expert",
           description:
-            'Arrange independent medical examination and prognosis report',
+            "Arrange independent medical examination and prognosis report",
           daysFromStart: 14,
           isRequired: true,
-          category: 'other',
+          category: "other",
         },
         {
-          title: 'Send Letter of Claim',
+          title: "Send Letter of Claim",
           description:
-            'Formal notification to defendant/insurer with injury details',
+            "Formal notification to defendant/insurer with injury details",
           daysFromStart: 30,
           isRequired: true,
-          category: 'filing',
+          category: "filing",
         },
         {
-          title: 'Defendant Response',
+          title: "Defendant Response",
           description:
-            'Insurer must respond within 21 days acknowledging claim',
+            "Insurer must respond within 21 days acknowledging claim",
           daysFromStart: 51,
           isRequired: true,
-          category: 'deadline',
+          category: "deadline",
         },
       ],
       checklistItems: [
         {
-          title: 'Complete accident report form',
-          description:
-            'Document incident details while memory is fresh',
-          category: 'communication',
-          priority: 'high',
+          title: "Complete accident report form",
+          description: "Document incident details while memory is fresh",
+          category: "communication",
+          priority: "high",
           daysFromStart: 1,
         },
         {
-          title: 'Photograph injuries',
+          title: "Photograph injuries",
           description:
-            'Take detailed photos of all visible injuries and update weekly',
-          category: 'evidence',
-          priority: 'high',
+            "Take detailed photos of all visible injuries and update weekly",
+          category: "evidence",
+          priority: "high",
           daysFromStart: 1,
         },
         {
-          title: 'Identify liable party',
-          description:
-            'Determine defendant and obtain insurance details',
-          category: 'research',
-          priority: 'high',
+          title: "Identify liable party",
+          description: "Determine defendant and obtain insurance details",
+          category: "research",
+          priority: "high",
           daysFromStart: 3,
         },
         {
-          title: 'Calculate special damages',
-          description:
-            'Itemize all out-of-pocket expenses and lost earnings',
-          category: 'research',
-          priority: 'medium',
+          title: "Calculate special damages",
+          description: "Itemize all out-of-pocket expenses and lost earnings",
+          category: "research",
+          priority: "medium",
           daysFromStart: 7,
         },
       ],
@@ -239,89 +238,87 @@ export class TemplateSeeder {
    */
   private employmentTribunalTemplate(): CreateTemplateInput {
     return {
-      name: 'Employment Tribunal Claim',
+      name: "Employment Tribunal Claim",
       description:
-        'Template for unfair dismissal, discrimination, and employment rights claims at tribunal.',
-      category: 'employment',
+        "Template for unfair dismissal, discrimination, and employment rights claims at tribunal.",
+      category: "employment",
       templateFields: {
-        titleTemplate: '[Claimant Name] v [Employer] - Employment Tribunal',
+        titleTemplate: "[Claimant Name] v [Employer] - Employment Tribunal",
         descriptionTemplate:
-          'Employment tribunal claim for [type: unfair dismissal/discrimination/etc]. Employment dates: [start] to [end]. Grounds: [brief description].',
-        caseType: 'employment',
-        defaultStatus: 'active',
+          "Employment tribunal claim for [type: unfair dismissal/discrimination/etc]. Employment dates: [start] to [end]. Grounds: [brief description].",
+        caseType: "employment",
+        defaultStatus: "active",
       },
       suggestedEvidenceTypes: [
-        'Employment contract',
-        'Payslips and P60/P45',
-        'Emails and written communications',
-        'Disciplinary/grievance records',
-        'Performance reviews',
-        'Witness statements from colleagues',
+        "Employment contract",
+        "Payslips and P60/P45",
+        "Emails and written communications",
+        "Disciplinary/grievance records",
+        "Performance reviews",
+        "Witness statements from colleagues",
       ],
       timelineMilestones: [
         {
-          title: 'Submit ACAS Early Conciliation',
+          title: "Submit ACAS Early Conciliation",
           description:
-            'Mandatory step before tribunal claim (min 1 month process)',
+            "Mandatory step before tribunal claim (min 1 month process)",
           daysFromStart: 7,
           isRequired: true,
-          category: 'filing',
+          category: "filing",
         },
         {
-          title: 'Obtain ACAS Certificate',
+          title: "Obtain ACAS Certificate",
           description:
-            'Wait for ACAS certificate (issued if conciliation fails)',
+            "Wait for ACAS certificate (issued if conciliation fails)",
           daysFromStart: 37,
           isRequired: true,
-          category: 'deadline',
+          category: "deadline",
         },
         {
-          title: 'File ET1 Form',
+          title: "File ET1 Form",
           description:
-            'Submit tribunal claim within 1 month of ACAS cert (strict deadline)',
+            "Submit tribunal claim within 1 month of ACAS cert (strict deadline)",
           daysFromStart: 44,
           isRequired: true,
-          category: 'filing',
+          category: "filing",
         },
         {
-          title: 'Employer Response (ET3)',
-          description: 'Employer must respond within 28 days of service',
+          title: "Employer Response (ET3)",
+          description: "Employer must respond within 28 days of service",
           daysFromStart: 72,
           isRequired: true,
-          category: 'deadline',
+          category: "deadline",
         },
       ],
       checklistItems: [
         {
-          title: 'Check time limits',
+          title: "Check time limits",
           description:
-            'Verify claim is within 3 months less 1 day of dismissal/incident',
-          category: 'filing',
-          priority: 'high',
+            "Verify claim is within 3 months less 1 day of dismissal/incident",
+          category: "filing",
+          priority: "high",
           daysFromStart: 1,
         },
         {
-          title: 'Gather employment documents',
+          title: "Gather employment documents",
           description:
-            'Collect contract, handbook, policies, and correspondence',
-          category: 'evidence',
-          priority: 'high',
+            "Collect contract, handbook, policies, and correspondence",
+          category: "evidence",
+          priority: "high",
           daysFromStart: 1,
         },
         {
-          title: 'Calculate compensation',
-          description:
-            'Determine financial losses and statutory award limits',
-          category: 'research',
-          priority: 'medium',
+          title: "Calculate compensation",
+          description: "Determine financial losses and statutory award limits",
+          category: "research",
+          priority: "medium",
           daysFromStart: 5,
         },
         {
-          title: 'Draft witness list',
-          description:
-            'Identify colleagues who can support claim',
-          category: 'evidence',
-          priority: 'medium',
+          title: "Draft witness list",
+          description: "Identify colleagues who can support claim",
+          category: "evidence",
+          priority: "medium",
           daysFromStart: 10,
         },
       ],
@@ -333,90 +330,87 @@ export class TemplateSeeder {
    */
   private housingPossessionDefenseTemplate(): CreateTemplateInput {
     return {
-      name: 'Housing Possession Defense',
+      name: "Housing Possession Defense",
       description:
-        'Defend against landlord possession claims (Section 21/Section 8 notices, mortgage repossession).',
-      category: 'housing',
+        "Defend against landlord possession claims (Section 21/Section 8 notices, mortgage repossession).",
+      category: "housing",
       templateFields: {
-        titleTemplate: 'Defense - [Landlord] v [Tenant] - Possession Claim',
+        titleTemplate: "Defense - [Landlord] v [Tenant] - Possession Claim",
         descriptionTemplate:
-          'Defense to possession claim. Property: [address]. Tenancy type: [AST/regulated/etc]. Notice received: [date]. Grounds: [Section 21/Section 8 grounds].',
-        caseType: 'housing',
-        defaultStatus: 'active',
+          "Defense to possession claim. Property: [address]. Tenancy type: [AST/regulated/etc]. Notice received: [date]. Grounds: [Section 21/Section 8 grounds].",
+        caseType: "housing",
+        defaultStatus: "active",
       },
       suggestedEvidenceTypes: [
-        'Tenancy agreement',
-        'Rent payment records',
-        'Notice (Section 21/8)',
-        'Correspondence with landlord',
-        'Photos of property condition',
-        'Deposit protection certificate',
+        "Tenancy agreement",
+        "Rent payment records",
+        "Notice (Section 21/8)",
+        "Correspondence with landlord",
+        "Photos of property condition",
+        "Deposit protection certificate",
       ],
       timelineMilestones: [
         {
-          title: 'File Defense Form',
-          description:
-            'Submit defense to court within 14 days of service',
+          title: "File Defense Form",
+          description: "Submit defense to court within 14 days of service",
           daysFromStart: 7,
           isRequired: true,
-          category: 'filing',
+          category: "filing",
         },
         {
-          title: 'Check deposit protection',
+          title: "Check deposit protection",
           description:
-            'Verify landlord protected deposit within 30 days of tenancy',
+            "Verify landlord protected deposit within 30 days of tenancy",
           daysFromStart: 3,
           isRequired: true,
-          category: 'other',
+          category: "other",
         },
         {
-          title: 'Obtain legal advice',
+          title: "Obtain legal advice",
           description:
-            'Urgent appointment with housing solicitor or advice service',
+            "Urgent appointment with housing solicitor or advice service",
           daysFromStart: 1,
           isRequired: true,
-          category: 'other',
+          category: "other",
         },
         {
-          title: 'First Hearing',
+          title: "First Hearing",
           description:
-            'Attend possession hearing (approx 4-8 weeks after filing)',
+            "Attend possession hearing (approx 4-8 weeks after filing)",
           daysFromStart: 42,
           isRequired: true,
-          category: 'hearing',
+          category: "hearing",
         },
       ],
       checklistItems: [
         {
-          title: 'Check notice validity',
+          title: "Check notice validity",
           description:
-            'Verify notice period, format, and procedural requirements',
-          category: 'research',
-          priority: 'high',
+            "Verify notice period, format, and procedural requirements",
+          category: "research",
+          priority: "high",
           daysFromStart: 1,
         },
         {
-          title: 'Review tenancy agreement',
+          title: "Review tenancy agreement",
           description:
-            'Check for landlord breaches (e.g., no deposit protection)',
-          category: 'evidence',
-          priority: 'high',
+            "Check for landlord breaches (e.g., no deposit protection)",
+          category: "evidence",
+          priority: "high",
           daysFromStart: 1,
         },
         {
-          title: 'Apply for discretionary housing payment',
-          description:
-            'Emergency funds from local council if rent arrears',
-          category: 'other',
-          priority: 'medium',
+          title: "Apply for discretionary housing payment",
+          description: "Emergency funds from local council if rent arrears",
+          category: "other",
+          priority: "medium",
           daysFromStart: 2,
         },
         {
-          title: 'Gather rent payment evidence',
-          description:
-            'Bank statements showing all rent payments made',
-          category: 'evidence',
-          priority: 'high',
+          title: "Gather rent payment evidence",
+          description: "Bank statements showing all rent payments made",
+          category: "evidence",
+          priority: "high",
           daysFromStart: 3,
         },
       ],
@@ -428,90 +422,86 @@ export class TemplateSeeder {
    */
   private familyCourtDivorceTemplate(): CreateTemplateInput {
     return {
-      name: 'Family Court - Divorce Petition',
+      name: "Family Court - Divorce Petition",
       description:
-        'No-fault divorce petition template (post-2022 reforms). Includes financial settlement and child arrangements.',
-      category: 'family',
+        "No-fault divorce petition template (post-2022 reforms). Includes financial settlement and child arrangements.",
+      category: "family",
       templateFields: {
-        titleTemplate: 'Divorce - [Petitioner] and [Respondent]',
+        titleTemplate: "Divorce - [Petitioner] and [Respondent]",
         descriptionTemplate:
-          'Divorce petition. Marriage date: [date]. Separation date: [date]. Grounds: Irretrievable breakdown. Children: [number]. Financial settlement: [disputed/agreed].',
-        caseType: 'family',
-        defaultStatus: 'active',
+          "Divorce petition. Marriage date: [date]. Separation date: [date]. Grounds: Irretrievable breakdown. Children: [number]. Financial settlement: [disputed/agreed].",
+        caseType: "family",
+        defaultStatus: "active",
       },
       suggestedEvidenceTypes: [
-        'Marriage certificate',
-        'Financial disclosure (Form E)',
-        'Property valuations',
-        'Pension statements',
-        'Bank statements (last 12 months)',
-        'Child arrangement proposals',
+        "Marriage certificate",
+        "Financial disclosure (Form E)",
+        "Property valuations",
+        "Pension statements",
+        "Bank statements (last 12 months)",
+        "Child arrangement proposals",
       ],
       timelineMilestones: [
         {
-          title: 'Submit Online Divorce Application',
-          description:
-            'File application via gov.uk portal (£593 court fee)',
+          title: "Submit Online Divorce Application",
+          description: "File application via gov.uk portal (£593 court fee)",
           daysFromStart: 7,
           isRequired: true,
-          category: 'filing',
+          category: "filing",
         },
         {
-          title: 'Serve Respondent',
+          title: "Serve Respondent",
           description:
-            'Court serves respondent (or personal service if required)',
+            "Court serves respondent (or personal service if required)",
           daysFromStart: 21,
           isRequired: true,
-          category: 'other',
+          category: "other",
         },
         {
-          title: 'Conditional Order (20 weeks)',
+          title: "Conditional Order (20 weeks)",
           description:
-            'Apply for conditional order after 20-week reflection period',
+            "Apply for conditional order after 20-week reflection period",
           daysFromStart: 140,
           isRequired: true,
-          category: 'filing',
+          category: "filing",
         },
         {
-          title: 'Final Order (6 weeks + 1 day)',
-          description:
-            'Apply for final order to complete divorce',
+          title: "Final Order (6 weeks + 1 day)",
+          description: "Apply for final order to complete divorce",
           daysFromStart: 182,
           isRequired: true,
-          category: 'filing',
+          category: "filing",
         },
       ],
       checklistItems: [
         {
-          title: 'Obtain marriage certificate',
-          description:
-            'Original or certified copy required for application',
-          category: 'evidence',
-          priority: 'high',
+          title: "Obtain marriage certificate",
+          description: "Original or certified copy required for application",
+          category: "evidence",
+          priority: "high",
           daysFromStart: 1,
         },
         {
-          title: 'Complete financial disclosure',
+          title: "Complete financial disclosure",
           description:
-            'Full Form E with all assets, debts, income, and pensions',
-          category: 'filing',
-          priority: 'high',
+            "Full Form E with all assets, debts, income, and pensions",
+          category: "filing",
+          priority: "high",
           daysFromStart: 7,
         },
         {
-          title: 'Draft child arrangements',
-          description:
-            'Propose living arrangements, contact, and maintenance',
-          category: 'filing',
-          priority: 'medium',
+          title: "Draft child arrangements",
+          description: "Propose living arrangements, contact, and maintenance",
+          category: "filing",
+          priority: "medium",
           daysFromStart: 14,
         },
         {
-          title: 'Attend MIAM (Mediation)',
+          title: "Attend MIAM (Mediation)",
           description:
-            'Mandatory Information and Assessment Meeting (unless exempt)',
-          category: 'other',
-          priority: 'high',
+            "Mandatory Information and Assessment Meeting (unless exempt)",
+          category: "other",
+          priority: "high",
           daysFromStart: 10,
         },
       ],
@@ -523,90 +513,86 @@ export class TemplateSeeder {
    */
   private immigrationAppealTemplate(): CreateTemplateInput {
     return {
-      name: 'Immigration Appeal (First-tier Tribunal)',
+      name: "Immigration Appeal (First-tier Tribunal)",
       description:
-        'Template for appealing visa refusals, deportation orders, and asylum decisions.',
-      category: 'immigration',
+        "Template for appealing visa refusals, deportation orders, and asylum decisions.",
+      category: "immigration",
       templateFields: {
-        titleTemplate: 'Immigration Appeal - [Appellant Name]',
+        titleTemplate: "Immigration Appeal - [Appellant Name]",
         descriptionTemplate:
-          'Appeal against [visa refusal/deportation/asylum refusal]. Home Office reference: [ref]. Decision date: [date]. Grounds: [Article 8/human rights/asylum grounds].',
-        caseType: 'other',
-        defaultStatus: 'active',
+          "Appeal against [visa refusal/deportation/asylum refusal]. Home Office reference: [ref]. Decision date: [date]. Grounds: [Article 8/human rights/asylum grounds].",
+        caseType: "other",
+        defaultStatus: "active",
       },
       suggestedEvidenceTypes: [
-        'Home Office decision letter',
-        'Passport and travel documents',
-        'Sponsor documents (if family visa)',
-        'Evidence of relationship/employment',
-        'Country expert reports',
-        'Character references',
+        "Home Office decision letter",
+        "Passport and travel documents",
+        "Sponsor documents (if family visa)",
+        "Evidence of relationship/employment",
+        "Country expert reports",
+        "Character references",
       ],
       timelineMilestones: [
         {
-          title: 'File Notice of Appeal',
-          description:
-            'Submit appeal to First-tier Tribunal (14-day deadline)',
+          title: "File Notice of Appeal",
+          description: "Submit appeal to First-tier Tribunal (14-day deadline)",
           daysFromStart: 7,
           isRequired: true,
-          category: 'filing',
+          category: "filing",
         },
         {
-          title: 'Home Office Review',
-          description:
-            'UKVI reviews decision (may withdraw or maintain)',
+          title: "Home Office Review",
+          description: "UKVI reviews decision (may withdraw or maintain)",
           daysFromStart: 28,
           isRequired: true,
-          category: 'deadline',
+          category: "deadline",
         },
         {
-          title: 'Submit Skeleton Argument',
-          description:
-            'Detailed legal grounds and evidence summary',
+          title: "Submit Skeleton Argument",
+          description: "Detailed legal grounds and evidence summary",
           daysFromStart: 42,
           isRequired: true,
-          category: 'filing',
+          category: "filing",
         },
         {
-          title: 'Tribunal Hearing',
+          title: "Tribunal Hearing",
           description:
-            'Oral hearing before immigration judge (approx 3-6 months)',
+            "Oral hearing before immigration judge (approx 3-6 months)",
           daysFromStart: 120,
           isRequired: true,
-          category: 'hearing',
+          category: "hearing",
         },
       ],
       checklistItems: [
         {
-          title: 'Check appeal deadline',
+          title: "Check appeal deadline",
           description:
-            '14 days for in-country, 28 days for out-of-country appeals',
-          category: 'filing',
-          priority: 'high',
+            "14 days for in-country, 28 days for out-of-country appeals",
+          category: "filing",
+          priority: "high",
           daysFromStart: 1,
         },
         {
-          title: 'Obtain Home Office bundle',
-          description:
-            'Request all documents HO relied on for decision',
-          category: 'evidence',
-          priority: 'high',
+          title: "Obtain Home Office bundle",
+          description: "Request all documents HO relied on for decision",
+          category: "evidence",
+          priority: "high",
           daysFromStart: 3,
         },
         {
-          title: 'Gather supporting evidence',
+          title: "Gather supporting evidence",
           description:
-            'Collect all evidence not submitted with original application',
-          category: 'evidence',
-          priority: 'high',
+            "Collect all evidence not submitted with original application",
+          category: "evidence",
+          priority: "high",
           daysFromStart: 5,
         },
         {
-          title: 'Instruct expert witness (if needed)',
+          title: "Instruct expert witness (if needed)",
           description:
-            'Country expert for asylum or medical expert for health grounds',
-          category: 'other',
-          priority: 'medium',
+            "Country expert for asylum or medical expert for health grounds",
+          category: "other",
+          priority: "medium",
           daysFromStart: 14,
         },
       ],
@@ -618,90 +604,84 @@ export class TemplateSeeder {
    */
   private landlordTenantDisputeTemplate(): CreateTemplateInput {
     return {
-      name: 'Landlord-Tenant Dispute',
+      name: "Landlord-Tenant Dispute",
       description:
-        'Template for deposit disputes, disrepair claims, and tenancy issues (not possession).',
-      category: 'housing',
+        "Template for deposit disputes, disrepair claims, and tenancy issues (not possession).",
+      category: "housing",
       templateFields: {
-        titleTemplate: '[Tenant] - Dispute with [Landlord]',
+        titleTemplate: "[Tenant] - Dispute with [Landlord]",
         descriptionTemplate:
-          'Dispute type: [deposit/disrepair/unlawful eviction]. Property: [address]. Tenancy dates: [start] to [end/ongoing]. Issue: [brief description].',
-        caseType: 'housing',
-        defaultStatus: 'active',
+          "Dispute type: [deposit/disrepair/unlawful eviction]. Property: [address]. Tenancy dates: [start] to [end/ongoing]. Issue: [brief description].",
+        caseType: "housing",
+        defaultStatus: "active",
       },
       suggestedEvidenceTypes: [
-        'Tenancy agreement',
-        'Inventory and check-in report',
-        'Photos of property condition',
-        'Repair requests and responses',
-        'Rent payment records',
-        'Correspondence with landlord',
+        "Tenancy agreement",
+        "Inventory and check-in report",
+        "Photos of property condition",
+        "Repair requests and responses",
+        "Rent payment records",
+        "Correspondence with landlord",
       ],
       timelineMilestones: [
         {
-          title: 'Raise issue with landlord',
-          description:
-            'Formal written notice of disrepair/deposit dispute',
+          title: "Raise issue with landlord",
+          description: "Formal written notice of disrepair/deposit dispute",
           daysFromStart: 3,
           isRequired: true,
-          category: 'communication',
+          category: "other",
         },
         {
-          title: 'Landlord Response Period',
+          title: "Landlord Response Period",
           description:
-            'Landlord must respond within reasonable time (14-28 days)',
+            "Landlord must respond within reasonable time (14-28 days)",
           daysFromStart: 21,
           isRequired: false,
-          category: 'deadline',
+          category: "deadline",
         },
         {
-          title: 'Initiate Deposit Scheme ADR',
-          description:
-            'Free dispute resolution via TDS/DPS/MyDeposits',
+          title: "Initiate Deposit Scheme ADR",
+          description: "Free dispute resolution via TDS/DPS/MyDeposits",
           daysFromStart: 30,
           isRequired: false,
-          category: 'other',
+          category: "other",
         },
         {
-          title: 'Submit County Court Claim',
-          description:
-            'File N1 claim form if ADR fails (last resort)',
+          title: "Submit County Court Claim",
+          description: "File N1 claim form if ADR fails (last resort)",
           daysFromStart: 60,
           isRequired: false,
-          category: 'filing',
+          category: "filing",
         },
       ],
       checklistItems: [
         {
-          title: 'Check deposit protection',
-          description:
-            'Verify deposit registered with TDS, DPS, or MyDeposits',
-          category: 'research',
-          priority: 'high',
+          title: "Check deposit protection",
+          description: "Verify deposit registered with TDS, DPS, or MyDeposits",
+          category: "research",
+          priority: "high",
           daysFromStart: 1,
         },
         {
-          title: 'Document property condition',
-          description:
-            'Timestamped photos and video walkthrough',
-          category: 'evidence',
-          priority: 'high',
+          title: "Document property condition",
+          description: "Timestamped photos and video walkthrough",
+          category: "evidence",
+          priority: "high",
           daysFromStart: 1,
         },
         {
-          title: 'Review tenancy agreement',
+          title: "Review tenancy agreement",
           description:
-            'Check repair obligations and dispute resolution clauses',
-          category: 'research',
-          priority: 'medium',
+            "Check repair obligations and dispute resolution clauses",
+          category: "research",
+          priority: "medium",
           daysFromStart: 2,
         },
         {
-          title: 'Calculate damages/compensation',
-          description:
-            'Itemize losses or cost of repairs with quotes',
-          category: 'research',
-          priority: 'medium',
+          title: "Calculate damages/compensation",
+          description: "Itemize losses or cost of repairs with quotes",
+          category: "research",
+          priority: "medium",
           daysFromStart: 7,
         },
       ],
@@ -713,88 +693,84 @@ export class TemplateSeeder {
    */
   private debtRecoveryTemplate(): CreateTemplateInput {
     return {
-      name: 'Debt Recovery Action',
+      name: "Debt Recovery Action",
       description:
-        'Template for recovering unpaid invoices, loans, or contractual debts from individuals or businesses.',
-      category: 'civil',
+        "Template for recovering unpaid invoices, loans, or contractual debts from individuals or businesses.",
+      category: "civil",
       templateFields: {
-        titleTemplate: '[Creditor] v [Debtor] - Debt Recovery',
+        titleTemplate: "[Creditor] v [Debtor] - Debt Recovery",
         descriptionTemplate:
-          'Debt recovery claim. Amount owed: £[amount]. Invoice/loan date: [date]. Payment due: [date]. Debtor response: [ignored/disputed/partial payment].',
-        caseType: 'debt',
-        defaultStatus: 'active',
+          "Debt recovery claim. Amount owed: £[amount]. Invoice/loan date: [date]. Payment due: [date]. Debtor response: [ignored/disputed/partial payment].",
+        caseType: "debt",
+        defaultStatus: "active",
       },
       suggestedEvidenceTypes: [
-        'Invoice or loan agreement',
-        'Proof of delivery/service',
-        'Payment reminders sent',
-        'Debtor correspondence',
-        'Bank statements showing non-payment',
-        'Credit report (for insolvency check)',
+        "Invoice or loan agreement",
+        "Proof of delivery/service",
+        "Payment reminders sent",
+        "Debtor correspondence",
+        "Bank statements showing non-payment",
+        "Credit report (for insolvency check)",
       ],
       timelineMilestones: [
         {
-          title: 'Send Letter Before Action',
+          title: "Send Letter Before Action",
           description:
-            'Final demand giving 14 days to pay or face legal action',
+            "Final demand giving 14 days to pay or face legal action",
           daysFromStart: 7,
           isRequired: true,
-          category: 'communication',
+          category: "other",
         },
         {
-          title: 'Debtor Payment Deadline',
-          description: 'Deadline for payment or response to letter',
+          title: "Debtor Payment Deadline",
+          description: "Deadline for payment or response to letter",
           daysFromStart: 21,
           isRequired: true,
-          category: 'deadline',
+          category: "deadline",
         },
         {
-          title: 'Issue County Court Claim (N1)',
-          description:
-            'File claim online (MCOL) or via court if no payment',
+          title: "Issue County Court Claim (N1)",
+          description: "File claim online (MCOL) or via court if no payment",
           daysFromStart: 28,
           isRequired: false,
-          category: 'filing',
+          category: "filing",
         },
         {
-          title: 'Debtor Defense Deadline',
-          description: 'Debtor has 14 days to acknowledge or defend',
+          title: "Debtor Defense Deadline",
+          description: "Debtor has 14 days to acknowledge or defend",
           daysFromStart: 42,
           isRequired: false,
-          category: 'deadline',
+          category: "deadline",
         },
       ],
       checklistItems: [
         {
-          title: 'Verify debt is not statute-barred',
-          description:
-            'Check debt is within 6 years (12 for specialty debts)',
-          category: 'research',
-          priority: 'high',
+          title: "Verify debt is not statute-barred",
+          description: "Check debt is within 6 years (12 for specialty debts)",
+          category: "research",
+          priority: "high",
           daysFromStart: 1,
         },
         {
-          title: 'Check debtor solvency',
-          description:
-            'Search Companies House or credit reference agencies',
-          category: 'research',
-          priority: 'high',
+          title: "Check debtor solvency",
+          description: "Search Companies House or credit reference agencies",
+          category: "research",
+          priority: "high",
           daysFromStart: 2,
         },
         {
-          title: 'Calculate total owed',
-          description:
-            'Include principal, interest (8% statutory), and costs',
-          category: 'research',
-          priority: 'high',
+          title: "Calculate total owed",
+          description: "Include principal, interest (8% statutory), and costs",
+          category: "research",
+          priority: "high",
           daysFromStart: 3,
         },
         {
-          title: 'Prepare enforcement options',
+          title: "Prepare enforcement options",
           description:
-            'Research bailiffs, charging orders, attachment of earnings',
-          category: 'research',
-          priority: 'medium',
+            "Research bailiffs, charging orders, attachment of earnings",
+          category: "research",
+          priority: "medium",
           daysFromStart: 14,
         },
       ],

@@ -13,9 +13,9 @@
  * - Error handling
  */
 
-import { describe, test, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, act } from '@testing-library/react';
-import { AuthProvider, useAuth } from '../../src/contexts/AuthContext';
+import { describe, test, expect, vi, beforeEach } from "vitest";
+import { render, screen, waitFor, act } from "@/test-utils/test-utils.tsx";
+import { AuthProvider, useAuth } from "../../src/contexts/AuthContext.tsx";
 
 // Test component that consumes AuthContext
 function TestComponent() {
@@ -24,74 +24,93 @@ function TestComponent() {
   return (
     <div>
       <div data-testid="auth-status">
-        {isAuthenticated ? 'authenticated' : 'unauthenticated'}
+        {isAuthenticated ? "authenticated" : "unauthenticated"}
       </div>
-      <div data-testid="loading">{isLoading ? 'loading' : 'ready'}</div>
+      <div data-testid="loading">{isLoading ? "loading" : "ready"}</div>
       {user && <div data-testid="username">{user.username}</div>}
       {error && <div data-testid="error">{error}</div>}
-      <button onClick={() => login('testuser', 'password', false)}>Login</button>
+      <button onClick={() => login("testuser", "password", false)}>
+        Login
+      </button>
       <button onClick={logout}>Logout</button>
     </div>
   );
 }
 
-describe('AuthContext', () => {
+describe("AuthContext", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Mock localStorage for session management
+    const localStorageMock = {
+      getItem: vi.fn(() => null), // No session by default
+      setItem: vi.fn(),
+      removeItem: vi.fn(),
+      clear: vi.fn(),
+      length: 0,
+      key: vi.fn(),
+    };
+    Reflect.set(globalThis.window, "localStorage", localStorageMock);
+    // Mock getSession to return no session by default (overridden per test)
+    globalThis.window.justiceAPI.getSession = vi.fn().mockResolvedValue({
+      success: true,
+      data: null,
+    });
   });
 
   /**
    * TEST 1: Provider renders children
    */
-  test('renders children wrapped in AuthProvider', () => {
+  test("renders children wrapped in AuthProvider", () => {
     render(
       <AuthProvider>
         <div data-testid="child">Test Child</div>
       </AuthProvider>
     );
 
-    expect(screen.getByTestId('child')).toBeInTheDocument();
+    expect(screen.getByTestId("child")).toBeInTheDocument();
   });
 
   /**
    * TEST 2: Initial state is unauthenticated
    */
-  test('starts with unauthenticated state', () => {
+  test("starts with unauthenticated state", () => {
     render(
       <AuthProvider>
         <TestComponent />
       </AuthProvider>
     );
 
-    expect(screen.getByTestId('auth-status')).toHaveTextContent('unauthenticated');
-    expect(screen.queryByTestId('username')).not.toBeInTheDocument();
+    expect(screen.getByTestId("auth-status")).toHaveTextContent(
+      "unauthenticated"
+    );
+    expect(screen.queryByTestId("username")).not.toBeInTheDocument();
   });
 
   /**
    * TEST 3: Initial state is not loading
    */
-  test('starts in ready state (not loading)', () => {
+  test("starts in ready state (not loading)", () => {
     render(
       <AuthProvider>
         <TestComponent />
       </AuthProvider>
     );
 
-    expect(screen.getByTestId('loading')).toHaveTextContent('ready');
+    expect(screen.getByTestId("loading")).toHaveTextContent("ready");
   });
 
   /**
    * TEST 4: Login action sets user and session
    */
-  test('sets authenticated state after successful login', async () => {
+  test("sets authenticated state after successful login", async () => {
     const mockLogin = vi.fn().mockResolvedValue({
       success: true,
       data: {
-        user: { id: '1', username: 'testuser', email: 'test@example.com' },
-        session: { sessionId: 'test-session-id' }
-      }
+        user: { id: "1", username: "testuser", email: "test@example.com" },
+        session: { id: "test-session-id" },
+      },
     });
-    window.justiceAPI.login = mockLogin;
+    globalThis.window.justiceAPI.login = mockLogin;
 
     render(
       <AuthProvider>
@@ -99,28 +118,34 @@ describe('AuthContext', () => {
       </AuthProvider>
     );
 
-    const loginButton = screen.getByText('Login');
+    const loginButton = screen.getByText("Login");
     await act(async () => {
       loginButton.click();
     });
 
     await waitFor(() => {
-      expect(screen.getByTestId('auth-status')).toHaveTextContent('authenticated');
-      expect(screen.getByTestId('username')).toHaveTextContent('testuser');
+      expect(screen.getByTestId("auth-status")).toHaveTextContent(
+        "authenticated"
+      );
+      expect(screen.getByTestId("username")).toHaveTextContent("testuser");
     });
   });
 
   /**
    * TEST 5: Login shows loading state
    */
-  test('shows loading state during login', async () => {
-    const mockLogin = vi.fn().mockImplementation(() =>
-      new Promise(resolve => setTimeout(() => resolve({
+  test("shows loading state during login", async () => {
+    const mockLogin = vi.fn().mockImplementation(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      return {
         success: true,
-        data: { user: { id: '1', username: 'testuser' }, session: {} }
-      }), 100))
-    );
-    window.justiceAPI.login = mockLogin;
+        data: {
+          user: { id: "1", username: "testuser" },
+          session: { id: "test-session-123" },
+        },
+      };
+    });
+    globalThis.window.justiceAPI.login = mockLogin;
 
     render(
       <AuthProvider>
@@ -128,34 +153,34 @@ describe('AuthContext', () => {
       </AuthProvider>
     );
 
-    const loginButton = screen.getByText('Login');
+    const loginButton = screen.getByText("Login");
     await act(async () => {
       loginButton.click();
     });
 
     // Should show loading immediately
-    expect(screen.getByTestId('loading')).toHaveTextContent('loading');
+    expect(screen.getByTestId("loading")).toHaveTextContent("loading");
 
     // Wait for login to complete
     await waitFor(() => {
-      expect(screen.getByTestId('loading')).toHaveTextContent('ready');
+      expect(screen.getByTestId("loading")).toHaveTextContent("ready");
     });
   });
 
   /**
    * TEST 6: Logout clears user and session
    */
-  test('clears state after logout', async () => {
+  test("clears state after logout", async () => {
     const mockLogin = vi.fn().mockResolvedValue({
       success: true,
       data: {
-        user: { id: '1', username: 'testuser', email: 'test@example.com' },
-        session: { sessionId: 'test-session-id' }
-      }
+        user: { id: "1", username: "testuser", email: "test@example.com" },
+        session: { id: "test-session-id" },
+      },
     });
     const mockLogout = vi.fn().mockResolvedValue({ success: true });
-    window.justiceAPI.login = mockLogin;
-    window.justiceAPI.logout = mockLogout;
+    globalThis.window.justiceAPI.login = mockLogin;
+    globalThis.window.justiceAPI.logout = mockLogout;
 
     render(
       <AuthProvider>
@@ -164,41 +189,45 @@ describe('AuthContext', () => {
     );
 
     // Login first
-    const loginButton = screen.getByText('Login');
+    const loginButton = screen.getByText("Login");
     await act(async () => {
       loginButton.click();
     });
 
     await waitFor(() => {
-      expect(screen.getByTestId('auth-status')).toHaveTextContent('authenticated');
+      expect(screen.getByTestId("auth-status")).toHaveTextContent(
+        "authenticated"
+      );
     });
 
     // Now logout
-    const logoutButton = screen.getByText('Logout');
+    const logoutButton = screen.getByText("Logout");
     await act(async () => {
       logoutButton.click();
     });
 
     await waitFor(() => {
-      expect(screen.getByTestId('auth-status')).toHaveTextContent('unauthenticated');
-      expect(screen.queryByTestId('username')).not.toBeInTheDocument();
+      expect(screen.getByTestId("auth-status")).toHaveTextContent(
+        "unauthenticated"
+      );
+      expect(screen.queryByTestId("username")).not.toBeInTheDocument();
     });
   });
 
   /**
    * TEST 7: Login failure shows error
    */
-  test('shows error message when login fails', async () => {
+  test("shows error message when login fails", async () => {
     const mockLogin = vi.fn().mockResolvedValue({
       success: false,
-      error: 'Invalid credentials'
+      message: "Invalid credentials", // AuthContext uses 'message' not 'error'
     });
     const mockGetSession = vi.fn().mockResolvedValue({
       success: true,
-      data: null // No existing session
+      data: null, // No existing session
     });
-    window.justiceAPI.login = mockLogin;
-    window.justiceAPI.getSession = mockGetSession;
+    globalThis.window.justiceAPI.login = mockLogin;
+    globalThis.window.justiceAPI.getSession = mockGetSession;
 
     render(
       <AuthProvider>
@@ -211,30 +240,51 @@ describe('AuthContext', () => {
       expect(mockGetSession).toHaveBeenCalled();
     });
 
-    const loginButton = screen.getByText('Login');
+    const loginButton = screen.getByText("Login");
     await act(async () => {
       loginButton.click();
     });
 
     await waitFor(() => {
-      expect(screen.getByTestId('error')).toHaveTextContent('Invalid credentials');
-      expect(screen.getByTestId('auth-status')).toHaveTextContent('unauthenticated');
+      expect(screen.getByTestId("error")).toHaveTextContent(
+        "Invalid credentials"
+      );
+      expect(screen.getByTestId("auth-status")).toHaveTextContent(
+        "unauthenticated"
+      );
     });
   });
 
   /**
    * TEST 8: Session restoration on mount
    */
-  test('restores session from IPC on mount', async () => {
+  test("restores session from IPC on mount", async () => {
+    // Mock localStorage to have a sessionId
+    const localStorageMock = {
+      getItem: vi.fn((key) =>
+        key === "sessionId" ? "test-session-123" : null
+      ),
+      setItem: vi.fn(),
+      removeItem: vi.fn(),
+      clear: vi.fn(),
+      length: 0,
+      key: vi.fn(),
+    };
+    Reflect.set(globalThis.window, "localStorage", localStorageMock);
+
     const mockGetSession = vi.fn().mockResolvedValue({
       success: true,
       data: {
-        userId: '1',
-        username: 'testuser',
-        email: 'test@example.com'
-      }
+        id: "session-123",
+        user: {
+          id: "1",
+          username: "testuser",
+          email: "test@example.com",
+        },
+        expiresAt: new Date(Date.now() + 86400000).toISOString(),
+      },
     });
-    window.justiceAPI.getSession = mockGetSession;
+    globalThis.window.justiceAPI.getSession = mockGetSession;
 
     render(
       <AuthProvider>
@@ -242,27 +292,29 @@ describe('AuthContext', () => {
       </AuthProvider>
     );
 
-    // Should call getSession on mount
+    // Should call getSession on mount with the sessionId
     await waitFor(() => {
-      expect(mockGetSession).toHaveBeenCalled();
+      expect(mockGetSession).toHaveBeenCalledWith("test-session-123");
     });
 
     // Should set authenticated state
     await waitFor(() => {
-      expect(screen.getByTestId('auth-status')).toHaveTextContent('authenticated');
-      expect(screen.getByTestId('username')).toHaveTextContent('testuser');
+      expect(screen.getByTestId("auth-status")).toHaveTextContent(
+        "authenticated"
+      );
+      expect(screen.getByTestId("username")).toHaveTextContent("testuser");
     });
   });
 
   /**
    * TEST 9: No session restoration if getSession fails
    */
-  test('stays unauthenticated if no session exists', async () => {
+  test("stays unauthenticated if no session exists", async () => {
     const mockGetSession = vi.fn().mockResolvedValue({
       success: true,
-      data: null
+      data: null,
     });
-    window.justiceAPI.getSession = mockGetSession;
+    globalThis.window.justiceAPI.getSession = mockGetSession;
 
     render(
       <AuthProvider>
@@ -275,19 +327,23 @@ describe('AuthContext', () => {
     });
 
     // Should remain unauthenticated
-    expect(screen.getByTestId('auth-status')).toHaveTextContent('unauthenticated');
+    expect(screen.getByTestId("auth-status")).toHaveTextContent(
+      "unauthenticated"
+    );
   });
 
   /**
    * TEST 10: useAuth hook throws error outside provider
    */
-  test('throws error when useAuth is used outside AuthProvider', () => {
+  test("throws error when useAuth is used outside AuthProvider", () => {
     // Suppress console.error for this test
-    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
 
     expect(() => {
       render(<TestComponent />);
-    }).toThrow('useAuth must be used within AuthProvider');
+    }).toThrow("useAuth must be used within an AuthProvider"); // Match exact error message
 
     consoleError.mockRestore();
   });
@@ -295,17 +351,17 @@ describe('AuthContext', () => {
   /**
    * TEST 11: Logout calls IPC handler
    */
-  test('calls window.justiceAPI.logout when logging out', async () => {
+  test("calls window.justiceAPI.logout when logging out", async () => {
     const mockLogin = vi.fn().mockResolvedValue({
       success: true,
       data: {
-        user: { id: '1', username: 'testuser' },
-        session: { sessionId: 'test-session' }
-      }
+        user: { id: "1", username: "testuser" },
+        session: { id: "test-session" },
+      },
     });
     const mockLogout = vi.fn().mockResolvedValue({ success: true });
-    window.justiceAPI.login = mockLogin;
-    window.justiceAPI.logout = mockLogout;
+    globalThis.window.justiceAPI.login = mockLogin;
+    globalThis.window.justiceAPI.logout = mockLogout;
 
     render(
       <AuthProvider>
@@ -315,16 +371,18 @@ describe('AuthContext', () => {
 
     // Login first
     await act(async () => {
-      screen.getByText('Login').click();
+      screen.getByText("Login").click();
     });
 
     await waitFor(() => {
-      expect(screen.getByTestId('auth-status')).toHaveTextContent('authenticated');
+      expect(screen.getByTestId("auth-status")).toHaveTextContent(
+        "authenticated"
+      );
     });
 
     // Logout
     await act(async () => {
-      screen.getByText('Logout').click();
+      screen.getByText("Logout").click();
     });
 
     await waitFor(() => {
@@ -335,19 +393,25 @@ describe('AuthContext', () => {
   /**
    * TEST 12: Error clears on successful login after failure
    */
-  test('clears error on successful login after previous failure', async () => {
+  test("clears error on successful login after previous failure", async () => {
     let callCount = 0;
     const mockLogin = vi.fn().mockImplementation(() => {
       callCount++;
       if (callCount === 1) {
-        return Promise.resolve({ success: false, error: 'First attempt failed' });
+        return Promise.resolve({
+          success: false,
+          message: "First attempt failed",
+        }); // AuthContext uses 'message' not 'error'
       }
       return Promise.resolve({
         success: true,
-        data: { user: { id: '1', username: 'testuser' }, session: {} }
+        data: {
+          user: { id: "1", username: "testuser" },
+          session: { id: "test-session-123" },
+        },
       });
     });
-    window.justiceAPI.login = mockLogin;
+    globalThis.window.justiceAPI.login = mockLogin;
 
     render(
       <AuthProvider>
@@ -355,7 +419,7 @@ describe('AuthContext', () => {
       </AuthProvider>
     );
 
-    const loginButton = screen.getByText('Login');
+    const loginButton = screen.getByText("Login");
 
     // First attempt - fails
     await act(async () => {
@@ -363,7 +427,9 @@ describe('AuthContext', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByTestId('error')).toHaveTextContent('First attempt failed');
+      expect(screen.getByTestId("error")).toHaveTextContent(
+        "First attempt failed"
+      );
     });
 
     // Second attempt - succeeds
@@ -372,8 +438,10 @@ describe('AuthContext', () => {
     });
 
     await waitFor(() => {
-      expect(screen.queryByTestId('error')).not.toBeInTheDocument();
-      expect(screen.getByTestId('auth-status')).toHaveTextContent('authenticated');
+      expect(screen.queryByTestId("error")).not.toBeInTheDocument();
+      expect(screen.getByTestId("auth-status")).toHaveTextContent(
+        "authenticated"
+      );
     });
   });
 });

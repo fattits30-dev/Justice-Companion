@@ -1,17 +1,21 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Plus, Calendar } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useAuth } from '../../contexts/AuthContext.tsx';
-import { Button } from '../../components/ui/Button';
-import { TimelineItem } from './components/TimelineItem';
-import { TimelineEmpty } from './components/TimelineEmpty';
-import { AddDeadlineDialog } from './components/AddDeadlineDialog';
-import type { DeadlineWithCase, CreateDeadlineInput, UpdateDeadlineInput } from '../../domains/timeline/entities/Deadline';
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { Plus, Calendar } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "../../contexts/AuthContext.tsx";
+import { Button } from "../../components/ui/Button";
+import { TimelineItem } from "./components/TimelineItem";
+import { TimelineEmpty } from "./components/TimelineEmpty";
+import { AddDeadlineDialog } from "./components/AddDeadlineDialog";
+import type {
+  DeadlineWithCase,
+  CreateDeadlineInput,
+  UpdateDeadlineInput,
+} from "../../domains/timeline/entities/Deadline";
 
 interface Case {
   id: number;
   title: string;
-  status: 'active' | 'pending' | 'closed';
+  status: "active" | "pending" | "closed";
 }
 
 export function TimelineView() {
@@ -24,13 +28,15 @@ export function TimelineView() {
 
   // Dialog states
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [editingDeadline, setEditingDeadline] = useState<DeadlineWithCase | null>(null);
-  const [deletingDeadline, setDeletingDeadline] = useState<DeadlineWithCase | null>(null);
+  const [editingDeadline, setEditingDeadline] =
+    useState<DeadlineWithCase | null>(null);
+  const [deletingDeadline, setDeletingDeadline] =
+    useState<DeadlineWithCase | null>(null);
 
   // Load deadlines and cases - wrapped in useCallback to stabilize reference
   const loadData = useCallback(async () => {
     if (!sessionId) {
-      setError('No active session');
+      setError("No active session");
       setIsLoading(false);
       return;
     }
@@ -39,22 +45,25 @@ export function TimelineView() {
     setError(null);
 
     try {
-
       // Load deadlines
-      const deadlinesResult = await globalThis.window.justiceAPI.getDeadlines(sessionId);
+      const deadlinesResult =
+        await globalThis.window.justiceAPI.getDeadlines(sessionId);
       if (!deadlinesResult.success) {
-        const errorMsg = typeof deadlinesResult.error === 'string'
-          ? deadlinesResult.error
-          : deadlinesResult.error?.message || 'Failed to fetch deadlines';
+        const errorMsg =
+          typeof deadlinesResult.error === "string"
+            ? deadlinesResult.error
+            : deadlinesResult.error?.message || "Failed to fetch deadlines";
         throw new Error(errorMsg);
       }
 
       // Load cases
-      const casesResult = await globalThis.window.justiceAPI.getAllCases(sessionId);
+      const casesResult =
+        await globalThis.window.justiceAPI.getAllCases(sessionId);
       if (!casesResult.success) {
-        const errorMsg = typeof casesResult.error === 'string'
-          ? casesResult.error
-          : casesResult.error?.message || 'Failed to fetch cases';
+        const errorMsg =
+          typeof casesResult.error === "string"
+            ? casesResult.error
+            : casesResult.error?.message || "Failed to fetch cases";
         throw new Error(errorMsg);
       }
 
@@ -62,20 +71,22 @@ export function TimelineView() {
       const casesData = casesResult.data || [];
 
       // Transform Deadline[] to DeadlineWithCase[] by joining with case data
-      const casesMap = new Map(casesData.map(c => [c.id, c]));
-      const deadlinesWithCase: DeadlineWithCase[] = deadlinesData.map(deadline => {
-        const caseData = casesMap.get(deadline.caseId);
-        return {
-          ...deadline,
-          caseTitle: caseData?.title || 'Unknown Case',
-          caseStatus: caseData?.status || 'active',
-        };
-      });
+      const casesMap = new Map(casesData.map((c) => [c.id, c]));
+      const deadlinesWithCase: DeadlineWithCase[] = deadlinesData.map(
+        (deadline) => {
+          const caseData = casesMap.get(deadline.caseId);
+          return {
+            ...deadline,
+            caseTitle: caseData?.title || "Unknown Case",
+            caseStatus: caseData?.status || "active",
+          };
+        }
+      );
 
       setDeadlines(deadlinesWithCase);
       setCases(casesData);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setIsLoading(false);
     }
@@ -107,121 +118,142 @@ export function TimelineView() {
   }, [deadlines, selectedCaseId]);
 
   // Handlers - all wrapped in useCallback to preserve memo benefits
-  const handleAddDeadline = useCallback(async (input: CreateDeadlineInput) => {
-    if (!sessionId) {
-      return { success: false, error: 'No active session' };
-    }
-
-    try {
-      const result = await globalThis.window.justiceAPI.createDeadline(input, sessionId);
-
-      if (result.success) {
-        await loadData(); // Reload to get updated data
-        return { success: true };
+  const handleAddDeadline = useCallback(
+    async (input: CreateDeadlineInput) => {
+      if (!sessionId) {
+        return { success: false, error: "No active session" };
       }
 
-      const errorMsg = typeof result.error === 'string'
-        ? result.error
-        : result.error?.message || 'Failed to create deadline';
-      return { success: false, error: errorMsg };
-    } catch (err) {
-      return {
-        success: false,
-        error: err instanceof Error ? err.message : 'Failed to create deadline',
-      };
-    }
-  }, [sessionId, loadData]);
+      try {
+        const result = await globalThis.window.justiceAPI.createDeadline(
+          input,
+          sessionId
+        );
+
+        if (result.success) {
+          await loadData(); // Reload to get updated data
+          return { success: true };
+        }
+
+        const errorMsg =
+          typeof result.error === "string"
+            ? result.error
+            : result.error?.message || "Failed to create deadline";
+        return { success: false, error: errorMsg };
+      } catch (err) {
+        return {
+          success: false,
+          error:
+            err instanceof Error ? err.message : "Failed to create deadline",
+        };
+      }
+    },
+    [sessionId, loadData]
+  );
 
   const handleEditDeadline = useCallback((deadline: DeadlineWithCase) => {
     setEditingDeadline(deadline);
   }, []);
 
-  const handleUpdateDeadline = useCallback(async (input: UpdateDeadlineInput) => {
-    if (!editingDeadline) {return { success: false, error: 'No deadline selected' };}
-
-    if (!sessionId) {
-      return { success: false, error: 'No active session' };
-    }
-
-    try {
-      const result = await globalThis.window.justiceAPI.updateDeadline(
-        editingDeadline.id,
-        input,
-        sessionId,
-      );
-
-      if (result.success) {
-        await loadData();
-        setEditingDeadline(null);
-        return { success: true };
+  const handleUpdateDeadline = useCallback(
+    async (input: UpdateDeadlineInput) => {
+      if (!editingDeadline) {
+        return { success: false, error: "No deadline selected" };
       }
 
-      const errorMsg = typeof result.error === 'string'
-        ? result.error
-        : result.error?.message || 'Failed to update deadline';
-      return { success: false, error: errorMsg };
-    } catch (err) {
-      return {
-        success: false,
-        error: err instanceof Error ? err.message : 'Failed to update deadline',
-      };
-    }
-  }, [editingDeadline, sessionId, loadData]);
-
-  const handleCompleteDeadline = useCallback(async (deadline: DeadlineWithCase) => {
-    if (!sessionId) {
-      console.error('No active session');
-      return;
-    }
-
-    const newStatus = deadline.status === 'completed' ? 'upcoming' : 'completed';
-
-    try {
-      const result = await globalThis.window.justiceAPI.updateDeadline(
-        deadline.id,
-        { status: newStatus },
-        sessionId,
-      );
-
-      if (result.success) {
-        await loadData();
+      if (!sessionId) {
+        return { success: false, error: "No active session" };
       }
-    } catch (err) {
-      console.error('Failed to update deadline status:', err);
-    }
-  }, [sessionId, loadData]);
+
+      try {
+        const result = await globalThis.window.justiceAPI.updateDeadline(
+          editingDeadline.id,
+          input,
+          sessionId
+        );
+
+        if (result.success) {
+          await loadData();
+          setEditingDeadline(null);
+          return { success: true };
+        }
+
+        const errorMsg =
+          typeof result.error === "string"
+            ? result.error
+            : result.error?.message || "Failed to update deadline";
+        return { success: false, error: errorMsg };
+      } catch (err) {
+        return {
+          success: false,
+          error:
+            err instanceof Error ? err.message : "Failed to update deadline",
+        };
+      }
+    },
+    [editingDeadline, sessionId, loadData]
+  );
+
+  const handleCompleteDeadline = useCallback(
+    async (deadline: DeadlineWithCase) => {
+      if (!sessionId) {
+        console.error("No active session");
+        return;
+      }
+
+      const newStatus =
+        deadline.status === "completed" ? "upcoming" : "completed";
+
+      try {
+        const result = await globalThis.window.justiceAPI.updateDeadline(
+          deadline.id,
+          { status: newStatus },
+          sessionId
+        );
+
+        if (result.success) {
+          await loadData();
+        }
+      } catch (err) {
+        console.error("Failed to update deadline status:", err);
+      }
+    },
+    [sessionId, loadData]
+  );
 
   const handleDeleteDeadline = useCallback((deadline: DeadlineWithCase) => {
     setDeletingDeadline(deadline);
   }, []);
 
   const handleConfirmDelete = useCallback(async () => {
-    if (!deletingDeadline) {return;}
+    if (!deletingDeadline) {
+      return;
+    }
 
     if (!sessionId) {
-      console.error('No active session');
+      console.error("No active session");
       return;
     }
 
     try {
       const result = await globalThis.window.justiceAPI.deleteDeadline(
         deletingDeadline.id,
-        sessionId,
+        sessionId
       );
 
       if (result.success) {
         await loadData();
       }
     } catch (err) {
-      console.error('Failed to delete deadline:', err);
+      console.error("Failed to delete deadline:", err);
     } finally {
       setDeletingDeadline(null);
     }
   }, [deletingDeadline, sessionId, loadData]);
 
   const handleCaseClick = useCallback((caseId: number) => {
-    // TODO: Navigate to case detail view
-    console.log('Navigate to case:', caseId);
+    // Navigate to case detail view using existing routing
+    window.location.href = `/cases/${caseId}`;
   }, []);
 
   // Get userId from first deadline or default to 1
@@ -260,16 +292,20 @@ export function TimelineView() {
             {/* Title */}
             <div className="flex items-center gap-3">
               <Calendar className="w-6 h-6 text-primary-400" />
-              <h1 className="text-2xl font-bold text-white">Timeline Tracker</h1>
+              <h1 className="text-2xl font-bold text-white">
+                Timeline Tracker
+              </h1>
             </div>
 
             {/* Actions */}
             <div className="flex items-center gap-4">
               {/* Case Filter */}
               <select
-                value={selectedCaseId || ''}
+                value={selectedCaseId || ""}
                 onChange={(e) =>
-                  setSelectedCaseId(e.target.value ? Number.parseInt(e.target.value, 10) : null)
+                  setSelectedCaseId(
+                    e.target.value ? Number.parseInt(e.target.value, 10) : null
+                  )
                 }
                 className="
                   px-4 py-2 bg-white/5 border border-white/10 rounded-lg
@@ -348,6 +384,14 @@ export function TimelineView() {
           }
           cases={cases}
           userId={userId}
+          mode="edit"
+          initialValues={{
+            title: editingDeadline.title,
+            caseId: editingDeadline.caseId,
+            deadlineDate: editingDeadline.deadlineDate,
+            priority: editingDeadline.priority,
+            description: editingDeadline.description || undefined,
+          }}
         />
       )}
 
@@ -371,8 +415,8 @@ export function TimelineView() {
               Delete Deadline?
             </h3>
             <p className="text-white/70 mb-6">
-              Are you sure you want to delete "{deletingDeadline.title}"? This action
-              cannot be undone.
+              Are you sure you want to delete "{deletingDeadline.title}"? This
+              action cannot be undone.
             </p>
 
             <div className="flex items-center gap-3">
@@ -383,11 +427,7 @@ export function TimelineView() {
               >
                 Cancel
               </Button>
-              <Button
-                variant="danger"
-                onClick={handleConfirmDelete}
-                fullWidth
-              >
+              <Button variant="danger" onClick={handleConfirmDelete} fullWidth>
                 Confirm
               </Button>
             </div>

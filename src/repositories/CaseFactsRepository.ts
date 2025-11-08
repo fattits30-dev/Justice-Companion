@@ -139,6 +139,18 @@ export class CaseFactsRepository {
       decryptedContent = row.fact_content;
     }
 
+    // Audit: Content access (PII decryption)
+    this.auditLogger?.log({
+      eventType: 'case_fact.content_access',
+      resourceType: 'case_fact',
+      resourceId: id.toString(),
+      action: 'read',
+      details: {
+        factId: id,
+      },
+      success: true,
+    });
+
     return {
       id: row.id,
       caseId: row.case_id,
@@ -199,7 +211,19 @@ export class CaseFactsRepository {
       }
       
       const updatedFact = this.findById(id)!;
-      
+
+      // Track what changed
+      const changes: Record<string, any> = {};
+      if (input.factContent !== undefined) {
+        changes.factContent = true;
+      }
+      if (input.factCategory !== undefined) {
+        changes.factCategory = input.factCategory;
+      }
+      if (input.importance !== undefined) {
+        changes.importance = input.importance;
+      }
+
       // Audit: Case fact updated
       this.auditLogger?.log({
         eventType: 'case_fact.update',
@@ -207,14 +231,16 @@ export class CaseFactsRepository {
         resourceId: updatedFact.id.toString(),
         action: 'update',
         details: {
+          factId: id,
           caseId: updatedFact.caseId,
           factCategory: updatedFact.factCategory,
           importance: updatedFact.importance,
           contentLength: updatedFact.factContent.length,
+          changes,
         },
         success: true,
       });
-      
+
       return updatedFact;
     } catch (_error) {
       // Audit: Failed update
@@ -259,9 +285,7 @@ export class CaseFactsRepository {
         resourceId: id.toString(),
         action: 'delete',
         details: {
-          caseId: null,
-          factCategory: null,
-          importance: null,
+          factId: id,
         },
         success: true,
       });
@@ -292,12 +316,33 @@ export class CaseFactsRepository {
       SELECT id, case_id, fact_content, fact_category, importance, created_at, updated_at
       FROM case_facts
       WHERE case_id = ?
-      ORDER BY created_at DESC
+      ORDER BY
+        CASE importance
+          WHEN 'critical' THEN 1
+          WHEN 'high' THEN 2
+          WHEN 'medium' THEN 3
+          WHEN 'low' THEN 4
+        END ASC,
+        created_at DESC
     `);
 
     const rows = stmt.all(caseId) as CaseFactRow[];
 
-    return rows.map(row => this.mapRowToCaseFact(row));
+    const facts = rows.map(row => this.mapRowToCaseFact(row));
+
+    // Audit: Bulk content access (PII decryption)
+    this.auditLogger?.log({
+      eventType: 'case_fact.content_access',
+      resourceType: 'case_fact',
+      resourceId: caseId.toString(),
+      action: 'read',
+      details: {
+        count: facts.length,
+      },
+      success: true,
+    });
+
+    return facts;
   }
 
   /**

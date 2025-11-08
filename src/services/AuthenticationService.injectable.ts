@@ -1,13 +1,21 @@
-import crypto from "crypto";
-import { injectable, inject } from 'inversify';
-import { TYPES } from '../shared/infrastructure/di/types.ts';
-import { logger } from "../utils/logger.ts";
-import { promisify } from "util";
+import crypto from "node:crypto";
+import { inject, injectable } from "inversify";
+import { promisify } from "node:util";
 import { v4 as uuidv4 } from "uuid";
-import type { IUserRepository, ISessionRepository } from '../shared/infrastructure/di/repository-interfaces.ts';
-import type { IAuditLogger, IRateLimitService, IAuthenticationService } from '../shared/infrastructure/di/service-interfaces.ts';
-import type { User } from "../domains/auth/entities/User.ts";
+import { TYPES } from "../shared/infrastructure/di/types.ts";
+import type {
+  IUserRepository,
+  ISessionRepository,
+} from "../shared/infrastructure/di/repository-interfaces.ts";
+import type {
+  IAuditLogger,
+  IAuthenticationService,
+  IRateLimitService,
+  ISessionPersistenceHandler,
+} from "../shared/infrastructure/di/service-interfaces.ts";
 import type { Session } from "../domains/auth/entities/Session.ts";
+import type { User } from "../domains/auth/entities/User.ts";
+import { logger } from "../utils/logger.ts";
 
 const scrypt = promisify(crypto.scrypt);
 
@@ -22,191 +30,278 @@ export class AuthenticationError extends Error {
 }
 
 /**
- * Interface for session persistence operations
- * Allows injection of platform-specific persistence (e.g., Electron's safeStorage)
- */
-export interface SessionPersistenceHandler {
-  storeSessionId(sessionId: string): Promise<void>;
-  retrieveSessionId(): Promise<string | null>;
-  clearSession(): Promise<void>;
-  hasStoredSession(): Promise<boolean>;
-  isAvailable(): Promise<boolean>;
-}
-
-/**
  * Injectable Authentication service for local user management
- *
- * Features:
- * - User registration with strong password requirements (OWASP)
- * - Password hashing using scrypt (OWASP recommended)
- * - Session management with 24-hour expiration
- * - Session ID regeneration on every login (prevents session fixation)
- * - Remember Me with secure session persistence
- * - Timing-safe password comparison (prevents timing attacks)
- * - Comprehensive audit logging
- *
- * Security:
- * - Passwords never stored in plaintext
- * - Random salt per user (16 bytes)
- * - scrypt key derivation (64-byte hash)
- * - UUID session IDs (always regenerated on login)
- * - All authentication events audited
  */
 @injectable()
 export class AuthenticationServiceInjectable implements IAuthenticationService {
   private readonly SALT_LENGTH = 16;
   private readonly KEY_LENGTH = 64;
   private readonly SESSION_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
+  private readonly REMEMBER_ME_DURATION_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
   constructor(
-    @inject(TYPES.UserRepository) private userRepository: IUserRepository,
-    @inject(TYPES.SessionRepository) private sessionRepository: ISessionRepository,
-    @inject(TYPES.AuditLogger) private auditLogger: IAuditLogger,
-    @inject(TYPES.RateLimitService) private rateLimitService: IRateLimitService
+    @inject(TYPES.UserRepository)
+    private readonly userRepository: IUserRepository,
+    @inject(TYPES.SessionRepository)
+    private readonly sessionRepository: ISessionRepository,
+    @inject(TYPES.AuditLogger) private readonly auditLogger: IAuditLogger,
+    @inject(TYPES.RateLimitService)
+    private readonly rateLimitService: IRateLimitService,
+    @inject(TYPES.SessionPersistenceService)
+    private readonly sessionPersistence?: ISessionPersistenceHandler
   ) {}
 
   /**
-   * Register a new user
-   * Enforces OWASP password requirements:
-   * - Minimum 12 characters
-   * - At least one uppercase letter
-   * - At least one lowercase letter
-   * - At least one number
+   * Register a new user with OWASP-compliant password requirements
    */
   async register(
-    email: string,
+    username: string,
     password: string,
-    username?: string
+    email: string
   ): Promise<User> {
-    // Validate username if provided
-    if (username !== undefined && (!username || username.trim().length === 0)) {
+    const normalizedUsername = username?.trim();
+    const normalizedEmail = email?.trim().toLowerCase();
+
+    if (!normalizedUsername) {
       throw new AuthenticationError("Username cannot be empty");
     }
 
-    // Validate password strength
-    this.validatePasswordStrength(password);
-
-    // Check if user already exists
-    const existingUser = this.userRepository.findByEmail(email);
-    if (existingUser) {
-      throw new AuthenticationError("User with this email already exists");
+    if (!normalizedEmail) {
+      throw new AuthenticationError("Email is required");
     }
 
-    // Hash password with random salt
-    const hashedPassword = await this.hashPassword(password);
+    this.validatePasswordStrength(password);
 
-    // Create user
+    if (this.userRepository.findByUsername(normalizedUsername)) {
+      throw new AuthenticationError("Username already exists");
+    }
+
+    if (this.userRepository.findByEmail(normalizedEmail)) {
+      throw new AuthenticationError("Email already exists");
+    }
+
+    const { hash, salt } = await this.generatePasswordHash(password);
+
     const user = this.userRepository.create({
-      username: username || email.split('@')[0],
-      email,
-      passwordHash: hashedPassword,
+      username: normalizedUsername,
+      email: normalizedEmail,
+      passwordHash: hash,
+      passwordSalt: salt,
+      role: "user",
     });
 
-    // Log registration
     this.auditLogger?.log({
+      eventType: "user.register",
       userId: user.id.toString(),
-      action: "USER_REGISTER",
       resourceType: "user",
       resourceId: user.id.toString(),
-      details: { email },
-      ipAddress: "local",
-      userAgent: "desktop-app",
+      action: "create",
+      success: true,
+      details: { username: normalizedUsername, email: normalizedEmail },
     });
 
-    logger.info(`User registered: ${email}`);
+    logger.info("AuthenticationService", "User registered", {
+      username: normalizedUsername,
+      email: normalizedEmail,
+    });
+
     return user;
   }
 
   /**
-   * Login with email and password
+   * Login user, enforce rate limiting, and create a new session
    */
   async login(
-    email: string,
-    password: string
+    username: string,
+    password: string,
+    rememberMe: boolean = false,
+    ipAddress?: string,
+    userAgent?: string
   ): Promise<{ user: User; session: Session }> {
-    // Rate limiting
-    const rateLimitKey = `login:${email}`;
-    const { allowed } = this.rateLimitService.checkLimit(rateLimitKey, 5, 15 * 60 * 1000);
+    const rateLimitResult = this.rateLimitService.checkRateLimit(username);
 
-    if (!allowed) {
-      throw new AuthenticationError("Too many login attempts. Please try again later.");
-    }
-
-    // Find user
-    const user = this.userRepository.findByEmail(email);
-    if (!user) {
-      this.rateLimitService.consume(rateLimitKey);
-      throw new AuthenticationError("Invalid email or password");
-    }
-
-    // Verify password
-    const isValid = await this.verifyPassword(password, user.passwordHash);
-    if (!isValid) {
-      this.rateLimitService.consume(rateLimitKey);
+    if (!rateLimitResult.allowed) {
       this.auditLogger?.log({
-        userId: user.id.toString(),
-        action: "LOGIN_FAILED",
-        resourceType: "session",
-        resourceId: "n/a",
-        details: { reason: "Invalid password" },
-        ipAddress: "local",
-        userAgent: "desktop-app",
+        eventType: "user.login",
+        resourceType: "user",
+        resourceId: "unknown",
+        action: "read",
+        success: false,
+        details: {
+          username,
+          reason: "Rate limit exceeded",
+          remainingTime: rateLimitResult.remainingTime,
+        },
       });
-      throw new AuthenticationError("Invalid email or password");
+
+      const message = rateLimitResult.remainingTime
+        ? `Account temporarily locked. Please try again in ${Math.ceil(rateLimitResult.remainingTime / 60)} minutes.`
+        : "Too many failed login attempts. Please try again later.";
+
+      throw new AuthenticationError(message);
     }
 
-    // Create session
-    const session = this.createSession(user.id);
+    const user = this.userRepository.findByUsername(username);
 
-    // Log successful login
-    this.auditLogger?.log({
-      userId: user.id.toString(),
-      action: "LOGIN",
-      resourceType: "session",
-      resourceId: session.id,
-      details: { email },
-      ipAddress: "local",
-      userAgent: "desktop-app",
+    if (!user) {
+      this.rateLimitService.recordFailedAttempt(username);
+      this.auditLogger?.log({
+        eventType: "user.login",
+        resourceType: "user",
+        resourceId: "unknown",
+        action: "read",
+        success: false,
+        details: { username, reason: "User not found" },
+      });
+      throw new AuthenticationError("Invalid credentials");
+    }
+
+    if (!user.isActive) {
+      this.rateLimitService.recordFailedAttempt(username);
+      this.auditLogger?.log({
+        eventType: "user.login",
+        userId: user.id.toString(),
+        resourceType: "user",
+        resourceId: user.id.toString(),
+        action: "read",
+        success: false,
+        details: { username, reason: "User inactive" },
+      });
+      throw new AuthenticationError("Account is inactive");
+    }
+
+    const passwordValid = await this.verifyPassword(
+      password,
+      user.passwordHash,
+      user.passwordSalt
+    );
+
+    if (!passwordValid) {
+      this.rateLimitService.recordFailedAttempt(username);
+      this.auditLogger?.log({
+        eventType: "user.login",
+        userId: user.id.toString(),
+        resourceType: "user",
+        resourceId: user.id.toString(),
+        action: "read",
+        success: false,
+        details: { username, reason: "Invalid password" },
+      });
+      throw new AuthenticationError("Invalid credentials");
+    }
+
+    this.rateLimitService.clearAttempts(username);
+
+    const session = this.createSession(user.id, {
+      rememberMe,
+      ipAddress,
+      userAgent,
     });
 
-    logger.info(`User logged in: ${email}`);
+    let sessionPersisted = false;
+    if (rememberMe && this.sessionPersistence) {
+      try {
+        if (await this.sessionPersistence.isAvailable()) {
+          await this.sessionPersistence.storeSessionId(session.id);
+          sessionPersisted = true;
+        } else {
+          logger.warn(
+            "AuthenticationService",
+            "Session persistence unavailable for Remember Me"
+          );
+        }
+      } catch (error) {
+        logger.error("AuthenticationService", "Failed to persist session", {
+          error,
+        });
+      }
+    }
+
+    this.userRepository.updateLastLogin(user.id);
+
+    this.auditLogger?.log({
+      eventType: "user.login",
+      userId: user.id.toString(),
+      resourceType: "user",
+      resourceId: user.id.toString(),
+      action: "read",
+      success: true,
+      details: {
+        username,
+        sessionId: session.id,
+        rememberMe: rememberMe ? "enabled" : "disabled",
+        sessionPersisted,
+      },
+      ipAddress,
+      userAgent,
+    });
+
+    logger.info("AuthenticationService", "User logged in", {
+      username,
+      rememberMe,
+      sessionPersisted,
+    });
+
     return { user, session };
   }
 
   /**
-   * Logout and invalidate session
+   * Retrieve session by ID, returning null when expired
+   */
+  async getSession(sessionId: string): Promise<Session | null> {
+    const session = this.sessionRepository.findById(sessionId);
+
+    if (!session) {
+      return null;
+    }
+
+    if (this.sessionRepository.isExpired(session)) {
+      this.sessionRepository.delete(sessionId);
+      return null;
+    }
+
+    return session;
+  }
+
+  /**
+   * Logout user and clear persisted session state when available
    */
   async logout(sessionId: string): Promise<void> {
     const session = this.sessionRepository.findById(sessionId);
 
-    if (session) {
-      const success = this.sessionRepository.delete(sessionId);
+    if (!session) {
+      return;
+    }
 
-      if (success) {
-        this.auditLogger?.log({
-          userId: session.userId.toString(),
-          action: "LOGOUT",
-          resourceType: "session",
-          resourceId: sessionId,
-          details: {},
-          ipAddress: "local",
-          userAgent: "desktop-app",
-        });
-
-        logger.info(`User logged out: session ${sessionId}`);
+    if (this.sessionPersistence) {
+      try {
+        await this.sessionPersistence.clearSession();
+      } catch (error) {
+        logger.error(
+          "AuthenticationService",
+          "Failed to clear persisted session",
+          { error }
+        );
       }
     }
+
+    this.sessionRepository.delete(sessionId);
+
+    this.auditLogger?.log({
+      eventType: "user.logout",
+      userId: session.userId.toString(),
+      resourceType: "session",
+      resourceId: sessionId,
+      action: "delete",
+      success: true,
+      details: { sessionCleared: true },
+    });
+
+    logger.info("AuthenticationService", "User logged out", { sessionId });
   }
 
   /**
-   * Get session by ID
-   */
-  async getSession(sessionId: string): Promise<Session | null> {
-    return this.sessionRepository.findById(sessionId);
-  }
-
-  /**
-   * Validate a session and return user
+   * Validate a session and return associated user, deleting expired sessions
    */
   validateSession(sessionId: string | null): User | null {
     if (!sessionId) {
@@ -219,54 +314,20 @@ export class AuthenticationServiceInjectable implements IAuthenticationService {
       return null;
     }
 
-    // Check if session is expired
-    if (new Date(session.expiresAt) < new Date()) {
+    if (this.sessionRepository.isExpired(session)) {
       this.sessionRepository.delete(sessionId);
       return null;
     }
 
-    // Get and return user
-    const user = this.userRepository.findById(session.userId);
-    return user;
+    return this.userRepository.findById(session.userId);
   }
 
   /**
-   * Refresh a session's expiration time
-   */
-  async refreshSession(sessionId: string): Promise<Session | null> {
-    const session = await this.validateSession(sessionId);
-
-    if (!session) {
-      return null;
-    }
-
-    // Update expiration
-    const newExpiresAt = new Date(Date.now() + this.SESSION_DURATION_MS);
-    const updated = this.sessionRepository.update(sessionId, {
-      expiresAt: newExpiresAt.toISOString(),
-    });
-
-    if (updated) {
-      this.auditLogger?.log({
-        userId: session.userId.toString(),
-        action: "SESSION_REFRESH",
-        resourceType: "session",
-        resourceId: sessionId,
-        details: { newExpiresAt: newExpiresAt.toISOString() },
-        ipAddress: "local",
-        userAgent: "desktop-app",
-      });
-    }
-
-    return updated;
-  }
-
-  /**
-   * Change user password
+   * Change user password after verifying the existing one
    */
   async changePassword(
     userId: number,
-    currentPassword: string,
+    oldPassword: string,
     newPassword: string
   ): Promise<void> {
     const user = this.userRepository.findById(userId);
@@ -275,82 +336,170 @@ export class AuthenticationServiceInjectable implements IAuthenticationService {
       throw new AuthenticationError("User not found");
     }
 
-    // Verify current password
-    const isValid = await this.verifyPassword(currentPassword, user.passwordHash);
+    const isValid = await this.verifyPassword(
+      oldPassword,
+      user.passwordHash,
+      user.passwordSalt
+    );
+
     if (!isValid) {
       this.auditLogger?.log({
+        eventType: "user.password_change",
         userId: userId.toString(),
-        action: "PASSWORD_CHANGE_FAILED",
         resourceType: "user",
         resourceId: userId.toString(),
+        action: "update",
+        success: false,
         details: { reason: "Invalid current password" },
-        ipAddress: "local",
-        userAgent: "desktop-app",
       });
-      throw new AuthenticationError("Current password is incorrect");
+      throw new AuthenticationError("Invalid current password");
     }
 
-    // Validate new password
     this.validatePasswordStrength(newPassword);
 
-    // Hash new password
-    const hashedPassword = await this.hashPassword(newPassword);
+    const { hash, salt } = await this.generatePasswordHash(newPassword);
 
-    // Update user
-    const updated = this.userRepository.update(userId, {
-      passwordHash: hashedPassword,
-    });
-
-    if (!updated) {
-      throw new AuthenticationError("Failed to update password");
-    }
-
-    // Invalidate all sessions for this user
+    this.userRepository.updatePassword(userId, hash, salt);
     this.sessionRepository.deleteByUserId(userId);
 
     this.auditLogger?.log({
+      eventType: "user.password_change",
       userId: userId.toString(),
-      action: "PASSWORD_CHANGE",
       resourceType: "user",
       resourceId: userId.toString(),
-      details: {},
-      ipAddress: "local",
-      userAgent: "desktop-app",
+      action: "update",
+      success: true,
     });
 
-    logger.info(`Password changed for user: ${userId}`);
+    logger.info("AuthenticationService", "Password changed", { userId });
   }
 
   /**
-   * Hash password with random salt using scrypt
+   * Restore session from persistent storage for Remember Me functionality
    */
-  private async hashPassword(password: string): Promise<string> {
+  async restorePersistedSession(): Promise<{
+    user: User;
+    session: Session;
+  } | null> {
+    if (!this.sessionPersistence) {
+      return null;
+    }
+
+    try {
+      if (!(await this.sessionPersistence.hasStoredSession())) {
+        return null;
+      }
+
+      const sessionId = await this.sessionPersistence.retrieveSessionId();
+
+      if (!sessionId) {
+        return null;
+      }
+
+      const session = this.sessionRepository.findById(sessionId);
+
+      if (!session) {
+        await this.sessionPersistence.clearSession();
+        return null;
+      }
+
+      if (this.sessionRepository.isExpired(session)) {
+        await this.sessionPersistence.clearSession();
+        this.sessionRepository.delete(sessionId);
+        return null;
+      }
+
+      const user = this.userRepository.findById(session.userId);
+
+      if (!user || !user.isActive) {
+        await this.sessionPersistence.clearSession();
+        this.sessionRepository.delete(sessionId);
+        return null;
+      }
+
+      this.auditLogger?.log({
+        eventType: "user.login",
+        userId: user.id.toString(),
+        resourceType: "session",
+        resourceId: sessionId,
+        action: "read",
+        success: true,
+        details: {
+          rememberMe: session.rememberMe,
+          restored: true,
+          restoredFromPersistence: true,
+        },
+      });
+
+      return { user, session };
+    } catch (error) {
+      logger.error(
+        "AuthenticationService",
+        "Error restoring persisted session",
+        { error }
+      );
+
+      try {
+        await this.sessionPersistence.clearSession();
+      } catch {
+        // Ignore cleanup errors
+      }
+
+      return null;
+    }
+  }
+
+  /**
+   * Remove expired sessions from the repository and audit the cleanup
+   */
+  cleanupExpiredSessions(): number {
+    const deletedCount = this.sessionRepository.deleteExpired();
+
+    if (deletedCount > 0) {
+      this.auditLogger?.log({
+        eventType: "session.cleanup",
+        resourceType: "session",
+        resourceId: "system",
+        action: "delete",
+        success: true,
+        details: { deletedCount },
+      });
+    }
+
+    logger.info("AuthenticationService", "Expired sessions cleaned", {
+      deletedCount,
+    });
+
+    return deletedCount;
+  }
+
+  private async generatePasswordHash(
+    password: string
+  ): Promise<{ hash: string; salt: string }> {
     const salt = crypto.randomBytes(this.SALT_LENGTH);
-    const hash = (await scrypt(password, salt, this.KEY_LENGTH)) as Buffer;
-    return salt.toString("hex") + ":" + hash.toString("hex");
+    const derived = (await scrypt(password, salt, this.KEY_LENGTH)) as Buffer;
+
+    return {
+      hash: derived.toString("hex"),
+      salt: salt.toString("hex"),
+    };
   }
 
-  /**
-   * Verify password against hash using timing-safe comparison
-   */
   private async verifyPassword(
     password: string,
-    storedHash: string
+    passwordHash: string,
+    passwordSalt: string
   ): Promise<boolean> {
-    const [salt, hash] = storedHash.split(":");
-    const saltBuffer = Buffer.from(salt, "hex");
-    const hashBuffer = Buffer.from(hash, "hex");
-    const derivedHash = (await scrypt(
+    const derived = (await scrypt(
       password,
-      saltBuffer,
+      Buffer.from(passwordSalt, "hex"),
       this.KEY_LENGTH
     )) as Buffer;
-    return crypto.timingSafeEqual(hashBuffer, derivedHash);
+    const stored = Buffer.from(passwordHash, "hex");
+
+    return crypto.timingSafeEqual(stored, derived);
   }
 
-  /**
-   * Validate password strength according to OWASP guidelines
-   */
   private validatePasswordStrength(password: string): void {
     if (password.length < 12) {
       throw new AuthenticationError(
@@ -377,37 +526,26 @@ export class AuthenticationServiceInjectable implements IAuthenticationService {
     }
   }
 
-  /**
-   * Restore session from persistent storage (for Remember Me)
-   */
-  async restorePersistedSession(): Promise<{ user: User; session: Session } | null> {
-    // This method would integrate with SessionPersistenceHandler if provided
-    // For now, return null as no persistence handler is configured
-    return null;
-  }
-
-  /**
-   * Cleanup expired sessions (should be run periodically)
-   */
-  cleanupExpiredSessions(): number {
-    // Note: This is a simplified implementation
-    // In production, this should be delegated to the repository layer
-    // which can efficiently query and delete expired sessions in bulk
-    logger.info('Cleanup expired sessions called - delegating to repository');
-    return 0;
-  }
-
-  /**
-   * Create a new session for a user
-   */
-  private createSession(userId: number): Session {
-    const sessionId = uuidv4();
-    const expiresAt = new Date(Date.now() + this.SESSION_DURATION_MS);
+  private createSession(
+    userId: number,
+    options: {
+      rememberMe: boolean;
+      ipAddress?: string;
+      userAgent?: string;
+    }
+  ): Session {
+    const sessionDuration = options.rememberMe
+      ? this.REMEMBER_ME_DURATION_MS
+      : this.SESSION_DURATION_MS;
+    const expiresAt = new Date(Date.now() + sessionDuration);
 
     return this.sessionRepository.create({
-      id: sessionId,
+      id: uuidv4(),
       userId,
       expiresAt: expiresAt.toISOString(),
+      ipAddress: options.ipAddress,
+      userAgent: options.userAgent,
+      rememberMe: options.rememberMe,
     });
   }
 }

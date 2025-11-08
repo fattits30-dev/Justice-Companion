@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Database,
   HardDrive,
@@ -13,11 +13,12 @@ import {
   Shield,
   ChevronDown,
   ChevronUp,
-} from 'lucide-react';
-import { Card } from '../../components/ui/Card.tsx';
-import { Button } from '../../components/ui/Button.tsx';
-import { Badge } from '../../components/ui/Badge.tsx';
-import { useAuth } from '../../contexts/AuthContext.tsx';
+} from "lucide-react";
+import { Card } from "../../components/ui/Card.tsx";
+import { Button } from "../../components/ui/Button.tsx";
+import { Badge } from "../../components/ui/Badge.tsx";
+import { useAuth } from "../../contexts/AuthContext.tsx";
+import { ConfirmationModal } from "../../components/common/ConfirmationModal.tsx";
 
 export interface Backup {
   id: number;
@@ -34,14 +35,16 @@ export interface Backup {
 }
 
 export function BackupSettingsTab() {
-  const { user } = useAuth();
+  const { user, sessionId } = useAuth();
   const [backups, setBackups] = useState<Backup[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [autoBackupEnabled, setAutoBackupEnabled] = useState(false);
-  const [frequency, setFrequency] = useState<'daily' | 'weekly' | 'monthly'>('daily');
+  const [frequency, setFrequency] = useState<"daily" | "weekly" | "monthly">(
+    "daily"
+  );
   const [keepCount, setKeepCount] = useState(7);
-  const [backupTime, setBackupTime] = useState('03:00');
+  const [backupTime, setBackupTime] = useState("03:00");
   const [expandedBackup, setExpandedBackup] = useState<number | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
@@ -62,13 +65,13 @@ export function BackupSettingsTab() {
           id: index + 1,
         }));
         setBackups(backupsWithIds);
-      } else {
-        console.error('Failed to load backups:', result.error);
-        showToast(result.error?.message || 'Failed to load backups', 'error');
+      } else if (!result.success && result.error) {
+        console.error("Failed to load backups:", result.error);
+        showToast(result.error.message || "Failed to load backups", "error");
       }
     } catch (error) {
-      console.error('Failed to load backups:', error);
-      showToast('Failed to load backups', 'error');
+      console.error("Failed to load backups:", error);
+      showToast("Failed to load backups", "error");
     } finally {
       setIsLoading(false);
     }
@@ -76,8 +79,12 @@ export function BackupSettingsTab() {
 
   const loadSettings = async () => {
     try {
-      if (!user?.id) {return;}
-      const result = await globalThis.window.justiceAPI.getBackupSettings(Number(user.id));
+      if (!user?.id) {
+        return;
+      }
+      const result = await globalThis.window.justiceAPI.getBackupSettings(
+        sessionId!
+      );
       if (result.success && result.data) {
         setAutoBackupEnabled(result.data.enabled);
         setFrequency(result.data.frequency);
@@ -85,7 +92,7 @@ export function BackupSettingsTab() {
         setBackupTime(result.data.backup_time);
       }
     } catch (error) {
-      console.error('Failed to load settings:', error);
+      console.error("Failed to load settings:", error);
     }
   };
 
@@ -93,15 +100,15 @@ export function BackupSettingsTab() {
     setIsCreating(true);
     try {
       const result = await globalThis.window.justiceAPI.createBackup();
-      if (result.success && result.data) {
-        showToast('Backup created successfully', 'success');
+      if (result.success) {
+        showToast("Backup created successfully", "success");
         await loadBackups();
-      } else {
-        showToast(result.error?.message || 'Failed to create backup', 'error');
+      } else if (!result.success && result.error) {
+        showToast(result.error.message || "Failed to create backup", "error");
       }
     } catch (error) {
-      console.error('Failed to create backup:', error);
-      showToast('Failed to create backup', 'error');
+      console.error("Failed to create backup:", error);
+      showToast("Failed to create backup", "error");
     } finally {
       setIsCreating(false);
     }
@@ -109,66 +116,79 @@ export function BackupSettingsTab() {
 
   const handleRestore = async (backup: Backup) => {
     const confirmed = await showConfirmDialog({
-      title: 'Restore Database',
+      title: "Restore Database",
       message: `This will replace your current database with the backup from ${formatRelativeTime(backup.created_at)}. Are you sure?`,
-      confirmText: 'Restore',
+      confirmText: "Restore",
     });
 
     if (confirmed) {
       try {
-        const result = await globalThis.window.justiceAPI.restoreBackup(backup.filename);
+        const result = await globalThis.window.justiceAPI.restoreBackup(
+          backup.filename,
+          sessionId!
+        );
         if (result.success) {
-          showToast('Database restored successfully - Application will reload', 'success');
+          showToast(
+            "Database restored successfully - Application will reload",
+            "success"
+          );
           // Wait a moment for the toast to show, then reload
           setTimeout(() => {
             globalThis.location.reload();
           }, 1500);
         } else {
-          showToast(result.error?.message || 'Failed to restore backup', 'error');
+          showToast(
+            result.error?.message || "Failed to restore backup",
+            "error"
+          );
         }
       } catch (error) {
-        console.error('Failed to restore backup:', error);
-        showToast('Failed to restore backup', 'error');
+        console.error("Failed to restore backup:", error);
+        showToast("Failed to restore backup", "error");
       }
     }
   };
 
-  const handleExport = async (backup: Backup) => {
+  const handleExport = async (_backup: Backup) => {
     try {
-      // TODO: Replace with actual IPC call when backend is ready
-      // const result = await window.justiceAPI.db.exportBackup(backup.id);
-      // if (result.success) {
-      //   showSuccess(`Backup exported to ${result.data.path}`);
-      // } else {
-      //   showError(result.error);
-      // }
+      const result = await globalThis.window.justiceAPI.createBackup();
 
-      showToast(`Exported ${backup.filename} to Downloads`, 'success');
+      if (result.success && result.data) {
+        showToast(`Backup exported to ${result.data.path}`, "success");
+      } else {
+        showToast("Failed to export backup", "error");
+      }
     } catch (error) {
-      console.error('[BackupSettings] Export error:', error);
-      showToast('Failed to export backup', 'error');
+      console.error("[BackupSettings] Export error:", error);
+      showToast("Failed to export backup", "error");
     }
   };
 
   const handleDelete = async (backupFilename: string) => {
     const confirmed = await showConfirmDialog({
-      title: 'Delete Backup',
-      message: 'This cannot be undone. Are you sure?',
-      confirmText: 'Delete',
+      title: "Delete Backup",
+      message: "This cannot be undone. Are you sure?",
+      confirmText: "Delete",
     });
 
     if (confirmed) {
       try {
-        const result = await globalThis.window.justiceAPI.deleteBackup(backupFilename);
+        const result = await globalThis.window.justiceAPI.deleteBackup(
+          backupFilename,
+          sessionId!
+        );
         if (result.success) {
-          showToast('Backup deleted', 'success');
+          showToast("Backup deleted", "success");
           await loadBackups();
         } else {
-          showToast(result.error?.message || 'Failed to delete backup', 'error');
+          showToast(
+            result.error?.message || "Failed to delete backup",
+            "error"
+          );
         }
       } catch (error) {
-        console.error('Failed to delete backup:', error);
-        showToast('Failed to delete backup', 'error');
+        console.error("Failed to delete backup:", error);
+        showToast("Failed to delete backup", "error");
       }
     }
   };
@@ -176,27 +196,30 @@ export function BackupSettingsTab() {
   const handleSaveAutoBackup = async () => {
     try {
       if (!user?.id) {
-        showToast('User not authenticated', 'error');
+        showToast("User not authenticated", "error");
         return;
       }
 
-      const result = await globalThis.window.justiceAPI.updateBackupSettings(Number(user.id), {
-        enabled: autoBackupEnabled,
-        frequency,
-        backup_time: backupTime,
-        keep_count: keepCount,
-      });
+      const result = await globalThis.window.justiceAPI.updateBackupSettings(
+        {
+          enabled: autoBackupEnabled,
+          frequency,
+          backup_time: backupTime,
+          keep_count: keepCount,
+        },
+        sessionId!
+      );
 
       if (result.success) {
         setSaveSuccess(true);
         setTimeout(() => setSaveSuccess(false), 3000);
-        showToast('Auto-backup settings saved', 'success');
+        showToast("Auto-backup settings saved", "success");
       } else {
-        showToast(result.error?.message || 'Failed to save settings', 'error');
+        showToast(result.error?.message || "Failed to save settings", "error");
       }
     } catch (error) {
-      console.error('Failed to save settings:', error);
-      showToast('Failed to save settings', 'error');
+      console.error("Failed to save settings:", error);
+      showToast("Failed to save settings", "error");
     }
   };
 
@@ -209,31 +232,69 @@ export function BackupSettingsTab() {
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 1) {return 'Just now';}
-    if (diffMins < 60) {return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;}
-    if (diffHours < 24) {return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;}
-    if (diffDays < 7) {return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;}
+    if (diffMins < 1) {
+      return "Just now";
+    }
+    if (diffMins < 60) {
+      return `${diffMins} minute${diffMins > 1 ? "s" : ""} ago`;
+    }
+    if (diffHours < 24) {
+      return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
+    }
+    if (diffDays < 7) {
+      return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
+    }
     return date.toLocaleDateString();
   }
 
   function formatFileSize(bytes: number): string {
-    if (bytes < 1024) {return `${bytes} B`;}
-    if (bytes < 1024 * 1024) {return `${(bytes / 1024).toFixed(1)} KB`;}
+    if (bytes < 1024) {
+      return `${bytes} B`;
+    }
+    if (bytes < 1024 * 1024) {
+      return `${(bytes / 1024).toFixed(1)} KB`;
+    }
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   }
+
+  const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
+  const [confirmationConfig, setConfirmationConfig] = useState<{
+    title: string;
+    message: string;
+    onResponse: (confirmed: boolean) => void;
+  } | null>(null);
 
   async function showConfirmDialog(options: {
     title: string;
     message: string;
     confirmText: string;
   }): Promise<boolean> {
-    // TODO: Implement proper modal dialog
-    return globalThis.confirm(`${options.title}\n\n${options.message}`);
+    return new Promise((resolve) => {
+      setConfirmationConfig({
+        title: options.title,
+        message: options.message,
+        onResponse: resolve,
+      });
+      setIsConfirmationOpen(true);
+    });
   }
 
-  function showToast(message: string, type: 'success' | 'error' | 'info') {
-    // TODO: Implement proper toast notification
-    console.log(`[${type.toUpperCase()}] ${message}`);
+  function showToast(message: string, type: "success" | "error" | "info") {
+    // Simple toast implementation using existing notification system
+    const toast = document.createElement("div");
+    toast.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 text-white ${
+      type === "success"
+        ? "bg-green-600"
+        : type === "error"
+          ? "bg-red-600"
+          : "bg-blue-600"
+    }`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+      toast.remove();
+    }, 3000);
   }
 
   const latestBackup = backups[0];
@@ -244,7 +305,9 @@ export function BackupSettingsTab() {
       {/* Header */}
       <div>
         <h2 className="text-2xl font-bold text-white mb-2">Backup & Restore</h2>
-        <p className="text-white/60">Create backups and restore your database to a previous state</p>
+        <p className="text-white/60">
+          Create backups and restore your database to a previous state
+        </p>
       </div>
 
       {/* Status Overview */}
@@ -258,7 +321,9 @@ export function BackupSettingsTab() {
                 <span className="text-sm text-white/60">Last Backup</span>
               </div>
               <p className="text-xl font-semibold text-white">
-                {latestBackup ? formatRelativeTime(latestBackup.created_at) : 'Never'}
+                {latestBackup
+                  ? formatRelativeTime(latestBackup.created_at)
+                  : "Never"}
               </p>
             </div>
 
@@ -268,8 +333,11 @@ export function BackupSettingsTab() {
                 <Shield className="w-5 h-5 text-green-400" />
                 <span className="text-sm text-white/60">Status</span>
               </div>
-              <Badge variant={latestBackup?.is_valid ? 'success' : 'warning'} glow>
-                {latestBackup?.is_valid ? 'Healthy' : 'No backups'}
+              <Badge
+                variant={latestBackup?.is_valid ? "success" : "warning"}
+                glow
+              >
+                {latestBackup?.is_valid ? "Healthy" : "No backups"}
               </Badge>
             </div>
 
@@ -295,8 +363,12 @@ export function BackupSettingsTab() {
               <Database className="w-6 h-6 text-purple-400" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-white">Manual Backup</h3>
-              <p className="text-sm text-white/60">Create a snapshot of your database right now</p>
+              <h3 className="text-lg font-semibold text-white">
+                Manual Backup
+              </h3>
+              <p className="text-sm text-white/60">
+                Create a snapshot of your database right now
+              </p>
             </div>
           </div>
 
@@ -308,7 +380,7 @@ export function BackupSettingsTab() {
               icon={<RefreshCw />}
               className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
             >
-              {isCreating ? 'Creating Backup...' : 'Create Backup Now'}
+              {isCreating ? "Creating Backup..." : "Create Backup Now"}
             </Button>
 
             {latestBackup && (
@@ -328,16 +400,24 @@ export function BackupSettingsTab() {
               <Calendar className="w-6 h-6 text-blue-400" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-white">Automatic Backups</h3>
-              <p className="text-sm text-white/60">Schedule regular automated backups</p>
+              <h3 className="text-lg font-semibold text-white">
+                Automatic Backups
+              </h3>
+              <p className="text-sm text-white/60">
+                Schedule regular automated backups
+              </p>
             </div>
           </div>
 
           {/* Master Toggle */}
           <div className="flex items-center justify-between pb-4 border-b border-white/10">
             <div>
-              <h4 className="text-white font-medium">Enable Automatic Backups</h4>
-              <p className="text-sm text-white/60">Create backups on a schedule</p>
+              <h4 className="text-white font-medium">
+                Enable Automatic Backups
+              </h4>
+              <p className="text-sm text-white/60">
+                Create backups on a schedule
+              </p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
@@ -356,19 +436,26 @@ export function BackupSettingsTab() {
             {autoBackupEnabled && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
+                animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
                 className="space-y-4"
               >
                 {/* Frequency */}
                 <div>
-                  <label htmlFor="frequency" className="block text-sm font-medium text-white mb-2">
+                  <label
+                    htmlFor="frequency"
+                    className="block text-sm font-medium text-white mb-2"
+                  >
                     Backup Frequency
                   </label>
                   <select
                     id="frequency"
                     value={frequency}
-                    onChange={(e) => setFrequency(e.target.value as 'daily' | 'weekly' | 'monthly')}
+                    onChange={(e) =>
+                      setFrequency(
+                        e.target.value as "daily" | "weekly" | "monthly"
+                      )
+                    }
                     className="w-full px-4 py-3 bg-blue-950/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     aria-label="Backup frequency"
                   >
@@ -380,7 +467,10 @@ export function BackupSettingsTab() {
 
                 {/* Time */}
                 <div>
-                  <label htmlFor="backup-time" className="block text-sm font-medium text-white mb-2">
+                  <label
+                    htmlFor="backup-time"
+                    className="block text-sm font-medium text-white mb-2"
+                  >
                     Backup Time
                   </label>
                   <input
@@ -398,7 +488,10 @@ export function BackupSettingsTab() {
 
                 {/* Keep Count */}
                 <div>
-                  <label htmlFor="keep-count" className="block text-sm font-medium text-white mb-2">
+                  <label
+                    htmlFor="keep-count"
+                    className="block text-sm font-medium text-white mb-2"
+                  >
                     Keep Last {keepCount} Backups
                   </label>
                   <div className="flex items-center gap-4">
@@ -408,11 +501,15 @@ export function BackupSettingsTab() {
                       min="1"
                       max="30"
                       value={keepCount}
-                      onChange={(e) => setKeepCount(Number.parseInt(e.target.value))}
+                      onChange={(e) =>
+                        setKeepCount(Number.parseInt(e.target.value))
+                      }
                       className="flex-1 h-2 bg-blue-950/50 rounded-lg appearance-none cursor-pointer accent-purple-500"
                       aria-label="Number of backups to keep"
                     />
-                    <span className="text-white font-medium w-12 text-center">{keepCount}</span>
+                    <span className="text-white font-medium w-12 text-center">
+                      {keepCount}
+                    </span>
                   </div>
                   <p className="text-xs text-white/40 mt-2">
                     Older backups will be automatically deleted
@@ -438,7 +535,9 @@ export function BackupSettingsTab() {
                       className="flex items-center gap-2 text-green-400"
                     >
                       <CheckCircle2 className="w-5 h-5" />
-                      <span className="text-sm font-medium">Saved successfully!</span>
+                      <span className="text-sm font-medium">
+                        Saved successfully!
+                      </span>
                     </motion.div>
                   )}
                 </div>
@@ -453,8 +552,12 @@ export function BackupSettingsTab() {
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-lg font-semibold text-white">Backup History</h3>
-              <p className="text-sm text-white/60 mt-1">{backups.length} backups available</p>
+              <h3 className="text-lg font-semibold text-white">
+                Backup History
+              </h3>
+              <p className="text-sm text-white/60 mt-1">
+                {backups.length} backups available
+              </p>
             </div>
             <Button
               onClick={loadBackups}
@@ -475,7 +578,9 @@ export function BackupSettingsTab() {
             <div className="text-center py-12">
               <Database className="w-16 h-16 text-white/20 mx-auto mb-4" />
               <p className="text-white/60">No backups found</p>
-              <p className="text-sm text-white/40 mt-2">Create your first backup above</p>
+              <p className="text-sm text-white/40 mt-2">
+                Create your first backup above
+              </p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -484,7 +589,11 @@ export function BackupSettingsTab() {
                   key={backup.id}
                   backup={backup}
                   isExpanded={expandedBackup === backup.id}
-                  onToggle={() => setExpandedBackup(expandedBackup === backup.id ? null : backup.id)}
+                  onToggle={() =>
+                    setExpandedBackup(
+                      expandedBackup === backup.id ? null : backup.id
+                    )
+                  }
                   onRestore={() => handleRestore(backup)}
                   onExport={() => handleExport(backup)}
                   onDelete={() => handleDelete(backup.filename)}
@@ -494,6 +603,19 @@ export function BackupSettingsTab() {
           )}
         </div>
       </Card>
+
+      {/* Confirmation Modal */}
+      {confirmationConfig && (
+        <ConfirmationModal
+          isOpen={isConfirmationOpen}
+          onClose={(confirmed) => {
+            setIsConfirmationOpen(false);
+            confirmationConfig.onResponse(confirmed);
+          }}
+          title={confirmationConfig.title}
+          message={confirmationConfig.message}
+        />
+      )}
     </div>
   );
 }
@@ -507,7 +629,14 @@ interface BackupListItemProps {
   onDelete: () => void;
 }
 
-function BackupListItem({ backup, isExpanded, onToggle, onRestore, onExport, onDelete }: BackupListItemProps) {
+function BackupListItem({
+  backup,
+  isExpanded,
+  onToggle,
+  onRestore,
+  onExport,
+  onDelete,
+}: BackupListItemProps) {
   function formatRelativeTime(dateString: string): string {
     const date = new Date(dateString);
     const now = new Date();
@@ -516,16 +645,28 @@ function BackupListItem({ backup, isExpanded, onToggle, onRestore, onExport, onD
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 1) {return 'Just now';}
-    if (diffMins < 60) {return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;}
-    if (diffHours < 24) {return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;}
-    if (diffDays < 7) {return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;}
+    if (diffMins < 1) {
+      return "Just now";
+    }
+    if (diffMins < 60) {
+      return `${diffMins} minute${diffMins > 1 ? "s" : ""} ago`;
+    }
+    if (diffHours < 24) {
+      return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
+    }
+    if (diffDays < 7) {
+      return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
+    }
     return date.toLocaleDateString();
   }
 
   function formatFileSize(bytes: number): string {
-    if (bytes < 1024) {return `${bytes} B`;}
-    if (bytes < 1024 * 1024) {return `${(bytes / 1024).toFixed(1)} KB`;}
+    if (bytes < 1024) {
+      return `${bytes} B`;
+    }
+    if (bytes < 1024 * 1024) {
+      return `${(bytes / 1024).toFixed(1)} KB`;
+    }
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   }
 
@@ -540,7 +681,9 @@ function BackupListItem({ backup, isExpanded, onToggle, onRestore, onExport, onD
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3 mb-1">
               <Database className="w-5 h-5 text-purple-400 flex-shrink-0" />
-              <p className="font-medium text-white truncate">{backup.filename}</p>
+              <p className="font-medium text-white truncate">
+                {backup.filename}
+              </p>
               {backup.is_valid && (
                 <Badge variant="success" size="sm" dot>
                   Valid
@@ -554,7 +697,9 @@ function BackupListItem({ backup, isExpanded, onToggle, onRestore, onExport, onD
               {backup.metadata?.record_count && (
                 <>
                   <span>•</span>
-                  <span>{backup.metadata.record_count.toLocaleString()} records</span>
+                  <span>
+                    {backup.metadata.record_count.toLocaleString()} records
+                  </span>
                 </>
               )}
             </div>
@@ -569,16 +714,25 @@ function BackupListItem({ backup, isExpanded, onToggle, onRestore, onExport, onD
               <FileDown className="w-4 h-4" />
               Export
             </Button>
-            <Button onClick={onDelete} variant="ghost" size="sm" className="text-red-400 hover:text-red-300">
+            <Button
+              onClick={onDelete}
+              variant="ghost"
+              size="sm"
+              className="text-red-400 hover:text-red-300"
+            >
               <Trash2 className="w-4 h-4" />
             </Button>
             <button
               type="button"
               onClick={onToggle}
               className="p-2 text-white/60 hover:text-white transition-colors"
-              aria-label={isExpanded ? 'Collapse details' : 'Expand details'}
+              aria-label={isExpanded ? "Collapse details" : "Expand details"}
             >
-              {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              {isExpanded ? (
+                <ChevronUp className="w-4 h-4" />
+              ) : (
+                <ChevronDown className="w-4 h-4" />
+              )}
             </button>
           </div>
         </div>
@@ -589,26 +743,34 @@ function BackupListItem({ backup, isExpanded, onToggle, onRestore, onExport, onD
         {isExpanded && backup.metadata && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
+            animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             className="border-t border-white/10 bg-white/5 p-4"
           >
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <div>
                 <span className="text-white/60">Version</span>
-                <p className="text-white font-medium">{backup.metadata.version}</p>
+                <p className="text-white font-medium">
+                  {backup.metadata.version}
+                </p>
               </div>
               <div>
                 <span className="text-white/60">Records</span>
-                <p className="text-white font-medium">{backup.metadata.record_count.toLocaleString()}</p>
+                <p className="text-white font-medium">
+                  {backup.metadata.record_count.toLocaleString()}
+                </p>
               </div>
               <div>
                 <span className="text-white/60">Created</span>
-                <p className="text-white font-medium">{new Date(backup.created_at).toLocaleString()}</p>
+                <p className="text-white font-medium">
+                  {new Date(backup.created_at).toLocaleString()}
+                </p>
               </div>
               <div>
                 <span className="text-white/60">File Size</span>
-                <p className="text-white font-medium">{formatFileSize(backup.size)}</p>
+                <p className="text-white font-medium">
+                  {formatFileSize(backup.size)}
+                </p>
               </div>
             </div>
 
@@ -629,8 +791,9 @@ function BackupListItem({ backup, isExpanded, onToggle, onRestore, onExport, onD
               <div className="flex items-start gap-2">
                 <AlertTriangle className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
                 <div className="text-xs text-blue-200">
-                  <strong>Restore Warning:</strong> Restoring this backup will replace your current database.
-                  All data created after {formatRelativeTime(backup.created_at)} will be lost.
+                  <strong>Restore Warning:</strong> Restoring this backup will
+                  replace your current database. All data created after{" "}
+                  {formatRelativeTime(backup.created_at)} will be lost.
                 </div>
               </div>
             </div>

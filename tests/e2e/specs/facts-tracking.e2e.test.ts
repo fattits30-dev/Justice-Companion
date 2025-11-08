@@ -1,12 +1,15 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from "@playwright/test";
 import {
   authenticateTestUser,
   closeElectronApp,
   launchElectronApp,
   type ElectronTestApp,
-} from '../setup/electron-setup.js';
-import { caseFactsFixtures, userFactsFixtures } from '../setup/fixtures.js';
-import { getTestDatabase, TEST_USER_CREDENTIALS } from '../setup/test-database.js';
+} from "../setup/electron-setup.js";
+import { caseFactsFixtures, userFactsFixtures } from "../setup/fixtures.js";
+import {
+  getTestDatabase,
+  TEST_USER_CREDENTIALS,
+} from "../setup/test-database.js";
 
 let testApp: ElectronTestApp;
 
@@ -24,12 +27,12 @@ test.afterEach(async () => {
   await closeElectronApp(testApp);
 });
 
-test.describe('Facts Tracking E2E', () => {
-  test('should create user fact', async () => {
+test.describe("Facts Tracking E2E", () => {
+  test("should create user fact", async () => {
     const { window, dbPath } = testApp;
     const factData = userFactsFixtures.employment1;
 
-    await window.waitForLoadState('domcontentloaded');
+    await window.waitForLoadState("domcontentloaded");
     await window.waitForTimeout(2000);
 
     // Navigate to user facts
@@ -86,7 +89,7 @@ test.describe('Facts Tracking E2E', () => {
       // Verify database persistence
       const db = getTestDatabase(dbPath);
       const dbFact = db
-        .prepare('SELECT * FROM user_facts WHERE fact_type = ?')
+        .prepare("SELECT * FROM user_facts WHERE fact_type = ?")
         .get(factData.factType) as any;
 
       expect(dbFact).toBeDefined();
@@ -96,11 +99,11 @@ test.describe('Facts Tracking E2E', () => {
     }
   });
 
-  test('should create case fact', async () => {
+  test("should create case fact", async () => {
     const { window, dbPath } = testApp;
     const factData = caseFactsFixtures.timeline1;
 
-    await window.waitForLoadState('domcontentloaded');
+    await window.waitForLoadState("domcontentloaded");
     await window.waitForTimeout(2000);
 
     // Navigate to case details (case ID 1 from seed data)
@@ -112,7 +115,7 @@ test.describe('Facts Tracking E2E', () => {
       // Click on first case
       const firstCase =
         (await window.$('[data-testid="case-item"]')) ||
-        (await window.$$('.case-card').then((cards) => cards[0]));
+        (await window.$$(".case-card").then((cards: any) => cards[0]));
       if (firstCase) {
         await firstCase.click();
         await window.waitForTimeout(1000);
@@ -163,7 +166,7 @@ test.describe('Facts Tracking E2E', () => {
       // Verify in database
       const db = getTestDatabase(dbPath);
       const dbFact = db
-        .prepare('SELECT * FROM case_facts WHERE category = ?')
+        .prepare("SELECT * FROM case_facts WHERE category = ?")
         .get(factData.category) as any;
 
       expect(dbFact).toBeDefined();
@@ -171,7 +174,7 @@ test.describe('Facts Tracking E2E', () => {
     }
   });
 
-  test('should filter facts by category', async () => {
+  test("should filter facts by category", async () => {
     const { window, dbPath } = testApp;
 
     // Seed multiple user facts with different types
@@ -186,7 +189,7 @@ test.describe('Facts Tracking E2E', () => {
     db.close();
 
     await window.reload();
-    await window.waitForLoadState('domcontentloaded');
+    await window.waitForLoadState("domcontentloaded");
     await window.waitForTimeout(2000);
 
     // Navigate to user facts
@@ -206,15 +209,15 @@ test.describe('Facts Tracking E2E', () => {
       await window.waitForTimeout(500);
 
       // Should show only employment facts
-      const employmentFact = await window.$('text=Employment fact 1');
-      const personalFact = await window.$('text=Personal fact 1');
+      const employmentFact = await window.$("text=Employment fact 1");
+      const personalFact = await window.$("text=Personal fact 1");
 
       expect(employmentFact).toBeTruthy();
       expect(personalFact).toBeFalsy();
     }
   });
 
-  test('should update and delete facts', async () => {
+  test("should update and delete facts", async () => {
     const { window, dbPath } = testApp;
 
     // Seed a user fact
@@ -226,7 +229,7 @@ test.describe('Facts Tracking E2E', () => {
     db.close();
 
     await window.reload();
-    await window.waitForLoadState('domcontentloaded');
+    await window.waitForLoadState("domcontentloaded");
     await window.waitForTimeout(2000);
 
     // Navigate to user facts
@@ -237,7 +240,7 @@ test.describe('Facts Tracking E2E', () => {
     }
 
     // Find the fact
-    const factCard = await window.$('text=Test fact to update');
+    const factCard = await window.$("text=Test fact to update");
     if (factCard) {
       // Click to edit
       const editBtn =
@@ -251,7 +254,7 @@ test.describe('Facts Tracking E2E', () => {
         // Update content
         const contentInput = await window.$('[name="factContent"]');
         if (contentInput) {
-          await contentInput.fill('Updated fact content');
+          await contentInput.fill("Updated fact content");
 
           const saveBtn = await window.$('button:has-text("Save")');
           if (saveBtn) {
@@ -262,10 +265,10 @@ test.describe('Facts Tracking E2E', () => {
           // Verify update
           const dbVerify = getTestDatabase(dbPath);
           const updatedFact = dbVerify
-            .prepare('SELECT * FROM user_facts WHERE id = ?')
+            .prepare("SELECT * FROM user_facts WHERE id = ?")
             .get(999) as any;
 
-          expect(updatedFact.fact_content).toContain('Updated');
+          expect(updatedFact.fact_content).toContain("Updated");
           dbVerify.close();
         }
       }
@@ -288,7 +291,9 @@ test.describe('Facts Tracking E2E', () => {
 
         // Verify deletion
         const dbFinal = getTestDatabase(dbPath);
-        const deletedFact = dbFinal.prepare('SELECT * FROM user_facts WHERE id = ?').get(999);
+        const deletedFact = dbFinal
+          .prepare("SELECT * FROM user_facts WHERE id = ?")
+          .get(999);
 
         expect(deletedFact).toBeUndefined();
         dbFinal.close();

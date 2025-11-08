@@ -37,6 +37,8 @@ describe('AutoUpdater', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // Re-setup mock return value after clearAllMocks
+    (mockApp.getVersion as ReturnType<typeof vi.fn>).mockReturnValue('1.0.0');
     autoUpdater = new AutoUpdater(mockApp, mockAutoUpdater);
   });
 

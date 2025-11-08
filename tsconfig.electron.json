@@ -2,26 +2,31 @@
   "compilerOptions": {
     "composite": true,
     "target": "ES2022",
-    "lib": ["ES2022"],
-    "module": "node16",
+    "lib": ["ES2022", "DOM"],
+    "module": "ES2022",
     "outDir": "./dist/electron",
     "skipLibCheck": true,
     "allowJs": true,
-    "allowImportingTsExtensions": true,
     "noEmit": true,
-
-    /* Module Resolution */
-    "moduleResolution": "node16",
+    "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
+
+    /* Experimental Features */
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "jsx": "react-jsx",
+
+    /* Module Resolution */
+    "moduleResolution": "bundler",
+    "forceConsistentCasingInFileNames": true,
 
     /* Linting */
     "strict": false,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true,
-    "forceConsistentCasingInFileNames": true,
 
     /* Paths */
     "baseUrl": ".",
@@ -30,12 +35,9 @@
     },
 
     /* Types */
-    "types": ["node", "better-sqlite3"]
+    "types": ["node", "better-sqlite3-multiple-ciphers"]
   },
-  "include": [
-    "electron/**/*",
-    "src/**/*"
-  ],
+  "include": ["electron/**/*", "src/**/*"],
   "exclude": [
     "node_modules",
     "dist",

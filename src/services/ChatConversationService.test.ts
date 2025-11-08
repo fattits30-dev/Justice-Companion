@@ -7,7 +7,7 @@ import { AuditLogger } from './AuditLogger';
 import { TestDatabaseHelper } from '../test-utils/database-test-helper';
 import { databaseManager } from '../db/database';
 import { resetRepositories, initializeTestRepositories } from '../repositories';
-import { EncryptionService } from './EncryptionService';
+import { setupTestEnvironment, clearWindowMock } from '../test-utils/ipc-mock.ts';
 import type {
   CreateConversationInput,
   CreateMessageInput,
@@ -20,6 +20,9 @@ describe('ChatConversationService', () => {
   const TEST_USER_ID = 1;
 
   beforeEach(() => {
+    // Setup window mock and IPC API
+    setupTestEnvironment();
+
     testDb = new TestDatabaseHelper();
     const db = testDb.initialize();
 
@@ -38,9 +41,6 @@ describe('ChatConversationService', () => {
       VALUES (1, 'Test Case', 'employment', 1)
     `).run();
 
-    // Initialize encryption service (32-byte key = 64 hex chars converted to Buffer)
-    const testKey = Buffer.from('0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef', 'hex');
-
     // Reset singleton to force re-initialization with test key
     resetRepositories();
 
@@ -51,7 +51,8 @@ describe('ChatConversationService', () => {
     };
 
     // Initialize repositories with test encryption service and audit logger
-    const encryptionService = new EncryptionService(testKey.toString('base64'));
+    // Use encryption service from TestDatabaseHelper (automatically initialized)
+    const encryptionService = testDb.getEncryptionService();
     initializeTestRepositories(encryptionService, auditLogger);
   });
 
@@ -59,6 +60,7 @@ describe('ChatConversationService', () => {
     testDb.clearAllTables();
     testDb.cleanup();
     databaseManager.resetDatabase();
+    clearWindowMock();
   });
 
   describe('createConversation()', () => {

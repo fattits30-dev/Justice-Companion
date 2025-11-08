@@ -3,12 +3,18 @@
  * These types provide type safety for node-llama-cpp function definitions
  */
 
-import type { CaseStatus, CaseType } from '../domains/cases/entities/Case.ts';
-import type { EvidenceType } from '../domains/evidence/entities/Evidence.ts';
+import type { CaseStatus, CaseType } from "../domains/cases/entities/Case.ts";
+import type { EvidenceType } from "../domains/evidence/entities/Evidence.ts";
 
 // Export type aliases for CaseFact enums
-export type FactCategory = 'timeline' | 'evidence' | 'witness' | 'location' | 'communication' | 'other';
-export type FactImportance = 'low' | 'medium' | 'high' | 'critical';
+export type FactCategory =
+  | "timeline"
+  | "evidence"
+  | "witness"
+  | "location"
+  | "communication"
+  | "other";
+export type FactImportance = "low" | "medium" | "high" | "critical";
 
 // ============================================================================
 // API Response Types
@@ -107,7 +113,7 @@ export interface UpdateCaseResult {
 export interface CreateEvidenceParams {
   caseId: number;
   title: string;
-  evidenceType: string;
+  evidenceType: EvidenceType;
   content?: string;
   filePath?: string;
   obtainedDate?: string;
@@ -263,13 +269,15 @@ export interface ClassifyQuestionResult {
  * @template TParams - Input parameter type
  * @template TResult - Return value type
  */
-export type ChatFunctionHandler<TParams, TResult> = (params: TParams) => Promise<TResult>;
+export type ChatFunctionHandler<TParams, TResult> = (
+  params: TParams
+) => Promise<TResult>;
 
 /**
  * JSON Schema property definition for function parameters
  */
 export interface JSONSchemaProperty {
-  type: 'string' | 'number' | 'boolean' | 'object' | 'array';
+  type: "string" | "number" | "boolean" | "object" | "array";
   description?: string;
   enum?: string[];
   properties?: Record<string, JSONSchemaProperty>;
@@ -280,7 +288,7 @@ export interface JSONSchemaProperty {
  * JSON Schema object for function parameters
  */
 export interface JSONSchemaObject {
-  type: 'object';
+  type: "object";
   properties: Record<string, JSONSchemaProperty>;
   required: string[];
 }
@@ -305,9 +313,9 @@ export interface ChatSessionFunctionDefinition<TParams, TResult> {
  * Throws if not authenticated
  */
 export function getSessionId(): string {
-  const sessionId = localStorage.getItem('sessionId');
+  const sessionId = localStorage.getItem("sessionId");
   if (!sessionId) {
-    throw new Error('Not authenticated. Session ID not found in localStorage.');
+    throw new Error("Not authenticated. Session ID not found in localStorage.");
   }
   return sessionId;
 }
@@ -315,6 +323,8 @@ export function getSessionId(): string {
 /**
  * Type guard to check if response is an error
  */
-export function isAPIError<T>(response: APIResponse<T>): response is APIResponse<T> & { error: string } {
+export function isAPIError<T>(
+  response: APIResponse<T>
+): response is APIResponse<T> & { error: string } {
   return !response.success && response.error !== undefined;
 }

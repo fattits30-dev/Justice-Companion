@@ -11,7 +11,7 @@
 
 export interface GdprExportOptions {
   /** Export format */
-  format?: 'json' | 'csv';
+  format?: "json" | "csv";
 
   /** Include file attachments in export */
   includeFiles?: boolean;
@@ -82,7 +82,7 @@ export interface ExportMetadata {
   schemaVersion: string;
 
   /** Export format */
-  format: 'json' | 'csv';
+  format: "json" | "csv";
 
   /** Total number of records across all tables */
   totalRecords: number;
@@ -107,11 +107,20 @@ export interface GdprDeleteResult {
   /** Whether deletion was successful */
   success: boolean;
 
-  /** Number of records deleted */
-  recordsDeleted: number;
+  /** Timestamp when the deletion completed */
+  deletionDate: string;
+
+  /** Detailed counts for each table that had records removed */
+  deletedCounts: Record<string, number>;
+
+  /** Number of audit log records preserved for compliance */
+  preservedAuditLogs: number;
+
+  /** Number of consent records preserved for compliance */
+  preservedConsents: number;
 
   /** Optional export file path if export was performed */
-  exportFilePath?: string;
+  exportPath?: string;
 
   /** Error message if deletion failed */
   error?: string;
@@ -125,9 +134,9 @@ export interface GdprDeleteResult {
  * Error thrown when rate limit is exceeded for GDPR operations
  */
 export class RateLimitError extends Error {
-  constructor(message: string = 'Rate limit exceeded for GDPR operation') {
+  constructor(message: string = "Rate limit exceeded for GDPR operation") {
     super(message);
-    this.name = 'RateLimitError';
+    this.name = "RateLimitError";
   }
 }
 
@@ -135,9 +144,9 @@ export class RateLimitError extends Error {
  * Error thrown when required consent is missing
  */
 export class ConsentRequiredError extends Error {
-  constructor(message: string = 'User consent required for this operation') {
+  constructor(message: string = "User consent required for this operation") {
     super(message);
-    this.name = 'ConsentRequiredError';
+    this.name = "ConsentRequiredError";
   }
 }
 
@@ -147,6 +156,6 @@ export class ConsentRequiredError extends Error {
 export class GdprOperationError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = 'GdprOperationError';
+    this.name = "GdprOperationError";
   }
 }

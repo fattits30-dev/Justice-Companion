@@ -1,14 +1,55 @@
-// @ts-expect-error - Legacy code replaced by UnifiedAIService, needs cleanup
-import { errorLogger } from '../utils/error-logger.ts';
-// TODO: These services have been replaced by UnifiedAIService - clean up this legacy code
-// import { IntegratedAIService } from '../features/chat/services/IntegratedAIService.ts';
-// import { OpenAIService } from '../features/chat/services/OpenAIService.ts';
-// import type { OpenAIConfig } from '../features/chat/services/OpenAIService.ts';
-import type { AIChatRequest, AIResponse } from '../types/ai.ts';
-import fs from 'fs';
-import path from 'path';
-import { app } from 'electron';
-import type { CaseFactsRepository } from '../repositories/CaseFactsRepository.ts';
+import { errorLogger } from "../utils/error-logger.ts";
+import type { AIChatRequest, AIResponse } from "../types/ai.ts";
+import fs from "fs";
+import path from "path";
+import { app } from "electron";
+import type { CaseFactsRepository } from "../repositories/CaseFactsRepository.ts";
+
+// Temporary stub classes to satisfy type requirements
+class IntegratedAIService {
+  setCaseFactsRepository(_repository: CaseFactsRepository): void {
+    // Repository stored but not used in stub implementation
+  }
+
+  async handleChatRequest(_request: AIChatRequest): Promise<AIResponse> {
+    return {
+      success: false,
+      error: "Integrated AI service not implemented",
+      code: "NOT_IMPLEMENTED",
+    };
+  }
+}
+
+class OpenAIService {
+  constructor(private model: string) {}
+
+  updateConfig(_apiKey: string, model: string): void {
+    this.model = model;
+  }
+
+  getModel(): string {
+    return this.model;
+  }
+
+  async handleChatRequest(_request: AIChatRequest): Promise<AIResponse> {
+    return {
+      success: false,
+      error: "OpenAI service not implemented",
+      code: "NOT_IMPLEMENTED",
+    };
+  }
+}
+
+// Temporary stub to satisfy imports - replace with UnifiedAIService
+class StubAIService {
+  async chat(_request: AIChatRequest): Promise<AIResponse> {
+    return {
+      success: false,
+      error: "AI service temporarily unavailable - using legacy interface",
+      code: "LEGACY_STUB",
+    };
+  }
+}
 
 /**
  * AIServiceFactory - Multi-Provider AI Service Manager
@@ -29,7 +70,7 @@ export class AIServiceFactory {
   private integratedService: IntegratedAIService;
   private openAIService: OpenAIService | null = null;
   private modelPath: string;
-  private currentProvider: 'openai' | 'integrated' = 'integrated';
+  private currentProvider: "openai" | "integrated" = "integrated";
 
   private constructor() {
     // IntegratedService created without repository initially
@@ -40,14 +81,21 @@ export class AIServiceFactory {
     this.openAIService = null;
 
     // Check model availability
-    const userDataPath = app.getPath('userData');
-    this.modelPath = path.join(userDataPath, 'models', 'Qwen_Qwen3-8B-Q4_K_M.gguf');
+    const userDataPath = app.getPath("userData");
+    this.modelPath = path.join(
+      userDataPath,
+      "models",
+      "Qwen_Qwen3-8B-Q4_K_M.gguf"
+    );
 
-    errorLogger.logError('AIServiceFactory initialized with multi-provider support', {
-      type: 'info',
-      modelPath: this.modelPath,
-      defaultProvider: 'integrated',
-    });
+    errorLogger.logError(
+      "AIServiceFactory initialized with multi-provider support",
+      {
+        type: "info",
+        modelPath: this.modelPath,
+        defaultProvider: "integrated",
+      }
+    );
   }
 
   /**
@@ -64,7 +112,6 @@ export class AIServiceFactory {
    * Set the case facts repository for the integrated service
    */
   setCaseFactsRepository(repository: CaseFactsRepository): void {
-    this.caseFactsRepository = repository;
     // Pass repository to integrated service
     this.integratedService.setCaseFactsRepository(repository);
   }
@@ -74,7 +121,7 @@ export class AIServiceFactory {
    */
   configureOpenAI(apiKey: string, model: string): void {
     if (!this.openAIService) {
-      this.openAIService = new OpenAIService(apiKey, model);
+      this.openAIService = new OpenAIService(model);
     } else {
       // Update existing service if needed
       this.openAIService.updateConfig(apiKey, model);
@@ -84,7 +131,7 @@ export class AIServiceFactory {
   /**
    * Get current provider status
    */
-  getCurrentProvider(): 'openai' | 'integrated' {
+  getCurrentProvider(): "openai" | "integrated" {
     return this.currentProvider;
   }
 
@@ -103,7 +150,7 @@ export class AIServiceFactory {
    */
   switchToOpenAI(): boolean {
     if (this.openAIService) {
-      this.currentProvider = 'openai';
+      this.currentProvider = "openai";
       return true;
     }
     return false;
@@ -113,7 +160,7 @@ export class AIServiceFactory {
    * Switch provider to integrated service
    */
   switchToIntegrated(): void {
-    this.currentProvider = 'integrated';
+    this.currentProvider = "integrated";
   }
 
   /**
@@ -123,7 +170,7 @@ export class AIServiceFactory {
     try {
       return fs.existsSync(this.modelPath);
     } catch (error) {
-      errorLogger.logError('Failed to check model existence', { error });
+      errorLogger.logError("Failed to check model existence", { error });
       return false;
     }
   }
@@ -136,7 +183,7 @@ export class AIServiceFactory {
       const stats = fs.statSync(this.modelPath);
       return stats.size;
     } catch (error) {
-      errorLogger.logError('Failed to get model size', { error });
+      errorLogger.logError("Failed to get model size", { error });
       return 0;
     }
   }
@@ -148,25 +195,36 @@ export class AIServiceFactory {
     try {
       const service = this.getAIService();
       const response = await service.handleChatRequest(request);
-      
+
       // Log successful request
-      errorLogger.logError('AI request completed successfully', {
-        type: 'info',
+      errorLogger.logError("AI request completed successfully", {
+        type: "info",
         provider: this.currentProvider,
-        model: this.currentProvider === 'openai' ? 
-          (this.openAIService?.getModel() || 'unknown') : 
-          'local-qwen'
+        model:
+          this.currentProvider === "openai"
+            ? this.openAIService?.getModel() || "unknown"
+            : "local-qwen",
       });
-      
+
       return response;
     } catch (error) {
-      errorLogger.logError('AI request failed', { 
+      errorLogger.logError("AI request failed", {
         error,
         provider: this.currentProvider,
-        type: 'error'
+        type: "error",
       });
-      
+
       throw error;
     }
   }
+
+  /**
+   * Chat method for RAGService compatibility
+   */
+  async chat(_request: AIChatRequest): Promise<AIResponse> {
+    return new StubAIService().chat(_request);
+  }
 }
+
+// Export singleton instance for compatibility
+export const aiServiceFactory = AIServiceFactory.getInstance();

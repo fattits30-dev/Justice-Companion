@@ -127,6 +127,50 @@ export class ConsentRepository {
   }
 
   /**
+   * Alias for listByUser() - for service compatibility
+   */
+  findByUserId(userId: number): Consent[] {
+    return this.listByUser(userId);
+  }
+
+  /**
+   * Check if user has active consent for a specific type
+   * Returns boolean instead of Consent object
+   */
+  hasActiveConsent(userId: number, consentType: ConsentType): boolean {
+    const consent = this.findActiveConsent(userId, consentType);
+    return consent !== null;
+  }
+
+  /**
+   * Get all active consents for a user (excluding revoked)
+   */
+  getActiveConsents(userId: number): Consent[] {
+    const db = getDb();
+    const stmt = db.prepare(`
+      SELECT
+        id,
+        user_id as userId,
+        consent_type as consentType,
+        granted,
+        granted_at as grantedAt,
+        revoked_at as revokedAt,
+        version,
+        created_at as createdAt
+      FROM consents
+      WHERE user_id = ? AND revoked_at IS NULL
+      ORDER BY created_at DESC
+    `);
+
+    const rows = stmt.all(userId) as (Omit<Consent, 'granted'> & { granted: number })[];
+
+    return rows.map((row) => ({
+      ...row,
+      granted: row.granted === 1,
+    }));
+  }
+
+  /**
    * Revoke a consent (GDPR Article 7.3)
    */
   revoke(id: number): Consent | null {

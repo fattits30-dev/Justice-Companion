@@ -9,36 +9,70 @@ import type {
   Case,
   CreateCaseInput,
   UpdateCaseInput,
-} from '../../../domains/cases/entities/Case.ts';
+} from "../../../domains/cases/entities/Case.ts";
 import type {
   Evidence,
   CreateEvidenceInput,
   UpdateEvidenceInput,
-} from '../../../domains/evidence/entities/Evidence.ts';
+} from "../../../domains/evidence/entities/Evidence.ts";
 import type {
   User,
   CreateUserInput,
   UpdateUserInput,
-} from '../../../domains/auth/entities/User.ts';
-import type { Session } from '../../../domains/auth/entities/Session.ts';
+} from "../../../domains/auth/entities/User.ts";
+import type { Session } from "../../../domains/auth/entities/Session.ts";
 import type {
   UserProfile,
   UpdateUserProfileInput,
-} from '../../../domains/settings/entities/UserProfile.ts';
+} from "../../../domains/settings/entities/UserProfile.ts";
 import type {
   ChatConversation,
   CreateConversationInput,
-} from '../../../models/ChatConversation.ts';
-import type { Consent, ConsentType } from '../../../domains/settings/entities/Consent.ts';
-import type { Note, CreateNoteInput, UpdateNoteInput } from '../../../models/Note.ts';
-import type { LegalIssue, CreateLegalIssueInput, UpdateLegalIssueInput } from '../../../domains/legal-research/entities/LegalIssue.ts';
-import type { TimelineEvent, CreateTimelineEventInput, UpdateTimelineEventInput } from '../../../domains/timeline/entities/TimelineEvent.ts';
-import type { CaseFact, CreateCaseFactInput, UpdateCaseFactInput } from '../../../domains/cases/entities/CaseFact.ts';
-import type { UserFact, CreateUserFactInput, UpdateUserFactInput } from '../../../models/UserFact.ts';
-import type { Deadline, CreateDeadlineInput, UpdateDeadlineInput, DeadlineWithCase } from '../../../domains/timeline/entities/Deadline.ts';
-import type { AuditEvent, AuditLog, CreateAuditLogInput } from '../../../models/AuditLog.ts';
-import type { PaginatedResult } from '../../../types/pagination.ts';
-import type { GdprExportResult, GdprDeleteResult } from '../../../models/Gdpr.ts';
+} from "../../../models/ChatConversation.ts";
+import type {
+  Consent,
+  ConsentType,
+} from "../../../domains/settings/entities/Consent.ts";
+import type {
+  Note,
+  CreateNoteInput,
+  UpdateNoteInput,
+} from "../../../models/Note.ts";
+import type {
+  LegalIssue,
+  CreateLegalIssueInput,
+  UpdateLegalIssueInput,
+} from "../../../domains/legal-research/entities/LegalIssue.ts";
+import type {
+  TimelineEvent,
+  CreateTimelineEventInput,
+  UpdateTimelineEventInput,
+} from "../../../domains/timeline/entities/TimelineEvent.ts";
+import type {
+  CaseFact,
+  CreateCaseFactInput,
+  UpdateCaseFactInput,
+} from "../../../domains/cases/entities/CaseFact.ts";
+import type {
+  UserFact,
+  CreateUserFactInput,
+  UpdateUserFactInput,
+} from "../../../models/UserFact.ts";
+import type {
+  Deadline,
+  CreateDeadlineInput,
+  UpdateDeadlineInput,
+  DeadlineWithCase,
+} from "../../../domains/timeline/entities/Deadline.ts";
+import type {
+  AuditLog,
+  CreateAuditLogInput,
+} from "../../../models/AuditLog.ts";
+import type { PaginatedResult } from "../../../types/pagination.ts";
+import type {
+  GdprExportResult,
+  GdprDeleteResult,
+} from "../../../models/Gdpr.ts";
 
 // Additional type definitions needed for interfaces
 export interface CaseSearchCriteria {
@@ -99,7 +133,10 @@ export interface UserRepository {
 export interface UserProfileRepository {
   createUserProfile(input: CreateUserProfileInput): Promise<UserProfile>;
   getUserProfileByUserId(userId: number): Promise<UserProfile | null>;
-  updateUserProfile(userId: number, input: UpdateUserProfileInput): Promise<UserProfile>;
+  updateUserProfile(
+    userId: number,
+    input: UpdateUserProfileInput
+  ): Promise<UserProfile>;
   deleteUserProfile(userId: number): Promise<void>;
 }
 
@@ -124,16 +161,28 @@ export interface EvidenceRepository {
 export interface ChatConversationRepository {
   createConversation(input: CreateConversationInput): Promise<ChatConversation>;
   getConversationById(id: number): Promise<ChatConversation | null>;
-  updateConversation(id: number, input: UpdateChatConversationInput): Promise<ChatConversation>;
+  updateConversation(
+    id: number,
+    input: UpdateChatConversationInput
+  ): Promise<ChatConversation>;
   deleteConversation(id: number): Promise<void>;
   getConversationsByUserId(userId: number): Promise<ChatConversation[]>;
-  getConversationWithMessages(conversationId: number): Promise<ChatConversation | null>;
+  getConversationWithMessages(
+    conversationId: number
+  ): Promise<ChatConversation | null>;
 }
 
 export interface ConsentRepository {
   createConsent(consentType: ConsentType, userId: number): Promise<Consent>;
-  getConsentByTypeAndUserId(consentType: ConsentType, userId: number): Promise<Consent | null>;
-  updateConsent(consentType: ConsentType, userId: number, consented: boolean): Promise<Consent>;
+  getConsentByTypeAndUserId(
+    consentType: ConsentType,
+    userId: number
+  ): Promise<Consent | null>;
+  updateConsent(
+    consentType: ConsentType,
+    userId: number,
+    consented: boolean
+  ): Promise<Consent>;
   deleteConsent(consentType: ConsentType, userId: number): Promise<void>;
   getAllConsentsByUserId(userId: number): Promise<Consent[]>;
 }
@@ -150,7 +199,10 @@ export interface NoteRepository {
 export interface LegalIssueRepository {
   createLegalIssue(input: CreateLegalIssueInput): Promise<LegalIssue>;
   getLegalIssueById(id: number): Promise<LegalIssue | null>;
-  updateLegalIssue(id: number, input: UpdateLegalIssueInput): Promise<LegalIssue>;
+  updateLegalIssue(
+    id: number,
+    input: UpdateLegalIssueInput
+  ): Promise<LegalIssue>;
   deleteLegalIssue(id: number): Promise<void>;
   getLegalIssuesByCaseId(caseId: number): Promise<LegalIssue[]>;
 }
@@ -158,7 +210,10 @@ export interface LegalIssueRepository {
 export interface TimelineEventRepository {
   createTimelineEvent(input: CreateTimelineEventInput): Promise<TimelineEvent>;
   getTimelineEventById(id: number): Promise<TimelineEvent | null>;
-  updateTimelineEvent(id: number, input: UpdateTimelineEventInput): Promise<TimelineEvent>;
+  updateTimelineEvent(
+    id: number,
+    input: UpdateTimelineEventInput
+  ): Promise<TimelineEvent>;
   deleteTimelineEvent(id: number): Promise<void>;
   getTimelineEventsByCaseId(caseId: number): Promise<TimelineEvent[]>;
 }
@@ -195,7 +250,11 @@ export interface GdprRepository {
 }
 
 export interface SessionRepository {
-  createSession(userId: number, token: string, expiresAt: Date): Promise<Session>;
+  createSession(
+    userId: number,
+    token: string,
+    expiresAt: Date
+  ): Promise<Session>;
   getSessionByToken(token: string): Promise<Session | null>;
   deleteSession(token: string): Promise<void>;
   deleteExpiredSessions(): Promise<void>;
@@ -213,7 +272,7 @@ export type {
   IUserProfileService,
   IGdprService,
   ILegalAPIService,
-} from './service-interfaces.ts';
+} from "./service-interfaces.ts";
 
 // Re-export IDatabase from interfaces directory
-export type { IDatabase } from '../../../interfaces/IDatabase.ts';
+export type { IDatabase } from "../../../interfaces/IDatabase.ts";

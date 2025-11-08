@@ -1,14 +1,18 @@
-import { ipcMain, type IpcMainInvokeEvent } from 'electron';
-import { type IPCResponse } from '../utils/ipc-response.ts';
-import { logAuditEvent, AuditEventType } from '../utils/audit-helper.ts';
+import { ipcMain, type IpcMainInvokeEvent } from "electron";
+import { type IPCResponse } from "../utils/ipc-response";
+import { logAuditEvent, AuditEventType } from "../utils/audit-helper";
 import {
   withAuthorization,
   getAuthorizationMiddleware,
   verifyEvidenceOwnership,
-} from '../utils/authorization-wrapper.ts';
-import * as evidenceSchemas from '../../src/middleware/schemas/evidence-schemas.ts';
-import { getRepositories } from '../../src/repositories.ts';
-import { EvidenceNotFoundError } from '../../src/errors/DomainErrors.ts';
+} from "../utils/authorization-wrapper";
+import * as evidenceSchemas from "../../src/middleware/schemas/evidence-schemas";
+import { getRepositories } from "../../src/repositories";
+import { EvidenceNotFoundError } from "../../src/errors/DomainErrors";
+import type {
+  CreateEvidenceInput,
+  EvidenceType,
+} from "../../src/domains/evidence/entities/Evidence";
 
 /**
  * ===== EVIDENCE HANDLERS =====
@@ -20,11 +24,21 @@ export function setupEvidenceHandlers(): void {
 
   // Upload/create evidence
   ipcMain.handle(
-    'evidence:upload',
-    async (_event: IpcMainInvokeEvent, caseId: unknown, data: unknown, sessionId: string): Promise<IPCResponse> => {
+    "evidence:upload",
+    async (
+      _event: IpcMainInvokeEvent,
+      caseId: unknown,
+      data: unknown,
+      sessionId: string
+    ): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.warn('[IPC] evidence:upload called by user:', userId, 'for case:', caseId);
+          console.warn(
+            "[IPC] evidence:upload called by user:",
+            userId,
+            "for case:",
+            caseId
+          );
 
           // Validate input with Zod (schema expects { input: { caseId, ...fields } })
           const schemas = evidenceSchemas;
@@ -35,22 +49,31 @@ export function setupEvidenceHandlers(): void {
 
           // Verify user owns the case before adding evidence
           const authMiddleware = getAuthorizationMiddleware();
-          authMiddleware.verifyCaseOwnership(validatedData.input.caseId, userId);
+          authMiddleware.verifyCaseOwnership(
+            validatedData.input.caseId,
+            userId
+          );
 
-          // TODO: Validate file type and size if filePath provided
-          // TODO: Extract text if PDF/DOCX
+          // Future enhancement: validate file type/size if filePath provided
+          // Future enhancement: extract text content when handling PDFs or DOCX files
 
           // Call EvidenceRepository.create()
           const evidenceRepo = getEvidenceRepository();
-          const result = evidenceRepo.create(validatedData.input);
+          const createInput: CreateEvidenceInput = {
+            ...validatedData.input,
+            evidenceType: validatedData.input.evidenceType as EvidenceType,
+            caseId: validatedData.input.caseId as number,
+          };
+
+          const result = evidenceRepo.create(createInput);
 
           // Log audit event
           logAuditEvent({
             eventType: AuditEventType.EVIDENCE_UPLOADED,
             userId,
-            resourceType: 'evidence',
+            resourceType: "evidence",
             resourceId: result.id.toString(),
-            action: 'upload',
+            action: "upload",
             details: {
               caseId: result.caseId,
               evidenceType: result.evidenceType,
@@ -59,18 +82,18 @@ export function setupEvidenceHandlers(): void {
             success: true,
           });
 
-          console.warn('[IPC] Evidence created successfully:', result.id);
+          console.warn("[IPC] Evidence created successfully:", result.id);
           return result;
         } catch (error) {
-          console.error('[IPC] evidence:upload error:', error);
+          console.error("[IPC] evidence:upload error:", error);
 
           // Log failed upload
           logAuditEvent({
             eventType: AuditEventType.EVIDENCE_UPLOADED,
             userId,
-            resourceType: 'evidence',
-            resourceId: 'unknown',
-            action: 'upload',
+            resourceType: "evidence",
+            resourceId: "unknown",
+            action: "upload",
             success: false,
             errorMessage: String(error),
           });
@@ -83,15 +106,26 @@ export function setupEvidenceHandlers(): void {
 
   // List evidence for case
   ipcMain.handle(
-    'evidence:list',
-    async (_event: IpcMainInvokeEvent, caseId: unknown, sessionId: string): Promise<IPCResponse> => {
+    "evidence:list",
+    async (
+      _event: IpcMainInvokeEvent,
+      caseId: unknown,
+      sessionId: string
+    ): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.warn('[IPC] evidence:list called by user:', userId, 'for case:', caseId);
+          console.warn(
+            "[IPC] evidence:list called by user:",
+            userId,
+            "for case:",
+            caseId
+          );
 
           // Validate caseId
           const schemas = evidenceSchemas;
-          const validatedData = schemas.evidenceGetByCaseSchema.parse({ caseId });
+          const validatedData = schemas.evidenceGetByCaseSchema.parse({
+            caseId,
+          });
 
           // Verify user owns the case
           const authMiddleware = getAuthorizationMiddleware();
@@ -101,10 +135,15 @@ export function setupEvidenceHandlers(): void {
           const evidenceRepo = getEvidenceRepository();
           const evidence = evidenceRepo.findByCaseId(validatedData.caseId);
 
-          console.warn('[IPC] Retrieved', evidence.length, 'evidence items for case', caseId);
+          console.warn(
+            "[IPC] Retrieved",
+            evidence.length,
+            "evidence items for case",
+            caseId
+          );
           return evidence;
         } catch (error) {
-          console.error('[IPC] evidence:list error:', error);
+          console.error("[IPC] evidence:list error:", error);
           throw error; // withAuthorization will handle error formatting
         }
       });
@@ -113,11 +152,20 @@ export function setupEvidenceHandlers(): void {
 
   // Delete evidence
   ipcMain.handle(
-    'evidence:delete',
-    async (_event: IpcMainInvokeEvent, id: unknown, sessionId: string): Promise<IPCResponse> => {
+    "evidence:delete",
+    async (
+      _event: IpcMainInvokeEvent,
+      id: unknown,
+      sessionId: string
+    ): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.warn('[IPC] evidence:delete called by user:', userId, 'for evidence:', id);
+          console.warn(
+            "[IPC] evidence:delete called by user:",
+            userId,
+            "for evidence:",
+            id
+          );
 
           // Validate ID
           const schemas = evidenceSchemas;
@@ -138,24 +186,24 @@ export function setupEvidenceHandlers(): void {
           logAuditEvent({
             eventType: AuditEventType.EVIDENCE_DELETED,
             userId,
-            resourceType: 'evidence',
+            resourceType: "evidence",
             resourceId: validatedData.id.toString(),
-            action: 'delete',
+            action: "delete",
             success: true,
           });
 
-          console.warn('[IPC] Evidence deleted successfully:', id);
+          console.warn("[IPC] Evidence deleted successfully:", id);
           return { success: true };
         } catch (error) {
-          console.error('[IPC] evidence:delete error:', error);
+          console.error("[IPC] evidence:delete error:", error);
 
           // Log failed deletion
           logAuditEvent({
             eventType: AuditEventType.EVIDENCE_DELETED,
             userId,
-            resourceType: 'evidence',
+            resourceType: "evidence",
             resourceId: String(id),
-            action: 'delete',
+            action: "delete",
             success: false,
             errorMessage: String(error),
           });

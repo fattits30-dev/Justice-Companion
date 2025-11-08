@@ -2,9 +2,19 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext.tsx";
 import { SaveToCaseDialog } from "./chat/SaveToCaseDialog.tsx";
+import { AICaseCreationDialog } from "../components/cases/AICaseCreationDialog.tsx";
+import type { CaseFormData, AuditMetadata } from "../components/cases/AICaseCreationDialog.tsx";
 import { MessageItem } from './chat/MessageItem.tsx';
+import { TypingIndicator } from "../components/ui/TypingIndicator.tsx";
 import { toast } from 'sonner';
-import { Upload, FileText, Plus, Trash2 } from 'lucide-react';
+import { Upload, FileText, Trash2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import ReactMarkdown from 'react-markdown';
+import { usePendingActions, useActionQueueOperations } from '../stores/aiActionQueue.ts';
+import { ActionPendingCard } from '../components/ai/ActionPendingCard.tsx';
+import { AIActionConfirmationDialog } from '../components/ai/AIActionConfirmationDialog.tsx';
+import { aiActionExecutor } from '../services/ai/AIActionExecutor.ts';
+import type { SpecificAIAction, AuditMetadata as AIAuditMetadata } from '../types/ai-actions.ts';
 
 interface Message {
   id: string;
@@ -58,13 +68,30 @@ export function ChatView() {
   const [currentStreamingMessage, setCurrentStreamingMessage] = useState("");
   const [_showThinking, _setShowThinking] = useState(false); // Reserved for showing AI thinking process
   const [_currentThinking, setCurrentThinking] = useState(""); // Reserved for AI thinking display
+  const [currentConversationId, setCurrentConversationId] = useState<number | null>(null); // Track conversation for memory
 
   // Save to case state
   const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
   const [messageToSave, setMessageToSave] = useState<Message | null>(null);
 
+  // AI case creation dialog state
+  const [isAICaseDialogOpen, setIsAICaseDialogOpen] = useState(false);
+  const [aiCaseData, setAICaseData] = useState<any | null>(null);
+  const [documentAnalysisText, setDocumentAnalysisText] = useState<string>('');
+
   // Document upload state
   const [isAnalyzingDocument, setIsAnalyzingDocument] = useState(false);
+
+  // AI action confirmation state
+  const pendingActions = usePendingActions();
+  const {
+    confirmAction,
+    rejectAction,
+    setActionExecuting,
+    setActionCompleted,
+    setActionFailed,
+  } = useActionQueueOperations();
+  const [dialogAction, setDialogAction] = useState<SpecificAIAction | null>(null);
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -155,7 +182,7 @@ export function ChatView() {
         {
           sessionId,
           message: input.trim(),
-          conversationId: null, // New conversation
+          conversationId: currentConversationId, // Use tracked conversation for memory
         },
         (token: string) => {
           // Each token from AI response
@@ -195,6 +222,11 @@ export function ChatView() {
           setIsStreaming(false);
           setCurrentStreamingMessage("");
           setCurrentThinking("");
+        },
+        (conversationId: number) => {
+          // Capture conversation ID for memory
+          console.log('[ChatView] Received conversationId:', conversationId);
+          setCurrentConversationId(conversationId);
         },
       );
     } catch (error) {
@@ -306,7 +338,10 @@ export function ChatView() {
       );
 
       if (!analysisResult.success) {
-        throw new Error(analysisResult.error || 'Failed to analyze document');
+        const errorMsg = 'error' in analysisResult && analysisResult.error?.message
+          ? analysisResult.error.message
+          : 'Failed to analyze document';
+        throw new Error(errorMsg);
       }
 
       // Add AI analysis message
@@ -344,33 +379,32 @@ export function ChatView() {
     }
   }, []);
 
-  const handleCreateCaseFromAnalysis = useCallback(async (suggestedData: any) => {
-    // Instead of navigating away, ask the AI to help build the case
-    const caseCreationPrompt = `I want to create a case file based on the document you just analyzed. Please help me build a comprehensive case by:
+  const handleCreateCaseFromAnalysis = useCallback((message: Message) => {
+    // Open AI case creation dialog with suggested data
+    if (!message.documentAnalysis?.suggestedCaseData) {
+      toast.error('No case data available', {
+        description: 'This message does not contain document analysis data',
+      });
+      return;
+    }
 
-1. Summarizing what we know so far from the document
-2. Asking me what other documents or evidence I have that might be relevant to this case
-3. Helping me identify what additional information we need to gather
-4. Suggesting what type of case this should be categorized as
+    const suggestedData = message.documentAnalysis.suggestedCaseData;
 
-Let's work together to build a strong case file. What do you need from me?`;
+    // Warn if document belongs to someone else
+    if (suggestedData.documentOwnershipMismatch && suggestedData.documentClaimantName) {
+      toast.warning('Document Ownership Warning', {
+        description: `This document appears to be for ${suggestedData.documentClaimantName}, not you. You can still review the information, but for best results, they should download Justice Companion for personalized assistance.`,
+        duration: 10000, // Show warning for 10 seconds
+      });
+    }
 
-    // Add user message
-    const userMessage: Message = {
-      id: `user-${Date.now()}`,
-      role: "user",
-      content: caseCreationPrompt,
-      timestamp: new Date(),
-    };
+    setAICaseData(suggestedData);
+    setDocumentAnalysisText(message.content);
+    setIsAICaseDialogOpen(true);
+  }, []);
 
-    setMessages((prev) => [...prev, userMessage]);
-    setInput('');
-    setIsStreaming(true);
-    setCurrentStreamingMessage('');
-
-    toast.info('Starting case creation with AI...', {
-      description: 'The AI will help you build your case',
-    });
+  const handleCaseConfirm = useCallback(async (finalData: CaseFormData, metadata: AuditMetadata) => {
+    console.log('[ChatView] handleCaseConfirm called with data:', finalData);
 
     try {
       const sessionId = localStorage.getItem("sessionId");
@@ -378,56 +412,88 @@ Let's work together to build a strong case file. What do you need from me?`;
         throw new Error("No active session");
       }
 
-      // Stream AI response
-      await window.justiceAPI.streamChat(
+      // Build enhanced description with additional fields
+      const additionalInfo = [];
+      if (finalData.opposingParty) {
+        additionalInfo.push(`Opposing Party: ${finalData.opposingParty}`);
+      }
+      if (finalData.caseNumber) {
+        additionalInfo.push(`Case Number: ${finalData.caseNumber}`);
+      }
+      if (finalData.courtName) {
+        additionalInfo.push(`Court/Tribunal: ${finalData.courtName}`);
+      }
+      if (finalData.filingDeadline) {
+        additionalInfo.push(`Filing Deadline: ${finalData.filingDeadline}`);
+      }
+      if (finalData.nextHearingDate) {
+        additionalInfo.push(`Next Hearing: ${finalData.nextHearingDate}`);
+      }
+
+      const enhancedDescription = additionalInfo.length > 0
+        ? `${finalData.description}\n\n${additionalInfo.join('\n')}`
+        : finalData.description;
+
+      console.log('[ChatView] Creating case via IPC...');
+
+      // Create the case with AI metadata for audit trail
+      const result = await window.justiceAPI.createCase(
         {
-          message: caseCreationPrompt,
-          sessionId,
-          caseId: activeCaseId || undefined,
+          title: finalData.title,
+          description: enhancedDescription,
+          caseType: finalData.caseType as any, // Cast to satisfy TypeScript
         },
-        (token: string) => {
-          setCurrentStreamingMessage((prev) => prev + token);
-        },
-        (_thinking: string) => {
-          // Thinking process (not currently displayed)
-        },
-        () => {
-          // On complete
-          const aiMessage: Message = {
-            id: `assistant-${Date.now()}`,
-            role: "assistant",
-            content: currentStreamingMessage,
-            timestamp: new Date(),
-          };
-          setMessages((prev) => [...prev, aiMessage]);
-          setIsStreaming(false);
-          setCurrentStreamingMessage('');
-        },
-        (error: string) => {
-          console.error('[ChatView] Streaming error:', error);
-          const errorMessage: Message = {
-            id: `error-${Date.now()}`,
-            role: "assistant",
-            content: `Sorry, I encountered an error: ${error}`,
-            timestamp: new Date(),
-          };
-          setMessages((prev) => [...prev, errorMessage]);
-          setIsStreaming(false);
-          setCurrentStreamingMessage('');
-          toast.error('Failed to get AI response', {
-            description: error,
-          });
-        }
+        sessionId,
+        metadata // Pass AI metadata to be logged in audit trail
       );
+
+      console.log('[ChatView] Case creation result:', result);
+
+      if (!result.success) {
+        const errorMsg = 'error' in result && result.error?.message
+          ? result.error.message
+          : 'Failed to create case';
+        throw new Error(errorMsg);
+      }
+
+      if (!result.data) {
+        throw new Error('Case created but no data returned');
+      }
+
+      const caseId = result.data.id;
+      console.log('[ChatView] Case created successfully with ID:', caseId);
+
+      // Close dialog first by returning successfully
+      // (Don't let navigation errors prevent dialog from closing)
+
+      // Show success message (wrapped in try-catch to prevent blocking)
+      try {
+        toast.success('Case created successfully!', {
+          description: `Created case: ${finalData.title}`,
+        });
+      } catch (toastError) {
+        console.warn('[ChatView] Toast notification failed:', toastError);
+      }
+
+      // Navigate to the new case (wrapped in try-catch to prevent blocking)
+      try {
+        console.log('[ChatView] Navigating to case:', caseId);
+        navigate(`/cases/${caseId}`);
+      } catch (navError) {
+        console.warn('[ChatView] Navigation failed:', navError);
+      }
+
+      // Important: Don't throw here - let the dialog close
+      console.log('[ChatView] handleCaseConfirm completed successfully');
+
     } catch (error) {
-      console.error('[ChatView] Error starting case creation:', error);
-      setIsStreaming(false);
-      setCurrentStreamingMessage('');
-      toast.error('Failed to start case creation', {
+      console.error('[ChatView] Error creating case:', error);
+      toast.error('Failed to create case', {
         description: error instanceof Error ? error.message : 'Unknown error',
       });
+      throw error; // Only re-throw if case creation actually failed
     }
-  }, [navigate, activeCaseId, currentStreamingMessage]);
+  }, [navigate]);
 
   const handleClearChat = useCallback(() => {
     if (messages.length === 0) {
@@ -442,18 +508,128 @@ Let's work together to build a strong case file. What do you need from me?`;
 
     if (confirmed) {
       setMessages([]);
+      setCurrentConversationId(null); // Reset conversation to start fresh
       toast.success('Chat cleared', {
         description: `Cleared ${messages.length} messages`,
       });
     }
   }, [messages.length, activeCaseId]);
 
+  // AI Action Handlers
+  const handleQuickApprove = useCallback(async (actionId: string) => {
+    try {
+      // Confirm the action
+      confirmAction(actionId);
+
+      // Set executing state
+      setActionExecuting(actionId);
+
+      // Get the confirmed action
+      const action = pendingActions.find((a) => a.id === actionId);
+      if (!action) {
+        throw new Error('Action not found');
+      }
+
+      // Execute the action
+      const result = await aiActionExecutor.execute(action);
+
+      if (result.success) {
+        setActionCompleted(actionId, result);
+        toast.success('Action completed!', {
+          description: result.message,
+        });
+      } else {
+        setActionFailed(actionId, result.message || 'Unknown error');
+        toast.error('Action failed', {
+          description: result.message,
+        });
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      setActionFailed(actionId, errorMessage);
+      toast.error('Failed to execute action', {
+        description: errorMessage,
+      });
+    }
+  }, [confirmAction, setActionExecuting, setActionCompleted, setActionFailed, pendingActions]);
+
+  const handleReview = useCallback((actionId: string) => {
+    // Find the action and open the confirmation dialog
+    const action = pendingActions.find((a) => a.id === actionId);
+    if (action) {
+      setDialogAction(action);
+    } else {
+      toast.error('Action not found');
+    }
+  }, [pendingActions]);
+
+  const handleReject = useCallback((actionId: string) => {
+    // Reject the action
+    rejectAction(actionId);
+    toast.info('Action rejected', {
+      description: 'The AI-proposed action has been discarded',
+    });
+  }, [rejectAction]);
+
+  const handleDialogConfirm = useCallback(async (
+    actionId: string,
+    editedData: Record<string, any>,
+    auditMetadata: AIAuditMetadata
+  ) => {
+    try {
+      // Confirm the action with edited data
+      confirmAction(actionId, editedData, auditMetadata);
+
+      // Close the dialog
+      setDialogAction(null);
+
+      // Set executing state
+      setActionExecuting(actionId);
+
+      // Get the confirmed action (it now has edited data)
+      const action = pendingActions.find((a) => a.id === actionId);
+      if (!action) {
+        throw new Error('Action not found after confirmation');
+      }
+
+      // Execute the action
+      const result = await aiActionExecutor.execute(action);
+
+      if (result.success) {
+        setActionCompleted(actionId, result);
+        toast.success('Action completed!', {
+          description: result.message,
+        });
+
+        // If case was created, navigate to it
+        if (result.data?.id && action.type === 'create_case') {
+          navigate(`/cases/${result.data.id}`);
+        }
+      } else {
+        setActionFailed(actionId, result.message || 'Unknown error');
+        toast.error('Action failed', {
+          description: result.message,
+        });
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      setActionFailed(actionId, errorMessage);
+      toast.error('Failed to execute action', {
+        description: errorMessage,
+      });
+    }
+  }, [confirmAction, setActionExecuting, setActionCompleted, setActionFailed, pendingActions, navigate]);
+
+  const handleDialogCancel = useCallback(() => {
+    setDialogAction(null);
+  }, []);
+
   return (
     <div className="flex flex-col h-full bg-gradient-to-br from-gray-900 via-primary-900 to-gray-900 text-white">
-      {/* Header with BIG legal disclaimer */}
+      {/* Header */}
       <div className="sticky top-0 z-30 bg-gray-900/80 backdrop-blur-md border-b border-white/10">
         <div className="p-6">
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold">AI Legal Assistant</h1>
             {messages.length > 0 && (
               <button
@@ -466,64 +642,59 @@ Let's work together to build a strong case file. What do you need from me?`;
               </button>
             )}
           </div>
-          <div className="bg-amber-900/30 border-l-4 border-amber-500 rounded-lg p-4">
-            <div className="flex items-start gap-3">
-              <svg
-                className="w-6 h-6 text-amber-500 flex-shrink-0 mt-0.5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                />
-              </svg>
-              <div>
-                <p className="font-semibold text-amber-200 mb-1">
-                  This AI provides legal information, NOT legal advice
-                </p>
-                <p className="text-sm text-amber-100/80">
-                  I can help you understand legal concepts, research case law,
-                  and organize your thinking. But I'm NOT a lawyer and can't
-                  give you advice on what to do in your specific situation. For
-                  legal advice, talk to a qualified solicitor.
-                </p>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 
       {/* Messages area - now with proper scrolling */}
       <div className="flex-1 overflow-y-auto" style={{ minHeight: 0 }}>
-        {messages.length === 0 && !isStreaming && (
-          <div className="p-6">
-            <div className="max-w-3xl mx-auto mt-12 text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-cyan-500/20 rounded-full mb-6">
-                <svg
-                  className="w-8 h-8 text-cyan-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+        <AnimatePresence mode="wait">
+          {messages.length === 0 && !isStreaming && (
+            <motion.div
+              key="empty-state"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+              className="p-6"
+            >
+              <div className="max-w-3xl mx-auto mt-12 text-center">
+                <motion.div
+                  initial={{ scale: 0.5, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.5, delay: 0.1, ease: 'backOut' }}
+                  className="inline-flex items-center justify-center w-16 h-16 bg-cyan-500/20 rounded-full mb-6"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
-                  />
-                </svg>
-              </div>
-              <h2 className="text-2xl font-bold mb-3">
-                How can I help you today?
-              </h2>
-              <p className="text-white/90 mb-8">
-                Ask me about UK employment law, case precedents, or help
-                organizing your case.
-              </p>
+                  <svg
+                    className="w-8 h-8 text-cyan-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
+                    />
+                  </svg>
+                </motion.div>
+                <motion.h2
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.2 }}
+                  className="text-2xl font-bold mb-3"
+                >
+                  How can I help you today?
+                </motion.h2>
+                <motion.p
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.3 }}
+                  className="text-white/90 mb-8"
+                >
+                  Ask me about UK employment law, case precedents, or help
+                  organizing your case.
+                </motion.p>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
                 <button
@@ -577,55 +748,163 @@ Let's work together to build a strong case file. What do you need from me?`;
                 </button>
               </div>
             </div>
-          </div>
+          </motion.div>
         )}
+        </AnimatePresence>
 
         {(messages.length > 0 || isStreaming) && (
           <div className="p-6 space-y-4">
-            {/* Regular messages */}
-            {messages.map((message) => (
-              <MessageItem
-                key={message.id}
-                message={message}
-                onSaveToCase={handleSaveToCase}
-                onCreateCase={handleCreateCaseFromAnalysis}
-                showThinking={_showThinking}
-                style={{}}
-              />
-            ))}
+            {/* Regular messages with entrance animations */}
+            <AnimatePresence initial={false}>
+              {messages.map((message, index) => (
+                <motion.div
+                  key={message.id}
+                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{
+                    duration: 0.4,
+                    delay: index * 0.05,
+                    ease: [0.4, 0, 0.2, 1],
+                  }}
+                >
+                  <MessageItem
+                    message={message}
+                    onSaveToCase={handleSaveToCase}
+                    onCreateCase={handleCreateCaseFromAnalysis}
+                    showThinking={_showThinking}
+                    style={{}}
+                  />
+                </motion.div>
+              ))}
+            </AnimatePresence>
 
-            {/* Streaming message */}
-            {isStreaming && currentStreamingMessage && (
-              <div key="streaming">
-                <div className="flex justify-start">
-                  <div className="max-w-3xl bg-white/5 border border-white/10 rounded-2xl rounded-tl-sm p-4">
-                    <div className="flex items-center gap-2 mb-2 text-sm text-white/90">
-                      <svg
-                        className="w-4 h-4 animate-pulse"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+            {/* Pending AI Actions (displayed inline after messages) */}
+            <AnimatePresence>
+              {pendingActions.map((action) => (
+                <ActionPendingCard
+                  key={action.id}
+                  action={action}
+                  onQuickApprove={handleQuickApprove}
+                  onReview={handleReview}
+                  onReject={handleReject}
+                  allowQuickApprove={true}
+                />
+              ))}
+            </AnimatePresence>
+
+            {/* AI Thinking/Responding Indicator */}
+            <AnimatePresence mode="wait">
+              {isStreaming && (
+                <motion.div
+                  key="streaming"
+                  initial={{ opacity: 0, y: 30, scale: 0.9 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                  transition={{
+                    duration: 0.5,
+                    ease: [0.4, 0, 0.2, 1],
+                  }}
+                  className="flex justify-start"
+                >
+                  {!currentStreamingMessage ? (
+                    // Show typing indicator when waiting for first token
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <TypingIndicator status="thinking" />
+                    </motion.div>
+                  ) : (
+                    // Show streaming message with animated cursor
+                    <motion.div
+                      className="max-w-3xl bg-white/5 border border-white/10 rounded-2xl rounded-tl-sm p-4 shadow-lg"
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{
+                        scale: 1,
+                        opacity: 1,
+                      }}
+                      transition={{
+                        duration: 0.3,
+                        ease: [0.4, 0, 0.2, 1],
+                      }}
+                    >
+                      <div className="flex items-center gap-2 mb-3">
+                        <motion.svg
+                          className="w-5 h-5 text-cyan-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          animate={{
+                            scale: [1, 1.2, 1],
+                          }}
+                          transition={{
+                            duration: 1.5,
+                            repeat: Infinity,
+                            ease: 'easeInOut',
+                          }}
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                          />
+                        </motion.svg>
+                        <span className="text-sm font-medium text-white/90">AI Assistant</span>
+                        <motion.div
+                          className="ml-auto flex items-center gap-2"
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.3, delay: 0.2 }}
+                        >
+                          <motion.div
+                            className="w-2 h-2 rounded-full bg-green-400"
+                            animate={{
+                              scale: [1, 1.3, 1],
+                              opacity: [0.7, 1, 0.7],
+                            }}
+                            transition={{
+                              duration: 2,
+                              repeat: Infinity,
+                              ease: 'easeInOut',
+                            }}
+                          />
+                          <motion.span
+                            className="text-xs font-medium text-green-400"
+                            animate={{
+                              opacity: [0.7, 1, 0.7],
+                            }}
+                            transition={{
+                              duration: 2,
+                              repeat: Infinity,
+                              ease: 'easeInOut',
+                            }}
+                          >
+                            Live
+                          </motion.span>
+                        </motion.div>
+                      </div>
+                      <div className="prose prose-invert max-w-none text-white/90">
+                        <ReactMarkdown>{currentStreamingMessage}</ReactMarkdown>
+                        <motion.span
+                          className="inline-block w-[2px] h-5 ml-1 bg-gradient-to-b from-cyan-400 to-blue-500 rounded-full"
+                          animate={{
+                            opacity: [1, 0.3, 1],
+                          }}
+                          transition={{
+                            duration: 1,
+                            repeat: Infinity,
+                            ease: 'easeInOut',
+                          }}
                         />
-                      </svg>
-                      <span>AI Assistant</span>
-                      <span className="ml-2 text-green-400">● Responding...</span>
-                    </div>
-                    <div className="prose prose-invert max-w-none">
-                      <p className="whitespace-pre-wrap">
-                        {currentStreamingMessage}
-                        <span className="animate-pulse">▊</span>
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
+                      </div>
+                    </motion.div>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Auto-scroll anchor */}
             <div ref={messagesEndRef} />
@@ -727,6 +1006,27 @@ Let's work together to build a strong case file. What do you need from me?`;
         messageContent={messageToSave?.content || ''}
         sessionId={localStorage.getItem('sessionId') || ''}
       />
+
+      {/* AI Case Creation Dialog */}
+      {aiCaseData && (
+        <AICaseCreationDialog
+          open={isAICaseDialogOpen}
+          onClose={() => setIsAICaseDialogOpen(false)}
+          aiSuggestions={aiCaseData}
+          documentAnalysis={documentAnalysisText}
+          onConfirm={handleCaseConfirm}
+        />
+      )}
+
+      {/* AI Action Confirmation Dialog */}
+      {dialogAction && (
+        <AIActionConfirmationDialog
+          action={dialogAction}
+          isOpen={dialogAction !== null}
+          onConfirm={handleDialogConfirm}
+          onCancel={handleDialogCancel}
+        />
+      )}
     </div>
   );
 }

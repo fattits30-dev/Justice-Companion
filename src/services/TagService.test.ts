@@ -3,10 +3,10 @@
  * Comprehensive test suite for tag management functionality
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import Database from 'better-sqlite3';
-import { TagService } from './TagService.ts';
-import type { CreateTagInput, UpdateTagInput } from '../models/Tag.ts';
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import Database from "better-sqlite3";
+import { TagService } from "./TagService.ts";
+import type { CreateTagInput } from "../models/Tag.ts";
 
 // Mock dependencies
 let db: Database.Database;
@@ -15,7 +15,7 @@ const testUserId = 1;
 
 // Helper to create test database
 function createTestDatabase(): Database.Database {
-  const testDb = new Database(':memory:');
+  const testDb = new Database(":memory:");
 
   // Create users table
   testDb.exec(`
@@ -82,12 +82,11 @@ function createTestDatabase(): Database.Database {
   `);
 
   // Insert test user
-  testDb.prepare('INSERT INTO users (id, username, email, password_hash) VALUES (?, ?, ?, ?)').run(
-    testUserId,
-    'testuser',
-    'test@example.com',
-    'hashed_password'
-  );
+  testDb
+    .prepare(
+      "INSERT INTO users (id, username, email, password_hash) VALUES (?, ?, ?, ?)"
+    )
+    .run(testUserId, "testuser", "test@example.com", "hashed_password");
 
   return testDb;
 }
@@ -97,7 +96,7 @@ beforeEach(() => {
   db = createTestDatabase();
   tagService = new TagService();
   // Override db getter
-  Object.defineProperty(tagService, 'db', {
+  Object.defineProperty(tagService, "db", {
     get: () => db,
   });
 });
@@ -106,63 +105,60 @@ afterEach(() => {
   db.close();
 });
 
-describe('TagService', () => {
-  describe('createTag', () => {
-    it('should create a new tag', () => {
+describe("TagService", () => {
+  describe("createTag", () => {
+    it("should create a new tag", () => {
       const input: CreateTagInput = {
-        name: 'Important',
-        color: '#EF4444',
-        description: 'High priority items',
+        name: "Important",
+        color: "#EF4444",
+        description: "High priority items",
       };
 
       const tag = tagService.createTag(testUserId, input);
 
       expect(tag).toBeDefined();
       expect(tag.id).toBeGreaterThan(0);
-      expect(tag.name).toBe('Important');
-      expect(tag.color).toBe('#EF4444');
-      expect(tag.description).toBe('High priority items');
+      expect(tag.name).toBe("Important");
+      expect(tag.color).toBe("#EF4444");
+      expect(tag.description).toBe("High priority items");
       expect(tag.userId).toBe(testUserId);
       expect(tag.usageCount).toBe(0);
     });
 
-    it('should create tag without description', () => {
+    it("should create tag without description", () => {
       const input: CreateTagInput = {
-        name: 'Urgent',
-        color: '#F59E0B',
+        name: "Urgent",
+        color: "#F59E0B",
       };
 
       const tag = tagService.createTag(testUserId, input);
 
-      expect(tag.name).toBe('Urgent');
+      expect(tag.name).toBe("Urgent");
       expect(tag.description).toBeUndefined();
     });
 
-    it('should prevent duplicate tag names for same user', () => {
+    it("should prevent duplicate tag names for same user", () => {
       const input: CreateTagInput = {
-        name: 'Duplicate',
-        color: '#3B82F6',
+        name: "Duplicate",
+        color: "#3B82F6",
       };
 
       tagService.createTag(testUserId, input);
 
       expect(() => {
         tagService.createTag(testUserId, input);
-      }).toThrow('A tag with this name already exists');
+      }).toThrow("A tag with this name already exists");
     });
 
-    it('should allow same tag name for different users', () => {
+    it("should allow same tag name for different users", () => {
       // Create second user
-      db.prepare('INSERT INTO users (id, username, email, password_hash) VALUES (?, ?, ?, ?)').run(
-        2,
-        'user2',
-        'user2@example.com',
-        'hashed_password'
-      );
+      db.prepare(
+        "INSERT INTO users (id, username, email, password_hash) VALUES (?, ?, ?, ?)"
+      ).run(2, "user2", "user2@example.com", "hashed_password");
 
       const input: CreateTagInput = {
-        name: 'Same Name',
-        color: '#10B981',
+        name: "Same Name",
+        color: "#10B981",
       };
 
       const tag1 = tagService.createTag(testUserId, input);
@@ -173,28 +169,28 @@ describe('TagService', () => {
     });
   });
 
-  describe('getTags', () => {
-    it('should return all tags for a user', () => {
-      tagService.createTag(testUserId, { name: 'Tag1', color: '#EF4444' });
-      tagService.createTag(testUserId, { name: 'Tag2', color: '#10B981' });
-      tagService.createTag(testUserId, { name: 'Tag3', color: '#3B82F6' });
+  describe("getTags", () => {
+    it("should return all tags for a user", () => {
+      tagService.createTag(testUserId, { name: "Tag1", color: "#EF4444" });
+      tagService.createTag(testUserId, { name: "Tag2", color: "#10B981" });
+      tagService.createTag(testUserId, { name: "Tag3", color: "#3B82F6" });
 
       const tags = tagService.getTags(testUserId);
 
       expect(tags).toHaveLength(3);
-      expect(tags.map((t) => t.name)).toEqual(['Tag1', 'Tag2', 'Tag3']);
+      expect(tags.map((t) => t.name)).toEqual(["Tag1", "Tag2", "Tag3"]);
     });
 
-    it('should return tags with usage counts', () => {
-      const tag = tagService.createTag(testUserId, { name: 'Used Tag', color: '#EF4444' });
+    it("should return tags with usage counts", () => {
+      const tag = tagService.createTag(testUserId, {
+        name: "Used Tag",
+        color: "#EF4444",
+      });
 
       // Create evidence
-      db.prepare('INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)').run(
-        1,
-        testUserId,
-        1,
-        'Evidence 1'
-      );
+      db.prepare(
+        "INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)"
+      ).run(1, testUserId, 1, "Evidence 1");
 
       // Tag evidence
       tagService.tagEvidence(1, tag.id, testUserId);
@@ -203,79 +199,90 @@ describe('TagService', () => {
       expect(tags[0].usageCount).toBe(1);
     });
 
-    it('should return empty array if no tags', () => {
+    it("should return empty array if no tags", () => {
       const tags = tagService.getTags(testUserId);
       expect(tags).toEqual([]);
     });
 
-    it('should only return tags for specified user', () => {
+    it("should only return tags for specified user", () => {
       // Create second user
-      db.prepare('INSERT INTO users (id, username, email, password_hash) VALUES (?, ?, ?, ?)').run(
-        2,
-        'user2',
-        'user2@example.com',
-        'hashed_password'
-      );
+      db.prepare(
+        "INSERT INTO users (id, username, email, password_hash) VALUES (?, ?, ?, ?)"
+      ).run(2, "user2", "user2@example.com", "hashed_password");
 
-      tagService.createTag(testUserId, { name: 'User1Tag', color: '#EF4444' });
-      tagService.createTag(2, { name: 'User2Tag', color: '#10B981' });
+      tagService.createTag(testUserId, { name: "User1Tag", color: "#EF4444" });
+      tagService.createTag(2, { name: "User2Tag", color: "#10B981" });
 
       const tags = tagService.getTags(testUserId);
 
       expect(tags).toHaveLength(1);
-      expect(tags[0].name).toBe('User1Tag');
+      expect(tags[0].name).toBe("User1Tag");
     });
   });
 
-  describe('updateTag', () => {
-    it('should update tag name', () => {
-      const tag = tagService.createTag(testUserId, { name: 'Old Name', color: '#EF4444' });
-
-      const updated = tagService.updateTag(tag.id, { name: 'New Name' });
-
-      expect(updated.name).toBe('New Name');
-      expect(updated.color).toBe('#EF4444'); // Unchanged
-    });
-
-    it('should update tag color', () => {
-      const tag = tagService.createTag(testUserId, { name: 'Tag', color: '#EF4444' });
-
-      const updated = tagService.updateTag(tag.id, { color: '#10B981' });
-
-      expect(updated.color).toBe('#10B981');
-      expect(updated.name).toBe('Tag'); // Unchanged
-    });
-
-    it('should update tag description', () => {
-      const tag = tagService.createTag(testUserId, { name: 'Tag', color: '#EF4444' });
-
-      const updated = tagService.updateTag(tag.id, { description: 'New description' });
-
-      expect(updated.description).toBe('New description');
-    });
-
-    it('should clear description when set to undefined', () => {
+  describe("updateTag", () => {
+    it("should update tag name", () => {
       const tag = tagService.createTag(testUserId, {
-        name: 'Tag',
-        color: '#EF4444',
-        description: 'Original',
+        name: "Old Name",
+        color: "#EF4444",
       });
 
-      const updated = tagService.updateTag(tag.id, { description: '' });
+      const updated = tagService.updateTag(tag.id, { name: "New Name" });
+
+      expect(updated.name).toBe("New Name");
+      expect(updated.color).toBe("#EF4444"); // Unchanged
+    });
+
+    it("should update tag color", () => {
+      const tag = tagService.createTag(testUserId, {
+        name: "Tag",
+        color: "#EF4444",
+      });
+
+      const updated = tagService.updateTag(tag.id, { color: "#10B981" });
+
+      expect(updated.color).toBe("#10B981");
+      expect(updated.name).toBe("Tag"); // Unchanged
+    });
+
+    it("should update tag description", () => {
+      const tag = tagService.createTag(testUserId, {
+        name: "Tag",
+        color: "#EF4444",
+      });
+
+      const updated = tagService.updateTag(tag.id, {
+        description: "New description",
+      });
+
+      expect(updated.description).toBe("New description");
+    });
+
+    it("should clear description when set to undefined", () => {
+      const tag = tagService.createTag(testUserId, {
+        name: "Tag",
+        color: "#EF4444",
+        description: "Original",
+      });
+
+      const updated = tagService.updateTag(tag.id, { description: "" });
 
       expect(updated.description).toBeUndefined();
     });
 
-    it('should throw error if tag not found', () => {
+    it("should throw error if tag not found", () => {
       expect(() => {
-        tagService.updateTag(999, { name: 'Updated' });
-      }).toThrow('Tag not found');
+        tagService.updateTag(999, { name: "Updated" });
+      }).toThrow("Tag not found");
     });
   });
 
-  describe('deleteTag', () => {
-    it('should delete tag', () => {
-      const tag = tagService.createTag(testUserId, { name: 'ToDelete', color: '#EF4444' });
+  describe("deleteTag", () => {
+    it("should delete tag", () => {
+      const tag = tagService.createTag(testUserId, {
+        name: "ToDelete",
+        color: "#EF4444",
+      });
 
       tagService.deleteTag(tag.id);
 
@@ -283,16 +290,16 @@ describe('TagService', () => {
       expect(tags).toHaveLength(0);
     });
 
-    it('should remove tag from all evidence when deleted', () => {
-      const tag = tagService.createTag(testUserId, { name: 'Tag', color: '#EF4444' });
+    it("should remove tag from all evidence when deleted", () => {
+      const tag = tagService.createTag(testUserId, {
+        name: "Tag",
+        color: "#EF4444",
+      });
 
       // Create and tag evidence
-      db.prepare('INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)').run(
-        1,
-        testUserId,
-        1,
-        'Evidence 1'
-      );
+      db.prepare(
+        "INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)"
+      ).run(1, testUserId, 1, "Evidence 1");
       tagService.tagEvidence(1, tag.id, testUserId);
 
       // Verify tag is applied
@@ -307,23 +314,23 @@ describe('TagService', () => {
       expect(evidenceTags).toHaveLength(0);
     });
 
-    it('should throw error if tag not found', () => {
+    it("should throw error if tag not found", () => {
       expect(() => {
         tagService.deleteTag(999);
-      }).toThrow('Tag not found');
+      }).toThrow("Tag not found");
     });
   });
 
-  describe('tagEvidence', () => {
-    it('should apply tag to evidence', () => {
-      const tag = tagService.createTag(testUserId, { name: 'Tag', color: '#EF4444' });
+  describe("tagEvidence", () => {
+    it("should apply tag to evidence", () => {
+      const tag = tagService.createTag(testUserId, {
+        name: "Tag",
+        color: "#EF4444",
+      });
 
-      db.prepare('INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)').run(
-        1,
-        testUserId,
-        1,
-        'Evidence 1'
-      );
+      db.prepare(
+        "INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)"
+      ).run(1, testUserId, 1, "Evidence 1");
 
       tagService.tagEvidence(1, tag.id, testUserId);
 
@@ -332,15 +339,15 @@ describe('TagService', () => {
       expect(evidenceTags[0].id).toBe(tag.id);
     });
 
-    it('should not duplicate tags on same evidence', () => {
-      const tag = tagService.createTag(testUserId, { name: 'Tag', color: '#EF4444' });
+    it("should not duplicate tags on same evidence", () => {
+      const tag = tagService.createTag(testUserId, {
+        name: "Tag",
+        color: "#EF4444",
+      });
 
-      db.prepare('INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)').run(
-        1,
-        testUserId,
-        1,
-        'Evidence 1'
-      );
+      db.prepare(
+        "INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)"
+      ).run(1, testUserId, 1, "Evidence 1");
 
       tagService.tagEvidence(1, tag.id, testUserId);
       tagService.tagEvidence(1, tag.id, testUserId); // Apply again
@@ -349,16 +356,19 @@ describe('TagService', () => {
       expect(evidenceTags).toHaveLength(1); // Still only 1
     });
 
-    it('should allow multiple tags on same evidence', () => {
-      const tag1 = tagService.createTag(testUserId, { name: 'Tag1', color: '#EF4444' });
-      const tag2 = tagService.createTag(testUserId, { name: 'Tag2', color: '#10B981' });
+    it("should allow multiple tags on same evidence", () => {
+      const tag1 = tagService.createTag(testUserId, {
+        name: "Tag1",
+        color: "#EF4444",
+      });
+      const tag2 = tagService.createTag(testUserId, {
+        name: "Tag2",
+        color: "#10B981",
+      });
 
-      db.prepare('INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)').run(
-        1,
-        testUserId,
-        1,
-        'Evidence 1'
-      );
+      db.prepare(
+        "INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)"
+      ).run(1, testUserId, 1, "Evidence 1");
 
       tagService.tagEvidence(1, tag1.id, testUserId);
       tagService.tagEvidence(1, tag2.id, testUserId);
@@ -368,16 +378,16 @@ describe('TagService', () => {
     });
   });
 
-  describe('untagEvidence', () => {
-    it('should remove tag from evidence', () => {
-      const tag = tagService.createTag(testUserId, { name: 'Tag', color: '#EF4444' });
+  describe("untagEvidence", () => {
+    it("should remove tag from evidence", () => {
+      const tag = tagService.createTag(testUserId, {
+        name: "Tag",
+        color: "#EF4444",
+      });
 
-      db.prepare('INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)').run(
-        1,
-        testUserId,
-        1,
-        'Evidence 1'
-      );
+      db.prepare(
+        "INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)"
+      ).run(1, testUserId, 1, "Evidence 1");
 
       tagService.tagEvidence(1, tag.id, testUserId);
       tagService.untagEvidence(1, tag.id, testUserId);
@@ -386,15 +396,15 @@ describe('TagService', () => {
       expect(evidenceTags).toHaveLength(0);
     });
 
-    it('should be idempotent (no error if tag not applied)', () => {
-      const tag = tagService.createTag(testUserId, { name: 'Tag', color: '#EF4444' });
+    it("should be idempotent (no error if tag not applied)", () => {
+      const tag = tagService.createTag(testUserId, {
+        name: "Tag",
+        color: "#EF4444",
+      });
 
-      db.prepare('INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)').run(
-        1,
-        testUserId,
-        1,
-        'Evidence 1'
-      );
+      db.prepare(
+        "INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)"
+      ).run(1, testUserId, 1, "Evidence 1");
 
       expect(() => {
         tagService.untagEvidence(1, tag.id, testUserId);
@@ -402,24 +412,24 @@ describe('TagService', () => {
     });
   });
 
-  describe('searchByTags', () => {
-    it('should find evidence with specified tags (AND logic)', () => {
-      const tag1 = tagService.createTag(testUserId, { name: 'Tag1', color: '#EF4444' });
-      const tag2 = tagService.createTag(testUserId, { name: 'Tag2', color: '#10B981' });
+  describe("searchByTags", () => {
+    it("should find evidence with specified tags (AND logic)", () => {
+      const tag1 = tagService.createTag(testUserId, {
+        name: "Tag1",
+        color: "#EF4444",
+      });
+      const tag2 = tagService.createTag(testUserId, {
+        name: "Tag2",
+        color: "#10B981",
+      });
 
       // Create evidence
-      db.prepare('INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)').run(
-        1,
-        testUserId,
-        1,
-        'Evidence 1'
-      );
-      db.prepare('INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)').run(
-        2,
-        testUserId,
-        1,
-        'Evidence 2'
-      );
+      db.prepare(
+        "INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)"
+      ).run(1, testUserId, 1, "Evidence 1");
+      db.prepare(
+        "INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)"
+      ).run(2, testUserId, 1, "Evidence 2");
 
       // Evidence 1 has both tags
       tagService.tagEvidence(1, tag1.id, testUserId);
@@ -434,37 +444,31 @@ describe('TagService', () => {
       expect(results).toEqual([1]); // Only Evidence 1 has both tags
     });
 
-    it('should return empty array if no tags specified', () => {
+    it("should return empty array if no tags specified", () => {
       const results = tagService.searchByTags(testUserId, []);
       expect(results).toEqual([]);
     });
 
-    it('should only return evidence owned by user', () => {
+    it("should only return evidence owned by user", () => {
       // Create second user
-      db.prepare('INSERT INTO users (id, username, email, password_hash) VALUES (?, ?, ?, ?)').run(
-        2,
-        'user2',
-        'user2@example.com',
-        'hashed_password'
-      );
+      db.prepare(
+        "INSERT INTO users (id, username, email, password_hash) VALUES (?, ?, ?, ?)"
+      ).run(2, "user2", "user2@example.com", "hashed_password");
 
-      const tag = tagService.createTag(testUserId, { name: 'Tag', color: '#EF4444' });
+      const tag = tagService.createTag(testUserId, {
+        name: "Tag",
+        color: "#EF4444",
+      });
 
       // Evidence for user 1
-      db.prepare('INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)').run(
-        1,
-        testUserId,
-        1,
-        'Evidence 1'
-      );
+      db.prepare(
+        "INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)"
+      ).run(1, testUserId, 1, "Evidence 1");
 
       // Evidence for user 2
-      db.prepare('INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)').run(
-        2,
-        2,
-        1,
-        'Evidence 2'
-      );
+      db.prepare(
+        "INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)"
+      ).run(2, 2, 1, "Evidence 2");
 
       tagService.tagEvidence(1, tag.id, testUserId);
       tagService.tagEvidence(2, tag.id, 2);
@@ -475,25 +479,25 @@ describe('TagService', () => {
     });
   });
 
-  describe('getTagStatistics', () => {
-    it('should return correct statistics', () => {
-      const tag1 = tagService.createTag(testUserId, { name: 'Tag1', color: '#EF4444' });
-      const tag2 = tagService.createTag(testUserId, { name: 'Tag2', color: '#10B981' });
-      tagService.createTag(testUserId, { name: 'Unused', color: '#3B82F6' });
+  describe("getTagStatistics", () => {
+    it("should return correct statistics", () => {
+      const tag1 = tagService.createTag(testUserId, {
+        name: "Tag1",
+        color: "#EF4444",
+      });
+      const tag2 = tagService.createTag(testUserId, {
+        name: "Tag2",
+        color: "#10B981",
+      });
+      tagService.createTag(testUserId, { name: "Unused", color: "#3B82F6" });
 
       // Create evidence
-      db.prepare('INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)').run(
-        1,
-        testUserId,
-        1,
-        'Evidence 1'
-      );
-      db.prepare('INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)').run(
-        2,
-        testUserId,
-        1,
-        'Evidence 2'
-      );
+      db.prepare(
+        "INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)"
+      ).run(1, testUserId, 1, "Evidence 1");
+      db.prepare(
+        "INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)"
+      ).run(2, testUserId, 1, "Evidence 2");
 
       // Tag evidence
       tagService.tagEvidence(1, tag1.id, testUserId);
@@ -504,11 +508,11 @@ describe('TagService', () => {
 
       expect(stats.totalTags).toBe(3);
       expect(stats.totalTaggedEvidence).toBe(2);
-      expect(stats.mostUsedTag?.name).toBe('Tag1'); // Used 2 times
+      expect(stats.mostUsedTag?.name).toBe("Tag1"); // Used 2 times
       expect(stats.unusedTags).toBe(1); // Tag3
     });
 
-    it('should handle user with no tags', () => {
+    it("should handle user with no tags", () => {
       const stats = tagService.getTagStatistics(testUserId);
 
       expect(stats.totalTags).toBe(0);

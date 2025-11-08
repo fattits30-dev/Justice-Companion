@@ -6,14 +6,22 @@
  * This provides full type safety, IDE autocomplete, and runtime validation enforcement
  */
 
-import type { User } from '../domains/auth/entities/User.ts';
-import type { Session } from '../domains/auth/entities/Session.ts';
-import type { Case, CreateCaseInput, UpdateCaseInput } from '../domains/cases/entities/Case.ts';
-import type { CaseFact } from '../domains/cases/entities/CaseFact.ts';
-import type { Evidence } from '../domains/evidence/entities/Evidence.ts';
-import type { Deadline, CreateDeadlineInput, UpdateDeadlineInput } from '../domains/timeline/entities/Deadline.ts';
-import type { ConsentType } from '../domains/settings/entities/Consent.ts';
-import type { Tag, CreateTagInput, UpdateTagInput } from '../models/Tag.ts';
+import type { User } from "../domains/auth/entities/User.ts";
+import type { Session } from "../domains/auth/entities/Session.ts";
+import type {
+  Case,
+  CreateCaseInput,
+  UpdateCaseInput,
+} from "../domains/cases/entities/Case.ts";
+import type { CaseFact } from "../domains/cases/entities/CaseFact.ts";
+import type { Evidence } from "../domains/evidence/entities/Evidence.ts";
+import type {
+  Deadline,
+  CreateDeadlineInput,
+  UpdateDeadlineInput,
+} from "../domains/timeline/entities/Deadline.ts";
+import type { ConsentType } from "../domains/settings/entities/Consent.ts";
+import type { Tag, CreateTagInput, UpdateTagInput } from "../models/Tag.ts";
 
 /**
  * Response wrapper for all IPC operations
@@ -71,7 +79,7 @@ interface DashboardStats {
   recentCases?: Array<{
     id: string;
     title: string;
-    status: 'active' | 'closed' | 'pending';
+    status: "active" | "closed" | "pending";
     lastUpdated: string;
   }>;
 }
@@ -81,7 +89,17 @@ interface DashboardStats {
  * Supports 10 AI providers
  */
 interface AIConfig {
-  provider: 'openai' | 'anthropic' | 'qwen' | 'huggingface' | 'google' | 'cohere' | 'together' | 'anyscale' | 'mistral' | 'perplexity';
+  provider:
+    | "openai"
+    | "anthropic"
+    | "qwen"
+    | "huggingface"
+    | "google"
+    | "cohere"
+    | "together"
+    | "anyscale"
+    | "mistral"
+    | "perplexity";
   apiKey: string;
   model: string;
   endpoint?: string;
@@ -97,6 +115,7 @@ interface StreamChatRequest {
   sessionId: string;
   message: string;
   conversationId?: number | null;
+  caseId?: number | null;
 }
 
 /**
@@ -118,19 +137,27 @@ interface CreateCaseFactInput {
  * Main JusticeAPI interface exposed via window.justiceAPI
  * All methods are now fully typed with proper request/response interfaces
  */
-interface JusticeAPI {
+export interface JusticeAPI {
   // ===== AUTHENTICATION =====
   /**
    * Login user with username and password
    * @returns User and session data if successful
    */
-  login(username: string, password: string, rememberMe?: boolean): Promise<IPCResponse<{ user: User; session: Session }>>;
+  login(
+    username: string,
+    password: string,
+    rememberMe?: boolean
+  ): Promise<IPCResponse<{ user: User; session: Session }>>;
 
   /**
    * Register new user account
    * @returns Newly created user data
    */
-  register(username: string, email: string, password: string): Promise<IPCResponse<User>>;
+  register(
+    username: string,
+    email: string,
+    password: string
+  ): Promise<IPCResponse<User>>;
 
   /**
    * Logout current user session
@@ -149,7 +176,10 @@ interface JusticeAPI {
    * @param type - Consent type (e.g., 'data_processing', 'marketing')
    * @param granted - Whether consent is granted
    */
-  grantConsent(type: ConsentType, granted: boolean): Promise<IPCResponse<{ granted: boolean }>>;
+  grantConsent(
+    type: ConsentType,
+    granted: boolean
+  ): Promise<IPCResponse<{ granted: boolean }>>;
 
   // ===== DASHBOARD =====
   /**
@@ -175,9 +205,15 @@ interface JusticeAPI {
   /**
    * Create new case
    * @param data - Case creation input
+   * @param sessionId - Session ID for authorization
+   * @param aiMetadata - Optional AI assistance metadata for audit trail
    * @returns Newly created case
    */
-  createCase(data: CreateCaseInput, sessionId: string): Promise<IPCResponse<Case>>;
+  createCase(
+    data: CreateCaseInput,
+    sessionId: string,
+    aiMetadata?: any
+  ): Promise<IPCResponse<Case>>;
 
   /**
    * Update existing case
@@ -185,7 +221,11 @@ interface JusticeAPI {
    * @param data - Fields to update
    * @returns Updated case
    */
-  updateCase(id: string, data: UpdateCaseInput, sessionId: string): Promise<IPCResponse<Case>>;
+  updateCase(
+    id: string,
+    data: UpdateCaseInput,
+    sessionId: string
+  ): Promise<IPCResponse<Case>>;
 
   /**
    * Delete case permanently
@@ -198,14 +238,20 @@ interface JusticeAPI {
    * @param caseId - Case ID
    * @returns Array of case facts
    */
-  getCaseFacts(caseId: number, sessionId: string): Promise<IPCResponse<CaseFact[]>>;
+  getCaseFacts(
+    caseId: number,
+    sessionId: string
+  ): Promise<IPCResponse<CaseFact[]>>;
 
   /**
    * Create case fact (AI memory entry)
    * @param data - Case fact creation input
    * @returns Newly created case fact
    */
-  createCaseFact(data: CreateCaseFactInput, sessionId: string): Promise<IPCResponse<CaseFact>>;
+  createCaseFact(
+    data: CreateCaseFactInput,
+    sessionId: string
+  ): Promise<IPCResponse<CaseFact>>;
 
   // ===== EVIDENCE/DOCUMENTS =====
   /**
@@ -214,21 +260,31 @@ interface JusticeAPI {
    * @param file - File object to upload
    * @returns Evidence metadata including extracted text
    */
-  uploadFile(caseId: string, file: File, sessionId: string): Promise<IPCResponse<Evidence>>;
+  uploadFile(
+    caseId: string,
+    file: File,
+    sessionId: string
+  ): Promise<IPCResponse<Evidence>>;
 
   /**
    * Get all evidence for a case
    * @param caseId - Case ID
    * @returns Array of evidence items
    */
-  getAllEvidence(caseId: string, sessionId: string): Promise<IPCResponse<Evidence[]>>;
+  getAllEvidence(
+    caseId: string,
+    sessionId: string
+  ): Promise<IPCResponse<Evidence[]>>;
 
   /**
    * Get all evidence for a case (alias for getAllEvidence)
    * @param caseId - Case ID
    * @returns Array of evidence items
    */
-  getEvidenceByCaseId(caseId: string, sessionId: string): Promise<IPCResponse<Evidence[]>>;
+  getEvidenceByCaseId(
+    caseId: string,
+    sessionId: string
+  ): Promise<IPCResponse<Evidence[]>>;
 
   /**
    * Delete evidence item
@@ -243,14 +299,20 @@ interface JusticeAPI {
    * @param caseId - Optional case ID filter
    * @returns Array of deadlines
    */
-  getDeadlines(sessionId: string, caseId?: number): Promise<IPCResponse<Deadline[]>>;
+  getDeadlines(
+    sessionId: string,
+    caseId?: number
+  ): Promise<IPCResponse<Deadline[]>>;
 
   /**
    * Create new deadline
    * @param data - Deadline creation input
    * @returns Newly created deadline
    */
-  createDeadline(data: CreateDeadlineInput, sessionId: string): Promise<IPCResponse<Deadline>>;
+  createDeadline(
+    data: CreateDeadlineInput,
+    sessionId: string
+  ): Promise<IPCResponse<Deadline>>;
 
   /**
    * Update deadline
@@ -258,14 +320,21 @@ interface JusticeAPI {
    * @param data - Fields to update
    * @returns Updated deadline
    */
-  updateDeadline(id: number, data: UpdateDeadlineInput, sessionId: string): Promise<IPCResponse<Deadline>>;
+  updateDeadline(
+    id: number,
+    data: UpdateDeadlineInput,
+    sessionId: string
+  ): Promise<IPCResponse<Deadline>>;
 
   /**
    * Mark deadline as completed
    * @param id - Deadline ID to complete
    * @returns Updated deadline
    */
-  completeDeadline(id: number, sessionId: string): Promise<IPCResponse<Deadline>>;
+  completeDeadline(
+    id: number,
+    sessionId: string
+  ): Promise<IPCResponse<Deadline>>;
 
   /**
    * Delete deadline
@@ -288,13 +357,15 @@ interface JusticeAPI {
    * @param onThinking - Callback for AI reasoning tokens
    * @param onComplete - Callback when streaming completes
    * @param onError - Callback for errors
+   * @param onConversationId - Optional callback for conversation ID (for memory)
    */
   streamChat(
     request: StreamChatRequest,
     onToken: (token: string) => void,
     onThinking: (thinking: string) => void,
     onComplete: () => void,
-    onError: (error: string) => void
+    onError: (error: string) => void,
+    onConversationId?: (conversationId: number) => void
   ): Promise<void>;
 
   // ===== AI ANALYSIS =====
@@ -337,14 +408,18 @@ interface JusticeAPI {
    * @param options - Dialog options (filters, properties, etc.)
    * @returns Dialog result with selected file paths
    */
-  showOpenDialog(options: any): Promise<{ canceled: boolean; filePaths: string[] }>;
+  showOpenDialog(
+    options: any
+  ): Promise<{ canceled: boolean; filePaths: string[] }>;
 
   /**
    * Show file save dialog
    * @param options - Dialog options (filters, defaultPath, etc.)
    * @returns Dialog result with selected file path
    */
-  showSaveDialog(options: any): Promise<{ canceled: boolean; filePath?: string }>;
+  showSaveDialog(
+    options: any
+  ): Promise<{ canceled: boolean; filePath?: string }>;
 
   // ===== SECURE STORAGE (Flat Methods) =====
   /**
@@ -421,16 +496,70 @@ interface JusticeAPI {
   /**
    * Restore database from a backup file
    * @param backupFilename - Filename of the backup to restore
+   * @param sessionId - Current session ID for authentication
    * @returns Restore operation result
    */
-  restoreBackup(backupFilename: string): Promise<IPCResponse<{ restored: boolean; message: string; preRestoreBackup: string }>>;
+  restoreBackup(
+    backupFilename: string,
+    sessionId: string
+  ): Promise<
+    IPCResponse<{
+      restored: boolean;
+      message: string;
+      preRestoreBackup: string;
+    }>
+  >;
 
   /**
    * Delete a backup file
    * @param backupFilename - Filename of the backup to delete
+   * @param sessionId - Current session ID for authentication
    * @returns Delete operation result
    */
-  deleteBackup(backupFilename: string): Promise<IPCResponse<{ deleted: boolean; message: string }>>;
+  deleteBackup(
+    backupFilename: string,
+    sessionId: string
+  ): Promise<IPCResponse<{ deleted: boolean; message: string }>>;
+
+  /**
+   * Get auto-backup settings for current user
+   * @param sessionId - Current session ID for authentication
+   * @returns Backup settings
+   */
+  getBackupSettings(sessionId: string): Promise<
+    IPCResponse<{
+      enabled: boolean;
+      frequency: "daily" | "weekly" | "monthly";
+      backup_time: string;
+      keep_count: number;
+      last_backup_at?: string;
+      next_backup_at?: string;
+    }>
+  >;
+
+  /**
+   * Update auto-backup settings
+   * @param settings - Backup settings to update
+   * @param sessionId - Current session ID for authentication
+   * @returns Updated backup settings
+   */
+  updateBackupSettings(
+    settings: {
+      enabled: boolean;
+      frequency: "daily" | "weekly" | "monthly";
+      backup_time: string;
+      keep_count: number;
+    },
+    sessionId: string
+  ): Promise<
+    IPCResponse<{
+      enabled: boolean;
+      frequency: "daily" | "weekly" | "monthly";
+      backup_time: string;
+      keep_count: number;
+      next_backup_at?: string;
+    }>
+  >;
 
   // ===== TAG MANAGEMENT =====
   tags: {
@@ -453,41 +582,62 @@ interface JusticeAPI {
      * @param input - Fields to update
      * @returns Updated tag
      */
-    update(tagId: number, input: UpdateTagInput, sessionId: string): Promise<IPCResponse<Tag>>;
+    update(
+      tagId: number,
+      input: UpdateTagInput,
+      sessionId: string
+    ): Promise<IPCResponse<Tag>>;
 
     /**
      * Delete a tag (removes from all evidence)
      * @param tagId - Tag ID to delete
      */
-    delete(tagId: number, sessionId: string): Promise<IPCResponse<{ deleted: boolean }>>;
+    delete(
+      tagId: number,
+      sessionId: string
+    ): Promise<IPCResponse<{ deleted: boolean }>>;
 
     /**
      * Apply tag to evidence
      * @param evidenceId - Evidence ID
      * @param tagId - Tag ID to apply
      */
-    tagEvidence(evidenceId: number, tagId: number, sessionId: string): Promise<IPCResponse<{ tagged: boolean }>>;
+    tagEvidence(
+      evidenceId: number,
+      tagId: number,
+      sessionId: string
+    ): Promise<IPCResponse<{ tagged: boolean }>>;
 
     /**
      * Remove tag from evidence
      * @param evidenceId - Evidence ID
      * @param tagId - Tag ID to remove
      */
-    untagEvidence(evidenceId: number, tagId: number, sessionId: string): Promise<IPCResponse<{ untagged: boolean }>>;
+    untagEvidence(
+      evidenceId: number,
+      tagId: number,
+      sessionId: string
+    ): Promise<IPCResponse<{ untagged: boolean }>>;
 
     /**
      * Get tags for specific evidence
      * @param evidenceId - Evidence ID
      * @returns Array of tags applied to the evidence
      */
-    getForEvidence(evidenceId: number, sessionId: string): Promise<IPCResponse<Tag[]>>;
+    getForEvidence(
+      evidenceId: number,
+      sessionId: string
+    ): Promise<IPCResponse<Tag[]>>;
 
     /**
      * Search evidence by tags (AND logic - must have all specified tags)
      * @param tagIds - Array of tag IDs
      * @returns Array of evidence IDs matching all tags
      */
-    searchByTags(tagIds: number[], sessionId: string): Promise<IPCResponse<number[]>>;
+    searchByTags(
+      tagIds: number[],
+      sessionId: string
+    ): Promise<IPCResponse<number[]>>;
 
     /**
      * Get tag statistics for the current user
@@ -504,7 +654,10 @@ interface JusticeAPI {
      * @param filters - Optional filters for notifications
      * @returns List of notifications
      */
-    list(sessionId: string, filters?: NotificationFilters): Promise<IPCResponse<Notification[]>>;
+    list(
+      sessionId: string,
+      filters?: NotificationFilters
+    ): Promise<IPCResponse<Notification[]>>;
 
     /**
      * Get unread notification count
@@ -518,7 +671,10 @@ interface JusticeAPI {
      * @param sessionId - User session ID
      * @param notificationId - ID of the notification to mark as read
      */
-    markRead(sessionId: string, notificationId: number): Promise<IPCResponse<null>>;
+    markRead(
+      sessionId: string,
+      notificationId: number
+    ): Promise<IPCResponse<null>>;
 
     /**
      * Mark all notifications as read
@@ -532,14 +688,19 @@ interface JusticeAPI {
      * @param sessionId - User session ID
      * @param notificationId - ID of the notification to dismiss
      */
-    dismiss(sessionId: string, notificationId: number): Promise<IPCResponse<null>>;
+    dismiss(
+      sessionId: string,
+      notificationId: number
+    ): Promise<IPCResponse<null>>;
 
     /**
      * Get notification preferences
      * @param sessionId - User session ID
      * @returns User's notification preferences
      */
-    preferences(sessionId: string): Promise<IPCResponse<NotificationPreferences>>;
+    preferences(
+      sessionId: string
+    ): Promise<IPCResponse<NotificationPreferences>>;
 
     /**
      * Update notification preferences
@@ -547,7 +708,10 @@ interface JusticeAPI {
      * @param preferences - Preferences to update
      * @returns Updated preferences
      */
-    updatePreferences(sessionId: string, preferences: UpdateNotificationPreferencesInput): Promise<IPCResponse<NotificationPreferences>>;
+    updatePreferences(
+      sessionId: string,
+      preferences: UpdateNotificationPreferencesInput
+    ): Promise<IPCResponse<NotificationPreferences>>;
 
     /**
      * Get notification statistics
@@ -611,7 +775,10 @@ interface JusticeAPI {
      * @param entityType - Type of entity ('case', 'evidence', 'conversation', 'note')
      * @param entityId - ID of the entity to update
      */
-    updateIndex(entityType: string, entityId: number): Promise<IPCResponse<void>>;
+    updateIndex(
+      entityType: string,
+      entityId: number
+    ): Promise<IPCResponse<void>>;
   };
 
   // ===== CASE TEMPLATES =====
@@ -628,7 +795,9 @@ interface JusticeAPI {
      * @param sessionId - User session ID
      * @returns Array of templates with stats
      */
-    getAllWithStats(sessionId: string): Promise<IPCResponse<TemplateWithStats[]>>;
+    getAllWithStats(
+      sessionId: string
+    ): Promise<IPCResponse<TemplateWithStats[]>>;
 
     /**
      * Get template by ID
@@ -643,7 +812,10 @@ interface JusticeAPI {
      * @param sessionId - User session ID
      * @returns Filtered templates
      */
-    getByCategory(category: string, sessionId: string): Promise<IPCResponse<CaseTemplate[]>>;
+    getByCategory(
+      category: string,
+      sessionId: string
+    ): Promise<IPCResponse<CaseTemplate[]>>;
 
     /**
      * Search templates with filters
@@ -658,7 +830,10 @@ interface JusticeAPI {
      * @param sessionId - User session ID
      * @returns Popular templates with stats
      */
-    getPopular(limit: number, sessionId: string): Promise<IPCResponse<TemplateWithStats[]>>;
+    getPopular(
+      limit: number,
+      sessionId: string
+    ): Promise<IPCResponse<TemplateWithStats[]>>;
 
     /**
      * Create a custom template
@@ -666,7 +841,10 @@ interface JusticeAPI {
      * @param sessionId - User session ID
      * @returns Newly created template
      */
-    create(input: CreateTemplateInput, sessionId: string): Promise<IPCResponse<CaseTemplate>>;
+    create(
+      input: CreateTemplateInput,
+      sessionId: string
+    ): Promise<IPCResponse<CaseTemplate>>;
 
     /**
      * Update an existing template
@@ -675,14 +853,21 @@ interface JusticeAPI {
      * @param sessionId - User session ID
      * @returns Updated template
      */
-    update(templateId: number, input: UpdateTemplateInput, sessionId: string): Promise<IPCResponse<CaseTemplate>>;
+    update(
+      templateId: number,
+      input: UpdateTemplateInput,
+      sessionId: string
+    ): Promise<IPCResponse<CaseTemplate>>;
 
     /**
      * Delete a template
      * @param templateId - Template ID to delete
      * @param sessionId - User session ID
      */
-    delete(templateId: number, sessionId: string): Promise<IPCResponse<{ deleted: boolean }>>;
+    delete(
+      templateId: number,
+      sessionId: string
+    ): Promise<IPCResponse<{ deleted: boolean }>>;
 
     /**
      * Apply template to create a new case
@@ -690,7 +875,10 @@ interface JusticeAPI {
      * @param sessionId - User session ID
      * @returns Case creation result with applied template data
      */
-    apply(templateId: number, sessionId: string): Promise<IPCResponse<TemplateApplicationResult>>;
+    apply(
+      templateId: number,
+      sessionId: string
+    ): Promise<IPCResponse<TemplateApplicationResult>>;
 
     /**
      * Get template usage statistics
@@ -705,7 +893,10 @@ interface JusticeAPI {
      * @param limit - Number of records to return
      * @returns Usage history
      */
-    getUsageHistory(templateId: number, limit?: number): Promise<IPCResponse<TemplateUsage[]>>;
+    getUsageHistory(
+      templateId: number,
+      limit?: number
+    ): Promise<IPCResponse<TemplateUsage[]>>;
 
     /**
      * Seed built-in system templates (admin operation)
@@ -713,6 +904,159 @@ interface JusticeAPI {
      */
     seedDefaults(): Promise<IPCResponse<{ message: string }>>;
   };
+
+  // ===== EXPORT OPERATIONS (Flat Methods) =====
+  /**
+   * Export case details to PDF
+   * @param caseId - Case ID to export
+   * @param sessionId - Current session ID
+   * @returns Export result with file path
+   */
+  exportCaseToPDF(
+    caseId: number,
+    sessionId: string
+  ): Promise<IPCResponse<{ filePath: string }>>;
+
+  /**
+   * Export case details to Word document
+   * @param caseId - Case ID to export
+   * @param sessionId - Current session ID
+   * @returns Export result with file path
+   */
+  exportCaseToWord(
+    caseId: number,
+    sessionId: string
+  ): Promise<IPCResponse<{ filePath: string }>>;
+
+  /**
+   * Export evidence list to PDF
+   * @param caseId - Case ID
+   * @param sessionId - Current session ID
+   * @returns Export result with file path
+   */
+  exportEvidenceListToPDF(
+    caseId: number,
+    sessionId: string
+  ): Promise<IPCResponse<{ filePath: string }>>;
+
+  /**
+   * Export timeline report to PDF
+   * @param caseId - Case ID
+   * @param sessionId - Current session ID
+   * @returns Export result with file path
+   */
+  exportTimelineReportToPDF(
+    caseId: number,
+    sessionId: string
+  ): Promise<IPCResponse<{ filePath: string }>>;
+
+  /**
+   * Export case notes to PDF
+   * @param caseId - Case ID
+   * @param sessionId - Current session ID
+   * @returns Export result with file path
+   */
+  exportCaseNotesToPDF(
+    caseId: number,
+    sessionId: string
+  ): Promise<IPCResponse<{ filePath: string }>>;
+
+  /**
+   * Export case notes to Word document
+   * @param caseId - Case ID
+   * @param sessionId - Current session ID
+   * @returns Export result with file path
+   */
+  exportCaseNotesToWord(
+    caseId: number,
+    sessionId: string
+  ): Promise<IPCResponse<{ filePath: string }>>;
+
+  /**
+   * Custom export with options
+   * @param exportType - Type of export
+   * @param caseId - Case ID
+   * @param options - Export options
+   * @param sessionId - Current session ID
+   * @returns Export result with file path
+   */
+  exportCustom(
+    exportType: string,
+    caseId: number,
+    options: any,
+    sessionId: string
+  ): Promise<IPCResponse<{ filePath: string }>>;
+
+  // ===== TEMPLATE OPERATIONS (Flat Methods) =====
+  /**
+   * Get all templates for current user
+   * @param sessionId - Current session ID
+   * @returns Array of templates
+   */
+  getAllTemplates(sessionId: string): Promise<IPCResponse<CaseTemplate[]>>;
+
+  /**
+   * Create a new template
+   * @param templateData - Template creation data
+   * @param sessionId - Current session ID
+   * @returns Newly created template
+   */
+  createTemplate(
+    templateData: CreateTemplateInput,
+    sessionId: string
+  ): Promise<IPCResponse<CaseTemplate>>;
+
+  /**
+   * Update existing template
+   * @param templateId - Template ID
+   * @param templateData - Template update data
+   * @param sessionId - Current session ID
+   * @returns Updated template
+   */
+  updateTemplate(
+    templateId: number,
+    templateData: UpdateTemplateInput,
+    sessionId: string
+  ): Promise<IPCResponse<CaseTemplate>>;
+
+  /**
+   * Delete template
+   * @param templateId - Template ID to delete
+   * @param sessionId - Current session ID
+   * @returns Delete result
+   */
+  deleteTemplate(
+    templateId: number,
+    sessionId: string
+  ): Promise<IPCResponse<{ deleted: boolean }>>;
+
+  /**
+   * Seed default system templates
+   * @param sessionId - Current session ID
+   * @returns Seed result
+   */
+  seedTemplates(sessionId: string): Promise<IPCResponse<{ message: string }>>;
+
+  // ===== SEARCH OPERATIONS (Flat Methods) =====
+  /**
+   * Search across all entities
+   * @param query - Search query with filters
+   * @param sessionId - Current session ID
+   * @returns Search results
+   */
+  search(
+    query: SearchQuery,
+    sessionId: string
+  ): Promise<IPCResponse<SearchResponse>>;
+
+  /**
+   * Rebuild search index for current user
+   * @param sessionId - Current session ID
+   * @returns Rebuild result
+   */
+  rebuildSearchIndex(
+    sessionId: string
+  ): Promise<IPCResponse<{ message: string }>>;
 }
 
 /**
@@ -721,8 +1065,8 @@ interface JusticeAPI {
 interface SearchQuery {
   query: string;
   filters?: SearchFilters;
-  sortBy?: 'relevance' | 'date' | 'title';
-  sortOrder?: 'asc' | 'desc';
+  sortBy?: "relevance" | "date" | "title";
+  sortOrder?: "asc" | "desc";
   limit?: number;
   offset?: number;
 }
@@ -731,9 +1075,11 @@ interface SearchQuery {
  * Search filters
  */
 interface SearchFilters {
-  caseStatus?: Array<'active' | 'closed' | 'pending'>;
+  caseStatus?: Array<"active" | "closed" | "pending">;
   dateRange?: { from: Date; to: Date };
-  entityTypes?: Array<'case' | 'evidence' | 'document' | 'conversation' | 'note'>;
+  entityTypes?: Array<
+    "case" | "evidence" | "document" | "conversation" | "note"
+  >;
   tags?: string[];
   caseIds?: number[];
 }
@@ -743,7 +1089,7 @@ interface SearchFilters {
  */
 interface SearchResult {
   id: number;
-  type: 'case' | 'evidence' | 'document' | 'conversation' | 'note';
+  type: "case" | "evidence" | "document" | "conversation" | "note";
   title: string;
   excerpt: string;
   relevanceScore: number;
@@ -808,7 +1154,7 @@ interface Backup {
  */
 interface AutoBackupSettings {
   enabled: boolean;
-  frequency: 'daily' | 'weekly' | 'monthly';
+  frequency: "daily" | "weekly" | "monthly";
   keepCount: number;
   time?: string;
 }
@@ -827,18 +1173,18 @@ interface TagStatistics {
  * Notification types
  */
 type NotificationType =
-  | 'deadline_reminder'
-  | 'case_status_change'
-  | 'evidence_uploaded'
-  | 'document_updated'
-  | 'system_alert'
-  | 'system_warning'
-  | 'system_info';
+  | "deadline_reminder"
+  | "case_status_change"
+  | "evidence_uploaded"
+  | "document_updated"
+  | "system_alert"
+  | "system_warning"
+  | "system_info";
 
 /**
  * Notification severity levels
  */
-type NotificationSeverity = 'low' | 'medium' | 'high' | 'urgent';
+type NotificationSeverity = "low" | "medium" | "high" | "urgent";
 
 /**
  * Notification object
@@ -933,7 +1279,7 @@ import type {
   TemplateStats,
   TemplateUsage,
   TemplateApplicationResult,
-} from '../models/CaseTemplate.ts';
+} from "../models/CaseTemplate.ts";
 
 declare global {
   interface Window {

@@ -1,31 +1,35 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Settings as SettingsIcon } from "lucide-react";
-import { Palette } from "lucide-react";
-import { Shield } from "lucide-react";
-import { Database } from "lucide-react";
-import { Bell } from "lucide-react";
-import { Info } from "lucide-react";
-import { ChevronRight } from "lucide-react";
-import { Moon } from "lucide-react";
-import { Sun } from "lucide-react";
-import { Monitor } from "lucide-react";
-import { Save } from "lucide-react";
-import { Download } from "lucide-react";
-import { Trash2 } from "lucide-react";
-import { Key } from "lucide-react";
-import { Eye } from "lucide-react";
-import { EyeOff } from "lucide-react";
-import { AlertTriangle } from "lucide-react";
-import { CheckCircle2 } from "lucide-react";
-import { Sparkles } from "lucide-react";
-import { Brain } from "lucide-react";
-import { Zap } from "lucide-react";
-import { HardDrive } from "lucide-react";
+import {
+  Settings as SettingsIcon,
+  Palette,
+  Shield,
+  Database,
+  Bell,
+  Info,
+  ChevronRight,
+  Moon,
+  Sun,
+  Monitor,
+  Save,
+  Download,
+  Trash2,
+  Key,
+  Eye,
+  EyeOff,
+  AlertTriangle,
+  CheckCircle2,
+  Sparkles,
+  Brain,
+  Zap,
+  HardDrive,
+} from "lucide-react";
 import { Card } from "../components/ui/Card.tsx";
 import { Button } from "../components/ui/Button.tsx";
 import { Badge } from "../components/ui/Badge.tsx";
 import { BackupSettingsTab } from "./settings/BackupSettings.tsx";
+
+type ThemeMode = "light" | "dark" | "system";
 
 type TabId =
   | "ai-provider"
@@ -54,7 +58,7 @@ const tabs: Tab[] = [
 
 export function SettingsView() {
   const [activeTab, setActiveTab] = useState<TabId>("ai-provider");
-  const [theme, setTheme] = useState<"light" | "dark" | "system">("dark");
+  const [theme, setTheme] = useState<ThemeMode>("dark");
   const [showApiKey, setShowApiKey] = useState(false);
   const [apiKey, setApiKey] = useState("");
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
@@ -101,30 +105,28 @@ export function SettingsView() {
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
+              const panelId = `${tab.id}-panel`;
 
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={isActive ? "true" : "false"}
-                  aria-controls={`${tab.id}-panel`}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`
-                    relative flex items-center gap-2 px-4 py-2 rounded-lg
-                    transition-all duration-200 flex-shrink-0
-                    ${
-                      isActive
-                        ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/50"
-                        : "bg-white/5 text-white/70 hover:bg-white/10 hover:text-white"
-                    }
-                  `}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span className="font-medium whitespace-nowrap">
-                    {tab.label}
-                  </span>
-                  {isActive && (
+              if (isActive) {
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    id={`${tab.id}-tab`}
+                    role="tab"
+                    aria-selected="true"
+                    aria-controls={panelId}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`
+                      relative flex items-center gap-2 px-4 py-2 rounded-lg
+                      transition-all duration-200 flex-shrink-0
+                      bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/50
+                    `}
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span className="font-medium whitespace-nowrap">
+                      {tab.label}
+                    </span>
                     <motion.div
                       layoutId="activeTab"
                       className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg -z-10"
@@ -134,7 +136,29 @@ export function SettingsView() {
                         duration: 0.6,
                       }}
                     />
-                  )}
+                  </button>
+                );
+              }
+
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  id={`${tab.id}-tab`}
+                  role="tab"
+                  aria-selected="false"
+                  aria-controls={panelId}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`
+                    relative flex items-center gap-2 px-4 py-2 rounded-lg
+                    transition-all duration-200 flex-shrink-0
+                    bg-white/5 text-white/70 hover:bg-white/10 hover:text-white
+                  `}
+                >
+                  <Icon className="w-4 h-4" />
+                  <span className="font-medium whitespace-nowrap">
+                    {tab.label}
+                  </span>
                 </button>
               );
             })}
@@ -453,7 +477,7 @@ function AIProviderTab({
   React.useEffect(() => {
     setSelectedModel(currentProvider.models[0].value);
     setCustomEndpoint(currentProvider.endpoint);
-  }, [selectedProvider]);
+  }, [selectedProvider, currentProvider.models, currentProvider.endpoint]);
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -475,10 +499,16 @@ function AIProviderTab({
       if (result.success) {
         setSaveSuccess(true);
         setTimeout(() => setSaveSuccess(false), 3000);
-        console.log("[SettingsView] AI provider configured:", selectedProvider);
+        // Success - configuration saved
       } else {
         console.error("[SettingsView] Failed to save AI config:", result.error);
-        alert("Failed to save configuration: " + result.error);
+        alert(
+          `Failed to save configuration: ${
+            typeof result.error === "string"
+              ? result.error
+              : (result.error?.message ?? "Unknown error")
+          }`
+        );
       }
     } catch (error) {
       console.error("[SettingsView] Error saving AI config:", error);
@@ -710,8 +740,8 @@ function AppearanceTab({
   theme,
   setTheme,
 }: {
-  readonly theme: "light" | "dark" | "system";
-  readonly setTheme: (theme: "light" | "dark" | "system") => void;
+  readonly theme: ThemeMode;
+  readonly setTheme: (theme: ThemeMode) => void;
 }) {
   const themeOptions = [
     { value: "light" as const, label: "Light", icon: Sun },
@@ -740,6 +770,27 @@ function AppearanceTab({
                 const Icon = option.icon;
                 const isActive = theme === option.value;
 
+                if (isActive) {
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setTheme(option.value)}
+                      className={`
+                        p-4 rounded-lg border-2 transition-all
+                        bg-gradient-to-br from-purple-500 to-pink-500 border-purple-400 shadow-lg shadow-purple-500/50
+                      `}
+                      aria-label={`${option.label} theme`}
+                      aria-pressed="true"
+                    >
+                      <Icon className="w-6 h-6 text-white mx-auto mb-2" />
+                      <div className="text-sm font-medium text-white">
+                        {option.label}
+                      </div>
+                    </button>
+                  );
+                }
+
                 return (
                   <button
                     key={option.value}
@@ -747,14 +798,10 @@ function AppearanceTab({
                     onClick={() => setTheme(option.value)}
                     className={`
                       p-4 rounded-lg border-2 transition-all
-                      ${
-                        isActive
-                          ? "bg-gradient-to-br from-purple-500 to-pink-500 border-purple-400 shadow-lg shadow-purple-500/50"
-                          : "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20"
-                      }
+                      bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20
                     `}
                     aria-label={`${option.label} theme`}
-                    aria-pressed={isActive ? "true" : "false"}
+                    aria-pressed="false"
                   >
                     <Icon className="w-6 h-6 text-white mx-auto mb-2" />
                     <div className="text-sm font-medium text-white">
@@ -1069,17 +1116,14 @@ function DataManagementTab() {
             Storage Usage
           </h3>
 
-          {/* Note: Inline styles used for progress bar widths - will be dynamic based on actual storage usage */}
+          {/* Note: Progress bar widths use Tailwind width utilities */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-white/60">Cases</span>
               <span className="text-white font-medium">24.5 MB</span>
             </div>
             <div className="w-full bg-white/5 rounded-full h-2">
-              <div
-                className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all"
-                style={{ width: "45%" }}
-              />
+              <div className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all w-[45%]" />
             </div>
 
             <div className="flex items-center justify-between">
@@ -1087,10 +1131,7 @@ function DataManagementTab() {
               <span className="text-white font-medium">156.2 MB</span>
             </div>
             <div className="w-full bg-white/5 rounded-full h-2">
-              <div
-                className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all"
-                style={{ width: "78%" }}
-              />
+              <div className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all w-[78%]" />
             </div>
 
             <div className="flex items-center justify-between">
@@ -1098,10 +1139,7 @@ function DataManagementTab() {
               <span className="text-white font-medium">8.1 MB</span>
             </div>
             <div className="w-full bg-white/5 rounded-full h-2">
-              <div
-                className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all"
-                style={{ width: "15%" }}
-              />
+              <div className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all w-[15%]" />
             </div>
           </div>
 

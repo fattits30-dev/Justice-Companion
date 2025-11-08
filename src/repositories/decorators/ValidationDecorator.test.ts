@@ -2,10 +2,14 @@
  * Unit tests for ValidationDecorator
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
-import { z } from 'zod';
-import { ValidationDecorator } from './ValidationDecorator.ts';
-import { ValidationError } from '../../errors/DomainErrors.ts';
+import { describe, it, expect, beforeEach } from "vitest";
+import { z } from "zod";
+import { ValidationDecorator } from "./ValidationDecorator.ts";
+import { ValidationError } from "../../errors/DomainErrors.ts";
+import {
+  generateTestDisplayName,
+  generateTestEmail,
+} from "@/test-utils/identities.ts";
 
 // Mock repository for testing
 class MockRepository {
@@ -42,16 +46,16 @@ class MockRepository {
 const createSchema = z.object({
   name: z.string().min(1).max(100),
   age: z.number().int().positive().max(150),
-  email: z.string().email().optional()
+  email: z.string().email().optional(),
 });
 
 const updateSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   age: z.number().int().positive().max(150).optional(),
-  email: z.string().email().optional()
+  email: z.string().email().optional(),
 });
 
-describe('ValidationDecorator', () => {
+describe("ValidationDecorator", () => {
   let mockRepository: MockRepository;
   let decorator: any;
 
@@ -59,45 +63,51 @@ describe('ValidationDecorator', () => {
     mockRepository = new MockRepository();
     decorator = new ValidationDecorator(mockRepository, {
       create: createSchema,
-      update: updateSchema
+      update: updateSchema,
     });
   });
 
-  describe('create validation', () => {
-    it('should accept valid input', async () => {
+  describe("create validation", () => {
+    it("should accept valid input", async () => {
+      const name = generateTestDisplayName();
+      const email = generateTestEmail();
       const validInput = {
-        name: 'John Doe',
+        name,
         age: 30,
-        email: 'john@example.com'
+        email,
       };
 
       const result = await decorator.create(validInput);
       expect(result).toEqual({ id: 1, ...validInput });
     });
 
-    it('should reject invalid input', async () => {
+    it("should reject invalid input", async () => {
       const invalidInput = {
-        name: '', // Empty string
+        name: "", // Empty string
         age: -5, // Negative age
-        email: 'not-an-email' // Invalid email
+        email: "not-an-email", // Invalid email
       };
 
-      await expect(decorator.create(invalidInput)).rejects.toThrow(ValidationError);
+      await expect(decorator.create(invalidInput)).rejects.toThrow(
+        ValidationError
+      );
     });
 
-    it('should reject missing required fields', async () => {
+    it("should reject missing required fields", async () => {
       const incompleteInput = {
-        name: 'John Doe'
+        name: generateTestDisplayName(),
         // Missing required 'age' field
       };
 
-      await expect(decorator.create(incompleteInput)).rejects.toThrow(ValidationError);
+      await expect(decorator.create(incompleteInput)).rejects.toThrow(
+        ValidationError
+      );
     });
 
-    it('should handle optional fields', async () => {
+    it("should handle optional fields", async () => {
       const inputWithoutEmail = {
-        name: 'Jane Doe',
-        age: 25
+        name: generateTestDisplayName(),
+        age: 25,
         // Email is optional
       };
 
@@ -106,53 +116,63 @@ describe('ValidationDecorator', () => {
     });
   });
 
-  describe('update validation', () => {
-    it('should accept partial updates', async () => {
+  describe("update validation", () => {
+    it("should accept partial updates", async () => {
       const partialUpdate = {
-        name: 'Updated Name'
+        name: generateTestDisplayName("Updated"),
       };
 
       const result = await decorator.update(1, partialUpdate);
       expect(result).toEqual({ id: 1, ...partialUpdate });
     });
 
-    it('should reject invalid partial updates', async () => {
+    it("should reject invalid partial updates", async () => {
       const invalidUpdate = {
-        age: 200 // Exceeds max age
+        age: 200, // Exceeds max age
       };
 
-      await expect(decorator.update(1, invalidUpdate)).rejects.toThrow(ValidationError);
+      await expect(decorator.update(1, invalidUpdate)).rejects.toThrow(
+        ValidationError
+      );
     });
 
-    it('should validate ID parameter', async () => {
-      const validUpdate = { name: 'New Name' };
+    it("should validate ID parameter", async () => {
+      const validUpdate = { name: generateTestDisplayName("New") };
 
       // Invalid ID (negative)
-      await expect(decorator.update(-1, validUpdate)).rejects.toThrow(ValidationError);
+      await expect(decorator.update(-1, validUpdate)).rejects.toThrow(
+        ValidationError
+      );
 
       // Invalid ID (non-integer)
-      await expect(decorator.update(1.5, validUpdate)).rejects.toThrow(ValidationError);
+      await expect(decorator.update(1.5, validUpdate)).rejects.toThrow(
+        ValidationError
+      );
 
       // Invalid ID (NaN)
-      await expect(decorator.update(NaN, validUpdate)).rejects.toThrow(ValidationError);
+      await expect(decorator.update(NaN, validUpdate)).rejects.toThrow(
+        ValidationError
+      );
     });
   });
 
-  describe('findById validation', () => {
-    it('should accept valid ID', async () => {
+  describe("findById validation", () => {
+    it("should accept valid ID", async () => {
       const result = await decorator.findById(1);
-      expect(result).toEqual({ id: 1, name: 'Entity 1' });
+      expect(result).toEqual({ id: 1, name: "Entity 1" });
     });
 
-    it('should reject invalid ID', async () => {
+    it("should reject invalid ID", async () => {
       await expect(decorator.findById(-1)).rejects.toThrow(ValidationError);
       await expect(decorator.findById(0)).rejects.toThrow(ValidationError);
-      await expect(decorator.findById(Infinity)).rejects.toThrow(ValidationError);
+      await expect(decorator.findById(Infinity)).rejects.toThrow(
+        ValidationError
+      );
     });
   });
 
-  describe('delete validation', () => {
-    it('should validate ID before deletion', async () => {
+  describe("delete validation", () => {
+    it("should validate ID before deletion", async () => {
       const result = await decorator.delete(1);
       expect(result).toBe(true);
 
@@ -160,60 +180,67 @@ describe('ValidationDecorator', () => {
     });
   });
 
-  describe('batch operations', () => {
-    it('should validate each item in batch creation', async () => {
+  describe("batch operations", () => {
+    it("should validate each item in batch creation", async () => {
       const validBatch = [
-        { name: 'Item 1', age: 20 },
-        { name: 'Item 2', age: 30 }
+        { name: "Item 1", age: 20 },
+        { name: "Item 2", age: 30 },
       ];
 
       const result = await decorator.createBatch(validBatch);
       expect(result).toHaveLength(2);
     });
 
-    it('should reject batch with invalid items', async () => {
+    it("should reject batch with invalid items", async () => {
       const invalidBatch = [
-        { name: 'Valid Item', age: 20 },
-        { name: '', age: -5 } // Invalid item
+        { name: "Valid Item", age: 20 },
+        { name: "", age: -5 }, // Invalid item
       ];
 
-      await expect(decorator.createBatch(invalidBatch)).rejects.toThrow(ValidationError);
+      await expect(decorator.createBatch(invalidBatch)).rejects.toThrow(
+        ValidationError
+      );
     });
 
-    it('should validate all IDs in batch deletion', async () => {
+    it("should validate all IDs in batch deletion", async () => {
       const validIds = [1, 2, 3];
       const result = await decorator.deleteBatch(validIds);
       expect(result).toBe(3);
 
       const invalidIds = [1, -1, 3]; // Contains invalid ID
-      await expect(decorator.deleteBatch(invalidIds)).rejects.toThrow(ValidationError);
+      await expect(decorator.deleteBatch(invalidIds)).rejects.toThrow(
+        ValidationError
+      );
     });
   });
 
-  describe('schema management', () => {
-    it('should allow setting schemas dynamically', () => {
+  describe("schema management", () => {
+    it("should allow setting schemas dynamically", () => {
       const newSchema = z.object({ field: z.string() });
-      decorator.setSchema('customMethod', newSchema);
-      expect(decorator.getSchema('customMethod')).toBe(newSchema);
+      decorator.setSchema("customMethod", newSchema);
+      expect(decorator.getSchema("customMethod")).toBe(newSchema);
     });
 
-    it('should work without schemas', async () => {
-      const decoratorWithoutSchemas = new ValidationDecorator(mockRepository, {});
-      const result = await decoratorWithoutSchemas.create({ any: 'data' });
-      expect(result).toEqual({ id: 1, any: 'data' });
+    it("should work without schemas", async () => {
+      const decoratorWithoutSchemas = new ValidationDecorator(
+        mockRepository,
+        {}
+      );
+      const result = await decoratorWithoutSchemas.create({ any: "data" });
+      expect(result).toEqual({ id: 1, any: "data" });
     });
   });
 
-  describe('error messages', () => {
-    it('should provide detailed validation errors', async () => {
+  describe("error messages", () => {
+    it("should provide detailed validation errors", async () => {
       const invalidInput = {
-        name: 'x'.repeat(101), // Exceeds max length
-        age: 'not a number' as any
+        name: "x".repeat(101), // Exceeds max length
+        age: "not a number" as any,
       };
 
       try {
         await decorator.create(invalidInput);
-        expect.fail('Should have thrown ValidationError');
+        expect.fail("Should have thrown ValidationError");
       } catch (error) {
         expect(error).toBeInstanceOf(ValidationError);
         if (error instanceof ValidationError) {

@@ -5,28 +5,28 @@
  * compliance, debugging, and security auditing purposes.
  */
 
-import { injectable, inject } from 'inversify';
-import { TYPES } from '../../shared/infrastructure/di/types.ts';
-import type { IAuditLogger } from '../../shared/infrastructure/di/interfaces.ts';
-import { RepositoryDecorator } from './RepositoryDecorator.ts';
+import { injectable, inject } from "inversify";
+import { TYPES } from "../../shared/infrastructure/di/types.ts";
+import type { IAuditLogger } from "../../shared/infrastructure/di/interfaces.ts";
+import { RepositoryDecorator } from "./RepositoryDecorator.ts";
 
 /**
  * Log levels for repository operations
  */
 export enum LogLevel {
-  DEBUG = 'debug',
-  INFO = 'info',
-  WARN = 'warn',
-  ERROR = 'error'
+  DEBUG = "debug",
+  INFO = "info",
+  WARN = "warn",
+  ERROR = "error",
 }
 
 /**
  * Configuration options for logging decorator
  */
 export interface LoggingOptions {
-  logReads?: boolean;      // Log read operations (default: true)
-  logWrites?: boolean;     // Log write operations (default: true)
-  logErrors?: boolean;     // Log errors (default: true)
+  logReads?: boolean; // Log read operations (default: true)
+  logWrites?: boolean; // Log write operations (default: true)
+  logErrors?: boolean; // Log errors (default: true)
   logPerformance?: boolean; // Log operation duration (default: true)
   sensitiveFields?: string[]; // Fields to redact in logs
 }
@@ -61,7 +61,11 @@ export class LoggingDecorator<T> extends RepositoryDecorator<T> {
       logWrites: options.logWrites ?? true,
       logErrors: options.logErrors ?? true,
       logPerformance: options.logPerformance ?? true,
-      sensitiveFields: options.sensitiveFields ?? ['password', 'token', 'apiKey']
+      sensitiveFields: options.sensitiveFields ?? [
+        "password",
+        "token",
+        "apiKey",
+      ],
     };
   }
 
@@ -70,21 +74,23 @@ export class LoggingDecorator<T> extends RepositoryDecorator<T> {
    */
   async findById(id: number): Promise<any> {
     if (!this.options.logReads) {
-      return await (this.repository as any).findById(id);
+      return await this.forwardCall("findById", id);
     }
 
     const startTime = Date.now();
-    const operation = 'findById';
+    const operation = "findById";
 
     try {
-      const result = await (this.repository as any).findById(id);
+      const result = await this.forwardCall("findById", id);
 
       this.logOperation({
         operation,
         entityId: id.toString(),
         success: true,
         found: result !== null,
-        duration: this.options.logPerformance ? Date.now() - startTime : undefined
+        duration: this.options.logPerformance
+          ? Date.now() - startTime
+          : undefined,
       });
 
       return result;
@@ -94,8 +100,10 @@ export class LoggingDecorator<T> extends RepositoryDecorator<T> {
           operation,
           entityId: id.toString(),
           success: false,
-          error: error.message,
-          duration: this.options.logPerformance ? Date.now() - startTime : undefined
+          error: error instanceof Error ? error.message : String(error),
+          duration: this.options.logPerformance
+            ? Date.now() - startTime
+            : undefined,
         });
       }
       throw error;
@@ -107,20 +115,22 @@ export class LoggingDecorator<T> extends RepositoryDecorator<T> {
    */
   async findAll(): Promise<any[]> {
     if (!this.options.logReads) {
-      return await (this.repository as any).findAll();
+      return await this.forwardCall("findAll");
     }
 
     const startTime = Date.now();
-    const operation = 'findAll';
+    const operation = "findAll";
 
     try {
-      const result = await (this.repository as any).findAll();
+      const result = await this.forwardCall("findAll");
 
       this.logOperation({
         operation,
         success: true,
         count: result.length,
-        duration: this.options.logPerformance ? Date.now() - startTime : undefined
+        duration: this.options.logPerformance
+          ? Date.now() - startTime
+          : undefined,
       });
 
       return result;
@@ -129,8 +139,10 @@ export class LoggingDecorator<T> extends RepositoryDecorator<T> {
         this.logOperation({
           operation,
           success: false,
-          error: error.message,
-          duration: this.options.logPerformance ? Date.now() - startTime : undefined
+          error: error instanceof Error ? error.message : String(error),
+          duration: this.options.logPerformance
+            ? Date.now() - startTime
+            : undefined,
         });
       }
       throw error;
@@ -142,20 +154,22 @@ export class LoggingDecorator<T> extends RepositoryDecorator<T> {
    */
   async create(data: any): Promise<any> {
     if (!this.options.logWrites) {
-      return await (this.repository as any).create(data);
+      return await this.forwardCall("create", data);
     }
 
     const startTime = Date.now();
-    const operation = 'create';
+    const operation = "create";
 
     try {
-      const result = await (this.repository as any).create(data);
+      const result = await this.forwardCall("create", data);
 
       this.logOperation({
         operation,
         entityId: result.id?.toString(),
         success: true,
-        duration: this.options.logPerformance ? Date.now() - startTime : undefined
+        duration: this.options.logPerformance
+          ? Date.now() - startTime
+          : undefined,
       });
 
       return result;
@@ -164,8 +178,10 @@ export class LoggingDecorator<T> extends RepositoryDecorator<T> {
         this.logOperation({
           operation,
           success: false,
-          error: error.message,
-          duration: this.options.logPerformance ? Date.now() - startTime : undefined
+          error: error instanceof Error ? error.message : String(error),
+          duration: this.options.logPerformance
+            ? Date.now() - startTime
+            : undefined,
         });
       }
       throw error;
@@ -177,20 +193,22 @@ export class LoggingDecorator<T> extends RepositoryDecorator<T> {
    */
   async update(id: number, data: any): Promise<any> {
     if (!this.options.logWrites) {
-      return await (this.repository as any).update(id, data);
+      return await this.forwardCall("update", id, data);
     }
 
     const startTime = Date.now();
-    const operation = 'update';
+    const operation = "update";
 
     try {
-      const result = await (this.repository as any).update(id, data);
+      const result = await this.forwardCall("update", id, data);
 
       this.logOperation({
         operation,
         entityId: id.toString(),
         success: true,
-        duration: this.options.logPerformance ? Date.now() - startTime : undefined
+        duration: this.options.logPerformance
+          ? Date.now() - startTime
+          : undefined,
       });
 
       return result;
@@ -200,8 +218,10 @@ export class LoggingDecorator<T> extends RepositoryDecorator<T> {
           operation,
           entityId: id.toString(),
           success: false,
-          error: error.message,
-          duration: this.options.logPerformance ? Date.now() - startTime : undefined
+          error: error instanceof Error ? error.message : String(error),
+          duration: this.options.logPerformance
+            ? Date.now() - startTime
+            : undefined,
         });
       }
       throw error;
@@ -213,21 +233,23 @@ export class LoggingDecorator<T> extends RepositoryDecorator<T> {
    */
   async delete(id: number): Promise<boolean> {
     if (!this.options.logWrites) {
-      return await (this.repository as any).delete(id);
+      return await this.forwardCall("delete", id);
     }
 
     const startTime = Date.now();
-    const operation = 'delete';
+    const operation = "delete";
 
     try {
-      const result = await (this.repository as any).delete(id);
+      const result = await this.forwardCall("delete", id);
 
       this.logOperation({
         operation,
         entityId: id.toString(),
         success: true,
         deleted: result,
-        duration: this.options.logPerformance ? Date.now() - startTime : undefined
+        duration: this.options.logPerformance
+          ? Date.now() - startTime
+          : undefined,
       });
 
       return result;
@@ -237,8 +259,10 @@ export class LoggingDecorator<T> extends RepositoryDecorator<T> {
           operation,
           entityId: id.toString(),
           success: false,
-          error: error.message,
-          duration: this.options.logPerformance ? Date.now() - startTime : undefined
+          error: error instanceof Error ? error.message : String(error),
+          duration: this.options.logPerformance
+            ? Date.now() - startTime
+            : undefined,
         });
       }
       throw error;
@@ -254,8 +278,8 @@ export class LoggingDecorator<T> extends RepositoryDecorator<T> {
     this.auditLogger.log({
       ...logData,
       timestamp: new Date().toISOString(),
-      service: 'repository',
-      module: 'logging-decorator'
+      service: "repository",
+      module: "logging-decorator",
     });
   }
 }
