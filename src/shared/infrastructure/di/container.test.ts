@@ -9,6 +9,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import Database from 'better-sqlite3';
 import { createTestContainer, resetContainer } from './container.ts';
 import { TYPES } from './types.ts';
+import { TestDatabaseHelper } from '../../../test-utils/database-test-helper.ts';
 
 // Import repository interfaces
 import type { ICaseRepository } from './repository-interfaces.ts';
@@ -25,18 +26,22 @@ import type { IDatabase } from '../../../interfaces/IDatabase.ts';
 
 describe('DI Container', () => {
   let testDb: Database.Database;
+  let testDbHelper: TestDatabaseHelper;
   let container: ReturnType<typeof createTestContainer>;
 
   beforeEach(() => {
-    // Create in-memory test database
-    testDb = new Database(':memory:');
+    // Use TestDatabaseHelper to create properly initialized database with migrations
+    testDbHelper = new TestDatabaseHelper();
+    testDb = testDbHelper.initialize();
 
-    // Create test container
+    // Create test container without specifying encryption key
+    // It will use the default test key from the container
     container = createTestContainer(testDb);
   });
 
   afterEach(() => {
-    testDb.close();
+    testDbHelper.clearAllTables();
+    testDbHelper.cleanup();
     resetContainer();
   });
 
@@ -88,10 +93,22 @@ describe('DI Container', () => {
       // This test verifies that repositories receive their dependencies
       const repo = container.get<ICaseRepository>(TYPES.CaseRepository);
 
+      // Create a test case using the repository (which uses proper encryption)
+      const testCase = repo.create({
+        title: 'DI Test Case',
+        caseType: 'employment',
+        description: 'Test case for dependency injection',
+      });
+
+      expect(testCase).toBeDefined();
+      expect(testCase.title).toBe('DI Test Case');
+
       // The repository should be able to use its injected dependencies
       // We can't directly test private properties, but we can verify
       // that the repository methods don't throw when dependencies are needed
-      expect(() => repo.findAll()).not.toThrow();
+      const cases = repo.findAll();
+      expect(cases).toHaveLength(1);
+      expect(cases[0].description).toBe('Test case for dependency injection');
     });
   });
 
@@ -111,9 +128,36 @@ describe('DI Container', () => {
     it('should inject repository and database into CaseService', () => {
       const service = container.get<ICaseService>(TYPES.CaseService);
 
+      // Clear any existing data to ensure test isolation
+      testDb.prepare('DELETE FROM cases').run();
+      testDb.prepare('DELETE FROM users').run();
+
+      // Create a test user first
+      testDb.prepare('INSERT INTO users (username, email, password_hash, password_salt, role) VALUES (?, ?, ?, ?, ?)').run(
+        'testuser',
+        'test@example.com',
+        'hash',
+        'salt',
+        'user'
+      );
+
+      const userId = testDb.prepare('SELECT id FROM users WHERE username = ?').get('testuser') as { id: number };
+
+      // Create a test case through the service
+      const testCase = service.createCase({
+        userId: userId.id,
+        title: 'Service Test Case',
+        caseType: 'employment',
+        description: 'Test case created via service',
+      });
+
+      expect(testCase).toBeDefined();
+
       // Verify that the service can call its methods without throwing
       // This proves that dependencies were properly injected
-      expect(() => service.getAllCases()).not.toThrow();
+      const cases = service.getAllCases();
+      expect(cases).toHaveLength(1);
+      expect(cases[0].title).toBe('Service Test Case');
     });
   });
 
@@ -160,8 +204,35 @@ describe('DI Container', () => {
       // CaseService -> CaseRepository -> EncryptionService & AuditLogger -> Database
       const service = container.get<ICaseService>(TYPES.CaseService);
 
+      // Clear any existing data to ensure test isolation
+      testDb.prepare('DELETE FROM cases').run();
+      testDb.prepare('DELETE FROM users').run();
+
+      // Create a test user first
+      testDb.prepare('INSERT INTO users (username, email, password_hash, password_salt, role) VALUES (?, ?, ?, ?, ?)').run(
+        'chainuser',
+        'chain@example.com',
+        'hash',
+        'salt',
+        'user'
+      );
+
+      const userId = testDb.prepare('SELECT id FROM users WHERE username = ?').get('chainuser') as { id: number };
+
+      // Create a test case to verify the entire dependency chain works
+      const testCase = service.createCase({
+        userId: userId.id,
+        title: 'Chain Test Case',
+        caseType: 'employment',
+        description: 'Test for dependency chain',
+      });
+
+      expect(testCase).toBeDefined();
+
       // This should not throw, proving the entire dependency chain is resolved
-      expect(() => service.getAllCases()).not.toThrow();
+      const cases = service.getAllCases();
+      expect(cases).toHaveLength(1);
+      expect(cases[0].description).toBe('Test for dependency chain');
     });
 
     it('should maintain singleton scope across dependency injections', () => {

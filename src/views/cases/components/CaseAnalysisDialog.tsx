@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { X, AlertTriangle, Scale, CheckCircle, AlertCircle, ExternalLink, BookOpen } from 'lucide-react';
 import { Card } from '../../../components/ui/Card.tsx';
 import { Button } from '../../../components/ui/Button.tsx';
-import type { CaseAnalysisResponse } from '../../../types/ai-analysis.ts';
+import type { CaseAnalysisResponse, LegalIssue, ApplicableLaw, ActionItem, EvidenceGap } from '../../../types/ai-analysis.ts';
 
 interface CaseAnalysisDialogProps {
   onClose: () => void;
@@ -109,23 +109,53 @@ export function CaseAnalysisDialog({ onClose, analysis, isLoading }: CaseAnalysi
                 Legal Issues Identified
               </h3>
               <div className="space-y-3">
-                {analysis.legalIssues.map((issue, index) => (
-                  <Card key={index} variant="flat" className="p-4">
+                {analysis.legalIssues.map((legalIssue: LegalIssue, index: number) => (
+                  <Card key={index} variant="default" className="p-4">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <h4 className="font-medium text-white">{issue.title}</h4>
+                          <h4 className="font-medium text-white">{legalIssue.issue}</h4>
                           <span
-                            className={`px-2 py-1 rounded text-xs font-medium border ${getSeverityColor(issue.severity)}`}
+                            className={`px-2 py-1 rounded text-xs font-medium border ${getSeverityColor(legalIssue.severity)}`}
                           >
-                            {issue.severity.toUpperCase()}
+                            {legalIssue.severity.toUpperCase()}
                           </span>
                         </div>
-                        <p className="text-sm text-gray-300 mb-2">{issue.description}</p>
-                        {issue.potentialImpact && (
-                          <p className="text-xs text-gray-400 italic">
-                            Impact: {issue.potentialImpact}
-                          </p>
+
+                        {/* Relevant Law */}
+                        {legalIssue.relevantLaw && legalIssue.relevantLaw.length > 0 && (
+                          <div className="mb-2">
+                            <p className="text-xs font-medium text-gray-400 mb-1">Relevant Law:</p>
+                            <ul className="list-disc list-inside space-y-1 text-sm text-gray-300">
+                              {legalIssue.relevantLaw.map((law: string, idx: number) => (
+                                <li key={idx}>{law}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {/* Potential Claims */}
+                        {legalIssue.potentialClaims && legalIssue.potentialClaims.length > 0 && (
+                          <div className="mb-2">
+                            <p className="text-xs font-medium text-gray-400 mb-1">Potential Claims:</p>
+                            <ul className="list-disc list-inside space-y-1 text-sm text-gray-300">
+                              {legalIssue.potentialClaims.map((claim: string, idx: number) => (
+                                <li key={idx}>{claim}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {/* Defenses */}
+                        {legalIssue.defenses && legalIssue.defenses.length > 0 && (
+                          <div>
+                            <p className="text-xs font-medium text-gray-400 mb-1">Possible Defenses:</p>
+                            <ul className="list-disc list-inside space-y-1 text-sm text-gray-300">
+                              {legalIssue.defenses.map((defense: string, idx: number) => (
+                                <li key={idx}>{defense}</li>
+                              ))}
+                            </ul>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -141,24 +171,26 @@ export function CaseAnalysisDialog({ onClose, analysis, isLoading }: CaseAnalysi
                 Applicable UK Law
               </h3>
               <div className="space-y-3">
-                {analysis.applicableLaw.map((law, index) => (
-                  <Card key={index} variant="flat" className="p-4">
-                    <h4 className="font-medium text-white mb-2">{law.statute}</h4>
-                    <p className="text-sm text-gray-300 mb-2">{law.relevantSections}</p>
-                    <p className="text-xs text-gray-400 italic mb-2">
-                      How it applies: {law.howItApplies}
-                    </p>
-                    {law.citation && (
-                      <a
-                        href={law.citation}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs text-primary-400 hover:text-primary-300 flex items-center gap-1"
-                      >
-                        View statute
-                        <ExternalLink className="h-3 w-3" />
-                      </a>
-                    )}
+                {analysis.applicableLaw.map((law: ApplicableLaw, index: number) => (
+                  <Card key={index} variant="default" className="p-4">
+                    <h4 className="font-medium text-white mb-2">
+                      {law.statute} - Section {law.section}
+                    </h4>
+                    <div className="space-y-2">
+                      <div>
+                        <p className="text-xs font-medium text-gray-400 mb-1">Summary:</p>
+                        <p className="text-sm text-gray-300">{law.summary}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium text-gray-400 mb-1">How it applies to your case:</p>
+                        <p className="text-sm text-gray-300">{law.application}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-400">
+                          Jurisdiction: {law.jurisdiction.replace('_', ' ').toUpperCase()}
+                        </p>
+                      </div>
+                    </div>
                   </Card>
                 ))}
               </div>
@@ -171,27 +203,27 @@ export function CaseAnalysisDialog({ onClose, analysis, isLoading }: CaseAnalysi
                 Recommended Actions
               </h3>
               <div className="space-y-3">
-                {analysis.recommendedActions.map((action, index) => (
-                  <Card key={index} variant="flat" className="p-4">
+                {analysis.recommendedActions.map((actionItem: ActionItem, index: number) => (
+                  <Card key={index} variant="default" className="p-4">
                     <div className="flex items-start gap-3">
                       <div
-                        className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${getPriorityColor(action.priority)}`}
+                        className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${getPriorityColor(actionItem.priority)}`}
                       >
                         {index + 1}
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <h4 className="font-medium text-white">{action.title}</h4>
+                          <h4 className="font-medium text-white">{actionItem.action}</h4>
                           <span
-                            className={`px-2 py-1 rounded text-xs font-medium border ${getPriorityColor(action.priority)}`}
+                            className={`px-2 py-1 rounded text-xs font-medium border ${getPriorityColor(actionItem.priority)}`}
                           >
-                            {action.priority.toUpperCase()}
+                            {actionItem.priority.toUpperCase()}
                           </span>
                         </div>
-                        <p className="text-sm text-gray-300 mb-2">{action.description}</p>
-                        {action.timeframe && (
+                        <p className="text-sm text-gray-300 mb-2">{actionItem.rationale}</p>
+                        {actionItem.deadline && (
                           <p className="text-xs text-gray-400">
-                            Timeframe: {action.timeframe}
+                            Deadline: {actionItem.deadline}
                           </p>
                         )}
                       </div>
@@ -209,26 +241,23 @@ export function CaseAnalysisDialog({ onClose, analysis, isLoading }: CaseAnalysi
                   Evidence Gaps
                 </h3>
                 <div className="space-y-3">
-                  {analysis.evidenceGaps.map((gap, index) => (
-                    <Card key={index} variant="flat" className="p-4">
+                  {analysis.evidenceGaps.map((gap: EvidenceGap, index: number) => (
+                    <Card key={index} variant="default" className="p-4">
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
-                            <h4 className="font-medium text-white">{gap.missingEvidence}</h4>
+                            <h4 className="font-medium text-white">{gap.description}</h4>
                             <span
                               className={`px-2 py-1 rounded text-xs font-medium border ${getSeverityColor(gap.importance)}`}
                             >
                               {gap.importance.toUpperCase()}
                             </span>
                           </div>
-                          <p className="text-sm text-gray-300 mb-2">
-                            Why needed: {gap.whyNeeded}
-                          </p>
                           {gap.suggestedSources && gap.suggestedSources.length > 0 && (
                             <div className="text-xs text-gray-400">
                               <p className="font-medium mb-1">Suggested sources:</p>
                               <ul className="list-disc list-inside space-y-1">
-                                {gap.suggestedSources.map((source, idx) => (
+                                {gap.suggestedSources.map((source: string, idx: number) => (
                                   <li key={idx}>{source}</li>
                                 ))}
                               </ul>
@@ -248,38 +277,24 @@ export function CaseAnalysisDialog({ onClose, analysis, isLoading }: CaseAnalysi
                 <h3 className="text-lg font-semibold text-white mb-3">
                   Case Complexity Assessment
                 </h3>
-                <Card variant="flat" className="p-4">
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div>
-                      <p className="text-xs text-gray-400 mb-1">Overall Score</p>
-                      <p className="text-2xl font-bold text-white">
-                        {analysis.estimatedComplexity.overallScore}/10
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-400 mb-1">Legal Complexity</p>
-                      <p className="text-2xl font-bold text-white">
-                        {analysis.estimatedComplexity.legalComplexity}/10
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-400 mb-1">Evidence Strength</p>
-                      <p className="text-2xl font-bold text-white">
-                        {analysis.estimatedComplexity.evidenceStrength}/10
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-400 mb-1">Est. Duration</p>
-                      <p className="text-lg font-semibold text-white">
-                        {analysis.estimatedComplexity.estimatedDuration}
-                      </p>
-                    </div>
+                <Card variant="default" className="p-4">
+                  <div className="mb-4">
+                    <p className="text-xs text-gray-400 mb-1">Complexity Score</p>
+                    <p className="text-3xl font-bold text-white">
+                      {analysis.estimatedComplexity.score}/10
+                    </p>
                   </div>
-                  {analysis.estimatedComplexity.keyFactors && (
-                    <div className="mt-4 pt-4 border-t border-gray-700">
-                      <p className="text-xs text-gray-400 mb-2">Key Complexity Factors:</p>
+
+                  <div className="mb-4">
+                    <p className="text-xs font-medium text-gray-400 mb-2">Explanation:</p>
+                    <p className="text-sm text-gray-300">{analysis.estimatedComplexity.explanation}</p>
+                  </div>
+
+                  {analysis.estimatedComplexity.factors && analysis.estimatedComplexity.factors.length > 0 && (
+                    <div className="pt-4 border-t border-gray-700">
+                      <p className="text-xs text-gray-400 mb-2">Contributing Factors:</p>
                       <ul className="list-disc list-inside space-y-1 text-sm text-gray-300">
-                        {analysis.estimatedComplexity.keyFactors.map((factor, idx) => (
+                        {analysis.estimatedComplexity.factors.map((factor: string, idx: number) => (
                           <li key={idx}>{factor}</li>
                         ))}
                       </ul>
@@ -292,7 +307,7 @@ export function CaseAnalysisDialog({ onClose, analysis, isLoading }: CaseAnalysi
             {/* AI Reasoning */}
             <section>
               <h3 className="text-lg font-semibold text-white mb-3">Analysis Reasoning</h3>
-              <Card variant="flat" className="p-4">
+              <Card variant="default" className="p-4">
                 <p className="text-sm text-gray-300 whitespace-pre-wrap">
                   {analysis.reasoning}
                 </p>
@@ -305,11 +320,11 @@ export function CaseAnalysisDialog({ onClose, analysis, isLoading }: CaseAnalysi
                 <h3 className="text-lg font-semibold text-white mb-3">Legal Sources</h3>
                 <div className="space-y-2">
                   {analysis.sources.map((source, index) => (
-                    <Card key={index} variant="flat" className="p-3">
+                    <Card key={index} variant="default" className="p-3">
                       <div className="flex items-center justify-between gap-2">
                         <div>
                           <p className="text-sm font-medium text-white">{source.title}</p>
-                          <p className="text-xs text-gray-400">{source.type}</p>
+                          <p className="text-xs text-gray-400">{source.citation}</p>
                         </div>
                         {source.url && (
                           <a
@@ -330,7 +345,7 @@ export function CaseAnalysisDialog({ onClose, analysis, isLoading }: CaseAnalysi
 
             {/* Disclaimer */}
             <section>
-              <Card variant="flat" className="p-4 bg-yellow-900/20 border border-yellow-700/50">
+              <Card variant="default" className="p-4 bg-yellow-900/20 border border-yellow-700/50">
                 <div className="flex gap-3">
                   <AlertTriangle className="h-5 w-5 text-yellow-400 flex-shrink-0 mt-0.5" />
                   <div>

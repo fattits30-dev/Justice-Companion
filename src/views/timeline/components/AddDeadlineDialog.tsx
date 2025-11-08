@@ -1,23 +1,33 @@
-import { useState, useEffect } from 'react';
-import { X, Plus } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Button } from '../../../components/ui/Button';
-import { Card } from '../../../components/ui/Card';
-import type { CreateDeadlineInput } from '../../../domains/timeline/entities/Deadline';
+import { useState, useEffect } from "react";
+import { X, Plus } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Button } from "../../../components/ui/Button";
+import { Card } from "../../../components/ui/Card";
+import type { CreateDeadlineInput } from "../../../domains/timeline/entities/Deadline";
 
 interface AddDeadlineDialogProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (input: CreateDeadlineInput) => Promise<{ success: boolean; error?: string }>;
+  onSubmit: (
+    input: CreateDeadlineInput
+  ) => Promise<{ success: boolean; error?: string }>;
   cases: Array<{ id: number; title: string; status: string }>;
   userId: number;
+  mode?: "create" | "edit";
+  initialValues?: {
+    title: string;
+    caseId: number;
+    deadlineDate: string;
+    priority: "high" | "medium" | "low" | "critical";
+    description?: string;
+  };
 }
 
 interface FormData {
   title: string;
   caseId: string;
   deadlineDate: string;
-  priority: 'high' | 'medium' | 'low';
+  priority: "high" | "medium" | "low" | "critical";
   description: string;
 }
 
@@ -35,13 +45,15 @@ export function AddDeadlineDialog({
   onSubmit,
   cases,
   userId,
+  mode = "create",
+  initialValues,
 }: AddDeadlineDialogProps) {
   const [formData, setFormData] = useState<FormData>({
-    title: '',
-    caseId: '',
-    deadlineDate: '',
-    priority: 'medium',
-    description: '',
+    title: "",
+    caseId: "",
+    deadlineDate: "",
+    priority: "medium",
+    description: "",
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
@@ -51,44 +63,57 @@ export function AddDeadlineDialog({
   useEffect(() => {
     if (!open) {
       setFormData({
-        title: '',
-        caseId: '',
-        deadlineDate: '',
-        priority: 'medium',
-        description: '',
+        title: "",
+        caseId: "",
+        deadlineDate: "",
+        priority: "medium",
+        description: "",
       });
       setErrors({});
       setIsSubmitting(false);
     }
   }, [open]);
 
+  // Pre-fill form with initialValues when provided (edit mode)
+  useEffect(() => {
+    if (open && initialValues) {
+      setFormData({
+        title: initialValues.title,
+        caseId: String(initialValues.caseId),
+        deadlineDate: initialValues.deadlineDate,
+        priority: initialValues.priority,
+        description: initialValues.description || "",
+      });
+    }
+  }, [open, initialValues]);
+
   // Handle Escape key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && open) {
+      if (e.key === "Escape" && open) {
         onClose();
       }
     };
 
-    window.addEventListener('keydown', handleEscape);
-    return () => window.removeEventListener('keydown', handleEscape);
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
   }, [open, onClose]);
 
   const validate = (): boolean => {
     const newErrors: FormErrors = {};
 
     if (!formData.title.trim()) {
-      newErrors.title = 'Title is required';
+      newErrors.title = "Title is required";
     } else if (formData.title.length > 200) {
-      newErrors.title = 'Title must be 200 characters or less';
+      newErrors.title = "Title must be 200 characters or less";
     }
 
     if (!formData.caseId) {
-      newErrors.caseId = 'Case is required';
+      newErrors.caseId = "Case is required";
     }
 
     if (!formData.deadlineDate) {
-      newErrors.deadlineDate = 'Date is required';
+      newErrors.deadlineDate = "Date is required";
     } else {
       const selectedDate = new Date(formData.deadlineDate);
       const today = new Date();
@@ -96,7 +121,7 @@ export function AddDeadlineDialog({
       selectedDate.setHours(0, 0, 0, 0);
 
       if (selectedDate < today) {
-        newErrors.deadlineDate = 'Date cannot be in the past';
+        newErrors.deadlineDate = "Date cannot be in the past";
       }
     }
 
@@ -129,10 +154,10 @@ export function AddDeadlineDialog({
       if (result.success) {
         onClose();
       } else {
-        setErrors({ submit: result.error || 'Failed to create deadline' });
+        setErrors({ submit: result.error || "Failed to create deadline" });
       }
     } catch (error) {
-      setErrors({ submit: 'An unexpected error occurred' });
+      setErrors({ submit: "An unexpected error occurred" });
     } finally {
       setIsSubmitting(false);
     }
@@ -142,9 +167,13 @@ export function AddDeadlineDialog({
     onClose();
   };
 
-  if (!open) {return null;}
+  if (!open) {
+    return null;
+  }
 
-  const noCasesAvailable = cases.length === 0;
+  // In edit mode, we don't need cases dropdown since we already have caseId from initialValues
+  // Only disable submit in create mode when no cases available
+  const noCasesAvailable = mode === "create" && cases.length === 0;
 
   return (
     <AnimatePresence>
@@ -165,7 +194,7 @@ export function AddDeadlineDialog({
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ type: 'spring', duration: 0.3 }}
+              transition={{ type: "spring", duration: 0.3 }}
               className="w-full max-w-lg"
               role="dialog"
               aria-labelledby="dialog-title"
@@ -178,7 +207,7 @@ export function AddDeadlineDialog({
                     id="dialog-title"
                     className="text-2xl font-bold text-white"
                   >
-                    New Deadline
+                    {mode === "edit" ? "Edit Deadline" : "New Deadline"}
                   </h2>
                   <button
                     onClick={onClose}
@@ -194,7 +223,8 @@ export function AddDeadlineDialog({
                 {noCasesAvailable && (
                   <div className="mb-6 p-4 bg-warning-500/10 border border-warning-500/20 rounded-lg">
                     <p className="text-sm text-warning-400">
-                      No cases available. Please create a case first before adding deadlines.
+                      No cases available. Please create a case first before
+                      adding deadlines.
                     </p>
                   </div>
                 )}
@@ -226,7 +256,9 @@ export function AddDeadlineDialog({
                       disabled={isSubmitting}
                     />
                     {errors.title && (
-                      <p className="mt-1 text-sm text-danger-400">{errors.title}</p>
+                      <p className="mt-1 text-sm text-danger-400">
+                        {errors.title}
+                      </p>
                     )}
                   </div>
 
@@ -261,7 +293,9 @@ export function AddDeadlineDialog({
                       ))}
                     </select>
                     {errors.caseId && (
-                      <p className="mt-1 text-sm text-danger-400">{errors.caseId}</p>
+                      <p className="mt-1 text-sm text-danger-400">
+                        {errors.caseId}
+                      </p>
                     )}
                   </div>
 
@@ -278,7 +312,10 @@ export function AddDeadlineDialog({
                       id="date"
                       value={formData.deadlineDate}
                       onChange={(e) =>
-                        setFormData({ ...formData, deadlineDate: e.target.value })
+                        setFormData({
+                          ...formData,
+                          deadlineDate: e.target.value,
+                        })
                       }
                       className="
                         w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg
@@ -309,7 +346,11 @@ export function AddDeadlineDialog({
                       onChange={(e) =>
                         setFormData({
                           ...formData,
-                          priority: e.target.value as 'high' | 'medium' | 'low',
+                          priority: e.target.value as
+                            | "high"
+                            | "medium"
+                            | "low"
+                            | "critical",
                         })
                       }
                       className="
@@ -321,6 +362,7 @@ export function AddDeadlineDialog({
                       disabled={isSubmitting}
                       role="combobox"
                     >
+                      <option value="critical">Critical</option>
                       <option value="high">High</option>
                       <option value="medium">Medium</option>
                       <option value="low">Low</option>
@@ -339,7 +381,10 @@ export function AddDeadlineDialog({
                       id="description"
                       value={formData.description}
                       onChange={(e) =>
-                        setFormData({ ...formData, description: e.target.value })
+                        setFormData({
+                          ...formData,
+                          description: e.target.value,
+                        })
                       }
                       rows={3}
                       className="
@@ -379,7 +424,13 @@ export function AddDeadlineDialog({
                       disabled={isSubmitting || noCasesAvailable}
                       fullWidth
                     >
-                      {isSubmitting ? 'Creating...' : 'Create'}
+                      {isSubmitting
+                        ? mode === "edit"
+                          ? "Updating..."
+                          : "Creating..."
+                        : mode === "edit"
+                          ? "Update"
+                          : "Create"}
                     </Button>
                   </div>
                 </form>

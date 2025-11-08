@@ -7,8 +7,8 @@
  * - Audit log and consent preservation (legal requirement)
  */
 
-import type Database from 'better-sqlite3';
-import type { GdprDeleteOptions, GdprDeleteResult } from '../../models/Gdpr.ts';
+import type Database from "better-sqlite3";
+import type { GdprDeleteOptions, GdprDeleteResult } from "../../models/Gdpr.ts";
 
 export class DataDeleter {
   // Explicit property declaration (TSX strip-only mode compatibility)
@@ -41,7 +41,7 @@ export class DataDeleter {
    *
    * PRESERVED (legal requirement):
    * - audit_logs: Immutable compliance trail
-   * - consent_records: GDPR proof of user consent history
+   * - consents: GDPR proof of user consent history
    */
   deleteAllUserData(
     userId: number,
@@ -50,117 +50,122 @@ export class DataDeleter {
     // Safety check: Explicit confirmation required
     if (!options.confirmed) {
       throw new Error(
-        'GDPR deletion requires explicit confirmation. Set options.confirmed = true.'
+        "GDPR deletion requires explicit confirmation. Set options.confirmed = true."
       );
     }
 
     const deletionDate = new Date().toISOString();
     const deletedCounts: Record<string, number> = {};
 
+    // Count preserved records BEFORE deletion (CASCADE will delete consents)
+    const preservedAuditLogs = this.db
+      .prepare("SELECT COUNT(*) as count FROM audit_logs WHERE user_id = ?")
+      .get(userId.toString()) as { count: number };
+
+    const preservedConsents = this.db
+      .prepare("SELECT COUNT(*) as count FROM consents WHERE user_id = ?")
+      .get(userId) as { count: number };
+
     // Use transaction for atomicity - all deletions succeed or all fail
     const deleteTransaction = this.db.transaction(() => {
-      // Step 1: Get counts BEFORE deletion (for reporting)
-      const casesStmt = this.db.prepare('SELECT id FROM cases WHERE userId = ?');
-      const caseIds = casesStmt.all(userId).map((c: { id: number }) => c.id);
-
-      const conversationsStmt = this.db.prepare(
-        'SELECT id FROM chat_conversations WHERE userId = ?'
-      );
-      const conversationIds = conversationsStmt.all(userId).map((c: { id: number }) => c.id);
-
       // Step 2: Delete in bottom-up order (child tables first)
-      // event_evidence (FK → timeline_events)
-      const deleteEventEvidence = this.db.prepare(
-        'DELETE FROM event_evidence WHERE eventId IN (SELECT id FROM timeline_events WHERE caseId IN (?))'
-      );
-      deleteEventEvidence.run(caseIds);
-      
+      // Use subqueries to avoid array binding issues
+
+      // event_evidence (FK → timeline_events → cases)
+      const eventEvidenceResult = this.db
+        .prepare(
+          "DELETE FROM event_evidence WHERE event_id IN (SELECT id FROM timeline_events WHERE case_id IN (SELECT id FROM cases WHERE user_id = ?))"
+        )
+        .run(userId);
+
       // timeline_events (FK → cases)
-      const deleteTimelineEvents = this.db.prepare(
-        'DELETE FROM timeline_events WHERE caseId IN (?)'
-      );
-      deleteTimelineEvents.run(caseIds);
-      
+      const timelineEventsResult = this.db
+        .prepare(
+          "DELETE FROM timeline_events WHERE case_id IN (SELECT id FROM cases WHERE user_id = ?)"
+        )
+        .run(userId);
+
       // case_facts (FK → cases)
-      const deleteCaseFacts = this.db.prepare(
-        'DELETE FROM case_facts WHERE caseId IN (?)'
-      );
-      deleteCaseFacts.run(caseIds);
-      
+      const caseFactsResult = this.db
+        .prepare(
+          "DELETE FROM case_facts WHERE case_id IN (SELECT id FROM cases WHERE user_id = ?)"
+        )
+        .run(userId);
+
       // legal_issues (FK → cases)
-      const deleteLegalIssues = this.db.prepare(
-        'DELETE FROM legal_issues WHERE caseId IN (?)'
-      );
-      deleteLegalIssues.run(caseIds);
-      
+      const legalIssuesResult = this.db
+        .prepare(
+          "DELETE FROM legal_issues WHERE case_id IN (SELECT id FROM cases WHERE user_id = ?)"
+        )
+        .run(userId);
+
       // actions (FK → cases)
-      const deleteActions = this.db.prepare(
-        'DELETE FROM actions WHERE caseId IN (?)'
-      );
-      deleteActions.run(caseIds);
-      
+      const actionsResult = this.db
+        .prepare(
+          "DELETE FROM actions WHERE case_id IN (SELECT id FROM cases WHERE user_id = ?)"
+        )
+        .run(userId);
+
       // notes (FK → cases)
-      const deleteNotes = this.db.prepare(
-        'DELETE FROM notes WHERE caseId IN (?)'
-      );
-      deleteNotes.run(caseIds);
-      
+      const notesResult = this.db
+        .prepare(
+          "DELETE FROM notes WHERE case_id IN (SELECT id FROM cases WHERE user_id = ?)"
+        )
+        .run(userId);
+
       // evidence (FK → cases)
-      const deleteEvidence = this.db.prepare(
-        'DELETE FROM evidence WHERE caseId IN (?)'
-      );
-      deleteEvidence.run(caseIds);
-      
+      const evidenceResult = this.db
+        .prepare(
+          "DELETE FROM evidence WHERE case_id IN (SELECT id FROM cases WHERE user_id = ?)"
+        )
+        .run(userId);
+
       // chat_messages (FK → chat_conversations)
-      const deleteChatMessages = this.db.prepare(
-        'DELETE FROM chat_messages WHERE conversationId IN (?)'
-      );
-      deleteChatMessages.run(conversationIds);
-      
+      const chatMessagesResult = this.db
+        .prepare(
+          "DELETE FROM chat_messages WHERE conversation_id IN (SELECT id FROM chat_conversations WHERE user_id = ?)"
+        )
+        .run(userId);
+
       // chat_conversations (FK → users)
-      const deleteChatConversations = this.db.prepare(
-        'DELETE FROM chat_conversations WHERE userId = ?'
-      );
-      deleteChatConversations.run(userId);
-      
+      const chatConversationsResult = this.db
+        .prepare("DELETE FROM chat_conversations WHERE user_id = ?")
+        .run(userId);
+
       // cases (FK → users)
-      const deleteCases = this.db.prepare(
-        'DELETE FROM cases WHERE userId = ?'
-      );
-      deleteCases.run(userId);
-      
+      const casesResult = this.db
+        .prepare("DELETE FROM cases WHERE user_id = ?")
+        .run(userId);
+
       // user_facts (FK → users)
-      const deleteUserFacts = this.db.prepare(
-        'DELETE FROM user_facts WHERE userId = ?'
-      );
-      deleteUserFacts.run(userId);
-      
+      const userFactsResult = this.db
+        .prepare("DELETE FROM user_facts WHERE user_id = ?")
+        .run(userId);
+
       // sessions (FK → users)
-      const deleteSessions = this.db.prepare(
-        'DELETE FROM sessions WHERE userId = ?'
-      );
-      deleteSessions.run(userId);
-      
+      const sessionsResult = this.db
+        .prepare("DELETE FROM sessions WHERE user_id = ?")
+        .run(userId);
+
       // users (root table)
-      const deleteUser = this.db.prepare(
-        'DELETE FROM users WHERE id = ?'
-      );
-      deleteUser.run(userId);
-      
+      const userResult = this.db
+        .prepare("DELETE FROM users WHERE id = ?")
+        .run(userId);
+
       // Step 3: Update counts for reporting
-      deletedCounts['event_evidence'] = deleteEventEvidence.changes;
-      deletedCounts['timeline_events'] = deleteTimelineEvents.changes;
-      deletedCounts['case_facts'] = deleteCaseFacts.changes;
-      deletedCounts['legal_issues'] = deleteLegalIssues.changes;
-      deletedCounts['actions'] = deleteActions.changes;
-      deletedCounts['notes'] = deleteNotes.changes;
-      deletedCounts['evidence'] = deleteEvidence.changes;
-      deletedCounts['chat_messages'] = deleteChatMessages.changes;
-      deletedCounts['chat_conversations'] = deleteChatConversations.changes;
-      deletedCounts['cases'] = deleteCases.changes;
-      deletedCounts['user_facts'] = deleteUserFacts.changes;
-      deletedCounts['sessions'] = deleteSessions.changes;
-      deletedCounts['users'] = deleteUser.changes;
+      deletedCounts["event_evidence"] = eventEvidenceResult.changes;
+      deletedCounts["timeline_events"] = timelineEventsResult.changes;
+      deletedCounts["case_facts"] = caseFactsResult.changes;
+      deletedCounts["legal_issues"] = legalIssuesResult.changes;
+      deletedCounts["actions"] = actionsResult.changes;
+      deletedCounts["notes"] = notesResult.changes;
+      deletedCounts["evidence"] = evidenceResult.changes;
+      deletedCounts["chat_messages"] = chatMessagesResult.changes;
+      deletedCounts["chat_conversations"] = chatConversationsResult.changes;
+      deletedCounts["cases"] = casesResult.changes;
+      deletedCounts["user_facts"] = userFactsResult.changes;
+      deletedCounts["sessions"] = sessionsResult.changes;
+      deletedCounts["users"] = userResult.changes;
     });
 
     // Execute the transaction
@@ -168,8 +173,10 @@ export class DataDeleter {
 
     return {
       success: true,
-      deletedAt: deletionDate,
-      counts: deletedCounts
+      deletionDate: deletionDate,
+      deletedCounts,
+      preservedAuditLogs: preservedAuditLogs.count,
+      preservedConsents: preservedConsents.count,
     };
   }
 }

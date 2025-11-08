@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, waitFor, fireEvent, within } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, within } from '../test-utils/test-utils.tsx';
 import { CasesView } from './CasesView.tsx';
 import type { Case } from '../domains/cases/entities/Case.ts';
 
@@ -30,6 +30,27 @@ describe('CasesView', () => {
   beforeEach(() => {
     localStorage.setItem('sessionId', 'test-session-123');
     vi.clearAllMocks();
+
+    // Mock getSession for AuthProvider
+    window.justiceAPI.getSession = vi.fn().mockResolvedValue({
+      success: true,
+      data: {
+        session: {
+          id: 'test-session-123',
+          userId: 1,
+          createdAt: new Date().toISOString(),
+          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        },
+        user: {
+          id: 1,
+          username: 'testuser',
+          email: 'test@example.com',
+          role: 'user',
+          isActive: true,
+          createdAt: new Date().toISOString(),
+        },
+      },
+    });
   });
 
   it('shows loading state while cases are fetched', () => {

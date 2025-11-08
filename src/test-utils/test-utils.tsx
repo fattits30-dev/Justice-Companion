@@ -13,27 +13,37 @@
  * import { render, screen, userEvent } from '@/test-utils/test-utils';
  */
 
-import { render, RenderOptions } from '@testing-library/react';
-import { ReactElement, ReactNode } from 'react';
-import { BrowserRouter } from 'react-router-dom';
-import { vi } from 'vitest';
-import type { JusticeCompanionAPI } from '@/types/ipc';
-import { AuthProvider } from '@/contexts/AuthContext';
+import { render, RenderOptions } from "@testing-library/react";
+import { ReactElement, ReactNode } from "react";
+import { BrowserRouter } from "react-router-dom";
+import { vi } from "vitest";
+import type { JusticeCompanionAPI } from "@/types/ipc";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 /**
  * All Providers Component
  *
  * Wraps components with necessary providers for testing:
  * - BrowserRouter (for components using react-router hooks)
- * - AuthProvider (for components using useAuth hook)
+ * - AuthProvider (for components using useAuth hook) - conditionally included
  * - Add other providers here as needed (ThemeProvider, QueryClientProvider, etc.)
+ *
+ * Note: Tests should mock window.justiceAPI.getSession in their beforeEach
  */
-function AllTheProviders({ children }: { children: ReactNode }) {
-  return (
-    <BrowserRouter>
-      <AuthProvider>{children}</AuthProvider>
-    </BrowserRouter>
+function AllTheProviders({
+  children,
+  includeAuth = true,
+}: {
+  children: ReactNode;
+  includeAuth?: boolean;
+}) {
+  const content = includeAuth ? (
+    <AuthProvider>{children}</AuthProvider>
+  ) : (
+    <>{children}</>
   );
+
+  return <BrowserRouter>{content}</BrowserRouter>;
 }
 
 /**
@@ -45,13 +55,15 @@ function AllTheProviders({ children }: { children: ReactNode }) {
  * @param options - Additional render options
  * @returns RTL render result
  */
-const customRender = (ui: ReactElement, options?: Omit<RenderOptions, 'wrapper'>) =>
-  render(ui, { wrapper: AllTheProviders, ...options });
+const customRender = (
+  ui: ReactElement,
+  options?: Omit<RenderOptions, "wrapper">
+) => render(ui, { wrapper: AllTheProviders, ...options });
 
 // Re-export specific items from React Testing Library (excluding render to avoid conflict)
 export {
   screen,
-  waitFor,
+  waitFor, // RTL's waitFor (keep this, remove custom one below)
   within,
   fireEvent,
   act,
@@ -73,9 +85,9 @@ export {
   queryByAltText,
   queryByTitle,
   queryByTestId,
-} from '@testing-library/react';
+} from "@testing-library/react";
 
-export { default as userEvent } from '@testing-library/user-event';
+export { default as userEvent } from "@testing-library/user-event";
 
 // Export custom render as render (replaces RTL's render)
 export { customRender as render };
@@ -98,19 +110,31 @@ export function createMockJusticeAPI(
   const baseApi: Partial<JusticeCompanionAPI> = {
     // Case operations
     createCase: vi.fn().mockResolvedValue({ success: true, data: { id: 1 } }),
-    getCases: vi.fn().mockResolvedValue({ success: true, data: [] }),
-    getCase: vi.fn().mockResolvedValue({ success: true, data: null }),
+    getAllCases: vi.fn().mockResolvedValue({ success: true, data: [] }),
+    getCaseById: vi.fn().mockResolvedValue({ success: true, data: null }),
     updateCase: vi.fn().mockResolvedValue({ success: true }),
     deleteCase: vi.fn().mockResolvedValue({ success: true }),
 
     // Evidence operations
-    createEvidence: vi.fn().mockResolvedValue({ success: true, data: { id: 1 } }),
-    getEvidence: vi.fn().mockResolvedValue({ success: true, data: [] }),
+    createEvidence: vi
+      .fn()
+      .mockResolvedValue({ success: true, data: { id: 1 } }),
+    getAllEvidence: vi.fn().mockResolvedValue({ success: true, data: [] }),
+    getEvidenceById: vi.fn().mockResolvedValue({ success: true, data: null }),
+    getEvidenceByCaseId: vi.fn().mockResolvedValue({ success: true, data: [] }),
     updateEvidence: vi.fn().mockResolvedValue({ success: true }),
     deleteEvidence: vi.fn().mockResolvedValue({ success: true }),
 
     // AI operations
-    askQuestion: vi.fn().mockResolvedValue({ success: true, data: { answer: 'Test answer' } }),
+    checkAIStatus: vi
+      .fn()
+      .mockResolvedValue({ success: true, connected: true }),
+    aiChat: vi
+      .fn()
+      .mockResolvedValue({
+        success: true,
+        message: { role: "assistant", content: "Test response" },
+      }),
 
     // Override with custom implementations
   };
@@ -125,16 +149,20 @@ export function createMockJusticeAPI(
  * Wait for a condition to be true
  *
  * Useful for waiting for async state updates.
+ * Renamed to avoid conflict with RTL's waitFor
  *
  * @param callback - Function that returns true when condition is met
  * @param timeout - Maximum time to wait in ms (default: 3000)
  * @returns Promise that resolves when condition is met
  */
-export async function waitFor(callback: () => boolean, timeout = 3000): Promise<void> {
+export async function waitForCondition(
+  callback: () => boolean,
+  timeout = 3000
+): Promise<void> {
   const startTime = Date.now();
   while (!callback()) {
     if (Date.now() - startTime > timeout) {
-      throw new Error('Timeout waiting for condition');
+      throw new Error("Timeout waiting for condition");
     }
     await new Promise((resolve) => setTimeout(resolve, 50));
   }
@@ -148,7 +176,11 @@ export async function waitFor(callback: () => boolean, timeout = 3000): Promise<
  * @param type - MIME type
  * @returns File object
  */
-export function createMockFile(name: string, content: string, type: string): File {
+export function createMockFile(
+  name: string,
+  content: string,
+  type: string
+): File {
   const blob = new Blob([content], { type });
   return new File([blob], name, { type });
 }

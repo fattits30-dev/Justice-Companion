@@ -3,19 +3,19 @@
  * Pre-defined templates for common legal scenarios
  */
 
-import type { CaseType, CaseStatus } from './Case.ts';
+import type { CaseType, CaseStatus } from "./Case.ts";
 
 /**
  * Template categories aligned with case types
  */
 export type TemplateCategory =
-  | 'civil'
-  | 'criminal'
-  | 'family'
-  | 'employment'
-  | 'housing'
-  | 'immigration'
-  | 'other';
+  | "civil"
+  | "criminal"
+  | "family"
+  | "employment"
+  | "housing"
+  | "immigration"
+  | "other";
 
 /**
  * Main case template entity
@@ -58,7 +58,7 @@ export interface TimelineMilestone {
   description: string;
   daysFromStart: number; // e.g., 7 = 7 days after case creation
   isRequired: boolean; // Whether this milestone is mandatory
-  category: 'filing' | 'hearing' | 'deadline' | 'meeting' | 'other';
+  category: "filing" | "hearing" | "deadline" | "meeting" | "other";
 }
 
 /**
@@ -68,8 +68,8 @@ export interface TimelineMilestone {
 export interface ChecklistItem {
   title: string;
   description: string;
-  category: 'evidence' | 'filing' | 'communication' | 'research' | 'other';
-  priority: 'low' | 'medium' | 'high';
+  category: "evidence" | "filing" | "communication" | "research" | "other";
+  priority: "low" | "medium" | "high";
   daysFromStart?: number; // Optional suggested completion timeline
 }
 
@@ -102,6 +102,8 @@ export interface CreateTemplateInput {
   name: string;
   description?: string;
   category: TemplateCategory;
+  isSystemTemplate?: boolean;
+  userId?: number | null;
   templateFields: TemplateFields;
   suggestedEvidenceTypes?: string[];
   timelineMilestones?: TimelineMilestone[];

@@ -1,6 +1,8 @@
-import Database from 'better-sqlite3';
-import fs from 'fs';
-import path from 'path';
+import Database from "better-sqlite3-multiple-ciphers";
+
+import fs from "node:fs";
+import path from "node:path";
+import { generateDeterministicPassword } from "../../../src/test-utils/passwords.ts";
 
 /**
  * Test database configuration
@@ -28,9 +30,12 @@ export interface TestDatabaseConfig {
  * The library ships Node.js prebuilds, so Playwright's Node runtime can read the database as long as
  * dependencies have been installed (pnpm install). No better-sqlite3 calls run in the Electron context.
  */
-export async function setupTestDatabase(config?: Partial<TestDatabaseConfig>): Promise<string> {
-  const testDataDir = path.join(process.cwd(), 'test-data');
-  const dbPath = config?.dbPath || path.join(testDataDir, `test-${Date.now()}.db`);
+export async function setupTestDatabase(
+  config?: Partial<TestDatabaseConfig>
+): Promise<string> {
+  const testDataDir = path.join(process.cwd(), "test-data");
+  const dbPath =
+    config?.dbPath || path.join(testDataDir, `test-${Date.now()}.db`);
 
   // Create test-data directory if it doesn't exist
   if (!fs.existsSync(testDataDir)) {
@@ -43,12 +48,18 @@ export async function setupTestDatabase(config?: Partial<TestDatabaseConfig>): P
   }
 
   // Copy pre-migrated template database
-  const templatePath = path.join(process.cwd(), 'tests', 'e2e', 'fixtures', 'test-database-template.db');
+  const templatePath = path.join(
+    process.cwd(),
+    "tests",
+    "e2e",
+    "fixtures",
+    "test-database-template.db"
+  );
 
   if (!fs.existsSync(templatePath)) {
     throw new Error(
       `Database template not found at: ${templatePath}\n` +
-      `Please run: pnpm exec tsx scripts/create-test-database-template.ts`
+        `Please run: pnpm exec tsx scripts/create-test-database-template.ts`
     );
   }
 
@@ -56,16 +67,19 @@ export async function setupTestDatabase(config?: Partial<TestDatabaseConfig>): P
   console.warn(`Test database created at: ${dbPath}`);
   console.warn(`Copied from template: ${templatePath}`);
 
+  // Skip password update in test mode to avoid better-sqlite3 issues
+  console.warn("Skipping password update in test mode");
+
   // Set environment variable for database path
   process.env.JUSTICE_DB_PATH = dbPath;
 
-  // TODO: Implement seedData functionality if needed
-  // For now, the template includes just the test user and consent
-  // Additional seeding can be added by creating a seeded template or
-  // by letting Electron app seed data after launch
+  // NOTE: Template currently ships with baseline user + consent records.
+  // Extend the template generation script if future scenarios need extra seed data.
   if (config?.seedData) {
-    console.warn('Note: seedData is requested but not yet implemented in template approach');
-    console.warn('Template includes: test user and consent');
+    console.warn(
+      "Note: seedData is requested but not yet implemented in template approach"
+    );
+    console.warn("Template includes: test user and consent");
   }
 
   return dbPath;
@@ -86,10 +100,14 @@ export async function cleanupTestDatabase(dbPath: string): Promise<void> {
     // Also cleanup WAL and SHM files (SQLite journal files)
     const walPath = `${dbPath}-wal`;
     const shmPath = `${dbPath}-shm`;
-    if (fs.existsSync(walPath)) {fs.unlinkSync(walPath);}
-    if (fs.existsSync(shmPath)) {fs.unlinkSync(shmPath);}
+    if (fs.existsSync(walPath)) {
+      fs.unlinkSync(walPath);
+    }
+    if (fs.existsSync(shmPath)) {
+      fs.unlinkSync(shmPath);
+    }
   } catch (error) {
-    console.error('Failed to cleanup test database:', error);
+    console.error("Failed to cleanup test database:", error);
     // Don't throw - cleanup is best effort
   }
 }
@@ -114,7 +132,7 @@ export async function cleanupTestDatabase(dbPath: string): Promise<void> {
  * Clean up all test databases in test-data directory
  */
 export async function cleanupAllTestDatabases(): Promise<void> {
-  const testDataDir = path.join(process.cwd(), 'test-data');
+  const testDataDir = path.join(process.cwd(), "test-data");
 
   if (!fs.existsSync(testDataDir)) {
     return;
@@ -123,13 +141,13 @@ export async function cleanupAllTestDatabases(): Promise<void> {
   const files = fs.readdirSync(testDataDir);
 
   for (const file of files) {
-    if (file.startsWith('test-') && file.endsWith('.db')) {
+    if (file.startsWith("test-") && file.endsWith(".db")) {
       const filePath = path.join(testDataDir, file);
       await cleanupTestDatabase(filePath);
     }
   }
 
-  console.warn('All test databases cleaned up');
+  console.warn("All test databases cleaned up");
 }
 
 /**
@@ -137,13 +155,17 @@ export async function cleanupAllTestDatabases(): Promise<void> {
  * The template includes data_processing consent for the test user
  */
 
+const TEST_USER_PASSWORD = generateDeterministicPassword(
+  "justice-template-user"
+);
+
 /**
  * Test user credentials (for use in tests that need to authenticate)
  */
 export const TEST_USER_CREDENTIALS = {
-  username: 'testuser',
-  email: 'testuser@example.com',
-  password: 'TestPassword123!',
+  username: "testuser",
+  email: "testuser@example.com",
+  password: TEST_USER_PASSWORD,
   userId: 1,
 };
 
@@ -153,7 +175,7 @@ export const TEST_USER_CREDENTIALS = {
  */
 export function getTestDatabase(dbPath: string): Database.Database {
   if (!dbPath) {
-    throw new Error('Test database path is required');
+    throw new Error("Test database path is required");
   }
 
   if (!fs.existsSync(dbPath)) {
@@ -161,8 +183,8 @@ export function getTestDatabase(dbPath: string): Database.Database {
   }
 
   const db = new Database(dbPath, { readonly: false });
-  db.pragma('journal_mode = WAL');
-  db.pragma('foreign_keys = ON');
+  db.pragma("journal_mode = WAL");
+  db.pragma("foreign_keys = ON");
 
   return db;
 }
@@ -177,16 +199,16 @@ export function seedUserConsents(
   options?: { includeOptional?: boolean; version?: string }
 ): void {
   if (!db) {
-    throw new Error('Database connection is required to seed user consents');
+    throw new Error("Database connection is required to seed user consents");
   }
 
-  const consentVersion = options?.version ?? '1.0';
+  const consentVersion = options?.version ?? "1.0";
   const grantedAt = new Date().toISOString();
 
-  const consentTypes = ['data_processing'];
+  const consentTypes = ["data_processing"];
 
   if (options?.includeOptional) {
-    consentTypes.push('encryption', 'ai_processing');
+    consentTypes.push("encryption", "ai_processing");
   }
 
   const statement = db.prepare(`
@@ -225,23 +247,27 @@ export interface DatabaseStateSummary {
 /**
  * Return aggregate row counts for critical tables to assert against in E2E specs.
  */
-export async function verifyDatabaseState(dbPath: string): Promise<DatabaseStateSummary> {
+export async function verifyDatabaseState(
+  dbPath: string
+): Promise<DatabaseStateSummary> {
   const db = getTestDatabase(dbPath);
 
   const count = (table: string): number => {
-    const result = db.prepare(`SELECT COUNT(*) as count FROM ${table}`).get() as { count: number };
+    const result = db
+      .prepare(`SELECT COUNT(*) as count FROM ${table}`)
+      .get() as { count: number };
     return result?.count ?? 0;
   };
 
   try {
     return {
-      users: count('users'),
-      sessions: count('sessions'),
-      consents: count('consents'),
-      cases: count('cases'),
-      userFacts: count('user_facts'),
-      caseFacts: count('case_facts'),
-      evidence: count('evidence'),
+      users: count("users"),
+      sessions: count("sessions"),
+      consents: count("consents"),
+      cases: count("cases"),
+      userFacts: count("user_facts"),
+      caseFacts: count("case_facts"),
+      evidence: count("evidence"),
     };
   } finally {
     db.close();

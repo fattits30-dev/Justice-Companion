@@ -1,8 +1,8 @@
-import type Database from 'better-sqlite3';
-import type { IEventBus } from '../di/service-interfaces.ts';
-import type { DomainEvent } from './DomainEvent.ts';
-import { injectable, inject } from 'inversify';
-import { TYPES } from '../di/types.ts';
+import type Database from "better-sqlite3";
+import type { IEventBus } from "../di/service-interfaces.ts";
+import type { DomainEvent } from "./DomainEvent.ts";
+import { injectable, inject } from "inversify";
+import { TYPES } from "../di/types.ts";
 
 /**
  * Event Bus Implementation
@@ -10,7 +10,10 @@ import { TYPES } from '../di/types.ts';
  */
 @injectable()
 export class EventBus implements IEventBus {
-  private subscribers: Map<string, Set<(event: DomainEvent) => void | Promise<void>>> = new Map();
+  private subscribers: Map<
+    string,
+    Set<(event: DomainEvent) => void | Promise<void>>
+  > = new Map();
 
   constructor(@inject(TYPES.Database) private db: Database.Database) {}
 
@@ -47,7 +50,7 @@ export class EventBus implements IEventBus {
   async publish(event: DomainEvent): Promise<void> {
     // Type guard: check if event implements DomainEvent interface
     if (!this.isDomainEvent(event)) {
-      throw new Error('Event must implement DomainEvent interface');
+      throw new Error("Event must implement DomainEvent interface");
     }
 
     const eventType = event.getEventName();
@@ -74,7 +77,7 @@ export class EventBus implements IEventBus {
             promises.push(result);
           }
         } catch (error) {
-          console.error('Error in event handler:', error);
+          console.error("Error in event handler:", error);
         }
       }
 
@@ -95,25 +98,25 @@ export class EventBus implements IEventBus {
       eventTypes?: string[];
     }
   ): Promise<DomainEvent[]> {
-    let sql = 'SELECT * FROM events WHERE aggregate_id = ?';
+    let sql = "SELECT * FROM events WHERE aggregate_id = ?";
     const params: (string | number)[] = [aggregateId];
 
     if (options?.fromDate) {
-      sql += ' AND occurred_at >= ?';
+      sql += " AND occurred_at >= ?";
       params.push(options.fromDate.toISOString());
     }
 
     if (options?.toDate) {
-      sql += ' AND occurred_at <= ?';
+      sql += " AND occurred_at <= ?";
       params.push(options.toDate.toISOString());
     }
 
     if (options?.eventTypes && options.eventTypes.length > 0) {
-      sql += ` AND event_type IN (${options.eventTypes.map(() => '?').join(',')})`;
+      sql += ` AND event_type IN (${options.eventTypes.map(() => "?").join(",")})`;
       params.push(...options.eventTypes);
     }
 
-    sql += ' ORDER BY occurred_at ASC';
+    sql += " ORDER BY occurred_at ASC";
 
     const stmt = this.db.prepare(sql);
     const rows = stmt.all(...params) as Array<{
@@ -124,7 +127,7 @@ export class EventBus implements IEventBus {
       occurred_at: string;
     }>;
 
-    return rows.map(row => {
+    return rows.map((row) => {
       const payload = JSON.parse(row.event_data);
       return {
         eventType: row.event_type,
@@ -174,7 +177,7 @@ export class EventBus implements IEventBus {
               promises.push(result);
             }
           } catch (error) {
-            console.error('Error in event replay handler:', error);
+            console.error("Error in event replay handler:", error);
           }
         }
 
@@ -188,11 +191,11 @@ export class EventBus implements IEventBus {
    */
   private isDomainEvent(event: unknown): event is DomainEvent {
     return (
-      typeof event === 'object' &&
+      typeof event === "object" &&
       event !== null &&
-      typeof (event as DomainEvent).getEventName === 'function' &&
-      typeof (event as DomainEvent).getAggregateId === 'function' &&
-      typeof (event as DomainEvent).getPayload === 'function'
+      typeof (event as DomainEvent).getEventName === "function" &&
+      typeof (event as DomainEvent).getAggregateId === "function" &&
+      typeof (event as DomainEvent).getPayload === "function"
     );
   }
 }

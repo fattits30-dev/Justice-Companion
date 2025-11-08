@@ -5,21 +5,21 @@
  * Events for tracking progress of bulk operations
  */
 
-import type { DomainEvent } from '../../../shared/infrastructure/events/DomainEvent.ts';
+import type { DomainEvent } from "../../../shared/infrastructure/events/DomainEvent.ts";
 
 export type BulkOperationType =
-  | 'bulk_delete_cases'
-  | 'bulk_update_cases'
-  | 'bulk_archive_cases'
-  | 'bulk_delete_evidence'
-  | 'bulk_tag_evidence';
+  | "bulk_delete_cases"
+  | "bulk_update_cases"
+  | "bulk_archive_cases"
+  | "bulk_delete_evidence"
+  | "bulk_tag_evidence";
 
 export type BulkOperationStatus =
-  | 'pending'
-  | 'in_progress'
-  | 'completed'
-  | 'failed'
-  | 'rolled_back';
+  | "pending"
+  | "in_progress"
+  | "completed"
+  | "failed"
+  | "rolled_back";
 
 export interface BulkOperationProgress {
   operationId: string;
@@ -34,11 +34,14 @@ export interface BulkOperationProgress {
   completedAt?: Date;
 }
 
+// Export the interface for use in services
+export type { BulkOperationProgress as OperationProgress };
+
 /**
  * Event emitted when a bulk operation starts
  */
 export class BulkOperationStartedEvent implements DomainEvent {
-  public readonly eventType = 'bulk.operation.started';
+  public readonly eventType = "bulk.operation.started";
   public readonly occurredAt: Date;
 
   constructor(
@@ -73,7 +76,7 @@ export class BulkOperationStartedEvent implements DomainEvent {
  * Event emitted as bulk operation progresses
  */
 export class BulkOperationProgressEvent implements DomainEvent {
-  public readonly eventType = 'bulk.operation.progress';
+  public readonly eventType = "bulk.operation.progress";
   public readonly occurredAt: Date;
 
   constructor(
@@ -102,7 +105,9 @@ export class BulkOperationProgressEvent implements DomainEvent {
       totalItems: this.totalItems,
       successCount: this.successCount,
       failureCount: this.failureCount,
-      percentComplete: Math.round((this.processedItems / this.totalItems) * 100),
+      percentComplete: Math.round(
+        (this.processedItems / this.totalItems) * 100
+      ),
     };
   }
 }
@@ -111,7 +116,7 @@ export class BulkOperationProgressEvent implements DomainEvent {
  * Event emitted when bulk operation completes successfully
  */
 export class BulkOperationCompletedEvent implements DomainEvent {
-  public readonly eventType = 'bulk.operation.completed';
+  public readonly eventType = "bulk.operation.completed";
   public readonly occurredAt: Date;
 
   constructor(
@@ -148,7 +153,7 @@ export class BulkOperationCompletedEvent implements DomainEvent {
  * Event emitted when bulk operation fails
  */
 export class BulkOperationFailedEvent implements DomainEvent {
-  public readonly eventType = 'bulk.operation.failed';
+  public readonly eventType = "bulk.operation.failed";
   public readonly occurredAt: Date;
 
   constructor(
@@ -183,7 +188,7 @@ export class BulkOperationFailedEvent implements DomainEvent {
  * Event emitted when bulk operation is rolled back
  */
 export class BulkOperationRolledBackEvent implements DomainEvent {
-  public readonly eventType = 'bulk.operation.rolled_back';
+  public readonly eventType = "bulk.operation.rolled_back";
   public readonly occurredAt: Date;
 
   constructor(

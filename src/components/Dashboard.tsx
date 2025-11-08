@@ -8,12 +8,14 @@
  * - Stats cards (cases, evidence, activity)
  * - Quick action buttons (New Case, Upload Evidence, AI Chat)
  * - Recent cases list with status badges
+ * - DEADLINE WARNINGS - Critical tribunal deadline tracking
  * - Loading state
  * - Empty state
  * - Error handling
  * - Accessible headings and landmarks
  */
 
+import { useState, useEffect } from "react";
 import {
   TrendingUp,
   Briefcase,
@@ -30,6 +32,9 @@ import { Card } from "./ui/Card.tsx";
 import { Button } from "./ui/Button.tsx";
 import { Badge } from "./ui/Badge.tsx";
 import { SkeletonCard } from "./ui/Skeleton.tsx";
+import { DeadlineWarningBanner } from "./deadlines/DeadlineWarningBanner.tsx";
+import { DeadlineCountdownList } from "./deadlines/DeadlineCountdownCard.tsx";
+import type { DeadlineWithDaysRemaining } from "../types/deadline.ts";
 
 interface Stats {
   totalCases: number;
@@ -73,6 +78,63 @@ export function Dashboard({
   onStartChat,
   onCaseClick,
 }: DashboardProps) {
+  // Deadline tracking state
+  const [deadlines, setDeadlines] = useState<DeadlineWithDaysRemaining[]>([]);
+  const [urgentDeadlines, setUrgentDeadlines] = useState<DeadlineWithDaysRemaining[]>([]);
+  const [loadingDeadlines, setLoadingDeadlines] = useState(true);
+
+  // Fetch mandatory deadlines on mount
+  useEffect(() => {
+    const fetchDeadlines = async () => {
+      try {
+        setLoadingDeadlines(true);
+
+        // Fetch all mandatory deadlines (tribunal deadlines, ACAS, appeals)
+        // Using window.justiceAPI which is exposed via preload.ts
+        const response = await (window as any).justiceAPI?.deadline?.getAllMandatory?.();
+
+        if (response?.success && response.data) {
+          const allDeadlines = response.data as DeadlineWithDaysRemaining[];
+          setDeadlines(allDeadlines);
+
+          // Filter urgent deadlines (for warning banners at top)
+          const urgent = allDeadlines.filter(d => d.isUrgent || d.isOverdue);
+          setUrgentDeadlines(urgent);
+        }
+      } catch (err) {
+        console.error('Failed to fetch deadlines:', err);
+        // Silently fail - deadlines are supplementary to main dashboard
+      } finally {
+        setLoadingDeadlines(false);
+      }
+    };
+
+    fetchDeadlines();
+  }, []); // Run once on mount
+
+  // Handle deadline warning dismissal
+  const handleDismissDeadlineWarning = async (deadlineId: number) => {
+    try {
+      const response = await (window as any).justiceAPI?.deadline?.dismissWarning?.(deadlineId);
+
+      if (response?.success) {
+        // Remove from urgent deadlines after dismissal
+        setUrgentDeadlines(prev => prev.filter(d => d.id !== deadlineId));
+      }
+    } catch (err) {
+      console.error('Failed to dismiss deadline warning:', err);
+    }
+  };
+
+  // Handle deadline click (navigate to case or deadline detail)
+  const handleDeadlineClick = (deadlineId: number) => {
+    // Find the deadline to get its caseId
+    const deadline = deadlines.find(d => d.id === deadlineId);
+    if (deadline && onCaseClick) {
+      onCaseClick(deadline.caseId.toString());
+    }
+  };
+
   // Format date for display
   const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
@@ -163,6 +225,17 @@ export function Dashboard({
             </div>
           </div>
         </Card>
+
+        {/* CRITICAL: Urgent Deadline Warnings */}
+        {urgentDeadlines.length > 0 && urgentDeadlines.map((deadline) => (
+          <DeadlineWarningBanner
+            key={deadline.id}
+            deadline={deadline}
+            onDismiss={handleDismissDeadlineWarning}
+            onAction={() => handleDeadlineClick(deadline.id)}
+            showDismissButton={!deadline.isMandatory}
+          />
+        ))}
 
         {/* Welcome Section */}
         <div className="mb-6">
@@ -277,6 +350,19 @@ export function Dashboard({
           </Button>
         </div>
       </div>
+
+      {/* Upcoming Deadlines - Critical Feature */}
+      {!loadingDeadlines && deadlines.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-4">Upcoming Deadlines</h2>
+          <DeadlineCountdownList
+            deadlines={deadlines}
+            onDeadlineClick={handleDeadlineClick}
+            maxVisible={5}
+            emptyMessage="No upcoming deadlines"
+          />
+        </div>
+      )}
 
       {/* Recent Cases */}
       <div className="mb-8">

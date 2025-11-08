@@ -12,25 +12,24 @@
  */
 export async function initializeDatabase(): Promise<void> {
   try {
-    console.warn('[Database] Initializing database...');
+    console.warn("[Database] Initializing database...");
 
     // Dynamic import for ESM compatibility (tsx requires this)
     // Runtime path: from electron/ to src/ (sibling directory - one level up)
 
-    const { databaseManager } = await import('../src/db/database.ts');
-
-    const { runMigrations } = await import('../src/db/migrate.ts');
+    const { databaseManager } = await import("../src/db/database");
+    const { runMigrations } = await import("../src/db/migrate");
 
     // Initialize database connection
     databaseManager.getDatabase();
-    console.warn('[Database] Connection established');
+    console.warn("[Database] Connection established");
 
     // Run migrations
-    console.warn('[Database] Running migrations...');
+    console.warn("[Database] Running migrations...");
     runMigrations();
-    console.warn('[Database] Migrations complete');
+    console.warn("[Database] Migrations complete");
   } catch (error) {
-    console.error('[Database] Initialization failed:', error);
+    console.error("[Database] Initialization failed:", error);
     throw error;
   }
 }
@@ -43,11 +42,11 @@ export async function closeDatabase(): Promise<void> {
     // Dynamic import for ESM compatibility (tsx requires this)
     // Runtime path: from electron/ to src/ (sibling directory - one level up)
 
-    const { databaseManager } = await import('../src/db/database.ts');
+    const { databaseManager } = await import("../src/db/database");
 
     databaseManager.close();
-    console.warn('[Database] Connection closed');
+    console.warn("[Database] Connection closed");
   } catch (error) {
-    console.error('[Database] Error closing connection:', error);
+    console.error("[Database] Error closing connection:", error);
   }
 }

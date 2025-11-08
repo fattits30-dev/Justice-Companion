@@ -1,8 +1,11 @@
-import type Database from 'better-sqlite3';
-import type { Permission, PermissionCheckResult } from '../domains/auth/entities/Permission.ts';
-import type { Role } from '../domains/auth/entities/Role.ts';
-import { injectable, inject } from 'inversify';
-import { TYPES } from '../shared/infrastructure/di/types.ts';
+import type Database from "better-sqlite3";
+import type {
+  Permission,
+  PermissionCheckResult,
+} from "../domains/auth/entities/Permission.ts";
+import type { Role } from "../domains/auth/entities/Role.ts";
+import { injectable, inject } from "inversify";
+import { TYPES } from "../shared/infrastructure/di/types.ts";
 
 /**
  * Authorization Service
@@ -18,7 +21,10 @@ export class AuthorizationService {
    * @param permissionName - Permission name (e.g., 'cases.create')
    * @returns Permission check result
    */
-  async hasPermission(userId: number, permissionName: string): Promise<PermissionCheckResult> {
+  async hasPermission(
+    userId: number,
+    permissionName: string
+  ): Promise<PermissionCheckResult> {
     const query = `
       SELECT COUNT(*) as count
       FROM user_roles ur
@@ -27,11 +33,14 @@ export class AuthorizationService {
       WHERE ur.user_id = ? AND p.name = ?
     `;
 
-    const result = this.db.prepare(query).get(userId, permissionName) as { count: number };
+    const result = this.db.prepare(query).get(userId, permissionName) as {
+      count: number;
+    };
 
     return {
       allowed: result.count > 0,
-      reason: result.count > 0 ? undefined : `Missing permission: ${permissionName}`,
+      reason:
+        result.count > 0 ? undefined : `Missing permission: ${permissionName}`,
     };
   }
 
@@ -41,7 +50,10 @@ export class AuthorizationService {
    * @param permissionNames - Array of permission names
    * @returns Permission check result
    */
-  async hasAllPermissions(userId: number, permissionNames: string[]): Promise<PermissionCheckResult> {
+  async hasAllPermissions(
+    userId: number,
+    permissionNames: string[]
+  ): Promise<PermissionCheckResult> {
     for (const permissionName of permissionNames) {
       const result = await this.hasPermission(userId, permissionName);
       if (!result.allowed) {
@@ -58,7 +70,10 @@ export class AuthorizationService {
    * @param permissionNames - Array of permission names
    * @returns Permission check result
    */
-  async hasAnyPermission(userId: number, permissionNames: string[]): Promise<PermissionCheckResult> {
+  async hasAnyPermission(
+    userId: number,
+    permissionNames: string[]
+  ): Promise<PermissionCheckResult> {
     for (const permissionName of permissionNames) {
       const result = await this.hasPermission(userId, permissionName);
       if (result.allowed) {
@@ -68,7 +83,7 @@ export class AuthorizationService {
 
     return {
       allowed: false,
-      reason: `Missing any of: ${permissionNames.join(', ')}`,
+      reason: `Missing any of: ${permissionNames.join(", ")}`,
     };
   }
 
@@ -131,15 +146,23 @@ export class AuthorizationService {
       updated_at: string;
     }>;
 
-    return rows.map((row) => ({
-      id: row.id,
-      name: row.name,
-      displayName: row.display_name,
-      description: row.description,
-      isSystemRole: row.is_system_role === 1,
-      createdAt: new Date(row.created_at),
-      updatedAt: new Date(row.updated_at),
-    }));
+    // Load permissions for each role
+    const roles: Role[] = [];
+    for (const row of rows) {
+      const permissions = await this.getRolePermissions(row.id);
+      roles.push({
+        id: row.id,
+        name: row.name,
+        displayName: row.display_name,
+        description: row.description,
+        isSystemRole: row.is_system_role === 1,
+        createdAt: new Date(row.created_at),
+        updatedAt: new Date(row.updated_at),
+        permissions,
+      });
+    }
+
+    return roles;
   }
 
   /**
@@ -156,7 +179,9 @@ export class AuthorizationService {
       WHERE ur.user_id = ? AND r.name = ?
     `;
 
-    const result = this.db.prepare(query).get(userId, roleName) as { count: number };
+    const result = this.db.prepare(query).get(userId, roleName) as {
+      count: number;
+    };
     return result.count > 0;
   }
 
@@ -166,7 +191,11 @@ export class AuthorizationService {
    * @param roleId - Role ID
    * @param assignedBy - User ID who is assigning the role
    */
-  async assignRole(userId: number, roleId: number, assignedBy: number): Promise<void> {
+  async assignRole(
+    userId: number,
+    roleId: number,
+    assignedBy: number
+  ): Promise<void> {
     const stmt = this.db.prepare(`
       INSERT OR IGNORE INTO user_roles (user_id, role_id, assigned_by)
       VALUES (?, ?, ?)
@@ -211,15 +240,23 @@ export class AuthorizationService {
       updated_at: string;
     }>;
 
-    return rows.map((row) => ({
-      id: row.id,
-      name: row.name,
-      displayName: row.display_name,
-      description: row.description,
-      isSystemRole: row.is_system_role === 1,
-      createdAt: new Date(row.created_at),
-      updatedAt: new Date(row.updated_at),
-    }));
+    // Load permissions for each role
+    const roles: Role[] = [];
+    for (const row of rows) {
+      const permissions = await this.getRolePermissions(row.id);
+      roles.push({
+        id: row.id,
+        name: row.name,
+        displayName: row.display_name,
+        description: row.description,
+        isSystemRole: row.is_system_role === 1,
+        createdAt: new Date(row.created_at),
+        updatedAt: new Date(row.updated_at),
+        permissions,
+      });
+    }
+
+    return roles;
   }
 
   /**

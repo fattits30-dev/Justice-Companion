@@ -47,12 +47,12 @@ export interface NotificationEventHandler {
  * - Real-time event emission
  */
 export class NotificationService {
-  private eventHandlers: NotificationEventHandler[] = [];
+  private readonly eventHandlers: NotificationEventHandler[] = [];
 
   constructor(
-    private notificationRepo: NotificationRepository,
-    private preferencesRepo: NotificationPreferencesRepository,
-    private auditLogger: AuditLogger
+    private readonly notificationRepo: NotificationRepository,
+    private readonly preferencesRepo: NotificationPreferencesRepository,
+    private readonly auditLogger: AuditLogger
   ) {}
 
   /**
@@ -65,65 +65,261 @@ export class NotificationService {
   /**
    * Create a new notification
    */
-  async createNotification(input: CreateNotificationInput): Promise<Notification> {
+  async createNotification(
+    input: CreateNotificationInput
+  ): Promise<Notification> {
     try {
       // Check if user has this notification type enabled
       const prefs = await this.getPreferences(input.userId);
 
       if (!this.shouldSendNotification(input.type, prefs)) {
-        logger.info(`Notification type ${input.type} is disabled for user ${input.userId}`);
-        throw new NotificationError(`Notification type ${input.type} is disabled`);
+        logger.info("NotificationService", "Notification type disabled", {
+          type: input.type,
+          userId: input.userId,
+        });
+        throw new NotificationError(
+          `Notification type ${input.type} is disabled`
+        );
       }
 
       // Check if we're in quiet hours
       if (this.isInQuietHours(prefs)) {
-        logger.info(`Skipping notification during quiet hours for user ${input.userId}`);
-        throw new NotificationError("Notification skipped during quiet hours");
+        logger.info(
+          "NotificationService",
+          "Blocking notification during quiet hours",
+          {
+            userId: input.userId,
+          }
+        );
+        throw new NotificationError("Notification blocked during quiet hours");
       }
 
       // Create the notification
-      const notification = await this.notificationRepo.create(input);
-      
+      const notification = this.notificationRepo.create(input);
+
+      // Log the creation
+      this.auditLogger.log({
+        eventType: "notification.create",
+        userId: String(input.userId),
+        resourceType: "notification",
+        resourceId: String(notification.id),
+        action: "create",
+        details: {
+          type: input.type,
+          severity: input.severity,
+        },
+      });
+
       // Emit event
       await Promise.all(
-        this.eventHandlers.map(handler => handler.onNotificationCreated(notification))
+        this.eventHandlers.map((handler) =>
+          handler.onNotificationCreated(notification)
+        )
       );
-      
+
+      // Return the created notification by ID to ensure it's fetched
       return notification;
     } catch (error) {
       if (error instanceof NotificationError) {
         throw error;
       }
-      logger.error("Failed to create notification", error);
+      const errorData =
+        error instanceof Error
+          ? { message: error.message, stack: error.stack }
+          : { error };
+      logger.error(
+        "NotificationService",
+        "Failed to create notification",
+        errorData
+      );
       throw new NotificationError("Failed to create notification");
     }
   }
 
   /**
-   * Get user notification preferences
+   * Get notifications for a user with optional filters
    */
-  private async getPreferences(userId: number): Promise<NotificationPreferences> {
-    let prefs = await this.preferencesRepo.findByUserId(userId);
-    if (!prefs) {
-      // Create default preferences if they don't exist
-      prefs = await this.preferencesRepo.createDefault(userId);
+  async getNotifications(
+    userId: number,
+    filters?: NotificationFilters
+  ): Promise<Notification[]> {
+    return this.notificationRepo.findByUser(userId, filters);
+  }
+
+  /**
+   * Get a notification by ID
+   */
+  async getNotificationById(
+    notificationId: number
+  ): Promise<Notification | null> {
+    return this.notificationRepo.findById(notificationId);
+  }
+
+  /**
+   * Mark a notification as read
+   */
+  async markAsRead(notificationId: number): Promise<void> {
+    this.notificationRepo.markAsRead(notificationId);
+    this.auditLogger.log({
+      eventType: "notification.read",
+      resourceType: "notification",
+      resourceId: String(notificationId),
+      action: "read",
+    });
+  }
+
+  /**
+   * Mark all notifications as read for a user
+   */
+  async markAllAsRead(userId: number): Promise<number> {
+    const count = this.notificationRepo.markAllAsRead(userId);
+    this.auditLogger.log({
+      eventType: "notification.read_all",
+      resourceType: "notification",
+      resourceId: String(userId),
+      action: "update",
+      userId: String(userId),
+      details: { count },
+    });
+    return count;
+  }
+
+  /**
+   * Dismiss a notification
+   */
+  async dismiss(notificationId: number): Promise<void> {
+    this.notificationRepo.dismiss(notificationId);
+    this.auditLogger.log({
+      eventType: "notification.dismiss",
+      resourceType: "notification",
+      resourceId: String(notificationId),
+      action: "update",
+    });
+  }
+
+  /**
+   * Get count of unread notifications for a user
+   */
+  async getUnreadCount(userId: number): Promise<number> {
+    return this.notificationRepo.getUnreadCount(userId);
+  }
+
+  /**
+   * Get notification statistics for a user
+   */
+  async getStats(userId: number): Promise<NotificationStats> {
+    return this.notificationRepo.getStats(userId);
+  }
+
+  /**
+   * Get user notification preferences (public)
+   */
+  async getPreferences(userId: number): Promise<NotificationPreferences> {
+    const existing = this.preferencesRepo.findByUser(userId);
+    if (existing) {
+      return existing;
     }
-    return prefs;
+    return this.preferencesRepo.createDefaults(userId);
+  }
+
+  /**
+   * Update user notification preferences
+   */
+  async updatePreferences(
+    userId: number,
+    updates: UpdateNotificationPreferencesInput
+  ): Promise<NotificationPreferences> {
+    const updated = this.preferencesRepo.update(userId, updates);
+
+    // Log which fields were changed
+    const changes = Object.keys(updates);
+    this.auditLogger.log({
+      eventType: "notification.preferences_update",
+      resourceType: "notification_preferences",
+      resourceId: String(userId),
+      action: "update",
+      userId: String(userId),
+      details: { changes },
+    });
+
+    return updated;
+  }
+
+  /**
+   * Cleanup expired notifications
+   */
+  async cleanupExpired(): Promise<number> {
+    const deletedCount = this.notificationRepo.deleteExpired();
+
+    // Only log if we actually deleted something
+    if (deletedCount > 0) {
+      this.auditLogger.log({
+        eventType: "notification.cleanup",
+        resourceType: "notification",
+        resourceId: "bulk",
+        action: "delete",
+        details: { deletedCount },
+      });
+    }
+
+    return deletedCount;
+  }
+
+  /**
+   * Create a system notification
+   */
+  async createSystemNotification(
+    userId: number,
+    severity: NotificationSeverity,
+    title: string,
+    message: string
+  ): Promise<Notification> {
+    // Determine notification type based on severity
+    let type: NotificationType;
+    switch (severity) {
+      case "urgent":
+        type = "system_alert";
+        break;
+      case "high":
+      case "medium":
+        type = "system_warning";
+        break;
+      case "low":
+      default:
+        type = "system_info";
+        break;
+    }
+
+    return this.createNotification({
+      userId,
+      type,
+      severity,
+      title,
+      message,
+    });
   }
 
   /**
    * Check if notification should be sent based on user preferences
    */
-  private shouldSendNotification(type: NotificationType, prefs: NotificationPreferences): boolean {
+  private shouldSendNotification(
+    type: NotificationType,
+    prefs: NotificationPreferences
+  ): boolean {
     switch (type) {
       case "deadline_reminder":
         return prefs.deadlineRemindersEnabled;
-      case "system_update":
-        return prefs.systemUpdatesEnabled;
-      case "security_alert":
-        return prefs.securityAlertsEnabled;
+      case "case_status_change":
+      case "document_updated":
+        return prefs.caseUpdatesEnabled;
+      case "evidence_uploaded":
+        return prefs.evidenceUpdatesEnabled;
+      case "system_alert":
+      case "system_warning":
+      case "system_info":
+        return prefs.systemAlertsEnabled;
       default:
-        return true; // Default to sending if unknown type
+        return true;
     }
   }
 
@@ -134,11 +330,19 @@ export class NotificationService {
     if (!prefs.quietHoursEnabled) {
       return false;
     }
-    
+
     const now = new Date();
-    const currentHour = now.getHours();
-    
-    // Check if current hour is within quiet hours range
-    return currentHour >= prefs.quietHoursStart && currentHour < prefs.quietHoursEnd;
+    const currentTime = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+
+    // Parse quiet hours times
+    const start = prefs.quietHoursStart;
+    const end = prefs.quietHoursEnd;
+
+    // Handle case where quiet hours span midnight
+    if (start < end) {
+      return currentTime >= start && currentTime < end;
+    } else {
+      return currentTime >= start || currentTime < end;
+    }
   }
 }

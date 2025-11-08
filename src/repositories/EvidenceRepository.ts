@@ -1,12 +1,19 @@
-import { getDb } from '../db/database.ts';
-import type { Evidence, CreateEvidenceInput, UpdateEvidenceInput } from '../domains/evidence/entities/Evidence.ts';
-import { EncryptionService, type EncryptedData } from '../services/EncryptionService.ts';
-import type { AuditLogger } from '../services/AuditLogger.ts';
+import { getDb } from "../db/database.ts";
+import type {
+  Evidence,
+  CreateEvidenceInput,
+  UpdateEvidenceInput,
+} from "../domains/evidence/entities/Evidence.ts";
+import {
+  EncryptionService,
+  type EncryptedData,
+} from "../services/EncryptionService.ts";
+import type { AuditLogger } from "../services/AuditLogger.ts";
 import {
   encodeSimpleCursor,
   decodeSimpleCursor,
-} from '../utils/cursor-pagination.ts';
-import type { PaginatedResult } from '../types/pagination.ts';
+} from "../utils/cursor-pagination.ts";
+import type { PaginatedResult } from "../types/pagination.ts";
 
 /**
  * Repository for managing evidence (documents, photos, emails, recordings, notes)
@@ -16,10 +23,7 @@ export class EvidenceRepository {
   private encryptionService: EncryptionService;
   private auditLogger?: AuditLogger;
 
-  constructor(
-    encryptionService: EncryptionService,
-    auditLogger?: AuditLogger,
-  ) {
+  constructor(encryptionService: EncryptionService, auditLogger?: AuditLogger) {
     this.encryptionService = encryptionService;
     this.auditLogger = auditLogger;
   }
@@ -36,7 +40,9 @@ export class EvidenceRepository {
       let contentToStore: string | null = null;
       if (input.content) {
         const encryptedContent = encryption.encrypt(input.content);
-        contentToStore = encryptedContent ? JSON.stringify(encryptedContent) : null;
+        contentToStore = encryptedContent
+          ? JSON.stringify(encryptedContent)
+          : null;
       }
 
       const stmt = db.prepare(`
@@ -61,10 +67,10 @@ export class EvidenceRepository {
 
       // Audit: Evidence created
       this.auditLogger?.log({
-        eventType: 'evidence.create',
-        resourceType: 'evidence',
+        eventType: "evidence.create",
+        resourceType: "evidence",
         resourceId: createdEvidence.id.toString(),
-        action: 'create',
+        action: "create",
         details: {
           caseId: createdEvidence.caseId,
           evidenceType: createdEvidence.evidenceType,
@@ -76,12 +82,12 @@ export class EvidenceRepository {
     } catch (error) {
       // Audit: Failed evidence creation
       this.auditLogger?.log({
-        eventType: 'evidence.create',
-        resourceType: 'evidence',
-        resourceId: 'unknown',
-        action: 'create',
+        eventType: "evidence.create",
+        resourceType: "evidence",
+        resourceId: "unknown",
+        action: "create",
         success: false,
-        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        errorMessage: error instanceof Error ? error.message : "Unknown error",
       });
       throw error;
     }
@@ -117,14 +123,14 @@ export class EvidenceRepository {
       // Audit: PII/content accessed (encrypted content field)
       if (originalContent && row.content !== originalContent) {
         this.auditLogger?.log({
-          eventType: 'evidence.content_access',
-          resourceType: 'evidence',
+          eventType: "evidence.content_access",
+          resourceType: "evidence",
           resourceId: id.toString(),
-          action: 'read',
+          action: "read",
           details: {
             caseId: row.caseId,
             evidenceType: row.evidenceType,
-            field: 'content',
+            field: "content",
             encrypted: true,
           },
           success: true,
@@ -158,7 +164,7 @@ export class EvidenceRepository {
     const rows = stmt.all(userId) as Evidence[];
 
     // Decrypt content for each evidence
-    return rows.map(row => ({
+    return rows.map((row) => ({
       ...row,
       content: this.decryptContent(row.content),
     }));
@@ -190,23 +196,28 @@ export class EvidenceRepository {
     const rows = stmt.all(caseId) as Evidence[];
 
     // Use batch decryption if enabled and encryption service is available
-    const useBatchEncryption = process.env.ENABLE_BATCH_ENCRYPTION !== 'false';
+    const useBatchEncryption = process.env.ENABLE_BATCH_ENCRYPTION !== "false";
 
     if (useBatchEncryption && this.encryptionService && rows.length > 0) {
       // Collect all encrypted content for batch decryption
-      const encryptedContents = rows.map(row => {
-        if (!row.content) {return null;}
+      const encryptedContents = rows.map((row) => {
+        if (!row.content) {
+          return null;
+        }
 
         try {
           const encryptedData = JSON.parse(row.content) as EncryptedData;
-          return this.encryptionService!.isEncrypted(encryptedData) ? encryptedData : null;
+          return this.encryptionService!.isEncrypted(encryptedData)
+            ? encryptedData
+            : null;
         } catch {
           return null; // Legacy plaintext
         }
       });
 
       // Batch decrypt all encrypted content
-      const decryptedContents = this.encryptionService.batchDecrypt(encryptedContents);
+      const decryptedContents =
+        this.encryptionService.batchDecrypt(encryptedContents);
 
       // Map decrypted content back to rows
       return rows.map((row, index) => {
@@ -251,7 +262,7 @@ export class EvidenceRepository {
     // Generate WHERE clause for cursor
     const whereClause = cursor
       ? `WHERE case_id = ? AND id < ${decodeSimpleCursor(cursor).rowid}`
-      : 'WHERE case_id = ?';
+      : "WHERE case_id = ?";
 
     const stmt = db.prepare(`
       SELECT
@@ -277,32 +288,39 @@ export class EvidenceRepository {
     const items = hasMore ? rows.slice(0, limit) : rows;
 
     // Generate next cursor from last item's id
-    const nextCursor = hasMore && items.length > 0
-      ? encodeSimpleCursor(items[items.length - 1].id)
-      : undefined;
+    const nextCursor =
+      hasMore && items.length > 0
+        ? encodeSimpleCursor(items[items.length - 1].id)
+        : undefined;
 
     // Use batch decryption if enabled
-    const useBatchEncryption = process.env.ENABLE_BATCH_ENCRYPTION !== 'false';
+    const useBatchEncryption = process.env.ENABLE_BATCH_ENCRYPTION !== "false";
 
     if (useBatchEncryption && this.encryptionService && items.length > 0) {
-      const encryptedContents = items.map(row => {
-        if (!row.content) {return null;}
+      const encryptedContents = items.map((row) => {
+        if (!row.content) {
+          return null;
+        }
         try {
           const encryptedData = JSON.parse(row.content) as EncryptedData;
-          return this.encryptionService!.isEncrypted(encryptedData) ? encryptedData : null;
+          return this.encryptionService!.isEncrypted(encryptedData)
+            ? encryptedData
+            : null;
         } catch {
           return null;
         }
       });
 
-      const decryptedContents = this.encryptionService.batchDecrypt(encryptedContents);
+      const decryptedContents =
+        this.encryptionService.batchDecrypt(encryptedContents);
 
       const decryptedItems = items.map((row, index) => {
         return {
           ...row,
-          content: encryptedContents[index] !== null
-            ? decryptedContents[index]
-            : row.content,
+          content:
+            encryptedContents[index] !== null
+              ? decryptedContents[index]
+              : row.content,
           updatedAt: row.updatedAt ?? undefined,
         };
       });
@@ -361,31 +379,36 @@ export class EvidenceRepository {
     let rows: Evidence[];
 
     if (evidenceType) {
-      query += ' WHERE evidence_type = ? ORDER BY created_at DESC';
+      query += " WHERE evidence_type = ? ORDER BY created_at DESC";
       rows = db.prepare(query).all(evidenceType) as Evidence[];
     } else {
-      query += ' ORDER BY created_at DESC';
+      query += " ORDER BY created_at DESC";
       rows = db.prepare(query).all() as Evidence[];
     }
 
     // Use batch decryption if enabled and encryption service is available
-    const useBatchEncryption = process.env.ENABLE_BATCH_ENCRYPTION !== 'false';
+    const useBatchEncryption = process.env.ENABLE_BATCH_ENCRYPTION !== "false";
 
     if (useBatchEncryption && this.encryptionService && rows.length > 0) {
       // Collect all encrypted content for batch decryption
-      const encryptedContents = rows.map(row => {
-        if (!row.content) {return null;}
+      const encryptedContents = rows.map((row) => {
+        if (!row.content) {
+          return null;
+        }
 
         try {
           const encryptedData = JSON.parse(row.content) as EncryptedData;
-          return this.encryptionService!.isEncrypted(encryptedData) ? encryptedData : null;
+          return this.encryptionService!.isEncrypted(encryptedData)
+            ? encryptedData
+            : null;
         } catch {
           return null; // Legacy plaintext
         }
       });
 
       // Batch decrypt all encrypted content
-      const decryptedContents = this.encryptionService.batchDecrypt(encryptedContents);
+      const decryptedContents =
+        this.encryptionService.batchDecrypt(encryptedContents);
 
       // Map decrypted content back to rows
       return rows.map((row, index) => {
@@ -428,21 +451,21 @@ export class EvidenceRepository {
     const db = getDb();
 
     // Build WHERE clause
-    let whereClause = '';
+    let whereClause = "";
     const params: any[] = [];
 
     if (cursor) {
       const { rowid } = decodeSimpleCursor(cursor);
       if (evidenceType) {
-        whereClause = 'WHERE evidence_type = ? AND id < ?';
+        whereClause = "WHERE evidence_type = ? AND id < ?";
         params.push(evidenceType, rowid);
       } else {
-        whereClause = 'WHERE id < ?';
+        whereClause = "WHERE id < ?";
         params.push(rowid);
       }
     } else {
       if (evidenceType) {
-        whereClause = 'WHERE evidence_type = ?';
+        whereClause = "WHERE evidence_type = ?";
         params.push(evidenceType);
       }
     }
@@ -472,32 +495,39 @@ export class EvidenceRepository {
     const items = hasMore ? rows.slice(0, limit) : rows;
 
     // Generate next cursor from last item's id
-    const nextCursor = hasMore && items.length > 0
-      ? encodeSimpleCursor(items[items.length - 1].id)
-      : undefined;
+    const nextCursor =
+      hasMore && items.length > 0
+        ? encodeSimpleCursor(items[items.length - 1].id)
+        : undefined;
 
     // Use batch decryption if enabled
-    const useBatchEncryption = process.env.ENABLE_BATCH_ENCRYPTION !== 'false';
+    const useBatchEncryption = process.env.ENABLE_BATCH_ENCRYPTION !== "false";
 
     if (useBatchEncryption && this.encryptionService && items.length > 0) {
-      const encryptedContents = items.map(row => {
-        if (!row.content) {return null;}
+      const encryptedContents = items.map((row) => {
+        if (!row.content) {
+          return null;
+        }
         try {
           const encryptedData = JSON.parse(row.content) as EncryptedData;
-          return this.encryptionService!.isEncrypted(encryptedData) ? encryptedData : null;
+          return this.encryptionService!.isEncrypted(encryptedData)
+            ? encryptedData
+            : null;
         } catch {
           return null;
         }
       });
 
-      const decryptedContents = this.encryptionService.batchDecrypt(encryptedContents);
+      const decryptedContents =
+        this.encryptionService.batchDecrypt(encryptedContents);
 
       const decryptedItems = items.map((row, index) => {
         return {
           ...row,
-          content: encryptedContents[index] !== null
-            ? decryptedContents[index]
-            : row.content,
+          content:
+            encryptedContents[index] !== null
+              ? decryptedContents[index]
+              : row.content,
           updatedAt: row.updatedAt ?? undefined,
         };
       });
@@ -543,29 +573,31 @@ export class EvidenceRepository {
       const params: Record<string, unknown> = { id };
 
       if (input.title !== undefined) {
-        updates.push('title = @title');
+        updates.push("title = @title");
         params.title = input.title;
       }
       if (input.filePath !== undefined) {
-        updates.push('file_path = @filePath');
+        updates.push("file_path = @filePath");
         params.filePath = input.filePath;
       }
       if (input.content !== undefined) {
-        updates.push('content = @content');
+        updates.push("content = @content");
         // Encrypt content before UPDATE
         if (input.content) {
           const encryptedContent = encryption.encrypt(input.content);
-          params.content = encryptedContent ? JSON.stringify(encryptedContent) : null;
+          params.content = encryptedContent
+            ? JSON.stringify(encryptedContent)
+            : null;
         } else {
           params.content = null;
         }
       }
       if (input.evidenceType !== undefined) {
-        updates.push('evidence_type = @evidenceType');
+        updates.push("evidence_type = @evidenceType");
         params.evidenceType = input.evidenceType;
       }
       if (input.obtainedDate !== undefined) {
-        updates.push('obtained_date = @obtainedDate');
+        updates.push("obtained_date = @obtainedDate");
         params.obtainedDate = input.obtainedDate;
       }
 
@@ -575,7 +607,7 @@ export class EvidenceRepository {
 
       const stmt = db.prepare(`
         UPDATE evidence
-        SET ${updates.join(', ')}
+        SET ${updates.join(", ")}
         WHERE id = @id
       `);
 
@@ -586,10 +618,10 @@ export class EvidenceRepository {
       // Audit: Evidence updated
       if (updatedEvidence) {
         this.auditLogger?.log({
-          eventType: 'evidence.update',
-          resourceType: 'evidence',
+          eventType: "evidence.update",
+          resourceType: "evidence",
           resourceId: id.toString(),
-          action: 'update',
+          action: "update",
           details: {
             fieldsUpdated: Object.keys(input),
             caseId: updatedEvidence.caseId,
@@ -603,12 +635,12 @@ export class EvidenceRepository {
     } catch (error) {
       // Audit: Failed update
       this.auditLogger?.log({
-        eventType: 'evidence.update',
-        resourceType: 'evidence',
+        eventType: "evidence.update",
+        resourceType: "evidence",
         resourceId: id.toString(),
-        action: 'update',
+        action: "update",
         success: false,
-        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        errorMessage: error instanceof Error ? error.message : "Unknown error",
       });
       throw error;
     }
@@ -620,16 +652,16 @@ export class EvidenceRepository {
   delete(id: number): boolean {
     try {
       const db = getDb();
-      const stmt = db.prepare('DELETE FROM evidence WHERE id = ?');
+      const stmt = db.prepare("DELETE FROM evidence WHERE id = ?");
       const result = stmt.run(id);
       const success = result.changes > 0;
 
       // Audit: Evidence deleted
       this.auditLogger?.log({
-        eventType: 'evidence.delete',
-        resourceType: 'evidence',
+        eventType: "evidence.delete",
+        resourceType: "evidence",
         resourceId: id.toString(),
-        action: 'delete',
+        action: "delete",
         success,
       });
 
@@ -637,12 +669,12 @@ export class EvidenceRepository {
     } catch (error) {
       // Audit: Failed deletion
       this.auditLogger?.log({
-        eventType: 'evidence.delete',
-        resourceType: 'evidence',
+        eventType: "evidence.delete",
+        resourceType: "evidence",
         resourceId: id.toString(),
-        action: 'delete',
+        action: "delete",
         success: false,
-        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        errorMessage: error instanceof Error ? error.message : "Unknown error",
       });
       throw error;
     }
@@ -675,10 +707,10 @@ export class EvidenceRepository {
     `;
 
     if (caseId !== undefined) {
-      query += ' WHERE case_id = ?';
+      query += " WHERE case_id = ?";
     }
 
-    query += ' GROUP BY evidence_type';
+    query += " GROUP BY evidence_type";
 
     const stmt = db.prepare(query);
     const results =
@@ -706,7 +738,9 @@ export class EvidenceRepository {
    * @param storedValue - Encrypted JSON string or legacy plaintext
    * @returns Decrypted plaintext or null
    */
-  private decryptContent(storedValue: string | null | undefined): string | null {
+  private decryptContent(
+    storedValue: string | null | undefined
+  ): string | null {
     if (!storedValue) {
       return null;
     }
@@ -735,7 +769,9 @@ export class EvidenceRepository {
 
   private requireEncryptionService(): EncryptionService {
     if (!this.encryptionService) {
-      throw new Error('EncryptionService not configured for EvidenceRepository');
+      throw new Error(
+        "EncryptionService not configured for EvidenceRepository"
+      );
     }
     return this.encryptionService;
   }
@@ -743,44 +779,54 @@ export class EvidenceRepository {
   /**
    * Search evidence by query string and filters
    */
-  async searchEvidence(userId: number, query: string, filters?: any): Promise<Evidence[]> {
+  async searchEvidence(
+    userId: number,
+    query: string,
+    filters?: any
+  ): Promise<Evidence[]> {
     const db = getDb();
     const conditions: string[] = [];
     const params: any[] = [];
 
     // Get user's cases first
-    const userCases = db.prepare('SELECT id FROM cases WHERE user_id = ?').all(userId) as { id: number }[];
-    const caseIds = userCases.map(c => c.id);
+    const userCases = db
+      .prepare("SELECT id FROM cases WHERE user_id = ?")
+      .all(userId) as { id: number }[];
+    const caseIds = userCases.map((c) => c.id);
 
     if (caseIds.length === 0) {
       return [];
     }
 
     // Case filter
-    const placeholders = caseIds.map(() => '?').join(',');
+    const placeholders = caseIds.map(() => "?").join(",");
     conditions.push(`case_id IN (${placeholders})`);
     params.push(...caseIds);
 
     // Text search
     if (query) {
-      conditions.push('(title LIKE ? OR content LIKE ?)');
+      conditions.push("(title LIKE ? OR content LIKE ?)");
       params.push(`%${query}%`, `%${query}%`);
     }
 
     // Date range filter
     if (filters?.dateRange) {
-      conditions.push('created_at >= ? AND created_at <= ?');
-      params.push(filters.dateRange.from.toISOString(), filters.dateRange.to.toISOString());
+      conditions.push("created_at >= ? AND created_at <= ?");
+      params.push(
+        filters.dateRange.from.toISOString(),
+        filters.dateRange.to.toISOString()
+      );
     }
 
     // Specific case IDs filter
     if (filters?.caseIds && filters.caseIds.length > 0) {
-      const casePlaceholders = filters.caseIds.map(() => '?').join(',');
+      const casePlaceholders = filters.caseIds.map(() => "?").join(",");
       conditions.push(`case_id IN (${casePlaceholders})`);
       params.push(...filters.caseIds);
     }
 
-    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+    const whereClause =
+      conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 
     const stmt = db.prepare(`
       SELECT
@@ -801,7 +847,7 @@ export class EvidenceRepository {
     const rows = stmt.all(...params) as Evidence[];
 
     // Decrypt content
-    return rows.map(row => {
+    return rows.map((row) => {
       row.content = this.decryptContent(row.content);
       return row;
     });
@@ -814,14 +860,16 @@ export class EvidenceRepository {
     const db = getDb();
 
     // Get user's cases
-    const userCases = db.prepare('SELECT id FROM cases WHERE user_id = ?').all(userId) as { id: number }[];
-    const caseIds = userCases.map(c => c.id);
+    const userCases = db
+      .prepare("SELECT id FROM cases WHERE user_id = ?")
+      .all(userId) as { id: number }[];
+    const caseIds = userCases.map((c) => c.id);
 
     if (caseIds.length === 0) {
       return [];
     }
 
-    const placeholders = caseIds.map(() => '?').join(',');
+    const placeholders = caseIds.map(() => "?").join(",");
     const stmt = db.prepare(`
       SELECT
         id,
@@ -841,7 +889,7 @@ export class EvidenceRepository {
     const rows = stmt.all(...caseIds) as Evidence[];
 
     // Decrypt content
-    return rows.map(row => {
+    return rows.map((row) => {
       row.content = this.decryptContent(row.content);
       return row;
     });
@@ -853,5 +901,4 @@ export class EvidenceRepository {
   async get(id: number): Promise<Evidence | null> {
     return this.findById(id);
   }
-
 }

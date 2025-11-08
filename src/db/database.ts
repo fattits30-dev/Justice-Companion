@@ -1,7 +1,7 @@
-import Database from 'better-sqlite3';
-import fs from 'fs';
-import path from 'path';
-import { errorLogger } from '../utils/error-logger.ts';
+import Database from "better-sqlite3-multiple-ciphers";
+import fs from "fs";
+import path from "path";
+import { errorLogger } from "../utils/error-logger.ts";
 
 const resolveDatabasePath = (): string => {
   if (process.env.JUSTICE_DB_PATH) {
@@ -13,19 +13,21 @@ const resolveDatabasePath = (): string => {
     try {
       // Dynamic import only when running in Electron
       // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { app } = require('electron');
-      if (app && typeof app.getPath === 'function') {
-        return path.join(app.getPath('userData'), 'justice.db');
+      const { app } = require("electron");
+      if (app && typeof app.getPath === "function") {
+        return path.join(app.getPath("userData"), "justice.db");
       }
     } catch (error) {
-      errorLogger.logError(error as Error, { context: 'database-path-resolution' });
+      errorLogger.logError(error as Error, {
+        context: "database-path-resolution",
+      });
     }
   }
 
-  const fallbackDir = path.join(process.cwd(), '.justice-companion');
+  const fallbackDir = path.join(process.cwd(), ".justice-companion");
   fs.mkdirSync(fallbackDir, { recursive: true });
 
-  return path.join(fallbackDir, 'justice.db');
+  return path.join(fallbackDir, "justice.db");
 };
 
 class DatabaseManager {
@@ -48,22 +50,24 @@ class DatabaseManager {
         this.db = new Database(dbPath);
 
         // Enable foreign keys
-        this.db.pragma('foreign_keys = ON');
+        this.db.pragma("foreign_keys = ON");
 
         // Enable WAL mode for better concurrency
-        this.db.pragma('journal_mode = WAL');
+        this.db.pragma("journal_mode = WAL");
 
         // Prevent immediate lock failures - wait 5 seconds for locks (critical for E2E tests)
-        this.db.pragma('busy_timeout = 5000');
+        this.db.pragma("busy_timeout = 5000");
 
         // Performance optimizations
-        this.db.pragma('cache_size = -40000'); // 40MB cache
-        this.db.pragma('synchronous = NORMAL'); // Faster writes (safe with WAL)
-        this.db.pragma('temp_store = MEMORY'); // Temp tables in RAM
+        this.db.pragma("cache_size = -40000"); // 40MB cache
+        this.db.pragma("synchronous = NORMAL"); // Faster writes (safe with WAL)
+        this.db.pragma("temp_store = MEMORY"); // Temp tables in RAM
 
-        errorLogger.logError('Database initialized successfully', { path: dbPath });
+        errorLogger.logError("Database initialized successfully", {
+          path: dbPath,
+        });
       } catch (error) {
-        errorLogger.logError(error as Error, { context: 'database-init' });
+        errorLogger.logError(error as Error, { context: "database-init" });
         throw error;
       }
     }
@@ -75,9 +79,9 @@ class DatabaseManager {
       try {
         this.db.close();
         this.db = null;
-        errorLogger.logError('Database closed successfully', {});
+        errorLogger.logError("Database closed successfully", {});
       } catch (error) {
-        errorLogger.logError(error as Error, { context: 'database-close' });
+        errorLogger.logError(error as Error, { context: "database-close" });
       }
     }
   }
@@ -104,11 +108,13 @@ class DatabaseManager {
    * Get a query analyzer instance for performance analysis
    * @returns DatabaseQueryAnalyzer instance for the current database
    */
-  public getQueryAnalyzer(): import('../utils/database-query-analyzer.ts').DatabaseQueryAnalyzer {
+  public getQueryAnalyzer(): import("../utils/database-query-analyzer.ts").DatabaseQueryAnalyzer {
     const db = this.getDatabase();
     // Lazy load to avoid circular dependencies
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { DatabaseQueryAnalyzer } = require('../utils/database-query-analyzer.ts');
+
+    const {
+      DatabaseQueryAnalyzer,
+    } = require("../utils/database-query-analyzer.ts");
     return new DatabaseQueryAnalyzer(db);
   }
 }

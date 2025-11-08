@@ -2,11 +2,11 @@
  * Unit tests for CachingDecorator
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { Container } from 'inversify';
-import { CachingDecorator } from './CachingDecorator.ts';
-import { TYPES } from '../../shared/infrastructure/di/types.ts';
-import type { ICacheService } from '../../shared/infrastructure/di/interfaces.ts';
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { Container } from "inversify";
+import { CachingDecorator } from "./CachingDecorator.ts";
+import { TYPES } from "../../shared/infrastructure/di/types.ts";
+import type { ICacheService } from "../../shared/infrastructure/di/interfaces.ts";
 
 // Mock repository for testing
 class MockRepository {
@@ -16,13 +16,13 @@ class MockRepository {
 
   async findAll() {
     return [
-      { id: 1, name: 'Entity 1' },
-      { id: 2, name: 'Entity 2' }
+      { id: 1, name: "Entity 1" },
+      { id: 2, name: "Entity 2" },
     ];
   }
 
   async findByUserId(userId: number) {
-    return [{ id: 1, userId, name: 'User Entity' }];
+    return [{ id: 1, userId, name: "User Entity" }];
   }
 
   async create(input: any) {
@@ -74,7 +74,7 @@ class MockCacheService implements ICacheService {
     // Simple pattern matching for test purposes
     const keys = Array.from(this.cache.keys());
     for (const key of keys) {
-      if (key.includes(pattern.replace('*', ''))) {
+      if (key.includes(pattern.replace("*", ""))) {
         this.cache.delete(key);
       }
     }
@@ -84,12 +84,12 @@ class MockCacheService implements ICacheService {
     return {
       hits: this.hits,
       misses: this.misses,
-      size: this.cache.size
+      size: this.cache.size,
     };
   }
 }
 
-describe('CachingDecorator', () => {
+describe("CachingDecorator", () => {
   let container: Container;
   let mockRepository: MockRepository;
   let mockCacheService: MockCacheService;
@@ -100,29 +100,31 @@ describe('CachingDecorator', () => {
     mockRepository = new MockRepository();
     mockCacheService = new MockCacheService();
 
-    container.bind<ICacheService>(TYPES.CacheService).toConstantValue(mockCacheService);
-    decorator = new CachingDecorator(mockRepository, mockCacheService);
+    container
+      .bind<ICacheService>(TYPES.CacheService)
+      .toConstantValue(mockCacheService);
+    decorator = new CachingDecorator(mockRepository, mockCacheService, 300);
   });
 
   afterEach(() => {
     vi.clearAllMocks();
   });
 
-  describe('findById', () => {
-    it('should cache results on first call', async () => {
+  describe("findById", () => {
+    it("should cache results on first call", async () => {
       const result1 = await decorator.findById(1);
-      expect(result1).toEqual({ id: 1, name: 'Entity 1' });
+      expect(result1).toEqual({ id: 1, name: "Entity 1" });
       expect(mockCacheService.misses).toBe(1);
       expect(mockCacheService.hits).toBe(0);
 
       const result2 = await decorator.findById(1);
-      expect(result2).toEqual({ id: 1, name: 'Entity 1' });
+      expect(result2).toEqual({ id: 1, name: "Entity 1" });
       expect(mockCacheService.hits).toBe(1);
       expect(mockCacheService.misses).toBe(1);
     });
 
-    it('should not cache null results', async () => {
-      vi.spyOn(mockRepository, 'findById').mockResolvedValueOnce(null);
+    it("should not cache null results", async () => {
+      vi.spyOn(mockRepository, "findById").mockResolvedValueOnce(null as any);
 
       const result1 = await decorator.findById(999);
       expect(result1).toBeNull();
@@ -130,8 +132,8 @@ describe('CachingDecorator', () => {
     });
   });
 
-  describe('findAll', () => {
-    it('should cache list results with shorter TTL', async () => {
+  describe("findAll", () => {
+    it("should cache list results with shorter TTL", async () => {
       const result1 = await decorator.findAll();
       expect(result1).toHaveLength(2);
       expect(mockCacheService.misses).toBe(1);
@@ -142,15 +144,15 @@ describe('CachingDecorator', () => {
     });
   });
 
-  describe('create', () => {
-    it('should invalidate cache after creation', async () => {
+  describe("create", () => {
+    it("should invalidate cache after creation", async () => {
       // First, populate cache
       await decorator.findAll();
       expect(mockCacheService.getStats().size).toBe(1);
 
       // Create new entity
-      const created = await decorator.create({ name: 'New Entity' });
-      expect(created).toEqual({ id: 3, name: 'New Entity' });
+      const created = await decorator.create({ name: "New Entity" });
+      expect(created).toEqual({ id: 3, name: "New Entity" });
 
       // Cache should be cleared
       mockCacheService.clear(); // Simulating invalidation
@@ -158,24 +160,24 @@ describe('CachingDecorator', () => {
     });
   });
 
-  describe('update', () => {
-    it('should invalidate specific cache entries after update', async () => {
+  describe("update", () => {
+    it("should invalidate specific cache entries after update", async () => {
       // Populate cache
       await decorator.findById(1);
       await decorator.findById(2);
       expect(mockCacheService.getStats().size).toBe(2);
 
       // Update entity 1
-      await decorator.update(1, { name: 'Updated' });
+      await decorator.update(1, { name: "Updated" });
 
       // Entity 1 cache should be invalidated (simulated)
-      mockCacheService.delete('MockRepository:findById:1');
-      expect(mockCacheService.has('MockRepository:findById:1')).toBe(false);
+      mockCacheService.delete("MockRepository:findById:1");
+      expect(mockCacheService.has("MockRepository:findById:1")).toBe(false);
     });
   });
 
-  describe('delete', () => {
-    it('should invalidate cache after deletion', async () => {
+  describe("delete", () => {
+    it("should invalidate cache after deletion", async () => {
       // Populate cache
       await decorator.findById(1);
       expect(mockCacheService.getStats().size).toBe(1);
@@ -185,13 +187,13 @@ describe('CachingDecorator', () => {
       expect(deleted).toBe(true);
 
       // Cache should be invalidated for this ID
-      mockCacheService.delete('MockRepository:findById:1');
-      expect(mockCacheService.has('MockRepository:findById:1')).toBe(false);
+      mockCacheService.delete("MockRepository:findById:1");
+      expect(mockCacheService.has("MockRepository:findById:1")).toBe(false);
     });
   });
 
-  describe('cache hit rate', () => {
-    it('should achieve >50% cache hit rate for repeated reads', async () => {
+  describe("cache hit rate", () => {
+    it("should achieve >50% cache hit rate for repeated reads", async () => {
       // Perform multiple reads
       await decorator.findById(1); // miss
       await decorator.findById(1); // hit

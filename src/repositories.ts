@@ -54,6 +54,10 @@ function initializeRepositories(): RepositoryContainer {
   const encryptionKey = process.env.ENCRYPTION_KEY_BASE64 ||
     Buffer.from('test-key-only-replace-in-production!!').toString('base64');
 
+  console.log('[Repositories] Initializing with encryption key from:',
+    process.env.ENCRYPTION_KEY_BASE64 ? '.env file' : 'fallback test key');
+  console.log('[Repositories] Key (first 10 chars):', encryptionKey.substring(0, 10));
+
   const encryptionService = new EncryptionService(encryptionKey);
   const auditLogger = new AuditLogger(db);
 

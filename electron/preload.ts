@@ -1,7 +1,9 @@
 // CommonJS require for Electron preload (sandboxed context doesn't support ESM)
 // Using require here is acceptable for preload scripts
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const { contextBridge, ipcRenderer } = require('electron');
+const { contextBridge, ipcRenderer } = require("electron");
+
+console.log("[PRELOAD] Preload script starting...");
 
 // Type definitions for exposed API (not exported - preload can't use ESM export)
 interface RegisterData {
@@ -85,7 +87,7 @@ interface BackupResponse {
 }
 
 interface MigrationStatusResponse {
-  status: 'pending' | 'in_progress' | 'completed' | 'failed';
+  status: "pending" | "in_progress" | "completed" | "failed";
   lastMigration?: string;
 }
 
@@ -109,193 +111,187 @@ interface GdprDeleteResponse {
  */
 
 // Expose API to renderer process
-contextBridge.exposeInMainWorld('electronAPI', {
+contextBridge.exposeInMainWorld("electronAPI", {
   auth: {
     register: (data: RegisterData): Promise<AuthResponse> =>
-      ipcRenderer.invoke('auth:register', data),
+      ipcRenderer.invoke("auth:register", data),
     login: (data: LoginData): Promise<AuthResponse> =>
-      ipcRenderer.invoke('auth:login', data),
+      ipcRenderer.invoke("auth:login", data),
     logout: (sessionId: string): Promise<void> =>
-      ipcRenderer.invoke('auth:logout', sessionId),
+      ipcRenderer.invoke("auth:logout", sessionId),
     getSession: (sessionId: string): Promise<SessionResponse> =>
-      ipcRenderer.invoke('auth:session', sessionId),
+      ipcRenderer.invoke("auth:session", sessionId),
   },
   cases: {
-    create: (data: CreateCaseData): Promise<CaseResponse> => 
-      ipcRenderer.invoke('cases:create', data),
-    list: (): Promise<CaseListResponse> => 
-      ipcRenderer.invoke('cases:list'),
-    get: (id: string): Promise<CaseResponse> => 
-      ipcRenderer.invoke('cases:get', id),
-    update: (id: string, data: UpdateCaseData): Promise<CaseResponse> => 
-      ipcRenderer.invoke('cases:update', id, data),
-    delete: (id: string): Promise<void> => 
-      ipcRenderer.invoke('cases:delete', id),
+    create: (data: CreateCaseData): Promise<CaseResponse> =>
+      ipcRenderer.invoke("cases:create", data),
+    list: (): Promise<CaseListResponse> => ipcRenderer.invoke("cases:list"),
+    get: (id: string): Promise<CaseResponse> =>
+      ipcRenderer.invoke("cases:get", id),
+    update: (id: string, data: UpdateCaseData): Promise<CaseResponse> =>
+      ipcRenderer.invoke("cases:update", id, data),
+    delete: (id: string): Promise<void> =>
+      ipcRenderer.invoke("cases:delete", id),
   },
   evidence: {
-    upload: (caseId: string, file: File): Promise<EvidenceResponse> => 
-      ipcRenderer.invoke('evidence:upload', caseId, file),
-    list: (caseId: string): Promise<EvidenceListResponse> => 
-      ipcRenderer.invoke('evidence:list', caseId),
-    download: (evidenceId: string): Promise<void> => 
-      ipcRenderer.invoke('evidence:download', evidenceId),
+    upload: (caseId: string, file: File): Promise<EvidenceResponse> =>
+      ipcRenderer.invoke("evidence:upload", caseId, file),
+    list: (caseId: string): Promise<EvidenceListResponse> =>
+      ipcRenderer.invoke("evidence:list", caseId),
+    download: (evidenceId: string): Promise<void> =>
+      ipcRenderer.invoke("evidence:download", evidenceId),
   },
   chat: {
     sendMessage: (message: string): Promise<ChatResponse> =>
-      ipcRenderer.invoke('chat:send', message),
-    // TODO: Implement chat:get-messages handler or remove this call
-    // getMessages: (): Promise<ChatResponse[]> =>
-    //   ipcRenderer.invoke('chat:get-messages'),
+      ipcRenderer.invoke("chat:send", message),
   },
   migrations: {
-    start: (): Promise<MigrationResponse> => 
-      ipcRenderer.invoke('migrations:start'),
-    getStatus: (): Promise<MigrationStatusResponse> => 
-      ipcRenderer.invoke('migrations:get-status'),
+    start: (): Promise<MigrationResponse> =>
+      ipcRenderer.invoke("migrations:start"),
+    getStatus: (): Promise<MigrationStatusResponse> =>
+      ipcRenderer.invoke("migrations:get-status"),
   },
   backups: {
-    create: (): Promise<BackupResponse> => 
-      ipcRenderer.invoke('backups:create'),
-    restore: (path: string): Promise<BackupResponse> => 
-      ipcRenderer.invoke('backups:restore', path),
+    create: (): Promise<BackupResponse> => ipcRenderer.invoke("backups:create"),
+    restore: (path: string): Promise<BackupResponse> =>
+      ipcRenderer.invoke("backups:restore", path),
   },
   gdpr: {
     exportData: (): Promise<GdprExportResponse> =>
-      ipcRenderer.invoke('gdpr:export'),
+      ipcRenderer.invoke("gdpr:export"),
     deleteData: (): Promise<GdprDeleteResponse> =>
-      ipcRenderer.invoke('gdpr:delete'),
-  }
+      ipcRenderer.invoke("gdpr:delete"),
+  },
 });
 
 // Expose justiceAPI (flat structure matching window.d.ts interface)
 // This is the primary API used by the frontend
-contextBridge.exposeInMainWorld('justiceAPI', {
+contextBridge.exposeInMainWorld("justiceAPI", {
   // ===== AUTHENTICATION =====
   login: (username: string, password: string, rememberMe: boolean = false) =>
-    ipcRenderer.invoke('auth:login', { username, password, rememberMe }),
+    ipcRenderer.invoke("auth:login", { username, password, rememberMe }),
 
   register: (username: string, email: string, password: string) =>
-    ipcRenderer.invoke('auth:register', { username, email, password }),
+    ipcRenderer.invoke("auth:register", { username, email, password }),
 
-  logout: (sessionId: string) =>
-    ipcRenderer.invoke('auth:logout', sessionId),
+  logout: (sessionId: string) => ipcRenderer.invoke("auth:logout", sessionId),
 
   getSession: (sessionId: string) =>
-    ipcRenderer.invoke('auth:session', sessionId),
+    ipcRenderer.invoke("auth:session", sessionId),
 
   // ===== DASHBOARD =====
   getDashboardStats: (sessionId: string) =>
-    ipcRenderer.invoke('dashboard:get-stats', sessionId),
+    ipcRenderer.invoke("dashboard:get-stats", sessionId),
 
   // ===== CASE MANAGEMENT =====
   getAllCases: (sessionId: string) =>
-    ipcRenderer.invoke('case:list', sessionId),
+    ipcRenderer.invoke("case:list", sessionId),
 
   getCaseById: (id: string, sessionId: string) =>
-    ipcRenderer.invoke('case:get', id, sessionId),
+    ipcRenderer.invoke("case:get", id, sessionId),
 
-  createCase: (data: any, sessionId: string) =>
-    ipcRenderer.invoke('case:create', data, sessionId),
+  createCase: (data: any, sessionId: string, aiMetadata?: any) =>
+    ipcRenderer.invoke("case:create", data, sessionId, aiMetadata),
 
   updateCase: (id: string, data: any, sessionId: string) =>
-    ipcRenderer.invoke('case:update', id, data, sessionId),
+    ipcRenderer.invoke("case:update", id, data, sessionId),
 
   deleteCase: (id: string, sessionId: string) =>
-    ipcRenderer.invoke('case:delete', id, sessionId),
+    ipcRenderer.invoke("case:delete", id, sessionId),
 
   getCaseFacts: (caseId: number, sessionId: string) =>
-    ipcRenderer.invoke('case-fact:get-all', caseId, sessionId),
+    ipcRenderer.invoke("case-fact:get-all", caseId, sessionId),
 
   createCaseFact: (data: any, sessionId: string) =>
-    ipcRenderer.invoke('case-fact:create', data, sessionId),
+    ipcRenderer.invoke("case-fact:create", data, sessionId),
 
   // ===== EVIDENCE/DOCUMENTS =====
   uploadFile: (caseId: string, file: File, sessionId: string) =>
-    ipcRenderer.invoke('evidence:upload', caseId, file, sessionId),
+    ipcRenderer.invoke("evidence:upload", caseId, file, sessionId),
 
   getAllEvidence: (caseId: string, sessionId: string) =>
-    ipcRenderer.invoke('evidence:list', caseId, sessionId),
+    ipcRenderer.invoke("evidence:list", caseId, sessionId),
 
   getEvidenceByCaseId: (caseId: string, sessionId: string) =>
-    ipcRenderer.invoke('evidence:list', caseId, sessionId),
+    ipcRenderer.invoke("evidence:list", caseId, sessionId),
 
   deleteEvidence: (id: string, sessionId: string) =>
-    ipcRenderer.invoke('evidence:delete', id, sessionId),
+    ipcRenderer.invoke("evidence:delete", id, sessionId),
 
   // ===== DEADLINES =====
   getDeadlines: (sessionId: string, caseId?: number) =>
-    ipcRenderer.invoke('deadline:getAll', sessionId, caseId),
+    ipcRenderer.invoke("deadline:getAll", sessionId, caseId),
 
   createDeadline: (data: any, sessionId: string) =>
-    ipcRenderer.invoke('deadline:create', data, sessionId),
+    ipcRenderer.invoke("deadline:create", data, sessionId),
 
   updateDeadline: (id: number, data: any, sessionId: string) =>
-    ipcRenderer.invoke('deadline:update', id, data, sessionId),
+    ipcRenderer.invoke("deadline:update", id, data, sessionId),
 
   completeDeadline: (id: number, sessionId: string) =>
-    ipcRenderer.invoke('deadline:complete', id, sessionId),
+    ipcRenderer.invoke("deadline:complete", id, sessionId),
 
   deleteDeadline: (id: number, sessionId: string) =>
-    ipcRenderer.invoke('deadline:delete', id, sessionId),
+    ipcRenderer.invoke("deadline:delete", id, sessionId),
 
   // ===== SECURE STORAGE =====
   secureStorageSet: (key: string, value: string) =>
-    ipcRenderer.invoke('secure-storage:set', key, value),
+    ipcRenderer.invoke("secure-storage:set", key, value),
 
   secureStorageGet: (key: string) =>
-    ipcRenderer.invoke('secure-storage:get', key),
+    ipcRenderer.invoke("secure-storage:get", key),
 
   secureStorageDelete: (key: string) =>
-    ipcRenderer.invoke('secure-storage:delete', key),
+    ipcRenderer.invoke("secure-storage:delete", key),
 
   secureStorageHas: (key: string) =>
-    ipcRenderer.invoke('secure-storage:has', key),
+    ipcRenderer.invoke("secure-storage:has", key),
 
   secureStorage: {
-    isEncryptionAvailable: () => ipcRenderer.invoke('secure-storage:is-available'),
-    set: (key: string, value: string) => ipcRenderer.invoke('secure-storage:set', key, value),
-    get: (key: string) => ipcRenderer.invoke('secure-storage:get', key),
-    delete: (key: string) => ipcRenderer.invoke('secure-storage:delete', key),
-    clearAll: () => ipcRenderer.invoke('secure-storage:clear-all'),
+    isEncryptionAvailable: () =>
+      ipcRenderer.invoke("secure-storage:is-available"),
+    set: (key: string, value: string) =>
+      ipcRenderer.invoke("secure-storage:set", key, value),
+    get: (key: string) => ipcRenderer.invoke("secure-storage:get", key),
+    delete: (key: string) => ipcRenderer.invoke("secure-storage:delete", key),
+    clearAll: () => ipcRenderer.invoke("secure-storage:clear-all"),
   },
 
   // ===== BACKUP & RESTORE =====
-  createBackup: () =>
-    ipcRenderer.invoke('db:backup'),
+  createBackup: () => ipcRenderer.invoke("db:backup"),
 
-  listBackups: () =>
-    ipcRenderer.invoke('db:listBackups'),
+  listBackups: () => ipcRenderer.invoke("db:listBackups"),
 
-  restoreBackup: (backupFilename: string) =>
-    ipcRenderer.invoke('db:restore', backupFilename),
+  restoreBackup: (backupFilename: string, sessionId: string) =>
+    ipcRenderer.invoke("db:restore", backupFilename, sessionId),
 
-  deleteBackup: (backupFilename: string) =>
-    ipcRenderer.invoke('db:deleteBackup', backupFilename),
+  deleteBackup: (backupFilename: string, sessionId: string) =>
+    ipcRenderer.invoke("db:deleteBackup", backupFilename, sessionId),
 
   // Auto-backup settings
-  getBackupSettings: (userId: number) =>
-    ipcRenderer.invoke('backup:getSettings', userId),
+  getBackupSettings: (sessionId: string) =>
+    ipcRenderer.invoke("backup:getSettings", sessionId),
 
-  updateBackupSettings: (userId: number, settings: {
-    enabled: boolean;
-    frequency: 'daily' | 'weekly' | 'monthly';
-    backup_time: string;
-    keep_count: number;
-  }) =>
-    ipcRenderer.invoke('backup:updateSettings', userId, settings),
+  updateBackupSettings: (
+    settings: {
+      enabled: boolean;
+      frequency: "daily" | "weekly" | "monthly";
+      backup_time: string;
+      keep_count: number;
+    },
+    sessionId: string
+  ) => ipcRenderer.invoke("backup:updateSettings", settings, sessionId),
 
   cleanupOldBackups: (keepCount: number) =>
-    ipcRenderer.invoke('backup:cleanupOld', keepCount),
+    ipcRenderer.invoke("backup:cleanupOld", keepCount),
 
   // ===== AI CONFIG =====
-  configureAI: (config: any) =>
-    ipcRenderer.invoke('ai:configure', config),
+  configureAI: (config: any) => ipcRenderer.invoke("ai:configure", config),
 
-  getAIConfig: () =>
-    ipcRenderer.invoke('ai:get-config'),
+  getAIConfig: () => ipcRenderer.invoke("ai:get-config"),
 
   testAIConnection: (provider: string) =>
-    ipcRenderer.invoke('ai:test-connection', { provider }),
+    ipcRenderer.invoke("ai:test-connection", { provider }),
 
   // ===== AI CHAT STREAMING =====
   streamChat: (
@@ -303,10 +299,14 @@ contextBridge.exposeInMainWorld('justiceAPI', {
     onToken: (token: string) => void,
     onThinking: (thinking: string) => void,
     onComplete: () => void,
-    onError: (error: string) => void
+    onError: (error: string) => void,
+    onConversationId?: (conversationId: number) => void
   ) => {
     // Set up listeners for streaming events
-    const dataHandler = (_event: any, data: { data: string; done: boolean }) => {
+    const dataHandler = (
+      _event: any,
+      data: { data: string; done: boolean }
+    ) => {
       if (data.done) {
         onComplete();
       } else {
@@ -318,35 +318,104 @@ contextBridge.exposeInMainWorld('justiceAPI', {
       onError(error.message);
     };
 
+    const conversationIdHandler = (
+      _event: any,
+      data: { conversationId: number }
+    ) => {
+      if (onConversationId) {
+        onConversationId(data.conversationId);
+      }
+    };
+
     // Register listeners
-    ipcRenderer.on('chat:stream:data', dataHandler);
-    ipcRenderer.on('chat:stream:error', errorHandler);
+    ipcRenderer.on("chat:stream:data", dataHandler);
+    ipcRenderer.on("chat:stream:error", errorHandler);
+    ipcRenderer.on("chat:stream:conversation-id", conversationIdHandler);
 
     // Start streaming
-    return ipcRenderer.invoke('chat:stream', request).finally(() => {
+    return ipcRenderer.invoke("chat:stream", request).finally(() => {
       // Clean up listeners when done
-      ipcRenderer.removeListener('chat:stream:data', dataHandler);
-      ipcRenderer.removeListener('chat:stream:error', errorHandler);
+      ipcRenderer.removeListener("chat:stream:data", dataHandler);
+      ipcRenderer.removeListener("chat:stream:error", errorHandler);
+      ipcRenderer.removeListener(
+        "chat:stream:conversation-id",
+        conversationIdHandler
+      );
     });
   },
 
   // ===== AI ANALYSIS METHODS =====
-  analyzeCase: (request: any) =>
-    ipcRenderer.invoke('ai:analyze-case', request),
+  analyzeCase: (request: any) => ipcRenderer.invoke("ai:analyze-case", request),
 
   analyzeEvidence: (request: any) =>
-    ipcRenderer.invoke('ai:analyze-evidence', request),
+    ipcRenderer.invoke("ai:analyze-evidence", request),
 
   draftDocument: (request: any) =>
-    ipcRenderer.invoke('ai:draft-document', request),
+    ipcRenderer.invoke("ai:draft-document", request),
 
   // ===== AI DOCUMENT ANALYSIS =====
-  analyzeDocument: (filePath: string, sessionId: string, userQuestion?: string) =>
-    ipcRenderer.invoke('ai:analyze-document', { filePath, sessionId, userQuestion }),
+  analyzeDocument: (
+    filePath: string,
+    sessionId: string,
+    userQuestion?: string
+  ) =>
+    ipcRenderer.invoke("ai:analyze-document", {
+      filePath,
+      sessionId,
+      userQuestion,
+    }),
 
   // File selection dialog (for document upload)
   showOpenDialog: (options: any) =>
-    ipcRenderer.invoke('dialog:showOpenDialog', options),
+    ipcRenderer.invoke("dialog:showOpenDialog", options),
 
-  // TODO: Add remaining API methods as needed (tags, notifications, search, etc.)
+  // ===== EXPORT OPERATIONS =====
+  exportCaseToPDF: (caseId: number, sessionId: string) =>
+    ipcRenderer.invoke("export:case-to-pdf", caseId, sessionId),
+
+  exportCaseToWord: (caseId: number, sessionId: string) =>
+    ipcRenderer.invoke("export:case-to-word", caseId, sessionId),
+
+  exportEvidenceListToPDF: (caseId: number, sessionId: string) =>
+    ipcRenderer.invoke("export:evidence-list-to-pdf", caseId, sessionId),
+
+  exportTimelineReportToPDF: (caseId: number, sessionId: string) =>
+    ipcRenderer.invoke("export:timeline-report-to-pdf", caseId, sessionId),
+
+  exportCaseNotesToPDF: (caseId: number, sessionId: string) =>
+    ipcRenderer.invoke("export:case-notes-to-pdf", caseId, sessionId),
+
+  exportCaseNotesToWord: (caseId: number, sessionId: string) =>
+    ipcRenderer.invoke("export:case-notes-to-word", caseId, sessionId),
+
+  exportCustom: (
+    exportType: string,
+    caseId: number,
+    options: any,
+    sessionId: string
+  ) =>
+    ipcRenderer.invoke("export:custom", exportType, caseId, options, sessionId),
+
+  // ===== TEMPLATE OPERATIONS =====
+  getAllTemplates: (sessionId: string) =>
+    ipcRenderer.invoke("templates:get-all", sessionId),
+
+  createTemplate: (templateData: any, sessionId: string) =>
+    ipcRenderer.invoke("templates:create", templateData, sessionId),
+
+  updateTemplate: (templateId: number, templateData: any, sessionId: string) =>
+    ipcRenderer.invoke("templates:update", templateId, templateData, sessionId),
+
+  deleteTemplate: (templateId: number, sessionId: string) =>
+    ipcRenderer.invoke("templates:delete", templateId, sessionId),
+
+  seedTemplates: (sessionId: string) =>
+    ipcRenderer.invoke("templates:seed", sessionId),
+
+  // ===== SEARCH OPERATIONS =====
+  search: (query: any, sessionId: string) =>
+    ipcRenderer.invoke("search", query, sessionId),
+
+  rebuildSearchIndex: (sessionId: string) =>
+    ipcRenderer.invoke("rebuild-search-index", sessionId),
 });

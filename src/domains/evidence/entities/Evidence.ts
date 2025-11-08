@@ -1,4 +1,11 @@
-export type EvidenceType = 'document' | 'photo' | 'email' | 'recording' | 'note' | 'witness';
+// Keep this union aligned with VALID_EVIDENCE_TYPES and EvidenceTypeSchema.
+export type EvidenceType =
+  | "document"
+  | "photo"
+  | "email"
+  | "recording"
+  | "note"
+  | "witness";
 
 export interface Evidence {
   id: number;

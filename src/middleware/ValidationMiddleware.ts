@@ -5,12 +5,15 @@
  * Implements defense-in-depth security with sanitization and injection prevention.
  */
 
-import { z } from 'zod';
-import { logger } from '../utils/logger.ts';
-import type { AuditLogger } from '../services/AuditLogger.ts';
-// TODO: Create schemas.ts file with IPC validation schemas
-const ipcSchemas: Record<string, z.ZodSchema> = {};
-import { preventSqlInjection, sanitizeForLogging, sanitizeHtml } from './utils/sanitizers.ts';
+import { z } from "zod";
+import { logger } from "../utils/logger.ts";
+import type { AuditLogger } from "../services/AuditLogger.ts";
+import { ipcSchemas } from "./schemas.ts";
+import {
+  preventSqlInjection,
+  sanitizeForLogging,
+  sanitizeHtml,
+} from "./utils/sanitizers.ts";
 
 /**
  * Custom validation error with detailed field information
@@ -19,9 +22,13 @@ export class ValidationError extends Error {
   public readonly fields: Record<string, string[]>;
   public readonly code: string;
 
-  constructor(message: string, fields: Record<string, string[]> = {}, code = 'VALIDATION_ERROR') {
+  constructor(
+    message: string,
+    fields: Record<string, string[]> = {},
+    code = "VALIDATION_ERROR"
+  ) {
     super(message);
-    this.name = 'ValidationError';
+    this.name = "ValidationError";
     this.fields = fields;
     this.code = code;
   }
@@ -33,8 +40,15 @@ export class ValidationError extends Error {
 interface ValidationMetrics {
   totalValidations: number;
   totalDuration: number;
-  channelMetrics: Map<string, { count: number; totalMs: number; avgMs: number }>;
-  slowValidations: Array<{ channel: string; duration: number; timestamp: Date }>;
+  channelMetrics: Map<
+    string,
+    { count: number; totalMs: number; avgMs: number }
+  >;
+  slowValidations: Array<{
+    channel: string;
+    duration: number;
+    timestamp: Date;
+  }>;
 }
 
 /**
@@ -103,7 +117,7 @@ export class ValidationMiddleware {
         throw new ValidationError(
           `No validation schema defined for channel: ${channel}`,
           {},
-          'SCHEMA_NOT_FOUND',
+          "SCHEMA_NOT_FOUND"
         );
       }
 
@@ -118,13 +132,13 @@ export class ValidationMiddleware {
         // Note: Using 'authorization.denied' as proxy for validation failures
         // since there's no explicit validation event type in AuditEventType
         this.auditLogger?.log({
-          eventType: 'authorization.denied',
+          eventType: "authorization.denied",
           userId: this.extractUserId(data),
-          resourceType: 'ipc',
+          resourceType: "ipc",
           resourceId: channel,
-          action: 'read',
+          action: "read",
           success: false,
-          errorMessage: 'Validation failed',
+          errorMessage: "Validation failed",
           details: {
             channel,
             errorCount: Object.keys(fields).length,
@@ -135,9 +149,9 @@ export class ValidationMiddleware {
         });
 
         throw new ValidationError(
-          'Validation failed: Invalid request data',
+          "Validation failed: Invalid request data",
           fields,
-          'VALIDATION_FAILED',
+          "VALIDATION_FAILED"
         );
       }
 
@@ -152,7 +166,10 @@ export class ValidationMiddleware {
       this.updateMetrics(channel, duration);
 
       if (duration > this.slowValidationThreshold) {
-        logger.warn('ValidationMiddleware', `Slow validation for ${channel}: ${duration.toFixed(2)}ms`);
+        logger.warn(
+          "ValidationMiddleware",
+          `Slow validation for ${channel}: ${duration.toFixed(2)}ms`
+        );
       }
 
       return sanitized as T;
@@ -163,24 +180,25 @@ export class ValidationMiddleware {
 
       // Log unexpected errors
       this.auditLogger?.log({
-        eventType: 'authorization.denied',
+        eventType: "authorization.denied",
         userId: this.extractUserId(data),
-        resourceType: 'ipc',
+        resourceType: "ipc",
         resourceId: channel,
-        action: 'read',
+        action: "read",
         success: false,
-        errorMessage: error instanceof Error ? error.message : 'Unknown validation error',
+        errorMessage:
+          error instanceof Error ? error.message : "Unknown validation error",
         details: {
-          error: error instanceof Error ? error.message : 'Unknown error',
+          error: error instanceof Error ? error.message : "Unknown error",
           channel,
           duration: performance.now() - startTime,
         },
       });
 
       throw new ValidationError(
-        'Validation error: Unable to process request',
+        "Validation error: Unable to process request",
         {},
-        'VALIDATION_ERROR',
+        "VALIDATION_ERROR"
       );
     }
   }
@@ -194,8 +212,11 @@ export class ValidationMiddleware {
       this.schemas.set(channel, schema as z.ZodSchema);
     });
 
-    if (process.env.NODE_ENV === 'development') {
-      logger.warn('ValidationMiddleware', 'Registered ${this.schemas.size} validation schemas');
+    if (process.env.NODE_ENV === "development") {
+      logger.warn(
+        "ValidationMiddleware",
+        "Registered ${this.schemas.size} validation schemas"
+      );
     }
   }
 
@@ -204,15 +225,15 @@ export class ValidationMiddleware {
    */
   private isNoValidationChannel(channel: string): boolean {
     const noValidationChannels = [
-      'case:getAll',
-      'case:getStatistics',
-      'model:getAvailable',
-      'model:getDownloaded',
-      'profile:get',
-      'auth:logout',
-      'auth:getCurrentUser',
-      'gdpr:exportUserData',
-      'consent:getUserConsents',
+      "case:getAll",
+      "case:getStatistics",
+      "model:getAvailable",
+      "model:getDownloaded",
+      "profile:get",
+      "auth:logout",
+      "auth:getCurrentUser",
+      "gdpr:exportUserData",
+      "consent:getUserConsents",
     ];
 
     return noValidationChannels.includes(channel);
@@ -225,7 +246,7 @@ export class ValidationMiddleware {
     const fields: Record<string, string[]> = {};
 
     error.issues.forEach((err) => {
-      const path = err.path.join('.');
+      const path = err.path.join(".");
       if (!fields[path]) {
         fields[path] = [];
       }
@@ -234,19 +255,19 @@ export class ValidationMiddleware {
       let message = err.message;
 
       // Enhance common error messages based on Zod v4 issue types
-      if (err.code === 'too_small') {
+      if (err.code === "too_small") {
         // Check if it's a required field (minimum 1 for strings)
-        if ('minimum' in err && err.minimum === 1) {
-          message = 'This field is required';
+        if ("minimum" in err && err.minimum === 1) {
+          message = "This field is required";
         }
-      } else if (err.code === 'invalid_type') {
+      } else if (err.code === "invalid_type") {
         // Type narrowing for invalid_type
-        if ('expected' in err && 'received' in err) {
+        if ("expected" in err && "received" in err) {
           message = `Expected ${String(err.expected)}, received ${String(err.received)}`;
         }
-      } else if (err.code === 'invalid_enum_value') {
+      } else if (err.code === "invalid_enum_value") {
         // Zod enum validation error
-        message = 'Please select a valid option';
+        message = "Please select a valid option";
       }
 
       fields[path].push(message);
@@ -264,13 +285,13 @@ export class ValidationMiddleware {
       return data;
     }
 
-    if (typeof data === 'string') {
+    if (typeof data === "string") {
       // Check string length
       if (data.length > this.maxStringLength) {
         throw new ValidationError(
-          'String exceeds maximum length',
+          "String exceeds maximum length",
           { field: [`Maximum length is ${this.maxStringLength} characters`] },
-          'STRING_TOO_LONG',
+          "STRING_TOO_LONG"
         );
       }
 
@@ -280,9 +301,9 @@ export class ValidationMiddleware {
       // For certain fields, we need stricter validation
       if (!preventSqlInjection(sanitized)) {
         throw new ValidationError(
-          'Invalid characters detected',
-          { field: ['Input contains potentially dangerous characters'] },
-          'INVALID_CHARACTERS',
+          "Invalid characters detected",
+          { field: ["Input contains potentially dangerous characters"] },
+          "INVALID_CHARACTERS"
         );
       }
 
@@ -293,18 +314,20 @@ export class ValidationMiddleware {
       // Check array length
       if (data.length > this.maxArrayLength) {
         throw new ValidationError(
-          'Array exceeds maximum length',
+          "Array exceeds maximum length",
           { field: [`Maximum ${this.maxArrayLength} items allowed`] },
-          'ARRAY_TOO_LONG',
+          "ARRAY_TOO_LONG"
         );
       }
 
       return data.map((item) => this.sanitizeData(item));
     }
 
-    if (data && typeof data === 'object') {
+    if (data && typeof data === "object") {
       const sanitized: Record<string, unknown> = {};
-      for (const [key, value] of Object.entries(data as Record<string, unknown>)) {
+      for (const [key, value] of Object.entries(
+        data as Record<string, unknown>
+      )) {
         // Skip sanitization for certain field types
         if (this.shouldSkipSanitization(key, value)) {
           sanitized[key] = value;
@@ -323,12 +346,16 @@ export class ValidationMiddleware {
    */
   private shouldSkipSanitization(key: string, value: unknown): boolean {
     // Don't sanitize numbers, booleans, dates
-    if (typeof value === 'number' || typeof value === 'boolean' || value instanceof Date) {
+    if (
+      typeof value === "number" ||
+      typeof value === "boolean" ||
+      value instanceof Date
+    ) {
       return true;
     }
 
     // Don't sanitize specific fields that need raw data
-    const skipFields = ['fileContent', 'binaryData', 'checksum', 'hash'];
+    const skipFields = ["fileContent", "binaryData", "checksum", "hash"];
     return skipFields.includes(key);
   }
 
@@ -337,7 +364,7 @@ export class ValidationMiddleware {
    */
   private validateBusinessRules(channel: string, data: unknown): void {
     // Example: Case-specific business rules
-    if (channel === 'case:create' && data && typeof data === 'object') {
+    if (channel === "case:create" && data && typeof data === "object") {
       const obj = data as Record<string, unknown>;
       const input = obj.input as Record<string, unknown> | undefined;
 
@@ -345,17 +372,21 @@ export class ValidationMiddleware {
       if (
         input?.filingDeadline &&
         input?.nextHearingDate &&
-        typeof input.filingDeadline === 'string' &&
-        typeof input.nextHearingDate === 'string'
+        typeof input.filingDeadline === "string" &&
+        typeof input.nextHearingDate === "string"
       ) {
         const filing = new Date(input.filingDeadline);
         const hearing = new Date(input.nextHearingDate);
 
         if (filing > hearing) {
           throw new ValidationError(
-            'Filing deadline cannot be after hearing date',
-            { 'input.filingDeadline': ['Filing deadline must be before hearing date'] },
-            'INVALID_DATE_RANGE',
+            "Filing deadline cannot be after hearing date",
+            {
+              "input.filingDeadline": [
+                "Filing deadline must be before hearing date",
+              ],
+            },
+            "INVALID_DATE_RANGE"
           );
         }
       }
@@ -369,7 +400,7 @@ export class ValidationMiddleware {
    */
   private extractUserId(data: unknown): string {
     // Attempt to extract userId from common locations
-    if (data && typeof data === 'object') {
+    if (data && typeof data === "object") {
       const obj = data as Record<string, unknown>;
 
       // Try different possible locations
@@ -379,12 +410,15 @@ export class ValidationMiddleware {
 
       const userId = obj.userId ?? input?.userId ?? user?.id ?? session?.userId;
 
-      if (userId && (typeof userId === 'string' || typeof userId === 'number')) {
+      if (
+        userId &&
+        (typeof userId === "string" || typeof userId === "number")
+      ) {
         return String(userId);
       }
     }
 
-    return 'anonymous';
+    return "anonymous";
   }
 
   /**
@@ -458,7 +492,9 @@ export class ValidationMiddleware {
 // Export singleton instance
 let instance: ValidationMiddleware | null = null;
 
-export function getValidationMiddleware(auditLogger?: AuditLogger): ValidationMiddleware {
+export function getValidationMiddleware(
+  auditLogger?: AuditLogger
+): ValidationMiddleware {
   instance ??= new ValidationMiddleware(auditLogger);
   return instance;
 }

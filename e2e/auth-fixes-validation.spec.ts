@@ -4,10 +4,10 @@ import {
   _electron as electron,
   type ElectronApplication,
   type Page,
-} from '@playwright/test';
-import path from 'path';
-import fs from 'fs';
-import crypto from 'crypto';
+} from "@playwright/test";
+import path from "path";
+import fs from "fs";
+import crypto from "crypto";
 
 /**
  * Authentication Fixes Validation Test Suite
@@ -31,25 +31,44 @@ import crypto from 'crypto';
 let electronApp: ElectronApplication;
 let window: Page;
 
-const TEST_DB_PATH = path.join(process.cwd(), '.test-e2e-fixes', 'justice-test.db');
+const TEST_DB_PATH = path.join(
+  process.cwd(),
+  ".test-e2e-fixes",
+  "justice-test.db"
+);
 
 /**
  * Generate a random 32-byte encryption key for testing
  */
 function generateTestEncryptionKey(): string {
-  return crypto.randomBytes(32).toString('base64');
+  return crypto.randomBytes(32).toString("base64");
 }
 
 function generateTestUser() {
   const timestamp = Date.now();
+  const randomPassword = `TestPass${timestamp}!`;
   return {
     username: `testuser_${timestamp}`,
     email: `test_${timestamp}@example.com`,
-    password: 'TestPassword123!',
+    password: randomPassword,
   };
 }
 
-test.describe('Fix #1: IPC Response Structure', () => {
+/**
+ * Generate a secure random password for testing
+ * Follows the same requirements as the authentication system:
+ * - At least 12 characters
+ * - At least one uppercase letter
+ * - At least one lowercase letter
+ * - At least one number
+ */
+function generateSecurePassword(): string {
+  const timestamp = Date.now();
+  const randomNum = Math.floor(Math.random() * 1000);
+  return `SecurePass${timestamp}${randomNum}!`;
+}
+
+test.describe("Fix #1: IPC Response Structure", () => {
   test.beforeAll(async () => {
     const testDbDir = path.dirname(TEST_DB_PATH);
     if (fs.existsSync(testDbDir)) {
@@ -57,47 +76,60 @@ test.describe('Fix #1: IPC Response Structure', () => {
     }
     fs.mkdirSync(testDbDir, { recursive: true });
 
-    const distPath = path.join(process.cwd(), 'dist', 'electron', 'main.js');
-    const tsPath = path.join(process.cwd(), 'electron', 'main.ts');
+    const distPath = path.join(process.cwd(), "dist", "electron", "main.js");
+    const tsPath = path.join(process.cwd(), "electron", "main.ts");
 
     let mainPath: string;
     let launchArgs: string[];
 
     if (fs.existsSync(distPath)) {
-      console.log('[E2E] Using compiled JavaScript');
+      console.log("[E2E] Using compiled JavaScript");
       mainPath = distPath;
       launchArgs = [mainPath];
     } else {
-      console.warn('[E2E] Using tsx (slower). Run: pnpm build');
+      console.warn("[E2E] Using tsx (slower). Run: pnpm build");
       mainPath = tsPath;
-      launchArgs = ['--require', path.join(process.cwd(), 'node_modules', 'tsx', 'dist', 'loader.mjs'), mainPath];
+      launchArgs = [
+        "--require",
+        path.join(process.cwd(), "node_modules", "tsx", "dist", "loader.mjs"),
+        mainPath,
+      ];
     }
 
     // Generate test encryption key and write to .env
     const testEncryptionKey = generateTestEncryptionKey();
-    const envPath = path.join(process.cwd(), '.env');
-    fs.writeFileSync(envPath, `ENCRYPTION_KEY_BASE64=${testEncryptionKey}\n`, 'utf8');
-    console.log('[E2E] Created .env with test encryption key');
+    const envPath = path.join(process.cwd(), ".env");
+    fs.writeFileSync(
+      envPath,
+      `ENCRYPTION_KEY_BASE64=${testEncryptionKey}\n`,
+      "utf8"
+    );
+    console.log("[E2E] Created .env with test encryption key");
 
     electronApp = await electron.launch({
-      executablePath: path.join(process.cwd(), 'node_modules', '.bin', 'electron.cmd'),
+      executablePath: path.join(
+        process.cwd(),
+        "node_modules",
+        ".bin",
+        "electron.cmd"
+      ),
       args: launchArgs,
       env: {
         ...process.env,
         JUSTICE_DB_PATH: TEST_DB_PATH,
-        NODE_ENV: 'test',
+        NODE_ENV: "test",
         ENCRYPTION_KEY_BASE64: testEncryptionKey, // ← Critical: Provide test encryption key
-        ELECTRON_DISABLE_GPU: '1',
+        ELECTRON_DISABLE_GPU: "1",
       },
       timeout: 60000,
     });
 
     await new Promise((resolve) => setTimeout(resolve, 3000));
     window = await electronApp.firstWindow();
-    await window.waitForLoadState('domcontentloaded');
+    await window.waitForLoadState("domcontentloaded");
     await window.waitForTimeout(2000);
 
-    console.log('[Fix #1] App launched');
+    console.log("[Fix #1] App launched");
   });
 
   test.afterAll(async () => {
@@ -110,23 +142,24 @@ test.describe('Fix #1: IPC Response Structure', () => {
     }
 
     // Clean up test .env file
-    const envPath = path.join(process.cwd(), '.env');
+    const envPath = path.join(process.cwd(), ".env");
     if (fs.existsSync(envPath)) {
       fs.unlinkSync(envPath);
-      console.log('[E2E] Cleaned up test .env file');
+      console.log("[E2E] Cleaned up test .env file");
     }
   });
 
-  test('should receive flat IPC response structure on login', async () => {
+  test("should receive flat IPC response structure on login", async () => {
     const testUser = generateTestUser();
 
     // Register user
-    const registerResult = await window.evaluate(
-      async (user) => {
-        return await (window as any).justiceAPI.registerUser(user.username, user.password, user.email);
-      },
-      testUser,
-    );
+    const registerResult = await window.evaluate(async (user) => {
+      return await (window as any).justiceAPI.registerUser(
+        user.username,
+        user.password,
+        user.email
+      );
+    }, testUser);
 
     expect(registerResult.success).toBe(true);
 
@@ -138,41 +171,44 @@ test.describe('Fix #1: IPC Response Structure', () => {
     }
 
     // Login and check IPC response structure
-    const loginResult = await window.evaluate(
-      async (user) => {
-        return await (window as any).justiceAPI.loginUser(user.username, user.password, false);
-      },
-      testUser,
-    );
+    const loginResult = await window.evaluate(async (user) => {
+      return await (window as any).justiceAPI.loginUser(
+        user.username,
+        user.password,
+        false
+      );
+    }, testUser);
 
     // Verify flat structure (Fix #1)
     expect(loginResult.success).toBe(true);
-    expect(loginResult.data).toHaveProperty('userId');
-    expect(loginResult.data).toHaveProperty('sessionId');
-    expect(loginResult.data).toHaveProperty('username');
-    expect(loginResult.data).toHaveProperty('email');
+    expect(loginResult.data).toHaveProperty("userId");
+    expect(loginResult.data).toHaveProperty("sessionId");
+    expect(loginResult.data).toHaveProperty("username");
+    expect(loginResult.data).toHaveProperty("email");
 
     // Verify NO nested structure (should not have { user: {...}, sessionId })
-    expect(loginResult.data).not.toHaveProperty('user');
+    expect(loginResult.data).not.toHaveProperty("user");
 
-    console.log('[Fix #1] ✓ IPC response structure is flat');
+    console.log("[Fix #1] ✓ IPC response structure is flat");
   });
 
-  test('should set user state correctly from flat IPC response', async () => {
+  test("should set user state correctly from flat IPC response", async () => {
     const testUser = generateTestUser();
 
-    await window.evaluate(
-      async (user) => {
-        return await (window as any).justiceAPI.registerUser(user.username, user.password, user.email);
-      },
-      testUser,
-    );
+    await window.evaluate(async (user) => {
+      return await (window as any).justiceAPI.registerUser(
+        user.username,
+        user.password,
+        user.email
+      );
+    }, testUser);
 
     // Wait for user state to populate
     await window.waitForTimeout(1000);
 
     // Check if dashboard is visible (indicates user state set correctly)
-    const hasDashboard = (await window.locator('text=/dashboard|welcome|cases/i').count()) > 0;
+    const hasDashboard =
+      (await window.locator("text=/dashboard|welcome|cases/i").count()) > 0;
     expect(hasDashboard).toBeTruthy();
 
     // Verify no console errors related to user state
@@ -180,31 +216,38 @@ test.describe('Fix #1: IPC Response Structure', () => {
       return (window as any).testLogs || [];
     });
 
-    const hasUserError = logs.some((log: string) => log.includes("Cannot read property 'user'"));
+    const hasUserError = logs.some((log: string) =>
+      log.includes("Cannot read property 'user'")
+    );
     expect(hasUserError).toBe(false);
 
-    console.log('[Fix #1] ✓ User state set correctly');
+    console.log("[Fix #1] ✓ User state set correctly");
   });
 });
 
-test.describe('Fix #2: Session Persistence Race Condition', () => {
-  test('should load session immediately on app start (no race condition)', async () => {
+test.describe("Fix #2: Session Persistence Race Condition", () => {
+  test("should load session immediately on app start (no race condition)", async () => {
     const testUser = generateTestUser();
 
     // Register and login
-    const loginResult = await window.evaluate(
-      async (user) => {
-        await (window as any).justiceAPI.registerUser(user.username, user.password, user.email);
-        return await (window as any).justiceAPI.loginUser(user.username, user.password, true); // Remember me
-      },
-      testUser,
-    );
+    const loginResult = await window.evaluate(async (user) => {
+      await (window as any).justiceAPI.registerUser(
+        user.username,
+        user.password,
+        user.email
+      );
+      return await (window as any).justiceAPI.loginUser(
+        user.username,
+        user.password,
+        true
+      ); // Remember me
+    }, testUser);
 
     expect(loginResult.success).toBe(true);
 
     // Verify sessionId stored in localStorage
     const sessionId = await window.evaluate(() => {
-      return localStorage.getItem('sessionId');
+      return localStorage.getItem("sessionId");
     });
 
     expect(sessionId).toBe(loginResult.data.sessionId);
@@ -213,8 +256,8 @@ test.describe('Fix #2: Session Persistence Race Condition', () => {
     await electronApp.close();
 
     // Restart with same database
-    const distPath = path.join(process.cwd(), 'dist', 'electron', 'main.js');
-    const tsPath = path.join(process.cwd(), 'electron', 'main.ts');
+    const distPath = path.join(process.cwd(), "dist", "electron", "main.js");
+    const tsPath = path.join(process.cwd(), "electron", "main.ts");
 
     let mainPath: string;
     let launchArgs: string[];
@@ -224,104 +267,132 @@ test.describe('Fix #2: Session Persistence Race Condition', () => {
       launchArgs = [mainPath];
     } else {
       mainPath = tsPath;
-      launchArgs = ['--require', path.join(process.cwd(), 'node_modules', 'tsx', 'dist', 'loader.mjs'), mainPath];
+      launchArgs = [
+        "--require",
+        path.join(process.cwd(), "node_modules", "tsx", "dist", "loader.mjs"),
+        mainPath,
+      ];
     }
 
     electronApp = await electron.launch({
-      executablePath: path.join(process.cwd(), 'node_modules', '.bin', 'electron.cmd'),
+      executablePath: path.join(
+        process.cwd(),
+        "node_modules",
+        ".bin",
+        "electron.cmd"
+      ),
       args: launchArgs,
       env: {
         ...process.env,
         JUSTICE_DB_PATH: TEST_DB_PATH,
-        NODE_ENV: 'test',
-        ELECTRON_DISABLE_GPU: '1',
+        NODE_ENV: "test",
+        ELECTRON_DISABLE_GPU: "1",
       },
       timeout: 60000,
     });
 
     await new Promise((resolve) => setTimeout(resolve, 3000));
     window = await electronApp.firstWindow();
-    await window.waitForLoadState('domcontentloaded');
+    await window.waitForLoadState("domcontentloaded");
 
     // Check if dashboard appears immediately (no login screen flash)
     // Wait minimal time to avoid false positives
     await window.waitForTimeout(1000);
 
-    const hasDashboard = (await window.locator('text=/dashboard|welcome|cases/i').count()) > 0;
-    const hasLoginForm = (await window.locator('button:has-text("Login"), input[type="password"]').count()) > 0;
+    const hasDashboard =
+      (await window.locator("text=/dashboard|welcome|cases/i").count()) > 0;
+    const hasLoginForm =
+      (await window
+        .locator('button:has-text("Login"), input[type="password"]')
+        .count()) > 0;
 
     expect(hasDashboard).toBeTruthy();
     expect(hasLoginForm).toBe(false); // Should NOT see login form
 
-    console.log('[Fix #2] ✓ Session loaded immediately, no race condition');
+    console.log("[Fix #2] ✓ Session loaded immediately, no race condition");
   });
 
-  test('should not show login screen flash on valid session', async () => {
+  test("should not show login screen flash on valid session", async () => {
     // This test checks that the combined useEffect prevents the login screen flash
 
     const testUser = generateTestUser();
 
-    await window.evaluate(
-      async (user) => {
-        await (window as any).justiceAPI.registerUser(user.username, user.password, user.email);
-        return await (window as any).justiceAPI.loginUser(user.username, user.password, true);
-      },
-      testUser,
-    );
+    await window.evaluate(async (user) => {
+      await (window as any).justiceAPI.registerUser(
+        user.username,
+        user.password,
+        user.email
+      );
+      return await (window as any).justiceAPI.loginUser(
+        user.username,
+        user.password,
+        true
+      );
+    }, testUser);
 
     // Reload page (simulates app restart without closing)
     await window.reload();
-    await window.waitForLoadState('domcontentloaded');
+    await window.waitForLoadState("domcontentloaded");
 
     // Wait for initial load
     await window.waitForTimeout(500);
 
     // Check that we go straight to dashboard
-    const hasDashboard = (await window.locator('text=/dashboard|welcome|cases/i').count()) > 0;
+    const hasDashboard =
+      (await window.locator("text=/dashboard|welcome|cases/i").count()) > 0;
     expect(hasDashboard).toBeTruthy();
 
-    console.log('[Fix #2] ✓ No login screen flash on reload');
+    console.log("[Fix #2] ✓ No login screen flash on reload");
   });
 });
 
-test.describe('Fix #3: ErrorBoundary Wrapping', () => {
-  test('should show error message (not blank screen) on invalid credentials', async () => {
+test.describe("Fix #3: ErrorBoundary Wrapping", () => {
+  test("should show error message (not blank screen) on invalid credentials", async () => {
     // Try to login with invalid credentials
-    await window.evaluate(async () => {
-      return await (window as any).justiceAPI.loginUser('invalid_user', 'InvalidPassword123!', false);
-    });
+    const invalidPassword = `InvalidPass${Date.now()}!`;
+    await window.evaluate(async (password) => {
+      return await (window as any).justiceAPI.loginUser(
+        "invalid_user",
+        password,
+        false
+      );
+    }, invalidPassword);
 
     await window.waitForTimeout(1000);
 
     // Check for error message (not blank screen)
-    const hasError = (await window.locator('text=/invalid|error|wrong|incorrect/i').count()) > 0;
+    const hasError =
+      (await window.locator("text=/invalid|error|wrong|incorrect/i").count()) >
+      0;
     expect(hasError).toBeTruthy();
 
     // Verify page is still visible (not blank)
-    const hasContent = (await window.locator('body').count()) > 0;
+    const hasContent = (await window.locator("body").count()) > 0;
     expect(hasContent).toBeTruthy();
 
-    console.log('[Fix #3] ✓ Error handled gracefully, no blank screen');
+    console.log("[Fix #3] ✓ Error handled gracefully, no blank screen");
   });
 
-  test('should catch and display authentication errors without crashing', async () => {
+  test("should catch and display authentication errors without crashing", async () => {
     const testUser = generateTestUser();
 
     // Register user
-    await window.evaluate(
-      async (user) => {
-        return await (window as any).justiceAPI.registerUser(user.username, user.password, user.email);
-      },
-      testUser,
-    );
+    await window.evaluate(async (user) => {
+      return await (window as any).justiceAPI.registerUser(
+        user.username,
+        user.password,
+        user.email
+      );
+    }, testUser);
 
     // Try to register same user again (duplicate error)
-    const duplicateResult = await window.evaluate(
-      async (user) => {
-        return await (window as any).justiceAPI.registerUser(user.username, user.password, user.email);
-      },
-      testUser,
-    );
+    const duplicateResult = await window.evaluate(async (user) => {
+      return await (window as any).justiceAPI.registerUser(
+        user.username,
+        user.password,
+        user.email
+      );
+    }, testUser);
 
     expect(duplicateResult.success).toBe(false);
 
@@ -329,65 +400,71 @@ test.describe('Fix #3: ErrorBoundary Wrapping', () => {
     await window.waitForTimeout(1000);
 
     // Verify app is still functional
-    const hasContent = (await window.locator('body').count()) > 0;
+    const hasContent = (await window.locator("body").count()) > 0;
     expect(hasContent).toBeTruthy();
 
-    console.log('[Fix #3] ✓ Duplicate registration error handled');
+    console.log("[Fix #3] ✓ Duplicate registration error handled");
   });
 });
 
-test.describe('Fix #4: hasConsent Temporary Bypass', () => {
-  test('should show consent banner after login (hasConsent bypassed)', async () => {
+test.describe("Fix #4: hasConsent Temporary Bypass", () => {
+  test("should show consent banner after login (hasConsent bypassed)", async () => {
     const testUser = generateTestUser();
 
     // Register user (auto-login after registration)
-    await window.evaluate(
-      async (user) => {
-        return await (window as any).justiceAPI.registerUser(user.username, user.password, user.email);
-      },
-      testUser,
-    );
+    await window.evaluate(async (user) => {
+      return await (window as any).justiceAPI.registerUser(
+        user.username,
+        user.password,
+        user.email
+      );
+    }, testUser);
 
     await window.waitForTimeout(2000);
 
     // Check for consent banner
-    const hasConsentBanner = (await window.locator('text=/consent|gdpr|privacy|accept/i').count()) > 0;
+    const hasConsentBanner =
+      (await window.locator("text=/consent|gdpr|privacy|accept/i").count()) > 0;
     expect(hasConsentBanner).toBeTruthy();
 
-    console.log('[Fix #4] ✓ Consent banner appears (hasConsent bypassed)');
+    console.log("[Fix #4] ✓ Consent banner appears (hasConsent bypassed)");
   });
 
-  test('should allow dismissing consent banner', async () => {
+  test("should allow dismissing consent banner", async () => {
     const testUser = generateTestUser();
 
-    await window.evaluate(
-      async (user) => {
-        return await (window as any).justiceAPI.registerUser(user.username, user.password, user.email);
-      },
-      testUser,
-    );
+    await window.evaluate(async (user) => {
+      return await (window as any).justiceAPI.registerUser(
+        user.username,
+        user.password,
+        user.email
+      );
+    }, testUser);
 
     await window.waitForTimeout(2000);
 
     // Look for accept button and click
-    const acceptButton = window.locator('button:has-text("Accept"), button:has-text("Continue")').first();
+    const acceptButton = window
+      .locator('button:has-text("Accept"), button:has-text("Continue")')
+      .first();
     if ((await acceptButton.count()) > 0) {
       await acceptButton.click();
       await window.waitForTimeout(1000);
 
       // Verify consent banner disappeared
-      const hasConsentBanner = (await window.locator('text=/consent|gdpr|privacy/i').count()) === 0;
+      const hasConsentBanner =
+        (await window.locator("text=/consent|gdpr|privacy/i").count()) === 0;
       expect(hasConsentBanner).toBeTruthy();
 
-      console.log('[Fix #4] ✓ Consent banner dismissed successfully');
+      console.log("[Fix #4] ✓ Consent banner dismissed successfully");
     } else {
-      console.warn('[Fix #4] Accept button not found, skipping dismissal test');
+      console.warn("[Fix #4] Accept button not found, skipping dismissal test");
     }
   });
 });
 
-test.describe('Fix #5: IPC Validation Guards', () => {
-  test('should log error when IPC API is undefined', async () => {
+test.describe("Fix #5: IPC Validation Guards", () => {
+  test("should log error when IPC API is undefined", async () => {
     // This test verifies the guard in AuthContext.tsx lines 57-61
 
     // Try to break IPC by removing it
@@ -400,8 +477,8 @@ test.describe('Fix #5: IPC Validation Guards', () => {
       let errorCaught = false;
       try {
         // This should trigger the guard and log error
-        if (typeof window === 'undefined' || !(window as any).justiceAPI) {
-          console.error('IPC API not available');
+        if (typeof window === "undefined" || !(window as any).justiceAPI) {
+          console.error("IPC API not available");
           errorCaught = true;
         }
       } catch (e) {
@@ -416,19 +493,20 @@ test.describe('Fix #5: IPC Validation Guards', () => {
 
     expect(errorLogged).toBe(true);
 
-    console.log('[Fix #5] ✓ IPC validation guard works');
+    console.log("[Fix #5] ✓ IPC validation guard works");
   });
 
-  test('should handle missing IPC API gracefully', async () => {
+  test("should handle missing IPC API gracefully", async () => {
     const testUser = generateTestUser();
 
     // Register user normally first
-    await window.evaluate(
-      async (user) => {
-        return await (window as any).justiceAPI.registerUser(user.username, user.password, user.email);
-      },
-      testUser,
-    );
+    await window.evaluate(async (user) => {
+      return await (window as any).justiceAPI.registerUser(
+        user.username,
+        user.password,
+        user.email
+      );
+    }, testUser);
 
     // Now test guard by attempting login with undefined API
     const result = await window.evaluate(async (user) => {
@@ -436,7 +514,7 @@ test.describe('Fix #5: IPC Validation Guards', () => {
       (window as any).justiceAPI = undefined;
 
       let guardTriggered = false;
-      if (typeof window === 'undefined' || !(window as any).justiceAPI) {
+      if (typeof window === "undefined" || !(window as any).justiceAPI) {
         guardTriggered = true;
       }
 
@@ -447,38 +525,48 @@ test.describe('Fix #5: IPC Validation Guards', () => {
 
     expect(result).toBe(true);
 
-    console.log('[Fix #5] ✓ Missing IPC API handled gracefully');
+    console.log("[Fix #5] ✓ Missing IPC API handled gracefully");
   });
 });
 
-test.describe('Fix #6: Password Validation Consistency', () => {
-  test('should reject short password in login (<8 characters)', async () => {
+test.describe("Fix #6: Password Validation Consistency", () => {
+  test("should reject short password in login (<8 characters)", async () => {
     // Try to login with short password
     const result = await window.evaluate(async () => {
       // This would be caught by client-side validation in LoginScreen.tsx
       // We simulate the validation here
-      const shortPassword = 'short'; // 5 characters
+      const shortPassword = "short"; // 5 characters
 
       if (!shortPassword || shortPassword.length < 8) {
-        return { success: false, error: 'Password must be at least 8 characters' };
+        return {
+          success: false,
+          error: "Password must be at least 8 characters",
+        };
       }
 
-      return await (window as any).justiceAPI.loginUser('testuser', shortPassword, false);
+      return await (window as any).justiceAPI.loginUser(
+        "testuser",
+        shortPassword,
+        false
+      );
     });
 
     expect(result.success).toBe(false);
-    expect(result.error).toContain('8 characters');
+    expect(result.error).toContain("8 characters");
 
-    console.log('[Fix #6] ✓ Short password rejected in login');
+    console.log("[Fix #6] ✓ Short password rejected in login");
   });
 
-  test('should enforce consistent password validation between login and registration', async () => {
-    const shortPassword = 'short'; // 5 characters
+  test("should enforce consistent password validation between login and registration", async () => {
+    const shortPassword = "short"; // 5 characters
 
     // Test registration validation (should fail)
     const registerValidation = await window.evaluate(async (pwd) => {
       if (!pwd || pwd.length < 8) {
-        return { valid: false, error: 'Password must be at least 8 characters' };
+        return {
+          valid: false,
+          error: "Password must be at least 8 characters",
+        };
       }
       return { valid: true };
     }, shortPassword);
@@ -486,7 +574,10 @@ test.describe('Fix #6: Password Validation Consistency', () => {
     // Test login validation (should fail identically)
     const loginValidation = await window.evaluate(async (pwd) => {
       if (!pwd || pwd.length < 8) {
-        return { valid: false, error: 'Password must be at least 8 characters' };
+        return {
+          valid: false,
+          error: "Password must be at least 8 characters",
+        };
       }
       return { valid: true };
     }, shortPassword);
@@ -495,92 +586,108 @@ test.describe('Fix #6: Password Validation Consistency', () => {
     expect(loginValidation.valid).toBe(false);
     expect(registerValidation.error).toBe(loginValidation.error);
 
-    console.log('[Fix #6] ✓ Password validation consistent between login and registration');
+    console.log(
+      "[Fix #6] ✓ Password validation consistent between login and registration"
+    );
   });
 
-  test('should accept valid password (>=8 characters)', async () => {
-    const validPassword = 'ValidPassword123!'; // 17 characters
+  test("should accept valid password (>=8 characters)", async () => {
+    const validPassword = `ValidPass${Date.now()}!`; // Generated valid password
 
     const validation = await window.evaluate(async (pwd) => {
       if (!pwd || pwd.length < 8) {
-        return { valid: false, error: 'Password must be at least 8 characters' };
+        return {
+          valid: false,
+          error: "Password must be at least 8 characters",
+        };
       }
       return { valid: true };
     }, validPassword);
 
     expect(validation.valid).toBe(true);
 
-    console.log('[Fix #6] ✓ Valid password accepted');
+    console.log("[Fix #6] ✓ Valid password accepted");
   });
 });
 
-test.describe('Integration: All Fixes Working Together', () => {
-  test('should complete full authentication flow with all fixes', async () => {
+test.describe("Integration: All Fixes Working Together", () => {
+  test("should complete full authentication flow with all fixes", async () => {
     const testUser = generateTestUser();
 
     // 1. Register (Fix #1, #4)
-    const registerResult = await window.evaluate(
-      async (user) => {
-        return await (window as any).justiceAPI.registerUser(user.username, user.password, user.email);
-      },
-      testUser,
-    );
+    const registerResult = await window.evaluate(async (user) => {
+      return await (window as any).justiceAPI.registerUser(
+        user.username,
+        user.password,
+        user.email
+      );
+    }, testUser);
 
     expect(registerResult.success).toBe(true);
 
     // 2. Verify IPC response structure (Fix #1)
-    expect(registerResult.data).toHaveProperty('userId');
-    expect(registerResult.data).toHaveProperty('sessionId');
+    expect(registerResult.data).toHaveProperty("userId");
+    expect(registerResult.data).toHaveProperty("sessionId");
 
     // 3. Verify consent banner appears (Fix #4)
     await window.waitForTimeout(2000);
-    const hasConsentBanner = (await window.locator('text=/consent|gdpr|privacy/i').count()) > 0;
+    const hasConsentBanner =
+      (await window.locator("text=/consent|gdpr|privacy/i").count()) > 0;
     expect(hasConsentBanner).toBeTruthy();
 
     // 4. Dismiss consent
-    const acceptButton = window.locator('button:has-text("Accept"), button:has-text("Continue")').first();
+    const acceptButton = window
+      .locator('button:has-text("Accept"), button:has-text("Continue")')
+      .first();
     if ((await acceptButton.count()) > 0) {
       await acceptButton.click();
     }
 
     // 5. Logout
-    const logoutButton = window.locator('button:has-text("Logout"), button:has-text("Sign out")');
+    const logoutButton = window.locator(
+      'button:has-text("Logout"), button:has-text("Sign out")'
+    );
     if ((await logoutButton.count()) > 0) {
       await logoutButton.first().click();
       await window.waitForTimeout(1000);
     }
 
     // 6. Login with password validation (Fix #6)
-    const loginResult = await window.evaluate(
-      async (user) => {
-        // Validate password length (Fix #6)
-        if (!user.password || user.password.length < 8) {
-          return { success: false, error: 'Password must be at least 8 characters' };
-        }
+    const loginResult = await window.evaluate(async (user) => {
+      // Validate password length (Fix #6)
+      if (!user.password || user.password.length < 8) {
+        return {
+          success: false,
+          error: "Password must be at least 8 characters",
+        };
+      }
 
-        return await (window as any).justiceAPI.loginUser(user.username, user.password, true); // Remember me
-      },
-      testUser,
-    );
+      return await (window as any).justiceAPI.loginUser(
+        user.username,
+        user.password,
+        true
+      ); // Remember me
+    }, testUser);
 
     expect(loginResult.success).toBe(true);
 
     // 7. Verify session persistence (Fix #2)
     const sessionId = await window.evaluate(() => {
-      return localStorage.getItem('sessionId');
+      return localStorage.getItem("sessionId");
     });
 
     expect(sessionId).toBe(loginResult.data.sessionId);
 
     // 8. Reload page to test session restoration (Fix #2)
     await window.reload();
-    await window.waitForLoadState('domcontentloaded');
+    await window.waitForLoadState("domcontentloaded");
     await window.waitForTimeout(1000);
 
     // 9. Verify dashboard appears (no login screen flash)
-    const hasDashboard = (await window.locator('text=/dashboard|welcome|cases/i').count()) > 0;
+    const hasDashboard =
+      (await window.locator("text=/dashboard|welcome|cases/i").count()) > 0;
     expect(hasDashboard).toBeTruthy();
 
-    console.log('[Integration] ✓ All fixes working together');
+    console.log("[Integration] ✓ All fixes working together");
   });
 });

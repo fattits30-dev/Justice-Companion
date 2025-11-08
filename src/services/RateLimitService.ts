@@ -1,5 +1,5 @@
-import { injectable } from 'inversify';
-import { logger } from '../utils/logger.ts';
+import { injectable } from "inversify";
+import { logger } from "../utils/logger.ts";
 
 /**
  * Represents a login attempt record for rate limiting
@@ -77,21 +77,26 @@ export class RateLimitService {
       return {
         allowed: true,
         attemptsRemaining: this.MAX_ATTEMPTS,
-        message: 'Login attempt allowed',
+        message: "Login attempt allowed",
       };
     }
 
     // Check if account is locked
     if (attempt.lockedUntil && attempt.lockedUntil > now) {
-      const remainingSeconds = Math.ceil((attempt.lockedUntil.getTime() - now.getTime()) / 1000);
+      const remainingSeconds = Math.ceil(
+        (attempt.lockedUntil.getTime() - now.getTime()) / 1000
+      );
 
       // Log rate limit violation for monitoring
-      logger.warn('RateLimitService', `Rate limit exceeded for ${normalizedUsername}. Attempts: ${attempt.count}, Lock time remaining: ${remainingSeconds}s`);
+      logger.warn(
+        "RateLimitService",
+        `Rate limit exceeded for ${normalizedUsername}. Attempts: ${attempt.count}, Lock time remaining: ${remainingSeconds}s`
+      );
 
       return {
         allowed: false,
         remainingTime: remainingSeconds,
-        message: 'Account temporarily locked due to too many failed attempts',
+        message: "Account temporarily locked due to too many failed attempts",
       };
     }
 
@@ -103,7 +108,7 @@ export class RateLimitService {
       return {
         allowed: true,
         attemptsRemaining: this.MAX_ATTEMPTS,
-        message: 'Login attempt allowed',
+        message: "Login attempt allowed",
       };
     }
 
@@ -113,13 +118,16 @@ export class RateLimitService {
       attempt.lockedUntil = new Date(now.getTime() + this.LOCK_DURATION_MS);
 
       // Log account lockout for monitoring
-      logger.warn('RateLimitService', `Account locked for ${normalizedUsername}. Attempts: ${attempt.count}, Lock duration: ${this.LOCK_DURATION_MS / 1000}s`);
+      logger.warn(
+        "RateLimitService",
+        `Account locked for ${normalizedUsername}. Attempts: ${attempt.count}, Lock duration: ${this.LOCK_DURATION_MS / 1000}s`
+      );
 
       const remainingSeconds = Math.ceil(this.LOCK_DURATION_MS / 1000);
       return {
         allowed: false,
         remainingTime: remainingSeconds,
-        message: 'Account temporarily locked due to too many failed attempts',
+        message: "Account temporarily locked due to too many failed attempts",
       };
     }
 
@@ -150,7 +158,6 @@ export class RateLimitService {
         lockedUntil: null,
       };
       this.attempts.set(normalizedUsername, attempt);
-
     } else {
       // If already locked, don't increment count further
       if (attempt.lockedUntil && attempt.lockedUntil > now) {
@@ -180,10 +187,12 @@ export class RateLimitService {
         if (attempt.count >= this.MAX_ATTEMPTS && !attempt.lockedUntil) {
           attempt.lockedUntil = new Date(now.getTime() + this.LOCK_DURATION_MS);
 
-          logger.error('RateLimitService', `BRUTE FORCE DETECTED for ${normalizedUsername}. Account locked for ${this.LOCK_DURATION_MS / 1000}s`);
+          logger.error(
+            "RateLimitService",
+            `BRUTE FORCE DETECTED for ${normalizedUsername}. Account locked for ${this.LOCK_DURATION_MS / 1000}s`
+          );
         }
       }
-
     }
   }
 
@@ -257,10 +266,9 @@ export class RateLimitService {
     });
 
     // Delete expired entries
-    entriesToDelete.forEach(username => {
+    entriesToDelete.forEach((username) => {
       this.attempts.delete(username);
     });
-
   }
 
   /**
@@ -314,7 +322,10 @@ export class RateLimitService {
     return {
       allowed: result.allowed,
       remaining: result.attemptsRemaining || 0,
-      resetAt: new Date(Date.now() + (result.remainingTime ? result.remainingTime * 1000 : windowMs))
+      resetAt: new Date(
+        Date.now() +
+          (result.remainingTime ? result.remainingTime * 1000 : this.WINDOW_MS)
+      ),
     };
   }
 
@@ -339,12 +350,12 @@ export class RateLimitService {
     totalTrackedUsers: number;
     lockedAccounts: number;
     activeAttempts: number;
-    } {
+  } {
     const now = new Date();
     let lockedAccounts = 0;
     let activeAttempts = 0;
 
-    this.attempts.forEach(attempt => {
+    this.attempts.forEach((attempt) => {
       if (attempt.lockedUntil && attempt.lockedUntil > now) {
         lockedAccounts++;
       }

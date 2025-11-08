@@ -1,18 +1,23 @@
-import { ipcMain } from 'electron';
-import { SearchService, type SearchQuery } from '../../src/services/SearchService.ts';
-import { SearchIndexBuilder } from '../../src/services/SearchIndexBuilder.ts';
-import { databaseManager } from '../../src/db/database.ts';
-import { CaseRepository } from '../../src/repositories/CaseRepository.ts';
-import { EvidenceRepository } from '../../src/repositories/EvidenceRepository.ts';
-import { ChatConversationRepository } from '../../src/repositories/ChatConversationRepository.ts';
-import { NotesRepository } from '../../src/repositories/NotesRepository.ts';
-import { EncryptionService } from '../../src/services/EncryptionService.ts';
-import { AuditLogger } from '../../src/services/AuditLogger.ts';
-// import { SessionManager } from '../session-manager.ts'; // TODO: SessionManager not implemented
-import { getKeyManager } from '../main.ts';
-import { DatabaseError, ValidationError } from '../../src/errors/DomainErrors.ts';
-
-// const sessionManager = new SessionManager(); // TODO: SessionManager not implemented
+import { ipcMain, type IpcMainInvokeEvent } from "electron";
+import {
+  SearchService,
+  type SearchQuery,
+} from "../../src/services/SearchService";
+import { SearchIndexBuilder } from "../../src/services/SearchIndexBuilder";
+import { databaseManager } from "../../src/db/database";
+import { CaseRepository } from "../../src/repositories/CaseRepository";
+import { EvidenceRepository } from "../../src/repositories/EvidenceRepository";
+import { ChatConversationRepository } from "../../src/repositories/ChatConversationRepository";
+import { NotesRepository } from "../../src/repositories/NotesRepository";
+import { EncryptionService } from "../../src/services/EncryptionService";
+import { AuditLogger } from "../../src/services/AuditLogger";
+import { withAuthorization } from "../utils/authorization-wrapper";
+import type { IPCResponse } from "../utils/ipc-response";
+import { getKeyManager } from "../main";
+import {
+  DatabaseError,
+  ValidationError,
+} from "../../src/errors/DomainErrors";
 
 // Lazy initialization of services
 let searchService: SearchService | null = null;
@@ -22,11 +27,14 @@ function _getSearchService(): SearchService {
   if (!searchService) {
     const keyManager = getKeyManager();
     const encryptionService = new EncryptionService(keyManager.getKey());
-    const auditLogger = new AuditLogger(databaseManager.getDatabase(), encryptionService);
+    const auditLogger = new AuditLogger(databaseManager.getDatabase());
 
     const caseRepo = new CaseRepository(encryptionService, auditLogger);
     const evidenceRepo = new EvidenceRepository(encryptionService, auditLogger);
-    const chatRepo = new ChatConversationRepository(encryptionService, auditLogger);
+    const chatRepo = new ChatConversationRepository(
+      encryptionService,
+      auditLogger
+    );
     const notesRepo = new NotesRepository(encryptionService, auditLogger);
 
     searchService = new SearchService(
@@ -46,11 +54,14 @@ function _getSearchIndexBuilder(): SearchIndexBuilder {
   if (!searchIndexBuilder) {
     const keyManager = getKeyManager();
     const encryptionService = new EncryptionService(keyManager.getKey());
-    const auditLogger = new AuditLogger(databaseManager.getDatabase(), encryptionService);
+    const auditLogger = new AuditLogger(databaseManager.getDatabase());
 
     const caseRepo = new CaseRepository(encryptionService, auditLogger);
     const evidenceRepo = new EvidenceRepository(encryptionService, auditLogger);
-    const chatRepo = new ChatConversationRepository(encryptionService, auditLogger);
+    const chatRepo = new ChatConversationRepository(
+      encryptionService,
+      auditLogger
+    );
     const notesRepo = new NotesRepository(encryptionService, auditLogger);
 
     searchIndexBuilder = new SearchIndexBuilder(
@@ -59,57 +70,97 @@ function _getSearchIndexBuilder(): SearchIndexBuilder {
       evidenceRepo,
       chatRepo,
       notesRepo,
-      encryptionService,
-      auditLogger
+      encryptionService
     );
   }
   return searchIndexBuilder;
 }
 
+/**
+ * Register all search IPC handlers
+ *
+ * SECURITY: All handlers require session validation via withAuthorization
+ * All search results are filtered by userId to prevent data leakage
+ * Updated: 2025-11-03 - Fixed missing authentication
+ */
 export function registerSearchHandlers(): void {
-  ipcMain.handle('search', async (_event, query: SearchQuery) => {
-    try {
-      const searchService = _getSearchService();
-      const results = await searchService.search(query);
-      return results;
-    } catch (error) {
-      console.error('Search error:', error);
+  ipcMain.handle(
+    "search",
+    async (
+      _event: IpcMainInvokeEvent,
+      query: SearchQuery,
+      sessionId: string
+    ): Promise<IPCResponse> => {
+      return withAuthorization(sessionId, async (userId) => {
+        try {
+          console.warn("[IPC] search called by user:", userId, "query:", query);
 
-      // Wrap generic errors in DomainErrors
-      if (error instanceof Error) {
-        const message = error.message.toLowerCase();
+          const searchService = _getSearchService();
 
-        if (message.includes('database') || message.includes('sqlite')) {
-          throw new DatabaseError('search', error.message);
+          // SECURITY: Pass userId to filter search results
+          // SearchService.search(userId, query) filters all results by user_id
+          const results = await searchService.search(userId, query);
+
+          return { success: true, data: results };
+        } catch (error) {
+          console.error("[IPC] Search error:", error);
+
+          // Wrap generic errors in DomainErrors
+          if (error instanceof Error) {
+            const message = error.message.toLowerCase();
+
+            if (message.includes("database") || message.includes("sqlite")) {
+              throw new DatabaseError("search", error.message);
+            }
+
+            if (message.includes("invalid") || message.includes("query")) {
+              throw new ValidationError(
+                `Invalid search query: ${error.message}`
+              );
+            }
+          }
+
+          throw error;
         }
-
-        if (message.includes('invalid') || message.includes('query')) {
-          throw new ValidationError(`Invalid search query: ${error.message}`);
-        }
-      }
-
-      throw error;
+      });
     }
-  });
+  );
 
-  ipcMain.handle('rebuild-search-index', async () => {
-    try {
-      const searchIndexBuilder = _getSearchIndexBuilder();
-      await searchIndexBuilder.buildIndex();
-      return { success: true };
-    } catch (error) {
-      console.error('Search index rebuild error:', error);
+  ipcMain.handle(
+    "rebuild-search-index",
+    async (
+      _event: IpcMainInvokeEvent,
+      sessionId: string
+    ): Promise<IPCResponse> => {
+      return withAuthorization(sessionId, async (userId) => {
+        try {
+          console.warn("[IPC] rebuild-search-index called by user:", userId);
 
-      // Wrap generic errors in DomainErrors
-      if (error instanceof Error) {
-        const message = error.message.toLowerCase();
+          const searchIndexBuilder = _getSearchIndexBuilder();
 
-        if (message.includes('database') || message.includes('sqlite')) {
-          throw new DatabaseError('rebuild search index', error.message);
+          // SECURITY: Only rebuild index for authenticated user's data
+          // rebuildIndexForUser() only clears and rebuilds this user's index entries
+          await searchIndexBuilder.rebuildIndexForUser(userId);
+
+          return {
+            success: true,
+            data: { message: `Search index rebuilt for user ${userId}` },
+          };
+        } catch (error) {
+          console.error("[IPC] Search index rebuild error:", error);
+
+          // Wrap generic errors in DomainErrors
+          if (error instanceof Error) {
+            const message = error.message.toLowerCase();
+
+            if (message.includes("database") || message.includes("sqlite")) {
+              throw new DatabaseError("rebuild search index", error.message);
+            }
+          }
+
+          throw error;
         }
-      }
-
-      throw error;
+      });
     }
-  });
+  );
 }

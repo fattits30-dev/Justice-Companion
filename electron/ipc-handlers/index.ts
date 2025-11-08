@@ -25,22 +25,22 @@
  * Total: 36 IPC channels across 7 domain modules (~1,830 LOC split)
  */
 
-import { setupAuthHandlers } from './auth.ts';
-import { setupCaseHandlers } from './cases.ts';
-import { setupEvidenceHandlers } from './evidence.ts';
-import { setupDeadlineHandlers } from './deadlines.ts';
-import { setupChatHandlers } from './chat.ts';
-import { setupGdprHandlers } from './gdpr.ts';
-import { registerSearchHandlers } from './search.ts';
-import { setupTagHandlers } from './tags.ts';
-import { setupNotificationHandlers } from './notifications.ts';
-import { setupDashboardHandlers } from './dashboard.ts';
+import { setupAuthHandlers } from "./auth.ts";
+import { setupCaseHandlers } from "./cases.ts";
+import { setupEvidenceHandlers } from "./evidence.ts";
+import { setupDeadlineHandlers } from "./deadlines.ts";
+import { setupChatHandlers } from "./chat.ts";
+import { setupGdprHandlers } from "./gdpr.ts";
+import { registerSearchHandlers } from "./search.ts";
+import { setupTagHandlers } from "./tags.ts";
+import { setupNotificationHandlers } from "./notifications.ts";
+import { setupDashboardHandlers } from "./dashboard.ts";
 import {
   setupDatabaseHandlers,
   setupSecureStorageHandlers,
   setupUIHandlers,
-} from './database.ts';
-import { setupAIConfigHandlers } from './ai-config.ts';
+} from "./database.ts";
+import { setupAIConfigHandlers } from "./ai-config.ts";
 
 /**
  * Initialize all IPC handlers
@@ -49,7 +49,7 @@ import { setupAIConfigHandlers } from './ai-config.ts';
  * Registers all 36 IPC channels across 7 domain modules.
  */
 export function setupIpcHandlers(): void {
-  console.warn('[IPC] Setting up IPC handlers...');
+  console.warn("[IPC] Setting up IPC handlers...");
 
   // Authentication handlers (4 channels)
   setupAuthHandlers();
@@ -65,6 +65,11 @@ export function setupIpcHandlers(): void {
 
   // Deadline handlers (5 channels)
   setupDeadlineHandlers();
+
+  // Case deadline handlers for tribunal deadline tracking (11 channels)
+  // TEMP DISABLED: Conflicts with setupDeadlineHandlers() - both register 'deadline:create'
+  // Pending resolution: merge case-deadlines.ts into deadlines.ts or resolve duplicate handlers
+  // registerCaseDeadlineHandlers();
 
   // Chat handlers (2 channels)
   setupChatHandlers();
@@ -93,5 +98,7 @@ export function setupIpcHandlers(): void {
   // Notification handlers (8 channels)
   setupNotificationHandlers();
 
-  console.warn('[IPC] All IPC handlers registered (62 channels across 10 domains)');
+  console.warn(
+    "[IPC] All IPC handlers registered (73 channels across 11 domains)"
+  );
 }

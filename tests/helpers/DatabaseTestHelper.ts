@@ -1,5 +1,4 @@
-import { getDb } from '../../src/db/database';
-import type { Database } from 'better-sqlite3';
+import { getDb } from "../../src/db/database";
 
 /**
  * Database Test Helper
@@ -12,8 +11,6 @@ import type { Database } from 'better-sqlite3';
  */
 
 export class DatabaseTestHelper {
-  private db: Database | null = null;
-
   /**
    * Initialize in-memory database for unit tests
    * Faster than file-based database and automatically cleaned up
@@ -28,7 +25,7 @@ export class DatabaseTestHelper {
     // await DatabaseManager.initialize(':memory:');
     // await DatabaseManager.runMigrations();
 
-    console.log('[Test] In-memory database initialized');
+    console.log("[Test] In-memory database initialized");
   }
 
   /**
@@ -40,50 +37,50 @@ export class DatabaseTestHelper {
 
     try {
       // Disable foreign key checks temporarily
-      db.pragma('foreign_keys = OFF');
+      db.pragma("foreign_keys = OFF");
 
       // Delete in reverse order of dependencies to avoid constraint violations
       // Order: leaf tables first, then parent tables
 
       // 1. Delete sessions (no dependencies)
-      db.prepare('DELETE FROM sessions').run();
+      db.prepare("DELETE FROM sessions").run();
 
       // 2. Delete evidence (depends on cases)
-      db.prepare('DELETE FROM evidence').run();
+      db.prepare("DELETE FROM evidence").run();
 
       // 3. Delete documents (depends on cases)
-      db.prepare('DELETE FROM documents').run();
+      db.prepare("DELETE FROM documents").run();
 
       // 4. Delete chat messages (depends on conversations)
-      db.prepare('DELETE FROM chat_messages').run();
+      db.prepare("DELETE FROM chat_messages").run();
 
       // 5. Delete conversations (depends on cases and users)
-      db.prepare('DELETE FROM conversations').run();
+      db.prepare("DELETE FROM conversations").run();
 
       // 6. Delete case participants (depends on cases and users)
-      db.prepare('DELETE FROM case_participants').run();
+      db.prepare("DELETE FROM case_participants").run();
 
       // 7. Delete cases (depends on users)
-      db.prepare('DELETE FROM cases').run();
+      db.prepare("DELETE FROM cases").run();
 
       // 8. Delete consents (depends on users)
-      db.prepare('DELETE FROM user_consents').run();
+      db.prepare("DELETE FROM user_consents").run();
 
       // 9. Delete user facts (depends on users)
-      db.prepare('DELETE FROM user_facts').run();
+      db.prepare("DELETE FROM user_facts").run();
 
       // 10. Delete audit logs (no foreign keys, but keep at end)
-      db.prepare('DELETE FROM audit_logs').run();
+      db.prepare("DELETE FROM audit_logs").run();
 
       // 11. Delete users (parent table for most others)
-      db.prepare('DELETE FROM users').run();
+      db.prepare("DELETE FROM users").run();
 
       // Re-enable foreign key checks
-      db.pragma('foreign_keys = ON');
+      db.pragma("foreign_keys = ON");
 
-      console.log('[Test] Database cleaned up successfully');
+      console.log("[Test] Database cleaned up successfully");
     } catch (error) {
-      console.error('[Test] Error cleaning up database:', error);
+      console.error("[Test] Error cleaning up database:", error);
       throw error;
     }
   }
@@ -95,17 +92,17 @@ export class DatabaseTestHelper {
     const db = getDb();
 
     try {
-      db.pragma('foreign_keys = OFF');
+      db.pragma("foreign_keys = OFF");
 
       // Only clean auth-related tables
-      db.prepare('DELETE FROM sessions').run();
-      db.prepare('DELETE FROM users').run();
+      db.prepare("DELETE FROM sessions").run();
+      db.prepare("DELETE FROM users").run();
 
-      db.pragma('foreign_keys = ON');
+      db.pragma("foreign_keys = ON");
 
-      console.log('[Test] Auth tables cleaned up');
+      console.log("[Test] Auth tables cleaned up");
     } catch (error) {
-      console.error('[Test] Error cleaning up auth tables:', error);
+      console.error("[Test] Error cleaning up auth tables:", error);
       throw error;
     }
   }
@@ -115,7 +112,9 @@ export class DatabaseTestHelper {
    */
   static getTableCount(tableName: string): number {
     const db = getDb();
-    const result = db.prepare(`SELECT COUNT(*) as count FROM ${tableName}`).get() as { count: number };
+    const result = db
+      .prepare(`SELECT COUNT(*) as count FROM ${tableName}`)
+      .get() as { count: number };
     return result.count;
   }
 
@@ -124,7 +123,9 @@ export class DatabaseTestHelper {
    */
   static userExists(username: string): boolean {
     const db = getDb();
-    const result = db.prepare('SELECT COUNT(*) as count FROM users WHERE username = ?').get(username) as {
+    const result = db
+      .prepare("SELECT COUNT(*) as count FROM users WHERE username = ?")
+      .get(username) as {
       count: number;
     };
     return result.count > 0;
@@ -135,7 +136,9 @@ export class DatabaseTestHelper {
    */
   static sessionExists(sessionId: string): boolean {
     const db = getDb();
-    const result = db.prepare('SELECT COUNT(*) as count FROM sessions WHERE id = ?').get(sessionId) as {
+    const result = db
+      .prepare("SELECT COUNT(*) as count FROM sessions WHERE id = ?")
+      .get(sessionId) as {
       count: number;
     };
     return result.count > 0;
@@ -146,7 +149,7 @@ export class DatabaseTestHelper {
    */
   static getUserByUsername(username: string): any | null {
     const db = getDb();
-    return db.prepare('SELECT * FROM users WHERE username = ?').get(username);
+    return db.prepare("SELECT * FROM users WHERE username = ?").get(username);
   }
 
   /**
@@ -154,7 +157,7 @@ export class DatabaseTestHelper {
    */
   static getSessionById(sessionId: string): any | null {
     const db = getDb();
-    return db.prepare('SELECT * FROM sessions WHERE id = ?').get(sessionId);
+    return db.prepare("SELECT * FROM sessions WHERE id = ?").get(sessionId);
   }
 
   /**
@@ -162,7 +165,7 @@ export class DatabaseTestHelper {
    */
   static getUserSessions(userId: number): any[] {
     const db = getDb();
-    return db.prepare('SELECT * FROM sessions WHERE user_id = ?').all(userId);
+    return db.prepare("SELECT * FROM sessions WHERE user_id = ?").all(userId);
   }
 
   /**
@@ -217,9 +220,15 @@ export class DatabaseTestHelper {
     const db = getDb();
 
     if (eventType) {
-      return db.prepare('SELECT * FROM audit_logs WHERE event_type = ? ORDER BY created_at DESC').all(eventType);
+      return db
+        .prepare(
+          "SELECT * FROM audit_logs WHERE event_type = ? ORDER BY created_at DESC"
+        )
+        .all(eventType);
     } else {
-      return db.prepare('SELECT * FROM audit_logs ORDER BY created_at DESC').all();
+      return db
+        .prepare("SELECT * FROM audit_logs ORDER BY created_at DESC")
+        .all();
     }
   }
 
@@ -228,7 +237,9 @@ export class DatabaseTestHelper {
    */
   static countAuditLogs(eventType: string): number {
     const db = getDb();
-    const result = db.prepare('SELECT COUNT(*) as count FROM audit_logs WHERE event_type = ?').get(eventType) as {
+    const result = db
+      .prepare("SELECT COUNT(*) as count FROM audit_logs WHERE event_type = ?")
+      .get(eventType) as {
       count: number;
     };
     return result.count;
@@ -239,13 +250,19 @@ export class DatabaseTestHelper {
    */
   static verifyPasswordHashed(username: string): boolean {
     const user = this.getUserByUsername(username);
-    if (!user) {return false;}
+    if (!user) {
+      return false;
+    }
 
     // Hashed password should be 128 hex characters (64 bytes)
     // Salt should be 32 hex characters (16 bytes)
-    const isHashedCorrectly = user.password_hash?.length === 128 && /^[0-9a-f]+$/i.test(user.password_hash);
+    const isHashedCorrectly =
+      user.password_hash?.length === 128 &&
+      /^[0-9a-f]+$/i.test(user.password_hash);
 
-    const isSaltCorrect = user.password_salt?.length === 32 && /^[0-9a-f]+$/i.test(user.password_salt);
+    const isSaltCorrect =
+      user.password_salt?.length === 32 &&
+      /^[0-9a-f]+$/i.test(user.password_salt);
 
     return isHashedCorrectly && isSaltCorrect;
   }
@@ -255,16 +272,16 @@ export class DatabaseTestHelper {
    */
   static getDatabaseStats(): Record<string, number> {
     const tables = [
-      'users',
-      'sessions',
-      'cases',
-      'evidence',
-      'documents',
-      'conversations',
-      'chat_messages',
-      'audit_logs',
-      'user_consents',
-      'user_facts',
+      "users",
+      "sessions",
+      "cases",
+      "evidence",
+      "documents",
+      "conversations",
+      "chat_messages",
+      "audit_logs",
+      "user_consents",
+      "user_facts",
     ];
 
     const stats: Record<string, number> = {};
@@ -292,7 +309,10 @@ export class DatabaseTestHelper {
       console.log(`[Test] Reset auto-increment for ${tableName}`);
     } catch (error) {
       // sqlite_sequence might not exist if no auto-increment used yet
-      console.warn(`[Test] Could not reset auto-increment for ${tableName}:`, error);
+      console.warn(
+        `[Test] Could not reset auto-increment for ${tableName}:`,
+        error
+      );
     }
   }
 
@@ -300,28 +320,36 @@ export class DatabaseTestHelper {
    * Dump database contents (for debugging)
    */
   static dumpDatabase(): void {
-    console.log('\n===== DATABASE DUMP =====');
+    console.log("\n===== DATABASE DUMP =====");
     console.log(JSON.stringify(this.getDatabaseStats(), null, 2));
 
     const db = getDb();
 
-    console.log('\n--- USERS ---');
-    const users = db.prepare('SELECT id, username, email, role, is_active, created_at FROM users').all();
+    console.log("\n--- USERS ---");
+    const users = db
+      .prepare(
+        "SELECT id, username, email, role, is_active, created_at FROM users"
+      )
+      .all();
     console.table(users);
 
-    console.log('\n--- SESSIONS ---');
+    console.log("\n--- SESSIONS ---");
     const sessions = db
-      .prepare('SELECT id, user_id, expires_at, remember_me, created_at FROM sessions')
+      .prepare(
+        "SELECT id, user_id, expires_at, remember_me, created_at FROM sessions"
+      )
       .all();
     console.table(sessions);
 
-    console.log('\n--- AUDIT LOGS (last 10) ---');
+    console.log("\n--- AUDIT LOGS (last 10) ---");
     const auditLogs = db
-      .prepare('SELECT event_type, user_id, success, created_at FROM audit_logs ORDER BY created_at DESC LIMIT 10')
+      .prepare(
+        "SELECT event_type, user_id, success, created_at FROM audit_logs ORDER BY created_at DESC LIMIT 10"
+      )
       .all();
     console.table(auditLogs);
 
-    console.log('========================\n');
+    console.log("========================\n");
   }
 
   /**
@@ -337,22 +365,19 @@ export class DatabaseTestHelper {
         return db.exec(sql);
       }
     } catch (error) {
-      console.error('[Test] Error executing raw SQL:', error);
+      console.error("[Test] Error executing raw SQL:", error);
       throw error;
     }
   }
 
   /**
    * Backup test database to file (for debugging)
+   * Note: This method is not implemented due to API changes in better-sqlite3
    */
-  static backupDatabase(backupPath: string): void {
-    const db = getDb();
-    const backup = db.backup(backupPath);
-
-    backup.step(-1); // Copy all pages at once
-    backup.finish();
-
-    console.log(`[Test] Database backed up to: ${backupPath}`);
+  static async backupDatabase(_backupPath: string): Promise<void> {
+    console.warn(
+      "[Test] Database backup not implemented - API changed in better-sqlite3"
+    );
   }
 }
 

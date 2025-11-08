@@ -54,8 +54,8 @@ export class DomainError extends Error {
  * User is not authenticated (no valid session)
  */
 export class NotAuthenticatedError extends DomainError {
-  constructor(message: string = 'Authentication required') {
-    super('NOT_AUTHENTICATED', message, 401);
+  constructor(message: string = "Authentication required") {
+    super("NOT_AUTHENTICATED", message, 401);
   }
 }
 
@@ -63,8 +63,8 @@ export class NotAuthenticatedError extends DomainError {
  * Invalid username/password combination
  */
 export class InvalidCredentialsError extends DomainError {
-  constructor(message: string = 'Invalid username or password') {
-    super('INVALID_CREDENTIALS', message, 401);
+  constructor(message: string = "Invalid username or password") {
+    super("INVALID_CREDENTIALS", message, 401);
   }
 }
 
@@ -75,8 +75,8 @@ export class SessionExpiredError extends DomainError {
   constructor(sessionId?: string) {
     const message = sessionId
       ? `Session ${sessionId} has expired`
-      : 'Your session has expired';
-    super('SESSION_EXPIRED', message, 401, { sessionId });
+      : "Your session has expired";
+    super("SESSION_EXPIRED", message, 401, { sessionId });
   }
 }
 
@@ -84,13 +84,9 @@ export class SessionExpiredError extends DomainError {
  * User lacks permission for requested operation
  */
 export class UnauthorizedError extends DomainError {
-  constructor(
-    resource: string,
-    action: string,
-    userId?: number
-  ) {
+  constructor(resource: string, action: string, userId?: number) {
     const message = `Unauthorized to ${action} ${resource}`;
-    super('UNAUTHORIZED', message, 403, { resource, action, userId });
+    super("UNAUTHORIZED", message, 403, { resource, action, userId });
   }
 }
 
@@ -99,7 +95,12 @@ export class UnauthorizedError extends DomainError {
  */
 export class RegistrationError extends DomainError {
   constructor(reason: string, details?: Record<string, unknown>) {
-    super('REGISTRATION_FAILED', `Registration failed: ${reason}`, 400, details);
+    super(
+      "REGISTRATION_FAILED",
+      `Registration failed: ${reason}`,
+      400,
+      details
+    );
   }
 }
 
@@ -110,12 +111,9 @@ export class RegistrationError extends DomainError {
  */
 export class CaseNotFoundError extends DomainError {
   constructor(caseId: number | string) {
-    super(
-      'CASE_NOT_FOUND',
-      `Case with ID ${caseId} not found`,
-      404,
-      { caseId }
-    );
+    super("CASE_NOT_FOUND", `Case with ID ${caseId} not found`, 404, {
+      caseId,
+    });
   }
 }
 
@@ -125,10 +123,24 @@ export class CaseNotFoundError extends DomainError {
 export class EvidenceNotFoundError extends DomainError {
   constructor(evidenceId: number | string) {
     super(
-      'EVIDENCE_NOT_FOUND',
+      "EVIDENCE_NOT_FOUND",
       `Evidence with ID ${evidenceId} not found`,
       404,
       { evidenceId }
+    );
+  }
+}
+
+/**
+ * Notification not found in database
+ */
+export class NotificationNotFoundError extends DomainError {
+  constructor(notificationId: number | string) {
+    super(
+      "NOTIFICATION_NOT_FOUND",
+      `Notification with ID ${notificationId} not found`,
+      404,
+      { notificationId }
     );
   }
 }
@@ -138,12 +150,9 @@ export class EvidenceNotFoundError extends DomainError {
  */
 export class UserNotFoundError extends DomainError {
   constructor(userId: number | string) {
-    super(
-      'USER_NOT_FOUND',
-      `User with ID ${userId} not found`,
-      404,
-      { userId }
-    );
+    super("USER_NOT_FOUND", `User with ID ${userId} not found`, 404, {
+      userId,
+    });
   }
 }
 
@@ -153,7 +162,7 @@ export class UserNotFoundError extends DomainError {
 export class DeadlineNotFoundError extends DomainError {
   constructor(deadlineId: number | string) {
     super(
-      'DEADLINE_NOT_FOUND',
+      "DEADLINE_NOT_FOUND",
       `Deadline with ID ${deadlineId} not found`,
       404,
       { deadlineId }
@@ -167,7 +176,7 @@ export class DeadlineNotFoundError extends DomainError {
 export class ResourceAlreadyExistsError extends DomainError {
   constructor(resource: string, identifier: string | number) {
     super(
-      'ALREADY_EXISTS',
+      "ALREADY_EXISTS",
       `${resource} with identifier ${identifier} already exists`,
       409,
       { resource, identifier }
@@ -182,15 +191,30 @@ export class ResourceAlreadyExistsError extends DomainError {
  */
 export class ValidationError extends DomainError {
   constructor(
-    field: string,
-    message: string,
+    fieldOrMessage: string,
+    messageOrValidation?: string | Array<{ field: string; message: string }>,
     validationErrors?: Array<{ field: string; message: string }>
   ) {
+    if (Array.isArray(messageOrValidation)) {
+      super(
+        "VALIDATION_ERROR",
+        `Validation failed for ${fieldOrMessage}`,
+        400,
+        { field: fieldOrMessage, validationErrors: messageOrValidation }
+      );
+      return;
+    }
+
+    if (messageOrValidation === undefined) {
+      super("VALIDATION_ERROR", fieldOrMessage, 400, { field: "general" });
+      return;
+    }
+
     super(
-      'VALIDATION_ERROR',
-      `Validation failed for ${field}: ${message}`,
+      "VALIDATION_ERROR",
+      `Validation failed for ${fieldOrMessage}: ${messageOrValidation}`,
       400,
-      { field, validationErrors }
+      { field: fieldOrMessage, validationErrors }
     );
   }
 }
@@ -201,7 +225,7 @@ export class ValidationError extends DomainError {
 export class RequiredFieldError extends DomainError {
   constructor(fieldName: string) {
     super(
-      'REQUIRED_FIELD_MISSING',
+      "REQUIRED_FIELD_MISSING",
       `Required field '${fieldName}' is missing`,
       400,
       { fieldName }
@@ -213,14 +237,10 @@ export class RequiredFieldError extends DomainError {
  * Invalid file type or format
  */
 export class InvalidFileTypeError extends DomainError {
-  constructor(
-    fileName: string,
-    expectedTypes: string[],
-    actualType?: string
-  ) {
+  constructor(fileName: string, expectedTypes: string[], actualType?: string) {
     super(
-      'INVALID_FILE_TYPE',
-      `Invalid file type for ${fileName}. Expected: ${expectedTypes.join(', ')}`,
+      "INVALID_FILE_TYPE",
+      `Invalid file type for ${fileName}. Expected: ${expectedTypes.join(", ")}`,
       400,
       { fileName, expectedTypes, actualType }
     );
@@ -233,11 +253,11 @@ export class InvalidFileTypeError extends DomainError {
  * Encryption operation failed
  */
 export class EncryptionError extends DomainError {
-  constructor(operation: 'encrypt' | 'decrypt', reason?: string) {
+  constructor(operation: "encrypt" | "decrypt", reason?: string) {
     const message = reason
       ? `Failed to ${operation} data: ${reason}`
       : `Failed to ${operation} data`;
-    super('ENCRYPTION_ERROR', message, 500, { operation });
+    super("ENCRYPTION_ERROR", message, 500, { operation });
   }
 }
 
@@ -245,8 +265,8 @@ export class EncryptionError extends DomainError {
  * Encryption key not found or invalid
  */
 export class EncryptionKeyError extends DomainError {
-  constructor(reason: string = 'Encryption key not configured') {
-    super('ENCRYPTION_KEY_ERROR', reason, 500);
+  constructor(reason: string = "Encryption key not configured") {
+    super("ENCRYPTION_KEY_ERROR", reason, 500);
   }
 }
 
@@ -256,15 +276,11 @@ export class EncryptionKeyError extends DomainError {
  * Database operation failed
  */
 export class DatabaseError extends DomainError {
-  constructor(
-    operation: string,
-    reason?: string,
-    sqliteCode?: string
-  ) {
+  constructor(operation: string, reason?: string, sqliteCode?: string) {
     const message = reason
       ? `Database ${operation} failed: ${reason}`
       : `Database ${operation} failed`;
-    super('DATABASE_ERROR', message, 500, { operation, sqliteCode });
+    super("DATABASE_ERROR", message, 500, { operation, sqliteCode });
   }
 }
 
@@ -275,8 +291,8 @@ export class DatabaseConnectionError extends DomainError {
   constructor(reason?: string) {
     const message = reason
       ? `Failed to connect to database: ${reason}`
-      : 'Failed to connect to database';
-    super('DATABASE_CONNECTION_ERROR', message, 500);
+      : "Failed to connect to database";
+    super("DATABASE_CONNECTION_ERROR", message, 500);
   }
 }
 
@@ -286,7 +302,7 @@ export class DatabaseConnectionError extends DomainError {
 export class MigrationError extends DomainError {
   constructor(migrationName: string, reason: string) {
     super(
-      'MIGRATION_ERROR',
+      "MIGRATION_ERROR",
       `Migration '${migrationName}' failed: ${reason}`,
       500,
       { migrationName }
@@ -300,16 +316,12 @@ export class MigrationError extends DomainError {
  * Rate limit exceeded for operation
  */
 export class RateLimitError extends DomainError {
-  constructor(
-    operation: string,
-    limit: number,
-    resetTime?: Date
-  ) {
+  constructor(operation: string, limit: number, resetTime?: Date) {
     const message = `Rate limit exceeded for ${operation}. Limit: ${limit} requests`;
-    super('RATE_LIMIT_EXCEEDED', message, 429, {
+    super("RATE_LIMIT_EXCEEDED", message, 429, {
       operation,
       limit,
-      resetTime: resetTime?.toISOString()
+      resetTime: resetTime?.toISOString(),
     });
   }
 }
@@ -318,13 +330,9 @@ export class RateLimitError extends DomainError {
  * Storage quota exceeded
  */
 export class QuotaExceededError extends DomainError {
-  constructor(
-    resource: string,
-    used: number,
-    limit: number
-  ) {
+  constructor(resource: string, used: number, limit: number) {
     super(
-      'QUOTA_EXCEEDED',
+      "QUOTA_EXCEEDED",
       `Quota exceeded for ${resource}. Used: ${used}, Limit: ${limit}`,
       507,
       { resource, used, limit }
@@ -338,15 +346,11 @@ export class QuotaExceededError extends DomainError {
  * GDPR compliance violation or requirement not met
  */
 export class GdprComplianceError extends DomainError {
-  constructor(
-    article: number,
-    requirement: string,
-    reason?: string
-  ) {
+  constructor(article: number, requirement: string, reason?: string) {
     const message = reason
       ? `GDPR Article ${article} - ${requirement}: ${reason}`
       : `GDPR Article ${article} requirement not met: ${requirement}`;
-    super('GDPR_COMPLIANCE_ERROR', message, 451, { article, requirement });
+    super("GDPR_COMPLIANCE_ERROR", message, 451, { article, requirement });
   }
 }
 
@@ -354,12 +358,9 @@ export class GdprComplianceError extends DomainError {
  * User consent required for operation
  */
 export class ConsentRequiredError extends DomainError {
-  constructor(
-    consentType: string,
-    operation: string
-  ) {
+  constructor(consentType: string, operation: string) {
     super(
-      'CONSENT_REQUIRED',
+      "CONSENT_REQUIRED",
       `User consent for '${consentType}' required to ${operation}`,
       403,
       { consentType, operation }
@@ -372,12 +373,9 @@ export class ConsentRequiredError extends DomainError {
  */
 export class DataExportError extends DomainError {
   constructor(reason: string, userId?: number) {
-    super(
-      'DATA_EXPORT_ERROR',
-      `Failed to export user data: ${reason}`,
-      500,
-      { userId }
-    );
+    super("DATA_EXPORT_ERROR", `Failed to export user data: ${reason}`, 500, {
+      userId,
+    });
   }
 }
 
@@ -386,12 +384,9 @@ export class DataExportError extends DomainError {
  */
 export class DataDeletionError extends DomainError {
   constructor(reason: string, userId?: number) {
-    super(
-      'DATA_DELETION_ERROR',
-      `Failed to delete user data: ${reason}`,
-      500,
-      { userId }
-    );
+    super("DATA_DELETION_ERROR", `Failed to delete user data: ${reason}`, 500, {
+      userId,
+    });
   }
 }
 
@@ -401,9 +396,9 @@ export class DataDeletionError extends DomainError {
  * AI service not configured
  */
 export class AINotConfiguredError extends DomainError {
-  constructor(provider: string = 'AI service') {
+  constructor(provider: string = "AI service") {
     super(
-      'AI_NOT_CONFIGURED',
+      "AI_NOT_CONFIGURED",
       `${provider} not configured. Please set your API key in Settings.`,
       503
     );
@@ -414,13 +409,9 @@ export class AINotConfiguredError extends DomainError {
  * AI service request failed
  */
 export class AIServiceError extends DomainError {
-  constructor(
-    provider: string,
-    reason: string,
-    statusCode?: number
-  ) {
+  constructor(provider: string, reason: string, statusCode?: number) {
     super(
-      'AI_SERVICE_ERROR',
+      "AI_SERVICE_ERROR",
       `${provider} error: ${reason}`,
       statusCode || 503,
       { provider }
@@ -433,12 +424,9 @@ export class AIServiceError extends DomainError {
  */
 export class AIInvalidKeyError extends DomainError {
   constructor(provider: string) {
-    super(
-      'AI_INVALID_KEY',
-      `Invalid API key for ${provider}`,
-      401,
-      { provider }
-    );
+    super("AI_INVALID_KEY", `Invalid API key for ${provider}`, 401, {
+      provider,
+    });
   }
 }
 
@@ -449,12 +437,7 @@ export class AIInvalidKeyError extends DomainError {
  */
 export class FileNotFoundError extends DomainError {
   constructor(filePath: string) {
-    super(
-      'FILE_NOT_FOUND',
-      `File not found: ${filePath}`,
-      404,
-      { filePath }
-    );
+    super("FILE_NOT_FOUND", `File not found: ${filePath}`, 404, { filePath });
   }
 }
 
@@ -463,14 +446,14 @@ export class FileNotFoundError extends DomainError {
  */
 export class FileOperationError extends DomainError {
   constructor(
-    operation: 'read' | 'write' | 'delete' | 'move',
+    operation: "read" | "write" | "delete" | "move",
     filePath: string,
     reason?: string
   ) {
     const message = reason
       ? `Failed to ${operation} file ${filePath}: ${reason}`
       : `Failed to ${operation} file ${filePath}`;
-    super('FILE_OPERATION_ERROR', message, 500, { operation, filePath });
+    super("FILE_OPERATION_ERROR", message, 500, { operation, filePath });
   }
 }
 
@@ -480,13 +463,9 @@ export class FileOperationError extends DomainError {
  * Operation not allowed in current state
  */
 export class InvalidStateError extends DomainError {
-  constructor(
-    entity: string,
-    currentState: string,
-    operation: string
-  ) {
+  constructor(entity: string, currentState: string, operation: string) {
     super(
-      'INVALID_STATE',
+      "INVALID_STATE",
       `Cannot ${operation} ${entity} in state '${currentState}'`,
       409,
       { entity, currentState, operation }
@@ -500,7 +479,7 @@ export class InvalidStateError extends DomainError {
 export class BusinessRuleError extends DomainError {
   constructor(rule: string, violation: string) {
     super(
-      'BUSINESS_RULE_VIOLATION',
+      "BUSINESS_RULE_VIOLATION",
       `Business rule violation - ${rule}: ${violation}`,
       400,
       { rule }
@@ -513,12 +492,7 @@ export class BusinessRuleError extends DomainError {
  */
 export class ConflictError extends DomainError {
   constructor(resource: string, reason: string) {
-    super(
-      'CONFLICT',
-      `Conflict in ${resource}: ${reason}`,
-      409,
-      { resource }
-    );
+    super("CONFLICT", `Conflict in ${resource}: ${reason}`, 409, { resource });
   }
 }
 
@@ -540,42 +514,55 @@ export function toDomainError(error: unknown): DomainError {
   }
 
   if (error instanceof Error) {
-    // Try to infer the type of error from the message
-    const message = error.message.toLowerCase();
+    const lowerMessage = error.message.toLowerCase();
 
-    if (message.includes('not found')) {
-      return new DomainError('NOT_FOUND', error.message, 404);
-    }
-    if (message.includes('unauthorized') || message.includes('permission')) {
-      return new DomainError('UNAUTHORIZED', error.message, 403);
-    }
-    if (message.includes('authenticated') || message.includes('login')) {
-      return new DomainError('NOT_AUTHENTICATED', error.message, 401);
-    }
-    if (message.includes('validation') || message.includes('invalid')) {
-      return new DomainError('VALIDATION_ERROR', error.message, 400);
-    }
-    if (message.includes('database') || message.includes('sqlite')) {
-      return new DatabaseError('operation', error.message);
-    }
-    if (message.includes('encryption')) {
-      return new EncryptionError('encrypt', error.message);
-    }
-    if (message.includes('rate limit')) {
-      return new RateLimitError('operation', 0);
+    const mapping: Array<{
+      keywords: string[];
+      factory: () => DomainError;
+    }> = [
+      {
+        keywords: ["not found"],
+        factory: () => new DomainError("NOT_FOUND", error.message, 404),
+      },
+      {
+        keywords: ["unauthorized", "permission"],
+        factory: () => new DomainError("UNAUTHORIZED", error.message, 403),
+      },
+      {
+        keywords: ["authenticated", "login"],
+        factory: () => new DomainError("NOT_AUTHENTICATED", error.message, 401),
+      },
+      {
+        keywords: ["validation", "invalid"],
+        factory: () => new DomainError("VALIDATION_ERROR", error.message, 400),
+      },
+      {
+        keywords: ["database", "sqlite"],
+        factory: () => new DatabaseError("operation", error.message),
+      },
+      {
+        keywords: ["encryption"],
+        factory: () => new EncryptionError("encrypt", error.message),
+      },
+      {
+        keywords: ["rate limit"],
+        factory: () => new RateLimitError("operation", 0),
+      },
+    ];
+
+    for (const { keywords, factory } of mapping) {
+      if (keywords.some((keyword) => lowerMessage.includes(keyword))) {
+        return factory();
+      }
     }
 
-    // Generic internal error
-    return new DomainError('INTERNAL_ERROR', error.message, 500);
+    return new DomainError("INTERNAL_ERROR", error.message, 500);
   }
 
   // Unknown error type
-  return new DomainError(
-    'UNKNOWN_ERROR',
-    'An unexpected error occurred',
-    500,
-    { originalError: String(error) }
-  );
+  return new DomainError("UNKNOWN_ERROR", "An unexpected error occurred", 500, {
+    originalError: String(error),
+  });
 }
 
 /**
@@ -589,6 +576,6 @@ export function createErrorResponse(error: DomainError) {
       message: error.message,
       statusCode: error.statusCode,
       context: error.context,
-    }
+    },
   };
 }

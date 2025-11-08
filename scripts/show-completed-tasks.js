@@ -3,20 +3,28 @@
  * Show completed tasks from Supabase
  */
 
-const { Client } = require('pg');
+const { Client } = require("pg");
+
+function getRequiredEnv(name) {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`Missing required environment variable ${name}`);
+  }
+  return value;
+}
 
 const client = new Client({
-  host: '127.0.0.1',
-  port: 54322,
-  database: 'postgres',
-  user: 'postgres',
-  password: 'postgres',
+  host: process.env.PG_HOST ?? "127.0.0.1",
+  port: Number(process.env.PG_PORT ?? "54322"),
+  database: process.env.PG_DATABASE ?? "postgres",
+  user: process.env.PG_USER ?? "postgres",
+  password: getRequiredEnv("PG_PASSWORD"),
 });
 
 async function showTasks() {
   try {
     await client.connect();
-    console.log('✅ Connected to local Supabase database\n');
+    console.log("✅ Connected to local Supabase database\n");
 
     // Get summary stats
     const statsQuery = `
@@ -33,13 +41,13 @@ async function showTasks() {
     const statsResult = await client.query(statsQuery);
     const stats = statsResult.rows[0];
 
-    console.log('📊 COMPLETED WORK SUMMARY');
-    console.log('========================\n');
+    console.log("📊 COMPLETED WORK SUMMARY");
+    console.log("========================\n");
     console.log(`✅ Total Completed Tasks: ${stats.total_tasks}`);
     console.log(`⏱️  Total Hours: ${stats.total_hours}h`);
     console.log(`📈 Total Story Points: ${stats.total_points}`);
     console.log(`📦 Parent Tasks: ${stats.parent_tasks}`);
-    console.log('\n');
+    console.log("\n");
 
     // Get all completed tasks
     const tasksQuery = `
@@ -66,19 +74,20 @@ async function showTasks() {
 
     const tasksResult = await client.query(tasksQuery);
 
-    console.log('📋 COMPLETED TASKS (Most Recent)');
-    console.log('=================================\n');
+    console.log("📋 COMPLETED TASKS (Most Recent)");
+    console.log("=================================\n");
 
     console.table(tasksResult.rows);
 
-    console.log('\n✨ All completed work has been documented in Supabase!');
-    console.log('🌐 View in Supabase Studio: http://127.0.0.1:54323');
+    console.log("\n✨ All completed work has been documented in Supabase!");
+    console.log("🌐 View in Supabase Studio: http://127.0.0.1:54323");
   } catch (error) {
-    console.error('❌ Error:', error.message);
+    console.error("❌ Error:", error.message);
     process.exit(1);
   } finally {
     await client.end();
   }
 }
 
+// eslint-disable-next-line promise/prefer-top-level-await
 showTasks();

@@ -3,19 +3,17 @@
  * Channels: tags:*
  */
 
-import { ipcMain, type IpcMainInvokeEvent } from 'electron';
-import { type IPCResponse } from '../utils/ipc-response.ts';
-import { logAuditEvent, AuditEventType } from '../utils/audit-helper.ts';
-import { withAuthorization } from '../utils/authorization-wrapper.ts';
-import { tagService } from '../../src/services/TagService.ts';
-import type { CreateTagInput, UpdateTagInput } from '../../src/models/Tag.ts';
+import { ipcMain, type IpcMainInvokeEvent } from "electron";
+import { type IPCResponse } from "../utils/ipc-response";
+import { withAuthorization } from "../utils/authorization-wrapper";
+import { tagService } from "../../src/services/TagService";
+import type { CreateTagInput, UpdateTagInput } from "../../src/models/Tag";
 import {
   ValidationError,
   RequiredFieldError,
   DatabaseError,
-  TagNotFoundError,
   EvidenceNotFoundError,
-} from '../../src/errors/DomainErrors.ts';
+} from "../../src/errors/DomainErrors";
 
 /**
  * ===== TAG HANDLERS =====
@@ -29,25 +27,28 @@ export function setupTagHandlers(): void {
    * List all tags for the current user
    */
   ipcMain.handle(
-    'tags:list',
-    async (_event: IpcMainInvokeEvent, sessionId: string): Promise<IPCResponse> => {
-      return withAuthorization(sessionId, async (_userId) => {
+    "tags:list",
+    async (
+      _event: IpcMainInvokeEvent,
+      sessionId: string
+    ): Promise<IPCResponse> => {
+      return withAuthorization(sessionId, async (userId) => {
         try {
-          const tags = tagService.getTags(_userId);
+          const tags = tagService.getTags(userId);
 
           return {
             success: true,
             data: tags,
           };
         } catch (error: unknown) {
-          console.error('[IPC] tags:list error:', error);
+          console.error("[IPC] tags:list error:", error);
 
           // Wrap generic errors in DomainErrors
           if (error instanceof Error) {
             const message = error.message.toLowerCase();
 
-            if (message.includes('database') || message.includes('sqlite')) {
-              throw new DatabaseError('list tags', error.message);
+            if (message.includes("database") || message.includes("sqlite")) {
+              throw new DatabaseError("list tags", error.message);
             }
           }
 
@@ -61,38 +62,44 @@ export function setupTagHandlers(): void {
    * Create a new tag
    */
   ipcMain.handle(
-    'tags:create',
-    async (_event: IpcMainInvokeEvent, input: CreateTagInput, sessionId: string): Promise<IPCResponse> => {
-      return withAuthorization(sessionId, async (_userId) => {
+    "tags:create",
+    async (
+      _event: IpcMainInvokeEvent,
+      input: CreateTagInput,
+      sessionId: string
+    ): Promise<IPCResponse> => {
+      return withAuthorization(sessionId, async (userId) => {
         try {
           // Validate input
           if (!input.name || input.name.trim().length === 0) {
-            throw new RequiredFieldError('Tag name');
+            throw new RequiredFieldError("Tag name");
           }
 
           if (!input.color || !/^#[0-9A-Fa-f]{6}$/.test(input.color)) {
-            throw new ValidationError('Valid hex color is required (e.g., #FF0000)');
+            throw new ValidationError(
+              "Valid hex color is required (e.g., #FF0000)"
+            );
           }
 
-          const tag = tagService.createTag(_userId, input);
+          const tag = tagService.createTag(userId, input);
 
           return {
             success: true,
             data: tag,
           };
         } catch (error: unknown) {
-          console.error('[IPC] tags:create error:', error);
+          console.error("[IPC] tags:create error:", error);
 
           // Wrap generic errors in DomainErrors
           if (error instanceof Error) {
             const message = error.message.toLowerCase();
 
-            if (message.includes('database') || message.includes('sqlite')) {
-              throw new DatabaseError('create tag', error.message);
+            if (message.includes("database") || message.includes("sqlite")) {
+              throw new DatabaseError("create tag", error.message);
             }
 
-            if (message.includes('duplicate') || message.includes('unique')) {
-              throw new ValidationError('Tag with this name already exists');
+            if (message.includes("duplicate") || message.includes("unique")) {
+              throw new ValidationError("Tag with this name already exists");
             }
           }
 
@@ -106,46 +113,51 @@ export function setupTagHandlers(): void {
    * Update an existing tag
    */
   ipcMain.handle(
-    'tags:update',
-    async (_event: IpcMainInvokeEvent, input: UpdateTagInput, sessionId: string): Promise<IPCResponse> => {
+    "tags:update",
+    async (
+      _event: IpcMainInvokeEvent,
+      input: UpdateTagInput & { id: number },
+      sessionId: string
+    ): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (_userId) => {
         try {
           // Validate input
           if (!input.id) {
-            throw new RequiredFieldError('Tag ID');
+            throw new RequiredFieldError("Tag ID");
           }
 
           if (!input.name || input.name.trim().length === 0) {
-            throw new RequiredFieldError('Tag name');
+            throw new RequiredFieldError("Tag name");
           }
 
           if (!input.color || !/^#[0-9A-Fa-f]{6}$/.test(input.color)) {
-            throw new ValidationError('Valid hex color is required (e.g., #FF0000)');
+            throw new ValidationError(
+              "Valid hex color is required (e.g., #FF0000)"
+            );
           }
 
-          const tag = tagService.updateTag(_userId, input);
+          const tag = tagService.updateTag(input.id, input);
 
           return {
             success: true,
             data: tag,
           };
         } catch (error: unknown) {
-          console.error('[IPC] tags:update error:', error);
+          console.error("[IPC] tags:update error:", error);
 
           // Wrap generic errors in DomainErrors
           if (error instanceof Error) {
             const message = error.message.toLowerCase();
 
-            if (message.includes('database') || message.includes('sqlite')) {
-              throw new DatabaseError('update tag', error.message);
+            if (message.includes("database") || message.includes("sqlite")) {
+              throw new DatabaseError("update tag", error.message);
             }
 
-            if (message.includes('not found')) {
-              throw new TagNotFoundError(`Tag ${input.id} not found`);
+            if (message.includes("duplicate") || message.includes("unique")) {
+              throw new ValidationError("Tag with this name already exists");
             }
-
-            if (message.includes('duplicate') || message.includes('unique')) {
-              throw new ValidationError('Tag with this name already exists');
+            if (message.includes("not found")) {
+              throw new ValidationError(`Tag ${input.id} not found`);
             }
           }
 
@@ -159,28 +171,32 @@ export function setupTagHandlers(): void {
    * Delete a tag
    */
   ipcMain.handle(
-    'tags:delete',
-    async (_event: IpcMainInvokeEvent, tagId: string, sessionId: string): Promise<IPCResponse> => {
+    "tags:delete",
+    async (
+      _event: IpcMainInvokeEvent,
+      tagId: number,
+      sessionId: string
+    ): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (_userId) => {
         try {
-          await tagService.deleteTag(_userId, tagId);
+          tagService.deleteTag(tagId);
 
           return {
             success: true,
           };
         } catch (error: unknown) {
-          console.error('[IPC] tags:delete error:', error);
+          console.error("[IPC] tags:delete error:", error);
 
           // Wrap generic errors in DomainErrors
           if (error instanceof Error) {
             const message = error.message.toLowerCase();
 
-            if (message.includes('database') || message.includes('sqlite')) {
-              throw new DatabaseError('delete tag', error.message);
+            if (message.includes("database") || message.includes("sqlite")) {
+              throw new DatabaseError("delete tag", error.message);
             }
 
-            if (message.includes('not found')) {
-              throw new TagNotFoundError(`Tag ${tagId} not found`);
+            if (message.includes("not found")) {
+              throw new ValidationError(`Tag ${tagId} not found`);
             }
           }
 
@@ -194,37 +210,55 @@ export function setupTagHandlers(): void {
    * Tag evidence
    */
   ipcMain.handle(
-    'tags:tagEvidence',
+    "tags:tagEvidence",
     async (
       _event: IpcMainInvokeEvent,
-      evidenceId: string,
-      tagIds: string[],
+      evidenceId: number | string,
+      tagIds: Array<number | string>,
       sessionId: string
     ): Promise<IPCResponse> => {
-      return withAuthorization(sessionId, async (_userId) => {
+      return withAuthorization(sessionId, async (userId) => {
         try {
-          await tagService.tagEvidence(_userId, evidenceId, tagIds);
+          const numericEvidenceId = Number(evidenceId);
+          const numericTagIds = tagIds.map(Number);
+
+          if (!Number.isInteger(numericEvidenceId)) {
+            throw new ValidationError("Valid evidence ID is required");
+          }
+
+          if (numericTagIds.length === 0) {
+            throw new ValidationError("At least one tag ID is required");
+          }
+
+          for (const tagId of numericTagIds) {
+            if (!Number.isInteger(tagId)) {
+              throw new ValidationError("Tag IDs must be integers");
+            }
+            tagService.tagEvidence(numericEvidenceId, tagId, userId);
+          }
 
           return {
             success: true,
           };
         } catch (error: unknown) {
-          console.error('[IPC] tags:tagEvidence error:', error);
+          console.error("[IPC] tags:tagEvidence error:", error);
 
           // Wrap generic errors in DomainErrors
           if (error instanceof Error) {
             const message = error.message.toLowerCase();
 
-            if (message.includes('database') || message.includes('sqlite')) {
-              throw new DatabaseError('tag evidence', error.message);
+            if (message.includes("database") || message.includes("sqlite")) {
+              throw new DatabaseError("tag evidence", error.message);
             }
 
-            if (message.includes('evidence') && message.includes('not found')) {
-              throw new EvidenceNotFoundError(`Evidence ${evidenceId} not found`);
+            if (message.includes("evidence") && message.includes("not found")) {
+              throw new EvidenceNotFoundError(
+                `Evidence ${evidenceId} not found`
+              );
             }
 
-            if (message.includes('tag') && message.includes('not found')) {
-              throw new TagNotFoundError('One or more tags not found');
+            if (message.includes("tag") && message.includes("not found")) {
+              throw new ValidationError("One or more tags not found");
             }
           }
 
@@ -238,37 +272,51 @@ export function setupTagHandlers(): void {
    * Untag evidence
    */
   ipcMain.handle(
-    'tags:untagEvidence',
+    "tags:untagEvidence",
     async (
       _event: IpcMainInvokeEvent,
-      evidenceId: string,
-      tagIds: string[],
+      evidenceId: number | string,
+      tagIds: Array<number | string>,
       sessionId: string
     ): Promise<IPCResponse> => {
-      return withAuthorization(sessionId, async (_userId) => {
+      return withAuthorization(sessionId, async (userId) => {
         try {
-          await tagService.untagEvidence(_userId, evidenceId, tagIds);
+          const numericEvidenceId = Number(evidenceId);
+          const numericTagIds = tagIds.map(Number);
+
+          if (!Number.isInteger(numericEvidenceId)) {
+            throw new ValidationError("Valid evidence ID is required");
+          }
+
+          for (const tagId of numericTagIds) {
+            if (!Number.isInteger(tagId)) {
+              throw new ValidationError("Tag IDs must be integers");
+            }
+            tagService.untagEvidence(numericEvidenceId, tagId, userId);
+          }
 
           return {
             success: true,
           };
         } catch (error: unknown) {
-          console.error('[IPC] tags:untagEvidence error:', error);
+          console.error("[IPC] tags:untagEvidence error:", error);
 
           // Wrap generic errors in DomainErrors
           if (error instanceof Error) {
             const message = error.message.toLowerCase();
 
-            if (message.includes('database') || message.includes('sqlite')) {
-              throw new DatabaseError('untag evidence', error.message);
+            if (message.includes("database") || message.includes("sqlite")) {
+              throw new DatabaseError("untag evidence", error.message);
             }
 
-            if (message.includes('evidence') && message.includes('not found')) {
-              throw new EvidenceNotFoundError(`Evidence ${evidenceId} not found`);
+            if (message.includes("evidence") && message.includes("not found")) {
+              throw new EvidenceNotFoundError(
+                `Evidence ${evidenceId} not found`
+              );
             }
 
-            if (message.includes('tag') && message.includes('not found')) {
-              throw new TagNotFoundError('One or more tags not found');
+            if (message.includes("tag") && message.includes("not found")) {
+              throw new ValidationError("One or more tags not found");
             }
           }
 
@@ -282,29 +330,41 @@ export function setupTagHandlers(): void {
    * Get tags for evidence
    */
   ipcMain.handle(
-    'tags:getForEvidence',
-    async (_event: IpcMainInvokeEvent, evidenceId: string, sessionId: string): Promise<IPCResponse> => {
+    "tags:getForEvidence",
+    async (
+      _event: IpcMainInvokeEvent,
+      evidenceId: string,
+      sessionId: string
+    ): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (_userId) => {
         try {
-          const tags = tagService.getTagsForEvidence(_userId, evidenceId);
+          const numericEvidenceId = Number(evidenceId);
+
+          if (!Number.isInteger(numericEvidenceId)) {
+            throw new ValidationError("Valid evidence ID is required");
+          }
+
+          const tags = tagService.getEvidenceTags(numericEvidenceId);
 
           return {
             success: true,
             data: tags,
           };
         } catch (error: unknown) {
-          console.error('[IPC] tags:getForEvidence error:', error);
+          console.error("[IPC] tags:getForEvidence error:", error);
 
           // Wrap generic errors in DomainErrors
           if (error instanceof Error) {
             const message = error.message.toLowerCase();
 
-            if (message.includes('database') || message.includes('sqlite')) {
-              throw new DatabaseError('get tags for evidence', error.message);
+            if (message.includes("database") || message.includes("sqlite")) {
+              throw new DatabaseError("get tags for evidence", error.message);
             }
 
-            if (message.includes('evidence') && message.includes('not found')) {
-              throw new EvidenceNotFoundError(`Evidence ${evidenceId} not found`);
+            if (message.includes("evidence") && message.includes("not found")) {
+              throw new EvidenceNotFoundError(
+                `Evidence ${evidenceId} not found`
+              );
             }
           }
 
@@ -318,29 +378,43 @@ export function setupTagHandlers(): void {
    * Search evidence by tags
    */
   ipcMain.handle(
-    'tags:searchByTags',
-    async (_event: IpcMainInvokeEvent, tagIds: string[], sessionId: string): Promise<IPCResponse> => {
-      return withAuthorization(sessionId, async (_userId) => {
+    "tags:searchByTags",
+    async (
+      _event: IpcMainInvokeEvent,
+      tagIds: string[],
+      sessionId: string
+    ): Promise<IPCResponse> => {
+      return withAuthorization(sessionId, async (userId) => {
         try {
-          const evidence = tagService.searchEvidenceByTags(_userId, tagIds);
+          const numericTagIds = tagIds.map(Number);
+
+          if (numericTagIds.length === 0) {
+            throw new ValidationError("At least one tag ID is required");
+          }
+
+          if (numericTagIds.some((tagId) => !Number.isInteger(tagId))) {
+            throw new ValidationError("Tag IDs must be integers");
+          }
+
+          const evidence = tagService.searchByTags(userId, numericTagIds);
 
           return {
             success: true,
             data: evidence,
           };
         } catch (error: unknown) {
-          console.error('[IPC] tags:searchByTags error:', error);
+          console.error("[IPC] tags:searchByTags error:", error);
 
           // Wrap generic errors in DomainErrors
           if (error instanceof Error) {
             const message = error.message.toLowerCase();
 
-            if (message.includes('database') || message.includes('sqlite')) {
-              throw new DatabaseError('search evidence by tags', error.message);
+            if (message.includes("database") || message.includes("sqlite")) {
+              throw new DatabaseError("search evidence by tags", error.message);
             }
 
-            if (message.includes('tag') && message.includes('not found')) {
-              throw new TagNotFoundError('One or more tags not found');
+            if (message.includes("tag") && message.includes("not found")) {
+              throw new ValidationError("One or more tags not found");
             }
           }
 
@@ -354,8 +428,11 @@ export function setupTagHandlers(): void {
    * Get tag statistics
    */
   ipcMain.handle(
-    'tags:statistics',
-    async (_event: IpcMainInvokeEvent, sessionId: string): Promise<IPCResponse> => {
+    "tags:statistics",
+    async (
+      _event: IpcMainInvokeEvent,
+      sessionId: string
+    ): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (_userId) => {
         try {
           const stats = tagService.getTagStatistics(_userId);
@@ -365,14 +442,14 @@ export function setupTagHandlers(): void {
             data: stats,
           };
         } catch (error: unknown) {
-          console.error('[IPC] tags:statistics error:', error);
+          console.error("[IPC] tags:statistics error:", error);
 
           // Wrap generic errors in DomainErrors
           if (error instanceof Error) {
             const message = error.message.toLowerCase();
 
-            if (message.includes('database') || message.includes('sqlite')) {
-              throw new DatabaseError('get tag statistics', error.message);
+            if (message.includes("database") || message.includes("sqlite")) {
+              throw new DatabaseError("get tag statistics", error.message);
             }
           }
 

@@ -1,6 +1,6 @@
-import { errorLogger } from '../utils/error-logger.ts';
-import { legalAPIService } from './LegalAPIService.ts';
-import { aiServiceFactory } from './AIServiceFactory.ts';
+import { errorLogger } from "../utils/error-logger.ts";
+import { legalAPIService } from "./LegalAPIService.ts";
+import { aiServiceFactory } from "./AIServiceFactory.ts";
 import type {
   LegalContext,
   LegislationResult,
@@ -8,7 +8,7 @@ import type {
   KnowledgeEntry,
   AIResponse,
   AIChatRequest,
-} from '../types/ai.ts';
+} from "../types/ai.ts";
 
 /**
  * RAGService - Retrieval Augmented Generation for Legal Information
@@ -31,11 +31,11 @@ export class RAGService {
    */
   async processQuestion(
     question: string,
-    caseId?: number,
+    caseId?: number
   ): Promise<AIResponse> {
     try {
-      errorLogger.logError('RAGService.processQuestion started', {
-        type: 'info',
+      errorLogger.logError("RAGService.processQuestion started", {
+        type: "info",
         question,
         caseId,
       });
@@ -44,8 +44,8 @@ export class RAGService {
       const keywords = await this.extractAndAnalyzeQuestion(question);
       const category = legalAPIService.classifyQuestion(question);
 
-      errorLogger.logError('Question analyzed', {
-        type: 'info',
+      errorLogger.logError("Question analyzed", {
+        type: "info",
         keywords,
         category,
       });
@@ -55,8 +55,8 @@ export class RAGService {
 
       // PHASE 3: Validate Context
       if (!this.hasValidContext(context)) {
-        errorLogger.logError('No legal context found for question', {
-          type: 'warn',
+        errorLogger.logError("No legal context found for question", {
+          type: "warn",
           question,
           keywords,
         });
@@ -65,12 +65,12 @@ export class RAGService {
           success: false,
           error:
             "I don't have information on that specific topic. Please try rephrasing your question or consult a qualified solicitor.",
-          code: 'NO_CONTEXT',
+          code: "NO_CONTEXT",
         };
       }
 
-      errorLogger.logError('Legal context assembled', {
-        type: 'info',
+      errorLogger.logError("Legal context assembled", {
+        type: "info",
         legislationCount: context.legislation.length,
         caseLawCount: context.caseLaw.length,
         knowledgeBaseCount: context.knowledgeBase.length,
@@ -80,7 +80,7 @@ export class RAGService {
       const aiRequest: AIChatRequest = {
         messages: [
           {
-            role: 'user',
+            role: "user",
             content: question,
           },
         ],
@@ -93,12 +93,12 @@ export class RAGService {
       // PHASE 5: Safety Validation
       if (aiResponse.success) {
         const validationResult = this.validateResponse(
-          aiResponse.message.content,
+          aiResponse.message.content
         );
 
         if (!validationResult.valid) {
-          errorLogger.logError('AI response failed safety validation', {
-            type: 'error',
+          errorLogger.logError("AI response failed safety validation", {
+            type: "error",
             violations: validationResult.violations,
             response: aiResponse.message.content,
           });
@@ -106,20 +106,19 @@ export class RAGService {
           // Return safe fallback response
           return {
             success: false,
-            error:
-              'Response validation failed. Please rephrase your question.',
-            code: 'SAFETY_VIOLATION',
+            error: "Response validation failed. Please rephrase your question.",
+            code: "SAFETY_VIOLATION",
           };
         }
 
         // Ensure disclaimer is present
         aiResponse.message.content = this.enforceDisclaimer(
-          aiResponse.message.content,
+          aiResponse.message.content
         );
       }
 
-      errorLogger.logError('RAGService.processQuestion completed', {
-        type: 'info',
+      errorLogger.logError("RAGService.processQuestion completed", {
+        type: "info",
         success: aiResponse.success,
         sourcesCount: aiResponse.success ? aiResponse.sources.length : 0,
       });
@@ -127,14 +126,14 @@ export class RAGService {
       return aiResponse;
     } catch (error) {
       errorLogger.logError(error as Error, {
-        context: 'RAGService.processQuestion',
+        context: "RAGService.processQuestion",
         question,
       });
 
       return {
         success: false,
-        error: 'An error occurred processing your question. Please try again.',
-        code: 'EXCEPTION',
+        error: "An error occurred processing your question. Please try again.",
+        code: "EXCEPTION",
       };
     }
   }
@@ -164,7 +163,7 @@ export class RAGService {
    */
   private async fetchLegalContext(
     keywords: string[],
-    category: string,
+    category: string
   ): Promise<LegalContext> {
     try {
       // Query all APIs in parallel for speed
@@ -176,15 +175,19 @@ export class RAGService {
 
       // Assemble context with limits to prevent token overflow
       const context: LegalContext = {
-        legislation: this.limitAndSortLegislation(legislation),
-        caseLaw: this.limitAndSortCaseLaw(caseLaw),
-        knowledgeBase: this.limitKnowledgeBase(knowledgeBase),
+        legislation: this.limitAndSortLegislation(
+          legislation as LegislationResult[]
+        ),
+        caseLaw: this.limitAndSortCaseLaw(caseLaw as CaseResult[]),
+        knowledgeBase: this.limitKnowledgeBase(
+          knowledgeBase as KnowledgeEntry[]
+        ),
       };
 
       return context;
     } catch (error) {
-      errorLogger.logError('Failed to fetch legal context', {
-        error: error instanceof Error ? error.message : 'Unknown error',
+      errorLogger.logError("Failed to fetch legal context", {
+        error: error instanceof Error ? error.message : "Unknown error",
         keywords,
         category,
       });
@@ -203,7 +206,7 @@ export class RAGService {
    * Sort by relevance score if available
    */
   private limitAndSortLegislation(
-    results: LegislationResult[],
+    results: LegislationResult[]
   ): LegislationResult[] {
     // Sort by relevance score (descending)
     const sorted = [...results].sort((a, b) => {
@@ -279,13 +282,13 @@ export class RAGService {
     }
 
     // Check for disclaimer presence (should end with disclaimer)
-    if (!response.includes('⚠️') && !lowerResponse.includes('disclaimer')) {
-      violations.push('Missing required disclaimer');
+    if (!response.includes("⚠️") && !lowerResponse.includes("disclaimer")) {
+      violations.push("Missing required disclaimer");
     }
 
     // Response too short (likely not informative)
     if (response.length < 50) {
-      violations.push('Response too short to be informative');
+      violations.push("Response too short to be informative");
     }
 
     return {
@@ -300,12 +303,12 @@ export class RAGService {
    */
   private enforceDisclaimer(response: string): string {
     const disclaimer =
-      '\n\n⚠️ This is general information only. For advice specific to your situation, please consult a qualified solicitor.';
+      "\n\n⚠️ This is general information only. For advice specific to your situation, please consult a qualified solicitor.";
 
     // Check if disclaimer already present
     if (
-      response.includes('⚠️') ||
-      response.toLowerCase().includes('this is general information only')
+      response.includes("⚠️") ||
+      response.toLowerCase().includes("this is general information only")
     ) {
       return response;
     }
@@ -320,11 +323,11 @@ export class RAGService {
   getLastQueryStats(): {
     hasStats: boolean;
     message?: string;
-    } {
+  } {
     // Placeholder for future enhancement
     return {
       hasStats: false,
-      message: 'Statistics tracking not yet implemented',
+      message: "Statistics tracking not yet implemented",
     };
   }
 }

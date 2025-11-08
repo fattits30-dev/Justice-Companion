@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { LegalAPIService } from './LegalAPIService.ts';
+import { describe, it, expect, beforeEach } from "vitest";
+import { LegalAPIService } from "./LegalAPIService.ts";
 
-describe('LegalAPIService', () => {
+describe("LegalAPIService", () => {
   let service: LegalAPIService;
 
   beforeEach(() => {
@@ -9,9 +9,9 @@ describe('LegalAPIService', () => {
     service.clearCache();
   });
 
-  describe('extractKeywords', () => {
+  describe("extractKeywords", () => {
     it('should extract keywords from "Can I be fired for being pregnant?"', async () => {
-      const question = 'Can I be fired for being pregnant?';
+      const question = "Can I be fired for being pregnant?";
       const keywords = await service.extractKeywords(question);
 
       // Should extract legal terms related to employment and pregnancy
@@ -19,40 +19,40 @@ describe('LegalAPIService', () => {
       expect(keywords.legal.length).toBeGreaterThan(0);
 
       // Should contain key terms
-      const allKeywordsStr = keywords.all.join(' ');
+      const allKeywordsStr = keywords.all.join(" ");
       expect(
-        allKeywordsStr.includes('fired') ||
-          allKeywordsStr.includes('dismissed') ||
-          allKeywordsStr.includes('employment'),
+        allKeywordsStr.includes("fired") ||
+          allKeywordsStr.includes("dismissed") ||
+          allKeywordsStr.includes("employment")
       ).toBe(true);
 
       expect(
-        allKeywordsStr.includes('pregnant') ||
-          allKeywordsStr.includes('pregnancy') ||
-          allKeywordsStr.includes('maternity'),
+        allKeywordsStr.includes("pregnant") ||
+          allKeywordsStr.includes("pregnancy") ||
+          allKeywordsStr.includes("maternity")
       ).toBe(true);
 
       // Should filter out stop words
-      expect(keywords.all).not.toContain('can');
-      expect(keywords.all).not.toContain('i');
-      expect(keywords.all).not.toContain('be');
-      expect(keywords.all).not.toContain('for');
+      expect(keywords.all).not.toContain("can");
+      expect(keywords.all).not.toContain("i");
+      expect(keywords.all).not.toContain("be");
+      expect(keywords.all).not.toContain("for");
     });
 
-    it('should handle housing-related questions', async () => {
-      const question = 'My landlord wants to evict me, what are my rights?';
+    it("should handle housing-related questions", async () => {
+      const question = "My landlord wants to evict me, what are my rights?";
       const keywords = await service.extractKeywords(question);
 
-      const allKeywordsStr = keywords.all.join(' ');
+      const allKeywordsStr = keywords.all.join(" ");
       expect(
-        allKeywordsStr.includes('landlord') ||
-          allKeywordsStr.includes('eviction') ||
-          allKeywordsStr.includes('tenant'),
+        allKeywordsStr.includes("landlord") ||
+          allKeywordsStr.includes("eviction") ||
+          allKeywordsStr.includes("tenant")
       ).toBe(true);
     });
 
-    it('should return general keywords when no legal terms found', async () => {
-      const question = 'What happens next in this situation?';
+    it("should return general keywords when no legal terms found", async () => {
+      const question = "What happens next in this situation?";
       const keywords = await service.extractKeywords(question);
 
       expect(keywords.all.length).toBeGreaterThan(0);
@@ -60,52 +60,52 @@ describe('LegalAPIService', () => {
     });
   });
 
-  describe('classifyQuestion', () => {
-    it('should classify pregnancy discrimination as employment', () => {
-      const question = 'Can I be fired for being pregnant?';
+  describe("classifyQuestion", () => {
+    it("should classify pregnancy discrimination as employment", () => {
+      const question = "Can I be fired for being pregnant?";
       const category = service.classifyQuestion(question);
-      expect(category).toBe('employment');
+      expect(category).toBe("employment");
     });
 
-    it('should classify eviction as housing', () => {
-      const question = 'My landlord wants to evict me';
+    it("should classify eviction as housing", () => {
+      const question = "My landlord wants to evict me";
       const category = service.classifyQuestion(question);
-      expect(category).toBe('housing');
+      expect(category).toBe("housing");
     });
 
-    it('should classify consumer refund as consumer', () => {
-      const question = 'Can I get a refund for faulty product?';
+    it("should classify consumer refund as consumer", () => {
+      const question = "Can I get a refund for faulty product?";
       const category = service.classifyQuestion(question);
-      expect(category).toBe('consumer');
+      expect(category).toBe("consumer");
     });
 
-    it('should default to general for unknown questions', () => {
-      const question = 'What are my general rights?';
+    it("should default to general for unknown questions", () => {
+      const question = "What are my general rights?";
       const category = service.classifyQuestion(question);
-      expect(category).toBe('general');
+      expect(category).toBe("general");
     });
   });
 
-  describe('searchLegalInfo', () => {
-    it('should return LegalSearchResults structure', async () => {
-      const question = 'Can I be fired for being pregnant?';
+  describe("searchLegalInfo", () => {
+    it("should return LegalSearchResults structure", async () => {
+      const question = "Can I be fired for being pregnant?";
       const results = await service.searchLegalInfo(question);
 
-      expect(results).toHaveProperty('legislation');
-      expect(results).toHaveProperty('cases');
-      expect(results).toHaveProperty('knowledgeBase');
-      expect(results).toHaveProperty('cached');
-      expect(results).toHaveProperty('timestamp');
+      expect(results).toHaveProperty("legislation");
+      expect(results).toHaveProperty("cases");
+      expect(results).toHaveProperty("knowledgeBase");
+      expect(results).toHaveProperty("cached");
+      expect(results).toHaveProperty("timestamp");
 
       expect(Array.isArray(results.legislation)).toBe(true);
       expect(Array.isArray(results.cases)).toBe(true);
       expect(Array.isArray(results.knowledgeBase)).toBe(true);
-      expect(typeof results.cached).toBe('boolean');
-      expect(typeof results.timestamp).toBe('number');
+      expect(typeof results.cached).toBe("boolean");
+      expect(typeof results.timestamp).toBe("number");
     });
 
-    it('should cache results on subsequent calls', async () => {
-      const question = 'Can I be fired for being pregnant?';
+    it("should cache results on subsequent calls", async () => {
+      const question = "Can I be fired for being pregnant?";
 
       // First call
       const results1 = await service.searchLegalInfo(question);
@@ -117,10 +117,10 @@ describe('LegalAPIService', () => {
       expect(results2.timestamp).toBe(results1.timestamp);
     });
 
-    it.skip('should handle errors gracefully and return empty results', async () => {
+    it.skip("should handle errors gracefully and return empty results", async () => {
       // SKIPPED: This test makes real API calls that timeout in CI/CD
-      // TODO: Mock the API to properly test error handling without network calls
-      const question = 'Test question';
+      // TODO: Implement proper mocking for API error handling tests
+      const question = "Test question";
       const results = await service.searchLegalInfo(question);
 
       // Should not throw, should return empty arrays
@@ -130,9 +130,9 @@ describe('LegalAPIService', () => {
     });
   });
 
-  describe('cache management', () => {
-    it('should clear cache', async () => {
-      const question = 'Can I be fired for being pregnant?';
+  describe("cache management", () => {
+    it("should clear cache", async () => {
+      const question = "Can I be fired for being pregnant?";
 
       // Create cached entry
       await service.searchLegalInfo(question);

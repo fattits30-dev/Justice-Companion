@@ -1,68 +1,68 @@
-import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll } from 'vitest';
-import { EvidenceRepository } from './EvidenceRepository';
-import { CaseRepository } from './CaseRepository';
-import { EncryptionService } from '../services/EncryptionService';
-import { createTestDatabase } from '../test-utils/database-test-helper';
-import { databaseManager } from '../db/database.ts';
-import type { CreateEvidenceInput } from '../domains/evidence/entities/Evidence';
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import Database from "better-sqlite3-multiple-ciphers";
+import { EvidenceRepository } from "./EvidenceRepository";
+import { CaseRepository } from "./CaseRepository";
+import { EncryptionService } from "../services/EncryptionService";
+import { TestDatabaseHelper } from "../test-utils/database-test-helper";
+import { databaseManager } from "../db/database.ts";
+import {
+  resetRepositories,
+  initializeTestRepositories,
+} from "../repositories.ts";
+import type { CreateEvidenceInput } from "../domains/evidence/entities/Evidence";
 
-// Create test database instance at module level
-const testDb = createTestDatabase();
-
-describe('EvidenceRepository with Encryption', () => {
+describe("EvidenceRepository with Encryption", () => {
+  let db: Database.Database;
   let evidenceRepo: EvidenceRepository;
   let caseRepo: CaseRepository;
-  let encryptionService: EncryptionService;
-  let testKey: Buffer;
+  let testDb: TestDatabaseHelper;
   let testCaseId: number;
 
-  beforeAll(() => {
+  beforeEach(async () => {
     // Initialize test database with all migrations
-    const testDatabase = testDb.initialize();
+    testDb = new TestDatabaseHelper();
+    db = testDb.initialize();
 
-    // Inject test database into the singleton (NO MOCKING NEEDED!)
-    databaseManager.setTestDatabase(testDatabase);
-  });
+    // Inject test database into the singleton for proper test isolation
+    databaseManager.setTestDatabase(db);
 
-  afterAll(() => {
-    // Reset database singleton and cleanup
-    databaseManager.resetDatabase();
-    testDb.cleanup();
-  });
+    // Reset repository singletons to force re-initialization with test dependencies
+    resetRepositories();
 
-  beforeEach(() => {
-    // Generate test encryption key
-    testKey = EncryptionService.generateKey();
-    encryptionService = new EncryptionService(testKey);
+    // Initialize repositories with test dependencies
+    const encryptionService = testDb.getEncryptionService();
+    const auditLogger = new (
+      await import("../services/AuditLogger.ts")
+    ).AuditLogger(testDb.getDatabase());
+    const repos = initializeTestRepositories(encryptionService, auditLogger);
 
-    // Create repository instances with encryption
-    evidenceRepo = new EvidenceRepository(encryptionService);
-    caseRepo = new CaseRepository(encryptionService);
-
-    // Clear data for test isolation
-    testDb.clearAllTables();
+    // Extract repositories from container
+    evidenceRepo = repos.evidenceRepository;
+    caseRepo = repos.caseRepository;
 
     // Create a test case for evidence to belong to
     const testCase = caseRepo.create({
-      title: 'Test Case for Evidence',
-      caseType: 'employment',
-      description: 'Test case',
+      title: "Test Case for Evidence",
+      caseType: "employment",
+      description: "Test case",
     });
     testCaseId = testCase.id;
   });
 
   afterEach(() => {
-    // Additional cleanup if needed
+    testDb.clearAllTables(); // Clear data between tests (must happen before cleanup)
+    testDb.cleanup(); // Close database connection
+    databaseManager.resetDatabase(); // Reset singleton to clean state
   });
 
-  describe('Encryption on Write Operations', () => {
-    it('should store encrypted evidence content in database', () => {
+  describe("Encryption on Write Operations", () => {
+    it("should store encrypted evidence content in database", () => {
       const evidenceInput: CreateEvidenceInput = {
         caseId: testCaseId,
-        title: 'Email Evidence',
-        evidenceType: 'email',
+        title: "Email Evidence",
+        evidenceType: "email",
         content:
-          'Confidential email content: Subject: Re: Termination, Body: Your employment is terminated...',
+          "Confidential email content: Subject: Re: Termination, Body: Your employment is terminated...",
       };
 
       const created = evidenceRepo.create(evidenceInput);
@@ -70,58 +70,59 @@ describe('EvidenceRepository with Encryption', () => {
       // Query database directly to verify encryption
       const rawRow = testDb
         .getDatabase()
-        .prepare('SELECT content FROM evidence WHERE id = ?')
+        .prepare("SELECT content FROM evidence WHERE id = ?")
         .get(created.id) as {
         content: string | null;
       };
 
       expect(rawRow.content).toBeTruthy();
-      expect(rawRow.content).not.toContain('Confidential');
-      expect(rawRow.content).not.toContain('Termination');
-      expect(rawRow.content).not.toContain('employment is terminated');
+      expect(rawRow.content).not.toContain("Confidential");
+      expect(rawRow.content).not.toContain("Termination");
+      expect(rawRow.content).not.toContain("employment is terminated");
 
       // Verify it's JSON-encoded encrypted data
       const encryptedData = JSON.parse(rawRow.content!);
-      expect(encryptedData).toHaveProperty('algorithm', 'aes-256-gcm');
-      expect(encryptedData).toHaveProperty('ciphertext');
-      expect(encryptedData).toHaveProperty('iv');
-      expect(encryptedData).toHaveProperty('authTag');
-      expect(encryptedData).toHaveProperty('version', 1);
+      expect(encryptedData).toHaveProperty("algorithm", "aes-256-gcm");
+      expect(encryptedData).toHaveProperty("ciphertext");
+      expect(encryptedData).toHaveProperty("iv");
+      expect(encryptedData).toHaveProperty("authTag");
+      expect(encryptedData).toHaveProperty("version", 1);
     });
 
-    it('should store file path without encryption', () => {
+    it("should store file path without encryption", () => {
       const evidenceInput: CreateEvidenceInput = {
         caseId: testCaseId,
-        title: 'Document Evidence',
-        evidenceType: 'document',
-        filePath: '/path/to/sensitive/document.pdf',
+        title: "Document Evidence",
+        evidenceType: "document",
+        filePath: "/path/to/sensitive/document.pdf",
       };
 
       const created = evidenceRepo.create(evidenceInput);
 
       const rawRow = testDb
         .getDatabase()
-        .prepare('SELECT file_path, content FROM evidence WHERE id = ?')
+        .prepare("SELECT file_path, content FROM evidence WHERE id = ?")
         .get(created.id) as {
         file_path: string | null;
         content: string | null;
       };
 
       // File path stored as plaintext (it's just a path, not sensitive content)
-      expect(rawRow.file_path).toBe('/path/to/sensitive/document.pdf');
+      expect(rawRow.file_path).toBe("/path/to/sensitive/document.pdf");
       expect(rawRow.content).toBeNull();
     });
 
-    it('should update and encrypt evidence content', () => {
+    it("should update and encrypt evidence content", () => {
       const created = evidenceRepo.create({
         caseId: testCaseId,
-        title: 'Note Evidence',
-        evidenceType: 'note',
-        content: 'Initial note content',
+        title: "Note Evidence",
+        evidenceType: "note",
+        content: "Initial note content",
       });
 
       const updated = evidenceRepo.update(created.id, {
-        content: 'Updated sensitive note: Client disclosed medical condition - diabetes',
+        content:
+          "Updated sensitive note: Client disclosed medical condition - diabetes",
       });
 
       expect(updated).toBeTruthy();
@@ -129,31 +130,31 @@ describe('EvidenceRepository with Encryption', () => {
       // Verify encryption in database
       const rawRow = testDb
         .getDatabase()
-        .prepare('SELECT content FROM evidence WHERE id = ?')
+        .prepare("SELECT content FROM evidence WHERE id = ?")
         .get(created.id) as {
         content: string | null;
       };
 
-      expect(rawRow.content).not.toContain('medical');
-      expect(rawRow.content).not.toContain('diabetes');
+      expect(rawRow.content).not.toContain("medical");
+      expect(rawRow.content).not.toContain("diabetes");
 
       const encryptedData = JSON.parse(rawRow.content!);
-      expect(encryptedData).toHaveProperty('algorithm', 'aes-256-gcm');
+      expect(encryptedData).toHaveProperty("algorithm", "aes-256-gcm");
     });
 
-    it('should handle null content without encryption', () => {
+    it("should handle null content without encryption", () => {
       const evidenceInput: CreateEvidenceInput = {
         caseId: testCaseId,
-        title: 'File Reference Only',
-        evidenceType: 'photo',
-        filePath: '/photos/evidence.jpg',
+        title: "File Reference Only",
+        evidenceType: "photo",
+        filePath: "/photos/evidence.jpg",
       };
 
       const created = evidenceRepo.create(evidenceInput);
 
       const rawRow = testDb
         .getDatabase()
-        .prepare('SELECT content FROM evidence WHERE id = ?')
+        .prepare("SELECT content FROM evidence WHERE id = ?")
         .get(created.id) as {
         content: string | null;
       };
@@ -162,14 +163,15 @@ describe('EvidenceRepository with Encryption', () => {
     });
   });
 
-  describe('Decryption on Read Operations', () => {
-    it('should decrypt evidence content on retrieval', () => {
-      const content = 'Recorded conversation transcript: "I will fire you if you don\'t resign"';
+  describe("Decryption on Read Operations", () => {
+    it("should decrypt evidence content on retrieval", () => {
+      const content =
+        'Recorded conversation transcript: "I will fire you if you don\'t resign"';
 
       const created = evidenceRepo.create({
         caseId: testCaseId,
-        title: 'Recording Transcript',
-        evidenceType: 'recording',
+        title: "Recording Transcript",
+        evidenceType: "recording",
         content,
       });
 
@@ -179,11 +181,23 @@ describe('EvidenceRepository with Encryption', () => {
       expect(retrieved!.content).toBe(content);
     });
 
-    it('should decrypt all evidence content in findByCaseId', () => {
+    it("should decrypt all evidence content in findByCaseId", () => {
       const evidenceItems = [
-        { title: 'Email 1', evidenceType: 'email' as const, content: 'Email content 1' },
-        { title: 'Note 1', evidenceType: 'note' as const, content: 'Note content 1' },
-        { title: 'Document 1', evidenceType: 'document' as const, content: 'Document content 1' },
+        {
+          title: "Email 1",
+          evidenceType: "email" as const,
+          content: "Email content 1",
+        },
+        {
+          title: "Note 1",
+          evidenceType: "note" as const,
+          content: "Note content 1",
+        },
+        {
+          title: "Document 1",
+          evidenceType: "document" as const,
+          content: "Document content 1",
+        },
       ];
 
       const createdIds = evidenceItems.map(
@@ -205,12 +219,12 @@ describe('EvidenceRepository with Encryption', () => {
       });
     });
 
-    it('should decrypt all evidence content in findAll', () => {
+    it("should decrypt all evidence content in findAll", () => {
       const created = evidenceRepo.create({
         caseId: testCaseId,
-        title: 'Test Evidence',
-        evidenceType: 'email',
-        content: 'Confidential email',
+        title: "Test Evidence",
+        evidenceType: "email",
+        content: "Confidential email",
       });
 
       const allEvidence = evidenceRepo.findAll();
@@ -219,34 +233,34 @@ describe('EvidenceRepository with Encryption', () => {
 
       const found = allEvidence.find((e) => e.id === created.id);
       expect(found).toBeTruthy();
-      expect(found!.content).toBe('Confidential email');
+      expect(found!.content).toBe("Confidential email");
     });
 
-    it('should filter by evidence type and decrypt', () => {
+    it("should filter by evidence type and decrypt", () => {
       evidenceRepo.create({
         caseId: testCaseId,
-        title: 'Email Evidence',
-        evidenceType: 'email',
-        content: 'Email content',
+        title: "Email Evidence",
+        evidenceType: "email",
+        content: "Email content",
       });
 
       evidenceRepo.create({
         caseId: testCaseId,
-        title: 'Note Evidence',
-        evidenceType: 'note',
-        content: 'Note content',
+        title: "Note Evidence",
+        evidenceType: "note",
+        content: "Note content",
       });
 
-      const emails = evidenceRepo.findAll('email');
+      const emails = evidenceRepo.findAll("email");
 
       expect(emails.length).toBeGreaterThanOrEqual(1);
-      expect(emails.every((e) => e.evidenceType === 'email')).toBe(true);
-      expect(emails[0].content).toBe('Email content');
+      expect(emails.every((e) => e.evidenceType === "email")).toBe(true);
+      expect(emails[0].content).toBe("Email content");
     });
   });
 
-  describe('Backward Compatibility', () => {
-    it('should handle legacy plaintext content', () => {
+  describe("Backward Compatibility", () => {
+    it("should handle legacy plaintext content", () => {
       // Manually insert plaintext content (simulating legacy data)
       const result = testDb
         .getDatabase()
@@ -254,7 +268,12 @@ describe('EvidenceRepository with Encryption', () => {
           `INSERT INTO evidence (case_id, title, evidence_type, content)
          VALUES (?, ?, ?, ?)`
         )
-        .run(testCaseId, 'Legacy Evidence', 'note', 'This is plaintext from old version');
+        .run(
+          testCaseId,
+          "Legacy Evidence",
+          "note",
+          "This is plaintext from old version"
+        );
 
       const evidenceId = result.lastInsertRowid as number;
 
@@ -262,37 +281,37 @@ describe('EvidenceRepository with Encryption', () => {
       const retrieved = evidenceRepo.findById(evidenceId);
 
       expect(retrieved).toBeTruthy();
-      expect(retrieved!.content).toBe('This is plaintext from old version');
+      expect(retrieved!.content).toBe("This is plaintext from old version");
     });
   });
 
-  describe('Encryption Security Properties', () => {
-    it('should use unique IVs for same content encrypted multiple times', () => {
-      const content = 'Repeated confidential evidence';
+  describe("Encryption Security Properties", () => {
+    it("should use unique IVs for same content encrypted multiple times", () => {
+      const content = "Repeated confidential evidence";
 
       const evidence1 = evidenceRepo.create({
         caseId: testCaseId,
-        title: 'Evidence 1',
-        evidenceType: 'note',
+        title: "Evidence 1",
+        evidenceType: "note",
         content,
       });
 
       const evidence2 = evidenceRepo.create({
         caseId: testCaseId,
-        title: 'Evidence 2',
-        evidenceType: 'note',
+        title: "Evidence 2",
+        evidenceType: "note",
         content,
       });
 
       const row1 = testDb
         .getDatabase()
-        .prepare('SELECT content FROM evidence WHERE id = ?')
+        .prepare("SELECT content FROM evidence WHERE id = ?")
         .get(evidence1.id) as {
         content: string;
       };
       const row2 = testDb
         .getDatabase()
-        .prepare('SELECT content FROM evidence WHERE id = ?')
+        .prepare("SELECT content FROM evidence WHERE id = ?")
         .get(evidence2.id) as {
         content: string;
       };
@@ -306,13 +325,13 @@ describe('EvidenceRepository with Encryption', () => {
       expect(encrypted1.authTag).not.toBe(encrypted2.authTag);
     });
 
-    it('should fail decryption with wrong key', () => {
-      const content = 'Highly confidential evidence content';
+    it("should fail decryption with wrong key", () => {
+      const content = "Highly confidential evidence content";
 
       const created = evidenceRepo.create({
         caseId: testCaseId,
-        title: 'Encrypted Evidence',
-        evidenceType: 'email',
+        title: "Encrypted Evidence",
+        evidenceType: "email",
         content,
       });
 
@@ -329,14 +348,15 @@ describe('EvidenceRepository with Encryption', () => {
     });
   });
 
-  describe('Round-Trip Testing', () => {
-    it('should successfully encrypt and decrypt unicode characters', () => {
-      const content = 'Legal document in multiple languages: 法律文件 📄 ⚖️ مستند قانوني Документ';
+  describe("Round-Trip Testing", () => {
+    it("should successfully encrypt and decrypt unicode characters", () => {
+      const content =
+        "Legal document in multiple languages: 法律文件 📄 ⚖️ مستند قانوني Документ";
 
       const created = evidenceRepo.create({
         caseId: testCaseId,
-        title: 'Unicode Evidence',
-        evidenceType: 'document',
+        title: "Unicode Evidence",
+        evidenceType: "document",
         content,
       });
 
@@ -344,14 +364,14 @@ describe('EvidenceRepository with Encryption', () => {
       expect(retrieved!.content).toBe(content);
     });
 
-    it('should handle large evidence content (100KB+)', () => {
+    it("should handle large evidence content (100KB+)", () => {
       // Generate 100KB of text (simulating large document)
-      const largeContent = 'Legal document evidence content: '.repeat(3000); // ~100KB
+      const largeContent = "Legal document evidence content: ".repeat(3000); // ~100KB
 
       const created = evidenceRepo.create({
         caseId: testCaseId,
-        title: 'Large Evidence',
-        evidenceType: 'document',
+        title: "Large Evidence",
+        evidenceType: "document",
         content: largeContent,
       });
 
@@ -359,7 +379,7 @@ describe('EvidenceRepository with Encryption', () => {
       expect(retrieved!.content).toBe(largeContent);
     });
 
-    it('should handle special characters in evidence', () => {
+    it("should handle special characters in evidence", () => {
       const content = `
         Email Subject: RE: Settlement Offer [CONFIDENTIAL]
         From: lawyer@firm.com
@@ -379,8 +399,8 @@ describe('EvidenceRepository with Encryption', () => {
 
       const created = evidenceRepo.create({
         caseId: testCaseId,
-        title: 'Email with Special Chars',
-        evidenceType: 'email',
+        title: "Email with Special Chars",
+        evidenceType: "email",
         content,
       });
 
@@ -389,47 +409,47 @@ describe('EvidenceRepository with Encryption', () => {
     });
   });
 
-  describe('Statistics and Counting', () => {
-    it('should count evidence by case correctly', () => {
+  describe("Statistics and Counting", () => {
+    it("should count evidence by case correctly", () => {
       // Create evidence for test case
       evidenceRepo.create({
         caseId: testCaseId,
-        title: 'Evidence 1',
-        evidenceType: 'note',
-        content: 'Content 1',
+        title: "Evidence 1",
+        evidenceType: "note",
+        content: "Content 1",
       });
 
       evidenceRepo.create({
         caseId: testCaseId,
-        title: 'Evidence 2',
-        evidenceType: 'email',
-        content: 'Content 2',
+        title: "Evidence 2",
+        evidenceType: "email",
+        content: "Content 2",
       });
 
       const count = evidenceRepo.countByCase(testCaseId);
       expect(count).toBe(2);
     });
 
-    it('should count evidence by type correctly', () => {
+    it("should count evidence by type correctly", () => {
       evidenceRepo.create({
         caseId: testCaseId,
-        title: 'Email 1',
-        evidenceType: 'email',
-        content: 'Email content',
+        title: "Email 1",
+        evidenceType: "email",
+        content: "Email content",
       });
 
       evidenceRepo.create({
         caseId: testCaseId,
-        title: 'Email 2',
-        evidenceType: 'email',
-        content: 'Email content',
+        title: "Email 2",
+        evidenceType: "email",
+        content: "Email content",
       });
 
       evidenceRepo.create({
         caseId: testCaseId,
-        title: 'Note 1',
-        evidenceType: 'note',
-        content: 'Note content',
+        title: "Note 1",
+        evidenceType: "note",
+        content: "Note content",
       });
 
       const counts = evidenceRepo.countByType(testCaseId);

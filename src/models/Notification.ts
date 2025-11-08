@@ -4,15 +4,15 @@
  */
 
 export type NotificationType =
-  | 'deadline_reminder'
-  | 'case_status_change'
-  | 'evidence_uploaded'
-  | 'document_updated'
-  | 'system_alert'
-  | 'system_warning'
-  | 'system_info';
+  | "deadline_reminder"
+  | "case_status_change"
+  | "evidence_uploaded"
+  | "document_updated"
+  | "system_alert"
+  | "system_warning"
+  | "system_info";
 
-export type NotificationSeverity = 'low' | 'medium' | 'high' | 'urgent';
+export type NotificationSeverity = "low" | "medium" | "high" | "urgent";
 
 export interface NotificationMetadata {
   caseId?: number;
@@ -55,9 +55,17 @@ export interface CreateNotificationInput {
 }
 
 export interface UpdateNotificationInput {
+  type?: NotificationType;
+  severity?: NotificationSeverity;
+  title?: string;
+  message?: string;
+  actionUrl?: string;
+  actionLabel?: string;
+  metadata?: NotificationMetadata;
+  expiresAt?: Date | string | null;
   isRead?: boolean;
   isDismissed?: boolean;
-  readAt?: string;
+  readAt?: Date | string | null;
 }
 
 export interface NotificationFilters {

@@ -1,16 +1,19 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { SearchService, type SearchQuery, type SearchFilters } from './SearchService.ts';
-import type { Database } from '../db/database.ts';
-import type { CaseRepository } from '../repositories/CaseRepository.ts';
-import type { EvidenceRepository } from '../repositories/EvidenceRepository.ts';
-import type { ChatConversationRepository } from '../repositories/ChatConversationRepository.ts';
-import type { NotesRepository } from '../repositories/NotesRepository.ts';
-import type { EncryptionService } from './EncryptionService.ts';
-import type { AuditLogger } from './AuditLogger.ts';
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import {
+  SearchService,
+  type SearchQuery,
+  type SearchFilters,
+} from "./SearchService.ts";
+import type { CaseRepository } from "../repositories/CaseRepository.ts";
+import type { EvidenceRepository } from "../repositories/EvidenceRepository.ts";
+import type { ChatConversationRepository } from "../repositories/ChatConversationRepository.ts";
+import type { NotesRepository } from "../repositories/NotesRepository.ts";
+import type { EncryptionService } from "./EncryptionService.ts";
+import type { AuditLogger } from "./AuditLogger.ts";
 
-describe('SearchService', () => {
+describe("SearchService", () => {
   let searchService: SearchService;
-  let mockDb: Database;
+  let mockDb: any;
   let mockCaseRepo: CaseRepository;
   let mockEvidenceRepo: EvidenceRepository;
   let mockChatRepo: ChatConversationRepository;
@@ -54,7 +57,7 @@ describe('SearchService', () => {
     } as any;
 
     mockEncryptionService = {
-      decrypt: vi.fn().mockResolvedValue('decrypted'),
+      decrypt: vi.fn().mockResolvedValue("decrypted"),
     } as any;
 
     mockAuditLogger = {
@@ -73,10 +76,10 @@ describe('SearchService', () => {
     );
   });
 
-  describe('search', () => {
-    it('should perform a basic search query', async () => {
+  describe("search", () => {
+    it("should perform a basic search query", async () => {
       const query: SearchQuery = {
-        query: 'test search',
+        query: "test search",
         limit: 10,
         offset: 0,
       };
@@ -95,21 +98,21 @@ describe('SearchService', () => {
     // Test mocks caseRepo.searchCases() which is never called
     // Need to either: 1) Mock database.prepare() or 2) Refactor service to use repository
     // Related: Wave 3 test environment issues - tracked in TODO.md
-    it.skip('should search with filters', async () => {
+    it.skip("should search with filters", async () => {
       const filters: SearchFilters = {
-        caseStatus: ['active'],
-        entityTypes: ['case', 'evidence'],
+        caseStatus: ["active"],
+        entityTypes: ["case", "evidence"],
         dateRange: {
-          from: new Date('2024-01-01'),
-          to: new Date('2024-12-31'),
+          from: new Date("2024-01-01"),
+          to: new Date("2024-12-31"),
         },
       };
 
       const query: SearchQuery = {
-        query: 'legal',
+        query: "legal",
         filters,
-        sortBy: 'date',
-        sortOrder: 'desc',
+        sortBy: "date",
+        sortOrder: "desc",
         limit: 20,
         offset: 0,
       };
@@ -118,13 +121,13 @@ describe('SearchService', () => {
       vi.mocked(mockCaseRepo.searchCases).mockResolvedValue([
         {
           id: 1,
-          title: 'Legal Case 1',
-          description: 'Description with legal terms',
-          caseType: 'employment',
-          status: 'active',
+          title: "Legal Case 1",
+          description: "Description with legal terms",
+          caseType: "employment",
+          status: "active",
           userId: 1,
-          createdAt: '2024-06-01T10:00:00Z',
-          updatedAt: '2024-06-01T10:00:00Z',
+          createdAt: "2024-06-01T10:00:00Z",
+          updatedAt: "2024-06-01T10:00:00Z",
         },
       ]);
 
@@ -133,40 +136,46 @@ describe('SearchService', () => {
       expect(result.results).toHaveLength(1);
       expect(result.results[0]).toMatchObject({
         id: 1,
-        type: 'case',
-        title: 'Legal Case 1',
+        type: "case",
+        title: "Legal Case 1",
       });
-      expect(mockCaseRepo.searchCases).toHaveBeenCalledWith(1, 'legal', filters);
+      expect(mockCaseRepo.searchCases).toHaveBeenCalledWith(
+        1,
+        "legal",
+        filters
+      );
     });
 
-    it('should handle search errors gracefully', async () => {
+    it("should handle search errors gracefully", async () => {
       const query: SearchQuery = {
-        query: 'error test',
+        query: "error test",
       };
 
       // Mock an error
-      vi.mocked(mockCaseRepo.searchCases).mockRejectedValue(new Error('Database error'));
+      vi.mocked(mockCaseRepo.searchCases).mockRejectedValue(
+        new Error("Database error")
+      );
 
       const result = await searchService.search(1, query);
 
       // Should return empty results on error (fallback search)
       expect(result.results).toEqual([]);
       expect(mockAuditLogger.log).toHaveBeenCalledWith(
-        'search_query',
+        "search_query",
         expect.objectContaining({
           userId: 1,
-          query: 'error test',
+          query: "error test",
         })
       );
     });
   });
 
-  describe('saveSearch', () => {
-    it('should save a search query', async () => {
+  describe("saveSearch", () => {
+    it("should save a search query", async () => {
       const query: SearchQuery = {
-        query: 'test',
+        query: "test",
         filters: {
-          caseStatus: ['active'],
+          caseStatus: ["active"],
         },
       };
 
@@ -175,51 +184,51 @@ describe('SearchService', () => {
         get: vi.fn().mockReturnValue({
           id: 1,
           userId: 1,
-          name: 'My Search',
+          name: "My Search",
           queryJson: JSON.stringify(query),
-          createdAt: '2024-01-01T10:00:00Z',
+          createdAt: "2024-01-01T10:00:00Z",
           lastUsedAt: null,
           useCount: 0,
         }),
       });
       mockDb.prepare = mockPrepare;
 
-      const result = await searchService.saveSearch(1, 'My Search', query);
+      const result = await searchService.saveSearch(1, "My Search", query);
 
       expect(result).toMatchObject({
         id: 1,
-        name: 'My Search',
+        name: "My Search",
         queryJson: JSON.stringify(query),
       });
       expect(mockAuditLogger.log).toHaveBeenCalledWith(
-        'search_saved',
+        "search_saved",
         expect.objectContaining({
           userId: 1,
           searchId: 1,
-          name: 'My Search',
+          name: "My Search",
         })
       );
     });
   });
 
-  describe('getSavedSearches', () => {
-    it('should retrieve saved searches for a user', async () => {
+  describe("getSavedSearches", () => {
+    it("should retrieve saved searches for a user", async () => {
       const mockSearches = [
         {
           id: 1,
           userId: 1,
-          name: 'Search 1',
+          name: "Search 1",
           queryJson: '{"query":"test1"}',
-          createdAt: '2024-01-01T10:00:00Z',
-          lastUsedAt: '2024-01-02T10:00:00Z',
+          createdAt: "2024-01-01T10:00:00Z",
+          lastUsedAt: "2024-01-02T10:00:00Z",
           useCount: 5,
         },
         {
           id: 2,
           userId: 1,
-          name: 'Search 2',
+          name: "Search 2",
           queryJson: '{"query":"test2"}',
-          createdAt: '2024-01-01T11:00:00Z',
+          createdAt: "2024-01-01T11:00:00Z",
           lastUsedAt: null,
           useCount: 0,
         },
@@ -233,13 +242,13 @@ describe('SearchService', () => {
       const result = await searchService.getSavedSearches(1);
 
       expect(result).toHaveLength(2);
-      expect(result[0].name).toBe('Search 1');
-      expect(result[1].name).toBe('Search 2');
+      expect(result[0].name).toBe("Search 1");
+      expect(result[1].name).toBe("Search 2");
     });
   });
 
-  describe('deleteSavedSearch', () => {
-    it('should delete a saved search', async () => {
+  describe("deleteSavedSearch", () => {
+    it("should delete a saved search", async () => {
       const mockPrepare = vi.fn().mockReturnValue({
         run: vi.fn().mockReturnValue({ changes: 1 }),
       });
@@ -248,7 +257,7 @@ describe('SearchService', () => {
       await searchService.deleteSavedSearch(1, 5);
 
       expect(mockAuditLogger.log).toHaveBeenCalledWith(
-        'search_deleted',
+        "search_deleted",
         expect.objectContaining({
           userId: 1,
           searchId: 5,
@@ -257,12 +266,12 @@ describe('SearchService', () => {
     });
   });
 
-  describe('executeSavedSearch', () => {
-    it('should execute a saved search', async () => {
+  describe("executeSavedSearch", () => {
+    it("should execute a saved search", async () => {
       const savedQuery: SearchQuery = {
-        query: 'saved test',
+        query: "saved test",
         filters: {
-          caseStatus: ['active'],
+          caseStatus: ["active"],
         },
       };
 
@@ -270,9 +279,9 @@ describe('SearchService', () => {
         get: vi.fn().mockReturnValue({
           id: 1,
           userId: 1,
-          name: 'My Search',
+          name: "My Search",
           queryJson: JSON.stringify(savedQuery),
-          createdAt: '2024-01-01T10:00:00Z',
+          createdAt: "2024-01-01T10:00:00Z",
           lastUsedAt: null,
           useCount: 0,
         }),
@@ -286,18 +295,20 @@ describe('SearchService', () => {
       expect(result.query).toEqual(savedQuery);
     });
 
-    it('should throw error for non-existent saved search', async () => {
+    it("should throw error for non-existent saved search", async () => {
       const mockPrepare = vi.fn().mockReturnValue({
         get: vi.fn().mockReturnValue(undefined),
       });
       mockDb.prepare = mockPrepare;
 
-      await expect(searchService.executeSavedSearch(1, 999)).rejects.toThrow('Saved search not found');
+      await expect(searchService.executeSavedSearch(1, 999)).rejects.toThrow(
+        "Saved search not found"
+      );
     });
   });
 
-  describe('getSearchSuggestions', () => {
-    it('should return search suggestions based on prefix', async () => {
+  describe("getSearchSuggestions", () => {
+    it("should return search suggestions based on prefix", async () => {
       const mockSearches = [
         { query_json: '{"query":"legal advice"}' },
         { query_json: '{"query":"legal representation"}' },
@@ -309,12 +320,16 @@ describe('SearchService', () => {
       });
       mockDb.prepare = mockPrepare;
 
-      const suggestions = await searchService.getSearchSuggestions(1, 'legal', 5);
+      const suggestions = await searchService.getSearchSuggestions(
+        1,
+        "legal",
+        5
+      );
 
       expect(suggestions).toEqual([
-        'legal advice',
-        'legal representation',
-        'legal rights',
+        "legal advice",
+        "legal representation",
+        "legal rights",
       ]);
     });
   });

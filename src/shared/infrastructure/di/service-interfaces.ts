@@ -30,22 +30,23 @@
  * ```
  */
 
-import type { User } from '../../../domains/auth/entities/User.ts';
-import type { Session } from '../../../domains/auth/entities/Session.ts';
-import type { Case } from '../../../domains/cases/entities/Case.ts';
-import type { EncryptedData } from '../../../services/EncryptionService.ts';
+import type { User } from "../../../domains/auth/entities/User.ts";
+import type { Session } from "../../../domains/auth/entities/Session.ts";
+import type { Case } from "../../../domains/cases/entities/Case.ts";
+import type { EncryptedData } from "../../../services/EncryptionService.ts";
 import type {
   AuditEvent,
   AuditLogEntry,
   AuditQueryFilters,
-  IntegrityReport
-} from '../../../models/AuditLog.ts';
+  IntegrityReport,
+} from "../../../models/AuditLog.ts";
 import type {
   GdprExportOptions,
   GdprExportResult,
   GdprDeleteOptions,
-  GdprDeleteResult
-} from '../../../models/Gdpr.ts';
+  GdprDeleteResult,
+} from "../../../models/Gdpr.ts";
+import type { DomainEvent } from "../../../shared/infrastructure/events/DomainEvent.ts";
 
 // =============================================================================
 // AUTHENTICATION & AUTHORIZATION SERVICES
@@ -215,7 +216,9 @@ export interface IEncryptionService {
    * @param plaintexts - Array of strings to encrypt
    * @returns Array of EncryptedData objects (null for empty inputs)
    */
-  batchEncrypt(plaintexts: Array<string | null | undefined>): Array<EncryptedData | null>;
+  batchEncrypt(
+    plaintexts: Array<string | null | undefined>
+  ): Array<EncryptedData | null>;
 
   /**
    * Batch decrypt multiple ciphertexts (3-5x faster than individual)
@@ -223,7 +226,9 @@ export interface IEncryptionService {
    * @returns Array of decrypted plaintext strings (null for null inputs)
    * @throws Error if any decryption fails
    */
-  batchDecrypt(encryptedDataArray: Array<EncryptedData | null | undefined>): Array<string | null>;
+  batchDecrypt(
+    encryptedDataArray: Array<EncryptedData | null | undefined>
+  ): Array<string | null>;
 
   /**
    * Rotate encryption key by re-encrypting data with new key
@@ -231,7 +236,10 @@ export interface IEncryptionService {
    * @param newService - EncryptionService initialized with new key
    * @returns Data re-encrypted with new key
    */
-  rotateKey(oldEncryptedData: EncryptedData, newService: IEncryptionService): EncryptedData | null;
+  rotateKey(
+    oldEncryptedData: EncryptedData,
+    newService: IEncryptionService
+  ): EncryptedData | null;
 
   // TODO: Add in Wave 3 - batch operations for table-level encryption
   // encryptBatch(values: Array<string | null>): Array<EncryptedData | null>;
@@ -320,7 +328,7 @@ export interface IAuditLogger {
    * @param filters - Optional query filters
    * @returns Formatted string (JSON or CSV)
    */
-  exportLogs(format: 'json' | 'csv', filters?: AuditQueryFilters): string;
+  exportLogs(format: "json" | "csv", filters?: AuditQueryFilters): string;
 
   // TODO: Add in Wave 3 - user and resource-specific queries
   // getLogsForUser(userId: number, filters?: AuditQueryFilters): AuditLogEntry[];
@@ -673,23 +681,26 @@ export interface ICaseService {
    * Update case
    * @param id - Case ID
    * @param input - Update data
+   * @param userId - User ID for audit logging
    * @returns Updated case or null if not found
    */
-  updateCase(id: number, input: unknown): Case | null;
+  updateCase(id: number, input: unknown, userId: number): Case | null;
 
   /**
    * Close case
    * @param id - Case ID
+   * @param userId - User ID for audit logging
    * @returns Updated case or null if not found
    */
-  closeCase(id: number): Case | null;
+  closeCase(id: number, userId: number): Case | null;
 
   /**
    * Delete case
    * @param id - Case ID
+   * @param userId - User ID for audit logging
    * @returns true if deleted, false if not found
    */
-  deleteCase(id: number): boolean;
+  deleteCase(id: number, userId: number): boolean;
 }
 
 /**
@@ -851,16 +862,16 @@ export interface IEventBus {
    * @param handler - Handler function to execute when event is published
    * @returns Unsubscribe function
    */
-  subscribe<T = unknown>(
+  subscribe(
     eventType: string,
-    handler: (event: T) => void | Promise<void>
+    handler: (event: DomainEvent) => void | Promise<void>
   ): () => void;
 
   /**
    * Publish an event to all subscribers
    * @param event - Event object to publish
    */
-  publish<T = unknown>(event: T): Promise<void>;
+  publish(event: DomainEvent): Promise<void>;
 
   /**
    * Get all persisted events for an aggregate

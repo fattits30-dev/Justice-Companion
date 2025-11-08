@@ -13,7 +13,7 @@ function rebuildForElectron() {
 
   try {
     // Rebuild better-sqlite3 for Electron
-    execSync('npx electron-rebuild -f -w better-sqlite3', {
+    execSync('npx @electron/rebuild -f -w better-sqlite3', {
       stdio: 'inherit',
       cwd: path.join(__dirname, '..'),
     });

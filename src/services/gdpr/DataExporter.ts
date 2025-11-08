@@ -68,7 +68,7 @@ export class DataExporter {
   private exportUserProfile(userId: number): TableExport {
     const stmt = this.db.prepare(`
       SELECT
-        id, username, email, created_at, updated_at, last_login
+        id, username, email, created_at, updated_at, last_login_at
       FROM users
       WHERE id = ?
     `);
@@ -89,8 +89,8 @@ export class DataExporter {
   private exportCases(userId: number): TableExport {
     const stmt = this.db.prepare(`
       SELECT * FROM cases
-      WHERE userId = ?
-      ORDER BY createdAt DESC
+      WHERE user_id = ?
+      ORDER BY created_at DESC
     `);
 
     const cases = stmt.all(userId) as any[];
@@ -128,9 +128,9 @@ export class DataExporter {
     const stmt = this.db.prepare(`
       SELECT e.*
       FROM evidence e
-      JOIN cases c ON e.caseId = c.id
-      WHERE c.userId = ?
-      ORDER BY e.createdAt DESC
+      JOIN cases c ON e.case_id = c.id
+      WHERE c.user_id = ?
+      ORDER BY e.created_at DESC
     `);
 
     const evidence = stmt.all(userId) as any[];
@@ -165,9 +165,9 @@ export class DataExporter {
     const stmt = this.db.prepare(`
       SELECT li.*
       FROM legal_issues li
-      JOIN cases c ON li.caseId = c.id
-      WHERE c.userId = ?
-      ORDER BY li.createdAt DESC
+      JOIN cases c ON li.case_id = c.id
+      WHERE c.user_id = ?
+      ORDER BY li.created_at DESC
     `);
 
     const issues = stmt.all(userId) as any[];
@@ -187,9 +187,9 @@ export class DataExporter {
     const stmt = this.db.prepare(`
       SELECT te.*
       FROM timeline_events te
-      JOIN cases c ON te.caseId = c.id
-      WHERE c.userId = ?
-      ORDER BY te.date DESC
+      JOIN cases c ON te.case_id = c.id
+      WHERE c.user_id = ?
+      ORDER BY te.event_date DESC
     `);
 
     const events = stmt.all(userId) as any[];
@@ -225,9 +225,9 @@ export class DataExporter {
     const stmt = this.db.prepare(`
       SELECT a.*
       FROM actions a
-      JOIN cases c ON a.caseId = c.id
-      WHERE c.userId = ?
-      ORDER BY a.dueDate DESC
+      JOIN cases c ON a.case_id = c.id
+      WHERE c.user_id = ?
+      ORDER BY a.due_date DESC
     `);
 
     const actions = stmt.all(userId) as any[];
@@ -263,9 +263,9 @@ export class DataExporter {
     const stmt = this.db.prepare(`
       SELECT n.*
       FROM notes n
-      JOIN cases c ON n.caseId = c.id
-      WHERE c.userId = ?
-      ORDER BY n.createdAt DESC
+      JOIN cases c ON n.case_id = c.id
+      WHERE c.user_id = ?
+      ORDER BY n.created_at DESC
     `);
 
     const notes = stmt.all(userId) as any[];
@@ -299,8 +299,8 @@ export class DataExporter {
   private exportChatConversations(userId: number): TableExport {
     const stmt = this.db.prepare(`
       SELECT * FROM chat_conversations
-      WHERE userId = ?
-      ORDER BY createdAt DESC
+      WHERE user_id = ?
+      ORDER BY created_at DESC
     `);
 
     const conversations = stmt.all(userId) as any[];
@@ -320,8 +320,8 @@ export class DataExporter {
     const stmt = this.db.prepare(`
       SELECT m.*
       FROM chat_messages m
-      JOIN chat_conversations c ON m.conversationId = c.id
-      WHERE c.userId = ?
+      JOIN chat_conversations c ON m.conversation_id = c.id
+      WHERE c.user_id = ?
       ORDER BY m.timestamp DESC
     `);
 
@@ -369,8 +369,8 @@ export class DataExporter {
   private exportUserFacts(userId: number): TableExport {
     const stmt = this.db.prepare(`
       SELECT * FROM user_facts
-      WHERE userId = ?
-      ORDER BY createdAt DESC
+      WHERE user_id = ?
+      ORDER BY created_at DESC
     `);
 
     const facts = stmt.all(userId) as any[];
@@ -389,9 +389,9 @@ export class DataExporter {
     const stmt = this.db.prepare(`
       SELECT cf.*
       FROM case_facts cf
-      JOIN cases c ON cf.caseId = c.id
-      WHERE c.userId = ?
-      ORDER BY cf.createdAt DESC
+      JOIN cases c ON cf.case_id = c.id
+      WHERE c.user_id = ?
+      ORDER BY cf.created_at DESC
     `);
 
     const facts = stmt.all(userId) as any[];
@@ -408,10 +408,10 @@ export class DataExporter {
    */
   private exportSessions(userId: number): TableExport {
     const stmt = this.db.prepare(`
-      SELECT id, sessionId, userId, createdAt, expiresAt, lastActivity
+      SELECT id, user_id, created_at, expires_at, ip_address, user_agent
       FROM sessions
-      WHERE userId = ?
-      ORDER BY createdAt DESC
+      WHERE user_id = ?
+      ORDER BY created_at DESC
     `);
 
     const sessions = stmt.all(userId) as any[];
@@ -428,15 +428,15 @@ export class DataExporter {
    */
   private exportConsents(userId: number): TableExport {
     const stmt = this.db.prepare(`
-      SELECT * FROM consent_records
-      WHERE userId = ?
-      ORDER BY timestamp DESC
+      SELECT * FROM consents
+      WHERE user_id = ?
+      ORDER BY created_at DESC
     `);
 
     const consents = stmt.all(userId) as any[];
 
     return {
-      tableName: 'consent_records',
+      tableName: 'consents',
       records: consents,
       count: consents.length,
     };

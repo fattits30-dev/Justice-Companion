@@ -1,11 +1,11 @@
-import { expect, test } from '@playwright/test';
-import crypto from 'crypto';
+import { expect, test } from "@playwright/test";
+import crypto from "crypto";
 import {
   closeElectronApp,
   launchElectronApp,
   type ElectronTestApp,
-} from '../setup/electron-setup.js';
-import { getTestDatabase, seedUserConsents } from '../setup/test-database.js';
+} from "../setup/electron-setup.js";
+import { getTestDatabase, seedUserConsents } from "../setup/test-database.js";
 
 /**
  * E2E Tests for Authorization System
@@ -44,8 +44,8 @@ function createTestUser(
 ): { id: number; username: string; email: string } {
   const salt = crypto.randomBytes(16);
   const hash = crypto.scryptSync(password, salt, 64);
-  const passwordHash = Buffer.concat([salt, hash]).toString('base64');
-  const passwordSalt = salt.toString('base64');
+  const passwordHash = Buffer.concat([salt, hash]).toString("base64");
+  const passwordSalt = salt.toString("base64");
 
   db.prepare(
     `
@@ -54,7 +54,9 @@ function createTestUser(
   `
   ).run(username, email, passwordHash, passwordSalt);
 
-  const user = db.prepare('SELECT * FROM users WHERE username = ?').get(username) as any;
+  const user = db
+    .prepare("SELECT * FROM users WHERE username = ?")
+    .get(username) as any;
 
   // Grant required consent
   seedUserConsents(db, user.id);
@@ -65,35 +67,49 @@ function createTestUser(
 /**
  * Helper: Login a user via UI
  */
-async function loginUser(window: any, username: string, password: string): Promise<void> {
-  await window.waitForLoadState('domcontentloaded');
-  await expect(window.getByText('Sign In')).toBeVisible({ timeout: 10000 });
+async function loginUser(
+  window: any,
+  username: string,
+  password: string
+): Promise<void> {
+  await window.waitForLoadState("domcontentloaded");
+  await expect(window.getByText("Sign In")).toBeVisible({ timeout: 10000 });
 
-  await window.fill('#username', username);
-  await window.fill('#password', password);
-  await window.getByRole('button', { name: 'Login' }).click();
+  await window.fill("#username", username);
+  await window.fill("#password", password);
+  await window.getByRole("button", { name: "Login" }).click();
 
   // Wait for successful login
-  await expect(window.getByText('Welcome to Justice Companion')).toBeVisible({
+  await expect(window.getByText("Welcome to Justice Companion")).toBeVisible({
     timeout: 10000,
   });
 }
 
-test.describe('Authorization E2E - Case Handlers', () => {
+test.describe("Authorization E2E - Case Handlers", () => {
   /**
    * Test: User A cannot access User B's case
    * Verifies CASE_GET_BY_ID authorization
    */
-  test('should block access to another user case via CASE_GET_BY_ID', async () => {
+  test("should block access to another user case via CASE_GET_BY_ID", async () => {
     const { window, dbPath } = testApp;
     const db = getTestDatabase(dbPath);
 
     // 1. Create User A and User B
-    const userA = createTestUser(db, `userA_${Date.now()}`, 'userA@example.com', 'Password123!');
-    const userB = createTestUser(db, `userB_${Date.now()}`, 'userB@example.com', 'Password123!');
+    const userA = createTestUser(
+      db,
+      `userA_${Date.now()}`,
+      "userA@example.com",
+      "Password123!"
+    );
+    const userB = createTestUser(
+      db,
+      `userB_${Date.now()}`,
+      "userB@example.com",
+      "Password123!"
+    );
 
     // 2. Create a case owned by User B
-    const caseTitle = 'User B Private Case';
+    const caseTitle = "User B Private Case";
     db.prepare(
       `
       INSERT INTO cases (user_id, title, description, case_type, status, created_at, updated_at)
@@ -101,19 +117,19 @@ test.describe('Authorization E2E - Case Handlers', () => {
     `
     ).run(userB.id, caseTitle);
 
-    const userBCase = db.prepare('SELECT * FROM cases WHERE user_id = ?').get(userB.id) as any;
+    db.prepare("SELECT * FROM cases WHERE user_id = ?").get(userB.id) as any;
 
     db.close();
 
     // 3. Login as User A
-    await loginUser(window, userA.username, 'Password123!');
+    await loginUser(window, userA.username, "Password123!");
 
     // 4. Try to access User B's case via IPC (simulated via UI navigation or direct call)
     // In a real app, this would be clicking on a case link with User B's caseId
     // For now, we verify via database state that cases are properly filtered
 
     // Navigate to Cases page
-    const casesLink = await window.$('text=Cases');
+    const casesLink = await window.$("text=Cases");
     if (casesLink) {
       await casesLink.click();
       await window.waitForTimeout(500);
@@ -128,15 +144,20 @@ test.describe('Authorization E2E - Case Handlers', () => {
    * Test: User A can access their own case
    * Verifies CASE_GET_BY_ID authorization (positive case)
    */
-  test('should allow access to own case via CASE_GET_BY_ID', async () => {
+  test("should allow access to own case via CASE_GET_BY_ID", async () => {
     const { window, dbPath } = testApp;
     const db = getTestDatabase(dbPath);
 
     // 1. Create User A
-    const userA = createTestUser(db, `userA_${Date.now()}`, 'userA@example.com', 'Password123!');
+    const userA = createTestUser(
+      db,
+      `userA_${Date.now()}`,
+      "userA@example.com",
+      "Password123!"
+    );
 
     // 2. Create a case owned by User A
-    const caseTitle = 'User A Own Case';
+    const caseTitle = "User A Own Case";
     db.prepare(
       `
       INSERT INTO cases (user_id, title, description, case_type, status, created_at, updated_at)
@@ -147,10 +168,10 @@ test.describe('Authorization E2E - Case Handlers', () => {
     db.close();
 
     // 3. Login as User A
-    await loginUser(window, userA.username, 'Password123!');
+    await loginUser(window, userA.username, "Password123!");
 
     // 4. Navigate to Cases page
-    const casesLink = await window.$('text=Cases');
+    const casesLink = await window.$("text=Cases");
     if (casesLink) {
       await casesLink.click();
       await window.waitForTimeout(500);
@@ -164,13 +185,23 @@ test.describe('Authorization E2E - Case Handlers', () => {
    * Test: CASE_GET_ALL returns only user's cases
    * Verifies bulk operation filtering
    */
-  test('should return only current user cases via CASE_GET_ALL', async () => {
+  test("should return only current user cases via CASE_GET_ALL", async () => {
     const { window, dbPath } = testApp;
     const db = getTestDatabase(dbPath);
 
     // 1. Create User A and User B
-    const userA = createTestUser(db, `userA_${Date.now()}`, 'userA@example.com', 'Password123!');
-    const userB = createTestUser(db, `userB_${Date.now()}`, 'userB@example.com', 'Password123!');
+    const userA = createTestUser(
+      db,
+      `userA_${Date.now()}`,
+      "userA@example.com",
+      "Password123!"
+    );
+    const userB = createTestUser(
+      db,
+      `userB_${Date.now()}`,
+      "userB@example.com",
+      "Password123!"
+    );
 
     // 2. Create cases for both users
     db.prepare(
@@ -197,21 +228,25 @@ test.describe('Authorization E2E - Case Handlers', () => {
     db.close();
 
     // 3. Login as User A
-    await loginUser(window, userA.username, 'Password123!');
+    await loginUser(window, userA.username, "Password123!");
 
     // 4. Navigate to Cases page
-    const casesLink = await window.$('text=Cases');
+    const casesLink = await window.$("text=Cases");
     if (casesLink) {
       await casesLink.click();
       await window.waitForTimeout(500);
     }
 
     // 5. Verify User A sees only their own cases
-    await expect(window.getByText('User A Case 1')).toBeVisible({ timeout: 5000 });
-    await expect(window.getByText('User A Case 2')).toBeVisible({ timeout: 5000 });
+    await expect(window.getByText("User A Case 1")).toBeVisible({
+      timeout: 5000,
+    });
+    await expect(window.getByText("User A Case 2")).toBeVisible({
+      timeout: 5000,
+    });
 
     // User B's case should NOT be visible
-    const userBCase = await window.$('text=User B Case 1');
+    const userBCase = await window.$("text=User B Case 1");
     expect(userBCase).toBeFalsy();
   });
 
@@ -219,13 +254,23 @@ test.describe('Authorization E2E - Case Handlers', () => {
    * Test: CASE_UPDATE requires ownership
    * Verifies case modification authorization
    */
-  test('should block case update for non-owned case', async () => {
+  test("should block case update for non-owned case", async () => {
     const { window, dbPath } = testApp;
     const db = getTestDatabase(dbPath);
 
     // 1. Create User A and User B
-    const userA = createTestUser(db, `userA_${Date.now()}`, 'userA@example.com', 'Password123!');
-    const userB = createTestUser(db, `userB_${Date.now()}`, 'userB@example.com', 'Password123!');
+    const userA = createTestUser(
+      db,
+      `userA_${Date.now()}`,
+      "userA@example.com",
+      "Password123!"
+    );
+    const userB = createTestUser(
+      db,
+      `userB_${Date.now()}`,
+      "userB@example.com",
+      "Password123!"
+    );
 
     // 2. Create a case owned by User B
     db.prepare(
@@ -235,12 +280,14 @@ test.describe('Authorization E2E - Case Handlers', () => {
     `
     ).run(userB.id);
 
-    const userBCase = db.prepare('SELECT * FROM cases WHERE user_id = ?').get(userB.id) as any;
+    const userBCase = db
+      .prepare("SELECT * FROM cases WHERE user_id = ?")
+      .get(userB.id) as any;
 
     db.close();
 
     // 3. Login as User A
-    await loginUser(window, userA.username, 'Password123!');
+    await loginUser(window, userA.username, "Password123!");
 
     // 4. Try to update User B's case (simulated)
     // In real app, this would be intercepted by IPC authorization
@@ -248,25 +295,35 @@ test.describe('Authorization E2E - Case Handlers', () => {
 
     const dbVerify = getTestDatabase(dbPath);
     const unchangedCase = dbVerify
-      .prepare('SELECT * FROM cases WHERE id = ?')
+      .prepare("SELECT * FROM cases WHERE id = ?")
       .get(userBCase.id) as any;
-    expect(unchangedCase.title).toBe('User B Case'); // Should remain unchanged
+    expect(unchangedCase.title).toBe("User B Case"); // Should remain unchanged
     dbVerify.close();
   });
 });
 
-test.describe('Authorization E2E - Evidence Handlers', () => {
+test.describe("Authorization E2E - Evidence Handlers", () => {
   /**
    * Test: User A cannot access User B's evidence
    * Verifies EVIDENCE_GET_ALL filtering
    */
-  test('should return only evidence from user-owned cases via EVIDENCE_GET_ALL', async () => {
+  test("should return only evidence from user-owned cases via EVIDENCE_GET_ALL", async () => {
     const { window, dbPath } = testApp;
     const db = getTestDatabase(dbPath);
 
     // 1. Create User A and User B
-    const userA = createTestUser(db, `userA_${Date.now()}`, 'userA@example.com', 'Password123!');
-    const userB = createTestUser(db, `userB_${Date.now()}`, 'userB@example.com', 'Password123!');
+    const userA = createTestUser(
+      db,
+      `userA_${Date.now()}`,
+      "userA@example.com",
+      "Password123!"
+    );
+    const userB = createTestUser(
+      db,
+      `userB_${Date.now()}`,
+      "userB@example.com",
+      "Password123!"
+    );
 
     // 2. Create cases for both users
     db.prepare(
@@ -276,7 +333,9 @@ test.describe('Authorization E2E - Evidence Handlers', () => {
     `
     ).run(userA.id);
 
-    const userACase = db.prepare('SELECT * FROM cases WHERE user_id = ?').get(userA.id) as any;
+    const userACase = db
+      .prepare("SELECT * FROM cases WHERE user_id = ?")
+      .get(userA.id) as any;
 
     db.prepare(
       `
@@ -285,7 +344,9 @@ test.describe('Authorization E2E - Evidence Handlers', () => {
     `
     ).run(userB.id);
 
-    const userBCase = db.prepare('SELECT * FROM cases WHERE user_id = ?').get(userB.id) as any;
+    const userBCase = db
+      .prepare("SELECT * FROM cases WHERE user_id = ?")
+      .get(userB.id) as any;
 
     // 3. Create evidence for both cases
     db.prepare(
@@ -305,22 +366,22 @@ test.describe('Authorization E2E - Evidence Handlers', () => {
     db.close();
 
     // 4. Login as User A
-    await loginUser(window, userA.username, 'Password123!');
+    await loginUser(window, userA.username, "Password123!");
 
     // 5. Navigate to Evidence page or Case detail
-    const casesLink = await window.$('text=Cases');
+    const casesLink = await window.$("text=Cases");
     if (casesLink) {
       await casesLink.click();
       await window.waitForTimeout(500);
 
       // Click on User A's case
-      const userACaseLink = await window.$('text=User A Case');
+      const userACaseLink = await window.$("text=User A Case");
       if (userACaseLink) {
         await userACaseLink.click();
         await window.waitForTimeout(500);
 
         // Navigate to Evidence tab if exists
-        const evidenceTab = await window.$('text=Evidence');
+        const evidenceTab = await window.$("text=Evidence");
         if (evidenceTab) {
           await evidenceTab.click();
           await window.waitForTimeout(500);
@@ -330,7 +391,7 @@ test.describe('Authorization E2E - Evidence Handlers', () => {
 
     // 6. Verify User A sees only their own evidence
     // Note: User B's evidence should NOT be visible anywhere in the app
-    const userBEvidence = await window.$('text=User B Evidence');
+    const userBEvidence = await window.$("text=User B Evidence");
     expect(userBEvidence).toBeFalsy();
   });
 
@@ -338,13 +399,23 @@ test.describe('Authorization E2E - Evidence Handlers', () => {
    * Test: EVIDENCE_CREATE requires case ownership
    * Verifies evidence creation authorization
    */
-  test('should block evidence creation for non-owned case', async () => {
+  test("should block evidence creation for non-owned case", async () => {
     const { window, dbPath } = testApp;
     const db = getTestDatabase(dbPath);
 
     // 1. Create User A and User B
-    const userA = createTestUser(db, `userA_${Date.now()}`, 'userA@example.com', 'Password123!');
-    const userB = createTestUser(db, `userB_${Date.now()}`, 'userB@example.com', 'Password123!');
+    const userA = createTestUser(
+      db,
+      `userA_${Date.now()}`,
+      "userA@example.com",
+      "Password123!"
+    );
+    const userB = createTestUser(
+      db,
+      `userB_${Date.now()}`,
+      "userB@example.com",
+      "Password123!"
+    );
 
     // 2. Create a case owned by User B
     db.prepare(
@@ -354,12 +425,14 @@ test.describe('Authorization E2E - Evidence Handlers', () => {
     `
     ).run(userB.id);
 
-    const userBCase = db.prepare('SELECT * FROM cases WHERE user_id = ?').get(userB.id) as any;
+    const userBCase = db
+      .prepare("SELECT * FROM cases WHERE user_id = ?")
+      .get(userB.id) as any;
 
     db.close();
 
     // 3. Login as User A
-    await loginUser(window, userA.username, 'Password123!');
+    await loginUser(window, userA.username, "Password123!");
 
     // 4. Try to create evidence for User B's case
     // In real app, IPC authorization would block this before database insert
@@ -367,25 +440,35 @@ test.describe('Authorization E2E - Evidence Handlers', () => {
     // Verify no evidence was created for User B's case by User A
     const dbVerify = getTestDatabase(dbPath);
     const evidenceCount = dbVerify
-      .prepare('SELECT COUNT(*) as count FROM evidence WHERE case_id = ?')
+      .prepare("SELECT COUNT(*) as count FROM evidence WHERE case_id = ?")
       .get(userBCase.id) as any;
     expect(evidenceCount.count).toBe(0); // Should remain 0
     dbVerify.close();
   });
 });
 
-test.describe('Authorization E2E - Conversation Handlers', () => {
+test.describe("Authorization E2E - Conversation Handlers", () => {
   /**
    * Test: User A cannot access User B's conversations
    * Verifies CONVERSATION_GET_ALL filtering
    */
-  test('should return only conversations from user-owned cases via CONVERSATION_GET_ALL', async () => {
+  test("should return only conversations from user-owned cases via CONVERSATION_GET_ALL", async () => {
     const { window, dbPath } = testApp;
     const db = getTestDatabase(dbPath);
 
     // 1. Create User A and User B
-    const userA = createTestUser(db, `userA_${Date.now()}`, 'userA@example.com', 'Password123!');
-    const userB = createTestUser(db, `userB_${Date.now()}`, 'userB@example.com', 'Password123!');
+    const userA = createTestUser(
+      db,
+      `userA_${Date.now()}`,
+      "userA@example.com",
+      "Password123!"
+    );
+    const userB = createTestUser(
+      db,
+      `userB_${Date.now()}`,
+      "userB@example.com",
+      "Password123!"
+    );
 
     // 2. Create cases for both users
     db.prepare(
@@ -395,7 +478,9 @@ test.describe('Authorization E2E - Conversation Handlers', () => {
     `
     ).run(userA.id);
 
-    const userACase = db.prepare('SELECT * FROM cases WHERE user_id = ?').get(userA.id) as any;
+    const userACase = db
+      .prepare("SELECT * FROM cases WHERE user_id = ?")
+      .get(userA.id) as any;
 
     db.prepare(
       `
@@ -404,7 +489,9 @@ test.describe('Authorization E2E - Conversation Handlers', () => {
     `
     ).run(userB.id);
 
-    const userBCase = db.prepare('SELECT * FROM cases WHERE user_id = ?').get(userB.id) as any;
+    const userBCase = db
+      .prepare("SELECT * FROM cases WHERE user_id = ?")
+      .get(userB.id) as any;
 
     // 3. Create conversations for both cases
     db.prepare(
@@ -424,10 +511,10 @@ test.describe('Authorization E2E - Conversation Handlers', () => {
     db.close();
 
     // 4. Login as User A
-    await loginUser(window, userA.username, 'Password123!');
+    await loginUser(window, userA.username, "Password123!");
 
     // 5. Navigate to Chat/Conversations page
-    const chatLink = await window.$('text=Chat');
+    const chatLink = await window.$("text=Chat");
     if (chatLink) {
       await chatLink.click();
       await window.waitForTimeout(500);
@@ -435,7 +522,7 @@ test.describe('Authorization E2E - Conversation Handlers', () => {
 
     // 6. Verify User A sees only their own conversations
     // User B's conversation should NOT be visible
-    const userBConversation = await window.$('text=User B Conversation');
+    const userBConversation = await window.$("text=User B Conversation");
     expect(userBConversation).toBeFalsy();
   });
 
@@ -443,12 +530,17 @@ test.describe('Authorization E2E - Conversation Handlers', () => {
    * Test: General conversations (null caseId) are blocked
    * Verifies conversation security gap mitigation
    */
-  test('should block access to conversations without caseId (security gap)', async () => {
+  test("should block access to conversations without caseId (security gap)", async () => {
     const { window, dbPath } = testApp;
     const db = getTestDatabase(dbPath);
 
     // 1. Create User A
-    const userA = createTestUser(db, `userA_${Date.now()}`, 'userA@example.com', 'Password123!');
+    const userA = createTestUser(
+      db,
+      `userA_${Date.now()}`,
+      "userA@example.com",
+      "Password123!"
+    );
 
     // 2. Create a conversation with NULL caseId (general chat)
     db.prepare(
@@ -461,33 +553,43 @@ test.describe('Authorization E2E - Conversation Handlers', () => {
     db.close();
 
     // 3. Login as User A
-    await loginUser(window, userA.username, 'Password123!');
+    await loginUser(window, userA.username, "Password123!");
 
     // 4. Navigate to Chat page
-    const chatLink = await window.$('text=Chat');
+    const chatLink = await window.$("text=Chat");
     if (chatLink) {
       await chatLink.click();
       await window.waitForTimeout(500);
     }
 
     // 5. Verify general conversation is NOT visible (blocked by authorization)
-    const generalConversation = await window.$('text=General Conversation');
+    const generalConversation = await window.$("text=General Conversation");
     expect(generalConversation).toBeFalsy();
   });
 });
 
-test.describe('Authorization E2E - GDPR Handlers', () => {
+test.describe("Authorization E2E - GDPR Handlers", () => {
   /**
    * Test: GDPR_EXPORT_USER_DATA exports only current user data
    * Verifies GDPR export authorization (CRITICAL)
    */
-  test('should export only current user data via GDPR_EXPORT_USER_DATA', async () => {
+  test("should export only current user data via GDPR_EXPORT_USER_DATA", async () => {
     const { window, dbPath } = testApp;
     const db = getTestDatabase(dbPath);
 
     // 1. Create User A and User B
-    const userA = createTestUser(db, `userA_${Date.now()}`, 'userA@example.com', 'Password123!');
-    const userB = createTestUser(db, `userB_${Date.now()}`, 'userB@example.com', 'Password123!');
+    const userA = createTestUser(
+      db,
+      `userA_${Date.now()}`,
+      "userA@example.com",
+      "Password123!"
+    );
+    const userB = createTestUser(
+      db,
+      `userB_${Date.now()}`,
+      "userB@example.com",
+      "Password123!"
+    );
 
     // 2. Create cases for both users
     db.prepare(
@@ -507,10 +609,10 @@ test.describe('Authorization E2E - GDPR Handlers', () => {
     db.close();
 
     // 3. Login as User A
-    await loginUser(window, userA.username, 'Password123!');
+    await loginUser(window, userA.username, "Password123!");
 
     // 4. Navigate to Settings → GDPR
-    const settingsLink = await window.$('text=Settings');
+    const settingsLink = await window.$("text=Settings");
     if (settingsLink) {
       await settingsLink.click();
       await window.waitForTimeout(500);
@@ -551,13 +653,23 @@ test.describe('Authorization E2E - GDPR Handlers', () => {
    * Test: GDPR_DELETE_USER_DATA deletes only current user data
    * Verifies GDPR deletion authorization (CRITICAL)
    */
-  test('should delete only current user data via GDPR_DELETE_USER_DATA', async () => {
+  test("should delete only current user data via GDPR_DELETE_USER_DATA", async () => {
     const { window, dbPath } = testApp;
     const db = getTestDatabase(dbPath);
 
     // 1. Create User A and User B
-    const userA = createTestUser(db, `userA_${Date.now()}`, 'userA@example.com', 'Password123!');
-    const userB = createTestUser(db, `userB_${Date.now()}`, 'userB@example.com', 'Password123!');
+    const userA = createTestUser(
+      db,
+      `userA_${Date.now()}`,
+      "userA@example.com",
+      "Password123!"
+    );
+    const userB = createTestUser(
+      db,
+      `userB_${Date.now()}`,
+      "userB@example.com",
+      "Password123!"
+    );
 
     // 2. Create cases for both users
     db.prepare(
@@ -576,10 +688,10 @@ test.describe('Authorization E2E - GDPR Handlers', () => {
 
     // Verify initial counts
     const userACases = db
-      .prepare('SELECT COUNT(*) as count FROM cases WHERE user_id = ?')
+      .prepare("SELECT COUNT(*) as count FROM cases WHERE user_id = ?")
       .get(userA.id) as any;
     const userBCases = db
-      .prepare('SELECT COUNT(*) as count FROM cases WHERE user_id = ?')
+      .prepare("SELECT COUNT(*) as count FROM cases WHERE user_id = ?")
       .get(userB.id) as any;
     expect(userACases.count).toBe(1);
     expect(userBCases.count).toBe(1);
@@ -587,10 +699,10 @@ test.describe('Authorization E2E - GDPR Handlers', () => {
     db.close();
 
     // 3. Login as User A
-    await loginUser(window, userA.username, 'Password123!');
+    await loginUser(window, userA.username, "Password123!");
 
     // 4. Navigate to Settings → GDPR
-    const settingsLink = await window.$('text=Settings');
+    const settingsLink = await window.$("text=Settings");
     if (settingsLink) {
       await settingsLink.click();
       await window.waitForTimeout(500);
@@ -605,8 +717,10 @@ test.describe('Authorization E2E - GDPR Handlers', () => {
       // 6. Confirm deletion (if confirmation dialog appears)
       const confirmInput = await window.$('input[type="text"]');
       if (confirmInput) {
-        await confirmInput.fill('DELETE_ALL_MY_DATA');
-        const confirmButton = await window.$('button:has-text("Confirm Delete")');
+        await confirmInput.fill("DELETE_ALL_MY_DATA");
+        const confirmButton = await window.$(
+          'button:has-text("Confirm Delete")'
+        );
         if (confirmButton) {
           await confirmButton.click();
           await window.waitForTimeout(1000);
@@ -619,13 +733,13 @@ test.describe('Authorization E2E - GDPR Handlers', () => {
 
     // User A's cases should be deleted (0 remaining)
     const userACasesAfter = dbVerify
-      .prepare('SELECT COUNT(*) as count FROM cases WHERE user_id = ?')
+      .prepare("SELECT COUNT(*) as count FROM cases WHERE user_id = ?")
       .get(userA.id) as any;
     expect(userACasesAfter.count).toBe(0);
 
     // User B's cases should remain intact (1 remaining)
     const userBCasesAfter = dbVerify
-      .prepare('SELECT COUNT(*) as count FROM cases WHERE user_id = ?')
+      .prepare("SELECT COUNT(*) as count FROM cases WHERE user_id = ?")
       .get(userB.id) as any;
     expect(userBCasesAfter.count).toBe(1);
 
@@ -633,17 +747,22 @@ test.describe('Authorization E2E - GDPR Handlers', () => {
   });
 });
 
-test.describe('Authorization E2E - Session Expiration', () => {
+test.describe("Authorization E2E - Session Expiration", () => {
   /**
    * Test: Expired session cannot access protected resources
    * Verifies session validation in authorization
    */
-  test('should block resource access with expired session', async () => {
+  test("should block resource access with expired session", async () => {
     const { window, dbPath } = testApp;
     const db = getTestDatabase(dbPath);
 
     // 1. Create User A
-    const userA = createTestUser(db, `userA_${Date.now()}`, 'userA@example.com', 'Password123!');
+    const userA = createTestUser(
+      db,
+      `userA_${Date.now()}`,
+      "userA@example.com",
+      "Password123!"
+    );
 
     // 2. Create a case for User A
     db.prepare(
@@ -656,16 +775,18 @@ test.describe('Authorization E2E - Session Expiration', () => {
     db.close();
 
     // 3. Login as User A
-    await loginUser(window, userA.username, 'Password123!');
+    await loginUser(window, userA.username, "Password123!");
 
     // 4. Verify case is visible
-    const casesLink = await window.$('text=Cases');
+    const casesLink = await window.$("text=Cases");
     if (casesLink) {
       await casesLink.click();
       await window.waitForTimeout(500);
     }
 
-    await expect(window.getByText('User A Case')).toBeVisible({ timeout: 5000 });
+    await expect(window.getByText("User A Case")).toBeVisible({
+      timeout: 5000,
+    });
 
     // 5. Manually expire session in database
     const dbExpire = getTestDatabase(dbPath);
@@ -682,13 +803,13 @@ test.describe('Authorization E2E - Session Expiration', () => {
 
     // 6. Try to access resources (refresh page)
     await window.reload();
-    await window.waitForLoadState('domcontentloaded');
+    await window.waitForLoadState("domcontentloaded");
 
     // 7. Should be redirected to login screen (session expired)
-    await expect(window.getByText('Sign In')).toBeVisible({ timeout: 10000 });
+    await expect(window.getByText("Sign In")).toBeVisible({ timeout: 10000 });
 
     // Case should NOT be visible (logged out)
-    const caseAfterExpiry = await window.$('text=User A Case');
+    const caseAfterExpiry = await window.$("text=User A Case");
     expect(caseAfterExpiry).toBeFalsy();
   });
 });

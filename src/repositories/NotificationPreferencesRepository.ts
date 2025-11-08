@@ -82,6 +82,20 @@ export class NotificationPreferencesRepository {
   }
 
   /**
+   * Alias for findByUser() - for service compatibility
+   */
+  findByUserId(userId: number): NotificationPreferences | null {
+    return this.findByUser(userId);
+  }
+
+  /**
+   * Alias for createDefaults() - for service compatibility
+   */
+  createDefault(userId: number): NotificationPreferences {
+    return this.createDefaults(userId);
+  }
+
+  /**
    * Update notification preferences
    */
   update(

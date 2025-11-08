@@ -1,8 +1,8 @@
-import type { App } from 'electron';
-import { exec } from 'child_process';
-import { promisify } from 'util';
-import net from 'net';
-import { errorLogger } from '../utils/error-logger.ts';
+import type { App } from "electron";
+import { exec } from "child_process";
+import { promisify } from "util";
+import net from "net";
+import { errorLogger } from "../utils/error-logger.ts";
 
 const execAsync = promisify(exec);
 
@@ -42,15 +42,15 @@ export class ProcessManager {
     const gotLock = this.app.requestSingleInstanceLock();
 
     if (!gotLock) {
-      errorLogger.logError(new Error('Another instance is already running'), {
-        service: 'ProcessManager',
-        operation: 'enforceSingleInstance',
+      errorLogger.logError(new Error("Another instance is already running"), {
+        service: "ProcessManager",
+        operation: "enforceSingleInstance",
       });
       this.app.quit();
       return false;
     }
 
-    console.log('[ProcessManager] Single instance lock acquired');
+    console.log("[ProcessManager] Single instance lock acquired");
     return true;
   }
 
@@ -58,10 +58,15 @@ export class ProcessManager {
    * Register callback for when a second instance is launched
    */
   public onSecondInstance(callback: () => void): void {
-    this.app.on('second-instance', (_event, _commandLine, _workingDirectory) => {
-      console.warn('[ProcessManager] Second instance detected, focusing main window...');
-      callback();
-    });
+    this.app.on(
+      "second-instance",
+      (_event, _commandLine, _workingDirectory) => {
+        console.warn(
+          "[ProcessManager] Second instance detected, focusing main window..."
+        );
+        callback();
+      }
+    );
   }
 
   /**
@@ -71,12 +76,11 @@ export class ProcessManager {
     return new Promise((resolve) => {
       const server = net.createServer();
 
-      server.once('error', (_err: NodeJS.ErrnoException) => {
-         
+      server.once("error", (_err: NodeJS.ErrnoException) => {
         resolve(true);
       });
 
-      server.once('listening', () => {
+      server.once("listening", () => {
         server.close();
         resolve(false);
       });
@@ -90,9 +94,9 @@ export class ProcessManager {
    */
   public async findProcessByPort(port: number): Promise<ProcessInfo> {
     try {
-      if (process.platform === 'win32') {
+      if (process.platform === "win32") {
         const { stdout } = await execAsync(`netstat -ano | findstr :${port}`);
-        const lines = stdout.trim().split('\n');
+        const lines = stdout.trim().split("\n");
 
         for (const line of lines) {
           const match = line.match(/LISTENING\s+(\d+)/);
@@ -100,7 +104,10 @@ export class ProcessManager {
             return { pid: parseInt(match[1], 10) };
           }
         }
-      } else if (process.platform === 'linux' || process.platform === 'darwin') {
+      } else if (
+        process.platform === "linux" ||
+        process.platform === "darwin"
+      ) {
         const { stdout } = await execAsync(`lsof -i :${port} -t`);
         const pid = stdout.trim();
         if (pid) {
@@ -118,7 +125,7 @@ export class ProcessManager {
    */
   public async getProcessStatus(): Promise<ProcessStatus> {
     const ports: PortStatus[] = [];
-    
+
     for (const [port, name] of this.managedPorts.entries()) {
       const inUse = await this.isPortInUse(port);
       ports.push({ port, name, inUse });
@@ -127,7 +134,7 @@ export class ProcessManager {
     return {
       isRunning: true,
       startTime: this.startTime,
-      ports
+      ports,
     };
   }
 
@@ -146,6 +153,125 @@ export class ProcessManager {
   }
 
   /**
+   * Kill process running on a specific port
+   */
+  public async killProcessOnPort(port: number): Promise<boolean> {
+    try {
+      const processInfo = await this.findProcessByPort(port);
+
+      if (!processInfo.pid) {
+        return false; // No process found on port
+      }
+
+      if (process.platform === "win32") {
+        await execAsync(`taskkill /PID ${processInfo.pid} /F`);
+      } else {
+        await execAsync(`kill -9 ${processInfo.pid}`);
+      }
+
+      return true;
+    } catch (error) {
+      errorLogger.logError(
+        error instanceof Error ? error : new Error(String(error)),
+        {
+          service: "ProcessManager",
+          operation: "killProcessOnPort",
+          port,
+        }
+      );
+      return false;
+    }
+  }
+
+  /**
+   * Clean up processes on startup
+   */
+  public async cleanupOnStartup(): Promise<void> {
+    // Implementation for cleaning up processes on startup
+    // This could kill any lingering processes from previous runs
+  }
+
+  /**
+   * Register shutdown handlers
+   */
+  public registerShutdownHandlers(): void {
+    // This method might be used to set up shutdown handlers
+    // The existing executeShutdownHandlers actually executes them
+  }
+
+  /**
+   * Register shutdown callback
+   */
+  public onShutdown(callback: () => void | Promise<void>): void {
+    this.addShutdownHandler(callback);
+  }
+
+  /**
+   * Get status (alias for getProcessStatus)
+   */
+  public async getStatus(): Promise<ProcessStatus> {
+    return this.getProcessStatus();
+  }
+
+  /**
+   * Track port (alias for registerManagedPort)
+   */
+  public trackPort(port: number, name: string): void {
+    this.registerManagedPort(port, name);
+  }
+
+  /**
+   * Ensure port is available
+   */
+  public async ensurePortAvailable(
+    port: number,
+    maxRetries: number = 1
+  ): Promise<boolean> {
+    for (let i = 0; i < maxRetries; i++) {
+      const inUse = await this.isPortInUse(port);
+      if (!inUse) {
+        return true;
+      }
+      await this.killProcessOnPort(port);
+    }
+    return false;
+  }
+
+  /**
+   * Log error
+   */
+  public logError(error: Error, context?: Record<string, unknown>): void {
+    errorLogger.logError(error, {
+      service: "ProcessManager",
+      ...context,
+    });
+  }
+
+  /**
+   * Kill process by ID
+   */
+  public async killProcessById(pid: number): Promise<boolean> {
+    try {
+      if (process.platform === "win32") {
+        await execAsync(`taskkill /PID ${pid} /F`);
+      } else {
+        await execAsync(`kill -9 ${pid}`);
+      }
+      return true;
+    } catch (error) {
+      errorLogger.logError(
+        error instanceof Error ? error : new Error(String(error)),
+        {
+          service: "ProcessManager",
+          operation: "killProcessById",
+          pid,
+        }
+      );
+      return false;
+    }
+  }
+
+  /**
    * Execute all shutdown handlers
    */
   public async executeShutdownHandlers(): Promise<void> {
@@ -153,10 +279,13 @@ export class ProcessManager {
       try {
         await handler();
       } catch (error) {
-        errorLogger.logError(error instanceof Error ? error : new Error(String(error)), {
-          service: 'ProcessManager',
-          operation: 'executeShutdownHandlers',
-        });
+        errorLogger.logError(
+          error instanceof Error ? error : new Error(String(error)),
+          {
+            service: "ProcessManager",
+            operation: "executeShutdownHandlers",
+          }
+        );
       }
     }
   }

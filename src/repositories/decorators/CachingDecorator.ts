@@ -6,10 +6,10 @@
  * invalidation on write operations.
  */
 
-import { injectable, inject } from 'inversify';
-import { TYPES } from '../../shared/infrastructure/di/types.ts';
-import type { ICacheService } from '../../shared/infrastructure/di/interfaces.ts';
-import { RepositoryDecorator } from './RepositoryDecorator.ts';
+import { injectable, inject } from "inversify";
+import { TYPES } from "../../shared/infrastructure/di/types.ts";
+import type { ICacheService } from "../../shared/infrastructure/di/interfaces.ts";
+import { RepositoryDecorator } from "./RepositoryDecorator.ts";
 
 /**
  * Adds caching layer to repository operations
@@ -29,7 +29,8 @@ export class CachingDecorator<T> extends RepositoryDecorator<T> {
 
   constructor(
     repository: T,
-    @inject(TYPES.CacheService) private cache: ICacheService
+    @inject(TYPES.CacheService) private cache: ICacheService,
+    private ttlSeconds?: number
   ) {
     super(repository);
   }
@@ -38,7 +39,7 @@ export class CachingDecorator<T> extends RepositoryDecorator<T> {
    * Wrap findById with cache lookup
    */
   async findById(id: number): Promise<T | null> {
-    const cacheKey = this.getCacheKey('findById', id);
+    const cacheKey = this.getCacheKey("findById", id);
 
     // Try cache first
     const cached = this.cache.get<T | null>(cacheKey);
@@ -51,7 +52,11 @@ export class CachingDecorator<T> extends RepositoryDecorator<T> {
 
     // Store in cache
     if (result) {
-      this.cache.set(cacheKey, result, this.DEFAULT_TTL_SECONDS);
+      this.cache.set(
+        cacheKey,
+        result,
+        this.ttlSeconds || this.DEFAULT_TTL_SECONDS
+      );
     }
 
     return result;
@@ -61,7 +66,7 @@ export class CachingDecorator<T> extends RepositoryDecorator<T> {
    * Wrap findAll with cache lookup
    */
   async findAll(): Promise<T[]> {
-    const cacheKey = this.getCacheKey('findAll');
+    const cacheKey = this.getCacheKey("findAll");
 
     // Try cache first
     const cached = this.cache.get<T[]>(cacheKey);
@@ -84,11 +89,11 @@ export class CachingDecorator<T> extends RepositoryDecorator<T> {
    * Wrap findByUserId with cache lookup
    */
   async findByUserId(userId: number): Promise<T[]> {
-    if (!this.hasMethod('findByUserId')) {
-      return this.forwardCall('findByUserId', userId);
+    if (!this.hasMethod("findByUserId")) {
+      return this.forwardCall("findByUserId", userId);
     }
 
-    const cacheKey = this.getCacheKey('findByUserId', userId);
+    const cacheKey = this.getCacheKey("findByUserId", userId);
 
     // Try cache first
     const cached = this.cache.get<T[]>(cacheKey);
@@ -101,7 +106,11 @@ export class CachingDecorator<T> extends RepositoryDecorator<T> {
 
     // Store in cache
     if (result) {
-      this.cache.set(cacheKey, result, this.DEFAULT_TTL_SECONDS);
+      this.cache.set(
+        cacheKey,
+        result,
+        this.ttlSeconds || this.DEFAULT_TTL_SECONDS
+      );
     }
 
     return result;
@@ -114,9 +123,9 @@ export class CachingDecorator<T> extends RepositoryDecorator<T> {
     const result = await (this.repository as any).create(data);
 
     // Invalidate relevant caches
-    this.invalidateCachePattern('findById');
-    this.invalidateCachePattern('findAll');
-    this.invalidateCachePattern('findByUserId');
+    this.invalidateCachePattern("findById");
+    this.invalidateCachePattern("findAll");
+    this.invalidateCachePattern("findByUserId");
 
     return result;
   }
@@ -128,8 +137,8 @@ export class CachingDecorator<T> extends RepositoryDecorator<T> {
     const result = await (this.repository as any).update(id, data);
 
     // Invalidate relevant caches
-    this.invalidateCachePattern('findById', id);
-    this.invalidateCachePattern('findByUserId');
+    this.invalidateCachePattern("findById", id);
+    this.invalidateCachePattern("findByUserId");
 
     return result;
   }
@@ -141,8 +150,8 @@ export class CachingDecorator<T> extends RepositoryDecorator<T> {
     const result = await (this.repository as any).delete(id);
 
     // Invalidate relevant caches
-    this.invalidateCachePattern('findById', id);
-    this.invalidateCachePattern('findByUserId');
+    this.invalidateCachePattern("findById", id);
+    this.invalidateCachePattern("findByUserId");
 
     return result;
   }
@@ -151,8 +160,8 @@ export class CachingDecorator<T> extends RepositoryDecorator<T> {
    * Generate cache key based on method and parameters
    */
   private getCacheKey(method: string, ...args: any[]): string {
-    const keyParts = [method, ...args.map(arg => String(arg))];
-    return keyParts.join(':');
+    const keyParts = [method, ...args.map((arg) => String(arg))];
+    return keyParts.join(":");
   }
 
   /**
@@ -167,13 +176,16 @@ export class CachingDecorator<T> extends RepositoryDecorator<T> {
    * Check if repository has specific method
    */
   protected hasMethod(methodName: string): boolean {
-    return typeof (this.repository as any)[methodName] === 'function';
+    return typeof (this.repository as any)[methodName] === "function";
   }
 
   /**
    * Forward call to original repository
    */
-  protected async forwardCall(methodName: string, ...args: any[]): Promise<any> {
+  protected async forwardCall(
+    methodName: string,
+    ...args: any[]
+  ): Promise<any> {
     return (this.repository as any)[methodName](...args);
   }
 }
