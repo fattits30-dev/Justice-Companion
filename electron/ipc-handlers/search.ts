@@ -13,8 +13,6 @@ import {
 import { withAuthorization } from '../utils/authorization-wrapper.ts';
 import type { IPCResponse } from '../utils/ipc-response.ts';
 import { DatabaseError, ValidationError } from '../../src/errors/DomainErrors.ts';
-import { AuditLogger } from '../../src/services/AuditLogger.ts';
-import { EncryptionService } from '../../src/services/EncryptionService.ts';
 
 // Lazy initialization of services
 let searchService: SearchService | null = null;

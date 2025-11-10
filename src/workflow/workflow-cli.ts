@@ -12,8 +12,8 @@ import readline from "readline";
 import { ConfigManager } from "./ConfigManager.ts";
 import { ProjectPlanner } from "./ProjectPlanner.ts";
 import { TodoManager } from "./TodoManager.ts";
-// @ts-expect-error - Unused import WorkflowPlan - workflow files are WIP
-import type { WorkflowPlan } from "./types.ts";
+// Unused import for future use - workflow files are WIP
+import type { WorkflowPlan as _WorkflowPlan } from "./types.ts";
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -74,7 +74,7 @@ async function main() {
   console.log("Let me help you set up a workflow for this project.\n");
 
   const shouldSetup = await question(
-    "Create workflow configuration? (yes/no): "
+    "Create workflow configuration? (yes/no): ",
   );
 
   if (
@@ -93,10 +93,10 @@ async function main() {
   console.log("\n📊 Project Analysis:");
   console.log(`  Languages: ${analysis.techStack.languages.join(", ")}`);
   console.log(
-    `  Frameworks: ${analysis.techStack.frameworks.join(", ") || "None detected"}`
+    `  Frameworks: ${analysis.techStack.frameworks.join(", ") || "None detected"}`,
   );
   console.log(
-    `  Package Manager: ${analysis.techStack.packageManager || "npm"}`
+    `  Package Manager: ${analysis.techStack.packageManager || "npm"}`,
   );
   console.log(`  Files: ${analysis.structure.fileCount}`);
   console.log(`  Libraries: ${analysis.libraries.length}`);
@@ -149,7 +149,7 @@ async function main() {
 
   console.log("\n✅ Workflow setup complete!\n");
   console.log(
-    "Next time you run this command, I'll load your existing plan.\n"
+    "Next time you run this command, I'll load your existing plan.\n",
   );
 
   // Interactive loop
@@ -160,7 +160,7 @@ async function main() {
 
 async function interactiveLoop(
   todoManager: TodoManager,
-  configManager: ConfigManager
+  configManager: ConfigManager,
 ) {
   console.log("\n╔══════════════════════════════════════════════════════════╗");
   console.log("║                Interactive Workflow Mode                  ║");
@@ -199,7 +199,7 @@ async function interactiveLoop(
             console.log(`  Category: ${nextTask.category}`);
           } else {
             console.log(
-              "\n✅ No pending tasks! All dependencies blocked or plan complete."
+              "\n✅ No pending tasks! All dependencies blocked or plan complete.",
             );
           }
           break;
@@ -315,7 +315,7 @@ async function interactiveLoop(
       }
     } catch (error) {
       console.error(
-        `\n❌ Error: ${error instanceof Error ? error.message : String(error)}`
+        `\n❌ Error: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
