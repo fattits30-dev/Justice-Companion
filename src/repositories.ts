@@ -7,6 +7,7 @@ import { getDb } from "./db/database.ts";
 import { EncryptionService } from "./services/EncryptionService.ts";
 import { AuditLogger } from "./services/AuditLogger.ts";
 import { initializeServiceContainer } from "./services/ServiceContainer.ts";
+import { logger } from "./utils/logger.ts";
 
 // Import all repositories
 import { CaseRepository } from "./repositories/CaseRepository.ts";
@@ -56,13 +57,14 @@ function initializeRepositories(): RepositoryContainer {
     process.env.ENCRYPTION_KEY_BASE64 ||
     Buffer.from("test-key-only-replace-in-production!!").toString("base64");
 
-  console.log(
-    "[Repositories] Initializing with encryption key from:",
-    process.env.ENCRYPTION_KEY_BASE64 ? ".env file" : "fallback test key",
+  logger.info(
+    "[Repositories] Initializing with encryption key from: " +
+      (process.env.ENCRYPTION_KEY_BASE64 ? ".env file" : "fallback test key"),
+    { service: "Repositories" },
   );
-  console.log(
-    "[Repositories] Key (first 10 chars):",
-    encryptionKey.substring(0, 10),
+  logger.debug(
+    "[Repositories] Key (first 10 chars): " + encryptionKey.substring(0, 10),
+    { service: "Repositories" },
   );
 
   const encryptionService = new EncryptionService(encryptionKey);

@@ -3,6 +3,7 @@ import { exec } from "child_process";
 import { promisify } from "util";
 import net from "net";
 import { errorLogger } from "../utils/error-logger.ts";
+import { logger } from "../utils/logger.ts";
 
 const execAsync = promisify(exec);
 
@@ -50,7 +51,9 @@ export class ProcessManager {
       return false;
     }
 
-    console.log("[ProcessManager] Single instance lock acquired");
+    logger.info("[ProcessManager] Single instance lock acquired", {
+      service: "ProcessManager",
+    });
     return true;
   }
 
@@ -192,8 +195,9 @@ export class ProcessManager {
       try {
         const inUse = await this.isPortInUse(port);
         if (inUse) {
-          console.log(
+          logger.info(
             `[ProcessManager] Port ${port} (${name}) is in use, attempting cleanup...`,
+            { service: "ProcessManager", port, name },
           );
           await this.killProcessOnPort(port);
         }

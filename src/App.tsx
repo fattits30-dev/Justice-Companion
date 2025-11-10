@@ -27,6 +27,7 @@ import { MainLayout } from "./components/layouts/MainLayout.tsx";
 import { ToastProvider } from "./components/ui/index.ts";
 import { SkeletonCard } from "./components/ui/Skeleton.tsx";
 import { ErrorBoundary } from "./components/ErrorBoundary.tsx";
+import { logger } from "./utils/logger.ts";
 
 // Lazy load views for code splitting
 const Dashboard = lazy(() =>
@@ -137,8 +138,9 @@ function DashboardWrapper() {
 
         if (!sessionId) {
           // No session - ProtectedRoute will handle redirect to login
-          console.log(
+          logger.info(
             "[DashboardWrapper] No sessionId found - user not authenticated",
+            { service: "App" },
           );
           setError("No active session");
           return;

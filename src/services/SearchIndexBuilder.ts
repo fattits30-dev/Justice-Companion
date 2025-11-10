@@ -9,6 +9,7 @@ import type { Evidence } from "../domains/evidence/entities/Evidence.ts";
 import type { ChatConversation } from "../models/ChatConversation.ts";
 import type { Note } from "../models/Note.ts";
 import { errorLogger } from "../utils/error-logger.ts";
+import { logger } from "../utils/logger.ts";
 
 export class SearchIndexBuilder {
   constructor(
@@ -17,7 +18,7 @@ export class SearchIndexBuilder {
     private evidenceRepo: EvidenceRepository,
     private chatRepo: ChatConversationRepository,
     private notesRepo: NotesRepository,
-    private encryptionService: EncryptionService
+    private encryptionService: EncryptionService,
   ) {}
 
   /**
@@ -25,7 +26,9 @@ export class SearchIndexBuilder {
    * ADMIN ONLY - should require admin role check
    */
   async rebuildIndex(): Promise<void> {
-    console.log("Starting search index rebuild...");
+    logger.info("Starting search index rebuild...", {
+      service: "SearchIndexBuilder",
+    });
 
     try {
       // Start a transaction for consistency
@@ -40,7 +43,10 @@ export class SearchIndexBuilder {
       }[];
 
       for (const user of users) {
-        console.log(`Indexing data for user ${user.id}...`);
+        logger.info(`Indexing data for user ${user.id}...`, {
+          service: "SearchIndexBuilder",
+          userId: user.id,
+        });
 
         // Index cases
         const cases = await this.caseRepo.getByUserId(user.id);
@@ -69,7 +75,9 @@ export class SearchIndexBuilder {
 
       // Commit transaction
       this.db.prepare("COMMIT").run();
-      console.log("Search index rebuild completed successfully");
+      logger.info("Search index rebuild completed successfully", {
+        service: "SearchIndexBuilder",
+      });
     } catch (error) {
       // Rollback on error
       this.db.prepare("ROLLBACK").run();
@@ -78,7 +86,7 @@ export class SearchIndexBuilder {
         {
           service: "SearchIndexBuilder",
           operation: "rebuildIndex",
-        }
+        },
       );
       throw error;
     }
@@ -89,7 +97,10 @@ export class SearchIndexBuilder {
    * SECURITY: Only rebuilds index for authenticated user's data
    */
   async rebuildIndexForUser(userId: number): Promise<void> {
-    console.log(`Starting search index rebuild for user ${userId}...`);
+    logger.info(`Starting search index rebuild for user ${userId}...`, {
+      service: "SearchIndexBuilder",
+      userId,
+    });
 
     try {
       // Start a transaction for consistency
@@ -124,7 +135,10 @@ export class SearchIndexBuilder {
 
       // Commit transaction
       this.db.prepare("COMMIT").run();
-      console.log(`Search index rebuild completed for user ${userId}`);
+      logger.info(`Search index rebuild completed for user ${userId}`, {
+        service: "SearchIndexBuilder",
+        userId,
+      });
     } catch (error) {
       // Rollback on error
       this.db.prepare("ROLLBACK").run();
@@ -134,7 +148,7 @@ export class SearchIndexBuilder {
           service: "SearchIndexBuilder",
           operation: "rebuildIndexForUser",
           userId,
-        }
+        },
       );
       throw error;
     }
@@ -145,7 +159,7 @@ export class SearchIndexBuilder {
    */
   private clearIndex(): void {
     this.db.prepare("DELETE FROM search_index").run();
-    console.log("Search index cleared");
+    logger.info("Search index cleared", { service: "SearchIndexBuilder" });
   }
 
   /**
@@ -170,7 +184,7 @@ export class SearchIndexBuilder {
           entity_type, entity_id, user_id, case_id, title, content, tags, created_at,
           status, case_type
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `
+      `,
         )
         .run(
           "case",
@@ -182,7 +196,7 @@ export class SearchIndexBuilder {
           tags,
           caseItem.createdAt,
           caseItem.status,
-          caseItem.caseType
+          caseItem.caseType,
         );
     } catch (error) {
       errorLogger.logError(
@@ -191,7 +205,7 @@ export class SearchIndexBuilder {
           service: "SearchIndexBuilder",
           operation: "indexCase",
           caseId: caseItem.id,
-        }
+        },
       );
     }
   }
@@ -227,7 +241,7 @@ export class SearchIndexBuilder {
           entity_type, entity_id, user_id, case_id, title, content, tags, created_at,
           evidence_type, file_path
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `
+      `,
         )
         .run(
           "evidence",
@@ -239,7 +253,7 @@ export class SearchIndexBuilder {
           tags,
           evidence.createdAt,
           evidence.evidenceType,
-          filePath
+          filePath,
         );
     } catch (error) {
       errorLogger.logError(
@@ -249,7 +263,7 @@ export class SearchIndexBuilder {
           operation: "indexEvidence",
           evidenceId: evidence.id,
           caseId: evidence.caseId,
-        }
+        },
       );
     }
   }
@@ -261,7 +275,7 @@ export class SearchIndexBuilder {
     try {
       // Get messages for content
       const messages = await this.chatRepo.getConversationMessages(
-        conversation.id
+        conversation.id,
       );
       const messageContent = messages.map((m) => m.content).join(" ");
 
@@ -276,7 +290,7 @@ export class SearchIndexBuilder {
           entity_type, entity_id, user_id, case_id, title, content, tags, created_at,
           message_count
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `
+      `,
         )
         .run(
           "conversation",
@@ -287,7 +301,7 @@ export class SearchIndexBuilder {
           content,
           tags,
           conversation.createdAt,
-          conversation.messageCount
+          conversation.messageCount,
         );
     } catch (error) {
       errorLogger.logError(
@@ -297,7 +311,7 @@ export class SearchIndexBuilder {
           operation: "indexConversation",
           conversationId: conversation.id,
           caseId: conversation.caseId,
-        }
+        },
       );
     }
   }
@@ -322,7 +336,7 @@ export class SearchIndexBuilder {
           entity_type, entity_id, user_id, case_id, title, content, tags, created_at,
           is_pinned
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `
+      `,
         )
         .run(
           "note",
@@ -333,7 +347,7 @@ export class SearchIndexBuilder {
           fullContent,
           tags,
           note.createdAt,
-          note.isPinned ? 1 : 0
+          note.isPinned ? 1 : 0,
         );
     } catch (error) {
       errorLogger.logError(
@@ -343,7 +357,7 @@ export class SearchIndexBuilder {
           operation: "indexNote",
           noteId: note.id,
           caseId: note.caseId,
-        }
+        },
       );
     }
   }
@@ -354,7 +368,7 @@ export class SearchIndexBuilder {
   async removeFromIndex(entityType: string, entityId: number): Promise<void> {
     this.db
       .prepare(
-        "DELETE FROM search_index WHERE entity_type = ? AND entity_id = ?"
+        "DELETE FROM search_index WHERE entity_type = ? AND entity_id = ?",
       )
       .run(entityType, entityId);
   }
@@ -402,7 +416,7 @@ export class SearchIndexBuilder {
           operation: "updateInIndex",
           entityType,
           entityId,
-        }
+        },
       );
     }
   }
@@ -471,14 +485,16 @@ export class SearchIndexBuilder {
         .prepare('INSERT INTO search_index(search_index) VALUES("optimize")')
         .run();
 
-      console.log("Search index optimized successfully");
+      logger.info("Search index optimized successfully", {
+        service: "SearchIndexBuilder",
+      });
     } catch (error) {
       errorLogger.logError(
         error instanceof Error ? error : new Error(String(error)),
         {
           service: "SearchIndexBuilder",
           operation: "optimizeIndex",
-        }
+        },
       );
       throw error;
     }
@@ -502,7 +518,7 @@ export class SearchIndexBuilder {
       SELECT entity_type, COUNT(*) as count
       FROM search_index
       GROUP BY entity_type
-    `
+    `,
       )
       .all() as { entity_type: string; count: number }[];
 
@@ -511,7 +527,7 @@ export class SearchIndexBuilder {
         `
       SELECT MAX(created_at) as last_updated
       FROM search_index
-    `
+    `,
       )
       .get() as { last_updated: string | null };
 

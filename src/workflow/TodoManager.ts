@@ -11,6 +11,7 @@ import type {
   TaskExecutionResult,
 } from "./types.ts";
 import { ConfigManager } from "./ConfigManager.ts";
+import { logger } from "../utils/logger.ts";
 
 export class TodoManager {
   private configManager: ConfigManager;
@@ -31,9 +32,9 @@ export class TodoManager {
 
     const totalTasks = plan.phases.reduce(
       (sum, phase) => sum + phase.tasks.length,
-      0
+      0,
     );
-    console.log(`✓ Loaded ${totalTasks} tasks from plan\n`);
+    logger.info(`✓ Loaded ${totalTasks} tasks from plan\n`);
   }
 
   /**
@@ -108,7 +109,7 @@ export class TodoManager {
 
     await this.savePlan();
 
-    console.log(`\n→ Starting: ${task.title}`);
+    logger.info(`\n→ Starting: ${task.title}`);
 
     return task;
   }
@@ -118,7 +119,7 @@ export class TodoManager {
    */
   async completeTask(
     taskId: string,
-    result?: TaskExecutionResult
+    result?: TaskExecutionResult,
   ): Promise<WorkflowTask | null> {
     const task = this.getTaskById(taskId);
     if (!task) {
@@ -145,7 +146,7 @@ export class TodoManager {
 
     await this.savePlan();
 
-    console.log(`\n✓ Completed: ${task.title}`);
+    logger.info(`\n✓ Completed: ${task.title}`);
 
     // Show progress
     await this.showProgress();
@@ -153,7 +154,7 @@ export class TodoManager {
     // Add to memory
     await this.configManager.addDecision(
       `Completed task: ${task.title}`,
-      task.description
+      task.description,
     );
 
     return task;
@@ -165,7 +166,7 @@ export class TodoManager {
   async failTask(
     taskId: string,
     reason: string,
-    error?: string
+    error?: string,
   ): Promise<WorkflowTask | null> {
     const task = this.getTaskById(taskId);
     if (!task) {
@@ -180,8 +181,8 @@ export class TodoManager {
 
     await this.savePlan();
 
-    console.log(`\n✗ Failed: ${task.title}`);
-    console.log(`  Reason: ${reason}`);
+    logger.info(`\n✗ Failed: ${task.title}`);
+    logger.info(`  Reason: ${reason}`);
 
     return task;
   }
@@ -191,7 +192,7 @@ export class TodoManager {
    */
   async blockTask(
     taskId: string,
-    reason: string
+    reason: string,
   ): Promise<WorkflowTask | null> {
     const task = this.getTaskById(taskId);
     if (!task) {
@@ -203,8 +204,8 @@ export class TodoManager {
 
     await this.savePlan();
 
-    console.log(`\n⚠ Blocked: ${task.title}`);
-    console.log(`  Reason: ${reason}`);
+    logger.info(`\n⚠ Blocked: ${task.title}`);
+    logger.info(`  Reason: ${reason}`);
 
     return task;
   }
@@ -221,7 +222,7 @@ export class TodoManager {
       priority?: WorkflowTask["priority"];
       dependencies?: string[];
       acceptanceCriteria?: string[];
-    }
+    },
   ): Promise<WorkflowTask> {
     const plan = await this.getPlan();
     if (!plan) {
@@ -260,7 +261,7 @@ export class TodoManager {
 
     await this.savePlan();
 
-    console.log(`\n✓ Added task: ${title}`);
+    logger.info(`\n✓ Added task: ${title}`);
 
     return task;
   }
@@ -271,18 +272,18 @@ export class TodoManager {
   async showTodoList(showAll: boolean = false): Promise<void> {
     const plan = await this.getPlan();
     if (!plan) {
-      console.log("No plan loaded");
+      logger.info("No plan loaded");
       return;
     }
 
-    console.log(
-      "\n╔══════════════════════════════════════════════════════════╗"
+    logger.info(
+      "\n╔══════════════════════════════════════════════════════════╗",
     );
-    console.log(
-      "║                    TASK LIST                              ║"
+    logger.info(
+      "║                    TASK LIST                              ║",
     );
-    console.log(
-      "╚══════════════════════════════════════════════════════════╝\n"
+    logger.info(
+      "╚══════════════════════════════════════════════════════════╝\n",
     );
 
     for (const phase of plan.phases) {
@@ -294,16 +295,16 @@ export class TodoManager {
         continue;
       }
 
-      console.log(`\n📦 ${phase.name}:`);
+      logger.info(`\n📦 ${phase.name}:`);
       if (phase.description) {
-        console.log(`   ${phase.description}`);
+        logger.info(`   ${phase.description}`);
       }
 
       for (const task of phaseTasks) {
         const symbol = this.getStatusSymbol(task.status);
         const priority = this.getPriorityEmoji(task.priority);
 
-        console.log(`  ${symbol} ${task.title} ${priority}`);
+        logger.info(`  ${symbol} ${task.title} ${priority}`);
 
         // Show dependencies if pending
         if (task.status === "pending" && task.dependencies.length > 0) {
@@ -313,8 +314,8 @@ export class TodoManager {
           });
 
           if (incompleteDeps.length > 0) {
-            console.log(
-              `     ⏳ Waiting on: ${incompleteDeps.length} dependencies`
+            logger.info(
+              `     ⏳ Waiting on: ${incompleteDeps.length} dependencies`,
             );
           }
         }
@@ -325,15 +326,15 @@ export class TodoManager {
           task.acceptanceCriteria &&
           task.acceptanceCriteria.length > 0
         ) {
-          console.log(`     ✅ Acceptance criteria:`);
+          logger.info(`     ✅ Acceptance criteria:`);
           for (const criteria of task.acceptanceCriteria.slice(0, 2)) {
-            console.log(`        - ${criteria}`);
+            logger.info(`        - ${criteria}`);
           }
         }
       }
     }
 
-    console.log("");
+    logger.info("");
   }
 
   /**
@@ -342,36 +343,36 @@ export class TodoManager {
   async showProgress(): Promise<void> {
     const plan = await this.getPlan();
     if (!plan) {
-      console.log("No plan loaded");
+      logger.info("No plan loaded");
       return;
     }
 
     const stats = this.calculateStats();
 
-    console.log("\n📊 Progress:");
-    console.log(
-      `  ✅ Completed: ${stats.completed}/${stats.total} (${stats.percentage}%)`
+    logger.info("\n📊 Progress:");
+    logger.info(
+      `  ✅ Completed: ${stats.completed}/${stats.total} (${stats.percentage}%)`,
     );
 
     if (stats.inProgress > 0) {
-      console.log(`  ⚙️  In Progress: ${stats.inProgress}`);
+      logger.info(`  ⚙️  In Progress: ${stats.inProgress}`);
     }
 
     if (stats.failed > 0) {
-      console.log(`  ❌ Failed: ${stats.failed}`);
+      logger.info(`  ❌ Failed: ${stats.failed}`);
     }
 
     if (stats.blocked > 0) {
-      console.log(`  ⚠️  Blocked: ${stats.blocked}`);
+      logger.info(`  ⚠️  Blocked: ${stats.blocked}`);
     }
 
-    console.log(`  ⏳ Pending: ${stats.pending}`);
+    logger.info(`  ⏳ Pending: ${stats.pending}`);
 
     // Progress bar
     const barWidth = 40;
     const filled = Math.round((stats.completed / stats.total) * barWidth);
     const bar = "█".repeat(filled) + "░".repeat(barWidth - filled);
-    console.log(`\n  [${bar}] ${stats.percentage}%\n`);
+    logger.info(`\n  [${bar}] ${stats.percentage}%\n`);
   }
 
   /**

@@ -9,22 +9,11 @@ import { KeyManager } from '../src/services/KeyManager.ts';
 import { BackupScheduler } from '../src/services/backup/BackupScheduler.ts';
 import { databaseManager } from '../src/db/database.ts';
 import { setKeyManager } from './services/KeyManagerService.ts';
+import { logger } from '../src/utils/logger.ts';
 
 const __dirname = path.dirname(require.main?.filename || process.argv[1]);
 
 const env = { NODE_ENV: process.env.NODE_ENV };
-
-const logger = {
-  info(message: string, meta?: Record<string, unknown>) {
-    console.log("[Main]", message, meta ?? "");
-  },
-  warn(message: string, meta?: Record<string, unknown>) {
-    console.warn("[Main]", message, meta ?? "");
-  },
-  error(message: string, meta?: Record<string, unknown>) {
-    console.error("[Main]", message, meta ?? "");
-  },
-};
 
 let keyManager: KeyManager | null = null;
 let backupScheduler: BackupScheduler | null = null;
@@ -37,10 +26,10 @@ export function getKeyManager(): KeyManager {
 }
 
 function createMainWindow(): BrowserWindow {
-  logger.info("Creating main window");
+  logger.info("Creating main window", { service: "Main" });
 
   const preloadPath = path.resolve(__dirname, "../dist/electron/preload.js");
-  logger.info("Preload path", { path: preloadPath });
+  logger.info("Preload path", { service: "Main", path: preloadPath });
 
   const window = new BrowserWindow({
     width: 1280,
@@ -72,12 +61,12 @@ function createMainWindow(): BrowserWindow {
   }
 
   window.once("ready-to-show", () => {
-    logger.info("Window ready-to-show");
+    logger.info("Window ready-to-show", { service: "Main" });
     window.show();
   });
 
   window.webContents.on("did-finish-load", () => {
-    logger.info("Renderer finished loading");
+    logger.info("Renderer finished loading", { service: "Main" });
   });
 
   window.webContents.on("will-navigate", (event) => {
@@ -88,7 +77,7 @@ function createMainWindow(): BrowserWindow {
 }
 
 app.whenReady().then(async () => {
-  logger.info("App is ready");
+  logger.info("App is ready", { service: "Main" });
 
   try {
     // Initialize KeyManager BEFORE database (database needs it for decryption)
@@ -101,11 +90,11 @@ app.whenReady().then(async () => {
     if (!keyManager.hasKey()) {
       const envKey = process.env.ENCRYPTION_KEY_BASE64;
       if (envKey) {
-        logger.info("Migrating encryption key from .env to safeStorage...");
+        logger.info("Migrating encryption key from .env to safeStorage...", { service: "Main", operation: "KeyMigration" });
         keyManager.migrateFromEnv(envKey);
-        logger.info("✓ Key migrated successfully");
+        logger.info("✓ Key migrated successfully", { service: "Main", operation: "KeyMigration" });
         logger.warn(
-          "IMPORTANT: Remove ENCRYPTION_KEY_BASE64 from .env file for security"
+          "IMPORTANT: Remove ENCRYPTION_KEY_BASE64 from .env file for security", { service: "Main", security: true }
         );
       } else {
         throw new Error(
@@ -118,15 +107,14 @@ app.whenReady().then(async () => {
 
     try {
       await initializeDatabase();
-      logger.info("Database initialized");
+      logger.info("Database initialized", { service: "Main" });
     } catch (dbError) {
       if (env.NODE_ENV === "test") {
         logger.warn(
-          "Database initialization failed in test mode, continuing anyway:",
-          { error: dbError }
+          "Database initialization failed in test mode, continuing anyway", { service: "Main", error: dbError }
         );
       } else {
-        logger.error("Failed to initialize database", { error: dbError });
+        logger.error("Failed to initialize database", { service: "Main", error: dbError });
         throw dbError;
       }
     }
@@ -138,7 +126,7 @@ app.whenReady().then(async () => {
     if (env.NODE_ENV !== "test") {
       setupIpcHandlers();
     } else {
-      logger.info("Skipping IPC handlers in test mode");
+      logger.info("Skipping IPC handlers in test mode", { service: "Main" });
     }
 
     // Initialize backup scheduler
@@ -147,22 +135,20 @@ app.whenReady().then(async () => {
         databaseManager.getDatabase()
       );
       await backupScheduler.start();
-      logger.info("Backup scheduler started");
+      logger.info("Backup scheduler started", { service: "Main" });
     } catch (error) {
-      logger.error("Failed to start backup scheduler", { error });
+      logger.error("Failed to start backup scheduler", { service: "Main", error });
       // Don't crash the app if scheduler fails to start
     }
 
     createMainWindow();
   } catch (error) {
     if (env.NODE_ENV === "test") {
-      logger.error("Failed to initialize app in test mode, continuing anyway", {
-        error,
-      });
+      logger.error("Failed to initialize app in test mode, continuing anyway", { service: "Main", error });
       // In test mode, don't quit - let the window try to load anyway
       createMainWindow();
     } else {
-      logger.error("Failed to initialize app", { error });
+      logger.error("Failed to initialize app", { service: "Main", error });
       app.quit();
     }
   }
@@ -185,9 +171,9 @@ app.on("before-quit", async () => {
   if (backupScheduler) {
     try {
       await backupScheduler.stop();
-      logger.info("Backup scheduler stopped");
+      logger.info("Backup scheduler stopped", { service: "Main" });
     } catch (error) {
-      logger.error("Error stopping backup scheduler", { error });
+      logger.error("Error stopping backup scheduler", { service: "Main", error });
     }
   }
 });
