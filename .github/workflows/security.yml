@@ -1,0 +1,144 @@
+name: Security Checks
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    # Run weekly security checks on Monday at 9 AM UTC
+    - cron: "0 9 * * 1"
+
+env:
+  NODE_VERSION: "20.18.0"
+  PNPM_VERSION: "10.18.3"
+
+jobs:
+  # Dependency vulnerability scanning
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Security vulnerability checks
+      - name: Run npm audit
+        run: |
+          # Check for high and critical vulnerabilities
+          if pnpm audit --prod --audit-level=moderate; then
+            echo "✅ No moderate or higher security vulnerabilities found"
+          else
+            echo "❌ Security vulnerabilities detected"
+            exit 1
+          fi
+        continue-on-error: false
+
+      - name: Check for exposed secrets
+        run: |
+          # Basic secret detection (GitLeaks would be better, but this is a start)
+          if grep -r "password\|secret\|key\|token" --include="*.ts" --include="*.js" --include="*.json" src/ | grep -v "test\|spec\|mock\|example"; then
+            echo "❌ Potential secrets found in source code"
+            exit 1
+          else
+            echo "✅ No obvious secrets found in source code"
+          fi
+
+  # Code security analysis
+  code-security:
+    name: Code Security Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Basic security checks
+      - name: Check for dangerous patterns
+        run: |
+          # Check for eval usage
+          if grep -r "eval(" --include="*.ts" --include="*.js" src/ | grep -v "test\|spec"; then
+            echo "❌ Dangerous eval() usage found"
+            exit 1
+          fi
+
+          # Check for innerHTML usage (potential XSS)
+          if grep -r "innerHTML" --include="*.ts" --include="*.tsx" src/ | grep -v "test\|spec\|dangerouslySetInnerHTML"; then
+            echo "❌ Potential XSS via innerHTML found"
+            exit 1
+          fi
+
+          # Check for console.log in production code
+          if grep -r "console\.log\|console\.warn\|console\.error" --include="*.ts" --include="*.tsx" src/ | grep -v "test\|spec\|console\.error"; then
+            echo "⚠️  Console logging found in production code (warning only)"
+          else
+            echo "✅ No console logging in production code"
+          fi
+
+      # TypeScript strict mode check
+      - name: Verify TypeScript strict mode
+        run: |
+          # Check that main process has strict mode enabled
+          if grep -q '"strict": true' tsconfig.electron.json; then
+            echo "✅ TypeScript strict mode enabled in main process"
+          else
+            echo "❌ TypeScript strict mode disabled in main process"
+            exit 1
+          fi
+
+          # Check that renderer has strict mode enabled
+          if grep -q '"strict": true' tsconfig.json; then
+            echo "✅ TypeScript strict mode enabled in renderer"
+          else
+            echo "❌ TypeScript strict mode disabled in renderer"
+            exit 1
+          fi
+
+  # Success summary
+  security-success:
+    name: Security Checks Passed
+    runs-on: ubuntu-latest
+    needs: [security-audit, code-security]
+    if: success()
+
+    steps:
+      - name: Security checks completed
+        run: |
+          echo "✅ All security checks passed successfully!"
+          echo ""
+          echo "Security measures verified:"
+          echo "  • Dependency vulnerabilities scanned"
+          echo "  • Secrets detection performed"
+          echo "  • Dangerous code patterns checked"
+          echo "  • TypeScript strict mode verified"

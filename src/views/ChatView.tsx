@@ -1,20 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+
 import { useAuth } from "../contexts/AuthContext.tsx";
 import { SaveToCaseDialog } from "./chat/SaveToCaseDialog.tsx";
-import { AICaseCreationDialog } from "../components/cases/AICaseCreationDialog.tsx";
-import type { CaseFormData, AuditMetadata } from "../components/cases/AICaseCreationDialog.tsx";
-import { MessageItem } from './chat/MessageItem.tsx';
-import { TypingIndicator } from "../components/ui/TypingIndicator.tsx";
-import { toast } from 'sonner';
-import { Upload, FileText, Trash2 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import ReactMarkdown from 'react-markdown';
-import { usePendingActions, useActionQueueOperations } from '../stores/aiActionQueue.ts';
-import { ActionPendingCard } from '../components/ai/ActionPendingCard.tsx';
-import { AIActionConfirmationDialog } from '../components/ai/AIActionConfirmationDialog.tsx';
-import { aiActionExecutor } from '../services/ai/AIActionExecutor.ts';
-import type { SpecificAIAction, AuditMetadata as AIAuditMetadata } from '../types/ai-actions.ts';
+import { MessageItem } from "./chat/MessageItem.tsx";
+import { AICaseCreationDialog } from "./chat/AICaseCreationDialog.tsx";
+import { toast } from "sonner";
+import { Upload, FileText, Trash2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import ReactMarkdown from "react-markdown";
 
 interface Message {
   id: string;
@@ -35,19 +28,20 @@ interface Message {
  * Every response includes a disclaimer.
  */
 export function ChatView() {
-  const { user: _user } = useAuth(); // Reserved for future use
-  const navigate = useNavigate();
+  const { user } = useAuth();
 
   // Track active case from localStorage
   const [activeCaseId, setActiveCaseId] = useState<string | null>(() => {
-    return localStorage.getItem('activeCaseId');
+    return localStorage.getItem("activeCaseId");
   });
 
   // Load messages from localStorage for the active case
   const [messages, setMessages] = useState<Message[]>(() => {
     try {
-      const caseId = localStorage.getItem('activeCaseId');
-      const storageKey = caseId ? `chatMessages-${caseId}` : 'chatMessages-global';
+      const caseId = localStorage.getItem("activeCaseId");
+      const storageKey = caseId
+        ? `chatMessages-${caseId}`
+        : "chatMessages-global";
       const saved = localStorage.getItem(storageKey);
       if (saved) {
         const parsed = JSON.parse(saved);
@@ -58,7 +52,7 @@ export function ChatView() {
         }));
       }
     } catch (error) {
-      console.error('[ChatView] Failed to load saved messages:', error);
+      console.error("[ChatView] Failed to load saved messages:", error);
     }
     return [];
   });
@@ -68,7 +62,9 @@ export function ChatView() {
   const [currentStreamingMessage, setCurrentStreamingMessage] = useState("");
   const [_showThinking, _setShowThinking] = useState(false); // Reserved for showing AI thinking process
   const [_currentThinking, setCurrentThinking] = useState(""); // Reserved for AI thinking display
-  const [currentConversationId, setCurrentConversationId] = useState<number | null>(null); // Track conversation for memory
+  const [currentConversationId, setCurrentConversationId] = useState<
+    number | null
+  >(null); // Track conversation for memory
 
   // Save to case state
   const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
@@ -76,22 +72,17 @@ export function ChatView() {
 
   // AI case creation dialog state
   const [isAICaseDialogOpen, setIsAICaseDialogOpen] = useState(false);
-  const [aiCaseData, setAICaseData] = useState<any | null>(null);
-  const [documentAnalysisText, setDocumentAnalysisText] = useState<string>('');
+  const [messageForCaseCreation, setMessageForCaseCreation] =
+    useState<Message | null>(null);
+  const [isCreatingCase, setIsCreatingCase] = useState(false);
+
+  // Duplicate case warning state
+  const [isDuplicateWarningOpen, setIsDuplicateWarningOpen] = useState(false);
+  const [duplicateCaseData, setDuplicateCaseData] = useState<any>(null);
+  const [existingCaseTitle, setExistingCaseTitle] = useState<string>("");
 
   // Document upload state
   const [isAnalyzingDocument, setIsAnalyzingDocument] = useState(false);
-
-  // AI action confirmation state
-  const pendingActions = usePendingActions();
-  const {
-    confirmAction,
-    rejectAction,
-    setActionExecuting,
-    setActionCompleted,
-    setActionFailed,
-  } = useActionQueueOperations();
-  const [dialogAction, setDialogAction] = useState<SpecificAIAction | null>(null);
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -99,35 +90,42 @@ export function ChatView() {
   // Listen for active case changes and reload messages
   useEffect(() => {
     const handleStorageChange = () => {
-      const newCaseId = localStorage.getItem('activeCaseId');
+      const newCaseId = localStorage.getItem("activeCaseId");
       if (newCaseId !== activeCaseId) {
         setActiveCaseId(newCaseId);
         // Load messages for new case
         try {
-          const storageKey = newCaseId ? `chatMessages-${newCaseId}` : 'chatMessages-global';
+          const storageKey = newCaseId
+            ? `chatMessages-${newCaseId}`
+            : "chatMessages-global";
           const saved = localStorage.getItem(storageKey);
           if (saved) {
             const parsed = JSON.parse(saved);
-            setMessages(parsed.map((m: any) => ({
-              ...m,
-              timestamp: new Date(m.timestamp),
-            })));
+            setMessages(
+              parsed.map((m: any) => ({
+                ...m,
+                timestamp: new Date(m.timestamp),
+              })),
+            );
           } else {
             setMessages([]);
           }
         } catch (error) {
-          console.error('[ChatView] Failed to load messages for new case:', error);
+          console.error(
+            "[ChatView] Failed to load messages for new case:",
+            error,
+          );
           setMessages([]);
         }
       }
     };
 
-    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener("storage", handleStorageChange);
     // Also check on mount and periodically
     const interval = setInterval(handleStorageChange, 500);
 
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener("storage", handleStorageChange);
       clearInterval(interval);
     };
   }, [activeCaseId]);
@@ -135,10 +133,12 @@ export function ChatView() {
   // Save messages to localStorage whenever they change (case-specific)
   useEffect(() => {
     try {
-      const storageKey = activeCaseId ? `chatMessages-${activeCaseId}` : 'chatMessages-global';
+      const storageKey = activeCaseId
+        ? `chatMessages-${activeCaseId}`
+        : "chatMessages-global";
       localStorage.setItem(storageKey, JSON.stringify(messages));
     } catch (error) {
-      console.error('[ChatView] Failed to save messages:', error);
+      console.error("[ChatView] Failed to save messages:", error);
     }
   }, [messages, activeCaseId]);
 
@@ -225,7 +225,7 @@ export function ChatView() {
         },
         (conversationId: number) => {
           // Capture conversation ID for memory
-          console.log('[ChatView] Received conversationId:', conversationId);
+          console.log("[ChatView] Received conversationId:", conversationId);
           setCurrentConversationId(conversationId);
         },
       );
@@ -235,60 +235,225 @@ export function ChatView() {
     }
   }, [input, isStreaming]);
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  }, [handleSend]);
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        handleSend();
+      }
+    },
+    [handleSend],
+  );
 
   const handleSaveToCase = useCallback((message: Message) => {
     setMessageToSave(message);
     setIsSaveDialogOpen(true);
   }, []);
 
-  const handleSaveConfirm = useCallback(async (caseId: number, title: string) => {
-    if (!messageToSave) {
-      return { success: false, error: 'No message selected' };
-    }
-
-    try {
-      const sessionId = localStorage.getItem("sessionId");
-      if (!sessionId) {
-        return { success: false, error: 'No active session' };
+  const handleSaveConfirm = useCallback(
+    async (caseId: number, title: string) => {
+      if (!messageToSave) {
+        return { success: false, error: "No message selected" };
       }
 
-      // Format the AI response as a case fact
-      // Combine title and content for fact_content field
-      const factContent = `${title}\n\n${messageToSave.content}\n\n[Source: AI Legal Assistant]`;
+      try {
+        const sessionId = localStorage.getItem("sessionId");
+        if (!sessionId) {
+          return { success: false, error: "No active session" };
+        }
 
-      // Save the AI response as a case fact
-      const result = await window.justiceAPI.createCaseFact({
-        caseId,
-        factContent,
-        factCategory: 'other', // AI responses don't fit standard categories
-        importance: 'medium',
-      }, sessionId);
+        // Format the AI response as a case fact
+        // Combine title and content for fact_content field
+        const factContent = `${title}\n\n${messageToSave.content}\n\n[Source: AI Legal Assistant]`;
 
-      if (result.success) {
-        toast.success('AI response saved to case', {
-          description: `Saved to ${title}`,
+        // Save the AI response as a case fact
+        const result = await window.justiceAPI.createCaseFact(
+          {
+            caseId,
+            factContent,
+            factCategory: "other", // AI responses don't fit standard categories
+            importance: "medium",
+          },
+          sessionId,
+        );
+
+        if (result.success) {
+          toast.success("AI response saved to case", {
+            description: `Saved to ${title}`,
+          });
+          return { success: true };
+        }
+
+        const errorMsg =
+          typeof result.error === "string"
+            ? result.error
+            : result.error?.message || "Failed to save";
+        return { success: false, error: errorMsg };
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "Failed to save";
+        toast.error("Failed to save to case", {
+          description: errorMessage,
         });
-        return { success: true };
+        return { success: false, error: errorMessage };
+      }
+    },
+    [messageToSave],
+  );
+
+  const handleCreateCase = useCallback((message: Message) => {
+    // Open the AI case creation dialog for human review
+    setMessageForCaseCreation(message);
+    setIsAICaseDialogOpen(true);
+  }, []);
+
+  const handleAICaseConfirm = useCallback(
+    async (caseData: any) => {
+      if (!messageForCaseCreation) {
+        return;
       }
 
-      const errorMsg = typeof result.error === 'string'
-        ? result.error
-        : result.error?.message || 'Failed to save';
-      return { success: false, error: errorMsg };
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to save';
-      toast.error('Failed to save to case', {
-        description: errorMessage,
-      });
-      return { success: false, error: errorMessage };
-    }
-  }, [messageToSave]);
+      setIsCreatingCase(true);
+
+      try {
+        const sessionId = localStorage.getItem("sessionId");
+        if (!sessionId) {
+          toast.error("No active session", {
+            description: "Please log in to create cases",
+          });
+          return;
+        }
+
+        // Check for duplicate cases with the same title
+        try {
+          const existingCases = (await window.justiceAPI.getAllCases(
+            sessionId,
+          )) as any;
+          const duplicateCase = existingCases.data?.find(
+            (case_: any) =>
+              case_.title?.toLowerCase() === caseData.title?.toLowerCase(),
+          );
+
+          if (duplicateCase) {
+            // Show duplicate warning instead of creating
+            setIsCreatingCase(false);
+            setDuplicateCaseData(caseData);
+            setExistingCaseTitle(duplicateCase.title);
+            setIsDuplicateWarningOpen(true);
+            return;
+          }
+        } catch (error) {
+          // If we can't check for duplicates, proceed with creation
+          console.warn(
+            "[ChatView] Could not check for duplicate cases:",
+            error,
+          );
+        }
+
+        // Create the case with AI metadata
+        const result = await window.justiceAPI.createCase(caseData, sessionId, {
+          source: "document_analysis",
+          documentFilename:
+            messageForCaseCreation.documentAnalysis?.filename || "unknown",
+          aiProvider: "document_extraction",
+          confidence:
+            messageForCaseCreation.documentAnalysis?.suggestedCaseData
+              ?.confidence,
+          extractedFrom:
+            messageForCaseCreation.documentAnalysis?.suggestedCaseData
+              ?.extractedFrom,
+        });
+
+        if (result.success && result.data) {
+          toast.success("Case created successfully", {
+            description: `Created case: ${result.data.title}`,
+          });
+
+          // Close dialog
+          setIsAICaseDialogOpen(false);
+          setMessageForCaseCreation(null);
+
+          // Switch to the new case and add AI case-building guidance
+          if (result.data.id) {
+            const newCaseId = result.data.id.toString();
+            localStorage.setItem("activeCaseId", newCaseId);
+            setActiveCaseId(newCaseId);
+
+            // Add AI guidance message for case building with legal disclaimers
+            const guidanceMessage: Message = {
+              id: `guidance-${Date.now()}`,
+              role: "assistant",
+              content: `🎯 **Case Created Successfully!**
+
+I've created your case "${result.data.title}" and switched you to it. Now let's build your legal strategy together.
+
+---
+
+## ⚠️ **IMPORTANT LEGAL DISCLAIMER**
+
+**I AM NOT A LAWYER AND THIS IS NOT LEGAL ADVICE**
+
+- This is a legal information tool designed to help you organize and understand your case
+- Nothing I provide constitutes legal advice, representation, or counsel
+- All information is general in nature and may not apply to your specific situation
+- **You must consult a qualified legal professional** for advice specific to your case
+- Laws and regulations change frequently - always verify current requirements
+- I cannot guarantee the accuracy, completeness, or timeliness of any information
+
+---
+
+**What I can help you with next:**
+
+📋 **Case Organization & Planning**
+- Help organize your evidence and documents
+- Create timelines for important deadlines
+- Suggest general steps for case preparation
+
+📚 **Legal Information & Research**
+- Provide general information about UK employment law processes
+- Share publicly available legal resources and precedents
+- Explain common legal concepts and procedures
+
+📄 **Document Management**
+- Help organize and categorize your case documents
+- Suggest standard document types you may need
+- Provide general templates and checklists
+
+💡 **General Guidance:**
+Based on your dismissal letter, here are some general steps many people take when preparing an employment case:
+
+1. **Gather Documentation** - Collect emails, performance reviews, contracts, etc.
+2. **Check Time Limits** - Note important deadlines (generally 3 months for unfair dismissal claims)
+3. **Document Your Case** - Keep detailed records of events and communications
+4. **Seek Professional Advice** - Consult a solicitor or trade union representative
+
+**What would you like to focus on first?** I can help you organize your case information and provide general guidance about the process.
+
+---
+
+*Remember: This tool is for information purposes only. For legal advice, please consult a qualified solicitor or legal professional.*`,
+              timestamp: new Date(),
+            };
+
+            setMessages((prev) => [...prev, guidanceMessage]);
+          }
+        } else {
+          toast.error("Failed to create case", {
+            description: "An unexpected error occurred",
+          });
+        }
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "Failed to create case";
+        toast.error("Failed to create case", {
+          description: errorMessage,
+        });
+      } finally {
+        setIsCreatingCase(false);
+      }
+    },
+    [messageForCaseCreation],
+  );
 
   const handleDocumentUpload = useCallback(async () => {
     setIsAnalyzingDocument(true);
@@ -301,21 +466,25 @@ export function ChatView() {
 
       // Use Electron's dialog to select file
       const result = await window.justiceAPI.showOpenDialog({
-        title: 'Select Document to Analyze',
+        title: "Select Document to Analyze",
         filters: [
-          { name: 'Documents', extensions: ['pdf', 'docx', 'txt'] },
-          { name: 'All Files', extensions: ['*'] }
+          { name: "Documents", extensions: ["pdf", "docx", "txt"] },
+          { name: "All Files", extensions: ["*"] },
         ],
-        properties: ['openFile']
+        properties: ["openFile"],
       });
 
-      if (result.canceled || !result.filePaths || result.filePaths.length === 0) {
+      if (
+        result.canceled ||
+        !result.filePaths ||
+        result.filePaths.length === 0
+      ) {
         setIsAnalyzingDocument(false);
         return;
       }
 
       const filePath = result.filePaths[0];
-      const filename = filePath.split(/[\\/]/).pop() || 'document';
+      const filename = filePath.split(/[\\/]/).pop() || "document";
 
       // Add user message showing file upload
       const uploadMessage: Message = {
@@ -326,25 +495,40 @@ export function ChatView() {
       };
       setMessages((prev) => [...prev, uploadMessage]);
 
-      toast.info('Analyzing document...', {
+      toast.info("Analyzing document...", {
         description: `Processing ${filename}`,
       });
 
-      // Call the document analysis API
+      // Call the document analysis API with user profile data
       const analysisResult = await window.justiceAPI.analyzeDocument(
         filePath,
         sessionId,
-        `Please analyze this document: ${filename}`
+        `Please analyze this document: ${filename}`,
+        user ? { name: user.username, email: user.email } : undefined,
       );
 
       if (!analysisResult.success) {
-        const errorMsg = 'error' in analysisResult && analysisResult.error?.message
-          ? analysisResult.error.message
-          : 'Failed to analyze document';
+        const errorMsg =
+          "error" in analysisResult && analysisResult.error?.message
+            ? analysisResult.error.message
+            : "Failed to analyze document";
         throw new Error(errorMsg);
       }
 
+      const suggestedCaseData = analysisResult.data?.suggestedCaseData;
+
       // Add AI analysis message
+      const finalSuggestedCaseData = suggestedCaseData || {
+        title: `Case regarding ${filename}`,
+        caseType: "other",
+        description: `Document uploaded for analysis: ${filename}`,
+        confidence: {
+          title: 0.3,
+          caseType: 0.3,
+          description: 0.3,
+        },
+      };
+
       const analysisMessage: Message = {
         id: `analysis-${Date.now()}`,
         role: "assistant",
@@ -352,277 +536,52 @@ export function ChatView() {
         timestamp: new Date(),
         documentAnalysis: {
           filename,
-          suggestedCaseData: analysisResult.data!.suggestedCaseData,
+          suggestedCaseData: finalSuggestedCaseData,
         },
       };
 
       setMessages((prev) => [...prev, analysisMessage]);
 
-      toast.success('Document analyzed successfully', {
+      toast.success("Document analyzed successfully", {
         description: `Analyzed ${filename}`,
       });
     } catch (error) {
-      console.error('[ChatView] Document upload error:', error);
+      console.error("[ChatView] Document upload error:", error);
       const errorMessage: Message = {
         id: `error-${Date.now()}`,
         role: "assistant",
-        content: `Sorry, I couldn't analyze that document: ${error instanceof Error ? error.message : 'Unknown error'}\n\nPlease try again or upload a different file.`,
+        content: `Sorry, I couldn't analyze that document: ${error instanceof Error ? error.message : "Unknown error"}\n\nPlease try again or upload a different file.`,
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);
 
-      toast.error('Failed to analyze document', {
-        description: error instanceof Error ? error.message : 'Unknown error',
+      toast.error("Failed to analyze document", {
+        description: error instanceof Error ? error.message : "Unknown error",
       });
     } finally {
       setIsAnalyzingDocument(false);
     }
   }, []);
 
-  const handleCreateCaseFromAnalysis = useCallback((message: Message) => {
-    // Open AI case creation dialog with suggested data
-    if (!message.documentAnalysis?.suggestedCaseData) {
-      toast.error('No case data available', {
-        description: 'This message does not contain document analysis data',
-      });
-      return;
-    }
-
-    const suggestedData = message.documentAnalysis.suggestedCaseData;
-
-    // Warn if document belongs to someone else
-    if (suggestedData.documentOwnershipMismatch && suggestedData.documentClaimantName) {
-      toast.warning('Document Ownership Warning', {
-        description: `This document appears to be for ${suggestedData.documentClaimantName}, not you. You can still review the information, but for best results, they should download Justice Companion for personalized assistance.`,
-        duration: 10000, // Show warning for 10 seconds
-      });
-    }
-
-    setAICaseData(suggestedData);
-    setDocumentAnalysisText(message.content);
-    setIsAICaseDialogOpen(true);
-  }, []);
-
-  const handleCaseConfirm = useCallback(async (finalData: CaseFormData, metadata: AuditMetadata) => {
-    console.log('[ChatView] handleCaseConfirm called with data:', finalData);
-
-    try {
-      const sessionId = localStorage.getItem("sessionId");
-      if (!sessionId) {
-        throw new Error("No active session");
-      }
-
-      // Build enhanced description with additional fields
-      const additionalInfo = [];
-      if (finalData.opposingParty) {
-        additionalInfo.push(`Opposing Party: ${finalData.opposingParty}`);
-      }
-      if (finalData.caseNumber) {
-        additionalInfo.push(`Case Number: ${finalData.caseNumber}`);
-      }
-      if (finalData.courtName) {
-        additionalInfo.push(`Court/Tribunal: ${finalData.courtName}`);
-      }
-      if (finalData.filingDeadline) {
-        additionalInfo.push(`Filing Deadline: ${finalData.filingDeadline}`);
-      }
-      if (finalData.nextHearingDate) {
-        additionalInfo.push(`Next Hearing: ${finalData.nextHearingDate}`);
-      }
-
-      const enhancedDescription = additionalInfo.length > 0
-        ? `${finalData.description}\n\n${additionalInfo.join('\n')}`
-        : finalData.description;
-
-      console.log('[ChatView] Creating case via IPC...');
-
-      // Create the case with AI metadata for audit trail
-      const result = await window.justiceAPI.createCase(
-        {
-          title: finalData.title,
-          description: enhancedDescription,
-          caseType: finalData.caseType as any, // Cast to satisfy TypeScript
-        },
-        sessionId,
-        metadata // Pass AI metadata to be logged in audit trail
-      );
-
-      console.log('[ChatView] Case creation result:', result);
-
-      if (!result.success) {
-        const errorMsg = 'error' in result && result.error?.message
-          ? result.error.message
-          : 'Failed to create case';
-        throw new Error(errorMsg);
-      }
-
-      if (!result.data) {
-        throw new Error('Case created but no data returned');
-      }
-
-      const caseId = result.data.id;
-      console.log('[ChatView] Case created successfully with ID:', caseId);
-
-      // Close dialog first by returning successfully
-      // (Don't let navigation errors prevent dialog from closing)
-
-      // Show success message (wrapped in try-catch to prevent blocking)
-      try {
-        toast.success('Case created successfully!', {
-          description: `Created case: ${finalData.title}`,
-        });
-      } catch (toastError) {
-        console.warn('[ChatView] Toast notification failed:', toastError);
-      }
-
-      // Navigate to the new case (wrapped in try-catch to prevent blocking)
-      try {
-        console.log('[ChatView] Navigating to case:', caseId);
-        navigate(`/cases/${caseId}`);
-      } catch (navError) {
-        console.warn('[ChatView] Navigation failed:', navError);
-      }
-
-      // Important: Don't throw here - let the dialog close
-      console.log('[ChatView] handleCaseConfirm completed successfully');
-
-    } catch (error) {
-      console.error('[ChatView] Error creating case:', error);
-      toast.error('Failed to create case', {
-        description: error instanceof Error ? error.message : 'Unknown error',
-      });
-      throw error; // Only re-throw if case creation actually failed
-    }
-  }, [navigate]);
-
   const handleClearChat = useCallback(() => {
     if (messages.length === 0) {
-      toast.info('Chat is already empty');
+      toast.info("Chat is already empty");
       return;
     }
 
     // Confirm before clearing
     const confirmed = window.confirm(
-      `Are you sure you want to clear all chat messages${activeCaseId ? ' for this case' : ''}?\n\nThis cannot be undone.`
+      `Are you sure you want to clear all chat messages${activeCaseId ? " for this case" : ""}?\n\nThis cannot be undone.`,
     );
 
     if (confirmed) {
       setMessages([]);
       setCurrentConversationId(null); // Reset conversation to start fresh
-      toast.success('Chat cleared', {
+      toast.success("Chat cleared", {
         description: `Cleared ${messages.length} messages`,
       });
     }
   }, [messages.length, activeCaseId]);
-
-  // AI Action Handlers
-  const handleQuickApprove = useCallback(async (actionId: string) => {
-    try {
-      // Confirm the action
-      confirmAction(actionId);
-
-      // Set executing state
-      setActionExecuting(actionId);
-
-      // Get the confirmed action
-      const action = pendingActions.find((a) => a.id === actionId);
-      if (!action) {
-        throw new Error('Action not found');
-      }
-
-      // Execute the action
-      const result = await aiActionExecutor.execute(action);
-
-      if (result.success) {
-        setActionCompleted(actionId, result);
-        toast.success('Action completed!', {
-          description: result.message,
-        });
-      } else {
-        setActionFailed(actionId, result.message || 'Unknown error');
-        toast.error('Action failed', {
-          description: result.message,
-        });
-      }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      setActionFailed(actionId, errorMessage);
-      toast.error('Failed to execute action', {
-        description: errorMessage,
-      });
-    }
-  }, [confirmAction, setActionExecuting, setActionCompleted, setActionFailed, pendingActions]);
-
-  const handleReview = useCallback((actionId: string) => {
-    // Find the action and open the confirmation dialog
-    const action = pendingActions.find((a) => a.id === actionId);
-    if (action) {
-      setDialogAction(action);
-    } else {
-      toast.error('Action not found');
-    }
-  }, [pendingActions]);
-
-  const handleReject = useCallback((actionId: string) => {
-    // Reject the action
-    rejectAction(actionId);
-    toast.info('Action rejected', {
-      description: 'The AI-proposed action has been discarded',
-    });
-  }, [rejectAction]);
-
-  const handleDialogConfirm = useCallback(async (
-    actionId: string,
-    editedData: Record<string, any>,
-    auditMetadata: AIAuditMetadata
-  ) => {
-    try {
-      // Confirm the action with edited data
-      confirmAction(actionId, editedData, auditMetadata);
-
-      // Close the dialog
-      setDialogAction(null);
-
-      // Set executing state
-      setActionExecuting(actionId);
-
-      // Get the confirmed action (it now has edited data)
-      const action = pendingActions.find((a) => a.id === actionId);
-      if (!action) {
-        throw new Error('Action not found after confirmation');
-      }
-
-      // Execute the action
-      const result = await aiActionExecutor.execute(action);
-
-      if (result.success) {
-        setActionCompleted(actionId, result);
-        toast.success('Action completed!', {
-          description: result.message,
-        });
-
-        // If case was created, navigate to it
-        if (result.data?.id && action.type === 'create_case') {
-          navigate(`/cases/${result.data.id}`);
-        }
-      } else {
-        setActionFailed(actionId, result.message || 'Unknown error');
-        toast.error('Action failed', {
-          description: result.message,
-        });
-      }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      setActionFailed(actionId, errorMessage);
-      toast.error('Failed to execute action', {
-        description: errorMessage,
-      });
-    }
-  }, [confirmAction, setActionExecuting, setActionCompleted, setActionFailed, pendingActions, navigate]);
-
-  const handleDialogCancel = useCallback(() => {
-    setDialogAction(null);
-  }, []);
 
   return (
     <div className="flex flex-col h-full bg-gradient-to-br from-gray-900 via-primary-900 to-gray-900 text-white">
@@ -661,7 +620,7 @@ export function ChatView() {
                 <motion.div
                   initial={{ scale: 0.5, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  transition={{ duration: 0.5, delay: 0.1, ease: 'backOut' }}
+                  transition={{ duration: 0.5, delay: 0.1, ease: "backOut" }}
                   className="inline-flex items-center justify-center w-16 h-16 bg-cyan-500/20 rounded-full mb-6"
                 >
                   <svg
@@ -690,66 +649,79 @@ export function ChatView() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: 0.3 }}
-                  className="text-white/90 mb-8"
+                  className="text-white/90 mb-4"
                 >
                   Ask me about UK employment law, case precedents, or help
                   organizing your case.
                 </motion.p>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
-                <button
-                  onClick={() =>
-                    setInput("What are my rights if I'm being bullied at work?")
-                  }
-                  className="p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg transition-colors text-left"
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.4 }}
+                  className="text-xs text-white/60 mb-8 max-w-2xl mx-auto"
                 >
-                  <p className="font-medium mb-1">Workplace Rights</p>
-                  <p className="text-sm text-white/90">
-                    Understand your protections against bullying
-                  </p>
-                </button>
+                  ⚠️ **Legal Disclaimer**: I am not a lawyer and this is not
+                  legal advice. All information is general and you should
+                  consult a qualified legal professional for advice specific to
+                  your situation.
+                </motion.div>
 
-                <button
-                  onClick={() =>
-                    setInput(
-                      "How do I gather evidence for an unfair dismissal claim?",
-                    )
-                  }
-                  className="p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg transition-colors text-left"
-                >
-                  <p className="font-medium mb-1">Building Your Case</p>
-                  <p className="text-sm text-white/90">
-                    Learn what evidence you need
-                  </p>
-                </button>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+                  <button
+                    onClick={() =>
+                      setInput(
+                        "What are my rights if I'm being bullied at work?",
+                      )
+                    }
+                    className="p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg transition-colors text-left"
+                  >
+                    <p className="font-medium mb-1">Workplace Rights</p>
+                    <p className="text-sm text-white/90">
+                      Understand your protections against bullying
+                    </p>
+                  </button>
 
-                <button
-                  onClick={() => setInput("What is constructive dismissal?")}
-                  className="p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg transition-colors text-left"
-                >
-                  <p className="font-medium mb-1">Legal Concepts</p>
-                  <p className="text-sm text-white/90">
-                    Get clear explanations of legal terms
-                  </p>
-                </button>
+                  <button
+                    onClick={() =>
+                      setInput(
+                        "How do I gather evidence for an unfair dismissal claim?",
+                      )
+                    }
+                    className="p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg transition-colors text-left"
+                  >
+                    <p className="font-medium mb-1">Building Your Case</p>
+                    <p className="text-sm text-white/90">
+                      Learn what evidence you need
+                    </p>
+                  </button>
 
-                <button
-                  onClick={() =>
-                    setInput(
-                      "What should I do if I'm being discriminated against?",
-                    )
-                  }
-                  className="p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg transition-colors text-left"
-                >
-                  <p className="font-medium mb-1">Discrimination</p>
-                  <p className="text-sm text-white/90">
-                    Know your rights and next steps
-                  </p>
-                </button>
+                  <button
+                    onClick={() => setInput("What is constructive dismissal?")}
+                    className="p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg transition-colors text-left"
+                  >
+                    <p className="font-medium mb-1">Legal Concepts</p>
+                    <p className="text-sm text-white/90">
+                      Get clear explanations of legal terms
+                    </p>
+                  </button>
+
+                  <button
+                    onClick={() =>
+                      setInput(
+                        "What should I do if I'm being discriminated against?",
+                      )
+                    }
+                    className="p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg transition-colors text-left"
+                  >
+                    <p className="font-medium mb-1">Discrimination</p>
+                    <p className="text-sm text-white/90">
+                      Know your rights and next steps
+                    </p>
+                  </button>
+                </div>
               </div>
-            </div>
-          </motion.div>
-        )}
+            </motion.div>
+          )}
         </AnimatePresence>
 
         {(messages.length > 0 || isStreaming) && (
@@ -771,25 +743,11 @@ export function ChatView() {
                   <MessageItem
                     message={message}
                     onSaveToCase={handleSaveToCase}
-                    onCreateCase={handleCreateCaseFromAnalysis}
+                    onCreateCase={handleCreateCase}
                     showThinking={_showThinking}
                     style={{}}
                   />
                 </motion.div>
-              ))}
-            </AnimatePresence>
-
-            {/* Pending AI Actions (displayed inline after messages) */}
-            <AnimatePresence>
-              {pendingActions.map((action) => (
-                <ActionPendingCard
-                  key={action.id}
-                  action={action}
-                  onQuickApprove={handleQuickApprove}
-                  onReview={handleReview}
-                  onReject={handleReject}
-                  allowQuickApprove={true}
-                />
               ))}
             </AnimatePresence>
 
@@ -813,8 +771,22 @@ export function ChatView() {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.3 }}
+                      className="flex items-center gap-2"
                     >
-                      <TypingIndicator status="thinking" />
+                      <div className="flex space-x-1">
+                        <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce"></div>
+                        <div
+                          className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce"
+                          style={{ animationDelay: "0.1s" }}
+                        ></div>
+                        <div
+                          className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce"
+                          style={{ animationDelay: "0.2s" }}
+                        ></div>
+                      </div>
+                      <span className="text-sm text-white/70">
+                        AI is thinking...
+                      </span>
                     </motion.div>
                   ) : (
                     // Show streaming message with animated cursor
@@ -842,7 +814,7 @@ export function ChatView() {
                           transition={{
                             duration: 1.5,
                             repeat: Infinity,
-                            ease: 'easeInOut',
+                            ease: "easeInOut",
                           }}
                         >
                           <path
@@ -852,7 +824,9 @@ export function ChatView() {
                             d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
                           />
                         </motion.svg>
-                        <span className="text-sm font-medium text-white/90">AI Assistant</span>
+                        <span className="text-sm font-medium text-white/90">
+                          AI Assistant
+                        </span>
                         <motion.div
                           className="ml-auto flex items-center gap-2"
                           initial={{ opacity: 0, x: -10 }}
@@ -868,7 +842,7 @@ export function ChatView() {
                             transition={{
                               duration: 2,
                               repeat: Infinity,
-                              ease: 'easeInOut',
+                              ease: "easeInOut",
                             }}
                           />
                           <motion.span
@@ -879,7 +853,7 @@ export function ChatView() {
                             transition={{
                               duration: 2,
                               repeat: Infinity,
-                              ease: 'easeInOut',
+                              ease: "easeInOut",
                             }}
                           >
                             Live
@@ -896,7 +870,7 @@ export function ChatView() {
                           transition={{
                             duration: 1,
                             repeat: Infinity,
-                            ease: 'easeInOut',
+                            ease: "easeInOut",
                           }}
                         />
                       </div>
@@ -1003,29 +977,242 @@ export function ChatView() {
         open={isSaveDialogOpen}
         onClose={() => setIsSaveDialogOpen(false)}
         onSave={handleSaveConfirm}
-        messageContent={messageToSave?.content || ''}
-        sessionId={localStorage.getItem('sessionId') || ''}
+        messageContent={messageToSave?.content || ""}
+        sessionId={localStorage.getItem("sessionId") || ""}
       />
 
       {/* AI Case Creation Dialog */}
-      {aiCaseData && (
-        <AICaseCreationDialog
-          open={isAICaseDialogOpen}
-          onClose={() => setIsAICaseDialogOpen(false)}
-          aiSuggestions={aiCaseData}
-          documentAnalysis={documentAnalysisText}
-          onConfirm={handleCaseConfirm}
-        />
-      )}
+      <AICaseCreationDialog
+        isOpen={isAICaseDialogOpen}
+        onClose={() => {
+          setIsAICaseDialogOpen(false);
+          setMessageForCaseCreation(null);
+        }}
+        onConfirm={handleAICaseConfirm}
+        suggestedData={
+          messageForCaseCreation?.documentAnalysis?.suggestedCaseData || {}
+        }
+        isCreating={isCreatingCase}
+      />
 
-      {/* AI Action Confirmation Dialog */}
-      {dialogAction && (
-        <AIActionConfirmationDialog
-          action={dialogAction}
-          isOpen={dialogAction !== null}
-          onConfirm={handleDialogConfirm}
-          onCancel={handleDialogCancel}
-        />
+      {/* Duplicate Case Warning Dialog */}
+      {isDuplicateWarningOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl max-w-2xl w-full mx-4">
+            {/* Header */}
+            <div className="p-6 border-b border-gray-700 flex-shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-yellow-500/20 border border-yellow-500/40 flex items-center justify-center">
+                  <svg
+                    className="w-5 h-5 text-yellow-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white">
+                    Duplicate Case Detected
+                  </h2>
+                  <p className="text-white/70 mt-1">
+                    A case with this title already exists
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-6">
+              <div className="space-y-4">
+                <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                  <h3 className="text-yellow-200 font-medium mb-2">
+                    Why can't I create this case?
+                  </h3>
+                  <p className="text-yellow-100/80 text-sm">
+                    You already have a case titled{" "}
+                    <strong>"{existingCaseTitle}"</strong>. Justice Companion
+                    prevents duplicate cases to avoid confusion and maintain
+                    organized case management. Each case should have a unique,
+                    descriptive title.
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  <h3 className="text-white font-medium">
+                    What would you like to do?
+                  </h3>
+
+                  <div className="grid grid-cols-1 gap-3">
+                    <button
+                      onClick={() => {
+                        // Close warning and reopen case creation dialog with modified title
+                        setIsDuplicateWarningOpen(false);
+                        if (duplicateCaseData) {
+                          const modifiedData = {
+                            ...duplicateCaseData,
+                            title: `${duplicateCaseData.title} (2)`,
+                          };
+                          // Re-trigger case creation with modified title
+                          handleAICaseConfirm(modifiedData);
+                        }
+                      }}
+                      className="flex items-center gap-3 p-4 bg-primary-500/20 hover:bg-primary-500/30 border border-primary-500/30 hover:border-primary-500/50 rounded-lg transition-colors text-left"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-primary-500/20 border border-primary-500/40 flex items-center justify-center">
+                        <svg
+                          className="w-4 h-4 text-primary-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 4v16m8-8H4"
+                          />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="text-white font-medium">
+                          Create with Modified Title
+                        </div>
+                        <div className="text-white/70 text-sm">
+                          Add "(2)" to make the title unique
+                        </div>
+                      </div>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        // Close warning and reopen case creation dialog for editing
+                        setIsDuplicateWarningOpen(false);
+                        setIsAICaseDialogOpen(true);
+                      }}
+                      className="flex items-center gap-3 p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg transition-colors text-left"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-white/10 border border-white/20 flex items-center justify-center">
+                        <svg
+                          className="w-4 h-4 text-white/70"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                          />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="text-white font-medium">
+                          Edit Case Details
+                        </div>
+                        <div className="text-white/70 text-sm">
+                          Go back and change the title or other details
+                        </div>
+                      </div>
+                    </button>
+
+                    <button
+                      onClick={async () => {
+                        // Switch to existing case
+                        try {
+                          const sessionId = localStorage.getItem("sessionId");
+                          if (!sessionId) {
+                            toast.error("No active session");
+                            return;
+                          }
+
+                          const existingCases =
+                            (await window.justiceAPI.getAllCases(
+                              sessionId,
+                            )) as any;
+                          const existingCase = existingCases.data?.find(
+                            (c: any) =>
+                              c.title?.toLowerCase() ===
+                              existingCaseTitle.toLowerCase(),
+                          );
+
+                          if (existingCase) {
+                            localStorage.setItem(
+                              "activeCaseId",
+                              existingCase.id.toString(),
+                            );
+                            setActiveCaseId(existingCase.id.toString());
+                            toast.success("Switched to existing case", {
+                              description: `Now viewing: ${existingCaseTitle}`,
+                            });
+                          } else {
+                            toast.error("Could not find existing case");
+                          }
+                        } catch (error) {
+                          console.error(
+                            "Error switching to existing case:",
+                            error,
+                          );
+                          toast.error("Failed to switch to existing case");
+                        }
+
+                        setIsDuplicateWarningOpen(false);
+                        setIsAICaseDialogOpen(false);
+                        setMessageForCaseCreation(null);
+                      }}
+                      className="flex items-center gap-3 p-4 bg-green-500/20 hover:bg-green-500/30 border border-green-500/30 hover:border-green-500/50 rounded-lg transition-colors text-left"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-green-500/20 border border-green-500/40 flex items-center justify-center">
+                        <svg
+                          className="w-4 h-4 text-green-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 5l7 7-7 7"
+                          />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="text-white font-medium">
+                          Switch to Existing Case
+                        </div>
+                        <div className="text-white/70 text-sm">
+                          Work on the existing case instead
+                        </div>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="p-6 border-t border-gray-700 flex justify-end">
+              <button
+                onClick={() => {
+                  setIsDuplicateWarningOpen(false);
+                  setDuplicateCaseData(null);
+                  setExistingCaseTitle("");
+                }}
+                className="px-4 py-2 text-white/70 hover:text-white border border-gray-600 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

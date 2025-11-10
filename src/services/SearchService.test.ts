@@ -72,7 +72,7 @@ describe("SearchService", () => {
       mockChatRepo,
       mockNotesRepo,
       mockEncryptionService,
-      mockAuditLogger
+      mockAuditLogger,
     );
   });
 
@@ -142,7 +142,7 @@ describe("SearchService", () => {
       expect(mockCaseRepo.searchCases).toHaveBeenCalledWith(
         1,
         "legal",
-        filters
+        filters,
       );
     });
 
@@ -153,7 +153,7 @@ describe("SearchService", () => {
 
       // Mock an error
       vi.mocked(mockCaseRepo.searchCases).mockRejectedValue(
-        new Error("Database error")
+        new Error("Database error"),
       );
 
       const result = await searchService.search(1, query);
@@ -161,11 +161,14 @@ describe("SearchService", () => {
       // Should return empty results on error (fallback search)
       expect(result.results).toEqual([]);
       expect(mockAuditLogger.log).toHaveBeenCalledWith(
-        "search_query",
         expect.objectContaining({
-          userId: 1,
-          query: "error test",
-        })
+          eventType: "query.paginated",
+          action: "read",
+          userId: "1",
+          details: expect.objectContaining({
+            query: "error test",
+          }),
+        }),
       );
     });
   });
@@ -201,12 +204,15 @@ describe("SearchService", () => {
         queryJson: JSON.stringify(query),
       });
       expect(mockAuditLogger.log).toHaveBeenCalledWith(
-        "search_saved",
         expect.objectContaining({
-          userId: 1,
-          searchId: 1,
-          name: "My Search",
-        })
+          eventType: "query.paginated",
+          action: "create",
+          resourceId: "1",
+          userId: "1",
+          details: expect.objectContaining({
+            name: "My Search",
+          }),
+        }),
       );
     });
   });
@@ -257,11 +263,12 @@ describe("SearchService", () => {
       await searchService.deleteSavedSearch(1, 5);
 
       expect(mockAuditLogger.log).toHaveBeenCalledWith(
-        "search_deleted",
         expect.objectContaining({
-          userId: 1,
-          searchId: 5,
-        })
+          eventType: "query.paginated",
+          action: "delete",
+          resourceId: "5",
+          userId: "1",
+        }),
       );
     });
   });
@@ -302,7 +309,7 @@ describe("SearchService", () => {
       mockDb.prepare = mockPrepare;
 
       await expect(searchService.executeSavedSearch(1, 999)).rejects.toThrow(
-        "Saved search not found"
+        "Saved search not found",
       );
     });
   });
@@ -323,7 +330,7 @@ describe("SearchService", () => {
       const suggestions = await searchService.getSearchSuggestions(
         1,
         "legal",
-        5
+        5,
       );
 
       expect(suggestions).toEqual([

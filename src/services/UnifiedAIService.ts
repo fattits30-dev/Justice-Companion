@@ -141,11 +141,11 @@ export class UnifiedAIService {
    */
   async streamChat(
     messages: ChatMessage[],
-    callbacks: StreamingCallbacks
+    callbacks: StreamingCallbacks,
   ): Promise<void> {
     if (!this.client) {
       callbacks.onError(
-        new Error(`${this.config.provider} client not configured`)
+        new Error(`${this.config.provider} client not configured`),
       );
       return;
     }
@@ -173,10 +173,10 @@ export class UnifiedAIService {
           provider: this.config.provider,
           model: this.config.model,
           operation: "streamChat",
-        }
+        },
       );
       callbacks.onError(
-        error instanceof Error ? error : new Error("Unknown streaming error")
+        error instanceof Error ? error : new Error("Unknown streaming error"),
       );
     }
   }
@@ -186,7 +186,7 @@ export class UnifiedAIService {
    */
   private async streamAnthropicChat(
     messages: ChatMessage[],
-    callbacks: StreamingCallbacks
+    callbacks: StreamingCallbacks,
   ): Promise<void> {
     const client = this.client as Anthropic;
     let fullResponse = "";
@@ -299,7 +299,7 @@ export class UnifiedAIService {
    */
   private async streamQwenChat(
     messages: ChatMessage[],
-    callbacks: StreamingCallbacks
+    callbacks: StreamingCallbacks,
   ): Promise<void> {
     const client = this.client as HfInference;
     let fullResponse = "";
@@ -329,7 +329,7 @@ export class UnifiedAIService {
       callbacks.onComplete(fullResponse);
     } catch (error) {
       callbacks.onError(
-        error instanceof Error ? error : new Error("Qwen streaming error")
+        error instanceof Error ? error : new Error("Qwen streaming error"),
       );
     }
   }
@@ -340,7 +340,7 @@ export class UnifiedAIService {
    */
   private async streamOpenAICompatibleChat(
     messages: ChatMessage[],
-    callbacks: StreamingCallbacks
+    callbacks: StreamingCallbacks,
   ): Promise<void> {
     const client = this.client as OpenAI;
     let fullResponse = "";
@@ -389,7 +389,7 @@ export class UnifiedAIService {
         for (const toolCall of delta.tool_calls) {
           // Accumulate function call data
           const existingCall = functionCalls.find(
-            (fc) => fc.id === toolCall.id
+            (fc) => fc.id === toolCall.id,
           );
 
           if (existingCall) {
@@ -421,7 +421,7 @@ export class UnifiedAIService {
 
             // Find the tool handler
             const tool = tools?.find(
-              (t) => t.function.name === functionCall.name
+              (t) => t.function.name === functionCall.name,
             );
 
             if (tool && tool.handler) {
@@ -440,17 +440,17 @@ export class UnifiedAIService {
               fullResponse += "\n\n" + functionResultMessage + "\n\n";
             } else {
               console.warn(
-                `No handler found for function: ${functionCall.name}`
+                `No handler found for function: ${functionCall.name}`,
               );
             }
           } catch (error) {
             console.error(
               `Error executing function ${functionCall.name}:`,
-              error
+              error,
             );
             if (callbacks.onError) {
               callbacks.onError(
-                new Error(`Function call failed: ${functionCall.name}`)
+                new Error(`Function call failed: ${functionCall.name}`),
               );
             }
           }
@@ -493,7 +493,7 @@ export class UnifiedAIService {
           provider: this.config.provider,
           model: this.config.model,
           operation: "chat",
-        }
+        },
       );
       throw error;
     }
@@ -503,7 +503,7 @@ export class UnifiedAIService {
    * Non-streaming chat for Anthropic
    */
   private async chatAnthropicNonStreaming(
-    messages: ChatMessage[]
+    messages: ChatMessage[],
   ): Promise<string> {
     const client = this.client as Anthropic;
 
@@ -571,7 +571,7 @@ export class UnifiedAIService {
       console.warn("[UnifiedAIService] Model:", this.config.model);
       console.warn(
         "[UnifiedAIService] Endpoint:",
-        this.config.endpoint || "default"
+        this.config.endpoint || "default",
       );
       console.warn("[UnifiedAIService] Message count:", messages.length);
 
@@ -595,11 +595,11 @@ export class UnifiedAIService {
       console.error("Error status:", error.status || "N/A");
       console.error(
         "Error response:",
-        error.response?.data || error.response || "N/A"
+        error.response?.data || error.response || "N/A",
       );
       console.error("Full error:", error);
       throw new Error(
-        `Failed to perform inference: ${error.message}${error.status ? ` (HTTP ${error.status})` : ""}`
+        `Failed to perform inference: ${error.message}${error.status ? ` (HTTP ${error.status})` : ""}`,
       );
     }
   }
@@ -608,7 +608,7 @@ export class UnifiedAIService {
    * Non-streaming chat for OpenAI-compatible providers
    */
   private async chatOpenAICompatibleNonStreaming(
-    messages: ChatMessage[]
+    messages: ChatMessage[],
   ): Promise<string> {
     const client = this.client as OpenAI;
 
@@ -648,7 +648,7 @@ export class UnifiedAIService {
           try {
             const args = JSON.parse(toolCall.function.arguments);
             const tool = tools?.find(
-              (t) => t.function.name === toolCall.function.name
+              (t) => t.function.name === toolCall.function.name,
             );
 
             if (tool && tool.handler) {
@@ -658,7 +658,7 @@ export class UnifiedAIService {
           } catch (error) {
             console.error(
               `Error executing function ${toolCall.function.name}:`,
-              error
+              error,
             );
           }
         }
@@ -688,7 +688,7 @@ export class UnifiedAIService {
    * Analyze a case and provide structured legal analysis
    */
   async analyzeCase(
-    request: CaseAnalysisRequest
+    request: CaseAnalysisRequest,
   ): Promise<CaseAnalysisResponse> {
     if (!this.client) {
       throw new Error(`${this.config.provider} client not configured`);
@@ -721,7 +721,7 @@ export class UnifiedAIService {
           provider: this.config.provider,
           operation: "analyzeCase",
           caseId: request.caseId,
-        }
+        },
       );
       throw new Error("Failed to analyze case. Please try again.");
     }
@@ -731,7 +731,7 @@ export class UnifiedAIService {
    * Analyze evidence and identify gaps
    */
   async analyzeEvidence(
-    request: EvidenceAnalysisRequest
+    request: EvidenceAnalysisRequest,
   ): Promise<EvidenceAnalysisResponse> {
     if (!this.client) {
       throw new Error(`${this.config.provider} client not configured`);
@@ -764,7 +764,7 @@ export class UnifiedAIService {
           provider: this.config.provider,
           operation: "analyzeEvidence",
           caseId: request.caseId,
-        }
+        },
       );
       throw new Error("Failed to analyze evidence. Please try again.");
     }
@@ -774,7 +774,7 @@ export class UnifiedAIService {
    * Draft a legal document
    */
   async draftDocument(
-    request: DocumentDraftRequest
+    request: DocumentDraftRequest,
   ): Promise<DocumentDraftResponse> {
     if (!this.client) {
       throw new Error(`${this.config.provider} client not configured`);
@@ -807,7 +807,7 @@ export class UnifiedAIService {
           provider: this.config.provider,
           operation: "draftDocument",
           documentType: request.documentType,
-        }
+        },
       );
       throw new Error("Failed to draft document. Please try again.");
     }
@@ -825,7 +825,7 @@ export class UnifiedAIService {
       fileType: string;
     },
     userProfile: { name: string; email: string | null },
-    userQuestion?: string
+    userQuestion?: string,
   ): Promise<{ analysis: string; suggestedCaseData: any }> {
     if (!this.client) {
       throw new Error(`${this.config.provider} client not configured`);
@@ -858,9 +858,12 @@ TASK 1: Provide a conversational analysis (talk DIRECTLY to ${userProfile.name |
 - Explain key information about dates, deadlines, amounts, rights
 - If document is for user: speak in second person ("your case", "you")
 - If document is for someone else: speak in third person ("their case", "they")
+- ALWAYS end with actionable suggestions for next steps
 
 TASK 2: Extract structured data for case creation (return as JSON at the end)
+- ALWAYS extract structured data regardless of ownership mismatch
 - DO NOT include claimant name in JSON (it will be set automatically to: ${userProfile.name || "user"})
+- Extract data based on document content, not user identity
 
 DOCUMENT: ${parsedDoc.filename}
 FILE TYPE: ${parsedDoc.fileType.toUpperCase()}
@@ -874,7 +877,7 @@ ${userQuestion ? `\nUSER QUESTION: "${userQuestion}"` : ""}
 Provide your response in TWO parts:
 
 PART 1 - Conversational Analysis (plain text):
-[Your friendly analysis talking directly to the user]
+[Your friendly analysis talking directly to the user, ending with actionable suggestions]
 
 PART 2 - Structured Data (JSON format):
 \`\`\`json
@@ -916,10 +919,12 @@ OWNERSHIP VERIFICATION FIELDS:
 - "documentClaimantName": "Name from document" if mismatch detected, otherwise null
 
 IMPORTANT:
+- ALWAYS extract structured data from document content regardless of ownership
 - Use confidence scores honestly (low confidence if unsure)
 - Provide extraction sources for transparency
 - Use null for fields not found in document
-- Case type should be one of: employment, housing, consumer, family, other`;
+- Case type should be one of: employment, housing, consumer, family, other
+- End PART 1 with suggestions like "Would you like me to create a case file from this document?" or "If you have additional evidence, please upload it so I can build a complete case profile."`;
 
       const messages: ChatMessage[] = [
         {
@@ -938,7 +943,11 @@ IMPORTANT:
       // Split response into analysis (part 1) and structured data (part 2)
       const jsonMatch = response.match(/```json\n?([\s\S]*?)\n?```/);
 
+      console.warn("[UnifiedAIService] Full AI response:", response);
+      console.warn("[UnifiedAIService] JSON match found:", !!jsonMatch);
+
       if (!jsonMatch) {
+        console.warn("[UnifiedAIService] No JSON found, using fallback");
         // Fallback: simple extraction with low confidence
         return {
           analysis: response,
@@ -961,7 +970,35 @@ IMPORTANT:
 
       const analysisText = response.substring(0, jsonMatch.index).trim();
       const jsonStr = jsonMatch[1];
-      const suggestedCaseData = JSON.parse(jsonStr);
+
+      console.warn("[UnifiedAIService] Extracted JSON string:", jsonStr);
+
+      let suggestedCaseData;
+      try {
+        suggestedCaseData = JSON.parse(jsonStr);
+        console.warn(
+          "[UnifiedAIService] Parsed suggestedCaseData:",
+          suggestedCaseData,
+        );
+      } catch (parseError) {
+        console.error("[UnifiedAIService] JSON parse error:", parseError);
+        console.error("[UnifiedAIService] Failed to parse:", jsonStr);
+        // Fallback on parse error
+        suggestedCaseData = {
+          title: `Case regarding ${parsedDoc.filename}`,
+          caseType: "other",
+          description: `Document uploaded: ${parsedDoc.filename}`,
+          claimantName: userProfile.name || "User",
+          confidence: {
+            title: 0.3,
+            caseType: 0.3,
+            opposingParty: 0.0,
+            caseNumber: 0.0,
+            filingDeadline: 0.0,
+          },
+          extractedFrom: {},
+        };
+      }
 
       // Inject user's name as claimant (do not extract from document)
       suggestedCaseData.claimantName = userProfile.name || "User";
@@ -978,10 +1015,10 @@ IMPORTANT:
           provider: this.config.provider,
           operation: "extractCaseDataFromDocument",
           filename: parsedDoc.filename,
-        }
+        },
       );
       throw new Error(
-        "Failed to extract case data from document. Please try again."
+        "Failed to extract case data from document. Please try again.",
       );
     }
   }

@@ -1,9 +1,13 @@
-import type Database from 'better-sqlite3';
-import { EncryptionService } from '../services/EncryptionService.ts';
-import type { AuditLogger } from '../services/AuditLogger.ts';
-import { DecryptionCache } from '../services/DecryptionCache.ts';
-import { PaginationParamsSchema, type PaginationParams, type PaginatedResult } from '../types/pagination.ts';
-import { generateCacheKey } from '../types/cache.ts';
+import type Database from "better-sqlite3";
+import { EncryptionService } from "../services/EncryptionService.ts";
+import type { AuditLogger } from "../services/AuditLogger.ts";
+import { DecryptionCache } from "../services/DecryptionCache.ts";
+import {
+  PaginationParamsSchema,
+  type PaginationParams,
+  type PaginatedResult,
+} from "../types/pagination.ts";
+import { generateCacheKey } from "../types/cache.ts";
 
 /**
  * Base repository interface with dual API support
@@ -67,8 +71,35 @@ export abstract class BaseRepository<T> implements IRepository<T> {
 
   /**
    * Abstract method: Define table name
+   *
+   * SECURITY: Table names MUST be hardcoded string literals in implementations.
+   * NEVER use user input or dynamic values for table names.
+   *
+   * @example
+   * ```typescript
+   * protected getTableName(): string {
+   *   return 'cases';  // ✅ SAFE: hardcoded literal
+   * }
+   * ```
    */
   protected abstract getTableName(): string;
+
+  /**
+   * Validate table name to prevent SQL injection
+   *
+   * SECURITY: Only alphanumeric and underscores allowed.
+   * Prevents SQL injection via table name manipulation.
+   *
+   * @param tableName - Table name from getTableName()
+   * @throws Error if table name contains invalid characters
+   */
+  private validateTableName(tableName: string): void {
+    if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(tableName)) {
+      throw new Error(
+        `Invalid table name: ${tableName}. Only alphanumeric and underscores allowed.`,
+      );
+    }
+  }
 
   /**
    * Abstract method: Define encrypted fields
@@ -96,7 +127,9 @@ export abstract class BaseRepository<T> implements IRepository<T> {
     encryptedValue: string | null,
     entityId: number,
   ): string | null {
-    if (!encryptedValue) {return null;}
+    if (!encryptedValue) {
+      return null;
+    }
 
     // Check cache first (if available)
     if (this.cache) {
@@ -138,6 +171,25 @@ export abstract class BaseRepository<T> implements IRepository<T> {
   }
 
   /**
+   * Validate and sanitize ORDER BY direction
+   *
+   * SECURITY: Prevents SQL injection in ORDER BY clauses.
+   * SQLite doesn't support parameterized ORDER BY direction, so we use whitelist validation.
+   *
+   * @param direction - Sort direction ('asc' or 'desc')
+   * @returns Sanitized SQL direction ('ASC' or 'DESC')
+   * @throws Error if direction is not 'asc' or 'desc'
+   */
+  private validateOrderDirection(direction: string): "ASC" | "DESC" {
+    if (direction !== "asc" && direction !== "desc") {
+      throw new Error(
+        `Invalid ORDER BY direction: ${direction}. Must be 'asc' or 'desc'.`,
+      );
+    }
+    return direction === "asc" ? "ASC" : "DESC";
+  }
+
+  /**
    * LEGACY: Find all items (backward compatible)
    * @deprecated Use findPaginated for better performance
    *
@@ -146,14 +198,16 @@ export abstract class BaseRepository<T> implements IRepository<T> {
    */
   public findAll(): T[] {
     const tableName = this.getTableName();
+    this.validateTableName(tableName);
+
     const query = `SELECT rowid, * FROM ${tableName} ORDER BY rowid DESC`;
 
     this.auditLogger?.log({
-      eventType: 'query.all',
+      eventType: "query.all",
       resourceType: tableName,
-      resourceId: 'all',
-      action: 'read',
-      details: { warning: 'Using deprecated findAll() - consider pagination' },
+      resourceId: "all",
+      action: "read",
+      details: { warning: "Using deprecated findAll() - consider pagination" },
       success: true,
     });
 
@@ -173,23 +227,24 @@ export abstract class BaseRepository<T> implements IRepository<T> {
     const { limit, cursor, direction } = validated;
 
     const tableName = this.getTableName();
+    this.validateTableName(tableName); // SECURITY: Prevent table name injection
 
     // Decode cursor to get starting rowid
     let startRowId = 0;
     if (cursor) {
       try {
-        const decoded = Buffer.from(cursor, 'base64').toString('utf-8');
-        const [rowid] = decoded.split(':');
+        const decoded = Buffer.from(cursor, "base64").toString("utf-8");
+        const [rowid] = decoded.split(":");
         startRowId = parseInt(rowid, 10);
       } catch (_error) {
-        throw new Error('Invalid cursor format');
+        throw new Error("Invalid cursor format");
       }
     }
 
-    // Build query with LIMIT (fetch limit + 1 to check hasMore)
-    const orderDirection = direction === 'asc' ? 'ASC' : 'DESC';
-    const comparator = direction === 'asc' ? '>' : '<';
-    const whereClause = cursor ? `WHERE rowid ${comparator} ?` : '';
+    // SECURITY: Validate ORDER BY direction (SQLite doesn't support parameterized ORDER BY)
+    const orderDirection = this.validateOrderDirection(direction);
+    const comparator = direction === "asc" ? ">" : "<";
+    const whereClause = cursor ? `WHERE rowid ${comparator} ?` : "";
 
     const query = `
       SELECT rowid, * FROM ${tableName}
@@ -201,10 +256,10 @@ export abstract class BaseRepository<T> implements IRepository<T> {
     const queryParams = cursor ? [startRowId, limit + 1] : [limit + 1];
 
     this.auditLogger?.log({
-      eventType: 'query.paginated',
+      eventType: "query.paginated",
       resourceType: tableName,
-      resourceId: cursor || 'start',
-      action: 'read',
+      resourceId: cursor || "start",
+      action: "read",
       details: { cursor, limit, direction },
       success: true,
     });
@@ -222,14 +277,14 @@ export abstract class BaseRepository<T> implements IRepository<T> {
     // Generate cursors for next/prev pages
     const nextCursor =
       hasMore && itemsToReturn.length > 0
-        ? Buffer.from(`${itemsToReturn[itemsToReturn.length - 1].rowid}:${Date.now()}`).toString(
-            'base64',
-          )
+        ? Buffer.from(
+            `${itemsToReturn[itemsToReturn.length - 1].rowid}:${Date.now()}`,
+          ).toString("base64")
         : undefined;
 
     const prevCursor =
       cursor && startRowId > 0
-        ? Buffer.from(`${startRowId}:${Date.now()}`).toString('base64')
+        ? Buffer.from(`${startRowId}:${Date.now()}`).toString("base64")
         : undefined;
 
     return {
@@ -252,6 +307,8 @@ export abstract class BaseRepository<T> implements IRepository<T> {
    */
   public findById(id: number, useCache = true): T | null {
     const tableName = this.getTableName();
+    this.validateTableName(tableName); // SECURITY: Prevent table name injection
+
     const query = `SELECT rowid, * FROM ${tableName} WHERE id = ?`;
 
     const row = this.db.prepare(query).get(id);
@@ -272,10 +329,10 @@ export abstract class BaseRepository<T> implements IRepository<T> {
     this.cache = originalCache;
 
     this.auditLogger?.log({
-      eventType: 'query.by_id',
+      eventType: "query.by_id",
       resourceType: tableName,
       resourceId: id.toString(),
-      action: 'read',
+      action: "read",
       details: { cached: useCache },
       success: true,
     });
@@ -290,14 +347,16 @@ export abstract class BaseRepository<T> implements IRepository<T> {
    */
   public getTotalCount(): number {
     const tableName = this.getTableName();
+    this.validateTableName(tableName); // SECURITY: Prevent table name injection
+
     const query = `SELECT COUNT(*) as count FROM ${tableName}`;
     const result = this.db.prepare(query).get() as { count: number };
 
     this.auditLogger?.log({
-      eventType: 'query.count',
+      eventType: "query.count",
       resourceType: tableName,
-      resourceId: 'all',
-      action: 'read',
+      resourceId: "all",
+      action: "read",
       details: { count: result.count },
       success: true,
     });

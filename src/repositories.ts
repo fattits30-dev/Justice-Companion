@@ -3,23 +3,24 @@
  * Provides singleton instances of all repositories with proper dependency injection
  */
 
-import { getDb } from './db/database.ts';
-import { EncryptionService } from './services/EncryptionService.ts';
-import { AuditLogger } from './services/AuditLogger.ts';
+import { getDb } from "./db/database.ts";
+import { EncryptionService } from "./services/EncryptionService.ts";
+import { AuditLogger } from "./services/AuditLogger.ts";
+import { initializeServiceContainer } from "./services/ServiceContainer.ts";
 
 // Import all repositories
-import { CaseRepository } from './repositories/CaseRepository.ts';
-import { EvidenceRepository } from './repositories/EvidenceRepository.ts';
-import { UserRepository } from './repositories/UserRepository.ts';
-import { SessionRepository } from './repositories/SessionRepository.ts';
-import { UserProfileRepository } from './repositories/UserProfileRepository.ts';
-import { ChatConversationRepository } from './repositories/ChatConversationRepository.ts';
-import { ConsentRepository } from './repositories/ConsentRepository.ts';
-import { NotesRepository } from './repositories/NotesRepository.ts';
-import { LegalIssuesRepository } from './repositories/LegalIssuesRepository.ts';
-import { TimelineRepository } from './repositories/TimelineRepository.ts';
-import { CaseFactsRepository } from './repositories/CaseFactsRepository.ts';
-import { UserFactsRepository } from './repositories/UserFactsRepository.ts';
+import { CaseRepository } from "./repositories/CaseRepository.ts";
+import { EvidenceRepository } from "./repositories/EvidenceRepository.ts";
+import { UserRepository } from "./repositories/UserRepository.ts";
+import { SessionRepository } from "./repositories/SessionRepository.ts";
+import { UserProfileRepository } from "./repositories/UserProfileRepository.ts";
+import { ChatConversationRepository } from "./repositories/ChatConversationRepository.ts";
+import { ConsentRepository } from "./repositories/ConsentRepository.ts";
+import { NotesRepository } from "./repositories/NotesRepository.ts";
+import { LegalIssuesRepository } from "./repositories/LegalIssuesRepository.ts";
+import { TimelineRepository } from "./repositories/TimelineRepository.ts";
+import { CaseFactsRepository } from "./repositories/CaseFactsRepository.ts";
+import { UserFactsRepository } from "./repositories/UserFactsRepository.ts";
 
 /**
  * Repository container - holds all initialized repository instances
@@ -51,15 +52,26 @@ function initializeRepositories(): RepositoryContainer {
   // Initialize core services
   // Note: In production, KeyManager loads the key from secure storage
   // For now, we'll use environment variable or generate a test key
-  const encryptionKey = process.env.ENCRYPTION_KEY_BASE64 ||
-    Buffer.from('test-key-only-replace-in-production!!').toString('base64');
+  const encryptionKey =
+    process.env.ENCRYPTION_KEY_BASE64 ||
+    Buffer.from("test-key-only-replace-in-production!!").toString("base64");
 
-  console.log('[Repositories] Initializing with encryption key from:',
-    process.env.ENCRYPTION_KEY_BASE64 ? '.env file' : 'fallback test key');
-  console.log('[Repositories] Key (first 10 chars):', encryptionKey.substring(0, 10));
+  console.log(
+    "[Repositories] Initializing with encryption key from:",
+    process.env.ENCRYPTION_KEY_BASE64 ? ".env file" : "fallback test key",
+  );
+  console.log(
+    "[Repositories] Key (first 10 chars):",
+    encryptionKey.substring(0, 10),
+  );
 
   const encryptionService = new EncryptionService(encryptionKey);
   const auditLogger = new AuditLogger(db);
+
+  // Initialize service container for shared service access
+  // Note: KeyManager is not available here, so we pass null for now
+  // Services that need KeyManager should get it from KeyManagerService
+  initializeServiceContainer(encryptionService, auditLogger, null as any);
 
   // Initialize all repositories
   return {
@@ -67,14 +79,32 @@ function initializeRepositories(): RepositoryContainer {
     evidenceRepository: new EvidenceRepository(encryptionService, auditLogger),
     userRepository: new UserRepository(auditLogger),
     sessionRepository: new SessionRepository(),
-    userProfileRepository: new UserProfileRepository(encryptionService, auditLogger),
-    chatConversationRepository: new ChatConversationRepository(encryptionService, auditLogger),
+    userProfileRepository: new UserProfileRepository(
+      encryptionService,
+      auditLogger,
+    ),
+    chatConversationRepository: new ChatConversationRepository(
+      encryptionService,
+      auditLogger,
+    ),
     consentRepository: new ConsentRepository(),
     notesRepository: new NotesRepository(encryptionService, auditLogger),
-    legalIssuesRepository: new LegalIssuesRepository(encryptionService, auditLogger),
-    timelineEventRepository: new TimelineRepository(encryptionService, auditLogger),
-    caseFactsRepository: new CaseFactsRepository(encryptionService, auditLogger),
-    userFactsRepository: new UserFactsRepository(encryptionService, auditLogger),
+    legalIssuesRepository: new LegalIssuesRepository(
+      encryptionService,
+      auditLogger,
+    ),
+    timelineEventRepository: new TimelineRepository(
+      encryptionService,
+      auditLogger,
+    ),
+    caseFactsRepository: new CaseFactsRepository(
+      encryptionService,
+      auditLogger,
+    ),
+    userFactsRepository: new UserFactsRepository(
+      encryptionService,
+      auditLogger,
+    ),
   };
 }
 
@@ -103,7 +133,7 @@ export function resetRepositories(): void {
  */
 export function initializeTestRepositories(
   encryptionService: EncryptionService,
-  auditLogger: AuditLogger
+  auditLogger: AuditLogger,
 ): RepositoryContainer {
   // Initialize all repositories with test dependencies
   repositoryContainer = {
@@ -111,14 +141,32 @@ export function initializeTestRepositories(
     evidenceRepository: new EvidenceRepository(encryptionService, auditLogger),
     userRepository: new UserRepository(auditLogger),
     sessionRepository: new SessionRepository(),
-    userProfileRepository: new UserProfileRepository(encryptionService, auditLogger),
-    chatConversationRepository: new ChatConversationRepository(encryptionService, auditLogger),
+    userProfileRepository: new UserProfileRepository(
+      encryptionService,
+      auditLogger,
+    ),
+    chatConversationRepository: new ChatConversationRepository(
+      encryptionService,
+      auditLogger,
+    ),
     consentRepository: new ConsentRepository(),
     notesRepository: new NotesRepository(encryptionService, auditLogger),
-    legalIssuesRepository: new LegalIssuesRepository(encryptionService, auditLogger),
-    timelineEventRepository: new TimelineRepository(encryptionService, auditLogger),
-    caseFactsRepository: new CaseFactsRepository(encryptionService, auditLogger),
-    userFactsRepository: new UserFactsRepository(encryptionService, auditLogger),
+    legalIssuesRepository: new LegalIssuesRepository(
+      encryptionService,
+      auditLogger,
+    ),
+    timelineEventRepository: new TimelineRepository(
+      encryptionService,
+      auditLogger,
+    ),
+    caseFactsRepository: new CaseFactsRepository(
+      encryptionService,
+      auditLogger,
+    ),
+    userFactsRepository: new UserFactsRepository(
+      encryptionService,
+      auditLogger,
+    ),
   };
   return repositoryContainer;
 }

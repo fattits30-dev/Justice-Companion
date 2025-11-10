@@ -5,19 +5,16 @@ import {
 } from "../../src/services/SearchService";
 import { SearchIndexBuilder } from "../../src/services/SearchIndexBuilder";
 import { databaseManager } from "../../src/db/database";
-import { CaseRepository } from "../../src/repositories/CaseRepository";
-import { EvidenceRepository } from "../../src/repositories/EvidenceRepository";
-import { ChatConversationRepository } from "../../src/repositories/ChatConversationRepository";
-import { NotesRepository } from "../../src/repositories/NotesRepository";
-import { EncryptionService } from "../../src/services/EncryptionService";
-import { AuditLogger } from "../../src/services/AuditLogger";
+import { getRepositories } from "../../src/repositories";
+import {
+  getEncryptionService,
+  getAuditLogger,
+} from "../../src/services/ServiceContainer";
 import { withAuthorization } from "../utils/authorization-wrapper";
 import type { IPCResponse } from "../utils/ipc-response";
-import { getKeyManager } from "../main";
-import {
-  DatabaseError,
-  ValidationError,
-} from "../../src/errors/DomainErrors";
+import { DatabaseError, ValidationError } from "../../src/errors/DomainErrors";
+import { AuditLogger } from "../../src/services/AuditLogger";
+import { EncryptionService } from "../../src/services/EncryptionService";
 
 // Lazy initialization of services
 let searchService: SearchService | null = null;
@@ -25,26 +22,16 @@ let searchIndexBuilder: SearchIndexBuilder | null = null;
 
 function _getSearchService(): SearchService {
   if (!searchService) {
-    const keyManager = getKeyManager();
-    const encryptionService = new EncryptionService(keyManager.getKey());
-    const auditLogger = new AuditLogger(databaseManager.getDatabase());
-
-    const caseRepo = new CaseRepository(encryptionService, auditLogger);
-    const evidenceRepo = new EvidenceRepository(encryptionService, auditLogger);
-    const chatRepo = new ChatConversationRepository(
-      encryptionService,
-      auditLogger
-    );
-    const notesRepo = new NotesRepository(encryptionService, auditLogger);
+    const repos = getRepositories();
 
     searchService = new SearchService(
       databaseManager.getDatabase(),
-      caseRepo,
-      evidenceRepo,
-      chatRepo,
-      notesRepo,
-      encryptionService,
-      auditLogger
+      repos.caseRepository,
+      repos.evidenceRepository,
+      repos.chatConversationRepository,
+      repos.notesRepository,
+      getEncryptionService(),
+      getAuditLogger()
     );
   }
   return searchService;
@@ -52,25 +39,15 @@ function _getSearchService(): SearchService {
 
 function _getSearchIndexBuilder(): SearchIndexBuilder {
   if (!searchIndexBuilder) {
-    const keyManager = getKeyManager();
-    const encryptionService = new EncryptionService(keyManager.getKey());
-    const auditLogger = new AuditLogger(databaseManager.getDatabase());
-
-    const caseRepo = new CaseRepository(encryptionService, auditLogger);
-    const evidenceRepo = new EvidenceRepository(encryptionService, auditLogger);
-    const chatRepo = new ChatConversationRepository(
-      encryptionService,
-      auditLogger
-    );
-    const notesRepo = new NotesRepository(encryptionService, auditLogger);
+    const repos = getRepositories();
 
     searchIndexBuilder = new SearchIndexBuilder(
       databaseManager.getDatabase(),
-      caseRepo,
-      evidenceRepo,
-      chatRepo,
-      notesRepo,
-      encryptionService
+      repos.caseRepository,
+      repos.evidenceRepository,
+      repos.chatConversationRepository,
+      repos.notesRepository,
+      getEncryptionService()
     );
   }
   return searchIndexBuilder;

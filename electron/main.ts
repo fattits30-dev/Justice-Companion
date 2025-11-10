@@ -8,6 +8,7 @@ import { initializeDatabase } from "./database-init";
 import { KeyManager } from "../src/services/KeyManager";
 import { BackupScheduler } from "../src/services/backup/BackupScheduler";
 import { databaseManager } from "../src/db/database";
+import { setKeyManager } from "./services/KeyManagerService";
 
 const __dirname = path.dirname(require.main?.filename || process.argv[1]);
 
@@ -55,6 +56,8 @@ function createMainWindow(): BrowserWindow {
       sandbox: true,
       webSecurity: true,
       allowRunningInsecureContent: false,
+      // Disable autofill to prevent DevTools errors
+      disableBlinkFeatures: "Autofill",
     },
   });
 
@@ -90,6 +93,9 @@ app.whenReady().then(async () => {
   try {
     // Initialize KeyManager BEFORE database (database needs it for decryption)
     keyManager = new KeyManager(safeStorage, app.getPath("userData"));
+
+    // Set key manager in service to break circular dependencies
+    setKeyManager(keyManager);
 
     // Auto-migrate encryption key from .env to safeStorage if needed
     if (!keyManager.hasKey()) {

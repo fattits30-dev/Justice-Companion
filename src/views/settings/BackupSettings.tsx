@@ -18,7 +18,7 @@ import { Card } from "../../components/ui/Card.tsx";
 import { Button } from "../../components/ui/Button.tsx";
 import { Badge } from "../../components/ui/Badge.tsx";
 import { useAuth } from "../../contexts/AuthContext.tsx";
-import { ConfirmationModal } from "../../components/common/ConfirmationModal.tsx";
+import { ConfirmationModal } from "../../components/ui/ConfirmationModal.tsx";
 
 export interface Backup {
   id: number;
@@ -41,7 +41,7 @@ export function BackupSettingsTab() {
   const [isLoading, setIsLoading] = useState(true);
   const [autoBackupEnabled, setAutoBackupEnabled] = useState(false);
   const [frequency, setFrequency] = useState<"daily" | "weekly" | "monthly">(
-    "daily"
+    "daily",
   );
   const [keepCount, setKeepCount] = useState(7);
   const [backupTime, setBackupTime] = useState("03:00");
@@ -83,7 +83,7 @@ export function BackupSettingsTab() {
         return;
       }
       const result = await globalThis.window.justiceAPI.getBackupSettings(
-        sessionId!
+        sessionId!,
       );
       if (result.success && result.data) {
         setAutoBackupEnabled(result.data.enabled);
@@ -125,12 +125,12 @@ export function BackupSettingsTab() {
       try {
         const result = await globalThis.window.justiceAPI.restoreBackup(
           backup.filename,
-          sessionId!
+          sessionId!,
         );
         if (result.success) {
           showToast(
             "Database restored successfully - Application will reload",
-            "success"
+            "success",
           );
           // Wait a moment for the toast to show, then reload
           setTimeout(() => {
@@ -139,7 +139,7 @@ export function BackupSettingsTab() {
         } else {
           showToast(
             result.error?.message || "Failed to restore backup",
-            "error"
+            "error",
           );
         }
       } catch (error) {
@@ -175,7 +175,7 @@ export function BackupSettingsTab() {
       try {
         const result = await globalThis.window.justiceAPI.deleteBackup(
           backupFilename,
-          sessionId!
+          sessionId!,
         );
         if (result.success) {
           showToast("Backup deleted", "success");
@@ -183,7 +183,7 @@ export function BackupSettingsTab() {
         } else {
           showToast(
             result.error?.message || "Failed to delete backup",
-            "error"
+            "error",
           );
         }
       } catch (error) {
@@ -207,7 +207,7 @@ export function BackupSettingsTab() {
           backup_time: backupTime,
           keep_count: keepCount,
         },
-        sessionId!
+        sessionId!,
       );
 
       if (result.success) {
@@ -453,7 +453,7 @@ export function BackupSettingsTab() {
                     value={frequency}
                     onChange={(e) =>
                       setFrequency(
-                        e.target.value as "daily" | "weekly" | "monthly"
+                        e.target.value as "daily" | "weekly" | "monthly",
                       )
                     }
                     className="w-full px-4 py-3 bg-blue-950/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
@@ -591,7 +591,7 @@ export function BackupSettingsTab() {
                   isExpanded={expandedBackup === backup.id}
                   onToggle={() =>
                     setExpandedBackup(
-                      expandedBackup === backup.id ? null : backup.id
+                      expandedBackup === backup.id ? null : backup.id,
                     )
                   }
                   onRestore={() => handleRestore(backup)}
@@ -608,7 +608,7 @@ export function BackupSettingsTab() {
       {confirmationConfig && (
         <ConfirmationModal
           isOpen={isConfirmationOpen}
-          onClose={(confirmed) => {
+          onClose={(confirmed: boolean) => {
             setIsConfirmationOpen(false);
             confirmationConfig.onResponse(confirmed);
           }}

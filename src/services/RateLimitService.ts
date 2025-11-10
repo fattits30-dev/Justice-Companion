@@ -1,5 +1,4 @@
 import { injectable } from "inversify";
-import { logger } from "../utils/logger.ts";
 
 /**
  * Represents a login attempt record for rate limiting
@@ -84,13 +83,12 @@ export class RateLimitService {
     // Check if account is locked
     if (attempt.lockedUntil && attempt.lockedUntil > now) {
       const remainingSeconds = Math.ceil(
-        (attempt.lockedUntil.getTime() - now.getTime()) / 1000
+        (attempt.lockedUntil.getTime() - now.getTime()) / 1000,
       );
 
       // Log rate limit violation for monitoring
-      logger.warn(
-        "RateLimitService",
-        `Rate limit exceeded for ${normalizedUsername}. Attempts: ${attempt.count}, Lock time remaining: ${remainingSeconds}s`
+      console.warn(
+        `Rate limit exceeded for ${normalizedUsername}. Attempts: ${attempt.count}, Lock time remaining: ${remainingSeconds}s`,
       );
 
       return {
@@ -118,9 +116,8 @@ export class RateLimitService {
       attempt.lockedUntil = new Date(now.getTime() + this.LOCK_DURATION_MS);
 
       // Log account lockout for monitoring
-      logger.warn(
-        "RateLimitService",
-        `Account locked for ${normalizedUsername}. Attempts: ${attempt.count}, Lock duration: ${this.LOCK_DURATION_MS / 1000}s`
+      console.warn(
+        `Account locked for ${normalizedUsername}. Attempts: ${attempt.count}, Lock duration: ${this.LOCK_DURATION_MS / 1000}s`,
       );
 
       const remainingSeconds = Math.ceil(this.LOCK_DURATION_MS / 1000);
@@ -187,9 +184,8 @@ export class RateLimitService {
         if (attempt.count >= this.MAX_ATTEMPTS && !attempt.lockedUntil) {
           attempt.lockedUntil = new Date(now.getTime() + this.LOCK_DURATION_MS);
 
-          logger.error(
-            "RateLimitService",
-            `BRUTE FORCE DETECTED for ${normalizedUsername}. Account locked for ${this.LOCK_DURATION_MS / 1000}s`
+          console.error(
+            `BRUTE FORCE DETECTED for ${normalizedUsername}. Account locked for ${this.LOCK_DURATION_MS / 1000}s`,
           );
         }
       }
@@ -315,7 +311,7 @@ export class RateLimitService {
   public checkLimit(
     key: string,
     _limit: number,
-    _windowMs: number
+    _windowMs: number,
   ): { allowed: boolean; remaining: number; resetAt: Date } {
     // For now, delegate to checkRateLimit with a simplified response
     const result = this.checkRateLimit(key);
@@ -324,7 +320,7 @@ export class RateLimitService {
       remaining: result.attemptsRemaining || 0,
       resetAt: new Date(
         Date.now() +
-          (result.remainingTime ? result.remainingTime * 1000 : this.WINDOW_MS)
+          (result.remainingTime ? result.remainingTime * 1000 : this.WINDOW_MS),
       ),
     };
   }

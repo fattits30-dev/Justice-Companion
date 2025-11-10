@@ -37,7 +37,7 @@ export class GdprService {
   constructor(
     db: Database.Database,
     encryptionService: EncryptionService,
-    auditLogger: AuditLogger
+    auditLogger: AuditLogger,
   ) {
     this.db = db;
     this.auditLogger = auditLogger;
@@ -52,7 +52,7 @@ export class GdprService {
    */
   async exportUserData(
     userId: number,
-    options: GdprExportOptions = {}
+    options: GdprExportOptions = {},
   ): Promise<GdprExportResult> {
     try {
       // Rate limiting: Prevent abuse
@@ -109,7 +109,7 @@ export class GdprService {
    */
   async deleteUserData(
     userId: number,
-    options: GdprDeleteOptions
+    options: GdprDeleteOptions,
   ): Promise<GdprDeleteResult> {
     try {
       // Consent check: User must have active data processing consent
@@ -125,10 +125,7 @@ export class GdprService {
       }
 
       // Delete data using DataDeleter
-      const result = await this.deleter.deleteAllUserData(userId, {
-        ...options,
-        confirmed: true,
-      });
+      const result = await this.deleter.deleteAllUserData(userId, options);
 
       // Audit log (created AFTER deletion so it's preserved)
       this.auditLogger.log({
@@ -203,7 +200,7 @@ export class GdprService {
       WHERE user_id = ?
         AND consent_type = ?
         AND revoked_at IS NULL
-    `
+    `,
       )
       .get(userId, consentType) as { id: number; granted: number } | undefined;
 

@@ -1,12 +1,11 @@
-import { createHash, randomUUID } from 'node:crypto';
-import { logger } from '../utils/logger.ts';
-import type Database from 'better-sqlite3';
+import { createHash, randomUUID } from "node:crypto";
+import type Database from "better-sqlite3";
 import type {
   AuditEvent,
   AuditLogEntry,
   AuditQueryFilters,
   IntegrityReport,
-} from '../models/AuditLog.ts';
+} from "../models/AuditLog.ts";
 
 /**
  * AuditLogger - Blockchain-style immutable audit trail
@@ -54,7 +53,7 @@ export class AuditLogger {
         success: event.success ?? true,
         errorMessage: event.errorMessage ?? null,
         previousLogHash: previousHash,
-        integrityHash: '', // Calculate next
+        integrityHash: "", // Calculate next
         createdAt: new Date().toISOString(),
       };
 
@@ -65,7 +64,7 @@ export class AuditLogger {
       this.insertAuditLog(entry);
     } catch (error) {
       // CRITICAL: Audit failures should NOT break app
-      logger.error('App', '❌ Audit logging failed:', { error: error });
+      console.error("❌ Audit logging failed:", error);
     }
   }
 
@@ -81,55 +80,55 @@ export class AuditLogger {
 
     // Build WHERE clauses
     if (filters.startDate) {
-      conditions.push('timestamp >= @startDate');
+      conditions.push("timestamp >= @startDate");
       params.startDate = filters.startDate;
     }
 
     if (filters.endDate) {
-      conditions.push('timestamp <= @endDate');
+      conditions.push("timestamp <= @endDate");
       params.endDate = filters.endDate;
     }
 
     if (filters.resourceType) {
-      conditions.push('resource_type = @resourceType');
+      conditions.push("resource_type = @resourceType");
       params.resourceType = filters.resourceType;
     }
 
     if (filters.resourceId) {
-      conditions.push('resource_id = @resourceId');
+      conditions.push("resource_id = @resourceId");
       params.resourceId = filters.resourceId;
     }
 
     if (filters.eventType) {
-      conditions.push('event_type = @eventType');
+      conditions.push("event_type = @eventType");
       params.eventType = filters.eventType;
     }
 
     if (filters.userId) {
-      conditions.push('user_id = @userId');
+      conditions.push("user_id = @userId");
       params.userId = filters.userId;
     }
 
     if (filters.success !== undefined) {
-      conditions.push('success = @success');
+      conditions.push("success = @success");
       params.success = filters.success ? 1 : 0;
     }
 
     // Build SQL query
-    let sql = 'SELECT * FROM audit_logs';
+    let sql = "SELECT * FROM audit_logs";
     if (conditions.length > 0) {
-      sql += ' WHERE ' + conditions.join(' AND ');
+      sql += " WHERE " + conditions.join(" AND ");
     }
     // Use ROWID for deterministic ordering (most recent first)
-    sql += ' ORDER BY ROWID DESC';
+    sql += " ORDER BY ROWID DESC";
 
     if (filters.limit) {
-      sql += ' LIMIT @limit';
+      sql += " LIMIT @limit";
       params.limit = filters.limit;
     }
 
     if (filters.offset) {
-      sql += ' OFFSET @offset';
+      sql += " OFFSET @offset";
       params.offset = filters.offset;
     }
 
@@ -209,7 +208,8 @@ export class AuditLogger {
             totalLogs: entries.length,
             brokenAt: i,
             brokenLog: entry,
-            error: 'Integrity hash mismatch - log entry may have been tampered with',
+            error:
+              "Integrity hash mismatch - log entry may have been tampered with",
           };
         }
 
@@ -220,7 +220,8 @@ export class AuditLogger {
             totalLogs: entries.length,
             brokenAt: i,
             brokenLog: entry,
-            error: 'Chain broken - previousLogHash does not match previous entry',
+            error:
+              "Chain broken - previousLogHash does not match previous entry",
           };
         }
 
@@ -235,7 +236,7 @@ export class AuditLogger {
       return {
         valid: false,
         totalLogs: 0,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }
@@ -247,35 +248,35 @@ export class AuditLogger {
    * @param filters - Optional query filters
    * @returns Formatted string (JSON or CSV)
    */
-  exportLogs(format: 'json' | 'csv', filters?: AuditQueryFilters): string {
+  exportLogs(format: "json" | "csv", filters?: AuditQueryFilters): string {
     const logs = this.query(filters);
 
-    if (format === 'json') {
+    if (format === "json") {
       return JSON.stringify(logs, null, 2);
     }
 
     // CSV format
     if (logs.length === 0) {
-      return '';
+      return "";
     }
 
     // CSV headers
     const headers = [
-      'id',
-      'timestamp',
-      'eventType',
-      'userId',
-      'resourceType',
-      'resourceId',
-      'action',
-      'details',
-      'ipAddress',
-      'userAgent',
-      'success',
-      'errorMessage',
-      'integrityHash',
-      'previousLogHash',
-      'createdAt',
+      "id",
+      "timestamp",
+      "eventType",
+      "userId",
+      "resourceType",
+      "resourceId",
+      "action",
+      "details",
+      "ipAddress",
+      "userAgent",
+      "success",
+      "errorMessage",
+      "integrityHash",
+      "previousLogHash",
+      "createdAt",
     ];
 
     // Build CSV rows
@@ -284,25 +285,25 @@ export class AuditLogger {
         log.id,
         log.timestamp,
         log.eventType,
-        log.userId ?? '',
+        log.userId ?? "",
         log.resourceType,
         log.resourceId,
         log.action,
-        log.details ? JSON.stringify(log.details) : '',
-        log.ipAddress ?? '',
-        log.userAgent ?? '',
+        log.details ? JSON.stringify(log.details) : "",
+        log.ipAddress ?? "",
+        log.userAgent ?? "",
         log.success.toString(),
-        log.errorMessage ?? '',
+        log.errorMessage ?? "",
         log.integrityHash,
-        log.previousLogHash ?? '',
+        log.previousLogHash ?? "",
         log.createdAt,
       ].map((field) => this.escapeCsvField(field));
     });
 
     // Combine headers and rows
-    const csvLines = [headers.join(','), ...rows.map((row) => row.join(','))];
+    const csvLines = [headers.join(","), ...rows.map((row) => row.join(","))];
 
-    return csvLines.join('\n');
+    return csvLines.join("\n");
   }
 
   /**
@@ -330,7 +331,7 @@ export class AuditLogger {
 
     // Deterministic JSON string (same input = same hash)
     const jsonString = JSON.stringify(data);
-    return createHash('sha256').update(jsonString).digest('hex');
+    return createHash("sha256").update(jsonString).digest("hex");
   }
 
   /**
@@ -424,11 +425,11 @@ export class AuditLogger {
     return {
       id: row.id,
       timestamp: row.timestamp,
-      eventType: row.event_type as AuditLogEntry['eventType'],
+      eventType: row.event_type as AuditLogEntry["eventType"],
       userId: row.user_id,
       resourceType: row.resource_type,
       resourceId: row.resource_id,
-      action: row.action as AuditLogEntry['action'],
+      action: row.action as AuditLogEntry["action"],
       details: parsedDetails ?? null,
       ipAddress: row.ip_address,
       userAgent: row.user_agent,
@@ -447,7 +448,7 @@ export class AuditLogger {
    * @returns Escaped field value
    */
   private escapeCsvField(field: string): string {
-    if (field.includes(',') || field.includes('"') || field.includes('\n')) {
+    if (field.includes(",") || field.includes('"') || field.includes("\n")) {
       return `"${field.replace(/"/g, '""')}"`;
     }
     return field;

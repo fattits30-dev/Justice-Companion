@@ -1,4 +1,4 @@
-import { expect, type Page, type Browser } from "@playwright/test";
+import { expect, type Page, type Browser, _electron as electron } from "@playwright/test";
 import crypto from "crypto";
 import fs from "fs";
 import path from "path";
@@ -31,34 +31,126 @@ export interface ElectronTestApp {
 export async function launchWebApp(options?: {
   seedData?: boolean;
   timeout?: number;
-}): Promise<WebTestApp> {
+  headless?: boolean;
+}): Promise<ElectronTestApp> {
+  const timeout = options?.timeout ?? 30000;
   const { seedData = false } = options || {};
 
   // Setup test database
   const dbPath = await setupTestDatabase({ seedData });
 
-  console.warn(`[launchWebApp] Setting up test database: ${dbPath}`);
+  // Determine electron main file path
+  const projectRoot = process.cwd();
+  const compiledMainPath = path.join(projectRoot, "dist-electron", "main.js");
+  const testMainPath = path.join(projectRoot, "electron", "main.test.ts");
+  const sourceMainPath = path.join(projectRoot, "electron", "main.ts");
 
-  // Set test environment variables
-  const encryptionKey =
-    process.env.ENCRYPTION_KEY_BASE64 ??
-    crypto.randomBytes(32).toString("base64");
-  process.env.ENCRYPTION_KEY_BASE64 = encryptionKey;
-  process.env.JUSTICE_DB_PATH = dbPath;
-  process.env.NODE_ENV = "test";
+  // Use test version in test mode (check if test env vars are set)
+  const isTestMode =
+    process.env.JUSTICE_DB_PATH?.includes("test-") ||
+    process.env.NODE_ENV === "test";
+  const mainPath =
+    isTestMode && fs.existsSync(testMainPath)
+      ? testMainPath
+      : fs.existsSync(compiledMainPath)
+        ? compiledMainPath
+        : sourceMainPath;
 
-  console.warn(`[launchWebApp] Test database ready: ${dbPath}`);
+  console.warn(`NODE_ENV: ${process.env.NODE_ENV}`);
+  console.warn(`testMainPath exists: ${fs.existsSync(testMainPath)}`);
+  console.warn(`compiledMainPath exists: ${fs.existsSync(compiledMainPath)}`);
+  console.warn(`Launching Electron from: ${mainPath}`);
+  console.warn(`Using test database: ${dbPath}`);
 
-  // Note: Browser will be launched by Playwright's test runner
-  // We just need to return the setup info
-  return { browser: {} as Browser, page: {} as Page, dbPath };
+  try {
+    // Launch Electron with Electron 38+ compatibility
+    // Playwright needs to add --user-data-dir for Electron 38+ due to Chromium security changes
+    const userDataDir = path.join(
+      process.cwd(),
+      "test-data",
+      `electron-user-data-${Date.now()}`
+    );
+    fs.mkdirSync(userDataDir, { recursive: true });
+
+    const electronBinary = path.join(
+      projectRoot,
+      "node_modules",
+      ".bin",
+      process.platform === "win32" ? "electron.cmd" : "electron"
+    );
+
+    if (!fs.existsSync(electronBinary)) {
+      throw new Error(
+        `Electron binary not found at ${electronBinary}. Did you run pnpm install?`
+      );
+    }
+
+    const launchArgs = [mainPath, `--user-data-dir=${userDataDir}`];
+
+    const encryptionKey =
+      process.env.ENCRYPTION_KEY_BASE64 ??
+      crypto.randomBytes(32).toString("base64");
+    process.env.ENCRYPTION_KEY_BASE64 = encryptionKey;
+
+    const app = await electron.launch({
+      executablePath: electronBinary,
+      args: launchArgs,
+      env: {
+        ...process.env,
+        NODE_ENV: "test",
+        JUSTICE_DB_PATH: dbPath,
+        ENCRYPTION_KEY_BASE64: encryptionKey,
+        NODE_OPTIONS: "--import=tsx",
+        // Disable dev server in test mode
+        VITE_DEV_SERVER_URL: "",
+      },
+      timeout,
+    });
+
+    const childProcess = app.process();
+    childProcess?.stdout?.on("data", (chunk: Buffer) => {
+      console.warn(`[Main stdout] ${chunk.toString()}`.trim());
+    });
+    childProcess?.stderr?.on("data", (chunk: Buffer) => {
+      console.error(`[Main stderr] ${chunk.toString()}`.trim());
+    });
+
+    // Wait for first window
+    const window = await app.firstWindow({
+      timeout,
+    });
+
+    // ✅ FIX #1: Capture renderer process console output for debugging
+    window.on("console", (msg: any) => {
+      const type = msg.type();
+      const text = msg.text();
+      console.warn(`[Renderer ${type}] ${text}`);
+    });
+
+    // Wait for app to be fully loaded
+    // We'll wait for the main content area to be visible
+    await window.waitForLoadState("domcontentloaded", { timeout });
+    await window.waitForSelector("body", { timeout });
+
+    // Give React time to hydrate
+    await window.waitForTimeout(2000);
+
+    console.warn("Electron app launched successfully");
+
+    return { window, dbPath };
+  } catch (error) {
+    console.error("Failed to launch Electron app:", error);
+    // Cleanup database on failure
+    await cleanupTestDatabase(dbPath);
+    throw error;
+  }
 }
 
 /**
  * Close web app and cleanup test database
  */
 export async function closeWebApp(
-  testApp: WebTestApp | undefined
+  testApp: WebTestApp | ElectronTestApp | undefined
 ): Promise<void> {
   if (!testApp) {
     return;

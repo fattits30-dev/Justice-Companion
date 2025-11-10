@@ -1,0 +1,67 @@
+GLOBAL TECH INNOVATIONS PLC
+MEETING NOTES - CONFIDENTIAL
+
+Meeting: Termination Discussion - Test User
+Date: 15 October 2024
+Time: 10:00 AM - 11:30 AM
+Location: Conference Room B, Birmingham Office
+Attendees:
+- Test User (Lead Developer)
+- Sarah Johnson (Engineering Manager)
+- Dr. Amanda Chen (Chief Technology Officer)
+- Michael Roberts (HR Business Partner)
+
+AGENDA:
+1. Review of Performance Improvement Plan progress
+2. Discussion of termination decision
+3. Termination package and next steps
+
+MEETING NOTES:
+
+1. PERFORMANCE IMPROVEMENT PLAN REVIEW (10:00-10:30)
+- PIP commenced: 1 July 2024 (originally 8 weeks, extended to 15 October 2024)
+- Mobile application project: 75% complete, significant technical debt identified
+- Code quality: Improved but still below team standards (78% positive peer reviews vs 85% target)
+- Knowledge sharing: One session completed, positive feedback from team
+- Cloud certification: In progress, expected completion November 2024
+
+Test User expressed frustration with the changing project requirements and resource constraints that impacted delivery timelines.
+
+2. TERMINATION DECISION DISCUSSION (10:30-11:00)
+Dr. Chen explained the company's strategic direction towards cloud-native and AI technologies. Despite Test User's valuable experience with legacy systems, the role requires skills in modern cloud technologies that Test User has not yet demonstrated.
+
+Key points discussed:
+- Company's transformation to cloud-first architecture
+- Skills gap analysis showing limited adoption of required technologies
+- Competitive market requiring faster delivery cycles
+- No suitable alternative positions available
+
+Test User raised concerns about the timing, noting the PIP extension and ongoing certification. Dr. Chen acknowledged these points but stated that the decision was based on the overall business needs and strategic direction.
+
+3. TERMINATION PACKAGE AND NEXT STEPS (11:00-11:30)
+Agreed termination package:
+- Notice period: 1 month (salary in lieu of notice: £8,333.33)
+- Holiday pay: 15 days accrued (£2,884.62)
+- Ex-gratia payment: £5,000 (discretionary)
+- Total package: £16,217.95
+
+Next steps:
+- Formal termination letter to be issued today
+- Garden leave effective immediately (20 October 2024)
+- Return of company property by 31 October 2024
+- Final payroll and P45 by 15 November 2024
+- Appeal rights: 5 working days to appeal to HR Director
+
+Test User requested time to consider appeal options and stated they would respond within the appeal window.
+
+ACTION ITEMS:
+- HR to prepare formal termination letter (Due: Today)
+- IT to revoke system access except email (Due: Today)
+- Test User to return company property (Due: 31 October 2024)
+- Schedule appeal meeting if requested (Due: Within 5 working days)
+
+Meeting concluded at 11:30 AM.
+
+CONFIDENTIAL - For HR Records Only
+Document prepared by: Michael Roberts
+Date prepared: 15 October 2024

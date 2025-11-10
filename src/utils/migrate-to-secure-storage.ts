@@ -7,16 +7,15 @@
  * @module migrate-to-secure-storage
  */
 
-import { secureStorage } from '@/services/SecureStorageService';
-import { logger } from '@/utils/logger';
+import { secureStorage } from "@/services/SecureStorageService";
 
 /**
  * Storage keys that need migration
  */
 const MIGRATION_KEYS = {
-  API_KEY: 'openai_api_key',
-  MODEL: 'openai_model',
-  ORGANIZATION: 'openai_organization',
+  API_KEY: "openai_api_key",
+  MODEL: "openai_model",
+  ORGANIZATION: "openai_organization",
 } as const;
 
 /**
@@ -43,7 +42,9 @@ interface MigrationSummary {
  * Check if we're running in a browser environment
  */
 function isBrowserEnvironment(): boolean {
-  return typeof window !== 'undefined' && typeof window.localStorage !== 'undefined';
+  return (
+    typeof window !== "undefined" && typeof window.localStorage !== "undefined"
+  );
 }
 
 /**
@@ -56,7 +57,11 @@ function getFromLocalStorage(key: string): string | null {
     }
     return localStorage.getItem(key);
   } catch (error) {
-    logger.error('MigrateToSecureStorage', `Failed to read from localStorage for key "${key}"`, { error });
+    console.error(
+      "MigrateToSecureStorage",
+      `Failed to read from localStorage for key "${key}"`,
+      error,
+    );
     return null;
   }
 }
@@ -72,7 +77,11 @@ function removeFromLocalStorage(key: string): boolean {
     localStorage.removeItem(key);
     return true;
   } catch (error) {
-    logger.error('MigrateToSecureStorage', `Failed to remove from localStorage for key "${key}"`, { error });
+    console.error(
+      "MigrateToSecureStorage",
+      `Failed to remove from localStorage for key "${key}"`,
+      error,
+    );
     return false;
   }
 }
@@ -107,14 +116,18 @@ async function migrateKey(key: string): Promise<MigrationResult> {
 
     // Migrate to secure storage
     await secureStorage.setApiKey(key, value);
-    
+
     // Remove from localStorage after successful migration
     removeFromLocalStorage(key);
-    
+
     result.migrated = true;
     return result;
   } catch (error) {
-    logger.error('MigrateToSecureStorage', `Failed to migrate key "${key}"`, { error });
+    console.error(
+      "MigrateToSecureStorage",
+      `Failed to migrate key "${key}"`,
+      error,
+    );
     result.error = error instanceof Error ? error.message : String(error);
     return result;
   }
@@ -124,6 +137,16 @@ async function migrateKey(key: string): Promise<MigrationResult> {
  * Migrate all keys from localStorage to secure storage
  */
 export async function migrateAllKeys(): Promise<MigrationSummary> {
+  // Initialize secure storage
+  await secureStorage.init();
+
+  // Warn if encryption is not available
+  if (!secureStorage.isEncryptionAvailable()) {
+    console.warn(
+      "OS-native encryption not available. Keys will be stored without encryption.",
+    );
+  }
+
   const results: MigrationResult[] = [];
   let migratedKeys = 0;
   let failedKeys = 0;
@@ -156,16 +179,22 @@ export async function migrateAllKeys(): Promise<MigrationSummary> {
 export const migrateToSecureStorage = migrateAllKeys;
 
 /**
- * Check if migration is needed (if any keys exist in localStorage)
+ * Check if migration is needed (if any keys exist in localStorage but not in secure storage)
  */
-export function isMigrationNeeded(): boolean {
+export async function isMigrationNeeded(): Promise<boolean> {
   if (!isBrowserEnvironment()) {
     return false;
   }
 
   for (const key of Object.values(MIGRATION_KEYS)) {
-    if (getFromLocalStorage(key)) {
-      return true;
+    const localValue = getFromLocalStorage(key);
+    if (localValue) {
+      // Check if it already exists in secure storage
+      const secureValue = await secureStorage.getApiKey(key);
+      if (!secureValue) {
+        // Exists in localStorage but not in secure storage - migration needed
+        return true;
+      }
     }
   }
 

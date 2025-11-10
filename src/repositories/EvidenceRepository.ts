@@ -255,7 +255,7 @@ export class EvidenceRepository {
   findByCaseIdPaginated(
     caseId: number,
     limit: number = 50,
-    cursor: string | null = null
+    cursor: string | null = null,
   ): PaginatedResult<Evidence> {
     const db = getDb();
 
@@ -291,7 +291,7 @@ export class EvidenceRepository {
     const nextCursor =
       hasMore && items.length > 0
         ? encodeSimpleCursor(items[items.length - 1].id)
-        : undefined;
+        : null;
 
     // Use batch decryption if enabled
     const useBatchEncryption = process.env.ENABLE_BATCH_ENCRYPTION !== "false";
@@ -327,7 +327,7 @@ export class EvidenceRepository {
 
       return {
         items: decryptedItems as Evidence[],
-        nextCursor,
+        nextCursor: nextCursor ?? undefined,
         prevCursor: undefined,
         hasMore,
         pageSize: limit,
@@ -346,7 +346,7 @@ export class EvidenceRepository {
 
     return {
       items: decryptedItems as Evidence[],
-      nextCursor,
+      nextCursor: nextCursor ?? undefined,
       prevCursor: undefined,
       hasMore,
       pageSize: limit,
@@ -446,7 +446,7 @@ export class EvidenceRepository {
   findAllPaginated(
     evidenceType?: string,
     limit: number = 50,
-    cursor: string | null = null
+    cursor: string | null = null,
   ): PaginatedResult<Evidence> {
     const db = getDb();
 
@@ -498,7 +498,7 @@ export class EvidenceRepository {
     const nextCursor =
       hasMore && items.length > 0
         ? encodeSimpleCursor(items[items.length - 1].id)
-        : undefined;
+        : null;
 
     // Use batch decryption if enabled
     const useBatchEncryption = process.env.ENABLE_BATCH_ENCRYPTION !== "false";
@@ -534,7 +534,7 @@ export class EvidenceRepository {
 
       return {
         items: decryptedItems as Evidence[],
-        nextCursor,
+        nextCursor: nextCursor ?? undefined,
         prevCursor: undefined,
         hasMore,
         pageSize: limit,
@@ -553,7 +553,7 @@ export class EvidenceRepository {
 
     return {
       items: decryptedItems as Evidence[],
-      nextCursor,
+      nextCursor: nextCursor ?? undefined,
       prevCursor: undefined,
       hasMore,
       pageSize: limit,
@@ -739,7 +739,7 @@ export class EvidenceRepository {
    * @returns Decrypted plaintext or null
    */
   private decryptContent(
-    storedValue: string | null | undefined
+    storedValue: string | null | undefined,
   ): string | null {
     if (!storedValue) {
       return null;
@@ -770,7 +770,7 @@ export class EvidenceRepository {
   private requireEncryptionService(): EncryptionService {
     if (!this.encryptionService) {
       throw new Error(
-        "EncryptionService not configured for EvidenceRepository"
+        "EncryptionService not configured for EvidenceRepository",
       );
     }
     return this.encryptionService;
@@ -782,7 +782,7 @@ export class EvidenceRepository {
   async searchEvidence(
     userId: number,
     query: string,
-    filters?: any
+    filters?: any,
   ): Promise<Evidence[]> {
     const db = getDb();
     const conditions: string[] = [];
@@ -814,7 +814,7 @@ export class EvidenceRepository {
       conditions.push("created_at >= ? AND created_at <= ?");
       params.push(
         filters.dateRange.from.toISOString(),
-        filters.dateRange.to.toISOString()
+        filters.dateRange.to.toISOString(),
       );
     }
 

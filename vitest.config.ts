@@ -24,8 +24,15 @@ export default defineConfig({
       "**/tests/e2e/**",
       "tests/**/*.e2e.test.*",
       "tests/**/*.e2e.spec.*",
+      "src/**/*.e2e.test.*",
+      "src/**/*.e2e.spec.*",
       "e2e/**/*.test.*",
       "e2e/**/*.spec.*",
+      // Integration tests that use native better-sqlite3 module
+      "src/services/AuthorizationService.test.ts",
+      "src/services/TagService.test.ts",
+      "src/shared/infrastructure/di/container.test.ts",
+      "src/shared/infrastructure/events/EventBus.test.ts",
     ],
     coverage: {
       provider: "v8",

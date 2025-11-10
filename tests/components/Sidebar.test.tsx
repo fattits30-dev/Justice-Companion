@@ -13,13 +13,29 @@
  */
 
 import { describe, test, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent } from "@/test-utils/test-utils.tsx";
 import "react-router-dom";
 import { Sidebar } from "../../src/components/Sidebar";
 
 describe("Sidebar", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+
+    // Mock session for AuthProvider
+    localStorage.setItem("sessionId", "test-session-123");
+
+    // Ensure window.justiceAPI.getSession is mocked
+    if (window.justiceAPI && window.justiceAPI.getSession) {
+      (window.justiceAPI.getSession as any).mockResolvedValue({
+        success: true,
+        data: {
+          id: 1,
+          sessionId: "test-session-123",
+          user: { id: "1", username: "testuser", email: "test@example.com" },
+          expiresAt: new Date(Date.now() + 86400000).toISOString(),
+        },
+      });
+    }
   });
 
   /**

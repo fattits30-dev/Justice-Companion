@@ -1,253 +1,225 @@
 /**
- * Centralized Logger Utility
+ * Structured Logging System for Justice Companion
  *
- * Provides consistent logging patterns across the entire application.
- * Integrates with ErrorLogger for persistent storage.
- * Can be used standalone or via DebugContext.
- *
- * Features:
- * - Structured logging with timestamps
- * - Component/module tagging
- * - Log level filtering
- * - Performance timing
- * - Error aggregation
- *
- * Usage:
- * import { logger } from '../utils/logger.ts';
- * logger.info('MyComponent', 'Something happened', { data });
+ * SECURITY: Prevents sensitive data leakage in production logs
+ * PERFORMANCE: Efficient logging with proper formatting
+ * COMPLIANCE: GDPR-compliant, no PII in logs
  */
 
-export type LogLevel = 'error' | 'warn' | 'info' | 'debug';
+import winston from "winston";
+import path from "path";
+import { app } from "electron";
 
-interface LogEntry {
-  timestamp: string;
-  level: LogLevel;
-  component: string;
-  message: string;
-  data?: unknown;
+// Log levels
+export enum LogLevel {
+  ERROR = "error",
+  WARN = "warn",
+  INFO = "info",
+  DEBUG = "debug",
 }
 
-class Logger {
-  private isProduction: boolean;
-  private logBuffer: LogEntry[] = [];
-  private maxBufferSize: number = 1000;
-
-  constructor() {
-    // Environment detection that works in both ESM (Vite) and CommonJS (Node.js)
-    // - Vite/Browser (ESM): import.meta.env available
-    // - Node.js/Electron main (CommonJS): process.env available
-    // Use process.env as primary source (works everywhere), import.meta as fallback
-    const nodeEnv = typeof process !== 'undefined' ? process.env.NODE_ENV : undefined;
-    this.isProduction = nodeEnv === 'production';
-
-    // Logger initialized - console allowed for initialization diagnostics
-
-    console.warn('[LOGGER INIT]', {
-      'process.env.NODE_ENV': nodeEnv,
-      isProduction: this.isProduction,
-      context: typeof process !== 'undefined' ? 'Node.js/Electron' : 'Browser',
-    });
-
-  }
-
-  /**
-   * Format log message with timestamp and component
-   */
-  private formatMessage(
-    level: LogLevel,
-    component: string,
-    message: string,
-    data?: unknown,
-  ): string {
-    const timestamp = new Date().toISOString();
-    const dataStr = data ? ` ${JSON.stringify(data, null, 2)}` : '';
-    return `[${timestamp}][${level.toUpperCase()}][${component}] ${message}${dataStr}`;
-  }
-
-  /**
-   * Add entry to log buffer for analysis
-   */
-  private bufferLog(entry: LogEntry): void {
-    this.logBuffer.push(entry);
-
-    // Keep buffer size manageable
-    if (this.logBuffer.length > this.maxBufferSize) {
-      this.logBuffer.shift();
-    }
-  }
-
-  /**
-   * Log error message
-   */
-  error(component: string, message: string, data?: unknown): void {
-    const formattedMessage = this.formatMessage('error', component, message, data);
-     
-    console.error(formattedMessage);
-
-    // Buffer for analysis
-    const entry: LogEntry = {
-      timestamp: new Date().toISOString(),
-      level: 'error',
-      component,
-      message,
-      data,
-    };
-    this.bufferLog(entry);
-  }
-
-  /**
-   * Log warning message
-   */
-  warn(component: string, message: string, data?: unknown): void {
-    const formattedMessage = this.formatMessage('warn', component, message, data);
-     
-    console.warn(formattedMessage);
-
-    // Buffer for analysis
-    const entry: LogEntry = {
-      timestamp: new Date().toISOString(),
-      level: 'warn',
-      component,
-      message,
-      data,
-    };
-    this.bufferLog(entry);
-  }
-
-  /**
-   * Log info message
-   */
-  info(component: string, message: string, data?: unknown): void {
-    // Skip in production
-    if (this.isProduction) {
-      return;
-    }
-
-    const formattedMessage = this.formatMessage('info', component, message, data);
-    /* eslint-disable-next-line no-console */
-    console.info(formattedMessage);
-
-    // Buffer for analysis
-    const entry: LogEntry = {
-      timestamp: new Date().toISOString(),
-      level: 'info',
-      component,
-      message,
-      data,
-    };
-    this.bufferLog(entry);
-  }
-
-  /**
-   * Log debug message
-   */
-  debug(component: string, message: string, data?: unknown): void {
-    // Skip in production
-    if (this.isProduction) {
-      return;
-    }
-
-    const formattedMessage = this.formatMessage('debug', component, message, data);
-    /* eslint-disable-next-line no-console */
-    console.debug(formattedMessage);
-
-    // Buffer for analysis
-    const entry: LogEntry = {
-      timestamp: new Date().toISOString(),
-      level: 'debug',
-      component,
-      message,
-      data,
-    };
-    this.bufferLog(entry);
-  }
-
-  /**
-   * Performance timing utilities
-   */
-  private timers = new Map<string, number>();
-
-  startTimer(label: string): void {
-    if (this.isProduction) {
-      return;
-    }
-    this.timers.set(label, performance.now());
-    this.debug('Performance', `Timer started: ${label}`);
-  }
-
-  endTimer(label: string): void {
-    if (this.isProduction) {
-      return;
-    }
-
-    const startTime = this.timers.get(label);
-    if (startTime === undefined) {
-      this.warn('Performance', `Timer not found: ${label}`);
-      return;
-    }
-
-    const elapsed = performance.now() - startTime;
-    this.timers.delete(label);
-    this.debug('Performance', `Timer ended: ${label}`, {
-      duration: `${elapsed.toFixed(2)}ms`,
-    });
-  }
-
-  /**
-   * Get recent log entries for debugging
-   */
-  getRecentLogs(count: number = 50): LogEntry[] {
-    return this.logBuffer.slice(-count);
-  }
-
-  /**
-   * Get logs filtered by component
-   */
-  getLogsByComponent(component: string): LogEntry[] {
-    return this.logBuffer.filter((entry) => entry.component === component);
-  }
-
-  /**
-   * Get logs filtered by level
-   */
-  getLogsByLevel(level: LogLevel): LogEntry[] {
-    return this.logBuffer.filter((entry) => entry.level === level);
-  }
-
-  /**
-   * Clear log buffer
-   */
-  clearBuffer(): void {
-    this.logBuffer = [];
-    this.debug('Logger', 'Log buffer cleared');
-  }
-
-  /**
-   * Export logs as JSON for analysis
-   */
-  exportLogs(): string {
-    return JSON.stringify(this.logBuffer, null, 2);
-  }
+// Log context for structured logging
+export interface LogContext {
+  service?: string;
+  operation?: string;
+  userId?: string;
+  sessionId?: string;
+  requestId?: string;
+  duration?: number;
+  error?: Error;
+  metadata?: Record<string, unknown>;
+  legacy?: boolean;
+  args?: unknown[];
+  security?: boolean;
+  audit?: boolean;
+  performance?: boolean;
 }
 
-// Singleton instance
-export const logger = new Logger();
-
-/**
- * Expose logger to window for DevTools access
- * Usage in browser console:
- * - window.logger.getRecentLogs()
- * - window.logger.getLogsByComponent('StreamingIndicator')
- * - window.logger.exportLogs()
- */
-declare global {
-  interface Window {
-    logger: Logger;
+// Sanitize sensitive data from logs
+function sanitizeValue(value: unknown): unknown {
+  if (typeof value === "string") {
+    // Remove potential PII patterns
+    return value
+      .replace(/\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b/g, "[REDACTED:CARD]") // Credit cards
+      .replace(
+        /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g,
+        "[REDACTED:EMAIL]",
+      ) // Emails
+      .replace(/\b\d{3}[\s-]?\d{3}[\s-]?\d{4}\b/g, "[REDACTED:PHONE]") // Phone numbers
+      .replace(/\b\d{3}[\s-]?\d{2}[\s-]?\d{4}\b/g, "[REDACTED:SSN]"); // SSN-like
   }
+  return value;
 }
 
-// Expose logger globally in browser context (renderer process only)
-// Use globalThis which is available in both Node.js and browsers
-if (typeof globalThis !== 'undefined' && 'window' in globalThis) {
-  (globalThis as any).window.logger = logger;
+// Sanitize entire objects
+function sanitizeObject(obj: Record<string, unknown>): Record<string, unknown> {
+  const sanitized: Record<string, unknown> = {};
+
+  for (const [key, value] of Object.entries(obj)) {
+    // Skip known sensitive fields
+    if (
+      ["password", "token", "secret", "key", "auth", "session"].includes(
+        key.toLowerCase(),
+      )
+    ) {
+      sanitized[key] = "[REDACTED]";
+    } else {
+      sanitized[key] = sanitizeValue(value);
+    }
+  }
+
+  return sanitized;
 }
+
+// Custom format for security and readability
+const secureFormat = winston.format.combine(
+  winston.format.timestamp(),
+  winston.format.errors({ stack: true }),
+  winston.format.json({
+    replacer: (_key: string, value: unknown) => {
+      // Additional sanitization for JSON output
+      if (typeof value === "object" && value !== null) {
+        return sanitizeObject(value as Record<string, unknown>);
+      }
+      return sanitizeValue(value);
+    },
+  }),
+);
+
+// Create logger instance
+let loggerInstance: winston.Logger;
+
+function createLogger(): winston.Logger {
+  const isDevelopment = process.env.NODE_ENV === "development";
+  const isTest = process.env.NODE_ENV === "test";
+
+  const transports: winston.transport[] = [];
+
+  // File transport for all environments
+  if (!isTest) {
+    const logDir = app?.getPath("logs") || path.join(process.cwd(), "logs");
+
+    transports.push(
+      new winston.transports.File({
+        filename: path.join(logDir, "error.log"),
+        level: "error",
+        maxsize: 5242880, // 5MB
+        maxFiles: 5,
+        format: secureFormat,
+      }),
+
+      new winston.transports.File({
+        filename: path.join(logDir, "combined.log"),
+        maxsize: 5242880, // 5MB
+        maxFiles: 5,
+        format: secureFormat,
+      }),
+    );
+  }
+
+  // Console transport for development
+  if (isDevelopment) {
+    transports.push(
+      new winston.transports.Console({
+        level: process.env.LOG_LEVEL || "info",
+        format: winston.format.combine(
+          winston.format.colorize(),
+          winston.format.simple(),
+          winston.format.printf(
+            ({ level, message, service, operation, ...meta }: any) => {
+              const prefix = service ? `[${service}]` : "";
+              const op = operation ? ` ${operation}:` : "";
+              const metaStr =
+                Object.keys(meta).length > 0 ? ` ${JSON.stringify(meta)}` : "";
+              return `${level}${prefix}${op} ${message}${metaStr}`;
+            },
+          ),
+        ),
+      }),
+    );
+  }
+
+  return winston.createLogger({
+    level: process.env.LOG_LEVEL || (isDevelopment ? "debug" : "info"),
+    transports,
+    exitOnError: false,
+  });
+}
+
+// Get or create logger instance
+export function getLogger(): winston.Logger {
+  if (!loggerInstance) {
+    loggerInstance = createLogger();
+  }
+  return loggerInstance;
+}
+
+// Convenience logging functions
+export function logError(message: string, context?: LogContext): void {
+  const logger = getLogger();
+  logger.error(message, context);
+}
+
+export function logWarn(message: string, context?: LogContext): void {
+  const logger = getLogger();
+  logger.warn(message, context);
+}
+
+export function logInfo(message: string, context?: LogContext): void {
+  const logger = getLogger();
+  logger.info(message, context);
+}
+
+export function logDebug(message: string, context?: LogContext): void {
+  const logger = getLogger();
+  logger.debug(message, context);
+}
+
+// Performance logging
+export function logPerformance(
+  operation: string,
+  duration: number,
+  context?: Omit<LogContext, "operation" | "duration">,
+): void {
+  const level = duration > 5000 ? "warn" : duration > 1000 ? "info" : "debug";
+  const logger = getLogger();
+
+  logger.log(level, `Performance: ${operation} completed in ${duration}ms`, {
+    ...context,
+    operation,
+    duration,
+    performance: true,
+  });
+}
+
+// Security event logging
+export function logSecurity(event: string, context?: LogContext): void {
+  const logger = getLogger();
+  logger.warn(`SECURITY: ${event}`, { ...context, security: true });
+}
+
+// Audit logging (for compliance)
+export function logAudit(action: string, context?: LogContext): void {
+  const logger = getLogger();
+  logger.info(`AUDIT: ${action}`, { ...context, audit: true });
+}
+
+// Legacy console.log replacement (for gradual migration)
+export function legacyLog(message: string, ...args: unknown[]): void {
+  if (process.env.NODE_ENV === "development") {
+    // In development, still show console for debugging
+    console.log(`[LEGACY] ${message}`, ...args);
+  }
+
+  // Always log to structured logger
+  logInfo(`LEGACY: ${message}`, {
+    legacy: true,
+    args: args.map(sanitizeValue),
+  });
+}
+
+// Export default logger instance
+export default getLogger();
+
+// Named export for backward compatibility
+export const logger = getLogger();

@@ -146,7 +146,7 @@ export interface JusticeAPI {
   login(
     username: string,
     password: string,
-    rememberMe?: boolean
+    rememberMe?: boolean,
   ): Promise<IPCResponse<{ user: User; session: Session }>>;
 
   /**
@@ -156,7 +156,7 @@ export interface JusticeAPI {
   register(
     username: string,
     email: string,
-    password: string
+    password: string,
   ): Promise<IPCResponse<User>>;
 
   /**
@@ -178,7 +178,7 @@ export interface JusticeAPI {
    */
   grantConsent(
     type: ConsentType,
-    granted: boolean
+    granted: boolean,
   ): Promise<IPCResponse<{ granted: boolean }>>;
 
   // ===== DASHBOARD =====
@@ -212,7 +212,7 @@ export interface JusticeAPI {
   createCase(
     data: CreateCaseInput,
     sessionId: string,
-    aiMetadata?: any
+    aiMetadata?: any,
   ): Promise<IPCResponse<Case>>;
 
   /**
@@ -224,7 +224,7 @@ export interface JusticeAPI {
   updateCase(
     id: string,
     data: UpdateCaseInput,
-    sessionId: string
+    sessionId: string,
   ): Promise<IPCResponse<Case>>;
 
   /**
@@ -240,7 +240,7 @@ export interface JusticeAPI {
    */
   getCaseFacts(
     caseId: number,
-    sessionId: string
+    sessionId: string,
   ): Promise<IPCResponse<CaseFact[]>>;
 
   /**
@@ -250,7 +250,7 @@ export interface JusticeAPI {
    */
   createCaseFact(
     data: CreateCaseFactInput,
-    sessionId: string
+    sessionId: string,
   ): Promise<IPCResponse<CaseFact>>;
 
   // ===== EVIDENCE/DOCUMENTS =====
@@ -263,7 +263,7 @@ export interface JusticeAPI {
   uploadFile(
     caseId: string,
     file: File,
-    sessionId: string
+    sessionId: string,
   ): Promise<IPCResponse<Evidence>>;
 
   /**
@@ -273,7 +273,7 @@ export interface JusticeAPI {
    */
   getAllEvidence(
     caseId: string,
-    sessionId: string
+    sessionId: string,
   ): Promise<IPCResponse<Evidence[]>>;
 
   /**
@@ -283,7 +283,7 @@ export interface JusticeAPI {
    */
   getEvidenceByCaseId(
     caseId: string,
-    sessionId: string
+    sessionId: string,
   ): Promise<IPCResponse<Evidence[]>>;
 
   /**
@@ -301,7 +301,7 @@ export interface JusticeAPI {
    */
   getDeadlines(
     sessionId: string,
-    caseId?: number
+    caseId?: number,
   ): Promise<IPCResponse<Deadline[]>>;
 
   /**
@@ -311,7 +311,7 @@ export interface JusticeAPI {
    */
   createDeadline(
     data: CreateDeadlineInput,
-    sessionId: string
+    sessionId: string,
   ): Promise<IPCResponse<Deadline>>;
 
   /**
@@ -323,7 +323,7 @@ export interface JusticeAPI {
   updateDeadline(
     id: number,
     data: UpdateDeadlineInput,
-    sessionId: string
+    sessionId: string,
   ): Promise<IPCResponse<Deadline>>;
 
   /**
@@ -333,7 +333,7 @@ export interface JusticeAPI {
    */
   completeDeadline(
     id: number,
-    sessionId: string
+    sessionId: string,
   ): Promise<IPCResponse<Deadline>>;
 
   /**
@@ -365,7 +365,7 @@ export interface JusticeAPI {
     onThinking: (thinking: string) => void,
     onComplete: () => void,
     onError: (error: string) => void,
-    onConversationId?: (conversationId: number) => void
+    onConversationId?: (conversationId: number) => void,
   ): Promise<void>;
 
   // ===== AI ANALYSIS =====
@@ -395,12 +395,14 @@ export interface JusticeAPI {
    * @param filePath - Path to the document file
    * @param sessionId - Current session ID
    * @param userQuestion - Optional question about the document
+   * @param userProfile - Optional user profile data for personalization
    * @returns AI analysis with potential case data
    */
   analyzeDocument(
     filePath: string,
     sessionId: string,
-    userQuestion?: string
+    userQuestion?: string,
+    userProfile?: { name: string; email: string | null },
   ): Promise<IPCResponse<{ analysis: string; suggestedCaseData?: any }>>;
 
   /**
@@ -409,7 +411,7 @@ export interface JusticeAPI {
    * @returns Dialog result with selected file paths
    */
   showOpenDialog(
-    options: any
+    options: any,
   ): Promise<{ canceled: boolean; filePaths: string[] }>;
 
   /**
@@ -418,7 +420,7 @@ export interface JusticeAPI {
    * @returns Dialog result with selected file path
    */
   showSaveDialog(
-    options: any
+    options: any,
   ): Promise<{ canceled: boolean; filePath?: string }>;
 
   // ===== SECURE STORAGE (Flat Methods) =====
@@ -501,7 +503,7 @@ export interface JusticeAPI {
    */
   restoreBackup(
     backupFilename: string,
-    sessionId: string
+    sessionId: string,
   ): Promise<
     IPCResponse<{
       restored: boolean;
@@ -518,7 +520,7 @@ export interface JusticeAPI {
    */
   deleteBackup(
     backupFilename: string,
-    sessionId: string
+    sessionId: string,
   ): Promise<IPCResponse<{ deleted: boolean; message: string }>>;
 
   /**
@@ -550,7 +552,7 @@ export interface JusticeAPI {
       backup_time: string;
       keep_count: number;
     },
-    sessionId: string
+    sessionId: string,
   ): Promise<
     IPCResponse<{
       enabled: boolean;
@@ -585,7 +587,7 @@ export interface JusticeAPI {
     update(
       tagId: number,
       input: UpdateTagInput,
-      sessionId: string
+      sessionId: string,
     ): Promise<IPCResponse<Tag>>;
 
     /**
@@ -594,7 +596,7 @@ export interface JusticeAPI {
      */
     delete(
       tagId: number,
-      sessionId: string
+      sessionId: string,
     ): Promise<IPCResponse<{ deleted: boolean }>>;
 
     /**
@@ -605,7 +607,7 @@ export interface JusticeAPI {
     tagEvidence(
       evidenceId: number,
       tagId: number,
-      sessionId: string
+      sessionId: string,
     ): Promise<IPCResponse<{ tagged: boolean }>>;
 
     /**
@@ -616,7 +618,7 @@ export interface JusticeAPI {
     untagEvidence(
       evidenceId: number,
       tagId: number,
-      sessionId: string
+      sessionId: string,
     ): Promise<IPCResponse<{ untagged: boolean }>>;
 
     /**
@@ -626,7 +628,7 @@ export interface JusticeAPI {
      */
     getForEvidence(
       evidenceId: number,
-      sessionId: string
+      sessionId: string,
     ): Promise<IPCResponse<Tag[]>>;
 
     /**
@@ -636,7 +638,7 @@ export interface JusticeAPI {
      */
     searchByTags(
       tagIds: number[],
-      sessionId: string
+      sessionId: string,
     ): Promise<IPCResponse<number[]>>;
 
     /**
@@ -656,7 +658,7 @@ export interface JusticeAPI {
      */
     list(
       sessionId: string,
-      filters?: NotificationFilters
+      filters?: NotificationFilters,
     ): Promise<IPCResponse<Notification[]>>;
 
     /**
@@ -673,7 +675,7 @@ export interface JusticeAPI {
      */
     markRead(
       sessionId: string,
-      notificationId: number
+      notificationId: number,
     ): Promise<IPCResponse<null>>;
 
     /**
@@ -690,7 +692,7 @@ export interface JusticeAPI {
      */
     dismiss(
       sessionId: string,
-      notificationId: number
+      notificationId: number,
     ): Promise<IPCResponse<null>>;
 
     /**
@@ -699,7 +701,7 @@ export interface JusticeAPI {
      * @returns User's notification preferences
      */
     preferences(
-      sessionId: string
+      sessionId: string,
     ): Promise<IPCResponse<NotificationPreferences>>;
 
     /**
@@ -710,7 +712,7 @@ export interface JusticeAPI {
      */
     updatePreferences(
       sessionId: string,
-      preferences: UpdateNotificationPreferencesInput
+      preferences: UpdateNotificationPreferencesInput,
     ): Promise<IPCResponse<NotificationPreferences>>;
 
     /**
@@ -777,7 +779,7 @@ export interface JusticeAPI {
      */
     updateIndex(
       entityType: string,
-      entityId: number
+      entityId: number,
     ): Promise<IPCResponse<void>>;
   };
 
@@ -796,7 +798,7 @@ export interface JusticeAPI {
      * @returns Array of templates with stats
      */
     getAllWithStats(
-      sessionId: string
+      sessionId: string,
     ): Promise<IPCResponse<TemplateWithStats[]>>;
 
     /**
@@ -814,7 +816,7 @@ export interface JusticeAPI {
      */
     getByCategory(
       category: string,
-      sessionId: string
+      sessionId: string,
     ): Promise<IPCResponse<CaseTemplate[]>>;
 
     /**
@@ -832,7 +834,7 @@ export interface JusticeAPI {
      */
     getPopular(
       limit: number,
-      sessionId: string
+      sessionId: string,
     ): Promise<IPCResponse<TemplateWithStats[]>>;
 
     /**
@@ -843,7 +845,7 @@ export interface JusticeAPI {
      */
     create(
       input: CreateTemplateInput,
-      sessionId: string
+      sessionId: string,
     ): Promise<IPCResponse<CaseTemplate>>;
 
     /**
@@ -856,7 +858,7 @@ export interface JusticeAPI {
     update(
       templateId: number,
       input: UpdateTemplateInput,
-      sessionId: string
+      sessionId: string,
     ): Promise<IPCResponse<CaseTemplate>>;
 
     /**
@@ -866,7 +868,7 @@ export interface JusticeAPI {
      */
     delete(
       templateId: number,
-      sessionId: string
+      sessionId: string,
     ): Promise<IPCResponse<{ deleted: boolean }>>;
 
     /**
@@ -877,7 +879,7 @@ export interface JusticeAPI {
      */
     apply(
       templateId: number,
-      sessionId: string
+      sessionId: string,
     ): Promise<IPCResponse<TemplateApplicationResult>>;
 
     /**
@@ -895,7 +897,7 @@ export interface JusticeAPI {
      */
     getUsageHistory(
       templateId: number,
-      limit?: number
+      limit?: number,
     ): Promise<IPCResponse<TemplateUsage[]>>;
 
     /**
@@ -914,7 +916,7 @@ export interface JusticeAPI {
    */
   exportCaseToPDF(
     caseId: number,
-    sessionId: string
+    sessionId: string,
   ): Promise<IPCResponse<{ filePath: string }>>;
 
   /**
@@ -925,7 +927,7 @@ export interface JusticeAPI {
    */
   exportCaseToWord(
     caseId: number,
-    sessionId: string
+    sessionId: string,
   ): Promise<IPCResponse<{ filePath: string }>>;
 
   /**
@@ -936,7 +938,7 @@ export interface JusticeAPI {
    */
   exportEvidenceListToPDF(
     caseId: number,
-    sessionId: string
+    sessionId: string,
   ): Promise<IPCResponse<{ filePath: string }>>;
 
   /**
@@ -947,7 +949,7 @@ export interface JusticeAPI {
    */
   exportTimelineReportToPDF(
     caseId: number,
-    sessionId: string
+    sessionId: string,
   ): Promise<IPCResponse<{ filePath: string }>>;
 
   /**
@@ -958,7 +960,7 @@ export interface JusticeAPI {
    */
   exportCaseNotesToPDF(
     caseId: number,
-    sessionId: string
+    sessionId: string,
   ): Promise<IPCResponse<{ filePath: string }>>;
 
   /**
@@ -969,7 +971,7 @@ export interface JusticeAPI {
    */
   exportCaseNotesToWord(
     caseId: number,
-    sessionId: string
+    sessionId: string,
   ): Promise<IPCResponse<{ filePath: string }>>;
 
   /**
@@ -984,7 +986,7 @@ export interface JusticeAPI {
     exportType: string,
     caseId: number,
     options: any,
-    sessionId: string
+    sessionId: string,
   ): Promise<IPCResponse<{ filePath: string }>>;
 
   // ===== TEMPLATE OPERATIONS (Flat Methods) =====
@@ -1003,7 +1005,7 @@ export interface JusticeAPI {
    */
   createTemplate(
     templateData: CreateTemplateInput,
-    sessionId: string
+    sessionId: string,
   ): Promise<IPCResponse<CaseTemplate>>;
 
   /**
@@ -1016,7 +1018,7 @@ export interface JusticeAPI {
   updateTemplate(
     templateId: number,
     templateData: UpdateTemplateInput,
-    sessionId: string
+    sessionId: string,
   ): Promise<IPCResponse<CaseTemplate>>;
 
   /**
@@ -1027,7 +1029,7 @@ export interface JusticeAPI {
    */
   deleteTemplate(
     templateId: number,
-    sessionId: string
+    sessionId: string,
   ): Promise<IPCResponse<{ deleted: boolean }>>;
 
   /**
@@ -1046,7 +1048,7 @@ export interface JusticeAPI {
    */
   search(
     query: SearchQuery,
-    sessionId: string
+    sessionId: string,
   ): Promise<IPCResponse<SearchResponse>>;
 
   /**
@@ -1055,7 +1057,7 @@ export interface JusticeAPI {
    * @returns Rebuild result
    */
   rebuildSearchIndex(
-    sessionId: string
+    sessionId: string,
   ): Promise<IPCResponse<{ message: string }>>;
 }
 

@@ -125,7 +125,7 @@ export interface IAuthenticationService {
     password: string,
     rememberMe?: boolean,
     ipAddress?: string,
-    userAgent?: string
+    userAgent?: string,
   ): Promise<{ user: User; session: Session }>;
 
   /**
@@ -158,7 +158,7 @@ export interface IAuthenticationService {
   changePassword(
     userId: number,
     oldPassword: string,
-    newPassword: string
+    newPassword: string,
   ): Promise<void>;
 
   /**
@@ -217,7 +217,7 @@ export interface IEncryptionService {
    * @returns Array of EncryptedData objects (null for empty inputs)
    */
   batchEncrypt(
-    plaintexts: Array<string | null | undefined>
+    plaintexts: Array<string | null | undefined>,
   ): Array<EncryptedData | null>;
 
   /**
@@ -227,7 +227,7 @@ export interface IEncryptionService {
    * @throws Error if any decryption fails
    */
   batchDecrypt(
-    encryptedDataArray: Array<EncryptedData | null | undefined>
+    encryptedDataArray: Array<EncryptedData | null | undefined>,
   ): Array<string | null>;
 
   /**
@@ -238,7 +238,7 @@ export interface IEncryptionService {
    */
   rotateKey(
     oldEncryptedData: EncryptedData,
-    newService: IEncryptionService
+    newService: IEncryptionService,
   ): EncryptedData | null;
 
   // TODO: Add in Wave 3 - batch operations for table-level encryption
@@ -364,7 +364,7 @@ export interface IGdprService {
    */
   exportUserData(
     userId: number,
-    options?: GdprExportOptions
+    options?: GdprExportOptions,
   ): Promise<GdprExportResult>;
 
   /**
@@ -378,7 +378,7 @@ export interface IGdprService {
    */
   deleteUserData(
     userId: number,
-    options: GdprDeleteOptions
+    options: GdprDeleteOptions,
   ): Promise<GdprDeleteResult>;
 
   // TODO: Add in Wave 3
@@ -772,12 +772,11 @@ export interface ISecureStorageService {
 }
 
 /**
- * Interface for SessionPersistenceService
+ * Type alias for SessionPersistenceService
  * Persists sessions across app restarts (for Remember Me)
+ * Currently just an alias for ISessionPersistenceHandler, can be extended later if needed
  */
-export interface ISessionPersistenceService extends ISessionPersistenceHandler {
-  // Extends ISessionPersistenceHandler
-}
+export type ISessionPersistenceService = ISessionPersistenceHandler;
 
 /**
  * Interface for ProcessManager
@@ -864,7 +863,7 @@ export interface IEventBus {
    */
   subscribe(
     eventType: string,
-    handler: (event: DomainEvent) => void | Promise<void>
+    handler: (event: DomainEvent) => void | Promise<void>,
   ): () => void;
 
   /**
@@ -886,7 +885,7 @@ export interface IEventBus {
       toDate?: Date;
       eventTypes?: string[];
       limit?: number;
-    }
+    },
   ): Promise<DomainEvent[]>;
 
   /**
@@ -900,7 +899,7 @@ export interface IEventBus {
       fromDate?: Date;
       toDate?: Date;
       eventTypes?: string[];
-    }
+    },
   ): Promise<void>;
 
   /**

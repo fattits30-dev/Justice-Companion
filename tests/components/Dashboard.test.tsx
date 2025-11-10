@@ -129,8 +129,8 @@ describe("Dashboard", () => {
   test("displays empty state when no cases exist", () => {
     render(<Dashboard username="User" recentCases={[]} />);
 
-    expect(screen.getByText(/no cases yet/i)).toBeInTheDocument();
-    expect(screen.getByText(/get started/i)).toBeInTheDocument();
+    expect(screen.getByText(/ready to start your first case/i)).toBeInTheDocument();
+    expect(screen.getByText(/click "new case" above to begin organizing/i)).toBeInTheDocument();
   });
 
   /**
@@ -193,11 +193,11 @@ describe("Dashboard", () => {
 
     render(<Dashboard username="User" stats={stats} />);
 
-    expect(screen.getByText(/total cases/i)).toBeInTheDocument();
-    expect(screen.getByText(/active cases/i)).toBeInTheDocument();
-    expect(
-      screen.getByText(/evidence items|total evidence/i)
-    ).toBeInTheDocument();
+    expect(screen.getByText(/your cases/i)).toBeInTheDocument();
+    expect(screen.getByText(/currently active/i)).toBeInTheDocument();
+    // Use getAllByText since "Evidence Collected" appears in multiple places
+    const evidenceLabels = screen.getAllByText(/evidence collected/i);
+    expect(evidenceLabels.length).toBeGreaterThan(0);
   });
 
   /**
@@ -253,11 +253,11 @@ describe("Dashboard", () => {
     render(<Dashboard username="User" stats={stats} />);
 
     // Should have multiple stat cards (check for labels)
-    expect(screen.getByText(/total cases/i)).toBeInTheDocument();
-    expect(screen.getByText(/active cases/i)).toBeInTheDocument();
-    expect(
-      screen.getByText(/evidence items|total evidence/i)
-    ).toBeInTheDocument();
+    expect(screen.getByText(/your cases/i)).toBeInTheDocument();
+    expect(screen.getByText(/currently active/i)).toBeInTheDocument();
+    // Use getAllByText since "Evidence Collected" appears in multiple places
+    const evidenceLabels = screen.getAllByText(/evidence collected/i);
+    expect(evidenceLabels.length).toBeGreaterThan(0);
   });
 
   /**
@@ -320,10 +320,9 @@ describe("Dashboard", () => {
 
     render(<Dashboard username="User" recentCases={recentCases} />);
 
-    // Find status badges by exact text (badges show lowercase status)
-    const badges = screen.getAllByText("active");
-    expect(badges.length).toBeGreaterThan(0);
-    expect(screen.getByText("closed")).toBeInTheDocument();
+    // Find status badges by exact text (badges show uppercase status)
+    expect(screen.getByText("ACTIVE")).toBeInTheDocument();
+    expect(screen.getByText("CLOSED")).toBeInTheDocument();
   });
 
   /**

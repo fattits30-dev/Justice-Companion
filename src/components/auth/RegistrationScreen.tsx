@@ -123,7 +123,12 @@ export function RegistrationScreen({
       );
 
       if (!response.success) {
-        setError(response.error?.message || "Registration failed");
+        // Handle error as string or object with message property
+        const errorMessage =
+          typeof response.error === "string"
+            ? response.error
+            : response.error?.message || "Registration failed";
+        setError(errorMessage);
         return;
       }
 

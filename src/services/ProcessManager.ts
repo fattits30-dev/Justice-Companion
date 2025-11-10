@@ -62,10 +62,10 @@ export class ProcessManager {
       "second-instance",
       (_event, _commandLine, _workingDirectory) => {
         console.warn(
-          "[ProcessManager] Second instance detected, focusing main window..."
+          "[ProcessManager] Second instance detected, focusing main window...",
         );
         callback();
-      }
+      },
     );
   }
 
@@ -177,7 +177,7 @@ export class ProcessManager {
           service: "ProcessManager",
           operation: "killProcessOnPort",
           port,
-        }
+        },
       );
       return false;
     }
@@ -187,16 +187,38 @@ export class ProcessManager {
    * Clean up processes on startup
    */
   public async cleanupOnStartup(): Promise<void> {
-    // Implementation for cleaning up processes on startup
-    // This could kill any lingering processes from previous runs
+    // Kill any lingering processes from previous runs on managed ports
+    for (const [port, name] of this.managedPorts.entries()) {
+      try {
+        const inUse = await this.isPortInUse(port);
+        if (inUse) {
+          console.log(
+            `[ProcessManager] Port ${port} (${name}) is in use, attempting cleanup...`,
+          );
+          await this.killProcessOnPort(port);
+        }
+      } catch (error) {
+        // Log error but don't throw - cleanup should continue
+        this.logError(
+          error instanceof Error ? error : new Error(String(error)),
+          {
+            operation: "cleanupOnStartup",
+            port,
+            name,
+          },
+        );
+      }
+    }
   }
 
   /**
    * Register shutdown handlers
    */
   public registerShutdownHandlers(): void {
-    // This method might be used to set up shutdown handlers
-    // The existing executeShutdownHandlers actually executes them
+    // Register 'before-quit' event handler to execute cleanup before app quits
+    this.app.on("before-quit", async () => {
+      await this.executeShutdownHandlers();
+    });
   }
 
   /**
@@ -225,7 +247,7 @@ export class ProcessManager {
    */
   public async ensurePortAvailable(
     port: number,
-    maxRetries: number = 1
+    maxRetries: number = 1,
   ): Promise<boolean> {
     for (let i = 0; i < maxRetries; i++) {
       const inUse = await this.isPortInUse(port);
@@ -241,6 +263,13 @@ export class ProcessManager {
    * Log error
    */
   public logError(error: Error, context?: Record<string, unknown>): void {
+    // Log to console for immediate feedback
+    console.error("[ProcessManager]", error.message, {
+      service: "ProcessManager",
+      ...context,
+    });
+
+    // Also log to file for persistence
     errorLogger.logError(error, {
       service: "ProcessManager",
       ...context,
@@ -265,7 +294,7 @@ export class ProcessManager {
           service: "ProcessManager",
           operation: "killProcessById",
           pid,
-        }
+        },
       );
       return false;
     }
@@ -284,7 +313,7 @@ export class ProcessManager {
           {
             service: "ProcessManager",
             operation: "executeShutdownHandlers",
-          }
+          },
         );
       }
     }
