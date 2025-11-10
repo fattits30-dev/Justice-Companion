@@ -13,6 +13,82 @@
  * - Accessible navigation
  */
 
+import React from "react";
+import { toast } from "sonner";
+import { useAuth } from "../contexts/AuthContext.tsx";
+import type { ProfileFormData } from "../types/profile.ts";
+import { profileService } from "../services/ProfileService.ts";
+
+/**
+ * Custom hook for debounced values
+ */
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = React.useState<T>(value);
+
+  React.useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
+/**
+ * Error Boundary for Profile Operations
+ */
+class ProfileErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean; error?: Error }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error(
+      "[ProfileErrorBoundary] Profile operation error:",
+      error,
+      errorInfo,
+    );
+    toast.error("Profile Error", {
+      description:
+        "An error occurred while managing your profile. Please try again.",
+    });
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
+          <h3 className="text-red-200 font-medium mb-2">Profile Error</h3>
+          <p className="text-red-100/80 text-sm">
+            Something went wrong with the profile manager. Please refresh the
+            page and try again.
+          </p>
+          <button
+            onClick={() => this.setState({ hasError: false, error: undefined })}
+            className="mt-2 px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-sm rounded transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 interface SidebarProps {
   currentRoute: string;
   user?: {
@@ -44,7 +120,7 @@ interface NavItem {
   badge?: number;
 }
 
-export function Sidebar({
+const SidebarComponent = React.memo(function Sidebar({
   currentRoute,
   user = null,
   onLogout,
@@ -56,6 +132,74 @@ export function Sidebar({
   selectedCaseId = null,
   onCaseSelect,
 }: SidebarProps) {
+  const { refreshUser } = useAuth();
+  const [isProfileManagerOpen, setIsProfileManagerOpen] = React.useState(false);
+  const [profileData, setProfileData] = React.useState<ProfileFormData>({
+    firstName: "",
+    lastName: "",
+    email: user?.email || "",
+    phone: "",
+  });
+
+  // Debounced profile data for validation
+  const debouncedProfileData = useDebounce(profileData, 300);
+
+  // Load profile data when dialog opens (only once per open)
+  React.useEffect(() => {
+    if (isProfileManagerOpen && user && !profileData.email) {
+      // Load profile data from service, fallback to splitting username
+      const existingProfile = profileService.get();
+      if (existingProfile) {
+        setProfileData(profileService.profileToFormData(existingProfile));
+      } else {
+        // Split existing name into first/last if available
+        const nameParts = user.username.split(" ");
+        setProfileData({
+          firstName: nameParts[0] || "",
+          lastName: nameParts.slice(1).join(" ") || "",
+          email: user.email || "",
+          phone: "",
+        });
+      }
+    }
+  }, [isProfileManagerOpen, user, profileData.email]);
+
+  // Memoized event handlers
+  const handleLinkClick = React.useCallback(
+    (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+      if (onNavigate) {
+        e.preventDefault();
+        onNavigate(href);
+      }
+    },
+    [onNavigate],
+  );
+
+  const handleProfileSave = React.useCallback(async () => {
+    // Convert form data to profile data and update via service
+    const profileUpdate =
+      profileService.formDataToProfile(debouncedProfileData);
+    const result = await profileService.update(profileUpdate);
+
+    if (result.success) {
+      // Refresh user data in AuthContext to update UI
+      await refreshUser();
+
+      // Update local state to reflect changes immediately
+      setProfileData(
+        profileService.profileToFormData(result.updatedFields || null),
+      );
+
+      toast.success("Profile updated", {
+        description: "Your changes have been saved locally",
+      });
+      setIsProfileManagerOpen(false);
+    } else {
+      toast.error("Profile update failed", {
+        description: result.message,
+      });
+    }
+  }, [debouncedProfileData, refreshUser]);
   const navItems: NavItem[] = [
     {
       name: "Dashboard",
@@ -182,16 +326,6 @@ export function Sidebar({
     },
   ];
 
-  const handleLinkClick = (
-    e: React.MouseEvent<HTMLAnchorElement>,
-    href: string,
-  ) => {
-    if (onNavigate) {
-      e.preventDefault();
-      onNavigate(href);
-    }
-  };
-
   return (
     <nav
       className={`flex flex-col h-screen bg-gray-900 border-r border-white/10 transition-all duration-300 ${
@@ -240,12 +374,15 @@ export function Sidebar({
       {/* Case Selector */}
       {!isCollapsed && onCaseSelect && (
         <div className="px-4 py-3 border-b border-white/10">
-          <label htmlFor="case-selector" className="block text-xs font-medium text-white/70 mb-2">
+          <label
+            htmlFor="case-selector"
+            className="block text-xs font-medium text-white/70 mb-2"
+          >
             Active Case
           </label>
           <select
             id="case-selector"
-            value={selectedCaseId || ''}
+            value={selectedCaseId || ""}
             onChange={(e) => onCaseSelect(e.target.value || null)}
             className="w-full bg-white/5 border border-white/10 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
           >
@@ -308,7 +445,11 @@ export function Sidebar({
           ) : (
             /* Expanded: Full Profile Card */
             <div className="space-y-3">
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10">
+              <button
+                onClick={() => setIsProfileManagerOpen(true)}
+                className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-colors w-full text-left"
+                aria-label="Open profile manager"
+              >
                 <div className="relative flex-shrink-0">
                   <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-secondary-500 to-secondary-600 rounded-full text-white font-semibold text-sm shadow-lg">
                     {user.username.substring(0, 2).toUpperCase()}
@@ -321,7 +462,20 @@ export function Sidebar({
                   </p>
                   <p className="text-xs text-white/70 truncate">{user.email}</p>
                 </div>
-              </div>
+                <svg
+                  className="w-4 h-4 text-white/50"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </button>
               <button
                 onClick={onLogout}
                 className="flex items-center justify-center gap-2 w-full px-3 py-2 text-sm font-medium text-white bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg transition-all duration-200"
@@ -346,6 +500,157 @@ export function Sidebar({
           )}
         </div>
       )}
+
+      {/* Profile Manager Dialog */}
+      {isProfileManagerOpen && (
+        <ProfileErrorBoundary>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+            <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl max-w-md w-full mx-4">
+              {/* Header */}
+              <div className="p-6 border-b border-gray-700 flex-shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary-500/20 border border-primary-500/40 flex items-center justify-center">
+                    <svg
+                      className="w-5 h-5 text-primary-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                      />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-white">
+                      Profile Manager
+                    </h2>
+                    <p className="text-white/70 mt-1">
+                      Manage your personal information
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="p-6">
+                <div className="space-y-4">
+                  <div className="p-4 bg-white/5 border border-white/10 rounded-lg">
+                    <h3 className="text-white font-medium mb-3">
+                      Profile Information
+                    </h3>
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-sm font-medium text-white/70 mb-1">
+                            First Name
+                          </label>
+                          <input
+                            type="text"
+                            value={profileData.firstName}
+                            onChange={(e) =>
+                              setProfileData((prev) => ({
+                                ...prev,
+                                firstName: e.target.value,
+                              }))
+                            }
+                            className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                            placeholder="Enter first name"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-white/70 mb-1">
+                            Last Name
+                          </label>
+                          <input
+                            type="text"
+                            value={profileData.lastName}
+                            onChange={(e) =>
+                              setProfileData((prev) => ({
+                                ...prev,
+                                lastName: e.target.value,
+                              }))
+                            }
+                            className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                            placeholder="Enter last name"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-white/70 mb-1">
+                          Email
+                        </label>
+                        <input
+                          type="email"
+                          value={profileData.email}
+                          onChange={(e) =>
+                            setProfileData((prev) => ({
+                              ...prev,
+                              email: e.target.value,
+                            }))
+                          }
+                          className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                          placeholder="Enter your email"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-white/70 mb-1">
+                          Phone (Optional)
+                        </label>
+                        <input
+                          type="tel"
+                          value={profileData.phone}
+                          onChange={(e) =>
+                            setProfileData((prev) => ({
+                              ...prev,
+                              phone: e.target.value,
+                            }))
+                          }
+                          className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                          placeholder="Enter your phone number"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                    <h3 className="text-blue-200 font-medium mb-2">
+                      Privacy & Security
+                    </h3>
+                    <p className="text-blue-100/80 text-sm">
+                      Your profile information is stored locally on your device
+                      and is never transmitted to external servers. This ensures
+                      your personal data remains private and secure.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="p-6 border-t border-gray-700 flex justify-end gap-3">
+                <button
+                  onClick={() => setIsProfileManagerOpen(false)}
+                  className="px-4 py-2 text-white/70 hover:text-white border border-gray-600 rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleProfileSave}
+                  className="px-6 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </div>
+          </div>
+        </ProfileErrorBoundary>
+      )}
     </nav>
   );
-}
+});
+
+// Export the memoized component as the default export
+export const Sidebar = SidebarComponent;

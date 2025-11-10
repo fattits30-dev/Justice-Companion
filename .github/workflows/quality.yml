@@ -35,22 +35,22 @@ jobs:
 
       - name: Check code formatting
         run: pnpm format:check
-        continue-on-error: true
+        # ✅ BLOCKING: Code must be properly formatted
 
       - name: Run linter
         run: pnpm lint
-        continue-on-error: true
+        # ✅ BLOCKING: Linting errors must be fixed
 
       - name: TypeScript type check
         run: pnpm type-check
-        continue-on-error: true
+        # ✅ BLOCKING: Type errors must be fixed
 
       - name: Rebuild for Node.js
         run: pnpm rebuild:node
 
       - name: Run tests with coverage
         run: pnpm test:coverage
-        continue-on-error: true
+        # ✅ BLOCKING: All tests must pass before merge
 
       - name: Build app
         run: pnpm build:electron
@@ -58,4 +58,4 @@ jobs:
       - name: Quality gate summary
         run: |
           echo "✅ Quality gate checks completed"
-          echo "Note: Lint, type-check, and tests are non-blocking due to legacy code cleanup in progress"
+          echo "All checks are now BLOCKING - code must pass all quality gates before merge"

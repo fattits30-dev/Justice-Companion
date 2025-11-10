@@ -14,7 +14,7 @@ import * as fs from "fs";
 import * as path from "path";
 
 // Import pdf-parse using require since it doesn't have proper ES6 exports
-
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const pdfParse = require("pdf-parse");
 
 export interface ParsedDocument {
@@ -56,7 +56,7 @@ export class DocumentParserService {
    */
   async parseDocumentBuffer(
     buffer: Buffer,
-    filename: string
+    filename: string,
   ): Promise<ParsedDocument> {
     const ext = path.extname(filename).toLowerCase();
 
@@ -77,7 +77,7 @@ export class DocumentParserService {
    */
   private async parsePDF(
     filePath: string,
-    filename: string
+    filename: string,
   ): Promise<ParsedDocument> {
     const dataBuffer = fs.readFileSync(filePath);
     return this.parsePDFBuffer(dataBuffer, filename);
@@ -88,7 +88,7 @@ export class DocumentParserService {
    */
   private async parsePDFBuffer(
     buffer: Buffer,
-    filename: string
+    filename: string,
   ): Promise<ParsedDocument> {
     try {
       const data = await pdfParse(buffer);
@@ -108,7 +108,7 @@ export class DocumentParserService {
       };
     } catch (error) {
       throw new Error(
-        `Failed to parse PDF: ${error instanceof Error ? error.message : "Unknown error"}`
+        `Failed to parse PDF: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     }
   }
@@ -118,7 +118,7 @@ export class DocumentParserService {
    */
   private async parseDOCX(
     filePath: string,
-    filename: string
+    filename: string,
   ): Promise<ParsedDocument> {
     const dataBuffer = fs.readFileSync(filePath);
     return this.parseDOCXBuffer(dataBuffer, filename);
@@ -129,7 +129,7 @@ export class DocumentParserService {
    */
   private async parseDOCXBuffer(
     buffer: Buffer,
-    filename: string
+    filename: string,
   ): Promise<ParsedDocument> {
     try {
       const result = await mammoth.extractRawText({ buffer });
@@ -145,7 +145,7 @@ export class DocumentParserService {
       };
     } catch (error) {
       throw new Error(
-        `Failed to parse DOCX: ${error instanceof Error ? error.message : "Unknown error"}`
+        `Failed to parse DOCX: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     }
   }
@@ -155,7 +155,7 @@ export class DocumentParserService {
    */
   private async parseTXT(
     filePath: string,
-    filename: string
+    filename: string,
   ): Promise<ParsedDocument> {
     const buffer = fs.readFileSync(filePath);
     return this.parseTXTBuffer(buffer, filename);
@@ -166,7 +166,7 @@ export class DocumentParserService {
    */
   private async parseTXTBuffer(
     buffer: Buffer,
-    filename: string
+    filename: string,
   ): Promise<ParsedDocument> {
     try {
       const text = buffer.toString("utf-8");
@@ -179,7 +179,7 @@ export class DocumentParserService {
       };
     } catch (error) {
       throw new Error(
-        `Failed to parse TXT: ${error instanceof Error ? error.message : "Unknown error"}`
+        `Failed to parse TXT: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     }
   }

@@ -7,8 +7,8 @@ on:
     branches: [main, develop]
 
 env:
-  NODE_VERSION: '20.18.0'
-  PNPM_VERSION: '10.18.3'
+  NODE_VERSION: "20.18.0"
+  PNPM_VERSION: "10.18.3"
 
 jobs:
   # Basic quality checks and tests
@@ -35,19 +35,17 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
+          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # Code Quality Checks (non-blocking for legacy issues)
+      # Code Quality Checks (now blocking - prevents broken code from shipping)
       - name: Lint check
         run: pnpm lint
-        continue-on-error: true
 
       - name: TypeScript type check
         run: pnpm type-check
-        continue-on-error: true
 
       # Rebuild better-sqlite3 for Node.js (critical for tests)
       - name: Rebuild better-sqlite3 for Node.js
@@ -56,7 +54,6 @@ jobs:
       # Run unit tests
       - name: Run unit tests
         run: pnpm test
-        continue-on-error: true
         env:
           CI: true
           NODE_ENV: test

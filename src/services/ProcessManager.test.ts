@@ -11,7 +11,7 @@ const mockApp = {
 
 async function withMockedPlatform<T>(
   platform: NodeJS.Platform,
-  callback: () => Promise<T> | T
+  callback: () => Promise<T> | T,
 ): Promise<T> {
   const platformSpy = vi
     .spyOn(process, "platform", "get")
@@ -76,7 +76,7 @@ describe("ProcessManager", () => {
       // Verify the event listener was registered
       expect(mockApp.on).toHaveBeenCalledWith(
         "second-instance",
-        expect.any(Function)
+        expect.any(Function),
       );
     });
   });
@@ -115,6 +115,9 @@ describe("ProcessManager", () => {
     });
 
     it("should cleanup on startup", async () => {
+      // Register a managed port to be cleaned up
+      processManager.registerManagedPort(5176, "test-service");
+
       const isPortInUseSpy = vi
         .spyOn(processManager, "isPortInUse")
         .mockResolvedValue(true);
@@ -132,7 +135,7 @@ describe("ProcessManager", () => {
 
     it("should handle errors gracefully during cleanup", async () => {
       vi.spyOn(processManager, "killProcessOnPort").mockRejectedValue(
-        new Error("Access denied")
+        new Error("Access denied"),
       );
 
       await expect(processManager.cleanupOnStartup()).resolves.not.toThrow();
@@ -145,7 +148,7 @@ describe("ProcessManager", () => {
 
       expect(mockApp.on).toHaveBeenCalledWith(
         "before-quit",
-        expect.any(Function)
+        expect.any(Function),
       );
     });
 
@@ -214,7 +217,7 @@ describe("ProcessManager", () => {
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringContaining("[ProcessManager]"),
         expect.any(String),
-        expect.objectContaining({ context: "test" })
+        expect.objectContaining({ context: "test" }),
       );
 
       consoleSpy.mockRestore();

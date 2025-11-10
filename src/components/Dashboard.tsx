@@ -15,7 +15,6 @@
  * - Accessible headings and landmarks
  */
 
-import { useState, useEffect } from "react";
 import {
   TrendingUp,
   Briefcase,
@@ -32,9 +31,6 @@ import { Card } from "./ui/Card.tsx";
 import { Button } from "./ui/Button.tsx";
 import { Badge } from "./ui/Badge.tsx";
 import { SkeletonCard } from "./ui/Skeleton.tsx";
-import { DeadlineWarningBanner } from "./deadlines/DeadlineWarningBanner.tsx";
-import { DeadlineCountdownList } from "./deadlines/DeadlineCountdownCard.tsx";
-import type { DeadlineWithDaysRemaining } from "../types/deadline.ts";
 
 interface Stats {
   totalCases: number;
@@ -78,63 +74,6 @@ export function Dashboard({
   onStartChat,
   onCaseClick,
 }: DashboardProps) {
-  // Deadline tracking state
-  const [deadlines, setDeadlines] = useState<DeadlineWithDaysRemaining[]>([]);
-  const [urgentDeadlines, setUrgentDeadlines] = useState<DeadlineWithDaysRemaining[]>([]);
-  const [loadingDeadlines, setLoadingDeadlines] = useState(true);
-
-  // Fetch mandatory deadlines on mount
-  useEffect(() => {
-    const fetchDeadlines = async () => {
-      try {
-        setLoadingDeadlines(true);
-
-        // Fetch all mandatory deadlines (tribunal deadlines, ACAS, appeals)
-        // Using window.justiceAPI which is exposed via preload.ts
-        const response = await (window as any).justiceAPI?.deadline?.getAllMandatory?.();
-
-        if (response?.success && response.data) {
-          const allDeadlines = response.data as DeadlineWithDaysRemaining[];
-          setDeadlines(allDeadlines);
-
-          // Filter urgent deadlines (for warning banners at top)
-          const urgent = allDeadlines.filter(d => d.isUrgent || d.isOverdue);
-          setUrgentDeadlines(urgent);
-        }
-      } catch (err) {
-        console.error('Failed to fetch deadlines:', err);
-        // Silently fail - deadlines are supplementary to main dashboard
-      } finally {
-        setLoadingDeadlines(false);
-      }
-    };
-
-    fetchDeadlines();
-  }, []); // Run once on mount
-
-  // Handle deadline warning dismissal
-  const handleDismissDeadlineWarning = async (deadlineId: number) => {
-    try {
-      const response = await (window as any).justiceAPI?.deadline?.dismissWarning?.(deadlineId);
-
-      if (response?.success) {
-        // Remove from urgent deadlines after dismissal
-        setUrgentDeadlines(prev => prev.filter(d => d.id !== deadlineId));
-      }
-    } catch (err) {
-      console.error('Failed to dismiss deadline warning:', err);
-    }
-  };
-
-  // Handle deadline click (navigate to case or deadline detail)
-  const handleDeadlineClick = (deadlineId: number) => {
-    // Find the deadline to get its caseId
-    const deadline = deadlines.find(d => d.id === deadlineId);
-    if (deadline && onCaseClick) {
-      onCaseClick(deadline.caseId.toString());
-    }
-  };
-
   // Format date for display
   const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
@@ -218,24 +157,13 @@ export function Dashboard({
               </p>
               <p className="text-sm text-amber-100/80">
                 Justice Companion helps you organize your case and understand
-                legal concepts. It's NOT a replacement for a qualified lawyer. For
-                legal advice specific to your situation, please consult a
+                legal concepts. It's NOT a replacement for a qualified lawyer.
+                For legal advice specific to your situation, please consult a
                 solicitor or legal professional.
               </p>
             </div>
           </div>
         </Card>
-
-        {/* CRITICAL: Urgent Deadline Warnings */}
-        {urgentDeadlines.length > 0 && urgentDeadlines.map((deadline) => (
-          <DeadlineWarningBanner
-            key={deadline.id}
-            deadline={deadline}
-            onDismiss={handleDismissDeadlineWarning}
-            onAction={() => handleDeadlineClick(deadline.id)}
-            showDismissButton={!deadline.isMandatory}
-          />
-        ))}
 
         {/* Welcome Section */}
         <div className="mb-6">
@@ -248,219 +176,210 @@ export function Dashboard({
 
       {/* Scrollable Content Area */}
       <div className="flex-1 overflow-y-auto px-8 pb-8">
-
-      {/* Stats Grid - People-friendly language */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {/* Total Cases */}
-        <Card variant="glass" hoverable shine>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-white/90 text-sm mb-1">Your Cases</p>
-              <p className="text-3xl font-bold">{stats.totalCases}</p>
-              <p className="text-xs text-white/80 mt-1">
-                {stats.totalCases === 0
-                  ? "Ready to start"
-                  : "Cases you're tracking"}
-              </p>
-            </div>
-            <Briefcase className="w-12 h-12 text-cyan-400" />
-          </div>
-        </Card>
-
-        {/* Active Cases */}
-        <Card variant="glass" hoverable shine>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-white/90 text-sm mb-1">Currently Active</p>
-              <p className="text-3xl font-bold">{stats.activeCases}</p>
-              <p className="text-xs text-white/80 mt-1">
-                {stats.activeCases === 0 ? "All caught up" : "Ongoing matters"}
-              </p>
-            </div>
-            <TrendingUp className="w-12 h-12 text-green-400" />
-          </div>
-        </Card>
-
-        {/* Total Evidence */}
-        <Card variant="glass" hoverable shine>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-white/90 text-sm mb-1">Evidence Collected</p>
-              <p className="text-3xl font-bold">{stats.totalEvidence}</p>
-              <p className="text-xs text-white/80 mt-1">
-                {stats.totalEvidence === 0
-                  ? "Start gathering proof"
-                  : "Documents & records"}
-              </p>
-            </div>
-            <FileText className="w-12 h-12 text-pink-400" />
-          </div>
-        </Card>
-
-        {/* Recent Activity */}
-        <Card variant="glass" hoverable shine>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-white/90 text-sm mb-1">Recent Activity</p>
-              <p className="text-3xl font-bold">{stats.recentActivity}</p>
-              <p className="text-xs text-white/80 mt-1">
-                {stats.recentActivity === 0
-                  ? "No recent changes"
-                  : "Updates this week"}
-              </p>
-            </div>
-            <Activity className="w-12 h-12 text-yellow-400" />
-          </div>
-        </Card>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
-        <div className="flex flex-wrap gap-4">
-          <Button
-            onClick={onNewCase}
-            variant="secondary"
-            size="lg"
-            icon={<Plus />}
-            iconPosition="left"
-          >
-            New Case
-          </Button>
-
-          <Button
-            onClick={onUploadEvidence}
-            variant="secondary"
-            size="lg"
-            icon={<Upload />}
-            iconPosition="left"
-          >
-            Upload Evidence
-          </Button>
-
-          <Button
-            onClick={onStartChat}
-            variant="secondary"
-            size="lg"
-            icon={<MessageSquare />}
-            iconPosition="left"
-            className="bg-gradient-to-br from-green-500 to-green-600 hover:from-green-400 hover:to-green-500"
-          >
-            Start Chat
-          </Button>
-        </div>
-      </div>
-
-      {/* Upcoming Deadlines - Critical Feature */}
-      {!loadingDeadlines && deadlines.length > 0 && (
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4">Upcoming Deadlines</h2>
-          <DeadlineCountdownList
-            deadlines={deadlines}
-            onDeadlineClick={handleDeadlineClick}
-            maxVisible={5}
-            emptyMessage="No upcoming deadlines"
-          />
-        </div>
-      )}
-
-      {/* Recent Cases */}
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold mb-4">Your Recent Cases</h2>
-
-        {recentCases.length === 0 ? (
-          <Card variant="glass">
-            <div className="text-center">
-              <Briefcase className="w-16 h-16 text-white/70 mx-auto mb-4" />
-              <p className="text-white/90 text-lg mb-2">
-                Ready to start your first case?
-              </p>
-              <p className="text-white/80 mb-4">
-                Click "New Case" above to begin organizing your evidence and
-                building your record.
-              </p>
-              <p className="text-sm text-white/70">
-                Remember: Start documenting early. Evidence collected at the
-                time is more credible than memories later.
-              </p>
+        {/* Stats Grid - People-friendly language */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {/* Total Cases */}
+          <Card variant="glass" hoverable shine>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-white/90 text-sm mb-1">Your Cases</p>
+                <p className="text-3xl font-bold">{stats.totalCases}</p>
+                <p className="text-xs text-white/80 mt-1">
+                  {stats.totalCases === 0
+                    ? "Ready to start"
+                    : "Cases you're tracking"}
+                </p>
+              </div>
+              <Briefcase className="w-12 h-12 text-cyan-400" />
             </div>
           </Card>
-        ) : (
-          <div className="space-y-4">
-            {recentCases.map((case_) => (
-              <Card
-                key={case_.id}
-                variant="glass"
-                hoverable
-                role="button"
-                tabIndex={0}
-                onClick={() => onCaseClick && onCaseClick(case_.id)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    if (onCaseClick) {
-                      onCaseClick(case_.id);
-                    }
-                  }
-                }}
-                className="cursor-pointer"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-lg mb-1">
-                      {case_.title}
-                    </h3>
-                    <p className="text-white/90 text-sm">
-                      Last updated: {formatDate(case_.lastUpdated)}
-                    </p>
-                  </div>
-                  <Badge
-                    variant={getStatusVariant(case_.status)}
-                    size="md"
-                    dot
-                    pulse
-                  >
-                    {case_.status.toUpperCase()}
-                  </Badge>
-                </div>
-              </Card>
-            ))}
-          </div>
-        )}
-      </div>
 
-      {/* When to Get a Lawyer - Practical Advice */}
-      <Card variant="glass" className="bg-primary-900/20 border-primary-700/50">
-        <div className="flex items-start gap-3">
-          <Lightbulb className="w-6 h-6 text-amber-400 flex-shrink-0 mt-0.5" />
-          <div className="flex-1">
-            <h3 className="font-semibold text-white mb-2">
-              When You Should Get Professional Legal Advice
-            </h3>
-            <div className="text-sm text-white/90 space-y-2">
-              <p>
-                This app helps you organize your case, but some situations need
-                a qualified solicitor:
-              </p>
-              <ul className="list-disc list-inside space-y-1 ml-2">
-                <li>Employment tribunals or court proceedings</li>
-                <li>Negotiating settlements or redundancy packages</li>
-                <li>Complex discrimination or whistleblowing cases</li>
-                <li>If you're facing legal action from your employer</li>
-                <li>When you need representation at a hearing</li>
-              </ul>
-              <p className="mt-3 text-xs text-white/70 flex items-start gap-2">
-                <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                <span>
-                  Tip: Many solicitors offer free initial consultations. Some
-                  trade unions provide free legal advice to members. Citizens
-                  Advice Bureau can also help point you to free or low-cost
-                  legal support.
-                </span>
-              </p>
+          {/* Active Cases */}
+          <Card variant="glass" hoverable shine>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-white/90 text-sm mb-1">Currently Active</p>
+                <p className="text-3xl font-bold">{stats.activeCases}</p>
+                <p className="text-xs text-white/80 mt-1">
+                  {stats.activeCases === 0
+                    ? "All caught up"
+                    : "Ongoing matters"}
+                </p>
+              </div>
+              <TrendingUp className="w-12 h-12 text-green-400" />
             </div>
+          </Card>
+
+          {/* Total Evidence */}
+          <Card variant="glass" hoverable shine>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-white/90 text-sm mb-1">Evidence Collected</p>
+                <p className="text-3xl font-bold">{stats.totalEvidence}</p>
+                <p className="text-xs text-white/80 mt-1">
+                  {stats.totalEvidence === 0
+                    ? "Start gathering proof"
+                    : "Documents & records"}
+                </p>
+              </div>
+              <FileText className="w-12 h-12 text-pink-400" />
+            </div>
+          </Card>
+
+          {/* Recent Activity */}
+          <Card variant="glass" hoverable shine>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-white/90 text-sm mb-1">Recent Activity</p>
+                <p className="text-3xl font-bold">{stats.recentActivity}</p>
+                <p className="text-xs text-white/80 mt-1">
+                  {stats.recentActivity === 0
+                    ? "No recent changes"
+                    : "Updates this week"}
+                </p>
+              </div>
+              <Activity className="w-12 h-12 text-yellow-400" />
+            </div>
+          </Card>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
+          <div className="flex flex-wrap gap-4">
+            <Button
+              onClick={onNewCase}
+              variant="secondary"
+              size="lg"
+              icon={<Plus />}
+              iconPosition="left"
+            >
+              New Case
+            </Button>
+
+            <Button
+              onClick={onUploadEvidence}
+              variant="secondary"
+              size="lg"
+              icon={<Upload />}
+              iconPosition="left"
+            >
+              Upload Evidence
+            </Button>
+
+            <Button
+              onClick={onStartChat}
+              variant="secondary"
+              size="lg"
+              icon={<MessageSquare />}
+              iconPosition="left"
+              className="bg-gradient-to-br from-green-500 to-green-600 hover:from-green-400 hover:to-green-500"
+            >
+              Start Chat
+            </Button>
           </div>
         </div>
-      </Card>
+
+        {/* Recent Cases */}
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-4">Your Recent Cases</h2>
+
+          {recentCases.length === 0 ? (
+            <Card variant="glass">
+              <div className="text-center">
+                <Briefcase className="w-16 h-16 text-white/70 mx-auto mb-4" />
+                <p className="text-white/90 text-lg mb-2">
+                  Ready to start your first case?
+                </p>
+                <p className="text-white/80 mb-4">
+                  Click "New Case" above to begin organizing your evidence and
+                  building your record.
+                </p>
+                <p className="text-sm text-white/70">
+                  Remember: Start documenting early. Evidence collected at the
+                  time is more credible than memories later.
+                </p>
+              </div>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {recentCases.map((case_) => (
+                <Card
+                  key={case_.id}
+                  variant="glass"
+                  hoverable
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => onCaseClick && onCaseClick(case_.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      if (onCaseClick) {
+                        onCaseClick(case_.id);
+                      }
+                    }
+                  }}
+                  className="cursor-pointer"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-lg mb-1">
+                        {case_.title}
+                      </h3>
+                      <p className="text-white/90 text-sm">
+                        Last updated: {formatDate(case_.lastUpdated)}
+                      </p>
+                    </div>
+                    <Badge
+                      variant={getStatusVariant(case_.status)}
+                      size="md"
+                      dot
+                      pulse
+                    >
+                      {case_.status.toUpperCase()}
+                    </Badge>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* When to Get a Lawyer - Practical Advice */}
+        <Card
+          variant="glass"
+          className="bg-primary-900/20 border-primary-700/50"
+        >
+          <div className="flex items-start gap-3">
+            <Lightbulb className="w-6 h-6 text-amber-400 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <h3 className="font-semibold text-white mb-2">
+                When You Should Get Professional Legal Advice
+              </h3>
+              <div className="text-sm text-white/90 space-y-2">
+                <p>
+                  This app helps you organize your case, but some situations
+                  need a qualified solicitor:
+                </p>
+                <ul className="list-disc list-inside space-y-1 ml-2">
+                  <li>Employment tribunals or court proceedings</li>
+                  <li>Negotiating settlements or redundancy packages</li>
+                  <li>Complex discrimination or whistleblowing cases</li>
+                  <li>If you're facing legal action from your employer</li>
+                  <li>When you need representation at a hearing</li>
+                </ul>
+                <p className="mt-3 text-xs text-white/70 flex items-start gap-2">
+                  <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                  <span>
+                    Tip: Many solicitors offer free initial consultations. Some
+                    trade unions provide free legal advice to members. Citizens
+                    Advice Bureau can also help point you to free or low-cost
+                    legal support.
+                  </span>
+                </p>
+              </div>
+            </div>
+          </div>
+        </Card>
       </div>
     </div>
   );

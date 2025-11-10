@@ -7,8 +7,7 @@
  * - Setup global test utilities
  */
 
-import { afterEach, beforeEach, vi } from "vitest";
-import { cleanup } from "@testing-library/react";
+import { beforeEach, vi } from "vitest";
 import "@testing-library/jest-dom";
 import { createRequire } from "module";
 import path from "path";
@@ -99,40 +98,38 @@ interface LocalStorageMock {
   key: ViMock;
 }
 
-interface WindowMock {
-  localStorage: LocalStorageMock;
-  justiceAPI?: WindowJusticeAPI;
-}
-
 interface ClipboardMock {
   writeText: ReturnType<typeof vi.fn>;
   readText: ReturnType<typeof vi.fn>;
 }
 
-interface NavigatorMock {
-  clipboard: ClipboardMock;
-}
+const createLocalStorageMock = (): LocalStorageMock => {
+  const store: Record<string, string> = {};
 
-const createLocalStorageMock = (): LocalStorageMock => ({
-  getItem: vi.fn(),
-  setItem: vi.fn(),
-  removeItem: vi.fn(),
-  clear: vi.fn(),
-  length: 0,
-  key: vi.fn(),
-});
+  return {
+    getItem: vi.fn((key: string) => store[key] || null),
+    setItem: vi.fn((key: string, value: string) => {
+      store[key] = String(value);
+    }),
+    removeItem: vi.fn((key: string) => {
+      delete store[key];
+    }),
+    clear: vi.fn(() => {
+      Object.keys(store).forEach((key) => delete store[key]);
+    }),
+    get length() {
+      return Object.keys(store).length;
+    },
+    key: vi.fn((index: number) => {
+      const keys = Object.keys(store);
+      return keys[index] || null;
+    }),
+  };
+};
 
 const createClipboardMock = (): ClipboardMock => ({
   writeText: vi.fn(() => Promise.resolve()),
   readText: vi.fn(() => Promise.resolve("")),
-});
-
-const createWindowMock = (): WindowMock => ({
-  localStorage: createLocalStorageMock(),
-});
-
-const createNavigatorMock = (): NavigatorMock => ({
-  clipboard: createClipboardMock(),
 });
 
 const createJusticeAPIMock = (): Record<string, unknown> => ({
@@ -156,7 +153,12 @@ const createJusticeAPIMock = (): Record<string, unknown> => ({
   logout: vi.fn().mockResolvedValue({ success: true }),
   getSession: vi.fn().mockResolvedValue({
     success: true,
-    data: { userId: "1", username: "testuser", email: "test@example.com" },
+    data: {
+      id: 1,
+      sessionId: "test-session-id",
+      user: { id: "1", username: "testuser", email: "test@example.com" },
+      expiresAt: new Date(Date.now() + 86400000).toISOString(),
+    },
   }),
 
   // Cases
@@ -181,6 +183,15 @@ const createJusticeAPIMock = (): Record<string, unknown> => ({
   getAllEvidence: vi.fn().mockResolvedValue({ success: true, data: [] }),
   uploadFile: vi.fn().mockResolvedValue({ success: true, data: { id: "1" } }),
   deleteEvidence: vi.fn().mockResolvedValue({ success: true }),
+
+  // Deadlines
+  getDeadlines: vi.fn().mockResolvedValue({ success: true, data: [] }),
+  createDeadline: vi.fn().mockResolvedValue({
+    success: true,
+    data: { id: 1 },
+  }),
+  updateDeadline: vi.fn().mockResolvedValue({ success: true }),
+  deleteDeadline: vi.fn().mockResolvedValue({ success: true }),
 
   // Chat
   chatSend: vi.fn().mockResolvedValue({
@@ -288,43 +299,74 @@ const createJusticeAPIMock = (): Record<string, unknown> => ({
   revokeConsent: vi.fn().mockRejectedValue(new Error("Not implemented")),
 });
 
-const setGlobalWindow = (mock: WindowMock): void => {
-  Reflect.set(globalThis, "window", mock);
-};
+// CRITICAL: DO NOT replace window/navigator - jsdom provides DOM constructors (HTMLElement, etc.)
+// Instead, EXTEND the existing window object with our mocks
 
-const setGlobalNavigator = (mock: NavigatorMock): void => {
-  Reflect.set(globalThis, "navigator", mock);
-};
+// Extend jsdom window with our mocks (only if window exists - service tests don't need DOM)
+if (typeof window !== 'undefined') {
+  Object.assign(window, {
+    localStorage: createLocalStorageMock(),
+    justiceAPI: createJusticeAPIMock() as unknown as WindowJusticeAPI,
+  });
 
-const initialWindowMock = createWindowMock();
-const initialNavigatorMock = createNavigatorMock();
-
-setGlobalWindow(initialWindowMock);
-setGlobalNavigator(initialNavigatorMock);
-
-initialWindowMock.justiceAPI =
-  createJusticeAPIMock() as unknown as WindowJusticeAPI;
+  // Extend jsdom navigator with clipboard mock (clipboard is read-only getter, use defineProperty)
+  // Only if navigator exists (jsdom provides it, Node doesn't)
+  if (typeof window.navigator !== 'undefined' && window.navigator) {
+    Object.defineProperty(window.navigator, "clipboard", {
+      value: createClipboardMock(),
+      writable: true,
+      configurable: true,
+    });
+  }
+}
 
 /**
- * Cleanup after each test
+ * Cleanup after each test - React 18 concurrent rendering support
+ *
+ * NOTE: @testing-library/react@16.3+ automatically cleans up after each test.
+ * No manual cleanup or afterEach hooks are needed.
+ * Any interference with React's cleanup causes "Should not already be working" errors.
  */
-afterEach(() => {
-  cleanup();
-});
 
 /**
  * Mock window.justiceAPI (Electron IPC bridge)
  * All methods return resolved promises by default
  */
 beforeEach(() => {
-  const windowInstance = createWindowMock();
-  const navigatorInstance = createNavigatorMock();
+  // Save original console.error before mocking to prevent infinite recursion
+  const originalConsoleError = console.error;
 
-  setGlobalWindow(windowInstance);
-  setGlobalNavigator(navigatorInstance);
+  // Mock console methods to avoid test output pollution
+  vi.spyOn(console, "error").mockImplementation((message, ...args) => {
+    // Only suppress React's internal concurrent work messages
+    if (
+      message.includes("ReactDOM.render") ||
+      message.includes("performConcurrentWorkOnRoot")
+    ) {
+      return;
+    }
+    // Use original console.error to avoid infinite recursion
+    originalConsoleError(message, ...args);
+  });
 
-  windowInstance.justiceAPI =
-    createJusticeAPIMock() as unknown as WindowJusticeAPI;
+  // CRITICAL: EXTEND jsdom window, don't replace it (preserves HTMLElement, Document, etc.)
+  // Only if window exists - service tests don't need DOM
+  if (typeof window !== 'undefined') {
+    Object.assign(window, {
+      localStorage: createLocalStorageMock(),
+      justiceAPI: createJusticeAPIMock() as unknown as WindowJusticeAPI,
+    });
+
+    // CRITICAL: EXTEND jsdom navigator with clipboard mock (clipboard is read-only getter, use defineProperty)
+    // Only if navigator exists (jsdom provides it, Node doesn't)
+    if (typeof window.navigator !== 'undefined' && window.navigator) {
+      Object.defineProperty(window.navigator, "clipboard", {
+        value: createClipboardMock(),
+        writable: true,
+        configurable: true,
+      });
+    }
+  }
 });
 
 /**

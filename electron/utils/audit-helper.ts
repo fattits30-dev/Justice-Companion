@@ -147,6 +147,7 @@ export function getUserIdFromEvent(event: IpcMainInvokeEvent): number | null {
   }
 
   // Lazy-load SessionManager to avoid circular dependencies
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { getSessionManager } = require("../services/SessionManager.ts");
   const sessionManager = getSessionManager();
 
@@ -165,6 +166,7 @@ export function isAuthenticated(event: IpcMainInvokeEvent): boolean {
   }
 
   // Lazy-load SessionManager to avoid circular dependencies
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { getSessionManager } = require("../services/SessionManager.ts");
   const sessionManager = getSessionManager();
 

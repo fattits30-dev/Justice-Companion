@@ -18,6 +18,9 @@ export default tseslint.config(
       "scripts/**/*", // Scripts run outside main project
       "src/test-utils/**/*", // Test utilities not in main tsconfig
       "e2e/**/*", // Legacy Playwright recordings (superseded by tests/e2e)
+      "electron/__tests__/**/*", // Electron tests not in tsconfig.electron.json
+      "temp-*.tsx", // Temporary test files
+      "temp-*.ts", // Temporary test files
     ],
   },
   {

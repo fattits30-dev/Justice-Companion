@@ -1,6 +1,6 @@
-import { memo } from 'react';
-import { Save, Plus, FileText } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
+import { memo } from "react";
+import { Save, Plus, FileText } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 
 interface Message {
   id: string;
@@ -22,7 +22,13 @@ interface MessageItemProps {
   style?: React.CSSProperties; // Optional: for react-window positioning (no longer used)
 }
 
-function MessageItemComponent({ message, onSaveToCase, onCreateCase, showThinking, style = {} }: MessageItemProps) {
+function MessageItemComponent({
+  message,
+  onSaveToCase,
+  onCreateCase,
+  showThinking,
+  style = {},
+}: MessageItemProps) {
   return (
     <div style={style}>
       <div

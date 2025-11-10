@@ -31,9 +31,11 @@ export function MainLayout() {
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
-  const [cases, setCases] = useState<Array<{ id: string; title: string; status: string }>>([]);
+  const [cases, setCases] = useState<
+    Array<{ id: string; title: string; status: string }>
+  >([]);
   const [selectedCaseId, setSelectedCaseId] = useState<string | null>(() => {
-    return localStorage.getItem('activeCaseId');
+    return localStorage.getItem("activeCaseId");
   });
 
   const handleNavigate = (route: string) => {
@@ -52,31 +54,35 @@ export function MainLayout() {
   const handleCaseSelect = (caseId: string | null) => {
     setSelectedCaseId(caseId);
     if (caseId) {
-      localStorage.setItem('activeCaseId', caseId);
+      localStorage.setItem("activeCaseId", caseId);
     } else {
-      localStorage.removeItem('activeCaseId');
+      localStorage.removeItem("activeCaseId");
     }
     // Trigger storage event for ChatView to reload messages
-    window.dispatchEvent(new Event('storage'));
+    window.dispatchEvent(new Event("storage"));
   };
 
   // Fetch cases from backend
   useEffect(() => {
     const fetchCases = async () => {
       try {
-        const sessionId = localStorage.getItem('sessionId');
-        if (!sessionId) return;
+        const sessionId = localStorage.getItem("sessionId");
+        if (!sessionId) {
+          return;
+        }
 
         const result = await window.justiceAPI.getAllCases(sessionId);
         if (result.success && result.data) {
-          setCases(result.data.map((c: any) => ({
-            id: c.id.toString(),
-            title: c.title,
-            status: c.status,
-          })));
+          setCases(
+            result.data.map((c: any) => ({
+              id: c.id.toString(),
+              title: c.title,
+              status: c.status,
+            })),
+          );
         }
       } catch (error) {
-        console.error('[MainLayout] Failed to fetch cases:', error);
+        console.error("[MainLayout] Failed to fetch cases:", error);
       }
     };
 

@@ -15,6 +15,7 @@
 
 import { describe, test, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor, act } from "@/test-utils/test-utils.tsx";
+import { render as renderRaw } from "@testing-library/react";
 import { AuthProvider, useAuth } from "../../src/contexts/AuthContext.tsx";
 
 // Test component that consumes AuthContext
@@ -39,18 +40,10 @@ function TestComponent() {
 
 describe("AuthContext", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-    // Mock localStorage for session management
-    const localStorageMock = {
-      getItem: vi.fn(() => null), // No session by default
-      setItem: vi.fn(),
-      removeItem: vi.fn(),
-      clear: vi.fn(),
-      length: 0,
-      key: vi.fn(),
-    };
-    Reflect.set(globalThis.window, "localStorage", localStorageMock);
-    // Mock getSession to return no session by default (overridden per test)
+    // Don't call vi.clearAllMocks() - let global setup handle mock creation
+    // Just clear localStorage for each test
+    localStorage.clear();
+    // Override getSession to return no session by default (tests can override)
     globalThis.window.justiceAPI.getSession = vi.fn().mockResolvedValue({
       success: true,
       data: null,
@@ -222,12 +215,7 @@ describe("AuthContext", () => {
       success: false,
       message: "Invalid credentials", // AuthContext uses 'message' not 'error'
     });
-    const mockGetSession = vi.fn().mockResolvedValue({
-      success: true,
-      data: null, // No existing session
-    });
     globalThis.window.justiceAPI.login = mockLogin;
-    globalThis.window.justiceAPI.getSession = mockGetSession;
 
     render(
       <AuthProvider>
@@ -235,9 +223,9 @@ describe("AuthContext", () => {
       </AuthProvider>
     );
 
-    // Wait for session restoration to complete
+    // Wait for initial loading to complete
     await waitFor(() => {
-      expect(mockGetSession).toHaveBeenCalled();
+      expect(screen.getByTestId("loading")).toHaveTextContent("ready");
     });
 
     const loginButton = screen.getByText("Login");
@@ -259,18 +247,8 @@ describe("AuthContext", () => {
    * TEST 8: Session restoration on mount
    */
   test("restores session from IPC on mount", async () => {
-    // Mock localStorage to have a sessionId
-    const localStorageMock = {
-      getItem: vi.fn((key) =>
-        key === "sessionId" ? "test-session-123" : null
-      ),
-      setItem: vi.fn(),
-      removeItem: vi.fn(),
-      clear: vi.fn(),
-      length: 0,
-      key: vi.fn(),
-    };
-    Reflect.set(globalThis.window, "localStorage", localStorageMock);
+    // Set sessionId in localStorage
+    localStorage.setItem("sessionId", "test-session-123");
 
     const mockGetSession = vi.fn().mockResolvedValue({
       success: true,
@@ -310,20 +288,17 @@ describe("AuthContext", () => {
    * TEST 9: No session restoration if getSession fails
    */
   test("stays unauthenticated if no session exists", async () => {
-    const mockGetSession = vi.fn().mockResolvedValue({
-      success: true,
-      data: null,
-    });
-    globalThis.window.justiceAPI.getSession = mockGetSession;
-
+    // Global beforeEach already sets getSession to return null data
+    // Just render and verify unauthenticated state
     render(
       <AuthProvider>
         <TestComponent />
       </AuthProvider>
     );
 
+    // Wait for loading to complete
     await waitFor(() => {
-      expect(mockGetSession).toHaveBeenCalled();
+      expect(screen.getByTestId("loading")).toHaveTextContent("ready");
     });
 
     // Should remain unauthenticated
@@ -342,7 +317,8 @@ describe("AuthContext", () => {
       .mockImplementation(() => {});
 
     expect(() => {
-      render(<TestComponent />);
+      // Use raw render (without AuthProvider wrapper)
+      renderRaw(<TestComponent />);
     }).toThrow("useAuth must be used within an AuthProvider"); // Match exact error message
 
     consoleError.mockRestore();

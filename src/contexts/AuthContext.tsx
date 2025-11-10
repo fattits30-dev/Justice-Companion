@@ -13,7 +13,13 @@
  * - Persistent session support
  */
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 
 // Types
 interface User {
@@ -28,8 +34,13 @@ interface AuthContextValue {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
-  login: (username: string, password: string, rememberMe: boolean) => Promise<void>;
+  login: (
+    username: string,
+    password: string,
+    rememberMe: boolean,
+  ) => Promise<void>;
   logout: () => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 interface AuthProviderProps {
@@ -57,41 +68,53 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const restoreSession = async () => {
       try {
         // Get sessionId from localStorage
-        const sessionId = localStorage.getItem('sessionId');
-        console.log('[AuthContext] Restoring session, sessionId:', sessionId);
+        const sessionId = localStorage.getItem("sessionId");
 
         if (!sessionId) {
-          console.log('[AuthContext] No sessionId found in localStorage');
           setIsLoading(false);
           return; // No session to restore
         }
 
-        console.log('[AuthContext] Calling getSession with sessionId:', sessionId);
         const response = await window.justiceAPI.getSession(sessionId);
-        console.log('[AuthContext] getSession response:', response);
 
         if (!response.success) {
           // Session invalid - clear it
-          console.log('[AuthContext] Session invalid, removing from localStorage');
-          localStorage.removeItem('sessionId');
+          localStorage.removeItem("sessionId");
           setIsLoading(false);
           return;
         }
 
         if (response.data) {
-          console.log('[AuthContext] Setting user from session:', response.data);
           // Session response has nested user object: { id, user: { id, username, email }, expiresAt }
           const sessionData = response.data;
+
+          // Check for profile overrides in localStorage
+          const profileFirstName = localStorage.getItem("userFirstName");
+          const profileLastName = localStorage.getItem("userLastName");
+          const profileEmail = localStorage.getItem("userEmail");
+
+          // Build username from profile data or use session data
+          let username = sessionData.user.username;
+          if (profileFirstName || profileLastName) {
+            const firstName = profileFirstName || "";
+            const lastName = profileLastName || "";
+            username =
+              `${firstName} ${lastName}`.trim() || sessionData.user.username;
+          }
+
+          // Use profile email if available, otherwise session email
+          const email = profileEmail || sessionData.user.email;
+
           setUser({
             id: String(sessionData.user.id),
-            username: sessionData.user.username,
-            email: sessionData.user.email
+            username: username,
+            email: email,
           });
           setSessionId(sessionId); // Save sessionId to state
         }
       } catch (err) {
         // Silently fail - no session to restore
-        console.error('[AuthContext] Error restoring session:', err);
+        console.error("[AuthContext] Error restoring session:", err);
       } finally {
         setIsLoading(false);
       }
@@ -103,31 +126,58 @@ export function AuthProvider({ children }: AuthProviderProps) {
   /**
    * Login user
    */
-  const login = async (username: string, password: string, rememberMe: boolean): Promise<void> => {
+  const login = async (
+    username: string,
+    password: string,
+    rememberMe: boolean,
+  ): Promise<void> => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await window.justiceAPI.login(username, password, rememberMe);
+      const response = await window.justiceAPI.login(
+        username,
+        password,
+        rememberMe,
+      );
 
       if (!response.success) {
-        throw new Error(response.message || 'Login failed');
+        throw new Error(response.message || "Login failed");
       }
 
       if (response.data) {
+        // Check for profile overrides in localStorage
+        const profileFirstName = localStorage.getItem("userFirstName");
+        const profileLastName = localStorage.getItem("userLastName");
+        const profileEmail = localStorage.getItem("userEmail");
+
+        // Build username from profile data or use session data
+        let username = response.data.user.username;
+        if (profileFirstName || profileLastName) {
+          const firstName = profileFirstName || "";
+          const lastName = profileLastName || "";
+          username =
+            `${firstName} ${lastName}`.trim() || response.data.user.username;
+        }
+
+        // Use profile email if available, otherwise session email
+        const email = profileEmail || response.data.user.email;
+
         setUser({
           id: String(response.data.user.id),
-          username: response.data.user.username,
-          email: response.data.user.email
+          username: username,
+          email: email,
         });
 
         // Always save sessionId to localStorage (rememberMe controls session duration on backend)
         const newSessionId = response.data.session.id;
-        localStorage.setItem('sessionId', newSessionId);
+        localStorage.setItem("sessionId", newSessionId);
         setSessionId(newSessionId); // Save sessionId to state
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      setError(
+        err instanceof Error ? err.message : "An unknown error occurred",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -141,19 +191,65 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setError(null);
 
     try {
-      const sessionId = localStorage.getItem('sessionId');
-      
+      const sessionId = localStorage.getItem("sessionId");
+
       if (sessionId) {
         await window.justiceAPI.logout(sessionId);
-        localStorage.removeItem('sessionId');
+        localStorage.removeItem("sessionId");
       }
 
       setUser(null);
       setSessionId(null); // Clear sessionId from state
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      setError(
+        err instanceof Error ? err.message : "An unknown error occurred",
+      );
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  /**
+   * Refresh user data (useful after profile updates)
+   */
+  const refreshUser = async (): Promise<void> => {
+    const currentSessionId = localStorage.getItem("sessionId");
+    if (!currentSessionId || !user) {
+      return;
+    }
+
+    try {
+      const response = await window.justiceAPI.getSession(currentSessionId);
+
+      if (response.success && response.data) {
+        // Apply the same profile merging logic as in restoreSession and login
+        const sessionData = response.data;
+
+        // Check for profile overrides in localStorage
+        const profileFirstName = localStorage.getItem("userFirstName");
+        const profileLastName = localStorage.getItem("userLastName");
+        const profileEmail = localStorage.getItem("userEmail");
+
+        // Build username from profile data or use session data
+        let username = sessionData.user.username;
+        if (profileFirstName || profileLastName) {
+          const firstName = profileFirstName || "";
+          const lastName = profileLastName || "";
+          username =
+            `${firstName} ${lastName}`.trim() || sessionData.user.username;
+        }
+
+        // Use profile email if available, otherwise session email
+        const email = profileEmail || sessionData.user.email;
+
+        setUser({
+          id: String(sessionData.user.id),
+          username: username,
+          email: email,
+        });
+      }
+    } catch (err) {
+      console.error("[AuthContext] Error refreshing user:", err);
     }
   };
 
@@ -164,14 +260,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     isLoading,
     error,
     login,
-    logout
+    logout,
+    refreshUser,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 /**
@@ -179,10 +272,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
  */
 export function useAuth() {
   const context = useContext(AuthContext);
-  
+
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
-  
+
   return context;
 }

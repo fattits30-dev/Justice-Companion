@@ -27,11 +27,11 @@ export class TestDatabaseHelper {
     // Use consistent test encryption key (matches DI container default for 'test' environment)
     // This ensures encryption/decryption works across TestDatabaseHelper and DI container
     const testKey = Buffer.from("test-key-for-testing-32-bytes!!!").toString(
-      "base64"
+      "base64",
     );
     this.encryptionService = new EncryptionService(testKey);
     console.log(
-      "[TestDatabaseHelper] Encryption service initialized with test key"
+      "[TestDatabaseHelper] Encryption service initialized with test key",
     );
 
     console.log("[TestDatabaseHelper] Finding migrations directory...");
@@ -58,7 +58,7 @@ export class TestDatabaseHelper {
 
     if (!migrationsDir) {
       throw new Error(
-        `[TestDatabaseHelper] Migrations directory not found! Searched paths: ${possiblePaths.join(", ")}`
+        `[TestDatabaseHelper] Migrations directory not found! Searched paths: ${possiblePaths.join(", ")}`,
       );
     }
 
@@ -74,13 +74,19 @@ export class TestDatabaseHelper {
       "012_consent_management.sql",
       "013_add_remember_me_to_sessions.sql",
       "014_remove_unused_remember_me_index.sql",
-      "015_fix_consent_cascade_gdpr.sql",
-      "016_remove_consent_foreign_key_gdpr.sql",
+      "015_add_performance_indexes.sql",
+      "016_create_deadlines_table.sql",
+      "017_create_search_tables.sql",
+      "018_create_notifications_table.sql",
+      "020_create_templates_system.sql",
+      "021_create_events_table.sql",
+      "022_add_backup_settings.sql",
+      "023_create_deadline_dependencies.sql",
       "024_add_evidence_updated_at.sql",
     ];
 
     console.log(
-      `[TestDatabaseHelper] Running ${migrations.length} migrations...`
+      `[TestDatabaseHelper] Running ${migrations.length} migrations...`,
     );
 
     for (const migration of migrations) {
@@ -133,7 +139,7 @@ export class TestDatabaseHelper {
   getEncryptionService(): EncryptionService {
     if (!this.encryptionService) {
       throw new Error(
-        "EncryptionService not initialized. Call initialize() first."
+        "EncryptionService not initialized. Call initialize() first.",
       );
     }
     return this.encryptionService;
@@ -150,15 +156,26 @@ export class TestDatabaseHelper {
     // Disable foreign keys temporarily to avoid constraint errors
     this.db.pragma("foreign_keys = OFF");
 
-    // Get all table names
+    // Get all table names (excluding virtual tables and SQLite internals)
     const tables = this.db
       .prepare(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
+        "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'",
       )
       .all() as { name: string }[];
 
-    // Clear all tables
+    // Clear all tables, skipping FTS5 virtual tables (they end with _data, _idx, _content, _docsize, _config)
     for (const { name } of tables) {
+      // Skip FTS5 internal tables (virtual tables cannot be modified with DELETE)
+      if (
+        name.endsWith("_data") ||
+        name.endsWith("_idx") ||
+        name.endsWith("_content") ||
+        name.endsWith("_docsize") ||
+        name.endsWith("_config")
+      ) {
+        continue;
+      }
+
       this.db.prepare(`DELETE FROM ${name}`).run();
     }
 

@@ -28,6 +28,10 @@ import { Card } from "../components/ui/Card.tsx";
 import { Button } from "../components/ui/Button.tsx";
 import { Badge } from "../components/ui/Badge.tsx";
 import { BackupSettingsTab } from "./settings/BackupSettings.tsx";
+import {
+  AI_PROVIDER_METADATA,
+  type AIProviderType,
+} from "../types/ai-providers.ts";
 
 type ThemeMode = "light" | "dark" | "system";
 
@@ -214,242 +218,90 @@ export function SettingsView() {
   );
 }
 
-// AI Provider Configurations
-const AI_PROVIDERS = {
-  openai: {
-    name: "OpenAI",
-    icon: Sparkles,
-    description: "GPT-4, GPT-3.5 - Industry-leading models",
-    apiKeyLabel: "OpenAI API Key",
-    apiKeyPlaceholder: "sk-...",
-    endpoint: "https://api.openai.com/v1",
-    models: [
-      {
-        value: "gpt-4-turbo",
-        label: "GPT-4 Turbo (Recommended)",
-        description: "Most capable, 128K context",
-      },
-      {
-        value: "gpt-4",
-        label: "GPT-4",
-        description: "High quality, 8K context",
-      },
-      {
-        value: "gpt-3.5-turbo",
-        label: "GPT-3.5 Turbo",
-        description: "Fast and affordable",
-      },
-    ],
-  },
-  anthropic: {
-    name: "Anthropic",
-    icon: Brain,
-    description: "Claude 3.5 Sonnet, Opus - Long context specialists",
-    apiKeyLabel: "Anthropic API Key",
-    apiKeyPlaceholder: "sk-ant-...",
-    endpoint: "https://api.anthropic.com/v1",
-    models: [
-      {
-        value: "claude-3-5-sonnet-20241022",
-        label: "Claude 3.5 Sonnet (Recommended)",
-        description: "Best performance, 200K context",
-      },
-      {
-        value: "claude-3-opus-20240229",
-        label: "Claude 3 Opus",
-        description: "Most intelligent, 200K context",
-      },
-      {
-        value: "claude-3-sonnet-20240229",
-        label: "Claude 3 Sonnet",
-        description: "Balanced, 200K context",
-      },
-    ],
-  },
-  qwen: {
-    name: "Qwen 2.5-72B",
-    icon: Brain,
-    description: "Alibaba's flagship model - UK legal expertise",
-    apiKeyLabel: "HuggingFace Token",
-    apiKeyPlaceholder: "hf_...",
-    endpoint:
-      "https://api-inference.huggingface.co/models/Qwen/Qwen2.5-72B-Instruct/v1",
-    models: [
-      {
-        value: "Qwen/Qwen2.5-72B-Instruct",
-        label: "Qwen 2.5 72B Instruct (Recommended)",
-        description: "32K context, excellent reasoning",
-      },
-    ],
-  },
-  huggingface: {
-    name: "Hugging Face",
-    icon: Sparkles,
-    description: "Access 350K+ models via Inference API",
-    apiKeyLabel: "Hugging Face Token",
-    apiKeyPlaceholder: "hf_...",
-    endpoint: "https://api-inference.huggingface.co",
-    models: [
-      {
-        value: "meta-llama/Meta-Llama-3.1-70B-Instruct",
-        label: "Llama 3.1 70B (Recommended)",
-        description: "128K context, affordable",
-      },
-      {
-        value: "Qwen/Qwen2.5-72B-Instruct",
-        label: "Qwen 2.5 72B",
-        description: "Best performance",
-      },
-      {
-        value: "mistralai/Mixtral-8x22B-Instruct-v0.1",
-        label: "Mixtral 8x22B",
-        description: "Multilingual",
-      },
-    ],
-  },
-  google: {
-    name: "Google AI",
-    icon: Sparkles,
-    description: "Gemini Pro, Flash - Multimodal capabilities",
-    apiKeyLabel: "Google AI API Key",
-    apiKeyPlaceholder: "AIza...",
-    endpoint: "https://generativelanguage.googleapis.com/v1",
-    models: [
-      {
-        value: "gemini-2.0-flash-exp",
-        label: "Gemini 2.0 Flash (Recommended)",
-        description: "Latest, fastest",
-      },
-      {
-        value: "gemini-1.5-pro",
-        label: "Gemini 1.5 Pro",
-        description: "2M context window",
-      },
-      {
-        value: "gemini-1.5-flash",
-        label: "Gemini 1.5 Flash",
-        description: "Fast and efficient",
-      },
-    ],
-  },
-  cohere: {
-    name: "Cohere",
-    icon: Brain,
-    description: "Command R+ - Enterprise-grade models",
-    apiKeyLabel: "Cohere API Key",
-    apiKeyPlaceholder: "co_...",
-    endpoint: "https://api.cohere.com/v1",
-    models: [
-      {
-        value: "command-r-plus",
-        label: "Command R+ (Recommended)",
-        description: "Most capable",
-      },
-      {
-        value: "command-r",
-        label: "Command R",
-        description: "Fast and efficient",
-      },
-      {
-        value: "command-light",
-        label: "Command Light",
-        description: "Lightweight",
-      },
-    ],
-  },
-  together: {
-    name: "Together AI",
-    icon: Zap,
-    description: "Llama, Mixtral, Qwen - Fast and affordable",
-    apiKeyLabel: "Together AI API Key",
-    apiKeyPlaceholder: "together-...",
-    endpoint: "https://api.together.xyz/v1",
-    models: [
-      {
-        value: "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
-        label: "Llama 3.1 70B Turbo",
-        description: "Ultra-fast",
-      },
-      {
-        value: "Qwen/Qwen2.5-72B-Instruct-Turbo",
-        label: "Qwen 2.5 72B",
-        description: "Best quality",
-      },
-      {
-        value: "mistralai/Mixtral-8x22B-Instruct-v0.1",
-        label: "Mixtral 8x22B",
-        description: "Large context",
-      },
-    ],
-  },
-  anyscale: {
-    name: "Anyscale",
-    icon: Zap,
-    description: "Managed Llama models at scale",
-    apiKeyLabel: "Anyscale API Key",
-    apiKeyPlaceholder: "esecret_...",
-    endpoint: "https://api.endpoints.anyscale.com/v1",
-    models: [
-      {
-        value: "meta-llama/Meta-Llama-3.1-70B-Instruct",
-        label: "Llama 3.1 70B",
-        description: "Recommended",
-      },
-      {
-        value: "meta-llama/Meta-Llama-3.1-8B-Instruct",
-        label: "Llama 3.1 8B",
-        description: "Fast and cheap",
-      },
-    ],
-  },
-  mistral: {
-    name: "Mistral AI",
-    icon: Sparkles,
-    description: "Mistral Large, Medium - European models",
-    apiKeyLabel: "Mistral AI API Key",
-    apiKeyPlaceholder: "msk_...",
-    endpoint: "https://api.mistral.ai/v1",
-    models: [
-      {
-        value: "mistral-large-latest",
-        label: "Mistral Large (Recommended)",
-        description: "Most capable",
-      },
-      {
-        value: "mistral-medium-latest",
-        label: "Mistral Medium",
-        description: "Balanced",
-      },
-      {
-        value: "mistral-small-latest",
-        label: "Mistral Small",
-        description: "Fast and efficient",
-      },
-    ],
-  },
-  perplexity: {
-    name: "Perplexity",
-    icon: Brain,
-    description: "Sonar models - Real-time web search",
-    apiKeyLabel: "Perplexity API Key",
-    apiKeyPlaceholder: "pplx-...",
-    endpoint: "https://api.perplexity.ai",
-    models: [
-      {
-        value: "llama-3.1-sonar-large-128k-online",
-        label: "Sonar Large Online",
-        description: "Real-time web data",
-      },
-      {
-        value: "llama-3.1-sonar-small-128k-online",
-        label: "Sonar Small Online",
-        description: "Fast with web access",
-      },
-    ],
-  },
-} as const;
+// Helper function to get provider icon
+const getProviderIcon = (provider: AIProviderType) => {
+  switch (provider) {
+    case "openai":
+      return Sparkles;
+    case "anthropic":
+      return Brain;
+    case "huggingface":
+      return Sparkles;
+    case "qwen":
+      return Brain;
+    case "google":
+      return Sparkles;
+    case "cohere":
+      return Brain;
+    case "together":
+      return Zap;
+    case "anyscale":
+      return Zap;
+    case "mistral":
+      return Sparkles;
+    case "perplexity":
+      return Brain;
+    default:
+      return Sparkles;
+  }
+};
 
-type AIProviderKey = keyof typeof AI_PROVIDERS;
+// Helper function to get API key details
+const getApiKeyDetails = (provider: AIProviderType) => {
+  switch (provider) {
+    case "openai":
+      return {
+        label: "OpenAI API Key",
+        placeholder: "sk-...",
+      };
+    case "anthropic":
+      return {
+        label: "Anthropic API Key",
+        placeholder: "sk-ant-...",
+      };
+    case "huggingface":
+    case "qwen":
+      return {
+        label: "Hugging Face Token",
+        placeholder: "hf_...",
+      };
+    case "google":
+      return {
+        label: "Google AI API Key",
+        placeholder: "AIza...",
+      };
+    case "cohere":
+      return {
+        label: "Cohere API Key",
+        placeholder: "co_...",
+      };
+    case "together":
+      return {
+        label: "Together AI API Key",
+        placeholder: "together-...",
+      };
+    case "anyscale":
+      return {
+        label: "Anyscale API Key",
+        placeholder: "esecret_...",
+      };
+    case "mistral":
+      return {
+        label: "Mistral AI API Key",
+        placeholder: "msk_...",
+      };
+    case "perplexity":
+      return {
+        label: "Perplexity API Key",
+        placeholder: "pplx-...",
+      };
+    default:
+      return {
+        label: "API Key",
+        placeholder: "Enter API key...",
+      };
+  }
+};
 
 // AI Provider Tab
 function AIProviderTab({
@@ -464,33 +316,38 @@ function AIProviderTab({
   readonly setShowApiKey: (show: boolean) => void;
 }) {
   const [selectedProvider, setSelectedProvider] =
-    useState<AIProviderKey>("openai");
+    useState<AIProviderType>("openai");
   const [selectedModel, setSelectedModel] = useState("");
   const [customEndpoint, setCustomEndpoint] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  const currentProvider = AI_PROVIDERS[selectedProvider];
-  const ProviderIcon = currentProvider.icon;
+  const currentProvider = AI_PROVIDER_METADATA[selectedProvider];
+  const ProviderIcon = getProviderIcon(selectedProvider);
+  const apiKeyDetails = getApiKeyDetails(selectedProvider);
 
   // Update selected model when provider changes
   React.useEffect(() => {
-    setSelectedModel(currentProvider.models[0].value);
-    setCustomEndpoint(currentProvider.endpoint);
-  }, [selectedProvider, currentProvider.models, currentProvider.endpoint]);
+    setSelectedModel(currentProvider.defaultModel);
+    setCustomEndpoint(currentProvider.defaultEndpoint);
+  }, [
+    selectedProvider,
+    currentProvider.defaultModel,
+    currentProvider.defaultEndpoint,
+  ]);
 
   const handleSave = async () => {
     setIsSaving(true);
 
     try {
-      const providerConfig = AI_PROVIDERS[selectedProvider];
+      const providerConfig = AI_PROVIDER_METADATA[selectedProvider];
 
       // Call the actual IPC handler to save configuration
       const result = await globalThis.window.justiceAPI.configureAI({
         provider: selectedProvider,
         apiKey: apiKey.trim(),
-        model: selectedModel || providerConfig.models[0].value,
-        endpoint: customEndpoint || providerConfig.endpoint,
+        model: selectedModel || providerConfig.defaultModel,
+        endpoint: customEndpoint || providerConfig.defaultEndpoint,
         temperature: 0.7,
         maxTokens: 2048,
         topP: 0.9,
@@ -507,14 +364,14 @@ function AIProviderTab({
             typeof result.error === "string"
               ? result.error
               : (result.error?.message ?? "Unknown error")
-          }`
+          }`,
         );
       }
     } catch (error) {
       console.error("[SettingsView] Error saving AI config:", error);
       alert(
         "Error saving configuration: " +
-          (error instanceof Error ? error.message : "Unknown error")
+          (error instanceof Error ? error.message : "Unknown error"),
       );
     } finally {
       setIsSaving(false);
@@ -547,18 +404,19 @@ function AIProviderTab({
                 id="ai-provider"
                 value={selectedProvider}
                 onChange={(e) =>
-                  setSelectedProvider(e.target.value as AIProviderKey)
+                  setSelectedProvider(e.target.value as AIProviderType)
                 }
                 className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white appearance-none focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent [&>option]:text-gray-900 [&>option]:bg-white"
                 aria-label="Select AI Provider"
               >
-                {Object.entries(AI_PROVIDERS).map(([key, provider]) => (
+                {Object.entries(AI_PROVIDER_METADATA).map(([key, provider]) => (
                   <option
                     key={key}
                     value={key}
                     className="text-gray-900 bg-white"
                   >
-                    {provider.name} - {provider.description}
+                    {provider.name} - {provider.availableModels.length} models
+                    available
                   </option>
                 ))}
               </select>
@@ -573,11 +431,15 @@ function AIProviderTab({
                   {currentProvider.name}
                 </span>
                 <Badge variant="success" className="ml-auto">
-                  Selected
+                  {currentProvider.availableModels.length} Models
                 </Badge>
               </div>
               <p className="text-xs text-white/60 mt-1">
-                {currentProvider.description}
+                {currentProvider.maxContextTokens.toLocaleString()} token
+                context •{" "}
+                {currentProvider.supportsStreaming
+                  ? "Streaming"
+                  : "Non-streaming"}
               </p>
             </div>
           </div>
@@ -588,7 +450,7 @@ function AIProviderTab({
               htmlFor="api-key"
               className="block text-sm font-medium text-white mb-2"
             >
-              {currentProvider.apiKeyLabel}
+              {apiKeyDetails.label}
             </label>
             <div className="relative">
               <input
@@ -596,9 +458,9 @@ function AIProviderTab({
                 type={showApiKey ? "text" : "password"}
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
-                placeholder={currentProvider.apiKeyPlaceholder}
+                placeholder={apiKeyDetails.placeholder}
                 className="w-full px-4 py-3 pr-12 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                aria-label={currentProvider.apiKeyLabel}
+                aria-label={apiKeyDetails.label}
               />
               <button
                 type="button"
@@ -625,7 +487,7 @@ function AIProviderTab({
               htmlFor="model"
               className="block text-sm font-medium text-white mb-2"
             >
-              Model
+              Model ({currentProvider.availableModels.length} available)
             </label>
             <select
               id="model"
@@ -634,13 +496,13 @@ function AIProviderTab({
               className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent [&>option]:text-gray-900 [&>option]:bg-white"
               aria-label="AI Model"
             >
-              {currentProvider.models.map((model) => (
+              {currentProvider.availableModels.map((model: string) => (
                 <option
-                  key={model.value}
-                  value={model.value}
+                  key={model}
+                  value={model}
                   className="text-gray-900 bg-white"
                 >
-                  {model.label} - {model.description}
+                  {model}
                 </option>
               ))}
             </select>
@@ -665,7 +527,7 @@ function AIProviderTab({
               type="text"
               value={customEndpoint}
               onChange={(e) => setCustomEndpoint(e.target.value)}
-              placeholder={currentProvider.endpoint}
+              placeholder={currentProvider.defaultEndpoint}
               className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono text-sm"
               aria-label="API Endpoint"
             />

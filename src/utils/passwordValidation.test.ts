@@ -24,13 +24,13 @@ describe("validatePasswordChange", () => {
   const twelveCharacterPassword = generatePasswordOfLength(12);
   const specialCharacterPassword = generateStrongTestPassword();
   const veryLongPassword = generatePasswordOfLength(48);
-  const mismatchedPassword = generateStrongTestPassword();
+  const mismatchedPassword = "DifferentPassword123!@#"; // Must be different from validNewPassword
 
   it("should return error when old password is empty", () => {
     const result = validatePasswordChange(
       "",
       validNewPassword,
-      validNewPassword
+      validNewPassword,
     );
 
     expect(result.isValid).toBe(false);
@@ -41,7 +41,7 @@ describe("validatePasswordChange", () => {
     const result = validatePasswordChange(
       validOldPassword,
       shortPassword,
-      shortPassword
+      shortPassword,
     );
 
     expect(result.isValid).toBe(false);
@@ -52,12 +52,12 @@ describe("validatePasswordChange", () => {
     const result = validatePasswordChange(
       validOldPassword,
       noUppercasePassword,
-      noUppercasePassword
+      noUppercasePassword,
     );
 
     expect(result.isValid).toBe(false);
     expect(result.error).toBe(
-      "Password must contain at least one uppercase letter"
+      "Password must contain at least one uppercase letter",
     );
   });
 
@@ -65,12 +65,12 @@ describe("validatePasswordChange", () => {
     const result = validatePasswordChange(
       validOldPassword,
       noLowercasePassword,
-      noLowercasePassword
+      noLowercasePassword,
     );
 
     expect(result.isValid).toBe(false);
     expect(result.error).toBe(
-      "Password must contain at least one lowercase letter"
+      "Password must contain at least one lowercase letter",
     );
   });
 
@@ -78,7 +78,7 @@ describe("validatePasswordChange", () => {
     const result = validatePasswordChange(
       validOldPassword,
       noDigitPassword,
-      noDigitPassword
+      noDigitPassword,
     );
 
     expect(result.isValid).toBe(false);
@@ -89,7 +89,7 @@ describe("validatePasswordChange", () => {
     const result = validatePasswordChange(
       validOldPassword,
       validNewPassword,
-      mismatchedPassword
+      mismatchedPassword,
     );
 
     expect(result.isValid).toBe(false);
@@ -100,7 +100,7 @@ describe("validatePasswordChange", () => {
     const result = validatePasswordChange(
       validOldPassword,
       validNewPassword,
-      validNewPassword
+      validNewPassword,
     );
 
     expect(result.isValid).toBe(true);
@@ -111,7 +111,7 @@ describe("validatePasswordChange", () => {
     const result = validatePasswordChange(
       validOldPassword,
       twelveCharacterPassword,
-      twelveCharacterPassword
+      twelveCharacterPassword,
     );
 
     expect(result.isValid).toBe(true);
@@ -121,7 +121,7 @@ describe("validatePasswordChange", () => {
     const result = validatePasswordChange(
       validOldPassword,
       specialCharacterPassword,
-      specialCharacterPassword
+      specialCharacterPassword,
     );
 
     expect(result.isValid).toBe(true);
@@ -131,7 +131,7 @@ describe("validatePasswordChange", () => {
     const result = validatePasswordChange(
       validOldPassword,
       veryLongPassword,
-      veryLongPassword
+      veryLongPassword,
     );
 
     expect(result.isValid).toBe(true);

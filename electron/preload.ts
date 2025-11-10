@@ -357,12 +357,14 @@ contextBridge.exposeInMainWorld("justiceAPI", {
   analyzeDocument: (
     filePath: string,
     sessionId: string,
-    userQuestion?: string
+    userQuestion?: string,
+    userProfile?: { name: string; email: string | null }
   ) =>
     ipcRenderer.invoke("ai:analyze-document", {
       filePath,
       sessionId,
       userQuestion,
+      userProfile,
     }),
 
   // File selection dialog (for document upload)

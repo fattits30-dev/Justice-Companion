@@ -1,0 +1,60 @@
+GLOBAL TECH INNOVATIONS PLC
+456 Innovation Drive
+Birmingham, B1 1AA
+United Kingdom
+
+Phone: +44 (0)121 123 4567
+Email: hr@globaltech.co.uk
+
+20 October 2024
+
+Test User
+78 Elm Street
+Birmingham, B2 2BB
+
+Dear Test User,
+
+RE: NOTICE OF TERMINATION OF EMPLOYMENT
+
+I am writing to formally notify you that your employment with Global Tech Innovations PLC will be terminated with effect from 31 October 2024.
+
+Following our meeting on 15 October 2024, and after careful consideration of your performance over the past 12 months, we have decided that your role as Lead Developer is no longer required due to organizational restructuring.
+
+During your Performance Improvement Plan (PIP) which commenced on 1 July 2024, several performance objectives were not met, including:
+- Delivery of the mobile application project by the agreed deadline
+- Code quality standards as measured by peer reviews
+- Team collaboration and knowledge sharing requirements
+
+The company is undergoing significant transformation to focus on cloud-native technologies and AI-driven solutions. After reviewing your current skill set and the requirements of our new strategic direction, we have determined that there is no suitable alternative position available within the organization.
+
+Your termination package will include:
+- Salary in lieu of notice: £8,333.33 (one month's salary)
+- Accrued holiday pay: £2,884.62 (15 days at full pay)
+- Ex-gratia payment: £5,000 (discretionary severance payment)
+
+All company property, including your laptop, mobile phone, access cards, and any confidential documents, must be returned to HR by 31 October 2024.
+
+You will receive your final payslip and P45 by 15 November 2024.
+
+We wish you success in your future career endeavors.
+
+Yours sincerely,
+
+Dr. Amanda Chen
+Chief Technology Officer
+Global Tech Innovations PLC
+
+---
+EMPLOYMENT DETAILS:
+Start Date: 15 March 2018
+Termination Date: 31 October 2024
+Length of Service: 6 years, 7 months
+Position: Lead Developer
+Department: Software Development
+Location: Birmingham Office
+Final Salary: £100,000 per annum (£8,333.33 per month)
+
+NOTICE PERIOD: One month (as per contract)
+GARDEN LEAVE: Applied from 20 October 2024
+
+APPEAL RIGHTS: You have the right to appeal this decision in writing to the HR Director within 5 working days of receiving this letter.

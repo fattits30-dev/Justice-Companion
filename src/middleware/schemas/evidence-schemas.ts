@@ -33,7 +33,7 @@ export const evidenceCreateSchema = z.object({
         .min(1, "Title is required")
         .max(
           MAX_TITLE_LENGTH,
-          `Title must be less than ${MAX_TITLE_LENGTH} characters`
+          `Title must be less than ${MAX_TITLE_LENGTH} characters`,
         )
         .trim(),
 
@@ -45,12 +45,12 @@ export const evidenceCreateSchema = z.object({
         .string()
         .max(
           MAX_PATH_LENGTH,
-          `File path must be less than ${MAX_PATH_LENGTH} characters`
+          `File path must be less than ${MAX_PATH_LENGTH} characters`,
         )
         .transform(sanitizeFilePath)
         .refine(
           (path) => !path.includes(".."),
-          "File path contains invalid traversal characters"
+          "File path contains invalid traversal characters",
         )
         .optional(),
 
@@ -58,7 +58,7 @@ export const evidenceCreateSchema = z.object({
         .string()
         .max(
           MAX_STRING_LENGTH,
-          `Content must be less than ${MAX_STRING_LENGTH} characters`
+          `Content must be less than ${MAX_STRING_LENGTH} characters`,
         )
         .trim()
         .optional(),
@@ -86,7 +86,7 @@ export const evidenceCreateSchema = z.object({
     .strict() // No additional properties allowed
     .refine(
       (data) => data.filePath ?? data.content,
-      "Either file path or content must be provided"
+      "Either file path or content must be provided",
     ),
 });
 
@@ -120,12 +120,19 @@ export const evidenceGetAllSchema = z.object({
  */
 export const evidenceGetByCaseSchema = z.object({
   caseId: z
-    .number({
-      message: "Case ID is required and must be a number",
+    .union([z.string(), z.number()], {
+      message: "Case ID is required",
     })
-    .int("Case ID must be an integer")
-    .positive("Case ID must be positive")
-    .max(2147483647, "Case ID exceeds maximum value"),
+    .transform((val) => {
+      const num = typeof val === "string" ? parseInt(val, 10) : val;
+      if (isNaN(num) || !Number.isInteger(num) || num <= 0) {
+        throw new Error("Case ID must be a positive integer");
+      }
+      if (num > 2147483647) {
+        throw new Error("Case ID exceeds maximum value");
+      }
+      return num;
+    }),
 });
 
 /**
@@ -147,7 +154,7 @@ export const evidenceUpdateSchema = z.object({
         .min(1, "Title cannot be empty")
         .max(
           MAX_TITLE_LENGTH,
-          `Title must be less than ${MAX_TITLE_LENGTH} characters`
+          `Title must be less than ${MAX_TITLE_LENGTH} characters`,
         )
         .trim()
         .optional(),
@@ -162,12 +169,12 @@ export const evidenceUpdateSchema = z.object({
         .string()
         .max(
           MAX_PATH_LENGTH,
-          `File path must be less than ${MAX_PATH_LENGTH} characters`
+          `File path must be less than ${MAX_PATH_LENGTH} characters`,
         )
         .transform(sanitizeFilePath)
         .refine(
           (path) => !path.includes(".."),
-          "File path contains invalid traversal characters"
+          "File path contains invalid traversal characters",
         )
         .optional(),
 
@@ -175,7 +182,7 @@ export const evidenceUpdateSchema = z.object({
         .string()
         .max(
           MAX_STRING_LENGTH,
-          `Content must be less than ${MAX_STRING_LENGTH} characters`
+          `Content must be less than ${MAX_STRING_LENGTH} characters`,
         )
         .trim()
         .optional(),
@@ -195,7 +202,7 @@ export const evidenceUpdateSchema = z.object({
     .strict() // No additional properties allowed
     .refine(
       (data) => Object.keys(data).length > 0,
-      "At least one field must be provided for update"
+      "At least one field must be provided for update",
     ),
 });
 

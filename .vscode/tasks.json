@@ -2,9 +2,10 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "npm: dev",
+      "label": "Start Vite Dev Server",
       "type": "shell",
-      "command": "pnpm dev",
+      "command": "pnpm",
+      "args": ["dev"],
       "isBackground": true,
       "problemMatcher": {
         "owner": "vite",
@@ -17,7 +18,7 @@
         "background": {
           "activeOnStart": true,
           "beginsPattern": "VITE",
-          "endsPattern": "(Local|Network):.*http"
+          "endsPattern": "Local:\\s+http://localhost:5176"
         }
       },
       "presentation": {
@@ -385,6 +386,47 @@
       "presentation": {
         "reveal": "always",
         "panel": "shared"
+      }
+    },
+    {
+      "label": "Install Dependencies",
+      "type": "shell",
+      "command": "pnpm install",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Rebuild better-sqlite3",
+      "type": "shell",
+      "command": "pnpm rebuild:electron",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Full Setup (Install + Rebuild)",
+      "type": "shell",
+      "command": "pnpm install && pnpm rebuild:electron",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "Start Development (Full Stack)",
+      "type": "shell",
+      "command": "pnpm electron:dev",
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
       }
     }
   ]

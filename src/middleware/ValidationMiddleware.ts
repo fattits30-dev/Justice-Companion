@@ -8,12 +8,13 @@
 import { z } from "zod";
 import { logger } from "../utils/logger.ts";
 import type { AuditLogger } from "../services/AuditLogger.ts";
-import { ipcSchemas } from "./schemas.ts";
+
 import {
   preventSqlInjection,
   sanitizeForLogging,
   sanitizeHtml,
 } from "./utils/sanitizers.ts";
+import { ipcSchemas } from "./schemas/index.ts";
 
 /**
  * Custom validation error with detailed field information
@@ -25,7 +26,7 @@ export class ValidationError extends Error {
   constructor(
     message: string,
     fields: Record<string, string[]> = {},
-    code = "VALIDATION_ERROR"
+    code = "VALIDATION_ERROR",
   ) {
     super(message);
     this.name = "ValidationError";
@@ -117,7 +118,7 @@ export class ValidationMiddleware {
         throw new ValidationError(
           `No validation schema defined for channel: ${channel}`,
           {},
-          "SCHEMA_NOT_FOUND"
+          "SCHEMA_NOT_FOUND",
         );
       }
 
@@ -151,7 +152,7 @@ export class ValidationMiddleware {
         throw new ValidationError(
           "Validation failed: Invalid request data",
           fields,
-          "VALIDATION_FAILED"
+          "VALIDATION_FAILED",
         );
       }
 
@@ -168,7 +169,7 @@ export class ValidationMiddleware {
       if (duration > this.slowValidationThreshold) {
         logger.warn(
           "ValidationMiddleware",
-          `Slow validation for ${channel}: ${duration.toFixed(2)}ms`
+          `Slow validation for ${channel}: ${duration.toFixed(2)}ms`,
         );
       }
 
@@ -198,7 +199,7 @@ export class ValidationMiddleware {
       throw new ValidationError(
         "Validation error: Unable to process request",
         {},
-        "VALIDATION_ERROR"
+        "VALIDATION_ERROR",
       );
     }
   }
@@ -215,7 +216,7 @@ export class ValidationMiddleware {
     if (process.env.NODE_ENV === "development") {
       logger.warn(
         "ValidationMiddleware",
-        "Registered ${this.schemas.size} validation schemas"
+        "Registered ${this.schemas.size} validation schemas",
       );
     }
   }
@@ -291,7 +292,7 @@ export class ValidationMiddleware {
         throw new ValidationError(
           "String exceeds maximum length",
           { field: [`Maximum length is ${this.maxStringLength} characters`] },
-          "STRING_TOO_LONG"
+          "STRING_TOO_LONG",
         );
       }
 
@@ -303,7 +304,7 @@ export class ValidationMiddleware {
         throw new ValidationError(
           "Invalid characters detected",
           { field: ["Input contains potentially dangerous characters"] },
-          "INVALID_CHARACTERS"
+          "INVALID_CHARACTERS",
         );
       }
 
@@ -316,7 +317,7 @@ export class ValidationMiddleware {
         throw new ValidationError(
           "Array exceeds maximum length",
           { field: [`Maximum ${this.maxArrayLength} items allowed`] },
-          "ARRAY_TOO_LONG"
+          "ARRAY_TOO_LONG",
         );
       }
 
@@ -326,7 +327,7 @@ export class ValidationMiddleware {
     if (data && typeof data === "object") {
       const sanitized: Record<string, unknown> = {};
       for (const [key, value] of Object.entries(
-        data as Record<string, unknown>
+        data as Record<string, unknown>,
       )) {
         // Skip sanitization for certain field types
         if (this.shouldSkipSanitization(key, value)) {
@@ -386,7 +387,7 @@ export class ValidationMiddleware {
                 "Filing deadline must be before hearing date",
               ],
             },
-            "INVALID_DATE_RANGE"
+            "INVALID_DATE_RANGE",
           );
         }
       }
@@ -493,7 +494,7 @@ export class ValidationMiddleware {
 let instance: ValidationMiddleware | null = null;
 
 export function getValidationMiddleware(
-  auditLogger?: AuditLogger
+  auditLogger?: AuditLogger,
 ): ValidationMiddleware {
   instance ??= new ValidationMiddleware(auditLogger);
   return instance;

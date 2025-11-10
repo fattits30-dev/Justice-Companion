@@ -45,12 +45,12 @@ export class DataDeleter {
    */
   deleteAllUserData(
     userId: number,
-    options: GdprDeleteOptions
+    options: GdprDeleteOptions,
   ): GdprDeleteResult {
     // Safety check: Explicit confirmation required
     if (!options.confirmed) {
       throw new Error(
-        "GDPR deletion requires explicit confirmation. Set options.confirmed = true."
+        "GDPR deletion requires explicit confirmation. Set options.confirmed = true.",
       );
     }
 
@@ -66,6 +66,14 @@ export class DataDeleter {
       .prepare("SELECT COUNT(*) as count FROM consents WHERE user_id = ?")
       .get(userId) as { count: number };
 
+    // Save consents BEFORE deletion (CASCADE will delete them, we'll restore after)
+    const savedConsents = this.db
+      .prepare("SELECT * FROM consents WHERE user_id = ?")
+      .all(userId) as any[];
+
+    // Disable foreign keys BEFORE transaction to allow restoring consents without user
+    this.db.pragma("foreign_keys = OFF");
+
     // Use transaction for atomicity - all deletions succeed or all fail
     const deleteTransaction = this.db.transaction(() => {
       // Step 2: Delete in bottom-up order (child tables first)
@@ -74,56 +82,56 @@ export class DataDeleter {
       // event_evidence (FK → timeline_events → cases)
       const eventEvidenceResult = this.db
         .prepare(
-          "DELETE FROM event_evidence WHERE event_id IN (SELECT id FROM timeline_events WHERE case_id IN (SELECT id FROM cases WHERE user_id = ?))"
+          "DELETE FROM event_evidence WHERE event_id IN (SELECT id FROM timeline_events WHERE case_id IN (SELECT id FROM cases WHERE user_id = ?))",
         )
         .run(userId);
 
       // timeline_events (FK → cases)
       const timelineEventsResult = this.db
         .prepare(
-          "DELETE FROM timeline_events WHERE case_id IN (SELECT id FROM cases WHERE user_id = ?)"
+          "DELETE FROM timeline_events WHERE case_id IN (SELECT id FROM cases WHERE user_id = ?)",
         )
         .run(userId);
 
       // case_facts (FK → cases)
       const caseFactsResult = this.db
         .prepare(
-          "DELETE FROM case_facts WHERE case_id IN (SELECT id FROM cases WHERE user_id = ?)"
+          "DELETE FROM case_facts WHERE case_id IN (SELECT id FROM cases WHERE user_id = ?)",
         )
         .run(userId);
 
       // legal_issues (FK → cases)
       const legalIssuesResult = this.db
         .prepare(
-          "DELETE FROM legal_issues WHERE case_id IN (SELECT id FROM cases WHERE user_id = ?)"
+          "DELETE FROM legal_issues WHERE case_id IN (SELECT id FROM cases WHERE user_id = ?)",
         )
         .run(userId);
 
       // actions (FK → cases)
       const actionsResult = this.db
         .prepare(
-          "DELETE FROM actions WHERE case_id IN (SELECT id FROM cases WHERE user_id = ?)"
+          "DELETE FROM actions WHERE case_id IN (SELECT id FROM cases WHERE user_id = ?)",
         )
         .run(userId);
 
       // notes (FK → cases)
       const notesResult = this.db
         .prepare(
-          "DELETE FROM notes WHERE case_id IN (SELECT id FROM cases WHERE user_id = ?)"
+          "DELETE FROM notes WHERE case_id IN (SELECT id FROM cases WHERE user_id = ?)",
         )
         .run(userId);
 
       // evidence (FK → cases)
       const evidenceResult = this.db
         .prepare(
-          "DELETE FROM evidence WHERE case_id IN (SELECT id FROM cases WHERE user_id = ?)"
+          "DELETE FROM evidence WHERE case_id IN (SELECT id FROM cases WHERE user_id = ?)",
         )
         .run(userId);
 
       // chat_messages (FK → chat_conversations)
       const chatMessagesResult = this.db
         .prepare(
-          "DELETE FROM chat_messages WHERE conversation_id IN (SELECT id FROM chat_conversations WHERE user_id = ?)"
+          "DELETE FROM chat_messages WHERE conversation_id IN (SELECT id FROM chat_conversations WHERE user_id = ?)",
         )
         .run(userId);
 
@@ -166,10 +174,35 @@ export class DataDeleter {
       deletedCounts["user_facts"] = userFactsResult.changes;
       deletedCounts["sessions"] = sessionsResult.changes;
       deletedCounts["users"] = userResult.changes;
+
+      // Restore saved consents (CASCADE deleted them, we need to restore for GDPR compliance)
+      // First, ensure any existing consents for this user are deleted (in case of re-runs)
+      this.db.prepare("DELETE FROM consents WHERE user_id = ?").run(userId);
+
+      for (const consent of savedConsents) {
+        this.db
+          .prepare(
+            `INSERT INTO consents (id, user_id, consent_type, granted, granted_at, revoked_at, version, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          )
+          .run(
+            consent.id,
+            consent.user_id,
+            consent.consent_type,
+            consent.granted,
+            consent.granted_at,
+            consent.revoked_at,
+            consent.version,
+            consent.created_at,
+          );
+      }
     });
 
     // Execute the transaction
     deleteTransaction();
+
+    // Re-enable foreign keys after transaction completes
+    this.db.pragma("foreign_keys = ON");
 
     return {
       success: true,
