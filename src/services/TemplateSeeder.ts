@@ -5,6 +5,7 @@
 
 import type { TemplateRepository } from "../repositories/TemplateRepository.ts";
 import type { CreateTemplateInput } from "../models/CaseTemplate.ts";
+import { logger } from "../utils/logger.ts";
 
 export class TemplateSeeder {
   constructor(private templateRepo: TemplateRepository) {}
@@ -19,7 +20,7 @@ export class TemplateSeeder {
       // Check if template already exists by name
       const allTemplates = this.templateRepo.findAllTemplates();
       const existing = allTemplates.find(
-        (t) => t.name === template.name && t.isSystemTemplate
+        (t) => t.name === template.name && t.isSystemTemplate,
       );
 
       if (!existing) {
@@ -28,9 +29,15 @@ export class TemplateSeeder {
           isSystemTemplate: true,
           userId: null,
         });
-        console.log(`✓ Seeded template: ${template.name}`);
+        logger.info(`✓ Seeded template: ${template.name}`, {
+          service: "TemplateSeeder",
+          template: template.name,
+        });
       } else {
-        console.log(`⊘ Template already exists: ${template.name}`);
+        logger.debug(`⊘ Template already exists: ${template.name}`, {
+          service: "TemplateSeeder",
+          template: template.name,
+        });
       }
     }
   }

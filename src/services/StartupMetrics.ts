@@ -3,6 +3,8 @@
  * Monitors and logs critical startup phases for Justice Companion
  */
 
+import { logger } from "../utils/logger.ts";
+
 export interface StartupTimestamps {
   moduleLoad: number; // When main.ts is first loaded
   appReady: number; // When Electron app.whenReady fires
@@ -177,25 +179,25 @@ export class StartupMetrics {
   logStartupMetrics(): void {
     const metrics = this.calculateMetrics();
 
-    console.info(
+    logger.info(
       "\n╔════════════════════════════════════════════════════════════╗",
     );
-    console.info(
+    logger.info(
       "║              STARTUP PERFORMANCE METRICS                    ║",
     );
-    console.info(
+    logger.info(
       "╠════════════════════════════════════════════════════════════╣",
     );
-    console.info(
+    logger.info(
       "║                                                              ║",
     );
-    console.info(
+    logger.info(
       "║  Phase Timing (from app ready)                              ║",
     );
-    console.info(
+    logger.info(
       "║  ─────────────────────────────────                          ║",
     );
-    console.info(
+    logger.info(
       `║  Loading window shown:         ${this.formatWithIndicator(
         metrics.timeToLoadingWindow,
         {
@@ -204,7 +206,7 @@ export class StartupMetrics {
         },
       ).padEnd(20)} ║`,
     );
-    console.info(
+    logger.info(
       `║  Critical services ready:      ${this.formatWithIndicator(
         metrics.timeToCriticalServices,
         {
@@ -213,7 +215,7 @@ export class StartupMetrics {
         },
       ).padEnd(20)} ║`,
     );
-    console.info(
+    logger.info(
       `║  Critical handlers registered: ${this.formatWithIndicator(
         metrics.timeToCriticalHandlers,
         {
@@ -222,13 +224,13 @@ export class StartupMetrics {
         },
       ).padEnd(20)} ║`,
     );
-    console.info(
+    logger.info(
       `║  Main window created:          ${this.formatWithIndicator(
         metrics.timeToMainWindowCreated,
         { good: 200, warning: 300 },
       ).padEnd(20)} ║`,
     );
-    console.info(
+    logger.info(
       `║  Main window shown:            ${this.formatWithIndicator(
         metrics.timeToMainWindowShown,
         {
@@ -237,60 +239,60 @@ export class StartupMetrics {
         },
       ).padEnd(20)} ║`,
     );
-    console.info(
+    logger.info(
       `║  Non-critical services ready:  ${this.formatDuration(
         metrics.timeToNonCriticalServices,
       ).padEnd(20)} ║`,
     );
-    console.info(
+    logger.info(
       `║  All handlers registered:      ${this.formatDuration(
         metrics.timeToAllHandlers,
       ).padEnd(20)} ║`,
     );
-    console.info(
+    logger.info(
       "║                                                              ║",
     );
-    console.info(
+    logger.info(
       "║  Phase Deltas                                                ║",
     );
-    console.info(
+    logger.info(
       "║  ─────────────────                                           ║",
     );
-    console.info(
+    logger.info(
       `║  Loading → Services:           ${this.formatDuration(
         metrics.loadingToServices,
       ).padEnd(20)} ║`,
     );
-    console.info(
+    logger.info(
       `║  Services → Handlers:          ${this.formatDuration(
         metrics.servicesToHandlers,
       ).padEnd(20)} ║`,
     );
-    console.info(
+    logger.info(
       `║  Handlers → Main Window:       ${this.formatDuration(
         metrics.handlersToMainWindow,
       ).padEnd(20)} ║`,
     );
-    console.info(
+    logger.info(
       `║  Main Window → Non-Critical:   ${this.formatDuration(
         metrics.mainWindowToNonCritical,
       ).padEnd(20)} ║`,
     );
-    console.info(
+    logger.info(
       `║  Non-Critical → Complete:      ${this.formatDuration(
         metrics.nonCriticalToComplete,
       ).padEnd(20)} ║`,
     );
-    console.info(
+    logger.info(
       "║                                                              ║",
     );
-    console.info(
+    logger.info(
       "║  Summary                                                     ║",
     );
-    console.info(
+    logger.info(
       "║  ──────────                                                  ║",
     );
-    console.info(
+    logger.info(
       `║  Perceived startup time:       ${this.formatWithIndicator(
         metrics.perceivedStartupTime,
         {
@@ -299,7 +301,7 @@ export class StartupMetrics {
         },
       ).padEnd(20)} ║`,
     );
-    console.info(
+    logger.info(
       `║  Total startup time:           ${this.formatWithIndicator(
         metrics.totalStartupTime,
         {
@@ -308,10 +310,10 @@ export class StartupMetrics {
         },
       ).padEnd(20)} ║`,
     );
-    console.info(
+    logger.info(
       "║                                                              ║",
     );
-    console.info(
+    logger.info(
       "╚════════════════════════════════════════════════════════════╝",
     );
 
@@ -334,7 +336,7 @@ export class StartupMetrics {
         );
       }
     } else if (metrics.perceivedStartupTime < 400) {
-      console.info("\nExcellent startup performance! Target achieved.");
+      logger.info("\nExcellent startup performance! Target achieved.");
     }
   }
 
