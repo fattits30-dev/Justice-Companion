@@ -107,7 +107,7 @@ export function setupChatHandlers(): void {
         caseId?: number | null;
       }
     ): Promise<IPCResponse<{ conversationId: number }>> => {
-      return withAuthorization(request.sessionId, async (userId) => {
+      return withAuthorization(request.sessionId, async (_userId) => {
         try {
           // Validate message
           if (!request.message || request.message.trim().length === 0) {
@@ -284,7 +284,7 @@ export function setupChatHandlers(): void {
         requestId: string;
       }
     ): Promise<IPCResponse<string>> => {
-      return withAuthorization(request.sessionId, async (userId) => {
+      return withAuthorization(request.sessionId, async (_userId) => {
         try {
           // Validate message
           if (!request.message || request.message.trim().length === 0) {
@@ -488,7 +488,7 @@ export function setupChatHandlers(): void {
         userProfile?: { name: string; email: string | null };
       }
     ): Promise<IPCResponse<{ analysis: string; suggestedCaseData?: any }>> => {
-      withAuthorization(request.sessionId, async (userId) => {
+      withAuthorization(request.sessionId, async (_userId) => {
         try {
           // Validate file path
           if (!request.filePath) {

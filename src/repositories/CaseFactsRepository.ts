@@ -1,8 +1,15 @@
-import { getDb } from '../db/database.ts';
-import type { CaseFact, CreateCaseFactInput, UpdateCaseFactInput } from '../domains/cases/entities/CaseFact.ts';
-import type { FactCategory, FactImportance } from '../types/ai-functions.ts';
-import type { AuditLogger } from '../services/AuditLogger.ts';
-import { EncryptionService, type EncryptedData } from '../services/EncryptionService.ts';
+import { getDb } from "../db/database.ts";
+import type {
+  CaseFact,
+  CreateCaseFactInput,
+  UpdateCaseFactInput,
+} from "../domains/cases/entities/CaseFact.ts";
+import type { FactCategory, FactImportance } from "../types/ai-functions.ts";
+import type { AuditLogger } from "../services/AuditLogger.ts";
+import {
+  EncryptionService,
+  type EncryptedData,
+} from "../services/EncryptionService.ts";
 
 /**
  * Database row type for case_facts table
@@ -30,10 +37,7 @@ export class CaseFactsRepository {
   private encryptionService: EncryptionService;
   private auditLogger?: AuditLogger;
 
-  constructor(
-    encryptionService: EncryptionService,
-    auditLogger?: AuditLogger,
-  ) {
+  constructor(encryptionService: EncryptionService, auditLogger?: AuditLogger) {
     this.encryptionService = encryptionService;
     this.auditLogger = auditLogger;
   }
@@ -46,10 +50,12 @@ export class CaseFactsRepository {
       const db = getDb();
 
       // Encrypt fact_content before INSERT (P1 priority field - may contain PII)
-      const encryptedContent = this.encryptionService?.encrypt(input.factContent);
+      const encryptedContent = this.encryptionService?.encrypt(
+        input.factContent,
+      );
 
       if (!encryptedContent) {
-        throw new Error('EncryptionService is required to create case facts');
+        throw new Error("EncryptionService is required to create case facts");
       }
 
       const contentToStore = JSON.stringify(encryptedContent);
@@ -63,21 +69,21 @@ export class CaseFactsRepository {
         caseId: input.caseId,
         factContent: contentToStore,
         factCategory: input.factCategory,
-        importance: input.importance || 'medium',
+        importance: input.importance || "medium",
       });
 
       const createdFact = this.findById(result.lastInsertRowid as number)!;
 
       // Audit: Case fact created
       this.auditLogger?.log({
-        eventType: 'case_fact.create',
-        resourceType: 'case_fact',
+        eventType: "case_fact.create",
+        resourceType: "case_fact",
         resourceId: createdFact.id.toString(),
-        action: 'create',
+        action: "create",
         details: {
           caseId: input.caseId,
           factCategory: input.factCategory,
-          importance: input.importance || 'medium',
+          importance: input.importance || "medium",
           contentLength: input.factContent.length,
         },
         success: true,
@@ -87,14 +93,14 @@ export class CaseFactsRepository {
     } catch (_error) {
       // Audit: Failed creation
       this.auditLogger?.log({
-        eventType: 'case_fact.create',
-        resourceType: 'case_fact',
-        resourceId: 'unknown',
-        action: 'create',
+        eventType: "case_fact.create",
+        resourceType: "case_fact",
+        resourceId: "unknown",
+        action: "create",
         details: {
           caseId: input.caseId,
           factCategory: input.factCategory,
-          importance: input.importance || 'medium',
+          importance: input.importance || "medium",
           contentLength: input.factContent.length,
         },
         success: false,
@@ -126,25 +132,25 @@ export class CaseFactsRepository {
     let decryptedContent: string;
     try {
       const parsedContent = JSON.parse(row.fact_content);
-      if (typeof parsedContent === 'string') {
+      if (typeof parsedContent === "string") {
         // Legacy plaintext format
         decryptedContent = parsedContent;
       } else {
         // Encrypted format
         const decrypted = this.encryptionService.decrypt(parsedContent);
-        decryptedContent = decrypted ?? '';
+        decryptedContent = decrypted ?? "";
       }
-    } catch (e) {
+    } catch (_e) {
       // Fallback to plaintext if decryption fails
       decryptedContent = row.fact_content;
     }
 
     // Audit: Content access (PII decryption)
     this.auditLogger?.log({
-      eventType: 'case_fact.content_access',
-      resourceType: 'case_fact',
+      eventType: "case_fact.content_access",
+      resourceType: "case_fact",
       resourceId: id.toString(),
-      action: 'read',
+      action: "read",
       details: {
         factId: id,
       },
@@ -168,27 +174,27 @@ export class CaseFactsRepository {
   update(id: number, input: UpdateCaseFactInput): CaseFact | null {
     try {
       const existingFact = this.findById(id);
-      
+
       if (!existingFact) {
         return null;
       }
-      
+
       const db = getDb();
-      
+
       // Encrypt fact_content if provided (P1 priority field - may contain PII)
       let encryptedContent: EncryptedData | null = null;
       let contentToStore: string | null = null;
-      
+
       if (input.factContent !== undefined) {
         encryptedContent = this.encryptionService?.encrypt(input.factContent);
-        
+
         if (!encryptedContent) {
-          throw new Error('EncryptionService is required to update case facts');
+          throw new Error("EncryptionService is required to update case facts");
         }
-        
+
         contentToStore = JSON.stringify(encryptedContent);
       }
-      
+
       const stmt = db.prepare(`
         UPDATE case_facts 
         SET 
@@ -198,18 +204,18 @@ export class CaseFactsRepository {
           updated_at = CURRENT_TIMESTAMP
         WHERE id = @id
       `);
-      
+
       const result = stmt.run({
         id,
         factContent: contentToStore,
         factCategory: input.factCategory,
         importance: input.importance,
       });
-      
+
       if (result.changes === 0) {
         return null;
       }
-      
+
       const updatedFact = this.findById(id)!;
 
       // Track what changed
@@ -226,10 +232,10 @@ export class CaseFactsRepository {
 
       // Audit: Case fact updated
       this.auditLogger?.log({
-        eventType: 'case_fact.update',
-        resourceType: 'case_fact',
+        eventType: "case_fact.update",
+        resourceType: "case_fact",
         resourceId: updatedFact.id.toString(),
-        action: 'update',
+        action: "update",
         details: {
           factId: id,
           caseId: updatedFact.caseId,
@@ -245,10 +251,10 @@ export class CaseFactsRepository {
     } catch (_error) {
       // Audit: Failed update
       this.auditLogger?.log({
-        eventType: 'case_fact.update',
-        resourceType: 'case_fact',
+        eventType: "case_fact.update",
+        resourceType: "case_fact",
         resourceId: id.toString(),
-        action: 'update',
+        action: "update",
         details: {
           factCategory: input.factCategory,
           importance: input.importance,
@@ -266,38 +272,38 @@ export class CaseFactsRepository {
   delete(id: number): boolean {
     try {
       const db = getDb();
-      
+
       const stmt = db.prepare(`
         DELETE FROM case_facts 
         WHERE id = ?
       `);
-      
+
       const result = stmt.run(id);
-      
+
       if (result.changes === 0) {
         return false;
       }
-      
+
       // Audit: Case fact deleted
       this.auditLogger?.log({
-        eventType: 'case_fact.delete',
-        resourceType: 'case_fact',
+        eventType: "case_fact.delete",
+        resourceType: "case_fact",
         resourceId: id.toString(),
-        action: 'delete',
+        action: "delete",
         details: {
           factId: id,
         },
         success: true,
       });
-      
+
       return true;
     } catch (_error) {
       // Audit: Failed deletion
       this.auditLogger?.log({
-        eventType: 'case_fact.delete',
-        resourceType: 'case_fact',
+        eventType: "case_fact.delete",
+        resourceType: "case_fact",
         resourceId: id.toString(),
-        action: 'delete',
+        action: "delete",
         details: {},
         success: false,
       });
@@ -328,14 +334,14 @@ export class CaseFactsRepository {
 
     const rows = stmt.all(caseId) as CaseFactRow[];
 
-    const facts = rows.map(row => this.mapRowToCaseFact(row));
+    const facts = rows.map((row) => this.mapRowToCaseFact(row));
 
     // Audit: Bulk content access (PII decryption)
     this.auditLogger?.log({
-      eventType: 'case_fact.content_access',
-      resourceType: 'case_fact',
+      eventType: "case_fact.content_access",
+      resourceType: "case_fact",
       resourceId: caseId.toString(),
-      action: 'read',
+      action: "read",
       details: {
         count: facts.length,
       },
@@ -350,7 +356,13 @@ export class CaseFactsRepository {
    */
   findByCategory(
     caseId: number,
-    category: 'timeline' | 'evidence' | 'witness' | 'location' | 'communication' | 'other'
+    category:
+      | "timeline"
+      | "evidence"
+      | "witness"
+      | "location"
+      | "communication"
+      | "other",
   ): CaseFact[] {
     const db = getDb();
 
@@ -363,14 +375,14 @@ export class CaseFactsRepository {
 
     const rows = stmt.all(caseId, category) as CaseFactRow[];
 
-    const facts = rows.map(row => this.mapRowToCaseFact(row));
+    const facts = rows.map((row) => this.mapRowToCaseFact(row));
 
     // Audit: Content access for filtered facts
     this.auditLogger?.log({
-      eventType: 'case_fact.content_access',
-      resourceType: 'case_fact',
+      eventType: "case_fact.content_access",
+      resourceType: "case_fact",
       resourceId: caseId.toString(),
-      action: 'read',
+      action: "read",
       details: {
         factCategory: category,
         factsRetrieved: facts.length,
@@ -386,7 +398,7 @@ export class CaseFactsRepository {
    */
   findByImportance(
     caseId: number,
-    importance: 'low' | 'medium' | 'high' | 'critical'
+    importance: "low" | "medium" | "high" | "critical",
   ): CaseFact[] {
     const db = getDb();
 
@@ -399,7 +411,7 @@ export class CaseFactsRepository {
 
     const rows = stmt.all(caseId, importance) as CaseFactRow[];
 
-    return rows.map(row => this.mapRowToCaseFact(row));
+    return rows.map((row) => this.mapRowToCaseFact(row));
   }
 
   /**
@@ -410,15 +422,15 @@ export class CaseFactsRepository {
     let decryptedContent: string;
     try {
       const parsedContent = JSON.parse(row.fact_content);
-      if (typeof parsedContent === 'string') {
+      if (typeof parsedContent === "string") {
         // Legacy plaintext format
         decryptedContent = parsedContent;
       } else {
         // Encrypted format
         const decrypted = this.encryptionService.decrypt(parsedContent);
-        decryptedContent = decrypted ?? '';
+        decryptedContent = decrypted ?? "";
       }
-    } catch (e) {
+    } catch (_e) {
       // Fallback to plaintext if decryption fails
       decryptedContent = row.fact_content;
     }
@@ -427,8 +439,8 @@ export class CaseFactsRepository {
       id: row.id,
       caseId: row.case_id,
       factContent: decryptedContent,
-      factCategory: row.fact_category as CaseFact['factCategory'],
-      importance: row.importance as CaseFact['importance'],
+      factCategory: row.fact_category as CaseFact["factCategory"],
+      importance: row.importance as CaseFact["importance"],
       createdAt: new Date(row.created_at).toISOString(),
       updatedAt: new Date(row.updated_at).toISOString(),
     };
