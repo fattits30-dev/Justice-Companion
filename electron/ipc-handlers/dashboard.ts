@@ -1,8 +1,8 @@
 import { ipcMain, type IpcMainInvokeEvent } from "electron";
-import { successResponse, type IPCResponse } from "../utils/ipc-response";
-import { withAuthorization } from "../utils/authorization-wrapper";
-import { databaseManager } from "../../src/db/database";
-import { DatabaseError } from "../../src/errors/DomainErrors";
+import { successResponse, type IPCResponse } from '../utils/ipc-response.ts';
+import { withAuthorization } from '../utils/authorization-wrapper.ts';
+import { databaseManager } from '../../src/db/database.ts';
+import { DatabaseError } from '../../src/errors/DomainErrors.ts';
 
 /**
  * ===== DASHBOARD HANDLERS =====

@@ -1,12 +1,15 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X, Save, FolderOpen } from 'lucide-react';
-import { Button } from '../../components/ui/Button';
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { X, Save, FolderOpen } from "lucide-react";
+import { Button } from "../../components/ui/Button.ts";
 
 interface SaveToCaseDialogProps {
   open: boolean;
   onClose: () => void;
-  onSave: (caseId: number, title: string) => Promise<{ success: boolean; error?: string }>;
+  onSave: (
+    caseId: number,
+    title: string,
+  ) => Promise<{ success: boolean; error?: string }>;
   messageContent: string;
   sessionId: string;
 }
@@ -14,7 +17,7 @@ interface SaveToCaseDialogProps {
 interface Case {
   id: number;
   title: string;
-  status: 'active' | 'pending' | 'closed';
+  status: "active" | "pending" | "closed";
 }
 
 export function SaveToCaseDialog({
@@ -26,7 +29,7 @@ export function SaveToCaseDialog({
 }: SaveToCaseDialogProps) {
   const [cases, setCases] = useState<Case[]>([]);
   const [selectedCaseId, setSelectedCaseId] = useState<number | null>(null);
-  const [title, setTitle] = useState('AI Legal Research Note');
+  const [title, setTitle] = useState("AI Legal Research Note");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loadingCases, setLoadingCases] = useState(true);
@@ -36,7 +39,7 @@ export function SaveToCaseDialog({
     if (open) {
       loadCases();
       // Auto-generate a better title from the content
-      const firstLine = messageContent.split('\n')[0].trim();
+      const firstLine = messageContent.split("\n")[0].trim();
       if (firstLine.length > 0 && firstLine.length < 100) {
         setTitle(firstLine);
       }
@@ -51,25 +54,28 @@ export function SaveToCaseDialog({
       const result = await window.justiceAPI.getAllCases(sessionId);
 
       if (!result.success) {
-        const errorMsg = typeof result.error === 'string'
-          ? result.error
-          : result.error?.message || 'Failed to load cases';
+        const errorMsg =
+          typeof result.error === "string"
+            ? result.error
+            : result.error?.message || "Failed to load cases";
         setError(errorMsg);
         return;
       }
 
       if (result.data) {
-        const activeCases = result.data.filter((c: Case) => c.status === 'active');
+        const activeCases = result.data.filter(
+          (c: Case) => c.status === "active",
+        );
         setCases(activeCases);
 
         if (activeCases.length > 0) {
           setSelectedCaseId(activeCases[0].id);
         } else {
-          setError('No active cases found. Please create a case first.');
+          setError("No active cases found. Please create a case first.");
         }
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoadingCases(false);
     }
@@ -77,7 +83,7 @@ export function SaveToCaseDialog({
 
   const handleSave = async () => {
     if (!selectedCaseId || !title.trim()) {
-      setError('Please select a case and enter a title');
+      setError("Please select a case and enter a title");
       return;
     }
 
@@ -90,19 +96,21 @@ export function SaveToCaseDialog({
       if (result.success) {
         onClose();
         // Reset form
-        setTitle('AI Legal Research Note');
+        setTitle("AI Legal Research Note");
         setSelectedCaseId(null);
       } else {
-        setError(result.error || 'Failed to save');
+        setError(result.error || "Failed to save");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setIsLoading(false);
     }
   };
 
-  if (!open) {return null;}
+  if (!open) {
+    return null;
+  }
 
   return (
     <AnimatePresence>
@@ -130,8 +138,12 @@ export function SaveToCaseDialog({
                 <Save className="w-5 h-5 text-primary-400" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-white">Save AI Response to Case</h2>
-                <p className="text-sm text-white/70">Add this research to your case notes</p>
+                <h2 className="text-xl font-bold text-white">
+                  Save AI Response to Case
+                </h2>
+                <p className="text-sm text-white/70">
+                  Add this research to your case notes
+                </p>
               </div>
             </div>
             <button
@@ -159,7 +171,10 @@ export function SaveToCaseDialog({
 
             {/* Title Input */}
             <div>
-              <label htmlFor="title" className="block text-sm font-medium text-white/90 mb-2">
+              <label
+                htmlFor="title"
+                className="block text-sm font-medium text-white/90 mb-2"
+              >
                 Note Title <span className="text-danger-400">*</span>
               </label>
               <input
@@ -175,7 +190,10 @@ export function SaveToCaseDialog({
 
             {/* Case Selection */}
             <div>
-              <label htmlFor="case" className="block text-sm font-medium text-white/90 mb-2">
+              <label
+                htmlFor="case"
+                className="block text-sm font-medium text-white/90 mb-2"
+              >
                 Select Case <span className="text-danger-400">*</span>
               </label>
 
@@ -188,7 +206,9 @@ export function SaveToCaseDialog({
                   <div className="flex items-start gap-3">
                     <FolderOpen className="w-5 h-5 text-warning-400 flex-shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-warning-400 font-medium">No active cases</p>
+                      <p className="text-warning-400 font-medium">
+                        No active cases
+                      </p>
                       <p className="text-sm text-warning-300/80 mt-1">
                         Create a case first to save AI responses.
                       </p>
@@ -198,8 +218,10 @@ export function SaveToCaseDialog({
               ) : (
                 <select
                   id="case"
-                  value={selectedCaseId || ''}
-                  onChange={(e) => setSelectedCaseId(parseInt(e.target.value, 10))}
+                  value={selectedCaseId || ""}
+                  onChange={(e) =>
+                    setSelectedCaseId(parseInt(e.target.value, 10))
+                  }
                   className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
                   disabled={isLoading}
                 >
@@ -222,20 +244,21 @@ export function SaveToCaseDialog({
 
           {/* Footer */}
           <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-white/10 bg-gray-900/50">
-            <Button
-              variant="ghost"
-              onClick={onClose}
-              disabled={isLoading}
-            >
+            <Button variant="ghost" onClick={onClose} disabled={isLoading}>
               Cancel
             </Button>
             <Button
               variant="primary"
               onClick={handleSave}
-              disabled={isLoading || !selectedCaseId || !title.trim() || cases.length === 0}
+              disabled={
+                isLoading ||
+                !selectedCaseId ||
+                !title.trim() ||
+                cases.length === 0
+              }
               icon={<Save />}
             >
-              {isLoading ? 'Saving...' : 'Save to Case'}
+              {isLoading ? "Saving..." : "Save to Case"}
             </Button>
           </div>
         </motion.div>

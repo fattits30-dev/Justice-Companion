@@ -40,9 +40,15 @@ export function DocumentsToolbar({
           }}
           className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all [&>option]:text-gray-900 [&>option]:bg-white"
         >
-          <option value="" className="text-gray-900 bg-white">Select a case</option>
+          <option value="" className="text-gray-900 bg-white">
+            Select a case
+          </option>
           {cases.map((caseItem) => (
-            <option key={caseItem.id} value={caseItem.id} className="text-gray-900 bg-white">
+            <option
+              key={caseItem.id}
+              value={caseItem.id}
+              className="text-gray-900 bg-white"
+            >
               {caseItem.title}
             </option>
           ))}
@@ -56,7 +62,11 @@ export function DocumentsToolbar({
           className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all [&>option]:text-gray-900 [&>option]:bg-white"
         >
           {evidenceFilterOptions.map((option) => (
-            <option key={option.value} value={option.value} className="text-gray-900 bg-white">
+            <option
+              key={option.value}
+              value={option.value}
+              className="text-gray-900 bg-white"
+            >
               {option.label}
             </option>
           ))}

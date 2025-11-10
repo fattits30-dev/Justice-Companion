@@ -2,15 +2,15 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { Plus, Calendar } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../../contexts/AuthContext.tsx";
-import { Button } from "../../components/ui/Button";
-import { TimelineItem } from "./components/TimelineItem";
-import { TimelineEmpty } from "./components/TimelineEmpty";
-import { AddDeadlineDialog } from "./components/AddDeadlineDialog";
+import { Button } from "../../components/ui/Button.ts";
+import { TimelineItem } from "./components/TimelineItem.ts";
+import { TimelineEmpty } from "./components/TimelineEmpty.ts";
+import { AddDeadlineDialog } from "./components/AddDeadlineDialog.ts";
 import type {
   DeadlineWithCase,
   CreateDeadlineInput,
   UpdateDeadlineInput,
-} from "../../domains/timeline/entities/Deadline";
+} from "../../domains/timeline/entities/Deadline.ts";
 
 interface Case {
   id: number;
@@ -80,7 +80,7 @@ export function TimelineView() {
             caseTitle: caseData?.title || "Unknown Case",
             caseStatus: caseData?.status || "active",
           };
-        }
+        },
       );
 
       setDeadlines(deadlinesWithCase);
@@ -127,7 +127,7 @@ export function TimelineView() {
       try {
         const result = await globalThis.window.justiceAPI.createDeadline(
           input,
-          sessionId
+          sessionId,
         );
 
         if (result.success) {
@@ -148,7 +148,7 @@ export function TimelineView() {
         };
       }
     },
-    [sessionId, loadData]
+    [sessionId, loadData],
   );
 
   const handleEditDeadline = useCallback((deadline: DeadlineWithCase) => {
@@ -169,7 +169,7 @@ export function TimelineView() {
         const result = await globalThis.window.justiceAPI.updateDeadline(
           editingDeadline.id,
           input,
-          sessionId
+          sessionId,
         );
 
         if (result.success) {
@@ -191,7 +191,7 @@ export function TimelineView() {
         };
       }
     },
-    [editingDeadline, sessionId, loadData]
+    [editingDeadline, sessionId, loadData],
   );
 
   const handleCompleteDeadline = useCallback(
@@ -208,7 +208,7 @@ export function TimelineView() {
         const result = await globalThis.window.justiceAPI.updateDeadline(
           deadline.id,
           { status: newStatus },
-          sessionId
+          sessionId,
         );
 
         if (result.success) {
@@ -218,7 +218,7 @@ export function TimelineView() {
         console.error("Failed to update deadline status:", err);
       }
     },
-    [sessionId, loadData]
+    [sessionId, loadData],
   );
 
   const handleDeleteDeadline = useCallback((deadline: DeadlineWithCase) => {
@@ -238,7 +238,7 @@ export function TimelineView() {
     try {
       const result = await globalThis.window.justiceAPI.deleteDeadline(
         deletingDeadline.id,
-        sessionId
+        sessionId,
       );
 
       if (result.success) {
@@ -304,7 +304,7 @@ export function TimelineView() {
                 value={selectedCaseId || ""}
                 onChange={(e) =>
                   setSelectedCaseId(
-                    e.target.value ? Number.parseInt(e.target.value, 10) : null
+                    e.target.value ? Number.parseInt(e.target.value, 10) : null,
                   )
                 }
                 className="

@@ -604,9 +604,8 @@ export class ProjectPlanner {
   /**
    * Generate Core Features phase
    */
-  // @ts-expect-error - Unused parameter analysis - workflow files are WIP
   private generateFeaturePhase(
-    analysis: ProjectAnalysis,
+    _analysis: ProjectAnalysis,
     userGoal?: string,
   ): WorkflowPhase {
     const tasks: WorkflowTask[] = [];

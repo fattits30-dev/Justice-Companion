@@ -3,8 +3,8 @@
  * Allows users to add/remove tags from evidence items
  */
 
-import { useState, useEffect, useCallback } from 'react';
-import type { Tag } from '../../models/Tag';
+import { useState, useEffect, useCallback } from "react";
+import type { Tag } from "../../models/Tag.ts";
 
 interface EvidenceTagSelectorProps {
   evidenceId: number;
@@ -15,7 +15,7 @@ interface EvidenceTagSelectorProps {
 export function EvidenceTagSelector({
   evidenceId,
   onTagsChange,
-  className = '',
+  className = "",
 }: EvidenceTagSelectorProps) {
   const [, setAllTags] = useState<Tag[]>([]);
   const [, setSelectedTags] = useState<Tag[]>([]);
@@ -24,14 +24,16 @@ export function EvidenceTagSelector({
   const loadTags = useCallback(async () => {
     try {
       const sessionId = window.sessionManager?.getSessionId();
-      if (!sessionId) {return;}
+      if (!sessionId) {
+        return;
+      }
 
       const result = await window.api.tags.list(sessionId);
       if (result.success && result.data) {
         setAllTags(result.data);
       }
     } catch (error) {
-      console.error('Error loading tags:', error);
+      console.error("Error loading tags:", error);
     }
   }, []);
 
@@ -39,15 +41,20 @@ export function EvidenceTagSelector({
     setIsLoading(true);
     try {
       const sessionId = window.sessionManager?.getSessionId();
-      if (!sessionId) {return;}
+      if (!sessionId) {
+        return;
+      }
 
-      const result = await window.api.tags.getForEvidence(evidenceId, sessionId);
+      const result = await window.api.tags.getForEvidence(
+        evidenceId,
+        sessionId,
+      );
       if (result.success && result.data) {
         setSelectedTags(result.data);
         onTagsChange?.(result.data);
       }
     } catch (error) {
-      console.error('Error loading evidence tags:', error);
+      console.error("Error loading evidence tags:", error);
     } finally {
       setIsLoading(false);
     }

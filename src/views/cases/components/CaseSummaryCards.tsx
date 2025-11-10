@@ -1,11 +1,6 @@
 import type { Case } from "../../../domains/cases/entities/Case.ts";
 import { Card } from "../../../components/ui/Card.tsx";
-import {
-  Briefcase,
-  TrendingUp,
-  Clock,
-  CheckCircle,
-} from "lucide-react";
+import { Briefcase, TrendingUp, Clock, CheckCircle } from "lucide-react";
 import { useMemo } from "react";
 
 interface CaseSummaryCardsProps {

@@ -1,8 +1,8 @@
 import { ipcMain, type IpcMainInvokeEvent } from "electron";
-import { type IPCResponse } from "../utils/ipc-response";
-import { withAuthorization } from "../utils/authorization-wrapper";
-import { AIProviderConfigService } from "../../src/services/AIProviderConfigService";
-import type { AIProviderType } from "../../src/types/ai-providers";
+import { type IPCResponse } from '../utils/ipc-response.ts';
+import { withAuthorization } from '../utils/authorization-wrapper.ts';
+import { AIProviderConfigService } from '../../src/services/AIProviderConfigService.ts';
+import type { AIProviderType } from '../../src/types/ai-providers.ts';
 
 // AI configuration service singleton
 let aiConfigService: AIProviderConfigService | null = null;

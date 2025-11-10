@@ -23,13 +23,13 @@ import {
   successResponse,
   isIPCResponse,
   type IPCResponse,
-} from "./ipc-response";
-import { getSessionManager } from "../services/SessionManager";
-import { AuthorizationMiddleware } from "../../src/middleware/AuthorizationMiddleware";
-import { getRepositories } from "../../src/repositories";
-import { AuditLogger } from "../../src/services/AuditLogger";
-import { getDb } from "../../src/db/database";
-import { EvidenceNotFoundError } from "../../src/errors/DomainErrors";
+} from './ipc-response.ts';
+import { getSessionManager } from '../services/SessionManager.ts';
+import { AuthorizationMiddleware } from '../../src/middleware/AuthorizationMiddleware.ts';
+import { getRepositories } from '../../src/repositories.ts';
+import { AuditLogger } from '../../src/services/AuditLogger.ts';
+import { getDb } from '../../src/db/database.ts';
+import { EvidenceNotFoundError } from '../../src/errors/DomainErrors.ts';
 
 // AuthorizationError is loaded at runtime via require() to avoid TypeScript path issues
 class AuthorizationError extends Error {

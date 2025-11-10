@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { Evidence, EvidenceType } from "../../domains/evidence/entities/Evidence.ts";
+import type {
+  Evidence,
+  EvidenceType,
+} from "../../domains/evidence/entities/Evidence.ts";
 import type { Case } from "../../domains/cases/entities/Case.ts";
 import { useAuth } from "../../contexts/AuthContext.tsx";
 import { DocumentsToolbar } from "./components/DocumentsToolbar.tsx";
@@ -79,36 +82,39 @@ export function DocumentsView() {
     }
   }, [sessionId]);
 
-  const loadEvidence = useCallback(async (caseId: number) => {
-    if (!sessionId) {
-      setEvidenceError("No active session");
-      setEvidenceState("error");
-      return;
-    }
-
-    try {
-      setEvidenceState("loading");
-      setEvidenceError(null);
-      const response = await window.justiceAPI.getAllEvidence(
-        caseId.toString(),
-        sessionId,
-      );
-
-      if (!response.success) {
-        throw new Error(response.error?.message || "Failed to load evidence");
+  const loadEvidence = useCallback(
+    async (caseId: number) => {
+      if (!sessionId) {
+        setEvidenceError("No active session");
+        setEvidenceState("error");
+        return;
       }
 
-      if (!response.data) {
-        throw new Error("No data returned from getAllEvidence");
-      }
+      try {
+        setEvidenceState("loading");
+        setEvidenceError(null);
+        const response = await window.justiceAPI.getAllEvidence(
+          caseId.toString(),
+          sessionId,
+        );
 
-      setEvidence(response.data);
-      setEvidenceState("ready");
-    } catch (err) {
-      setEvidenceError(err instanceof Error ? err.message : "Unknown error");
-      setEvidenceState("error");
-    }
-  }, [sessionId]);
+        if (!response.success) {
+          throw new Error(response.error?.message || "Failed to load evidence");
+        }
+
+        if (!response.data) {
+          throw new Error("No data returned from getAllEvidence");
+        }
+
+        setEvidence(response.data);
+        setEvidenceState("ready");
+      } catch (err) {
+        setEvidenceError(err instanceof Error ? err.message : "Unknown error");
+        setEvidenceState("error");
+      }
+    },
+    [sessionId],
+  );
 
   useEffect(() => {
     if (!authLoading && sessionId) {
@@ -140,7 +146,9 @@ export function DocumentsView() {
         );
 
         if (!response.success) {
-          throw new Error(response.error?.message || "Failed to upload evidence");
+          throw new Error(
+            response.error?.message || "Failed to upload evidence",
+          );
         }
 
         if (!response.data) {

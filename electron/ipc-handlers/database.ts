@@ -13,15 +13,15 @@ import {
   successResponse,
   formatError,
   type IPCResponse,
-} from "../utils/ipc-response";
-import { withAuthorization } from "../utils/authorization-wrapper";
-import { logAuditEvent, AuditEventType } from "../utils/audit-helper";
-import { databaseManager } from "../../src/db/database";
+} from '../utils/ipc-response.ts';
+import { withAuthorization } from '../utils/authorization-wrapper.ts';
+import { logAuditEvent, AuditEventType } from '../utils/audit-helper.ts';
+import { databaseManager } from '../../src/db/database.ts';
 import {
   DatabaseError,
   FileNotFoundError,
   EncryptionError,
-} from "../../src/errors/DomainErrors";
+} from '../../src/errors/DomainErrors.ts';
 
 const UI_ERROR_AUDIT_EVENT = "UI_ERROR_LOGGED" as AuditEventType;
 

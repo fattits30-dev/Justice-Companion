@@ -5,7 +5,7 @@ import { databaseManager } from "../../src/db/database.ts";
 import { GdprService } from "../../src/services/gdpr/GdprService.ts";
 import { EncryptionService } from "../../src/services/EncryptionService.ts";
 import { AuditLogger } from "../../src/services/AuditLogger.ts";
-import { getKeyManager } from "../services/KeyManagerService";
+import { getKeyManager } from '../services/KeyManagerService.ts';
 import {
   GdprComplianceError,
   ConsentRequiredError,

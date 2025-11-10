@@ -1,45 +1,48 @@
-import { Edit2, Trash2, CheckCircle, Circle, FolderOpen } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { memo } from 'react';
-import { Card } from '../../../components/ui/Card';
-import { Badge } from '../../../components/ui/Badge';
-import { Button } from '../../../components/ui/Button';
-import type { DeadlineWithCase } from '../../../domains/timeline/entities/Deadline';
+import { Edit2, Trash2, CheckCircle, Circle, FolderOpen } from "lucide-react";
+import { motion } from "framer-motion";
+import { memo } from "react";
+import { Card } from "../../../components/ui/Card.ts";
+import { Badge } from "../../../components/ui/Badge.ts";
+import { Button } from "../../../components/ui/Button.ts";
+import type { DeadlineWithCase } from "../../../domains/timeline/entities/Deadline.ts";
 import {
   formatDeadlineStatus,
   isDeadlineUrgent,
-} from '../../../domains/timeline/entities/Deadline';
+} from "../../../domains/timeline/entities/Deadline.ts";
 
 // Constant color mappings (moved outside component to prevent recreation)
 const urgencyColors = {
   overdue: {
-    dot: 'bg-danger-500',
-    line: 'bg-danger-500/30',
-    glow: 'shadow-danger',
+    dot: "bg-danger-500",
+    line: "bg-danger-500/30",
+    glow: "shadow-danger",
   },
   urgent: {
-    dot: 'bg-warning-500',
-    line: 'bg-warning-500/30',
-    glow: 'shadow-warning',
+    dot: "bg-warning-500",
+    line: "bg-warning-500/30",
+    glow: "shadow-warning",
   },
   future: {
-    dot: 'bg-success-500',
-    line: 'bg-success-500/30',
-    glow: 'shadow-success',
+    dot: "bg-success-500",
+    line: "bg-success-500/30",
+    glow: "shadow-success",
   },
   completed: {
-    dot: 'bg-gray-500',
-    line: 'bg-gray-500/30',
-    glow: '',
+    dot: "bg-gray-500",
+    line: "bg-gray-500/30",
+    glow: "",
   },
 };
 
 // Constant priority badge variant mapping
-const priorityVariant: Record<'high' | 'medium' | 'low' | 'critical', 'danger' | 'warning' | 'neutral'> = {
-  critical: 'danger' as const,
-  high: 'danger' as const,
-  medium: 'warning' as const,
-  low: 'neutral' as const,
+const priorityVariant: Record<
+  "high" | "medium" | "low" | "critical",
+  "danger" | "warning" | "neutral"
+> = {
+  critical: "danger" as const,
+  high: "danger" as const,
+  medium: "warning" as const,
+  low: "neutral" as const,
 };
 
 interface TimelineItemProps {
@@ -58,12 +61,18 @@ function TimelineItemComponent({
   onCaseClick,
 }: TimelineItemProps) {
   // Determine urgency level
-  const getUrgency = (): 'overdue' | 'urgent' | 'future' | 'completed' => {
-    if (deadline.status === 'completed') {return 'completed';}
-    if (deadline.status === 'overdue') {return 'overdue';}
+  const getUrgency = (): "overdue" | "urgent" | "future" | "completed" => {
+    if (deadline.status === "completed") {
+      return "completed";
+    }
+    if (deadline.status === "overdue") {
+      return "overdue";
+    }
 
-    if (isDeadlineUrgent(deadline.deadlineDate)) {return 'urgent';}
-    return 'future';
+    if (isDeadlineUrgent(deadline.deadlineDate)) {
+      return "urgent";
+    }
+    return "future";
   };
 
   const urgency = getUrgency();
@@ -71,10 +80,10 @@ function TimelineItemComponent({
   // Format date
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
     });
   };
 
@@ -153,7 +162,8 @@ function TimelineItemComponent({
                 variant={priorityVariant[deadline.priority]}
                 data-variant={priorityVariant[deadline.priority]}
               >
-                {deadline.priority.charAt(0).toUpperCase() + deadline.priority.slice(1)}
+                {deadline.priority.charAt(0).toUpperCase() +
+                  deadline.priority.slice(1)}
               </Badge>
             </div>
 
@@ -168,16 +178,16 @@ function TimelineItemComponent({
             <div className="flex items-center gap-2">
               <Badge
                 variant={
-                  urgency === 'overdue'
-                    ? 'danger'
-                    : urgency === 'urgent'
-                      ? 'warning'
-                      : urgency === 'completed'
-                        ? 'neutral'
-                        : 'success'
+                  urgency === "overdue"
+                    ? "danger"
+                    : urgency === "urgent"
+                      ? "warning"
+                      : urgency === "completed"
+                        ? "neutral"
+                        : "success"
                 }
                 dot
-                pulse={urgency === 'overdue'}
+                pulse={urgency === "overdue"}
               >
                 {statusText}
               </Badge>
@@ -197,10 +207,14 @@ function TimelineItemComponent({
               <Button
                 variant="ghost"
                 size="sm"
-                icon={deadline.status === 'completed' ? <Circle /> : <CheckCircle />}
+                icon={
+                  deadline.status === "completed" ? <Circle /> : <CheckCircle />
+                }
                 onClick={() => onComplete(deadline)}
               >
-                {deadline.status === 'completed' ? 'Mark Incomplete' : 'Complete'}
+                {deadline.status === "completed"
+                  ? "Mark Incomplete"
+                  : "Complete"}
               </Button>
 
               <Button

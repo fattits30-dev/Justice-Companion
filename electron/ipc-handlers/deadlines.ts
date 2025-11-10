@@ -1,19 +1,19 @@
 import { ipcMain, type IpcMainInvokeEvent } from "electron";
-import { successResponse, type IPCResponse } from "../utils/ipc-response";
+import { successResponse, type IPCResponse } from '../utils/ipc-response.ts';
 import {
   withAuthorization,
   getAuthorizationMiddleware,
-} from "../utils/authorization-wrapper";
-import { databaseManager } from "../../src/db/database";
-import { DeadlineRepository } from "../../src/repositories/DeadlineRepository";
-import { AuditLogger } from "../../src/services/AuditLogger";
+} from '../utils/authorization-wrapper.ts';
+import { databaseManager } from '../../src/db/database.ts';
+import { DeadlineRepository } from '../../src/repositories/DeadlineRepository.ts';
+import { AuditLogger } from '../../src/services/AuditLogger.ts';
 import {
   DeadlineNotFoundError,
   DatabaseError,
   RequiredFieldError,
   ValidationError,
-} from "../../src/errors/DomainErrors";
-import type { UpdateDeadlineInput } from "../../src/domains/timeline/entities/Deadline";
+} from '../../src/errors/DomainErrors.ts';
+import type { UpdateDeadlineInput } from '../../src/domains/timeline/entities/Deadline.ts';
 
 type DeadlinePriority = "low" | "medium" | "high" | "critical";
 type DeadlineStatus = "upcoming" | "overdue" | "completed";
