@@ -3,12 +3,12 @@ import "dotenv/config";
 import { app, BrowserWindow, safeStorage } from "electron";
 import path from "path";
 
-import { setupIpcHandlers } from "./ipc-handlers/index";
-import { initializeDatabase } from "./database-init";
-import { KeyManager } from "../src/services/KeyManager";
-import { BackupScheduler } from "../src/services/backup/BackupScheduler";
-import { databaseManager } from "../src/db/database";
-import { setKeyManager } from "./services/KeyManagerService";
+import { setupIpcHandlers } from './ipc-handlers/index.ts';
+import { initializeDatabase } from './database-init.ts';
+import { KeyManager } from '../src/services/KeyManager.ts';
+import { BackupScheduler } from '../src/services/backup/BackupScheduler.ts';
+import { databaseManager } from '../src/db/database.ts';
+import { setKeyManager } from './services/KeyManagerService.ts';
 
 const __dirname = path.dirname(require.main?.filename || process.argv[1]);
 

@@ -3,16 +3,16 @@ import {
   successResponse,
   errorResponse,
   IPCErrorCode,
-} from "../utils/ipc-response";
-import { databaseManager } from "../../src/db/database";
-import { UserRepository } from "../../src/repositories/UserRepository";
-import { SessionRepository } from "../../src/repositories/SessionRepository";
-import { AuditLogger } from "../../src/services/AuditLogger";
+} from '../utils/ipc-response.ts';
+import { databaseManager } from '../../src/db/database.ts';
+import { UserRepository } from '../../src/repositories/UserRepository.ts';
+import { SessionRepository } from '../../src/repositories/SessionRepository.ts';
+import { AuditLogger } from '../../src/services/AuditLogger.ts';
 import {
   AuthenticationError,
   AuthenticationService,
-} from "../../src/services/AuthenticationService";
-import { getSessionManager } from "../services/SessionManager";
+} from '../../src/services/AuthenticationService.ts';
+import { getSessionManager } from '../services/SessionManager.ts';
 // Domain errors available if needed for future error handling improvements
 
 // ESM equivalent of __dirname

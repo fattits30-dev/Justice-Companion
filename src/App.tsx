@@ -137,7 +137,9 @@ function DashboardWrapper() {
 
         if (!sessionId) {
           // No session - ProtectedRoute will handle redirect to login
-          console.log("[DashboardWrapper] No sessionId found - user not authenticated");
+          console.log(
+            "[DashboardWrapper] No sessionId found - user not authenticated",
+          );
           setError("No active session");
           return;
         }

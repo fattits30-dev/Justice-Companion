@@ -1,9 +1,9 @@
-import { useState, useRef, useCallback, useMemo } from 'react';
-import { motion } from 'framer-motion';
-import { ZoomIn, ZoomOut, FileImage, FileText } from 'lucide-react';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
-import type { DeadlineWithDependencies } from '../../../domains/timeline/entities/DeadlineDependency';
+import { useState, useRef, useCallback, useMemo } from "react";
+import { motion } from "framer-motion";
+import { ZoomIn, ZoomOut, FileImage, FileText } from "lucide-react";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
+import type { DeadlineWithDependencies } from "../../../domains/timeline/entities/DeadlineDependency.ts";
 
 interface GanttChartProps {
   deadlines: DeadlineWithDependencies[];
@@ -15,7 +15,11 @@ const PIXELS_PER_DAY = 40;
 const ROW_HEIGHT = 60;
 const LABEL_WIDTH = 250;
 
-export function GanttChart({ deadlines, onDeadlineUpdate, onDependencyClick }: GanttChartProps) {
+export function GanttChart({
+  deadlines,
+  onDeadlineUpdate,
+  onDependencyClick,
+}: GanttChartProps) {
   const chartRef = useRef<HTMLDivElement>(null);
   const [, setDraggingDeadlineId] = useState<number | null>(null);
   const [zoom, setZoom] = useState(1);
@@ -55,7 +59,7 @@ export function GanttChart({ deadlines, onDeadlineUpdate, onDependencyClick }: G
       const diffDays = diffTime / (1000 * 60 * 60 * 24);
       return diffDays * PIXELS_PER_DAY * zoom;
     },
-    [minDate, zoom]
+    [minDate, zoom],
   );
 
   // Calculate date from position
@@ -66,7 +70,7 @@ export function GanttChart({ deadlines, onDeadlineUpdate, onDependencyClick }: G
       newDate.setDate(newDate.getDate() + days);
       return newDate;
     },
-    [minDate, zoom]
+    [minDate, zoom],
   );
 
   // Handle drag start
@@ -78,29 +82,31 @@ export function GanttChart({ deadlines, onDeadlineUpdate, onDependencyClick }: G
   const handleDragEnd = useCallback(
     (deadlineId: number, newX: number) => {
       const newDate = getDateFromPosition(newX);
-      onDeadlineUpdate(deadlineId, newDate.toISOString().split('T')[0]);
+      onDeadlineUpdate(deadlineId, newDate.toISOString().split("T")[0]);
       setDraggingDeadlineId(null);
     },
-    [getDateFromPosition, onDeadlineUpdate]
+    [getDateFromPosition, onDeadlineUpdate],
   );
 
   // Export to PNG
   const exportToPNG = useCallback(async () => {
-    if (!chartRef.current) {return;}
+    if (!chartRef.current) {
+      return;
+    }
 
     setIsExporting(true);
     try {
       const canvas = await html2canvas(chartRef.current, {
-        backgroundColor: '#1f2937',
+        backgroundColor: "#1f2937",
         scale: 2,
       });
 
-      const link = document.createElement('a');
-      link.download = `timeline-gantt-${new Date().toISOString().split('T')[0]}.png`;
+      const link = document.createElement("a");
+      link.download = `timeline-gantt-${new Date().toISOString().split("T")[0]}.png`;
       link.href = canvas.toDataURL();
       link.click();
     } catch (error) {
-      console.error('Failed to export PNG:', error);
+      console.error("Failed to export PNG:", error);
     } finally {
       setIsExporting(false);
     }
@@ -108,26 +114,28 @@ export function GanttChart({ deadlines, onDeadlineUpdate, onDependencyClick }: G
 
   // Export to PDF
   const exportToPDF = useCallback(async () => {
-    if (!chartRef.current) {return;}
+    if (!chartRef.current) {
+      return;
+    }
 
     setIsExporting(true);
     try {
       const canvas = await html2canvas(chartRef.current, {
-        backgroundColor: '#1f2937',
+        backgroundColor: "#1f2937",
         scale: 2,
       });
 
-      const imgData = canvas.toDataURL('image/png');
+      const imgData = canvas.toDataURL("image/png");
       const pdf = new jsPDF({
-        orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
-        unit: 'px',
+        orientation: canvas.width > canvas.height ? "landscape" : "portrait",
+        unit: "px",
         format: [canvas.width, canvas.height],
       });
 
-      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
-      pdf.save(`timeline-gantt-${new Date().toISOString().split('T')[0]}.pdf`);
+      pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
+      pdf.save(`timeline-gantt-${new Date().toISOString().split("T")[0]}.pdf`);
     } catch (error) {
-      console.error('Failed to export PDF:', error);
+      console.error("Failed to export PDF:", error);
     } finally {
       setIsExporting(false);
     }
@@ -150,7 +158,10 @@ export function GanttChart({ deadlines, onDeadlineUpdate, onDependencyClick }: G
       const width = endX - x;
 
       headers.push({
-        month: monthStart.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+        month: monthStart.toLocaleDateString("en-US", {
+          month: "long",
+          year: "numeric",
+        }),
         x,
         width,
       });
@@ -162,10 +173,10 @@ export function GanttChart({ deadlines, onDeadlineUpdate, onDependencyClick }: G
   }, [minDate, maxDate, getPositionForDate]);
 
   const priorityColors = {
-    critical: 'bg-red-500',
-    high: 'bg-orange-500',
-    medium: 'bg-yellow-500',
-    low: 'bg-green-500',
+    critical: "bg-red-500",
+    high: "bg-orange-500",
+    medium: "bg-yellow-500",
+    low: "bg-green-500",
   };
 
   return (
@@ -180,7 +191,9 @@ export function GanttChart({ deadlines, onDeadlineUpdate, onDependencyClick }: G
           >
             <ZoomOut className="w-5 h-5 text-white" />
           </button>
-          <span className="text-sm text-white/70">{Math.round(zoom * 100)}%</span>
+          <span className="text-sm text-white/70">
+            {Math.round(zoom * 100)}%
+          </span>
           <button
             onClick={() => setZoom((z) => Math.min(3, z + 0.25))}
             className="p-2 bg-white/5 hover:bg-white/10 rounded-lg transition-colors"
@@ -220,14 +233,20 @@ export function GanttChart({ deadlines, onDeadlineUpdate, onDependencyClick }: G
                 Deadline
               </div>
             </div>
-            <div className="relative" style={{ width: totalDays * PIXELS_PER_DAY * zoom }}>
+            <div
+              className="relative"
+              style={{ width: totalDays * PIXELS_PER_DAY * zoom }}
+            >
               {/* Month Headers */}
               <div className="flex h-10 border-b border-white/10">
                 {monthHeaders.map((header, i) => (
                   <div
                     key={i}
                     className="border-r border-white/10 flex items-center justify-center text-sm font-medium text-white/70"
-                    style={{ width: header.width, marginLeft: i === 0 ? header.x : 0 }}
+                    style={{
+                      width: header.width,
+                      marginLeft: i === 0 ? header.x : 0,
+                    }}
                   >
                     {header.month}
                   </div>
@@ -244,7 +263,7 @@ export function GanttChart({ deadlines, onDeadlineUpdate, onDependencyClick }: G
                     <div
                       key={i}
                       className={`border-r border-white/5 flex items-center justify-center text-xs ${
-                        isWeekend ? 'bg-white/5 text-white/50' : 'text-white/70'
+                        isWeekend ? "bg-white/5 text-white/50" : "text-white/70"
                       }`}
                       style={{ width: PIXELS_PER_DAY * zoom }}
                     >
@@ -266,23 +285,34 @@ export function GanttChart({ deadlines, onDeadlineUpdate, onDependencyClick }: G
                   {/* Label Column */}
                   <div className="w-[250px] flex-shrink-0 pr-4">
                     <div className="h-[60px] flex flex-col justify-center">
-                      <div className="font-medium text-white text-sm truncate">{deadline.title}</div>
-                      <div className="text-xs text-white/50 truncate">{deadline.caseTitle}</div>
+                      <div className="font-medium text-white text-sm truncate">
+                        {deadline.title}
+                      </div>
+                      <div className="text-xs text-white/50 truncate">
+                        {deadline.caseTitle}
+                      </div>
                     </div>
                   </div>
 
                   {/* Chart Column */}
-                  <div className="relative" style={{ width: totalDays * PIXELS_PER_DAY * zoom, height: ROW_HEIGHT }}>
+                  <div
+                    className="relative"
+                    style={{
+                      width: totalDays * PIXELS_PER_DAY * zoom,
+                      height: ROW_HEIGHT,
+                    }}
+                  >
                     {/* Grid Background */}
                     <div className="absolute inset-0 flex">
                       {Array.from({ length: totalDays }).map((_, i) => {
                         const date = new Date(minDate);
                         date.setDate(date.getDate() + i);
-                        const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+                        const isWeekend =
+                          date.getDay() === 0 || date.getDay() === 6;
                         return (
                           <div
                             key={i}
-                            className={`border-r border-white/5 ${isWeekend ? 'bg-white/5' : ''}`}
+                            className={`border-r border-white/5 ${isWeekend ? "bg-white/5" : ""}`}
                             style={{ width: PIXELS_PER_DAY * zoom }}
                           />
                         );
@@ -295,7 +325,9 @@ export function GanttChart({ deadlines, onDeadlineUpdate, onDependencyClick }: G
                       dragMomentum={false}
                       dragElastic={0}
                       onDragStart={() => handleDragStart(deadline.id)}
-                      onDragEnd={(_, info) => handleDragEnd(deadline.id, x + info.offset.x)}
+                      onDragEnd={(_, info) =>
+                        handleDragEnd(deadline.id, x + info.offset.x)
+                      }
                       className={`absolute top-1/2 -translate-y-1/2 h-8 rounded cursor-move ${
                         priorityColors[deadline.priority]
                       } opacity-80 hover:opacity-100 transition-opacity flex items-center justify-center`}
@@ -306,13 +338,18 @@ export function GanttChart({ deadlines, onDeadlineUpdate, onDependencyClick }: G
                       whileHover={{ scale: 1.05 }}
                       whileDrag={{ scale: 1.1, zIndex: 10 }}
                     >
-                      <span className="text-xs font-medium text-white px-2 truncate">{deadline.title}</span>
+                      <span className="text-xs font-medium text-white px-2 truncate">
+                        {deadline.title}
+                      </span>
                     </motion.div>
 
                     {/* Today Indicator */}
                     {(() => {
                       const todayX = getPositionForDate(new Date());
-                      if (todayX >= 0 && todayX <= totalDays * PIXELS_PER_DAY * zoom) {
+                      if (
+                        todayX >= 0 &&
+                        todayX <= totalDays * PIXELS_PER_DAY * zoom
+                      ) {
                         return (
                           <div
                             className="absolute top-0 bottom-0 w-0.5 bg-blue-500 z-20"
@@ -334,16 +371,29 @@ export function GanttChart({ deadlines, onDeadlineUpdate, onDependencyClick }: G
             {/* Dependency Arrows (SVG Overlay) */}
             <svg
               className="absolute top-0 left-0 pointer-events-none"
-              style={{ width: LABEL_WIDTH + totalDays * PIXELS_PER_DAY * zoom, height: deadlines.length * ROW_HEIGHT }}
+              style={{
+                width: LABEL_WIDTH + totalDays * PIXELS_PER_DAY * zoom,
+                height: deadlines.length * ROW_HEIGHT,
+              }}
             >
               {deadlines.flatMap((deadline, index) =>
                 deadline.dependencies.map((dep) => {
-                  const targetIndex = deadlines.findIndex((d) => d.id === dep.targetDeadlineId);
-                  if (targetIndex === -1) {return null;}
+                  const targetIndex = deadlines.findIndex(
+                    (d) => d.id === dep.targetDeadlineId,
+                  );
+                  if (targetIndex === -1) {
+                    return null;
+                  }
 
-                  const sourceX = LABEL_WIDTH + getPositionForDate(new Date(deadline.deadlineDate));
+                  const sourceX =
+                    LABEL_WIDTH +
+                    getPositionForDate(new Date(deadline.deadlineDate));
                   const sourceY = index * ROW_HEIGHT + ROW_HEIGHT / 2;
-                  const targetX = LABEL_WIDTH + getPositionForDate(new Date(deadlines[targetIndex].deadlineDate));
+                  const targetX =
+                    LABEL_WIDTH +
+                    getPositionForDate(
+                      new Date(deadlines[targetIndex].deadlineDate),
+                    );
                   const targetY = targetIndex * ROW_HEIGHT + ROW_HEIGHT / 2;
 
                   return (
@@ -357,11 +407,13 @@ export function GanttChart({ deadlines, onDeadlineUpdate, onDependencyClick }: G
                         strokeWidth="2"
                         markerEnd="url(#arrowhead)"
                         className="hover:stroke-primary-400 cursor-pointer"
-                        onClick={() => onDependencyClick?.(deadline.id, dep.targetDeadlineId)}
+                        onClick={() =>
+                          onDependencyClick?.(deadline.id, dep.targetDeadlineId)
+                        }
                       />
                     </g>
                   );
-                })
+                }),
               )}
               <defs>
                 <marker

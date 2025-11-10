@@ -1,18 +1,18 @@
 import { ipcMain, type IpcMainInvokeEvent } from "electron";
-import { successResponse, type IPCResponse } from "../utils/ipc-response";
-import { withAuthorization } from "../utils/authorization-wrapper";
-import { databaseManager } from "../../src/db/database";
-import { NotificationService } from "../../src/services/NotificationService";
-import { NotificationRepository } from "../../src/repositories/NotificationRepository";
-import { NotificationPreferencesRepository } from "../../src/repositories/NotificationPreferencesRepository";
-import { AuditLogger } from "../../src/services/AuditLogger";
-import type { NotificationFilters } from "../../src/models/Notification";
-import type { UpdateNotificationPreferencesInput } from "../../src/models/NotificationPreferences";
+import { successResponse, type IPCResponse } from '../utils/ipc-response.ts';
+import { withAuthorization } from '../utils/authorization-wrapper.ts';
+import { databaseManager } from '../../src/db/database.ts';
+import { NotificationService } from '../../src/services/NotificationService.ts';
+import { NotificationRepository } from '../../src/repositories/NotificationRepository.ts';
+import { NotificationPreferencesRepository } from '../../src/repositories/NotificationPreferencesRepository.ts';
+import { AuditLogger } from '../../src/services/AuditLogger.ts';
+import type { NotificationFilters } from '../../src/models/Notification.ts';
+import type { UpdateNotificationPreferencesInput } from '../../src/models/NotificationPreferences.ts';
 import {
   DatabaseError,
   NotificationNotFoundError,
   ValidationError,
-} from "../../src/errors/DomainErrors";
+} from '../../src/errors/DomainErrors.ts';
 
 /**
  * ===== NOTIFICATION HANDLERS =====

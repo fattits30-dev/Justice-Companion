@@ -1,18 +1,18 @@
 import { ipcMain, type IpcMainInvokeEvent } from "electron";
-import { type IPCResponse } from "../utils/ipc-response";
-import { logAuditEvent, AuditEventType } from "../utils/audit-helper";
+import { type IPCResponse } from '../utils/ipc-response.ts';
+import { logAuditEvent, AuditEventType } from '../utils/audit-helper.ts';
 import {
   withAuthorization,
   getAuthorizationMiddleware,
   verifyEvidenceOwnership,
-} from "../utils/authorization-wrapper";
-import * as evidenceSchemas from "../../src/middleware/schemas/evidence-schemas";
-import { getRepositories } from "../../src/repositories";
-import { EvidenceNotFoundError } from "../../src/errors/DomainErrors";
+} from '../utils/authorization-wrapper.ts';
+import * as evidenceSchemas from '../../src/middleware/schemas/evidence-schemas.ts';
+import { getRepositories } from '../../src/repositories.ts';
+import { EvidenceNotFoundError } from '../../src/errors/DomainErrors.ts';
 import type {
   CreateEvidenceInput,
   EvidenceType,
-} from "../../src/domains/evidence/entities/Evidence";
+} from '../../src/domains/evidence/entities/Evidence.ts';
 
 /**
  * ===== EVIDENCE HANDLERS =====

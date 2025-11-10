@@ -40,7 +40,8 @@ export function CasesView() {
       setLoadState("loading");
       setError(null);
 
-      const response = await globalThis.window.justiceAPI.getAllCases(sessionId);
+      const response =
+        await globalThis.window.justiceAPI.getAllCases(sessionId);
 
       if (!response.success) {
         throw new Error(response.error?.message || "Failed to load cases");
@@ -62,67 +63,76 @@ export function CasesView() {
     }
   }, [loadCases, authLoading]);
 
-  const handleCreateCase = useCallback(async (input: CreateCaseInput) => {
-    if (!sessionId) {
-      showError("No active session", { title: "Failed to create case" });
-      return;
-    }
-
-    try {
-      const response = await globalThis.window.justiceAPI.createCase(input, sessionId);
-
-      if (!response.success) {
-        throw new Error(response.error?.message || "Failed to create case");
-      }
-
-      if (response.data) {
-        const newCase = response.data;
-        setCases((previous) => [newCase, ...previous]);
-        setShowCreateDialog(false);
-        showSuccess(`${input.title} has been added to your cases`, {
-          title: "Case created successfully",
-        });
-      }
-    } catch (err) {
-      showError(err instanceof Error ? err.message : "Unknown error", {
-        title: "Failed to create case",
-      });
-    }
-  }, [sessionId]);
-
-  const handleDeleteCase = useCallback(async (caseId: number) => {
-    if (!sessionId) {
-      showError("No active session", { title: "Failed to delete case" });
-      return;
-    }
-
-    const confirmed = confirm(
-      "Are you sure you want to delete this case? This cannot be undone.",
-    );
-    if (!confirmed) {
-      return;
-    }
-
-    try {
-      const response = await globalThis.window.justiceAPI.deleteCase(
-        caseId.toString(),
-        sessionId,
-      );
-      if (response.success) {
-        setCases((previous) => previous.filter((item) => item.id !== caseId));
-        showSuccess("The case has been permanently removed", {
-          title: "Case deleted",
-        });
+  const handleCreateCase = useCallback(
+    async (input: CreateCaseInput) => {
+      if (!sessionId) {
+        showError("No active session", { title: "Failed to create case" });
         return;
       }
 
-      throw new Error(response.error?.message || "Failed to delete case");
-    } catch (err) {
-      showError(err instanceof Error ? err.message : "Unknown error", {
-        title: "Failed to delete case",
-      });
-    }
-  }, [sessionId]);
+      try {
+        const response = await globalThis.window.justiceAPI.createCase(
+          input,
+          sessionId,
+        );
+
+        if (!response.success) {
+          throw new Error(response.error?.message || "Failed to create case");
+        }
+
+        if (response.data) {
+          const newCase = response.data;
+          setCases((previous) => [newCase, ...previous]);
+          setShowCreateDialog(false);
+          showSuccess(`${input.title} has been added to your cases`, {
+            title: "Case created successfully",
+          });
+        }
+      } catch (err) {
+        showError(err instanceof Error ? err.message : "Unknown error", {
+          title: "Failed to create case",
+        });
+      }
+    },
+    [sessionId],
+  );
+
+  const handleDeleteCase = useCallback(
+    async (caseId: number) => {
+      if (!sessionId) {
+        showError("No active session", { title: "Failed to delete case" });
+        return;
+      }
+
+      const confirmed = confirm(
+        "Are you sure you want to delete this case? This cannot be undone.",
+      );
+      if (!confirmed) {
+        return;
+      }
+
+      try {
+        const response = await globalThis.window.justiceAPI.deleteCase(
+          caseId.toString(),
+          sessionId,
+        );
+        if (response.success) {
+          setCases((previous) => previous.filter((item) => item.id !== caseId));
+          showSuccess("The case has been permanently removed", {
+            title: "Case deleted",
+          });
+          return;
+        }
+
+        throw new Error(response.error?.message || "Failed to delete case");
+      } catch (err) {
+        showError(err instanceof Error ? err.message : "Unknown error", {
+          title: "Failed to delete case",
+        });
+      }
+    },
+    [sessionId],
+  );
 
   const filteredCases = useMemo(() => {
     return cases.filter((caseItem) => {

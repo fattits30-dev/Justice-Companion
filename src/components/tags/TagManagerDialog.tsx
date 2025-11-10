@@ -3,13 +3,13 @@
  * Comprehensive tag management interface for creating, editing, and deleting tags
  */
 
-import { useState, useEffect } from 'react';
-import { X, Plus, Edit2, Trash2 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Button } from '../ui/Button.tsx';
-import { Card } from '../ui/Card.tsx';
-import { TagBadge } from '../ui/TagBadge.tsx';
-import type { Tag, CreateTagInput, UpdateTagInput } from '../../models/Tag';
+import { useState, useEffect } from "react";
+import { X, Plus, Edit2, Trash2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Button } from "../ui/Button.tsx";
+import { Card } from "../ui/Card.tsx";
+import { TagBadge } from "../ui/TagBadge.tsx";
+import type { Tag, CreateTagInput, UpdateTagInput } from "../../models/Tag.ts";
 
 interface TagManagerDialogProps {
   open: boolean;
@@ -17,16 +17,16 @@ interface TagManagerDialogProps {
 }
 
 const PRESET_COLORS = [
-  '#EF4444', // Red
-  '#F59E0B', // Amber
-  '#10B981', // Green
-  '#3B82F6', // Blue
-  '#8B5CF6', // Violet
-  '#EC4899', // Pink
-  '#6B7280', // Gray
-  '#14B8A6', // Teal
-  '#F97316', // Orange
-  '#A855F7', // Purple
+  "#EF4444", // Red
+  "#F59E0B", // Amber
+  "#10B981", // Green
+  "#3B82F6", // Blue
+  "#8B5CF6", // Violet
+  "#EC4899", // Pink
+  "#6B7280", // Gray
+  "#14B8A6", // Teal
+  "#F97316", // Orange
+  "#A855F7", // Purple
 ];
 
 interface FormErrors {
@@ -39,9 +39,9 @@ export function TagManagerDialog({ open, onClose }: TagManagerDialogProps) {
   const [tags, setTags] = useState<Tag[]>([]);
   const [editingTag, setEditingTag] = useState<Tag | null>(null);
   const [formData, setFormData] = useState({
-    name: '',
+    name: "",
     color: PRESET_COLORS[0],
-    description: '',
+    description: "",
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -57,13 +57,13 @@ export function TagManagerDialog({ open, onClose }: TagManagerDialogProps) {
   // Handle Escape key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && open) {
+      if (e.key === "Escape" && open) {
         onClose();
       }
     };
 
-    window.addEventListener('keydown', handleEscape);
-    return () => window.removeEventListener('keydown', handleEscape);
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
   }, [open, onClose]);
 
   const loadTags = async () => {
@@ -71,7 +71,7 @@ export function TagManagerDialog({ open, onClose }: TagManagerDialogProps) {
     try {
       const sessionId = window.sessionManager?.getSessionId();
       if (!sessionId) {
-        console.error('No session ID');
+        console.error("No session ID");
         return;
       }
 
@@ -81,10 +81,13 @@ export function TagManagerDialog({ open, onClose }: TagManagerDialogProps) {
           setTags(result.data);
         }
       } else {
-        console.error('Failed to load tags:', result.error?.message || 'Unknown error');
+        console.error(
+          "Failed to load tags:",
+          result.error?.message || "Unknown error",
+        );
       }
     } catch (error) {
-      console.error('Error loading tags:', error);
+      console.error("Error loading tags:", error);
     } finally {
       setIsLoading(false);
     }
@@ -94,13 +97,13 @@ export function TagManagerDialog({ open, onClose }: TagManagerDialogProps) {
     const newErrors: FormErrors = {};
 
     if (!formData.name.trim()) {
-      newErrors.name = 'Tag name is required';
+      newErrors.name = "Tag name is required";
     } else if (formData.name.length > 50) {
-      newErrors.name = 'Tag name must be 50 characters or less';
+      newErrors.name = "Tag name must be 50 characters or less";
     }
 
     if (!formData.color || !/^#[0-9A-Fa-f]{6}$/.test(formData.color)) {
-      newErrors.color = 'Valid color is required';
+      newErrors.color = "Valid color is required";
     }
 
     setErrors(newErrors);
@@ -108,7 +111,9 @@ export function TagManagerDialog({ open, onClose }: TagManagerDialogProps) {
   };
 
   const handleCreateOrUpdate = async () => {
-    if (!validate()) {return;}
+    if (!validate()) {
+      return;
+    }
 
     setIsSubmitting(true);
     setErrors({});
@@ -116,7 +121,7 @@ export function TagManagerDialog({ open, onClose }: TagManagerDialogProps) {
     try {
       const sessionId = window.sessionManager?.getSessionId();
       if (!sessionId) {
-        setErrors({ submit: 'No active session' });
+        setErrors({ submit: "No active session" });
         return;
       }
 
@@ -128,7 +133,11 @@ export function TagManagerDialog({ open, onClose }: TagManagerDialogProps) {
           color: formData.color,
           description: formData.description || undefined,
         };
-        result = await window.api.tags.update(editingTag.id, updateInput, sessionId);
+        result = await window.api.tags.update(
+          editingTag.id,
+          updateInput,
+          sessionId,
+        );
       } else {
         // Create new tag
         const createInput: CreateTagInput = {
@@ -142,17 +151,17 @@ export function TagManagerDialog({ open, onClose }: TagManagerDialogProps) {
       if (result.success) {
         // Reset form
         setFormData({
-          name: '',
+          name: "",
           color: PRESET_COLORS[0],
-          description: '',
+          description: "",
         });
         setEditingTag(null);
         await loadTags();
       } else {
-        setErrors({ submit: result.error?.message || 'Failed to save tag' });
+        setErrors({ submit: result.error?.message || "Failed to save tag" });
       }
     } catch (error: any) {
-      setErrors({ submit: error.message || 'An error occurred' });
+      setErrors({ submit: error.message || "An error occurred" });
     } finally {
       setIsSubmitting(false);
     }
@@ -160,18 +169,24 @@ export function TagManagerDialog({ open, onClose }: TagManagerDialogProps) {
 
   const handleDeleteTag = async (tagId: number) => {
     const tag = tags.find((t) => t.id === tagId);
-    if (!tag) {return;}
+    if (!tag) {
+      return;
+    }
 
     const confirmMessage =
       tag.usageCount && tag.usageCount > 0
-        ? `Delete "${tag.name}"? It will be removed from ${tag.usageCount} evidence item${tag.usageCount !== 1 ? 's' : ''}.`
+        ? `Delete "${tag.name}"? It will be removed from ${tag.usageCount} evidence item${tag.usageCount !== 1 ? "s" : ""}.`
         : `Delete "${tag.name}"?`;
 
-    if (!confirm(confirmMessage)) {return;}
+    if (!confirm(confirmMessage)) {
+      return;
+    }
 
     try {
       const sessionId = window.sessionManager?.getSessionId();
-      if (!sessionId) {return;}
+      if (!sessionId) {
+        return;
+      }
 
       const result = await window.api.tags.delete(tagId, sessionId);
       if (result.success) {
@@ -181,10 +196,12 @@ export function TagManagerDialog({ open, onClose }: TagManagerDialogProps) {
           cancelEdit();
         }
       } else {
-        alert('Failed to delete tag: ' + (result.error?.message || 'Unknown error'));
+        alert(
+          "Failed to delete tag: " + (result.error?.message || "Unknown error"),
+        );
       }
     } catch (error: any) {
-      alert('Error deleting tag: ' + error.message);
+      alert("Error deleting tag: " + error.message);
     }
   };
 
@@ -193,7 +210,7 @@ export function TagManagerDialog({ open, onClose }: TagManagerDialogProps) {
     setFormData({
       name: tag.name,
       color: tag.color,
-      description: tag.description || '',
+      description: tag.description || "",
     });
     setErrors({});
   };
@@ -201,14 +218,16 @@ export function TagManagerDialog({ open, onClose }: TagManagerDialogProps) {
   const cancelEdit = () => {
     setEditingTag(null);
     setFormData({
-      name: '',
+      name: "",
       color: PRESET_COLORS[0],
-      description: '',
+      description: "",
     });
     setErrors({});
   };
 
-  if (!open) {return null;}
+  if (!open) {
+    return null;
+  }
 
   return (
     <AnimatePresence>
@@ -247,7 +266,7 @@ export function TagManagerDialog({ open, onClose }: TagManagerDialogProps) {
               {/* Create/Edit Form */}
               <div className="bg-gray-800/50 rounded-lg p-5 mb-6 border border-white/5">
                 <h3 className="text-lg font-semibold text-white mb-4">
-                  {editingTag ? 'Edit Tag' : 'Create New Tag'}
+                  {editingTag ? "Edit Tag" : "Create New Tag"}
                 </h3>
 
                 <div className="space-y-4">
@@ -259,7 +278,9 @@ export function TagManagerDialog({ open, onClose }: TagManagerDialogProps) {
                     <input
                       type="text"
                       value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, name: e.target.value })
+                      }
                       className="w-full px-3 py-2 bg-gray-900/50 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="e.g., Important, Urgent, Reviewed"
                       maxLength={50}
@@ -282,7 +303,7 @@ export function TagManagerDialog({ open, onClose }: TagManagerDialogProps) {
                           onClick={() => setFormData({ ...formData, color })}
                           className={`
                             w-10 h-10 rounded-full transition-all
-                            ${formData.color === color ? 'ring-2 ring-offset-2 ring-blue-500 ring-offset-gray-900 scale-110' : 'hover:scale-105'}
+                            ${formData.color === color ? "ring-2 ring-offset-2 ring-blue-500 ring-offset-gray-900 scale-110" : "hover:scale-105"}
                           `}
                           style={{ backgroundColor: color }}
                           aria-label={`Select color ${color}`}
@@ -290,7 +311,9 @@ export function TagManagerDialog({ open, onClose }: TagManagerDialogProps) {
                       ))}
                     </div>
                     {errors.color && (
-                      <p className="mt-1 text-sm text-red-400">{errors.color}</p>
+                      <p className="mt-1 text-sm text-red-400">
+                        {errors.color}
+                      </p>
                     )}
                   </div>
 
@@ -301,7 +324,12 @@ export function TagManagerDialog({ open, onClose }: TagManagerDialogProps) {
                     </div>
                     <textarea
                       value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          description: e.target.value,
+                        })
+                      }
                       className="w-full px-3 py-2 bg-gray-900/50 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                       rows={2}
                       placeholder="What does this tag represent?"
@@ -325,7 +353,7 @@ export function TagManagerDialog({ open, onClose }: TagManagerDialogProps) {
                           disabled={isSubmitting}
                           variant="primary"
                         >
-                          {isSubmitting ? 'Updating...' : 'Update Tag'}
+                          {isSubmitting ? "Updating..." : "Update Tag"}
                         </Button>
                         <Button onClick={cancelEdit} variant="secondary">
                           Cancel
@@ -338,7 +366,7 @@ export function TagManagerDialog({ open, onClose }: TagManagerDialogProps) {
                         variant="primary"
                         icon={<Plus size={18} />}
                       >
-                        {isSubmitting ? 'Creating...' : 'Create Tag'}
+                        {isSubmitting ? "Creating..." : "Create Tag"}
                       </Button>
                     )}
                   </div>
@@ -359,7 +387,9 @@ export function TagManagerDialog({ open, onClose }: TagManagerDialogProps) {
                 ) : tags.length === 0 ? (
                   <div className="text-center py-12 bg-gray-800/30 rounded-lg border border-dashed border-white/10">
                     <p className="text-gray-400 mb-2">No tags yet</p>
-                    <p className="text-sm text-gray-500">Create your first tag above to get started</p>
+                    <p className="text-sm text-gray-500">
+                      Create your first tag above to get started
+                    </p>
                   </div>
                 ) : (
                   <div className="space-y-2">
@@ -374,10 +404,13 @@ export function TagManagerDialog({ open, onClose }: TagManagerDialogProps) {
                           <TagBadge name={tag.name} color={tag.color} />
                           <div className="flex-1 min-w-0">
                             {tag.description && (
-                              <p className="text-sm text-gray-300 truncate">{tag.description}</p>
+                              <p className="text-sm text-gray-300 truncate">
+                                {tag.description}
+                              </p>
                             )}
                             <p className="text-xs text-gray-500 mt-0.5">
-                              Used {tag.usageCount || 0} time{tag.usageCount !== 1 ? 's' : ''}
+                              Used {tag.usageCount || 0} time
+                              {tag.usageCount !== 1 ? "s" : ""}
                             </p>
                           </div>
                         </div>

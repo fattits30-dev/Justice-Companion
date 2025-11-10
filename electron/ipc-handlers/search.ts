@@ -2,19 +2,19 @@ import { ipcMain, type IpcMainInvokeEvent } from "electron";
 import {
   SearchService,
   type SearchQuery,
-} from "../../src/services/SearchService";
-import { SearchIndexBuilder } from "../../src/services/SearchIndexBuilder";
-import { databaseManager } from "../../src/db/database";
-import { getRepositories } from "../../src/repositories";
+} from '../../src/services/SearchService.ts';
+import { SearchIndexBuilder } from '../../src/services/SearchIndexBuilder.ts';
+import { databaseManager } from '../../src/db/database.ts';
+import { getRepositories } from '../../src/repositories.ts';
 import {
   getEncryptionService,
   getAuditLogger,
-} from "../../src/services/ServiceContainer";
-import { withAuthorization } from "../utils/authorization-wrapper";
-import type { IPCResponse } from "../utils/ipc-response";
-import { DatabaseError, ValidationError } from "../../src/errors/DomainErrors";
-import { AuditLogger } from "../../src/services/AuditLogger";
-import { EncryptionService } from "../../src/services/EncryptionService";
+} from '../../src/services/ServiceContainer.ts';
+import { withAuthorization } from '../utils/authorization-wrapper.ts';
+import type { IPCResponse } from '../utils/ipc-response.ts';
+import { DatabaseError, ValidationError } from '../../src/errors/DomainErrors.ts';
+import { AuditLogger } from '../../src/services/AuditLogger.ts';
+import { EncryptionService } from '../../src/services/EncryptionService.ts';
 
 // Lazy initialization of services
 let searchService: SearchService | null = null;

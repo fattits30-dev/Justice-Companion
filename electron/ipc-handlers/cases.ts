@@ -13,7 +13,7 @@ import {
   DatabaseError,
   RequiredFieldError,
 } from "../../src/errors/DomainErrors.ts";
-import { getKeyManager } from "../services/KeyManagerService";
+import { getKeyManager } from '../services/KeyManagerService.ts';
 import type { CreateCaseFactInput } from "../../src/models/CaseFact.ts";
 
 /**

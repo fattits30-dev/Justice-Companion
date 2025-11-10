@@ -5,7 +5,7 @@
  */
 
 import { ZodError } from "zod";
-import { isDomainError } from "../../src/errors/DomainErrors";
+import { isDomainError } from '../../src/errors/DomainErrors.ts';
 
 /**
  * Standard IPC response type

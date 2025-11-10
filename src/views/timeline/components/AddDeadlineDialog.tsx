@@ -1,15 +1,15 @@
 import { useState, useEffect } from "react";
 import { X, Plus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "../../../components/ui/Button";
-import { Card } from "../../../components/ui/Card";
-import type { CreateDeadlineInput } from "../../../domains/timeline/entities/Deadline";
+import { Button } from "../../../components/ui/Button.ts";
+import { Card } from "../../../components/ui/Card.ts";
+import type { CreateDeadlineInput } from "../../../domains/timeline/entities/Deadline.ts";
 
 interface AddDeadlineDialogProps {
   open: boolean;
   onClose: () => void;
   onSubmit: (
-    input: CreateDeadlineInput
+    input: CreateDeadlineInput,
   ) => Promise<{ success: boolean; error?: string }>;
   cases: Array<{ id: number; title: string; status: string }>;
   userId: number;

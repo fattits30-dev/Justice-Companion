@@ -4,16 +4,16 @@
  */
 
 import { ipcMain, type IpcMainInvokeEvent } from "electron";
-import { type IPCResponse } from "../utils/ipc-response";
-import { withAuthorization } from "../utils/authorization-wrapper";
-import { tagService } from "../../src/services/TagService";
-import type { CreateTagInput, UpdateTagInput } from "../../src/models/Tag";
+import { type IPCResponse } from '../utils/ipc-response.ts';
+import { withAuthorization } from '../utils/authorization-wrapper.ts';
+import { tagService } from '../../src/services/TagService.ts';
+import type { CreateTagInput, UpdateTagInput } from '../../src/models/Tag.ts';
 import {
   ValidationError,
   RequiredFieldError,
   DatabaseError,
   EvidenceNotFoundError,
-} from "../../src/errors/DomainErrors";
+} from '../../src/errors/DomainErrors.ts';
 
 /**
  * ===== TAG HANDLERS =====

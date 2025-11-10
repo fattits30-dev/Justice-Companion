@@ -4,17 +4,17 @@ import {
   IPCErrorCode,
   successResponse,
   type IPCResponse,
-} from "../utils/ipc-response";
-import { withAuthorization } from "../utils/authorization-wrapper";
-import { UnifiedAIService } from "../../src/services/UnifiedAIService";
-import { AISDKService } from "../../src/services/ai/AISDKService";
-import { AIProviderConfigService } from "../../src/services/AIProviderConfigService";
-import { DocumentParserService } from "../../src/services/DocumentParserService";
-import { chatConversationService } from "../../src/services/ChatConversationService";
+} from '../utils/ipc-response.ts';
+import { withAuthorization } from '../utils/authorization-wrapper.ts';
+import { UnifiedAIService } from '../../src/services/UnifiedAIService.ts';
+import { AISDKService } from '../../src/services/ai/AISDKService.ts';
+import { AIProviderConfigService } from '../../src/services/AIProviderConfigService.ts';
+import { DocumentParserService } from '../../src/services/DocumentParserService.ts';
+import { chatConversationService } from '../../src/services/ChatConversationService.ts';
 import {
   RequiredFieldError,
   ValidationError,
-} from "../../src/errors/DomainErrors";
+} from '../../src/errors/DomainErrors.ts';
 import type {
   CaseAnalysisRequest,
   CaseAnalysisResponse,
@@ -22,9 +22,9 @@ import type {
   EvidenceAnalysisResponse,
   DocumentDraftRequest,
   DocumentDraftResponse,
-} from "../../src/types/ai-analysis";
+} from '../../src/types/ai-analysis.ts';
 import * as fs from "node:fs";
-import { getKeyManager } from "../services/KeyManagerService";
+import { getKeyManager } from '../services/KeyManagerService.ts';
 
 // AI services singletons
 let aiConfigService: AIProviderConfigService | null = null;
