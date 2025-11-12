@@ -5,6 +5,7 @@
  */
 
 import Database from 'better-sqlite3';
+import { logger } from './logger';
 
 interface QueryAnalysis {
   query: string;
@@ -42,7 +43,7 @@ export class DatabaseQueryAnalyzer {
       const result = stmt.all(...params);
       rowsAffected = Array.isArray(result) ? result.length : 0;
     } catch (error) {
-      console.error('Query analysis error:', error);
+      logger.error('Query analysis error:', error);
     }
     
     const executionTime = performance.now() - startTime;
@@ -138,7 +139,7 @@ export class DatabaseQueryAnalyzer {
         const stmt = this.db.prepare(sql);
         stmt.all(...params);
       } catch (error) {
-        console.error('Benchmark error:', error);
+        logger.error('Benchmark error:', error);
       }
       times.push(performance.now() - startTime);
     }

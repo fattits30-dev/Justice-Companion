@@ -1,8 +1,10 @@
+import type { Electron } from 'electron';
 import { ipcMain, type IpcMainInvokeEvent } from "electron";
 import { successResponse, type IPCResponse } from '../utils/ipc-response.ts';
 import { withAuthorization } from '../utils/authorization-wrapper.ts';
 import { databaseManager } from '../../src/db/database.ts';
 import { DatabaseError } from '../../src/errors/DomainErrors.ts';
+import { logger } from '../../src/utils/logger';
 
 /**
  * ===== DASHBOARD HANDLERS =====
@@ -20,7 +22,7 @@ export function setupDashboardHandlers(): void {
     ): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.warn("[IPC] dashboard:get-stats called by user:", userId);
+          logger.warn("[IPC] dashboard:get-stats called by user:", userId);
           const db = databaseManager.getDatabase();
 
           // SECURITY: Filter all queries by user_id to prevent data leakage
@@ -76,7 +78,7 @@ export function setupDashboardHandlers(): void {
             recentCases,
           });
         } catch (error) {
-          console.error("[IPC] Dashboard stats error:", error);
+          logger.error("[IPC] Dashboard stats error:", error);
 
           // Wrap generic errors in DomainErrors
           if (error instanceof Error) {

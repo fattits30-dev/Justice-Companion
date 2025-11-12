@@ -1,3 +1,5 @@
+import { logger } from '../src/utils/logger';
+
 /**
  * Database initialization wrapper for Electron main process
  *
@@ -12,7 +14,7 @@
  */
 export async function initializeDatabase(): Promise<void> {
   try {
-    console.warn("[Database] Initializing database...");
+    logger.warn("[Database] Initializing database...");
 
     // Dynamic import for ESM compatibility (tsx requires this)
     // Runtime path: from electron/ to src/ (sibling directory - one level up)
@@ -22,14 +24,14 @@ export async function initializeDatabase(): Promise<void> {
 
     // Initialize database connection
     databaseManager.getDatabase();
-    console.warn("[Database] Connection established");
+    logger.warn("[Database] Connection established");
 
     // Run migrations
-    console.warn("[Database] Running migrations...");
+    logger.warn("[Database] Running migrations...");
     runMigrations();
-    console.warn("[Database] Migrations complete");
+    logger.warn("[Database] Migrations complete");
   } catch (error) {
-    console.error("[Database] Initialization failed:", error);
+    logger.error("[Database] Initialization failed:", error);
     throw error;
   }
 }
@@ -45,8 +47,8 @@ export async function closeDatabase(): Promise<void> {
     const { databaseManager } = await import("../src/db/database");
 
     databaseManager.close();
-    console.warn("[Database] Connection closed");
+    logger.warn("[Database] Connection closed");
   } catch (error) {
-    console.error("[Database] Error closing connection:", error);
+    logger.error("[Database] Error closing connection:", error);
   }
 }

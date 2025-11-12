@@ -36,7 +36,7 @@ export abstract class RepositoryDecorator<T> {
         // Otherwise, forward to the wrapped repository
         const value = (target.repository as any)[prop];
         if (typeof value === 'function') {
-          return function (this: any, ...args: any[]) {
+          return function (this: any, ...args: unknown[]) {
             return value.apply(target.repository, args);
           };
         }
@@ -53,12 +53,12 @@ export abstract class RepositoryDecorator<T> {
    * @param args - Arguments to pass to the method
    * @returns Result of the method call
    */
-  protected async forwardCall(methodName: string, ...args: any[]): Promise<any> {
+  protected async forwardCall<R = unknown>(methodName: string, ...args: unknown[]): Promise<R> {
     const method = (this.repository as any)[methodName];
     if (typeof method !== 'function') {
       throw new Error(`Method ${methodName} does not exist on repository`);
     }
-    return method.apply(this.repository, args);
+    return method.apply(this.repository, args) as Promise<R>;
   }
 
   /**

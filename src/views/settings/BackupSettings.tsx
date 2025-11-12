@@ -19,6 +19,7 @@ import { Button } from "../../components/ui/Button.tsx";
 import { Badge } from "../../components/ui/Badge.tsx";
 import { useAuth } from "../../contexts/AuthContext.tsx";
 import { ConfirmationModal } from "../../components/ui/ConfirmationModal.tsx";
+import { logger } from '../../utils/logger';
 
 export interface Backup {
   id: number;
@@ -66,11 +67,11 @@ export function BackupSettingsTab() {
         }));
         setBackups(backupsWithIds);
       } else if (!result.success && result.error) {
-        console.error("Failed to load backups:", result.error);
+        logger.error("Failed to load backups:", result.error);
         showToast(result.error.message || "Failed to load backups", "error");
       }
     } catch (error) {
-      console.error("Failed to load backups:", error);
+      logger.error("Failed to load backups:", error);
       showToast("Failed to load backups", "error");
     } finally {
       setIsLoading(false);
@@ -92,7 +93,7 @@ export function BackupSettingsTab() {
         setBackupTime(result.data.backup_time);
       }
     } catch (error) {
-      console.error("Failed to load settings:", error);
+      logger.error("Failed to load settings:", error);
     }
   };
 
@@ -107,7 +108,7 @@ export function BackupSettingsTab() {
         showToast(result.error.message || "Failed to create backup", "error");
       }
     } catch (error) {
-      console.error("Failed to create backup:", error);
+      logger.error("Failed to create backup:", error);
       showToast("Failed to create backup", "error");
     } finally {
       setIsCreating(false);
@@ -143,7 +144,7 @@ export function BackupSettingsTab() {
           );
         }
       } catch (error) {
-        console.error("Failed to restore backup:", error);
+        logger.error("Failed to restore backup:", error);
         showToast("Failed to restore backup", "error");
       }
     }
@@ -159,7 +160,7 @@ export function BackupSettingsTab() {
         showToast("Failed to export backup", "error");
       }
     } catch (error) {
-      console.error("[BackupSettings] Export error:", error);
+      logger.error("[BackupSettings] Export error:", error);
       showToast("Failed to export backup", "error");
     }
   };
@@ -187,7 +188,7 @@ export function BackupSettingsTab() {
           );
         }
       } catch (error) {
-        console.error("Failed to delete backup:", error);
+        logger.error("Failed to delete backup:", error);
         showToast("Failed to delete backup", "error");
       }
     }
@@ -218,7 +219,7 @@ export function BackupSettingsTab() {
         showToast(result.error?.message || "Failed to save settings", "error");
       }
     } catch (error) {
-      console.error("Failed to save settings:", error);
+      logger.error("Failed to save settings:", error);
       showToast("Failed to save settings", "error");
     }
   };

@@ -8,6 +8,7 @@
  */
 
 import { secureStorage } from "@/services/SecureStorageService";
+import { logger } from './logger';
 
 /**
  * Storage keys that need migration
@@ -57,7 +58,7 @@ function getFromLocalStorage(key: string): string | null {
     }
     return localStorage.getItem(key);
   } catch (error) {
-    console.error(
+    logger.error(
       "MigrateToSecureStorage",
       `Failed to read from localStorage for key "${key}"`,
       error,
@@ -77,7 +78,7 @@ function removeFromLocalStorage(key: string): boolean {
     localStorage.removeItem(key);
     return true;
   } catch (error) {
-    console.error(
+    logger.error(
       "MigrateToSecureStorage",
       `Failed to remove from localStorage for key "${key}"`,
       error,
@@ -123,7 +124,7 @@ async function migrateKey(key: string): Promise<MigrationResult> {
     result.migrated = true;
     return result;
   } catch (error) {
-    console.error(
+    logger.error(
       "MigrateToSecureStorage",
       `Failed to migrate key "${key}"`,
       error,
@@ -142,7 +143,7 @@ export async function migrateAllKeys(): Promise<MigrationSummary> {
 
   // Warn if encryption is not available
   if (!secureStorage.isEncryptionAvailable()) {
-    console.warn(
+    logger.warn(
       "OS-native encryption not available. Keys will be stored without encryption.",
     );
   }

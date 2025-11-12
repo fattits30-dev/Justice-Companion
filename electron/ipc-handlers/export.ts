@@ -1,3 +1,5 @@
+import type { Electron } from 'electron';
+import { logger } from '../../src/utils/logger';
 // electron/ipc-handlers/export.ts
 import { ipcMain, dialog, app, type IpcMainInvokeEvent } from 'electron';
 import { container } from '../../src/shared/infrastructure/di/container.ts';
@@ -26,7 +28,7 @@ export function setupExportHandlers(): void {
     ): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.warn('[IPC] export:case-to-pdf called by user:', userId, 'for case:', caseId);
+          logger.warn('[IPC] export:case-to-pdf called by user:', userId, 'for case:', caseId);
 
           // If no output path provided, show save dialog
           if (!options?.outputPath) {
@@ -56,7 +58,7 @@ export function setupExportHandlers(): void {
           const result = await service.exportCaseToPDF(caseId, userId, options);
           return { success: true, data: result };
         } catch (error) {
-          console.error('[IPC] Failed to export case to PDF:', error);
+          logger.error('[IPC] Failed to export case to PDF:', error);
 
           // Wrap generic errors in DomainErrors
           if (error instanceof Error) {
@@ -92,7 +94,7 @@ export function setupExportHandlers(): void {
     ): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.warn('[IPC] export:case-to-word called by user:', userId, 'for case:', caseId);
+          logger.warn('[IPC] export:case-to-word called by user:', userId, 'for case:', caseId);
 
           // If no output path provided, show save dialog
           if (!options?.outputPath) {
@@ -121,7 +123,7 @@ export function setupExportHandlers(): void {
           const result = await service.exportCaseToWord(caseId, userId, options);
           return { success: true, data: result };
         } catch (error) {
-          console.error('[IPC] Failed to export case to Word:', error);
+          logger.error('[IPC] Failed to export case to Word:', error);
 
           // Wrap generic errors in DomainErrors
           if (error instanceof Error) {
@@ -152,7 +154,7 @@ export function setupExportHandlers(): void {
     async (_event: IpcMainInvokeEvent, caseId: number, sessionId: string): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.warn('[IPC] export:evidence-list-to-pdf called by user:', userId, 'for case:', caseId);
+          logger.warn('[IPC] export:evidence-list-to-pdf called by user:', userId, 'for case:', caseId);
 
           const result = await dialog.showSaveDialog({
             title: 'Export Evidence List to PDF',
@@ -176,7 +178,7 @@ export function setupExportHandlers(): void {
           const exportResult = await service.exportEvidenceListToPDF(caseId, userId);
           return { success: true, data: exportResult };
         } catch (error) {
-          console.error('[IPC] Failed to export evidence list to PDF:', error);
+          logger.error('[IPC] Failed to export evidence list to PDF:', error);
 
           if (error instanceof Error) {
             const message = error.message.toLowerCase();
@@ -202,7 +204,7 @@ export function setupExportHandlers(): void {
     async (_event: IpcMainInvokeEvent, caseId: number, sessionId: string): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.warn('[IPC] export:timeline-report-to-pdf called by user:', userId, 'for case:', caseId);
+          logger.warn('[IPC] export:timeline-report-to-pdf called by user:', userId, 'for case:', caseId);
 
           const result = await dialog.showSaveDialog({
             title: 'Export Timeline Report to PDF',
@@ -226,7 +228,7 @@ export function setupExportHandlers(): void {
           const exportResult = await service.exportTimelineReportToPDF(caseId, userId);
           return { success: true, data: exportResult };
         } catch (error) {
-          console.error('[IPC] Failed to export timeline report to PDF:', error);
+          logger.error('[IPC] Failed to export timeline report to PDF:', error);
 
           if (error instanceof Error) {
             const message = error.message.toLowerCase();
@@ -252,7 +254,7 @@ export function setupExportHandlers(): void {
     async (_event: IpcMainInvokeEvent, caseId: number, sessionId: string): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.warn('[IPC] export:case-notes-to-pdf called by user:', userId, 'for case:', caseId);
+          logger.warn('[IPC] export:case-notes-to-pdf called by user:', userId, 'for case:', caseId);
 
           const result = await dialog.showSaveDialog({
             title: 'Export Case Notes to PDF',
@@ -276,7 +278,7 @@ export function setupExportHandlers(): void {
           const exportResult = await service.exportCaseNotesToPDF(caseId, userId);
           return { success: true, data: exportResult };
         } catch (error) {
-          console.error('[IPC] Failed to export case notes to PDF:', error);
+          logger.error('[IPC] Failed to export case notes to PDF:', error);
 
           if (error instanceof Error) {
             const message = error.message.toLowerCase();
@@ -302,7 +304,7 @@ export function setupExportHandlers(): void {
     async (_event: IpcMainInvokeEvent, caseId: number, sessionId: string): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.warn('[IPC] export:case-notes-to-word called by user:', userId, 'for case:', caseId);
+          logger.warn('[IPC] export:case-notes-to-word called by user:', userId, 'for case:', caseId);
 
           const result = await dialog.showSaveDialog({
             title: 'Export Case Notes to Word Document',
@@ -326,7 +328,7 @@ export function setupExportHandlers(): void {
           const exportResult = await service.exportCaseNotesToWord(caseId, userId);
           return { success: true, data: exportResult };
         } catch (error) {
-          console.error('[IPC] Failed to export case notes to Word:', error);
+          logger.error('[IPC] Failed to export case notes to Word:', error);
 
           if (error instanceof Error) {
             const message = error.message.toLowerCase();
@@ -379,7 +381,7 @@ export function setupExportHandlers(): void {
         ],
       };
     } catch (error) {
-      console.error('Failed to get export templates:', error);
+      logger.error('Failed to get export templates:', error);
 
       if (error instanceof Error) {
         throw new DatabaseError('get export templates', error.message);
@@ -399,7 +401,7 @@ export function setupExportHandlers(): void {
     ): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.warn('[IPC] export:custom called by user:', userId, 'for case:', caseId, 'format:', options.format);
+          logger.warn('[IPC] export:custom called by user:', userId, 'for case:', caseId, 'format:', options.format);
 
           const service = container.get<IExportService>(TYPES.ExportService);
 
@@ -414,7 +416,7 @@ export function setupExportHandlers(): void {
 
           return { success: true, data: result };
         } catch (error) {
-          console.error('[IPC] Failed to export with custom options:', error);
+          logger.error('[IPC] Failed to export with custom options:', error);
 
           if (error instanceof Error) {
             const message = error.message.toLowerCase();

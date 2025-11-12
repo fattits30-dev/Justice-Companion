@@ -1,9 +1,11 @@
+import { logger } from '../src/utils/logger';
+
 // CommonJS require for Electron preload (sandboxed context doesn't support ESM)
 // Using require here is acceptable for preload scripts
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { contextBridge, ipcRenderer } = require("electron");
 
-console.log("[PRELOAD] Preload script starting...");
+logger.info("[PRELOAD] Preload script starting...");
 
 // Type definitions for exposed API (not exported - preload can't use ESM export)
 interface RegisterData {
@@ -256,6 +258,13 @@ contextBridge.exposeInMainWorld("justiceAPI", {
     delete: (key: string) => ipcRenderer.invoke("secure-storage:delete", key),
     clearAll: () => ipcRenderer.invoke("secure-storage:clear-all"),
   },
+
+  // ===== PROFILE =====
+  getUserProfile: (sessionId: string) =>
+    ipcRenderer.invoke("profile:get", sessionId),
+
+  updateUserProfile: (sessionId: string, data: any) =>
+    ipcRenderer.invoke("profile:update", sessionId, data),
 
   // ===== BACKUP & RESTORE =====
   createBackup: () => ipcRenderer.invoke("db:backup"),

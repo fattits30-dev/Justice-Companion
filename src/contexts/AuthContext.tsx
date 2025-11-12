@@ -1,3 +1,5 @@
+import { logger } from '../utils/logger';
+
 /**
  * AuthContext - Authentication State Management
  *
@@ -114,7 +116,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
       } catch (err) {
         // Silently fail - no session to restore
-        console.error("[AuthContext] Error restoring session:", err);
+        logger.error("[AuthContext] Error restoring session:", err);
       } finally {
         setIsLoading(false);
       }
@@ -249,7 +251,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         });
       }
     } catch (err) {
-      console.error("[AuthContext] Error refreshing user:", err);
+      logger.error("[AuthContext] Error refreshing user:", err);
     }
   };
 

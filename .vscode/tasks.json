@@ -2,10 +2,10 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Start Vite Dev Server",
+      "label": "Start Full Stack",
       "type": "shell",
-      "command": "pnpm",
-      "args": ["dev"],
+      "command": "npm",
+      "args": ["run", "dev"],
       "isBackground": true,
       "problemMatcher": {
         "owner": "vite",
@@ -17,8 +17,8 @@
         },
         "background": {
           "activeOnStart": true,
-          "beginsPattern": "VITE",
-          "endsPattern": "Local:\\s+http://localhost:5176"
+          "beginsPattern": "Justice Companion Full Stack",
+          "endsPattern": "Full stack is running!"
         }
       },
       "presentation": {
@@ -423,6 +423,110 @@
       "type": "shell",
       "command": "pnpm electron:dev",
       "isBackground": true,
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "Python AI: Start Service",
+      "type": "shell",
+      "command": "python -m ai-service.main",
+      "isBackground": true,
+      "options": {
+        "env": {
+          "ENVIRONMENT": "production",
+          "PORT": "5051",
+          "HOST": "127.0.0.1",
+          "HF_TOKEN": "${env:HF_TOKEN}",
+          "OPENAI_API_KEY": "${env:OPENAI_API_KEY}",
+          "PYTHONUNBUFFERED": "1"
+        }
+      },
+      "problemMatcher": {
+        "pattern": {
+          "regexp": "^(.*)$"
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "Starting server",
+          "endsPattern": "Uvicorn running"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "showReuseMessage": true,
+        "clear": false
+      }
+    },
+    {
+      "label": "Python AI: Test API",
+      "type": "shell",
+      "command": "python test-api-direct.py",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Python AI: Install Dependencies",
+      "type": "shell",
+      "command": "pip install -r ai-service/requirements.txt",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Python AI: Check Port 5051",
+      "type": "shell",
+      "command": "netstat -ano | findstr :5051",
+      "windows": {
+        "command": "netstat -ano | findstr :5051"
+      },
+      "linux": {
+        "command": "lsof -i :5051"
+      },
+      "osx": {
+        "command": "lsof -i :5051"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Python AI: Kill Port 5051",
+      "type": "shell",
+      "command": "FOR /F \"tokens=5\" %P IN ('netstat -ano ^| findstr :5051') DO taskkill /F /PID %P",
+      "windows": {
+        "command": "FOR /F \"tokens=5\" %P IN ('netstat -ano ^| findstr :5051') DO taskkill /F /PID %P"
+      },
+      "linux": {
+        "command": "kill -9 $(lsof -t -i:5051)"
+      },
+      "osx": {
+        "command": "kill -9 $(lsof -t -i:5051)"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Full Stack: Start All Services",
+      "dependsOn": [
+        "Python AI: Start Service",
+        "Start Vite Dev Server",
+        "Start Electron Dev"
+      ],
+      "dependsOrder": "sequence",
       "problemMatcher": [],
       "presentation": {
         "reveal": "always",

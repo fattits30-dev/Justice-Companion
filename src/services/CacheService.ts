@@ -1,6 +1,7 @@
 import { injectable } from 'inversify';
 import { LRUCache } from 'lru-cache';
 import { errorLogger } from '../utils/error-logger.ts';
+import { logger } from '../utils/logger';
 
 /**
  * Cache statistics for monitoring and debugging
@@ -119,10 +120,10 @@ export class CacheService {
 
     // Log cache initialization
     if (this.enabled) {
-      console.log('[CacheService] Initialized with caches:',
+      logger.info('[CacheService] Initialized with caches:',
         Array.from(this.caches.keys()).join(', '));
     } else {
-      console.log('[CacheService] Cache disabled via feature flag');
+      logger.info('[CacheService] Cache disabled via feature flag');
     }
   }
 

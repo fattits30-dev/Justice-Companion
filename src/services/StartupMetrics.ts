@@ -319,19 +319,19 @@ export class StartupMetrics {
 
     // Additional performance recommendations
     if (metrics.perceivedStartupTime > 600) {
-      console.warn("\nPerformance Recommendations:");
+      logger.warn("\nPerformance Recommendations:");
       if (metrics.timeToLoadingWindow > 100) {
-        console.warn(
+        logger.warn(
           "  • Loading window is slow to show - check app.whenReady() early operations",
         );
       }
       if (metrics.timeToCriticalServices > 250) {
-        console.warn(
+        logger.warn(
           "  • Critical services initialization is slow - consider parallelizing",
         );
       }
       if (metrics.timeToMainWindowShown > 400) {
-        console.warn(
+        logger.warn(
           "  • Main window taking too long - check renderer bundle size",
         );
       }

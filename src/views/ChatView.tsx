@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { logger } from '../utils/logger';
 
 import { useAuth } from "../contexts/AuthContext.tsx";
 import { SaveToCaseDialog } from "./chat/SaveToCaseDialog.tsx";
@@ -52,7 +53,7 @@ export function ChatView() {
         }));
       }
     } catch (error) {
-      console.error("[ChatView] Failed to load saved messages:", error);
+      logger.error("[ChatView] Failed to load saved messages:", error);
     }
     return [];
   });
@@ -111,7 +112,7 @@ export function ChatView() {
             setMessages([]);
           }
         } catch (error) {
-          console.error(
+          logger.error(
             "[ChatView] Failed to load messages for new case:",
             error,
           );
@@ -138,7 +139,7 @@ export function ChatView() {
         : "chatMessages-global";
       localStorage.setItem(storageKey, JSON.stringify(messages));
     } catch (error) {
-      console.error("[ChatView] Failed to save messages:", error);
+      logger.error("[ChatView] Failed to save messages:", error);
     }
   }, [messages, activeCaseId]);
 
@@ -211,7 +212,7 @@ export function ChatView() {
         },
         (error: string) => {
           // Error during streaming
-          console.error("[ChatView] Streaming error:", error);
+          logger.error("[ChatView] Streaming error:", error);
           const errorMessage: Message = {
             id: `error-${Date.now()}`,
             role: "assistant",
@@ -225,12 +226,12 @@ export function ChatView() {
         },
         (conversationId: number) => {
           // Capture conversation ID for memory
-          console.log("[ChatView] Received conversationId:", conversationId);
+          logger.info("[ChatView] Received conversationId:", conversationId);
           setCurrentConversationId(conversationId);
         },
       );
     } catch (error) {
-      console.error("[ChatView] Send error:", error);
+      logger.error("[ChatView] Send error:", error);
       setIsStreaming(false);
     }
   }, [input, isStreaming]);
@@ -344,7 +345,7 @@ export function ChatView() {
           }
         } catch (error) {
           // If we can't check for duplicates, proceed with creation
-          console.warn(
+          logger.warn(
             "[ChatView] Could not check for duplicate cases:",
             error,
           );
@@ -546,7 +547,7 @@ Based on your dismissal letter, here are some general steps many people take whe
         description: `Analyzed ${filename}`,
       });
     } catch (error) {
-      console.error("[ChatView] Document upload error:", error);
+      logger.error("[ChatView] Document upload error:", error);
       const errorMessage: Message = {
         id: `error-${Date.now()}`,
         role: "assistant",
@@ -1156,7 +1157,7 @@ Based on your dismissal letter, here are some general steps many people take whe
                             toast.error("Could not find existing case");
                           }
                         } catch (error) {
-                          console.error(
+                          logger.error(
                             "Error switching to existing case:",
                             error,
                           );

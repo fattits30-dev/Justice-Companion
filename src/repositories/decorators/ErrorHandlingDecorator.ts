@@ -12,6 +12,7 @@ import {
   NotFoundError,
 } from "../../errors/RepositoryErrors.ts";
 import { DomainError, DatabaseError } from "../../errors/DomainErrors.ts";
+import { logger } from '../../utils/logger';
 
 /**
  * Configuration options for error handling
@@ -83,7 +84,7 @@ export class ErrorHandlingDecorator<T> extends RepositoryDecorator<T> {
    */
   async findByUserId(userId: number): Promise<T[]> {
     if (!this.hasMethod("findByUserId")) {
-      return this.forwardCall("findByUserId", userId);
+      return this.forwardCall<T[]>("findByUserId", userId);
     }
 
     try {
@@ -150,7 +151,7 @@ export class ErrorHandlingDecorator<T> extends RepositoryDecorator<T> {
   ): Error {
     // Log error if enabled
     if (this.options.logErrors) {
-      console.error(`[${operation}] Error occurred:`, error);
+      logger.error(`[${operation}] Error occurred:`, error);
     }
 
     // Preserve all DomainErrors (NotFoundError, ValidationError, etc.) without wrapping
@@ -285,7 +286,7 @@ export class ErrorHandlingDecorator<T> extends RepositoryDecorator<T> {
   /**
    * Forward call to repository if method exists
    */
-  protected forwardCall(methodName: string, ...args: any[]): Promise<any> {
+  protected forwardCall<R = unknown>(methodName: string, ...args: unknown[]): Promise<R> {
     const method = (this.repository as any)[methodName];
     if (typeof method !== "function") {
       throw new Error(`Method ${methodName} not found on repository`);

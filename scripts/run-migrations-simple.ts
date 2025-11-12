@@ -3,7 +3,7 @@
  * Directly applies all pending SQL migrations without fancy logging
  */
 
-import Database from 'better-sqlite3';
+import Database from 'better-sqlite3-multiple-ciphers';
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';

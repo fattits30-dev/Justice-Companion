@@ -206,7 +206,7 @@ HF_TOKEN=hf_xxxxxxxxxxxxxxxxxxxx
 ## Critical Requirements
 
 ### Package Manager
-**MUST use pnpm** - NOT npm or yarn. This is critical for native module (better-sqlite3) compatibility.
+**Now using npm** - The project has been migrated from pnpm to npm to resolve Electron 33+ module resolution issues.
 
 ### Node.js Version
 **MUST use Node.js 20.18.0 LTS** - NOT Node 22.x. Electron 38.2.1 requires Node 20.x.
@@ -214,15 +214,15 @@ HF_TOKEN=hf_xxxxxxxxxxxxxxxxxxxx
 If encountering "Electron failed to install correctly" or "NODE_MODULE_VERSION mismatch" errors:
 ```bash
 nvm use 20  # or fnm use 20
-pnpm install
+npm install
 ```
 
 ### Native Module: better-sqlite3
 This native SQLite module must be rebuilt for different environments:
 
-- **For Electron runtime:** `pnpm rebuild:electron` (runs via postinstall)
-- **For Node.js tests:** `pnpm rebuild:node` (run before tests)
-- **Manual rebuild:** `pnpm rebuild better-sqlite3`
+- **For Electron runtime:** `npm run rebuild:electron` (runs via postinstall)
+- **For Node.js tests:** `npm run rebuild:node` (run before tests)
+- **Manual rebuild:** `npm rebuild better-sqlite3`
 
 The postinstall script automatically rebuilds for Electron after installation.
 
@@ -248,42 +248,42 @@ import type { User } from '../models/User';
 
 ### Development
 ```bash
-pnpm install              # Install dependencies (use pnpm, not npm!)
-pnpm dev                  # Start Vite dev server only
-pnpm electron:dev         # Start full Electron app with dev server
+npm install              # Install dependencies
+npm run dev              # Start Vite dev server only
+npm run electron:dev     # Start full Electron app with dev server
 ```
 
 ### Database Operations
 ```bash
-pnpm db:migrate           # Run pending migrations
-pnpm db:migrate:status    # Check migration status
-pnpm db:migrate:rollback  # Rollback last migration
-pnpm db:backup            # Create database backup
-pnpm db:backup:list       # List all backups
+npm run db:migrate           # Run pending migrations
+npm run db:migrate:status    # Check migration status
+npm run db:migrate:rollback  # Rollback last migration
+npm run db:backup            # Create database backup
+npm run db:backup:list       # List all backups
 ```
 
 ### Building
 ```bash
-pnpm build                # Build for all platforms
-pnpm build:win            # Build Windows installer (.exe)
-pnpm build:mac            # Build macOS DMG
-pnpm build:linux          # Build Linux AppImage + .deb
+npm run build                # Build for all platforms
+npm run build:win            # Build Windows installer (.exe)
+npm run build:mac            # Build macOS DMG
+npm run build:linux          # Build Linux AppImage + .deb
 ```
 
 ### Testing
 ```bash
-pnpm test                 # Run unit tests (Vitest)
-pnpm test:coverage        # Run tests with coverage report
-pnpm test:e2e             # Run E2E tests (Playwright)
+npm test                 # Run unit tests (Vitest)
+npm run test:coverage    # Run tests with coverage report
+npm run test:e2e         # Run E2E tests (Playwright)
 ```
 
 ### Code Quality
 ```bash
-pnpm lint                 # Run ESLint
-pnpm lint:fix             # Auto-fix linting issues
-pnpm type-check           # TypeScript type checking
-pnpm format               # Format code with Prettier
-pnpm format:check         # Check formatting without changing files
+npm run lint             # Run ESLint
+npm run lint:fix         # Auto-fix linting issues
+npm run type-check       # TypeScript type checking
+npm run format           # Format code with Prettier
+npm run format:check     # Check formatting without changing files
 ```
 
 ## Architecture
@@ -433,7 +433,7 @@ console.log('✓ New key generated:', newKey);
 - Triggers: Push/PR to `main` and `develop`
 - Matrix: Ubuntu, Windows, macOS with Node 20.x
 - Steps: lint → type-check → rebuild better-sqlite3 → test
-- Critical: Must run `pnpm rebuild:node` before tests
+- Critical: Must run `npm run rebuild:node` before tests
 
 **Release Workflow** (`.github/workflows/release.yml`):
 - Triggers: Version tags (`v*` pattern, e.g., `v1.0.0`)
@@ -576,16 +576,16 @@ pnpm electron:dev
 nvm use 20  # or fnm use 20
 
 # Reinstall or rebuild
-pnpm install
+npm install
 # OR
-pnpm rebuild better-sqlite3
+npm rebuild better-sqlite3
 ```
 
 ### Test Pass Rate: 99.7% (1152/1156 passing)
 4 failing tests are due to Node version mismatch. All tests pass with Node 20.x.
 
 ### ESLint Warnings (320 in legacy code)
-New code should be ESLint-clean. Use `pnpm lint:fix` to auto-fix issues.
+New code should be ESLint-clean. Use `npm run lint:fix` to auto-fix issues.
 
 ### Large Dependencies
 `node-llama-cpp` (~4.5GB) is configured in `asarUnpack` to prevent ASAR bundling. This is intentional for local AI model support.
@@ -596,26 +596,26 @@ New code should be ESLint-clean. Use `pnpm lint:fix` to auto-fix issues.
    ```bash
    git clone <repository>
    cd Justice-Companion
-   pnpm install              # Auto-runs postinstall to rebuild better-sqlite3
+   npm install              # Auto-runs postinstall to rebuild better-sqlite3
    ```
 
 2. **Create `.env` file** with encryption key (see Environment Configuration above)
 
 3. **Run migrations:**
    ```bash
-   pnpm db:migrate
+   npm run db:migrate
    ```
 
 4. **Start development:**
    ```bash
-   pnpm electron:dev
+   npm run electron:dev
    ```
 
 5. **Before committing:**
    ```bash
-   pnpm lint:fix
-   pnpm type-check
-   pnpm test
+   npm run lint:fix
+   npm run type-check
+   npm test
    ```
 
 ## Testing Strategy
@@ -627,7 +627,7 @@ New code should be ESLint-clean. Use `pnpm lint:fix` to auto-fix issues.
 
 Run specific test file:
 ```bash
-pnpm test src/services/AuthenticationService.test.ts
+npm test src/services/AuthenticationService.test.ts
 ```
 
 ## Platform-Specific Notes

@@ -30,6 +30,7 @@ import { getRepositories } from '../../src/repositories.ts';
 import { AuditLogger } from '../../src/services/AuditLogger.ts';
 import { getDb } from '../../src/db/database.ts';
 import { EvidenceNotFoundError } from '../../src/errors/DomainErrors.ts';
+import { logger } from '../../src/utils/logger';
 
 // AuthorizationError is loaded at runtime via require() to avoid TypeScript path issues
 class AuthorizationError extends Error {
@@ -135,7 +136,7 @@ export async function withAuthorization<T>(
       username: user.username,
       rememberMe: false, // In-memory session uses default 24h expiration
     });
-    console.warn(
+    logger.warn(
       `[Authorization] Recreated in-memory session for user ${user.username} from database session`
     );
 
@@ -155,11 +156,11 @@ export async function withAuthorization<T>(
       ) as IPCResponse<T>;
     }
     // Log the actual error for debugging
-    console.error(
+    logger.error(
       "[Authorization] Unexpected error during authorization:",
       error
     );
-    console.error(
+    logger.error(
       "[Authorization] Error stack:",
       error instanceof Error ? error.stack : "No stack trace"
     );

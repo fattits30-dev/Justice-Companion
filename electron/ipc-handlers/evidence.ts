@@ -1,3 +1,6 @@
+import { logger } from '../../src/utils/logger';
+
+import type { Electron } from 'electron';
 import { ipcMain, type IpcMainInvokeEvent } from "electron";
 import { type IPCResponse } from '../utils/ipc-response.ts';
 import { logAuditEvent, AuditEventType } from '../utils/audit-helper.ts';
@@ -33,7 +36,7 @@ export function setupEvidenceHandlers(): void {
     ): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.warn(
+          logger.warn(
             "[IPC] evidence:upload called by user:",
             userId,
             "for case:",
@@ -82,10 +85,10 @@ export function setupEvidenceHandlers(): void {
             success: true,
           });
 
-          console.warn("[IPC] Evidence created successfully:", result.id);
+          logger.warn("[IPC] Evidence created successfully:", result.id);
           return result;
         } catch (error) {
-          console.error("[IPC] evidence:upload error:", error);
+          logger.error("[IPC] evidence:upload error:", error);
 
           // Log failed upload
           logAuditEvent({
@@ -114,7 +117,7 @@ export function setupEvidenceHandlers(): void {
     ): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.warn(
+          logger.warn(
             "[IPC] evidence:list called by user:",
             userId,
             "for case:",
@@ -135,7 +138,7 @@ export function setupEvidenceHandlers(): void {
           const evidenceRepo = getEvidenceRepository();
           const evidence = evidenceRepo.findByCaseId(validatedData.caseId);
 
-          console.warn(
+          logger.warn(
             "[IPC] Retrieved",
             evidence.length,
             "evidence items for case",
@@ -143,7 +146,7 @@ export function setupEvidenceHandlers(): void {
           );
           return evidence;
         } catch (error) {
-          console.error("[IPC] evidence:list error:", error);
+          logger.error("[IPC] evidence:list error:", error);
           throw error; // withAuthorization will handle error formatting
         }
       });
@@ -160,7 +163,7 @@ export function setupEvidenceHandlers(): void {
     ): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.warn(
+          logger.warn(
             "[IPC] evidence:delete called by user:",
             userId,
             "for evidence:",
@@ -192,10 +195,10 @@ export function setupEvidenceHandlers(): void {
             success: true,
           });
 
-          console.warn("[IPC] Evidence deleted successfully:", id);
+          logger.warn("[IPC] Evidence deleted successfully:", id);
           return { success: true };
         } catch (error) {
-          console.error("[IPC] evidence:delete error:", error);
+          logger.error("[IPC] evidence:delete error:", error);
 
           // Log failed deletion
           logAuditEvent({

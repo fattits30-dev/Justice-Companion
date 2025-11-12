@@ -1,3 +1,5 @@
+import { logger } from '../utils/logger';
+
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -358,7 +360,7 @@ function AIProviderTab({
         setTimeout(() => setSaveSuccess(false), 3000);
         // Success - configuration saved
       } else {
-        console.error("[SettingsView] Failed to save AI config:", result.error);
+        logger.error("[SettingsView] Failed to save AI config:", result.error);
         alert(
           `Failed to save configuration: ${
             typeof result.error === "string"
@@ -368,7 +370,7 @@ function AIProviderTab({
         );
       }
     } catch (error) {
-      console.error("[SettingsView] Error saving AI config:", error);
+      logger.error("[SettingsView] Error saving AI config:", error);
       alert(
         "Error saving configuration: " +
           (error instanceof Error ? error.message : "Unknown error"),

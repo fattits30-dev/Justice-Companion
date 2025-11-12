@@ -1,3 +1,5 @@
+import { logger } from '../../utils/logger';
+
 /**
  * MainLayout - Main app layout with Sidebar + content area + Command Palette
  *
@@ -82,7 +84,7 @@ export function MainLayout() {
           );
         }
       } catch (error) {
-        console.error("[MainLayout] Failed to fetch cases:", error);
+        logger.error("[MainLayout] Failed to fetch cases:", error);
       }
     };
 

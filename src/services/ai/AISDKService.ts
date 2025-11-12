@@ -10,6 +10,7 @@ import type {
   AIProviderType,
 } from "../../types/ai-providers.ts";
 import { UnifiedAIService } from "../UnifiedAIService.ts";
+import { logger } from '../../utils/logger';
 
 export interface ChatMessage {
   role: "system" | "user" | "assistant";
@@ -84,7 +85,7 @@ export class AISDKService {
 
       return response;
     } catch (error) {
-      console.error("[AISDKService] Chat error:", error);
+      logger.error("[AISDKService] Chat error:", error);
       throw error;
     }
   }
@@ -112,7 +113,7 @@ export class AISDKService {
         onFunctionCall: callbacks.onFunctionCall,
       });
     } catch (error) {
-      console.error("[AISDKService] Stream chat error:", error);
+      logger.error("[AISDKService] Stream chat error:", error);
       if (callbacks.onError) {
         callbacks.onError(
           error instanceof Error ? error : new Error(String(error)),

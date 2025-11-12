@@ -158,7 +158,7 @@ function DashboardWrapper() {
           setDashboardStats(response.data);
         }
       } catch (err) {
-        console.error("Failed to fetch dashboard stats:", err);
+        logger.error("Failed to fetch dashboard stats:", err);
         setError(err instanceof Error ? err.message : "An error occurred");
       } finally {
         setIsLoading(false);

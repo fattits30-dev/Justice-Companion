@@ -50,6 +50,9 @@ export default tseslint.config(
         { allowConstantExport: true },
       ],
 
+      // Allow require() imports in database.ts for conditional/lazy loading
+      "@typescript-eslint/no-require-imports": "off",
+
       // Import/Export rules
       "import/extensions": [
         "warn",

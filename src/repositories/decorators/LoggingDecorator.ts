@@ -72,16 +72,16 @@ export class LoggingDecorator<T> extends RepositoryDecorator<T> {
   /**
    * Log and execute findById
    */
-  async findById(id: number): Promise<any> {
+  async findById(id: number): Promise<unknown> {
     if (!this.options.logReads) {
-      return await this.forwardCall("findById", id);
+      return await this.forwardCall<any>("findById", id);
     }
 
     const startTime = Date.now();
     const operation = "findById";
 
     try {
-      const result = await this.forwardCall("findById", id);
+      const result = await this.forwardCall<any>("findById", id);
 
       this.logOperation({
         operation,
@@ -115,14 +115,14 @@ export class LoggingDecorator<T> extends RepositoryDecorator<T> {
    */
   async findAll(): Promise<any[]> {
     if (!this.options.logReads) {
-      return await this.forwardCall("findAll");
+      return await this.forwardCall<any[]>("findAll");
     }
 
     const startTime = Date.now();
     const operation = "findAll";
 
     try {
-      const result = await this.forwardCall("findAll");
+      const result = await this.forwardCall<any[]>("findAll");
 
       this.logOperation({
         operation,
@@ -152,16 +152,16 @@ export class LoggingDecorator<T> extends RepositoryDecorator<T> {
   /**
    * Log and execute create
    */
-  async create(data: any): Promise<any> {
+  async create(data: any): Promise<unknown> {
     if (!this.options.logWrites) {
-      return await this.forwardCall("create", data);
+      return await this.forwardCall<any>("create", data);
     }
 
     const startTime = Date.now();
     const operation = "create";
 
     try {
-      const result = await this.forwardCall("create", data);
+      const result = await this.forwardCall<any>("create", data);
 
       this.logOperation({
         operation,
@@ -191,16 +191,16 @@ export class LoggingDecorator<T> extends RepositoryDecorator<T> {
   /**
    * Log and execute update
    */
-  async update(id: number, data: any): Promise<any> {
+  async update(id: number, data: any): Promise<unknown> {
     if (!this.options.logWrites) {
-      return await this.forwardCall("update", id, data);
+      return await this.forwardCall<boolean>("update", id, data);
     }
 
     const startTime = Date.now();
     const operation = "update";
 
     try {
-      const result = await this.forwardCall("update", id, data);
+      const result = await this.forwardCall<boolean>("update", id, data);
 
       this.logOperation({
         operation,
@@ -233,14 +233,14 @@ export class LoggingDecorator<T> extends RepositoryDecorator<T> {
    */
   async delete(id: number): Promise<boolean> {
     if (!this.options.logWrites) {
-      return await this.forwardCall("delete", id);
+      return await this.forwardCall<boolean>("delete", id);
     }
 
     const startTime = Date.now();
     const operation = "delete";
 
     try {
-      const result = await this.forwardCall("delete", id);
+      const result = await this.forwardCall<boolean>("delete", id);
 
       this.logOperation({
         operation,

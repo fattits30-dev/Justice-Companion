@@ -8,6 +8,7 @@
 import "reflect-metadata";
 import { Container } from "inversify";
 import { TYPES } from "./types.ts";
+import { logger } from '../../../utils/logger';
 
 // Import repository interfaces from repository-interfaces.ts
 import type {
@@ -65,7 +66,7 @@ export function createDecoratedContainer(
   } = options;
 
   if (verbose) {
-    console.warn(
+    logger.warn(
       `[DI] Creating decorated container for environment: ${environment}`
     );
   }

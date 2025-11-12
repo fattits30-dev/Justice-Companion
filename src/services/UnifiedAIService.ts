@@ -36,6 +36,7 @@ import {
   buildDocumentDraftPrompt,
 } from "../core/ai/prompts/analysis-prompts.ts";
 import { getToolsForProvider } from "./AIToolDefinitions.ts";
+import { logger } from '../utils/logger';
 
 export class UnifiedAIService {
   private config: AIProviderConfig;
@@ -285,7 +286,7 @@ export class UnifiedAIService {
               fullResponse += "\n\n" + functionResultMessage + "\n\n";
             }
           } catch (error) {
-            console.error(`Error executing function ${lastCall.name}:`, error);
+            logger.error(`Error executing function ${lastCall.name}:`, error);
           }
         }
       }
@@ -439,12 +440,12 @@ export class UnifiedAIService {
               callbacks.onToken("\n\n" + functionResultMessage + "\n\n");
               fullResponse += "\n\n" + functionResultMessage + "\n\n";
             } else {
-              console.warn(
+              logger.warn(
                 `No handler found for function: ${functionCall.name}`,
               );
             }
           } catch (error) {
-            console.error(
+            logger.error(
               `Error executing function ${functionCall.name}:`,
               error,
             );
@@ -552,7 +553,7 @@ export class UnifiedAIService {
             result += `\n\nFunction ${content.name} executed: ${JSON.stringify(functionResult)}`;
           }
         } catch (error) {
-          console.error(`Error executing function ${content.name}:`, error);
+          logger.error(`Error executing function ${content.name}:`, error);
         }
       }
     }
@@ -567,13 +568,13 @@ export class UnifiedAIService {
     const client = this.client as HfInference;
 
     try {
-      console.warn("[UnifiedAIService] Calling HuggingFace Inference API...");
-      console.warn("[UnifiedAIService] Model:", this.config.model);
-      console.warn(
+      logger.warn("[UnifiedAIService] Calling HuggingFace Inference API...");
+      logger.warn("[UnifiedAIService] Model:", this.config.model);
+      logger.warn(
         "[UnifiedAIService] Endpoint:",
         this.config.endpoint || "default",
       );
-      console.warn("[UnifiedAIService] Message count:", messages.length);
+      logger.warn("[UnifiedAIService] Message count:", messages.length);
 
       const response = await client.chatCompletion({
         model: this.config.model,
@@ -586,21 +587,28 @@ export class UnifiedAIService {
         top_p: this.config.topP || 0.9,
       });
 
-      console.warn("[UnifiedAIService] Response received successfully");
+      logger.warn("[UnifiedAIService] Response received successfully");
       return response.choices[0]?.message?.content || "";
-    } catch (error: any) {
-      console.error("[UnifiedAIService] HuggingFace API Error Details:");
-      console.error("Error type:", error.constructor.name);
-      console.error("Error message:", error.message);
-      console.error("Error status:", error.status || "N/A");
-      console.error(
-        "Error response:",
-        error.response?.data || error.response || "N/A",
-      );
-      console.error("Full error:", error);
-      throw new Error(
-        `Failed to perform inference: ${error.message}${error.status ? ` (HTTP ${error.status})` : ""}`,
-      );
+    } catch (error) {
+      logger.error("[UnifiedAIService] HuggingFace API Error Details:");
+
+      if (error instanceof Error) {
+        logger.error("Error type:", error.constructor.name);
+        logger.error("Error message:", error.message);
+        const apiError = error as any; // Type assertion for API-specific properties
+        logger.error("Error status:", apiError.status || "N/A");
+        logger.error(
+          "Error response:",
+          apiError.response?.data || apiError.response || "N/A",
+        );
+        logger.error("Full error:", error);
+        throw new Error(
+          `Failed to perform inference: ${error.message}${apiError.status ? ` (HTTP ${apiError.status})` : ""}`,
+        );
+      }
+
+      logger.error("Unknown error:", error);
+      throw new Error("Failed to perform inference: Unknown error");
     }
   }
 
@@ -656,7 +664,7 @@ export class UnifiedAIService {
               result += `\n\nFunction ${toolCall.function.name} executed: ${JSON.stringify(functionResult)}`;
             }
           } catch (error) {
-            console.error(
+            logger.error(
               `Error executing function ${toolCall.function.name}:`,
               error,
             );
@@ -943,11 +951,11 @@ IMPORTANT:
       // Split response into analysis (part 1) and structured data (part 2)
       const jsonMatch = response.match(/```json\n?([\s\S]*?)\n?```/);
 
-      console.warn("[UnifiedAIService] Full AI response:", response);
-      console.warn("[UnifiedAIService] JSON match found:", !!jsonMatch);
+      logger.warn("[UnifiedAIService] Full AI response:", response);
+      logger.warn("[UnifiedAIService] JSON match found:", !!jsonMatch);
 
       if (!jsonMatch) {
-        console.warn("[UnifiedAIService] No JSON found, using fallback");
+        logger.warn("[UnifiedAIService] No JSON found, using fallback");
         // Fallback: simple extraction with low confidence
         return {
           analysis: response,
@@ -971,18 +979,18 @@ IMPORTANT:
       const analysisText = response.substring(0, jsonMatch.index).trim();
       const jsonStr = jsonMatch[1];
 
-      console.warn("[UnifiedAIService] Extracted JSON string:", jsonStr);
+      logger.warn("[UnifiedAIService] Extracted JSON string:", jsonStr);
 
       let suggestedCaseData;
       try {
         suggestedCaseData = JSON.parse(jsonStr);
-        console.warn(
+        logger.warn(
           "[UnifiedAIService] Parsed suggestedCaseData:",
           suggestedCaseData,
         );
       } catch (parseError) {
-        console.error("[UnifiedAIService] JSON parse error:", parseError);
-        console.error("[UnifiedAIService] Failed to parse:", jsonStr);
+        logger.error("[UnifiedAIService] JSON parse error:", parseError);
+        logger.error("[UnifiedAIService] Failed to parse:", jsonStr);
         // Fallback on parse error
         suggestedCaseData = {
           title: `Case regarding ${parsedDoc.filename}`,

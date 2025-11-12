@@ -1,6 +1,7 @@
 import type { App, BrowserWindow } from "electron";
 import type { AppUpdater, UpdateInfo, ProgressInfo } from "electron-updater";
 import { errorLogger } from "../utils/error-logger.ts";
+import { logger } from '../utils/logger';
 
 export interface AutoUpdaterConfig {
   checkOnStartup?: boolean;
@@ -83,7 +84,7 @@ export class AutoUpdater {
     const source = this.config.updateServerUrl
       ? `custom server ${this.config.updateServerUrl}`
       : "GitHub releases";
-    console.warn("[AutoUpdater] Configured for", source);
+    logger.warn("[AutoUpdater] Configured for", source);
   }
 
   /**
@@ -91,20 +92,20 @@ export class AutoUpdater {
    */
   private registerListeners(): void {
     this.updater.on("checking-for-update", () => {
-      console.warn("[AutoUpdater] Checking for updates...");
+      logger.warn("[AutoUpdater] Checking for updates...");
       this.status.checking = true;
       this.notifyWindow("app-update:checking");
     });
 
     this.updater.on("update-available", (info: UpdateInfo) => {
-      console.warn("[AutoUpdater] Update available:", info.version);
+      logger.warn("[AutoUpdater] Update available:", info.version);
       this.status.updateAvailable = true;
       this.status.latestVersion = info.version;
       this.notifyWindow("app-update:available", info);
     });
 
     this.updater.on("update-not-available", (info: UpdateInfo) => {
-      console.warn("[AutoUpdater] No update available:", info.version);
+      logger.warn("[AutoUpdater] No update available:", info.version);
       this.status.checking = false;
       this.notifyWindow("app-update:not-available");
     });
@@ -124,7 +125,7 @@ export class AutoUpdater {
     });
 
     this.updater.on("update-downloaded", (info: UpdateInfo) => {
-      console.warn("[AutoUpdater] Update downloaded:", info.version);
+      logger.warn("[AutoUpdater] Update downloaded:", info.version);
       this.status.downloading = false;
       this.status.updateDownloaded = true;
       this.status.latestVersion = info.version;
@@ -132,7 +133,7 @@ export class AutoUpdater {
     });
 
     this.updater.on("error", (error: Error) => {
-      console.error("[AutoUpdater] Error:", error);
+      logger.error("[AutoUpdater] Error:", error);
       errorLogger.logError(error, {
         service: "AutoUpdater",
         operation: "update",

@@ -1,3 +1,6 @@
+import { logger } from '../../src/utils/logger';
+
+import type { Electron } from 'electron';
 import {
   ipcMain,
   safeStorage,
@@ -75,7 +78,7 @@ export function setupDatabaseHandlers(): void {
     "db:migrate",
     async (_event: IpcMainInvokeEvent): Promise<IPCResponse> => {
       try {
-        console.warn("[IPC] db:migrate called");
+        logger.warn("[IPC] db:migrate called");
 
         // Create backup before migration
         const { createBackup } = await import("../../src/db/backup.ts");
@@ -105,7 +108,7 @@ export function setupDatabaseHandlers(): void {
           },
         });
 
-        console.warn("[IPC] Migrations completed successfully");
+        logger.warn("[IPC] Migrations completed successfully");
         return successResponse({
           migrationsRun: status.applied.length,
           migrationsPending: status.pending.length,
@@ -113,7 +116,7 @@ export function setupDatabaseHandlers(): void {
           message: "Migrations completed successfully",
         });
       } catch (error: unknown) {
-        console.error("[IPC] db:migrate error:", error);
+        logger.error("[IPC] db:migrate error:", error);
         return formatError(error);
       }
     }
@@ -124,7 +127,7 @@ export function setupDatabaseHandlers(): void {
     "db:backup",
     async (_event: IpcMainInvokeEvent): Promise<IPCResponse> => {
       try {
-        console.warn("[IPC] db:backup called");
+        logger.warn("[IPC] db:backup called");
 
         const mainDbPath = getMainDbPath();
         const backupDir = getBackupDir();
@@ -185,10 +188,10 @@ export function setupDatabaseHandlers(): void {
           success: true,
         });
 
-        console.warn("[IPC] Backup created:", backupFilename);
+        logger.warn("[IPC] Backup created:", backupFilename);
         return successResponse(backupData);
       } catch (error: unknown) {
-        console.error("[IPC] db:backup error:", error);
+        logger.error("[IPC] db:backup error:", error);
         logAuditEvent({
           eventType: AuditEventType.DATABASE_BACKUP_CREATED,
           userId: null,
@@ -207,7 +210,7 @@ export function setupDatabaseHandlers(): void {
     "db:status",
     async (_event: IpcMainInvokeEvent): Promise<IPCResponse> => {
       try {
-        console.warn("[IPC] db:status called");
+        logger.warn("[IPC] db:status called");
 
         const db = databaseManager.getDatabase();
         const isConnected = !!db;
@@ -219,7 +222,7 @@ export function setupDatabaseHandlers(): void {
             : "Database connection failed",
         });
       } catch (error: unknown) {
-        console.error("[IPC] db:status error:", error);
+        logger.error("[IPC] db:status error:", error);
         return formatError(error);
       }
     }
@@ -230,7 +233,7 @@ export function setupDatabaseHandlers(): void {
     "db:listBackups",
     async (_event: IpcMainInvokeEvent): Promise<IPCResponse> => {
       try {
-        console.warn("[IPC] db:listBackups called");
+        logger.warn("[IPC] db:listBackups called");
 
         const backupDir = getBackupDir();
         const backups: BackupMetadata[] = [];
@@ -276,7 +279,7 @@ export function setupDatabaseHandlers(): void {
 
             backupDb.close();
           } catch (err) {
-            console.error(
+            logger.error(
               "[IPC] Failed to read backup metadata:",
               filename,
               err
@@ -300,10 +303,10 @@ export function setupDatabaseHandlers(): void {
             new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         );
 
-        console.warn("[IPC] Found", backups.length, "backups");
+        logger.warn("[IPC] Found", backups.length, "backups");
         return successResponse({ backups });
       } catch (error: unknown) {
-        console.error("[IPC] db:listBackups error:", error);
+        logger.error("[IPC] db:listBackups error:", error);
         return formatError(error);
       }
     }
@@ -321,7 +324,7 @@ export function setupDatabaseHandlers(): void {
       return withAuthorization(sessionId, async (userId) => {
         const userIdString = userId.toString();
         try {
-          console.warn(
+          logger.warn(
             "[IPC] db:restore called by user:",
             userId,
             "for backup:",
@@ -367,7 +370,7 @@ export function setupDatabaseHandlers(): void {
             const testDb = new Database(backupPath, { readonly: true });
             testDb.close();
           } catch (err) {
-            console.error("[IPC] Backup verification failed:", err);
+            logger.error("[IPC] Backup verification failed:", err);
             throw new DatabaseError(
               "restore",
               "Backup file is corrupted or invalid"
@@ -405,7 +408,7 @@ export function setupDatabaseHandlers(): void {
             details: { backupFilename },
           });
 
-          console.warn(
+          logger.warn(
             "[IPC] Database restored from:",
             backupFilename,
             "by user:",
@@ -417,7 +420,7 @@ export function setupDatabaseHandlers(): void {
             preRestoreBackup,
           });
         } catch (error: unknown) {
-          console.error("[IPC] db:restore error:", error);
+          logger.error("[IPC] db:restore error:", error);
           logAuditEvent({
             eventType: AuditEventType.DATABASE_BACKUP_RESTORED,
             userId: userIdString,
@@ -448,7 +451,7 @@ export function setupDatabaseHandlers(): void {
       return withAuthorization(sessionId, async (userId) => {
         const userIdString = userId.toString();
         try {
-          console.warn(
+          logger.warn(
             "[IPC] db:deleteBackup called by user:",
             userId,
             "for backup:",
@@ -502,7 +505,7 @@ export function setupDatabaseHandlers(): void {
             details: { backupFilename },
           });
 
-          console.warn(
+          logger.warn(
             "[IPC] Backup deleted:",
             backupFilename,
             "by user:",
@@ -513,7 +516,7 @@ export function setupDatabaseHandlers(): void {
             message: "Backup deleted successfully",
           });
         } catch (error: unknown) {
-          console.error("[IPC] db:deleteBackup error:", error);
+          logger.error("[IPC] db:deleteBackup error:", error);
           logAuditEvent({
             eventType: AuditEventType.DATABASE_BACKUP_DELETED,
             userId: userIdString,
@@ -540,7 +543,7 @@ export function setupDatabaseHandlers(): void {
     ): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.warn("[IPC] backup:getSettings called by user:", userId);
+          logger.warn("[IPC] backup:getSettings called by user:", userId);
 
           const { BackupScheduler } = await import(
             "../../src/services/backup/BackupScheduler.ts"
@@ -571,7 +574,7 @@ export function setupDatabaseHandlers(): void {
             next_backup_at: settings.next_backup_at,
           });
         } catch (error: unknown) {
-          console.error("[IPC] backup:getSettings error:", error);
+          logger.error("[IPC] backup:getSettings error:", error);
           return formatError(error);
         }
       });
@@ -593,7 +596,7 @@ export function setupDatabaseHandlers(): void {
       return withAuthorization(sessionId, async (userId) => {
         const userIdString = userId.toString();
         try {
-          console.warn(
+          logger.warn(
             "[IPC] backup:updateSettings called by user:",
             userId,
             "with settings:",
@@ -631,7 +634,7 @@ export function setupDatabaseHandlers(): void {
             next_backup_at: updatedSettings.next_backup_at,
           });
         } catch (error: unknown) {
-          console.error("[IPC] backup:updateSettings error:", error);
+          logger.error("[IPC] backup:updateSettings error:", error);
 
           logAuditEvent({
             eventType: AuditEventType.DATABASE_SETTINGS_UPDATED,
@@ -655,7 +658,7 @@ export function setupDatabaseHandlers(): void {
       keepCount: number
     ): Promise<IPCResponse> => {
       try {
-        console.warn(
+        logger.warn(
           "[IPC] backup:cleanupOld called with keepCount:",
           keepCount
         );
@@ -683,7 +686,7 @@ export function setupDatabaseHandlers(): void {
           message: `Deleted ${deletedCount} old backup(s)`,
         });
       } catch (error: unknown) {
-        console.error("[IPC] backup:cleanupOld error:", error);
+        logger.error("[IPC] backup:cleanupOld error:", error);
         return formatError(error);
       }
     }
@@ -694,7 +697,7 @@ export function setupDatabaseHandlers(): void {
     "secure-storage:encrypt",
     async (_event: IpcMainInvokeEvent, data: string): Promise<IPCResponse> => {
       try {
-        console.warn("[IPC] secure-storage:encrypt called");
+        logger.warn("[IPC] secure-storage:encrypt called");
 
         if (!safeStorage.isEncryptionAvailable()) {
           throw new EncryptionError(
@@ -708,7 +711,7 @@ export function setupDatabaseHandlers(): void {
           encryptedData: encrypted.toString("base64"),
         });
       } catch (error: unknown) {
-        console.error("[IPC] secure-storage:encrypt error:", error);
+        logger.error("[IPC] secure-storage:encrypt error:", error);
         return formatError(error);
       }
     }
@@ -721,7 +724,7 @@ export function setupDatabaseHandlers(): void {
       encryptedData: string
     ): Promise<IPCResponse> => {
       try {
-        console.warn("[IPC] secure-storage:decrypt called");
+        logger.warn("[IPC] secure-storage:decrypt called");
 
         if (!safeStorage.isEncryptionAvailable()) {
           throw new EncryptionError(
@@ -737,7 +740,7 @@ export function setupDatabaseHandlers(): void {
           decryptedData: decrypted,
         });
       } catch (error: unknown) {
-        console.error("[IPC] secure-storage:decrypt error:", error);
+        logger.error("[IPC] secure-storage:decrypt error:", error);
         return formatError(error);
       }
     }
@@ -747,14 +750,14 @@ export function setupDatabaseHandlers(): void {
     "secure-storage:isAvailable",
     async (_event: IpcMainInvokeEvent): Promise<IPCResponse> => {
       try {
-        console.warn("[IPC] secure-storage:isAvailable called");
+        logger.warn("[IPC] secure-storage:isAvailable called");
 
         const isAvailable = safeStorage.isEncryptionAvailable();
         return successResponse({
           available: isAvailable,
         });
       } catch (error: unknown) {
-        console.error("[IPC] secure-storage:isAvailable error:", error);
+        logger.error("[IPC] secure-storage:isAvailable error:", error);
         return formatError(error);
       }
     }
@@ -767,7 +770,7 @@ export function setupDatabaseHandlers(): void {
       buffer: Buffer
     ): Promise<IPCResponse> => {
       try {
-        console.warn("[IPC] secure-storage:encrypt-buffer called");
+        logger.warn("[IPC] secure-storage:encrypt-buffer called");
 
         if (!safeStorage.isEncryptionAvailable()) {
           throw new EncryptionError(
@@ -781,7 +784,7 @@ export function setupDatabaseHandlers(): void {
           encryptedBuffer: encrypted.toString("base64"),
         });
       } catch (error: unknown) {
-        console.error("[IPC] secure-storage:encryptBuffer error:", error);
+        logger.error("[IPC] secure-storage:encryptBuffer error:", error);
         return formatError(error);
       }
     }
@@ -794,7 +797,7 @@ export function setupDatabaseHandlers(): void {
       encryptedBuffer: string
     ): Promise<IPCResponse> => {
       try {
-        console.warn("[IPC] secure-storage:decrypt-buffer called");
+        logger.warn("[IPC] secure-storage:decrypt-buffer called");
 
         if (!safeStorage.isEncryptionAvailable()) {
           throw new EncryptionError(
@@ -810,7 +813,7 @@ export function setupDatabaseHandlers(): void {
           decryptedBuffer: Buffer.from(decrypted).toString("base64"),
         });
       } catch (error: unknown) {
-        console.error("[IPC] secure-storage:decryptBuffer error:", error);
+        logger.error("[IPC] secure-storage:decryptBuffer error:", error);
         return formatError(error);
       }
     }
@@ -825,7 +828,7 @@ export function setupDatabaseHandlers(): void {
     "ui:logError",
     async (_event: IpcMainInvokeEvent, error: Error): Promise<IPCResponse> => {
       try {
-        console.error("[IPC] ui:logError called with error:", error);
+        logger.error("[IPC] ui:logError called with error:", error);
 
         // Log the error to audit system
         logAuditEvent({
@@ -846,7 +849,7 @@ export function setupDatabaseHandlers(): void {
           message: "Error logged successfully",
         });
       } catch (logError: unknown) {
-        console.error("[IPC] ui:logError internal error:", logError);
+        logger.error("[IPC] ui:logError internal error:", logError);
         return formatError(logError);
       }
     }
@@ -895,5 +898,5 @@ export function setupUIHandlers(): void {
 export function setupAIConfigHandlers(): void {
   // AI configuration handlers not yet implemented
   // This is a stub to satisfy the import in index.ts
-  console.warn("[IPC] AI configuration handlers not yet implemented");
+  logger.warn("[IPC] AI configuration handlers not yet implemented");
 }

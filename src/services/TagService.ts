@@ -52,8 +52,8 @@ export class TagService {
       }
 
       return tag;
-    } catch (error: any) {
-      if (error.message.includes("UNIQUE constraint failed")) {
+    } catch (error) {
+      if (error instanceof Error && error.message.includes("UNIQUE constraint failed")) {
         throw new Error("A tag with this name already exists");
       }
       throw error;

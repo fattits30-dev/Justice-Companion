@@ -13,6 +13,7 @@ import {
   AuthenticationService,
 } from '../../src/services/AuthenticationService.ts';
 import { getSessionManager } from '../services/SessionManager.ts';
+import { logger } from '../../src/utils/logger';
 // Domain errors available if needed for future error handling improvements
 
 // ESM equivalent of __dirname
@@ -34,7 +35,7 @@ function getAuthService(): AuthenticationService {
       auditLogger
     );
 
-    console.warn("[IPC] AuthenticationService initialized");
+    logger.warn("[IPC] AuthenticationService initialized");
   }
   return authService;
 }
@@ -71,7 +72,7 @@ export function setupAuthHandlers(): void {
 
       return successResponse({ user, session });
     } catch (error) {
-      console.error("[IPC] auth:register error:", error);
+      logger.error("[IPC] auth:register error:", error);
       if (error instanceof AuthenticationError) {
         return errorResponse(IPCErrorCode.AUTH_ERROR, error.message);
       }
@@ -99,13 +100,13 @@ export function setupAuthHandlers(): void {
         rememberMe,
       });
 
-      console.warn(
+      logger.warn(
         `[IPC] Created in-memory session ${inMemorySessionId} for user ${user.username}`
       );
 
       return successResponse({ user, session });
     } catch (error) {
-      console.error("[IPC] auth:login error:", error);
+      logger.error("[IPC] auth:login error:", error);
       if (error instanceof AuthenticationError) {
         return errorResponse(IPCErrorCode.INVALID_CREDENTIALS, error.message);
       }
@@ -123,25 +124,25 @@ export function setupAuthHandlers(): void {
       const sessionManager = getSessionManager();
       sessionManager.destroySession(sessionId);
 
-      console.warn(`[IPC] Destroyed in-memory session ${sessionId}`);
+      logger.warn(`[IPC] Destroyed in-memory session ${sessionId}`);
 
       return successResponse({ message: "Logged out successfully" });
     } catch (error) {
-      console.error("[IPC] auth:logout error:", error);
+      logger.error("[IPC] auth:logout error:", error);
       return errorResponse(IPCErrorCode.INTERNAL_ERROR, "Logout failed");
     }
   });
 
   // Register handler for auth:session
   ipcMain.handle("auth:session", async (_event, sessionId) => {
-    console.warn("[IPC] auth:session called with sessionId:", sessionId);
+    logger.warn("[IPC] auth:session called with sessionId:", sessionId);
     try {
       const authService = getAuthService();
       const session = await authService.getSession(sessionId);
-      console.warn("[IPC] auth:session - session from db:", session);
+      logger.warn("[IPC] auth:session - session from db:", session);
 
       if (!session) {
-        console.warn("[IPC] auth:session - session not found");
+        logger.warn("[IPC] auth:session - session not found");
         return errorResponse(
           IPCErrorCode.NOT_AUTHENTICATED,
           "Session not found"
@@ -153,13 +154,13 @@ export function setupAuthHandlers(): void {
       const auditLogger = new AuditLogger(db);
       const userRepository = new UserRepository(auditLogger);
       const user = await userRepository.findById(session.userId);
-      console.warn(
+      logger.warn(
         "[IPC] auth:session - user from db:",
         user ? `id=${user.id}, username=${user.username}` : "null"
       );
 
       if (!user) {
-        console.warn("[IPC] auth:session - user not found");
+        logger.warn("[IPC] auth:session - user not found");
         return errorResponse(IPCErrorCode.NOT_FOUND, "User not found");
       }
 
@@ -173,13 +174,13 @@ export function setupAuthHandlers(): void {
         },
         expiresAt: session.expiresAt,
       });
-      console.warn(
+      logger.warn(
         "[IPC] auth:session - returning success response with user:",
         response.data
       );
       return response;
     } catch (error) {
-      console.error("[IPC] auth:session - error:", error);
+      logger.error("[IPC] auth:session - error:", error);
       return errorResponse(IPCErrorCode.INTERNAL_ERROR, "Session check failed");
     }
   });

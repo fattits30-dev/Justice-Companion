@@ -13,6 +13,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
 import type { SafeStorage } from 'electron';
+import { logger } from '../utils/logger';
 
 /**
  * KeyManager handles secure storage and retrieval of encryption keys
@@ -115,8 +116,8 @@ export class KeyManager {
     // Write encrypted key to disk
     fs.writeFileSync(this.keyFilePath, encryptedKey, { mode: 0o600 });
 
-    console.warn('[KeyManager] Key migrated from .env to safeStorage');
-    console.warn('[KeyManager] IMPORTANT: Remove ENCRYPTION_KEY_BASE64 from .env file');
+    logger.warn('[KeyManager] Key migrated from .env to safeStorage');
+    logger.warn('[KeyManager] IMPORTANT: Remove ENCRYPTION_KEY_BASE64 from .env file');
   }
 
   /**
@@ -144,7 +145,7 @@ export class KeyManager {
     // Update cache
     this.cachedKey = newKey;
 
-    console.warn('[KeyManager] New encryption key generated and stored');
+    logger.warn('[KeyManager] New encryption key generated and stored');
     return newKeyBase64;
   }
 
@@ -160,7 +161,7 @@ export class KeyManager {
     if (fs.existsSync(this.keyFilePath)) {
       const backupPath = `${this.keyFilePath}.backup.${Date.now()}`;
       fs.copyFileSync(this.keyFilePath, backupPath);
-      console.warn(`[KeyManager] Old key backed up to: ${backupPath}`);
+      logger.warn(`[KeyManager] Old key backed up to: ${backupPath}`);
     }
 
     // Generate new key
@@ -246,7 +247,7 @@ export class KeyManager {
       const decryptedValue = this.safeStorage.decryptString(encryptedValue);
       return decryptedValue;
     } catch (error) {
-      console.error(`[KeyManager] Failed to decrypt key ${keyName}:`, error);
+      logger.error(`[KeyManager] Failed to decrypt key ${keyName}:`, error);
       return null;
     }
   }

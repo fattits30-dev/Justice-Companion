@@ -1,8 +1,10 @@
+import type { Electron } from 'electron';
 import { ipcMain, type IpcMainInvokeEvent } from "electron";
 import { type IPCResponse } from '../utils/ipc-response.ts';
 import { withAuthorization } from '../utils/authorization-wrapper.ts';
 import { AIProviderConfigService } from '../../src/services/AIProviderConfigService.ts';
 import type { AIProviderType } from '../../src/types/ai-providers.ts';
+import { logger } from '../../src/utils/logger';
 
 // AI configuration service singleton
 let aiConfigService: AIProviderConfigService | null = null;
@@ -10,7 +12,7 @@ let aiConfigService: AIProviderConfigService | null = null;
 function getAIConfigService(): AIProviderConfigService {
   if (!aiConfigService) {
     aiConfigService = new AIProviderConfigService();
-    console.warn("[IPC] AIProviderConfigService initialized");
+    logger.warn("[IPC] AIProviderConfigService initialized");
   }
   return aiConfigService;
 }
@@ -39,7 +41,7 @@ export function setupAIConfigHandlers(): void {
     ): Promise<IPCResponse> => {
       return withAuthorization(request.sessionId, async (userId) => {
         try {
-          console.warn("[IPC] ai:configure called by user:", userId, {
+          logger.warn("[IPC] ai:configure called by user:", userId, {
             provider: request.provider,
             model: request.model,
           });
@@ -81,7 +83,7 @@ export function setupAIConfigHandlers(): void {
             }
           );
 
-          console.warn(
+          logger.warn(
             "[IPC] AI provider configured successfully:",
             request.provider
           );
@@ -94,7 +96,7 @@ export function setupAIConfigHandlers(): void {
             },
           };
         } catch (error) {
-          console.error("[IPC] Error configuring AI provider:", error);
+          logger.error("[IPC] Error configuring AI provider:", error);
           return {
             success: false,
             error:
@@ -116,7 +118,7 @@ export function setupAIConfigHandlers(): void {
     ): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.warn("[IPC] ai:get-config called by user:", userId);
+          logger.warn("[IPC] ai:get-config called by user:", userId);
           const configService = getAIConfigService();
           const activeProvider = configService.getActiveProvider();
 
@@ -149,7 +151,7 @@ export function setupAIConfigHandlers(): void {
             },
           };
         } catch (error) {
-          console.error("[IPC] Error getting AI config:", error);
+          logger.error("[IPC] Error getting AI config:", error);
           return {
             success: false,
             error:
@@ -171,7 +173,7 @@ export function setupAIConfigHandlers(): void {
     ): Promise<IPCResponse> => {
       return withAuthorization(request.sessionId, async (userId) => {
         try {
-          console.warn(
+          logger.warn(
             "[IPC] ai:test-connection called by user:",
             userId,
             "for provider:",
@@ -189,7 +191,7 @@ export function setupAIConfigHandlers(): void {
             error: result.error,
           };
         } catch (error) {
-          console.error("[IPC] Error testing AI connection:", error);
+          logger.error("[IPC] Error testing AI connection:", error);
           return {
             success: false,
             error:
@@ -202,5 +204,5 @@ export function setupAIConfigHandlers(): void {
     }
   );
 
-  console.warn("[IPC] AI configuration handlers registered (3 channels)");
+  logger.warn("[IPC] AI configuration handlers registered (3 channels)");
 }

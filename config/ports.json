@@ -1,0 +1,78 @@
+{
+  "development": {
+    "services": [
+      {
+        "service": "vite-dev-server",
+        "defaultPort": 5176,
+        "range": [5173, 5180],
+        "description": "Vite development server for React frontend",
+        "required": true,
+        "env": "VITE_DEV_SERVER_PORT"
+      },
+      {
+        "service": "python-ai-service",
+        "defaultPort": 5051,
+        "range": [5050, 5060],
+        "description": "Python AI service for document analysis and OCR",
+        "required": false,
+        "env": "PYTHON_AI_SERVICE_PORT"
+      },
+      {
+        "service": "electron-dev-api",
+        "defaultPort": 8080,
+        "range": [8080, 8090],
+        "description": "Electron development API server",
+        "required": false,
+        "env": "ELECTRON_DEV_API_PORT"
+      },
+      {
+        "service": "playwright-debug",
+        "defaultPort": 9323,
+        "range": [9320, 9330],
+        "description": "Playwright debugger for E2E tests",
+        "required": false,
+        "env": "PLAYWRIGHT_DEBUG_PORT"
+      },
+      {
+        "service": "vitest-ui",
+        "defaultPort": 51204,
+        "range": [51200, 51210],
+        "description": "Vitest UI for test visualization",
+        "required": false,
+        "env": "VITEST_UI_PORT"
+      }
+    ]
+  },
+  "test": {
+    "services": [
+      {
+        "service": "vite-test-server",
+        "defaultPort": 5176,
+        "range": [5173, 5180],
+        "description": "Vite test server for E2E tests",
+        "required": true,
+        "env": "VITE_TEST_SERVER_PORT"
+      },
+      {
+        "service": "playwright-test",
+        "defaultPort": 9222,
+        "range": [9220, 9230],
+        "description": "Playwright test runner",
+        "required": false,
+        "env": "PLAYWRIGHT_TEST_PORT"
+      }
+    ]
+  },
+  "production": {
+    "services": [
+      {
+        "service": "python-ai-service",
+        "defaultPort": 5051,
+        "range": [5050, 5060],
+        "description": "Python AI service for document analysis",
+        "required": false,
+        "env": "PYTHON_AI_SERVICE_PORT"
+      }
+    ]
+  }
+}

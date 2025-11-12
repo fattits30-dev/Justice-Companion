@@ -1,3 +1,5 @@
+import type { Electron } from 'electron';
+import { logger } from '../../src/utils/logger';
 /**
  * IPC Handlers for Template Operations
  * Handles template CRUD, seeding, and application
@@ -89,14 +91,14 @@ export function setupTemplateHandlers(): void {
     ): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.warn("[IPC] templates:get-all called by user:", userId);
+          logger.warn("[IPC] templates:get-all called by user:", userId);
 
           const service = getTemplateService();
           const templates = await service.getAllTemplates(userId);
 
           return { success: true, data: templates };
         } catch (error) {
-          console.error("[IPC] templates:get-all error:", error);
+          logger.error("[IPC] templates:get-all error:", error);
 
           // Wrap generic errors in DomainErrors
           if (error instanceof Error) {
@@ -123,7 +125,7 @@ export function setupTemplateHandlers(): void {
     ): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.warn("[IPC] templates:create called by user:", userId);
+          logger.warn("[IPC] templates:create called by user:", userId);
 
           // Override userId from input with validated userId from session
           const validatedInput: CreateTemplateInput = {
@@ -136,7 +138,7 @@ export function setupTemplateHandlers(): void {
 
           return { success: true, data: template };
         } catch (error) {
-          console.error("[IPC] templates:create error:", error);
+          logger.error("[IPC] templates:create error:", error);
 
           // Wrap generic errors in DomainErrors
           if (error instanceof Error) {
@@ -171,7 +173,7 @@ export function setupTemplateHandlers(): void {
     ): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.warn(
+          logger.warn(
             "[IPC] templates:update called by user:",
             userId,
             "for template:",
@@ -189,7 +191,7 @@ export function setupTemplateHandlers(): void {
 
           return { success: true, data: template };
         } catch (error) {
-          console.error("[IPC] templates:update error:", error);
+          logger.error("[IPC] templates:update error:", error);
 
           // Wrap generic errors in DomainErrors
           if (error instanceof Error) {
@@ -224,7 +226,7 @@ export function setupTemplateHandlers(): void {
     ): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.warn(
+          logger.warn(
             "[IPC] templates:delete called by user:",
             userId,
             "for template:",
@@ -240,7 +242,7 @@ export function setupTemplateHandlers(): void {
 
           return { success: true };
         } catch (error) {
-          console.error("[IPC] templates:delete error:", error);
+          logger.error("[IPC] templates:delete error:", error);
 
           // Wrap generic errors in DomainErrors
           if (error instanceof Error) {
@@ -276,7 +278,7 @@ export function setupTemplateHandlers(): void {
     ): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.warn("[IPC] templates:seed called by user:", userId);
+          logger.warn("[IPC] templates:seed called by user:", userId);
           // Note: Admin role check should be added in future for security
 
           const seeder = getTemplateSeeder();
@@ -284,7 +286,7 @@ export function setupTemplateHandlers(): void {
 
           return { success: true };
         } catch (error) {
-          console.error("[IPC] templates:seed error:", error);
+          logger.error("[IPC] templates:seed error:", error);
 
           // Wrap generic errors in DomainErrors
           if (error instanceof Error) {

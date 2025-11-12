@@ -142,7 +142,9 @@ async function runMigrations(db: DatabaseType): Promise<void> {
 async function createTestUser(db: DatabaseType): Promise<void> {
   // Create test user with proper password hashing
   const username = "testuser";
-  const password = "TestPassword123!";
+  // Use environment variable or generate secure test password
+  const password =
+    process.env.TEST_USER_PASSWORD || crypto.randomBytes(16).toString("hex");
 
   // Hash password (simple for testing - in real app use proper hashing)
   const passwordHash = crypto

@@ -90,7 +90,7 @@ export class CachingDecorator<T> extends RepositoryDecorator<T> {
    */
   async findByUserId(userId: number): Promise<T[]> {
     if (!this.hasMethod("findByUserId")) {
-      return this.forwardCall("findByUserId", userId);
+      return this.forwardCall<T[]>("findByUserId", userId);
     }
 
     const cacheKey = this.getCacheKey("findByUserId", userId);
@@ -159,7 +159,7 @@ export class CachingDecorator<T> extends RepositoryDecorator<T> {
   /**
    * Generate cache key based on method and parameters
    */
-  private getCacheKey(method: string, ...args: any[]): string {
+  private getCacheKey(method: string, ...args: unknown[]): string {
     const keyParts = [method, ...args.map((arg) => String(arg))];
     return keyParts.join(":");
   }
@@ -167,7 +167,7 @@ export class CachingDecorator<T> extends RepositoryDecorator<T> {
   /**
    * Invalidate cache entries matching pattern
    */
-  private invalidateCachePattern(_pattern: string, ..._args: any[]): void {
+  private invalidateCachePattern(_pattern: string, ..._args: unknown[]): void {
     // Implementation would depend on your cache service's capabilities
     // This is a placeholder for cache invalidation logic
   }
@@ -182,10 +182,10 @@ export class CachingDecorator<T> extends RepositoryDecorator<T> {
   /**
    * Forward call to original repository
    */
-  protected async forwardCall(
+  protected async forwardCall<R = unknown>(
     methodName: string,
-    ...args: any[]
-  ): Promise<any> {
+    ...args: unknown[]
+  ): Promise<R> {
     return (this.repository as any)[methodName](...args);
   }
 }

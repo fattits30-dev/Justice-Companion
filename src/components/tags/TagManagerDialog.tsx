@@ -10,6 +10,7 @@ import { Button } from "../ui/Button.tsx";
 import { Card } from "../ui/Card.tsx";
 import { TagBadge } from "../ui/TagBadge.tsx";
 import type { Tag, CreateTagInput, UpdateTagInput } from "../../models/Tag.ts";
+import { logger } from '../../utils/logger';
 
 interface TagManagerDialogProps {
   open: boolean;
@@ -71,7 +72,7 @@ export function TagManagerDialog({ open, onClose }: TagManagerDialogProps) {
     try {
       const sessionId = window.sessionManager?.getSessionId();
       if (!sessionId) {
-        console.error("No session ID");
+        logger.error("No session ID");
         return;
       }
 
@@ -81,13 +82,13 @@ export function TagManagerDialog({ open, onClose }: TagManagerDialogProps) {
           setTags(result.data);
         }
       } else {
-        console.error(
+        logger.error(
           "Failed to load tags:",
           result.error?.message || "Unknown error",
         );
       }
     } catch (error) {
-      console.error("Error loading tags:", error);
+      logger.error("Error loading tags:", error);
     } finally {
       setIsLoading(false);
     }
@@ -160,8 +161,9 @@ export function TagManagerDialog({ open, onClose }: TagManagerDialogProps) {
       } else {
         setErrors({ submit: result.error?.message || "Failed to save tag" });
       }
-    } catch (error: any) {
-      setErrors({ submit: error.message || "An error occurred" });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "An error occurred";
+      setErrors({ submit: message });
     } finally {
       setIsSubmitting(false);
     }
@@ -200,8 +202,9 @@ export function TagManagerDialog({ open, onClose }: TagManagerDialogProps) {
           "Failed to delete tag: " + (result.error?.message || "Unknown error"),
         );
       }
-    } catch (error: any) {
-      alert("Error deleting tag: " + error.message);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unknown error";
+      alert("Error deleting tag: " + message);
     }
   };
 

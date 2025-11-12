@@ -1,3 +1,4 @@
+import type { Electron } from 'electron';
 import { ipcMain, type IpcMainInvokeEvent } from "electron";
 import { successResponse, type IPCResponse } from '../utils/ipc-response.ts';
 import {
@@ -14,6 +15,7 @@ import {
   ValidationError,
 } from '../../src/errors/DomainErrors.ts';
 import type { UpdateDeadlineInput } from '../../src/domains/timeline/entities/Deadline.ts';
+import { logger } from '../../src/utils/logger';
 
 type DeadlinePriority = "low" | "medium" | "high" | "critical";
 type DeadlineStatus = "upcoming" | "overdue" | "completed";
@@ -76,7 +78,7 @@ export function setupDeadlineHandlers(): void {
     ): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.warn(
+          logger.warn(
             "[IPC] deadline:getAll called by user:",
             userId,
             caseId ? `for case ${caseId}` : "all cases"
@@ -92,7 +94,7 @@ export function setupDeadlineHandlers(): void {
             authMiddleware.verifyCaseOwnership(caseId, userId);
 
             const deadlines = deadlineRepo.findByCaseId(caseId, userId);
-            console.warn(
+            logger.warn(
               "[IPC] Retrieved",
               deadlines.length,
               "deadlines for case",
@@ -103,7 +105,7 @@ export function setupDeadlineHandlers(): void {
 
           // Otherwise, get all deadlines for user with case info
           const deadlines = deadlineRepo.findByUserId(userId);
-          console.warn(
+          logger.warn(
             "[IPC] Retrieved",
             deadlines.length,
             "total deadlines for user",
@@ -111,7 +113,7 @@ export function setupDeadlineHandlers(): void {
           );
           return successResponse(deadlines); // Properly wrap response
         } catch (error) {
-          console.error("[IPC] deadline:getAll error:", error);
+          logger.error("[IPC] deadline:getAll error:", error);
 
           // Wrap generic errors in DomainErrors
           if (error instanceof Error) {
@@ -146,7 +148,7 @@ export function setupDeadlineHandlers(): void {
     ): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.warn("[IPC] deadline:create called by user:", userId);
+          logger.warn("[IPC] deadline:create called by user:", userId);
 
           const db = databaseManager.getDatabase();
           const auditLogger = new AuditLogger(db);
@@ -170,10 +172,10 @@ export function setupDeadlineHandlers(): void {
             priority: data.priority ?? "medium",
           });
 
-          console.warn("[IPC] Created deadline with ID:", createdDeadline.id);
+          logger.warn("[IPC] Created deadline with ID:", createdDeadline.id);
           return successResponse(createdDeadline);
         } catch (error) {
-          console.error("[IPC] deadline:create error:", error);
+          logger.error("[IPC] deadline:create error:", error);
 
           // Wrap generic errors in DomainErrors
           if (error instanceof Error) {
@@ -209,7 +211,7 @@ export function setupDeadlineHandlers(): void {
     ): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (_userId) => {
         try {
-          console.warn("[IPC] deadline:update called for deadline ID:", id);
+          logger.warn("[IPC] deadline:update called for deadline ID:", id);
 
           const db = databaseManager.getDatabase();
           const auditLogger = new AuditLogger(db);
@@ -219,10 +221,10 @@ export function setupDeadlineHandlers(): void {
 
           const updatedDeadline = deadlineRepo.update(id, updateInput);
 
-          console.warn("[IPC] Updated deadline with ID:", id);
+          logger.warn("[IPC] Updated deadline with ID:", id);
           return successResponse(updatedDeadline);
         } catch (error) {
-          console.error("[IPC] deadline:update error:", error);
+          logger.error("[IPC] deadline:update error:", error);
 
           // Wrap generic errors in DomainErrors
           if (error instanceof Error) {
@@ -257,7 +259,7 @@ export function setupDeadlineHandlers(): void {
     ): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.warn("[IPC] deadline:complete called for deadline ID:", id);
+          logger.warn("[IPC] deadline:complete called for deadline ID:", id);
 
           const db = databaseManager.getDatabase();
           const auditLogger = new AuditLogger(db);
@@ -265,10 +267,10 @@ export function setupDeadlineHandlers(): void {
 
           const completedDeadline = deadlineRepo.complete(id, userId);
 
-          console.warn("[IPC] Completed deadline with ID:", id);
+          logger.warn("[IPC] Completed deadline with ID:", id);
           return successResponse(completedDeadline);
         } catch (error) {
-          console.error("[IPC] deadline:complete error:", error);
+          logger.error("[IPC] deadline:complete error:", error);
 
           // Wrap generic errors in DomainErrors
           if (error instanceof Error) {
@@ -299,7 +301,7 @@ export function setupDeadlineHandlers(): void {
     ): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.warn("[IPC] deadline:delete called for deadline ID:", id);
+          logger.warn("[IPC] deadline:delete called for deadline ID:", id);
 
           const db = databaseManager.getDatabase();
           const auditLogger = new AuditLogger(db);
@@ -307,10 +309,10 @@ export function setupDeadlineHandlers(): void {
 
           deadlineRepo.delete(id, userId);
 
-          console.warn("[IPC] Deleted deadline with ID:", id);
+          logger.warn("[IPC] Deleted deadline with ID:", id);
           return successResponse({ deleted: true });
         } catch (error) {
-          console.error("[IPC] deadline:delete error:", error);
+          logger.error("[IPC] deadline:delete error:", error);
 
           // Wrap generic errors in DomainErrors
           if (error instanceof Error) {

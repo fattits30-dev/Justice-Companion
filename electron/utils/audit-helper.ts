@@ -7,6 +7,7 @@
 import type { IpcMainInvokeEvent } from "electron";
 import * as path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { logger } from '../../src/utils/logger';
 
 // ESM equivalent of __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -117,7 +118,7 @@ export async function logAuditEvent(params: {
     });
   } catch (error) {
     // Audit logging failures should never break the app
-    console.error("[Audit] Failed to log event:", error);
+    logger.error("[Audit] Failed to log event:", error);
   }
 }
 

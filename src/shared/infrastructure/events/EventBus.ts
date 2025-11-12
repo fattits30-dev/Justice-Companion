@@ -3,6 +3,7 @@ import type { IEventBus } from "../di/service-interfaces.ts";
 import type { DomainEvent } from "./DomainEvent.ts";
 import { injectable, inject } from "inversify";
 import { TYPES } from "../di/types.ts";
+import { logger } from '../../../utils/logger';
 
 /**
  * Event Bus Implementation
@@ -77,7 +78,7 @@ export class EventBus implements IEventBus {
             promises.push(result);
           }
         } catch (error) {
-          console.error("Error in event handler:", error);
+          logger.error("Error in event handler:", error);
         }
       }
 
@@ -177,7 +178,7 @@ export class EventBus implements IEventBus {
               promises.push(result);
             }
           } catch (error) {
-            console.error("Error in event replay handler:", error);
+            logger.error("Error in event replay handler:", error);
           }
         }
 
