@@ -1,9 +1,9 @@
-import { injectable } from 'inversify';
-import { app, safeStorage } from 'electron';
-import fs from 'fs/promises';
-import path from 'path';
-import { validate as uuidValidate, version as uuidVersion } from 'uuid';
-import { logger } from '../utils/logger.ts';
+import { injectable } from "inversify";
+import { app, safeStorage } from "electron";
+import fs from "fs/promises";
+import path from "path";
+import { validate as uuidValidate, version as uuidVersion } from "uuid";
+import { logger } from "../utils/logger.ts";
 
 /**
  * Service for securely persisting session IDs across app restarts
@@ -18,7 +18,7 @@ import { logger } from '../utils/logger.ts';
  */
 @injectable()
 export class SessionPersistenceService {
-  private static readonly FILE_NAME = 'session.enc';
+  private static readonly FILE_NAME = "session.enc";
   private static readonly UUID_V4_VERSION = 4;
   private static instance: SessionPersistenceService;
 
@@ -40,7 +40,10 @@ export class SessionPersistenceService {
    * Get the full path to the encrypted session storage file
    */
   private getStoragePath(): string {
-    return path.join(app.getPath('userData'), SessionPersistenceService.FILE_NAME);
+    return path.join(
+      app.getPath("userData"),
+      SessionPersistenceService.FILE_NAME,
+    );
   }
 
   /**
@@ -50,20 +53,30 @@ export class SessionPersistenceService {
   public async isAvailable(): Promise<boolean> {
     try {
       // Check if safeStorage is available and encryption is possible
-      if (!safeStorage || typeof safeStorage.isEncryptionAvailable !== 'function') {
-        logger.warn('SessionPersistence', 'safeStorage API not available');
+      if (
+        !safeStorage ||
+        typeof safeStorage.isEncryptionAvailable !== "function"
+      ) {
+        logger.warn("SessionPersistence", "safeStorage API not available");
         return false;
       }
 
       const available = safeStorage.isEncryptionAvailable();
 
       if (!available) {
-        logger.warn('SessionPersistence', 'Encryption not available (missing OS keychain support)');
+        logger.warn(
+          "SessionPersistence",
+          "Encryption not available (missing OS keychain support)",
+        );
       }
 
       return available;
     } catch (error) {
-      logger.error('SessionPersistence', 'Error checking encryption availability', { error });
+      logger.error(
+        "SessionPersistence",
+        "Error checking encryption availability",
+        { error },
+      );
       return false;
     }
   }
@@ -72,20 +85,24 @@ export class SessionPersistenceService {
    * Validate that a string is a properly formatted UUID v4
    */
   private isValidSessionId(sessionId: string): boolean {
-    if (!sessionId || typeof sessionId !== 'string') {
+    if (!sessionId || typeof sessionId !== "string") {
       return false;
     }
 
     // Check UUID v4 format specifically
-    if (!uuidValidate(sessionId) || !sessionId.includes('-')) {
+    if (!uuidValidate(sessionId) || !sessionId.includes("-")) {
       return false;
     }
 
     // Ensure it's specifically version 4
     try {
-      return uuidVersion(sessionId) === SessionPersistenceService.UUID_V4_VERSION;
+      return (
+        uuidVersion(sessionId) === SessionPersistenceService.UUID_V4_VERSION
+      );
     } catch (error) {
-      logger.error('SessionPersistence', 'Error validating UUID version', { error });
+      logger.error("SessionPersistence", "Error validating UUID version", {
+        error,
+      });
       return false;
     }
   }
@@ -99,32 +116,31 @@ export class SessionPersistenceService {
     try {
       // Validate input
       if (!this.isValidSessionId(sessionId)) {
-        throw new Error('Invalid session ID format (expected UUID v4)');
+        throw new Error("Invalid session ID format (expected UUID v4)");
       }
 
       // Check encryption availability
       const available = await this.isAvailable();
       if (!available) {
-        throw new Error('Encryption not available on this system');
+        throw new Error("Encryption not available on this system");
       }
 
       // Encrypt the session ID using safeStorage
       const encrypted = safeStorage.encryptString(sessionId);
 
-      // Ensure userData directory exists
+      // Get storage path and ensure directory exists atomically (fixes TOCTOU)
       const storagePath = this.getStoragePath();
       const storageDir = path.dirname(storagePath);
 
-      try {
-        await fs.access(storageDir);
-      } catch {
-        await fs.mkdir(storageDir, { recursive: true });
-      }
+      // mkdir with recursive: true is atomic and won't fail if directory exists
+      await fs.mkdir(storageDir, { recursive: true });
 
       // Write encrypted data to file
       await fs.writeFile(storagePath, encrypted);
     } catch (error) {
-      logger.error('SessionPersistence', 'Failed to store session ID', { error });
+      logger.error("SessionPersistence", "Failed to store session ID", {
+        error,
+      });
 
       // Clean up any partial writes
       try {
@@ -147,24 +163,33 @@ export class SessionPersistenceService {
       // Check encryption availability
       const available = await this.isAvailable();
       if (!available) {
-        logger.warn('SessionPersistence', 'Cannot retrieve: encryption not available');
+        logger.warn(
+          "SessionPersistence",
+          "Cannot retrieve: encryption not available",
+        );
         return null;
       }
 
       const storagePath = this.getStoragePath();
 
-      // Check if file exists
+      // Try to read encrypted data directly (fixes TOCTOU race condition)
+      let encrypted: Buffer;
       try {
-        await fs.access(storagePath);
-      } catch {
+        encrypted = await fs.readFile(storagePath);
+      } catch (error: any) {
+        // File doesn't exist - this is expected for first login
+        if (error.code === "ENOENT") {
+          return null;
+        }
+        // Other errors (permission, etc) should be logged
+        logger.error("SessionPersistence", "Failed to read session file", {
+          error,
+        });
         return null;
       }
 
-      // Read encrypted data
-      const encrypted = await fs.readFile(storagePath);
-
       if (!encrypted || encrypted.length === 0) {
-        logger.warn('SessionPersistence', 'Stored session file is empty');
+        logger.warn("SessionPersistence", "Stored session file is empty");
         await this.clearSession(); // Clean up invalid file
         return null;
       }
@@ -174,23 +199,28 @@ export class SessionPersistenceService {
 
       // Validate the decrypted session ID
       if (!this.isValidSessionId(decrypted)) {
-        logger.error('SessionPersistence', 'Stored session ID is invalid');
+        logger.error("SessionPersistence", "Stored session ID is invalid");
         await this.clearSession(); // Clean up invalid session
         return null;
       }
 
       return decrypted;
     } catch (error) {
-      logger.error('SessionPersistence', 'Failed to retrieve session ID', { error });
+      logger.error("SessionPersistence", "Failed to retrieve session ID", {
+        error,
+      });
 
       // Handle corrupted file by removing it
       if (
         error instanceof Error &&
-        (error.message.includes('decrypt') ||
-          error.message.includes('corrupt') ||
-          error.message.includes('invalid'))
+        (error.message.includes("decrypt") ||
+          error.message.includes("corrupt") ||
+          error.message.includes("invalid"))
       ) {
-        logger.warn('SessionPersistence', 'Corrupted session file detected, cleaning up');
+        logger.warn(
+          "SessionPersistence",
+          "Corrupted session file detected, cleaning up",
+        );
         await this.clearSession();
       }
 
@@ -213,7 +243,7 @@ export class SessionPersistenceService {
         // File doesn't exist or can't be deleted - not an error condition
       }
     } catch (error) {
-      logger.error('SessionPersistence', 'Error clearing session', { error });
+      logger.error("SessionPersistence", "Error clearing session", { error });
       // Don't throw - clearing should be best effort
     }
   }
@@ -269,4 +299,5 @@ export class SessionPersistenceService {
 }
 
 // Export singleton instance
-export const sessionPersistenceService = SessionPersistenceService.getInstance();
+export const sessionPersistenceService =
+  SessionPersistenceService.getInstance();

@@ -19,17 +19,29 @@ function generateEncryptionKey() {
 function writeEnvFile(key) {
   const envPath = path.join(__dirname, '..', '.env');
 
-  if (fs.existsSync(envPath)) {
+  // Use try-catch to handle file operations atomically (fixes TOCTOU race condition)
+  try {
+    // Try to read existing file
     const existingEnv = fs.readFileSync(envPath, 'utf8');
+
+    // Check if key already exists
     if (existingEnv.includes('ENCRYPTION_KEY_BASE64=')) {
       console.log('[GENERATE-KEY] ⚠️  Key already exists, skipping');
       return;
     }
+
+    // Append to existing file
     fs.appendFileSync(envPath, `\nENCRYPTION_KEY_BASE64=${key}\n`);
     console.log('[GENERATE-KEY] ✅ Added key to existing .env');
-  } else {
-    fs.writeFileSync(envPath, `ENCRYPTION_KEY_BASE64=${key}\n`);
-    console.log('[GENERATE-KEY] ✅ Created .env with key');
+  } catch (error) {
+    // File doesn't exist or can't be read - create new file
+    if (error.code === 'ENOENT') {
+      fs.writeFileSync(envPath, `ENCRYPTION_KEY_BASE64=${key}\n`);
+      console.log('[GENERATE-KEY] ✅ Created .env with key');
+    } else {
+      // Re-throw other errors
+      throw error;
+    }
   }
 }
 
