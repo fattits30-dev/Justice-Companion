@@ -22,6 +22,7 @@ import type {
 } from "../domains/timeline/entities/Deadline.ts";
 import type { ConsentType } from "../domains/settings/entities/Consent.ts";
 import type { Tag, CreateTagInput, UpdateTagInput } from "../models/Tag.ts";
+import { logger } from '../utils/logger';
 
 /**
  * Response wrapper for all IPC operations
@@ -33,10 +34,10 @@ import type { Tag, CreateTagInput, UpdateTagInput } from "../models/Tag.ts";
  * const response = await window.justiceAPI.getAllCases(sessionId);
  * if (response.success) {
  *   // TypeScript knows response.data is Case[] here
- *   console.log(response.data);
+ *   logger.info(response.data);
  * } else {
  *   // TypeScript knows response.error exists here
- *   console.error(response.error);
+ *   logger.error(response.error);
  * }
  */
 interface IPCSuccessResponse<T> {
@@ -45,7 +46,7 @@ interface IPCSuccessResponse<T> {
   message?: string;
 }
 
-interface IPCErrorResponse {
+export interface IPCErrorResponse {
   success: false;
   error?: {
     code: string;
@@ -722,6 +723,52 @@ export interface JusticeAPI {
      */
     stats(sessionId: string): Promise<IPCResponse<NotificationStats>>;
   };
+
+  // ===== PROFILE =====
+  /**
+   * Get user profile data
+   * @param sessionId - User session ID
+   * @returns User profile information
+   */
+  getUserProfile(sessionId: string): Promise<IPCResponse<{
+    profile: {
+      id: number;
+      username?: string;
+      name: string;
+      email: string | null;
+      phone?: string;
+      avatarUrl: string | null;
+      createdAt: string;
+      updatedAt: string;
+    };
+  }>>;
+
+  /**
+   * Update user profile
+   * @param sessionId - User session ID
+   * @param data - Profile data to update
+   * @returns Updated profile
+   */
+  updateUserProfile(
+    sessionId: string,
+    data: {
+      username?: string | null;
+      name: string;
+      email: string | null;
+      phone?: string | null;
+    }
+  ): Promise<IPCResponse<{
+    profile: {
+      id: number;
+      username?: string;
+      name: string;
+      email: string | null;
+      phone?: string;
+      avatarUrl: string | null;
+      createdAt: string;
+      updatedAt: string;
+    };
+  }>>;
 
   // ===== SEARCH =====
   search: {

@@ -1,3 +1,4 @@
+import type { Electron } from 'electron';
 import { ipcMain, type IpcMainInvokeEvent } from "electron";
 import { successResponse, type IPCResponse } from "../utils/ipc-response.ts";
 import { logAuditEvent, AuditEventType } from "../utils/audit-helper.ts";
@@ -15,6 +16,7 @@ import {
 } from "../../src/errors/DomainErrors.ts";
 import { getKeyManager } from '../services/KeyManagerService.ts';
 import type { CreateCaseFactInput } from "../../src/models/CaseFact.ts";
+import { logger } from '../../src/utils/logger';
 
 /**
  * ===== CASE MANAGEMENT HANDLERS =====
@@ -34,7 +36,7 @@ export function setupCaseHandlers(): void {
     ): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.warn("[IPC] case:create called by user:", userId);
+          logger.warn("[IPC] case:create called by user:", userId);
 
           // Validate input with Zod (schema expects { input: { ...fields } })
           const validatedData = caseSchemas.caseCreateSchema.parse({
@@ -101,7 +103,7 @@ export function setupCaseHandlers(): void {
             success: true,
           });
 
-          console.warn("[IPC] Case created successfully:", caseId);
+          logger.warn("[IPC] Case created successfully:", caseId);
           return successResponse(createdCase);
         } catch (error) {
           // Use domain-specific errors
@@ -163,7 +165,7 @@ export function setupCaseHandlers(): void {
     ): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.warn("[IPC] case:list called by user:", userId);
+          logger.warn("[IPC] case:list called by user:", userId);
 
           // WORKAROUND: Using raw SQL to bypass encryption key mismatch
           // Repository pattern would call batchDecrypt() which fails if key doesn't match
@@ -187,7 +189,7 @@ export function setupCaseHandlers(): void {
             )
             .all(userId);
 
-          console.warn(
+          logger.warn(
             "[IPC] Retrieved",
             (userCases as unknown[]).length,
             "cases for user:",
@@ -195,7 +197,7 @@ export function setupCaseHandlers(): void {
           );
           return successResponse(userCases);
         } catch (error) {
-          console.error("[IPC] case:list error:", error);
+          logger.error("[IPC] case:list error:", error);
           throw error; // withAuthorization will handle error formatting
         }
       });
@@ -212,7 +214,7 @@ export function setupCaseHandlers(): void {
     ): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.warn(
+          logger.warn(
             "[IPC] case:get called by user:",
             userId,
             "for case:",
@@ -261,13 +263,13 @@ export function setupCaseHandlers(): void {
             success: true,
           });
 
-          console.warn(
+          logger.warn(
             "[IPC] Case retrieved:",
             (caseData as { id: number }).id
           );
           return successResponse(caseData);
         } catch (error) {
-          console.error("[IPC] case:get error:", error);
+          logger.error("[IPC] case:get error:", error);
           throw error; // withAuthorization will handle error formatting
         }
       });
@@ -285,7 +287,7 @@ export function setupCaseHandlers(): void {
     ): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.warn(
+          logger.warn(
             "[IPC] case:update called by user:",
             userId,
             "for case:",
@@ -384,10 +386,10 @@ export function setupCaseHandlers(): void {
             success: true,
           });
 
-          console.warn("[IPC] Case updated successfully:", validatedData.id);
+          logger.warn("[IPC] Case updated successfully:", validatedData.id);
           return successResponse(updatedCase);
         } catch (error) {
-          console.error("[IPC] case:update error:", error);
+          logger.error("[IPC] case:update error:", error);
 
           // Log failed update
           logAuditEvent({
@@ -416,7 +418,7 @@ export function setupCaseHandlers(): void {
     ): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.warn(
+          logger.warn(
             "[IPC] case:delete called by user:",
             userId,
             "for case:",
@@ -444,7 +446,7 @@ export function setupCaseHandlers(): void {
             .get(validatedData.id, userId);
 
           if (!existingCase) {
-            console.error(
+            logger.error(
               "[IPC] case:delete - Case not found or unauthorized:",
               validatedData.id,
               "userId:",
@@ -453,7 +455,7 @@ export function setupCaseHandlers(): void {
             throw new CaseNotFoundError(validatedData.id);
           }
 
-          console.warn(
+          logger.warn(
             "[IPC] case:delete - Found case, attempting deletion..."
           );
 
@@ -463,13 +465,13 @@ export function setupCaseHandlers(): void {
           `);
           const result = deleteStmt.run(validatedData.id, userId);
 
-          console.warn("[IPC] case:delete - DELETE result:", {
+          logger.warn("[IPC] case:delete - DELETE result:", {
             changes: result.changes,
             lastInsertRowid: result.lastInsertRowid,
           });
 
           if (result.changes === 0) {
-            console.error(
+            logger.error(
               "[IPC] case:delete - No rows deleted for case:",
               validatedData.id
             );
@@ -486,7 +488,7 @@ export function setupCaseHandlers(): void {
             success: true,
           });
 
-          console.warn(
+          logger.warn(
             "[IPC] Case deleted successfully:",
             validatedData.id,
             "rows affected:",
@@ -494,8 +496,8 @@ export function setupCaseHandlers(): void {
           );
           return successResponse({ deleted: true, id: validatedData.id });
         } catch (error) {
-          console.error("[IPC] case:delete error:", error);
-          console.error(
+          logger.error("[IPC] case:delete error:", error);
+          logger.error(
             "[IPC] case:delete error stack:",
             error instanceof Error ? error.stack : "No stack trace"
           );
@@ -527,7 +529,7 @@ export function setupCaseHandlers(): void {
     ): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.warn("[IPC] case-fact:create called by user:", userId);
+          logger.warn("[IPC] case-fact:create called by user:", userId);
 
           // Get repositories and encryption service
           const db = databaseManager.getDatabase();
@@ -568,10 +570,10 @@ export function setupCaseHandlers(): void {
             success: true,
           });
 
-          console.warn("[IPC] Case fact created successfully:", result.id);
+          logger.warn("[IPC] Case fact created successfully:", result.id);
           return successResponse(result);
         } catch (error) {
-          console.error("[IPC] case-fact:create error:", error);
+          logger.error("[IPC] case-fact:create error:", error);
           throw error; // withAuthorization will handle error formatting
         }
       });
@@ -588,7 +590,7 @@ export function setupCaseHandlers(): void {
     ): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.warn(
+          logger.warn(
             "[IPC] case-fact:list called by user:",
             userId,
             "for case:",
@@ -619,10 +621,10 @@ export function setupCaseHandlers(): void {
           // Get case facts
           const facts = caseFactsRepository.findByCaseId(caseId);
 
-          console.warn("[IPC] Retrieved", facts.length, "case facts");
+          logger.warn("[IPC] Retrieved", facts.length, "case facts");
           return successResponse(facts);
         } catch (error) {
-          console.error("[IPC] case-fact:list error:", error);
+          logger.error("[IPC] case-fact:list error:", error);
           throw error; // withAuthorization will handle error formatting
         }
       });

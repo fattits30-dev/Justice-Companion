@@ -3,7 +3,7 @@
  * Displays the status of all database migrations (applied, pending, rolled back)
  */
 
-import Database from 'better-sqlite3';
+import Database from 'better-sqlite3-multiple-ciphers';
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';

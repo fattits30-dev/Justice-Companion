@@ -57,7 +57,10 @@
       "Bash(pnpm electron:dev)",
       "Bash(cmd.exe //c \"taskkill /F /PID 9968\")",
       "Bash(pnpm add:*)",
-      "Bash(pnpm list:*)"
+      "Bash(pnpm list:*)",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__get-library-docs",
+      "WebSearch"
     ]
   },
   "outputStyle": "professional-coder",

@@ -14,6 +14,7 @@ import { KeyManager } from './KeyManager.ts';
 import { app, safeStorage } from 'electron';
 import fs from 'fs';
 import path from 'path';
+import { logger } from '../utils/logger';
 
 export interface StoredProviderConfig {
   provider: AIProviderType;
@@ -56,7 +57,7 @@ export class AIProviderConfigService {
         }
       }
     } catch (error) {
-      console.error('[AIProviderConfigService] Failed to load configurations:', error);
+      logger.error('[AIProviderConfigService] Failed to load configurations:', error);
     }
   }
 
@@ -72,7 +73,7 @@ export class AIProviderConfigService {
 
       fs.writeFileSync(this.configPath, JSON.stringify(data, null, 2), 'utf-8');
     } catch (error) {
-      console.error('[AIProviderConfigService] Failed to save configurations:', error);
+      logger.error('[AIProviderConfigService] Failed to save configurations:', error);
       throw error;
     }
   }
@@ -122,7 +123,7 @@ export class AIProviderConfigService {
         apiKey,
       };
     } catch (error) {
-      console.error(`[AIProviderConfigService] Failed to get API key for ${provider}:`, error);
+      logger.error(`[AIProviderConfigService] Failed to get API key for ${provider}:`, error);
       return null;
     }
   }

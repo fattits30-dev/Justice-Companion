@@ -347,5 +347,89 @@
     "*.ts": "${capture}.js, ${capture}.d.ts, ${capture}.test.ts, ${capture}.spec.ts",
     "*.tsx": "${capture}.test.tsx, ${capture}.spec.tsx",
     "package.json": "package-lock.json, pnpm-lock.yaml, yarn.lock, .npmrc, .nvmrc"
+  },
+
+  // Python AI Service Configuration
+  "python.defaultInterpreterPath": "python",
+  "python.envFile": "${workspaceFolder}/.env",
+  "python.terminal.activateEnvironment": true,
+  "python.terminal.executeInFileDir": false,
+  "python.terminal.launchArgs": [],
+  "python.analysis.typeCheckingMode": "basic",
+  "python.analysis.autoImportCompletions": true,
+  "python.analysis.diagnosticMode": "workspace",
+  "python.analysis.inlayHints.variableTypes": true,
+  "python.analysis.inlayHints.functionReturnTypes": true,
+  "python.linting.enabled": true,
+  "python.linting.pylintEnabled": true,
+  "python.linting.lintOnSave": true,
+  "python.formatting.provider": "black",
+  "python.formatting.blackArgs": ["--line-length=100"],
+  "python.sortImports.args": [],
+  "python.testing.pytestEnabled": false,
+  "python.testing.unittestEnabled": false,
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit"
+    },
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true
+  },
+
+  // Python AI Service Environment
+  "terminal.integrated.env.windows": {
+    "NODE_ENV": "development",
+    "HF_TOKEN": "${env:HF_TOKEN}",
+    "OPENAI_API_KEY": "${env:OPENAI_API_KEY}",
+    "PYTHONUNBUFFERED": "1"
+  },
+  "terminal.integrated.env.linux": {
+    "NODE_ENV": "development",
+    "HF_TOKEN": "${env:HF_TOKEN}",
+    "OPENAI_API_KEY": "${env:OPENAI_API_KEY}",
+    "PYTHONUNBUFFERED": "1"
+  },
+  "terminal.integrated.env.osx": {
+    "NODE_ENV": "development",
+    "HF_TOKEN": "${env:HF_TOKEN}",
+    "OPENAI_API_KEY": "${env:OPENAI_API_KEY}",
+    "PYTHONUNBUFFERED": "1"
+  },
+
+  // Python Files Configuration
+  "files.associations": {
+    "*.py": "python",
+    "requirements.txt": "pip-requirements"
+  },
+
+  // Python Search Exclusions
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/release": true,
+    "**/.electron-builder": true,
+    "**/*.code-search": true,
+    "pnpm-lock.yaml": true,
+    "**/coverage": true,
+    "**/.nyc_output": true,
+    "**/__pycache__": true,
+    "**/*.pyc": true,
+    "**/.pytest_cache": true,
+    "**/.mypy_cache": true
+  },
+
+  // Python File Watcher Exclusions
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/dist/**": true,
+    "**/release/**": true,
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/build/**": true,
+    "**/__pycache__/**": true,
+    "**/.pytest_cache/**": true,
+    "**/.mypy_cache/**": true
   }
 }

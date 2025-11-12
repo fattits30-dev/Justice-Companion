@@ -35,12 +35,14 @@ import { registerSearchHandlers } from "./search.ts";
 import { setupTagHandlers } from "./tags.ts";
 import { setupNotificationHandlers } from "./notifications.ts";
 import { setupDashboardHandlers } from "./dashboard.ts";
+import { setupProfileHandlers } from "./profile.ts";
 import {
   setupDatabaseHandlers,
   setupSecureStorageHandlers,
   setupUIHandlers,
 } from "./database.ts";
 import { setupAIConfigHandlers } from "./ai-config.ts";
+import { logger } from '../../src/utils/logger';
 
 /**
  * Initialize all IPC handlers
@@ -49,7 +51,7 @@ import { setupAIConfigHandlers } from "./ai-config.ts";
  * Registers all 36 IPC channels across 7 domain modules.
  */
 export function setupIpcHandlers(): void {
-  console.warn("[IPC] Setting up IPC handlers...");
+  logger.warn("[IPC] Setting up IPC handlers...");
 
   // Authentication handlers (4 channels)
   setupAuthHandlers();
@@ -98,7 +100,10 @@ export function setupIpcHandlers(): void {
   // Notification handlers (8 channels)
   setupNotificationHandlers();
 
-  console.warn(
-    "[IPC] All IPC handlers registered (73 channels across 11 domains)"
+  // Profile handlers (2 channels)
+  setupProfileHandlers();
+
+  logger.warn(
+    "[IPC] All IPC handlers registered (75 channels across 12 domains)"
   );
 }

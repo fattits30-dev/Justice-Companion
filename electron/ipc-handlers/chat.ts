@@ -1,3 +1,4 @@
+import type { Electron } from 'electron';
 import { ipcMain, type IpcMainInvokeEvent } from "electron";
 import {
   errorResponse,
@@ -25,6 +26,7 @@ import type {
 } from '../../src/types/ai-analysis.ts';
 import * as fs from "node:fs";
 import { getKeyManager } from '../services/KeyManagerService.ts';
+import { logger } from '../../src/utils/logger';
 
 // AI services singletons
 let aiConfigService: AIProviderConfigService | null = null;
@@ -227,7 +229,7 @@ export function setupChatHandlers(): void {
                   conversationId,
                 });
               } catch (saveError) {
-                console.error("[IPC] Error saving conversation:", saveError);
+                logger.error("[IPC] Error saving conversation:", saveError);
               }
             },
             onError: (error: Error) => {
@@ -241,7 +243,7 @@ export function setupChatHandlers(): void {
           // Return conversationId (will be sent after stream completes)
           return { conversationId: conversationId || 0 };
         } catch (error) {
-          console.error("[IPC] Error in chat:stream:", error);
+          logger.error("[IPC] Error in chat:stream:", error);
 
           if (
             error instanceof RequiredFieldError ||
@@ -322,7 +324,7 @@ export function setupChatHandlers(): void {
 
           return response;
         } catch (error) {
-          console.error("[IPC] Error in chat:send:", error);
+          logger.error("[IPC] Error in chat:send:", error);
 
           if (
             error instanceof RequiredFieldError ||
@@ -364,7 +366,7 @@ export function setupChatHandlers(): void {
 
           return analysis;
         } catch (error) {
-          console.error("[IPC] Case analysis error:", error);
+          logger.error("[IPC] Case analysis error:", error);
           if (
             error instanceof RequiredFieldError ||
             error instanceof ValidationError
@@ -410,7 +412,7 @@ export function setupChatHandlers(): void {
 
           return analysis;
         } catch (error) {
-          console.error("[IPC] Evidence analysis error:", error);
+          logger.error("[IPC] Evidence analysis error:", error);
           if (
             error instanceof RequiredFieldError ||
             error instanceof ValidationError
@@ -457,7 +459,7 @@ export function setupChatHandlers(): void {
 
           return draft;
         } catch (error) {
-          console.error("[IPC] Document drafting error:", error);
+          logger.error("[IPC] Document drafting error:", error);
           if (
             error instanceof RequiredFieldError ||
             error instanceof ValidationError
@@ -573,7 +575,7 @@ export function setupChatHandlers(): void {
             suggestedCaseData,
           });
         } catch (error) {
-          console.error("[IPC] Document analysis error:", error);
+          logger.error("[IPC] Document analysis error:", error);
 
           if (
             error instanceof RequiredFieldError ||

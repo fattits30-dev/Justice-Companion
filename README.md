@@ -103,8 +103,12 @@ Justice Companion is a privacy-first, desktop application for managing legal cas
 5. **Start the application**
 
    ```bash
-   pnpm electron:dev
+   pnpm start
+   # or
+   pnpm dev
    ```
+
+   This launches both the React frontend and Electron desktop app.
 
 ## 📖 Usage
 
@@ -155,8 +159,11 @@ Justice Companion is a privacy-first, desktop application for managing legal cas
 
 ```bash
 # Development
-pnpm dev                  # Start Vite dev server
-pnpm electron:dev         # Start Electron with dev server
+pnpm start                # Start full application (Vite + Electron)
+pnpm dev                  # Same as start (full application)
+pnpm start:frontend       # Start Vite dev server only
+pnpm dev:frontend         # Same as start:frontend
+pnpm electron:dev         # Original Electron + Vite command
 
 # Building
 pnpm build                # Build for all platforms

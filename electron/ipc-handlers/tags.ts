@@ -1,3 +1,5 @@
+import type { Electron } from 'electron';
+import { logger } from '../../src/utils/logger';
 /**
  * IPC Handlers for Tag Management
  * Channels: tags:*
@@ -41,7 +43,7 @@ export function setupTagHandlers(): void {
             data: tags,
           };
         } catch (error: unknown) {
-          console.error("[IPC] tags:list error:", error);
+          logger.error("[IPC] tags:list error:", error);
 
           // Wrap generic errors in DomainErrors
           if (error instanceof Error) {
@@ -88,7 +90,7 @@ export function setupTagHandlers(): void {
             data: tag,
           };
         } catch (error: unknown) {
-          console.error("[IPC] tags:create error:", error);
+          logger.error("[IPC] tags:create error:", error);
 
           // Wrap generic errors in DomainErrors
           if (error instanceof Error) {
@@ -143,7 +145,7 @@ export function setupTagHandlers(): void {
             data: tag,
           };
         } catch (error: unknown) {
-          console.error("[IPC] tags:update error:", error);
+          logger.error("[IPC] tags:update error:", error);
 
           // Wrap generic errors in DomainErrors
           if (error instanceof Error) {
@@ -185,7 +187,7 @@ export function setupTagHandlers(): void {
             success: true,
           };
         } catch (error: unknown) {
-          console.error("[IPC] tags:delete error:", error);
+          logger.error("[IPC] tags:delete error:", error);
 
           // Wrap generic errors in DomainErrors
           if (error instanceof Error) {
@@ -241,7 +243,7 @@ export function setupTagHandlers(): void {
             success: true,
           };
         } catch (error: unknown) {
-          console.error("[IPC] tags:tagEvidence error:", error);
+          logger.error("[IPC] tags:tagEvidence error:", error);
 
           // Wrap generic errors in DomainErrors
           if (error instanceof Error) {
@@ -299,7 +301,7 @@ export function setupTagHandlers(): void {
             success: true,
           };
         } catch (error: unknown) {
-          console.error("[IPC] tags:untagEvidence error:", error);
+          logger.error("[IPC] tags:untagEvidence error:", error);
 
           // Wrap generic errors in DomainErrors
           if (error instanceof Error) {
@@ -351,7 +353,7 @@ export function setupTagHandlers(): void {
             data: tags,
           };
         } catch (error: unknown) {
-          console.error("[IPC] tags:getForEvidence error:", error);
+          logger.error("[IPC] tags:getForEvidence error:", error);
 
           // Wrap generic errors in DomainErrors
           if (error instanceof Error) {
@@ -403,7 +405,7 @@ export function setupTagHandlers(): void {
             data: evidence,
           };
         } catch (error: unknown) {
-          console.error("[IPC] tags:searchByTags error:", error);
+          logger.error("[IPC] tags:searchByTags error:", error);
 
           // Wrap generic errors in DomainErrors
           if (error instanceof Error) {
@@ -442,7 +444,7 @@ export function setupTagHandlers(): void {
             data: stats,
           };
         } catch (error: unknown) {
-          console.error("[IPC] tags:statistics error:", error);
+          logger.error("[IPC] tags:statistics error:", error);
 
           // Wrap generic errors in DomainErrors
           if (error instanceof Error) {

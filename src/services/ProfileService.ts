@@ -14,6 +14,7 @@ import type {
   IProfileService,
 } from "../types/profile.ts";
 import { ProfileStorageKey } from "../types/profile.ts";
+import { logger } from '../utils/logger';
 
 /**
  * Profile Service Implementation
@@ -55,7 +56,7 @@ export class ProfileService implements IProfileService {
         phone: phone || undefined,
       };
     } catch (error) {
-      console.error("[ProfileService] Error retrieving profile:", error);
+      logger.error("[ProfileService] Error retrieving profile:", error);
       return null;
     }
   }
@@ -162,7 +163,7 @@ export class ProfileService implements IProfileService {
         };
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
-        console.error(
+        logger.error(
           `[ProfileService] Update attempt ${attempt}/${maxRetries} failed:`,
           lastError.message,
         );
@@ -245,7 +246,7 @@ export class ProfileService implements IProfileService {
       localStorage.removeItem(ProfileStorageKey.EMAIL);
       localStorage.removeItem(ProfileStorageKey.PHONE);
     } catch (error) {
-      console.error("[ProfileService] Error clearing profile:", error);
+      logger.error("[ProfileService] Error clearing profile:", error);
     }
   }
 

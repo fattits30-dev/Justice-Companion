@@ -5,6 +5,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import type { Tag } from "../../models/Tag.ts";
+import { logger } from '../../utils/logger';
 
 interface EvidenceTagSelectorProps {
   evidenceId: number;
@@ -33,7 +34,7 @@ export function EvidenceTagSelector({
         setAllTags(result.data);
       }
     } catch (error) {
-      console.error("Error loading tags:", error);
+      logger.error("Error loading tags:", error);
     }
   }, []);
 
@@ -54,7 +55,7 @@ export function EvidenceTagSelector({
         onTagsChange?.(result.data);
       }
     } catch (error) {
-      console.error("Error loading evidence tags:", error);
+      logger.error("Error loading evidence tags:", error);
     } finally {
       setIsLoading(false);
     }

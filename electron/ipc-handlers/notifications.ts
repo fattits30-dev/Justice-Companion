@@ -1,3 +1,6 @@
+import { logger } from '../../src/utils/logger';
+
+import type { Electron } from 'electron';
 import { ipcMain, type IpcMainInvokeEvent } from "electron";
 import { successResponse, type IPCResponse } from '../utils/ipc-response.ts';
 import { withAuthorization } from '../utils/authorization-wrapper.ts';
@@ -38,7 +41,7 @@ export function setupNotificationHandlers(): void {
     ): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.warn(
+          logger.warn(
             "[IPC] notifications:list called by user:",
             userId,
             "with filters:",
@@ -56,7 +59,7 @@ export function setupNotificationHandlers(): void {
           );
 
           const notifications = await service.getNotifications(userId, filters);
-          console.warn(
+          logger.warn(
             "[IPC] Retrieved",
             notifications.length,
             "notifications for user",
@@ -65,7 +68,7 @@ export function setupNotificationHandlers(): void {
 
           return successResponse(notifications);
         } catch (error) {
-          console.error("[IPC] notifications:list error:", error);
+          logger.error("[IPC] notifications:list error:", error);
 
           // Wrap generic errors in DomainErrors
           if (error instanceof Error) {
@@ -90,7 +93,7 @@ export function setupNotificationHandlers(): void {
     ): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.warn(
+          logger.warn(
             "[IPC] notifications:unread-count called by user:",
             userId
           );
@@ -106,7 +109,7 @@ export function setupNotificationHandlers(): void {
           );
 
           const count = await service.getUnreadCount(userId);
-          console.warn(
+          logger.warn(
             "[IPC] User",
             userId,
             "has",
@@ -116,7 +119,7 @@ export function setupNotificationHandlers(): void {
 
           return successResponse(count);
         } catch (error) {
-          console.error("[IPC] notifications:unread-count error:", error);
+          logger.error("[IPC] notifications:unread-count error:", error);
 
           if (error instanceof Error) {
             const message = error.message.toLowerCase();
@@ -140,7 +143,7 @@ export function setupNotificationHandlers(): void {
     ): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.warn(
+          logger.warn(
             "[IPC] notifications:mark-read called by user:",
             userId,
             "for notification:",
@@ -165,11 +168,11 @@ export function setupNotificationHandlers(): void {
           }
 
           await service.markAsRead(notificationId);
-          console.warn("[IPC] Marked notification", notificationId, "as read");
+          logger.warn("[IPC] Marked notification", notificationId, "as read");
 
           return successResponse(null);
         } catch (error) {
-          console.error("[IPC] notifications:mark-read error:", error);
+          logger.error("[IPC] notifications:mark-read error:", error);
 
           if (error instanceof Error) {
             const message = error.message.toLowerCase();
@@ -201,7 +204,7 @@ export function setupNotificationHandlers(): void {
     ): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.warn(
+          logger.warn(
             "[IPC] notifications:mark-all-read called by user:",
             userId
           );
@@ -217,7 +220,7 @@ export function setupNotificationHandlers(): void {
           );
 
           const count = await service.markAllAsRead(userId);
-          console.warn(
+          logger.warn(
             "[IPC] Marked",
             count,
             "notifications as read for user",
@@ -226,7 +229,7 @@ export function setupNotificationHandlers(): void {
 
           return successResponse({ count });
         } catch (error) {
-          console.error("[IPC] notifications:mark-all-read error:", error);
+          logger.error("[IPC] notifications:mark-all-read error:", error);
 
           if (error instanceof Error) {
             const message = error.message.toLowerCase();
@@ -250,7 +253,7 @@ export function setupNotificationHandlers(): void {
     ): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.warn(
+          logger.warn(
             "[IPC] notifications:dismiss called by user:",
             userId,
             "for notification:",
@@ -275,11 +278,11 @@ export function setupNotificationHandlers(): void {
           }
 
           await service.dismiss(notificationId);
-          console.warn("[IPC] Dismissed notification", notificationId);
+          logger.warn("[IPC] Dismissed notification", notificationId);
 
           return successResponse(null);
         } catch (error) {
-          console.error("[IPC] notifications:dismiss error:", error);
+          logger.error("[IPC] notifications:dismiss error:", error);
 
           if (error instanceof Error) {
             const message = error.message.toLowerCase();
@@ -308,7 +311,7 @@ export function setupNotificationHandlers(): void {
     ): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.warn(
+          logger.warn(
             "[IPC] notifications:preferences called by user:",
             userId
           );
@@ -324,14 +327,14 @@ export function setupNotificationHandlers(): void {
           );
 
           const prefs = await service.getPreferences(userId);
-          console.warn(
+          logger.warn(
             "[IPC] Retrieved notification preferences for user",
             userId
           );
 
           return successResponse(prefs);
         } catch (error) {
-          console.error("[IPC] notifications:preferences error:", error);
+          logger.error("[IPC] notifications:preferences error:", error);
 
           if (error instanceof Error) {
             const message = error.message.toLowerCase();
@@ -358,7 +361,7 @@ export function setupNotificationHandlers(): void {
     ): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.warn(
+          logger.warn(
             "[IPC] notifications:update-preferences called by user:",
             userId,
             "with:",
@@ -376,14 +379,14 @@ export function setupNotificationHandlers(): void {
           );
 
           const updated = await service.updatePreferences(userId, preferences);
-          console.warn(
+          logger.warn(
             "[IPC] Updated notification preferences for user",
             userId
           );
 
           return successResponse(updated);
         } catch (error) {
-          console.error("[IPC] notifications:update-preferences error:", error);
+          logger.error("[IPC] notifications:update-preferences error:", error);
 
           if (error instanceof Error) {
             const message = error.message.toLowerCase();
@@ -412,7 +415,7 @@ export function setupNotificationHandlers(): void {
     ): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.warn("[IPC] notifications:stats called by user:", userId);
+          logger.warn("[IPC] notifications:stats called by user:", userId);
 
           const db = databaseManager.getDatabase();
           const notificationRepo = new NotificationRepository(db);
@@ -425,14 +428,14 @@ export function setupNotificationHandlers(): void {
           );
 
           const stats = await service.getStats(userId);
-          console.warn(
+          logger.warn(
             "[IPC] Retrieved notification statistics for user",
             userId
           );
 
           return successResponse(stats);
         } catch (error) {
-          console.error("[IPC] notifications:stats error:", error);
+          logger.error("[IPC] notifications:stats error:", error);
 
           if (error instanceof Error) {
             const message = error.message.toLowerCase();
@@ -449,5 +452,5 @@ export function setupNotificationHandlers(): void {
     }
   );
 
-  console.warn("[IPC] Notification handlers registered (8 channels)");
+  logger.warn("[IPC] Notification handlers registered (8 channels)");
 }

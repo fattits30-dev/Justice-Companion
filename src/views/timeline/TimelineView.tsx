@@ -1,3 +1,5 @@
+import { logger } from '../../utils/logger';
+
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { Plus, Calendar } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -197,7 +199,7 @@ export function TimelineView() {
   const handleCompleteDeadline = useCallback(
     async (deadline: DeadlineWithCase) => {
       if (!sessionId) {
-        console.error("No active session");
+        logger.error("No active session");
         return;
       }
 
@@ -215,7 +217,7 @@ export function TimelineView() {
           await loadData();
         }
       } catch (err) {
-        console.error("Failed to update deadline status:", err);
+        logger.error("Failed to update deadline status:", err);
       }
     },
     [sessionId, loadData],
@@ -231,7 +233,7 @@ export function TimelineView() {
     }
 
     if (!sessionId) {
-      console.error("No active session");
+      logger.error("No active session");
       return;
     }
 
@@ -245,7 +247,7 @@ export function TimelineView() {
         await loadData();
       }
     } catch (err) {
-      console.error("Failed to delete deadline:", err);
+      logger.error("Failed to delete deadline:", err);
     } finally {
       setDeletingDeadline(null);
     }

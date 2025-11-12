@@ -1,3 +1,5 @@
+import { logger } from '../utils/logger';
+
 /**
  * Project Planner - README and codebase analysis
  *
@@ -30,41 +32,41 @@ export class ProjectPlanner {
    * Analyze project comprehensively
    */
   async analyzeProject(): Promise<ProjectAnalysis> {
-    console.log("\n╔══════════════════════════════════════╗");
-    console.log("║      Analyzing Project...             ║");
-    console.log("╚══════════════════════════════════════╝\n");
+    logger.info("\n╔══════════════════════════════════════╗");
+    logger.info("║      Analyzing Project...             ║");
+    logger.info("╚══════════════════════════════════════╝\n");
 
     // Step 1: Read README
-    console.log("→ Reading README...");
+    logger.info("→ Reading README...");
     this.readme = this.readReadme();
     if (this.readme) {
-      console.log(`✓ README found (${this.readme.length} chars)`);
+      logger.info(`✓ README found (${this.readme.length} chars)`);
     } else {
-      console.log("! No README found");
+      logger.info("! No README found");
     }
 
     // Step 2: Analyze structure
-    console.log("→ Analyzing project structure...");
+    logger.info("→ Analyzing project structure...");
     this.structure = this.analyzeStructure();
-    console.log(
+    logger.info(
       `✓ Found ${this.structure.fileCount} files in ${this.structure.dirCount} directories`,
     );
 
     // Step 3: Load package.json
-    console.log("→ Reading package.json...");
+    logger.info("→ Reading package.json...");
     this.packageJson = this.readPackageJson();
     if (this.packageJson) {
-      console.log(
+      logger.info(
         `✓ Package: ${this.packageJson.name}@${this.packageJson.version}`,
       );
     }
 
     // Step 4: Detect tech stack
-    console.log("→ Detecting tech stack...");
+    logger.info("→ Detecting tech stack...");
     const techStack = this.detectTechStack();
-    console.log(`✓ Languages: ${techStack.languages.join(", ")}`);
+    logger.info(`✓ Languages: ${techStack.languages.join(", ")}`);
     if (techStack.frameworks.length > 0) {
-      console.log(`✓ Frameworks: ${techStack.frameworks.join(", ")}`);
+      logger.info(`✓ Frameworks: ${techStack.frameworks.join(", ")}`);
     }
 
     // Step 5: Extract libraries (Context7 integration point)
@@ -94,9 +96,9 @@ export class ProjectPlanner {
     userGoal?: string,
     analysis?: ProjectAnalysis,
   ): Promise<WorkflowPlan> {
-    console.log("\n╔══════════════════════════════════════╗");
-    console.log("║      Generating Project Plan...       ║");
-    console.log("╚══════════════════════════════════════╝\n");
+    logger.info("\n╔══════════════════════════════════════╗");
+    logger.info("║      Generating Project Plan...       ║");
+    logger.info("╚══════════════════════════════════════╝\n");
 
     const projectAnalysis = analysis || (await this.analyzeProject());
 
@@ -145,7 +147,7 @@ export class ProjectPlanner {
       completedTasks,
     };
 
-    console.log(
+    logger.info(
       `✓ Generated plan with ${plan.phases.length} phases, ${totalTasks} tasks\n`,
     );
 
@@ -170,7 +172,7 @@ export class ProjectPlanner {
         try {
           return fs.readFileSync(filepath, "utf-8");
         } catch (error) {
-          console.error(`Error reading ${filename}:`, error);
+          logger.error(`Error reading ${filename}:`, error);
         }
       }
     }
@@ -188,7 +190,7 @@ export class ProjectPlanner {
         const data = fs.readFileSync(packagePath, "utf-8");
         return JSON.parse(data);
       } catch (error) {
-        console.error("Error reading package.json:", error);
+        logger.error("Error reading package.json:", error);
       }
     }
     return null;

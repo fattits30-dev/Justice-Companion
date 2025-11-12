@@ -1,4 +1,5 @@
 import { errorLogger } from '../utils/error-logger.ts';
+import { logger } from '../utils/logger';
 
 /**
  * SecureStorageService - Electron safeStorage wrapper for secure API key storage
@@ -42,7 +43,7 @@ export class SecureStorageService {
       this.encryptionAvailable = await window.justiceAPI.secureStorage.isEncryptionAvailable();
 
       if (!this.encryptionAvailable) {
-        console.warn(
+        logger.warn(
           '[SecureStorage] Encryption not available on this system. ' +
           'On Linux, please install gnome-keyring or kwallet. ' +
           'API keys will be stored without encryption as fallback.',

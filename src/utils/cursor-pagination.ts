@@ -99,7 +99,7 @@ export function encodeSimpleCursor(rowid: number, timestamp?: number): string {
  *
  * @example
  * const cursor = decodeSimpleCursor("eyJyb3dpZCI6MTIz...");
- * console.log(cursor.rowid); // 123
+ * logger.info(cursor.rowid); // 123
  */
 export function decodeSimpleCursor(
   encoded: string,
@@ -191,7 +191,7 @@ export function encodeCompositeCursor(
  *
  * @example
  * const cursor = decodeCompositeCursor("eyJrZXlzIjp7ImV2ZW50RGF0ZSI6IjIwMjUtMTAtMjAifX0=");
- * console.log(cursor.keys.eventDate); // '2025-10-20'
+ * logger.info(cursor.keys.eventDate); // '2025-10-20'
  */
 export function decodeCompositeCursor(
   encoded: string,

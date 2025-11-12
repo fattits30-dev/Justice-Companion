@@ -12,6 +12,7 @@ import readline from "readline";
 import { ConfigManager } from "./ConfigManager.ts";
 import { ProjectPlanner } from "./ProjectPlanner.ts";
 import { TodoManager } from "./TodoManager.ts";
+import { logger } from '../utils/logger';
 // Unused import for future use - workflow files are WIP
 import type { WorkflowPlan as _WorkflowPlan } from "./types.ts";
 
@@ -29,25 +30,25 @@ function question(prompt: string): Promise<string> {
 }
 
 async function main() {
-  console.log("\n╔══════════════════════════════════════════════════════════╗");
-  console.log("║           Generic Workflow Builder v1.0.0                ║");
-  console.log("╚══════════════════════════════════════════════════════════╝\n");
+  logger.info("\n╔══════════════════════════════════════════════════════════╗");
+  logger.info("║           Generic Workflow Builder v1.0.0                ║");
+  logger.info("╚══════════════════════════════════════════════════════════╝\n");
 
   // Step 1: Get project path
   const projectPath = process.cwd();
-  console.log(`📁 Project Directory: ${projectPath}\n`);
+  logger.info(`📁 Project Directory: ${projectPath}\n`);
 
   const configManager = new ConfigManager(projectPath);
 
   // Step 2: Check if .localclaude/ exists
   if (configManager.exists()) {
-    console.log("✓ Found existing .localclaude/ configuration\n");
+    logger.info("✓ Found existing .localclaude/ configuration\n");
 
     const config = await configManager.loadConfig();
     if (config) {
-      console.log("📋 Project Summary:");
-      console.log(await configManager.getSummary());
-      console.log("");
+      logger.info("📋 Project Summary:");
+      logger.info(await configManager.getSummary());
+      logger.info("");
 
       // Load existing plan
       const plan = await configManager.loadPlan();
@@ -55,7 +56,7 @@ async function main() {
         const todoManager = new TodoManager(projectPath);
         await todoManager.loadPlan(plan);
 
-        console.log("✓ Loaded existing workflow plan\n");
+        logger.info("✓ Loaded existing workflow plan\n");
 
         // Show task list
         await todoManager.showTodoList();
@@ -70,8 +71,8 @@ async function main() {
   }
 
   // Step 3: Initialize new project
-  console.log("❌ No .localclaude/ configuration found\n");
-  console.log("Let me help you set up a workflow for this project.\n");
+  logger.info("❌ No .localclaude/ configuration found\n");
+  logger.info("Let me help you set up a workflow for this project.\n");
 
   const shouldSetup = await question(
     "Create workflow configuration? (yes/no): ",
@@ -81,7 +82,7 @@ async function main() {
     shouldSetup.toLowerCase() !== "yes" &&
     shouldSetup.toLowerCase() !== "y"
   ) {
-    console.log("\nExiting without configuration.\n");
+    logger.info("\nExiting without configuration.\n");
     rl.close();
     return;
   }
@@ -90,40 +91,40 @@ async function main() {
   const planner = new ProjectPlanner(projectPath);
   const analysis = await planner.analyzeProject();
 
-  console.log("\n📊 Project Analysis:");
-  console.log(`  Languages: ${analysis.techStack.languages.join(", ")}`);
-  console.log(
+  logger.info("\n📊 Project Analysis:");
+  logger.info(`  Languages: ${analysis.techStack.languages.join(", ")}`);
+  logger.info(
     `  Frameworks: ${analysis.techStack.frameworks.join(", ") || "None detected"}`,
   );
-  console.log(
+  logger.info(
     `  Package Manager: ${analysis.techStack.packageManager || "npm"}`,
   );
-  console.log(`  Files: ${analysis.structure.fileCount}`);
-  console.log(`  Libraries: ${analysis.libraries.length}`);
-  console.log("");
+  logger.info(`  Files: ${analysis.structure.fileCount}`);
+  logger.info(`  Libraries: ${analysis.libraries.length}`);
+  logger.info("");
 
   if (analysis.existingFeatures.length > 0) {
-    console.log("✨ Existing Features (from README):");
+    logger.info("✨ Existing Features (from README):");
     analysis.existingFeatures.slice(0, 5).forEach((feature) => {
-      console.log(`  - ${feature}`);
+      logger.info(`  - ${feature}`);
     });
     if (analysis.existingFeatures.length > 5) {
-      console.log(`  ... and ${analysis.existingFeatures.length - 5} more`);
+      logger.info(`  ... and ${analysis.existingFeatures.length - 5} more`);
     }
-    console.log("");
+    logger.info("");
   }
 
   if (analysis.suggestedImprovements.length > 0) {
-    console.log("💡 Suggested Improvements:");
+    logger.info("💡 Suggested Improvements:");
     analysis.suggestedImprovements.forEach((improvement) => {
-      console.log(`  - ${improvement}`);
+      logger.info(`  - ${improvement}`);
     });
-    console.log("");
+    logger.info("");
   }
 
   // Step 5: Get user goal
-  console.log("What's your main goal for this project?");
-  console.log("(Press Enter to use README goals)\n");
+  logger.info("What's your main goal for this project?");
+  logger.info("(Press Enter to use README goals)\n");
 
   const userGoal = await question("Goal: ");
 
@@ -134,7 +135,7 @@ async function main() {
   const projectName = plan.projectName;
   await configManager.initialize(projectName, projectPath);
 
-  console.log(`\n✓ Created .localclaude/ configuration\n`);
+  logger.info(`\n✓ Created .localclaude/ configuration\n`);
 
   // Step 8: Save plan
   await configManager.savePlan(plan);
@@ -147,8 +148,8 @@ async function main() {
   await todoManager.showTodoList();
   await todoManager.showProgress();
 
-  console.log("\n✅ Workflow setup complete!\n");
-  console.log(
+  logger.info("\n✅ Workflow setup complete!\n");
+  logger.info(
     "Next time you run this command, I'll load your existing plan.\n",
   );
 
@@ -162,20 +163,20 @@ async function interactiveLoop(
   todoManager: TodoManager,
   configManager: ConfigManager,
 ) {
-  console.log("\n╔══════════════════════════════════════════════════════════╗");
-  console.log("║                Interactive Workflow Mode                  ║");
-  console.log("╚══════════════════════════════════════════════════════════╝\n");
+  logger.info("\n╔══════════════════════════════════════════════════════════╗");
+  logger.info("║                Interactive Workflow Mode                  ║");
+  logger.info("╚══════════════════════════════════════════════════════════╝\n");
 
-  console.log("Commands:");
-  console.log("  next       - Show next available task");
-  console.log("  start <id> - Start a task");
-  console.log("  done <id>  - Mark task as complete");
-  console.log("  fail <id>  - Mark task as failed");
-  console.log("  list       - Show TODO list");
-  console.log("  progress   - Show progress");
-  console.log("  add        - Add new task");
-  console.log("  help       - Show commands");
-  console.log("  quit       - Exit\n");
+  logger.info("Commands:");
+  logger.info("  next       - Show next available task");
+  logger.info("  start <id> - Start a task");
+  logger.info("  done <id>  - Mark task as complete");
+  logger.info("  fail <id>  - Mark task as failed");
+  logger.info("  list       - Show TODO list");
+  logger.info("  progress   - Show progress");
+  logger.info("  add        - Add new task");
+  logger.info("  help       - Show commands");
+  logger.info("  quit       - Exit\n");
 
   while (true) {
     const command = await question("\n> ");
@@ -191,14 +192,14 @@ async function interactiveLoop(
         case "next": {
           const nextTask = await todoManager.getNextTask();
           if (nextTask) {
-            console.log("\n📋 Next Available Task:");
-            console.log(`  ID: ${nextTask.id}`);
-            console.log(`  Title: ${nextTask.title}`);
-            console.log(`  Description: ${nextTask.description}`);
-            console.log(`  Priority: ${nextTask.priority}`);
-            console.log(`  Category: ${nextTask.category}`);
+            logger.info("\n📋 Next Available Task:");
+            logger.info(`  ID: ${nextTask.id}`);
+            logger.info(`  Title: ${nextTask.title}`);
+            logger.info(`  Description: ${nextTask.description}`);
+            logger.info(`  Priority: ${nextTask.priority}`);
+            logger.info(`  Category: ${nextTask.category}`);
           } else {
-            console.log(
+            logger.info(
               "\n✅ No pending tasks! All dependencies blocked or plan complete.",
             );
           }
@@ -208,15 +209,15 @@ async function interactiveLoop(
         case "start": {
           const taskId = args[0];
           if (!taskId) {
-            console.log("❌ Usage: start <task-id>");
+            logger.info("❌ Usage: start <task-id>");
             break;
           }
 
           const task = await todoManager.startTask(taskId);
           if (task) {
-            console.log(`\n✓ Started task: ${task.title}`);
+            logger.info(`\n✓ Started task: ${task.title}`);
           } else {
-            console.log(`\n❌ Task not found: ${taskId}`);
+            logger.info(`\n❌ Task not found: ${taskId}`);
           }
           break;
         }
@@ -224,13 +225,13 @@ async function interactiveLoop(
         case "done": {
           const taskId = args[0];
           if (!taskId) {
-            console.log("❌ Usage: done <task-id>");
+            logger.info("❌ Usage: done <task-id>");
             break;
           }
 
           const task = await todoManager.completeTask(taskId);
           if (!task) {
-            console.log(`\n❌ Task not found: ${taskId}`);
+            logger.info(`\n❌ Task not found: ${taskId}`);
           }
           break;
         }
@@ -238,14 +239,14 @@ async function interactiveLoop(
         case "fail": {
           const taskId = args[0];
           if (!taskId) {
-            console.log("❌ Usage: fail <task-id> <reason>");
+            logger.info("❌ Usage: fail <task-id> <reason>");
             break;
           }
 
           const reason = args.slice(1).join(" ") || "No reason provided";
           const task = await todoManager.failTask(taskId, reason);
           if (!task) {
-            console.log(`\n❌ Task not found: ${taskId}`);
+            logger.info(`\n❌ Task not found: ${taskId}`);
           }
           break;
         }
@@ -266,7 +267,7 @@ async function interactiveLoop(
         }
 
         case "add": {
-          console.log("\n➕ Add New Task:");
+          logger.info("\n➕ Add New Task:");
           const title = await question("  Title: ");
           const description = await question("  Description: ");
           const phase = await question("  Phase (default: Manual): ");
@@ -276,45 +277,45 @@ async function interactiveLoop(
         }
 
         case "summary": {
-          console.log("\n" + (await configManager.getSummary()));
+          logger.info("\n" + (await configManager.getSummary()));
           break;
         }
 
         case "backup": {
           const label = args[0] || "manual";
           const backupPath = await configManager.createBackup(label);
-          console.log(`\n✓ Created backup: ${backupPath}`);
+          logger.info(`\n✓ Created backup: ${backupPath}`);
           break;
         }
 
         case "help": {
-          console.log("\nAvailable Commands:");
-          console.log("  next       - Show next available task");
-          console.log("  start <id> - Start a task");
-          console.log("  done <id>  - Mark task as complete");
-          console.log("  fail <id> <reason> - Mark task as failed");
-          console.log("  list       - Show TODO list (pending only)");
-          console.log("  list:all   - Show all tasks (including completed)");
-          console.log("  progress   - Show progress bar");
-          console.log("  add        - Add new task interactively");
-          console.log("  summary    - Show project summary");
-          console.log("  backup [label] - Create backup of current state");
-          console.log("  help       - Show this help");
-          console.log("  quit       - Exit interactive mode");
+          logger.info("\nAvailable Commands:");
+          logger.info("  next       - Show next available task");
+          logger.info("  start <id> - Start a task");
+          logger.info("  done <id>  - Mark task as complete");
+          logger.info("  fail <id> <reason> - Mark task as failed");
+          logger.info("  list       - Show TODO list (pending only)");
+          logger.info("  list:all   - Show all tasks (including completed)");
+          logger.info("  progress   - Show progress bar");
+          logger.info("  add        - Add new task interactively");
+          logger.info("  summary    - Show project summary");
+          logger.info("  backup [label] - Create backup of current state");
+          logger.info("  help       - Show this help");
+          logger.info("  quit       - Exit interactive mode");
           break;
         }
 
         case "quit":
         case "exit":
-          console.log("\n✅ Workflow session saved. Goodbye!\n");
+          logger.info("\n✅ Workflow session saved. Goodbye!\n");
           return;
 
         default:
-          console.log(`\n❌ Unknown command: ${cmd}`);
-          console.log('Type "help" for available commands.');
+          logger.info(`\n❌ Unknown command: ${cmd}`);
+          logger.info('Type "help" for available commands.');
       }
     } catch (error) {
-      console.error(
+      logger.error(
         `\n❌ Error: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
@@ -323,6 +324,6 @@ async function interactiveLoop(
 
 // Run CLI
 main().catch((error) => {
-  console.error("Fatal error:", error);
+  logger.error("Fatal error:", error);
   process.exit(1);
 });

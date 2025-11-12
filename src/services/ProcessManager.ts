@@ -64,7 +64,7 @@ export class ProcessManager {
     this.app.on(
       "second-instance",
       (_event, _commandLine, _workingDirectory) => {
-        console.warn(
+        logger.warn(
           "[ProcessManager] Second instance detected, focusing main window...",
         );
         callback();
@@ -268,7 +268,7 @@ export class ProcessManager {
    */
   public logError(error: Error, context?: Record<string, unknown>): void {
     // Log to console for immediate feedback
-    console.error("[ProcessManager]", error.message, {
+    logger.error("[ProcessManager]", error.message, {
       service: "ProcessManager",
       ...context,
     });

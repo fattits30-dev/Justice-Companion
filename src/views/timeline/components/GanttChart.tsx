@@ -4,6 +4,7 @@ import { ZoomIn, ZoomOut, FileImage, FileText } from "lucide-react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import type { DeadlineWithDependencies } from "../../../domains/timeline/entities/DeadlineDependency.ts";
+import { logger } from '../../../utils/logger';
 
 interface GanttChartProps {
   deadlines: DeadlineWithDependencies[];
@@ -106,7 +107,7 @@ export function GanttChart({
       link.href = canvas.toDataURL();
       link.click();
     } catch (error) {
-      console.error("Failed to export PNG:", error);
+      logger.error("Failed to export PNG:", error);
     } finally {
       setIsExporting(false);
     }
@@ -135,7 +136,7 @@ export function GanttChart({
       pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
       pdf.save(`timeline-gantt-${new Date().toISOString().split("T")[0]}.pdf`);
     } catch (error) {
-      console.error("Failed to export PDF:", error);
+      logger.error("Failed to export PDF:", error);
     } finally {
       setIsExporting(false);
     }

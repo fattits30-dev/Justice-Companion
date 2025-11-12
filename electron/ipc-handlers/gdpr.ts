@@ -1,3 +1,6 @@
+import { logger } from '../../src/utils/logger';
+
+import type { Electron } from 'electron';
 import { ipcMain, type IpcMainInvokeEvent } from "electron";
 import { successResponse, type IPCResponse } from "../utils/ipc-response.ts";
 import { withAuthorization } from "../utils/authorization-wrapper.ts";
@@ -40,7 +43,7 @@ export function setupGdprHandlers(): void {
     ): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.warn("[IPC] gdpr:export called by user:", userId);
+          logger.warn("[IPC] gdpr:export called by user:", userId);
 
           // Export all user data with decryption
           const gdprService = getGdprService();
@@ -49,7 +52,7 @@ export function setupGdprHandlers(): void {
             options || {}
           );
 
-          console.warn("[IPC] GDPR export complete:", {
+          logger.warn("[IPC] GDPR export complete:", {
             userId,
             totalRecords: result.metadata.totalRecords,
             filePath: result.filePath,
@@ -106,7 +109,7 @@ export function setupGdprHandlers(): void {
     ): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.warn("[IPC] gdpr:delete called by user:", userId);
+          logger.warn("[IPC] gdpr:delete called by user:", userId);
 
           // Safety check: Explicit confirmation required
           if (!options?.confirmed) {
@@ -125,7 +128,7 @@ export function setupGdprHandlers(): void {
             reason: options.reason,
           });
 
-          console.warn("[IPC] GDPR deletion complete:", {
+          logger.warn("[IPC] GDPR deletion complete:", {
             userId,
             deletedTables: Object.keys(result.deletedCounts).length,
             preservedAuditLogs: result.preservedAuditLogs,

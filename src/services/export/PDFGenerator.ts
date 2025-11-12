@@ -6,10 +6,12 @@ import type {
   TimelineExportData,
   NotesExportData,
   DocumentStyles,
+  TimelineEvent,
 } from '../../models/Export.ts';
 import type { Evidence } from '../../domains/evidence/entities/Evidence.ts';
 import type { Note } from '../../models/Note.ts';
 import type { Deadline } from '../../domains/timeline/entities/Deadline.ts';
+import type { CaseFact } from '../../domains/cases/entities/CaseFact.ts';
 
 export class PDFGenerator {
   private readonly styles: DocumentStyles = {
@@ -353,7 +355,7 @@ export class PDFGenerator {
     });
   }
 
-  private addTimelineSection(doc: PDFKit.PDFDocument, timeline: any[]): void {
+  private addTimelineSection(doc: PDFKit.PDFDocument, timeline: TimelineEvent[]): void {
     doc.fontSize(this.styles.body?.fontSize ?? 11)
       .fillColor('#000000');
 
@@ -432,7 +434,7 @@ export class PDFGenerator {
     });
   }
 
-  private addFactsSection(doc: PDFKit.PDFDocument, facts: any[]): void {
+  private addFactsSection(doc: PDFKit.PDFDocument, facts: CaseFact[]): void {
     doc.fontSize(this.styles.heading1?.fontSize ?? 18)
       .fillColor(this.styles.heading1?.color ?? '#2c5282')
       .text('Case Facts', this.pageMargins.left, doc.y + 10);
@@ -446,15 +448,10 @@ export class PDFGenerator {
       }
 
       doc.moveDown()
-        .text(`${index + 1}. ${fact.statement}`, this.pageMargins.left, doc.y);
+        .text(`${index + 1}. ${fact.factContent}`, this.pageMargins.left, doc.y);
 
-      if (fact.source) {
-        doc.text(`   Source: ${fact.source}`, { indent: 20 });
-      }
-
-      if (fact.confidence) {
-        doc.text(`   Confidence: ${fact.confidence}`, { indent: 20 });
-      }
+      doc.text(`   Category: ${fact.factCategory}`, { indent: 20 });
+      doc.text(`   Importance: ${fact.importance}`, { indent: 20 });
     });
   }
 }

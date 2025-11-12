@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { useAuth } from "../contexts/AuthContext.tsx";
 import type { ProfileFormData } from "../types/profile.ts";
 import { profileService } from "../services/ProfileService.ts";
+import { logger } from '../utils/logger';
 
 /**
  * Custom hook for debounced values
@@ -55,7 +56,7 @@ class ProfileErrorBoundary extends React.Component<
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error(
+    logger.error(
       "[ProfileErrorBoundary] Profile operation error:",
       error,
       errorInfo,

@@ -68,7 +68,7 @@ export class ValidationDecorator<T> extends RepositoryDecorator<T> {
   async createBatch(
     items: ValidationSchemas["create"] extends z.ZodSchema
       ? z.infer<ValidationSchemas["create"]>[]
-      : any[]
+      : unknown[]
   ): Promise<
     ValidationSchemas["create"] extends z.ZodSchema
       ? z.infer<ValidationSchemas["create"]>[]

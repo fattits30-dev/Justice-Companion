@@ -2,7 +2,7 @@
   "name": "justice-companion",
   "version": "1.0.0",
   "description": "Privacy-first desktop application for managing legal cases, evidence, documents, and AI-powered legal research",
-  "main": "dist/electron/main.js",
+  "main": "dist/electron/electron/main.js",
   "author": {
     "name": "Justice Companion Team",
     "email": "support@justicecompanion.app"
@@ -15,22 +15,31 @@
   },
   "engines": {
     "node": ">=20.18.0 <21.0.0",
-    "pnpm": ">=9.0.0"
+    "npm": ">=10.0.0"
   },
   "scripts": {
-    "dev": "vite",
-    "dev:electron": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
+    "start": "node scripts/start-full-stack.js",
+    "start:full": "node scripts/start-full-stack.js",
+    "start:frontend": "vite",
+    "package": "electron-forge package",
+    "make": "electron-forge make",
+    "dev": "node scripts/start-full-stack.js",
+    "dev:frontend": "vite",
+    "dev:smart": "node scripts/start-dev-server.js",
+    "dev:electron": "concurrently \"vite\" \"wait-on http://localhost:5176 && electron .\"",
     "build:preload": "tsc --module CommonJS --target ES2022 --outDir dist/electron --skipLibCheck electron/preload.ts",
     "watch:preload": "tsc --module CommonJS --target ES2022 --outDir dist/electron --skipLibCheck --watch electron/preload.ts",
-    "electron:dev": "pnpm build:preload && concurrently --names \"PRELOAD,VITE,ELECTRON\" -c \"yellow,cyan,magenta\" \"npm:watch:preload\" \"vite\" \"wait-on http://localhost:5176 && cross-env NODE_OPTIONS='--import=tsx' electron electron/main.ts\"",
+    "build:main": "tsc --project tsconfig.electron.json --noEmitOnError false",
+    "watch:main": "tsc --project tsconfig.electron.json --watch",
+    "electron:dev": "npm run build:electron && concurrently --names \"VITE,ELECTRON\" -c \"cyan,magenta\" \"vite\" \"wait-on http://localhost:5176 && electron .\"",
     "build": "tsc && vite build",
     "build:electron": "tsc -p tsconfig.electron.json && vite build",
-    "electron:build": "pnpm build:electron && electron-builder",
-    "build:win": "pnpm build:electron && electron-builder --win",
-    "build:mac": "pnpm build:electron && electron-builder --mac",
-    "build:linux": "pnpm build:electron && electron-builder --linux",
+    "electron:build": "npm run build:electron && electron-builder",
+    "build:win": "npm run build:electron && electron-builder --win",
+    "build:mac": "npm run build:electron && electron-builder --mac",
+    "build:linux": "npm run build:electron && electron-builder --linux",
     "preview": "vite preview",
-    "pretest": "pnpm rebuild:node",
+    "pretest": "npm run rebuild:node",
     "test": "vitest",
     "test:coverage": "vitest run --coverage || true",
     "test:e2e": "playwright test",
@@ -47,10 +56,10 @@
     "db:migrate:rollback": "tsx scripts/rollback-migration.ts",
     "db:backup": "tsx scripts/backup-database.ts",
     "db:backup:list": "tsx scripts/list-backups.ts",
-    "rebuild:electron": "@electron/rebuild -f -w better-sqlite3",
+    "rebuild:electron": "npx electron-rebuild -f -w better-sqlite3-multiple-ciphers",
     "rebuild:node": "node scripts/rebuild-for-node.js",
-    "rebuild": "pnpm rebuild:electron",
-    "postinstall": "@electron/rebuild -f -w better-sqlite3",
+    "rebuild": "npm run rebuild:electron",
+    "postinstall": "npx electron-rebuild -f -w better-sqlite3-multiple-ciphers",
     "guardian": "powershell -ExecutionPolicy Bypass -File guardian-local.ps1 scan",
     "guardian:scan": "powershell -ExecutionPolicy Bypass -File guardian-local.ps1 scan",
     "guardian:file": "powershell -ExecutionPolicy Bypass -File guardian-local.ps1 file",
@@ -59,6 +68,8 @@
     "workflow": "tsx src/workflow/workflow-cli.ts",
     "workflow:plan": "tsx src/workflow/workflow-cli.ts",
     "workflow:test": "tsx src/workflow/workflow-test.ts",
+    "fix-loop": "tsx scripts/error-fix-loop.ts",
+    "quality-gate": "tsx scripts/quality-gate-check.ts",
     "prepare": "husky"
   },
   "lint-staged": {
@@ -83,6 +94,7 @@
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-icons": "^1.3.2",
     "@tanstack/react-query": "^5.90.2",
+    "@types/dompurify": "^3.0.5",
     "ai": "^5.0.86",
     "better-sqlite3-multiple-ciphers": "^12.4.1",
     "clsx": "^2.1.1",
@@ -119,12 +131,19 @@
     "sonner": "^2.0.7",
     "sqlite3": "^5.1.7",
     "tailwind-merge": "^3.3.1",
-    "uuid": "^13.0.0",
+    "uuid": "9.0.1",
     "winston": "^3.18.3",
     "zod": "^3.24.1",
     "zustand": "^5.0.8"
   },
   "devDependencies": {
+    "@electron-forge/cli": "^7.10.2",
+    "@electron-forge/maker-deb": "^7.10.2",
+    "@electron-forge/maker-rpm": "^7.10.2",
+    "@electron-forge/maker-squirrel": "^7.10.2",
+    "@electron-forge/maker-zip": "^7.10.2",
+    "@electron-forge/plugin-auto-unpack-natives": "^7.10.2",
+    "@electron-forge/plugin-webpack": "^7.10.2",
     "@electron/rebuild": "^4.0.1",
     "@eslint/js": "^9.37.0",
     "@playwright/test": "^1.56.1",
@@ -138,6 +157,7 @@
     "@types/pdfkit": "^0.17.3",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
+    "@types/uuid": "^11.0.0",
     "@typescript-eslint/eslint-plugin": "^8.20.0",
     "@typescript-eslint/parser": "^8.20.0",
     "@vitejs/plugin-react": "^4.7.0",
@@ -146,7 +166,7 @@
     "concurrently": "^9.1.2",
     "cross-env": "^10.1.0",
     "drizzle-kit": "^0.30.6",
-    "electron": "38.3.0",
+    "electron": "^33.4.11",
     "electron-builder": "^25.1.8",
     "electron-reloader": "^1.2.3",
     "eslint": "^9.17.0",
@@ -166,13 +186,12 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.1",
     "vite": "^5.4.21",
+    "vite-plugin-node-polyfills": "^0.24.0",
     "vitest": "^2.1.8",
     "wait-on": "^8.0.1"
   },
-  "pnpm": {
-    "overrides": {
-      "esbuild": ">=0.25.0"
-    }
+  "overrides": {
+    "esbuild": ">=0.25.0"
   },
   "build": {
     "appId": "com.justicecompanion.app",

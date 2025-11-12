@@ -1,3 +1,4 @@
+import type { Electron } from 'electron';
 import { ipcMain, type IpcMainInvokeEvent } from "electron";
 import {
   SearchService,
@@ -13,6 +14,7 @@ import {
 import { withAuthorization } from '../utils/authorization-wrapper.ts';
 import type { IPCResponse } from '../utils/ipc-response.ts';
 import { DatabaseError, ValidationError } from '../../src/errors/DomainErrors.ts';
+import { logger } from '../../src/utils/logger';
 
 // Lazy initialization of services
 let searchService: SearchService | null = null;
@@ -68,7 +70,7 @@ export function registerSearchHandlers(): void {
     ): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.warn("[IPC] search called by user:", userId, "query:", query);
+          logger.warn("[IPC] search called by user:", userId, "query:", query);
 
           const searchService = _getSearchService();
 
@@ -78,7 +80,7 @@ export function registerSearchHandlers(): void {
 
           return { success: true, data: results };
         } catch (error) {
-          console.error("[IPC] Search error:", error);
+          logger.error("[IPC] Search error:", error);
 
           // Wrap generic errors in DomainErrors
           if (error instanceof Error) {
@@ -109,7 +111,7 @@ export function registerSearchHandlers(): void {
     ): Promise<IPCResponse> => {
       return withAuthorization(sessionId, async (userId) => {
         try {
-          console.warn("[IPC] rebuild-search-index called by user:", userId);
+          logger.warn("[IPC] rebuild-search-index called by user:", userId);
 
           const searchIndexBuilder = _getSearchIndexBuilder();
 
@@ -122,7 +124,7 @@ export function registerSearchHandlers(): void {
             data: { message: `Search index rebuilt for user ${userId}` },
           };
         } catch (error) {
-          console.error("[IPC] Search index rebuild error:", error);
+          logger.error("[IPC] Search index rebuild error:", error);
 
           // Wrap generic errors in DomainErrors
           if (error instanceof Error) {

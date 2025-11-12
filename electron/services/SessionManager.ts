@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
+import { logger } from '../../src/utils/logger';
 
 /**
  * In-memory session data for IPC authentication
@@ -73,7 +74,7 @@ class SessionManager {
 
     this.sessions.set(sessionId, session);
 
-    console.warn(
+    logger.warn(
       `[SessionManager] Created in-memory session ${sessionId} for user ${sessionData.username} (expires: ${expiresAt.toISOString()})`
     );
 
@@ -94,7 +95,7 @@ class SessionManager {
     if (new Date() > session.expiresAt) {
       // Clean up expired session
       this.sessions.delete(sessionId);
-      console.warn(
+      logger.warn(
         `[SessionManager] Cleaned up expired session ${sessionId} for user ${session.username}`
       );
       return { valid: false };
@@ -114,7 +115,7 @@ class SessionManager {
     const session = this.sessions.get(sessionId);
     if (session) {
       this.sessions.delete(sessionId);
-      console.warn(
+      logger.warn(
         `[SessionManager] Destroyed in-memory session ${sessionId} for user ${session.username}`
       );
       return true;
@@ -138,7 +139,7 @@ class SessionManager {
     }
 
     if (cleanedCount > 0) {
-      console.warn(
+      logger.warn(
         `[SessionManager] Cleaned up ${cleanedCount} expired in-memory sessions`
       );
     }

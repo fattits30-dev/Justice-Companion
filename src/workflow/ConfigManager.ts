@@ -8,6 +8,7 @@
 import fs from 'fs';
 import path from 'path';
 import type { LocalClaudeConfig, WorkflowPlan, AgentContext } from './types.ts';
+import { logger } from '../utils/logger';
 
 export class ConfigManager {
   private configDir: string;
@@ -80,7 +81,7 @@ export class ConfigManager {
       const data = fs.readFileSync(this.configPath, 'utf-8');
       return JSON.parse(data) as LocalClaudeConfig;
     } catch (error) {
-      console.error('Error loading config:', error);
+      logger.error('Error loading config:', error);
       return null;
     }
   }
@@ -124,7 +125,7 @@ export class ConfigManager {
       const data = fs.readFileSync(this.planPath, 'utf-8');
       return JSON.parse(data) as WorkflowPlan;
     } catch (error) {
-      console.error('Error loading plan:', error);
+      logger.error('Error loading plan:', error);
       return null;
     }
   }
@@ -160,7 +161,7 @@ export class ConfigManager {
       const data = fs.readFileSync(this.memoryPath, 'utf-8');
       return JSON.parse(data) as AgentContext['memory'];
     } catch (error) {
-      console.error('Error loading memory:', error);
+      logger.error('Error loading memory:', error);
       return { decisions: [], patterns: [], notes: [] };
     }
   }
@@ -212,7 +213,7 @@ export class ConfigManager {
 
       return history;
     } catch (error) {
-      console.error('Error loading history:', error);
+      logger.error('Error loading history:', error);
       return [];
     }
   }
@@ -271,7 +272,7 @@ export class ConfigManager {
         };
       });
     } catch (error) {
-      console.error('Error listing backups:', error);
+      logger.error('Error listing backups:', error);
       return [];
     }
   }

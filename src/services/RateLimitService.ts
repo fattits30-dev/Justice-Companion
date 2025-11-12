@@ -1,4 +1,5 @@
 import { injectable } from "inversify";
+import { logger } from '../utils/logger';
 
 /**
  * Represents a login attempt record for rate limiting
@@ -87,7 +88,7 @@ export class RateLimitService {
       );
 
       // Log rate limit violation for monitoring
-      console.warn(
+      logger.warn(
         `Rate limit exceeded for ${normalizedUsername}. Attempts: ${attempt.count}, Lock time remaining: ${remainingSeconds}s`,
       );
 
@@ -116,7 +117,7 @@ export class RateLimitService {
       attempt.lockedUntil = new Date(now.getTime() + this.LOCK_DURATION_MS);
 
       // Log account lockout for monitoring
-      console.warn(
+      logger.warn(
         `Account locked for ${normalizedUsername}. Attempts: ${attempt.count}, Lock duration: ${this.LOCK_DURATION_MS / 1000}s`,
       );
 
@@ -184,7 +185,7 @@ export class RateLimitService {
         if (attempt.count >= this.MAX_ATTEMPTS && !attempt.lockedUntil) {
           attempt.lockedUntil = new Date(now.getTime() + this.LOCK_DURATION_MS);
 
-          console.error(
+          logger.error(
             `BRUTE FORCE DETECTED for ${normalizedUsername}. Account locked for ${this.LOCK_DURATION_MS / 1000}s`,
           );
         }
