@@ -1,4 +1,3 @@
-import type { Electron } from 'electron';
 import { ipcMain } from 'electron';
 import type { IpcMainInvokeEvent } from 'electron';
 import { ProcessManager } from '../../src/services/ProcessManager';

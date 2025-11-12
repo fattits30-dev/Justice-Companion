@@ -1,4 +1,3 @@
-import type { Electron } from 'electron';
 import { ipcMain, type IpcMainInvokeEvent } from "electron";
 import { successResponse, type IPCResponse } from "../utils/ipc-response.ts";
 import { logAuditEvent, AuditEventType } from "../utils/audit-helper.ts";

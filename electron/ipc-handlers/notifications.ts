@@ -1,6 +1,5 @@
 import { logger } from '../../src/utils/logger';
 
-import type { Electron } from 'electron';
 import { ipcMain, type IpcMainInvokeEvent } from "electron";
 import { successResponse, type IPCResponse } from '../utils/ipc-response.ts';
 import { withAuthorization } from '../utils/authorization-wrapper.ts';

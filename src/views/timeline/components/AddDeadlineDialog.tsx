@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { X, Plus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "../../../components/ui/Button.ts";
-import { Card } from "../../../components/ui/Card.ts";
+import { Button } from "../../../components/ui/Button.tsx";
+import { Card } from "../../../components/ui/Card.tsx";
 import type { CreateDeadlineInput } from "../../../domains/timeline/entities/Deadline.ts";
 
 interface AddDeadlineDialogProps {

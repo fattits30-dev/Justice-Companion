@@ -1,4 +1,3 @@
-import type { Electron } from 'electron';
 import { ipcMain, type IpcMainInvokeEvent } from "electron";
 import {
   SearchService,

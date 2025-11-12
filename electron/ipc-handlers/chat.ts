@@ -1,4 +1,3 @@
-import type { Electron } from 'electron';
 import { ipcMain, type IpcMainInvokeEvent } from "electron";
 import {
   errorResponse,
@@ -109,7 +108,7 @@ export function setupChatHandlers(): void {
         caseId?: number | null;
       }
     ): Promise<IPCResponse<{ conversationId: number }>> => {
-      return withAuthorization(request.sessionId, async (_userId) => {
+      return withAuthorization(request.sessionId, async (userId) => {
         try {
           // Validate message
           if (!request.message || request.message.trim().length === 0) {

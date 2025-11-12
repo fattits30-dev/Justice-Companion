@@ -1,6 +1,5 @@
 import { logger } from '../../src/utils/logger';
 
-import type { Electron } from 'electron';
 import {
   ipcMain,
   safeStorage,

@@ -1,6 +1,5 @@
 import { logger } from '../../src/utils/logger';
 
-import type { Electron } from 'electron';
 import { ipcMain, type IpcMainInvokeEvent } from "electron";
 import { type IPCResponse } from '../utils/ipc-response.ts';
 import { logAuditEvent, AuditEventType } from '../utils/audit-helper.ts';

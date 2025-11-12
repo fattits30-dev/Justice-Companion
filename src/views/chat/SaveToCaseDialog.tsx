@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Save, FolderOpen } from "lucide-react";
-import { Button } from "../../components/ui/Button.ts";
+import { Button } from "../../components/ui/Button.tsx";
 
 interface SaveToCaseDialogProps {
   open: boolean;

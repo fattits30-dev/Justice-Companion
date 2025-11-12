@@ -1,4 +1,3 @@
-import type { Electron } from 'electron';
 import { logger } from '../../src/utils/logger';
 /**
  * IPC Handlers for Tag Management

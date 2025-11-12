@@ -1,4 +1,3 @@
-import type { Electron } from 'electron';
 import { logger } from '../../src/utils/logger';
 // electron/ipc-handlers/export.ts
 import { ipcMain, dialog, app, type IpcMainInvokeEvent } from 'electron';

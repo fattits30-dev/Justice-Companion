@@ -1,4 +1,3 @@
-import type { Electron } from 'electron';
 import { ipcMain, type IpcMainInvokeEvent } from "electron";
 import { type IPCResponse } from '../utils/ipc-response.ts';
 import { withAuthorization } from '../utils/authorization-wrapper.ts';

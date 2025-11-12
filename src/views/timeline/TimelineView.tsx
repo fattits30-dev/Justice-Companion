@@ -1,13 +1,13 @@
-import { logger } from '../../utils/logger';
+import { logger } from "../../utils/logger";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { Plus, Calendar } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../../contexts/AuthContext.tsx";
-import { Button } from "../../components/ui/Button.ts";
-import { TimelineItem } from "./components/TimelineItem.ts";
-import { TimelineEmpty } from "./components/TimelineEmpty.ts";
-import { AddDeadlineDialog } from "./components/AddDeadlineDialog.ts";
+import { Button } from "../../components/ui/Button.tsx";
+import { TimelineItem } from "./components/TimelineItem.tsx";
+import { TimelineEmpty } from "./components/TimelineEmpty.tsx";
+import { AddDeadlineDialog } from "./components/AddDeadlineDialog.tsx";
 import type {
   DeadlineWithCase,
   CreateDeadlineInput,

@@ -1,9 +1,9 @@
 import { Edit2, Trash2, CheckCircle, Circle, FolderOpen } from "lucide-react";
 import { motion } from "framer-motion";
 import { memo } from "react";
-import { Card } from "../../../components/ui/Card.ts";
-import { Badge } from "../../../components/ui/Badge.ts";
-import { Button } from "../../../components/ui/Button.ts";
+import { Card } from "../../../components/ui/Card.tsx";
+import { Badge } from "../../../components/ui/Badge.tsx";
+import { Button } from "../../../components/ui/Button.tsx";
 import type { DeadlineWithCase } from "../../../domains/timeline/entities/Deadline.ts";
 import {
   formatDeadlineStatus,
