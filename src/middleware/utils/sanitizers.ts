@@ -14,29 +14,55 @@ export function sanitizeHtml(input: string): string {
     return input;
   }
 
-  // Remove all HTML tags and their content
-  let sanitized = input.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
-  sanitized = sanitized.replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '');
-  sanitized = sanitized.replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '');
-  sanitized = sanitized.replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '');
-  sanitized = sanitized.replace(/<embed\b[^<]*(?:(?!<\/embed>)<[^<]*)*<\/embed>/gi, '');
+  // Remove all HTML tags and their content (iterative to handle nested tags)
+  let sanitized = input;
+  let previousLength = 0;
 
-  // Remove all remaining HTML tags but keep content
-  sanitized = sanitized.replace(/<[^>]+>/g, '');
+  // Repeat until no more tags are removed (handles nested/malformed tags)
+  while (sanitized.length !== previousLength) {
+    previousLength = sanitized.length;
+    sanitized = sanitized.replace(
+      /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
+      "",
+    );
+    sanitized = sanitized.replace(
+      /<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi,
+      "",
+    );
+    sanitized = sanitized.replace(
+      /<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi,
+      "",
+    );
+    sanitized = sanitized.replace(
+      /<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi,
+      "",
+    );
+    sanitized = sanitized.replace(
+      /<embed\b[^<]*(?:(?!<\/embed>)<[^<]*)*<\/embed>/gi,
+      "",
+    );
+    // Remove all HTML tags including malformed ones
+    sanitized = sanitized.replace(/<[^>]*>/g, "");
+  }
 
   // Decode HTML entities
   sanitized = sanitized
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
     .replace(/&quot;/g, '"')
     .replace(/&#x27;/g, "'")
-    .replace(/&#x2F;/g, '/')
-    .replace(/&amp;/g, '&');
+    .replace(/&#x2F;/g, "/")
+    .replace(/&amp;/g, "&");
 
-  // Remove dangerous characters and patterns
-  sanitized = sanitized.replace(/javascript:/gi, '');
-  sanitized = sanitized.replace(/on\w+\s*=/gi, '');
-  sanitized = sanitized.replace(/data:text\/html/gi, '');
+  // Remove dangerous patterns (iterative to handle obfuscation)
+  previousLength = 0;
+  while (sanitized.length !== previousLength) {
+    previousLength = sanitized.length;
+    sanitized = sanitized.replace(/javascript:/gi, "");
+    sanitized = sanitized.replace(/on\w+\s*=/gi, "");
+    sanitized = sanitized.replace(/data:text\/html/gi, "");
+    sanitized = sanitized.replace(/vbscript:/gi, "");
+  }
 
   return sanitized.trim();
 }
@@ -111,21 +137,29 @@ export function sanitizeFilePath(filePath: string): string {
     return filePath;
   }
 
-  // Remove directory traversal patterns
-  let sanitized = filePath.replace(/\.\./g, '');
-  sanitized = sanitized.replace(/~\//g, '');
+  // Remove directory traversal patterns (iterative to handle multiple encodings)
+  let sanitized = filePath;
+  let previousLength = 0;
+
+  while (sanitized.length !== previousLength) {
+    previousLength = sanitized.length;
+    sanitized = sanitized.replace(/\.\./g, "");
+    sanitized = sanitized.replace(/~\//g, "");
+    sanitized = sanitized.replace(/%2e%2e/gi, ""); // URL-encoded ..
+    sanitized = sanitized.replace(/%2f/gi, ""); // URL-encoded /
+  }
 
   // Remove leading slashes and backslashes
-  sanitized = sanitized.replace(/^[\\/]+/, '');
+  sanitized = sanitized.replace(/^[\\/]+/, "");
 
   // Normalize slashes
-  sanitized = sanitized.replace(/\\/g, '/');
+  sanitized = sanitized.replace(/\\/g, "/");
 
   // Remove multiple consecutive slashes
-  sanitized = sanitized.replace(/\/+/g, '/');
+  sanitized = sanitized.replace(/\/+/g, "/");
 
   // Remove null bytes
-  sanitized = sanitized.replace(/\0/g, '');
+  sanitized = sanitized.replace(/\0/g, "");
 
   return sanitized;
 }
@@ -139,25 +173,29 @@ export function sanitizeFilename(filename: string): string {
   }
 
   // Remove any path separators
-  let sanitized = filename.replace(/[\\/]/g, '');
+  let sanitized = filename.replace(/[\\/]/g, "");
 
-  // Remove directory traversal
-  sanitized = sanitized.replace(/\.\./g, '');
+  // Remove directory traversal (iterative)
+  let previousLength = 0;
+  while (sanitized.length !== previousLength) {
+    previousLength = sanitized.length;
+    sanitized = sanitized.replace(/\.\./g, "");
+  }
 
   // Remove leading dots (hidden files)
-  sanitized = sanitized.replace(/^\.+/, '');
+  sanitized = sanitized.replace(/^\.+/, "");
 
   // Remove special characters that could be problematic
-  sanitized = sanitized.replace(/[<>:"|?*]/g, '');
+  sanitized = sanitized.replace(/[<>:"|?*]/g, "");
 
   // Remove control characters (using Unicode ranges instead of control char literals)
   // eslint-disable-next-line no-control-regex
-  sanitized = sanitized.replace(/[\x00-\x1f\x7f]/g, '');
+  sanitized = sanitized.replace(/[\x00-\x1f\x7f]/g, "");
 
   // Limit length
   if (sanitized.length > 255) {
     // Preserve extension if present
-    const lastDot = sanitized.lastIndexOf('.');
+    const lastDot = sanitized.lastIndexOf(".");
     if (lastDot > 0) {
       const extension = sanitized.slice(lastDot);
       sanitized = sanitized.slice(0, 255 - extension.length) + extension;
@@ -177,33 +215,50 @@ export function sanitizeUrl(url: string): string {
     return url;
   }
 
-  // Remove javascript: and data: protocols
-  if (url.match(/^(javascript|data|vbscript|about|file):/i)) {
-    return '';
-  }
-
-  // Remove leading whitespace and control characters
+  // Remove leading/trailing whitespace and control characters
   // eslint-disable-next-line no-control-regex
-  let sanitized = url.replace(/^[\x00-\x20]+/, '');
+  let sanitized = url.replace(/^[\x00-\x20]+/, "").replace(/[\x00-\x20]+$/, "");
 
-  // Decode URL to catch encoded attacks
-  try {
-    sanitized = decodeURIComponent(sanitized);
-  } catch {
-    // If decoding fails, reject the URL
-    return '';
+  // Decode URL multiple times to catch double-encoded attacks
+  let previousValue = "";
+  let iterations = 0;
+  const maxIterations = 5;
+
+  while (sanitized !== previousValue && iterations < maxIterations) {
+    previousValue = sanitized;
+    try {
+      sanitized = decodeURIComponent(sanitized);
+    } catch {
+      // If decoding fails, reject the URL
+      return "";
+    }
+    iterations++;
   }
 
-  // Check again after decoding
-  if (sanitized.match(/^(javascript|data|vbscript|about|file):/i)) {
-    return '';
+  // Normalize case and remove null bytes for protocol check
+  const normalizedUrl = sanitized.toLowerCase().replace(/\0/g, "");
+
+  // Check for dangerous protocols (exhaustive list with variations)
+  const dangerousProtocols = [
+    "javascript:",
+    "data:",
+    "vbscript:",
+    "about:",
+    "file:",
+    "jar:",
+    "feed:",
+    "view-source:",
+  ];
+
+  if (dangerousProtocols.some((proto) => normalizedUrl.startsWith(proto))) {
+    return "";
   }
 
   // For relative URLs, ensure they start with / or are just paths
   if (!sanitized.match(/^https?:\/\//i)) {
     // Ensure relative URLs don't contain protocol handlers
-    if (sanitized.includes(':')) {
-      return '';
+    if (sanitized.includes(":")) {
+      return "";
     }
   }
 
@@ -222,19 +277,19 @@ export function sanitizeEmail(email: string): string {
   let sanitized = email.toLowerCase().trim();
 
   // Remove any HTML tags
-  sanitized = sanitized.replace(/<[^>]+>/g, '');
+  sanitized = sanitized.replace(/<[^>]+>/g, "");
 
   // Remove dangerous characters
-  sanitized = sanitized.replace(/[<>()[\]\\,;:]/g, '');
+  sanitized = sanitized.replace(/[<>()[\]\\,;:]/g, "");
 
   // Validate basic email format
   if (!sanitized.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
-    return '';
+    return "";
   }
 
   // Limit length
   if (sanitized.length > 254) {
-    return '';
+    return "";
   }
 
   return sanitized;
@@ -247,48 +302,50 @@ export function sanitizeEmail(email: string): string {
 export function sanitizeForLogging(data: unknown, maxDepth = 5): unknown {
   // Prevent infinite recursion
   if (maxDepth <= 0) {
-    return '[MAX_DEPTH_REACHED]';
+    return "[MAX_DEPTH_REACHED]";
   }
 
   // List of sensitive field names
   const sensitiveFields = [
-    'password',
-    'pass',
-    'passwd',
-    'pwd',
-    'apikey',
-    'api_key',
-    'apiKey',
-    'token',
-    'secret',
-    'key',
-    'auth',
-    'authorization',
-    'cookie',
-    'session',
-    'credit_card',
-    'creditCard',
-    'card_number',
-    'cardNumber',
-    'cvv',
-    'ssn',
-    'social_security',
-    'socialSecurity',
-    'pin',
-    'private_key',
-    'privateKey',
+    "password",
+    "pass",
+    "passwd",
+    "pwd",
+    "apikey",
+    "api_key",
+    "apiKey",
+    "token",
+    "secret",
+    "key",
+    "auth",
+    "authorization",
+    "cookie",
+    "session",
+    "credit_card",
+    "creditCard",
+    "card_number",
+    "cardNumber",
+    "cvv",
+    "ssn",
+    "social_security",
+    "socialSecurity",
+    "pin",
+    "private_key",
+    "privateKey",
   ];
 
   if (data === null || data === undefined) {
     return data;
   }
 
-  if (typeof data === 'string') {
+  if (typeof data === "string") {
     // Truncate long strings
-    return data.length > 1000 ? data.substring(0, 1000) + '...[TRUNCATED]' : data;
+    return data.length > 1000
+      ? data.substring(0, 1000) + "...[TRUNCATED]"
+      : data;
   }
 
-  if (typeof data === 'number' || typeof data === 'boolean') {
+  if (typeof data === "number" || typeof data === "boolean") {
     return data;
   }
 
@@ -299,7 +356,9 @@ export function sanitizeForLogging(data: unknown, maxDepth = 5): unknown {
   if (Array.isArray(data)) {
     // Limit array length
     const limited = data.slice(0, 10);
-    const mapped = limited.map((item: unknown) => sanitizeForLogging(item, maxDepth - 1));
+    const mapped = limited.map((item: unknown) =>
+      sanitizeForLogging(item, maxDepth - 1),
+    );
 
     if (data.length > 10) {
       mapped.push(`...[${data.length - 10} MORE ITEMS]`);
@@ -308,19 +367,23 @@ export function sanitizeForLogging(data: unknown, maxDepth = 5): unknown {
     return mapped;
   }
 
-  if (typeof data === 'object') {
+  if (typeof data === "object") {
     const sanitized: Record<string, unknown> = {};
 
-    for (const [key, value] of Object.entries(data as Record<string, unknown>)) {
+    for (const [key, value] of Object.entries(
+      data as Record<string, unknown>,
+    )) {
       // Check if field name suggests sensitive data
       const lowerKey = key.toLowerCase();
-      const isSensitive = sensitiveFields.some((field) => lowerKey.includes(field));
+      const isSensitive = sensitiveFields.some((field) =>
+        lowerKey.includes(field),
+      );
 
       if (isSensitive) {
-        sanitized[key] = '[REDACTED]';
-      } else if (key === 'file' || key === 'buffer' || key === 'data') {
+        sanitized[key] = "[REDACTED]";
+      } else if (key === "file" || key === "buffer" || key === "data") {
         // Don't log file contents or large data buffers
-        sanitized[key] = '[BINARY_DATA]';
+        sanitized[key] = "[BINARY_DATA]";
       } else {
         sanitized[key] = sanitizeForLogging(value, maxDepth - 1);
       }
@@ -330,7 +393,7 @@ export function sanitizeForLogging(data: unknown, maxDepth = 5): unknown {
   }
 
   // For any other type
-  return '[UNKNOWN_TYPE]';
+  return "[UNKNOWN_TYPE]";
 }
 
 /**
@@ -346,8 +409,8 @@ export function stripAnsi(input: string): string {
   const ESC = String.fromCodePoint(0x001b);
   const CSI = String.fromCodePoint(0x009b);
   const ansiPattern = `[${ESC}${CSI}][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]`;
-  const ansiRegex = new RegExp(ansiPattern, 'g');
-  return input.replace(ansiRegex, '');
+  const ansiRegex = new RegExp(ansiPattern, "g");
+  return input.replace(ansiRegex, "");
 }
 
 /**
@@ -358,13 +421,17 @@ export function escapeRegex(input: string): string {
     return input;
   }
 
-  return input.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return input.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 /**
  * Truncate string to specified length with ellipsis
  */
-export function truncate(input: string, maxLength: number, suffix = '...'): string {
+export function truncate(
+  input: string,
+  maxLength: number,
+  suffix = "...",
+): string {
   if (!input || input.length <= maxLength) {
     return input;
   }
