@@ -64,7 +64,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
           gradientBorder &&
             "before:absolute before:inset-0 before:rounded-xl before:p-px",
           gradientBorder &&
-            "before:bg-linear-to-br before:from-primary-500/50 before:via-secondary-500/50 before:to-primary-500/50",
+            "before:bg-gradient-to-br before:from-primary-500/50 before:via-secondary-500/50 before:to-primary-500/50",
           gradientBorder && "before:-z-10",
           // Custom
           className,
@@ -78,7 +78,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
               initial={{ x: "-100%" }}
               animate={{ x: "100%" }}
               transition={{ duration: 1.5, ease: "easeInOut" }}
-              className="absolute inset-0 bg-linear-to-r from-transparent via-white/20 to-transparent"
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
             />
           </div>
         )}

@@ -91,12 +91,12 @@ export function SettingsView() {
   }, [activeTab]);
 
   return (
-    <div className="h-full flex flex-col bg-linear-to-br from-gray-900 via-primary-900 to-gray-900">
+    <div className="h-full flex flex-col bg-gradient-to-br from-gray-900 via-primary-900 to-gray-900">
       {/* Fixed Header */}
       <header className="sticky top-0 z-30 border-b border-white/10 bg-gray-900/80 backdrop-blur-md">
         <div className="px-8 py-6">
           <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 rounded-lg bg-linear-to-br from-purple-500 to-pink-500">
+            <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500">
               <SettingsIcon className="w-6 h-6 text-white" />
             </div>
             <h1 className="text-3xl font-bold text-white">Settings</h1>
@@ -126,7 +126,7 @@ export function SettingsView() {
                     className={`
                       relative flex items-center gap-2 px-4 py-2 rounded-lg
                       transition-all duration-200 shrink-0
-                      bg-linear-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/50
+                      bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/50
                     `}
                   >
                     <Icon className="w-4 h-4" />
@@ -135,7 +135,7 @@ export function SettingsView() {
                     </span>
                     <motion.div
                       layoutId="activeTab"
-                      className="absolute inset-0 bg-linear-to-r from-purple-500 to-pink-500 rounded-lg -z-10"
+                      className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg -z-10"
                       transition={{
                         type: "spring",
                         bounce: 0.2,
@@ -543,7 +543,7 @@ function AIProviderTab({
             <Button
               onClick={handleSave}
               disabled={isSaving || !apiKey}
-              className="bg-linear-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
+              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
             >
               {isSaving ? (
                 <>
@@ -642,7 +642,7 @@ function AppearanceTab({
                       onClick={() => setTheme(option.value)}
                       className={`
                         p-4 rounded-lg border-2 transition-all
-                        bg-linear-to-br from-purple-500 to-pink-500 border-purple-400 shadow-lg shadow-purple-500/50
+                        bg-gradient-to-br from-purple-500 to-pink-500 border-purple-400 shadow-lg shadow-purple-500/50
                       `}
                       aria-label={`${option.label} theme`}
                       aria-pressed="true"
@@ -741,7 +741,7 @@ function AppearanceTab({
             </label>
           </div>
 
-          <Button className="bg-linear-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white">
+          <Button className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white">
             <Save className="w-4 h-4" />
             Save Preferences
           </Button>
@@ -765,7 +765,7 @@ function PrivacyTab() {
       </div>
 
       {/* Encryption Status */}
-      <Card className="bg-linear-to-br from-green-900/30 to-primary-900/30 border-green-500/20 backdrop-blur-md">
+      <Card className="bg-gradient-to-br from-green-900/30 to-primary-900/30 border-green-500/20 backdrop-blur-md">
         <div className="p-6">
           <div className="flex items-center gap-3 mb-4">
             <div className="p-2 rounded-lg bg-green-500/20">
@@ -854,7 +854,7 @@ function PrivacyTab() {
             </label>
           </div>
 
-          <Button className="bg-linear-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white">
+          <Button className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white">
             <Save className="w-4 h-4" />
             Save Privacy Settings
           </Button>
@@ -947,7 +947,7 @@ function DataManagementTab() {
             <Button
               onClick={handleExport}
               disabled={isExporting}
-              className="bg-linear-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
+              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
             >
               {isExporting ? (
                 <>
@@ -987,7 +987,7 @@ function DataManagementTab() {
               <span className="text-white font-medium">24.5 MB</span>
             </div>
             <div className="w-full bg-white/5 rounded-full h-2">
-              <div className="bg-linear-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all w-[45%]" />
+              <div className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all w-[45%]" />
             </div>
 
             <div className="flex items-center justify-between">
@@ -995,7 +995,7 @@ function DataManagementTab() {
               <span className="text-white font-medium">156.2 MB</span>
             </div>
             <div className="w-full bg-white/5 rounded-full h-2">
-              <div className="bg-linear-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all w-[78%]" />
+              <div className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all w-[78%]" />
             </div>
 
             <div className="flex items-center justify-between">
@@ -1003,7 +1003,7 @@ function DataManagementTab() {
               <span className="text-white font-medium">8.1 MB</span>
             </div>
             <div className="w-full bg-white/5 rounded-full h-2">
-              <div className="bg-linear-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all w-[15%]" />
+              <div className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all w-[15%]" />
             </div>
           </div>
 
@@ -1015,7 +1015,7 @@ function DataManagementTab() {
       </Card>
 
       {/* Danger Zone */}
-      <Card className="bg-linear-to-br from-red-900/30 to-orange-900/30 border-red-500/20 backdrop-blur-md">
+      <Card className="bg-gradient-to-br from-red-900/30 to-orange-900/30 border-red-500/20 backdrop-blur-md">
         <div className="p-6 space-y-4">
           <div className="flex items-center gap-3">
             <AlertTriangle className="w-6 h-6 text-red-400" />
@@ -1075,7 +1075,7 @@ function NotificationsTab({
                 className="sr-only peer"
                 aria-label="Enable notifications"
               />
-              <div className="w-11 h-6 bg-white/20 peer-focus:outline-hidden peer-focus:ring-4 peer-focus:ring-primary-500/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-linear-to-r peer-checked:from-purple-500 peer-checked:to-pink-500"></div>
+              <div className="w-11 h-6 bg-white/20 peer-focus:outline-hidden peer-focus:ring-4 peer-focus:ring-primary-500/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-purple-500 peer-checked:to-pink-500"></div>
             </label>
           </div>
 
@@ -1157,7 +1157,7 @@ function NotificationsTab({
             </motion.div>
           )}
 
-          <Button className="bg-linear-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white">
+          <Button className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white">
             <Save className="w-4 h-4" />
             Save Notification Preferences
           </Button>
@@ -1218,9 +1218,9 @@ function AboutTab() {
       </div>
 
       {/* App Info */}
-      <Card className="bg-linear-to-br from-gray-900 via-primary-900/50 to-gray-900 border-white/10 backdrop-blur-md">
+      <Card className="bg-gradient-to-br from-gray-900 via-primary-900/50 to-gray-900 border-white/10 backdrop-blur-md">
         <div className="p-6 text-center space-y-4">
-          <div className="w-20 h-20 mx-auto rounded-2xl bg-linear-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/50">
+          <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/50">
             <Shield className="w-10 h-10 text-white" />
           </div>
 

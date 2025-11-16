@@ -200,7 +200,7 @@ export function CasesView() {
   const hasFilteredResults = filteredCases.length > 0;
 
   return (
-    <div className="h-full flex flex-col bg-linear-to-br from-gray-900 via-primary-900 to-gray-900">
+    <div className="h-full flex flex-col bg-gradient-to-br from-gray-900 via-primary-900 to-gray-900">
       {/* Sticky Header with Toolbar */}
       <div className="sticky top-0 z-30 bg-gray-900/80 backdrop-blur-md border-b border-white/10">
         <div className="px-8 py-6">

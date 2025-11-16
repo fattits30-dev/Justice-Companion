@@ -102,7 +102,7 @@ export function Dashboard({
   // Loading state
   if (isLoading) {
     return (
-      <div className="h-full flex flex-col overflow-hidden bg-linear-to-br from-gray-900 via-primary-900 to-gray-900 text-white">
+      <div className="h-full flex flex-col overflow-hidden bg-gradient-to-br from-gray-900 via-primary-900 to-gray-900 text-white">
         <div className="shrink-0 p-8 pb-4">
           <h1 className="text-3xl font-bold mb-2">Welcome back, {username}</h1>
           <p className="text-white/90">Loading your dashboard...</p>
@@ -126,7 +126,7 @@ export function Dashboard({
   // Error state
   if (error) {
     return (
-      <div className="flex items-center justify-center h-full bg-linear-to-br from-gray-900 via-primary-900 to-gray-900 p-8">
+      <div className="flex items-center justify-center h-full bg-gradient-to-br from-gray-900 via-primary-900 to-gray-900 p-8">
         <Card variant="glass" className="max-w-md">
           <div className="text-center">
             <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
@@ -141,7 +141,7 @@ export function Dashboard({
   }
 
   return (
-    <div className="h-full flex flex-col overflow-hidden bg-linear-to-br from-gray-900 via-primary-900 to-gray-900 text-white">
+    <div className="h-full flex flex-col overflow-hidden bg-gradient-to-br from-gray-900 via-primary-900 to-gray-900 text-white">
       {/* Fixed Header Section */}
       <div className="shrink-0 p-8 pb-0">
         {/* Legal Disclaimer Banner */}
@@ -273,7 +273,7 @@ export function Dashboard({
               size="lg"
               icon={<MessageSquare />}
               iconPosition="left"
-              className="bg-linear-to-br from-green-500 to-green-600 hover:from-green-400 hover:to-green-500"
+              className="bg-gradient-to-br from-green-500 to-green-600 hover:from-green-400 hover:to-green-500"
             >
               Start Chat
             </Button>

@@ -513,7 +513,7 @@ Based on your dismissal letter, here are some general steps many people take whe
   }, [messages.length, activeCaseId, clearStreamingMessages]);
 
   return (
-    <div className="flex flex-col h-full bg-linear-to-br from-gray-900 via-primary-900 to-gray-900 text-white">
+    <div className="flex flex-col h-full bg-gradient-to-br from-gray-900 via-primary-900 to-gray-900 text-white">
       {/* Header */}
       <div className="sticky top-0 z-30 bg-gray-900/80 backdrop-blur-md border-b border-white/10">
         <div className="p-6">
@@ -789,7 +789,7 @@ Based on your dismissal letter, here are some general steps many people take whe
                       <div className="prose prose-invert max-w-none text-white/90">
                         <ReactMarkdown>{currentStreamingMessage}</ReactMarkdown>
                         <motion.span
-                          className="inline-block w-[2px] h-5 ml-1 bg-linear-to-b from-cyan-400 to-blue-500 rounded-full"
+                          className="inline-block w-[2px] h-5 ml-1 bg-gradient-to-b from-cyan-400 to-blue-500 rounded-full"
                           animate={{
                             opacity: [1, 0.3, 1],
                           }}

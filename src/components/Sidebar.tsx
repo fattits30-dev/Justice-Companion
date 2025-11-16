@@ -514,7 +514,7 @@ const SidebarComponent = React.memo(function Sidebar({
           {isCollapsed ? (
             /* Collapsed: Circle Badge with Initials */
             (<button
-              className="relative flex items-center justify-center w-10 h-10 mx-auto bg-linear-to-br from-secondary-500 to-secondary-600 rounded-full text-white font-semibold text-sm hover:from-secondary-400 hover:to-secondary-500 transition-all duration-200 shadow-lg hover:shadow-secondary"
+              className="relative flex items-center justify-center w-10 h-10 mx-auto bg-gradient-to-br from-secondary-500 to-secondary-600 rounded-full text-white font-semibold text-sm hover:from-secondary-400 hover:to-secondary-500 transition-all duration-200 shadow-lg hover:shadow-secondary"
               onClick={() => onNavigate?.("/settings")}
               aria-label={`${user.username} - View profile settings`}
               title={`${user.username}\n${user.email}\nClick for settings`}
@@ -531,7 +531,7 @@ const SidebarComponent = React.memo(function Sidebar({
                 aria-label="Open profile manager"
               >
                 <div className="relative shrink-0">
-                  <div className="flex items-center justify-center w-10 h-10 bg-linear-to-br from-secondary-500 to-secondary-600 rounded-full text-white font-semibold text-sm shadow-lg">
+                  <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-secondary-500 to-secondary-600 rounded-full text-white font-semibold text-sm shadow-lg">
                     {user.username.substring(0, 2).toUpperCase()}
                   </div>
                   <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-gray-900 rounded-full"></span>

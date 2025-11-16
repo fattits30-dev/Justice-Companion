@@ -226,7 +226,7 @@ export function ProfileViewMigrated() {
   }
 
   return (
-    <div className="h-full overflow-y-auto bg-linear-to-br from-gray-900 via-primary-900 to-gray-900">
+    <div className="h-full overflow-y-auto bg-gradient-to-br from-gray-900 via-primary-900 to-gray-900">
       <div className="max-w-4xl mx-auto px-8 py-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -278,7 +278,7 @@ export function ProfileViewMigrated() {
 
         {/* Profile Completeness Card */}
         {completeness && completeness.percentage < 100 && (
-          <Card className="bg-linear-to-br from-purple-900/30 to-pink-900/30 border-purple-500/20">
+          <Card className="bg-gradient-to-br from-purple-900/30 to-pink-900/30 border-purple-500/20">
             <div className="p-6">
               <h3 className="text-lg font-semibold text-white mb-3">
                 Complete Your Profile
@@ -424,7 +424,7 @@ export function ProfileViewMigrated() {
                 className={`
                   ${
                     hasChanges
-                      ? "bg-linear-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                      ? "bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
                       : "bg-white/10 cursor-not-allowed"
                   } text-white transition-all
                 `}
@@ -612,7 +612,7 @@ export function ProfileViewMigrated() {
                   !newPassword ||
                   !confirmPassword
                 }
-                className="flex-1 bg-linear-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
+                className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
               >
                 {passwordChanging ? (
                   <>

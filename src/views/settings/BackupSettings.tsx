@@ -379,7 +379,7 @@ export function BackupSettingsTab() {
               loading={isCreating}
               variant="primary"
               icon={<RefreshCw />}
-              className="bg-linear-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
             >
               {isCreating ? "Creating Backup..." : "Create Backup Now"}
             </Button>
@@ -428,7 +428,7 @@ export function BackupSettingsTab() {
                 className="sr-only peer"
                 aria-label="Enable automatic backups"
               />
-              <div className="w-11 h-6 bg-white/20 peer-focus:outline-hidden peer-focus:ring-4 peer-focus:ring-purple-500/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-linear-to-r peer-checked:from-purple-500 peer-checked:to-pink-500"></div>
+              <div className="w-11 h-6 bg-white/20 peer-focus:outline-hidden peer-focus:ring-4 peer-focus:ring-purple-500/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-purple-500 peer-checked:to-pink-500"></div>
             </label>
           </div>
 
@@ -522,7 +522,7 @@ export function BackupSettingsTab() {
                   <Button
                     onClick={handleSaveAutoBackup}
                     variant="primary"
-                    className="bg-linear-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                    className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
                   >
                     <CheckCircle2 className="w-4 h-4" />
                     Save Settings

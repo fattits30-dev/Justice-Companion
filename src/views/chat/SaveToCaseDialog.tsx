@@ -132,7 +132,7 @@ export function SaveToCaseDialog({
           className="relative bg-gray-900 border border-white/10 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden"
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-linear-to-r from-primary-900/50 to-secondary-900/50">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-gradient-to-r from-primary-900/50 to-secondary-900/50">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-primary-500/20 rounded-lg">
                 <Save className="w-5 h-5 text-primary-400" />
