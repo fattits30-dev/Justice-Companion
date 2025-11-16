@@ -36,7 +36,7 @@ import {
   buildDocumentDraftPrompt,
 } from "../core/ai/prompts/analysis-prompts.ts";
 import { getToolsForProvider } from "./AIToolDefinitions.ts";
-import { logger } from '../utils/logger';
+import { logger } from "../utils/logger";
 
 export class UnifiedAIService {
   private config: AIProviderConfig;
@@ -376,7 +376,7 @@ export class UnifiedAIService {
     const stream = await client.chat.completions.create(requestParams);
 
     for await (const chunk of stream as any) {
-      const delta = chunk.choices[0]?.delta;
+      const delta = chunk.choices?.[0]?.delta;
 
       // Handle regular content tokens
       const token = delta?.content || "";
@@ -411,7 +411,7 @@ export class UnifiedAIService {
 
       // Check if we have complete function calls to execute
       if (
-        chunk.choices[0]?.finish_reason === "tool_calls" &&
+        chunk.choices?.[0]?.finish_reason === "tool_calls" &&
         functionCalls.length > 0
       ) {
         // Execute function calls
@@ -652,7 +652,7 @@ export class UnifiedAIService {
       let result = message.content || "";
 
       for (const toolCall of message.tool_calls) {
-        if (toolCall.function) {
+        if (toolCall.type === 'function' && toolCall.function) {
           try {
             const args = JSON.parse(toolCall.function.arguments);
             const tool = tools?.find(
@@ -847,18 +847,20 @@ IMPORTANT CONTEXT:
 - USER'S REGISTERED NAME: ${userProfile.name || "Not provided"}
 - This app is personalized for ${userProfile.name || "this user"}
 
-VERIFICATION STEP (CRITICAL):
+VERIFICATION STEP (LENIENT):
 - Extract any claimant/applicant name mentioned in the document
 - Compare it to the user's registered name: ${userProfile.name || "Not provided"}
-- If the document mentions a DIFFERENT person's name as the claimant:
+- IMPORTANT: Normalize both names (lowercase, remove extra spaces) before comparing
+- ONLY flag as mismatch if the names are CLEARLY DIFFERENT (e.g., "John Smith" vs "Jane Doe")
+- Minor variations are OK: "Test User", "test user", "TEST USER" all match
+- If the document mentions a CLEARLY DIFFERENT person's name as the claimant:
   * Flag this as "documentOwnershipMismatch": true
   * Include "documentClaimantName": "[name from document]"
   * Warn the user that this appears to be someone else's document
-  * Explain they should download the app for personalized assistance
-- If names match or no claimant name in document → proceed normally
+- If names match (even with case/spacing variations) or no claimant name in document → proceed normally
 
 TASK 1: Provide a conversational analysis (talk DIRECTLY to ${userProfile.name || "the user"})
-- FIRST: If this document is for someone else, START with a clear warning:
+- ONLY show this warning if there's a CLEAR name mismatch (completely different person):
   "⚠️ IMPORTANT: This document appears to be for [NAME], not you. I'm designed to assist YOU (${userProfile.name || "the registered user"}) with your personalized legal matters.
   I can provide general information, but for best results, [NAME] should download Justice Companion for their own secure, personalized assistance."
 - What type of document is this?
