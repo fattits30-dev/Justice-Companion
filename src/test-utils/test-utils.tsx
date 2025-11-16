@@ -56,8 +56,8 @@ function AllTheProviders({
  * @returns RTL render result
  */
 const customRender = (
-  ui: ReactElement,
-  options?: Omit<RenderOptions, "wrapper">
+  ui: ReactElement<any>,
+  options?: Omit<RenderOptions, "wrapper">,
 ) => render(ui, { wrapper: AllTheProviders, ...options });
 
 // Re-export specific items from React Testing Library (excluding render to avoid conflict)
@@ -105,7 +105,7 @@ export { customRender as render };
  * });
  */
 export function createMockJusticeAPI(
-  overrides: Partial<JusticeCompanionAPI> = {}
+  overrides: Partial<JusticeCompanionAPI> = {},
 ): JusticeCompanionAPI {
   const baseApi: Partial<JusticeCompanionAPI> = {
     // Case operations
@@ -129,12 +129,10 @@ export function createMockJusticeAPI(
     checkAIStatus: vi
       .fn()
       .mockResolvedValue({ success: true, connected: true }),
-    aiChat: vi
-      .fn()
-      .mockResolvedValue({
-        success: true,
-        message: { role: "assistant", content: "Test response" },
-      }),
+    aiChat: vi.fn().mockResolvedValue({
+      success: true,
+      message: { role: "assistant", content: "Test response" },
+    }),
 
     // Override with custom implementations
   };
@@ -157,7 +155,7 @@ export function createMockJusticeAPI(
  */
 export async function waitForCondition(
   callback: () => boolean,
-  timeout = 3000
+  timeout = 3000,
 ): Promise<void> {
   const startTime = Date.now();
   while (!callback()) {
@@ -179,7 +177,7 @@ export async function waitForCondition(
 export function createMockFile(
   name: string,
   content: string,
-  type: string
+  type: string,
 ): File {
   const blob = new Blob([content], { type });
   return new File([blob], name, { type });
