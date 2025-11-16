@@ -41,7 +41,7 @@ export default defineConfig({
   plugins: [
     react(),
     nodePolyfills({
-      include: ['process', 'buffer', 'util', 'stream', 'events', 'path', 'crypto', 'os'],
+      include: ['process', 'buffer', 'util', 'stream', 'events', 'path', 'crypto', 'os', 'timers'],
       globals: {
         process: true,
         Buffer: true,
@@ -60,13 +60,10 @@ export default defineConfig({
     setupFiles: ['./src/test/setup.ts'],
 
     // Run repository tests sequentially to avoid database singleton conflicts
-    // Other tests can still run in parallel for speed
+    // Vitest 4: Use maxWorkers instead of poolOptions.forks.singleFork
     pool: 'forks',
-    poolOptions: {
-      forks: {
-        singleFork: true, // Run all tests in single fork (sequential)
-      },
-    },
+    maxWorkers: 1,
+    isolate: false, // Run all tests in single fork (sequential)
 
     exclude: [
       '**/node_modules/**',
