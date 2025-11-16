@@ -216,7 +216,7 @@ export class ValidationMiddleware {
     if (process.env.NODE_ENV === "development") {
       logger.warn(
         "ValidationMiddleware",
-        "Registered ${this.schemas.size} validation schemas",
+        `Registered ${this.schemas.size} validation schemas`,
       );
     }
   }
@@ -266,8 +266,8 @@ export class ValidationMiddleware {
         if ("expected" in err && "received" in err) {
           message = `Expected ${String(err.expected)}, received ${String(err.received)}`;
         }
-      } else if (err.code === "invalid_enum_value") {
-        // Zod enum validation error
+      } else if (err.code === "invalid_value") {
+        // Zod 4 enum validation error (replaces invalid_enum_value from Zod 3)
         message = "Please select a valid option";
       }
 
