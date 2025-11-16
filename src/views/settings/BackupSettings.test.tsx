@@ -79,7 +79,7 @@ beforeEach(() => {
   Reflect.set(
     globalThis.window,
     "confirm",
-    vi.fn(() => true)
+    vi.fn(() => true),
   );
 
   // Mock window.location.reload
@@ -181,7 +181,7 @@ describe("BackupSettingsTab", () => {
       expect(screen.getByLabelText("Backup frequency")).toBeInTheDocument();
       expect(screen.getByLabelText("Backup time")).toBeInTheDocument();
       expect(
-        screen.getByLabelText("Number of backups to keep")
+        screen.getByLabelText("Number of backups to keep"),
       ).toBeInTheDocument();
     });
   });
@@ -192,7 +192,7 @@ describe("BackupSettingsTab", () => {
     // Wait for mock backups to load
     await waitFor(() => {
       expect(
-        screen.getByText(/backup_2025-10-25_15-30.db/i)
+        screen.getByText(/backup_2025-10-25_15-30.db/i),
       ).toBeInTheDocument();
     });
   });
@@ -310,7 +310,7 @@ describe("BackupSettingsTab", () => {
     // Wait for component to load
     await waitFor(() => {
       expect(
-        screen.getByLabelText("Enable automatic backups")
+        screen.getByLabelText("Enable automatic backups"),
       ).toBeInTheDocument();
     });
 
@@ -345,7 +345,7 @@ describe("BackupSettingsTab", () => {
     // Wait for the create button to be available
     await waitFor(() => {
       expect(
-        screen.getByRole("button", { name: /create backup now/i })
+        screen.getByRole("button", { name: /create backup now/i }),
       ).toBeInTheDocument();
     });
 
@@ -363,7 +363,7 @@ describe("BackupSettingsTab", () => {
         // The "Create Backup Now" text should not be visible (replaced by spinner)
         expect(screen.queryByText("Create Backup Now")).not.toBeInTheDocument();
       },
-      { timeout: 100 }
+      { timeout: 100 },
     );
   });
 
@@ -399,7 +399,7 @@ describe("BackupSettings - Accessibility", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByLabelText("Enable automatic backups")
+        screen.getByLabelText("Enable automatic backups"),
       ).toBeInTheDocument();
     });
   });

@@ -38,10 +38,10 @@ export function DocumentsToolbar({
             const value = event.target.value;
             onCaseSelect(value ? Number(value) : null);
           }}
-          className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all [&>option]:text-gray-900 [&>option]:bg-white"
+          className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-hidden focus:ring-2 focus:ring-primary-500 transition-all [&>option]:text-gray-900 [&>option]:bg-white"
         >
           <option value="" className="text-gray-900 bg-white">
-            Select a case
+            All Cases
           </option>
           {cases.map((caseItem) => (
             <option
@@ -59,7 +59,7 @@ export function DocumentsToolbar({
           onChange={(event) =>
             onFilterChange(event.target.value as EvidenceType | "all")
           }
-          className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all [&>option]:text-gray-900 [&>option]:bg-white"
+          className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-hidden focus:ring-2 focus:ring-primary-500 transition-all [&>option]:text-gray-900 [&>option]:bg-white"
         >
           {evidenceFilterOptions.map((option) => (
             <option

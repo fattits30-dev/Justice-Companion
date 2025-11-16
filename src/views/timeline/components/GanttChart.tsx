@@ -4,7 +4,7 @@ import { ZoomIn, ZoomOut, FileImage, FileText } from "lucide-react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import type { DeadlineWithDependencies } from "../../../domains/timeline/entities/DeadlineDependency.ts";
-import { logger } from '../../../utils/logger';
+import { logger } from "../../../utils/logger";
 
 interface GanttChartProps {
   deadlines: DeadlineWithDependencies[];
@@ -229,7 +229,7 @@ export function GanttChart({
         <div ref={chartRef} className="min-w-max p-4">
           {/* Header Row */}
           <div className="flex sticky top-0 z-10 bg-gray-900">
-            <div className="w-[250px] flex-shrink-0 pr-4">
+            <div className="w-[250px] shrink-0 pr-4">
               <div className="h-[80px] flex items-center font-semibold text-white border-b border-white/10">
                 Deadline
               </div>
@@ -284,7 +284,7 @@ export function GanttChart({
               return (
                 <div key={deadline.id} className="flex border-b border-white/5">
                   {/* Label Column */}
-                  <div className="w-[250px] flex-shrink-0 pr-4">
+                  <div className="w-[250px] shrink-0 pr-4">
                     <div className="h-[60px] flex flex-col justify-center">
                       <div className="font-medium text-white text-sm truncate">
                         {deadline.title}

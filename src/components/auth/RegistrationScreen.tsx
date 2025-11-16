@@ -1,11 +1,11 @@
 /**
  * RegistrationScreen Component
  *
- * Built with TDD - All tests written FIRST
+ * Migrated to HTTP REST API - Replaces Electron IPC with FastAPI backend
  *
  * Features:
  * - Form validation (username, email, password strength, password match, terms)
- * - IPC communication with main process
+ * - HTTP REST API communication
  * - Loading states
  * - Error handling
  * - Password visibility toggles (2 independent)
@@ -13,7 +13,13 @@
  */
 
 import { useState, FormEvent } from "react";
+import { apiClient } from "../../lib/apiClient.ts";
 import type { User } from "../../domains/auth/entities/User.ts";
+
+// Preserve state during HMR
+if (import.meta.hot) {
+  import.meta.hot.accept();
+}
 
 interface RegistrationScreenProps {
   onSuccess?: (data: { user: User }) => void;
@@ -25,7 +31,8 @@ export function RegistrationScreen({
   onLoginClick,
 }: RegistrationScreenProps) {
   // Form state
-  const [username, setUsername] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -37,7 +44,8 @@ export function RegistrationScreen({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [validationErrors, setValidationErrors] = useState<{
-    username?: string;
+    firstName?: string;
+    lastName?: string;
     email?: string;
     password?: string;
     confirmPassword?: string;
@@ -57,18 +65,26 @@ export function RegistrationScreen({
    */
   const validate = (): boolean => {
     const errors: {
-      username?: string;
+      firstName?: string;
+      lastName?: string;
       email?: string;
       password?: string;
       confirmPassword?: string;
       terms?: string;
     } = {};
 
-    // Username validation
-    if (!username.trim()) {
-      errors.username = "Username is required";
-    } else if (username.trim().length < 3) {
-      errors.username = "Username must be at least 3 characters";
+    // First name validation
+    if (!firstName.trim()) {
+      errors.firstName = "First name is required";
+    } else if (firstName.trim().length < 2) {
+      errors.firstName = "First name must be at least 2 characters";
+    }
+
+    // Last name validation
+    if (!lastName.trim()) {
+      errors.lastName = "Last name is required";
+    } else if (lastName.trim().length < 2) {
+      errors.lastName = "Last name must be at least 2 characters";
     }
 
     // Email validation
@@ -115,26 +131,21 @@ export function RegistrationScreen({
     setIsLoading(true);
 
     try {
-      // Call IPC handler
-      const response = await window.justiceAPI.register(
-        username,
-        email,
-        password,
-      );
+      // Combine first and last name into username
+      const fullName = `${firstName.trim()} ${lastName.trim()}`;
+
+      // Call HTTP API
+      const response = await apiClient.auth.register(fullName, email, password);
 
       if (!response.success) {
-        // Handle error as string or object with message property
-        const errorMessage =
-          typeof response.error === "string"
-            ? response.error
-            : response.error?.message || "Registration failed";
-        setError(errorMessage);
+        setError("Registration failed");
         return;
       }
 
       if (response.data) {
         // Clear form on success
-        setUsername("");
+        setFirstName("");
+        setLastName("");
         setEmail("");
         setPassword("");
         setConfirmPassword("");
@@ -142,7 +153,23 @@ export function RegistrationScreen({
 
         // Call success callback
         if (onSuccess) {
-          onSuccess({ user: response.data });
+          // Map API response to User type
+          onSuccess({
+            user: {
+              id: response.data.user.id,
+              username: response.data.user.username,
+              email: response.data.user.email,
+              passwordHash: "", // Not exposed by API
+              passwordSalt: "", // Not exposed by API
+              role: (response.data.user.role === "admin" ? "admin" : "user") as
+                | "user"
+                | "admin",
+              isActive: response.data.user.is_active,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+              lastLoginAt: null,
+            },
+          });
         }
       }
     } catch (err) {
@@ -172,26 +199,50 @@ export function RegistrationScreen({
             </div>
           )}
 
-          {/* Username field */}
+          {/* First Name field */}
           <div>
             <label
-              htmlFor="username"
+              htmlFor="firstName"
               className="block text-sm font-medium text-white mb-1"
             >
-              Username
+              First Name
             </label>
             <input
-              id="username"
+              id="firstName"
               type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
               disabled={isLoading}
-              className="w-full px-3 py-2 bg-primary-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
-              placeholder="Enter your username"
+              className="w-full px-3 py-2 bg-primary-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-hidden focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+              placeholder="Enter your first name"
             />
-            {validationErrors.username && (
+            {validationErrors.firstName && (
               <p className="mt-1 text-sm text-red-400">
-                {validationErrors.username}
+                {validationErrors.firstName}
+              </p>
+            )}
+          </div>
+
+          {/* Last Name field */}
+          <div>
+            <label
+              htmlFor="lastName"
+              className="block text-sm font-medium text-white mb-1"
+            >
+              Last Name
+            </label>
+            <input
+              id="lastName"
+              type="text"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              disabled={isLoading}
+              className="w-full px-3 py-2 bg-primary-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-hidden focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+              placeholder="Enter your last name"
+            />
+            {validationErrors.lastName && (
+              <p className="mt-1 text-sm text-red-400">
+                {validationErrors.lastName}
               </p>
             )}
           </div>
@@ -210,7 +261,7 @@ export function RegistrationScreen({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={isLoading}
-              className="w-full px-3 py-2 bg-primary-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full px-3 py-2 bg-primary-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-hidden focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
               placeholder="Enter your email"
             />
             {validationErrors.email && (
@@ -235,7 +286,7 @@ export function RegistrationScreen({
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isLoading}
-                className="w-full px-3 py-2 bg-primary-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed pr-10"
+                className="w-full px-3 py-2 bg-primary-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-hidden focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed pr-10"
                 placeholder="Enter your password"
               />
               <button
@@ -303,7 +354,7 @@ export function RegistrationScreen({
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 disabled={isLoading}
-                className="w-full px-3 py-2 bg-primary-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed pr-10"
+                className="w-full px-3 py-2 bg-primary-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-hidden focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed pr-10"
                 placeholder="Confirm your password"
               />
               <button
@@ -382,7 +433,7 @@ export function RegistrationScreen({
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full px-4 py-2 text-sm font-medium text-white bg-secondary-600 rounded-md hover:bg-secondary-700 focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:ring-offset-2 focus:ring-offset-primary-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="w-full px-4 py-2 text-sm font-medium text-white bg-secondary-600 rounded-md hover:bg-secondary-700 focus:outline-hidden focus:ring-2 focus:ring-secondary-500 focus:ring-offset-2 focus:ring-offset-primary-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {isLoading ? "Creating account..." : "Sign Up"}
           </button>

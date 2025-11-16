@@ -79,7 +79,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     // Variant styles
     const variantStyles = {
       primary: clsx(
-        "bg-gradient-to-br from-primary-500 to-primary-600",
+        "bg-linear-to-br from-primary-500 to-primary-600",
         "text-white shadow-primary",
         "hover:shadow-primary-lg hover:from-primary-400 hover:to-primary-500",
         "active:from-primary-600 active:to-primary-700",
@@ -88,7 +88,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         "disabled:border-gray-700 disabled:cursor-not-allowed disabled:opacity-50",
       ),
       secondary: clsx(
-        "bg-gradient-to-br from-secondary-500 to-secondary-600",
+        "bg-linear-to-br from-secondary-500 to-secondary-600",
         "text-white shadow-secondary",
         "hover:shadow-secondary-lg hover:from-secondary-400 hover:to-secondary-500",
         "active:from-secondary-600 active:to-secondary-700",
@@ -105,7 +105,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         "disabled:bg-transparent disabled:cursor-not-allowed disabled:opacity-50",
       ),
       danger: clsx(
-        "bg-gradient-to-br from-red-500 to-red-600",
+        "bg-linear-to-br from-red-500 to-red-600",
         "text-white shadow-red",
         "hover:shadow-red-lg hover:from-red-400 hover:to-red-500",
         "active:from-red-600 active:to-red-700",
@@ -128,7 +128,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         type="button"
         disabled={disabled || loading}
         className={clsx(
-          "relative overflow-hidden rounded-lg font-medium transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900",
+          "relative overflow-hidden rounded-lg font-medium transition-all duration-200 ease-in-out focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900",
           variantStyles[variant],
           sizeStyles[size],
           fullWidth && "w-full",

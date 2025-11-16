@@ -144,7 +144,7 @@ export function AICaseCreationDialog({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
       <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl max-w-4xl w-full mx-4 max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="p-6 border-b border-gray-700 flex-shrink-0">
+        <div className="p-6 border-b border-gray-700 shrink-0">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold text-white">
@@ -158,7 +158,7 @@ export function AICaseCreationDialog({
             </div>
             <button
               onClick={onClose}
-              className="text-white/50 hover:text-white p-2 flex-shrink-0"
+              className="text-white/50 hover:text-white p-2 shrink-0"
               disabled={isCreating}
             >
               <svg
@@ -183,7 +183,7 @@ export function AICaseCreationDialog({
           {/* AI Transparency Notice */}
           <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
             <div className="flex items-start gap-3">
-              <AlertTriangle className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" />
+              <AlertTriangle className="w-5 h-5 text-blue-400 mt-0.5 shrink-0" />
               <div>
                 <h3 className="text-blue-200 font-medium mb-2">
                   AI Analysis Transparency
@@ -230,7 +230,7 @@ export function AICaseCreationDialog({
                 onChange={(e) =>
                   setEditedData((prev) => ({ ...prev, title: e.target.value }))
                 }
-                className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-hidden focus:ring-2 focus:ring-primary-500"
                 placeholder="Enter case title"
               />
               {showSources && suggestedData.extractedFrom?.title && (
@@ -266,7 +266,7 @@ export function AICaseCreationDialog({
                     caseType: e.target.value,
                   }))
                 }
-                className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-hidden focus:ring-2 focus:ring-primary-500"
               >
                 <option value="employment">Employment</option>
                 <option value="housing">Housing</option>
@@ -298,7 +298,7 @@ export function AICaseCreationDialog({
                   }))
                 }
                 rows={3}
-                className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
+                className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-hidden focus:ring-2 focus:ring-primary-500 resize-none"
                 placeholder="Brief description of the case"
               />
               {showSources && suggestedData.extractedFrom?.description && (
@@ -341,7 +341,7 @@ export function AICaseCreationDialog({
                       opposingParty: e.target.value,
                     }))
                   }
-                  className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-hidden focus:ring-2 focus:ring-primary-500"
                   placeholder="Name of opposing party"
                 />
                 {showSources && suggestedData.extractedFrom?.opposingParty && (
@@ -376,7 +376,7 @@ export function AICaseCreationDialog({
                       caseNumber: e.target.value,
                     }))
                   }
-                  className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-hidden focus:ring-2 focus:ring-primary-500"
                   placeholder="Case reference number"
                 />
                 {showSources && suggestedData.extractedFrom?.caseNumber && (
@@ -411,7 +411,7 @@ export function AICaseCreationDialog({
                       courtName: e.target.value,
                     }))
                   }
-                  className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-hidden focus:ring-2 focus:ring-primary-500"
                   placeholder="Court or tribunal name"
                 />
                 {showSources && suggestedData.extractedFrom?.courtName && (
@@ -448,7 +448,7 @@ export function AICaseCreationDialog({
                       filingDeadline: e.target.value,
                     }))
                   }
-                  className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-hidden focus:ring-2 focus:ring-primary-500"
                 />
                 {showSources && suggestedData.extractedFrom?.filingDeadline && (
                   <div className="mt-2 p-2 bg-gray-800/50 rounded border border-gray-600">
@@ -484,7 +484,7 @@ export function AICaseCreationDialog({
                       nextHearingDate: e.target.value,
                     }))
                   }
-                  className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-hidden focus:ring-2 focus:ring-primary-500"
                 />
                 {showSources &&
                   suggestedData.extractedFrom?.nextHearingDate && (

@@ -1,4 +1,4 @@
-import { logger } from '../../utils/logger';
+import { logger } from "../../utils/logger";
 
 /**
  * MainLayout - Main app layout with Sidebar + content area + Command Palette
@@ -38,6 +38,11 @@ export function MainLayout() {
   >([]);
   const [selectedCaseId, setSelectedCaseId] = useState<string | null>(() => {
     return localStorage.getItem("activeCaseId");
+  });
+  const [itemCounts, setItemCounts] = useState({
+    cases: 0,
+    documents: 0,
+    chat: 0,
   });
 
   const handleNavigate = (route: string) => {
@@ -84,13 +89,47 @@ export function MainLayout() {
           );
         }
       } catch (error) {
-        logger.error("[MainLayout] Failed to fetch cases:", error);
+        logger.error("Failed to fetch cases:", {
+          error: error as Error,
+          service: "MainLayout",
+        });
       }
     };
 
     fetchCases();
     // Refetch cases every 30 seconds to stay in sync
     const interval = setInterval(fetchCases, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Fetch item counts from dashboard stats
+  useEffect(() => {
+    const fetchCounts = async () => {
+      try {
+        const sessionId = localStorage.getItem("sessionId");
+        if (!sessionId) {
+          return;
+        }
+
+        const result = await window.justiceAPI.getDashboardStats(sessionId);
+        if (result.success && result.data) {
+          setItemCounts({
+            cases: result.data.activeCases || 0,
+            documents: result.data.totalEvidence || 0,
+            chat: 0, // Will be implemented when we add chat conversation tracking
+          });
+        }
+      } catch (error) {
+        logger.error("Failed to fetch counts:", {
+          error: error as Error,
+          service: "MainLayout",
+        });
+      }
+    };
+
+    fetchCounts();
+    // Refetch counts every 30 seconds to stay in sync
+    const interval = setInterval(fetchCounts, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -181,11 +220,7 @@ export function MainLayout() {
         onNavigate={handleNavigate}
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={handleToggleCollapse}
-        notifications={{
-          cases: 0,
-          documents: 0,
-          chat: 0,
-        }}
+        notifications={itemCounts}
         cases={cases}
         selectedCaseId={selectedCaseId}
         onCaseSelect={handleCaseSelect}

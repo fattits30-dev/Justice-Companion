@@ -8,17 +8,18 @@ import { useAuth } from "../../contexts/AuthContext.tsx";
 import { DocumentsToolbar } from "./components/DocumentsToolbar.tsx";
 import {
   DocumentsEmptyEvidenceState,
-  DocumentsErrorState,
   DocumentsFilteredEmptyState,
   DocumentsLoadingState,
   DocumentsNoCasesState,
 } from "./components/DocumentsStates.tsx";
 import { EvidenceList } from "./components/EvidenceList.tsx";
+import { EvidenceSummaryCards } from "./components/EvidenceSummaryCards.tsx";
 import {
   UploadEvidenceDialog,
   type UploadEvidenceInput,
 } from "./components/UploadEvidenceDialog.tsx";
 import { showSuccess, showError } from "../../components/ui/Toast.tsx";
+import { apiClient } from "../../lib/apiClient.ts";
 
 type LoadState = "idle" | "loading" | "error" | "ready";
 
@@ -51,17 +52,25 @@ export function DocumentsView() {
     try {
       setCasesState("loading");
       setCasesError(null);
-      const response = await window.justiceAPI.getAllCases(sessionId);
+
+      // Use HTTP API client instead of Electron IPC
+      const response = await apiClient.cases.list();
 
       if (!response.success) {
         throw new Error(response.error?.message || "Failed to load cases");
       }
 
       if (!response.data) {
-        throw new Error("No data returned from getAllCases");
+        throw new Error("No data returned from cases.list");
       }
 
-      const mappedCases = (response.data as Case[]).map((caseItem) => ({
+      // Handle both paginated and direct array responses
+      const casesArray =
+        "items" in response.data
+          ? response.data.items
+          : (response.data as Case[]);
+
+      const mappedCases = casesArray.map((caseItem) => ({
         id: caseItem.id,
         title: caseItem.title,
       }));
@@ -93,17 +102,16 @@ export function DocumentsView() {
       try {
         setEvidenceState("loading");
         setEvidenceError(null);
-        const response = await window.justiceAPI.getAllEvidence(
-          caseId.toString(),
-          sessionId,
-        );
+
+        // Use HTTP API client instead of Electron IPC
+        const response = await apiClient.evidence.listByCase(caseId);
 
         if (!response.success) {
           throw new Error(response.error?.message || "Failed to load evidence");
         }
 
         if (!response.data) {
-          throw new Error("No data returned from getAllEvidence");
+          throw new Error("No data returned from evidence.listByCase");
         }
 
         setEvidence(response.data);
@@ -139,23 +147,42 @@ export function DocumentsView() {
         if (selectedCaseId === null) {
           throw new Error("No case selected");
         }
-        const response = await window.justiceAPI.uploadFile(
-          selectedCaseId.toString(),
-          input.file,
-          sessionId,
+
+        // Create FormData for file upload (multipart/form-data)
+        const formData = new FormData();
+        formData.append("case_id", selectedCaseId.toString());
+        formData.append("title", input.file.name);
+        formData.append("evidence_type", "document");
+        formData.append("file", input.file);
+        formData.append("parse_document", "true");
+        formData.append("extract_citations", "true");
+
+        // Get session ID from localStorage for Authorization header
+        const sessionId = localStorage.getItem("sessionId");
+
+        // Upload file to HTTP API
+        const response = await fetch(
+          `${import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000"}/evidence/upload`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${sessionId}`,
+            },
+            body: formData,
+          },
         );
 
-        if (!response.success) {
-          throw new Error(
-            response.error?.message || "Failed to upload evidence",
-          );
+        if (!response.ok) {
+          const errorData = await response
+            .json()
+            .catch(() => ({ detail: "Upload failed" }));
+          throw new Error(errorData.detail || "Failed to upload evidence");
         }
 
-        if (!response.data) {
-          throw new Error("No data returned from uploadFile");
-        }
+        const data = await response.json();
+        const uploadedEvidence = data.evidence as Evidence;
 
-        setEvidence((previous) => [response.data as Evidence, ...previous]);
+        setEvidence((previous) => [uploadedEvidence, ...previous]);
         setShowUploadDialog(false);
         showSuccess(`${input.file.name} has been added to evidence`, {
           title: "Evidence uploaded",
@@ -169,41 +196,44 @@ export function DocumentsView() {
     [selectedCaseId, sessionId],
   );
 
-  const handleDeleteEvidence = useCallback(async (evidenceId: number) => {
-    if (!sessionId) {
-      showError("No active session", { title: "Failed to delete evidence" });
-      return;
-    }
-
-    const confirmed = confirm(
-      "Are you sure you want to delete this evidence? This cannot be undone.",
-    );
-    if (!confirmed) {
-      return;
-    }
-
-    try {
-      const response = await window.justiceAPI.deleteEvidence(
-        evidenceId.toString(),
-        sessionId,
-      );
-
-      if (!response.success) {
-        throw new Error(response.error?.message || "Failed to delete evidence");
+  const handleDeleteEvidence = useCallback(
+    async (evidenceId: number) => {
+      if (!sessionId) {
+        showError("No active session", { title: "Failed to delete evidence" });
+        return;
       }
 
-      setEvidence((previous) =>
-        previous.filter((item) => item.id !== evidenceId),
+      const confirmed = confirm(
+        "Are you sure you want to delete this evidence? This cannot be undone.",
       );
-      showSuccess("The evidence has been permanently removed", {
-        title: "Evidence deleted",
-      });
-    } catch (err) {
-      showError(err instanceof Error ? err.message : "Unknown error", {
-        title: "Failed to delete evidence",
-      });
-    }
-  }, []);
+      if (!confirmed) {
+        return;
+      }
+
+      try {
+        // Use HTTP API client instead of Electron IPC
+        const response = await apiClient.evidence.delete(evidenceId);
+
+        if (!response.success) {
+          throw new Error(
+            response.error?.message || "Failed to delete evidence",
+          );
+        }
+
+        setEvidence((previous) =>
+          previous.filter((item) => item.id !== evidenceId),
+        );
+        showSuccess("The evidence has been permanently removed", {
+          title: "Evidence deleted",
+        });
+      } catch (err) {
+        showError(err instanceof Error ? err.message : "Unknown error", {
+          title: "Failed to delete evidence",
+        });
+      }
+    },
+    [sessionId],
+  );
 
   const filteredEvidence = useMemo(() => {
     if (filterType === "all") {
@@ -212,41 +242,77 @@ export function DocumentsView() {
     return evidence.filter((item) => item.evidenceType === filterType);
   }, [evidence, filterType]);
 
-  if (casesState === "loading") {
-    return <DocumentsLoadingState />;
-  }
-
-  if (casesState === "error" && casesError) {
-    return <DocumentsErrorState message={casesError} onRetry={loadCases} />;
-  }
-
-  if (cases.length === 0) {
-    return <DocumentsNoCasesState onReload={loadCases} />;
-  }
-
-  if (selectedCaseId === null) {
-    return <DocumentsNoCasesState onReload={loadCases} />;
-  }
-
-  if (evidenceState === "loading") {
-    return <DocumentsLoadingState />;
-  }
-
-  if (evidenceState === "error" && evidenceError) {
-    return (
-      <DocumentsErrorState
-        message={evidenceError}
-        onRetry={() => loadEvidence(selectedCaseId)}
-      />
-    );
-  }
-
   const showFilteredEmpty =
     evidence.length > 0 && filteredEvidence.length === 0;
   const showEmptyEvidence = evidence.length === 0;
+  const hasCases = cases.length > 0;
+
+  // Determine what content to show
+  let contentArea;
+
+  if (casesState === "loading") {
+    contentArea = <DocumentsLoadingState />;
+  } else if (casesState === "error" && casesError) {
+    contentArea = (
+      <div className="rounded-lg border border-red-500 bg-red-900/20 p-6 max-w-md mx-auto mt-16">
+        <h2 className="mb-2 text-xl font-bold text-red-400">
+          Error Loading Documents
+        </h2>
+        <p className="text-white">{casesError}</p>
+        <button
+          onClick={loadCases}
+          className="mt-4 rounded bg-red-600 px-4 py-2 font-medium text-white transition-colors hover:bg-red-700"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  } else if (!hasCases) {
+    contentArea = <DocumentsNoCasesState onReload={loadCases} />;
+  } else if (selectedCaseId === null) {
+    contentArea = <DocumentsNoCasesState onReload={loadCases} />;
+  } else if (evidenceState === "loading") {
+    contentArea = <DocumentsLoadingState />;
+  } else if (evidenceState === "error" && evidenceError) {
+    contentArea = (
+      <div className="rounded-lg border border-red-500 bg-red-900/20 p-6 max-w-md mx-auto mt-16">
+        <h2 className="mb-2 text-xl font-bold text-red-400">
+          Error Loading Evidence
+        </h2>
+        <p className="text-white">{evidenceError}</p>
+        <button
+          onClick={() => loadEvidence(selectedCaseId)}
+          className="mt-4 rounded bg-red-600 px-4 py-2 font-medium text-white transition-colors hover:bg-red-700"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  } else if (showEmptyEvidence) {
+    contentArea = (
+      <DocumentsEmptyEvidenceState onUpload={() => setShowUploadDialog(true)} />
+    );
+  } else {
+    contentArea = (
+      <>
+        {/* Summary Statistics Cards */}
+        <EvidenceSummaryCards evidence={evidence} />
+
+        {/* Evidence List or Filtered Empty State */}
+        {showFilteredEmpty ? (
+          <DocumentsFilteredEmptyState />
+        ) : (
+          <EvidenceList
+            evidence={filteredEvidence}
+            onDelete={handleDeleteEvidence}
+          />
+        )}
+      </>
+    );
+  }
 
   return (
-    <div className="h-full flex flex-col bg-gradient-to-br from-gray-900 via-primary-900 to-gray-900">
+    <div className="h-full flex flex-col bg-linear-to-br from-gray-900 via-primary-900 to-gray-900">
       {/* Sticky Header with Toolbar */}
       <div className="sticky top-0 z-30 bg-gray-900/80 backdrop-blur-md border-b border-white/10">
         <div className="px-8 py-6">
@@ -263,20 +329,7 @@ export function DocumentsView() {
       </div>
 
       {/* Scrollable Content Area */}
-      <div className="flex-1 overflow-y-auto px-8 py-8">
-        {showEmptyEvidence ? (
-          <DocumentsEmptyEvidenceState
-            onUpload={() => setShowUploadDialog(true)}
-          />
-        ) : showFilteredEmpty ? (
-          <DocumentsFilteredEmptyState />
-        ) : (
-          <EvidenceList
-            evidence={filteredEvidence}
-            onDelete={handleDeleteEvidence}
-          />
-        )}
-      </div>
+      <div className="flex-1 overflow-y-auto px-8 py-8">{contentArea}</div>
 
       {showUploadDialog && (
         <UploadEvidenceDialog

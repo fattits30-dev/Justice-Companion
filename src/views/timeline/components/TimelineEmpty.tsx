@@ -1,7 +1,7 @@
-import { Calendar, Plus } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { Button } from '../../../components/ui/Button.tsx';
-import { Card } from '../../../components/ui/Card.tsx';
+import { Calendar, Plus } from "lucide-react";
+import { motion } from "framer-motion";
+import { Button } from "../../../components/ui/Button.tsx";
+import { Card } from "../../../components/ui/Card.tsx";
 
 interface TimelineEmptyProps {
   onAddClick: () => void;
@@ -10,7 +10,11 @@ interface TimelineEmptyProps {
 export function TimelineEmpty({ onAddClick }: TimelineEmptyProps) {
   return (
     <div className="flex flex-col items-center justify-center min-h-[400px] p-8">
-      <Card variant="glass" className="max-w-md w-full p-8" data-variant="glass">
+      <Card
+        variant="glass"
+        className="max-w-md w-full p-8"
+        data-variant="glass"
+      >
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -21,7 +25,7 @@ export function TimelineEmpty({ onAddClick }: TimelineEmptyProps) {
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
+            transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
             className="p-4 rounded-full bg-primary-500/10 border border-primary-500/20"
           >
             <Calendar

@@ -1,6 +1,8 @@
 import { memo } from "react";
-import { Save, Plus, FileText } from "lucide-react";
+import { Save, Plus, FileText, Copy, Check } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { toast } from "sonner";
+import { useState } from "react";
 
 interface Message {
   id: string;
@@ -29,6 +31,20 @@ function MessageItemComponent({
   showThinking,
   style = {},
 }: MessageItemProps) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(message.content);
+      setCopied(true);
+      toast.success("Message copied to clipboard");
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      console.error("[MessageItem] Copy failed:", error);
+      toast.error("Failed to copy message");
+    }
+  };
+
   return (
     <div style={style}>
       <div
@@ -97,6 +113,19 @@ function MessageItemComponent({
               >
                 <Save className="w-4 h-4" />
                 Save to Case
+              </button>
+
+              <button
+                onClick={handleCopy}
+                className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors border border-white/10 hover:border-white/20"
+                type="button"
+              >
+                {copied ? (
+                  <Check className="w-4 h-4" />
+                ) : (
+                  <Copy className="w-4 h-4" />
+                )}
+                {copied ? "Copied!" : "Copy"}
               </button>
 
               {/* Create Case Button (shown when AI suggests case creation) */}

@@ -8,6 +8,7 @@ import { Button } from "../../components/ui/Button.tsx";
 import { TimelineItem } from "./components/TimelineItem.tsx";
 import { TimelineEmpty } from "./components/TimelineEmpty.tsx";
 import { AddDeadlineDialog } from "./components/AddDeadlineDialog.tsx";
+import { apiClient } from "../../lib/apiClient.ts";
 import type {
   DeadlineWithCase,
   CreateDeadlineInput,
@@ -47,9 +48,8 @@ export function TimelineView() {
     setError(null);
 
     try {
-      // Load deadlines
-      const deadlinesResult =
-        await globalThis.window.justiceAPI.getDeadlines(sessionId);
+      // Load deadlines using HTTP API client
+      const deadlinesResult = await apiClient.deadlines.list();
       if (!deadlinesResult.success) {
         const errorMsg =
           typeof deadlinesResult.error === "string"
@@ -58,9 +58,8 @@ export function TimelineView() {
         throw new Error(errorMsg);
       }
 
-      // Load cases
-      const casesResult =
-        await globalThis.window.justiceAPI.getAllCases(sessionId);
+      // Load cases using HTTP API client
+      const casesResult = await apiClient.cases.list();
       if (!casesResult.success) {
         const errorMsg =
           typeof casesResult.error === "string"
@@ -69,13 +68,21 @@ export function TimelineView() {
         throw new Error(errorMsg);
       }
 
-      const deadlinesData = deadlinesResult.data || [];
-      const casesData = casesResult.data || [];
+      // Handle paginated vs direct array responses
+      const deadlinesData =
+        deadlinesResult.data && "items" in deadlinesResult.data
+          ? deadlinesResult.data.items
+          : deadlinesResult.data || [];
+
+      const casesData =
+        casesResult.data && "items" in casesResult.data
+          ? casesResult.data.items
+          : casesResult.data || [];
 
       // Transform Deadline[] to DeadlineWithCase[] by joining with case data
-      const casesMap = new Map(casesData.map((c) => [c.id, c]));
+      const casesMap = new Map(casesData.map((c: any) => [c.id, c]));
       const deadlinesWithCase: DeadlineWithCase[] = deadlinesData.map(
-        (deadline) => {
+        (deadline: any) => {
           const caseData = casesMap.get(deadline.caseId);
           return {
             ...deadline,
@@ -127,10 +134,8 @@ export function TimelineView() {
       }
 
       try {
-        const result = await globalThis.window.justiceAPI.createDeadline(
-          input,
-          sessionId,
-        );
+        // Use HTTP API client instead of Electron IPC
+        const result = await apiClient.deadlines.create(input);
 
         if (result.success) {
           await loadData(); // Reload to get updated data
@@ -168,10 +173,15 @@ export function TimelineView() {
       }
 
       try {
-        const result = await globalThis.window.justiceAPI.updateDeadline(
+        // Use HTTP API client instead of Electron IPC
+        // Transform input to match expected API types
+        const apiInput = {
+          ...input,
+          description: input.description || undefined,
+        };
+        const result = await apiClient.deadlines.update(
           editingDeadline.id,
-          input,
-          sessionId,
+          apiInput,
         );
 
         if (result.success) {
@@ -207,17 +217,18 @@ export function TimelineView() {
         deadline.status === "completed" ? "upcoming" : "completed";
 
       try {
-        const result = await globalThis.window.justiceAPI.updateDeadline(
-          deadline.id,
-          { status: newStatus },
-          sessionId,
-        );
+        // Use HTTP API client instead of Electron IPC
+        const result = await apiClient.deadlines.update(deadline.id, {
+          status: newStatus,
+        });
 
         if (result.success) {
           await loadData();
         }
       } catch (err) {
-        logger.error("Failed to update deadline status:", err);
+        logger.error("Failed to update deadline status", {
+          error: err as Error,
+        });
       }
     },
     [sessionId, loadData],
@@ -238,16 +249,14 @@ export function TimelineView() {
     }
 
     try {
-      const result = await globalThis.window.justiceAPI.deleteDeadline(
-        deletingDeadline.id,
-        sessionId,
-      );
+      // Use HTTP API client instead of Electron IPC
+      const result = await apiClient.deadlines.delete(deletingDeadline.id);
 
       if (result.success) {
         await loadData();
       }
     } catch (err) {
-      logger.error("Failed to delete deadline:", err);
+      logger.error("Failed to delete deadline", { error: err as Error });
     } finally {
       setDeletingDeadline(null);
     }
@@ -286,7 +295,7 @@ export function TimelineView() {
   }
 
   return (
-    <div className="h-full flex flex-col bg-gradient-to-br from-gray-900 via-primary-900 to-gray-900">
+    <div className="h-full flex flex-col bg-linear-to-br from-gray-900 via-primary-900 to-gray-900">
       {/* Sticky Header */}
       <div className="sticky top-0 z-30 bg-gray-900/80 backdrop-blur-md border-b border-white/10">
         <div className="px-8 py-6">
@@ -312,7 +321,7 @@ export function TimelineView() {
                 className="
                   px-4 py-2 bg-white/5 border border-white/10 rounded-lg
                   text-white
-                  focus:outline-none focus:ring-2 focus:ring-primary-500
+                  focus:outline-hidden focus:ring-2 focus:ring-primary-500
                   transition-all
                 "
                 aria-label="Filter deadlines by case"
@@ -381,7 +390,7 @@ export function TimelineView() {
               title: input.title,
               deadlineDate: input.deadlineDate,
               priority: input.priority,
-              description: input.description,
+              description: input.description || undefined,
             })
           }
           cases={cases}

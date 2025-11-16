@@ -43,7 +43,7 @@ export const Skeleton = forwardRef<HTMLDivElement, SkeletonProps>(
         ref={count === 1 ? ref : undefined}
         className={clsx(
           // Base styles
-          "bg-gradient-to-r from-gray-800/50 via-gray-700/50 to-gray-800/50",
+          "bg-linear-to-r from-gray-800/50 via-gray-700/50 to-gray-800/50",
           // Variant
           variantStyles[variant],
           // Animation
@@ -66,7 +66,7 @@ export const Skeleton = forwardRef<HTMLDivElement, SkeletonProps>(
       >
         {/* Shimmer effect */}
         {animation === "shimmer" && (
-          <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/5 to-transparent" />
+          <div className="absolute inset-0 -translate-x-full animate-shimmer bg-linear-to-r from-transparent via-white/5 to-transparent" />
         )}
       </div>
     );

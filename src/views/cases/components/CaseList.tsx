@@ -1,5 +1,5 @@
-import type { Case } from '../../../domains/cases/entities/Case.ts';
-import { CaseCard } from './CaseCard.tsx';
+import type { Case } from "../../../domains/cases/entities/Case.ts";
+import { CaseCard } from "./CaseCard.tsx";
 
 interface CaseListProps {
   readonly cases: readonly Case[];

@@ -48,7 +48,7 @@ beforeEach(() => {
 const mockSessionId = "test-session-123";
 
 const createMockDeadline = (
-  overrides: Partial<DeadlineWithCase> = {}
+  overrides: Partial<DeadlineWithCase> = {},
 ): DeadlineWithCase => ({
   id: 1,
   caseId: 1,
@@ -84,7 +84,7 @@ describe("TimelineView", () => {
       });
 
       expect(
-        screen.getByRole("button", { name: /add deadline/i })
+        screen.getByRole("button", { name: /add deadline/i }),
       ).toBeInTheDocument();
     });
 
@@ -125,7 +125,7 @@ describe("TimelineView", () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText(/failed to fetch deadlines/i)
+          screen.getByText(/failed to fetch deadlines/i),
         ).toBeInTheDocument();
       });
     });
@@ -234,7 +234,7 @@ describe("TimelineView", () => {
         // Find the timeline item and check for case title within it
         const timelineItem = screen.getByTestId("timeline-item-1");
         expect(
-          within(timelineItem).getByText("Unfair Dismissal Case")
+          within(timelineItem).getByText("Unfair Dismissal Case"),
         ).toBeInTheDocument();
       });
     });
@@ -346,7 +346,7 @@ describe("TimelineView", () => {
       // Wait for component to load before clicking button
       await waitFor(() => {
         expect(
-          screen.getByRole("button", { name: /add deadline/i })
+          screen.getByRole("button", { name: /add deadline/i }),
         ).toBeInTheDocument();
       });
 
@@ -377,7 +377,7 @@ describe("TimelineView", () => {
       // Wait for component to load before clicking button
       await waitFor(() => {
         expect(
-          screen.getByRole("button", { name: /add deadline/i })
+          screen.getByRole("button", { name: /add deadline/i }),
         ).toBeInTheDocument();
       });
 
@@ -413,7 +413,7 @@ describe("TimelineView", () => {
           // If API was called, dialog should close
           expect(mockJusticeAPI.createDeadline).toHaveBeenCalledTimes(1);
         },
-        { timeout: 3000 }
+        { timeout: 3000 },
       );
 
       expect(mockJusticeAPI.createDeadline).toHaveBeenCalledWith(
@@ -421,7 +421,7 @@ describe("TimelineView", () => {
           title: "New Deadline",
           deadlineDate: "2026-03-15",
         }),
-        mockSessionId
+        mockSessionId,
       );
     });
   });
@@ -495,7 +495,7 @@ describe("TimelineView", () => {
           expect.objectContaining({
             title: "Updated Title",
           }),
-          mockSessionId
+          mockSessionId,
         );
       });
     });
@@ -528,7 +528,7 @@ describe("TimelineView", () => {
         expect(mockJusticeAPI.updateDeadline).toHaveBeenCalledWith(
           1,
           { status: "completed" },
-          mockSessionId
+          mockSessionId,
         );
       });
     });
@@ -561,7 +561,7 @@ describe("TimelineView", () => {
         expect(mockJusticeAPI.updateDeadline).toHaveBeenCalledWith(
           1,
           { status: "upcoming" },
-          mockSessionId
+          mockSessionId,
         );
       });
     });
@@ -614,7 +614,7 @@ describe("TimelineView", () => {
       await waitFor(() => {
         expect(mockJusticeAPI.deleteDeadline).toHaveBeenCalledWith(
           1,
-          mockSessionId
+          mockSessionId,
         );
       });
     });

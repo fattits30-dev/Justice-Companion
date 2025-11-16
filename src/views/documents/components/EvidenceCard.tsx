@@ -152,7 +152,7 @@ function renderEvidenceDetails(evidence: Evidence) {
   if (evidence.filePath) {
     return (
       <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
-        <FileText className="h-4 w-4 text-cyan-400 flex-shrink-0" />
+        <FileText className="h-4 w-4 text-cyan-400 shrink-0" />
         <p className="text-sm text-white font-mono truncate">
           {evidence.filePath.split(/[\\/]/).pop()}
         </p>

@@ -169,7 +169,7 @@ function ToastContent({
 
   return (
     <div className="flex items-start gap-3 rounded-lg border bg-white p-4 shadow-lg">
-      <div className="mt-0.5 flex-shrink-0">{icon}</div>
+      <div className="mt-0.5 shrink-0">{icon}</div>
       <div className="flex-1">
         <h3 className="font-semibold text-gray-900">{title}</h3>
         <p className="text-sm text-gray-600 mt-1">{description}</p>
@@ -190,7 +190,7 @@ function ToastContent({
           e.stopPropagation();
           onDismiss();
         }}
-        className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none"
+        className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-hidden"
       >
         <X className="h-4 w-4" />
       </button>

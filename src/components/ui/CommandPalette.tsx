@@ -108,7 +108,7 @@ export function CommandPalette({
                     placeholder={placeholder}
                     value={search}
                     onValueChange={setSearch}
-                    className="w-full px-10 py-4 bg-transparent border-b border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-0 text-lg"
+                    className="w-full px-10 py-4 bg-transparent border-b border-gray-200 dark:border-gray-700 focus:outline-hidden focus:ring-0 text-lg"
                   />
                 </div>
 

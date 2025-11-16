@@ -1,5 +1,5 @@
-import type { Evidence } from '../../../domains/evidence/entities/Evidence.ts';
-import { EvidenceCard } from './EvidenceCard.tsx';
+import type { Evidence } from "../../../domains/evidence/entities/Evidence.ts";
+import { EvidenceCard } from "./EvidenceCard.tsx";
 
 interface EvidenceListProps {
   evidence: Evidence[];

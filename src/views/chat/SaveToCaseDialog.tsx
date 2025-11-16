@@ -132,7 +132,7 @@ export function SaveToCaseDialog({
           className="relative bg-gray-900 border border-white/10 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden"
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-gradient-to-r from-primary-900/50 to-secondary-900/50">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-linear-to-r from-primary-900/50 to-secondary-900/50">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-primary-500/20 rounded-lg">
                 <Save className="w-5 h-5 text-primary-400" />
@@ -183,7 +183,7 @@ export function SaveToCaseDialog({
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g., AI Legal Research Note"
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-hidden focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
                 disabled={isLoading}
               />
             </div>
@@ -204,7 +204,7 @@ export function SaveToCaseDialog({
               ) : cases.length === 0 ? (
                 <div className="p-4 bg-warning-500/10 border border-warning-500/20 rounded-lg">
                   <div className="flex items-start gap-3">
-                    <FolderOpen className="w-5 h-5 text-warning-400 flex-shrink-0 mt-0.5" />
+                    <FolderOpen className="w-5 h-5 text-warning-400 shrink-0 mt-0.5" />
                     <div>
                       <p className="text-warning-400 font-medium">
                         No active cases
@@ -222,7 +222,7 @@ export function SaveToCaseDialog({
                   onChange={(e) =>
                     setSelectedCaseId(parseInt(e.target.value, 10))
                   }
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-hidden focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
                   disabled={isLoading}
                 >
                   {cases.map((c) => (

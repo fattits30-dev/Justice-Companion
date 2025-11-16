@@ -1,8 +1,22 @@
-import { motion } from 'framer-motion';
-import { X, AlertTriangle, Scale, CheckCircle, AlertCircle, ExternalLink, BookOpen } from 'lucide-react';
-import { Card } from '../../../components/ui/Card.tsx';
-import { Button } from '../../../components/ui/Button.tsx';
-import type { CaseAnalysisResponse, LegalIssue, ApplicableLaw, ActionItem, EvidenceGap } from '../../../types/ai-analysis.ts';
+import { motion } from "framer-motion";
+import {
+  X,
+  AlertTriangle,
+  Scale,
+  CheckCircle,
+  AlertCircle,
+  ExternalLink,
+  BookOpen,
+} from "lucide-react";
+import { Card } from "../../../components/ui/Card.tsx";
+import { Button } from "../../../components/ui/Button.tsx";
+import type {
+  CaseAnalysisResponse,
+  LegalIssue,
+  ApplicableLaw,
+  ActionItem,
+  EvidenceGap,
+} from "../../../types/ai-analysis.ts";
 
 interface CaseAnalysisDialogProps {
   onClose: () => void;
@@ -10,7 +24,11 @@ interface CaseAnalysisDialogProps {
   isLoading?: boolean;
 }
 
-export function CaseAnalysisDialog({ onClose, analysis, isLoading }: CaseAnalysisDialogProps) {
+export function CaseAnalysisDialog({
+  onClose,
+  analysis,
+  isLoading,
+}: CaseAnalysisDialogProps) {
   if (isLoading) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
@@ -23,7 +41,9 @@ export function CaseAnalysisDialog({ onClose, analysis, isLoading }: CaseAnalysi
             <div className="flex flex-col items-center gap-4">
               <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary-500 border-t-transparent" />
               <p className="text-lg text-white">Analyzing your case...</p>
-              <p className="text-sm text-gray-400">Justice Companion AI is reviewing your case details</p>
+              <p className="text-sm text-gray-400">
+                Justice Companion AI is reviewing your case details
+              </p>
             </div>
           </Card>
         </motion.div>
@@ -33,31 +53,31 @@ export function CaseAnalysisDialog({ onClose, analysis, isLoading }: CaseAnalysi
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case 'critical':
-        return 'text-red-400 bg-red-900/30 border-red-700';
-      case 'high':
-        return 'text-orange-400 bg-orange-900/30 border-orange-700';
-      case 'medium':
-        return 'text-yellow-400 bg-yellow-900/30 border-yellow-700';
-      case 'low':
-        return 'text-green-400 bg-green-900/30 border-green-700';
+      case "critical":
+        return "text-red-400 bg-red-900/30 border-red-700";
+      case "high":
+        return "text-orange-400 bg-orange-900/30 border-orange-700";
+      case "medium":
+        return "text-yellow-400 bg-yellow-900/30 border-yellow-700";
+      case "low":
+        return "text-green-400 bg-green-900/30 border-green-700";
       default:
-        return 'text-gray-400 bg-gray-900/30 border-gray-700';
+        return "text-gray-400 bg-gray-900/30 border-gray-700";
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'urgent':
-        return 'text-red-400 bg-red-900/30 border-red-700';
-      case 'high':
-        return 'text-orange-400 bg-orange-900/30 border-orange-700';
-      case 'medium':
-        return 'text-yellow-400 bg-yellow-900/30 border-yellow-700';
-      case 'low':
-        return 'text-green-400 bg-green-900/30 border-green-700';
+      case "urgent":
+        return "text-red-400 bg-red-900/30 border-red-700";
+      case "high":
+        return "text-orange-400 bg-orange-900/30 border-orange-700";
+      case "medium":
+        return "text-yellow-400 bg-yellow-900/30 border-yellow-700";
+      case "low":
+        return "text-green-400 bg-green-900/30 border-green-700";
       default:
-        return 'text-gray-400 bg-gray-900/30 border-gray-700';
+        return "text-gray-400 bg-gray-900/30 border-gray-700";
     }
   };
 
@@ -67,7 +87,7 @@ export function CaseAnalysisDialog({ onClose, analysis, isLoading }: CaseAnalysi
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.9, y: 20 }}
-        transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+        transition={{ type: "spring", stiffness: 300, damping: 25 }}
         className="w-full max-w-6xl my-8"
       >
         <Card
@@ -109,58 +129,77 @@ export function CaseAnalysisDialog({ onClose, analysis, isLoading }: CaseAnalysi
                 Legal Issues Identified
               </h3>
               <div className="space-y-3">
-                {analysis.legalIssues.map((legalIssue: LegalIssue, index: number) => (
-                  <Card key={index} variant="default" className="p-4">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h4 className="font-medium text-white">{legalIssue.issue}</h4>
-                          <span
-                            className={`px-2 py-1 rounded text-xs font-medium border ${getSeverityColor(legalIssue.severity)}`}
-                          >
-                            {legalIssue.severity.toUpperCase()}
-                          </span>
+                {analysis.legalIssues.map(
+                  (legalIssue: LegalIssue, index: number) => (
+                    <Card key={index} variant="default" className="p-4">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h4 className="font-medium text-white">
+                              {legalIssue.issue}
+                            </h4>
+                            <span
+                              className={`px-2 py-1 rounded text-xs font-medium border ${getSeverityColor(legalIssue.severity)}`}
+                            >
+                              {legalIssue.severity.toUpperCase()}
+                            </span>
+                          </div>
+
+                          {/* Relevant Law */}
+                          {legalIssue.relevantLaw &&
+                            legalIssue.relevantLaw.length > 0 && (
+                              <div className="mb-2">
+                                <p className="text-xs font-medium text-gray-400 mb-1">
+                                  Relevant Law:
+                                </p>
+                                <ul className="list-disc list-inside space-y-1 text-sm text-gray-300">
+                                  {legalIssue.relevantLaw.map(
+                                    (law: string, idx: number) => (
+                                      <li key={idx}>{law}</li>
+                                    ),
+                                  )}
+                                </ul>
+                              </div>
+                            )}
+
+                          {/* Potential Claims */}
+                          {legalIssue.potentialClaims &&
+                            legalIssue.potentialClaims.length > 0 && (
+                              <div className="mb-2">
+                                <p className="text-xs font-medium text-gray-400 mb-1">
+                                  Potential Claims:
+                                </p>
+                                <ul className="list-disc list-inside space-y-1 text-sm text-gray-300">
+                                  {legalIssue.potentialClaims.map(
+                                    (claim: string, idx: number) => (
+                                      <li key={idx}>{claim}</li>
+                                    ),
+                                  )}
+                                </ul>
+                              </div>
+                            )}
+
+                          {/* Defenses */}
+                          {legalIssue.defenses &&
+                            legalIssue.defenses.length > 0 && (
+                              <div>
+                                <p className="text-xs font-medium text-gray-400 mb-1">
+                                  Possible Defenses:
+                                </p>
+                                <ul className="list-disc list-inside space-y-1 text-sm text-gray-300">
+                                  {legalIssue.defenses.map(
+                                    (defense: string, idx: number) => (
+                                      <li key={idx}>{defense}</li>
+                                    ),
+                                  )}
+                                </ul>
+                              </div>
+                            )}
                         </div>
-
-                        {/* Relevant Law */}
-                        {legalIssue.relevantLaw && legalIssue.relevantLaw.length > 0 && (
-                          <div className="mb-2">
-                            <p className="text-xs font-medium text-gray-400 mb-1">Relevant Law:</p>
-                            <ul className="list-disc list-inside space-y-1 text-sm text-gray-300">
-                              {legalIssue.relevantLaw.map((law: string, idx: number) => (
-                                <li key={idx}>{law}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-
-                        {/* Potential Claims */}
-                        {legalIssue.potentialClaims && legalIssue.potentialClaims.length > 0 && (
-                          <div className="mb-2">
-                            <p className="text-xs font-medium text-gray-400 mb-1">Potential Claims:</p>
-                            <ul className="list-disc list-inside space-y-1 text-sm text-gray-300">
-                              {legalIssue.potentialClaims.map((claim: string, idx: number) => (
-                                <li key={idx}>{claim}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-
-                        {/* Defenses */}
-                        {legalIssue.defenses && legalIssue.defenses.length > 0 && (
-                          <div>
-                            <p className="text-xs font-medium text-gray-400 mb-1">Possible Defenses:</p>
-                            <ul className="list-disc list-inside space-y-1 text-sm text-gray-300">
-                              {legalIssue.defenses.map((defense: string, idx: number) => (
-                                <li key={idx}>{defense}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
                       </div>
-                    </div>
-                  </Card>
-                ))}
+                    </Card>
+                  ),
+                )}
               </div>
             </section>
 
@@ -171,28 +210,37 @@ export function CaseAnalysisDialog({ onClose, analysis, isLoading }: CaseAnalysi
                 Applicable UK Law
               </h3>
               <div className="space-y-3">
-                {analysis.applicableLaw.map((law: ApplicableLaw, index: number) => (
-                  <Card key={index} variant="default" className="p-4">
-                    <h4 className="font-medium text-white mb-2">
-                      {law.statute} - Section {law.section}
-                    </h4>
-                    <div className="space-y-2">
-                      <div>
-                        <p className="text-xs font-medium text-gray-400 mb-1">Summary:</p>
-                        <p className="text-sm text-gray-300">{law.summary}</p>
+                {analysis.applicableLaw.map(
+                  (law: ApplicableLaw, index: number) => (
+                    <Card key={index} variant="default" className="p-4">
+                      <h4 className="font-medium text-white mb-2">
+                        {law.statute} - Section {law.section}
+                      </h4>
+                      <div className="space-y-2">
+                        <div>
+                          <p className="text-xs font-medium text-gray-400 mb-1">
+                            Summary:
+                          </p>
+                          <p className="text-sm text-gray-300">{law.summary}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-medium text-gray-400 mb-1">
+                            How it applies to your case:
+                          </p>
+                          <p className="text-sm text-gray-300">
+                            {law.application}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-400">
+                            Jurisdiction:{" "}
+                            {law.jurisdiction.replace("_", " ").toUpperCase()}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-xs font-medium text-gray-400 mb-1">How it applies to your case:</p>
-                        <p className="text-sm text-gray-300">{law.application}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-400">
-                          Jurisdiction: {law.jurisdiction.replace('_', ' ').toUpperCase()}
-                        </p>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
+                    </Card>
+                  ),
+                )}
               </div>
             </section>
 
@@ -203,33 +251,39 @@ export function CaseAnalysisDialog({ onClose, analysis, isLoading }: CaseAnalysi
                 Recommended Actions
               </h3>
               <div className="space-y-3">
-                {analysis.recommendedActions.map((actionItem: ActionItem, index: number) => (
-                  <Card key={index} variant="default" className="p-4">
-                    <div className="flex items-start gap-3">
-                      <div
-                        className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${getPriorityColor(actionItem.priority)}`}
-                      >
-                        {index + 1}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h4 className="font-medium text-white">{actionItem.action}</h4>
-                          <span
-                            className={`px-2 py-1 rounded text-xs font-medium border ${getPriorityColor(actionItem.priority)}`}
-                          >
-                            {actionItem.priority.toUpperCase()}
-                          </span>
+                {analysis.recommendedActions.map(
+                  (actionItem: ActionItem, index: number) => (
+                    <Card key={index} variant="default" className="p-4">
+                      <div className="flex items-start gap-3">
+                        <div
+                          className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${getPriorityColor(actionItem.priority)}`}
+                        >
+                          {index + 1}
                         </div>
-                        <p className="text-sm text-gray-300 mb-2">{actionItem.rationale}</p>
-                        {actionItem.deadline && (
-                          <p className="text-xs text-gray-400">
-                            Deadline: {actionItem.deadline}
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h4 className="font-medium text-white">
+                              {actionItem.action}
+                            </h4>
+                            <span
+                              className={`px-2 py-1 rounded text-xs font-medium border ${getPriorityColor(actionItem.priority)}`}
+                            >
+                              {actionItem.priority.toUpperCase()}
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-300 mb-2">
+                            {actionItem.rationale}
                           </p>
-                        )}
+                          {actionItem.deadline && (
+                            <p className="text-xs text-gray-400">
+                              Deadline: {actionItem.deadline}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </Card>
-                ))}
+                    </Card>
+                  ),
+                )}
               </div>
             </section>
 
@@ -241,32 +295,41 @@ export function CaseAnalysisDialog({ onClose, analysis, isLoading }: CaseAnalysi
                   Evidence Gaps
                 </h3>
                 <div className="space-y-3">
-                  {analysis.evidenceGaps.map((gap: EvidenceGap, index: number) => (
-                    <Card key={index} variant="default" className="p-4">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <h4 className="font-medium text-white">{gap.description}</h4>
-                            <span
-                              className={`px-2 py-1 rounded text-xs font-medium border ${getSeverityColor(gap.importance)}`}
-                            >
-                              {gap.importance.toUpperCase()}
-                            </span>
-                          </div>
-                          {gap.suggestedSources && gap.suggestedSources.length > 0 && (
-                            <div className="text-xs text-gray-400">
-                              <p className="font-medium mb-1">Suggested sources:</p>
-                              <ul className="list-disc list-inside space-y-1">
-                                {gap.suggestedSources.map((source: string, idx: number) => (
-                                  <li key={idx}>{source}</li>
-                                ))}
-                              </ul>
+                  {analysis.evidenceGaps.map(
+                    (gap: EvidenceGap, index: number) => (
+                      <Card key={index} variant="default" className="p-4">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h4 className="font-medium text-white">
+                                {gap.description}
+                              </h4>
+                              <span
+                                className={`px-2 py-1 rounded text-xs font-medium border ${getSeverityColor(gap.importance)}`}
+                              >
+                                {gap.importance.toUpperCase()}
+                              </span>
                             </div>
-                          )}
+                            {gap.suggestedSources &&
+                              gap.suggestedSources.length > 0 && (
+                                <div className="text-xs text-gray-400">
+                                  <p className="font-medium mb-1">
+                                    Suggested sources:
+                                  </p>
+                                  <ul className="list-disc list-inside space-y-1">
+                                    {gap.suggestedSources.map(
+                                      (source: string, idx: number) => (
+                                        <li key={idx}>{source}</li>
+                                      ),
+                                    )}
+                                  </ul>
+                                </div>
+                              )}
+                          </div>
                         </div>
-                      </div>
-                    </Card>
-                  ))}
+                      </Card>
+                    ),
+                  )}
                 </div>
               </section>
             )}
@@ -279,34 +342,47 @@ export function CaseAnalysisDialog({ onClose, analysis, isLoading }: CaseAnalysi
                 </h3>
                 <Card variant="default" className="p-4">
                   <div className="mb-4">
-                    <p className="text-xs text-gray-400 mb-1">Complexity Score</p>
+                    <p className="text-xs text-gray-400 mb-1">
+                      Complexity Score
+                    </p>
                     <p className="text-3xl font-bold text-white">
                       {analysis.estimatedComplexity.score}/10
                     </p>
                   </div>
 
                   <div className="mb-4">
-                    <p className="text-xs font-medium text-gray-400 mb-2">Explanation:</p>
-                    <p className="text-sm text-gray-300">{analysis.estimatedComplexity.explanation}</p>
+                    <p className="text-xs font-medium text-gray-400 mb-2">
+                      Explanation:
+                    </p>
+                    <p className="text-sm text-gray-300">
+                      {analysis.estimatedComplexity.explanation}
+                    </p>
                   </div>
 
-                  {analysis.estimatedComplexity.factors && analysis.estimatedComplexity.factors.length > 0 && (
-                    <div className="pt-4 border-t border-gray-700">
-                      <p className="text-xs text-gray-400 mb-2">Contributing Factors:</p>
-                      <ul className="list-disc list-inside space-y-1 text-sm text-gray-300">
-                        {analysis.estimatedComplexity.factors.map((factor: string, idx: number) => (
-                          <li key={idx}>{factor}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
+                  {analysis.estimatedComplexity.factors &&
+                    analysis.estimatedComplexity.factors.length > 0 && (
+                      <div className="pt-4 border-t border-gray-700">
+                        <p className="text-xs text-gray-400 mb-2">
+                          Contributing Factors:
+                        </p>
+                        <ul className="list-disc list-inside space-y-1 text-sm text-gray-300">
+                          {analysis.estimatedComplexity.factors.map(
+                            (factor: string, idx: number) => (
+                              <li key={idx}>{factor}</li>
+                            ),
+                          )}
+                        </ul>
+                      </div>
+                    )}
                 </Card>
               </section>
             )}
 
             {/* AI Reasoning */}
             <section>
-              <h3 className="text-lg font-semibold text-white mb-3">Analysis Reasoning</h3>
+              <h3 className="text-lg font-semibold text-white mb-3">
+                Analysis Reasoning
+              </h3>
               <Card variant="default" className="p-4">
                 <p className="text-sm text-gray-300 whitespace-pre-wrap">
                   {analysis.reasoning}
@@ -317,14 +393,20 @@ export function CaseAnalysisDialog({ onClose, analysis, isLoading }: CaseAnalysi
             {/* Legal Sources */}
             {analysis.sources && analysis.sources.length > 0 && (
               <section>
-                <h3 className="text-lg font-semibold text-white mb-3">Legal Sources</h3>
+                <h3 className="text-lg font-semibold text-white mb-3">
+                  Legal Sources
+                </h3>
                 <div className="space-y-2">
                   {analysis.sources.map((source, index) => (
                     <Card key={index} variant="default" className="p-3">
                       <div className="flex items-center justify-between gap-2">
                         <div>
-                          <p className="text-sm font-medium text-white">{source.title}</p>
-                          <p className="text-xs text-gray-400">{source.citation}</p>
+                          <p className="text-sm font-medium text-white">
+                            {source.title}
+                          </p>
+                          <p className="text-xs text-gray-400">
+                            {source.citation}
+                          </p>
                         </div>
                         {source.url && (
                           <a
@@ -345,12 +427,19 @@ export function CaseAnalysisDialog({ onClose, analysis, isLoading }: CaseAnalysi
 
             {/* Disclaimer */}
             <section>
-              <Card variant="default" className="p-4 bg-yellow-900/20 border border-yellow-700/50">
+              <Card
+                variant="default"
+                className="p-4 bg-yellow-900/20 border border-yellow-700/50"
+              >
                 <div className="flex gap-3">
-                  <AlertTriangle className="h-5 w-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+                  <AlertTriangle className="h-5 w-5 text-yellow-400 shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium text-yellow-200 mb-1">Important Disclaimer</p>
-                    <p className="text-xs text-yellow-100/80">{analysis.disclaimer}</p>
+                    <p className="text-sm font-medium text-yellow-200 mb-1">
+                      Important Disclaimer
+                    </p>
+                    <p className="text-xs text-yellow-100/80">
+                      {analysis.disclaimer}
+                    </p>
                   </div>
                 </div>
               </Card>
@@ -359,12 +448,7 @@ export function CaseAnalysisDialog({ onClose, analysis, isLoading }: CaseAnalysi
 
           {/* Footer */}
           <div className="flex gap-3 pt-6 mt-6 border-t border-gray-700/50">
-            <Button
-              onClick={onClose}
-              variant="secondary"
-              size="md"
-              fullWidth
-            >
+            <Button onClick={onClose} variant="secondary" size="md" fullWidth>
               Close
             </Button>
           </div>

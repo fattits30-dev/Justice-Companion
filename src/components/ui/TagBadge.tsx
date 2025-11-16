@@ -3,15 +3,15 @@
  * Displays a tag with color and optional remove button
  */
 
-import React from 'react';
-import { X } from 'lucide-react';
+import React from "react";
+import { X } from "lucide-react";
 
 export interface TagBadgeProps {
   name: string;
   color: string;
   onRemove?: () => void;
-  size?: 'sm' | 'md' | 'lg';
-  variant?: 'default' | 'outlined';
+  size?: "sm" | "md" | "lg";
+  variant?: "default" | "outlined";
   className?: string;
 }
 
@@ -19,14 +19,14 @@ export const TagBadge: React.FC<TagBadgeProps> = ({
   name,
   color,
   onRemove,
-  size = 'md',
-  variant = 'default',
-  className = '',
+  size = "md",
+  variant = "default",
+  className = "",
 }) => {
   const sizeClasses = {
-    sm: 'text-xs px-2 py-0.5 gap-1',
-    md: 'text-sm px-2.5 py-1 gap-1.5',
-    lg: 'text-base px-3 py-1.5 gap-2',
+    sm: "text-xs px-2 py-0.5 gap-1",
+    md: "text-sm px-2.5 py-1 gap-1.5",
+    lg: "text-base px-3 py-1.5 gap-2",
   };
 
   const iconSizes = {
@@ -43,18 +43,18 @@ export const TagBadge: React.FC<TagBadgeProps> = ({
   `;
 
   const variantStyles =
-    variant === 'default'
+    variant === "default"
       ? {
           backgroundColor: color,
           color: getContrastColor(color),
-          border: 'none',
+          border: "none",
         }
       : {
-          backgroundColor: 'transparent',
+          backgroundColor: "transparent",
           borderColor: color,
           color: color,
-          borderWidth: '1.5px',
-          borderStyle: 'solid',
+          borderWidth: "1.5px",
+          borderStyle: "solid",
         };
 
   return (
@@ -67,7 +67,7 @@ export const TagBadge: React.FC<TagBadgeProps> = ({
             e.stopPropagation();
             onRemove();
           }}
-          className="hover:opacity-70 transition-opacity focus:outline-none focus:ring-2 focus:ring-offset-1 rounded-full"
+          className="hover:opacity-70 transition-opacity focus:outline-hidden focus:ring-2 focus:ring-offset-1 rounded-full"
           style={{ color: variantStyles.color }}
           aria-label={`Remove ${name} tag`}
         >
@@ -84,7 +84,7 @@ export const TagBadge: React.FC<TagBadgeProps> = ({
  */
 function getContrastColor(hexColor: string): string {
   // Remove # if present
-  const hex = hexColor.replace('#', '');
+  const hex = hexColor.replace("#", "");
 
   // Convert to RGB
   const r = parseInt(hex.slice(0, 2), 16);
@@ -95,5 +95,5 @@ function getContrastColor(hexColor: string): string {
   const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
 
   // Return white for dark backgrounds, black for light backgrounds
-  return luminance > 0.5 ? '#000000' : '#FFFFFF';
+  return luminance > 0.5 ? "#000000" : "#FFFFFF";
 }

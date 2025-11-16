@@ -19,7 +19,7 @@ import { Button } from "../../components/ui/Button.tsx";
 import { Badge } from "../../components/ui/Badge.tsx";
 import { useAuth } from "../../contexts/AuthContext.tsx";
 import { ConfirmationModal } from "../../components/ui/ConfirmationModal.tsx";
-import { logger } from '../../utils/logger';
+import { logger } from "../../utils/logger";
 
 export interface Backup {
   id: number;
@@ -379,7 +379,7 @@ export function BackupSettingsTab() {
               loading={isCreating}
               variant="primary"
               icon={<RefreshCw />}
-              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+              className="bg-linear-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
             >
               {isCreating ? "Creating Backup..." : "Create Backup Now"}
             </Button>
@@ -428,7 +428,7 @@ export function BackupSettingsTab() {
                 className="sr-only peer"
                 aria-label="Enable automatic backups"
               />
-              <div className="w-11 h-6 bg-white/20 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-500/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-purple-500 peer-checked:to-pink-500"></div>
+              <div className="w-11 h-6 bg-white/20 peer-focus:outline-hidden peer-focus:ring-4 peer-focus:ring-purple-500/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-linear-to-r peer-checked:from-purple-500 peer-checked:to-pink-500"></div>
             </label>
           </div>
 
@@ -457,7 +457,7 @@ export function BackupSettingsTab() {
                         e.target.value as "daily" | "weekly" | "monthly",
                       )
                     }
-                    className="w-full px-4 py-3 bg-blue-950/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full px-4 py-3 bg-blue-950/50 border border-white/10 rounded-lg text-white focus:outline-hidden focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     aria-label="Backup frequency"
                   >
                     <option value="daily">Daily (Recommended)</option>
@@ -479,7 +479,7 @@ export function BackupSettingsTab() {
                     type="time"
                     value={backupTime}
                     onChange={(e) => setBackupTime(e.target.value)}
-                    className="w-full px-4 py-3 bg-blue-950/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full px-4 py-3 bg-blue-950/50 border border-white/10 rounded-lg text-white focus:outline-hidden focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     aria-label="Backup time"
                   />
                   <p className="text-xs text-white/40 mt-2">
@@ -522,7 +522,7 @@ export function BackupSettingsTab() {
                   <Button
                     onClick={handleSaveAutoBackup}
                     variant="primary"
-                    className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                    className="bg-linear-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
                   >
                     <CheckCircle2 className="w-4 h-4" />
                     Save Settings
@@ -681,7 +681,7 @@ function BackupListItem({
         <div className="flex items-center justify-between gap-4">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3 mb-1">
-              <Database className="w-5 h-5 text-purple-400 flex-shrink-0" />
+              <Database className="w-5 h-5 text-purple-400 shrink-0" />
               <p className="font-medium text-white truncate">
                 {backup.filename}
               </p>
@@ -790,7 +790,7 @@ function BackupListItem({
 
             <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
               <div className="flex items-start gap-2">
-                <AlertTriangle className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
+                <AlertTriangle className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
                 <div className="text-xs text-blue-200">
                   <strong>Restore Warning:</strong> Restoring this backup will
                   replace your current database. All data created after{" "}

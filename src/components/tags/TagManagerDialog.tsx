@@ -1,6 +1,8 @@
 /**
  * TagManagerDialog Component
  * Comprehensive tag management interface for creating, editing, and deleting tags
+ *
+ * MIGRATED: Now uses HTTP API via apiClient instead of IPC
  */
 
 import { useState, useEffect } from "react";
@@ -9,8 +11,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "../ui/Button.tsx";
 import { Card } from "../ui/Card.tsx";
 import { TagBadge } from "../ui/TagBadge.tsx";
+import { TagColorPicker } from "./TagColorPicker.tsx";
+import { apiClient } from "../../lib/apiClient.ts";
 import type { Tag, CreateTagInput, UpdateTagInput } from "../../models/Tag.ts";
-import { logger } from '../../utils/logger';
+import { logger } from "../../utils/logger";
 
 interface TagManagerDialogProps {
   open: boolean;
@@ -70,25 +74,14 @@ export function TagManagerDialog({ open, onClose }: TagManagerDialogProps) {
   const loadTags = async () => {
     setIsLoading(true);
     try {
-      const sessionId = window.sessionManager?.getSessionId();
-      if (!sessionId) {
-        logger.error("No session ID");
-        return;
-      }
-
-      const result = await window.api.tags.list(sessionId);
-      if (result.success) {
-        if (result.data) {
-          setTags(result.data);
-        }
+      const response = await apiClient.tags.list();
+      if (response.success && response.data) {
+        setTags(response.data);
       } else {
-        logger.error(
-          "Failed to load tags:",
-          result.error?.message || "Unknown error",
-        );
+        logger.error("Failed to load tags: Unknown error");
       }
     } catch (error) {
-      logger.error("Error loading tags:", error);
+      logger.error("Error loading tags");
     } finally {
       setIsLoading(false);
     }
@@ -120,13 +113,7 @@ export function TagManagerDialog({ open, onClose }: TagManagerDialogProps) {
     setErrors({});
 
     try {
-      const sessionId = window.sessionManager?.getSessionId();
-      if (!sessionId) {
-        setErrors({ submit: "No active session" });
-        return;
-      }
-
-      let result;
+      let response;
       if (editingTag) {
         // Update existing tag
         const updateInput: UpdateTagInput = {
@@ -134,11 +121,7 @@ export function TagManagerDialog({ open, onClose }: TagManagerDialogProps) {
           color: formData.color,
           description: formData.description || undefined,
         };
-        result = await window.api.tags.update(
-          editingTag.id,
-          updateInput,
-          sessionId,
-        );
+        response = await apiClient.tags.update(editingTag.id, updateInput);
       } else {
         // Create new tag
         const createInput: CreateTagInput = {
@@ -146,10 +129,10 @@ export function TagManagerDialog({ open, onClose }: TagManagerDialogProps) {
           color: formData.color,
           description: formData.description || undefined,
         };
-        result = await window.api.tags.create(createInput, sessionId);
+        response = await apiClient.tags.create(createInput);
       }
 
-      if (result.success) {
+      if (response.success) {
         // Reset form
         setFormData({
           name: "",
@@ -159,10 +142,11 @@ export function TagManagerDialog({ open, onClose }: TagManagerDialogProps) {
         setEditingTag(null);
         await loadTags();
       } else {
-        setErrors({ submit: result.error?.message || "Failed to save tag" });
+        setErrors({ submit: response.error?.message || "Failed to save tag" });
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : "An error occurred";
+      const message =
+        error instanceof Error ? error.message : "An error occurred";
       setErrors({ submit: message });
     } finally {
       setIsSubmitting(false);
@@ -177,7 +161,7 @@ export function TagManagerDialog({ open, onClose }: TagManagerDialogProps) {
 
     const confirmMessage =
       tag.usageCount && tag.usageCount > 0
-        ? `Delete "${tag.name}"? It will be removed from ${tag.usageCount} evidence item${tag.usageCount !== 1 ? "s" : ""}.`
+        ? `Delete "${tag.name}"? It will be removed from ${tag.usageCount} case${tag.usageCount !== 1 ? "s" : ""}.`
         : `Delete "${tag.name}"?`;
 
     if (!confirm(confirmMessage)) {
@@ -185,13 +169,8 @@ export function TagManagerDialog({ open, onClose }: TagManagerDialogProps) {
     }
 
     try {
-      const sessionId = window.sessionManager?.getSessionId();
-      if (!sessionId) {
-        return;
-      }
-
-      const result = await window.api.tags.delete(tagId, sessionId);
-      if (result.success) {
+      const response = await apiClient.tags.delete(tagId);
+      if (response.success) {
         await loadTags();
         // Clear form if deleting the tag being edited
         if (editingTag?.id === tagId) {
@@ -199,7 +178,8 @@ export function TagManagerDialog({ open, onClose }: TagManagerDialogProps) {
         }
       } else {
         alert(
-          "Failed to delete tag: " + (result.error?.message || "Unknown error"),
+          "Failed to delete tag: " +
+            (response.error?.message || "Unknown error"),
         );
       }
     } catch (error) {
@@ -284,7 +264,7 @@ export function TagManagerDialog({ open, onClose }: TagManagerDialogProps) {
                       onChange={(e) =>
                         setFormData({ ...formData, name: e.target.value })
                       }
-                      className="w-full px-3 py-2 bg-gray-900/50 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 bg-gray-900/50 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="e.g., Important, Urgent, Reviewed"
                       maxLength={50}
                     />
@@ -298,21 +278,13 @@ export function TagManagerDialog({ open, onClose }: TagManagerDialogProps) {
                     <div className="block text-sm font-medium text-gray-300 mb-1.5">
                       Color <span className="text-red-400">*</span>
                     </div>
-                    <div className="flex flex-wrap gap-2">
-                      {PRESET_COLORS.map((color) => (
-                        <button
-                          key={color}
-                          type="button"
-                          onClick={() => setFormData({ ...formData, color })}
-                          className={`
-                            w-10 h-10 rounded-full transition-all
-                            ${formData.color === color ? "ring-2 ring-offset-2 ring-blue-500 ring-offset-gray-900 scale-110" : "hover:scale-105"}
-                          `}
-                          style={{ backgroundColor: color }}
-                          aria-label={`Select color ${color}`}
-                        />
-                      ))}
-                    </div>
+                    <TagColorPicker
+                      selectedColor={formData.color}
+                      onColorSelect={(color) =>
+                        setFormData({ ...formData, color })
+                      }
+                      size="md"
+                    />
                     {errors.color && (
                       <p className="mt-1 text-sm text-red-400">
                         {errors.color}
@@ -333,7 +305,7 @@ export function TagManagerDialog({ open, onClose }: TagManagerDialogProps) {
                           description: e.target.value,
                         })
                       }
-                      className="w-full px-3 py-2 bg-gray-900/50 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                      className="w-full px-3 py-2 bg-gray-900/50 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                       rows={2}
                       placeholder="What does this tag represent?"
                       maxLength={200}

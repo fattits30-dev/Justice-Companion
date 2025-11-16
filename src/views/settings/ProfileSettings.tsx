@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { User, Mail, Save, AlertCircle, Check, Phone } from "lucide-react";
-import { Card } from '../../components/ui/Card';
-import { Button } from '../../components/ui/Button';
+import { Card } from "../../components/ui/Card";
+import { Button } from "../../components/ui/Button";
 import { toast } from "sonner";
-import { logger } from '../../utils/logger';
-import type { IPCErrorResponse } from '../../types/window';
+import { logger } from "../../utils/logger";
+import type { IPCErrorResponse } from "../../types/window";
 
 interface UserProfile {
   id: number;
@@ -43,7 +43,9 @@ export function ProfileSettingsTab() {
       const nameChanged = fullName !== profile.name;
       const emailChanged = email !== (profile.email || "");
       const phoneChanged = phone !== (profile.phone || "");
-      setHasChanges(usernameChanged || nameChanged || emailChanged || phoneChanged);
+      setHasChanges(
+        usernameChanged || nameChanged || emailChanged || phoneChanged,
+      );
     }
   }, [username, firstName, lastName, email, phone, profile]);
 
@@ -63,7 +65,7 @@ export function ProfileSettingsTab() {
           ...response.data.profile,
           username: response.data.profile.username ?? undefined,
           phone: response.data.profile.phone ?? undefined,
-          email: response.data.profile.email
+          email: response.data.profile.email,
         };
         setProfile(transformedProfile);
         setUsername(response.data.profile.username || "");
@@ -87,7 +89,7 @@ export function ProfileSettingsTab() {
   const handleSave = async () => {
     try {
       setSaving(true);
-      
+
       const sessionId = localStorage.getItem("sessionId");
       if (!sessionId) {
         toast.error("No active session");
@@ -126,13 +128,16 @@ export function ProfileSettingsTab() {
           ...response.data.profile,
           username: response.data.profile.username ?? undefined,
           phone: response.data.profile.phone ?? undefined,
-          email: response.data.profile.email
+          email: response.data.profile.email,
         };
         setProfile(transformedProfile);
         setHasChanges(false);
         toast.success("Profile updated successfully!");
       } else {
-        toast.error((response as IPCErrorResponse).error?.message || "Failed to update profile");
+        toast.error(
+          (response as IPCErrorResponse).error?.message ||
+            "Failed to update profile",
+        );
       }
     } catch (error) {
       logger.error("Failed to save profile:", error);
@@ -181,7 +186,7 @@ export function ProfileSettingsTab() {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full pl-10 pr-3 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                className="w-full pl-10 pr-3 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-hidden focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
                 placeholder="johndoe123"
               />
             </div>
@@ -209,7 +214,7 @@ export function ProfileSettingsTab() {
                   type="text"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  className="w-full pl-10 pr-3 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                  className="w-full pl-10 pr-3 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-hidden focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
                   placeholder="John"
                   required
                 />
@@ -233,7 +238,7 @@ export function ProfileSettingsTab() {
                   type="text"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  className="w-full pl-10 pr-3 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                  className="w-full pl-10 pr-3 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-hidden focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
                   placeholder="Doe"
                 />
               </div>
@@ -260,7 +265,7 @@ export function ProfileSettingsTab() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-10 pr-3 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                className="w-full pl-10 pr-3 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-hidden focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
                 placeholder="your.email@example.com"
               />
             </div>
@@ -286,7 +291,7 @@ export function ProfileSettingsTab() {
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="w-full pl-10 pr-3 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                className="w-full pl-10 pr-3 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-hidden focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
                 placeholder="+44 7700 900000"
               />
             </div>
@@ -310,9 +315,10 @@ export function ProfileSettingsTab() {
               onClick={handleSave}
               disabled={!hasChanges || saving}
               className={`
-                ${hasChanges 
-                  ? 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600' 
-                  : 'bg-white/10 cursor-not-allowed'
+                ${
+                  hasChanges
+                    ? "bg-linear-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                    : "bg-white/10 cursor-not-allowed"
                 } text-white transition-all
               `}
             >
@@ -324,7 +330,7 @@ export function ProfileSettingsTab() {
               ) : (
                 <>
                   <Save className="w-4 h-4" />
-                  {hasChanges ? 'Save Changes' : 'No Changes'}
+                  {hasChanges ? "Save Changes" : "No Changes"}
                 </>
               )}
             </Button>
@@ -350,13 +356,14 @@ export function ProfileSettingsTab() {
       <Card className="bg-white/5 border-white/10 backdrop-blur-md">
         <div className="p-6">
           <div className="flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-purple-400 flex-shrink-0 mt-0.5" />
+            <AlertCircle className="w-5 h-5 text-purple-400 shrink-0 mt-0.5" />
             <div>
               <h4 className="text-white font-medium mb-1">Privacy Notice</h4>
               <p className="text-sm text-white/60">
-                Your profile information is encrypted and stored locally on your device. 
-                It is never sent to external servers. This information is used to personalize 
-                your experience and populate legal documents.
+                Your profile information is encrypted and stored locally on your
+                device. It is never sent to external servers. This information
+                is used to personalize your experience and populate legal
+                documents.
               </p>
             </div>
           </div>

@@ -36,7 +36,7 @@ export function CaseToolbar({
           onChange={(event) =>
             onStatusChange(event.target.value as CaseStatus | "all")
           }
-          className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all [&>option]:text-gray-900 [&>option]:bg-white"
+          className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-hidden focus:ring-2 focus:ring-primary-500 transition-all [&>option]:text-gray-900 [&>option]:bg-white"
         >
           {statusFilterOptions.map((option) => (
             <option
@@ -54,7 +54,7 @@ export function CaseToolbar({
           onChange={(event) =>
             onTypeChange(event.target.value as CaseType | "all")
           }
-          className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all [&>option]:text-gray-900 [&>option]:bg-white"
+          className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-hidden focus:ring-2 focus:ring-primary-500 transition-all [&>option]:text-gray-900 [&>option]:bg-white"
         >
           {typeFilterOptions.map((option) => (
             <option

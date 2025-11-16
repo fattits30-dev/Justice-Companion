@@ -17,6 +17,7 @@ import { CaseList } from "./components/CaseList.tsx";
 import { CreateCaseDialog } from "./components/CreateCaseDialog.tsx";
 import { CaseSummaryCards } from "./components/CaseSummaryCards.tsx";
 import { showSuccess, showError } from "../../components/ui/Toast.tsx";
+import { apiClient } from "../../lib/apiClient.ts";
 
 type LoadState = "idle" | "loading" | "error" | "ready";
 
@@ -30,7 +31,8 @@ export function CasesView() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
 
   const loadCases = useCallback(async () => {
-    if (!sessionId) {
+    const currentSessionId = sessionId;
+    if (!currentSessionId) {
       setError("No active session");
       setLoadState("error");
       return;
@@ -40,15 +42,20 @@ export function CasesView() {
       setLoadState("loading");
       setError(null);
 
-      const response =
-        await globalThis.window.justiceAPI.getAllCases(sessionId);
+      // Use HTTP API client instead of Electron IPC
+      const response = await apiClient.cases.list();
 
       if (!response.success) {
         throw new Error(response.error?.message || "Failed to load cases");
       }
 
-      if (response.data) {
-        setCases(response.data);
+      if (response.data && "items" in response.data) {
+        // Handle paginated response
+        setCases(response.data.items);
+        setLoadState("ready");
+      } else if (response.data) {
+        // Handle direct array response
+        setCases(response.data as Case[]);
         setLoadState("ready");
       }
     } catch (err) {
@@ -58,10 +65,49 @@ export function CasesView() {
   }, [sessionId]);
 
   useEffect(() => {
-    if (!authLoading) {
-      loadCases();
-    }
-  }, [loadCases, authLoading]);
+    let mounted = true;
+
+    const fetchCases = async () => {
+      if (!sessionId || authLoading) {
+        return;
+      }
+
+      try {
+        setLoadState("loading");
+        setError(null);
+
+        const response = await apiClient.cases.list();
+
+        if (!mounted) {
+          return;
+        }
+
+        if (!response.success) {
+          throw new Error(response.error?.message || "Failed to load cases");
+        }
+
+        if (response.data && "items" in response.data) {
+          setCases(response.data.items);
+          setLoadState("ready");
+        } else if (response.data) {
+          setCases(response.data as Case[]);
+          setLoadState("ready");
+        }
+      } catch (err) {
+        if (!mounted) {
+          return;
+        }
+        setError(err instanceof Error ? err.message : "Unknown error");
+        setLoadState("error");
+      }
+    };
+
+    fetchCases();
+
+    return () => {
+      mounted = false;
+    };
+  }, [sessionId, authLoading]);
 
   const handleCreateCase = useCallback(
     async (input: CreateCaseInput) => {
@@ -71,10 +117,8 @@ export function CasesView() {
       }
 
       try {
-        const response = await globalThis.window.justiceAPI.createCase(
-          input,
-          sessionId,
-        );
+        // Use HTTP API client instead of Electron IPC
+        const response = await apiClient.cases.create(input);
 
         if (!response.success) {
           throw new Error(response.error?.message || "Failed to create case");
@@ -112,10 +156,8 @@ export function CasesView() {
       }
 
       try {
-        const response = await globalThis.window.justiceAPI.deleteCase(
-          caseId.toString(),
-          sessionId,
-        );
+        // Use HTTP API client instead of Electron IPC
+        const response = await apiClient.cases.delete(caseId);
         if (response.success) {
           setCases((previous) => previous.filter((item) => item.id !== caseId));
           showSuccess("The case has been permanently removed", {
@@ -158,7 +200,7 @@ export function CasesView() {
   const hasFilteredResults = filteredCases.length > 0;
 
   return (
-    <div className="h-full flex flex-col bg-gradient-to-br from-gray-900 via-primary-900 to-gray-900">
+    <div className="h-full flex flex-col bg-linear-to-br from-gray-900 via-primary-900 to-gray-900">
       {/* Sticky Header with Toolbar */}
       <div className="sticky top-0 z-30 bg-gray-900/80 backdrop-blur-md border-b border-white/10">
         <div className="px-8 py-6">

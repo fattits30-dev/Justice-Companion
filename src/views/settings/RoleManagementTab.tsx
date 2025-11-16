@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { Shield, Users, Key } from 'lucide-react';
-import type { Role } from '../../domains/auth/entities/Role.ts';
-import type { Permission } from '../../domains/auth/entities/Permission.ts';
+import React, { useState, useEffect } from "react";
+import { Shield, Users, Key } from "lucide-react";
+import type { Role } from "../../domains/auth/entities/Role.ts";
+import type { Permission } from "../../domains/auth/entities/Permission.ts";
 
 /**
  * Role Management Tab (Admin Only)
@@ -24,10 +24,12 @@ export const RoleManagementTab: React.FC = () => {
       setError(null);
 
       // Call IPC to get all roles
-      const rolesData = await window.electron.invoke('rbac:getAllRoles') as Role[];
+      const rolesData = (await window.electron.invoke(
+        "rbac:getAllRoles",
+      )) as Role[];
       setRoles(rolesData);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load roles');
+      setError(err instanceof Error ? err.message : "Failed to load roles");
     } finally {
       setLoading(false);
     }
@@ -35,10 +37,15 @@ export const RoleManagementTab: React.FC = () => {
 
   const loadRolePermissions = async (roleId: number) => {
     try {
-      const perms = await window.electron.invoke('rbac:getRolePermissions', roleId) as Permission[];
+      const perms = (await window.electron.invoke(
+        "rbac:getRolePermissions",
+        roleId,
+      )) as Permission[];
       setPermissions(perms);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load permissions');
+      setError(
+        err instanceof Error ? err.message : "Failed to load permissions",
+      );
     }
   };
 
@@ -83,20 +90,27 @@ export const RoleManagementTab: React.FC = () => {
         <div className="lg:col-span-1">
           <div className="bg-white rounded-lg shadow overflow-hidden">
             <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
-              <h3 className="text-lg leading-6 font-medium text-gray-900">Roles</h3>
+              <h3 className="text-lg leading-6 font-medium text-gray-900">
+                Roles
+              </h3>
             </div>
             <ul className="divide-y divide-gray-200">
               {roles.map((role) => (
-                <li key={role.id} className="px-4 py-4 hover:bg-gray-50 cursor-pointer">
-                  <div 
+                <li
+                  key={role.id}
+                  className="px-4 py-4 hover:bg-gray-50 cursor-pointer"
+                >
+                  <div
                     className={`flex items-center justify-between ${
-                      selectedRole?.id === role.id ? 'bg-blue-50' : ''
+                      selectedRole?.id === role.id ? "bg-blue-50" : ""
                     }`}
                     onClick={() => handleRoleSelect(role)}
                   >
                     <div className="flex items-center">
                       <Users className="w-5 h-5 text-gray-500 mr-3" />
-                      <span className="font-medium text-gray-900">{role.name}</span>
+                      <span className="font-medium text-gray-900">
+                        {role.name}
+                      </span>
                     </div>
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                       {role.permissions.length} permissions
@@ -124,20 +138,26 @@ export const RoleManagementTab: React.FC = () => {
                       <li key={permission.id} className="py-3">
                         <div className="flex items-center">
                           <Key className="w-5 h-5 text-gray-500 mr-3" />
-                          <span className="text-gray-900">{permission.name}</span>
+                          <span className="text-gray-900">
+                            {permission.name}
+                          </span>
                         </div>
                       </li>
                     ))}
                   </ul>
                 ) : (
-                  <p className="text-gray-500">No permissions assigned to this role.</p>
+                  <p className="text-gray-500">
+                    No permissions assigned to this role.
+                  </p>
                 )}
               </div>
             </div>
           ) : (
             <div className="bg-white rounded-lg shadow p-8 text-center">
               <Shield className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">Select a role to view its permissions</p>
+              <p className="text-gray-500">
+                Select a role to view its permissions
+              </p>
             </div>
           )}
         </div>

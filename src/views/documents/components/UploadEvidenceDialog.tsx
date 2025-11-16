@@ -86,7 +86,7 @@ export function UploadEvidenceDialog({
               <input
                 type="file"
                 onChange={(event) => setFile(event.target.files?.[0] ?? null)}
-                className="w-full cursor-pointer rounded-lg border border-gray-700 bg-primary-900 px-4 py-2 text-white file:mr-4 file:cursor-pointer file:rounded file:border-0 file:bg-primary-600 file:px-4 file:py-2 file:text-white hover:file:bg-primary-700 focus:border-primary-500 focus:outline-none"
+                className="w-full cursor-pointer rounded-lg border border-gray-700 bg-primary-900 px-4 py-2 text-white file:mr-4 file:cursor-pointer file:rounded file:border-0 file:bg-primary-600 file:px-4 file:py-2 file:text-white hover:file:bg-primary-700 focus:border-primary-500 focus:outline-hidden"
                 required
               />
             </label>
@@ -98,7 +98,7 @@ export function UploadEvidenceDialog({
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
                 placeholder="e.g., Employment Contract 2024"
-                className="w-full rounded-lg border border-gray-700 bg-primary-900 px-4 py-2 text-white placeholder-gray-500 focus:border-primary-500 focus:outline-none"
+                className="w-full rounded-lg border border-gray-700 bg-primary-900 px-4 py-2 text-white placeholder-gray-500 focus:border-primary-500 focus:outline-hidden"
                 required
               />
             </label>
@@ -112,7 +112,7 @@ export function UploadEvidenceDialog({
                 onChange={(event) =>
                   setEvidenceType(event.target.value as EvidenceType)
                 }
-                className="w-full rounded-lg border border-gray-700 bg-primary-900 px-4 py-2 text-white focus:border-primary-500 focus:outline-none"
+                className="w-full rounded-lg border border-gray-700 bg-primary-900 px-4 py-2 text-white focus:border-primary-500 focus:outline-hidden"
               >
                 {Object.entries(evidenceTypeMetadata).map(([value, meta]) => (
                   <option key={value} value={value}>
@@ -130,7 +130,7 @@ export function UploadEvidenceDialog({
                 type="date"
                 value={obtainedDate}
                 onChange={(event) => setObtainedDate(event.target.value)}
-                className="w-full rounded-lg border border-gray-700 bg-primary-900 px-4 py-2 text-white focus:border-primary-500 focus:outline-none"
+                className="w-full rounded-lg border border-gray-700 bg-primary-900 px-4 py-2 text-white focus:border-primary-500 focus:outline-hidden"
               />
             </label>
 
