@@ -41,7 +41,7 @@ describe("UserFactsRepository", () => {
       `
       INSERT INTO cases (title, case_type)
       VALUES ('Test Case', 'employment')
-    `
+    `,
     ).run();
   });
 
@@ -282,7 +282,7 @@ describe("UserFactsRepository", () => {
       expect(employmentFacts).toHaveLength(1);
       expect(personalFacts.every((f) => f.factType === "personal")).toBe(true);
       expect(employmentFacts.every((f) => f.factType === "employment")).toBe(
-        true
+        true,
       );
     });
 
@@ -460,7 +460,7 @@ describe("UserFactsRepository", () => {
           `
         INSERT INTO user_facts (case_id, fact_content, fact_type)
         VALUES (?, ?, ?)
-      `
+      `,
         )
         .run(1, "Plaintext fact", "personal");
 

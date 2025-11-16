@@ -1,8 +1,8 @@
-import net from 'net';
-import { logger } from '../utils/logger';
-import { errorLogger } from '../utils/error-logger';
-import path from 'path';
-import fs from 'fs';
+import net from "net";
+import { logger } from "../utils/logger";
+import { errorLogger } from "../utils/error-logger";
+import path from "path";
+import fs from "fs";
 
 /**
  * Port configuration for a service
@@ -22,7 +22,7 @@ interface PortAllocation {
   service: string;
   requestedPort: number;
   allocatedPort: number;
-  status: 'allocated' | 'in_use' | 'error';
+  status: "allocated" | "in_use" | "error";
   message?: string;
 }
 
@@ -59,33 +59,33 @@ interface PortManagerConfig {
  */
 const DEFAULT_PORT_CONFIGS: PortConfig[] = [
   {
-    service: 'vite-dev-server',
+    service: "vite-dev-server",
     defaultPort: 5176,
     range: [5173, 5180],
-    description: 'Vite development server',
-    required: true
+    description: "Vite development server",
+    required: true,
   },
   {
-    service: 'python-ai-service',
+    service: "python-ai-service",
     defaultPort: 5050,
     range: [5050, 5060],
-    description: 'Python AI document analysis service',
-    required: false
+    description: "Python AI document analysis service",
+    required: false,
   },
   {
-    service: 'electron-dev-api',
+    service: "electron-dev-api",
     defaultPort: 8080,
     range: [8080, 8090],
-    description: 'Electron development API server',
-    required: false
+    description: "Electron development API server",
+    required: false,
   },
   {
-    service: 'playwright-debug',
+    service: "playwright-debug",
     defaultPort: 9323,
     range: [9320, 9330],
-    description: 'Playwright debugger',
-    required: false
-  }
+    description: "Playwright debugger",
+    required: false,
+  },
 ];
 
 /**
@@ -100,10 +100,10 @@ export class PortManager {
 
   constructor(config?: PortManagerConfig) {
     this.config = {
-      portConfigPath: config?.portConfigPath || '',
+      portConfigPath: config?.portConfigPath || "",
       enableAutoAllocation: config?.enableAutoAllocation ?? true,
       maxRetries: config?.maxRetries ?? 10,
-      retryDelay: config?.retryDelay ?? 100
+      retryDelay: config?.retryDelay ?? 100,
     };
 
     // App reference not needed
@@ -115,25 +115,28 @@ export class PortManager {
    */
   private initializePortConfigs(): void {
     // Try to load from config file first
-    if (this.config.portConfigPath && fs.existsSync(this.config.portConfigPath)) {
+    if (
+      this.config.portConfigPath &&
+      fs.existsSync(this.config.portConfigPath)
+    ) {
       try {
-        const configData = fs.readFileSync(this.config.portConfigPath, 'utf-8');
+        const configData = fs.readFileSync(this.config.portConfigPath, "utf-8");
         const customConfigs = JSON.parse(configData) as PortConfig[];
-        customConfigs.forEach(config => {
+        customConfigs.forEach((config) => {
           this.portConfigs.set(config.service, config);
         });
-        logger.info('[PortManager] Loaded custom port configurations', {
-          service: 'PortManager',
-          configFile: this.config.portConfigPath
+        logger.info("[PortManager] Loaded custom port configurations", {
+          service: "PortManager",
+          metadata: { configFile: this.config.portConfigPath },
         });
       } catch (error) {
         errorLogger.logError(
           error instanceof Error ? error : new Error(String(error)),
           {
-            service: 'PortManager',
-            operation: 'initializePortConfigs',
-            configFile: this.config.portConfigPath
-          }
+            service: "PortManager",
+            operation: "initializePortConfigs",
+            metadata: { configFile: this.config.portConfigPath },
+          },
         );
         this.loadDefaultConfigs();
       }
@@ -146,12 +149,12 @@ export class PortManager {
    * Load default port configurations
    */
   private loadDefaultConfigs(): void {
-    DEFAULT_PORT_CONFIGS.forEach(config => {
+    DEFAULT_PORT_CONFIGS.forEach((config) => {
       this.portConfigs.set(config.service, config);
     });
-    logger.info('[PortManager] Loaded default port configurations', {
-      service: 'PortManager',
-      services: Array.from(this.portConfigs.keys())
+    logger.info("[PortManager] Loaded default port configurations", {
+      service: "PortManager",
+      metadata: { services: Array.from(this.portConfigs.keys()) },
     });
   }
 
@@ -162,26 +165,26 @@ export class PortManager {
     return new Promise((resolve) => {
       const server = net.createServer();
 
-      server.once('error', (err: NodeJS.ErrnoException) => {
-        if (err.code === 'EADDRINUSE') {
+      server.once("error", (err: NodeJS.ErrnoException) => {
+        if (err.code === "EADDRINUSE") {
           resolve(false);
         } else {
           // Other errors we'll treat as port being unavailable
           errorLogger.logError(err, {
-            service: 'PortManager',
-            operation: 'isPortAvailable',
-            port
+            service: "PortManager",
+            operation: "isPortAvailable",
+            port,
           });
           resolve(false);
         }
       });
 
-      server.once('listening', () => {
+      server.once("listening", () => {
         server.close();
         resolve(true);
       });
 
-      server.listen(port, '127.0.0.1');
+      server.listen(port, "127.0.0.1");
     });
   }
 
@@ -190,7 +193,7 @@ export class PortManager {
    */
   public async findAvailablePort(
     startPort: number,
-    endPort?: number
+    endPort?: number,
   ): Promise<number | null> {
     const end = endPort || startPort + 100;
 
@@ -215,8 +218,8 @@ export class PortManager {
         service: serviceName,
         requestedPort: 0,
         allocatedPort: 0,
-        status: 'error',
-        message: `No port configuration found for service: ${serviceName}`
+        status: "error",
+        message: `No port configuration found for service: ${serviceName}`,
       };
       this.allocatedPorts.set(serviceName, allocation);
       return allocation;
@@ -224,8 +227,10 @@ export class PortManager {
 
     // Check if already allocated
     const existingAllocation = this.allocatedPorts.get(serviceName);
-    if (existingAllocation && existingAllocation.status === 'allocated') {
-      const stillAvailable = await this.isPortAvailable(existingAllocation.allocatedPort);
+    if (existingAllocation && existingAllocation.status === "allocated") {
+      const stillAvailable = await this.isPortAvailable(
+        existingAllocation.allocatedPort,
+      );
       if (!stillAvailable) {
         return existingAllocation;
       }
@@ -238,34 +243,43 @@ export class PortManager {
         service: serviceName,
         requestedPort: config.defaultPort,
         allocatedPort: config.defaultPort,
-        status: 'allocated',
-        message: `Allocated default port ${config.defaultPort}`
+        status: "allocated",
+        message: `Allocated default port ${config.defaultPort}`,
       };
       this.allocatedPorts.set(serviceName, allocation);
-      logger.info(`[PortManager] Allocated port ${config.defaultPort} for ${serviceName}`, {
-        service: 'PortManager',
-        allocation
-      });
+      logger.info(
+        `[PortManager] Allocated port ${config.defaultPort} for ${serviceName}`,
+        {
+          service: "PortManager",
+          metadata: { allocation },
+        },
+      );
       return allocation;
     }
 
     // If auto-allocation is enabled and we have a range, try to find an alternative
     if (this.config.enableAutoAllocation && config.range) {
-      const availablePort = await this.findAvailablePort(config.range[0], config.range[1]);
+      const availablePort = await this.findAvailablePort(
+        config.range[0],
+        config.range[1],
+      );
 
       if (availablePort) {
         const allocation: PortAllocation = {
           service: serviceName,
           requestedPort: config.defaultPort,
           allocatedPort: availablePort,
-          status: 'allocated',
-          message: `Default port ${config.defaultPort} was in use. Allocated alternative port ${availablePort}`
+          status: "allocated",
+          message: `Default port ${config.defaultPort} was in use. Allocated alternative port ${availablePort}`,
         };
         this.allocatedPorts.set(serviceName, allocation);
-        logger.info(`[PortManager] Allocated alternative port ${availablePort} for ${serviceName}`, {
-          service: 'PortManager',
-          allocation
-        });
+        logger.info(
+          `[PortManager] Allocated alternative port ${availablePort} for ${serviceName}`,
+          {
+            service: "PortManager",
+            metadata: { allocation },
+          },
+        );
         return allocation;
       }
     }
@@ -275,14 +289,17 @@ export class PortManager {
       service: serviceName,
       requestedPort: config.defaultPort,
       allocatedPort: 0,
-      status: 'in_use',
-      message: `Port ${config.defaultPort} is in use and no alternatives available`
+      status: "in_use",
+      message: `Port ${config.defaultPort} is in use and no alternatives available`,
     };
     this.allocatedPorts.set(serviceName, allocation);
-    errorLogger.logError(new Error(`Failed to allocate port for ${serviceName}`), {
-      service: 'PortManager',
-      allocation
-    });
+    errorLogger.logError(
+      new Error(`Failed to allocate port for ${serviceName}`),
+      {
+        service: "PortManager",
+        metadata: { allocation },
+      },
+    );
     return allocation;
   }
 
@@ -307,7 +324,7 @@ export class PortManager {
    */
   public getPort(serviceName: string): number | null {
     const allocation = this.allocatedPorts.get(serviceName);
-    return allocation && allocation.status === 'allocated'
+    return allocation && allocation.status === "allocated"
       ? allocation.allocatedPort
       : null;
   }
@@ -319,7 +336,7 @@ export class PortManager {
     const portMap: ServicePortMap = {};
 
     for (const [service, allocation] of this.allocatedPorts) {
-      if (allocation.status === 'allocated') {
+      if (allocation.status === "allocated") {
         portMap[service] = allocation.allocatedPort;
       }
     }
@@ -342,11 +359,13 @@ export class PortManager {
         this.portMonitors.delete(allocation.allocatedPort);
       }
 
-      logger.info(`[PortManager] Released port ${allocation.allocatedPort} for ${serviceName}`, {
-        service: 'PortManager',
-        serviceName,
-        port: allocation.allocatedPort
-      });
+      logger.info(
+        `[PortManager] Released port ${allocation.allocatedPort} for ${serviceName}`,
+        {
+          service: "PortManager",
+          metadata: { serviceName, port: allocation.allocatedPort },
+        },
+      );
     }
   }
 
@@ -362,9 +381,12 @@ export class PortManager {
   /**
    * Monitor port availability
    */
-  public startPortMonitoring(serviceName: string, interval: number = 5000): void {
+  public startPortMonitoring(
+    serviceName: string,
+    interval: number = 5000,
+  ): void {
     const allocation = this.allocatedPorts.get(serviceName);
-    if (!allocation || allocation.status !== 'allocated') {
+    if (!allocation || allocation.status !== "allocated") {
       return;
     }
 
@@ -378,11 +400,13 @@ export class PortManager {
     const monitor = setInterval(async () => {
       const available = await this.isPortAvailable(allocation.allocatedPort);
       if (available) {
-        logger.warn(`[PortManager] Port ${allocation.allocatedPort} for ${serviceName} became available unexpectedly`, {
-          service: 'PortManager',
-          serviceName,
-          port: allocation.allocatedPort
-        });
+        logger.warn(
+          `[PortManager] Port ${allocation.allocatedPort} for ${serviceName} became available unexpectedly`,
+          {
+            service: "PortManager",
+            metadata: { serviceName, port: allocation.allocatedPort },
+          },
+        );
 
         // Could trigger reconnection logic here
         this.onPortBecameAvailable(serviceName, allocation.allocatedPort);
@@ -390,12 +414,15 @@ export class PortManager {
     }, interval);
 
     this.portMonitors.set(allocation.allocatedPort, monitor);
-    logger.info(`[PortManager] Started monitoring port ${allocation.allocatedPort} for ${serviceName}`, {
-      service: 'PortManager',
-      serviceName,
-      port: allocation.allocatedPort,
-      interval
-    });
+    logger.info(
+      `[PortManager] Started monitoring port ${allocation.allocatedPort} for ${serviceName}`,
+      {
+        service: "PortManager",
+        serviceName,
+        port: allocation.allocatedPort,
+        interval,
+      },
+    );
   }
 
   /**
@@ -408,11 +435,14 @@ export class PortManager {
       if (monitor) {
         clearInterval(monitor);
         this.portMonitors.delete(allocation.allocatedPort);
-        logger.info(`[PortManager] Stopped monitoring port ${allocation.allocatedPort} for ${serviceName}`, {
-          service: 'PortManager',
-          serviceName,
-          port: allocation.allocatedPort
-        });
+        logger.info(
+          `[PortManager] Stopped monitoring port ${allocation.allocatedPort} for ${serviceName}`,
+          {
+            service: "PortManager",
+            serviceName,
+            port: allocation.allocatedPort,
+          },
+        );
       }
     }
   }
@@ -424,13 +454,13 @@ export class PortManager {
     const statuses: PortStatus[] = [];
 
     for (const [serviceName, allocation] of this.allocatedPorts) {
-      if (allocation.status === 'allocated') {
+      if (allocation.status === "allocated") {
         const inUse = !(await this.isPortAvailable(allocation.allocatedPort));
         statuses.push({
           port: allocation.allocatedPort,
           service: serviceName,
           inUse,
-          allocatedAt: new Date()
+          allocatedAt: new Date(),
         });
       }
     }
@@ -445,7 +475,7 @@ export class PortManager {
     const configPath = filePath || this.config.portConfigPath;
 
     if (!configPath) {
-      throw new Error('No configuration file path specified');
+      throw new Error("No configuration file path specified");
     }
 
     const configs = Array.from(this.portConfigs.values());
@@ -454,26 +484,26 @@ export class PortManager {
     const configData = {
       timestamp: new Date().toISOString(),
       portConfigs: configs,
-      allocations: allocations.filter(a => a.status === 'allocated')
+      allocations: allocations.filter((a) => a.status === "allocated"),
     };
 
     try {
       fs.mkdirSync(path.dirname(configPath), { recursive: true });
       fs.writeFileSync(configPath, JSON.stringify(configData, null, 2));
 
-      logger.info('[PortManager] Saved port configuration', {
-        service: 'PortManager',
+      logger.info("[PortManager] Saved port configuration", {
+        service: "PortManager",
         configPath,
-        services: configs.length
+        services: configs.length,
       });
     } catch (error) {
       errorLogger.logError(
         error instanceof Error ? error : new Error(String(error)),
         {
-          service: 'PortManager',
-          operation: 'saveConfiguration',
-          configPath
-        }
+          service: "PortManager",
+          operation: "saveConfiguration",
+          configPath,
+        },
       );
       throw error;
     }
@@ -484,11 +514,14 @@ export class PortManager {
    */
   private onPortBecameAvailable(serviceName: string, port: number): void {
     // This could be extended to emit events or trigger reconnection logic
-    logger.info(`[PortManager] Port ${port} for ${serviceName} is now available`, {
-      service: 'PortManager',
-      serviceName,
-      port
-    });
+    logger.info(
+      `[PortManager] Port ${port} for ${serviceName} is now available`,
+      {
+        service: "PortManager",
+        serviceName,
+        port,
+      },
+    );
   }
 
   /**
@@ -498,8 +531,8 @@ export class PortManager {
     const env: Record<string, string> = {};
 
     for (const [service, allocation] of this.allocatedPorts) {
-      if (allocation.status === 'allocated') {
-        const envKey = service.toUpperCase().replace(/-/g, '_') + '_PORT';
+      if (allocation.status === "allocated") {
+        const envKey = service.toUpperCase().replace(/-/g, "_") + "_PORT";
         env[envKey] = String(allocation.allocatedPort);
       }
     }
@@ -513,7 +546,7 @@ export class PortManager {
   public async waitForPort(
     port: number,
     timeout: number = 30000,
-    checkInterval: number = 1000
+    checkInterval: number = 1000,
   ): Promise<boolean> {
     const startTime = Date.now();
 
@@ -522,7 +555,7 @@ export class PortManager {
       if (available) {
         return true;
       }
-      await new Promise(resolve => setTimeout(resolve, checkInterval));
+      await new Promise((resolve) => setTimeout(resolve, checkInterval));
     }
 
     return false;
@@ -547,9 +580,9 @@ export class PortManager {
         errorLogger.logError(
           error instanceof Error ? error : new Error(String(error)),
           {
-            service: 'PortManager',
-            operation: 'cleanup'
-          }
+            service: "PortManager",
+            operation: "cleanup",
+          },
         );
       }
     }
@@ -557,8 +590,8 @@ export class PortManager {
     // Clear allocations
     this.allocatedPorts.clear();
 
-    logger.info('[PortManager] Cleanup completed', {
-      service: 'PortManager'
+    logger.info("[PortManager] Cleanup completed", {
+      service: "PortManager",
     });
   }
 }

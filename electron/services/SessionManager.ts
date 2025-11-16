@@ -33,6 +33,7 @@ interface SessionValidationResult {
  * - Automatic session expiration
  * - Session cleanup on logout
  * - UUID-based session IDs for security
+ * - Supports reusing existing database session IDs
  *
  * Security:
  * - Sessions expire after 24 hours (or 30 days for rememberMe)
@@ -44,14 +45,16 @@ class SessionManager {
 
   /**
    * Create a new in-memory session
+   * @param sessionData.sessionId - Optional existing session ID to reuse (e.g., from database)
    */
   createSession(sessionData: {
     userId: number;
     username: string;
     rememberMe: boolean;
+    sessionId?: string;  // Optional - reuse existing session ID instead of generating new one
   }): string {
-    // Generate secure session ID
-    const sessionId = uuidv4();
+    // Use provided sessionId or generate new one
+    const sessionId = sessionData.sessionId || uuidv4();
 
     // Calculate expiration time
     const expiresAt = new Date();
@@ -75,7 +78,7 @@ class SessionManager {
     this.sessions.set(sessionId, session);
 
     logger.warn(
-      `[SessionManager] Created in-memory session ${sessionId} for user ${sessionData.username} (expires: ${expiresAt.toISOString()})`
+      `[SessionManager] Created in-memory session ${sessionId} for user ${sessionData.username} (expires: ${expiresAt.toISOString()})${sessionData.sessionId ? ' (reused database session ID)' : ''}`
     );
 
     return sessionId;

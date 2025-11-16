@@ -10,7 +10,7 @@
  * <motion.div variants={FADE_IN_UP} initial="hidden" animate="visible">
  */
 
-import type { Variants } from 'framer-motion';
+import type { Variants } from "framer-motion";
 
 /**
  * Fade in from bottom
@@ -26,7 +26,7 @@ export const FADE_IN_UP: Variants = {
     y: 0,
     transition: {
       duration: 0.5,
-      ease: 'easeOut',
+      ease: "easeOut",
     },
   },
 };
@@ -45,7 +45,7 @@ export const FADE_IN_DOWN: Variants = {
     y: 0,
     transition: {
       duration: 0.3,
-      ease: 'easeOut',
+      ease: "easeOut",
     },
   },
 };
@@ -64,7 +64,7 @@ export const FADE_IN_LEFT: Variants = {
     x: 0,
     transition: {
       duration: 0.3,
-      ease: 'easeOut',
+      ease: "easeOut",
     },
   },
 };
@@ -83,7 +83,7 @@ export const FADE_IN_RIGHT: Variants = {
     x: 0,
     transition: {
       duration: 0.3,
-      ease: 'easeOut',
+      ease: "easeOut",
     },
   },
 };
@@ -100,7 +100,7 @@ export const FADE_IN: Variants = {
     opacity: 1,
     transition: {
       duration: 0.3,
-      ease: 'easeInOut',
+      ease: "easeInOut",
     },
   },
 };
@@ -188,20 +188,20 @@ export const STAGGER_CONTAINER_SLOW: Variants = {
  */
 export const SLIDE_IN_LEFT: Variants = {
   hidden: {
-    x: '-100%',
+    x: "-100%",
   },
   visible: {
     x: 0,
     transition: {
       duration: 0.3,
-      ease: 'easeOut',
+      ease: "easeOut",
     },
   },
   exit: {
-    x: '-100%',
+    x: "-100%",
     transition: {
       duration: 0.2,
-      ease: 'easeIn',
+      ease: "easeIn",
     },
   },
 };
@@ -212,20 +212,20 @@ export const SLIDE_IN_LEFT: Variants = {
  */
 export const SLIDE_IN_RIGHT: Variants = {
   hidden: {
-    x: '100%',
+    x: "100%",
   },
   visible: {
     x: 0,
     transition: {
       duration: 0.3,
-      ease: 'easeOut',
+      ease: "easeOut",
     },
   },
   exit: {
-    x: '100%',
+    x: "100%",
     transition: {
       duration: 0.2,
-      ease: 'easeIn',
+      ease: "easeIn",
     },
   },
 };
@@ -264,7 +264,7 @@ export const CARD_HOVER = {
   y: -4,
   transition: {
     duration: 0.2,
-    ease: 'easeOut' as const,
+    ease: "easeOut" as const,
   },
 };
 
@@ -296,7 +296,7 @@ export const ROTATE_IN: Variants = {
     rotate: 0,
     transition: {
       duration: 0.5,
-      ease: 'easeOut',
+      ease: "easeOut",
     },
   },
 };
@@ -311,15 +311,15 @@ export const EXPAND_VERTICAL: Variants = {
     opacity: 0,
     transition: {
       duration: 0.3,
-      ease: 'easeInOut',
+      ease: "easeInOut",
     },
   },
   expanded: {
-    height: 'auto',
+    height: "auto",
     opacity: 1,
     transition: {
       duration: 0.3,
-      ease: 'easeInOut',
+      ease: "easeInOut",
     },
   },
 };
@@ -336,6 +336,6 @@ export const PULSE = {
   transition: {
     duration: 2,
     repeat: Infinity,
-    ease: 'easeInOut',
+    ease: "easeInOut",
   },
 };

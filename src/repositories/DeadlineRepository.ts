@@ -1,14 +1,14 @@
-import type Database from 'better-sqlite3';
+import type Database from "better-sqlite3";
 import type {
   Deadline,
   CreateDeadlineInput,
   UpdateDeadlineInput,
-} from '../domains/timeline/entities/Deadline.ts';
+} from "../domains/timeline/entities/Deadline.ts";
 import type {
   DeadlineDependency,
   DeadlineWithDependencies,
-} from '../domains/timeline/entities/DeadlineDependency.ts';
-import type { AuditLogger } from '../services/AuditLogger.ts';
+} from "../domains/timeline/entities/DeadlineDependency.ts";
+import type { AuditLogger } from "../services/AuditLogger.ts";
 
 /**
  * DeadlineRepository - Data access layer for deadlines
@@ -40,7 +40,7 @@ export class DeadlineRepository {
       title: input.title,
       description: input.description ?? null,
       deadlineDate: input.deadlineDate,
-      priority: input.priority ?? 'medium',
+      priority: input.priority ?? "medium",
     });
 
     const id = result.lastInsertRowid as number;
@@ -48,10 +48,10 @@ export class DeadlineRepository {
     if (this.auditLogger) {
       this.auditLogger.log({
         userId: input.userId.toString(),
-        eventType: 'timeline_event.create',
-        resourceType: 'deadline',
+        eventType: "timeline_event.create",
+        resourceType: "deadline",
         resourceId: id.toString(),
-        action: 'create',
+        action: "create",
         details: { title: input.title },
       });
     }
@@ -60,7 +60,7 @@ export class DeadlineRepository {
     if (!createdDeadline) {
       throw new Error(`Failed to retrieve created deadline with id ${id}`);
     }
-    
+
     return createdDeadline;
   }
 
@@ -153,10 +153,10 @@ export class DeadlineRepository {
     if (this.auditLogger) {
       this.auditLogger.log({
         userId: existingDeadline.userId.toString(),
-        eventType: 'timeline_event.update',
-        resourceType: 'deadline',
+        eventType: "timeline_event.update",
+        resourceType: "deadline",
         resourceId: id.toString(),
-        action: 'update',
+        action: "update",
         details: { title: input.title || existingDeadline.title },
       });
     }
@@ -184,10 +184,10 @@ export class DeadlineRepository {
     if (result.changes > 0 && this.auditLogger) {
       this.auditLogger.log({
         userId: userId.toString(),
-        eventType: 'timeline_event.delete',
-        resourceType: 'deadline',
+        eventType: "timeline_event.delete",
+        resourceType: "deadline",
         resourceId: id.toString(),
-        action: 'delete',
+        action: "delete",
         details: { title: existingDeadline.title },
       });
     }
@@ -212,10 +212,10 @@ export class DeadlineRepository {
       if (deadline) {
         this.auditLogger.log({
           userId: userId.toString(),
-          eventType: 'timeline_event.complete',
-          resourceType: 'deadline',
+          eventType: "timeline_event.complete",
+          resourceType: "deadline",
           resourceId: id.toString(),
-          action: 'complete',
+          action: "complete",
           details: { title: deadline.title },
         });
       }

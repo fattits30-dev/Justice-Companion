@@ -1,8 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import { AlertCircle, CheckCircle, RefreshCw, Server, XCircle } from 'lucide-react';
-import { Card } from './ui/Card';
-import { Button } from './ui/Button';
-import { Badge } from './ui/Badge';
+import React, { useEffect, useState } from "react";
+import {
+  AlertCircle,
+  CheckCircle,
+  RefreshCw,
+  Server,
+  XCircle,
+} from "lucide-react";
+import { Card } from "./ui/Card";
+import { Button } from "./ui/Button";
+import { Badge } from "./ui/Badge";
 
 interface PortStatus {
   port: number;
@@ -42,10 +48,10 @@ export const PortStatusMonitor: React.FC = () => {
       if (result && result.success) {
         setPortData(result.data || null);
       } else {
-        setError(result?.error || 'Failed to fetch port status');
+        setError(result?.error || "Failed to fetch port status");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error occurred');
+      setError(err instanceof Error ? err.message : "Unknown error occurred");
     } finally {
       setLoading(false);
     }
@@ -77,14 +83,14 @@ export const PortStatusMonitor: React.FC = () => {
   };
 
   const formatPort = (port: number) => {
-    return port.toString().padStart(5, ' ');
+    return port.toString().padStart(5, " ");
   };
 
   const formatServiceName = (service: string) => {
     return service
-      .split('-')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
+      .split("-")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
   };
 
   if (loading && !portData) {
@@ -105,11 +111,7 @@ export const PortStatusMonitor: React.FC = () => {
           <AlertCircle className="h-5 w-5 mr-2" />
           <span>Error: {error}</span>
         </div>
-        <Button
-          onClick={fetchPortStatus}
-          className="mt-4"
-          variant="secondary"
-        >
+        <Button onClick={fetchPortStatus} className="mt-4" variant="secondary">
           Retry
         </Button>
       </Card>
@@ -134,7 +136,7 @@ export const PortStatusMonitor: React.FC = () => {
             size="sm"
             disabled={loading}
           >
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
           </Button>
           <label className="flex items-center gap-2 cursor-pointer">
             <input
@@ -165,28 +167,35 @@ export const PortStatusMonitor: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="text-sm">
-                {Object.entries(portData.allocatedPorts).map(([service, port]) => {
-                  const status = portData.portStatus.find(s => s.port === port);
-                  const envVar = service.toUpperCase().replace(/-/g, '_') + '_PORT';
+                {Object.entries(portData.allocatedPorts).map(
+                  ([service, port]) => {
+                    const status = portData.portStatus.find(
+                      (s) => s.port === port,
+                    );
+                    const envVar =
+                      service.toUpperCase().replace(/-/g, "_") + "_PORT";
 
-                  return (
-                    <tr key={service} className="border-t border-gray-200">
-                      <td className="py-2">
-                        <div className="flex items-center">
-                          {getStatusIcon(status?.inUse || false)}
-                          <span className="ml-2">{formatServiceName(service)}</span>
-                        </div>
-                      </td>
-                      <td className="py-2 font-mono">{formatPort(port)}</td>
-                      <td className="py-2">
-                        {getStatusBadge(status?.inUse || false)}
-                      </td>
-                      <td className="py-2 font-mono text-xs text-gray-600">
-                        {envVar}
-                      </td>
-                    </tr>
-                  );
-                })}
+                    return (
+                      <tr key={service} className="border-t border-gray-200">
+                        <td className="py-2">
+                          <div className="flex items-center">
+                            {getStatusIcon(status?.inUse || false)}
+                            <span className="ml-2">
+                              {formatServiceName(service)}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="py-2 font-mono">{formatPort(port)}</td>
+                        <td className="py-2">
+                          {getStatusBadge(status?.inUse || false)}
+                        </td>
+                        <td className="py-2 font-mono text-xs text-gray-600">
+                          {envVar}
+                        </td>
+                      </tr>
+                    );
+                  },
+                )}
               </tbody>
             </table>
           </div>
@@ -207,13 +216,13 @@ export const PortStatusMonitor: React.FC = () => {
             <div>
               <span className="text-gray-600">Active Ports:</span>
               <span className="ml-2 font-medium">
-                {portData.portStatus.filter(p => p.inUse).length}
+                {portData.portStatus.filter((p) => p.inUse).length}
               </span>
             </div>
             <div>
               <span className="text-gray-600">Environment:</span>
               <span className="ml-2 font-medium">
-                {process.env.NODE_ENV || 'development'}
+                {process.env.NODE_ENV || "development"}
               </span>
             </div>
             <div>
@@ -250,10 +259,10 @@ export const PortStatusMonitor: React.FC = () => {
                 if (result && result.success) {
                   await fetchPortStatus();
                 } else {
-                  setError('Failed to restart services');
+                  setError("Failed to restart services");
                 }
               } catch (err) {
-                setError('Failed to restart services');
+                setError("Failed to restart services");
               }
             }}
             variant="secondary"
@@ -268,10 +277,10 @@ export const PortStatusMonitor: React.FC = () => {
                 if (result && result.success) {
                   await fetchPortStatus();
                 } else {
-                  setError('Failed to release ports');
+                  setError("Failed to release ports");
                 }
               } catch (err) {
-                setError('Failed to release ports');
+                setError("Failed to release ports");
               }
             }}
             variant="ghost"

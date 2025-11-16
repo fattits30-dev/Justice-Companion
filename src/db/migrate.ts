@@ -1,19 +1,17 @@
-import fs from 'fs';
-import { logger } from '../utils/logger.ts';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import crypto from 'crypto';
-import { databaseManager } from './database.ts';
-import { errorLogger } from '../utils/error-logger.ts';
+import fs from "fs";
+import { logger } from "../utils/logger.ts";
+import path from "path";
+import crypto from "crypto";
+import { databaseManager } from "./database.ts";
+import { errorLogger } from "../utils/error-logger.ts";
 
-// ESM equivalent of __dirname
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Note: __dirname is available in CommonJS mode (esbuild output)
+// No need to derive from import.meta.url
 
 /**
  * Migration status type
  */
-export type MigrationStatus = 'applied' | 'rolled_back' | 'failed';
+export type MigrationStatus = "applied" | "rolled_back" | "failed";
 
 /**
  * Migration record from database
@@ -51,7 +49,7 @@ function ensureMigrationsTable(): void {
  * Calculate SHA-256 checksum of migration file
  */
 function calculateChecksum(content: string): string {
-  return crypto.createHash('sha256').update(content).digest('hex');
+  return crypto.createHash("sha256").update(content).digest("hex");
 }
 
 /**
@@ -62,7 +60,7 @@ export function parseMigration(content: string): { up: string; down: string } {
   const downMatch = content.match(/--\s*DOWN\s*\n([\s\S]*?)$/i);
 
   const up = upMatch ? upMatch[1].trim() : content.trim();
-  const down = downMatch ? downMatch[1].trim() : '';
+  const down = downMatch ? downMatch[1].trim() : "";
 
   return { up, down };
 }
@@ -74,13 +72,13 @@ export function runMigrations(): void {
   const db = databaseManager.getDatabase();
   // Try multiple paths to find migrations
   const possiblePaths = [
-    path.join(__dirname, 'migrations'), // Bundled: dist-electron/migrations
-    path.join(process.cwd(), 'dist-electron', 'migrations'), // Development bundled
-    path.join(process.cwd(), 'src', 'db', 'migrations'), // Development source
-    path.join(process.resourcesPath || '', 'migrations'), // Production
+    path.join(__dirname, "migrations"), // Bundled: dist-electron/migrations
+    path.join(process.cwd(), "dist-electron", "migrations"), // Development bundled
+    path.join(process.cwd(), "src", "db", "migrations"), // Development source
+    path.join(process.resourcesPath || "", "migrations"), // Production
   ];
 
-  let migrationsDir = '';
+  let migrationsDir = "";
   for (const dir of possiblePaths) {
     if (fs.existsSync(dir)) {
       migrationsDir = dir;
@@ -89,7 +87,10 @@ export function runMigrations(): void {
   }
 
   if (!migrationsDir) {
-    throw new Error('Migrations directory not found! Searched paths: ' + possiblePaths.join(', '));
+    throw new Error(
+      "Migrations directory not found! Searched paths: " +
+        possiblePaths.join(", "),
+    );
   }
 
   try {
@@ -98,7 +99,7 @@ export function runMigrations(): void {
     // Get list of migration files
     const migrationFiles = fs
       .readdirSync(migrationsDir)
-      .filter((file) => file.endsWith('.sql'))
+      .filter((file) => file.endsWith(".sql"))
       .sort();
 
     // Get already applied migrations
@@ -108,8 +109,8 @@ export function runMigrations(): void {
     }
 
     const appliedMigrations = db
-      .prepare('SELECT name, checksum FROM migrations WHERE status = ?')
-      .all('applied')
+      .prepare("SELECT name, checksum FROM migrations WHERE status = ?")
+      .all("applied")
       .map((row: unknown) => {
         const migrationRow = row as MigrationRow;
         return {
@@ -124,11 +125,11 @@ export function runMigrations(): void {
     for (const file of migrationFiles) {
       if (!appliedNames.includes(file)) {
         const migrationPath = path.join(migrationsDir, file);
-        const migrationContent = fs.readFileSync(migrationPath, 'utf8');
+        const migrationContent = fs.readFileSync(migrationPath, "utf8");
         const checksum = calculateChecksum(migrationContent);
         const { up } = parseMigration(migrationContent);
 
-        errorLogger.logError(`Running migration: ${file}`, { type: 'info' });
+        errorLogger.logError(`Running migration: ${file}`, { type: "info" });
 
         const startTime = Date.now();
 
@@ -138,37 +139,42 @@ export function runMigrations(): void {
 
           const duration = Date.now() - startTime;
 
-          db.prepare(`
+          db.prepare(
+            `
             INSERT INTO migrations (name, checksum, duration_ms, status)
             VALUES (?, ?, ?, 'applied')
-          `).run(file, checksum, duration);
+          `,
+          ).run(file, checksum, duration);
         });
 
         applyMigration();
 
-        errorLogger.logError(`Migration completed: ${file} (${Date.now() - startTime}ms)`, {
-          type: 'info',
-        });
+        errorLogger.logError(
+          `Migration completed: ${file} (${Date.now() - startTime}ms)`,
+          {
+            type: "info",
+          },
+        );
       } else {
         // Verify checksum for already-applied migrations
         const applied = appliedMigrations.find((m) => m.name === file);
         const migrationPath = path.join(migrationsDir, file);
-        const migrationContent = fs.readFileSync(migrationPath, 'utf8');
+        const migrationContent = fs.readFileSync(migrationPath, "utf8");
         const currentChecksum = calculateChecksum(migrationContent);
 
         if (applied && applied.checksum !== currentChecksum) {
           errorLogger.logError(
             `WARNING: Migration ${file} has been modified after being applied! ` +
-            `Original checksum: ${applied.checksum}, Current: ${currentChecksum}`,
-            { type: 'warn' },
+              `Original checksum: ${applied.checksum}, Current: ${currentChecksum}`,
+            { type: "warn" },
           );
         }
       }
     }
 
-    errorLogger.logError('All migrations completed', { type: 'info' });
+    errorLogger.logError("All migrations completed", { type: "info" });
   } catch (error) {
-    errorLogger.logError(error as Error, { context: 'run-migrations' });
+    errorLogger.logError(error as Error, { context: "run-migrations" });
     throw error;
   }
 }
@@ -178,18 +184,20 @@ export function runMigrations(): void {
  */
 export function rollbackMigration(migrationName: string): void {
   const db = databaseManager.getDatabase();
-  const migrationsDir = path.join(__dirname, 'migrations');
+  const migrationsDir = path.join(__dirname, "migrations");
 
   try {
     ensureMigrationsTable();
 
     // Check if migration is applied
     const migration = db
-      .prepare('SELECT * FROM migrations WHERE name = ? AND status = ?')
-      .get(migrationName, 'applied') as MigrationRecord | undefined;
+      .prepare("SELECT * FROM migrations WHERE name = ? AND status = ?")
+      .get(migrationName, "applied") as MigrationRecord | undefined;
 
     if (!migration) {
-      throw new Error(`Migration ${migrationName} is not applied or already rolled back`);
+      throw new Error(
+        `Migration ${migrationName} is not applied or already rolled back`,
+      );
     }
 
     const migrationPath = path.join(migrationsDir, migrationName);
@@ -198,14 +206,18 @@ export function rollbackMigration(migrationName: string): void {
       throw new Error(`Migration file not found: ${migrationPath}`);
     }
 
-    const migrationContent = fs.readFileSync(migrationPath, 'utf8');
+    const migrationContent = fs.readFileSync(migrationPath, "utf8");
     const { down } = parseMigration(migrationContent);
 
     if (!down || down.length === 0) {
-      throw new Error(`Migration ${migrationName} has no DOWN section - cannot rollback`);
+      throw new Error(
+        `Migration ${migrationName} has no DOWN section - cannot rollback`,
+      );
     }
 
-    errorLogger.logError(`Rolling back migration: ${migrationName}`, { type: 'info' });
+    errorLogger.logError(`Rolling back migration: ${migrationName}`, {
+      type: "info",
+    });
 
     const startTime = Date.now();
 
@@ -213,20 +225,25 @@ export function rollbackMigration(migrationName: string): void {
     const rollback = db.transaction(() => {
       db.exec(down);
 
-      db.prepare(`
+      db.prepare(
+        `
         UPDATE migrations
         SET status = 'rolled_back'
         WHERE name = ?
-      `).run(migrationName);
+      `,
+      ).run(migrationName);
     });
 
     rollback();
 
-    errorLogger.logError(`Rollback completed: ${migrationName} (${Date.now() - startTime}ms)`, {
-      type: 'info',
-    });
+    errorLogger.logError(
+      `Rollback completed: ${migrationName} (${Date.now() - startTime}ms)`,
+      {
+        type: "info",
+      },
+    );
   } catch (error) {
-    errorLogger.logError(error as Error, { context: 'rollback-migration' });
+    errorLogger.logError(error as Error, { context: "rollback-migration" });
     throw error;
   }
 }
@@ -238,24 +255,28 @@ export function getMigrationStatus(): {
   applied: MigrationRecord[];
   pending: string[];
   rolledBack: MigrationRecord[];
-  } {
+} {
   const db = databaseManager.getDatabase();
-  const migrationsDir = path.join(__dirname, 'migrations');
+  const migrationsDir = path.join(__dirname, "migrations");
 
   ensureMigrationsTable();
 
   const migrationFiles = fs
     .readdirSync(migrationsDir)
-    .filter((file) => file.endsWith('.sql'))
+    .filter((file) => file.endsWith(".sql"))
     .sort();
 
   const applied = db
-    .prepare('SELECT * FROM migrations WHERE status = ? ORDER BY applied_at ASC')
-    .all('applied') as MigrationRecord[];
+    .prepare(
+      "SELECT * FROM migrations WHERE status = ? ORDER BY applied_at ASC",
+    )
+    .all("applied") as MigrationRecord[];
 
   const rolledBack = db
-    .prepare('SELECT * FROM migrations WHERE status = ? ORDER BY applied_at DESC')
-    .all('rolled_back') as MigrationRecord[];
+    .prepare(
+      "SELECT * FROM migrations WHERE status = ? ORDER BY applied_at DESC",
+    )
+    .all("rolled_back") as MigrationRecord[];
 
   const appliedNames = applied.map((m) => m.name);
   const pending = migrationFiles.filter((file) => !appliedNames.includes(file));
@@ -270,31 +291,36 @@ export function validateMigration(migrationName: string): {
   valid: boolean;
   errors: string[];
 } {
-  const migrationsDir = path.join(__dirname, 'migrations');
+  const migrationsDir = path.join(__dirname, "migrations");
   const migrationPath = path.join(migrationsDir, migrationName);
 
   const errors: string[] = [];
 
   if (!fs.existsSync(migrationPath)) {
-    errors.push('Migration file does not exist');
+    errors.push("Migration file does not exist");
     return { valid: false, errors };
   }
 
-  const content = fs.readFileSync(migrationPath, 'utf8');
+  const content = fs.readFileSync(migrationPath, "utf8");
   const { up, down } = parseMigration(content);
 
   if (!up || up.length === 0) {
-    errors.push('Migration has no UP section');
+    errors.push("Migration has no UP section");
   }
 
   if (!down || down.length === 0) {
-    errors.push('Migration has no DOWN section (rollback not supported)');
+    errors.push("Migration has no DOWN section (rollback not supported)");
   }
 
   // Check for basic SQL syntax issues
-  if (up && !up.toUpperCase().includes('CREATE') && !up.toUpperCase().includes('INSERT') &&
-      !up.toUpperCase().includes('ALTER') && !up.toUpperCase().includes('UPDATE')) {
-    errors.push('UP section does not appear to contain valid SQL statements');
+  if (
+    up &&
+    !up.toUpperCase().includes("CREATE") &&
+    !up.toUpperCase().includes("INSERT") &&
+    !up.toUpperCase().includes("ALTER") &&
+    !up.toUpperCase().includes("UPDATE")
+  ) {
+    errors.push("UP section does not appear to contain valid SQL statements");
   }
 
   return { valid: errors.length === 0, errors };
@@ -306,7 +332,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     runMigrations();
     process.exit(0);
   } catch (error) {
-    logger.error('App', '❌ Migration failed:', { error: error });
+    logger.error("Migration failed");
     process.exit(1);
   }
 }

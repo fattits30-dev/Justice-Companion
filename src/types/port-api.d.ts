@@ -36,7 +36,9 @@ export interface PortApi {
   /**
    * Allocate a port for a specific service
    */
-  allocatePort(serviceName: string): Promise<PortApiResponse<{ port: number; service: string }>>;
+  allocatePort(
+    serviceName: string,
+  ): Promise<PortApiResponse<{ port: number; service: string }>>;
 
   /**
    * Release all allocated ports
@@ -51,12 +53,16 @@ export interface PortApi {
   /**
    * Get the allocated port for a specific service
    */
-  getServicePort(serviceName: string): Promise<PortApiResponse<{ port: number; service: string }>>;
+  getServicePort(
+    serviceName: string,
+  ): Promise<PortApiResponse<{ port: number; service: string }>>;
 
   /**
    * Check if a specific port is available
    */
-  isPortAvailable(port: number): Promise<PortApiResponse<{ port: number; available: boolean }>>;
+  isPortAvailable(
+    port: number,
+  ): Promise<PortApiResponse<{ port: number; available: boolean }>>;
 }
 
 // Port management API is now part of a separate namespace
@@ -65,11 +71,17 @@ declare global {
     portApi?: {
       // Port management API
       getPortStatus: () => Promise<PortApiResponse<PortMonitorData>>;
-      allocatePort: (serviceName: string) => Promise<PortApiResponse<{ port: number; service: string }>>;
+      allocatePort: (
+        serviceName: string,
+      ) => Promise<PortApiResponse<{ port: number; service: string }>>;
       releaseAllPorts: () => Promise<PortApiResponse<void>>;
       restartServices: () => Promise<PortApiResponse<void>>;
-      getServicePort: (serviceName: string) => Promise<PortApiResponse<{ port: number; service: string }>>;
-      isPortAvailable: (port: number) => Promise<PortApiResponse<{ port: number; available: boolean }>>;
+      getServicePort: (
+        serviceName: string,
+      ) => Promise<PortApiResponse<{ port: number; service: string }>>;
+      isPortAvailable: (
+        port: number,
+      ) => Promise<PortApiResponse<{ port: number; available: boolean }>>;
     };
   }
 }

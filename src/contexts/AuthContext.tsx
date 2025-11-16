@@ -1,9 +1,10 @@
-import { logger } from '../utils/logger';
+import { logger } from "../utils/logger";
+import { apiClient } from "../lib/apiClient.ts";
 
 /**
  * AuthContext - Authentication State Management
  *
- * Built with TDD - All tests written FIRST
+ * Migrated to HTTP REST API - Replaces Electron IPC with FastAPI backend
  *
  * Features:
  * - Global authentication state
@@ -13,6 +14,7 @@ import { logger } from '../utils/logger';
  * - Error handling
  * - Type-safe context hook
  * - Persistent session support
+ * - HTTP-based authentication
  */
 
 import {
@@ -77,7 +79,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           return; // No session to restore
         }
 
-        const response = await window.justiceAPI.getSession(sessionId);
+        const response = await apiClient.auth.getSession(sessionId);
 
         if (!response.success) {
           // Session invalid - clear it
@@ -116,7 +118,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
       } catch (err) {
         // Silently fail - no session to restore
-        logger.error("[AuthContext] Error restoring session:", err);
+        logger.error("Error restoring session:", {
+          error: err as Error,
+          service: "AuthContext",
+        });
+        // Clear invalid session
+        localStorage.removeItem("sessionId");
       } finally {
         setIsLoading(false);
       }
@@ -137,14 +144,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setError(null);
 
     try {
-      const response = await window.justiceAPI.login(
+      const response = await apiClient.auth.login(
         username,
         password,
         rememberMe,
       );
 
       if (!response.success) {
-        throw new Error(response.message || "Login failed");
+        throw new Error("Login failed");
       }
 
       if (response.data) {
@@ -180,6 +187,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setError(
         err instanceof Error ? err.message : "An unknown error occurred",
       );
+      throw err; // Re-throw to allow component-level handling
     } finally {
       setIsLoading(false);
     }
@@ -196,7 +204,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const sessionId = localStorage.getItem("sessionId");
 
       if (sessionId) {
-        await window.justiceAPI.logout(sessionId);
+        await apiClient.auth.logout(sessionId);
         localStorage.removeItem("sessionId");
       }
 
@@ -221,7 +229,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
 
     try {
-      const response = await window.justiceAPI.getSession(currentSessionId);
+      const response = await apiClient.auth.getSession(currentSessionId);
 
       if (response.success && response.data) {
         // Apply the same profile merging logic as in restoreSession and login
@@ -251,7 +259,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
         });
       }
     } catch (err) {
-      logger.error("[AuthContext] Error refreshing user:", err);
+      logger.error("Error refreshing user:", {
+        error: err as Error,
+        service: "AuthContext",
+      });
     }
   };
 

@@ -1,11 +1,14 @@
-import { getDb } from '../db/database.ts';
+import { getDb } from "../db/database.ts";
 import type {
   TimelineEvent,
   CreateTimelineEventInput,
   UpdateTimelineEventInput,
-} from '../domains/timeline/entities/TimelineEvent.ts';
-import { EncryptionService, type EncryptedData } from '../services/EncryptionService.ts';
-import type { AuditLogger } from '../services/AuditLogger.ts';
+} from "../domains/timeline/entities/TimelineEvent.ts";
+import {
+  EncryptionService,
+  type EncryptedData,
+} from "../services/EncryptionService.ts";
+import type { AuditLogger } from "../services/AuditLogger.ts";
 
 /**
  * Repository for managing timeline events with encryption
@@ -19,10 +22,7 @@ export class TimelineRepository {
   private encryptionService: EncryptionService;
   private auditLogger?: AuditLogger;
 
-  constructor(
-    encryptionService: EncryptionService,
-    auditLogger?: AuditLogger,
-  ) {
+  constructor(encryptionService: EncryptionService, auditLogger?: AuditLogger) {
     this.encryptionService = encryptionService;
     this.auditLogger = auditLogger;
   }
@@ -36,9 +36,13 @@ export class TimelineRepository {
       const encryption = this.requireEncryptionService();
 
       // Encrypt description before INSERT (P1 priority field)
-      const encryptedDescription = input.description ? encryption.encrypt(input.description) : null;
+      const encryptedDescription = input.description
+        ? encryption.encrypt(input.description)
+        : null;
 
-      const descriptionToStore = encryptedDescription ? JSON.stringify(encryptedDescription) : null;
+      const descriptionToStore = encryptedDescription
+        ? JSON.stringify(encryptedDescription)
+        : null;
 
       const stmt = db.prepare(`
         INSERT INTO timeline_events (case_id, event_date, title, description)
@@ -56,10 +60,10 @@ export class TimelineRepository {
 
       // Audit: Timeline event created
       this.auditLogger?.log({
-        eventType: 'timeline_event.create',
-        resourceType: 'timeline_event',
+        eventType: "timeline_event.create",
+        resourceType: "timeline_event",
         resourceId: createdEvent.id.toString(),
-        action: 'create',
+        action: "create",
         details: {
           caseId: input.caseId,
           title: input.title,
@@ -72,10 +76,10 @@ export class TimelineRepository {
     } catch (error) {
       // Audit: Failed creation
       this.auditLogger?.log({
-        eventType: 'timeline_event.create',
-        resourceType: 'timeline_event',
-        resourceId: 'unknown',
-        action: 'create',
+        eventType: "timeline_event.create",
+        resourceType: "timeline_event",
+        resourceId: "unknown",
+        action: "create",
         success: false,
         errorMessage: this.getErrorMessage(error),
       });
@@ -149,23 +153,25 @@ export class TimelineRepository {
       const params: Record<string, unknown> = { id };
 
       if (input.eventDate !== undefined) {
-        updates.push('event_date = @eventDate');
+        updates.push("event_date = @eventDate");
         params.eventDate = input.eventDate;
       }
 
       if (input.title !== undefined) {
-        updates.push('title = @title');
+        updates.push("title = @title");
         params.title = input.title;
       }
 
       if (input.description !== undefined) {
-        updates.push('description = @description');
+        updates.push("description = @description");
         // Encrypt description before UPDATE
         const encryptedDescription = input.description
           ? encryption.encrypt(input.description)
           : null;
 
-        params.description = encryptedDescription ? JSON.stringify(encryptedDescription) : null;
+        params.description = encryptedDescription
+          ? JSON.stringify(encryptedDescription)
+          : null;
       }
 
       if (updates.length === 0) {
@@ -174,7 +180,7 @@ export class TimelineRepository {
 
       const stmt = db.prepare(`
         UPDATE timeline_events
-        SET ${updates.join(', ')}
+        SET ${updates.join(", ")}
         WHERE id = @id
       `);
 
@@ -184,10 +190,10 @@ export class TimelineRepository {
 
       // Audit: Timeline event updated
       this.auditLogger?.log({
-        eventType: 'timeline_event.update',
-        resourceType: 'timeline_event',
+        eventType: "timeline_event.update",
+        resourceType: "timeline_event",
         resourceId: id.toString(),
-        action: 'update',
+        action: "update",
         details: {
           fieldsUpdated: Object.keys(input),
         },
@@ -198,10 +204,10 @@ export class TimelineRepository {
     } catch (error) {
       // Audit: Failed update
       this.auditLogger?.log({
-        eventType: 'timeline_event.update',
-        resourceType: 'timeline_event',
+        eventType: "timeline_event.update",
+        resourceType: "timeline_event",
         resourceId: id.toString(),
-        action: 'update',
+        action: "update",
         success: false,
         errorMessage: this.getErrorMessage(error),
       });
@@ -215,16 +221,16 @@ export class TimelineRepository {
   delete(id: number): boolean {
     try {
       const db = getDb();
-      const stmt = db.prepare('DELETE FROM timeline_events WHERE id = ?');
+      const stmt = db.prepare("DELETE FROM timeline_events WHERE id = ?");
       const result = stmt.run(id);
       const success = result.changes > 0;
 
       // Audit: Timeline event deleted
       this.auditLogger?.log({
-        eventType: 'timeline_event.delete',
-        resourceType: 'timeline_event',
+        eventType: "timeline_event.delete",
+        resourceType: "timeline_event",
         resourceId: id.toString(),
-        action: 'delete',
+        action: "delete",
         success,
       });
 
@@ -232,10 +238,10 @@ export class TimelineRepository {
     } catch (error) {
       // Audit: Failed deletion
       this.auditLogger?.log({
-        eventType: 'timeline_event.delete',
-        resourceType: 'timeline_event',
+        eventType: "timeline_event.delete",
+        resourceType: "timeline_event",
         resourceId: id.toString(),
-        action: 'delete',
+        action: "delete",
         success: false,
         errorMessage: this.getErrorMessage(error),
       });
@@ -279,25 +285,26 @@ export class TimelineRepository {
    * Normalize unknown error values into a message for logging
    */
   private getErrorMessage(error: unknown): string {
-    if (typeof error === 'string' && error.length > 0) {
+    if (typeof error === "string" && error.length > 0) {
       return error;
     }
 
-    if (error && typeof error === 'object' && 'message' in error) {
+    if (error && typeof error === "object" && "message" in error) {
       const message = (error as { message?: unknown }).message;
-      if (typeof message === 'string' && message.length > 0) {
+      if (typeof message === "string" && message.length > 0) {
         return message;
       }
     }
 
-    return 'Unknown error';
+    return "Unknown error";
   }
 
   private requireEncryptionService(): EncryptionService {
     if (!this.encryptionService) {
-      throw new Error('EncryptionService not configured for TimelineRepository');
+      throw new Error(
+        "EncryptionService not configured for TimelineRepository",
+      );
     }
     return this.encryptionService;
   }
-
 }

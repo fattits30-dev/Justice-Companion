@@ -11,7 +11,7 @@ export interface ChatConversation {
 export interface ChatMessage {
   id: number;
   conversationId: number;
-  role: 'user' | 'assistant';
+  role: "user" | "assistant";
   content: string;
   thinkingContent: string | null; // AI reasoning from <think> tags
   timestamp: string;
@@ -26,7 +26,7 @@ export interface CreateConversationInput {
 
 export interface CreateMessageInput {
   conversationId: number;
-  role: 'user' | 'assistant';
+  role: "user" | "assistant";
   content: string;
   thinkingContent?: string | null;
   tokenCount?: number | null;

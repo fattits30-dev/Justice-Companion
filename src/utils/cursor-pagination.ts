@@ -55,7 +55,7 @@ export type Cursor = SimpleCursor | CompositeCursor;
 export class CursorError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = 'CursorError';
+    this.name = "CursorError";
   }
 }
 
@@ -86,7 +86,7 @@ export function encodeSimpleCursor(rowid: number, timestamp?: number): string {
     timestamp: timestamp ?? Date.now(),
   };
 
-  return Buffer.from(JSON.stringify(cursor)).toString('base64');
+  return Buffer.from(JSON.stringify(cursor)).toString("base64");
 }
 
 /**
@@ -109,14 +109,16 @@ export function decodeSimpleCursor(
   },
 ): SimpleCursor {
   if (!encoded || encoded.length === 0) {
-    throw new CursorError('Empty cursor string');
+    throw new CursorError("Empty cursor string");
   }
 
   let decoded: string;
   try {
-    decoded = Buffer.from(encoded, 'base64').toString('utf-8');
+    decoded = Buffer.from(encoded, "base64").toString("utf-8");
   } catch (error) {
-    throw new CursorError(`Invalid base64 encoding: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new CursorError(
+      `Invalid base64 encoding: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
   }
 
   let cursor: unknown;
@@ -124,7 +126,7 @@ export function decodeSimpleCursor(
     cursor = JSON.parse(decoded);
   } catch (error) {
     // Backward compatibility: Try parsing old format "rowid:timestamp"
-    const parts = decoded.split(':');
+    const parts = decoded.split(":");
     if (parts.length === 2) {
       const rowid = parseInt(parts[0], 10);
       const timestamp = parseInt(parts[1], 10);
@@ -134,20 +136,26 @@ export function decodeSimpleCursor(
         throw new CursorError(`Invalid cursor format: ${decoded}`);
       }
     } else {
-      throw new CursorError(`Invalid JSON in cursor: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new CursorError(
+        `Invalid JSON in cursor: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     }
   }
 
   // Type guard: Validate SimpleCursor structure
   if (!isSimpleCursor(cursor)) {
-    throw new CursorError(`Invalid cursor structure: ${JSON.stringify(cursor)}`);
+    throw new CursorError(
+      `Invalid cursor structure: ${JSON.stringify(cursor)}`,
+    );
   }
 
   // Optional: Validate cursor age
   if (options?.validateAge && cursor.timestamp) {
     const age = Date.now() - cursor.timestamp;
     if (age > MAX_CURSOR_AGE_MS) {
-      throw new CursorError(`Cursor expired (age: ${Math.floor(age / 1000)}s, max: ${MAX_CURSOR_AGE_MS / 1000}s)`);
+      throw new CursorError(
+        `Cursor expired (age: ${Math.floor(age / 1000)}s, max: ${MAX_CURSOR_AGE_MS / 1000}s)`,
+      );
     }
   }
 
@@ -170,7 +178,7 @@ export function encodeCompositeCursor(
   timestamp?: number,
 ): string {
   if (Object.keys(keys).length === 0) {
-    throw new CursorError('Composite cursor keys cannot be empty');
+    throw new CursorError("Composite cursor keys cannot be empty");
   }
 
   const cursor: CompositeCursor = {
@@ -178,7 +186,7 @@ export function encodeCompositeCursor(
     timestamp: timestamp ?? Date.now(),
   };
 
-  return Buffer.from(JSON.stringify(cursor)).toString('base64');
+  return Buffer.from(JSON.stringify(cursor)).toString("base64");
 }
 
 /**
@@ -201,33 +209,41 @@ export function decodeCompositeCursor(
   },
 ): CompositeCursor {
   if (!encoded || encoded.length === 0) {
-    throw new CursorError('Empty cursor string');
+    throw new CursorError("Empty cursor string");
   }
 
   let decoded: string;
   try {
-    decoded = Buffer.from(encoded, 'base64').toString('utf-8');
+    decoded = Buffer.from(encoded, "base64").toString("utf-8");
   } catch (error) {
-    throw new CursorError(`Invalid base64 encoding: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new CursorError(
+      `Invalid base64 encoding: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
   }
 
   let cursor: unknown;
   try {
     cursor = JSON.parse(decoded);
   } catch (error) {
-    throw new CursorError(`Invalid JSON in cursor: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new CursorError(
+      `Invalid JSON in cursor: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
   }
 
   // Type guard: Validate CompositeCursor structure
   if (!isCompositeCursor(cursor)) {
-    throw new CursorError(`Invalid composite cursor structure: ${JSON.stringify(cursor)}`);
+    throw new CursorError(
+      `Invalid composite cursor structure: ${JSON.stringify(cursor)}`,
+    );
   }
 
   // Optional: Validate cursor age
   if (options?.validateAge && cursor.timestamp) {
     const age = Date.now() - cursor.timestamp;
     if (age > MAX_CURSOR_AGE_MS) {
-      throw new CursorError(`Cursor expired (age: ${Math.floor(age / 1000)}s, max: ${MAX_CURSOR_AGE_MS / 1000}s)`);
+      throw new CursorError(
+        `Cursor expired (age: ${Math.floor(age / 1000)}s, max: ${MAX_CURSOR_AGE_MS / 1000}s)`,
+      );
     }
   }
 
@@ -238,28 +254,35 @@ export function decodeCompositeCursor(
  * Type guard: Check if value is a SimpleCursor
  */
 export function isSimpleCursor(value: unknown): value is SimpleCursor {
-  if (typeof value !== 'object' || value === null) {
+  if (typeof value !== "object" || value === null) {
     return false;
   }
 
   const cursor = value as Record<string, unknown>;
 
   // Must have rowid
-  if (typeof cursor.rowid !== 'number' || !Number.isInteger(cursor.rowid) || cursor.rowid < 1) {
+  if (
+    typeof cursor.rowid !== "number" ||
+    !Number.isInteger(cursor.rowid) ||
+    cursor.rowid < 1
+  ) {
     return false;
   }
 
   // Optional timestamp
   if (cursor.timestamp !== undefined) {
-    if (typeof cursor.timestamp !== 'number' || !Number.isInteger(cursor.timestamp)) {
+    if (
+      typeof cursor.timestamp !== "number" ||
+      !Number.isInteger(cursor.timestamp)
+    ) {
       return false;
     }
   }
 
   // No extra properties (strict validation)
-  const allowedKeys = ['rowid', 'timestamp'];
+  const allowedKeys = ["rowid", "timestamp"];
   const actualKeys = Object.keys(cursor);
-  const extraKeys = actualKeys.filter(key => !allowedKeys.includes(key));
+  const extraKeys = actualKeys.filter((key) => !allowedKeys.includes(key));
   if (extraKeys.length > 0) {
     return false;
   }
@@ -271,14 +294,18 @@ export function isSimpleCursor(value: unknown): value is SimpleCursor {
  * Type guard: Check if value is a CompositeCursor
  */
 export function isCompositeCursor(value: unknown): value is CompositeCursor {
-  if (typeof value !== 'object' || value === null) {
+  if (typeof value !== "object" || value === null) {
     return false;
   }
 
   const cursor = value as Record<string, unknown>;
 
   // Must have keys object
-  if (typeof cursor.keys !== 'object' || cursor.keys === null || Array.isArray(cursor.keys)) {
+  if (
+    typeof cursor.keys !== "object" ||
+    cursor.keys === null ||
+    Array.isArray(cursor.keys)
+  ) {
     return false;
   }
 
@@ -289,22 +316,29 @@ export function isCompositeCursor(value: unknown): value is CompositeCursor {
 
   // Validate key values: must be string, number, or null
   for (const value of Object.values(keys)) {
-    if (typeof value !== 'string' && typeof value !== 'number' && value !== null) {
+    if (
+      typeof value !== "string" &&
+      typeof value !== "number" &&
+      value !== null
+    ) {
       return false;
     }
   }
 
   // Optional timestamp
   if (cursor.timestamp !== undefined) {
-    if (typeof cursor.timestamp !== 'number' || !Number.isInteger(cursor.timestamp)) {
+    if (
+      typeof cursor.timestamp !== "number" ||
+      !Number.isInteger(cursor.timestamp)
+    ) {
       return false;
     }
   }
 
   // No extra properties (strict validation)
-  const allowedKeys = ['keys', 'timestamp'];
+  const allowedKeys = ["keys", "timestamp"];
   const actualKeys = Object.keys(cursor);
-  const extraKeys = actualKeys.filter(key => !allowedKeys.includes(key));
+  const extraKeys = actualKeys.filter((key) => !allowedKeys.includes(key));
   if (extraKeys.length > 0) {
     return false;
   }
@@ -325,9 +359,9 @@ export function isCompositeCursor(value: unknown): value is CompositeCursor {
  */
 export function buildSimpleWhereClause(
   cursor: SimpleCursor,
-  direction: 'asc' | 'desc',
+  direction: "asc" | "desc",
 ): { clause: string; params: number[] } {
-  const comparator = direction === 'asc' ? '>' : '<';
+  const comparator = direction === "asc" ? ">" : "<";
 
   return {
     clause: `rowid ${comparator} ?`,
@@ -356,21 +390,21 @@ export function buildSimpleWhereClause(
 export function buildCompositeWhereClause(
   cursor: CompositeCursor,
   columns: string[],
-  direction: 'asc' | 'desc',
+  direction: "asc" | "desc",
 ): { clause: string; params: (string | number | null)[] } {
   if (columns.length === 0) {
-    throw new CursorError('Columns array cannot be empty');
+    throw new CursorError("Columns array cannot be empty");
   }
 
   // Validate that cursor has all required keys
   const cursorKeys = Object.keys(cursor.keys);
-  const missingKeys = columns.filter(col => !cursorKeys.includes(col));
+  const missingKeys = columns.filter((col) => !cursorKeys.includes(col));
   if (missingKeys.length > 0) {
-    throw new CursorError(`Cursor missing keys: ${missingKeys.join(', ')}`);
+    throw new CursorError(`Cursor missing keys: ${missingKeys.join(", ")}`);
   }
 
-  const comparator = direction === 'asc' ? '>' : '<';
-  const equalComparator = direction === 'asc' ? '>' : '<';
+  const comparator = direction === "asc" ? ">" : "<";
+  const equalComparator = direction === "asc" ? ">" : "<";
 
   // Build WHERE clause using row value comparison pattern
   // E.g., for ORDER BY date DESC, id ASC:
@@ -388,18 +422,21 @@ export function buildCompositeWhereClause(
     for (let i = 1; i < columns.length; i++) {
       const equalityChain = columns
         .slice(0, i)
-        .map(col => {
+        .map((col) => {
           params.push(cursor.keys[col]);
           return `${col} = ?`;
         })
-        .join(' AND ');
+        .join(" AND ");
 
       params.push(cursor.keys[columns[i]]);
-      conditions.push(`(${equalityChain} AND ${columns[i]} ${equalComparator} ?)`);
+      conditions.push(
+        `(${equalityChain} AND ${columns[i]} ${equalComparator} ?)`,
+      );
     }
   }
 
-  const clause = conditions.length === 1 ? conditions[0] : `(${conditions.join(' OR ')})`;
+  const clause =
+    conditions.length === 1 ? conditions[0] : `(${conditions.join(" OR ")})`;
 
   return { clause, params };
 }
@@ -413,8 +450,8 @@ export function buildCompositeWhereClause(
  * @example
  * const prevDirection = reverseDirection('desc'); // 'asc'
  */
-export function reverseDirection(direction: 'asc' | 'desc'): 'asc' | 'desc' {
-  return direction === 'asc' ? 'desc' : 'asc';
+export function reverseDirection(direction: "asc" | "desc"): "asc" | "desc" {
+  return direction === "asc" ? "desc" : "asc";
 }
 
 /**
@@ -431,7 +468,7 @@ export function reverseDirection(direction: 'asc' | 'desc'): 'asc' | 'desc' {
 export function getPrevCursor<T>(
   items: T[],
   getRowid: (item: T) => number,
-  _direction: 'asc' | 'desc',
+  _direction: "asc" | "desc",
 ): string | undefined {
   if (items.length === 0) {
     return undefined;
@@ -458,7 +495,7 @@ export function getPrevCursor<T>(
 export function getNextCursor<T>(
   items: T[],
   getRowid: (item: T) => number,
-  _direction: 'asc' | 'desc',
+  _direction: "asc" | "desc",
 ): string | undefined {
   if (items.length === 0) {
     return undefined;
@@ -492,7 +529,9 @@ export function isCursorStale(cursor: SimpleCursor | CompositeCursor): boolean {
  * @param cursor - Decoded cursor
  * @returns Age in seconds, or null if no timestamp
  */
-export function getCursorAge(cursor: SimpleCursor | CompositeCursor): number | null {
+export function getCursorAge(
+  cursor: SimpleCursor | CompositeCursor,
+): number | null {
   if (!cursor.timestamp) {
     return null;
   }

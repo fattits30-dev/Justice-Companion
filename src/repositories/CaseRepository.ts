@@ -215,7 +215,7 @@ export class CaseRepository {
       try {
         // Batch decrypt all encrypted descriptions
         const decryptedDescriptions = encryptionService.batchDecrypt(
-          encryptedDescriptions
+          encryptedDescriptions,
         );
 
         // Map decrypted descriptions back to rows
@@ -434,7 +434,7 @@ export class CaseRepository {
    * @returns Decrypted plaintext or null
    */
   private decryptDescription(
-    storedValue: string | null | undefined
+    storedValue: string | null | undefined,
   ): string | null {
     if (!storedValue) {
       return null;
@@ -475,7 +475,7 @@ export class CaseRepository {
   async searchCases(
     userId: number,
     query: string,
-    filters?: any
+    filters?: any,
   ): Promise<Case[]> {
     const db = getDb();
     const conditions: string[] = [];
@@ -503,7 +503,7 @@ export class CaseRepository {
       conditions.push("created_at >= ? AND created_at <= ?");
       params.push(
         filters.dateRange.from.toISOString(),
-        filters.dateRange.to.toISOString()
+        filters.dateRange.to.toISOString(),
       );
     }
 

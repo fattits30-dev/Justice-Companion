@@ -1,432 +1,230 @@
-import { logger } from '../src/utils/logger';
-
-// CommonJS require for Electron preload (sandboxed context doesn't support ESM)
-// Using require here is acceptable for preload scripts
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { contextBridge, ipcRenderer } = require("electron");
-
-logger.info("[PRELOAD] Preload script starting...");
-
-// Type definitions for exposed API (not exported - preload can't use ESM export)
-interface RegisterData {
-  username: string;
-  email: string;
-  password: string;
-}
-
-interface LoginData {
-  email: string;
-  password: string;
-}
-
-interface AuthResponse {
-  success: boolean;
-  token?: string;
-  error?: string;
-}
-
-interface SessionResponse {
-  id: string;
-  user: {
-    id: string;
-    username: string;
-    email: string;
-  };
-  expiresAt: string;
-}
-
-interface CreateCaseData {
-  title: string;
-  description: string;
-  status: string;
-}
-
-interface CaseResponse {
-  id: string;
-  title: string;
-  description: string;
-  status: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface CaseListResponse {
-  cases: CaseResponse[];
-}
-
-interface UpdateCaseData {
-  title?: string;
-  description?: string;
-  status?: string;
-}
-
-interface EvidenceResponse {
-  id: string;
-  fileName: string;
-  fileSize: number;
-  fileType: string;
-  uploadedAt: string;
-}
-
-interface EvidenceListResponse {
-  evidence: EvidenceResponse[];
-}
-
-interface ChatResponse {
-  id: string;
-  message: string;
-  timestamp: string;
-}
-
-interface MigrationResponse {
-  success: boolean;
-  message: string;
-}
-
-interface BackupResponse {
-  success: boolean;
-  path: string;
-}
-
-interface MigrationStatusResponse {
-  status: "pending" | "in_progress" | "completed" | "failed";
-  lastMigration?: string;
-}
-
-interface GdprExportResponse {
-  success: boolean;
-  filePath: string;
-}
-
-interface GdprDeleteResponse {
-  success: boolean;
-  message: string;
-}
-
 /**
- * Electron API exposed to renderer process via contextBridge
+ * Electron Preload Script - HTTP API Bridge
  *
- * SECURITY: This is the ONLY way renderer can communicate with main process
- * - contextIsolation: true (enforced in main.ts)
- * - No direct Node.js API access in renderer
- * - Type-safe IPC invocations
+ * ARCHITECTURE: Frontend uses Python FastAPI backend (HTTP REST API on port 8000)
+ *
+ * This preload provides a compatibility bridge for legacy code that uses window.justiceAPI.
+ * All calls are forwarded to the Python FastAPI backend via HTTP fetch.
+ *
+ * Security:
+ * - contextIsolation: true
+ * - nodeIntegration: false
+ * - sandbox: true
  */
 
-// Expose API to renderer process
-contextBridge.exposeInMainWorld("electronAPI", {
-  auth: {
-    register: (data: RegisterData): Promise<AuthResponse> =>
-      ipcRenderer.invoke("auth:register", data),
-    login: (data: LoginData): Promise<AuthResponse> =>
-      ipcRenderer.invoke("auth:login", data),
-    logout: (sessionId: string): Promise<void> =>
-      ipcRenderer.invoke("auth:logout", sessionId),
-    getSession: (sessionId: string): Promise<SessionResponse> =>
-      ipcRenderer.invoke("auth:session", sessionId),
-  },
-  cases: {
-    create: (data: CreateCaseData): Promise<CaseResponse> =>
-      ipcRenderer.invoke("cases:create", data),
-    list: (): Promise<CaseListResponse> => ipcRenderer.invoke("cases:list"),
-    get: (id: string): Promise<CaseResponse> =>
-      ipcRenderer.invoke("cases:get", id),
-    update: (id: string, data: UpdateCaseData): Promise<CaseResponse> =>
-      ipcRenderer.invoke("cases:update", id, data),
-    delete: (id: string): Promise<void> =>
-      ipcRenderer.invoke("cases:delete", id),
-  },
-  evidence: {
-    upload: (caseId: string, file: File): Promise<EvidenceResponse> =>
-      ipcRenderer.invoke("evidence:upload", caseId, file),
-    list: (caseId: string): Promise<EvidenceListResponse> =>
-      ipcRenderer.invoke("evidence:list", caseId),
-    download: (evidenceId: string): Promise<void> =>
-      ipcRenderer.invoke("evidence:download", evidenceId),
-  },
-  chat: {
-    sendMessage: (message: string): Promise<ChatResponse> =>
-      ipcRenderer.invoke("chat:send", message),
-  },
-  migrations: {
-    start: (): Promise<MigrationResponse> =>
-      ipcRenderer.invoke("migrations:start"),
-    getStatus: (): Promise<MigrationStatusResponse> =>
-      ipcRenderer.invoke("migrations:get-status"),
-  },
-  backups: {
-    create: (): Promise<BackupResponse> => ipcRenderer.invoke("backups:create"),
-    restore: (path: string): Promise<BackupResponse> =>
-      ipcRenderer.invoke("backups:restore", path),
-  },
-  gdpr: {
-    exportData: (): Promise<GdprExportResponse> =>
-      ipcRenderer.invoke("gdpr:export"),
-    deleteData: (): Promise<GdprDeleteResponse> =>
-      ipcRenderer.invoke("gdpr:delete"),
-  },
-});
+// Common JS require for Electron preload (sandboxed context doesn't support ESM)
+ 
+const { contextBridge } = require("electron");
 
-// Expose justiceAPI (flat structure matching window.d.ts interface)
-// This is the primary API used by the frontend
-contextBridge.exposeInMainWorld("justiceAPI", {
-  // ===== AUTHENTICATION =====
-  login: (username: string, password: string, rememberMe: boolean = false) =>
-    ipcRenderer.invoke("auth:login", { username, password, rememberMe }),
+console.log("[PRELOAD] Loading HTTP API bridge for Python FastAPI backend");
+console.log("[PRELOAD] Backend URL: http://127.0.0.1:8000");
 
-  register: (username: string, email: string, password: string) =>
-    ipcRenderer.invoke("auth:register", { username, email, password }),
+const API_BASE_URL = "http://127.0.0.1:8000";
 
-  logout: (sessionId: string) => ipcRenderer.invoke("auth:logout", sessionId),
+/**
+ * HTTP API Bridge for window.justiceAPI
+ *
+ * Provides compatibility for legacy IPC code by forwarding calls to Python backend
+ */
+const createAPIBridge = () => {
+  const fetchAPI = async (endpoint: string, options: RequestInit = {}) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          ...options.headers,
+        },
+      });
+      return await response.json();
+    } catch (error) {
+      console.error(`[PRELOAD] API Error for ${endpoint}:`, error);
+      return {
+        success: false,
+        error: {
+          message: error instanceof Error ? error.message : 'Unknown error',
+        },
+      };
+    }
+  };
 
-  getSession: (sessionId: string) =>
-    ipcRenderer.invoke("auth:session", sessionId),
-
-  // ===== DASHBOARD =====
-  getDashboardStats: (sessionId: string) =>
-    ipcRenderer.invoke("dashboard:get-stats", sessionId),
-
-  // ===== CASE MANAGEMENT =====
-  getAllCases: (sessionId: string) =>
-    ipcRenderer.invoke("case:list", sessionId),
-
-  getCaseById: (id: string, sessionId: string) =>
-    ipcRenderer.invoke("case:get", id, sessionId),
-
-  createCase: (data: any, sessionId: string, aiMetadata?: any) =>
-    ipcRenderer.invoke("case:create", data, sessionId, aiMetadata),
-
-  updateCase: (id: string, data: any, sessionId: string) =>
-    ipcRenderer.invoke("case:update", id, data, sessionId),
-
-  deleteCase: (id: string, sessionId: string) =>
-    ipcRenderer.invoke("case:delete", id, sessionId),
-
-  getCaseFacts: (caseId: number, sessionId: string) =>
-    ipcRenderer.invoke("case-fact:get-all", caseId, sessionId),
-
-  createCaseFact: (data: any, sessionId: string) =>
-    ipcRenderer.invoke("case-fact:create", data, sessionId),
-
-  // ===== EVIDENCE/DOCUMENTS =====
-  uploadFile: (caseId: string, file: File, sessionId: string) =>
-    ipcRenderer.invoke("evidence:upload", caseId, file, sessionId),
-
-  getAllEvidence: (caseId: string, sessionId: string) =>
-    ipcRenderer.invoke("evidence:list", caseId, sessionId),
-
-  getEvidenceByCaseId: (caseId: string, sessionId: string) =>
-    ipcRenderer.invoke("evidence:list", caseId, sessionId),
-
-  deleteEvidence: (id: string, sessionId: string) =>
-    ipcRenderer.invoke("evidence:delete", id, sessionId),
-
-  // ===== DEADLINES =====
-  getDeadlines: (sessionId: string, caseId?: number) =>
-    ipcRenderer.invoke("deadline:getAll", sessionId, caseId),
-
-  createDeadline: (data: any, sessionId: string) =>
-    ipcRenderer.invoke("deadline:create", data, sessionId),
-
-  updateDeadline: (id: number, data: any, sessionId: string) =>
-    ipcRenderer.invoke("deadline:update", id, data, sessionId),
-
-  completeDeadline: (id: number, sessionId: string) =>
-    ipcRenderer.invoke("deadline:complete", id, sessionId),
-
-  deleteDeadline: (id: number, sessionId: string) =>
-    ipcRenderer.invoke("deadline:delete", id, sessionId),
-
-  // ===== SECURE STORAGE =====
-  secureStorageSet: (key: string, value: string) =>
-    ipcRenderer.invoke("secure-storage:set", key, value),
-
-  secureStorageGet: (key: string) =>
-    ipcRenderer.invoke("secure-storage:get", key),
-
-  secureStorageDelete: (key: string) =>
-    ipcRenderer.invoke("secure-storage:delete", key),
-
-  secureStorageHas: (key: string) =>
-    ipcRenderer.invoke("secure-storage:has", key),
-
-  secureStorage: {
-    isEncryptionAvailable: () =>
-      ipcRenderer.invoke("secure-storage:is-available"),
-    set: (key: string, value: string) =>
-      ipcRenderer.invoke("secure-storage:set", key, value),
-    get: (key: string) => ipcRenderer.invoke("secure-storage:get", key),
-    delete: (key: string) => ipcRenderer.invoke("secure-storage:delete", key),
-    clearAll: () => ipcRenderer.invoke("secure-storage:clear-all"),
-  },
-
-  // ===== PROFILE =====
-  getUserProfile: (sessionId: string) =>
-    ipcRenderer.invoke("profile:get", sessionId),
-
-  updateUserProfile: (sessionId: string, data: any) =>
-    ipcRenderer.invoke("profile:update", sessionId, data),
-
-  // ===== BACKUP & RESTORE =====
-  createBackup: () => ipcRenderer.invoke("db:backup"),
-
-  listBackups: () => ipcRenderer.invoke("db:listBackups"),
-
-  restoreBackup: (backupFilename: string, sessionId: string) =>
-    ipcRenderer.invoke("db:restore", backupFilename, sessionId),
-
-  deleteBackup: (backupFilename: string, sessionId: string) =>
-    ipcRenderer.invoke("db:deleteBackup", backupFilename, sessionId),
-
-  // Auto-backup settings
-  getBackupSettings: (sessionId: string) =>
-    ipcRenderer.invoke("backup:getSettings", sessionId),
-
-  updateBackupSettings: (
-    settings: {
-      enabled: boolean;
-      frequency: "daily" | "weekly" | "monthly";
-      backup_time: string;
-      keep_count: number;
+  return {
+    // Dashboard
+    getDashboardStats: async (sessionId: string) => {
+      return fetchAPI(`/dashboard/stats`, {
+        headers: { 'Authorization': `Bearer ${sessionId}` },
+      });
     },
-    sessionId: string
-  ) => ipcRenderer.invoke("backup:updateSettings", settings, sessionId),
 
-  cleanupOldBackups: (keepCount: number) =>
-    ipcRenderer.invoke("backup:cleanupOld", keepCount),
+    // Cases
+    getAllCases: async (sessionId: string) => {
+      return fetchAPI(`/cases/`, {
+        headers: { 'Authorization': `Bearer ${sessionId}` },
+      });
+    },
 
-  // ===== AI CONFIG =====
-  configureAI: (config: any) => ipcRenderer.invoke("ai:configure", config),
+    getCaseById: async (id: string, sessionId: string) => {
+      return fetchAPI(`/cases/${id}`, {
+        headers: { 'Authorization': `Bearer ${sessionId}` },
+      });
+    },
 
-  getAIConfig: () => ipcRenderer.invoke("ai:get-config"),
+    createCase: async (data: any, sessionId: string, aiMetadata?: any) => {
+      return fetchAPI(`/cases/`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${sessionId}` },
+        body: JSON.stringify(data),
+      });
+    },
 
-  testAIConnection: (provider: string) =>
-    ipcRenderer.invoke("ai:test-connection", { provider }),
+    updateCase: async (id: string, data: any, sessionId: string) => {
+      return fetchAPI(`/cases/${id}`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${sessionId}` },
+        body: JSON.stringify(data),
+      });
+    },
 
-  // ===== AI CHAT STREAMING =====
-  streamChat: (
-    request: any,
-    onToken: (token: string) => void,
-    onThinking: (thinking: string) => void,
-    onComplete: () => void,
-    onError: (error: string) => void,
-    onConversationId?: (conversationId: number) => void
-  ) => {
-    // Set up listeners for streaming events
-    const dataHandler = (
-      _event: any,
-      data: { data: string; done: boolean }
-    ) => {
-      if (data.done) {
-        onComplete();
-      } else {
-        onToken(data.data);
-      }
-    };
+    deleteCase: async (id: string, sessionId: string) => {
+      return fetchAPI(`/cases/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${sessionId}` },
+      });
+    },
 
-    const errorHandler = (_event: any, error: { message: string }) => {
-      onError(error.message);
-    };
+    // Evidence
+    getEvidenceByCaseId: async (caseId: string, sessionId: string) => {
+      return fetchAPI(`/evidence/case/${caseId}`, {
+        headers: { 'Authorization': `Bearer ${sessionId}` },
+      });
+    },
 
-    const conversationIdHandler = (
-      _event: any,
-      data: { conversationId: number }
-    ) => {
-      if (onConversationId) {
-        onConversationId(data.conversationId);
-      }
-    };
+    deleteEvidence: async (id: string, sessionId: string) => {
+      return fetchAPI(`/evidence/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${sessionId}` },
+      });
+    },
 
-    // Register listeners
-    ipcRenderer.on("chat:stream:data", dataHandler);
-    ipcRenderer.on("chat:stream:error", errorHandler);
-    ipcRenderer.on("chat:stream:conversation-id", conversationIdHandler);
+    // Deadlines
+    getDeadlines: async (sessionId: string, caseId?: number) => {
+      const url = caseId ? `/deadlines/?caseId=${caseId}` : '/deadlines/';
+      return fetchAPI(url, {
+        headers: { 'Authorization': `Bearer ${sessionId}` },
+      });
+    },
 
-    // Start streaming
-    return ipcRenderer.invoke("chat:stream", request).finally(() => {
-      // Clean up listeners when done
-      ipcRenderer.removeListener("chat:stream:data", dataHandler);
-      ipcRenderer.removeListener("chat:stream:error", errorHandler);
-      ipcRenderer.removeListener(
-        "chat:stream:conversation-id",
-        conversationIdHandler
-      );
-    });
+    createDeadline: async (data: any, sessionId: string) => {
+      return fetchAPI(`/deadlines/`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${sessionId}` },
+        body: JSON.stringify(data),
+      });
+    },
+
+    updateDeadline: async (id: number, data: any, sessionId: string) => {
+      return fetchAPI(`/deadlines/${id}`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${sessionId}` },
+        body: JSON.stringify(data),
+      });
+    },
+
+    deleteDeadline: async (id: number, sessionId: string) => {
+      return fetchAPI(`/deadlines/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${sessionId}` },
+      });
+    },
+
+    completeDeadline: async (id: number, sessionId: string) => {
+      return fetchAPI(`/deadlines/${id}/complete`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${sessionId}` },
+      });
+    },
+
+    // Case Facts
+    getCaseFacts: async (caseId: number, sessionId: string) => {
+      return fetchAPI(`/cases/${caseId}/facts`, {
+        headers: { 'Authorization': `Bearer ${sessionId}` },
+      });
+    },
+
+    createCaseFact: async (data: any, sessionId: string) => {
+      return fetchAPI(`/cases/facts`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${sessionId}` },
+        body: JSON.stringify(data),
+      });
+    },
+
+    // Chat / AI
+    getRecentConversations: async (sessionId: string, caseId: number | null, limit?: number) => {
+      const params = new URLSearchParams();
+      if (caseId !== null) {params.append('caseId', String(caseId));}
+      if (limit) {params.append('limit', String(limit));}
+
+      return fetchAPI(`/chat/conversations?${params}`, {
+        headers: { 'Authorization': `Bearer ${sessionId}` },
+      });
+    },
+
+    analyzeCase: async (request: any) => {
+      return fetchAPI(`/ai/analyze-case`, {
+        method: 'POST',
+        body: JSON.stringify(request),
+      });
+    },
+
+    analyzeEvidence: async (request: any) => {
+      return fetchAPI(`/ai/analyze-evidence`, {
+        method: 'POST',
+        body: JSON.stringify(request),
+      });
+    },
+
+    draftDocument: async (request: any) => {
+      return fetchAPI(`/ai/draft-document`, {
+        method: 'POST',
+        body: JSON.stringify(request),
+      });
+    },
+
+    // Consent
+    grantConsent: async (consentType: string, granted: boolean) => {
+      return fetchAPI(`/gdpr/consent`, {
+        method: 'POST',
+        body: JSON.stringify({ consentType, granted }),
+      });
+    },
+
+    // Secure Storage (placeholder - returns not implemented)
+    secureStorage: {
+      isEncryptionAvailable: async () => ({ success: true, data: true }),
+      set: async () => ({ success: false, error: { message: 'Use HTTP API' } }),
+      get: async () => ({ success: false, error: { message: 'Use HTTP API' } }),
+      delete: async () => ({ success: false, error: { message: 'Use HTTP API' } }),
+      clearAll: async () => ({ success: false, error: { message: 'Use HTTP API' } }),
+    },
+  };
+};
+
+/**
+ * Expose minimal Electron API to renderer process
+ */
+contextBridge.exposeInMainWorld("electronAPI", {
+  platform: process.platform,
+  versions: {
+    node: process.versions.node,
+    chrome: process.versions.chrome,
+    electron: process.versions.electron,
   },
-
-  // ===== AI ANALYSIS METHODS =====
-  analyzeCase: (request: any) => ipcRenderer.invoke("ai:analyze-case", request),
-
-  analyzeEvidence: (request: any) =>
-    ipcRenderer.invoke("ai:analyze-evidence", request),
-
-  draftDocument: (request: any) =>
-    ipcRenderer.invoke("ai:draft-document", request),
-
-  // ===== AI DOCUMENT ANALYSIS =====
-  analyzeDocument: (
-    filePath: string,
-    sessionId: string,
-    userQuestion?: string,
-    userProfile?: { name: string; email: string | null }
-  ) =>
-    ipcRenderer.invoke("ai:analyze-document", {
-      filePath,
-      sessionId,
-      userQuestion,
-      userProfile,
-    }),
-
-  // File selection dialog (for document upload)
-  showOpenDialog: (options: any) =>
-    ipcRenderer.invoke("dialog:showOpenDialog", options),
-
-  // ===== EXPORT OPERATIONS =====
-  exportCaseToPDF: (caseId: number, sessionId: string) =>
-    ipcRenderer.invoke("export:case-to-pdf", caseId, sessionId),
-
-  exportCaseToWord: (caseId: number, sessionId: string) =>
-    ipcRenderer.invoke("export:case-to-word", caseId, sessionId),
-
-  exportEvidenceListToPDF: (caseId: number, sessionId: string) =>
-    ipcRenderer.invoke("export:evidence-list-to-pdf", caseId, sessionId),
-
-  exportTimelineReportToPDF: (caseId: number, sessionId: string) =>
-    ipcRenderer.invoke("export:timeline-report-to-pdf", caseId, sessionId),
-
-  exportCaseNotesToPDF: (caseId: number, sessionId: string) =>
-    ipcRenderer.invoke("export:case-notes-to-pdf", caseId, sessionId),
-
-  exportCaseNotesToWord: (caseId: number, sessionId: string) =>
-    ipcRenderer.invoke("export:case-notes-to-word", caseId, sessionId),
-
-  exportCustom: (
-    exportType: string,
-    caseId: number,
-    options: any,
-    sessionId: string
-  ) =>
-    ipcRenderer.invoke("export:custom", exportType, caseId, options, sessionId),
-
-  // ===== TEMPLATE OPERATIONS =====
-  getAllTemplates: (sessionId: string) =>
-    ipcRenderer.invoke("templates:get-all", sessionId),
-
-  createTemplate: (templateData: any, sessionId: string) =>
-    ipcRenderer.invoke("templates:create", templateData, sessionId),
-
-  updateTemplate: (templateId: number, templateData: any, sessionId: string) =>
-    ipcRenderer.invoke("templates:update", templateId, templateData, sessionId),
-
-  deleteTemplate: (templateId: number, sessionId: string) =>
-    ipcRenderer.invoke("templates:delete", templateId, sessionId),
-
-  seedTemplates: (sessionId: string) =>
-    ipcRenderer.invoke("templates:seed", sessionId),
-
-  // ===== SEARCH OPERATIONS =====
-  search: (query: any, sessionId: string) =>
-    ipcRenderer.invoke("search", query, sessionId),
-
-  rebuildSearchIndex: (sessionId: string) =>
-    ipcRenderer.invoke("rebuild-search-index", sessionId),
 });
+
+/**
+ * Expose justiceAPI bridge for backwards compatibility
+ */
+contextBridge.exposeInMainWorld("justiceAPI", createAPIBridge());
+
+console.log("[PRELOAD] HTTP API bridge loaded - all calls forwarded to Python backend");

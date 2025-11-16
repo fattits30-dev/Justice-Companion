@@ -270,7 +270,7 @@ export interface ClassifyQuestionResult {
  * @template TResult - Return value type
  */
 export type ChatFunctionHandler<TParams, TResult> = (
-  params: TParams
+  params: TParams,
 ) => Promise<TResult>;
 
 /**
@@ -324,7 +324,7 @@ export function getSessionId(): string {
  * Type guard to check if response is an error
  */
 export function isAPIError<T>(
-  response: APIResponse<T>
+  response: APIResponse<T>,
 ): response is APIResponse<T> & { error: string } {
   return !response.success && response.error !== undefined;
 }

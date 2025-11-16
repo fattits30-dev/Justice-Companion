@@ -3,7 +3,7 @@
  * Fired when a new deadline is created for a case
  */
 export class DeadlineCreated {
-  public readonly eventType = 'deadline.created' as const;
+  public readonly eventType = "deadline.created" as const;
   public readonly occurredAt: Date;
 
   constructor(
@@ -12,14 +12,14 @@ export class DeadlineCreated {
     public readonly userId: number,
     public readonly title: string,
     public readonly deadlineDate: string,
-    public readonly priority: 'high' | 'medium' | 'low',
+    public readonly priority: "high" | "medium" | "low",
     public readonly metadata?: {
       description?: string;
       createdBy?: string;
       source?: string;
       daysUntilDeadline?: number;
       isUrgent?: boolean;
-    }
+    },
   ) {
     this.occurredAt = new Date();
   }
@@ -33,7 +33,7 @@ export class DeadlineCreated {
     userId: number;
     title: string;
     deadlineDate: string;
-    priority: 'high' | 'medium' | 'low';
+    priority: "high" | "medium" | "low";
     description?: string | null;
   }): DeadlineCreated {
     const daysUntil = DeadlineCreated.calculateDaysUntil(deadline.deadlineDate);
@@ -47,8 +47,8 @@ export class DeadlineCreated {
       {
         description: deadline.description || undefined,
         daysUntilDeadline: daysUntil,
-        isUrgent: daysUntil >= 0 && daysUntil <= 7
-      }
+        isUrgent: daysUntil >= 0 && daysUntil <= 7,
+      },
     );
   }
 
@@ -77,7 +77,7 @@ export class DeadlineCreated {
       title: this.title,
       deadlineDate: this.deadlineDate,
       priority: this.priority,
-      metadata: this.metadata
+      metadata: this.metadata,
     };
   }
 
@@ -106,7 +106,7 @@ export class DeadlineCreated {
    * Check if deadline is high priority
    */
   isHighPriority(): boolean {
-    return this.priority === 'high';
+    return this.priority === "high";
   }
 
   /**

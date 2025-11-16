@@ -1,8 +1,8 @@
 // src/services/backup/BackupScheduler.ts
-import type Database from 'better-sqlite3';
-import { createBackup } from '../../db/backup.ts';
-import { BackupRetentionPolicy } from './BackupRetentionPolicy.ts';
-import { errorLogger } from '../../utils/error-logger.ts';
+import type Database from "better-sqlite3";
+import { createBackup } from "../../db/backup.ts";
+import { BackupRetentionPolicy } from "./BackupRetentionPolicy.ts";
+import { errorLogger } from "../../utils/error-logger.ts";
 
 /**
  * Backup Settings Interface
@@ -11,7 +11,7 @@ export interface BackupSettings {
   id: number;
   user_id: number;
   enabled: boolean;
-  frequency: 'daily' | 'weekly' | 'monthly';
+  frequency: "daily" | "weekly" | "monthly";
   backup_time: string; // HH:mm format
   keep_count: number;
   last_backup_at: string | null;
@@ -58,12 +58,14 @@ export class BackupScheduler {
    */
   async start(): Promise<void> {
     if (this.isRunning) {
-      errorLogger.logError('Backup scheduler already running', { type: 'warning' });
+      errorLogger.logError("Backup scheduler already running", {
+        type: "warning",
+      });
       return;
     }
 
     try {
-      errorLogger.logError('Starting backup scheduler...', { type: 'info' });
+      errorLogger.logError("Starting backup scheduler...", { type: "info" });
 
       // Run any missed backups on startup
       await this.checkAndRunBackups();
@@ -74,9 +76,13 @@ export class BackupScheduler {
       }, this.CHECK_INTERVAL_MS);
 
       this.isRunning = true;
-      errorLogger.logError('Backup scheduler started successfully', { type: 'info' });
+      errorLogger.logError("Backup scheduler started successfully", {
+        type: "info",
+      });
     } catch (error) {
-      errorLogger.logError(error as Error, { context: 'backup-scheduler-start' });
+      errorLogger.logError(error as Error, {
+        context: "backup-scheduler-start",
+      });
       throw error;
     }
   }
@@ -96,9 +102,11 @@ export class BackupScheduler {
       }
 
       this.isRunning = false;
-      errorLogger.logError('Backup scheduler stopped', { type: 'info' });
+      errorLogger.logError("Backup scheduler stopped", { type: "info" });
     } catch (error) {
-      errorLogger.logError(error as Error, { context: 'backup-scheduler-stop' });
+      errorLogger.logError(error as Error, {
+        context: "backup-scheduler-stop",
+      });
     }
   }
 
@@ -115,7 +123,7 @@ export class BackupScheduler {
           `SELECT * FROM backup_settings
            WHERE enabled = 1
            AND (next_backup_at IS NULL OR next_backup_at <= ?)
-           ORDER BY next_backup_at ASC`
+           ORDER BY next_backup_at ASC`,
         )
         .all(now);
 
@@ -125,7 +133,7 @@ export class BackupScheduler {
 
       errorLogger.logError(
         `Found ${dueBackups.length} backup(s) due for execution`,
-        { type: 'info' }
+        { type: "info" },
       );
 
       // Run each due backup
@@ -133,7 +141,9 @@ export class BackupScheduler {
         await this.runScheduledBackup(settings);
       }
     } catch (error) {
-      errorLogger.logError(error as Error, { context: 'check-and-run-backups' });
+      errorLogger.logError(error as Error, {
+        context: "check-and-run-backups",
+      });
     }
   }
 
@@ -144,25 +154,27 @@ export class BackupScheduler {
     try {
       errorLogger.logError(
         `Running scheduled backup for user ${settings.user_id} (frequency: ${settings.frequency})`,
-        { type: 'info' }
+        { type: "info" },
       );
 
       // Create backup with auto-backup prefix
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
       const filename = `auto_backup_user${settings.user_id}_${timestamp}`;
       const backup = createBackup(filename);
 
       errorLogger.logError(
         `Auto-backup created: ${backup.filename} (${backup.size} bytes)`,
-        { type: 'info' }
+        { type: "info" },
       );
 
       // Apply retention policy
-      const deletedCount = await this.retentionPolicy.applyRetentionPolicy(settings.keep_count);
+      const deletedCount = await this.retentionPolicy.applyRetentionPolicy(
+        settings.keep_count,
+      );
       if (deletedCount > 0) {
         errorLogger.logError(
           `Retention policy deleted ${deletedCount} old backup(s)`,
-          { type: 'info' }
+          { type: "info" },
         );
       }
 
@@ -170,25 +182,27 @@ export class BackupScheduler {
       const lastBackupAt = new Date().toISOString();
       const nextBackupAt = this.calculateNextBackupTime(
         settings.frequency,
-        settings.backup_time
+        settings.backup_time,
       );
 
       this.db
         .prepare(
           `UPDATE backup_settings
            SET last_backup_at = ?, next_backup_at = ?
-           WHERE id = ?`
+           WHERE id = ?`,
         )
         .run(lastBackupAt, nextBackupAt.toISOString(), settings.id);
 
       errorLogger.logError(
         `Next backup for user ${settings.user_id} scheduled for ${nextBackupAt.toLocaleString()}`,
-        { type: 'info' }
+        { type: "info" },
       );
     } catch (error) {
       errorLogger.logError(
-        new Error(`Failed to run scheduled backup for user ${settings.user_id}: ${(error as Error).message}`),
-        { context: 'run-scheduled-backup' }
+        new Error(
+          `Failed to run scheduled backup for user ${settings.user_id}: ${(error as Error).message}`,
+        ),
+        { context: "run-scheduled-backup" },
       );
     }
   }
@@ -198,7 +212,7 @@ export class BackupScheduler {
    */
   private calculateNextBackupTime(frequency: string, backupTime: string): Date {
     const now = new Date();
-    const [hours, minutes] = backupTime.split(':').map(Number);
+    const [hours, minutes] = backupTime.split(":").map(Number);
 
     // Start with today at the configured time
     const nextBackup = new Date();
@@ -207,13 +221,13 @@ export class BackupScheduler {
     // If the time has already passed today, add the interval
     if (nextBackup <= now) {
       switch (frequency) {
-        case 'daily':
+        case "daily":
           nextBackup.setDate(nextBackup.getDate() + 1);
           break;
-        case 'weekly':
+        case "weekly":
           nextBackup.setDate(nextBackup.getDate() + 7);
           break;
-        case 'monthly':
+        case "monthly":
           nextBackup.setMonth(nextBackup.getMonth() + 1);
           break;
       }
@@ -228,14 +242,15 @@ export class BackupScheduler {
   getBackupSettings(userId: number): BackupSettings | null {
     try {
       const settings = this.db
-        .prepare<[number], BackupSettings>(
-          'SELECT * FROM backup_settings WHERE user_id = ?'
-        )
+        .prepare<
+          [number],
+          BackupSettings
+        >("SELECT * FROM backup_settings WHERE user_id = ?")
         .get(userId);
 
       return settings || null;
     } catch (error) {
-      errorLogger.logError(error as Error, { context: 'get-backup-settings' });
+      errorLogger.logError(error as Error, { context: "get-backup-settings" });
       return null;
     }
   }
@@ -247,10 +262,10 @@ export class BackupScheduler {
     userId: number,
     settings: {
       enabled: boolean;
-      frequency: 'daily' | 'weekly' | 'monthly';
+      frequency: "daily" | "weekly" | "monthly";
       backup_time: string;
       keep_count: number;
-    }
+    },
   ): BackupSettings {
     try {
       // Check if settings exist
@@ -258,7 +273,10 @@ export class BackupScheduler {
 
       const now = new Date().toISOString();
       const nextBackupAt = settings.enabled
-        ? this.calculateNextBackupTime(settings.frequency, settings.backup_time).toISOString()
+        ? this.calculateNextBackupTime(
+            settings.frequency,
+            settings.backup_time,
+          ).toISOString()
         : null;
 
       if (existing) {
@@ -268,7 +286,7 @@ export class BackupScheduler {
             `UPDATE backup_settings
              SET enabled = ?, frequency = ?, backup_time = ?, keep_count = ?,
                  next_backup_at = ?, updated_at = ?
-             WHERE user_id = ?`
+             WHERE user_id = ?`,
           )
           .run(
             settings.enabled ? 1 : 0,
@@ -277,19 +295,18 @@ export class BackupScheduler {
             settings.keep_count,
             nextBackupAt,
             now,
-            userId
+            userId,
           );
 
-        errorLogger.logError(
-          `Updated backup settings for user ${userId}`,
-          { type: 'info' }
-        );
+        errorLogger.logError(`Updated backup settings for user ${userId}`, {
+          type: "info",
+        });
       } else {
         // Insert new settings
         this.db
           .prepare(
             `INSERT INTO backup_settings (user_id, enabled, frequency, backup_time, keep_count, next_backup_at, created_at, updated_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
           )
           .run(
             userId,
@@ -299,19 +316,20 @@ export class BackupScheduler {
             settings.keep_count,
             nextBackupAt,
             now,
-            now
+            now,
           );
 
-        errorLogger.logError(
-          `Created backup settings for user ${userId}`,
-          { type: 'info' }
-        );
+        errorLogger.logError(`Created backup settings for user ${userId}`, {
+          type: "info",
+        });
       }
 
       // Return updated settings
       return this.getBackupSettings(userId)!;
     } catch (error) {
-      errorLogger.logError(error as Error, { context: 'update-backup-settings' });
+      errorLogger.logError(error as Error, {
+        context: "update-backup-settings",
+      });
       throw error;
     }
   }

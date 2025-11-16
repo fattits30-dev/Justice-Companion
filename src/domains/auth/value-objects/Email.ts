@@ -12,7 +12,7 @@ export class Email {
     const trimmed = email.trim().toLowerCase();
 
     if (!trimmed) {
-      throw new Error('Email cannot be empty');
+      throw new Error("Email cannot be empty");
     }
 
     if (trimmed.length > Email.MAX_LENGTH) {
@@ -20,12 +20,16 @@ export class Email {
     }
 
     if (!Email.EMAIL_REGEX.test(trimmed)) {
-      throw new Error('Invalid email format');
+      throw new Error("Invalid email format");
     }
 
     // Additional validation for common typos
-    if (trimmed.includes('..') || trimmed.startsWith('.') || trimmed.endsWith('.')) {
-      throw new Error('Invalid email format: contains invalid dot placement');
+    if (
+      trimmed.includes("..") ||
+      trimmed.startsWith(".") ||
+      trimmed.endsWith(".")
+    ) {
+      throw new Error("Invalid email format: contains invalid dot placement");
     }
 
     return new Email(trimmed);
@@ -44,36 +48,36 @@ export class Email {
   }
 
   getDomain(): string {
-    return this.value.split('@')[1];
+    return this.value.split("@")[1];
   }
 
   getLocalPart(): string {
-    return this.value.split('@')[0];
+    return this.value.split("@")[0];
   }
 
   isBusinessEmail(): boolean {
     const commonPersonalDomains = [
-      'gmail.com',
-      'yahoo.com',
-      'hotmail.com',
-      'outlook.com',
-      'live.com',
-      'icloud.com',
-      'me.com',
-      'aol.com',
-      'protonmail.com',
-      'zoho.com'
+      "gmail.com",
+      "yahoo.com",
+      "hotmail.com",
+      "outlook.com",
+      "live.com",
+      "icloud.com",
+      "me.com",
+      "aol.com",
+      "protonmail.com",
+      "zoho.com",
     ];
     return !commonPersonalDomains.includes(this.getDomain());
   }
 
   getMasked(): string {
-    const [localPart, domain] = this.value.split('@');
+    const [localPart, domain] = this.value.split("@");
     if (localPart.length <= 3) {
-      return '***@' + domain;
+      return "***@" + domain;
     }
     const visibleChars = Math.min(3, Math.floor(localPart.length / 3));
-    const masked = localPart.substring(0, visibleChars) + '***';
-    return masked + '@' + domain;
+    const masked = localPart.substring(0, visibleChars) + "***";
+    return masked + "@" + domain;
   }
 }

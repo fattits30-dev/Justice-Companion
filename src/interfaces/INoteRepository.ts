@@ -1,5 +1,5 @@
 // src/interfaces/INoteRepository.ts
-import type { Note } from '../models/Note.ts';
+import type { Note } from "../models/Note.ts";
 
 export interface INoteRepository {
   findById(id: number): Note | null;

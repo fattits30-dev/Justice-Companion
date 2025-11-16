@@ -1,7 +1,7 @@
 import type { App, BrowserWindow } from "electron";
 import type { AppUpdater, UpdateInfo, ProgressInfo } from "electron-updater";
 import { errorLogger } from "../utils/error-logger.ts";
-import { logger } from '../utils/logger';
+import { logger } from "../utils/logger";
 
 export interface AutoUpdaterConfig {
   checkOnStartup?: boolean;

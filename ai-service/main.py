@@ -9,18 +9,19 @@ Prioritizes Hugging Face (local + API) for privacy-first operation.
 Author: Justice Companion Team
 License: MIT
 """
-# Force reload for verbose logging
-
+import logging
 import os
 import sys
 import tempfile
+import traceback
 from contextlib import asynccontextmanager
-from typing import Optional
 from pathlib import Path
+from typing import Optional
 
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from pydantic_settings import BaseSettings
 import uvicorn
 
 # Import our modules
@@ -36,13 +37,229 @@ from models.requests import DocumentAnalysisRequest, ParsedDocument, UserProfile
 from models.responses import DocumentAnalysisResponse
 
 
-# Version info
-VERSION = "1.0.0"
-SERVICE_NAME = "Justice Companion AI Service"
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='[%(asctime)s] %(levelname)s [%(name)s]: %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+logger = logging.getLogger(__name__)
 
-# Global model client (initialized in lifespan)
+
+class Settings(BaseSettings):
+    """Application settings with environment variable support."""
+
+    # Service configuration
+    version: str = "1.0.0"
+    service_name: str = "Justice Companion AI Service"
+
+    # Server configuration
+    host: str = "127.0.0.1"
+    port: int = 5051
+    environment: str = "production"
+
+    # Model configuration
+    use_local_models: bool = False
+    model_name: str = "google/flan-t5-large"
+    hf_model: str = "Qwen/Qwen3-30B-A3B-Instruct-2507"
+    openai_model: str = "gpt-3.5-turbo"
+    temperature: float = 0.7
+    max_tokens: int = 2000
+
+    # API keys (optional)
+    hf_token: Optional[str] = None
+    openai_api_key: Optional[str] = None
+
+    # File upload configuration
+    max_file_size: int = 10 * 1024 * 1024  # 10MB
+    allowed_extensions: set = {".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".tif", ".heic", ".pdf"}
+
+    class Config:
+        env_file = ".env"
+        case_sensitive = False
+
+
+# Global settings and model client
+settings = Settings()
 model_client: Optional[ModelClient] = None
 model_provider: str = "Not initialized"
+
+
+class ImageAnalysisService:
+    """Service for analyzing images of legal documents using OCR and AI."""
+
+    def __init__(self, model_client: ModelClient, settings: Settings):
+        self.model_client = model_client
+        self.settings = settings
+        self.image_processor = ImageProcessorService()
+
+    async def analyze_image(
+        self,
+        file: UploadFile,
+        user_name: str,
+        user_email: Optional[str],
+        session_id: str,
+        user_question: Optional[str]
+    ) -> DocumentAnalysisResponse:
+        """
+        Analyze an uploaded image file and extract legal document information.
+
+        Args:
+            file: The uploaded file
+            user_name: User's full name
+            user_email: User's email (optional)
+            session_id: Session identifier
+            user_question: Optional question about the document
+
+        Returns:
+            DocumentAnalysisResponse with analysis results
+
+        Raises:
+            HTTPException: For various error conditions
+        """
+        temp_file_path = None
+        try:
+            # Validate and save uploaded file
+            temp_file_path = await self._save_uploaded_file(file, session_id)
+
+            # Ensure filename is not None
+            filename = file.filename or "unknown_file"
+
+            # Extract text from image
+            text, ocr_metadata = self._extract_text_from_file(temp_file_path, filename)
+
+            # Create document objects
+            parsed_document = self._create_parsed_document(filename, text)
+            user_profile = UserProfile(name=user_name, email=user_email)
+
+            # Create analysis request
+            analysis_request = DocumentAnalysisRequest(
+                document=parsed_document,
+                userProfile=user_profile,
+                sessionId=session_id,
+                userQuestion=user_question
+            )
+
+            # Execute AI analysis
+            response = await self._execute_analysis(analysis_request)
+
+            # Add OCR metadata to response
+            if response.metadata is None:
+                response.metadata = {}
+            response.metadata["ocr"] = ocr_metadata
+
+            return response
+
+        finally:
+            # Clean up temp file
+            if temp_file_path and os.path.exists(temp_file_path):
+                try:
+                    os.remove(temp_file_path)
+                except Exception as e:
+                    logger.warning(f"Failed to clean up temp file: {e}")
+
+    async def _save_uploaded_file(self, file: UploadFile, session_id: str) -> str:
+        """Save uploaded file to temporary directory with validation."""
+        # Validate filename
+        if not file.filename:
+            raise HTTPException(status_code=400, detail="Filename is required")
+
+        # Sanitize filename to prevent path traversal
+        safe_filename = os.path.basename(file.filename)
+        file_extension = Path(safe_filename).suffix.lower()
+
+        # Validate file extension
+        if file_extension not in self.settings.allowed_extensions:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unsupported file type: {file_extension}. Supported: {', '.join(self.settings.allowed_extensions)}"
+            )
+
+        # Create temporary file path
+        temp_dir = tempfile.gettempdir()
+        temp_file_path = os.path.join(temp_dir, f"upload_{session_id}_{safe_filename}")
+
+        # Save file
+        with open(temp_file_path, "wb") as buffer:
+            content = await file.read()
+            buffer.write(content)
+
+        return temp_file_path
+
+    def _extract_text_from_file(self, file_path: str, filename: str) -> tuple[str, dict]:
+        """Extract text from image file using OCR."""
+        # Check if Tesseract is available
+        if not self.image_processor.is_tesseract_available():
+            raise HTTPException(
+                status_code=503,
+                detail=(
+                    "Tesseract OCR is not installed. "
+                    "Please install Tesseract:\n"
+                    "  Windows: https://github.com/UB-Mannheim/tesseract/wiki\n"
+                    "  macOS: brew install tesseract\n"
+                    "  Linux: apt-get install tesseract-ocr"
+                )
+            )
+
+        file_extension = Path(filename).suffix.lower()
+
+        # Extract text based on file type
+        if file_extension in [".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".tif"]:
+            logger.info(f"Extracting text from image: {filename}")
+            text, ocr_metadata = self.image_processor.extract_text_from_image(file_path)
+
+        elif file_extension == ".heic":
+            logger.info(f"Converting HEIC to JPG: {filename}")
+            jpg_path = self.image_processor.convert_heic_to_jpg(file_path)
+            text, ocr_metadata = self.image_processor.extract_text_from_image(jpg_path)
+            # Clean up converted JPG
+            if os.path.exists(jpg_path):
+                os.remove(jpg_path)
+
+        elif file_extension == ".pdf":
+            logger.info(f"Extracting text from PDF: {filename}")
+            text, ocr_metadata = self.image_processor.extract_text_from_pdf(file_path)
+
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unsupported file type: {file_extension}. Supported: JPG, PNG, BMP, TIFF, PDF, HEIC"
+            )
+
+        # Validate extracted text
+        if not text.strip():
+            raise HTTPException(
+                status_code=400,
+                detail="No text found in image. Image may be blank, too low quality, or not contain readable text."
+            )
+
+        confidence = ocr_metadata.get('ocr_confidence', 0)
+        logger.info(f"Extracted {len(text)} characters (confidence: {confidence:.1f}%)")
+
+        return text, ocr_metadata
+
+    def _create_parsed_document(self, filename: str, text: str) -> ParsedDocument:
+        """Create ParsedDocument from extracted text."""
+        word_count = len(text.split())
+        file_extension = Path(filename).suffix.lower().lstrip(".")
+
+        return ParsedDocument(
+            filename=filename,
+            text=text,
+            wordCount=word_count,
+            fileType=file_extension
+        )
+
+    async def _execute_analysis(self, request: DocumentAnalysisRequest) -> DocumentAnalysisResponse:
+        """Execute AI analysis on the document."""
+        config = {
+            "model": self.model_client.config.get("model", "unknown"),
+            "temperature": self.settings.temperature,
+            "max_tokens": self.settings.max_tokens,
+        }
+
+        agent = DocumentAnalyzerAgent(self.model_client, config)
+        return await agent.execute(request)
 
 
 @asynccontextmanager
@@ -55,84 +272,80 @@ async def lifespan(app: FastAPI):
     global model_client, model_provider
 
     # Startup
-    print(f"[AI Service] Starting {SERVICE_NAME} v{VERSION} (with verbose logging)")
-    print(f"[AI Service] Python version: {sys.version}")
-    print(f"[AI Service] Working directory: {os.getcwd()}")
+    logger.info(f"Starting {settings.service_name} v{settings.version}")
+    logger.info(f"Python version: {sys.version}")
+    logger.info(f"Working directory: {os.getcwd()}")
 
     # Initialize model client (Hugging Face-first strategy)
-    print("[AI Service] Initializing model client...")
+    logger.info("Initializing model client...")
 
     # Model selection priority:
     # 1. Hugging Face Local (best for privacy, free, but requires GPU/CPU)
     # 2. Hugging Face API (£9/month fallback, good privacy, less powerful hardware)
     # 3. OpenAI (optional, for users who prefer it)
 
-    hf_token = os.getenv("HF_TOKEN")
-    openai_key = os.getenv("OPENAI_API_KEY")
-    use_local = os.getenv("USE_LOCAL_MODELS", "false").lower() == "true"
-
     config = {
-        "model": os.getenv("MODEL_NAME", "google/flan-t5-large"),
-        "temperature": 0.7,
-        "max_tokens": 2000,
+        "model": settings.model_name,
+        "temperature": settings.temperature,
+        "max_tokens": settings.max_tokens,
     }
 
     try:
-        if use_local:
+        if settings.use_local_models:
             # Try Hugging Face Local first (PRIMARY - privacy-first)
-            print("[AI Service] Attempting to initialize Hugging Face Local...")
+            logger.info("Attempting to initialize Hugging Face Local...")
             try:
                 model_client = HuggingFaceLocalClient(config)
                 model_provider = "Hugging Face Local (Privacy-First)"
-                print(f"[AI Service] [OK] Initialized {model_provider}")
-                print(f"[AI Service] Model: {config['model']}")
-                print(f"[AI Service] Device: {model_client.device}")
+                logger.info(f"Initialized {model_provider}")
+                logger.info(f"Model: {config['model']}")
+                logger.info(f"Device: {model_client.device}")
             except Exception as e:
-                print(f"[AI Service] Local models not available: {e}")
+                logger.warning(f"Local models not available: {e}")
                 model_client = None
 
-        if model_client is None and hf_token:
+        if model_client is None and settings.hf_token:
             # Fallback to Hugging Face API (Pro subscription)
-            print("[AI Service] Initializing Hugging Face API (Pro)...")
-            config["api_token"] = hf_token
-            config["model"] = os.getenv("HF_MODEL", "Qwen/Qwen3-30B-A3B-Instruct-2507")
+            logger.info("Initializing Hugging Face API (Pro)...")
+            config["api_token"] = settings.hf_token
+            config["model"] = settings.hf_model
             model_client = HuggingFaceAPIClient(config)
             model_provider = "Hugging Face API (Pro - Qwen3)"
-            print(f"[AI Service] [OK] Initialized {model_provider}")
-            print(f"[AI Service] Model: {config['model']}")
+            logger.info(f"Initialized {model_provider}")
+            logger.info(f"Model: {config['model']}")
 
-        elif model_client is None and openai_key:
+        elif model_client is None and settings.openai_api_key:
             # Optional OpenAI fallback
-            print("[AI Service] Initializing OpenAI (Optional)...")
-            config["api_key"] = openai_key
-            config["model"] = os.getenv("OPENAI_MODEL", "gpt-3.5-turbo")
+            logger.info("Initializing OpenAI (Optional)...")
+            config["api_key"] = settings.openai_api_key
+            config["model"] = settings.openai_model
             model_client = OpenAIClient(config)
             model_provider = "OpenAI (Optional)"
-            print(f"[AI Service] [OK] Initialized {model_provider}")
-            print(f"[AI Service] Model: {config['model']}")
+            logger.info(f"Initialized {model_provider}")
+            logger.info(f"Model: {config['model']}")
 
         elif model_client is None:
             # No models available
-            print("[AI Service] [FAILED] No AI models configured!")
-            print("[AI Service] Set HF_TOKEN or OPENAI_API_KEY environment variable")
-            print("[AI Service] Or set USE_LOCAL_MODELS=true for local Hugging Face")
+            logger.error("No AI models configured!")
+            logger.error("Set HF_TOKEN or OPENAI_API_KEY environment variable")
+            logger.error("Or set USE_LOCAL_MODELS=true for local Hugging Face")
             model_provider = "None (No API keys configured)"
 
     except Exception as e:
-        print(f"[AI Service] [FAILED] Model initialization failed: {e}")
+        logger.error(f"Model initialization failed: {e}")
         model_provider = f"Failed: {str(e)}"
         model_client = None
 
     yield
 
     # Shutdown
-    print(f"[AI Service] Shutting down {SERVICE_NAME}")
+    logger.info(f"Shutting down {settings.service_name}")
 
 
 # Create FastAPI app
 app = FastAPI(
-    title=SERVICE_NAME,
-    version=VERSION,
+    title=settings.service_name,
+    version=settings.version,
     description="AI-powered legal assistant microservice",
     lifespan=lifespan
 )
@@ -154,8 +367,8 @@ app.add_middleware(
 async def root():
     """Root endpoint - service info"""
     return {
-        "service": SERVICE_NAME,
-        "version": VERSION,
+        "service": settings.service_name,
+        "version": settings.version,
         "status": "running",
         "endpoints": {
             "health": "/health",
@@ -169,8 +382,8 @@ async def health_check():
     """Health check endpoint for PythonProcessManager"""
     return {
         "status": "healthy",
-        "service": SERVICE_NAME,
-        "version": VERSION
+        "service": settings.service_name,
+        "version": settings.version
     }
 
 
@@ -179,8 +392,8 @@ async def api_info():
     """API version info with model provider status"""
     return {
         "api_version": "v1",
-        "service": SERVICE_NAME,
-        "version": VERSION,
+        "service": settings.service_name,
+        "version": settings.version,
         "model_provider": model_provider,
         "model_ready": model_client is not None,
         "available_agents": [
@@ -217,44 +430,38 @@ async def analyze_document(request: DocumentAnalysisRequest):
         )
 
     try:
-        print(f"[AI Service] analyze_document called with document: {request.document.filename}")
-        print(f"[AI Service] Document text length: {len(request.document.text)} chars")
-        print(f"[AI Service] User: {request.userProfile.name}")
+        logger.info(f"analyze_document called with document: {request.document.filename}")
+        logger.info(f"Document text length: {len(request.document.text)} chars")
+        logger.info(f"User: {request.userProfile.name}")
 
         # Create DocumentAnalyzerAgent with initialized model client
         config = {
             "model": model_client.config.get("model", "unknown"),
-            "temperature": 0.7,
-            "max_tokens": 2000,
+            "temperature": settings.temperature,
+            "max_tokens": settings.max_tokens,
         }
         agent = DocumentAnalyzerAgent(model_client, config)
 
         # Execute analysis
-        print(f"[AI Service] Executing agent.execute()...")
+        logger.info("Executing agent.execute()...")
         response = await agent.execute(request)
-        print(f"[AI Service] Agent execution completed successfully")
+        logger.info("Agent execution completed successfully")
 
         return response
 
     except ValueError as e:
         # Invalid request (validation error)
-        print(f"[AI Service] ValueError in analyze_document: {e}")
-        import traceback
-        traceback.print_exc()
+        logger.error(f"ValueError in analyze_document: {e}")
         raise HTTPException(status_code=400, detail=str(e))
 
     except RuntimeError as e:
         # Model generation error
-        print(f"[AI Service] RuntimeError in analyze_document: {e}")
-        import traceback
-        traceback.print_exc()
+        logger.error(f"RuntimeError in analyze_document: {e}")
         raise HTTPException(status_code=500, detail=f"Model error: {str(e)}")
 
     except Exception as e:
         # Unexpected error
-        print(f"[AI Service] Unexpected error in analyze_document: {e}")
-        import traceback
-        traceback.print_exc()
+        logger.error(f"Unexpected error in analyze_document: {e}")
         raise HTTPException(status_code=500, detail=f"Internal error: {str(e)}")
 
 
@@ -291,127 +498,16 @@ async def analyze_image(
             detail="AI model not initialized. Set HF_TOKEN or OPENAI_API_KEY environment variable."
         )
 
-    temp_file_path = None
     try:
-        # Save uploaded file to temp directory
-        temp_dir = tempfile.gettempdir()
-
-        # Sanitize filename to prevent path traversal
-        if not file.filename:
-            raise HTTPException(
-                status_code=400,
-                detail="Filename is required"
-            )
-        safe_filename = os.path.basename(file.filename)  # Remove any path components
-        file_extension = Path(safe_filename).suffix.lower()
-
-        # Validate file extension is allowed
-        allowed_extensions = {".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".tif", ".heic", ".pdf"}
-        if file_extension not in allowed_extensions:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Unsupported file type: {file_extension}. Supported: {', '.join(allowed_extensions)}"
-            )
-
-        # Create safe temporary filename
-        temp_file_path = os.path.join(temp_dir, f"upload_{sessionId}_{safe_filename}")
-
-        # Write file
-        with open(temp_file_path, "wb") as buffer:
-            content = await file.read()
-            buffer.write(content)
-
-        # Initialize OCR service
-        image_processor = ImageProcessorService()
-
-        # Check if Tesseract is available
-        if not image_processor.is_tesseract_available():
-            raise HTTPException(
-                status_code=503,
-                detail=(
-                    "Tesseract OCR is not installed. "
-                    "Please install Tesseract:\n"
-                    "  Windows: https://github.com/UB-Mannheim/tesseract/wiki\n"
-                    "  macOS: brew install tesseract\n"
-                    "  Linux: apt-get install tesseract-ocr"
-                )
-            )
-
-        # Extract text based on file type
-        if file_extension in [".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".tif"]:
-            # Image file - extract text directly
-            print(f"[AI Service] Extracting text from image: {file.filename}")
-            text, ocr_metadata = image_processor.extract_text_from_image(temp_file_path)
-
-        elif file_extension == ".heic":
-            # HEIC (iPhone photos) - convert to JPG first
-            print(f"[AI Service] Converting HEIC to JPG: {file.filename}")
-            jpg_path = image_processor.convert_heic_to_jpg(temp_file_path)
-            text, ocr_metadata = image_processor.extract_text_from_image(jpg_path)
-            # Clean up converted JPG
-            if os.path.exists(jpg_path):
-                os.remove(jpg_path)
-
-        elif file_extension == ".pdf":
-            # Scanned PDF - extract text from all pages
-            print(f"[AI Service] Extracting text from PDF: {file.filename}")
-            text, ocr_metadata = image_processor.extract_text_from_pdf(temp_file_path)
-
-        else:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Unsupported file type: {file_extension}. Supported: JPG, PNG, BMP, TIFF, PDF, HEIC"
-            )
-
-        # Check if OCR extracted any text
-        if not text.strip():
-            raise HTTPException(
-                status_code=400,
-                detail="No text found in image. Image may be blank, too low quality, or not contain readable text."
-            )
-
-        print(f"[AI Service] Extracted {len(text)} characters (confidence: {ocr_metadata.get('ocr_confidence', 0):.1f}%)")
-
-        # Create ParsedDocument from OCR results
-        word_count = len(text.split())
-        parsed_document = ParsedDocument(
-            filename=file.filename,
-            text=text,
-            wordCount=word_count,
-            fileType=file_extension.lstrip(".")
+        # Create and use image analysis service
+        image_service = ImageAnalysisService(model_client, settings)
+        return await image_service.analyze_image(
+            file=file,
+            user_name=userName,
+            user_email=userEmail,
+            session_id=sessionId,
+            user_question=userQuestion
         )
-
-        # Create user profile
-        user_profile = UserProfile(
-            name=userName,
-            email=userEmail
-        )
-
-        # Create analysis request
-        analysis_request = DocumentAnalysisRequest(
-            document=parsed_document,
-            userProfile=user_profile,
-            sessionId=sessionId,
-            userQuestion=userQuestion
-        )
-
-        # Create DocumentAnalyzerAgent with initialized model client
-        config = {
-            "model": model_client.config.get("model", "unknown"),
-            "temperature": 0.7,
-            "max_tokens": 2000,
-        }
-        agent = DocumentAnalyzerAgent(model_client, config)
-
-        # Execute analysis
-        response = await agent.execute(analysis_request)
-
-        # Add OCR metadata to response
-        if response.metadata is None:
-            response.metadata = {}
-        response.metadata["ocr"] = ocr_metadata
-
-        return response
 
     except HTTPException:
         # Re-raise HTTP exceptions
@@ -419,30 +515,25 @@ async def analyze_image(
 
     except ValueError as e:
         # Invalid request (validation error)
+        logger.error(f"ValueError in analyze_image: {e}")
         raise HTTPException(status_code=400, detail=str(e))
 
     except RuntimeError as e:
         # OCR or model generation error
+        logger.error(f"RuntimeError in analyze_image: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
     except Exception as e:
         # Unexpected error
-        print(f"[AI Service] Unexpected error in analyze_image: {e}")
+        logger.error(f"Unexpected error in analyze_image: {e}")
         raise HTTPException(status_code=500, detail=f"Internal error: {str(e)}")
-
-    finally:
-        # Clean up temp file
-        if temp_file_path and os.path.exists(temp_file_path):
-            try:
-                os.remove(temp_file_path)
-            except Exception as e:
-                print(f"[AI Service] Failed to clean up temp file: {e}")
 
 
 # Error handlers
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request, exc):
     """Custom HTTP exception handler"""
+    logger.warning(f"HTTP exception: {exc.status_code} - {exc.detail}")
     return JSONResponse(
         status_code=exc.status_code,
         content={
@@ -455,7 +546,7 @@ async def http_exception_handler(request, exc):
 @app.exception_handler(Exception)
 async def general_exception_handler(request, exc):
     """Catch-all exception handler"""
-    print(f"[AI Service] Unhandled exception: {exc}")
+    logger.error(f"Unhandled exception: {exc}", exc_info=True)
     return JSONResponse(
         status_code=500,
         content={
@@ -467,21 +558,16 @@ async def general_exception_handler(request, exc):
 
 
 if __name__ == "__main__":
-    # Get port from environment or default to 5051
-    port = int(os.getenv("PORT", "5051"))
-    host = os.getenv("HOST", "127.0.0.1")
-    is_dev = os.getenv("ENVIRONMENT", "production") == "development"
-
-    print(f"[AI Service] Starting server on {host}:{port}")
-    print(f"[AI Service] Mode: {'DEVELOPMENT' if is_dev else 'PRODUCTION'}")
+    logger.info(f"Starting server on {settings.host}:{settings.port}")
+    logger.info(f"Mode: {'DEVELOPMENT' if settings.environment == 'development' else 'PRODUCTION'}")
 
     # Use import string for reload mode (required by uvicorn)
     # Use app object for production (faster startup)
-    if is_dev:
+    if settings.environment == "development":
         uvicorn.run(
             "main:app",  # Import string required for reload
-            host=host,
-            port=port,
+            host=settings.host,
+            port=settings.port,
             log_level="info",
             access_log=True,
             reload=True
@@ -489,8 +575,8 @@ if __name__ == "__main__":
     else:
         uvicorn.run(
             app,
-            host=host,
-            port=port,
+            host=settings.host,
+            port=settings.port,
             log_level="info",
             access_log=True,
             reload=False

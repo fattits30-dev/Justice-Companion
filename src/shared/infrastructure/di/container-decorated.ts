@@ -8,7 +8,7 @@
 import "reflect-metadata";
 import { Container } from "inversify";
 import { TYPES } from "./types.ts";
-import { logger } from '../../../utils/logger';
+import { logger } from "../../../utils/logger";
 
 // Import repository interfaces from repository-interfaces.ts
 import type {
@@ -52,7 +52,7 @@ export interface DecoratedContainerOptions {
  * Creates a container with decorated repositories
  */
 export function createDecoratedContainer(
-  options: DecoratedContainerOptions = {}
+  options: DecoratedContainerOptions = {},
 ): Container {
   const container = new Container({
     defaultScope: "Singleton",
@@ -67,7 +67,7 @@ export function createDecoratedContainer(
 
   if (verbose) {
     logger.warn(
-      `[DI] Creating decorated container for environment: ${environment}`
+      `[DI] Creating decorated container for environment: ${environment}`,
     );
   }
 

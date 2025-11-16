@@ -5,8 +5,8 @@
  * creation, retrieval, message addition, and deletion with proper sanitization.
  */
 
-import { z } from 'zod';
-import { MAX_TITLE_LENGTH, MAX_STRING_LENGTH } from '../utils/constants.ts';
+import { z } from "zod";
+import { MAX_TITLE_LENGTH, MAX_STRING_LENGTH } from "../utils/constants.ts";
 
 /**
  * Schema for conversation creation request
@@ -17,16 +17,19 @@ export const conversationCreateSchema = z.object({
     .object({
       title: z
         .string()
-        .min(1, 'Title is required')
-        .max(MAX_TITLE_LENGTH, `Title must be less than ${MAX_TITLE_LENGTH} characters`)
+        .min(1, "Title is required")
+        .max(
+          MAX_TITLE_LENGTH,
+          `Title must be less than ${MAX_TITLE_LENGTH} characters`,
+        )
         .trim(),
 
       caseId: z
         .number({
-          message: 'Case ID must be a number',
+          message: "Case ID must be a number",
         })
-        .int('Case ID must be an integer')
-        .positive('Case ID must be positive')
+        .int("Case ID must be an integer")
+        .positive("Case ID must be positive")
         .nullable()
         .optional(),
 
@@ -45,11 +48,11 @@ export const conversationCreateSchema = z.object({
 export const conversationGetSchema = z.object({
   id: z
     .number({
-      message: 'Conversation ID is required and must be a number',
+      message: "Conversation ID is required and must be a number",
     })
-    .int('Conversation ID must be an integer')
-    .positive('Conversation ID must be positive')
-    .max(2147483647, 'Conversation ID exceeds maximum value'),
+    .int("Conversation ID must be an integer")
+    .positive("Conversation ID must be positive")
+    .max(2147483647, "Conversation ID exceeds maximum value"),
 });
 
 /**
@@ -58,10 +61,10 @@ export const conversationGetSchema = z.object({
 export const conversationGetAllSchema = z.object({
   caseId: z
     .number({
-      message: 'Case ID must be a number',
+      message: "Case ID must be a number",
     })
-    .int('Case ID must be an integer')
-    .positive('Case ID must be positive')
+    .int("Case ID must be an integer")
+    .positive("Case ID must be positive")
     .nullable()
     .optional(),
 });
@@ -72,19 +75,19 @@ export const conversationGetAllSchema = z.object({
 export const conversationGetRecentSchema = z.object({
   caseId: z
     .number({
-      message: 'Case ID must be a number',
+      message: "Case ID must be a number",
     })
-    .int('Case ID must be an integer')
-    .positive('Case ID must be positive')
+    .int("Case ID must be an integer")
+    .positive("Case ID must be positive")
     .nullable(),
 
   limit: z
     .number({
-      message: 'Limit must be a number',
+      message: "Limit must be a number",
     })
-    .int('Limit must be an integer')
-    .positive('Limit must be positive')
-    .max(100, 'Limit cannot exceed 100')
+    .int("Limit must be an integer")
+    .positive("Limit must be positive")
+    .max(100, "Limit cannot exceed 100")
     .optional()
     .default(10),
 });
@@ -95,11 +98,11 @@ export const conversationGetRecentSchema = z.object({
 export const conversationLoadWithMessagesSchema = z.object({
   conversationId: z
     .number({
-      message: 'Conversation ID is required and must be a number',
+      message: "Conversation ID is required and must be a number",
     })
-    .int('Conversation ID must be an integer')
-    .positive('Conversation ID must be positive')
-    .max(2147483647, 'Conversation ID exceeds maximum value'),
+    .int("Conversation ID must be an integer")
+    .positive("Conversation ID must be positive")
+    .max(2147483647, "Conversation ID exceeds maximum value"),
 });
 
 /**
@@ -108,11 +111,11 @@ export const conversationLoadWithMessagesSchema = z.object({
 export const conversationDeleteSchema = z.object({
   id: z
     .number({
-      message: 'Conversation ID is required and must be a number',
+      message: "Conversation ID is required and must be a number",
     })
-    .int('Conversation ID must be an integer')
-    .positive('Conversation ID must be positive')
-    .max(2147483647, 'Conversation ID exceeds maximum value'),
+    .int("Conversation ID must be an integer")
+    .positive("Conversation ID must be positive")
+    .max(2147483647, "Conversation ID exceeds maximum value"),
 });
 
 /**
@@ -124,19 +127,22 @@ export const messageAddSchema = z.object({
     .object({
       conversationId: z
         .number({
-          message: 'Conversation ID is required and must be a number',
+          message: "Conversation ID is required and must be a number",
         })
-        .int('Conversation ID must be an integer')
-        .positive('Conversation ID must be positive'),
+        .int("Conversation ID must be an integer")
+        .positive("Conversation ID must be positive"),
 
-      role: z.enum(['user', 'assistant'], {
+      role: z.enum(["user", "assistant"], {
         message: 'Role must be either "user" or "assistant"',
       }),
 
       content: z
         .string()
-        .min(1, 'Message content is required')
-        .max(MAX_STRING_LENGTH, `Message content must be less than ${MAX_STRING_LENGTH} characters`)
+        .min(1, "Message content is required")
+        .max(
+          MAX_STRING_LENGTH,
+          `Message content must be less than ${MAX_STRING_LENGTH} characters`,
+        )
         .trim(),
 
       thinkingContent: z
@@ -151,11 +157,11 @@ export const messageAddSchema = z.object({
 
       tokenCount: z
         .number({
-          message: 'Token count must be a number',
+          message: "Token count must be a number",
         })
-        .int('Token count must be an integer')
-        .nonnegative('Token count cannot be negative')
-        .max(1000000, 'Token count exceeds maximum value')
+        .int("Token count must be an integer")
+        .nonnegative("Token count cannot be negative")
+        .max(1000000, "Token count exceeds maximum value")
         .nullable()
         .optional(),
 
@@ -168,22 +174,26 @@ export const messageAddSchema = z.object({
       // Validate message count doesn't exceed limit (checked server-side but also here)
       // This is a soft check - server will do the actual enforcement
       return true;
-    }, 'Conversation has reached maximum message limit')
+    }, "Conversation has reached maximum message limit")
     .refine((data) => {
       // If role is assistant, thinking content is allowed
       // If role is user, thinking content should not be present
-      if (data.role === 'user' && data.thinkingContent) {
+      if (data.role === "user" && data.thinkingContent) {
         return false;
       }
       return true;
-    }, 'Thinking content is only allowed for assistant messages'),
+    }, "Thinking content is only allowed for assistant messages"),
 });
 
 // Type exports for use in other files
 export type ConversationCreateInput = z.infer<typeof conversationCreateSchema>;
 export type ConversationGetInput = z.infer<typeof conversationGetSchema>;
 export type ConversationGetAllInput = z.infer<typeof conversationGetAllSchema>;
-export type ConversationGetRecentInput = z.infer<typeof conversationGetRecentSchema>;
-export type ConversationLoadWithMessagesInput = z.infer<typeof conversationLoadWithMessagesSchema>;
+export type ConversationGetRecentInput = z.infer<
+  typeof conversationGetRecentSchema
+>;
+export type ConversationLoadWithMessagesInput = z.infer<
+  typeof conversationLoadWithMessagesSchema
+>;
 export type ConversationDeleteInput = z.infer<typeof conversationDeleteSchema>;
 export type MessageAddInput = z.infer<typeof messageAddSchema>;

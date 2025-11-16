@@ -22,11 +22,11 @@
  * @security Phase 2 - MVL Plan
  */
 
-import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
-import type { Session } from './domains/auth/entities/Session';
-import type { Case } from './domains/cases/entities/Case';
-import type { Evidence } from './domains/evidence/entities/Evidence';
-import type { ChatConversation } from './models/ChatConversation';
+import { describe, it, expect, beforeEach, vi, type Mock } from "vitest";
+import type { Session } from "./domains/auth/entities/Session";
+import type { Case } from "./domains/cases/entities/Case";
+import type { Evidence } from "./domains/evidence/entities/Evidence";
+import type { ChatConversation } from "./models/ChatConversation";
 
 // ============================================================================
 // Mock Setup
@@ -36,12 +36,14 @@ import type { ChatConversation } from './models/ChatConversation';
  * Mock session data for testing
  */
 const createMockSession = (userId: number, expired = false): Session => ({
-  id: 'mock-session-id',
+  id: "mock-session-id",
   userId,
   createdAt: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
-  expiresAt: expired ? new Date(Date.now() - 1000).toISOString() : new Date(Date.now() + 3600000).toISOString(), // Expired or 1 hour from now
-  ipAddress: '127.0.0.1',
-  userAgent: 'test-agent',
+  expiresAt: expired
+    ? new Date(Date.now() - 1000).toISOString()
+    : new Date(Date.now() + 3600000).toISOString(), // Expired or 1 hour from now
+  ipAddress: "127.0.0.1",
+  userAgent: "test-agent",
   rememberMe: false,
 });
 
@@ -52,9 +54,9 @@ const createMockCase = (id: number, userId: number): Case => ({
   id,
   userId,
   title: `Test Case ${id}`,
-  description: 'encrypted-description',
-  caseType: 'consumer',
-  status: 'active',
+  description: "encrypted-description",
+  caseType: "consumer",
+  status: "active",
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
 });
@@ -66,7 +68,7 @@ const createMockEvidence = (id: number, caseId: number): Evidence => ({
   id,
   caseId,
   title: `Test Evidence ${id}`,
-  evidenceType: 'document',
+  evidenceType: "document",
   filePath: `/path/to/evidence-${id}.pdf`,
   content: null,
   obtainedDate: new Date().toISOString(),
@@ -76,7 +78,10 @@ const createMockEvidence = (id: number, caseId: number): Evidence => ({
 /**
  * Mock conversation data for testing
  */
-const createMockConversation = (id: number, caseId: number | null): ChatConversation => ({
+const createMockConversation = (
+  id: number,
+  caseId: number | null,
+): ChatConversation => ({
   id,
   caseId,
   userId: 1,
@@ -90,7 +95,7 @@ const createMockConversation = (id: number, caseId: number | null): ChatConversa
 // Session Helper Function Tests
 // ============================================================================
 
-describe('getCurrentUserIdFromSession', () => {
+describe("getCurrentUserIdFromSession", () => {
   let mockSessionRepository: {
     findById: Mock;
   };
@@ -100,10 +105,10 @@ describe('getCurrentUserIdFromSession', () => {
     mockSessionRepository = {
       findById: vi.fn(),
     };
-    mockCurrentSessionId = 'mock-session-id';
+    mockCurrentSessionId = "mock-session-id";
   });
 
-  it('should return userId when session is valid', () => {
+  it("should return userId when session is valid", () => {
     // Arrange
     const userId = 1;
     const mockSession = createMockSession(userId, false);
@@ -112,19 +117,19 @@ describe('getCurrentUserIdFromSession', () => {
     // Act
     const getCurrentUserIdFromSession = (): number => {
       if (!mockCurrentSessionId) {
-        throw new Error('Unauthorized: No active session');
+        throw new Error("Unauthorized: No active session");
       }
 
       const session = mockSessionRepository.findById(mockCurrentSessionId);
       if (!session) {
         mockCurrentSessionId = null;
-        throw new Error('Unauthorized: Invalid session');
+        throw new Error("Unauthorized: Invalid session");
       }
 
       const now = Date.now();
       if (session.expiresAt < now) {
         mockCurrentSessionId = null;
-        throw new Error('Unauthorized: Session expired');
+        throw new Error("Unauthorized: Session expired");
       }
 
       return session.userId;
@@ -134,67 +139,73 @@ describe('getCurrentUserIdFromSession', () => {
 
     // Assert
     expect(result).toBe(userId);
-    expect(mockSessionRepository.findById).toHaveBeenCalledWith('mock-session-id');
+    expect(mockSessionRepository.findById).toHaveBeenCalledWith(
+      "mock-session-id",
+    );
   });
 
-  it('should throw error when no active session', () => {
+  it("should throw error when no active session", () => {
     // Arrange
     mockCurrentSessionId = null;
 
     // Act & Assert
     const getCurrentUserIdFromSession = (): number => {
       if (!mockCurrentSessionId) {
-        throw new Error('Unauthorized: No active session');
+        throw new Error("Unauthorized: No active session");
       }
 
       const session = mockSessionRepository.findById(mockCurrentSessionId);
       if (!session) {
         mockCurrentSessionId = null;
-        throw new Error('Unauthorized: Invalid session');
+        throw new Error("Unauthorized: Invalid session");
       }
 
       const now = Date.now();
       if (session.expiresAt < now) {
         mockCurrentSessionId = null;
-        throw new Error('Unauthorized: Session expired');
+        throw new Error("Unauthorized: Session expired");
       }
 
       return session.userId;
     };
 
-    expect(() => getCurrentUserIdFromSession()).toThrow('Unauthorized: No active session');
+    expect(() => getCurrentUserIdFromSession()).toThrow(
+      "Unauthorized: No active session",
+    );
   });
 
-  it('should throw error when session is invalid (not in database)', () => {
+  it("should throw error when session is invalid (not in database)", () => {
     // Arrange
     mockSessionRepository.findById.mockReturnValue(null);
 
     // Act & Assert
     const getCurrentUserIdFromSession = (): number => {
       if (!mockCurrentSessionId) {
-        throw new Error('Unauthorized: No active session');
+        throw new Error("Unauthorized: No active session");
       }
 
       const session = mockSessionRepository.findById(mockCurrentSessionId);
       if (!session) {
         mockCurrentSessionId = null;
-        throw new Error('Unauthorized: Invalid session');
+        throw new Error("Unauthorized: Invalid session");
       }
 
       const now = Date.now();
       if (session.expiresAt < now) {
         mockCurrentSessionId = null;
-        throw new Error('Unauthorized: Session expired');
+        throw new Error("Unauthorized: Session expired");
       }
 
       return session.userId;
     };
 
-    expect(() => getCurrentUserIdFromSession()).toThrow('Unauthorized: Invalid session');
+    expect(() => getCurrentUserIdFromSession()).toThrow(
+      "Unauthorized: Invalid session",
+    );
     expect(mockCurrentSessionId).toBeNull(); // Should clear stale session ID
   });
 
-  it('should throw error when session is expired', () => {
+  it("should throw error when session is expired", () => {
     // Arrange
     const userId = 1;
     const expiredSession = createMockSession(userId, true); // expired = true
@@ -203,26 +214,28 @@ describe('getCurrentUserIdFromSession', () => {
     // Act & Assert
     const getCurrentUserIdFromSession = (): number => {
       if (!mockCurrentSessionId) {
-        throw new Error('Unauthorized: No active session');
+        throw new Error("Unauthorized: No active session");
       }
 
       const session = mockSessionRepository.findById(mockCurrentSessionId);
       if (!session) {
         mockCurrentSessionId = null;
-        throw new Error('Unauthorized: Invalid session');
+        throw new Error("Unauthorized: Invalid session");
       }
 
       const now = Date.now();
       const expiresAt = new Date(session.expiresAt).getTime(); // FIX: Parse ISO string to timestamp
       if (expiresAt < now) {
         mockCurrentSessionId = null;
-        throw new Error('Unauthorized: Session expired');
+        throw new Error("Unauthorized: Session expired");
       }
 
       return session.userId;
     };
 
-    expect(() => getCurrentUserIdFromSession()).toThrow('Unauthorized: Session expired');
+    expect(() => getCurrentUserIdFromSession()).toThrow(
+      "Unauthorized: Session expired",
+    );
     expect(mockCurrentSessionId).toBeNull(); // Should clear expired session ID
   });
 });
@@ -231,7 +244,7 @@ describe('getCurrentUserIdFromSession', () => {
 // Case Handlers Authorization Tests
 // ============================================================================
 
-describe('Case Handlers Authorization', () => {
+describe("Case Handlers Authorization", () => {
   let mockCaseService: {
     createCase: Mock;
     updateCase: Mock;
@@ -273,20 +286,20 @@ describe('Case Handlers Authorization', () => {
       findById: vi.fn(),
     };
 
-    mockCurrentSessionId = 'mock-session-id';
+    mockCurrentSessionId = "mock-session-id";
   });
 
-  describe('CASE_CREATE', () => {
-    it('should auto-assign userId from session when creating case', () => {
+  describe("CASE_CREATE", () => {
+    it("should auto-assign userId from session when creating case", () => {
       // Arrange
       const userId = 1;
       const mockSession = createMockSession(userId, false);
       mockSessionRepository.findById.mockReturnValue(mockSession);
 
       const input = {
-        title: 'Test Case',
-        description: 'Test description',
-        caseType: 'consumer' as const,
+        title: "Test Case",
+        description: "Test description",
+        caseType: "consumer" as const,
       };
 
       const expectedCase = createMockCase(1, userId);
@@ -306,26 +319,30 @@ describe('Case Handlers Authorization', () => {
       expect(createdCase.userId).toBe(userId);
     });
 
-    it('should throw error if no active session', () => {
+    it("should throw error if no active session", () => {
       // Arrange
       mockCurrentSessionId = null;
 
       // Act & Assert
       const getCurrentUserIdFromSession = (): number => {
         if (!mockCurrentSessionId) {
-          throw new Error('Unauthorized: No active session');
+          throw new Error("Unauthorized: No active session");
         }
         const session = mockSessionRepository.findById(mockCurrentSessionId);
-        if (!session) {throw new Error('Unauthorized: Invalid session');}
+        if (!session) {
+          throw new Error("Unauthorized: Invalid session");
+        }
         return session.userId;
       };
 
-      expect(() => getCurrentUserIdFromSession()).toThrow('Unauthorized: No active session');
+      expect(() => getCurrentUserIdFromSession()).toThrow(
+        "Unauthorized: No active session",
+      );
     });
   });
 
-  describe('CASE_GET_BY_ID', () => {
-    it('should allow access when user owns the case', () => {
+  describe("CASE_GET_BY_ID", () => {
+    it("should allow access when user owns the case", () => {
       // Arrange
       const userId = 1;
       const caseId = 100;
@@ -343,12 +360,14 @@ describe('Case Handlers Authorization', () => {
       const foundCase = mockCaseRepository.findById(caseId);
 
       // Assert
-      expect(mockAuthorizationMiddleware.verifyCaseOwnership).toHaveBeenCalledWith(caseId, userId);
+      expect(
+        mockAuthorizationMiddleware.verifyCaseOwnership,
+      ).toHaveBeenCalledWith(caseId, userId);
       expect(foundCase).toEqual(mockCase);
       expect(foundCase.userId).toBe(userId);
     });
 
-    it('should throw error when user does not own the case', () => {
+    it("should throw error when user does not own the case", () => {
       // Arrange
       const userId = 1;
       const otherUserId = 2;
@@ -359,18 +378,20 @@ describe('Case Handlers Authorization', () => {
       mockSessionRepository.findById.mockReturnValue(mockSession);
       mockCaseRepository.findById.mockReturnValue(otherUserCase);
       mockAuthorizationMiddleware.verifyCaseOwnership.mockImplementation(() => {
-        throw new Error('Unauthorized: You do not have permission to access this case');
+        throw new Error(
+          "Unauthorized: You do not have permission to access this case",
+        );
       });
 
       // Act & Assert
-      expect(() => mockAuthorizationMiddleware.verifyCaseOwnership(caseId, userId)).toThrow(
-        'Unauthorized: You do not have permission to access this case'
-      );
+      expect(() =>
+        mockAuthorizationMiddleware.verifyCaseOwnership(caseId, userId),
+      ).toThrow("Unauthorized: You do not have permission to access this case");
     });
   });
 
-  describe('CASE_GET_ALL', () => {
-    it('should return only cases owned by current user', () => {
+  describe("CASE_GET_ALL", () => {
+    it("should return only cases owned by current user", () => {
       // Arrange
       const userId = 1;
       const otherUserId = 2;
@@ -393,16 +414,21 @@ describe('Case Handlers Authorization', () => {
       expect(userCases).toHaveLength(2);
       expect(userCases[0].userId).toBe(userId);
       expect(userCases[1].userId).toBe(userId);
-      expect(userCases).not.toContainEqual(expect.objectContaining({ userId: otherUserId }));
+      expect(userCases).not.toContainEqual(
+        expect.objectContaining({ userId: otherUserId }),
+      );
     });
 
-    it('should return empty array if user has no cases', () => {
+    it("should return empty array if user has no cases", () => {
       // Arrange
       const userId = 1;
       const otherUserId = 2;
       const mockSession = createMockSession(userId, false);
 
-      const allCases = [createMockCase(1, otherUserId), createMockCase(2, otherUserId)];
+      const allCases = [
+        createMockCase(1, otherUserId),
+        createMockCase(2, otherUserId),
+      ];
 
       mockSessionRepository.findById.mockReturnValue(mockSession);
       mockCaseRepository.findAll.mockReturnValue(allCases);
@@ -415,8 +441,8 @@ describe('Case Handlers Authorization', () => {
     });
   });
 
-  describe('CASE_UPDATE', () => {
-    it('should allow update when user owns the case', () => {
+  describe("CASE_UPDATE", () => {
+    it("should allow update when user owns the case", () => {
       // Arrange
       const userId = 1;
       const caseId = 100;
@@ -427,9 +453,9 @@ describe('Case Handlers Authorization', () => {
         // No error = authorized
       });
 
-      const updateInput = { title: 'Updated Title' };
+      const updateInput = { title: "Updated Title" };
       const updatedCase = createMockCase(caseId, userId);
-      updatedCase.title = 'Updated Title';
+      updatedCase.title = "Updated Title";
       mockCaseService.updateCase.mockReturnValue(updatedCase);
 
       // Act
@@ -437,27 +463,31 @@ describe('Case Handlers Authorization', () => {
       const result = mockCaseService.updateCase(caseId, updateInput);
 
       // Assert
-      expect(mockAuthorizationMiddleware.verifyCaseOwnership).toHaveBeenCalledWith(caseId, userId);
-      expect(result.title).toBe('Updated Title');
+      expect(
+        mockAuthorizationMiddleware.verifyCaseOwnership,
+      ).toHaveBeenCalledWith(caseId, userId);
+      expect(result.title).toBe("Updated Title");
     });
 
-    it('should throw error when user tries to update another user case', () => {
+    it("should throw error when user tries to update another user case", () => {
       // Arrange
       const userId = 1;
       const caseId = 100;
       mockAuthorizationMiddleware.verifyCaseOwnership.mockImplementation(() => {
-        throw new Error('Unauthorized: You do not have permission to modify this case');
+        throw new Error(
+          "Unauthorized: You do not have permission to modify this case",
+        );
       });
 
       // Act & Assert
-      expect(() => mockAuthorizationMiddleware.verifyCaseOwnership(caseId, userId)).toThrow(
-        'Unauthorized: You do not have permission to modify this case'
-      );
+      expect(() =>
+        mockAuthorizationMiddleware.verifyCaseOwnership(caseId, userId),
+      ).toThrow("Unauthorized: You do not have permission to modify this case");
     });
   });
 
-  describe('CASE_DELETE', () => {
-    it('should allow delete when user owns the case', () => {
+  describe("CASE_DELETE", () => {
+    it("should allow delete when user owns the case", () => {
       // Arrange
       const userId = 1;
       const caseId = 100;
@@ -471,37 +501,41 @@ describe('Case Handlers Authorization', () => {
       mockCaseService.deleteCase(caseId);
 
       // Assert
-      expect(mockAuthorizationMiddleware.verifyCaseOwnership).toHaveBeenCalledWith(caseId, userId);
+      expect(
+        mockAuthorizationMiddleware.verifyCaseOwnership,
+      ).toHaveBeenCalledWith(caseId, userId);
       expect(mockCaseService.deleteCase).toHaveBeenCalledWith(caseId);
     });
 
-    it('should throw error when user tries to delete another user case', () => {
+    it("should throw error when user tries to delete another user case", () => {
       // Arrange
       const userId = 1;
       const caseId = 100;
       mockAuthorizationMiddleware.verifyCaseOwnership.mockImplementation(() => {
-        throw new Error('Unauthorized: You do not have permission to delete this case');
+        throw new Error(
+          "Unauthorized: You do not have permission to delete this case",
+        );
       });
 
       // Act & Assert
-      expect(() => mockAuthorizationMiddleware.verifyCaseOwnership(caseId, userId)).toThrow(
-        'Unauthorized: You do not have permission to delete this case'
-      );
+      expect(() =>
+        mockAuthorizationMiddleware.verifyCaseOwnership(caseId, userId),
+      ).toThrow("Unauthorized: You do not have permission to delete this case");
     });
   });
 
-  describe('CASE_GET_STATISTICS', () => {
-    it('should calculate statistics for current user cases only', () => {
+  describe("CASE_GET_STATISTICS", () => {
+    it("should calculate statistics for current user cases only", () => {
       // Arrange
       const userId = 1;
       const otherUserId = 2;
       const mockSession = createMockSession(userId, false);
 
       const allCases = [
-        { ...createMockCase(1, userId), status: 'active' as const },
-        { ...createMockCase(2, otherUserId), status: 'active' as const },
-        { ...createMockCase(3, userId), status: 'closed' as const },
-        { ...createMockCase(4, userId), status: 'active' as const },
+        { ...createMockCase(1, userId), status: "active" as const },
+        { ...createMockCase(2, otherUserId), status: "active" as const },
+        { ...createMockCase(3, userId), status: "closed" as const },
+        { ...createMockCase(4, userId), status: "active" as const },
       ];
 
       mockSessionRepository.findById.mockReturnValue(mockSession);
@@ -516,9 +550,9 @@ describe('Case Handlers Authorization', () => {
 
       // Assert
       expect(userCases).toHaveLength(3);
-      expect(statusCounts['active']).toBe(2);
-      expect(statusCounts['closed']).toBe(1);
-      expect(statusCounts).not.toHaveProperty('pending');
+      expect(statusCounts["active"]).toBe(2);
+      expect(statusCounts["closed"]).toBe(1);
+      expect(statusCounts).not.toHaveProperty("pending");
     });
   });
 });
@@ -527,7 +561,7 @@ describe('Case Handlers Authorization', () => {
 // Evidence Handlers Authorization Tests
 // ============================================================================
 
-describe('Evidence Handlers Authorization', () => {
+describe("Evidence Handlers Authorization", () => {
   let mockEvidenceRepository: {
     create: Mock;
     findById: Mock;
@@ -564,8 +598,8 @@ describe('Evidence Handlers Authorization', () => {
     };
   });
 
-  describe('EVIDENCE_CREATE', () => {
-    it('should allow evidence creation when user owns the parent case', () => {
+  describe("EVIDENCE_CREATE", () => {
+    it("should allow evidence creation when user owns the parent case", () => {
       // Arrange
       const userId = 1;
       const caseId = 100;
@@ -575,8 +609,8 @@ describe('Evidence Handlers Authorization', () => {
 
       const input = {
         caseId,
-        title: 'Test Evidence',
-        evidenceType: 'document' as const,
+        title: "Test Evidence",
+        evidenceType: "document" as const,
       };
       const createdEvidence = createMockEvidence(1, caseId);
       mockEvidenceRepository.create.mockReturnValue(createdEvidence);
@@ -586,27 +620,31 @@ describe('Evidence Handlers Authorization', () => {
       const result = mockEvidenceRepository.create(input);
 
       // Assert
-      expect(mockAuthorizationMiddleware.verifyCaseOwnership).toHaveBeenCalledWith(caseId, userId);
+      expect(
+        mockAuthorizationMiddleware.verifyCaseOwnership,
+      ).toHaveBeenCalledWith(caseId, userId);
       expect(result.caseId).toBe(caseId);
     });
 
-    it('should throw error when user tries to add evidence to another user case', () => {
+    it("should throw error when user tries to add evidence to another user case", () => {
       // Arrange
       const userId = 1;
       const caseId = 100;
       mockAuthorizationMiddleware.verifyCaseOwnership.mockImplementation(() => {
-        throw new Error('Unauthorized: You do not have permission to access this case');
+        throw new Error(
+          "Unauthorized: You do not have permission to access this case",
+        );
       });
 
       // Act & Assert
-      expect(() => mockAuthorizationMiddleware.verifyCaseOwnership(caseId, userId)).toThrow(
-        'Unauthorized: You do not have permission to access this case'
-      );
+      expect(() =>
+        mockAuthorizationMiddleware.verifyCaseOwnership(caseId, userId),
+      ).toThrow("Unauthorized: You do not have permission to access this case");
     });
   });
 
-  describe('EVIDENCE_GET_BY_ID', () => {
-    it('should allow access when user owns the parent case', () => {
+  describe("EVIDENCE_GET_BY_ID", () => {
+    it("should allow access when user owns the parent case", () => {
       // Arrange
       const userId = 1;
       const evidenceId = 200;
@@ -623,11 +661,13 @@ describe('Evidence Handlers Authorization', () => {
       mockAuthorizationMiddleware.verifyCaseOwnership(evidence.caseId, userId);
 
       // Assert
-      expect(mockAuthorizationMiddleware.verifyCaseOwnership).toHaveBeenCalledWith(caseId, userId);
+      expect(
+        mockAuthorizationMiddleware.verifyCaseOwnership,
+      ).toHaveBeenCalledWith(caseId, userId);
       expect(evidence.id).toBe(evidenceId);
     });
 
-    it('should throw error when user does not own the parent case', () => {
+    it("should throw error when user does not own the parent case", () => {
       // Arrange
       const userId = 1;
       const evidenceId = 200;
@@ -636,24 +676,32 @@ describe('Evidence Handlers Authorization', () => {
       const mockEvidence = createMockEvidence(evidenceId, caseId);
       mockEvidenceRepository.findById.mockReturnValue(mockEvidence);
       mockAuthorizationMiddleware.verifyCaseOwnership.mockImplementation(() => {
-        throw new Error('Unauthorized: You do not have permission to access this case');
+        throw new Error(
+          "Unauthorized: You do not have permission to access this case",
+        );
       });
 
       // Act & Assert
       const evidence = mockEvidenceRepository.findById(evidenceId);
       expect(() =>
-        mockAuthorizationMiddleware.verifyCaseOwnership(evidence.caseId, userId)
-      ).toThrow('Unauthorized: You do not have permission to access this case');
+        mockAuthorizationMiddleware.verifyCaseOwnership(
+          evidence.caseId,
+          userId,
+        ),
+      ).toThrow("Unauthorized: You do not have permission to access this case");
     });
   });
 
-  describe('EVIDENCE_GET_ALL', () => {
-    it('should return only evidence from user-owned cases', () => {
+  describe("EVIDENCE_GET_ALL", () => {
+    it("should return only evidence from user-owned cases", () => {
       // Arrange
       const userId = 1;
       const otherUserId = 2;
 
-      const userCases = [createMockCase(100, userId), createMockCase(101, userId)];
+      const userCases = [
+        createMockCase(100, userId),
+        createMockCase(101, userId),
+      ];
       const allCases = [
         ...userCases,
         createMockCase(200, otherUserId),
@@ -687,7 +735,7 @@ describe('Evidence Handlers Authorization', () => {
 // Conversation Handlers Authorization Tests
 // ============================================================================
 
-describe('Conversation Handlers Authorization', () => {
+describe("Conversation Handlers Authorization", () => {
   let mockChatConversationService: {
     createConversation: Mock;
     getConversation: Mock;
@@ -718,8 +766,8 @@ describe('Conversation Handlers Authorization', () => {
     };
   });
 
-  describe('CONVERSATION_CREATE', () => {
-    it('should verify case ownership when caseId is provided', () => {
+  describe("CONVERSATION_CREATE", () => {
+    it("should verify case ownership when caseId is provided", () => {
       // Arrange
       const userId = 1;
       const caseId = 100;
@@ -727,36 +775,44 @@ describe('Conversation Handlers Authorization', () => {
         // No error = authorized
       });
 
-      const input = { caseId, title: 'Test Conversation' };
+      const input = { caseId, title: "Test Conversation" };
       const conversation = createMockConversation(1, caseId);
-      mockChatConversationService.createConversation.mockReturnValue(conversation);
+      mockChatConversationService.createConversation.mockReturnValue(
+        conversation,
+      );
 
       // Act
       mockAuthorizationMiddleware.verifyCaseOwnership(caseId, userId);
       const result = mockChatConversationService.createConversation(input);
 
       // Assert
-      expect(mockAuthorizationMiddleware.verifyCaseOwnership).toHaveBeenCalledWith(caseId, userId);
+      expect(
+        mockAuthorizationMiddleware.verifyCaseOwnership,
+      ).toHaveBeenCalledWith(caseId, userId);
       expect(result.caseId).toBe(caseId);
     });
 
-    it('should skip verification when caseId is null (general chat)', () => {
+    it("should skip verification when caseId is null (general chat)", () => {
       // Arrange
-      const input = { caseId: null, title: 'General Conversation' };
+      const input = { caseId: null, title: "General Conversation" };
       const conversation = createMockConversation(1, null);
-      mockChatConversationService.createConversation.mockReturnValue(conversation);
+      mockChatConversationService.createConversation.mockReturnValue(
+        conversation,
+      );
 
       // Act
       const result = mockChatConversationService.createConversation(input);
 
       // Assert
-      expect(mockAuthorizationMiddleware.verifyCaseOwnership).not.toHaveBeenCalled();
+      expect(
+        mockAuthorizationMiddleware.verifyCaseOwnership,
+      ).not.toHaveBeenCalled();
       expect(result.caseId).toBeNull();
     });
   });
 
-  describe('CONVERSATION_GET', () => {
-    it('should allow access when conversation has caseId and user owns case', () => {
+  describe("CONVERSATION_GET", () => {
+    it("should allow access when conversation has caseId and user owns case", () => {
       // Arrange
       const userId = 1;
       const conversationId = 300;
@@ -769,33 +825,41 @@ describe('Conversation Handlers Authorization', () => {
       });
 
       // Act
-      const result = mockChatConversationService.getConversation(conversationId);
+      const result =
+        mockChatConversationService.getConversation(conversationId);
       if (result && result.caseId) {
         mockAuthorizationMiddleware.verifyCaseOwnership(result.caseId, userId);
       }
 
       // Assert
-      expect(mockAuthorizationMiddleware.verifyCaseOwnership).toHaveBeenCalledWith(caseId, userId);
+      expect(
+        mockAuthorizationMiddleware.verifyCaseOwnership,
+      ).toHaveBeenCalledWith(caseId, userId);
     });
 
-    it('should throw error when conversation has null caseId (security gap)', () => {
+    it("should throw error when conversation has null caseId (security gap)", () => {
       // Arrange
       const conversationId = 300;
       const conversation = createMockConversation(conversationId, null);
       mockChatConversationService.getConversation.mockReturnValue(conversation);
 
       // Act & Assert
-      const result = mockChatConversationService.getConversation(conversationId);
+      const result =
+        mockChatConversationService.getConversation(conversationId);
       if (result && !result.caseId) {
         expect(() => {
-          throw new Error('Unauthorized: Cannot access general conversations without case context');
-        }).toThrow('Unauthorized: Cannot access general conversations without case context');
+          throw new Error(
+            "Unauthorized: Cannot access general conversations without case context",
+          );
+        }).toThrow(
+          "Unauthorized: Cannot access general conversations without case context",
+        );
       }
     });
   });
 
-  describe('CONVERSATION_GET_ALL', () => {
-    it('should return only conversations from user-owned cases', () => {
+  describe("CONVERSATION_GET_ALL", () => {
+    it("should return only conversations from user-owned cases", () => {
       // Arrange
       const userId = 1;
       const otherUserId = 2;
@@ -814,13 +878,15 @@ describe('Conversation Handlers Authorization', () => {
       ];
 
       mockCaseRepository.findAll.mockReturnValue(allCases);
-      mockChatConversationService.getAllConversations.mockReturnValue(allConversations);
+      mockChatConversationService.getAllConversations.mockReturnValue(
+        allConversations,
+      );
 
       // Act
       const userCases = allCases.filter((c) => c.userId === userId);
       const userCaseIds = new Set(userCases.map((c) => c.id));
       const userConversations = allConversations.filter(
-        (conv) => conv.caseId && userCaseIds.has(conv.caseId)
+        (conv) => conv.caseId && userCaseIds.has(conv.caseId),
       );
 
       // Assert
@@ -828,7 +894,9 @@ describe('Conversation Handlers Authorization', () => {
       expect(userConversations[0].caseId).toBe(100);
       expect(userConversations[1].caseId).toBe(101);
       // General chat (null caseId) should be excluded
-      expect(userConversations).not.toContainEqual(expect.objectContaining({ caseId: null }));
+      expect(userConversations).not.toContainEqual(
+        expect.objectContaining({ caseId: null }),
+      );
     });
   });
 });
@@ -837,7 +905,7 @@ describe('Conversation Handlers Authorization', () => {
 // GDPR Handlers Authorization Tests (CRITICAL)
 // ============================================================================
 
-describe('GDPR Handlers Authorization', () => {
+describe("GDPR Handlers Authorization", () => {
   let mockCaseRepository: {
     findAll: Mock;
   };
@@ -871,8 +939,8 @@ describe('GDPR Handlers Authorization', () => {
     };
   });
 
-  describe('GDPR_EXPORT_USER_DATA', () => {
-    it('should export only current user data, not all users', () => {
+  describe("GDPR_EXPORT_USER_DATA", () => {
+    it("should export only current user data, not all users", () => {
       // Arrange
       const userId = 1;
       const otherUserId = 2;
@@ -901,16 +969,23 @@ describe('GDPR Handlers Authorization', () => {
       // Assert
       expect(cases).toHaveLength(2);
       expect(evidence).toHaveLength(2);
-      expect(cases).not.toContainEqual(expect.objectContaining({ userId: otherUserId }));
-      expect(evidence).not.toContainEqual(expect.objectContaining({ caseId: 200 }));
+      expect(cases).not.toContainEqual(
+        expect.objectContaining({ userId: otherUserId }),
+      );
+      expect(evidence).not.toContainEqual(
+        expect.objectContaining({ caseId: 200 }),
+      );
     });
 
-    it('should filter conversations to user-owned cases only', () => {
+    it("should filter conversations to user-owned cases only", () => {
       // Arrange
       const userId = 1;
       const otherUserId = 2;
 
-      const allCases = [createMockCase(100, userId), createMockCase(200, otherUserId)];
+      const allCases = [
+        createMockCase(100, userId),
+        createMockCase(200, otherUserId),
+      ];
 
       const allConversations = [
         createMockConversation(1, 100), // User's case
@@ -919,13 +994,15 @@ describe('GDPR Handlers Authorization', () => {
       ];
 
       mockCaseRepository.findAll.mockReturnValue(allCases);
-      mockChatConversationService.getAllConversations.mockReturnValue(allConversations);
+      mockChatConversationService.getAllConversations.mockReturnValue(
+        allConversations,
+      );
 
       // Act
       const cases = allCases.filter((c) => c.userId === userId);
       const caseIds = new Set(cases.map((c) => c.id));
       const conversations = allConversations.filter(
-        (conv) => conv.caseId && caseIds.has(conv.caseId)
+        (conv) => conv.caseId && caseIds.has(conv.caseId),
       );
 
       // Assert
@@ -934,37 +1011,41 @@ describe('GDPR Handlers Authorization', () => {
     });
   });
 
-  describe('GDPR_DELETE_USER_DATA', () => {
-    it('should delete only current user data using WHERE clause', () => {
+  describe("GDPR_DELETE_USER_DATA", () => {
+    it("should delete only current user data using WHERE clause", () => {
       // Arrange
       const userId = 1;
       const runMock = vi.fn();
       mockDb.prepare.mockReturnValue({ run: runMock });
 
       // Act
-      const deleteStatement = mockDb.prepare('DELETE FROM cases WHERE user_id = ?');
+      const deleteStatement = mockDb.prepare(
+        "DELETE FROM cases WHERE user_id = ?",
+      );
       deleteStatement.run(userId);
 
       // Assert
-      expect(mockDb.prepare).toHaveBeenCalledWith('DELETE FROM cases WHERE user_id = ?');
+      expect(mockDb.prepare).toHaveBeenCalledWith(
+        "DELETE FROM cases WHERE user_id = ?",
+      );
       expect(runMock).toHaveBeenCalledWith(userId);
     });
 
-    it('should NOT delete all data without WHERE clause', () => {
+    it("should NOT delete all data without WHERE clause", () => {
       // This test ensures the security fix is in place
       // The old code had: DELETE FROM cases (no WHERE clause)
       // The new code must have: DELETE FROM cases WHERE user_id = ?
 
       // Arrange
-      const dangerousStatement = 'DELETE FROM cases'; // No WHERE clause
-      const secureStatement = 'DELETE FROM cases WHERE user_id = ?'; // With WHERE
+      const dangerousStatement = "DELETE FROM cases"; // No WHERE clause
+      const secureStatement = "DELETE FROM cases WHERE user_id = ?"; // With WHERE
 
       // Assert
-      expect(dangerousStatement).not.toContain('WHERE');
-      expect(secureStatement).toContain('WHERE user_id = ?');
+      expect(dangerousStatement).not.toContain("WHERE");
+      expect(secureStatement).toContain("WHERE user_id = ?");
     });
 
-    it('should delete conversations only for user-owned cases', () => {
+    it("should delete conversations only for user-owned cases", () => {
       // Arrange
       const userId = 1;
       const otherUserId = 2;

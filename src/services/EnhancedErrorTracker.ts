@@ -14,9 +14,9 @@
  * main and renderer processes.
  */
 
-import { createHash, randomUUID } from 'node:crypto';
-import { logger } from '../utils/logger.ts';
-import { EventEmitter } from 'node:events';
+import { createHash, randomUUID } from "node:crypto";
+import { logger } from "../utils/logger.ts";
+import { EventEmitter } from "node:events";
 import type {
   ErrorData,
   ErrorGroup,
@@ -24,12 +24,13 @@ import type {
   ErrorMetrics,
   ErrorTrackerConfig,
   ErrorTrackerStats,
-} from '../types/error-tracking.ts';
-import { errorLogger } from '../utils/error-logger.ts';
+} from "../types/error-tracking.ts";
+import { errorLogger } from "../utils/error-logger.ts";
 
 export class EnhancedErrorTracker extends EventEmitter {
   private errorGroups: Map<string, ErrorGroup> = new Map();
-  private rateLimiters: Map<string, { count: number; resetAt: number }> = new Map();
+  private rateLimiters: Map<string, { count: number; resetAt: number }> =
+    new Map();
   private totalErrorCount: number = 0;
   private sampledCount: number = 0;
   private rateLimitedCount: number = 0;
@@ -121,7 +122,7 @@ export class EnhancedErrorTracker extends EventEmitter {
       this.stats.totalErrors++;
 
       // Emit event for real-time updates
-      this.emit('error:tracked', { error: normalizedError, group });
+      this.emit("error:tracked", { error: normalizedError, group });
 
       // Check if alerts should be triggered
       this.evaluateAlerts(group);
@@ -129,11 +130,14 @@ export class EnhancedErrorTracker extends EventEmitter {
       // Update processing time stats
       const processingTime = Date.now() - startTime;
       this.stats.avgProcessingTime =
-        (this.stats.avgProcessingTime * (this.stats.totalErrors - 1) + processingTime) /
+        (this.stats.avgProcessingTime * (this.stats.totalErrors - 1) +
+          processingTime) /
         this.stats.totalErrors;
     } catch (error) {
       // Error tracking should never crash the app
-      logger.error('App', 'EnhancedErrorTracker: Failed to track error', { error: error });
+      logger.error("App", "EnhancedErrorTracker: Failed to track error", {
+        error: error,
+      });
     }
   }
 
@@ -143,10 +147,10 @@ export class EnhancedErrorTracker extends EventEmitter {
   private normalizeErrorData(errorData: Partial<ErrorData>): ErrorData {
     return {
       id: errorData.id ?? randomUUID(),
-      name: errorData.name ?? 'Error',
-      message: errorData.message ?? 'Unknown error',
+      name: errorData.name ?? "Error",
+      message: errorData.message ?? "Unknown error",
       stack: errorData.stack,
-      level: errorData.level ?? 'error',
+      level: errorData.level ?? "error",
       timestamp: errorData.timestamp ?? new Date().toISOString(),
       context: errorData.context ?? {},
       tags: errorData.tags ?? {},
@@ -172,7 +176,10 @@ export class EnhancedErrorTracker extends EventEmitter {
     ].filter(Boolean);
 
     // Generate SHA-256 hash (16-char fingerprint)
-    return createHash('sha256').update(components.join('|')).digest('hex').substring(0, 16);
+    return createHash("sha256")
+      .update(components.join("|"))
+      .digest("hex")
+      .substring(0, 16);
   }
 
   /**
@@ -182,18 +189,18 @@ export class EnhancedErrorTracker extends EventEmitter {
     return (
       message
         // Remove UUIDs
-        .replace(/[a-f0-9-]{36}/gi, '<UUID>')
+        .replace(/[a-f0-9-]{36}/gi, "<UUID>")
         // Remove numbers
-        .replace(/\b\d+\b/g, '<NUM>')
+        .replace(/\b\d+\b/g, "<NUM>")
         // Remove URLs
-        .replace(/https?:\/\/[^\s]+/g, '<URL>')
+        .replace(/https?:\/\/[^\s]+/g, "<URL>")
         // Remove file paths
-        .replace(/[A-Z]:\\[\w\\]+/g, '<PATH>')
-        .replace(/\/[\w/]+/g, '<PATH>')
+        .replace(/[A-Z]:\\[\w\\]+/g, "<PATH>")
+        .replace(/\/[\w/]+/g, "<PATH>")
         // Remove timestamps
-        .replace(/\d{4}-\d{2}-\d{2}[T\s]\d{2}:\d{2}:\d{2}/g, '<TIME>')
+        .replace(/\d{4}-\d{2}-\d{2}[T\s]\d{2}:\d{2}:\d{2}/g, "<TIME>")
         // Remove memory addresses
-        .replace(/0x[0-9a-fA-F]+/g, '<ADDR>')
+        .replace(/0x[0-9a-fA-F]+/g, "<ADDR>")
         .trim()
     );
   }
@@ -203,7 +210,7 @@ export class EnhancedErrorTracker extends EventEmitter {
    */
   private extractLocation(stack?: string): string {
     if (!stack) {
-      return 'unknown';
+      return "unknown";
     }
 
     // Find first line with file reference
@@ -211,7 +218,7 @@ export class EnhancedErrorTracker extends EventEmitter {
     if (match) {
       const [, , file, line] = match;
       // Normalize file path (remove absolute paths, keep src/ onwards)
-      const normalizedFile = file.replace(/.*[\\/](src[\\/].+)$/, '$1');
+      const normalizedFile = file.replace(/.*[\\/](src[\\/].+)$/, "$1");
       return `${normalizedFile}:${line}`;
     }
 
@@ -219,11 +226,11 @@ export class EnhancedErrorTracker extends EventEmitter {
     const altMatch = stack.match(/(.+?)@(.+?):(\d+):(\d+)/);
     if (altMatch) {
       const [, , file, line] = altMatch;
-      const normalizedFile = file.replace(/.*[\\/](src[\\/].+)$/, '$1');
+      const normalizedFile = file.replace(/.*[\\/](src[\\/].+)$/, "$1");
       return `${normalizedFile}:${line}`;
     }
 
-    return 'unknown';
+    return "unknown";
   }
 
   /**
@@ -289,7 +296,7 @@ export class EnhancedErrorTracker extends EventEmitter {
       this.stats.totalGroups++;
 
       // Emit new group event
-      this.emit('group:created', group);
+      this.emit("group:created", group);
     }
 
     return group;
@@ -312,7 +319,7 @@ export class EnhancedErrorTracker extends EventEmitter {
       });
     } catch (error) {
       // Silently fail - error logging should never crash app
-      logger.error('App', 'Failed to persist error', { error: error });
+      logger.error("App", "Failed to persist error", { error: error });
     }
   }
 
@@ -322,10 +329,10 @@ export class EnhancedErrorTracker extends EventEmitter {
   private evaluateAlerts(group: ErrorGroup): void {
     // Check if error count exceeds threshold
     if (group.count >= 10 && group.count % 10 === 0) {
-      this.emit('alert', {
+      this.emit("alert", {
         id: randomUUID(),
-        name: 'Repeated Error Group',
-        severity: 'warning',
+        name: "Repeated Error Group",
+        severity: "warning",
         message: `Error group ${group.fingerprint} occurred ${group.count} times`,
         value: group.count,
         threshold: 10,
@@ -342,17 +349,17 @@ export class EnhancedErrorTracker extends EventEmitter {
   /**
    * Get error metrics for dashboard
    */
-  async getMetrics(timeRange: string = '1h'): Promise<ErrorMetrics> {
+  async getMetrics(timeRange: string = "1h"): Promise<ErrorMetrics> {
     const now = Date.now();
     const ranges: Record<string, number> = {
-      '1h': 60 * 60 * 1000,
-      '6h': 6 * 60 * 60 * 1000,
-      '24h': 24 * 60 * 60 * 1000,
-      '7d': 7 * 24 * 60 * 60 * 1000,
-      '30d': 30 * 24 * 60 * 60 * 1000,
+      "1h": 60 * 60 * 1000,
+      "6h": 6 * 60 * 60 * 1000,
+      "24h": 24 * 60 * 60 * 1000,
+      "7d": 7 * 24 * 60 * 60 * 1000,
+      "30d": 30 * 24 * 60 * 60 * 1000,
     };
 
-    const rangeMs = ranges[timeRange] ?? ranges['1h'];
+    const rangeMs = ranges[timeRange] ?? ranges["1h"];
     const startTime = now - rangeMs;
 
     // Filter groups within time range
@@ -361,7 +368,10 @@ export class EnhancedErrorTracker extends EventEmitter {
     );
 
     // Calculate metrics
-    const totalErrors = recentGroups.reduce((sum, group) => sum + group.count, 0);
+    const totalErrors = recentGroups.reduce(
+      (sum, group) => sum + group.count,
+      0,
+    );
     const affectedUsers = new Set(
       recentGroups.flatMap((group) =>
         group.errors.map((error) => error.context?.userId).filter(Boolean),
@@ -369,7 +379,8 @@ export class EnhancedErrorTracker extends EventEmitter {
     ).size;
 
     // Calculate error rate (simplified - would need total operations in real implementation)
-    const errorRate = totalErrors > 0 ? 0.01 * Math.min(totalErrors / 100, 1) : 0;
+    const errorRate =
+      totalErrors > 0 ? 0.01 * Math.min(totalErrors / 100, 1) : 0;
 
     // Calculate MTTR (simplified - would track resolution times in real implementation)
     const mttr = 15 * 60 * 1000; // 15 minutes placeholder
@@ -377,8 +388,11 @@ export class EnhancedErrorTracker extends EventEmitter {
     // Error distribution by type
     const distributionMap = new Map<string, number>();
     recentGroups.forEach((group) => {
-      const errorName = group.errors[0]?.name ?? 'Unknown';
-      distributionMap.set(errorName, (distributionMap.get(errorName) ?? 0) + group.count);
+      const errorName = group.errors[0]?.name ?? "Unknown";
+      distributionMap.set(
+        errorName,
+        (distributionMap.get(errorName) ?? 0) + group.count,
+      );
     });
 
     const errorDistribution = Array.from(distributionMap.entries())
@@ -403,7 +417,10 @@ export class EnhancedErrorTracker extends EventEmitter {
     // Recent errors
     const recentErrors = recentGroups
       .flatMap((group) => group.errors)
-      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+      .sort(
+        (a, b) =>
+          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+      )
       .slice(0, 50);
 
     return {
@@ -417,10 +434,10 @@ export class EnhancedErrorTracker extends EventEmitter {
       recentErrors,
       activeAlerts: [], // Would be populated from alert manager
       errorHeatmap: [], // Would be populated from time-bucketed data
-      errorRateTrend: 'stable',
-      errorsTrend: 'stable',
-      usersTrend: 'stable',
-      mttrTrend: 'stable',
+      errorRateTrend: "stable",
+      errorsTrend: "stable",
+      usersTrend: "stable",
+      mttrTrend: "stable",
     };
   }
 
@@ -450,7 +467,7 @@ export class EnhancedErrorTracker extends EventEmitter {
   clearGroups(): void {
     this.errorGroups.clear();
     this.stats.totalGroups = 0;
-    this.emit('groups:cleared');
+    this.emit("groups:cleared");
   }
 
   /**
@@ -482,7 +499,7 @@ export class EnhancedErrorTracker extends EventEmitter {
 
     if (removed > 0) {
       this.stats.totalGroups -= removed;
-      this.emit('groups:cleanup', { removed });
+      this.emit("groups:cleanup", { removed });
     }
   }
 }

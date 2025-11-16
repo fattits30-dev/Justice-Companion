@@ -148,7 +148,7 @@ describe("UserProfileRepository", () => {
       .prepare(
         `
       SELECT * FROM audit_logs WHERE event_type = 'profile.pii_access'
-    `
+    `,
       )
       .get() as any;
 
@@ -262,7 +262,7 @@ describe("LegalIssuesRepository", () => {
       .prepare(
         `
       SELECT event_type FROM audit_logs WHERE resource_type = 'legal_issue'
-    `
+    `,
       )
       .all() as any[];
 
@@ -365,7 +365,7 @@ describe("TimelineRepository", () => {
       .prepare(
         `
       SELECT event_type FROM audit_logs WHERE resource_type = 'timeline_event'
-    `
+    `,
       )
       .all() as any[];
 
@@ -382,7 +382,7 @@ describe("Phase 3 GDPR Compliance", () => {
 
     const profileRepo = new UserProfileRepository(
       encryptionService,
-      auditLogger
+      auditLogger,
     );
     const legalRepo = new LegalIssuesRepository(encryptionService, auditLogger);
     const timelineRepo = new TimelineRepository(encryptionService, auditLogger);
@@ -411,7 +411,7 @@ describe("Phase 3 GDPR Compliance", () => {
       .prepare(
         `
       SELECT details, error_message FROM audit_logs
-    `
+    `,
       )
       .all() as any[];
 

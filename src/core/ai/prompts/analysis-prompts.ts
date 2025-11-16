@@ -11,12 +11,12 @@ import type {
   CaseAnalysisRequest,
   EvidenceAnalysisRequest,
   DocumentDraftRequest,
-} from '../../../types/ai-analysis.ts';
+} from "../../../types/ai-analysis.ts";
 import {
   LegalCaseType,
   UKJurisdiction,
   DocumentType,
-} from '../../../types/ai-analysis.ts';
+} from "../../../types/ai-analysis.ts";
 
 // ============================================================================
 // BASE UK LEGAL SYSTEM PROMPT
@@ -73,12 +73,12 @@ You are analyzing a ${caseTypeName} case in ${jurisdictionName}. Provide a struc
 - Description: ${request.description}
 
 **Evidence Available:**
-${request.evidence.length > 0 ? request.evidence.map((e, i) => `${i + 1}. ${e.type}: ${e.description}${e.date ? ` (${e.date})` : ''}`).join('\n') : 'No evidence provided yet'}
+${request.evidence.length > 0 ? request.evidence.map((e, i) => `${i + 1}. ${e.type}: ${e.description}${e.date ? ` (${e.date})` : ""}`).join("\n") : "No evidence provided yet"}
 
 **Timeline of Events:**
-${request.timeline.length > 0 ? request.timeline.map((t, i) => `${i + 1}. ${t.date}: ${t.event}${t.significance ? ` - ${t.significance}` : ''}`).join('\n') : 'No timeline provided yet'}
+${request.timeline.length > 0 ? request.timeline.map((t, i) => `${i + 1}. ${t.date}: ${t.event}${t.significance ? ` - ${t.significance}` : ""}`).join("\n") : "No timeline provided yet"}
 
-${request.context ? `**Additional Context:**\n${request.context}` : ''}
+${request.context ? `**Additional Context:**\n${request.context}` : ""}
 
 **Required Analysis (respond in JSON format):**
 
@@ -153,7 +153,9 @@ Respond ONLY with valid JSON. Do not include any text before or after the JSON o
 // EVIDENCE ANALYSIS PROMPT
 // ============================================================================
 
-export function buildEvidenceAnalysisPrompt(request: EvidenceAnalysisRequest): string {
+export function buildEvidenceAnalysisPrompt(
+  request: EvidenceAnalysisRequest,
+): string {
   const jurisdictionName = getJurisdictionName(request.jurisdiction);
   const caseTypeName = getCaseTypeName(request.caseType);
 
@@ -170,12 +172,12 @@ You are analyzing the evidence strength for a ${caseTypeName} case in ${jurisdic
 - Jurisdiction: ${jurisdictionName}
 
 **Existing Evidence:**
-${request.existingEvidence.length > 0 ? request.existingEvidence.map((e, i) => `${i + 1}. ${e}`).join('\n') : 'No evidence provided yet'}
+${request.existingEvidence.length > 0 ? request.existingEvidence.map((e, i) => `${i + 1}. ${e}`).join("\n") : "No evidence provided yet"}
 
 **Legal Claims Being Pursued:**
-${request.claims.length > 0 ? request.claims.map((c, i) => `${i + 1}. ${c}`).join('\n') : 'No claims specified'}
+${request.claims.length > 0 ? request.claims.map((c, i) => `${i + 1}. ${c}`).join("\n") : "No claims specified"}
 
-${request.context ? `**Additional Context:**\n${request.context}` : ''}
+${request.context ? `**Additional Context:**\n${request.context}` : ""}
 
 **Required Analysis (respond in JSON format):**
 
@@ -216,7 +218,9 @@ Respond ONLY with valid JSON. Do not include any text before or after the JSON o
 // DOCUMENT DRAFTING PROMPT
 // ============================================================================
 
-export function buildDocumentDraftPrompt(request: DocumentDraftRequest): string {
+export function buildDocumentDraftPrompt(
+  request: DocumentDraftRequest,
+): string {
   const documentTypeName = getDocumentTypeName(request.documentType);
   const jurisdictionName = getJurisdictionName(request.context.jurisdiction);
   const caseTypeName = getCaseTypeName(request.context.caseType);
@@ -240,11 +244,11 @@ ${request.context.facts}
 **Objectives:**
 ${request.context.objectives}
 
-${request.context.evidence && request.context.evidence.length > 0 ? `**Available Evidence:**\n${request.context.evidence.map((e, i) => `${i + 1}. ${e}`).join('\n')}` : ''}
+${request.context.evidence && request.context.evidence.length > 0 ? `**Available Evidence:**\n${request.context.evidence.map((e, i) => `${i + 1}. ${e}`).join("\n")}` : ""}
 
-${request.context.recipient ? `**Recipient:** ${request.context.recipient}` : ''}
+${request.context.recipient ? `**Recipient:** ${request.context.recipient}` : ""}
 
-${request.context.additionalContext ? `**Additional Context:**\n${request.context.additionalContext}` : ''}
+${request.context.additionalContext ? `**Additional Context:**\n${request.context.additionalContext}` : ""}
 
 **Drafting Instructions:**
 
@@ -284,35 +288,35 @@ Respond ONLY with valid JSON. Do not include any text before or after the JSON o
 
 function getJurisdictionName(jurisdiction: UKJurisdiction): string {
   const names: Record<UKJurisdiction, string> = {
-    [UKJurisdiction.ENGLAND_WALES]: 'England & Wales',
-    [UKJurisdiction.SCOTLAND]: 'Scotland',
-    [UKJurisdiction.NORTHERN_IRELAND]: 'Northern Ireland',
+    [UKJurisdiction.ENGLAND_WALES]: "England & Wales",
+    [UKJurisdiction.SCOTLAND]: "Scotland",
+    [UKJurisdiction.NORTHERN_IRELAND]: "Northern Ireland",
   };
   return names[jurisdiction] || jurisdiction;
 }
 
 function getCaseTypeName(caseType: LegalCaseType): string {
   const names: Record<LegalCaseType, string> = {
-    [LegalCaseType.EMPLOYMENT]: 'Employment',
-    [LegalCaseType.HOUSING]: 'Housing',
-    [LegalCaseType.BENEFITS]: 'Benefits',
-    [LegalCaseType.CONSUMER]: 'Consumer',
-    [LegalCaseType.CIVIL_RIGHTS]: 'Civil Rights',
-    [LegalCaseType.SMALL_CLAIMS]: 'Small Claims',
-    [LegalCaseType.FAMILY]: 'Family',
-    [LegalCaseType.OTHER]: 'General',
+    [LegalCaseType.EMPLOYMENT]: "Employment",
+    [LegalCaseType.HOUSING]: "Housing",
+    [LegalCaseType.BENEFITS]: "Benefits",
+    [LegalCaseType.CONSUMER]: "Consumer",
+    [LegalCaseType.CIVIL_RIGHTS]: "Civil Rights",
+    [LegalCaseType.SMALL_CLAIMS]: "Small Claims",
+    [LegalCaseType.FAMILY]: "Family",
+    [LegalCaseType.OTHER]: "General",
   };
   return names[caseType] || caseType;
 }
 
 function getDocumentTypeName(documentType: DocumentType): string {
   const names: Record<DocumentType, string> = {
-    [DocumentType.LETTER]: 'Formal Letter',
-    [DocumentType.WITNESS_STATEMENT]: 'Witness Statement',
-    [DocumentType.TRIBUNAL_SUBMISSION]: 'Employment Tribunal Submission',
-    [DocumentType.COURT_FORM]: 'Court Form',
-    [DocumentType.APPEAL]: 'Appeal Document',
-    [DocumentType.GRIEVANCE]: 'Grievance Letter',
+    [DocumentType.LETTER]: "Formal Letter",
+    [DocumentType.WITNESS_STATEMENT]: "Witness Statement",
+    [DocumentType.TRIBUNAL_SUBMISSION]: "Employment Tribunal Submission",
+    [DocumentType.COURT_FORM]: "Court Form",
+    [DocumentType.APPEAL]: "Appeal Document",
+    [DocumentType.GRIEVANCE]: "Grievance Letter",
   };
   return names[documentType] || documentType;
 }
@@ -386,5 +390,5 @@ function getDocumentTypeInstructions(documentType: DocumentType): string {
 - Professional but assertive tone
 `,
   };
-  return instructions[documentType] || 'Draft a professional legal document.';
+  return instructions[documentType] || "Draft a professional legal document.";
 }

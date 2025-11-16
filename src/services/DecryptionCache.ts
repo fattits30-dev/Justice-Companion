@@ -1,5 +1,5 @@
-import { LRUCache } from 'lru-cache';
-import type { AuditLogger } from './AuditLogger.ts';
+import { LRUCache } from "lru-cache";
+import type { AuditLogger } from "./AuditLogger.ts";
 
 /**
  * In-memory LRU cache for decrypted values
@@ -25,10 +25,10 @@ export class DecryptionCache {
       // Audit cache eviction for security monitoring
       dispose: (_value, key, reason) => {
         this.auditLogger?.log({
-          eventType: 'cache.evict',
-          resourceType: 'cache',
+          eventType: "cache.evict",
+          resourceType: "cache",
           resourceId: key,
-          action: 'evict',
+          action: "evict",
           details: { reason },
           success: true,
         });
@@ -36,10 +36,10 @@ export class DecryptionCache {
     });
 
     this.auditLogger?.log({
-      eventType: 'cache.initialized',
-      resourceType: 'cache',
-      resourceId: 'decryption-cache',
-      action: 'create',
+      eventType: "cache.initialized",
+      resourceType: "cache",
+      resourceId: "decryption-cache",
+      action: "create",
       details: { maxSize: 1000, ttl: 300000 },
       success: true,
     });
@@ -56,18 +56,18 @@ export class DecryptionCache {
 
     if (value) {
       this.auditLogger?.log({
-        eventType: 'cache.hit',
-        resourceType: 'cache',
+        eventType: "cache.hit",
+        resourceType: "cache",
         resourceId: key,
-        action: 'read',
+        action: "read",
         success: true,
       });
     } else {
       this.auditLogger?.log({
-        eventType: 'cache.miss',
-        resourceType: 'cache',
+        eventType: "cache.miss",
+        resourceType: "cache",
         resourceId: key,
-        action: 'read',
+        action: "read",
         success: false,
       });
     }
@@ -85,10 +85,10 @@ export class DecryptionCache {
     this.cache.set(key, value);
 
     this.auditLogger?.log({
-      eventType: 'cache.set',
-      resourceType: 'cache',
+      eventType: "cache.set",
+      resourceType: "cache",
       resourceId: key,
-      action: 'create',
+      action: "create",
       success: true,
     });
   }
@@ -113,10 +113,10 @@ export class DecryptionCache {
     keysToDelete.forEach((key) => this.cache.delete(key));
 
     this.auditLogger?.log({
-      eventType: 'cache.invalidate_entity',
-      resourceType: 'cache',
+      eventType: "cache.invalidate_entity",
+      resourceType: "cache",
       resourceId: `${entity}:${id}`,
-      action: 'delete',
+      action: "delete",
       details: { keysDeleted: keysToDelete.length },
       success: true,
     });
@@ -140,10 +140,10 @@ export class DecryptionCache {
     keysToDelete.forEach((key) => this.cache.delete(key));
 
     this.auditLogger?.log({
-      eventType: 'cache.invalidate_type',
-      resourceType: 'cache',
+      eventType: "cache.invalidate_type",
+      resourceType: "cache",
       resourceId: entity,
-      action: 'delete',
+      action: "delete",
       details: { keysDeleted: keysToDelete.length },
       success: true,
     });
@@ -158,11 +158,11 @@ export class DecryptionCache {
     this.cache.clear();
 
     this.auditLogger?.log({
-      eventType: 'cache.clear',
-      resourceType: 'cache',
-      resourceId: 'decryption-cache',
-      action: 'delete',
-      details: { entriesCleared: size, reason: 'User logout or session end' },
+      eventType: "cache.clear",
+      resourceType: "cache",
+      resourceId: "decryption-cache",
+      action: "delete",
+      details: { entriesCleared: size, reason: "User logout or session end" },
       success: true,
     });
   }
@@ -200,13 +200,13 @@ export class DecryptionCache {
     keysToDelete.forEach((key) => this.cache.delete(key));
 
     this.auditLogger?.log({
-      eventType: 'gdpr.erasure',
-      resourceType: 'cache',
+      eventType: "gdpr.erasure",
+      resourceType: "cache",
       resourceId: `user:${userId}`,
-      action: 'delete',
+      action: "delete",
       details: {
         keysDeleted: keysToDelete.length,
-        article: 'GDPR Article 17 - Right to Erasure',
+        article: "GDPR Article 17 - Right to Erasure",
       },
       success: true,
     });
@@ -219,26 +219,28 @@ export class DecryptionCache {
    * @param userId - User ID to generate report for
    * @returns Array of cache entries with metadata
    */
-  public getUserCacheReport(userId: string): Array<{ key: string; size: number }> {
+  public getUserCacheReport(
+    userId: string,
+  ): Array<{ key: string; size: number }> {
     const report: Array<{ key: string; size: number }> = [];
 
     this.cache.forEach((value, key) => {
       if (key.includes(`user:${userId}`)) {
         report.push({
           key,
-          size: Buffer.byteLength(value, 'utf-8'),
+          size: Buffer.byteLength(value, "utf-8"),
         });
       }
     });
 
     this.auditLogger?.log({
-      eventType: 'gdpr.access_request',
-      resourceType: 'cache',
+      eventType: "gdpr.access_request",
+      resourceType: "cache",
       resourceId: `user:${userId}`,
-      action: 'read',
+      action: "read",
       details: {
         entriesFound: report.length,
-        article: 'GDPR Article 15 - Right of Access',
+        article: "GDPR Article 15 - Right of Access",
       },
       success: true,
     });

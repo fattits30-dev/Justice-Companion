@@ -5,14 +5,14 @@
  * registration, login, password changes with strong security requirements.
  */
 
-import { z } from 'zod';
+import { z } from "zod";
 import {
   MIN_PASSWORD_LENGTH,
   MAX_PASSWORD_LENGTH,
   MAX_USERNAME_LENGTH,
   MAX_EMAIL_LENGTH,
   PATTERNS,
-} from '../utils/constants.ts';
+} from "../utils/constants.ts";
 
 /**
  * Password validation with strength requirements
@@ -20,20 +20,29 @@ import {
  */
 const passwordSchema = z
   .string()
-  .min(MIN_PASSWORD_LENGTH, `Password must be at least ${MIN_PASSWORD_LENGTH} characters`)
-  .max(MAX_PASSWORD_LENGTH, `Password must be less than ${MAX_PASSWORD_LENGTH} characters`)
+  .min(
+    MIN_PASSWORD_LENGTH,
+    `Password must be at least ${MIN_PASSWORD_LENGTH} characters`,
+  )
+  .max(
+    MAX_PASSWORD_LENGTH,
+    `Password must be less than ${MAX_PASSWORD_LENGTH} characters`,
+  )
   .refine(
     (password) => /[a-z]/.test(password),
-    'Password must contain at least one lowercase letter',
+    "Password must contain at least one lowercase letter",
   )
   .refine(
     (password) => /[A-Z]/.test(password),
-    'Password must contain at least one uppercase letter',
+    "Password must contain at least one uppercase letter",
   )
-  .refine((password) => /[0-9]/.test(password), 'Password must contain at least one number')
+  .refine(
+    (password) => /[0-9]/.test(password),
+    "Password must contain at least one number",
+  )
   .refine(
     (password) => /[^a-zA-Z0-9]/.test(password),
-    'Password must contain at least one special character',
+    "Password must contain at least one special character",
   )
   .refine((password) => {
     // Check for common weak patterns
@@ -45,7 +54,7 @@ const passwordSchema = z
     ];
 
     return !weakPatterns.some((pattern) => pattern.test(password));
-  }, 'Password is too common or follows a weak pattern');
+  }, "Password is too common or follows a weak pattern");
 
 /**
  * Schema for user registration
@@ -55,28 +64,41 @@ export const authRegisterSchema = z
   .object({
     username: z
       .string()
-      .min(3, 'Username must be at least 3 characters')
-      .max(MAX_USERNAME_LENGTH, `Username must be less than ${MAX_USERNAME_LENGTH} characters`)
+      .min(3, "Username must be at least 3 characters")
+      .max(
+        MAX_USERNAME_LENGTH,
+        `Username must be less than ${MAX_USERNAME_LENGTH} characters`,
+      )
       .regex(
         PATTERNS.USERNAME,
-        'Username can only contain letters, numbers, underscores, and hyphens',
+        "Username can only contain letters, numbers, underscores, and hyphens",
       )
       .transform((s) => s.toLowerCase()) // Normalize to lowercase
       .refine((username) => {
         // Prevent reserved usernames
-        const reserved = ['admin', 'root', 'system', 'api', 'null', 'undefined'];
+        const reserved = [
+          "admin",
+          "root",
+          "system",
+          "api",
+          "null",
+          "undefined",
+        ];
         return !reserved.includes(username);
-      }, 'This username is reserved'),
+      }, "This username is reserved"),
 
     email: z
       .string()
-      .min(1, 'Email is required')
-      .max(MAX_EMAIL_LENGTH, `Email must be less than ${MAX_EMAIL_LENGTH} characters`)
-      .email('Please enter a valid email address')
+      .min(1, "Email is required")
+      .max(
+        MAX_EMAIL_LENGTH,
+        `Email must be less than ${MAX_EMAIL_LENGTH} characters`,
+      )
+      .email("Please enter a valid email address")
       .transform((s) => s.toLowerCase()) // Normalize to lowercase
       .refine((email) => {
         // Additional email validation
-        const parts = email.split('@');
+        const parts = email.split("@");
         if (parts.length !== 2) {
           return false;
         }
@@ -87,10 +109,10 @@ export const authRegisterSchema = z
         if (local.length > 64) {
           return false;
         }
-        if (local.startsWith('.') || local.endsWith('.')) {
+        if (local.startsWith(".") || local.endsWith(".")) {
           return false;
         }
-        if (local.includes('..')) {
+        if (local.includes("..")) {
           return false;
         }
 
@@ -98,29 +120,29 @@ export const authRegisterSchema = z
         if (domain.length > 253) {
           return false;
         }
-        if (!domain.includes('.')) {
+        if (!domain.includes(".")) {
           return false;
         }
-        if (domain.startsWith('.') || domain.endsWith('.')) {
+        if (domain.startsWith(".") || domain.endsWith(".")) {
           return false;
         }
 
         return true;
-      }, 'Invalid email format'),
+      }, "Invalid email format"),
 
     password: passwordSchema,
 
     // Optional fields that might be added in the future
     firstName: z
       .string()
-      .max(100, 'First name must be less than 100 characters')
-      .regex(/^[a-zA-Z\s'-]+$/, 'First name contains invalid characters')
+      .max(100, "First name must be less than 100 characters")
+      .regex(/^[a-zA-Z\s'-]+$/, "First name contains invalid characters")
       .optional(),
 
     lastName: z
       .string()
-      .max(100, 'Last name must be less than 100 characters')
-      .regex(/^[a-zA-Z\s'-]+$/, 'Last name contains invalid characters')
+      .max(100, "Last name must be less than 100 characters")
+      .regex(/^[a-zA-Z\s'-]+$/, "Last name contains invalid characters")
       .optional(),
 
     // Fields that should NOT be provided by client
@@ -141,14 +163,20 @@ export const authLoginSchema = z
   .object({
     username: z
       .string()
-      .min(1, 'Username is required')
-      .max(MAX_USERNAME_LENGTH, `Username must be less than ${MAX_USERNAME_LENGTH} characters`)
+      .min(1, "Username is required")
+      .max(
+        MAX_USERNAME_LENGTH,
+        `Username must be less than ${MAX_USERNAME_LENGTH} characters`,
+      )
       .transform((s) => s.toLowerCase()), // Normalize to lowercase
 
     password: z
       .string()
-      .min(1, 'Password is required')
-      .max(MAX_PASSWORD_LENGTH, `Password must be less than ${MAX_PASSWORD_LENGTH} characters`),
+      .min(1, "Password is required")
+      .max(
+        MAX_PASSWORD_LENGTH,
+        `Password must be less than ${MAX_PASSWORD_LENGTH} characters`,
+      ),
 
     rememberMe: z.boolean().optional().default(false),
 
@@ -170,21 +198,24 @@ export const authChangePasswordSchema = z
   .object({
     oldPassword: z
       .string()
-      .min(1, 'Current password is required')
-      .max(MAX_PASSWORD_LENGTH, `Password must be less than ${MAX_PASSWORD_LENGTH} characters`),
+      .min(1, "Current password is required")
+      .max(
+        MAX_PASSWORD_LENGTH,
+        `Password must be less than ${MAX_PASSWORD_LENGTH} characters`,
+      ),
 
     newPassword: passwordSchema,
 
-    confirmPassword: z.string().min(1, 'Password confirmation is required'),
+    confirmPassword: z.string().min(1, "Password confirmation is required"),
   })
   .strict()
   .refine((data) => data.newPassword === data.confirmPassword, {
-    message: 'Passwords do not match',
-    path: ['confirmPassword'],
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
   })
   .refine((data) => data.oldPassword !== data.newPassword, {
-    message: 'New password must be different from current password',
-    path: ['newPassword'],
+    message: "New password must be different from current password",
+    path: ["newPassword"],
   });
 
 /**
@@ -195,8 +226,8 @@ export const authPasswordResetRequestSchema = z
   .object({
     email: z
       .string()
-      .min(1, 'Email is required')
-      .email('Please enter a valid email address')
+      .min(1, "Email is required")
+      .email("Please enter a valid email address")
       .transform((s) => s.toLowerCase()),
 
     captchaToken: z.string().optional(),
@@ -211,17 +242,17 @@ export const authPasswordResetConfirmSchema = z
   .object({
     token: z
       .string()
-      .min(1, 'Reset token is required')
-      .regex(PATTERNS.UUID, 'Invalid reset token format'),
+      .min(1, "Reset token is required")
+      .regex(PATTERNS.UUID, "Invalid reset token format"),
 
     newPassword: passwordSchema,
 
-    confirmPassword: z.string().min(1, 'Password confirmation is required'),
+    confirmPassword: z.string().min(1, "Password confirmation is required"),
   })
   .strict()
   .refine((data) => data.newPassword === data.confirmPassword, {
-    message: 'Passwords do not match',
-    path: ['confirmPassword'],
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
   });
 
 /**
@@ -232,8 +263,8 @@ export const authSessionValidateSchema = z
   .object({
     sessionId: z
       .string()
-      .min(1, 'Session ID is required')
-      .regex(PATTERNS.UUID, 'Invalid session ID format'),
+      .min(1, "Session ID is required")
+      .regex(PATTERNS.UUID, "Invalid session ID format"),
   })
   .strict();
 
@@ -243,29 +274,29 @@ export const authSessionValidateSchema = z
  */
 export const authTwoFactorSetupSchema = z
   .object({
-    password: z.string().min(1, 'Password is required for 2FA setup'),
+    password: z.string().min(1, "Password is required for 2FA setup"),
 
-    method: z.enum(['totp', 'sms', 'email'], {
-      message: 'Invalid 2FA method',
+    method: z.enum(["totp", "sms", "email"], {
+      message: "Invalid 2FA method",
     }),
 
     phoneNumber: z
       .string()
-      .regex(/^\+[1-9]\d{1,14}$/, 'Invalid phone number format')
+      .regex(/^\+[1-9]\d{1,14}$/, "Invalid phone number format")
       .optional(),
   })
   .strict()
   .refine(
     (data) => {
       // If SMS method, phone number is required
-      if (data.method === 'sms' && !data.phoneNumber) {
+      if (data.method === "sms" && !data.phoneNumber) {
         return false;
       }
       return true;
     },
     {
-      message: 'Phone number is required for SMS 2FA',
-      path: ['phoneNumber'],
+      message: "Phone number is required for SMS 2FA",
+      path: ["phoneNumber"],
     },
   );
 
@@ -274,12 +305,12 @@ export const authTwoFactorSetupSchema = z
  */
 export const authTwoFactorVerifySchema = z
   .object({
-    code: z.string().regex(/^\d{6}$/, 'Verification code must be 6 digits'),
+    code: z.string().regex(/^\d{6}$/, "Verification code must be 6 digits"),
 
     sessionId: z
       .string()
-      .min(1, 'Session ID is required')
-      .regex(PATTERNS.UUID, 'Invalid session ID format'),
+      .min(1, "Session ID is required")
+      .regex(PATTERNS.UUID, "Invalid session ID format"),
   })
   .strict();
 
@@ -287,8 +318,16 @@ export const authTwoFactorVerifySchema = z
 export type AuthRegisterInput = z.infer<typeof authRegisterSchema>;
 export type AuthLoginInput = z.infer<typeof authLoginSchema>;
 export type AuthChangePasswordInput = z.infer<typeof authChangePasswordSchema>;
-export type AuthPasswordResetRequestInput = z.infer<typeof authPasswordResetRequestSchema>;
-export type AuthPasswordResetConfirmInput = z.infer<typeof authPasswordResetConfirmSchema>;
-export type AuthSessionValidateInput = z.infer<typeof authSessionValidateSchema>;
+export type AuthPasswordResetRequestInput = z.infer<
+  typeof authPasswordResetRequestSchema
+>;
+export type AuthPasswordResetConfirmInput = z.infer<
+  typeof authPasswordResetConfirmSchema
+>;
+export type AuthSessionValidateInput = z.infer<
+  typeof authSessionValidateSchema
+>;
 export type AuthTwoFactorSetupInput = z.infer<typeof authTwoFactorSetupSchema>;
-export type AuthTwoFactorVerifyInput = z.infer<typeof authTwoFactorVerifySchema>;
+export type AuthTwoFactorVerifyInput = z.infer<
+  typeof authTwoFactorVerifySchema
+>;

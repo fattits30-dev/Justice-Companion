@@ -1,4 +1,4 @@
-import type { Permission } from './Permission.ts';
+import type { Permission } from "./Permission.ts";
 
 /**
  * Role Entity

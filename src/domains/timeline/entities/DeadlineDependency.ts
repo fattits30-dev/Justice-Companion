@@ -5,7 +5,11 @@
  * Represents a dependency relationship between two deadlines for Gantt chart visualization
  */
 
-export type DependencyType = 'finish-to-start' | 'start-to-start' | 'finish-to-finish' | 'start-to-finish';
+export type DependencyType =
+  | "finish-to-start"
+  | "start-to-start"
+  | "finish-to-finish"
+  | "start-to-finish";
 
 export interface DeadlineDependency {
   id: number;
@@ -40,8 +44,8 @@ export interface DeadlineWithDependencies {
   title: string;
   description?: string | null;
   deadlineDate: string;
-  priority: 'low' | 'medium' | 'high' | 'critical';
-  status: 'upcoming' | 'overdue' | 'completed';
+  priority: "low" | "medium" | "high" | "critical";
+  status: "upcoming" | "overdue" | "completed";
   completedAt?: string | null;
   createdAt: string;
   updatedAt: string;
@@ -51,8 +55,8 @@ export interface DeadlineWithDependencies {
   caseTitle?: string; // Optional case title for Gantt chart display
 
   // Dependency information
-  dependencies: DeadlineDependency[];  // Outgoing dependencies (this deadline depends on...)
-  dependents: DeadlineDependency[];    // Incoming dependencies (other deadlines depend on this)
+  dependencies: DeadlineDependency[]; // Outgoing dependencies (this deadline depends on...)
+  dependents: DeadlineDependency[]; // Incoming dependencies (other deadlines depend on this)
   dependenciesCount: number;
   dependentsCount: number;
 }

@@ -1,5 +1,9 @@
-import { getDb } from '../db/database.ts';
-import type { Consent, CreateConsentInput, ConsentType } from '../domains/settings/entities/Consent.ts';
+import { getDb } from "../db/database.ts";
+import type {
+  Consent,
+  CreateConsentInput,
+  ConsentType,
+} from "../domains/settings/entities/Consent.ts";
 
 /**
  * Repository for managing GDPR consent records
@@ -52,7 +56,9 @@ export class ConsentRepository {
       WHERE id = ?
     `);
 
-    const row = stmt.get(id) as (Omit<Consent, 'granted'> & { granted: number }) | undefined;
+    const row = stmt.get(id) as
+      | (Omit<Consent, "granted"> & { granted: number })
+      | undefined;
 
     if (row) {
       return {
@@ -86,7 +92,9 @@ export class ConsentRepository {
       LIMIT 1
     `);
 
-    const row = stmt.get(userId, consentType) as (Omit<Consent, 'granted'> & { granted: number }) | undefined;
+    const row = stmt.get(userId, consentType) as
+      | (Omit<Consent, "granted"> & { granted: number })
+      | undefined;
 
     if (row) {
       return {
@@ -118,7 +126,9 @@ export class ConsentRepository {
       ORDER BY created_at DESC
     `);
 
-    const rows = stmt.all(userId) as (Omit<Consent, 'granted'> & { granted: number })[];
+    const rows = stmt.all(userId) as (Omit<Consent, "granted"> & {
+      granted: number;
+    })[];
 
     return rows.map((row) => ({
       ...row,
@@ -162,7 +172,9 @@ export class ConsentRepository {
       ORDER BY created_at DESC
     `);
 
-    const rows = stmt.all(userId) as (Omit<Consent, 'granted'> & { granted: number })[];
+    const rows = stmt.all(userId) as (Omit<Consent, "granted"> & {
+      granted: number;
+    })[];
 
     return rows.map((row) => ({
       ...row,
@@ -193,7 +205,7 @@ export class ConsentRepository {
    */
   delete(id: number): boolean {
     const db = getDb();
-    const stmt = db.prepare('DELETE FROM consents WHERE id = ?');
+    const stmt = db.prepare("DELETE FROM consents WHERE id = ?");
     const result = stmt.run(id);
     return result.changes > 0;
   }
@@ -203,7 +215,7 @@ export class ConsentRepository {
    */
   deleteByUserId(userId: number): number {
     const db = getDb();
-    const stmt = db.prepare('DELETE FROM consents WHERE user_id = ?');
+    const stmt = db.prepare("DELETE FROM consents WHERE user_id = ?");
     const result = stmt.run(userId);
     return result.changes;
   }

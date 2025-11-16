@@ -102,8 +102,8 @@ export function Dashboard({
   // Loading state
   if (isLoading) {
     return (
-      <div className="h-full flex flex-col overflow-hidden bg-gradient-to-br from-gray-900 via-primary-900 to-gray-900 text-white">
-        <div className="flex-shrink-0 p-8 pb-4">
+      <div className="h-full flex flex-col overflow-hidden bg-linear-to-br from-gray-900 via-primary-900 to-gray-900 text-white">
+        <div className="shrink-0 p-8 pb-4">
           <h1 className="text-3xl font-bold mb-2">Welcome back, {username}</h1>
           <p className="text-white/90">Loading your dashboard...</p>
         </div>
@@ -126,7 +126,7 @@ export function Dashboard({
   // Error state
   if (error) {
     return (
-      <div className="flex items-center justify-center h-full bg-gradient-to-br from-gray-900 via-primary-900 to-gray-900 p-8">
+      <div className="flex items-center justify-center h-full bg-linear-to-br from-gray-900 via-primary-900 to-gray-900 p-8">
         <Card variant="glass" className="max-w-md">
           <div className="text-center">
             <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
@@ -141,16 +141,16 @@ export function Dashboard({
   }
 
   return (
-    <div className="h-full flex flex-col overflow-hidden bg-gradient-to-br from-gray-900 via-primary-900 to-gray-900 text-white">
+    <div className="h-full flex flex-col overflow-hidden bg-linear-to-br from-gray-900 via-primary-900 to-gray-900 text-white">
       {/* Fixed Header Section */}
-      <div className="flex-shrink-0 p-8 pb-0">
+      <div className="shrink-0 p-8 pb-0">
         {/* Legal Disclaimer Banner */}
         <Card
           variant="glass"
           className="mb-6 bg-amber-900/30 border-l-4 border-amber-500"
         >
           <div className="flex items-start gap-3">
-            <Info className="w-6 h-6 text-amber-500 flex-shrink-0 mt-0.5" />
+            <Info className="w-6 h-6 text-amber-500 shrink-0 mt-0.5" />
             <div>
               <p className="font-semibold text-amber-200 mb-1">
                 This app provides information, not legal advice
@@ -273,7 +273,7 @@ export function Dashboard({
               size="lg"
               icon={<MessageSquare />}
               iconPosition="left"
-              className="bg-gradient-to-br from-green-500 to-green-600 hover:from-green-400 hover:to-green-500"
+              className="bg-linear-to-br from-green-500 to-green-600 hover:from-green-400 hover:to-green-500"
             >
               Start Chat
             </Button>
@@ -350,7 +350,7 @@ export function Dashboard({
           className="bg-primary-900/20 border-primary-700/50"
         >
           <div className="flex items-start gap-3">
-            <Lightbulb className="w-6 h-6 text-amber-400 flex-shrink-0 mt-0.5" />
+            <Lightbulb className="w-6 h-6 text-amber-400 shrink-0 mt-0.5" />
             <div className="flex-1">
               <h3 className="font-semibold text-white mb-2">
                 When You Should Get Professional Legal Advice
@@ -368,7 +368,7 @@ export function Dashboard({
                   <li>When you need representation at a hearing</li>
                 </ul>
                 <p className="mt-3 text-xs text-white/70 flex items-start gap-2">
-                  <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                  <Info className="w-4 h-4 shrink-0 mt-0.5" />
                   <span>
                     Tip: Many solicitors offer free initial consultations. Some
                     trade unions provide free legal advice to members. Citizens

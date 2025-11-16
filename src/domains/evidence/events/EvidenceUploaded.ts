@@ -3,7 +3,7 @@
  * Fired when new evidence is uploaded to a case
  */
 export class EvidenceUploaded {
-  public readonly eventType = 'evidence.uploaded' as const;
+  public readonly eventType = "evidence.uploaded" as const;
   public readonly occurredAt: Date;
 
   constructor(
@@ -19,7 +19,7 @@ export class EvidenceUploaded {
       obtainedDate?: string;
       uploadedBy?: string;
       source?: string;
-    }
+    },
   ) {
     this.occurredAt = new Date();
   }
@@ -27,14 +27,17 @@ export class EvidenceUploaded {
   /**
    * Create an EvidenceUploaded event from an Evidence entity
    */
-  static fromEntity(evidence: {
-    id: number;
-    caseId: number;
-    title: string;
-    evidenceType: string;
-    filePath?: string | null;
-    obtainedDate?: string | null;
-  }, userId: number): EvidenceUploaded {
+  static fromEntity(
+    evidence: {
+      id: number;
+      caseId: number;
+      title: string;
+      evidenceType: string;
+      filePath?: string | null;
+      obtainedDate?: string | null;
+    },
+    userId: number,
+  ): EvidenceUploaded {
     return new EvidenceUploaded(
       evidence.id,
       evidence.caseId,
@@ -43,8 +46,8 @@ export class EvidenceUploaded {
       evidence.evidenceType,
       {
         filePath: evidence.filePath || undefined,
-        obtainedDate: evidence.obtainedDate || undefined
-      }
+        obtainedDate: evidence.obtainedDate || undefined,
+      },
     );
   }
 
@@ -60,7 +63,7 @@ export class EvidenceUploaded {
       userId: this.userId,
       title: this.title,
       evidenceType: this.evidenceType,
-      metadata: this.metadata
+      metadata: this.metadata,
     };
   }
 

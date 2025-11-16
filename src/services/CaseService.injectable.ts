@@ -31,7 +31,7 @@ export class CaseServiceInjectable implements ICaseService {
   constructor(
     @inject(TYPES.CaseRepository) private caseRepository: ICaseRepository,
     @inject(TYPES.Database) private db: IDatabase,
-    @inject(TYPES.AuditLogger) private auditLogger: IAuditLogger
+    @inject(TYPES.AuditLogger) private auditLogger: IAuditLogger,
   ) {}
 
   /**

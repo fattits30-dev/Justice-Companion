@@ -8,13 +8,16 @@
  * - Configuration validation
  */
 
-import type { AIProviderConfig, AIProviderType } from '../types/ai-providers.ts';
-import { AI_PROVIDER_METADATA } from '../types/ai-providers.ts';
-import { KeyManager } from './KeyManager.ts';
-import { app, safeStorage } from 'electron';
-import fs from 'fs';
-import path from 'path';
-import { logger } from '../utils/logger';
+import type {
+  AIProviderConfig,
+  AIProviderType,
+} from "../types/ai-providers.ts";
+import { AI_PROVIDER_METADATA } from "../types/ai-providers.ts";
+import { KeyManager } from "./KeyManager.ts";
+import { app, safeStorage } from "electron";
+import fs from "fs";
+import path from "path";
+import { logger } from "../utils/logger";
 
 export interface StoredProviderConfig {
   provider: AIProviderType;
@@ -32,8 +35,8 @@ export class AIProviderConfigService {
   private activeProvider: AIProviderType | null = null;
 
   constructor() {
-    this.keyManager = new KeyManager(safeStorage, app.getPath('userData'));
-    this.configPath = path.join(app.getPath('userData'), 'ai-providers.json');
+    this.keyManager = new KeyManager(safeStorage, app.getPath("userData"));
+    this.configPath = path.join(app.getPath("userData"), "ai-providers.json");
     this.loadConfigurations();
   }
 
@@ -43,7 +46,7 @@ export class AIProviderConfigService {
   private loadConfigurations(): void {
     try {
       if (fs.existsSync(this.configPath)) {
-        const data = fs.readFileSync(this.configPath, 'utf-8');
+        const data = fs.readFileSync(this.configPath, "utf-8");
         const stored = JSON.parse(data);
 
         if (stored.activeProvider) {
@@ -57,7 +60,10 @@ export class AIProviderConfigService {
         }
       }
     } catch (error) {
-      logger.error('[AIProviderConfigService] Failed to load configurations:', error);
+      logger.error(
+        "[AIProviderConfigService] Failed to load configurations:",
+        error,
+      );
     }
   }
 
@@ -71,9 +77,12 @@ export class AIProviderConfigService {
         configs: Array.from(this.configs.values()),
       };
 
-      fs.writeFileSync(this.configPath, JSON.stringify(data, null, 2), 'utf-8');
+      fs.writeFileSync(this.configPath, JSON.stringify(data, null, 2), "utf-8");
     } catch (error) {
-      logger.error('[AIProviderConfigService] Failed to save configurations:', error);
+      logger.error(
+        "[AIProviderConfigService] Failed to save configurations:",
+        error,
+      );
       throw error;
     }
   }
@@ -84,7 +93,7 @@ export class AIProviderConfigService {
   async setProviderConfig(
     provider: AIProviderType,
     apiKey: string,
-    config: Omit<StoredProviderConfig, 'provider'>
+    config: Omit<StoredProviderConfig, "provider">,
   ): Promise<void> {
     // Store API key securely
     await this.keyManager.storeKey(`ai-provider-${provider}`, apiKey);
@@ -106,14 +115,18 @@ export class AIProviderConfigService {
   /**
    * Get configuration for a provider (including API key)
    */
-  async getProviderConfig(provider: AIProviderType): Promise<AIProviderConfig | null> {
+  async getProviderConfig(
+    provider: AIProviderType,
+  ): Promise<AIProviderConfig | null> {
     const config = this.configs.get(provider);
     if (!config) {
       return null;
     }
 
     try {
-      const apiKey = await this.keyManager.retrieveKey(`ai-provider-${provider}`);
+      const apiKey = await this.keyManager.retrieveKey(
+        `ai-provider-${provider}`,
+      );
       if (!apiKey) {
         return null;
       }
@@ -123,7 +136,10 @@ export class AIProviderConfigService {
         apiKey,
       };
     } catch (error) {
-      logger.error(`[AIProviderConfigService] Failed to get API key for ${provider}:`, error);
+      logger.error(
+        `[AIProviderConfigService] Failed to get API key for ${provider}:`,
+        error,
+      );
       return null;
     }
   }
@@ -206,32 +222,35 @@ export class AIProviderConfigService {
   /**
    * Validate provider configuration
    */
-  validateConfig(config: AIProviderConfig): { valid: boolean; errors: string[] } {
+  validateConfig(config: AIProviderConfig): {
+    valid: boolean;
+    errors: string[];
+  } {
     const errors: string[] = [];
 
     if (!config.apiKey || config.apiKey.trim().length === 0) {
-      errors.push('API key is required');
+      errors.push("API key is required");
     }
 
     if (!config.model || config.model.trim().length === 0) {
-      errors.push('Model is required');
+      errors.push("Model is required");
     }
 
     if (config.temperature !== undefined) {
       if (config.temperature < 0 || config.temperature > 2) {
-        errors.push('Temperature must be between 0 and 2');
+        errors.push("Temperature must be between 0 and 2");
       }
     }
 
     if (config.maxTokens !== undefined) {
       if (config.maxTokens < 1 || config.maxTokens > 100000) {
-        errors.push('Max tokens must be between 1 and 100,000');
+        errors.push("Max tokens must be between 1 and 100,000");
       }
     }
 
     if (config.topP !== undefined) {
       if (config.topP < 0 || config.topP > 1) {
-        errors.push('Top P must be between 0 and 1');
+        errors.push("Top P must be between 0 and 1");
       }
     }
 
@@ -244,26 +263,31 @@ export class AIProviderConfigService {
   /**
    * Test provider connection
    */
-  async testProvider(provider: AIProviderType): Promise<{ success: boolean; error?: string }> {
+  async testProvider(
+    provider: AIProviderType,
+  ): Promise<{ success: boolean; error?: string }> {
     const config = await this.getProviderConfig(provider);
     if (!config) {
-      return { success: false, error: 'Provider not configured' };
+      return { success: false, error: "Provider not configured" };
     }
 
     try {
-      const { UnifiedAIService } = await import('./UnifiedAIService.ts');
+      const { UnifiedAIService } = await import("./UnifiedAIService.ts");
       const service = new UnifiedAIService(config);
 
       // Test with a simple message
       const response = await service.chat([
-        { role: 'user', content: 'Hello! Please respond with "OK" if you can hear me.' },
+        {
+          role: "user",
+          content: 'Hello! Please respond with "OK" if you can hear me.',
+        },
       ]);
 
       return { success: response.length > 0 };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }

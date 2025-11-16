@@ -30,7 +30,7 @@ export class ConsentService {
   constructor(
     @inject(TYPES.ConsentRepository)
     private consentRepository: IConsentRepository,
-    @inject(TYPES.AuditLogger) private auditLogger: IAuditLogger
+    @inject(TYPES.AuditLogger) private auditLogger: IAuditLogger,
   ) {}
 
   /**
@@ -67,7 +67,7 @@ export class ConsentService {
   revokeConsent(userId: number, consentType: ConsentType): void {
     const consent = this.consentRepository.findActiveConsent(
       userId,
-      consentType
+      consentType,
     );
 
     if (consent) {
@@ -91,7 +91,7 @@ export class ConsentService {
   hasActiveConsent(userId: number, consentType: ConsentType): boolean {
     const consent = this.consentRepository.findActiveConsent(
       userId,
-      consentType
+      consentType,
     );
     return consent !== null;
   }

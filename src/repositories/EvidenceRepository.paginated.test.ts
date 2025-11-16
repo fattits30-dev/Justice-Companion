@@ -1,15 +1,23 @@
-import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll } from 'vitest';
-import { EvidenceRepository } from './EvidenceRepository';
-import { EncryptionService } from '../services/EncryptionService';
-import { AuditLogger } from '../services/AuditLogger';
-import { createTestDatabase } from '../test-utils/database-test-helper';
-import { databaseManager } from '../db/database.ts';
-import type { CreateEvidenceInput } from '../domains/evidence/entities/Evidence';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  beforeAll,
+  afterAll,
+} from "vitest";
+import { EvidenceRepository } from "./EvidenceRepository";
+import { EncryptionService } from "../services/EncryptionService";
+import { AuditLogger } from "../services/AuditLogger";
+import { createTestDatabase } from "../test-utils/database-test-helper";
+import { databaseManager } from "../db/database.ts";
+import type { CreateEvidenceInput } from "../domains/evidence/entities/Evidence";
 
 // Create test database instance at module level
 const testDb = createTestDatabase();
 
-describe('EvidenceRepository - Cursor Pagination', () => {
+describe("EvidenceRepository - Cursor Pagination", () => {
   let encryptionService: EncryptionService;
   let auditLogger: AuditLogger;
   let repository: EvidenceRepository;
@@ -21,7 +29,13 @@ describe('EvidenceRepository - Cursor Pagination', () => {
       INSERT OR IGNORE INTO cases (id, title, description, case_type, status, created_at)
       VALUES (?, ?, ?, ?, ?, datetime('now'))
     `);
-    caseStmt.run(caseId, `Test Case ${caseId}`, 'Test Description', 'employment', 'active');
+    caseStmt.run(
+      caseId,
+      `Test Case ${caseId}`,
+      "Test Description",
+      "employment",
+      "active",
+    );
   };
 
   beforeAll(() => {
@@ -56,8 +70,8 @@ describe('EvidenceRepository - Cursor Pagination', () => {
     // Additional cleanup if needed
   });
 
-  describe('findByCaseIdPaginated', () => {
-    it('should return first page of evidence for a case', () => {
+  describe("findByCaseIdPaginated", () => {
+    it("should return first page of evidence for a case", () => {
       // Create parent case (satisfies FK constraint)
       createTestCase(100);
 
@@ -67,7 +81,7 @@ describe('EvidenceRepository - Cursor Pagination', () => {
           caseId: 100,
           title: `Evidence ${i}`,
           content: `Content ${i}`,
-          evidenceType: 'document',
+          evidenceType: "document",
         };
         repository.create(input);
       }
@@ -81,12 +95,12 @@ describe('EvidenceRepository - Cursor Pagination', () => {
       expect(result.totalReturned).toBe(3);
 
       // Items should be in DESC order (newest first)
-      expect(result.items[0].title).toBe('Evidence 5');
-      expect(result.items[1].title).toBe('Evidence 4');
-      expect(result.items[2].title).toBe('Evidence 3');
+      expect(result.items[0].title).toBe("Evidence 5");
+      expect(result.items[1].title).toBe("Evidence 4");
+      expect(result.items[2].title).toBe("Evidence 3");
     });
 
-    it('should return second page using cursor', () => {
+    it("should return second page using cursor", () => {
       // Create parent case (satisfies FK constraint)
       createTestCase(100);
 
@@ -96,7 +110,7 @@ describe('EvidenceRepository - Cursor Pagination', () => {
           caseId: 100,
           title: `Evidence ${i}`,
           content: `Content ${i}`,
-          evidenceType: 'document',
+          evidenceType: "document",
         };
         repository.create(input);
       }
@@ -110,11 +124,11 @@ describe('EvidenceRepository - Cursor Pagination', () => {
       expect(page2.items).toHaveLength(2);
       expect(page2.hasMore).toBe(false);
       expect(page2.nextCursor).toBeNull();
-      expect(page2.items[0].title).toBe('Evidence 2');
-      expect(page2.items[1].title).toBe('Evidence 1');
+      expect(page2.items[0].title).toBe("Evidence 2");
+      expect(page2.items[1].title).toBe("Evidence 1");
     });
 
-    it('should return empty result when no evidence exists', () => {
+    it("should return empty result when no evidence exists", () => {
       const result = repository.findByCaseIdPaginated(999, 10);
 
       expect(result.items).toHaveLength(0);
@@ -123,7 +137,7 @@ describe('EvidenceRepository - Cursor Pagination', () => {
       expect(result.totalReturned).toBe(0);
     });
 
-    it('should decrypt content for all paginated items', () => {
+    it("should decrypt content for all paginated items", () => {
       // Create parent case (satisfies FK constraint)
       createTestCase(100);
 
@@ -133,7 +147,7 @@ describe('EvidenceRepository - Cursor Pagination', () => {
           caseId: 100,
           title: `Evidence ${i}`,
           content: `Encrypted content ${i}`,
-          evidenceType: 'document',
+          evidenceType: "document",
         };
         repository.create(input);
       }
@@ -146,7 +160,7 @@ describe('EvidenceRepository - Cursor Pagination', () => {
       });
     });
 
-    it('should handle exact page size boundary', () => {
+    it("should handle exact page size boundary", () => {
       // Create parent case (satisfies FK constraint)
       createTestCase(100);
 
@@ -156,7 +170,7 @@ describe('EvidenceRepository - Cursor Pagination', () => {
           caseId: 100,
           title: `Evidence ${i}`,
           content: `Content ${i}`,
-          evidenceType: 'document',
+          evidenceType: "document",
         };
         repository.create(input);
       }
@@ -170,8 +184,8 @@ describe('EvidenceRepository - Cursor Pagination', () => {
     });
   });
 
-  describe('findAllPaginated', () => {
-    it('should return first page of all evidence', () => {
+  describe("findAllPaginated", () => {
+    it("should return first page of all evidence", () => {
       // Create parent cases (satisfies FK constraints)
       for (let caseId = 1; caseId <= 3; caseId++) {
         createTestCase(caseId);
@@ -184,7 +198,7 @@ describe('EvidenceRepository - Cursor Pagination', () => {
             caseId,
             title: `Case${caseId} Evidence ${i}`,
             content: `Content ${i}`,
-            evidenceType: 'document',
+            evidenceType: "document",
           };
           repository.create(input);
         }
@@ -198,12 +212,16 @@ describe('EvidenceRepository - Cursor Pagination', () => {
       expect(result.nextCursor).toBeTruthy();
     });
 
-    it('should filter by evidence type', () => {
+    it("should filter by evidence type", () => {
       // Create parent case (satisfies FK constraint)
       createTestCase(100);
 
       // Create mixed evidence types
-      const types: ('document' | 'photo' | 'email')[] = ['document', 'photo', 'email'];
+      const types: ("document" | "photo" | "email")[] = [
+        "document",
+        "photo",
+        "email",
+      ];
 
       for (let i = 1; i <= 15; i++) {
         const input: CreateEvidenceInput = {
@@ -216,14 +234,16 @@ describe('EvidenceRepository - Cursor Pagination', () => {
       }
 
       // Get only documents
-      const result = repository.findAllPaginated('document', 10);
+      const result = repository.findAllPaginated("document", 10);
 
       // Should return 5 documents (15 total / 3 types = 5 each)
       expect(result.items).toHaveLength(5);
-      expect(result.items.every((item: any) => item.evidenceType === 'document')).toBe(true);
+      expect(
+        result.items.every((item: any) => item.evidenceType === "document"),
+      ).toBe(true);
     });
 
-    it('should paginate through filtered results', () => {
+    it("should paginate through filtered results", () => {
       // Create parent case (satisfies FK constraint)
       createTestCase(100);
 
@@ -233,25 +253,29 @@ describe('EvidenceRepository - Cursor Pagination', () => {
           caseId: 100,
           title: `Document ${i}`,
           content: `Content ${i}`,
-          evidenceType: 'document',
+          evidenceType: "document",
         };
         repository.create(input);
       }
 
       // Get first page of documents (limit 6)
-      const page1 = repository.findAllPaginated('document', 6);
+      const page1 = repository.findAllPaginated("document", 6);
       expect(page1.items).toHaveLength(6);
       expect(page1.hasMore).toBe(true);
 
       // Get second page
-      const page2 = repository.findAllPaginated('document', 6, page1.nextCursor);
+      const page2 = repository.findAllPaginated(
+        "document",
+        6,
+        page1.nextCursor,
+      );
       expect(page2.items).toHaveLength(4);
       expect(page2.hasMore).toBe(false);
     });
 
-    it('should use batch decryption for performance', () => {
+    it("should use batch decryption for performance", () => {
       // Enable batch encryption
-      process.env.ENABLE_BATCH_ENCRYPTION = 'true';
+      process.env.ENABLE_BATCH_ENCRYPTION = "true";
 
       // Create parent case (satisfies FK constraint)
       createTestCase(100);
@@ -262,7 +286,7 @@ describe('EvidenceRepository - Cursor Pagination', () => {
           caseId: 100,
           title: `Evidence ${i}`,
           content: `Sensitive content ${i}`,
-          evidenceType: 'document',
+          evidenceType: "document",
         };
         repository.create(input);
       }
@@ -273,13 +297,13 @@ describe('EvidenceRepository - Cursor Pagination', () => {
       expect(result.items).toHaveLength(5);
       result.items.forEach((item: any) => {
         expect(item.content).toBeTruthy();
-        expect(item.content).toContain('Sensitive content'); // Decrypted content
+        expect(item.content).toContain("Sensitive content"); // Decrypted content
       });
     });
   });
 
-  describe('Performance comparison', () => {
-    it('should be more memory efficient than findAll', () => {
+  describe("Performance comparison", () => {
+    it("should be more memory efficient than findAll", () => {
       // Create parent case (satisfies FK constraint)
       createTestCase(100);
 
@@ -289,7 +313,7 @@ describe('EvidenceRepository - Cursor Pagination', () => {
           caseId: 100,
           title: `Evidence ${i}`,
           content: `Content ${i}`.repeat(1000), // 8KB each
-          evidenceType: 'document',
+          evidenceType: "document",
         };
         repository.create(input);
       }
@@ -305,7 +329,9 @@ describe('EvidenceRepository - Cursor Pagination', () => {
       // Memory usage: paginated is 10x more efficient
       console.log(`Paginated: ${paginated.items.length} items`);
       console.log(`Non-paginated: ${all.length} items`);
-      console.log(`Memory reduction: ${((1 - paginated.items.length / all.length) * 100).toFixed(1)}%`);
+      console.log(
+        `Memory reduction: ${((1 - paginated.items.length / all.length) * 100).toFixed(1)}%`,
+      );
     });
   });
 });

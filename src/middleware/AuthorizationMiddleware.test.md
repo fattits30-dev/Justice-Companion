@@ -17,6 +17,7 @@
 ## Test Organization
 
 ### 1. verifyCaseOwnership (7 tests)
+
 - ✅ Case exists and user is owner (success)
 - ✅ Case has null userId for backward compatibility
 - ✅ Case does not exist (throws error)
@@ -26,18 +27,21 @@
 - ✅ Works without audit logger
 
 ### 2. verifyAdminRole (4 tests)
+
 - ✅ User has admin role (success)
 - ✅ User is not admin (throws error)
 - ✅ Audit logging when user is not admin
 - ✅ Works without audit logger
 
 ### 3. verifyUserActive (4 tests)
+
 - ✅ User is active (success)
 - ✅ User is not active (throws error)
 - ✅ Audit logging when user is not active
 - ✅ Works without audit logger
 
 ### 4. verifyCanModifyUser (6 tests)
+
 - ✅ User modifies themselves (success)
 - ✅ Admin modifies another user (success)
 - ✅ Admin modifies themselves (success)
@@ -46,18 +50,21 @@
 - ✅ Works without audit logger
 
 ### 5. AuthorizationError (4 tests)
+
 - ✅ Is an instance of Error
 - ✅ Has correct name property
 - ✅ Has correct message property
 - ✅ Is catchable as specific error type
 
 ### 6. Edge Cases (4 tests)
+
 - ✅ Handles zero IDs correctly
 - ✅ Handles negative IDs correctly
 - ✅ Handles very large IDs correctly
 - ✅ Converts numeric IDs to strings in audit logs
 
 ### 7. Security Scenarios (5 tests)
+
 - ✅ Prevents horizontal privilege escalation
 - ✅ Prevents vertical privilege escalation
 - ✅ Prevents inactive users from accessing resources
@@ -65,6 +72,7 @@
 - ✅ Allows admins to perform all admin operations
 
 ### 8. Audit Logging Coverage (5 tests)
+
 - ✅ Audits all authorization failures for case ownership
 - ✅ Audits admin role failures
 - ✅ Audits inactive user failures
@@ -74,15 +82,18 @@
 ## Testing Approach
 
 ### Mocking Strategy
+
 - **CaseRepository**: Mocked using `vi.mock()` to control case data responses
 - **AuditLogger**: Mocked to verify audit logging behavior without side effects
 
 ### Test Fixtures
+
 - `createMockUser()`: Factory function for creating test User objects
 - `createMockCase()`: Factory function for creating test Case objects
 - Both support partial overrides for flexible test data
 
 ### Key Test Patterns
+
 1. **Happy Path Testing**: Validates successful authorization scenarios
 2. **Error Path Testing**: Verifies correct error handling and error messages
 3. **Audit Trail Testing**: Ensures all failures are logged with correct details
@@ -113,6 +124,7 @@ The tests comprehensively validate:
 ## Audit Logging
 
 Every authorization failure is logged with:
+
 - Event type: `authorization.denied`
 - User ID (as string)
 - Resource type and ID
@@ -123,6 +135,7 @@ Every authorization failure is logged with:
 ## Error Messages
 
 All error messages are descriptive and user-friendly:
+
 - "Case not found"
 - "Access denied: you do not own this case"
 - "Access denied: admin role required"

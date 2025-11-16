@@ -5,7 +5,7 @@
  * IPC handlers can import from this service instead of directly from main.ts.
  */
 
-import type { KeyManager } from "../../src/services/KeyManager.ts";
+import type { KeyManager } from "../../src/services/KeyManager";
 
 let keyManager: KeyManager | null = null;
 

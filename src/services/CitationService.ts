@@ -1,6 +1,11 @@
 // @ts-expect-error - Optional dependency for legal citation extraction, types not available
-import { getCitations, cleanText, annotateCitations, type Citation } from '@beshkenadze/eyecite';
-import { logger } from '../utils/logger.ts';
+import {
+  getCitations,
+  cleanText,
+  annotateCitations,
+  type Citation,
+} from "@beshkenadze/eyecite";
+import { logger } from "../utils/logger.ts";
 
 /**
  * Citation Service
@@ -41,23 +46,25 @@ export class CitationService {
       }
 
       // Clean text (remove HTML, normalize whitespace)
-      const cleaned = cleanText(text, ['html', 'inline_whitespace']);
+      const cleaned = cleanText(text, ["html", "inline_whitespace"]);
 
       // Extract citations with overlap handling to avoid duplicates
       const citations = getCitations(cleaned, {
-        overlapHandling: 'parent-only',
+        overlapHandling: "parent-only",
         removeAmbiguous: false,
       });
 
-      logger.info('CitationService', 'Extracted citations', {
+      logger.info("CitationService", "Extracted citations", {
         count: citations.length,
         textLength: text.length,
       });
 
       // Convert to our format
-      return citations.map((citation: Citation) => this.convertCitation(citation));
+      return citations.map((citation: Citation) =>
+        this.convertCitation(citation),
+      );
     } catch (error) {
-      logger.error('CitationService', 'Failed to extract citations', { error });
+      logger.error("CitationService", "Failed to extract citations", { error });
       return [];
     }
   }
@@ -68,7 +75,7 @@ export class CitationService {
   private static convertCitation(citation: Citation): ExtractedCitation {
     const type = citation.constructor.name;
     const span = citation.span();
-    const metadata: ExtractedCitation['metadata'] = {};
+    const metadata: ExtractedCitation["metadata"] = {};
 
     // Extract metadata based on citation type
     // Use direct property access since eyecite returns dynamic citation objects
@@ -130,9 +137,9 @@ export class CitationService {
         return text;
       }
 
-      const cleaned = cleanText(text, ['html', 'inline_whitespace']);
+      const cleaned = cleanText(text, ["html", "inline_whitespace"]);
       const citations = getCitations(cleaned, {
-        overlapHandling: 'parent-only',
+        overlapHandling: "parent-only",
       });
 
       if (citations.length === 0) {
@@ -144,12 +151,14 @@ export class CitationService {
         cleaned,
         citations.map((c: Citation) => [
           c.span(),
-          '<mark class="legal-citation" data-citation-type="' + c.constructor.name + '">',
-          '</mark>',
+          '<mark class="legal-citation" data-citation-type="' +
+            c.constructor.name +
+            '">',
+          "</mark>",
         ]),
       );
     } catch (error) {
-      logger.error('CitationService', 'Failed to highlight citations', {
+      logger.error("CitationService", "Failed to highlight citations", {
         error,
       });
       return text;
@@ -160,19 +169,19 @@ export class CitationService {
    * Format citation for display (human-readable)
    */
   static formatCitation(citation: ExtractedCitation): string {
-    if (citation.type === 'FullCaseCitation') {
+    if (citation.type === "FullCaseCitation") {
       const { volume, reporter, page, year, court } = citation.metadata;
       let formatted = `${volume} ${reporter} ${page}`;
       if (year) {
         formatted += ` (${year})`;
       }
-      if (court && court !== 'scotus') {
+      if (court && court !== "scotus") {
         formatted += ` (${court.toUpperCase()})`;
       }
       return formatted;
-    } else if (citation.type === 'FullLawCitation') {
+    } else if (citation.type === "FullLawCitation") {
       const { reporter, section, chapter } = citation.metadata;
-      let formatted = reporter || '';
+      let formatted = reporter || "";
       if (chapter) {
         formatted += ` ch. ${chapter}`;
       }
@@ -180,13 +189,13 @@ export class CitationService {
         formatted += ` § ${section}`;
       }
       return formatted;
-    } else if (citation.type === 'ShortCaseCitation') {
+    } else if (citation.type === "ShortCaseCitation") {
       const { volume, reporter, page } = citation.metadata;
       return `${volume} ${reporter}, at ${page}`;
-    } else if (citation.type === 'IdCitation') {
+    } else if (citation.type === "IdCitation") {
       const { pinCite } = citation.metadata;
-      return pinCite ? `Id. ${pinCite}` : 'Id.';
-    } else if (citation.type === 'SupraCitation') {
+      return pinCite ? `Id. ${pinCite}` : "Id.";
+    } else if (citation.type === "SupraCitation") {
       return citation.text;
     }
 
@@ -197,7 +206,7 @@ export class CitationService {
    * Get a link to the citation in CourtListener (if applicable)
    */
   static getCourtListenerLink(citation: ExtractedCitation): string | null {
-    if (citation.type === 'FullCaseCitation') {
+    if (citation.type === "FullCaseCitation") {
       const { volume, reporter, page } = citation.metadata;
       if (volume && reporter && page) {
         const query = encodeURIComponent(`${volume} ${reporter} ${page}`);

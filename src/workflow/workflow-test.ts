@@ -46,13 +46,13 @@ async function main() {
 
         // Test task operations
         console.log(
-          "\n╔══════════════════════════════════════════════════════════╗"
+          "\n╔══════════════════════════════════════════════════════════╗",
         );
         console.log(
-          "║                  Test: Task Operations                    ║"
+          "║                  Test: Task Operations                    ║",
         );
         console.log(
-          "╚══════════════════════════════════════════════════════════╝\n"
+          "╚══════════════════════════════════════════════════════════╝\n",
         );
 
         // Get next task
@@ -76,19 +76,19 @@ async function main() {
           });
         } else {
           console.log(
-            "✅ No pending tasks - all dependencies blocked or plan complete\n"
+            "✅ No pending tasks - all dependencies blocked or plan complete\n",
           );
         }
 
         // Test adding a new task
         console.log(
-          "\n╔══════════════════════════════════════════════════════════╗"
+          "\n╔══════════════════════════════════════════════════════════╗",
         );
         console.log(
-          "║                  Test: Add New Task                       ║"
+          "║                  Test: Add New Task                       ║",
         );
         console.log(
-          "╚══════════════════════════════════════════════════════════╝\n"
+          "╚══════════════════════════════════════════════════════════╝\n",
         );
 
         await todoManager.addTask(
@@ -102,14 +102,14 @@ async function main() {
               "Task appears in TODO list",
               "Task can be completed",
             ],
-          }
+          },
         );
 
         // Show updated progress
         await todoManager.showProgress();
 
         console.log(
-          "\n✅ Test complete! All workflow operations working correctly.\n"
+          "\n✅ Test complete! All workflow operations working correctly.\n",
         );
         return;
       }
@@ -127,17 +127,17 @@ async function main() {
   console.log("\n📊 Project Analysis Complete:");
   console.log(`  Languages: ${analysis.techStack.languages.join(", ")}`);
   console.log(
-    `  Frameworks: ${analysis.techStack.frameworks.join(", ") || "None detected"}`
+    `  Frameworks: ${analysis.techStack.frameworks.join(", ") || "None detected"}`,
   );
   console.log(
-    `  Package Manager: ${analysis.techStack.packageManager || "npm"}`
+    `  Package Manager: ${analysis.techStack.packageManager || "npm"}`,
   );
   console.log(`  Runtime: ${analysis.techStack.runtime || "Unknown"}`);
   console.log(
-    `  Database: ${analysis.techStack.database?.join(", ") || "None detected"}`
+    `  Database: ${analysis.techStack.database?.join(", ") || "None detected"}`,
   );
   console.log(
-    `  Testing: ${analysis.techStack.testing?.join(", ") || "None detected"}`
+    `  Testing: ${analysis.techStack.testing?.join(", ") || "None detected"}`,
   );
   console.log(`  Files: ${analysis.structure.fileCount}`);
   console.log(`  Directories: ${analysis.structure.dirCount}`);
@@ -189,18 +189,18 @@ async function main() {
   // Add decision to memory
   await configManager.addDecision(
     "Initialized workflow builder system",
-    "Created .localclaude/ directory with project analysis and multi-phase plan"
+    "Created .localclaude/ directory with project analysis and multi-phase plan",
   );
 
   // Add pattern to memory
   await configManager.addPattern(
     "Project initialization workflow",
-    "Always check for .localclaude/ first to avoid re-indexing"
+    "Always check for .localclaude/ first to avoid re-indexing",
   );
 
   // Add note to memory
   await configManager.addNote(
-    "Workflow system successfully initialized via automated test"
+    "Workflow system successfully initialized via automated test",
   );
 
   // Create backup

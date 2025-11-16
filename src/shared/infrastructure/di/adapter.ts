@@ -57,5 +57,5 @@ export function createSingletonProxy<T>(serviceType: symbol): T {
  * These can be used as drop-in replacements for existing exports
  */
 export const caseService = createSingletonProxy<ICaseService>(
-  TYPES.CaseService
+  TYPES.CaseService,
 );

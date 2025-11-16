@@ -1,7 +1,7 @@
-import fs from 'fs';
-import path from 'path';
-import { app } from 'electron';
-import { errorLogger } from '../utils/error-logger.ts';
+import fs from "fs";
+import path from "path";
+import { app } from "electron";
+import { errorLogger } from "../utils/error-logger.ts";
 
 /**
  * Backup metadata
@@ -17,8 +17,8 @@ export interface BackupMetadata {
  * Get backups directory path
  */
 function getBackupsDir(): string {
-  const userDataPath = app.getPath('userData');
-  const backupsDir = path.join(userDataPath, 'backups');
+  const userDataPath = app.getPath("userData");
+  const backupsDir = path.join(userDataPath, "backups");
 
   // Ensure backups directory exists
   if (!fs.existsSync(backupsDir)) {
@@ -32,7 +32,7 @@ function getBackupsDir(): string {
  * Get current database path
  */
 function getDbPath(): string {
-  return path.join(app.getPath('userData'), 'justice.db');
+  return path.join(app.getPath("userData"), "justice.db");
 }
 
 /**
@@ -45,11 +45,11 @@ export function createBackup(customFilename?: string): BackupMetadata {
     const dbPath = getDbPath();
 
     if (!fs.existsSync(dbPath)) {
-      throw new Error('Database file not found');
+      throw new Error("Database file not found");
     }
 
     const backupsDir = getBackupsDir();
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
     const filename = customFilename
       ? `${customFilename}.db`
       : `justice_backup_${timestamp}.db`;
@@ -68,13 +68,16 @@ export function createBackup(customFilename?: string): BackupMetadata {
       created_at: new Date().toISOString(),
     };
 
-    errorLogger.logError(`Database backup created: ${filename} (${stats.size} bytes)`, {
-      type: 'info',
-    });
+    errorLogger.logError(
+      `Database backup created: ${filename} (${stats.size} bytes)`,
+      {
+        type: "info",
+      },
+    );
 
     return metadata;
   } catch (error) {
-    errorLogger.logError(error as Error, { context: 'create-backup' });
+    errorLogger.logError(error as Error, { context: "create-backup" });
     throw error;
   }
 }
@@ -100,14 +103,16 @@ export function restoreBackup(filename: string): void {
     }
 
     // Create a backup of current database before restoring
-    createBackup('pre_restore_backup');
+    createBackup("pre_restore_backup");
 
     // Restore backup
     fs.copyFileSync(backupPath, dbPath);
 
-    errorLogger.logError(`Database restored from: ${filename}`, { type: 'info' });
+    errorLogger.logError(`Database restored from: ${filename}`, {
+      type: "info",
+    });
   } catch (error) {
-    errorLogger.logError(error as Error, { context: 'restore-backup' });
+    errorLogger.logError(error as Error, { context: "restore-backup" });
     throw error;
   }
 }
@@ -122,7 +127,7 @@ export function listBackups(): BackupMetadata[] {
 
     const files = fs
       .readdirSync(backupsDir)
-      .filter((file) => file.endsWith('.db'))
+      .filter((file) => file.endsWith(".db"))
       .map((file) => {
         const filepath = path.join(backupsDir, file);
         const stats = fs.statSync(filepath);
@@ -138,7 +143,7 @@ export function listBackups(): BackupMetadata[] {
 
     return files;
   } catch (error) {
-    errorLogger.logError(error as Error, { context: 'list-backups' });
+    errorLogger.logError(error as Error, { context: "list-backups" });
     return [];
   }
 }
@@ -157,9 +162,9 @@ export function deleteBackup(filename: string): void {
 
     fs.unlinkSync(backupPath);
 
-    errorLogger.logError(`Backup deleted: ${filename}`, { type: 'info' });
+    errorLogger.logError(`Backup deleted: ${filename}`, { type: "info" });
   } catch (error) {
-    errorLogger.logError(error as Error, { context: 'delete-backup' });
+    errorLogger.logError(error as Error, { context: "delete-backup" });
     throw error;
   }
 }
@@ -169,6 +174,6 @@ export function deleteBackup(filename: string): void {
  * Creates a timestamped backup with "pre_migration_" prefix
  */
 export function createPreMigrationBackup(): BackupMetadata {
-  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
   return createBackup(`pre_migration_${timestamp}`);
 }

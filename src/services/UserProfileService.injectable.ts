@@ -16,7 +16,7 @@ import { errorLogger } from "../utils/error-logger.ts";
 export class UserProfileServiceInjectable implements IUserProfileService {
   constructor(
     @inject(TYPES.UserProfileRepository)
-    private userProfileRepository: IUserProfileRepository
+    private userProfileRepository: IUserProfileRepository,
   ) {}
 
   /**
@@ -48,7 +48,7 @@ export class UserProfileServiceInjectable implements IUserProfileService {
    */
   updateProfile(
     _userId: number,
-    input: UpdateUserProfileInput
+    input: UpdateUserProfileInput,
   ): UserProfile | null {
     try {
       // Validate name if provided

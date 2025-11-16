@@ -1,8 +1,15 @@
-import { EvidenceRepository } from './EvidenceRepository.ts';
-import { getCacheService, type CacheService } from '../services/CacheService.ts';
-import { EncryptionService } from '../services/EncryptionService.ts';
-import type { AuditLogger } from '../services/AuditLogger.ts';
-import type { Evidence, CreateEvidenceInput, UpdateEvidenceInput } from '../domains/evidence/entities/Evidence.ts';
+import { EvidenceRepository } from "./EvidenceRepository.ts";
+import {
+  getCacheService,
+  type CacheService,
+} from "../services/CacheService.ts";
+import { EncryptionService } from "../services/EncryptionService.ts";
+import type { AuditLogger } from "../services/AuditLogger.ts";
+import type {
+  Evidence,
+  CreateEvidenceInput,
+  UpdateEvidenceInput,
+} from "../domains/evidence/entities/Evidence.ts";
 
 /**
  * Cached wrapper for EvidenceRepository
@@ -25,10 +32,7 @@ export class CachedEvidenceRepository {
   private baseRepo: EvidenceRepository;
   private cache: CacheService;
 
-  constructor(
-    encryptionService: EncryptionService,
-    auditLogger?: AuditLogger
-  ) {
+  constructor(encryptionService: EncryptionService, auditLogger?: AuditLogger) {
     this.baseRepo = new EvidenceRepository(encryptionService, auditLogger);
     this.cache = getCacheService();
   }
@@ -40,14 +44,14 @@ export class CachedEvidenceRepository {
     const createdEvidence = this.baseRepo.create(input);
 
     // Invalidate case-specific evidence list cache
-    this.cache.invalidatePattern(`evidence:case:${input.caseId}:*`, 'evidence');
+    this.cache.invalidatePattern(`evidence:case:${input.caseId}:*`, "evidence");
 
     // Pre-cache the new evidence
     const cacheKey = `evidence:${createdEvidence.id}`;
     await this.cache.getCached(
       cacheKey,
       async () => createdEvidence,
-      'evidence'
+      "evidence",
     );
 
     return createdEvidence;
@@ -62,7 +66,7 @@ export class CachedEvidenceRepository {
     return this.cache.getCached(
       cacheKey,
       async () => this.baseRepo.findById(id),
-      'evidence'
+      "evidence",
     );
   }
 
@@ -75,7 +79,7 @@ export class CachedEvidenceRepository {
     return this.cache.getCached(
       cacheKey,
       async () => this.baseRepo.findByCaseId(caseId),
-      'evidence'
+      "evidence",
     );
   }
 
@@ -85,19 +89,22 @@ export class CachedEvidenceRepository {
   async findAllAsync(evidenceType?: string): Promise<Evidence[]> {
     const cacheKey = evidenceType
       ? `evidence:type:${evidenceType}`
-      : 'evidence:all';
+      : "evidence:all";
 
     return this.cache.getCached(
       cacheKey,
       async () => this.baseRepo.findAll(evidenceType),
-      'evidence'
+      "evidence",
     );
   }
 
   /**
    * Update evidence with encrypted content and invalidate caches
    */
-  async updateAsync(id: number, input: UpdateEvidenceInput): Promise<Evidence | null> {
+  async updateAsync(
+    id: number,
+    input: UpdateEvidenceInput,
+  ): Promise<Evidence | null> {
     // Get the evidence first to know its caseId for cache invalidation
     const existingEvidence = await this.findByIdAsync(id);
 
@@ -105,26 +112,35 @@ export class CachedEvidenceRepository {
 
     if (updatedEvidence && existingEvidence) {
       // Invalidate specific evidence cache
-      this.cache.invalidate(`evidence:${id}`, 'evidence');
+      this.cache.invalidate(`evidence:${id}`, "evidence");
 
       // Invalidate case-specific evidence list cache
-      this.cache.invalidatePattern(`evidence:case:${existingEvidence.caseId}:*`, 'evidence');
+      this.cache.invalidatePattern(
+        `evidence:case:${existingEvidence.caseId}:*`,
+        "evidence",
+      );
 
       // Invalidate type-specific caches if type changed
       if (input.evidenceType) {
-        this.cache.invalidate(`evidence:type:${existingEvidence.evidenceType}`, 'evidence');
-        this.cache.invalidate(`evidence:type:${input.evidenceType}`, 'evidence');
+        this.cache.invalidate(
+          `evidence:type:${existingEvidence.evidenceType}`,
+          "evidence",
+        );
+        this.cache.invalidate(
+          `evidence:type:${input.evidenceType}`,
+          "evidence",
+        );
       }
 
       // Invalidate general list caches
-      this.cache.invalidate('evidence:all', 'evidence');
+      this.cache.invalidate("evidence:all", "evidence");
 
       // Pre-cache the updated evidence
       const cacheKey = `evidence:${id}`;
       await this.cache.getCached(
         cacheKey,
         async () => updatedEvidence,
-        'evidence'
+        "evidence",
       );
     }
 
@@ -142,16 +158,22 @@ export class CachedEvidenceRepository {
 
     if (result && evidence) {
       // Invalidate specific evidence cache
-      this.cache.invalidate(`evidence:${id}`, 'evidence');
+      this.cache.invalidate(`evidence:${id}`, "evidence");
 
       // Invalidate case-specific evidence list cache
-      this.cache.invalidatePattern(`evidence:case:${evidence.caseId}:*`, 'evidence');
+      this.cache.invalidatePattern(
+        `evidence:case:${evidence.caseId}:*`,
+        "evidence",
+      );
 
       // Invalidate type-specific cache
-      this.cache.invalidate(`evidence:type:${evidence.evidenceType}`, 'evidence');
+      this.cache.invalidate(
+        `evidence:type:${evidence.evidenceType}`,
+        "evidence",
+      );
 
       // Invalidate general list caches
-      this.cache.invalidate('evidence:all', 'evidence');
+      this.cache.invalidate("evidence:all", "evidence");
     }
 
     return result;
@@ -166,8 +188,8 @@ export class CachedEvidenceRepository {
     return this.cache.getCached(
       cacheKey,
       async () => this.baseRepo.countByCase(caseId),
-      'evidence',
-      10 * 60 * 1000 // 10 minute TTL for counts
+      "evidence",
+      10 * 60 * 1000, // 10 minute TTL for counts
     );
   }
 
@@ -177,13 +199,13 @@ export class CachedEvidenceRepository {
   async countByTypeAsync(caseId?: number): Promise<Record<string, number>> {
     const cacheKey = caseId
       ? `evidence:case:${caseId}:count-by-type`
-      : 'evidence:count-by-type';
+      : "evidence:count-by-type";
 
     return this.cache.getCached(
       cacheKey,
       async () => this.baseRepo.countByType(caseId),
-      'evidence',
-      10 * 60 * 1000 // 10 minute TTL for counts
+      "evidence",
+      10 * 60 * 1000, // 10 minute TTL for counts
     );
   }
 
@@ -192,7 +214,7 @@ export class CachedEvidenceRepository {
    */
   async findByIdsAsync(ids: number[]): Promise<(Evidence | null)[]> {
     // Process each ID through cache
-    const promises = ids.map(id => this.findByIdAsync(id));
+    const promises = ids.map((id) => this.findByIdAsync(id));
     const evidenceList = await Promise.all(promises);
 
     return evidenceList;
@@ -205,12 +227,12 @@ export class CachedEvidenceRepository {
     const evidenceList = await this.findByCaseIdAsync(caseId);
 
     // Cache individual evidence items
-    const entries = evidenceList.map(evidence => ({
+    const entries = evidenceList.map((evidence) => ({
       key: `evidence:${evidence.id}`,
       fetchFn: async () => evidence,
     }));
 
-    await this.cache.preload(entries, 'evidence');
+    await this.cache.preload(entries, "evidence");
   }
 
   /**
@@ -232,7 +254,10 @@ export class CachedEvidenceRepository {
   /**
    * Search evidence by content (with caching for repeated searches)
    */
-  async searchByContentAsync(searchTerm: string, caseId?: number): Promise<Evidence[]> {
+  async searchByContentAsync(
+    searchTerm: string,
+    caseId?: number,
+  ): Promise<Evidence[]> {
     const cacheKey = caseId
       ? `evidence:search:${caseId}:${searchTerm}`
       : `evidence:search:all:${searchTerm}`;
@@ -246,13 +271,14 @@ export class CachedEvidenceRepository {
           : await this.baseRepo.findAll();
 
         // Filter by content (simple contains search)
-        return allEvidence.filter(e =>
-          e.content?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          e.title.toLowerCase().includes(searchTerm.toLowerCase())
+        return allEvidence.filter(
+          (e) =>
+            e.content?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            e.title.toLowerCase().includes(searchTerm.toLowerCase()),
         );
       },
-      'evidence',
-      2 * 60 * 1000 // 2 minute TTL for search results
+      "evidence",
+      2 * 60 * 1000, // 2 minute TTL for search results
     );
   }
 
@@ -260,13 +286,13 @@ export class CachedEvidenceRepository {
    * Invalidate all evidence-related caches
    */
   invalidateAll(): void {
-    this.cache.clear('evidence');
+    this.cache.clear("evidence");
   }
 
   /**
    * Get cache statistics for monitoring
    */
   getCacheStats() {
-    return this.cache.getStats('evidence');
+    return this.cache.getStats("evidence");
   }
 }

@@ -3,16 +3,16 @@
  * Configures testing environment and imports testing library extensions
  */
 
-import '@testing-library/jest-dom';
-import { vi } from 'vitest';
+import "@testing-library/jest-dom";
+import { vi } from "vitest";
 
 // Extend Vitest matchers with Testing Library matchers
 // This provides matchers like toBeInTheDocument(), toHaveTextContent(), etc.
 
 // Mock window.matchMedia (not implemented in JSDOM)
 // Only mock if window exists (some tests run in Node.js environment without DOM)
-if (typeof window !== 'undefined') {
-  Object.defineProperty(window, 'matchMedia', {
+if (typeof window !== "undefined") {
+  Object.defineProperty(window, "matchMedia", {
     writable: true,
     value: vi.fn().mockImplementation((query) => ({
       matches: false,

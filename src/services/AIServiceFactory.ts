@@ -85,7 +85,7 @@ export class AIServiceFactory {
     this.modelPath = path.join(
       userDataPath,
       "models",
-      "Qwen_Qwen3-8B-Q4_K_M.gguf"
+      "Qwen_Qwen3-8B-Q4_K_M.gguf",
     );
 
     errorLogger.logError(
@@ -94,7 +94,7 @@ export class AIServiceFactory {
         type: "info",
         modelPath: this.modelPath,
         defaultProvider: "integrated",
-      }
+      },
     );
   }
 

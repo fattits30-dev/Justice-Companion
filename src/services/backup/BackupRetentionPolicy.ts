@@ -1,6 +1,6 @@
 // src/services/backup/BackupRetentionPolicy.ts
-import { listBackups, deleteBackup, BackupMetadata } from '../../db/backup.ts';
-import { errorLogger } from '../../utils/error-logger.ts';
+import { listBackups, deleteBackup, BackupMetadata } from "../../db/backup.ts";
+import { errorLogger } from "../../utils/error-logger.ts";
 
 /**
  * Backup Retention Policy Service
@@ -16,23 +16,31 @@ export class BackupRetentionPolicy {
     try {
       // Validate keepCount
       if (keepCount < 1 || keepCount > 30) {
-        throw new Error(`Invalid keepCount: ${keepCount}. Must be between 1 and 30.`);
+        throw new Error(
+          `Invalid keepCount: ${keepCount}. Must be between 1 and 30.`,
+        );
       }
 
       // Get all backups sorted by creation date (most recent first)
       const allBackups = await this.getBackupsSortedByDate();
 
       if (allBackups.length === 0) {
-        errorLogger.logError('No backups found for retention policy', { type: 'info' });
+        errorLogger.logError("No backups found for retention policy", {
+          type: "info",
+        });
         return 0;
       }
 
       // Separate protected backups (pre_migration_*) from regular backups
-      const protectedBackups = allBackups.filter(b =>
-        b.filename.startsWith('pre_migration_') || b.filename.startsWith('pre_restore_backup')
+      const protectedBackups = allBackups.filter(
+        (b) =>
+          b.filename.startsWith("pre_migration_") ||
+          b.filename.startsWith("pre_restore_backup"),
       );
-      const regularBackups = allBackups.filter(b =>
-        !b.filename.startsWith('pre_migration_') && !b.filename.startsWith('pre_restore_backup')
+      const regularBackups = allBackups.filter(
+        (b) =>
+          !b.filename.startsWith("pre_migration_") &&
+          !b.filename.startsWith("pre_restore_backup"),
       );
 
       // Determine which regular backups to keep
@@ -42,8 +50,8 @@ export class BackupRetentionPolicy {
       // Safety check: Always keep at least 1 backup
       if (backupsToKeep.length === 0 && regularBackups.length > 0) {
         errorLogger.logError(
-          'Retention policy would delete all backups. Keeping at least 1 for safety.',
-          { type: 'warning' }
+          "Retention policy would delete all backups. Keeping at least 1 for safety.",
+          { type: "warning" },
         );
         return 0;
       }
@@ -53,14 +61,14 @@ export class BackupRetentionPolicy {
 
       errorLogger.logError(
         `Retention policy applied: kept ${backupsToKeep.length} backups, ` +
-        `deleted ${deletedCount} backups, ` +
-        `protected ${protectedBackups.length} migration/restore backups`,
-        { type: 'info' }
+          `deleted ${deletedCount} backups, ` +
+          `protected ${protectedBackups.length} migration/restore backups`,
+        { type: "info" },
       );
 
       return deletedCount;
     } catch (error) {
-      errorLogger.logError(error as Error, { context: 'retention-policy' });
+      errorLogger.logError(error as Error, { context: "retention-policy" });
       throw error;
     }
   }
@@ -78,7 +86,9 @@ export class BackupRetentionPolicy {
    * @param backupsToDelete Array of backups to delete
    * @returns Number of successfully deleted backups
    */
-  private async deleteOldBackups(backupsToDelete: BackupMetadata[]): Promise<number> {
+  private async deleteOldBackups(
+    backupsToDelete: BackupMetadata[],
+  ): Promise<number> {
     let deletedCount = 0;
 
     for (const backup of backupsToDelete) {
@@ -88,8 +98,10 @@ export class BackupRetentionPolicy {
       } catch (error) {
         // Log error but continue with other deletions
         errorLogger.logError(
-          new Error(`Failed to delete backup ${backup.filename}: ${(error as Error).message}`),
-          { context: 'retention-policy-delete' }
+          new Error(
+            `Failed to delete backup ${backup.filename}: ${(error as Error).message}`,
+          ),
+          { context: "retention-policy-delete" },
         );
       }
     }
@@ -110,11 +122,15 @@ export class BackupRetentionPolicy {
   }> {
     const allBackups = await this.getBackupsSortedByDate();
 
-    const protectedBackups = allBackups.filter(b =>
-      b.filename.startsWith('pre_migration_') || b.filename.startsWith('pre_restore_backup')
+    const protectedBackups = allBackups.filter(
+      (b) =>
+        b.filename.startsWith("pre_migration_") ||
+        b.filename.startsWith("pre_restore_backup"),
     );
-    const regularBackups = allBackups.filter(b =>
-      !b.filename.startsWith('pre_migration_') && !b.filename.startsWith('pre_restore_backup')
+    const regularBackups = allBackups.filter(
+      (b) =>
+        !b.filename.startsWith("pre_migration_") &&
+        !b.filename.startsWith("pre_restore_backup"),
     );
 
     const toKeep = Math.min(keepCount, regularBackups.length);

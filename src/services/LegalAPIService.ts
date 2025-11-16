@@ -1,11 +1,11 @@
-import { injectable } from 'inversify';
-import { errorLogger } from '../utils/error-logger.ts';
-import { XMLParser } from 'fast-xml-parser';
+import { injectable } from "inversify";
+import { errorLogger } from "../utils/error-logger.ts";
+import { XMLParser } from "fast-xml-parser";
 import type {
   LegislationResult,
   CaseResult,
   KnowledgeEntry,
-} from '../types/ai.ts';
+} from "../types/ai.ts";
 
 // ============================================================================
 // ADDITIONAL TYPE DEFINITIONS
@@ -45,8 +45,8 @@ export interface ExtractedKeywords {
 // ============================================================================
 
 const API_CONFIG = {
-  LEGISLATION_BASE_URL: 'https://www.legislation.gov.uk',
-  CASELAW_BASE_URL: 'https://caselaw.nationalarchives.gov.uk',
+  LEGISLATION_BASE_URL: "https://www.legislation.gov.uk",
+  CASELAW_BASE_URL: "https://caselaw.nationalarchives.gov.uk",
   TIMEOUT_MS: 10000,
   MAX_RETRIES: 3,
   RETRY_DELAY_MS: 1000,
@@ -60,88 +60,88 @@ const API_CONFIG = {
  */
 const LEGAL_TERMS_DICTIONARY = {
   employment: [
-    'fired',
-    'dismissed',
-    'redundancy',
-    'employment',
-    'unfair dismissal',
-    'constructive dismissal',
-    'contract',
-    'wages',
-    'salary',
-    'notice period',
-    'disciplinary',
-    'grievance',
-    'maternity',
-    'paternity',
-    'pregnant',
-    'pregnancy',
+    "fired",
+    "dismissed",
+    "redundancy",
+    "employment",
+    "unfair dismissal",
+    "constructive dismissal",
+    "contract",
+    "wages",
+    "salary",
+    "notice period",
+    "disciplinary",
+    "grievance",
+    "maternity",
+    "paternity",
+    "pregnant",
+    "pregnancy",
   ],
   discrimination: [
-    'discrimination',
-    'protected characteristic',
-    'harassment',
-    'victimisation',
-    'equality',
-    'race',
-    'gender',
-    'disability',
-    'age',
-    'religion',
-    'sexual orientation',
+    "discrimination",
+    "protected characteristic",
+    "harassment",
+    "victimisation",
+    "equality",
+    "race",
+    "gender",
+    "disability",
+    "age",
+    "religion",
+    "sexual orientation",
   ],
   housing: [
-    'eviction',
-    'tenant',
-    'landlord',
-    'rent',
-    'housing',
-    'tenancy',
-    'deposit',
-    'repairs',
-    'notice',
-    'possession',
-    'section 21',
-    'section 8',
+    "eviction",
+    "tenant",
+    "landlord",
+    "rent",
+    "housing",
+    "tenancy",
+    "deposit",
+    "repairs",
+    "notice",
+    "possession",
+    "section 21",
+    "section 8",
   ],
   family: [
-    'custody',
-    'divorce',
-    'child',
-    'maintenance',
-    'contact',
-    'residence',
-    'separation',
-    'matrimonial',
-    'parental responsibility',
+    "custody",
+    "divorce",
+    "child",
+    "maintenance",
+    "contact",
+    "residence",
+    "separation",
+    "matrimonial",
+    "parental responsibility",
   ],
   consumer: [
-    'refund',
-    'warranty',
-    'guarantee',
-    'faulty',
-    'consumer rights',
-    'sale of goods',
-    'services',
-    'complaint',
-    'product',
+    "refund",
+    "warranty",
+    "guarantee",
+    "faulty",
+    "consumer rights",
+    "sale of goods",
+    "services",
+    "complaint",
+    "product",
   ],
   criminal: [
-    'arrest',
-    'charge',
-    'bail',
-    'police',
-    'prosecution',
-    'defence',
-    'sentence',
-    'conviction',
-    'caution',
+    "arrest",
+    "charge",
+    "bail",
+    "police",
+    "prosecution",
+    "defence",
+    "sentence",
+    "conviction",
+    "caution",
   ],
 } as const;
 
 type AtomLink = {
-  '@_rel'?: string;
-  '@_href'?: string;
+  "@_rel"?: string;
+  "@_href"?: string;
 };
 
 type AtomEntry = {
@@ -159,36 +159,36 @@ type AtomEntry = {
  */
 const CATEGORY_TO_COURT_MAP: Record<string, string[]> = {
   employment: [
-    'eat', // Employment Appeal Tribunal
-    'ukeat', // UK Employment Appeal Tribunal (alternative code)
+    "eat", // Employment Appeal Tribunal
+    "ukeat", // UK Employment Appeal Tribunal (alternative code)
   ],
   discrimination: [
-    'eat', // Employment Appeal Tribunal (handles many discrimination cases)
-    'uksc', // Supreme Court (landmark discrimination cases)
-    'ewca', // Court of Appeal
+    "eat", // Employment Appeal Tribunal (handles many discrimination cases)
+    "uksc", // Supreme Court (landmark discrimination cases)
+    "ewca", // Court of Appeal
   ],
   housing: [
-    'ukut', // Upper Tribunal (housing cases)
-    'ewca', // Court of Appeal
+    "ukut", // Upper Tribunal (housing cases)
+    "ewca", // Court of Appeal
   ],
   family: [
-    'ewfc', // Family Court
-    'ewca', // Court of Appeal (Family Division)
-    'uksc', // Supreme Court (landmark family law)
+    "ewfc", // Family Court
+    "ewca", // Court of Appeal (Family Division)
+    "uksc", // Supreme Court (landmark family law)
   ],
   consumer: [
-    'ewca', // Court of Appeal
-    'ewhc', // High Court
+    "ewca", // Court of Appeal
+    "ewhc", // High Court
   ],
   criminal: [
-    'uksc', // Supreme Court
-    'ewca', // Court of Appeal (Criminal Division)
-    'ewhc', // High Court
+    "uksc", // Supreme Court
+    "ewca", // Court of Appeal (Criminal Division)
+    "ewhc", // High Court
   ],
   civil: [
-    'ewca', // Court of Appeal (Civil Division)
-    'ewhc', // High Court
-    'uksc', // Supreme Court
+    "ewca", // Court of Appeal (Civil Division)
+    "ewhc", // High Court
+    "uksc", // Supreme Court
   ],
 };
 
@@ -196,46 +196,46 @@ const CATEGORY_TO_COURT_MAP: Record<string, string[]> = {
  * Common English stop words to filter out
  */
 const STOP_WORDS = new Set([
-  'a',
-  'an',
-  'and',
-  'are',
-  'as',
-  'at',
-  'be',
-  'by',
-  'can',
-  'for',
-  'from',
-  'has',
-  'he',
-  'she',
-  'in',
-  'is',
-  'it',
-  'its',
-  'of',
-  'on',
-  'that',
-  'the',
-  'to',
-  'was',
-  'will',
-  'with',
-  'i',
-  'my',
-  'me',
-  'am',
-  'being',
-  'been',
-  'do',
-  'does',
-  'did',
-  'would',
-  'could',
-  'should',
-  'may',
-  'might',
+  "a",
+  "an",
+  "and",
+  "are",
+  "as",
+  "at",
+  "be",
+  "by",
+  "can",
+  "for",
+  "from",
+  "has",
+  "he",
+  "she",
+  "in",
+  "is",
+  "it",
+  "its",
+  "of",
+  "on",
+  "that",
+  "the",
+  "to",
+  "was",
+  "will",
+  "with",
+  "i",
+  "my",
+  "me",
+  "am",
+  "being",
+  "been",
+  "do",
+  "does",
+  "did",
+  "would",
+  "could",
+  "should",
+  "may",
+  "might",
 ]);
 
 // ============================================================================
@@ -248,13 +248,13 @@ const STOP_WORDS = new Set([
 function isNetworkError(error: unknown): boolean {
   if (error instanceof Error) {
     return (
-      error.message.includes('fetch') ||
-      error.message.includes('network') ||
-      error.message.includes('ENOTFOUND') ||
-      error.message.includes('ECONNREFUSED') ||
-      error.message.includes('ETIMEDOUT') ||
-      error.name === 'AbortError' ||
-      error.name === 'TypeError'
+      error.message.includes("fetch") ||
+      error.message.includes("network") ||
+      error.message.includes("ENOTFOUND") ||
+      error.message.includes("ECONNREFUSED") ||
+      error.message.includes("ETIMEDOUT") ||
+      error.name === "AbortError" ||
+      error.name === "TypeError"
     );
   }
   return false;
@@ -322,21 +322,21 @@ export class LegalAPIService {
       // Classify question to determine relevant courts
       const category = this.classifyQuestion(question);
 
-      errorLogger.logError('Legal API search initiated', {
+      errorLogger.logError("Legal API search initiated", {
         question,
         keywords: keywords.all,
         category,
       });
 
       // Check cache first
-      const cacheKey = this.generateCacheKey('search', [
+      const cacheKey = this.generateCacheKey("search", [
         ...keywords.all,
         category,
       ]);
       const cached = this.getCached<LegalSearchResults>(cacheKey);
 
       if (cached) {
-        errorLogger.logError('Returning cached results', { cacheKey });
+        errorLogger.logError("Returning cached results", { cacheKey });
         return { ...cached, cached: true };
       }
 
@@ -363,7 +363,7 @@ export class LegalAPIService {
 
       this.setCache(cacheKey, results, ttl);
 
-      errorLogger.logError('Legal API search completed', {
+      errorLogger.logError("Legal API search completed", {
         legislationCount: legislation.length,
         casesCount: cases.length,
         knowledgeBaseCount: knowledgeBase.length,
@@ -373,7 +373,7 @@ export class LegalAPIService {
       return results;
     } catch (error) {
       errorLogger.logError(error as Error, {
-        context: 'searchLegalInfo',
+        context: "searchLegalInfo",
         question,
       });
 
@@ -394,7 +394,7 @@ export class LegalAPIService {
   clearCache(): void {
     this.cache.clear();
     this.saveCacheToStorage();
-    errorLogger.logError('Legal API cache cleared', {});
+    errorLogger.logError("Legal API cache cleared", {});
   }
 
   /**
@@ -414,7 +414,7 @@ export class LegalAPIService {
     }
 
     // No legal terms found - this is a general conversation
-    return 'general';
+    return "general";
   }
 
   // ==========================================================================
@@ -428,7 +428,7 @@ export class LegalAPIService {
   async extractKeywords(question: string): Promise<ExtractedKeywords> {
     const words = question
       .toLowerCase()
-      .replace(/[^a-z0-9\s]/g, '') // Remove punctuation
+      .replace(/[^a-z0-9\s]/g, "") // Remove punctuation
       .split(/\s+/)
       .filter((word) => word.length > 2 && !STOP_WORDS.has(word));
 
@@ -454,9 +454,11 @@ export class LegalAPIService {
     const generalKeywords = words.filter((word) => !legalTerms.includes(word));
 
     // Combine for search (deduplicated)
-    const allKeywords = Array.from(new Set([...legalTerms, ...generalKeywords]));
+    const allKeywords = Array.from(
+      new Set([...legalTerms, ...generalKeywords]),
+    );
 
-    errorLogger.logError('Keywords extracted', {
+    errorLogger.logError("Keywords extracted", {
       all: allKeywords,
       legal: legalTerms,
       general: generalKeywords,
@@ -483,7 +485,7 @@ export class LegalAPIService {
       return await this.searchLegislationInternal(keywords);
     } catch (error) {
       errorLogger.logError(error as Error, {
-        context: 'searchLegislation',
+        context: "searchLegislation",
         query,
       });
       return [];
@@ -494,14 +496,16 @@ export class LegalAPIService {
    * Search legislation.gov.uk API (internal implementation)
    * Queries UK statutes, regulations, and statutory instruments
    */
-  private async searchLegislationInternal(keywords: string[]): Promise<LegislationResult[]> {
+  private async searchLegislationInternal(
+    keywords: string[],
+  ): Promise<LegislationResult[]> {
     try {
-      const query = keywords.join(' ');
+      const query = keywords.join(" ");
       // Use Atom feed endpoint for UK Public General Acts
       const url = `${API_CONFIG.LEGISLATION_BASE_URL}/ukpga/data.feed?title=${encodeURIComponent(query)}`;
 
-      errorLogger.logError('Searching legislation.gov.uk', {
-        type: 'info',
+      errorLogger.logError("Searching legislation.gov.uk", {
+        type: "info",
         url,
         keywords,
       });
@@ -518,7 +522,7 @@ export class LegalAPIService {
       return this.parseAtomFeedToLegislation(xmlText, query);
     } catch (error) {
       errorLogger.logError(error as Error, {
-        context: 'searchLegislationInternal',
+        context: "searchLegislationInternal",
         keywords,
         isOffline: isNetworkError(error),
       });
@@ -529,14 +533,17 @@ export class LegalAPIService {
   /**
    * Search case law by query (interface compliance)
    */
-  async searchCaseLaw(query: string | string[], category?: string): Promise<unknown> {
+  async searchCaseLaw(
+    query: string | string[],
+    category?: string,
+  ): Promise<unknown> {
     try {
       // Handle both string and array inputs
       const keywords = Array.isArray(query) ? query : [query];
       return await this.searchCaseLawInternal(keywords, category);
     } catch (error) {
       errorLogger.logError(error as Error, {
-        context: 'searchCaseLaw',
+        context: "searchCaseLaw",
         query,
         category,
       });
@@ -550,15 +557,15 @@ export class LegalAPIService {
    */
   private async searchCaseLawInternal(
     keywords: string[],
-    category: string = 'general',
+    category: string = "general",
   ): Promise<CaseResult[]> {
     try {
       // Build improved query with quoted phrases for multi-word terms
       const queryTerms = keywords.map((term) => {
         // Quote multi-word terms for exact phrase matching
-        return term.includes(' ') ? `"${term}"` : term;
+        return term.includes(" ") ? `"${term}"` : term;
       });
-      const query = queryTerms.join(' ');
+      const query = queryTerms.join(" ");
 
       // Build URL with court filtering if category matches
       let url = `${API_CONFIG.CASELAW_BASE_URL}/atom.xml?query=${encodeURIComponent(query)}`;
@@ -569,12 +576,12 @@ export class LegalAPIService {
         // API supports multiple court parameters
         const courtParams = relevantCourts
           .map((court) => `court=${court}`)
-          .join('&');
+          .join("&");
         url += `&${courtParams}`;
       }
 
-      errorLogger.logError('Searching Find Case Law', {
-        type: 'info',
+      errorLogger.logError("Searching Find Case Law", {
+        type: "info",
         url,
         keywords,
         category,
@@ -593,7 +600,7 @@ export class LegalAPIService {
       return this.parseAtomFeedToCaseLaw(xmlText, query);
     } catch (error) {
       errorLogger.logError(error as Error, {
-        context: 'searchCaseLawInternal',
+        context: "searchCaseLawInternal",
         keywords,
         category,
         isOffline: isNetworkError(error),
@@ -609,8 +616,8 @@ export class LegalAPIService {
     try {
       const url = `${API_CONFIG.LEGISLATION_BASE_URL}/${id}/data.xml`;
 
-      errorLogger.logError('Fetching legislation by ID', {
-        type: 'info',
+      errorLogger.logError("Fetching legislation by ID", {
+        type: "info",
         id,
         url,
       });
@@ -625,7 +632,7 @@ export class LegalAPIService {
       return xmlText;
     } catch (error) {
       errorLogger.logError(error as Error, {
-        context: 'getLegislation',
+        context: "getLegislation",
         id,
         isOffline: isNetworkError(error),
       });
@@ -640,8 +647,8 @@ export class LegalAPIService {
     try {
       const url = `${API_CONFIG.CASELAW_BASE_URL}/${id}`;
 
-      errorLogger.logError('Fetching case law by ID', {
-        type: 'info',
+      errorLogger.logError("Fetching case law by ID", {
+        type: "info",
         id,
         url,
       });
@@ -656,7 +663,7 @@ export class LegalAPIService {
       return data;
     } catch (error) {
       errorLogger.logError(error as Error, {
-        context: 'getCaseLaw',
+        context: "getCaseLaw",
         id,
         isOffline: isNetworkError(error),
       });
@@ -670,7 +677,7 @@ export class LegalAPIService {
    */
   async searchKnowledgeBase(keywords: string[]): Promise<KnowledgeEntry[]> {
     try {
-      errorLogger.logError('Searching knowledge base', {
+      errorLogger.logError("Searching knowledge base", {
         keywords,
       });
 
@@ -679,7 +686,7 @@ export class LegalAPIService {
       return [];
     } catch (error) {
       errorLogger.logError(error as Error, {
-        context: 'searchKnowledgeBase',
+        context: "searchKnowledgeBase",
         keywords,
       });
       return [];
@@ -709,7 +716,7 @@ export class LegalAPIService {
         ...options,
         signal: controller.signal,
         headers: {
-          'User-Agent': 'Justice Companion/1.0',
+          "User-Agent": "Justice Companion/1.0",
           ...options.headers,
         },
       });
@@ -742,24 +749,29 @@ export class LegalAPIService {
    * Parse Atom XML feed to legislation results
    * Atom format: <feed><entry><title>, <link>, <summary>, etc.
    */
-  private parseAtomFeedToLegislation(xmlText: string, _query: string): LegislationResult[] {
+  private parseAtomFeedToLegislation(
+    xmlText: string,
+    _query: string,
+  ): LegislationResult[] {
     try {
       const parser = new XMLParser({
         ignoreAttributes: false,
-        attributeNamePrefix: '@_',
+        attributeNamePrefix: "@_",
       });
 
       const xmlDoc = parser.parse(xmlText) as unknown;
 
-      const entries = this.normalizeAtomEntries(this.extractFeedEntries(xmlDoc));
+      const entries = this.normalizeAtomEntries(
+        this.extractFeedEntries(xmlDoc),
+      );
       const results: LegislationResult[] = [];
 
       entries.slice(0, 5).forEach((entry, index) => {
-        const title = this.getTextContent(entry.title) || 'Unknown';
+        const title = this.getTextContent(entry.title) || "Unknown";
         const summary =
           this.getTextContent(entry.summary) ||
           this.getTextContent(entry.content) ||
-          'No summary available';
+          "No summary available";
 
         const link = this.extractLinkHref(entry.link);
 
@@ -779,7 +791,7 @@ export class LegalAPIService {
       return results;
     } catch (error) {
       errorLogger.logError(error as Error, {
-        context: 'parseAtomFeedToLegislation',
+        context: "parseAtomFeedToLegislation",
       });
       return [];
     }
@@ -789,24 +801,29 @@ export class LegalAPIService {
    * Parse Atom XML feed to case law results
    * Atom format: <feed><entry><title>, <link>, <summary>, etc.
    */
-  private parseAtomFeedToCaseLaw(xmlText: string, _query: string): CaseResult[] {
+  private parseAtomFeedToCaseLaw(
+    xmlText: string,
+    _query: string,
+  ): CaseResult[] {
     try {
       const parser = new XMLParser({
         ignoreAttributes: false,
-        attributeNamePrefix: '@_',
+        attributeNamePrefix: "@_",
       });
 
       const xmlDoc = parser.parse(xmlText) as unknown;
 
-      const entries = this.normalizeAtomEntries(this.extractFeedEntries(xmlDoc));
+      const entries = this.normalizeAtomEntries(
+        this.extractFeedEntries(xmlDoc),
+      );
       const results: CaseResult[] = [];
 
       entries.slice(0, 5).forEach((entry, index) => {
-        const title = this.getTextContent(entry.title) || 'Unknown Case';
+        const title = this.getTextContent(entry.title) || "Unknown Case";
         const summary =
           this.getTextContent(entry.summary) ||
           this.getTextContent(entry.content) ||
-          'No summary available';
+          "No summary available";
         const dateStr =
           this.getTextContent(entry.updated) ||
           this.getTextContent(entry.published) ||
@@ -816,12 +833,12 @@ export class LegalAPIService {
 
         // Extract court from title or use default
         const courtMatch = title.match(/\[(.*?)\]/);
-        const court = courtMatch ? courtMatch[1] : 'UK Court';
+        const court = courtMatch ? courtMatch[1] : "UK Court";
 
         results.push({
           citation: title.trim(),
           court,
-          date: dateStr.split('T')[0], // ISO date format
+          date: dateStr.split("T")[0], // ISO date format
           summary: summary.trim().substring(0, 500), // Limit summary length
           outcome: undefined, // Not typically in atom feed
           url: link,
@@ -832,7 +849,7 @@ export class LegalAPIService {
       return results;
     } catch (error) {
       errorLogger.logError(error as Error, {
-        context: 'parseAtomFeedToCaseLaw',
+        context: "parseAtomFeedToCaseLaw",
       });
       return [];
     }
@@ -843,25 +860,27 @@ export class LegalAPIService {
    * Handles both simple strings and objects with #text property
    */
   private getTextContent(value: unknown): string {
-    if (typeof value === 'string') {
+    if (typeof value === "string") {
       return value;
     }
     if (this.isTextNode(value)) {
-      const textValue = value['#text'];
-      if (typeof textValue === 'string') {
+      const textValue = value["#text"];
+      if (typeof textValue === "string") {
         return textValue;
       }
-      if (typeof textValue === 'number' || typeof textValue === 'boolean') {
+      if (typeof textValue === "number" || typeof textValue === "boolean") {
         return textValue.toString();
       }
     }
-    return '';
+    return "";
   }
 
   private normalizeAtomEntries(rawEntries: unknown): AtomEntry[] {
     if (Array.isArray(rawEntries)) {
       return rawEntries
-        .filter((entry): entry is Record<string, unknown> => this.isRecord(entry))
+        .filter((entry): entry is Record<string, unknown> =>
+          this.isRecord(entry),
+        )
         .map((entry) => this.toAtomEntry(entry));
     }
 
@@ -887,41 +906,47 @@ export class LegalAPIService {
     if (!this.isRecord(xmlDoc)) {
       return [];
     }
-    const feed = (xmlDoc).feed;
+    const feed = xmlDoc.feed;
     if (!this.isRecord(feed)) {
       return [];
     }
-    return (feed).entry ?? [];
+    return feed.entry ?? [];
   }
 
   private extractLinkHref(linkValue: unknown): string {
     if (Array.isArray(linkValue)) {
-      const typedLinks = linkValue.filter((item): item is AtomLink => this.isAtomLink(item));
+      const typedLinks = linkValue.filter((item): item is AtomLink =>
+        this.isAtomLink(item),
+      );
       if (typedLinks.length === 0) {
-        return '';
+        return "";
       }
-      const preferred = typedLinks.find((item) => item['@_rel'] === 'alternate');
+      const preferred = typedLinks.find(
+        (item) => item["@_rel"] === "alternate",
+      );
       const target = preferred ?? typedLinks[0];
-      return target['@_href'] ?? '';
+      return target["@_href"] ?? "";
     }
 
     if (this.isAtomLink(linkValue)) {
-      return linkValue['@_href'] ?? '';
+      return linkValue["@_href"] ?? "";
     }
 
-    return '';
+    return "";
   }
 
   private isAtomLink(value: unknown): value is AtomLink {
-    return this.isRecord(value) && ('@_href' in value || '@_rel' in value);
+    return this.isRecord(value) && ("@_href" in value || "@_rel" in value);
   }
 
-  private isTextNode(value: unknown): value is { '#text'?: unknown } & Record<string, unknown> {
-    return this.isRecord(value) && '#text' in value;
+  private isTextNode(
+    value: unknown,
+  ): value is { "#text"?: unknown } & Record<string, unknown> {
+    return this.isRecord(value) && "#text" in value;
   }
 
   private isRecord(value: unknown): value is Record<string, unknown> {
-    return typeof value === 'object' && value !== null;
+    return typeof value === "object" && value !== null;
   }
 
   // ==========================================================================
@@ -932,7 +957,7 @@ export class LegalAPIService {
    * Generate cache key from prefix and parameters
    */
   private generateCacheKey(prefix: string, params: string[]): string {
-    const sortedParams = params.sort().join(',');
+    const sortedParams = params.sort().join(",");
     return `${prefix}:${sortedParams}`;
   }
 
@@ -1000,20 +1025,20 @@ export class LegalAPIService {
    */
   private loadCacheFromStorage(): void {
     try {
-      if (typeof localStorage !== 'undefined') {
-        const stored = localStorage.getItem('legalAPICache');
+      if (typeof localStorage !== "undefined") {
+        const stored = localStorage.getItem("legalAPICache");
         if (stored) {
           const parsed = JSON.parse(stored);
           this.cache = new Map(Object.entries(parsed));
 
-          errorLogger.logError('Cache loaded from localStorage', {
+          errorLogger.logError("Cache loaded from localStorage", {
             entries: this.cache.size,
           });
         }
       }
     } catch (error) {
       errorLogger.logError(error as Error, {
-        context: 'loadCacheFromStorage',
+        context: "loadCacheFromStorage",
       });
     }
   }
@@ -1023,13 +1048,13 @@ export class LegalAPIService {
    */
   private saveCacheToStorage(): void {
     try {
-      if (typeof localStorage !== 'undefined') {
+      if (typeof localStorage !== "undefined") {
         const cacheObject = Object.fromEntries(this.cache);
-        localStorage.setItem('legalAPICache', JSON.stringify(cacheObject));
+        localStorage.setItem("legalAPICache", JSON.stringify(cacheObject));
       }
     } catch (error) {
       errorLogger.logError(error as Error, {
-        context: 'saveCacheToStorage',
+        context: "saveCacheToStorage",
       });
     }
   }

@@ -12,8 +12,8 @@ export interface Deadline {
   title: string;
   description?: string | null;
   deadlineDate: string; // ISO 8601 date (YYYY-MM-DD)
-  priority: 'low' | 'medium' | 'high' | 'critical';
-  status: 'upcoming' | 'overdue' | 'completed';
+  priority: "low" | "medium" | "high" | "critical";
+  status: "upcoming" | "overdue" | "completed";
   completedAt?: string | null;
   createdAt: string;
   updatedAt: string;
@@ -26,15 +26,15 @@ export interface CreateDeadlineInput {
   title: string;
   description?: string;
   deadlineDate: string; // ISO 8601 date (YYYY-MM-DD)
-  priority?: 'low' | 'medium' | 'high' | 'critical';
+  priority?: "low" | "medium" | "high" | "critical";
 }
 
 export interface UpdateDeadlineInput {
   title?: string;
   description?: string | null;
   deadlineDate?: string;
-  priority?: 'low' | 'medium' | 'high' | 'critical';
-  status?: 'upcoming' | 'overdue' | 'completed';
+  priority?: "low" | "medium" | "high" | "critical";
+  status?: "upcoming" | "overdue" | "completed";
 }
 
 /**
@@ -43,26 +43,26 @@ export interface UpdateDeadlineInput {
  */
 export interface DeadlineWithCase extends Deadline {
   caseTitle: string;
-  caseStatus: 'active' | 'pending' | 'closed';
+  caseStatus: "active" | "pending" | "closed";
 }
 
 /**
  * Priority levels for deadlines
  */
 export const DeadlinePriority = {
-  CRITICAL: 'critical' as const,
-  HIGH: 'high' as const,
-  MEDIUM: 'medium' as const,
-  LOW: 'low' as const,
+  CRITICAL: "critical" as const,
+  HIGH: "high" as const,
+  MEDIUM: "medium" as const,
+  LOW: "low" as const,
 };
 
 /**
  * Status values for deadlines
  */
 export const DeadlineStatus = {
-  UPCOMING: 'upcoming' as const,
-  OVERDUE: 'overdue' as const,
-  COMPLETED: 'completed' as const,
+  UPCOMING: "upcoming" as const,
+  OVERDUE: "overdue" as const,
+  COMPLETED: "completed" as const,
 };
 
 /**
@@ -95,26 +95,26 @@ export function isDeadlineUrgent(deadlineDate: string): boolean {
 export function formatDeadlineStatus(deadline: Deadline): string {
   const daysUntil = getDaysUntilDeadline(deadline.deadlineDate);
 
-  if (deadline.status === 'completed') {
-    return 'Completed';
+  if (deadline.status === "completed") {
+    return "Completed";
   }
 
-  if (deadline.status === 'overdue') {
+  if (deadline.status === "overdue") {
     const daysPast = Math.abs(daysUntil);
-    return `Overdue by ${daysPast} day${daysPast === 1 ? '' : 's'}`;
+    return `Overdue by ${daysPast} day${daysPast === 1 ? "" : "s"}`;
   }
 
   if (daysUntil === 0) {
-    return 'Due today';
+    return "Due today";
   }
 
   if (daysUntil === 1) {
-    return 'Due tomorrow';
+    return "Due tomorrow";
   }
 
   if (daysUntil < 0) {
     const daysPast = Math.abs(daysUntil);
-    return `${daysPast} day${daysPast === 1 ? '' : 's'} overdue`;
+    return `${daysPast} day${daysPast === 1 ? "" : "s"} overdue`;
   }
 
   return `${daysUntil} days away`;

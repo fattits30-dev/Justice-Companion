@@ -13,12 +13,12 @@
  * - Accessible navigation
  */
 
-import React from "react";
+import React, { type JSX } from "react";
 import { toast } from "sonner";
 import { useAuth } from "../contexts/AuthContext.tsx";
 import type { ProfileFormData } from "../types/profile.ts";
 import { profileService } from "../services/ProfileService.ts";
-import { logger } from '../utils/logger';
+import { logger } from "../utils/logger";
 
 /**
  * Custom hook for debounced values
@@ -56,11 +56,10 @@ class ProfileErrorBoundary extends React.Component<
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    logger.error(
-      "[ProfileErrorBoundary] Profile operation error:",
-      error,
-      errorInfo,
-    );
+    logger.error("Profile operation error:", {
+      error: error as Error,
+      metadata: { errorInfo },
+    });
     toast.error("Profile Error", {
       description:
         "An error occurred while managing your profile. Please try again.",
@@ -141,6 +140,14 @@ const SidebarComponent = React.memo(function Sidebar({
     email: user?.email || "",
     phone: "",
   });
+  const [recentConversations, setRecentConversations] = React.useState<
+    Array<{
+      id: number;
+      title: string;
+      updatedAt: string;
+      messageCount: number;
+    }>
+  >([]);
 
   // Debounced profile data for validation
   const debouncedProfileData = useDebounce(profileData, 300);
@@ -164,6 +171,40 @@ const SidebarComponent = React.memo(function Sidebar({
       }
     }
   }, [isProfileManagerOpen, user, profileData.email]);
+
+  // Load recent conversations when selected case changes
+  React.useEffect(() => {
+    const fetchRecentConversations = async () => {
+      if (!selectedCaseId) {
+        setRecentConversations([]);
+        return;
+      }
+
+      try {
+        const sessionId = localStorage.getItem("sessionId");
+        if (!sessionId) {
+          return;
+        }
+
+        const result = await window.justiceAPI.getRecentConversations(
+          sessionId,
+          parseInt(selectedCaseId, 10),
+          5,
+        );
+
+        if (result.success && result.data) {
+          setRecentConversations(result.data);
+        }
+      } catch (error) {
+        logger.error("Failed to fetch recent conversations:", {
+          error: error as Error,
+          metadata: { selectedCaseId },
+        });
+      }
+    };
+
+    fetchRecentConversations();
+  }, [selectedCaseId]);
 
   // Memoized event handlers
   const handleLinkClick = React.useCallback(
@@ -371,7 +412,6 @@ const SidebarComponent = React.memo(function Sidebar({
           </button>
         )}
       </div>
-
       {/* Case Selector */}
       {!isCollapsed && onCaseSelect && (
         <div className="px-4 py-3 border-b border-white/10">
@@ -385,7 +425,7 @@ const SidebarComponent = React.memo(function Sidebar({
             id="case-selector"
             value={selectedCaseId || ""}
             onChange={(e) => onCaseSelect(e.target.value || null)}
-            className="w-full bg-white/5 border border-white/10 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            className="w-full bg-white/5 border border-white/10 rounded-md px-3 py-2 text-sm text-white focus:outline-hidden focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
           >
             <option value="">No case selected</option>
             {cases.map((c) => (
@@ -396,7 +436,47 @@ const SidebarComponent = React.memo(function Sidebar({
           </select>
         </div>
       )}
-
+      {/* Recent Chat History */}
+      {!isCollapsed && selectedCaseId && recentConversations.length > 0 && (
+        <div className="px-4 py-3 border-b border-white/10">
+          <h3 className="text-xs font-medium text-white/70 mb-2">
+            Recent Conversations
+          </h3>
+          <div className="space-y-1">
+            {recentConversations.map((conversation) => (
+              <button
+                key={conversation.id}
+                onClick={() => onNavigate?.("/chat")}
+                className="w-full text-left px-3 py-2 rounded-md text-sm text-white/80 hover:bg-white/10 hover:text-white transition-colors"
+                title={`${conversation.title} - ${conversation.messageCount} messages`}
+              >
+                <div className="flex items-center gap-2">
+                  <svg
+                    className="w-4 h-4 shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
+                    />
+                  </svg>
+                  <span className="flex-1 truncate">{conversation.title}</span>
+                  <span className="text-xs text-white/50">
+                    {conversation.messageCount}
+                  </span>
+                </div>
+                <div className="text-xs text-white/50 mt-1">
+                  {new Date(conversation.updatedAt).toLocaleDateString()}
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       {/* Navigation Links */}
       <div className="flex-1 overflow-y-auto py-4">
         <ul className="space-y-1 px-2">
@@ -428,31 +508,30 @@ const SidebarComponent = React.memo(function Sidebar({
           })}
         </ul>
       </div>
-
       {/* Profile Button */}
       {user && (
         <div className="border-t border-white/10 p-4">
           {isCollapsed ? (
             /* Collapsed: Circle Badge with Initials */
-            <button
-              className="relative flex items-center justify-center w-10 h-10 mx-auto bg-gradient-to-br from-secondary-500 to-secondary-600 rounded-full text-white font-semibold text-sm hover:from-secondary-400 hover:to-secondary-500 transition-all duration-200 shadow-lg hover:shadow-secondary"
+            (<button
+              className="relative flex items-center justify-center w-10 h-10 mx-auto bg-linear-to-br from-secondary-500 to-secondary-600 rounded-full text-white font-semibold text-sm hover:from-secondary-400 hover:to-secondary-500 transition-all duration-200 shadow-lg hover:shadow-secondary"
               onClick={() => onNavigate?.("/settings")}
               aria-label={`${user.username} - View profile settings`}
               title={`${user.username}\n${user.email}\nClick for settings`}
             >
               {user.username.substring(0, 2).toUpperCase()}
               <span className="absolute top-0 right-0 w-3 h-3 bg-green-400 border-2 border-gray-900 rounded-full"></span>
-            </button>
+            </button>)
           ) : (
             /* Expanded: Full Profile Card */
-            <div className="space-y-3">
+            (<div className="space-y-3">
               <button
                 onClick={() => setIsProfileManagerOpen(true)}
                 className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-colors w-full text-left"
                 aria-label="Open profile manager"
               >
-                <div className="relative flex-shrink-0">
-                  <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-secondary-500 to-secondary-600 rounded-full text-white font-semibold text-sm shadow-lg">
+                <div className="relative shrink-0">
+                  <div className="flex items-center justify-center w-10 h-10 bg-linear-to-br from-secondary-500 to-secondary-600 rounded-full text-white font-semibold text-sm shadow-lg">
                     {user.username.substring(0, 2).toUpperCase()}
                   </div>
                   <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-gray-900 rounded-full"></span>
@@ -497,18 +576,17 @@ const SidebarComponent = React.memo(function Sidebar({
                 </svg>
                 <span>Logout</span>
               </button>
-            </div>
+            </div>)
           )}
         </div>
       )}
-
       {/* Profile Manager Dialog */}
       {isProfileManagerOpen && (
         <ProfileErrorBoundary>
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
             <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl max-w-md w-full mx-4">
               {/* Header */}
-              <div className="p-6 border-b border-gray-700 flex-shrink-0">
+              <div className="p-6 border-b border-gray-700 shrink-0">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-primary-500/20 border border-primary-500/40 flex items-center justify-center">
                     <svg
@@ -558,7 +636,7 @@ const SidebarComponent = React.memo(function Sidebar({
                                 firstName: e.target.value,
                               }))
                             }
-                            className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                            className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-hidden focus:ring-2 focus:ring-primary-500"
                             placeholder="Enter first name"
                           />
                         </div>
@@ -575,7 +653,7 @@ const SidebarComponent = React.memo(function Sidebar({
                                 lastName: e.target.value,
                               }))
                             }
-                            className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                            className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-hidden focus:ring-2 focus:ring-primary-500"
                             placeholder="Enter last name"
                           />
                         </div>
@@ -593,7 +671,7 @@ const SidebarComponent = React.memo(function Sidebar({
                               email: e.target.value,
                             }))
                           }
-                          className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                          className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-hidden focus:ring-2 focus:ring-primary-500"
                           placeholder="Enter your email"
                         />
                       </div>
@@ -610,7 +688,7 @@ const SidebarComponent = React.memo(function Sidebar({
                               phone: e.target.value,
                             }))
                           }
-                          className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                          className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-hidden focus:ring-2 focus:ring-primary-500"
                           placeholder="Enter your phone number"
                         />
                       </div>

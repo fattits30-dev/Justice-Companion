@@ -5,18 +5,19 @@
  * with proper decryption of sensitive fields.
  */
 
-import type Database from 'better-sqlite3';
-import { EncryptionService } from '../EncryptionService.ts';
-import type { UserDataExport, TableExport, GdprExportOptions } from '../../models/Gdpr.ts';
+import type Database from "better-sqlite3";
+import { EncryptionService } from "../EncryptionService.ts";
+import type {
+  UserDataExport,
+  TableExport,
+  GdprExportOptions,
+} from "../../models/Gdpr.ts";
 
 export class DataExporter {
   private db: Database.Database;
   private encryptionService: EncryptionService;
 
-  constructor(
-    db: Database.Database,
-    encryptionService: EncryptionService
-  ) {
+  constructor(db: Database.Database, encryptionService: EncryptionService) {
     this.db = db;
     this.encryptionService = encryptionService;
   }
@@ -26,7 +27,7 @@ export class DataExporter {
    */
   exportAllUserData(
     userId: number,
-    options: GdprExportOptions = {}
+    options: GdprExportOptions = {},
   ): UserDataExport {
     const exportDate = new Date().toISOString();
 
@@ -35,7 +36,7 @@ export class DataExporter {
         exportDate,
         userId,
         schemaVersion: this.getSchemaVersion(),
-        format: options.format || 'json',
+        format: options.format || "json",
         totalRecords: 0,
       },
       userData: {
@@ -76,7 +77,7 @@ export class DataExporter {
     const user = stmt.get(userId) as any;
 
     return {
-      tableName: 'users',
+      tableName: "users",
       records: user ? [user] : [],
       count: user ? 1 : 0,
     };
@@ -114,7 +115,7 @@ export class DataExporter {
     });
 
     return {
-      tableName: 'cases',
+      tableName: "cases",
       records: decryptedCases,
       count: decryptedCases.length,
     };
@@ -152,7 +153,7 @@ export class DataExporter {
     });
 
     return {
-      tableName: 'evidence',
+      tableName: "evidence",
       records: decryptedEvidence,
       count: decryptedEvidence.length,
     };
@@ -173,7 +174,7 @@ export class DataExporter {
     const issues = stmt.all(userId) as any[];
 
     return {
-      tableName: 'legal_issues',
+      tableName: "legal_issues",
       records: issues,
       count: issues.length,
     };
@@ -211,7 +212,7 @@ export class DataExporter {
     });
 
     return {
-      tableName: 'timeline_events',
+      tableName: "timeline_events",
       records: decryptedEvents,
       count: decryptedEvents.length,
     };
@@ -249,7 +250,7 @@ export class DataExporter {
     });
 
     return {
-      tableName: 'actions',
+      tableName: "actions",
       records: decryptedActions,
       count: decryptedActions.length,
     };
@@ -287,7 +288,7 @@ export class DataExporter {
     });
 
     return {
-      tableName: 'notes',
+      tableName: "notes",
       records: decryptedNotes,
       count: decryptedNotes.length,
     };
@@ -306,7 +307,7 @@ export class DataExporter {
     const conversations = stmt.all(userId) as any[];
 
     return {
-      tableName: 'chat_conversations',
+      tableName: "chat_conversations",
       records: conversations,
       count: conversations.length,
     };
@@ -357,7 +358,7 @@ export class DataExporter {
     });
 
     return {
-      tableName: 'chat_messages',
+      tableName: "chat_messages",
       records: decryptedMessages,
       count: decryptedMessages.length,
     };
@@ -376,7 +377,7 @@ export class DataExporter {
     const facts = stmt.all(userId) as any[];
 
     return {
-      tableName: 'user_facts',
+      tableName: "user_facts",
       records: facts,
       count: facts.length,
     };
@@ -397,7 +398,7 @@ export class DataExporter {
     const facts = stmt.all(userId) as any[];
 
     return {
-      tableName: 'case_facts',
+      tableName: "case_facts",
       records: facts,
       count: facts.length,
     };
@@ -417,7 +418,7 @@ export class DataExporter {
     const sessions = stmt.all(userId) as any[];
 
     return {
-      tableName: 'sessions',
+      tableName: "sessions",
       records: sessions,
       count: sessions.length,
     };
@@ -436,7 +437,7 @@ export class DataExporter {
     const consents = stmt.all(userId) as any[];
 
     return {
-      tableName: 'consents',
+      tableName: "consents",
       records: consents,
       count: consents.length,
     };
@@ -451,19 +452,19 @@ export class DataExporter {
         SELECT MAX(version) as version FROM migrations
       `);
       const result = stmt.get() as any;
-      return result?.version?.toString() || '0';
+      return result?.version?.toString() || "0";
     } catch (err) {
-      return '0';
+      return "0";
     }
   }
 
   /**
    * Count total records across all tables
    */
-  private countTotalRecords(userData: UserDataExport['userData']): number {
+  private countTotalRecords(userData: UserDataExport["userData"]): number {
     return Object.values(userData).reduce(
       (sum, table) => sum + (table?.count || 0),
-      0
+      0,
     );
   }
 }

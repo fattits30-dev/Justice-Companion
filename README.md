@@ -55,8 +55,10 @@ Justice Companion is a privacy-first, desktop application for managing legal cas
 - **Node.js** 20.18.0 LTS (Required - [Download](https://nodejs.org/))
   - ⚠️ **Important**: Use Node 20.x for best compatibility
   - Recommended: Use [fnm](https://github.com/Schniz/fnm) to manage Node versions: `fnm use 20`
-- **pnpm** 10.18.2+ (`npm install -g pnpm`)
-  - ⚠️ **Must use pnpm** - NOT npm or yarn (native module compatibility)
+- **Python** 3.11+ (Required for backend - [Download](https://www.python.org/downloads/))
+  - ⚠️ **Important**: Backend API server requires Python 3.11 or higher
+- **npm** 10.0.0+ (Comes with Node.js)
+  - ⚠️ **Note**: Project uses npm (migrated from pnpm)
 - **Git** (optional, for cloning)
 - **Windows 11** (native, not WSL) - Primary development platform
 
@@ -69,13 +71,21 @@ Justice Companion is a privacy-first, desktop application for managing legal cas
    cd Justice-Companion
    ```
 
-2. **Install dependencies**
+2. **Install Node.js dependencies**
 
    ```bash
-   pnpm install
+   npm install
    ```
 
-3. **Set up encryption key**
+3. **Install Python backend dependencies**
+
+   ```bash
+   cd backend
+   pip install -r requirements.txt
+   cd ..
+   ```
+
+4. **Set up encryption key**
 
    Create a `.env` file in the root directory:
 
@@ -94,21 +104,21 @@ Justice Companion is a privacy-first, desktop application for managing legal cas
    ENCRYPTION_KEY_BASE64=your-generated-key-here
    ```
 
-4. **Run database migrations**
+5. **Run database migrations**
 
    ```bash
-   pnpm db:migrate
+   npm run db:migrate
    ```
 
-5. **Start the application**
+6. **Start the application**
 
    ```bash
-   pnpm start
+   npm start
    # or
-   pnpm dev
+   npm run dev
    ```
 
-   This launches both the React frontend and Electron desktop app.
+   This launches the Python backend, React frontend, and Electron desktop app.
 
 ## 📖 Usage
 
@@ -138,94 +148,115 @@ Justice Companion is a privacy-first, desktop application for managing legal cas
 - **Chat with AI**: Sidebar → Chat (select a case for context)
 - **Export data**: Settings → GDPR → Export All Data
 - **Change password**: Settings → User Profile → Change Password
-- **Backup database**: `pnpm db:backup`
+- **Backup database**: `npm run db:backup`
 
 ## 🛠️ Development
 
 ### Tech Stack
 
 - **Frontend**: React 18.3, TypeScript 5.9.3, Vite 5.4, TailwindCSS 3.4
-- **Backend**: Electron 33+, Node.js 20.18.0 LTS
-- **Package Manager**: pnpm 9.x/10.x ⚠️ **MUST use pnpm, NOT npm/yarn**
-- **Database**: Drizzle ORM + Better-SQLite3 (15 tables, 11 encrypted fields)
+- **Backend**:
+  - **Desktop**: Electron 33+, Node.js 20.18.0 LTS
+  - **API Server**: FastAPI (Python 3.11+), Uvicorn ASGI server
+  - **Communication**: HTTP REST API + IPC bridge
+- **Package Manager**: npm 10.0.0+ (Node.js), pip (Python)
+- **Database**: SQLite with Drizzle ORM + Better-SQLite3 (15 tables, 11 encrypted fields)
 - **State**: Zustand 5.0.8, React Query 5.90.2
-- **Validation**: Zod (runtime validation)
-- **UI**: Framer Motion, Lucide React
-- **Testing**: Vitest, Playwright
-- **Build System**: Electron Builder
+- **Validation**: Zod (TypeScript), Pydantic (Python)
+- **UI**: Framer Motion, Lucide React, Radix UI
+- **Testing**: Vitest (unit), Playwright (E2E), pytest (Python backend)
+- **Build System**: Electron Builder, Vite
 - **CI/CD**: GitHub Actions
 
 ### Available Scripts
 
 ```bash
 # Development
-pnpm start                # Start full application (Vite + Electron)
-pnpm dev                  # Same as start (full application)
-pnpm start:frontend       # Start Vite dev server only
-pnpm dev:frontend         # Same as start:frontend
-pnpm electron:dev         # Original Electron + Vite command
+npm start                 # Start full stack (Python backend + Vite + Electron)
+npm run dev               # Same as start (full application)
+npm run start:frontend    # Start Vite dev server only
+npm run dev:frontend      # Same as start:frontend
+npm run electron:dev      # Original Electron + Vite command
 
 # Building
-pnpm build                # Build for all platforms
-pnpm build:win            # Build for Windows
-pnpm build:mac            # Build for macOS
-pnpm build:linux          # Build for Linux
+npm run build             # Build for all platforms
+npm run build:win         # Build for Windows
+npm run build:mac         # Build for macOS
+npm run build:linux       # Build for Linux
 
 # Testing
-pnpm test                     # Run unit tests
-pnpm test:coverage        # Run tests with coverage
-pnpm test:e2e             # Run E2E tests
+npm test                  # Run unit tests
+npm run test:coverage     # Run tests with coverage
+npm run test:e2e          # Run E2E tests
 
 # Code Quality
-pnpm lint                 # Run ESLint
-pnpm lint:fix             # Auto-fix linting issues
-pnpm type-check           # TypeScript type checking
-pnpm format               # Format code with Prettier
+npm run lint              # Run ESLint
+npm run lint:fix          # Auto-fix linting issues
+npm run type-check        # TypeScript type checking
+npm run format            # Format code with Prettier
 
 # Database
-pnpm db:migrate           # Run pending migrations
-pnpm db:migrate:status    # Check migration status
-pnpm db:migrate:rollback  # Rollback last migration
-pnpm db:backup            # Create database backup
-pnpm db:backup:list       # List all backups
+npm run db:migrate        # Run pending migrations
+npm run db:migrate:status # Check migration status
+npm run db:migrate:rollback  # Rollback last migration
+npm run db:backup         # Create database backup
+npm run db:backup:list    # List all backups
 ```
 
 ### Project Structure
 
 ```
 justice-companion/
-├── electron/               # Electron main process
+├── backend/                # Python FastAPI backend
+│   ├── main.py            # FastAPI application entry point
+│   ├── requirements.txt   # Python dependencies
+│   ├── routes/            # API route handlers (19 files)
+│   │   ├── auth.py        # Authentication endpoints
+│   │   ├── cases.py       # Case management
+│   │   ├── dashboard.py   # Dashboard statistics
+│   │   ├── chat.py        # AI chat interface
+│   │   ├── deadlines.py   # Deadline management
+│   │   ├── evidence.py    # Evidence/documents
+│   │   └── gdpr.py        # GDPR compliance
+│   ├── models/            # Pydantic/SQLAlchemy models
+│   ├── services/          # Business logic services
+│   │   ├── encryption_service.py
+│   │   ├── auth_service.py
+│   │   └── gdpr/          # GDPR services
+│   └── repositories/      # Database repositories
+├── electron/              # Electron main process
 │   ├── main.ts            # Main entry point
 │   ├── preload.ts         # Preload script (IPC bridge)
-│   └── dev-api-server.ts  # Development API server
-├── src/
+│   └── ipc-handlers/      # IPC handlers (legacy, migrating to HTTP)
+├── src/                   # React frontend
 │   ├── components/        # React components
 │   │   ├── auth/          # Authentication UI
 │   │   └── ui/            # Reusable UI components
 │   ├── contexts/          # React contexts (Auth, Debug)
-│   ├── db/               # Database layer
+│   ├── db/                # Database layer (TypeScript)
 │   │   ├── migrations/    # SQL migration files
 │   │   ├── database.ts    # Database manager
 │   │   └── migrate.ts     # Migration runner
-│   ├── features/         # Feature modules
-│   │   ├── cases/        # Case management
-│   │   ├── chat/         # AI chat
-│   │   ├── dashboard/    # Dashboard
-│   │   └── settings/     # Settings
-│   ├── models/           # TypeScript types
-│   ├── repositories/     # Data access layer
-│   ├── services/         # Business logic layer
+│   ├── views/             # Page-level components
+│   │   ├── cases/         # Case management pages
+│   │   ├── chat/          # AI chat interface
+│   │   ├── documents/     # Evidence/documents
+│   │   └── timeline/      # Timeline/deadlines
+│   ├── models/            # TypeScript domain models
+│   ├── repositories/      # Data access layer
+│   ├── services/          # Business logic layer
 │   │   ├── AuthenticationService.ts
 │   │   ├── EncryptionService.ts
-│   │   └── AuditLogger.ts
-│   ├── middleware/       # Authorization middleware
-│   └── types/           # TypeScript type definitions
+│   │   └── gdpr/          # GDPR services
+│   ├── middleware/        # Authorization middleware
+│   ├── lib/               # API client and utilities
+│   └── types/             # TypeScript type definitions
 ├── .github/
-│   ├── workflows/        # GitHub Actions CI/CD
-│   └── ISSUE_TEMPLATE/   # Issue templates
-└── docs/                # Documentation
+│   ├── workflows/         # GitHub Actions CI/CD
+│   └── ISSUE_TEMPLATE/    # Issue templates
+└── docs/                  # Documentation
 
-Total: ~50,000 lines of code
+Total: ~60,000+ lines of code (TypeScript + Python)
 ```
 
 ## 🔄 CI/CD Pipeline
@@ -253,20 +284,21 @@ Justice Companion uses GitHub Actions for automated testing, building, and relea
 **Pipeline Steps**:
 
 1. Checkout code (`actions/checkout@v4`)
-2. Setup Node.js 20.x with pnpm cache (`actions/setup-node@v4`)
-3. Setup pnpm 10.18.2 (`pnpm/action-setup@v4`)
-4. Get pnpm store directory for caching
-5. Cache pnpm store (`actions/cache@v4`)
-6. Install dependencies (`pnpm install --frozen-lockfile`)
-7. **Rebuild better-sqlite3 for Node.js** (`pnpm rebuild:node`)
-8. Run linter (`pnpm lint`)
-9. Run type check (`pnpm type-check`)
-10. Run tests (`pnpm test -- --run`)
+2. Setup Node.js 20.x with npm cache (`actions/setup-node@v4`)
+3. Setup Python 3.11+ (`actions/setup-python@v4`)
+4. Cache npm dependencies (`actions/cache@v4`)
+5. Install Node.js dependencies (`npm ci`)
+6. Install Python dependencies (`pip install -r backend/requirements.txt`)
+7. **Rebuild better-sqlite3 for Node.js** (`npm run rebuild:node`)
+8. Run linter (`npm run lint`)
+9. Run type check (`npm run type-check`)
+10. Run tests (`npm test -- --run`)
 
 **Key Requirements**:
 
 - Use `bash` shell for cross-platform compatibility
-- Cache pnpm store using `${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}`
+- Cache npm using `${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}`
+- Cache pip using `${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}`
 - Rebuild better-sqlite3 native module before tests (critical for test success)
 - ESLint may report warnings (use `continue-on-error: true` if needed)
 
@@ -299,10 +331,10 @@ env:
 **Pipeline Steps**:
 
 1. Checkout code (`actions/checkout@v4`)
-2. Setup Node.js 20.x with pnpm cache (`actions/setup-node@v4`)
-3. Setup pnpm 10.18.2 (`pnpm/action-setup@v4`)
-4. Install dependencies (`pnpm install --frozen-lockfile`)
-5. Build Electron app (`pnpm electron:build`)
+2. Setup Node.js 20.x with npm cache (`actions/setup-node@v4`)
+3. Setup Python 3.11+ (`actions/setup-python@v4`)
+4. Install dependencies (`npm ci` and `pip install -r backend/requirements.txt`)
+5. Build Electron app (`npm run electron:build`)
 6. Upload platform-specific artifacts (`actions/upload-artifact@v4`)
 7. Create GitHub release (`softprops/action-gh-release@v2`)
 
@@ -345,12 +377,12 @@ permissions:
 **Pipeline Steps**:
 
 1. Checkout code (`actions/checkout@v4`)
-2. Setup Node.js 20.x with pnpm cache (`actions/setup-node@v4`)
-3. Setup pnpm 10.18.2 (`pnpm/action-setup@v4`)
-4. Install dependencies (`pnpm install --frozen-lockfile`)
-5. Check code formatting (`pnpm format:check`)
-6. Lint code (`pnpm lint`, non-blocking)
-7. Run tests with coverage (`pnpm test:coverage -- --run`)
+2. Setup Node.js 20.x with npm cache (`actions/setup-node@v4`)
+3. Setup Python 3.11+ (`actions/setup-python@v4`)
+4. Install dependencies (`npm ci`)
+5. Check code formatting (`npm run format:check`)
+6. Lint code (`npm run lint`, non-blocking)
+7. Run tests with coverage (`npm run test:coverage -- --run`)
 8. Post automated comment to PR (`actions/github-script@v7`)
 
 **PR Comment Template**:
@@ -407,23 +439,25 @@ permissions:
 - ✅ Node.js 20.x is compatible and resolves installation issues
 - All CI/CD workflows must use `node-version: 20.x`
 
-#### pnpm Caching Strategy
+#### npm Caching Strategy
 
-Proper pnpm caching significantly improves CI performance:
+Proper npm caching significantly improves CI performance:
 
 ```yaml
-- name: Get pnpm store directory
-  id: pnpm-cache
-  shell: bash
-  run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+- name: Setup Node.js with npm cache
+  uses: actions/setup-node@v4
+  with:
+    node-version: '20.x'
+    cache: 'npm'
 
-- name: Setup pnpm cache
+# Or manual caching:
+- name: Cache npm dependencies
   uses: actions/cache@v4
   with:
-    path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-    key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+    path: ~/.npm
+    key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
     restore-keys: |
-      ${{ runner.os }}-pnpm-store-
+      ${{ runner.os }}-node-
 ```
 
 #### Large Dependencies
@@ -446,9 +480,9 @@ All workflows use latest stable versions:
 
 - `actions/checkout@v4`
 - `actions/setup-node@v4`
+- `actions/setup-python@v4`
 - `actions/cache@v4`
 - `actions/upload-artifact@v4`
-- `pnpm/action-setup@v4`
 - `softprops/action-gh-release@v2`
 - `actions/github-script@v7`
 
@@ -478,16 +512,16 @@ All workflows use latest stable versions:
      ```bash
      # If using nvm:
      nvm use 20
-     pnpm install
+     npm install
 
      # Or rebuild better-sqlite3:
-     pnpm rebuild better-sqlite3
+     npm rebuild better-sqlite3
      ```
 
 2. **ESLint Warnings (320 in legacy code)**
 
    - CI workflow: Use `continue-on-error: true` on lint step
-   - Or: `pnpm lint --max-warnings 500`
+   - Or: `npm run lint -- --max-warnings 500`
    - New code (OpenAI integration) is clean
 
 3. **Test Pass Rate: 99.7% (1152/1156)**

@@ -1,47 +1,43 @@
-pnpm test:e2e # Playwright E2E tests
+# Justice Companion Frontend Guide
 
-# Justice Companion AI Guide
+## Renderer Architecture
 
-## Quick Facts
+- React 18 entry in `src/App.tsx` wires routing, layout shells, and auth gates; feature pages live in `src/features/*` with co-located hooks/tests.
+- Shared components (forms, modals, skeletons) are in `src/components/ui`; animations/utilities live beside them (`Motion*`, `CommandPalette`).
+- Renderer accesses backend strictly through `window.justiceAPI` bindings defined in `electron/preload.ts`; mirror types in `src/types/ipc.ts` when adding channels.
 
-- Desktop Electron app; React renderer under `src/`, Electron main in `electron/`.
-- Use pnpm + Node 20.18.x; rebuild `better-sqlite3` via `pnpm rebuild:electron` (Electron) and `pnpm rebuild:node` (Node tests).
-- Preload bundle (`dist/electron/preload.js`) must exist; `pnpm build:preload` runs before launching Electron.
+## TypeScript & State Conventions
 
-## Architecture Map
+- Strict TypeScript setup in `tsconfig.json`; respect the `@/` alias to `src/` and include `.ts`/`.tsx` extensions on relative imports (see `docs/TSX-IMPORT-RESOLUTION-GUIDE.md`).
+- Domain data flows: UI → services (`src/services/*`) → repositories (`src/repositories/*`) → Drizzle schema (`src/db`). Renderer code should not touch the DB directly.
+- Global state uses Zustand stores (`src/store/*`) and React Contexts (`src/contexts/*`); async fetching goes through React Query hooks in each feature folder.
+- Validation and DTO typing rely on Zod schemas in `src/models` and `src/services/validation`; reuse these when fixing form or API typing issues.
 
-- Renderer orchestrated by `src/App.tsx` and feature folders (`src/features/*`); shared UI lives in `src/components/ui`.
-- Business logic sits in `src/services` (auth, encryption, GDPR); repositories in `src/repositories` are the only DB callers.
-- Drizzle schema + migrations under `src/db`; migrations create automatic backups via `scripts/migration-status.ts`.
-- IPC tunnel: `electron/preload.ts` exposes `window.justiceAPI`; handlers in `electron/ipc-handlers.ts` touch the database.
+## Python Backend Integration
 
-## Critical Workflows
+- FastAPI lives in `ai-service/main.py` and exposes `/health`, `/api/v1/info`, `/api/v1/analyze-document`, and `/api/v1/analyze-image` on `http://127.0.0.1:5051` (configurable via `.env`).
+- Electron bridges requests via `window.justiceAPI`; new frontend calls should flow through `src/services/*` helpers that target the Python endpoints, never directly from components.
+- Start the service with `pnpm electron:dev` (or the VS Code task “Python AI: Start Service”) so renderer fetches land on the running FastAPI app during development.
+- Keep TypeScript models in sync with Python `models.requests`/`models.responses`; update `src/types/api.ts` and relevant Zod schemas whenever the backend contract changes.
+- Image uploads must send `FormData` matching FastAPI parameter names (`file`, `userName`, `sessionId`, etc.); document analysis stays JSON-conformant with `DocumentAnalysisRequest`.
 
-- `pnpm electron:dev` builds preload, starts Vite (renderer), then boots Electron main.
-- Database lifecycle: `pnpm db:migrate`, `pnpm db:migrate:rollback`, `pnpm db:backup`.
-- Quality gate before commits: `pnpm lint:fix`, `pnpm type-check`, `pnpm test`, `pnpm test:e2e`.
-- Packaging: `pnpm build:electron` → `pnpm build:win|mac|linux` generates installers in `release/`.
+## Error-Fixing Workflow
 
-## Security Boundaries
+- Reproduce TS errors with `pnpm type-check`; watch mode is available via `pnpm type-check --watch` (task: “Type Check: Watch”).
+- Run ESLint with `pnpm lint` or auto-fix (`pnpm lint:fix`) before adjusting code paths; lint rules live in `eslint.config.mjs` and enforce React hook patterns.
+- For runtime renderer issues, start Vite via `pnpm start:frontend` (or `pnpm run dev` for full Electron) and inspect the browser console + `logs/renderer.log` (electron).
+- IPC changes often require rebuilding preload: `pnpm build:preload` then `pnpm electron:dev`.
 
-- `src/services/KeyManager.ts` stores encryption keys in OS `safeStorage`; never read keys directly from `.env` after migration.
-- `EncryptionService` provides AES-256-GCM for 11 sensitive columns; repositories expect encrypted payloads and return decrypted DTOs.
-- `AuthenticationService` enforces scrypt password hashing, 24h sessions, UUID IDs, and logs via `AuditLogger`.
+## Frontend Testing & QA
 
-## Coding Conventions
+- Unit/integration tests use Vitest (`pnpm test`); setup in `src/test/setup.ts` mocks Electron globals and seeds an in-memory DB.
+- Component tests commonly sit next to their source (`*.test.tsx`); use `@testing-library/react` helpers from `src/test-utils/test-utils.tsx`.
+- Renderer E2E flows live in `tests/e2e`; for UI-only checks prefer `pnpm test:e2e:web` to avoid native module dependencies.
+- Before merging front-end fixes, run `pnpm lint:fix && pnpm type-check && pnpm test`; Playwright suites are optional but recommended for auth/chat regressions.
 
-- Co-locate feature UI and tests; absolute imports through `@/` (see `tsconfig.paths.json`).
-- Tailwind + Framer Motion drive visuals; display skeletons (`src/components/ui/Skeleton*`) while queries load.
-- Server state via React Query; global app state via Zustand stores in `src/contexts` / `src/store`.
-- Validate user-facing data with Zod schemas from `src/models` or `src/services/validation` before persisting.
+## Frontend Ops Tips
 
-## Testing Notes
-
-- Vitest configured in `vite.config.ts`; shared RTL helpers live in `src/test-utils/test-utils.tsx`.
-- `src/test/setup.ts` seeds an in-memory SQLite DB for service tests; keep migrations fast and idempotent.
-- Playwright specs sit under `tests/e2e`; auth suite assumes disclaimer acceptance precedes login flow.
-
-## Troubleshooting
-
-- If `window.justiceAPI` is undefined, rebuild preload (`pnpm build:preload`) and confirm `BrowserWindow` loads `dist/electron/preload.js`.
-- IPC logging prefixed with `[IPC]`; enable verbose logs in `electron/ipc-handlers.ts` when diagnosing auth, consent, or session issues.
+- Tailwind tokens come from `tailwind.config.ts`; theme helpers and CSS resets load through `src/styles/index.css`.
+- Keep accessibility in mind: leverage primitives like `Dialog`, `Sheet`, and focus traps already implemented in `src/components/ui` rather than rolling new ones.
+- Use existing service helpers (e.g., `src/features/chat/hooks/useChatMessages.ts`) instead of duplicating API calls; update `src/types/api.ts` when response shapes change.
+- When adding assets or icons, prefer Lucide components already pulled into `src/components/ui/icon.tsx` and keep bundle size in check.

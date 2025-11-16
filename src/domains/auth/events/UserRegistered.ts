@@ -3,20 +3,20 @@
  * Fired when a new user registers in the system
  */
 export class UserRegistered {
-  public readonly eventType = 'user.registered' as const;
+  public readonly eventType = "user.registered" as const;
   public readonly occurredAt: Date;
 
   constructor(
     public readonly userId: number,
     public readonly username: string,
     public readonly email: string,
-    public readonly role: 'user' | 'admin',
+    public readonly role: "user" | "admin",
     public readonly metadata?: {
       registrationSource?: string;
       ipAddress?: string;
       userAgent?: string;
       referrer?: string;
-    }
+    },
   ) {
     this.occurredAt = new Date();
   }
@@ -24,21 +24,24 @@ export class UserRegistered {
   /**
    * Create a UserRegistered event from a User entity
    */
-  static fromEntity(user: {
-    id: number;
-    username: string;
-    email: string;
-    role: 'user' | 'admin';
-  }, metadata?: {
-    ipAddress?: string;
-    userAgent?: string;
-  }): UserRegistered {
+  static fromEntity(
+    user: {
+      id: number;
+      username: string;
+      email: string;
+      role: "user" | "admin";
+    },
+    metadata?: {
+      ipAddress?: string;
+      userAgent?: string;
+    },
+  ): UserRegistered {
     return new UserRegistered(
       user.id,
       user.username,
       user.email,
       user.role,
-      metadata
+      metadata,
     );
   }
 
@@ -53,7 +56,7 @@ export class UserRegistered {
       username: this.username,
       email: this.email,
       role: this.role,
-      metadata: this.metadata
+      metadata: this.metadata,
     };
   }
 
@@ -75,19 +78,19 @@ export class UserRegistered {
    * Check if user is admin
    */
   isAdmin(): boolean {
-    return this.role === 'admin';
+    return this.role === "admin";
   }
 
   /**
    * Get masked email for logging
    */
   getMaskedEmail(): string {
-    const [localPart, domain] = this.email.split('@');
+    const [localPart, domain] = this.email.split("@");
     if (localPart.length <= 3) {
-      return '***@' + domain;
+      return "***@" + domain;
     }
     const visibleChars = Math.min(3, Math.floor(localPart.length / 3));
-    const masked = localPart.substring(0, visibleChars) + '***';
-    return masked + '@' + domain;
+    const masked = localPart.substring(0, visibleChars) + "***";
+    return masked + "@" + domain;
   }
 }

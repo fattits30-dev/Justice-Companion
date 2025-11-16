@@ -1,24 +1,27 @@
-import { injectable, inject } from 'inversify';
-import { TYPES } from '../shared/infrastructure/di/types.ts';
-import type { IChatConversationRepository } from '../shared/infrastructure/di/repository-interfaces.ts';
-import type { IChatConversationService } from '../shared/infrastructure/di/service-interfaces.ts';
+import { injectable, inject } from "inversify";
+import { TYPES } from "../shared/infrastructure/di/types.ts";
+import type { IChatConversationRepository } from "../shared/infrastructure/di/repository-interfaces.ts";
+import type { IChatConversationService } from "../shared/infrastructure/di/service-interfaces.ts";
 import type {
   ChatConversation,
   ChatMessage,
   ConversationWithMessages,
   CreateConversationInput,
   CreateMessageInput,
-} from '../models/ChatConversation.ts';
-import { errorLogger } from '../utils/error-logger.ts';
+} from "../models/ChatConversation.ts";
+import { errorLogger } from "../utils/error-logger.ts";
 
 /**
  * Injectable ChatConversationService
  * Manages chat conversations with dependency injection
  */
 @injectable()
-export class ChatConversationServiceInjectable implements IChatConversationService {
+export class ChatConversationServiceInjectable
+  implements IChatConversationService
+{
   constructor(
-    @inject(TYPES.ChatConversationRepository) private chatConversationRepository: IChatConversationRepository
+    @inject(TYPES.ChatConversationRepository)
+    private chatConversationRepository: IChatConversationRepository,
   ) {}
 
   /**
@@ -30,7 +33,7 @@ export class ChatConversationServiceInjectable implements IChatConversationServi
       return this.chatConversationRepository.create(input);
     } catch (error) {
       errorLogger.logError(error as Error, {
-        context: 'ChatConversationService.createConversation',
+        context: "ChatConversationService.createConversation",
       });
       throw error;
     }
@@ -44,7 +47,7 @@ export class ChatConversationServiceInjectable implements IChatConversationServi
       return this.chatConversationRepository.findById(id);
     } catch (error) {
       errorLogger.logError(error as Error, {
-        context: 'ChatConversationService.getConversation',
+        context: "ChatConversationService.getConversation",
       });
       throw error;
     }
@@ -59,7 +62,7 @@ export class ChatConversationServiceInjectable implements IChatConversationServi
       return true;
     } catch (error) {
       errorLogger.logError(error as Error, {
-        context: 'ChatConversationService.deleteConversation',
+        context: "ChatConversationService.deleteConversation",
       });
       return false;
     }
@@ -68,12 +71,15 @@ export class ChatConversationServiceInjectable implements IChatConversationServi
   /**
    * Get all conversations for a user (optionally filtered by case)
    */
-  getAllConversations(userId: number, caseId?: number | null): ChatConversation[] {
+  getAllConversations(
+    userId: number,
+    caseId?: number | null,
+  ): ChatConversation[] {
     try {
       return this.chatConversationRepository.findAll(userId, caseId);
     } catch (error) {
       errorLogger.logError(error as Error, {
-        context: 'ChatConversationService.getAllConversations',
+        context: "ChatConversationService.getAllConversations",
       });
       throw error;
     }
@@ -86,13 +92,17 @@ export class ChatConversationServiceInjectable implements IChatConversationServi
   getRecentConversationsByCase(
     userId: number,
     caseId: number | null,
-    limit: number = 10
+    limit: number = 10,
   ): ChatConversation[] {
     try {
-      return this.chatConversationRepository.findRecentByCase(userId, caseId, limit);
+      return this.chatConversationRepository.findRecentByCase(
+        userId,
+        caseId,
+        limit,
+      );
     } catch (error) {
       errorLogger.logError(error as Error, {
-        context: 'ChatConversationService.getRecentConversationsByCase',
+        context: "ChatConversationService.getRecentConversationsByCase",
       });
       throw error;
     }
@@ -107,7 +117,7 @@ export class ChatConversationServiceInjectable implements IChatConversationServi
       return this.chatConversationRepository.findWithMessages(conversationId);
     } catch (error) {
       errorLogger.logError(error as Error, {
-        context: 'ChatConversationService.loadConversation',
+        context: "ChatConversationService.loadConversation",
       });
       throw error;
     }
@@ -122,7 +132,7 @@ export class ChatConversationServiceInjectable implements IChatConversationServi
       return this.chatConversationRepository.addMessage(input);
     } catch (error) {
       errorLogger.logError(error as Error, {
-        context: 'ChatConversationService.addMessage',
+        context: "ChatConversationService.addMessage",
       });
       throw error;
     }
@@ -135,13 +145,17 @@ export class ChatConversationServiceInjectable implements IChatConversationServi
   startNewConversation(
     userId: number,
     caseId: number | null,
-    firstMessage: { role: 'user' | 'assistant'; content: string; thinkingContent?: string }
+    firstMessage: {
+      role: "user" | "assistant";
+      content: string;
+      thinkingContent?: string;
+    },
   ): ConversationWithMessages {
     try {
       // Generate title from first user message (truncate at 50 chars)
       const title =
         firstMessage.content.substring(0, 50).trim() +
-        (firstMessage.content.length > 50 ? '...' : '');
+        (firstMessage.content.length > 50 ? "..." : "");
 
       const conversation = this.createConversation({ userId, caseId, title });
 
@@ -158,7 +172,7 @@ export class ChatConversationServiceInjectable implements IChatConversationServi
       };
     } catch (error) {
       errorLogger.logError(error as Error, {
-        context: 'ChatConversationService.startNewConversation',
+        context: "ChatConversationService.startNewConversation",
       });
       throw error;
     }
@@ -170,13 +184,18 @@ export class ChatConversationServiceInjectable implements IChatConversationServi
    */
   verifyOwnership(conversationId: number, userId: number): void {
     try {
-      const isOwner = this.chatConversationRepository.verifyOwnership(conversationId, userId);
+      const isOwner = this.chatConversationRepository.verifyOwnership(
+        conversationId,
+        userId,
+      );
       if (!isOwner) {
-        throw new Error(`Unauthorized: User ${userId} does not own conversation ${conversationId}`);
+        throw new Error(
+          `Unauthorized: User ${userId} does not own conversation ${conversationId}`,
+        );
       }
     } catch (error) {
       errorLogger.logError(error as Error, {
-        context: 'ChatConversationService.verifyOwnership',
+        context: "ChatConversationService.verifyOwnership",
       });
       throw error;
     }
@@ -184,7 +203,7 @@ export class ChatConversationServiceInjectable implements IChatConversationServi
 }
 
 // For backward compatibility - keep the singleton instance
-import { getRepositories } from '../repositories.ts';
+import { getRepositories } from "../repositories.ts";
 
 class ChatConversationServiceSingleton {
   private get chatConversationRepository() {
@@ -196,7 +215,7 @@ class ChatConversationServiceSingleton {
       return this.chatConversationRepository.create(input);
     } catch (error) {
       errorLogger.logError(error as Error, {
-        context: 'ChatConversationService.createConversation',
+        context: "ChatConversationService.createConversation",
       });
       throw error;
     }
@@ -207,18 +226,21 @@ class ChatConversationServiceSingleton {
       return this.chatConversationRepository.findById(id);
     } catch (error) {
       errorLogger.logError(error as Error, {
-        context: 'ChatConversationService.getConversation',
+        context: "ChatConversationService.getConversation",
       });
       throw error;
     }
   }
 
-  getAllConversations(userId: number, caseId?: number | null): ChatConversation[] {
+  getAllConversations(
+    userId: number,
+    caseId?: number | null,
+  ): ChatConversation[] {
     try {
       return this.chatConversationRepository.findAll(userId, caseId);
     } catch (error) {
       errorLogger.logError(error as Error, {
-        context: 'ChatConversationService.getAllConversations',
+        context: "ChatConversationService.getAllConversations",
       });
       throw error;
     }
@@ -230,10 +252,14 @@ class ChatConversationServiceSingleton {
     limit: number = 10,
   ): ChatConversation[] {
     try {
-      return this.chatConversationRepository.findRecentByCase(userId, caseId, limit);
+      return this.chatConversationRepository.findRecentByCase(
+        userId,
+        caseId,
+        limit,
+      );
     } catch (error) {
       errorLogger.logError(error as Error, {
-        context: 'ChatConversationService.getRecentConversationsByCase',
+        context: "ChatConversationService.getRecentConversationsByCase",
       });
       throw error;
     }
@@ -244,7 +270,7 @@ class ChatConversationServiceSingleton {
       return this.chatConversationRepository.findWithMessages(conversationId);
     } catch (error) {
       errorLogger.logError(error as Error, {
-        context: 'ChatConversationService.loadConversation',
+        context: "ChatConversationService.loadConversation",
       });
       throw error;
     }
@@ -255,7 +281,7 @@ class ChatConversationServiceSingleton {
       return this.chatConversationRepository.addMessage(input);
     } catch (error) {
       errorLogger.logError(error as Error, {
-        context: 'ChatConversationService.addMessage',
+        context: "ChatConversationService.addMessage",
       });
       throw error;
     }
@@ -266,7 +292,7 @@ class ChatConversationServiceSingleton {
       this.chatConversationRepository.delete(id);
     } catch (error) {
       errorLogger.logError(error as Error, {
-        context: 'ChatConversationService.deleteConversation',
+        context: "ChatConversationService.deleteConversation",
       });
       throw error;
     }
@@ -275,12 +301,16 @@ class ChatConversationServiceSingleton {
   startNewConversation(
     userId: number,
     caseId: number | null,
-    firstMessage: { role: 'user' | 'assistant'; content: string; thinkingContent?: string },
+    firstMessage: {
+      role: "user" | "assistant";
+      content: string;
+      thinkingContent?: string;
+    },
   ): ConversationWithMessages {
     try {
       const title =
         firstMessage.content.substring(0, 50).trim() +
-        (firstMessage.content.length > 50 ? '...' : '');
+        (firstMessage.content.length > 50 ? "..." : "");
 
       const conversation = this.createConversation({ userId, caseId, title });
 
@@ -297,7 +327,7 @@ class ChatConversationServiceSingleton {
       };
     } catch (error) {
       errorLogger.logError(error as Error, {
-        context: 'ChatConversationService.startNewConversation',
+        context: "ChatConversationService.startNewConversation",
       });
       throw error;
     }
@@ -305,13 +335,18 @@ class ChatConversationServiceSingleton {
 
   verifyOwnership(conversationId: number, userId: number): void {
     try {
-      const isOwner = this.chatConversationRepository.verifyOwnership(conversationId, userId);
+      const isOwner = this.chatConversationRepository.verifyOwnership(
+        conversationId,
+        userId,
+      );
       if (!isOwner) {
-        throw new Error(`Unauthorized: User ${userId} does not own conversation ${conversationId}`);
+        throw new Error(
+          `Unauthorized: User ${userId} does not own conversation ${conversationId}`,
+        );
       }
     } catch (error) {
       errorLogger.logError(error as Error, {
-        context: 'ChatConversationService.verifyOwnership',
+        context: "ChatConversationService.verifyOwnership",
       });
       throw error;
     }

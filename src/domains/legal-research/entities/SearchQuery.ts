@@ -7,7 +7,7 @@ export interface SearchQuery {
   caseId: number;
   userId: number;
   query: string;
-  searchType: 'legislation' | 'caselaw' | 'combined';
+  searchType: "legislation" | "caselaw" | "combined";
   filters?: {
     jurisdiction?: string;
     dateRange?: {
@@ -29,7 +29,7 @@ export interface CreateSearchQueryInput {
   caseId: number;
   userId: number;
   query: string;
-  searchType: 'legislation' | 'caselaw' | 'combined';
+  searchType: "legislation" | "caselaw" | "combined";
   filters?: {
     jurisdiction?: string;
     dateRange?: {

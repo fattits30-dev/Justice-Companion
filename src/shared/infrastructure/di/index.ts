@@ -50,7 +50,7 @@ export type {
   ILegalIssuesRepository,
   IUserFactsRepository,
   IUserProfileRepository,
-} from './repository-interfaces.ts';
+} from "./repository-interfaces.ts";
 
 // =============================================================================
 // SERVICE INTERFACES
@@ -98,7 +98,7 @@ export type {
   IProcessManager,
   IAutoUpdater,
   IStartupMetrics,
-} from './service-interfaces.ts';
+} from "./service-interfaces.ts";
 
 // =============================================================================
 // INFRASTRUCTURE INTERFACES
@@ -170,7 +170,7 @@ export {
   // Error utilities
   createDependencyErrorMessage,
   createMissingDependencyErrorMessage,
-} from './type-guards.ts';
+} from "./type-guards.ts";
 
 // =============================================================================
 // DOCUMENTATION & USAGE EXAMPLES

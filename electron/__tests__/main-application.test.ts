@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { BrowserWindow } from 'electron';
-import { MainApplication, type MainApplicationDependencies } from '../runtime/MainApplication.ts';
+import { MainApplication, type MainApplicationDependencies } from '../runtime/MainApplication';
 
 function createDeps(overrides: Partial<MainApplicationDependencies> = {}): {
   deps: MainApplicationDependencies;

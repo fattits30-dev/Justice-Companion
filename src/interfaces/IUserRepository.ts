@@ -1,5 +1,5 @@
 // src/interfaces/IUserRepository.ts
-import type { User } from '../domains/auth/entities/User.ts';
+import type { User } from "../domains/auth/entities/User.ts";
 
 export interface IUserRepository {
   findById(id: number): User | null;

@@ -89,7 +89,7 @@ describe.skip("BulkOperationService (NOT IN PRODUCTION - skipped)", () => {
     // Create services
     // Use a valid 32-byte key (base64 encoded)
     encryptionService = new EncryptionService(
-      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
     ); // test key (32 bytes)
     auditLogger = new AuditLogger(db);
     eventBus = new EventBus(db);
@@ -100,7 +100,7 @@ describe.skip("BulkOperationService (NOT IN PRODUCTION - skipped)", () => {
       eventBus as any,
       caseRepository,
       evidenceRepository,
-      auditLogger
+      auditLogger,
     );
   });
 
@@ -129,7 +129,7 @@ describe.skip("BulkOperationService (NOT IN PRODUCTION - skipped)", () => {
       // Delete cases in bulk
       const result = await service.bulkDeleteCases(
         [case1.id, case2.id, case3.id],
-        1
+        1,
       );
 
       expect(result.totalItems).toBe(3);
@@ -211,7 +211,7 @@ describe.skip("BulkOperationService (NOT IN PRODUCTION - skipped)", () => {
         1,
         {
           failFast: true,
-        }
+        },
       );
 
       // Should have rolled back
@@ -239,7 +239,7 @@ describe.skip("BulkOperationService (NOT IN PRODUCTION - skipped)", () => {
         1,
         {
           failFast: false,
-        }
+        },
       );
 
       // Should NOT have rolled back
@@ -287,7 +287,7 @@ describe.skip("BulkOperationService (NOT IN PRODUCTION - skipped)", () => {
             data: { status: "pending", description: "Updated in bulk" },
           },
         ],
-        1
+        1,
       );
 
       expect(result.totalItems).toBe(3);
@@ -364,7 +364,7 @@ describe.skip("BulkOperationService (NOT IN PRODUCTION - skipped)", () => {
       // Delete evidence in bulk
       const result = await service.bulkDeleteEvidence(
         [evidence1.id, evidence2.id, evidence3.id],
-        1
+        1,
       );
 
       expect(result.totalItems).toBe(3);
@@ -516,14 +516,14 @@ describe.skip("BulkOperationService (NOT IN PRODUCTION - skipped)", () => {
         1,
         {
           failFast: false,
-        }
+        },
       );
 
       expect(result.errors).toHaveLength(2);
       expect(result.errors.map((e) => e.itemId)).toContain(9998);
       expect(result.errors.map((e) => e.itemId)).toContain(9999);
       expect(result.errors.every((e) => typeof e.error === "string")).toBe(
-        true
+        true,
       );
     });
   });

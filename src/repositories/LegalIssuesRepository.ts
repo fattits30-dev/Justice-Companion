@@ -1,11 +1,14 @@
-import { getDb } from '../db/database.ts';
+import { getDb } from "../db/database.ts";
 import type {
   LegalIssue,
   CreateLegalIssueInput,
   UpdateLegalIssueInput,
-} from '../domains/legal-research/entities/LegalIssue.ts';
-import { EncryptionService, type EncryptedData } from '../services/EncryptionService.ts';
-import type { AuditLogger } from '../services/AuditLogger.ts';
+} from "../domains/legal-research/entities/LegalIssue.ts";
+import {
+  EncryptionService,
+  type EncryptedData,
+} from "../services/EncryptionService.ts";
+import type { AuditLogger } from "../services/AuditLogger.ts";
 
 /**
  * Repository for managing legal issues with encryption
@@ -19,10 +22,7 @@ export class LegalIssuesRepository {
   private encryptionService: EncryptionService;
   private auditLogger?: AuditLogger;
 
-  constructor(
-    encryptionService: EncryptionService,
-    auditLogger?: AuditLogger,
-  ) {
+  constructor(encryptionService: EncryptionService, auditLogger?: AuditLogger) {
     this.encryptionService = encryptionService;
     this.auditLogger = auditLogger;
   }
@@ -40,7 +40,9 @@ export class LegalIssuesRepository {
         descriptionToStore = null;
       } else {
         const encryptedDescription = encryption.encrypt(input.description);
-        descriptionToStore = encryptedDescription ? JSON.stringify(encryptedDescription) : null;
+        descriptionToStore = encryptedDescription
+          ? JSON.stringify(encryptedDescription)
+          : null;
       }
 
       const stmt = db.prepare(`
@@ -60,10 +62,10 @@ export class LegalIssuesRepository {
 
       // Audit: Legal issue created
       this.auditLogger?.log({
-        eventType: 'legal_issue.create',
-        resourceType: 'legal_issue',
+        eventType: "legal_issue.create",
+        resourceType: "legal_issue",
         resourceId: createdIssue.id.toString(),
-        action: 'create',
+        action: "create",
         details: {
           caseId: input.caseId,
           title: input.title,
@@ -75,12 +77,12 @@ export class LegalIssuesRepository {
     } catch (error) {
       // Audit: Failed creation
       this.auditLogger?.log({
-        eventType: 'legal_issue.create',
-        resourceType: 'legal_issue',
-        resourceId: 'unknown',
-        action: 'create',
+        eventType: "legal_issue.create",
+        resourceType: "legal_issue",
+        resourceId: "unknown",
+        action: "create",
         success: false,
-        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        errorMessage: error instanceof Error ? error.message : "Unknown error",
       });
       throw error;
     }
@@ -154,27 +156,29 @@ export class LegalIssuesRepository {
       const params: Record<string, unknown> = { id };
 
       if (input.title !== undefined) {
-        updates.push('title = @title');
+        updates.push("title = @title");
         params.title = input.title;
       }
 
       if (input.description !== undefined) {
-        updates.push('description = @description');
+        updates.push("description = @description");
         if (input.description === null) {
           params.description = null;
         } else {
           const encryptedDescription = encryption.encrypt(input.description);
-          params.description = encryptedDescription ? JSON.stringify(encryptedDescription) : null;
+          params.description = encryptedDescription
+            ? JSON.stringify(encryptedDescription)
+            : null;
         }
       }
 
       if (input.relevantLaw !== undefined) {
-        updates.push('relevant_law = @relevantLaw');
+        updates.push("relevant_law = @relevantLaw");
         params.relevantLaw = input.relevantLaw;
       }
 
       if (input.guidance !== undefined) {
-        updates.push('guidance = @guidance');
+        updates.push("guidance = @guidance");
         params.guidance = input.guidance;
       }
 
@@ -184,7 +188,7 @@ export class LegalIssuesRepository {
 
       const stmt = db.prepare(`
         UPDATE legal_issues
-        SET ${updates.join(', ')}
+        SET ${updates.join(", ")}
         WHERE id = @id
       `);
 
@@ -194,10 +198,10 @@ export class LegalIssuesRepository {
 
       // Audit: Legal issue updated
       this.auditLogger?.log({
-        eventType: 'legal_issue.update',
-        resourceType: 'legal_issue',
+        eventType: "legal_issue.update",
+        resourceType: "legal_issue",
         resourceId: id.toString(),
-        action: 'update',
+        action: "update",
         details: {
           fieldsUpdated: Object.keys(input),
         },
@@ -208,12 +212,12 @@ export class LegalIssuesRepository {
     } catch (error) {
       // Audit: Failed update
       this.auditLogger?.log({
-        eventType: 'legal_issue.update',
-        resourceType: 'legal_issue',
+        eventType: "legal_issue.update",
+        resourceType: "legal_issue",
         resourceId: id.toString(),
-        action: 'update',
+        action: "update",
         success: false,
-        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        errorMessage: error instanceof Error ? error.message : "Unknown error",
       });
       throw error;
     }
@@ -225,16 +229,16 @@ export class LegalIssuesRepository {
   delete(id: number): boolean {
     try {
       const db = getDb();
-      const stmt = db.prepare('DELETE FROM legal_issues WHERE id = ?');
+      const stmt = db.prepare("DELETE FROM legal_issues WHERE id = ?");
       const result = stmt.run(id);
       const success = result.changes > 0;
 
       // Audit: Legal issue deleted
       this.auditLogger?.log({
-        eventType: 'legal_issue.delete',
-        resourceType: 'legal_issue',
+        eventType: "legal_issue.delete",
+        resourceType: "legal_issue",
         resourceId: id.toString(),
-        action: 'delete',
+        action: "delete",
         success,
       });
 
@@ -242,12 +246,12 @@ export class LegalIssuesRepository {
     } catch (error) {
       // Audit: Failed deletion
       this.auditLogger?.log({
-        eventType: 'legal_issue.delete',
-        resourceType: 'legal_issue',
+        eventType: "legal_issue.delete",
+        resourceType: "legal_issue",
         resourceId: id.toString(),
-        action: 'delete',
+        action: "delete",
         success: false,
-        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        errorMessage: error instanceof Error ? error.message : "Unknown error",
       });
       throw error;
     }
@@ -287,9 +291,10 @@ export class LegalIssuesRepository {
 
   private requireEncryptionService(): EncryptionService {
     if (!this.encryptionService) {
-      throw new Error('EncryptionService not configured for LegalIssuesRepository');
+      throw new Error(
+        "EncryptionService not configured for LegalIssuesRepository",
+      );
     }
     return this.encryptionService;
   }
-
 }

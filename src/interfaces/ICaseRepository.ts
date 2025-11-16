@@ -1,5 +1,9 @@
 // src/interfaces/ICaseRepository.ts
-import type { Case, CreateCaseInput, UpdateCaseInput } from '../domains/cases/entities/Case.ts';
+import type {
+  Case,
+  CreateCaseInput,
+  UpdateCaseInput,
+} from "../domains/cases/entities/Case.ts";
 
 export interface ICaseRepository {
   findById(id: number): Case | null;

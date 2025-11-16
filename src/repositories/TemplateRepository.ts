@@ -39,7 +39,7 @@ export class TemplateRepository extends BaseRepository<CaseTemplate> {
     db: Database.Database,
     encryptionService: EncryptionService,
     auditLogger?: AuditLogger,
-    cache?: DecryptionCache
+    cache?: DecryptionCache,
   ) {
     super(db, encryptionService, auditLogger, cache);
   }
@@ -139,11 +139,11 @@ export class TemplateRepository extends BaseRepository<CaseTemplate> {
           : null,
         input.checklistItems ? JSON.stringify(input.checklistItems) : null,
         now,
-        now
+        now,
       );
 
     const createdTemplate = this.findTemplateById(
-      result.lastInsertRowid as number
+      result.lastInsertRowid as number,
     );
 
     if (!createdTemplate) {
@@ -158,7 +158,7 @@ export class TemplateRepository extends BaseRepository<CaseTemplate> {
    */
   public updateTemplate(
     id: number,
-    input: UpdateTemplateInput
+    input: UpdateTemplateInput,
   ): CaseTemplate | null {
     const query = `
       UPDATE case_templates
@@ -190,7 +190,7 @@ export class TemplateRepository extends BaseRepository<CaseTemplate> {
           : null,
         input.checklistItems ? JSON.stringify(input.checklistItems) : null,
         now,
-        id
+        id,
       );
 
     return this.findTemplateById(id);

@@ -5,7 +5,7 @@
  * checking download status, starting downloads, and deleting models.
  */
 
-import { z } from 'zod';
+import { z } from "zod";
 
 /**
  * Model ID validation helper
@@ -13,22 +13,22 @@ import { z } from 'zod';
  */
 const modelIdSchema = z
   .string()
-  .min(1, 'Model ID is required')
-  .max(200, 'Model ID is too long')
+  .min(1, "Model ID is required")
+  .max(200, "Model ID is too long")
   .regex(
     /^[a-zA-Z0-9._-]+$/,
-    'Model ID can only contain letters, numbers, dots, underscores, and hyphens',
+    "Model ID can only contain letters, numbers, dots, underscores, and hyphens",
   )
   .refine((id) => {
     // Prevent path traversal attempts in model IDs
-    return !id.includes('..') && !id.includes('/') && !id.includes('\\');
-  }, 'Model ID contains invalid characters')
+    return !id.includes("..") && !id.includes("/") && !id.includes("\\");
+  }, "Model ID contains invalid characters")
   .refine((id) => {
     // Ensure reasonable model ID format
     // Typical format: "provider-model-size" (e.g., "llama-3-8b", "phi-2-2.7b")
-    const parts = id.split('-');
+    const parts = id.split("-");
     return parts.length >= 2 && parts.length <= 5;
-  }, 'Model ID format is invalid');
+  }, "Model ID format is invalid");
 
 /**
  * Schema for checking if a model is downloaded
@@ -53,16 +53,16 @@ export const modelDownloadStartSchema = z
       // This should be checked against available models list server-side
       // but we can do basic format validation here
       const validPrefixes = [
-        'llama',
-        'phi',
-        'mistral',
-        'qwen',
-        'gemma',
-        'codellama',
-        'deepseek',
-        'openchat',
-        'solar',
-        'neural',
+        "llama",
+        "phi",
+        "mistral",
+        "qwen",
+        "gemma",
+        "codellama",
+        "deepseek",
+        "openchat",
+        "solar",
+        "neural",
       ];
 
       const hasValidPrefix = validPrefixes.some((prefix) =>
@@ -72,8 +72,8 @@ export const modelDownloadStartSchema = z
       return hasValidPrefix;
     },
     {
-      message: 'Model ID does not appear to be from a supported model provider',
-      path: ['modelId'],
+      message: "Model ID does not appear to be from a supported model provider",
+      path: ["modelId"],
     },
   );
 
@@ -88,12 +88,12 @@ export const modelDeleteSchema = z
   .refine(
     (data) => {
       // Prevent deletion of system models or special identifiers
-      const protectedIds = ['system', 'default', 'built-in', 'core'];
+      const protectedIds = ["system", "default", "built-in", "core"];
       return !protectedIds.includes(data.modelId.toLowerCase());
     },
     {
-      message: 'Cannot delete protected system models',
-      path: ['modelId'],
+      message: "Cannot delete protected system models",
+      path: ["modelId"],
     },
   );
 

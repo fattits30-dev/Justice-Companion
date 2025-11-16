@@ -1,6 +1,10 @@
-import { getDb } from '../db/database.ts';
-import type { User, CreateUserInput, UpdateUserInput } from '../domains/auth/entities/User.ts';
-import type { AuditLogger } from '../services/AuditLogger.ts';
+import { getDb } from "../db/database.ts";
+import type {
+  User,
+  CreateUserInput,
+  UpdateUserInput,
+} from "../domains/auth/entities/User.ts";
+import type { AuditLogger } from "../services/AuditLogger.ts";
 
 /**
  * Repository for managing users
@@ -37,18 +41,18 @@ export class UserRepository {
         email: input.email,
         passwordHash: input.passwordHash,
         passwordSalt: input.passwordSalt,
-        role: input.role ?? 'user',
+        role: input.role ?? "user",
       });
 
       const createdUser = this.findById(result.lastInsertRowid as number)!;
 
       // Audit: User created
       this.auditLogger?.log({
-        eventType: 'user.create',
+        eventType: "user.create",
         userId: createdUser.id.toString(),
-        resourceType: 'user',
+        resourceType: "user",
         resourceId: createdUser.id.toString(),
-        action: 'create',
+        action: "create",
         details: {
           username: createdUser.username,
           email: createdUser.email,
@@ -61,11 +65,11 @@ export class UserRepository {
     } catch (error) {
       // Audit: Failed creation
       this.auditLogger?.log({
-        eventType: 'user.create',
+        eventType: "user.create",
         userId: undefined,
-        resourceType: 'user',
-        resourceId: 'unknown',
-        action: 'create',
+        resourceType: "user",
+        resourceId: "unknown",
+        action: "create",
         success: false,
         errorMessage: this.getErrorMessage(error),
       });
@@ -94,7 +98,9 @@ export class UserRepository {
       WHERE id = ?
     `);
 
-    const row = stmt.get(id) as (Omit<User, 'isActive'> & { isActive: number }) | undefined;
+    const row = stmt.get(id) as
+      | (Omit<User, "isActive"> & { isActive: number })
+      | undefined;
 
     if (row) {
       return {
@@ -127,7 +133,9 @@ export class UserRepository {
       WHERE username = ?
     `);
 
-    const row = stmt.get(username) as (Omit<User, 'isActive'> & { isActive: number }) | undefined;
+    const row = stmt.get(username) as
+      | (Omit<User, "isActive"> & { isActive: number })
+      | undefined;
 
     if (row) {
       return {
@@ -160,7 +168,9 @@ export class UserRepository {
       WHERE email = ?
     `);
 
-    const row = stmt.get(email) as (Omit<User, 'isActive'> & { isActive: number }) | undefined;
+    const row = stmt.get(email) as
+      | (Omit<User, "isActive"> & { isActive: number })
+      | undefined;
 
     if (row) {
       return {
@@ -193,7 +203,9 @@ export class UserRepository {
       ORDER BY created_at DESC
     `);
 
-    const rows = stmt.all() as (Omit<User, 'isActive'> & { isActive: number })[];
+    const rows = stmt.all() as (Omit<User, "isActive"> & {
+      isActive: number;
+    })[];
 
     return rows.map((row) => ({
       ...row,
@@ -212,17 +224,17 @@ export class UserRepository {
       const params: Record<string, unknown> = { id };
 
       if (input.email !== undefined) {
-        updates.push('email = @email');
+        updates.push("email = @email");
         params.email = input.email;
       }
 
       if (input.isActive !== undefined) {
-        updates.push('is_active = @isActive');
+        updates.push("is_active = @isActive");
         params.isActive = input.isActive ? 1 : 0;
       }
 
       if (input.role !== undefined) {
-        updates.push('role = @role');
+        updates.push("role = @role");
         params.role = input.role;
       }
 
@@ -232,7 +244,7 @@ export class UserRepository {
 
       const stmt = db.prepare(`
         UPDATE users
-        SET ${updates.join(', ')}
+        SET ${updates.join(", ")}
         WHERE id = @id
       `);
 
@@ -242,11 +254,11 @@ export class UserRepository {
 
       // Audit: User updated
       this.auditLogger?.log({
-        eventType: 'user.update',
+        eventType: "user.update",
         userId: id.toString(),
-        resourceType: 'user',
+        resourceType: "user",
         resourceId: id.toString(),
-        action: 'update',
+        action: "update",
         details: {
           fieldsUpdated: Object.keys(input),
         },
@@ -257,11 +269,11 @@ export class UserRepository {
     } catch (error) {
       // Audit: Failed update
       this.auditLogger?.log({
-        eventType: 'user.update',
+        eventType: "user.update",
         userId: id.toString(),
-        resourceType: 'user',
+        resourceType: "user",
         resourceId: id.toString(),
-        action: 'update',
+        action: "update",
         success: false,
         errorMessage: this.getErrorMessage(error),
       });
@@ -290,21 +302,21 @@ export class UserRepository {
 
       // Audit: Password changed (don't log the hash!)
       this.auditLogger?.log({
-        eventType: 'user.password_change',
+        eventType: "user.password_change",
         userId: id.toString(),
-        resourceType: 'user',
+        resourceType: "user",
         resourceId: id.toString(),
-        action: 'update',
+        action: "update",
         success: true,
       });
     } catch (error) {
       // Audit: Failed password change
       this.auditLogger?.log({
-        eventType: 'user.password_change',
+        eventType: "user.password_change",
         userId: id.toString(),
-        resourceType: 'user',
+        resourceType: "user",
         resourceId: id.toString(),
-        action: 'update',
+        action: "update",
         success: false,
         errorMessage: this.getErrorMessage(error),
       });
@@ -328,11 +340,11 @@ export class UserRepository {
 
     // Audit: Login timestamp updated
     this.auditLogger?.log({
-      eventType: 'user.login_timestamp',
+      eventType: "user.login_timestamp",
       userId: id.toString(),
-      resourceType: 'user',
+      resourceType: "user",
       resourceId: id.toString(),
-      action: 'update',
+      action: "update",
       success: true,
     });
   }
@@ -353,11 +365,11 @@ export class UserRepository {
 
     // Audit: Active status changed
     this.auditLogger?.log({
-      eventType: 'user.update',
+      eventType: "user.update",
       userId: id.toString(),
-      resourceType: 'user',
+      resourceType: "user",
       resourceId: id.toString(),
-      action: 'update',
+      action: "update",
       details: { isActive },
       success: true,
     });
@@ -369,17 +381,17 @@ export class UserRepository {
   delete(id: number): boolean {
     try {
       const db = getDb();
-      const stmt = db.prepare('DELETE FROM users WHERE id = ?');
+      const stmt = db.prepare("DELETE FROM users WHERE id = ?");
       const result = stmt.run(id);
       const success = result.changes > 0;
 
       // Audit: User deleted
       this.auditLogger?.log({
-        eventType: 'user.delete',
+        eventType: "user.delete",
         userId: id.toString(),
-        resourceType: 'user',
+        resourceType: "user",
         resourceId: id.toString(),
-        action: 'delete',
+        action: "delete",
         success,
       });
 
@@ -387,11 +399,11 @@ export class UserRepository {
     } catch (error) {
       // Audit: Failed deletion
       this.auditLogger?.log({
-        eventType: 'user.delete',
+        eventType: "user.delete",
         userId: id.toString(),
-        resourceType: 'user',
+        resourceType: "user",
         resourceId: id.toString(),
-        action: 'delete',
+        action: "delete",
         success: false,
         errorMessage: this.getErrorMessage(error),
       });
@@ -410,18 +422,18 @@ export class UserRepository {
    * Normalize unknown error values into a message for logging
    */
   private getErrorMessage(error: unknown): string {
-    if (typeof error === 'string' && error.length > 0) {
+    if (typeof error === "string" && error.length > 0) {
       return error;
     }
 
-    if (error && typeof error === 'object' && 'message' in error) {
+    if (error && typeof error === "object" && "message" in error) {
       const message = (error as { message?: unknown }).message;
-      if (typeof message === 'string' && message.length > 0) {
+      if (typeof message === "string" && message.length > 0) {
         return message;
       }
     }
 
-    return 'Unknown error';
+    return "Unknown error";
   }
 }
 

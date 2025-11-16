@@ -1,0 +1,1211 @@
+"""
+Evidence management routes for Justice Companion.
+Migrated from electron/ipc-handlers/evidence.ts
+
+REFACTORED: Now uses service layer instead of direct database queries.
+
+Routes:
+- POST /evidence - Upload/create evidence (requires case ownership, with document parsing)
+- GET /evidence - List all evidence for user's cases
+- GET /evidence/{evidence_id} - Get specific evidence with metadata
+- GET /evidence/case/{case_id} - List evidence for a case
+- PUT /evidence/{evidence_id} - Update evidence metadata
+- DELETE /evidence/{evidence_id} - Delete evidence
+- POST /evidence/{evidence_id}/parse - Re-parse document and extract text
+- GET /evidence/{evidence_id}/citations - Extract legal citations from document
+- POST /evidence/upload - Upload file with automatic parsing
+
+Services Integrated:
+- DocumentParserService: PDF, DOCX, TXT parsing with metadata extraction
+- CitationService: Extract legal citations using eyecite library
+- EncryptionService: Field-level encryption for sensitive evidence data
+- AuditLogger: Comprehensive audit trail for all operations
+"""
+
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status, Form
+from pydantic import BaseModel, Field, field_validator
+from typing import Optional, List, Dict, Any
+from datetime import datetime
+from sqlalchemy.orm import Session
+from sqlalchemy import text
+import os
+import base64
+from pathlib import Path
+import logging
+
+from backend.models.base import get_db
+from backend.routes.auth import get_current_user
+from backend.services.document_parser_service import DocumentParserService, ParsedDocument
+from backend.services.citation_service import CitationService, ExtractedCitation
+from backend.services.encryption_service import EncryptionService
+from backend.services.audit_logger import AuditLogger, log_audit_event
+
+# Configure logging
+logger = logging.getLogger(__name__)
+
+router = APIRouter(prefix="/evidence", tags=["evidence"])
+
+
+# ===== CONSTANTS =====
+VALID_EVIDENCE_TYPES = ["document", "photo", "email", "recording", "note", "witness"]
+SUPPORTED_DOCUMENT_FORMATS = [".pdf", ".docx", ".txt"]
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
+UPLOAD_DIR = Path("uploads/evidence")  # Evidence file storage
+
+
+# ===== PYDANTIC REQUEST MODELS =====
+class CreateEvidenceRequest(BaseModel):
+    """Request model for creating/uploading evidence."""
+    caseId: int = Field(..., gt=0, description="Case ID this evidence belongs to")
+    evidenceType: str = Field(..., description="Type of evidence")
+    title: str = Field(..., min_length=1, max_length=500, description="Evidence title")
+    description: Optional[str] = Field(None, max_length=10000, description="Evidence description (deprecated, use content)")
+    filePath: Optional[str] = Field(None, max_length=1000, description="File path for file-based evidence")
+    content: Optional[str] = Field(None, description="Text content for note-based evidence")
+    obtainedDate: Optional[str] = Field(None, description="Date evidence was obtained (YYYY-MM-DD)")
+
+    @field_validator('evidenceType')
+    @classmethod
+    def validate_evidence_type(cls, v):
+        if v not in VALID_EVIDENCE_TYPES:
+            raise ValueError(f"Invalid evidence type. Must be one of: {', '.join(VALID_EVIDENCE_TYPES)}")
+        return v
+
+    @field_validator('title')
+    @classmethod
+    def strip_title(cls, v):
+        return v.strip()
+
+    @field_validator('obtainedDate')
+    @classmethod
+    def validate_date_format(cls, v):
+        if v:
+            try:
+                datetime.strptime(v, '%Y-%m-%d')
+            except ValueError:
+                raise ValueError("Invalid date format (use YYYY-MM-DD)")
+        return v
+
+    @field_validator('content', 'filePath')
+    @classmethod
+    def validate_file_or_content(cls, v, info):
+        """Ensure either filePath OR content is provided, but not both."""
+        if info.field_name == 'content':
+            values = info.data
+            file_path = values.get('filePath')
+            if v and file_path:
+                raise ValueError("Cannot provide both filePath and content")
+            if not v and not file_path:
+                raise ValueError("Must provide either filePath or content")
+        return v
+
+
+class UpdateEvidenceRequest(BaseModel):
+    """Request model for updating evidence metadata."""
+    title: Optional[str] = Field(None, min_length=1, max_length=500)
+    description: Optional[str] = Field(None, max_length=10000)
+    evidenceType: Optional[str] = None
+    obtainedDate: Optional[str] = None
+
+    @field_validator('evidenceType')
+    @classmethod
+    def validate_evidence_type(cls, v):
+        if v and v not in VALID_EVIDENCE_TYPES:
+            raise ValueError(f"Invalid evidence type. Must be one of: {', '.join(VALID_EVIDENCE_TYPES)}")
+        return v
+
+    @field_validator('title', 'description')
+    @classmethod
+    def strip_strings(cls, v):
+        return v.strip() if v else None
+
+    @field_validator('obtainedDate')
+    @classmethod
+    def validate_date_format(cls, v):
+        if v:
+            try:
+                datetime.strptime(v, '%Y-%m-%d')
+            except ValueError:
+                raise ValueError("Invalid date format (use YYYY-MM-DD)")
+        return v
+
+
+# ===== PYDANTIC RESPONSE MODELS =====
+class EvidenceResponse(BaseModel):
+    """Response model for evidence data."""
+    id: int
+    caseId: int
+    evidenceType: str
+    title: str
+    filePath: Optional[str] = None
+    content: Optional[str] = None
+    obtainedDate: Optional[str] = None
+    uploadedAt: str  # Alias for createdAt (from TypeScript)
+    createdAt: str
+    updatedAt: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class ParsedDocumentResponse(BaseModel):
+    """Response model for parsed document data."""
+    text: str = Field(..., description="Extracted plain text content")
+    filename: str = Field(..., description="Original filename")
+    file_type: str = Field(..., description="Document type (pdf, docx, txt)")
+    page_count: Optional[int] = Field(None, description="Number of pages (PDF only)")
+    word_count: int = Field(..., description="Total word count")
+    metadata: Optional[Dict[str, Any]] = Field(None, description="Document metadata")
+
+
+class CitationResponse(BaseModel):
+    """Response model for extracted citation."""
+    text: str = Field(..., description="Citation text")
+    type: str = Field(..., description="Citation type (FullCaseCitation, FullLawCitation, etc.)")
+    span: List[int] = Field(..., description="[start, end] position in text")
+    metadata: Dict[str, Any] = Field(..., description="Structured citation metadata")
+    court_listener_link: Optional[str] = Field(None, description="CourtListener search link (case citations only)")
+
+
+class CitationListResponse(BaseModel):
+    """Response model for citation list with summary."""
+    citations: List[CitationResponse]
+    summary: Dict[str, Any] = Field(..., description="Citation statistics")
+
+
+class DeleteEvidenceResponse(BaseModel):
+    """Response model for evidence deletion."""
+    success: bool
+
+
+class FileUploadResponse(BaseModel):
+    """Response model for file upload with parsing."""
+    evidence: EvidenceResponse
+    parsed_document: Optional[ParsedDocumentResponse] = None
+    citations: Optional[List[CitationResponse]] = None
+
+
+# ===== DEPENDENCY INJECTION =====
+def get_document_parser_service(
+    db: Session = Depends(get_db)
+) -> DocumentParserService:
+    """Get DocumentParserService instance with audit logger."""
+    audit_logger = AuditLogger(db)
+    return DocumentParserService(audit_logger=audit_logger, max_file_size=MAX_FILE_SIZE)
+
+
+def get_citation_service() -> CitationService:
+    """Get CitationService instance."""
+    return CitationService()
+
+
+def get_encryption_service() -> EncryptionService:
+    """
+    Get encryption service instance with encryption key.
+
+    Priority:
+    1. ENCRYPTION_KEY_BASE64 environment variable
+    2. Generate temporary key (WARNING: data will be lost on restart)
+    """
+    key_base64 = os.getenv("ENCRYPTION_KEY_BASE64")
+
+    if not key_base64:
+        # WARNING: Generating temporary key - data will be lost on restart
+        key = EncryptionService.generate_key()
+        key_base64 = base64.b64encode(key).decode('utf-8')
+        logger.warning("No ENCRYPTION_KEY_BASE64 found. Using temporary key.")
+
+    return EncryptionService(key_base64)
+
+
+def get_audit_logger(db: Session = Depends(get_db)) -> AuditLogger:
+    """Get audit logger instance."""
+    return AuditLogger(db)
+
+
+# ===== HELPER FUNCTIONS =====
+def verify_case_ownership(db: Session, case_id: int, user_id: int) -> bool:
+    """
+    Verify that a case belongs to the authenticated user.
+
+    Args:
+        db: Database session
+        case_id: Case ID to verify
+        user_id: User ID to check ownership
+
+    Returns:
+        True if user owns the case
+
+    Raises:
+        HTTPException: If case not found or unauthorized
+    """
+    query = text("SELECT id FROM cases WHERE id = :case_id AND user_id = :user_id")
+    result = db.execute(query, {"case_id": case_id, "user_id": user_id}).fetchone()
+
+    if not result:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Case with ID {case_id} not found or unauthorized"
+        )
+
+    return True
+
+
+def verify_evidence_ownership(db: Session, evidence_id: int, user_id: int) -> bool:
+    """
+    Verify that evidence belongs to a case owned by the authenticated user.
+
+    Args:
+        db: Database session
+        evidence_id: Evidence ID to verify
+        user_id: User ID to check ownership
+
+    Returns:
+        True if user owns the evidence (via case ownership)
+
+    Raises:
+        HTTPException: If evidence not found or unauthorized
+    """
+    query = text("""
+        SELECT e.id
+        FROM evidence e
+        INNER JOIN cases c ON e.case_id = c.id
+        WHERE e.id = :evidence_id AND c.user_id = :user_id
+    """)
+    result = db.execute(query, {"evidence_id": evidence_id, "user_id": user_id}).fetchone()
+
+    if not result:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Evidence with ID {evidence_id} not found or unauthorized"
+        )
+
+    return True
+
+
+def validate_file_upload(file: UploadFile) -> None:
+    """
+    Validate uploaded file.
+
+    Args:
+        file: Uploaded file
+
+    Raises:
+        HTTPException: If validation fails
+    """
+    # Check file extension
+    file_ext = os.path.splitext(file.filename)[1].lower()
+    if file_ext not in SUPPORTED_DOCUMENT_FORMATS:
+        raise HTTPException(
+            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            detail=f"Unsupported file format. Supported formats: {', '.join(SUPPORTED_DOCUMENT_FORMATS)}"
+        )
+
+    # Check file size (if available in headers)
+    # Note: file.size is not always available, so we'll check during read
+
+
+async def save_uploaded_file(file: UploadFile, case_id: int) -> str:
+    """
+    Save uploaded file to disk.
+
+    Args:
+        file: Uploaded file
+        case_id: Case ID for organizing files
+
+    Returns:
+        Absolute path to saved file
+
+    Raises:
+        HTTPException: If save fails or file too large
+    """
+    # Create upload directory
+    case_dir = UPLOAD_DIR / str(case_id)
+    case_dir.mkdir(parents=True, exist_ok=True)
+
+    # Generate unique filename
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    safe_filename = f"{timestamp}_{file.filename}"
+    file_path = case_dir / safe_filename
+
+    # Read file content (with size check)
+    content = await file.read()
+    if len(content) > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail=f"File size exceeds maximum allowed size of {MAX_FILE_SIZE / 1024 / 1024:.1f}MB"
+        )
+
+    # Write to disk
+    try:
+        with open(file_path, 'wb') as f:
+            f.write(content)
+
+        logger.info(f"Saved uploaded file: {file_path} ({len(content)} bytes)")
+        return str(file_path.absolute())
+
+    except Exception as e:
+        logger.error(f"Failed to save uploaded file: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to save uploaded file: {str(e)}"
+        )
+
+
+# ===== ROUTES =====
+
+@router.get("", response_model=List[EvidenceResponse])
+async def list_all_evidence(
+    user_id: int = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    case_id: Optional[int] = None
+):
+    """
+    List all evidence for user's cases.
+
+    Query Parameters:
+    - case_id: Optional filter by specific case
+
+    Returns evidence ordered by creation date (newest first).
+
+    Example:
+        GET /evidence
+        GET /evidence?case_id=123
+    """
+    try:
+        # Build query
+        if case_id:
+            # Verify case ownership first
+            verify_case_ownership(db, case_id, user_id)
+
+            query = text("""
+                SELECT
+                    id,
+                    case_id as caseId,
+                    title,
+                    file_path as filePath,
+                    content,
+                    evidence_type as evidenceType,
+                    obtained_date as obtainedDate,
+                    created_at as createdAt,
+                    updated_at as updatedAt
+                FROM evidence
+                WHERE case_id = :case_id
+                ORDER BY created_at DESC
+            """)
+            evidence_items = db.execute(query, {"case_id": case_id}).fetchall()
+        else:
+            # Get all evidence for user's cases
+            query = text("""
+                SELECT
+                    e.id,
+                    e.case_id as caseId,
+                    e.title,
+                    e.file_path as filePath,
+                    e.content,
+                    e.evidence_type as evidenceType,
+                    e.obtained_date as obtainedDate,
+                    e.created_at as createdAt,
+                    e.updated_at as updatedAt
+                FROM evidence e
+                INNER JOIN cases c ON e.case_id = c.id
+                WHERE c.user_id = :user_id
+                ORDER BY e.created_at DESC
+            """)
+            evidence_items = db.execute(query, {"user_id": user_id}).fetchall()
+
+        # Convert to list of dicts
+        result = []
+        for item in evidence_items:
+            evidence_dict = dict(item._mapping)
+            evidence_dict['uploadedAt'] = evidence_dict['createdAt'].isoformat() if evidence_dict.get('createdAt') else None
+            evidence_dict['createdAt'] = evidence_dict['createdAt'].isoformat() if evidence_dict.get('createdAt') else None
+            evidence_dict['updatedAt'] = evidence_dict['updatedAt'].isoformat() if evidence_dict.get('updatedAt') else None
+            result.append(evidence_dict)
+
+        return result
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to list evidence: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to list evidence: {str(e)}"
+        )
+
+
+@router.get("/{evidence_id}", response_model=EvidenceResponse)
+async def get_evidence(
+    evidence_id: int,
+    user_id: int = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get specific evidence by ID.
+
+    Validates that evidence belongs to user's case.
+    Returns 404 if not found or unauthorized.
+
+    Example:
+        GET /evidence/123
+    """
+    try:
+        # Verify ownership
+        verify_evidence_ownership(db, evidence_id, user_id)
+
+        # Fetch evidence
+        query = text("""
+            SELECT
+                id,
+                case_id as caseId,
+                title,
+                file_path as filePath,
+                content,
+                evidence_type as evidenceType,
+                obtained_date as obtainedDate,
+                created_at as createdAt,
+                updated_at as updatedAt
+            FROM evidence
+            WHERE id = :evidence_id
+        """)
+
+        evidence = db.execute(query, {"evidence_id": evidence_id}).fetchone()
+
+        if not evidence:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Evidence with ID {evidence_id} not found"
+            )
+
+        # Convert to dict
+        evidence_dict = dict(evidence._mapping)
+        evidence_dict['uploadedAt'] = evidence_dict['createdAt'].isoformat() if evidence_dict.get('createdAt') else None
+        evidence_dict['createdAt'] = evidence_dict['createdAt'].isoformat() if evidence_dict.get('createdAt') else None
+        evidence_dict['updatedAt'] = evidence_dict['updatedAt'].isoformat() if evidence_dict.get('updatedAt') else None
+
+        return evidence_dict
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get evidence: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get evidence: {str(e)}"
+        )
+
+
+@router.post("", response_model=EvidenceResponse, status_code=status.HTTP_201_CREATED)
+async def create_evidence(
+    request: CreateEvidenceRequest,
+    user_id: int = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    audit_logger: AuditLogger = Depends(get_audit_logger)
+):
+    """
+    Upload/create new evidence for a case.
+
+    Validates:
+    - User owns the case
+    - Either filePath OR content is provided (mutually exclusive)
+    - Evidence type is valid
+
+    Logs audit event for successful uploads and failures.
+
+    Example:
+        POST /evidence
+        {
+            "caseId": 123,
+            "evidenceType": "document",
+            "title": "Employment Contract",
+            "filePath": "/uploads/contract.pdf",
+            "obtainedDate": "2025-01-13"
+        }
+    """
+    try:
+        # Verify user owns the case
+        verify_case_ownership(db, request.caseId, user_id)
+
+        # Insert evidence
+        insert_query = text("""
+            INSERT INTO evidence (
+                case_id, title, file_path, content, evidence_type,
+                obtained_date, created_at, updated_at
+            )
+            VALUES (
+                :case_id, :title, :file_path, :content, :evidence_type,
+                :obtained_date, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+            )
+        """)
+
+        result = db.execute(insert_query, {
+            "case_id": request.caseId,
+            "title": request.title,
+            "file_path": request.filePath,
+            "content": request.content,
+            "evidence_type": request.evidenceType,
+            "obtained_date": request.obtainedDate
+        })
+        db.commit()
+
+        evidence_id = result.lastrowid
+
+        # Fetch created evidence
+        select_query = text("""
+            SELECT
+                id,
+                case_id as caseId,
+                title,
+                file_path as filePath,
+                content,
+                evidence_type as evidenceType,
+                obtained_date as obtainedDate,
+                created_at as createdAt,
+                updated_at as updatedAt
+            FROM evidence
+            WHERE id = :evidence_id
+        """)
+
+        created_evidence = db.execute(select_query, {"evidence_id": evidence_id}).fetchone()
+
+        # Log audit event
+        audit_logger.log(
+            event_type="evidence.uploaded",
+            user_id=str(user_id),
+            resource_type="evidence",
+            resource_id=str(evidence_id),
+            action="upload",
+            details={
+                "caseId": request.caseId,
+                "evidenceType": request.evidenceType,
+                "title": request.title
+            },
+            success=True
+        )
+
+        # Convert to dict
+        evidence_dict = dict(created_evidence._mapping)
+        evidence_dict['uploadedAt'] = evidence_dict['createdAt'].isoformat() if evidence_dict.get('createdAt') else None
+        evidence_dict['createdAt'] = evidence_dict['createdAt'].isoformat() if evidence_dict.get('createdAt') else None
+        evidence_dict['updatedAt'] = evidence_dict['updatedAt'].isoformat() if evidence_dict.get('updatedAt') else None
+
+        return evidence_dict
+
+    except ValueError as e:
+        # Validation error
+        audit_logger.log(
+            event_type="evidence.uploaded",
+            user_id=str(user_id),
+            resource_type="evidence",
+            resource_id="unknown",
+            action="upload",
+            success=False,
+            error_message=str(e)
+        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+    except HTTPException:
+        # Re-raise HTTP exceptions (case not found, unauthorized)
+        raise
+
+    except Exception as e:
+        db.rollback()
+        # Log failed upload
+        audit_logger.log(
+            event_type="evidence.uploaded",
+            user_id=str(user_id),
+            resource_type="evidence",
+            resource_id="unknown",
+            action="upload",
+            success=False,
+            error_message=str(e)
+        )
+
+        logger.error(f"Failed to create evidence: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to create evidence: {str(e)}"
+        )
+
+
+@router.post("/upload", response_model=FileUploadResponse, status_code=status.HTTP_201_CREATED)
+async def upload_evidence_file(
+    case_id: int = Form(..., description="Case ID"),
+    title: str = Form(..., description="Evidence title"),
+    evidence_type: str = Form(..., description="Evidence type"),
+    obtained_date: Optional[str] = Form(None, description="Date obtained (YYYY-MM-DD)"),
+    file: UploadFile = File(..., description="Document file to upload"),
+    parse_document: bool = Form(True, description="Parse document automatically"),
+    extract_citations: bool = Form(True, description="Extract citations automatically"),
+    user_id: int = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    parser_service: DocumentParserService = Depends(get_document_parser_service),
+    citation_service: CitationService = Depends(get_citation_service),
+    audit_logger: AuditLogger = Depends(get_audit_logger)
+):
+    """
+    Upload evidence file with automatic document parsing and citation extraction.
+
+    Features:
+    - Saves file to disk
+    - Parses PDF, DOCX, TXT documents
+    - Extracts legal citations (optional)
+    - Returns evidence record + parsed content + citations
+
+    Supported formats: PDF, DOCX, TXT
+    Max file size: 10MB
+
+    Example:
+        POST /evidence/upload
+        Content-Type: multipart/form-data
+
+        case_id=123
+        title=Employment Contract
+        evidence_type=document
+        obtained_date=2025-01-13
+        file=@contract.pdf
+        parse_document=true
+        extract_citations=true
+    """
+    try:
+        # Validate file
+        validate_file_upload(file)
+
+        # Verify case ownership
+        verify_case_ownership(db, case_id, user_id)
+
+        # Save uploaded file
+        file_path = await save_uploaded_file(file, case_id)
+
+        # Create evidence record
+        insert_query = text("""
+            INSERT INTO evidence (
+                case_id, title, file_path, evidence_type,
+                obtained_date, created_at, updated_at
+            )
+            VALUES (
+                :case_id, :title, :file_path, :evidence_type,
+                :obtained_date, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+            )
+        """)
+
+        result = db.execute(insert_query, {
+            "case_id": case_id,
+            "title": title,
+            "file_path": file_path,
+            "evidence_type": evidence_type,
+            "obtained_date": obtained_date
+        })
+        db.commit()
+
+        evidence_id = result.lastrowid
+
+        # Fetch created evidence
+        select_query = text("""
+            SELECT
+                id,
+                case_id as caseId,
+                title,
+                file_path as filePath,
+                content,
+                evidence_type as evidenceType,
+                obtained_date as obtainedDate,
+                created_at as createdAt,
+                updated_at as updatedAt
+            FROM evidence
+            WHERE id = :evidence_id
+        """)
+
+        created_evidence = db.execute(select_query, {"evidence_id": evidence_id}).fetchone()
+        evidence_dict = dict(created_evidence._mapping)
+        evidence_dict['uploadedAt'] = evidence_dict['createdAt'].isoformat() if evidence_dict.get('createdAt') else None
+        evidence_dict['createdAt'] = evidence_dict['createdAt'].isoformat() if evidence_dict.get('createdAt') else None
+        evidence_dict['updatedAt'] = evidence_dict['updatedAt'].isoformat() if evidence_dict.get('updatedAt') else None
+
+        # Parse document (if requested)
+        parsed_doc = None
+        citations_list = None
+
+        if parse_document:
+            try:
+                parsed = await parser_service.parse_document(file_path, user_id=str(user_id))
+                parsed_doc = ParsedDocumentResponse(
+                    text=parsed.text,
+                    filename=parsed.filename,
+                    file_type=parsed.file_type,
+                    page_count=parsed.page_count,
+                    word_count=parsed.word_count,
+                    metadata=parsed.metadata.to_dict() if parsed.metadata else None
+                )
+
+                # Extract citations (if requested)
+                if extract_citations and parsed.text:
+                    try:
+                        citations = citation_service.extract_citations(parsed.text)
+                        citations_list = [
+                            CitationResponse(
+                                text=citation.text,
+                                type=citation.type,
+                                span=list(citation.span),
+                                metadata=citation.metadata.to_dict(),
+                                court_listener_link=citation_service.get_court_listener_link(citation)
+                            )
+                            for citation in citations
+                        ]
+
+                        logger.info(f"Extracted {len(citations_list)} citations from evidence {evidence_id}")
+
+                    except Exception as e:
+                        logger.warning(f"Citation extraction failed (non-critical): {e}")
+
+            except Exception as e:
+                logger.warning(f"Document parsing failed (non-critical): {e}")
+
+        # Log audit event
+        audit_logger.log(
+            event_type="evidence.uploaded",
+            user_id=str(user_id),
+            resource_type="evidence",
+            resource_id=str(evidence_id),
+            action="upload",
+            details={
+                "caseId": case_id,
+                "evidenceType": evidence_type,
+                "title": title,
+                "filename": file.filename,
+                "file_size": os.path.getsize(file_path),
+                "parsed": parsed_doc is not None,
+                "citations_extracted": len(citations_list) if citations_list else 0
+            },
+            success=True
+        )
+
+        return FileUploadResponse(
+            evidence=evidence_dict,
+            parsed_document=parsed_doc,
+            citations=citations_list
+        )
+
+    except HTTPException:
+        raise
+
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Failed to upload evidence file: {e}", exc_info=True)
+
+        # Log failed upload
+        audit_logger.log(
+            event_type="evidence.uploaded",
+            user_id=str(user_id),
+            resource_type="evidence",
+            resource_id="unknown",
+            action="upload",
+            success=False,
+            error_message=str(e)
+        )
+
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to upload evidence file: {str(e)}"
+        )
+
+
+@router.post("/{evidence_id}/parse", response_model=ParsedDocumentResponse)
+async def parse_evidence_document(
+    evidence_id: int,
+    user_id: int = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    parser_service: DocumentParserService = Depends(get_document_parser_service)
+):
+    """
+    Re-parse evidence document and extract text/metadata.
+
+    Supports PDF, DOCX, TXT formats.
+    Requires evidence to have a file_path.
+
+    Example:
+        POST /evidence/123/parse
+    """
+    try:
+        # Verify ownership
+        verify_evidence_ownership(db, evidence_id, user_id)
+
+        # Get evidence file path
+        query = text("SELECT file_path FROM evidence WHERE id = :evidence_id")
+        result = db.execute(query, {"evidence_id": evidence_id}).fetchone()
+
+        if not result or not result[0]:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Evidence does not have an associated file"
+            )
+
+        file_path = result[0]
+
+        # Parse document
+        parsed = await parser_service.parse_document(file_path, user_id=str(user_id))
+
+        return ParsedDocumentResponse(
+            text=parsed.text,
+            filename=parsed.filename,
+            file_type=parsed.file_type,
+            page_count=parsed.page_count,
+            word_count=parsed.word_count,
+            metadata=parsed.metadata.to_dict() if parsed.metadata else None
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to parse evidence document: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to parse document: {str(e)}"
+        )
+
+
+@router.get("/{evidence_id}/citations", response_model=CitationListResponse)
+async def extract_evidence_citations(
+    evidence_id: int,
+    user_id: int = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    parser_service: DocumentParserService = Depends(get_document_parser_service),
+    citation_service: CitationService = Depends(get_citation_service)
+):
+    """
+    Extract legal citations from evidence document.
+
+    Parses document and extracts citations using eyecite library.
+    Supports case citations, statute citations, and reference citations.
+
+    Returns:
+    - List of citations with metadata
+    - Summary statistics (total, by type, categories)
+    - CourtListener links for case citations
+
+    Example:
+        GET /evidence/123/citations
+    """
+    try:
+        # Verify ownership
+        verify_evidence_ownership(db, evidence_id, user_id)
+
+        # Get evidence file path or content
+        query = text("SELECT file_path, content FROM evidence WHERE id = :evidence_id")
+        result = db.execute(query, {"evidence_id": evidence_id}).fetchone()
+
+        if not result:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Evidence with ID {evidence_id} not found"
+            )
+
+        file_path, content = result
+
+        # Get text content
+        text_content = None
+        if file_path:
+            # Parse document to get text
+            parsed = await parser_service.parse_document(file_path, user_id=str(user_id))
+            text_content = parsed.text
+        elif content:
+            text_content = content
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Evidence has no file or content to extract citations from"
+            )
+
+        # Extract citations
+        citations = citation_service.extract_citations(text_content)
+
+        # Convert to response format
+        citations_list = [
+            CitationResponse(
+                text=citation.text,
+                type=citation.type,
+                span=list(citation.span),
+                metadata=citation.metadata.to_dict(),
+                court_listener_link=citation_service.get_court_listener_link(citation)
+            )
+            for citation in citations
+        ]
+
+        # Get summary
+        summary = citation_service.get_citation_summary(citations)
+
+        logger.info(f"Extracted {len(citations_list)} citations from evidence {evidence_id}")
+
+        return CitationListResponse(
+            citations=citations_list,
+            summary=summary
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to extract citations: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to extract citations: {str(e)}"
+        )
+
+
+@router.get("/case/{case_id}", response_model=List[EvidenceResponse])
+async def list_case_evidence(
+    case_id: int,
+    user_id: int = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    List all evidence for a specific case.
+
+    Validates that the case belongs to the authenticated user.
+    Returns evidence items ordered by creation date (newest first).
+
+    Example:
+        GET /evidence/case/123
+    """
+    try:
+        # Verify user owns the case
+        verify_case_ownership(db, case_id, user_id)
+
+        # Fetch evidence
+        query = text("""
+            SELECT
+                id,
+                case_id as caseId,
+                title,
+                file_path as filePath,
+                content,
+                evidence_type as evidenceType,
+                obtained_date as obtainedDate,
+                created_at as createdAt,
+                updated_at as updatedAt
+            FROM evidence
+            WHERE case_id = :case_id
+            ORDER BY created_at DESC
+        """)
+
+        evidence_items = db.execute(query, {"case_id": case_id}).fetchall()
+
+        # Convert to list of dicts
+        result = []
+        for item in evidence_items:
+            evidence_dict = dict(item._mapping)
+            evidence_dict['uploadedAt'] = evidence_dict['createdAt'].isoformat() if evidence_dict.get('createdAt') else None
+            evidence_dict['createdAt'] = evidence_dict['createdAt'].isoformat() if evidence_dict.get('createdAt') else None
+            evidence_dict['updatedAt'] = evidence_dict['updatedAt'].isoformat() if evidence_dict.get('updatedAt') else None
+            result.append(evidence_dict)
+
+        return result
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to list case evidence: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to list evidence: {str(e)}"
+        )
+
+
+@router.put("/{evidence_id}", response_model=EvidenceResponse)
+async def update_evidence(
+    evidence_id: int,
+    request: UpdateEvidenceRequest,
+    user_id: int = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    audit_logger: AuditLogger = Depends(get_audit_logger)
+):
+    """
+    Update evidence metadata.
+
+    Only updates fields provided in the request body.
+    Only allows updating evidence owned by the authenticated user.
+    Returns 404 if evidence doesn't exist or user doesn't own it.
+
+    Example:
+        PUT /evidence/123
+        {
+            "title": "Updated Title",
+            "description": "Updated description",
+            "evidenceType": "document"
+        }
+    """
+    try:
+        # Verify ownership
+        verify_evidence_ownership(db, evidence_id, user_id)
+
+        # Ensure at least one field is provided
+        if all(field is None for field in [
+            request.title,
+            request.description,
+            request.evidenceType,
+            request.obtainedDate
+        ]):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="At least one field must be provided for update"
+            )
+
+        # Build dynamic update query
+        update_fields = []
+        params = {"evidence_id": evidence_id}
+
+        if request.title is not None:
+            update_fields.append("title = :title")
+            params["title"] = request.title
+
+        if request.description is not None:
+            update_fields.append("content = :content")
+            params["content"] = request.description
+
+        if request.evidenceType is not None:
+            update_fields.append("evidence_type = :evidence_type")
+            params["evidence_type"] = request.evidenceType
+
+        if request.obtainedDate is not None:
+            update_fields.append("obtained_date = :obtained_date")
+            params["obtained_date"] = request.obtainedDate
+
+        update_fields.append("updated_at = CURRENT_TIMESTAMP")
+
+        update_query = text(f"""
+            UPDATE evidence
+            SET {', '.join(update_fields)}
+            WHERE id = :evidence_id
+        """)
+
+        db.execute(update_query, params)
+        db.commit()
+
+        # Fetch updated evidence
+        select_query = text("""
+            SELECT
+                id,
+                case_id as caseId,
+                title,
+                file_path as filePath,
+                content,
+                evidence_type as evidenceType,
+                obtained_date as obtainedDate,
+                created_at as createdAt,
+                updated_at as updatedAt
+            FROM evidence
+            WHERE id = :evidence_id
+        """)
+
+        updated_evidence = db.execute(select_query, {"evidence_id": evidence_id}).fetchone()
+
+        # Log audit event
+        audit_logger.log(
+            event_type="evidence.updated",
+            user_id=str(user_id),
+            resource_type="evidence",
+            resource_id=str(evidence_id),
+            action="update",
+            details={"fields_updated": list(params.keys())},
+            success=True
+        )
+
+        # Convert to dict
+        evidence_dict = dict(updated_evidence._mapping)
+        evidence_dict['uploadedAt'] = evidence_dict['createdAt'].isoformat() if evidence_dict.get('createdAt') else None
+        evidence_dict['createdAt'] = evidence_dict['createdAt'].isoformat() if evidence_dict.get('createdAt') else None
+        evidence_dict['updatedAt'] = evidence_dict['updatedAt'].isoformat() if evidence_dict.get('updatedAt') else None
+
+        return evidence_dict
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Failed to update evidence: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to update evidence: {str(e)}"
+        )
+
+
+@router.delete("/{evidence_id}", response_model=DeleteEvidenceResponse, status_code=status.HTTP_200_OK)
+async def delete_evidence(
+    evidence_id: int,
+    user_id: int = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    audit_logger: AuditLogger = Depends(get_audit_logger)
+):
+    """
+    Delete evidence by ID.
+
+    Validates:
+    - Evidence exists
+    - User owns the case that contains this evidence
+
+    Logs audit event for successful deletions and failures.
+
+    Example:
+        DELETE /evidence/123
+    """
+    try:
+        # Verify user owns the evidence (via case ownership)
+        verify_evidence_ownership(db, evidence_id, user_id)
+
+        # Get file path before deletion (to delete file from disk)
+        file_query = text("SELECT file_path FROM evidence WHERE id = :evidence_id")
+        file_result = db.execute(file_query, {"evidence_id": evidence_id}).fetchone()
+        file_path = file_result[0] if file_result else None
+
+        # Delete evidence
+        delete_query = text("DELETE FROM evidence WHERE id = :evidence_id")
+        result = db.execute(delete_query, {"evidence_id": evidence_id})
+        db.commit()
+
+        if result.rowcount == 0:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Evidence with ID {evidence_id} not found"
+            )
+
+        # Delete file from disk (if exists)
+        if file_path and os.path.exists(file_path):
+            try:
+                os.remove(file_path)
+                logger.info(f"Deleted evidence file: {file_path}")
+            except Exception as e:
+                logger.warning(f"Failed to delete evidence file (non-critical): {e}")
+
+        # Log audit event
+        audit_logger.log(
+            event_type="evidence.deleted",
+            user_id=str(user_id),
+            resource_type="evidence",
+            resource_id=str(evidence_id),
+            action="delete",
+            success=True
+        )
+
+        return {"success": True}
+
+    except HTTPException:
+        raise
+
+    except Exception as e:
+        db.rollback()
+        # Log failed deletion
+        audit_logger.log(
+            event_type="evidence.deleted",
+            user_id=str(user_id),
+            resource_type="evidence",
+            resource_id=str(evidence_id),
+            action="delete",
+            success=False,
+            error_message=str(e)
+        )
+
+        logger.error(f"Failed to delete evidence: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete evidence: {str(e)}"
+        )

@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 /**
  * Cursor-based pagination parameters
@@ -22,7 +22,7 @@ export interface PaginationParams {
    * Sort direction (affects cursor navigation)
    * Default: 'desc' (newest first)
    */
-  direction?: 'asc' | 'desc';
+  direction?: "asc" | "desc";
 }
 
 /**
@@ -59,7 +59,7 @@ export interface PaginatedResult<T> {
 export const PaginationParamsSchema = z.object({
   limit: z.number().int().min(1).max(100).default(20),
   cursor: z.string().optional(),
-  direction: z.enum(['asc', 'desc']).default('desc'),
+  direction: z.enum(["asc", "desc"]).default("desc"),
 });
 
 export type ValidatedPaginationParams = z.infer<typeof PaginationParamsSchema>;

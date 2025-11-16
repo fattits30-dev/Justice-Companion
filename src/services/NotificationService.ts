@@ -52,7 +52,7 @@ export class NotificationService {
   constructor(
     private readonly notificationRepo: NotificationRepository,
     private readonly preferencesRepo: NotificationPreferencesRepository,
-    private readonly auditLogger: AuditLogger
+    private readonly auditLogger: AuditLogger,
   ) {}
 
   /**
@@ -66,7 +66,7 @@ export class NotificationService {
    * Create a new notification
    */
   async createNotification(
-    input: CreateNotificationInput
+    input: CreateNotificationInput,
   ): Promise<Notification> {
     try {
       // Check if user has this notification type enabled
@@ -78,7 +78,7 @@ export class NotificationService {
           userId: input.userId,
         });
         throw new NotificationError(
-          `Notification type ${input.type} is disabled`
+          `Notification type ${input.type} is disabled`,
         );
       }
 
@@ -89,7 +89,7 @@ export class NotificationService {
           "Blocking notification during quiet hours",
           {
             userId: input.userId,
-          }
+          },
         );
         throw new NotificationError("Notification blocked during quiet hours");
       }
@@ -113,8 +113,8 @@ export class NotificationService {
       // Emit event
       await Promise.all(
         this.eventHandlers.map((handler) =>
-          handler.onNotificationCreated(notification)
-        )
+          handler.onNotificationCreated(notification),
+        ),
       );
 
       // Return the created notification by ID to ensure it's fetched
@@ -130,7 +130,7 @@ export class NotificationService {
       logger.error(
         "NotificationService",
         "Failed to create notification",
-        errorData
+        errorData,
       );
       throw new NotificationError("Failed to create notification");
     }
@@ -141,7 +141,7 @@ export class NotificationService {
    */
   async getNotifications(
     userId: number,
-    filters?: NotificationFilters
+    filters?: NotificationFilters,
   ): Promise<Notification[]> {
     return this.notificationRepo.findByUser(userId, filters);
   }
@@ -150,7 +150,7 @@ export class NotificationService {
    * Get a notification by ID
    */
   async getNotificationById(
-    notificationId: number
+    notificationId: number,
   ): Promise<Notification | null> {
     return this.notificationRepo.findById(notificationId);
   }
@@ -227,7 +227,7 @@ export class NotificationService {
    */
   async updatePreferences(
     userId: number,
-    updates: UpdateNotificationPreferencesInput
+    updates: UpdateNotificationPreferencesInput,
   ): Promise<NotificationPreferences> {
     const updated = this.preferencesRepo.update(userId, updates);
 
@@ -272,7 +272,7 @@ export class NotificationService {
     userId: number,
     severity: NotificationSeverity,
     title: string,
-    message: string
+    message: string,
   ): Promise<Notification> {
     // Determine notification type based on severity
     let type: NotificationType;
@@ -304,7 +304,7 @@ export class NotificationService {
    */
   private shouldSendNotification(
     type: NotificationType,
-    prefs: NotificationPreferences
+    prefs: NotificationPreferences,
   ): boolean {
     switch (type) {
       case "deadline_reminder":

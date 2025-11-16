@@ -1,5 +1,5 @@
 import { injectable } from "inversify";
-import { logger } from '../utils/logger';
+import { logger } from "../utils/logger";
 
 /**
  * Represents a login attempt record for rate limiting

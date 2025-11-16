@@ -9,9 +9,8 @@ import * as path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { logger } from '../../src/utils/logger';
 
-// ESM equivalent of __dirname
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Note: __dirname is available in CommonJS mode (esbuild output)
+// No need to derive from import.meta.url
 
 /**
  * Audit event types for Justice Companion (const object - modern TypeScript best practice)
@@ -148,7 +147,7 @@ export function getUserIdFromEvent(event: IpcMainInvokeEvent): number | null {
   }
 
   // Lazy-load SessionManager to avoid circular dependencies
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
+   
   const { getSessionManager } = require("../services/SessionManager.ts");
   const sessionManager = getSessionManager();
 
@@ -167,7 +166,7 @@ export function isAuthenticated(event: IpcMainInvokeEvent): boolean {
   }
 
   // Lazy-load SessionManager to avoid circular dependencies
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
+   
   const { getSessionManager } = require("../services/SessionManager.ts");
   const sessionManager = getSessionManager();
 

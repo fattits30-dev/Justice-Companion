@@ -81,7 +81,7 @@ describe("UserProfileService", () => {
 
       const logs = (auditLogger as any).getAllLogs();
       const accessLog = logs.find(
-        (log: any) => log.event_type === "profile.pii_access"
+        (log: any) => log.event_type === "profile.pii_access",
       );
 
       expect(accessLog).toBeDefined();
@@ -190,7 +190,7 @@ describe("UserProfileService", () => {
 
       const logs = (auditLogger as any).getAllLogs();
       const updateLog = logs.find(
-        (log: any) => log.event_type === "profile.update"
+        (log: any) => log.event_type === "profile.update",
       );
 
       expect(updateLog).toBeDefined();
@@ -372,7 +372,7 @@ describe("UserProfileService", () => {
 
       const logs = (auditLogger as any).getAllLogs();
       const updateLogs = logs.filter(
-        (log: any) => log.event_type === "profile.update"
+        (log: any) => log.event_type === "profile.update",
       );
 
       expect(updateLogs.length).toBeGreaterThanOrEqual(3);

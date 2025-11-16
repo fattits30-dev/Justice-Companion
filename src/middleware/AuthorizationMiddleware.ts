@@ -1,6 +1,6 @@
-import { AuditLogger } from '../services/AuditLogger.ts';
-import { CaseRepository } from '../repositories/CaseRepository.ts';
-import type { User } from '../domains/auth/entities/User.ts';
+import { AuditLogger } from "../services/AuditLogger.ts";
+import { CaseRepository } from "../repositories/CaseRepository.ts";
+import type { User } from "../domains/auth/entities/User.ts";
 
 /**
  * Authorization error class
@@ -8,7 +8,7 @@ import type { User } from '../domains/auth/entities/User.ts';
 export class AuthorizationError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = 'AuthorizationError';
+    this.name = "AuthorizationError";
   }
 }
 
@@ -29,10 +29,7 @@ export class AuthorizationMiddleware {
   private caseRepository: CaseRepository;
   private auditLogger?: AuditLogger;
 
-  constructor(
-    caseRepository: CaseRepository,
-    auditLogger?: AuditLogger,
-  ) {
+  constructor(caseRepository: CaseRepository, auditLogger?: AuditLogger) {
     this.caseRepository = caseRepository;
     this.auditLogger = auditLogger;
   }
@@ -45,33 +42,33 @@ export class AuthorizationMiddleware {
 
     if (!caseData) {
       this.auditLogger?.log({
-        eventType: 'authorization.denied',
+        eventType: "authorization.denied",
         userId: userId.toString(),
-        resourceType: 'case',
+        resourceType: "case",
         resourceId: caseId.toString(),
-        action: 'read',
+        action: "read",
         success: false,
-        details: { reason: 'Case not found' },
+        details: { reason: "Case not found" },
       });
-      throw new AuthorizationError('Case not found');
+      throw new AuthorizationError("Case not found");
     }
 
     // Check ownership (userId column added in migration 011)
     // Note: For backward compatibility with existing data, null user_id is allowed
     if (caseData.userId && caseData.userId !== userId) {
       this.auditLogger?.log({
-        eventType: 'authorization.denied',
+        eventType: "authorization.denied",
         userId: userId.toString(),
-        resourceType: 'case',
+        resourceType: "case",
         resourceId: caseId.toString(),
-        action: 'read',
+        action: "read",
         success: false,
         details: {
-          reason: 'Not owner',
+          reason: "Not owner",
           ownerId: caseData.userId,
         },
       });
-      throw new AuthorizationError('Access denied: you do not own this case');
+      throw new AuthorizationError("Access denied: you do not own this case");
     }
   }
 
@@ -79,20 +76,20 @@ export class AuthorizationMiddleware {
    * Verify user has admin role
    */
   verifyAdminRole(user: User): void {
-    if (user.role !== 'admin') {
+    if (user.role !== "admin") {
       this.auditLogger?.log({
-        eventType: 'authorization.denied',
+        eventType: "authorization.denied",
         userId: user.id.toString(),
-        resourceType: 'admin',
-        resourceId: 'system',
-        action: 'read',
+        resourceType: "admin",
+        resourceId: "system",
+        action: "read",
         success: false,
         details: {
-          reason: 'Not admin',
+          reason: "Not admin",
           role: user.role,
         },
       });
-      throw new AuthorizationError('Access denied: admin role required');
+      throw new AuthorizationError("Access denied: admin role required");
     }
   }
 
@@ -102,15 +99,15 @@ export class AuthorizationMiddleware {
   verifyUserActive(user: User): void {
     if (!user.isActive) {
       this.auditLogger?.log({
-        eventType: 'authorization.denied',
+        eventType: "authorization.denied",
         userId: user.id.toString(),
-        resourceType: 'user',
+        resourceType: "user",
         resourceId: user.id.toString(),
-        action: 'read',
+        action: "read",
         success: false,
-        details: { reason: 'User inactive' },
+        details: { reason: "User inactive" },
       });
-      throw new AuthorizationError('Account is inactive');
+      throw new AuthorizationError("Account is inactive");
     }
   }
 
@@ -124,20 +121,22 @@ export class AuthorizationMiddleware {
     }
 
     // Only admin can modify other users
-    if (requestingUser.role !== 'admin') {
+    if (requestingUser.role !== "admin") {
       this.auditLogger?.log({
-        eventType: 'authorization.denied',
+        eventType: "authorization.denied",
         userId: requestingUser.id.toString(),
-        resourceType: 'user',
+        resourceType: "user",
         resourceId: targetUserId.toString(),
-        action: 'update',
+        action: "update",
         success: false,
         details: {
-          reason: 'Cannot modify other users',
+          reason: "Cannot modify other users",
           role: requestingUser.role,
         },
       });
-      throw new AuthorizationError('Access denied: you can only modify your own account');
+      throw new AuthorizationError(
+        "Access denied: you can only modify your own account",
+      );
     }
   }
 }

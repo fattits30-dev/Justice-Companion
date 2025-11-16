@@ -9,9 +9,16 @@ export interface WorkflowTask {
   id: string;
   title: string;
   description: string;
-  category: 'setup' | 'feature' | 'testing' | 'docs' | 'refactor' | 'bugfix' | 'manual';
-  priority: 'critical' | 'high' | 'medium' | 'low';
-  status: 'pending' | 'in_progress' | 'completed' | 'failed' | 'blocked';
+  category:
+    | "setup"
+    | "feature"
+    | "testing"
+    | "docs"
+    | "refactor"
+    | "bugfix"
+    | "manual";
+  priority: "critical" | "high" | "medium" | "low";
+  status: "pending" | "in_progress" | "completed" | "failed" | "blocked";
   dependencies: string[];
   phase?: string;
   estimatedHours?: number;
@@ -125,7 +132,11 @@ export interface AgentContext {
   config: LocalClaudeConfig;
   availableTools: string[];
   memory: {
-    decisions: Array<{ timestamp: string; decision: string; reasoning: string }>;
+    decisions: Array<{
+      timestamp: string;
+      decision: string;
+      reasoning: string;
+    }>;
     patterns: Array<{ pattern: string; context: string }>;
     notes: Array<{ timestamp: string; note: string }>;
   };
@@ -133,7 +144,7 @@ export interface AgentContext {
 
 export interface MCPWorkflowState {
   planId: string;
-  status: 'idle' | 'planning' | 'executing' | 'paused' | 'completed' | 'failed';
+  status: "idle" | "planning" | "executing" | "paused" | "completed" | "failed";
   currentPhaseIndex: number;
   currentTaskId?: string;
   history: Array<{
@@ -155,8 +166,8 @@ export interface MCPPlanAdd {
   taskId: string;
   title: string;
   description: string;
-  category: WorkflowTask['category'];
-  priority: WorkflowTask['priority'];
+  category: WorkflowTask["category"];
+  priority: WorkflowTask["priority"];
   dependencies: string[];
   acceptanceCriteria?: string[];
   phase: string;
@@ -166,7 +177,7 @@ export interface MCPPlanStatus {
   tasks: Array<{
     id: string;
     title: string;
-    status: WorkflowTask['status'];
+    status: WorkflowTask["status"];
     phase: string;
   }>;
   summary: {
@@ -190,7 +201,7 @@ export interface WorkflowSummary {
   };
   recentChanges: Array<{
     timestamp: string;
-    type: 'task_completed' | 'task_started' | 'task_failed' | 'phase_completed';
+    type: "task_completed" | "task_started" | "task_failed" | "phase_completed";
     details: string;
   }>;
   nextSteps: string[];

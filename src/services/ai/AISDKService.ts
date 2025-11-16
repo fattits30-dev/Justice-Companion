@@ -10,7 +10,7 @@ import type {
   AIProviderType,
 } from "../../types/ai-providers.ts";
 import { UnifiedAIService } from "../UnifiedAIService.ts";
-import { logger } from '../../utils/logger';
+import { logger } from "../../utils/logger";
 
 export interface ChatMessage {
   role: "system" | "user" | "assistant";
@@ -85,7 +85,7 @@ export class AISDKService {
 
       return response;
     } catch (error) {
-      logger.error("[AISDKService] Chat error:", error);
+      logger.error("[AISDKService] Chat error", { error: error as Error });
       throw error;
     }
   }
@@ -95,7 +95,7 @@ export class AISDKService {
    */
   async streamChat(
     messages: ChatMessage[],
-    callbacks: StreamingCallbacks,
+    callbacks: StreamingCallbacks
   ): Promise<void> {
     try {
       // Convert messages to the format expected by UnifiedAIService
@@ -113,10 +113,12 @@ export class AISDKService {
         onFunctionCall: callbacks.onFunctionCall,
       });
     } catch (error) {
-      logger.error("[AISDKService] Stream chat error:", error);
+      logger.error("[AISDKService] Stream chat error", {
+        error: error as Error,
+      });
       if (callbacks.onError) {
         callbacks.onError(
-          error instanceof Error ? error : new Error(String(error)),
+          error instanceof Error ? error : new Error(String(error))
         );
       }
     }

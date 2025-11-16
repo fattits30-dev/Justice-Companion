@@ -31,7 +31,7 @@ export class TagService {
         userId,
         input.name,
         input.color,
-        input.description || null
+        input.description || null,
       );
       const tagId = result.lastInsertRowid as number;
 
@@ -53,7 +53,10 @@ export class TagService {
 
       return tag;
     } catch (error) {
-      if (error instanceof Error && error.message.includes("UNIQUE constraint failed")) {
+      if (
+        error instanceof Error &&
+        error.message.includes("UNIQUE constraint failed")
+      ) {
         throw new Error("A tag with this name already exists");
       }
       throw error;
@@ -170,7 +173,7 @@ export class TagService {
 
     // Delete in transaction
     const deleteJunction = this.db.prepare(
-      "DELETE FROM evidence_tags WHERE tag_id = ?"
+      "DELETE FROM evidence_tags WHERE tag_id = ?",
     );
     const deleteTag = this.db.prepare("DELETE FROM tags WHERE id = ?");
 
@@ -308,7 +311,7 @@ export class TagService {
     const mostUsedTag =
       tags.length > 0
         ? tags.reduce((max, tag) =>
-            (tag.usageCount || 0) > (max.usageCount || 0) ? tag : max
+            (tag.usageCount || 0) > (max.usageCount || 0) ? tag : max,
           )
         : null;
 

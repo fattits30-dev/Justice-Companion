@@ -9,33 +9,45 @@
  * Application view types
  * Used for navigation and routing
  */
-export type ViewType = 'dashboard' | 'chat' | 'cases' | 'case-detail' | 'documents' | 'settings';
+export type ViewType =
+  | "dashboard"
+  | "chat"
+  | "cases"
+  | "case-detail"
+  | "documents"
+  | "settings";
 
 /**
  * Standard size scale
  * Used for buttons, inputs, badges, etc.
  */
-export type Size = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+export type Size = "xs" | "sm" | "md" | "lg" | "xl";
 
 /**
  * Component visual variants
  * Maps to design system color palette
  */
 export type Variant =
-  | 'primary' // Blue - main actions
-  | 'secondary' // Gold - accent actions
-  | 'success' // Green - positive feedback
-  | 'warning' // Yellow - caution
-  | 'error' // Red - errors/destructive
-  | 'info' // Cyan - informational
-  | 'ghost' // Transparent - subtle actions
-  | 'default'; // Neutral - standard appearance
+  | "primary" // Blue - main actions
+  | "secondary" // Gold - accent actions
+  | "success" // Green - positive feedback
+  | "warning" // Yellow - caution
+  | "error" // Red - errors/destructive
+  | "info" // Cyan - informational
+  | "ghost" // Transparent - subtle actions
+  | "default"; // Neutral - standard appearance
 
 /**
  * Entity status types
  * Used for cases, conversations, documents, etc.
  */
-export type Status = 'active' | 'inactive' | 'pending' | 'closed' | 'archived' | 'draft';
+export type Status =
+  | "active"
+  | "inactive"
+  | "pending"
+  | "closed"
+  | "archived"
+  | "draft";
 
 /**
  * Base props for all UI components
@@ -56,12 +68,12 @@ export interface BaseComponentProps {
    * Accessibility label for screen readers
    * Required for icon-only buttons and interactive elements
    */
-  'aria-label'?: string;
+  "aria-label"?: string;
 
   /**
    * Optional data-testid for testing
    */
-  'data-testid'?: string;
+  "data-testid"?: string;
 }
 
 /**
@@ -105,7 +117,7 @@ export const BREAKPOINTS = {
   md: 768,
   lg: 1024,
   xl: 1280,
-  '2xl': 1536,
+  "2xl": 1536,
 } as const;
 
 /**
@@ -142,8 +154,8 @@ export const DURATION = {
  * Common easing functions
  */
 export const EASING = {
-  in: 'cubic-bezier(0.4, 0, 1, 1)',
-  out: 'cubic-bezier(0, 0, 0.2, 1)',
-  inOut: 'cubic-bezier(0.4, 0, 0.2, 1)',
-  bounce: 'cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+  in: "cubic-bezier(0.4, 0, 1, 1)",
+  out: "cubic-bezier(0, 0, 0.2, 1)",
+  inOut: "cubic-bezier(0.4, 0, 0.2, 1)",
+  bounce: "cubic-bezier(0.68, -0.55, 0.265, 1.55)",
 } as const;

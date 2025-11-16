@@ -1,4 +1,4 @@
-import { getCacheService, type CacheStats } from '../services/CacheService.ts';
+import { getCacheService, type CacheStats } from "../services/CacheService.ts";
 
 /**
  * Detailed cache metrics for monitoring and analysis
@@ -81,15 +81,20 @@ export class CacheMetrics {
     }
 
     const totalRequests = totalHits + totalMisses;
-    const averageHitRate = totalRequests > 0 ? (totalHits / totalRequests) * 100 : 0;
-    const memoryUtilization = totalMaxSize > 0 ? (totalSize / totalMaxSize) * 100 : 0;
+    const averageHitRate =
+      totalRequests > 0 ? (totalHits / totalRequests) * 100 : 0;
+    const memoryUtilization =
+      totalMaxSize > 0 ? (totalSize / totalMaxSize) * 100 : 0;
 
     // Estimate memory usage (rough approximation)
     // Assume average entry size of 1KB (conservative estimate)
     const estimatedMemoryMB = (totalSize * 1024) / (1024 * 1024);
 
     // Calculate cache efficiency
-    const cacheEfficiency = this.calculateEfficiency(averageHitRate, memoryUtilization);
+    const cacheEfficiency = this.calculateEfficiency(
+      averageHitRate,
+      memoryUtilization,
+    );
 
     return {
       timestamp: Date.now(),
@@ -103,63 +108,81 @@ export class CacheMetrics {
         averageHitRate,
         totalSize,
         totalMaxSize,
-        memoryUtilization
+        memoryUtilization,
       },
       performance: {
         estimatedMemoryMB,
         cacheEfficiency,
-        recommendedActions: this.generateRecommendations(averageHitRate, memoryUtilization)
-      }
+        recommendedActions: this.generateRecommendations(
+          averageHitRate,
+          memoryUtilization,
+        ),
+      },
     };
   }
 
   private updateTimeSeries(cache: CacheStats): void {
-    const cacheKey = cache.name || 'default';
+    const cacheKey = cache.name || "default";
     const now = Date.now();
-    
+
     if (!this.timeSeriesData.has(cacheKey)) {
       this.timeSeriesData.set(cacheKey, []);
     }
-    
+
     const dataPoints = this.timeSeriesData.get(cacheKey)!;
-    
+
     // Remove oldest data point if we've reached the limit
     if (dataPoints.length >= this.maxDataPoints) {
       dataPoints.shift();
     }
-    
+
     // Add new data point
     dataPoints.push({
       timestamp: now,
-      hitRate: cache.hits + cache.misses > 0 ? (cache.hits / (cache.hits + cache.misses)) * 100 : 0,
+      hitRate:
+        cache.hits + cache.misses > 0
+          ? (cache.hits / (cache.hits + cache.misses)) * 100
+          : 0,
       size: cache.size,
-      evictions: cache.evictions
+      evictions: cache.evictions,
     });
   }
 
-  private calculateEfficiency(hitRate: number, memoryUtilization: number): number {
+  private calculateEfficiency(
+    hitRate: number,
+    memoryUtilization: number,
+  ): number {
     // Simple efficiency calculation based on hit rate and memory utilization
     // This is a placeholder implementation - actual logic may vary
     const normalizedHitRate = hitRate / 100;
-    const normalizedMemory = 1 - (memoryUtilization / 100);
-    
+    const normalizedMemory = 1 - memoryUtilization / 100;
+
     // Weighted average (adjust weights as needed)
     return (normalizedHitRate * 0.7 + normalizedMemory * 0.3) * 100;
   }
 
-  private generateRecommendations(hitRate: number, memoryUtilization: number): string[] {
+  private generateRecommendations(
+    hitRate: number,
+    memoryUtilization: number,
+  ): string[] {
     const recommendations: string[] = [];
-    
+
     if (hitRate < 50) {
-      recommendations.push('Consider increasing cache size or improving cache warming strategy');
+      recommendations.push(
+        "Consider increasing cache size or improving cache warming strategy",
+      );
     }
-    
+
     if (memoryUtilization > 80) {
-      recommendations.push('Consider increasing max cache size or implementing more aggressive eviction policies');
+      recommendations.push(
+        "Consider increasing max cache size or implementing more aggressive eviction policies",
+      );
     }
-    
+
     if (hitRate > 90 && memoryUtilization < 30) {
-      recommendations.push('Consider reducing cache size to save memory resources');
+      recommendations.push(
+        "Consider reducing cache size to save memory resources",
+      );
     }
 
     return recommendations;

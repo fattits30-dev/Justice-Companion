@@ -1,9 +1,17 @@
-import { describe, it, expect, beforeEach, afterAll, beforeAll } from 'vitest';
-import { AuditLogger } from './AuditLogger.ts';
-import { EncryptionService, type EncryptedData } from './EncryptionService.ts';
-import Database from 'better-sqlite3';
-import type { CreateCaseInput, UpdateCaseInput, Case } from '../domains/cases/entities/Case.ts';
-import type { CreateEvidenceInput, UpdateEvidenceInput, Evidence } from '../domains/evidence/entities/Evidence.ts';
+import { describe, it, expect, beforeEach, afterAll, beforeAll } from "vitest";
+import { AuditLogger } from "./AuditLogger.ts";
+import { EncryptionService, type EncryptedData } from "./EncryptionService.ts";
+import Database from "better-sqlite3";
+import type {
+  CreateCaseInput,
+  UpdateCaseInput,
+  Case,
+} from "../domains/cases/entities/Case.ts";
+import type {
+  CreateEvidenceInput,
+  UpdateEvidenceInput,
+  Evidence,
+} from "../domains/evidence/entities/Evidence.ts";
 
 /**
  * End-to-End Audit Logger Verification Suite
@@ -19,7 +27,7 @@ import type { CreateEvidenceInput, UpdateEvidenceInput, Evidence } from '../doma
  * NOTE: This test creates simplified versions of repositories that use
  * the test database directly instead of relying on the global getDb().
  */
-describe('AuditLogger E2E', () => {
+describe("AuditLogger E2E", () => {
   let auditLogger: AuditLogger;
   let encryptionService: EncryptionService;
   let db: Database.Database;
@@ -49,10 +57,10 @@ describe('AuditLogger E2E', () => {
 
     // Log create event FIRST (before retrieving, which may log PII access)
     auditLogger.log({
-      eventType: 'case.create',
-      resourceType: 'case',
+      eventType: "case.create",
+      resourceType: "case",
       resourceId: caseId.toString(),
-      action: 'create',
+      action: "create",
       details: {
         title: input.title,
         caseType: input.caseType,
@@ -88,11 +96,11 @@ describe('AuditLogger E2E', () => {
           row.description = encryptionService.decrypt(encryptedData);
 
           auditLogger.log({
-            eventType: 'case.pii_access',
-            resourceType: 'case',
+            eventType: "case.pii_access",
+            resourceType: "case",
             resourceId: id.toString(),
-            action: 'read',
-            details: { field: 'description', encrypted: true },
+            action: "read",
+            details: { field: "description", encrypted: true },
             success: true,
           });
         }
@@ -109,22 +117,24 @@ describe('AuditLogger E2E', () => {
     const params: Record<string, unknown> = { id };
 
     if (input.title !== undefined) {
-      updates.push('title = @title');
+      updates.push("title = @title");
       params.title = input.title;
     }
     if (input.description !== undefined) {
-      updates.push('description = @description');
+      updates.push("description = @description");
       const encryptedDescription = input.description
         ? encryptionService.encrypt(input.description)
         : null;
-      params.description = encryptedDescription ? JSON.stringify(encryptedDescription) : null;
+      params.description = encryptedDescription
+        ? JSON.stringify(encryptedDescription)
+        : null;
     }
     if (input.caseType !== undefined) {
-      updates.push('case_type = @caseType');
+      updates.push("case_type = @caseType");
       params.caseType = input.caseType;
     }
     if (input.status !== undefined) {
-      updates.push('status = @status');
+      updates.push("status = @status");
       params.status = input.status;
     }
 
@@ -134,7 +144,7 @@ describe('AuditLogger E2E', () => {
 
     const stmt = db.prepare(`
       UPDATE cases
-      SET ${updates.join(', ')}
+      SET ${updates.join(", ")}
       WHERE id = @id
     `);
 
@@ -142,10 +152,10 @@ describe('AuditLogger E2E', () => {
 
     // Log update event FIRST (before retrieving, which may log PII access)
     auditLogger.log({
-      eventType: 'case.update',
-      resourceType: 'case',
+      eventType: "case.update",
+      resourceType: "case",
       resourceId: id.toString(),
-      action: 'update',
+      action: "update",
       details: {
         fieldsUpdated: Object.keys(input),
       },
@@ -158,15 +168,15 @@ describe('AuditLogger E2E', () => {
   };
 
   const deleteCase = (id: number): boolean => {
-    const stmt = db.prepare('DELETE FROM cases WHERE id = ?');
+    const stmt = db.prepare("DELETE FROM cases WHERE id = ?");
     const result = stmt.run(id);
     const success = result.changes > 0;
 
     auditLogger.log({
-      eventType: 'case.delete',
-      resourceType: 'case',
+      eventType: "case.delete",
+      resourceType: "case",
       resourceId: id.toString(),
-      action: 'delete',
+      action: "delete",
       success,
     });
 
@@ -204,10 +214,10 @@ describe('AuditLogger E2E', () => {
 
     // Log create event FIRST (before retrieving, which may log content access)
     auditLogger.log({
-      eventType: 'evidence.create',
-      resourceType: 'evidence',
+      eventType: "evidence.create",
+      resourceType: "evidence",
       resourceId: evidenceId.toString(),
-      action: 'create',
+      action: "create",
       details: {
         caseId: input.caseId,
         evidenceType: input.evidenceType,
@@ -244,14 +254,14 @@ describe('AuditLogger E2E', () => {
           row.content = encryptionService.decrypt(encryptedData);
 
           auditLogger.log({
-            eventType: 'evidence.content_access',
-            resourceType: 'evidence',
+            eventType: "evidence.content_access",
+            resourceType: "evidence",
             resourceId: id.toString(),
-            action: 'read',
+            action: "read",
             details: {
               caseId: row.caseId,
               evidenceType: row.evidenceType,
-              field: 'content',
+              field: "content",
               encrypted: true,
             },
             success: true,
@@ -265,31 +275,36 @@ describe('AuditLogger E2E', () => {
     return row;
   };
 
-  const updateEvidence = (id: number, input: UpdateEvidenceInput): Evidence | null => {
+  const updateEvidence = (
+    id: number,
+    input: UpdateEvidenceInput,
+  ): Evidence | null => {
     const updates: string[] = [];
     const params: Record<string, unknown> = { id };
 
     if (input.title !== undefined) {
-      updates.push('title = @title');
+      updates.push("title = @title");
       params.title = input.title;
     }
     if (input.filePath !== undefined) {
-      updates.push('file_path = @filePath');
+      updates.push("file_path = @filePath");
       params.filePath = input.filePath;
     }
     if (input.content !== undefined) {
-      updates.push('content = @content');
+      updates.push("content = @content");
       const encryptedContent = input.content
         ? encryptionService.encrypt(input.content)
         : null;
-      params.content = encryptedContent ? JSON.stringify(encryptedContent) : null;
+      params.content = encryptedContent
+        ? JSON.stringify(encryptedContent)
+        : null;
     }
     if (input.evidenceType !== undefined) {
-      updates.push('evidence_type = @evidenceType');
+      updates.push("evidence_type = @evidenceType");
       params.evidenceType = input.evidenceType;
     }
     if (input.obtainedDate !== undefined) {
-      updates.push('obtained_date = @obtainedDate');
+      updates.push("obtained_date = @obtainedDate");
       params.obtainedDate = input.obtainedDate;
     }
 
@@ -299,21 +314,25 @@ describe('AuditLogger E2E', () => {
 
     const stmt = db.prepare(`
       UPDATE evidence
-      SET ${updates.join(', ')}
+      SET ${updates.join(", ")}
       WHERE id = @id
     `);
 
     stmt.run(params);
 
     // Get case info for audit log (without triggering content access log)
-    const evidenceInfo = db.prepare('SELECT case_id as caseId, evidence_type as evidenceType FROM evidence WHERE id = ?').get(id) as { caseId: number; evidenceType: string };
+    const evidenceInfo = db
+      .prepare(
+        "SELECT case_id as caseId, evidence_type as evidenceType FROM evidence WHERE id = ?",
+      )
+      .get(id) as { caseId: number; evidenceType: string };
 
     // Log update event FIRST (before retrieving full evidence, which may log content access)
     auditLogger.log({
-      eventType: 'evidence.update',
-      resourceType: 'evidence',
+      eventType: "evidence.update",
+      resourceType: "evidence",
       resourceId: id.toString(),
-      action: 'update',
+      action: "update",
       details: {
         fieldsUpdated: Object.keys(input),
         caseId: evidenceInfo.caseId,
@@ -328,15 +347,15 @@ describe('AuditLogger E2E', () => {
   };
 
   const deleteEvidence = (id: number): boolean => {
-    const stmt = db.prepare('DELETE FROM evidence WHERE id = ?');
+    const stmt = db.prepare("DELETE FROM evidence WHERE id = ?");
     const result = stmt.run(id);
     const success = result.changes > 0;
 
     auditLogger.log({
-      eventType: 'evidence.delete',
-      resourceType: 'evidence',
+      eventType: "evidence.delete",
+      resourceType: "evidence",
       resourceId: id.toString(),
-      action: 'delete',
+      action: "delete",
       success,
     });
 
@@ -345,8 +364,8 @@ describe('AuditLogger E2E', () => {
 
   beforeAll(async () => {
     // Create in-memory database
-    db = new Database(':memory:');
-    db.pragma('foreign_keys = ON');
+    db = new Database(":memory:");
+    db.pragma("foreign_keys = ON");
 
     // Apply audit logs migration
     db.exec(`
@@ -401,16 +420,16 @@ describe('AuditLogger E2E', () => {
     `);
 
     // Initialize services with test encryption key (32 bytes, base64 encoded)
-    const testEncryptionKey = 'ySfs+AmOEpab2AEui+055TNUymF5IjnYg230Wi7vKzk=';
+    const testEncryptionKey = "ySfs+AmOEpab2AEui+055TNUymF5IjnYg230Wi7vKzk=";
     encryptionService = new EncryptionService(testEncryptionKey);
     auditLogger = new AuditLogger(db);
   });
 
   beforeEach(() => {
     // Clear all tables before each test
-    db.prepare('DELETE FROM audit_logs').run();
-    db.prepare('DELETE FROM evidence').run();
-    db.prepare('DELETE FROM cases').run();
+    db.prepare("DELETE FROM audit_logs").run();
+    db.prepare("DELETE FROM evidence").run();
+    db.prepare("DELETE FROM cases").run();
   });
 
   afterAll(() => {
@@ -419,32 +438,32 @@ describe('AuditLogger E2E', () => {
     }
   });
 
-  describe('Event Type Coverage (18 Event Types)', () => {
-    describe('Case Operations (5 event types)', () => {
-      it('logs case.create event', () => {
+  describe("Event Type Coverage (18 Event Types)", () => {
+    describe("Case Operations (5 event types)", () => {
+      it("logs case.create event", () => {
         const testCase = createCase({
-          title: 'Test Case',
-          caseType: 'employment',
-          description: 'Sensitive description',
+          title: "Test Case",
+          caseType: "employment",
+          description: "Sensitive description",
         });
 
-        const logs = auditLogger.query({ eventType: 'case.create' });
+        const logs = auditLogger.query({ eventType: "case.create" });
         expect(logs).toHaveLength(1);
-        expect(logs[0].eventType).toBe('case.create');
-        expect(logs[0].resourceType).toBe('case');
+        expect(logs[0].eventType).toBe("case.create");
+        expect(logs[0].resourceType).toBe("case");
         expect(logs[0].resourceId).toBe(testCase.id.toString());
-        expect(logs[0].action).toBe('create');
+        expect(logs[0].action).toBe("create");
         expect(logs[0].success).toBe(true);
       });
 
-      it('logs case.read event via findById', () => {
+      it("logs case.read event via findById", () => {
         const testCase = createCase({
-          title: 'Test Case',
-          caseType: 'employment',
+          title: "Test Case",
+          caseType: "employment",
         });
 
         // Clear create logs
-        db.prepare('DELETE FROM audit_logs').run();
+        db.prepare("DELETE FROM audit_logs").run();
 
         // Read case - this should NOT auto-log, but repositories could be enhanced to do so
         const retrieved = findCaseById(testCase.id);
@@ -454,316 +473,322 @@ describe('AuditLogger E2E', () => {
         // This is by design for performance reasons
       });
 
-      it('logs case.update event', () => {
+      it("logs case.update event", () => {
         const testCase = createCase({
-          title: 'Original Title',
-          caseType: 'employment',
+          title: "Original Title",
+          caseType: "employment",
         });
 
-        db.prepare('DELETE FROM audit_logs').run();
+        db.prepare("DELETE FROM audit_logs").run();
 
-        updateCase(testCase.id, { title: 'Updated Title' });
+        updateCase(testCase.id, { title: "Updated Title" });
 
-        const logs = auditLogger.query({ eventType: 'case.update' });
+        const logs = auditLogger.query({ eventType: "case.update" });
         expect(logs).toHaveLength(1);
-        expect(logs[0].eventType).toBe('case.update');
+        expect(logs[0].eventType).toBe("case.update");
         expect(logs[0].resourceId).toBe(testCase.id.toString());
-        expect(logs[0].action).toBe('update');
+        expect(logs[0].action).toBe("update");
         expect(logs[0].success).toBe(true);
       });
 
-      it('logs case.delete event', () => {
+      it("logs case.delete event", () => {
         const testCase = createCase({
-          title: 'Test Case',
-          caseType: 'employment',
+          title: "Test Case",
+          caseType: "employment",
         });
 
-        db.prepare('DELETE FROM audit_logs').run();
+        db.prepare("DELETE FROM audit_logs").run();
 
         const deleted = deleteCase(testCase.id);
         expect(deleted).toBe(true);
 
-        const logs = auditLogger.query({ eventType: 'case.delete' });
+        const logs = auditLogger.query({ eventType: "case.delete" });
         expect(logs).toHaveLength(1);
-        expect(logs[0].eventType).toBe('case.delete');
-        expect(logs[0].action).toBe('delete');
+        expect(logs[0].eventType).toBe("case.delete");
+        expect(logs[0].action).toBe("delete");
         expect(logs[0].success).toBe(true);
       });
 
-      it('logs case.pii_access event when accessing encrypted description', () => {
+      it("logs case.pii_access event when accessing encrypted description", () => {
         const testCase = createCase({
-          title: 'Test Case',
-          caseType: 'employment',
-          description: 'Sensitive PII information',
+          title: "Test Case",
+          caseType: "employment",
+          description: "Sensitive PII information",
         });
 
-        db.prepare('DELETE FROM audit_logs').run();
+        db.prepare("DELETE FROM audit_logs").run();
 
         // Access the case to trigger PII access audit
         const retrieved = findCaseById(testCase.id);
-        expect(retrieved?.description).toBe('Sensitive PII information');
+        expect(retrieved?.description).toBe("Sensitive PII information");
 
-        const logs = auditLogger.query({ eventType: 'case.pii_access' });
+        const logs = auditLogger.query({ eventType: "case.pii_access" });
         expect(logs).toHaveLength(1);
-        expect(logs[0].eventType).toBe('case.pii_access');
+        expect(logs[0].eventType).toBe("case.pii_access");
         expect(logs[0].resourceId).toBe(testCase.id.toString());
-        expect(logs[0].action).toBe('read');
-        expect(logs[0].details).toHaveProperty('field', 'description');
-        expect(logs[0].details).toHaveProperty('encrypted', true);
+        expect(logs[0].action).toBe("read");
+        expect(logs[0].details).toHaveProperty("field", "description");
+        expect(logs[0].details).toHaveProperty("encrypted", true);
       });
     });
 
-    describe('Evidence Operations (6 event types)', () => {
+    describe("Evidence Operations (6 event types)", () => {
       let testCaseId: number;
 
       beforeEach(() => {
         const testCase = createCase({
-          title: 'Evidence Test Case',
-          caseType: 'employment',
+          title: "Evidence Test Case",
+          caseType: "employment",
         });
         testCaseId = testCase.id;
-        db.prepare('DELETE FROM audit_logs').run();
+        db.prepare("DELETE FROM audit_logs").run();
       });
 
-      it('logs evidence.create event', () => {
+      it("logs evidence.create event", () => {
         const evidence = createEvidence({
           caseId: testCaseId,
-          title: 'Test Evidence',
-          evidenceType: 'document',
-          content: 'Sensitive content',
+          title: "Test Evidence",
+          evidenceType: "document",
+          content: "Sensitive content",
         });
 
-        const logs = auditLogger.query({ eventType: 'evidence.create' });
+        const logs = auditLogger.query({ eventType: "evidence.create" });
         expect(logs).toHaveLength(1);
-        expect(logs[0].eventType).toBe('evidence.create');
-        expect(logs[0].resourceType).toBe('evidence');
+        expect(logs[0].eventType).toBe("evidence.create");
+        expect(logs[0].resourceType).toBe("evidence");
         expect(logs[0].resourceId).toBe(evidence.id.toString());
-        expect(logs[0].action).toBe('create');
+        expect(logs[0].action).toBe("create");
         expect(logs[0].success).toBe(true);
       });
 
-      it('logs evidence.update event', () => {
+      it("logs evidence.update event", () => {
         const evidence = createEvidence({
           caseId: testCaseId,
-          title: 'Original Title',
-          evidenceType: 'document',
+          title: "Original Title",
+          evidenceType: "document",
         });
 
-        db.prepare('DELETE FROM audit_logs').run();
+        db.prepare("DELETE FROM audit_logs").run();
 
-        updateEvidence(evidence.id, { title: 'Updated Title' });
+        updateEvidence(evidence.id, { title: "Updated Title" });
 
-        const logs = auditLogger.query({ eventType: 'evidence.update' });
+        const logs = auditLogger.query({ eventType: "evidence.update" });
         expect(logs).toHaveLength(1);
-        expect(logs[0].eventType).toBe('evidence.update');
-        expect(logs[0].action).toBe('update');
+        expect(logs[0].eventType).toBe("evidence.update");
+        expect(logs[0].action).toBe("update");
         expect(logs[0].success).toBe(true);
       });
 
-      it('logs evidence.delete event', () => {
+      it("logs evidence.delete event", () => {
         const evidence = createEvidence({
           caseId: testCaseId,
-          title: 'Test Evidence',
-          evidenceType: 'document',
+          title: "Test Evidence",
+          evidenceType: "document",
         });
 
-        db.prepare('DELETE FROM audit_logs').run();
+        db.prepare("DELETE FROM audit_logs").run();
 
         const deleted = deleteEvidence(evidence.id);
         expect(deleted).toBe(true);
 
-        const logs = auditLogger.query({ eventType: 'evidence.delete' });
+        const logs = auditLogger.query({ eventType: "evidence.delete" });
         expect(logs).toHaveLength(1);
-        expect(logs[0].eventType).toBe('evidence.delete');
-        expect(logs[0].action).toBe('delete');
+        expect(logs[0].eventType).toBe("evidence.delete");
+        expect(logs[0].action).toBe("delete");
         expect(logs[0].success).toBe(true);
       });
 
-      it('logs evidence.content_access when accessing encrypted content', () => {
+      it("logs evidence.content_access when accessing encrypted content", () => {
         const evidence = createEvidence({
           caseId: testCaseId,
-          title: 'Test Evidence',
-          evidenceType: 'document',
-          content: 'Sensitive encrypted content',
+          title: "Test Evidence",
+          evidenceType: "document",
+          content: "Sensitive encrypted content",
         });
 
-        db.prepare('DELETE FROM audit_logs').run();
+        db.prepare("DELETE FROM audit_logs").run();
 
         const retrieved = findEvidenceById(evidence.id);
-        expect(retrieved?.content).toBe('Sensitive encrypted content');
+        expect(retrieved?.content).toBe("Sensitive encrypted content");
 
-        const logs = auditLogger.query({ eventType: 'evidence.content_access' });
+        const logs = auditLogger.query({
+          eventType: "evidence.content_access",
+        });
         expect(logs).toHaveLength(1);
-        expect(logs[0].eventType).toBe('evidence.content_access');
-        expect(logs[0].action).toBe('read');
-        expect(logs[0].details).toHaveProperty('field', 'content');
-        expect(logs[0].details).toHaveProperty('encrypted', true);
+        expect(logs[0].eventType).toBe("evidence.content_access");
+        expect(logs[0].action).toBe("read");
+        expect(logs[0].details).toHaveProperty("field", "content");
+        expect(logs[0].details).toHaveProperty("encrypted", true);
       });
 
-      it('logs evidence.export event (manual)', () => {
+      it("logs evidence.export event (manual)", () => {
         const evidence = createEvidence({
           caseId: testCaseId,
-          title: 'Test Evidence',
-          evidenceType: 'document',
+          title: "Test Evidence",
+          evidenceType: "document",
         });
 
-        db.prepare('DELETE FROM audit_logs').run();
+        db.prepare("DELETE FROM audit_logs").run();
 
         // Simulate export operation
         auditLogger.log({
-          eventType: 'evidence.export',
-          resourceType: 'evidence',
+          eventType: "evidence.export",
+          resourceType: "evidence",
           resourceId: evidence.id.toString(),
-          action: 'export',
-          details: { format: 'pdf', destination: 'local' },
+          action: "export",
+          details: { format: "pdf", destination: "local" },
           success: true,
         });
 
-        const logs = auditLogger.query({ eventType: 'evidence.export' });
+        const logs = auditLogger.query({ eventType: "evidence.export" });
         expect(logs).toHaveLength(1);
-        expect(logs[0].eventType).toBe('evidence.export');
-        expect(logs[0].action).toBe('export');
+        expect(logs[0].eventType).toBe("evidence.export");
+        expect(logs[0].action).toBe("export");
       });
 
-      it('logs evidence.read event (manual)', () => {
+      it("logs evidence.read event (manual)", () => {
         const evidence = createEvidence({
           caseId: testCaseId,
-          title: 'Test Evidence',
-          evidenceType: 'document',
+          title: "Test Evidence",
+          evidenceType: "document",
         });
 
-        db.prepare('DELETE FROM audit_logs').run();
+        db.prepare("DELETE FROM audit_logs").run();
 
         auditLogger.log({
-          eventType: 'evidence.read',
-          resourceType: 'evidence',
+          eventType: "evidence.read",
+          resourceType: "evidence",
           resourceId: evidence.id.toString(),
-          action: 'read',
+          action: "read",
           success: true,
         });
 
-        const logs = auditLogger.query({ eventType: 'evidence.read' });
+        const logs = auditLogger.query({ eventType: "evidence.read" });
         expect(logs).toHaveLength(1);
       });
     });
 
-    describe('Encryption Operations (2 event types)', () => {
-      it('logs encryption.key_loaded event', () => {
+    describe("Encryption Operations (2 event types)", () => {
+      it("logs encryption.key_loaded event", () => {
         auditLogger.log({
-          eventType: 'encryption.key_loaded',
-          resourceType: 'system',
-          resourceId: 'encryption-service',
-          action: 'read',
+          eventType: "encryption.key_loaded",
+          resourceType: "system",
+          resourceId: "encryption-service",
+          action: "read",
           details: { keyLength: 32 },
           success: true,
         });
 
-        const logs = auditLogger.query({ eventType: 'encryption.key_loaded' });
+        const logs = auditLogger.query({ eventType: "encryption.key_loaded" });
         expect(logs).toHaveLength(1);
-        expect(logs[0].eventType).toBe('encryption.key_loaded');
-        expect(logs[0].details).toHaveProperty('keyLength', 32);
+        expect(logs[0].eventType).toBe("encryption.key_loaded");
+        expect(logs[0].details).toHaveProperty("keyLength", 32);
       });
 
-      it('logs encryption.decrypt event', () => {
+      it("logs encryption.decrypt event", () => {
         auditLogger.log({
-          eventType: 'encryption.decrypt',
-          resourceType: 'case',
-          resourceId: '123',
-          action: 'decrypt',
-          details: { field: 'description' },
+          eventType: "encryption.decrypt",
+          resourceType: "case",
+          resourceId: "123",
+          action: "decrypt",
+          details: { field: "description" },
           success: true,
         });
 
-        const logs = auditLogger.query({ eventType: 'encryption.decrypt' });
+        const logs = auditLogger.query({ eventType: "encryption.decrypt" });
         expect(logs).toHaveLength(1);
-        expect(logs[0].eventType).toBe('encryption.decrypt');
-        expect(logs[0].action).toBe('decrypt');
+        expect(logs[0].eventType).toBe("encryption.decrypt");
+        expect(logs[0].action).toBe("decrypt");
       });
     });
 
-    describe('Database Operations (3 event types)', () => {
-      it('logs database.backup event', () => {
+    describe("Database Operations (3 event types)", () => {
+      it("logs database.backup event", () => {
         auditLogger.log({
-          eventType: 'database.backup',
-          resourceType: 'database',
-          resourceId: 'main',
-          action: 'export',
-          details: { destination: '/backups/backup-2025-10-05.db' },
+          eventType: "database.backup",
+          resourceType: "database",
+          resourceId: "main",
+          action: "export",
+          details: { destination: "/backups/backup-2025-10-05.db" },
           success: true,
         });
 
-        const logs = auditLogger.query({ eventType: 'database.backup' });
+        const logs = auditLogger.query({ eventType: "database.backup" });
         expect(logs).toHaveLength(1);
-        expect(logs[0].eventType).toBe('database.backup');
-        expect(logs[0].action).toBe('export');
+        expect(logs[0].eventType).toBe("database.backup");
+        expect(logs[0].action).toBe("export");
       });
 
-      it('logs database.restore event', () => {
+      it("logs database.restore event", () => {
         auditLogger.log({
-          eventType: 'database.restore',
-          resourceType: 'database',
-          resourceId: 'main',
-          action: 'update',
-          details: { source: '/backups/backup-2025-10-04.db' },
+          eventType: "database.restore",
+          resourceType: "database",
+          resourceId: "main",
+          action: "update",
+          details: { source: "/backups/backup-2025-10-04.db" },
           success: true,
         });
 
-        const logs = auditLogger.query({ eventType: 'database.restore' });
+        const logs = auditLogger.query({ eventType: "database.restore" });
         expect(logs).toHaveLength(1);
-        expect(logs[0].eventType).toBe('database.restore');
+        expect(logs[0].eventType).toBe("database.restore");
       });
 
-      it('logs database.migrate event', () => {
+      it("logs database.migrate event", () => {
         auditLogger.log({
-          eventType: 'database.migrate',
-          resourceType: 'database',
-          resourceId: 'main',
-          action: 'update',
-          details: { fromVersion: 2, toVersion: 3, migration: '003_audit_logs' },
-          success: true,
-        });
-
-        const logs = auditLogger.query({ eventType: 'database.migrate' });
-        expect(logs).toHaveLength(1);
-        expect(logs[0].eventType).toBe('database.migrate');
-        expect(logs[0].details).toHaveProperty('toVersion', 3);
-      });
-    });
-
-    describe('Config Operations (1 event type)', () => {
-      it('logs config.change event', () => {
-        auditLogger.log({
-          eventType: 'config.change',
-          resourceType: 'config',
-          resourceId: 'app-settings',
-          action: 'update',
+          eventType: "database.migrate",
+          resourceType: "database",
+          resourceId: "main",
+          action: "update",
           details: {
-            setting: 'theme',
-            oldValue: 'light',
-            newValue: 'dark',
+            fromVersion: 2,
+            toVersion: 3,
+            migration: "003_audit_logs",
           },
           success: true,
         });
 
-        const logs = auditLogger.query({ eventType: 'config.change' });
+        const logs = auditLogger.query({ eventType: "database.migrate" });
         expect(logs).toHaveLength(1);
-        expect(logs[0].eventType).toBe('config.change');
-        expect(logs[0].details).toHaveProperty('setting', 'theme');
+        expect(logs[0].eventType).toBe("database.migrate");
+        expect(logs[0].details).toHaveProperty("toVersion", 3);
+      });
+    });
+
+    describe("Config Operations (1 event type)", () => {
+      it("logs config.change event", () => {
+        auditLogger.log({
+          eventType: "config.change",
+          resourceType: "config",
+          resourceId: "app-settings",
+          action: "update",
+          details: {
+            setting: "theme",
+            oldValue: "light",
+            newValue: "dark",
+          },
+          success: true,
+        });
+
+        const logs = auditLogger.query({ eventType: "config.change" });
+        expect(logs).toHaveLength(1);
+        expect(logs[0].eventType).toBe("config.change");
+        expect(logs[0].details).toHaveProperty("setting", "theme");
       });
     });
   });
 
-  describe('Full Workflow Integration Tests', () => {
-    it('maintains hash chain integrity across complete case lifecycle', () => {
+  describe("Full Workflow Integration Tests", () => {
+    it("maintains hash chain integrity across complete case lifecycle", () => {
       // 1. Create case
       const testCase = createCase({
-        title: 'Full Workflow Case',
-        caseType: 'employment',
-        description: 'Sensitive description',
+        title: "Full Workflow Case",
+        caseType: "employment",
+        description: "Sensitive description",
       });
 
       // 2. Update case
-      updateCase(testCase.id, { title: 'Updated Workflow Case' });
+      updateCase(testCase.id, { title: "Updated Workflow Case" });
 
       // 3. Access PII
       const retrieved = findCaseById(testCase.id);
@@ -776,45 +801,57 @@ describe('AuditLogger E2E', () => {
       const report = auditLogger.verifyIntegrity();
 
       if (!report.valid) {
-        console.error('Integrity check failed:', JSON.stringify(report, null, 2));
+        console.error(
+          "Integrity check failed:",
+          JSON.stringify(report, null, 2),
+        );
         const logs = auditLogger.query();
-        console.error('All logs:', JSON.stringify(logs.map(l => ({
-          id: l.id,
-          eventType: l.eventType,
-          timestamp: l.timestamp,
-          integrityHash: l.integrityHash.slice(0, 16) + '...',
-          previousLogHash: l.previousLogHash ? l.previousLogHash.slice(0, 16) + '...' : null,
-        })), null, 2));
+        console.error(
+          "All logs:",
+          JSON.stringify(
+            logs.map((l) => ({
+              id: l.id,
+              eventType: l.eventType,
+              timestamp: l.timestamp,
+              integrityHash: l.integrityHash.slice(0, 16) + "...",
+              previousLogHash: l.previousLogHash
+                ? l.previousLogHash.slice(0, 16) + "..."
+                : null,
+            })),
+            null,
+            2,
+          ),
+        );
       }
 
       expect(report.valid).toBe(true);
       expect(report.totalLogs).toBeGreaterThan(0);
     });
 
-    it('maintains hash chain integrity across case + evidence workflow', () => {
+    it("maintains hash chain integrity across case + evidence workflow", () => {
       // 1. Create case
       const testCase = createCase({
-        title: 'Case with Evidence',
-        caseType: 'employment',
+        title: "Case with Evidence",
+        caseType: "employment",
       });
 
       // 2. Create evidence
       const evidence1 = createEvidence({
         caseId: testCase.id,
-        title: 'Evidence 1',
-        evidenceType: 'document',
-        content: 'Sensitive content 1',
+        title: "Evidence 1",
+        evidenceType: "document",
+        content: "Sensitive content 1",
       });
 
       // 3. Create more evidence
       const evidence2 = createEvidence({
         caseId: testCase.id,
-        title: 'Evidence 2',
-        evidenceType: 'photo',
+        title: "Evidence 2",
+        evidenceType: "photo",
       });
 
       // 4. Update evidence
-      updateEvidence(evidence1.id, { title: 'Updated Evidence 1' });
+      updateEvidence(evidence1.id, { title: "Updated Evidence 1" });
 
       // 5. Access evidence content
       findEvidenceById(evidence1.id);
@@ -823,7 +860,7 @@ describe('AuditLogger E2E', () => {
       deleteEvidence(evidence2.id);
 
       // 7. Update case
-      updateCase(testCase.id, { status: 'closed' });
+      updateCase(testCase.id, { status: "closed" });
 
       // Verify full chain integrity
       const report = auditLogger.verifyIntegrity();
@@ -831,24 +868,24 @@ describe('AuditLogger E2E', () => {
       expect(report.totalLogs).toBeGreaterThanOrEqual(7);
     });
 
-    it('maintains integrity when operations fail', () => {
+    it("maintains integrity when operations fail", () => {
       // Create successful operation
       createCase({
-        title: 'Success Case',
-        caseType: 'employment',
+        title: "Success Case",
+        caseType: "employment",
       });
 
       // Attempt to update non-existent case (logs failure)
       try {
-        updateCase(999999, { title: 'Should Fail' });
+        updateCase(999999, { title: "Should Fail" });
       } catch {
         // Expected
       }
 
       // Create another successful operation
       createCase({
-        title: 'Another Success',
-        caseType: 'family',
+        title: "Another Success",
+        caseType: "family",
       });
 
       // Chain should still be valid
@@ -864,95 +901,96 @@ describe('AuditLogger E2E', () => {
     });
   });
 
-  describe('GDPR Compliance', () => {
-    it('does not log PII in case.create details', () => {
+  describe("GDPR Compliance", () => {
+    it("does not log PII in case.create details", () => {
       createCase({
-        title: 'GDPR Test Case',
-        caseType: 'employment',
-        description: 'This contains PII: SSN 123-45-6789, Email: user@example.com',
+        title: "GDPR Test Case",
+        caseType: "employment",
+        description:
+          "This contains PII: SSN 123-45-6789, Email: user@example.com",
       });
 
-      const logs = auditLogger.query({ eventType: 'case.create' });
+      const logs = auditLogger.query({ eventType: "case.create" });
       expect(logs).toHaveLength(1);
 
       // Details should only contain metadata, NOT the description
       expect(logs[0].details).toBeDefined();
-      expect(logs[0].details).toHaveProperty('title');
-      expect(logs[0].details).toHaveProperty('caseType');
-      expect(logs[0].details).not.toHaveProperty('description');
+      expect(logs[0].details).toHaveProperty("title");
+      expect(logs[0].details).toHaveProperty("caseType");
+      expect(logs[0].details).not.toHaveProperty("description");
 
       // Verify no PII in JSON serialization
       const logJson = JSON.stringify(logs[0]);
-      expect(logJson).not.toContain('SSN');
-      expect(logJson).not.toContain('123-45-6789');
-      expect(logJson).not.toContain('user@example.com');
+      expect(logJson).not.toContain("SSN");
+      expect(logJson).not.toContain("123-45-6789");
+      expect(logJson).not.toContain("user@example.com");
     });
 
-    it('does not log sensitive content in evidence.create details', () => {
+    it("does not log sensitive content in evidence.create details", () => {
       const testCase = createCase({
-        title: 'Evidence GDPR Test',
-        caseType: 'employment',
+        title: "Evidence GDPR Test",
+        caseType: "employment",
       });
 
       createEvidence({
         caseId: testCase.id,
-        title: 'Sensitive Evidence',
-        evidenceType: 'document',
-        content: 'CONFIDENTIAL: Bank Account 1234567890, SSN 987-65-4321',
+        title: "Sensitive Evidence",
+        evidenceType: "document",
+        content: "CONFIDENTIAL: Bank Account 1234567890, SSN 987-65-4321",
       });
 
-      const logs = auditLogger.query({ eventType: 'evidence.create' });
+      const logs = auditLogger.query({ eventType: "evidence.create" });
       expect(logs).toHaveLength(1);
 
       // Details should only contain metadata, NOT content
       expect(logs[0].details).toBeDefined();
-      expect(logs[0].details).toHaveProperty('caseId');
-      expect(logs[0].details).toHaveProperty('evidenceType');
-      expect(logs[0].details).not.toHaveProperty('content');
+      expect(logs[0].details).toHaveProperty("caseId");
+      expect(logs[0].details).toHaveProperty("evidenceType");
+      expect(logs[0].details).not.toHaveProperty("content");
 
       // Verify no PII in JSON serialization
       const logJson = JSON.stringify(logs[0]);
-      expect(logJson).not.toContain('CONFIDENTIAL');
-      expect(logJson).not.toContain('1234567890');
-      expect(logJson).not.toContain('987-65-4321');
+      expect(logJson).not.toContain("CONFIDENTIAL");
+      expect(logJson).not.toContain("1234567890");
+      expect(logJson).not.toContain("987-65-4321");
     });
 
-    it('logs only metadata for PII access events', () => {
+    it("logs only metadata for PII access events", () => {
       const testCase = createCase({
-        title: 'PII Access Test',
-        caseType: 'employment',
-        description: 'Sensitive PII: Credit Card 4111-1111-1111-1111',
+        title: "PII Access Test",
+        caseType: "employment",
+        description: "Sensitive PII: Credit Card 4111-1111-1111-1111",
       });
 
-      db.prepare('DELETE FROM audit_logs').run();
+      db.prepare("DELETE FROM audit_logs").run();
 
       findCaseById(testCase.id);
 
-      const logs = auditLogger.query({ eventType: 'case.pii_access' });
+      const logs = auditLogger.query({ eventType: "case.pii_access" });
       expect(logs).toHaveLength(1);
 
       // Should log THAT PII was accessed, but NOT the PII itself
-      expect(logs[0].details).toHaveProperty('field', 'description');
-      expect(logs[0].details).toHaveProperty('encrypted', true);
-      expect(logs[0].details).not.toHaveProperty('value');
+      expect(logs[0].details).toHaveProperty("field", "description");
+      expect(logs[0].details).toHaveProperty("encrypted", true);
+      expect(logs[0].details).not.toHaveProperty("value");
 
       const logJson = JSON.stringify(logs[0]);
-      expect(logJson).not.toContain('4111-1111-1111-1111');
-      expect(logJson).not.toContain('Credit Card');
+      expect(logJson).not.toContain("4111-1111-1111-1111");
+      expect(logJson).not.toContain("Credit Card");
     });
   });
 
-  describe('Performance Tests', () => {
-    it('handles 1000+ audit log entries efficiently', () => {
+  describe("Performance Tests", () => {
+    it("handles 1000+ audit log entries efficiently", () => {
       const startTime = Date.now();
 
       // Create 1000 log entries
       for (let i = 0; i < 1000; i++) {
         auditLogger.log({
-          eventType: 'case.create',
-          resourceType: 'case',
+          eventType: "case.create",
+          resourceType: "case",
           resourceId: i.toString(),
-          action: 'create',
+          action: "create",
           details: { iteration: i },
         });
       }
@@ -971,14 +1009,14 @@ describe('AuditLogger E2E', () => {
       expect(logs).toHaveLength(1000);
     });
 
-    it('verifies integrity of 1000+ log chain in reasonable time', () => {
+    it("verifies integrity of 1000+ log chain in reasonable time", () => {
       // Create 1000 log entries
       for (let i = 0; i < 1000; i++) {
         auditLogger.log({
-          eventType: 'case.create',
-          resourceType: 'case',
+          eventType: "case.create",
+          resourceType: "case",
           resourceId: i.toString(),
-          action: 'create',
+          action: "create",
         });
       }
 
@@ -993,28 +1031,26 @@ describe('AuditLogger E2E', () => {
       expect(verifyTime).toBeLessThan(2000);
     });
 
-    it('queries large audit log efficiently', () => {
+    it("queries large audit log efficiently", () => {
       // Create 1000 diverse logs
       for (let i = 0; i < 1000; i++) {
-        const eventTypes: Array<'case.create' | 'case.update' | 'evidence.create'> = [
-          'case.create',
-          'case.update',
-          'evidence.create',
-        ];
+        const eventTypes: Array<
+          "case.create" | "case.update" | "evidence.create"
+        > = ["case.create", "case.update", "evidence.create"];
         auditLogger.log({
           eventType: eventTypes[i % 3],
-          resourceType: i % 2 === 0 ? 'case' : 'evidence',
+          resourceType: i % 2 === 0 ? "case" : "evidence",
           resourceId: i.toString(),
-          action: 'create',
-          userId: i % 10 === 0 ? 'user123' : undefined,
+          action: "create",
+          userId: i % 10 === 0 ? "user123" : undefined,
         });
       }
 
       const startTime = Date.now();
 
       // Query with filters
-      const caseLogs = auditLogger.query({ resourceType: 'case' });
-      const userLogs = auditLogger.query({ userId: 'user123' });
+      const caseLogs = auditLogger.query({ resourceType: "case" });
+      const userLogs = auditLogger.query({ userId: "user123" });
       const limitedLogs = auditLogger.query({ limit: 50 });
 
       const queryTime = Date.now() - startTime;
@@ -1027,23 +1063,23 @@ describe('AuditLogger E2E', () => {
       expect(limitedLogs).toHaveLength(50);
     });
 
-    it('exports large audit log efficiently', () => {
+    it("exports large audit log efficiently", () => {
       // Create 500 log entries
       for (let i = 0; i < 500; i++) {
         auditLogger.log({
-          eventType: 'case.create',
-          resourceType: 'case',
+          eventType: "case.create",
+          resourceType: "case",
           resourceId: i.toString(),
-          action: 'create',
+          action: "create",
         });
       }
 
       const jsonStart = Date.now();
-      const jsonExport = auditLogger.exportLogs('json');
+      const jsonExport = auditLogger.exportLogs("json");
       const jsonTime = Date.now() - jsonStart;
 
       const csvStart = Date.now();
-      const csvExport = auditLogger.exportLogs('csv');
+      const csvExport = auditLogger.exportLogs("csv");
       const csvTime = Date.now() - csvStart;
 
       // JSON export should complete in < 1 second
@@ -1060,8 +1096,8 @@ describe('AuditLogger E2E', () => {
     });
   });
 
-  describe('Concurrent Logging', () => {
-    it('maintains hash chain integrity with concurrent operations', async () => {
+  describe("Concurrent Logging", () => {
+    it("maintains hash chain integrity with concurrent operations", async () => {
       // Simulate concurrent case creation
       const promises = [];
 
@@ -1069,7 +1105,7 @@ describe('AuditLogger E2E', () => {
         const promise = Promise.resolve().then(() => {
           createCase({
             title: `Concurrent Case ${i}`,
-            caseType: 'employment',
+            caseType: "employment",
           });
         });
         promises.push(promise);
@@ -1083,14 +1119,14 @@ describe('AuditLogger E2E', () => {
       expect(report.totalLogs).toBe(10);
     });
 
-    it('handles rapid sequential logging correctly', () => {
+    it("handles rapid sequential logging correctly", () => {
       // Log 100 entries in rapid succession
       for (let i = 0; i < 100; i++) {
         auditLogger.log({
-          eventType: 'case.create',
-          resourceType: 'case',
+          eventType: "case.create",
+          resourceType: "case",
           resourceId: i.toString(),
-          action: 'create',
+          action: "create",
         });
       }
 
@@ -1103,7 +1139,9 @@ describe('AuditLogger E2E', () => {
 
       // All timestamps should be present and valid
       logs.forEach((log) => {
-        expect(log.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+        expect(log.timestamp).toMatch(
+          /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
+        );
       });
 
       // Chain should be intact
@@ -1112,23 +1150,23 @@ describe('AuditLogger E2E', () => {
     });
   });
 
-  describe('Error Recovery', () => {
-    it('continues logging after failed operation', () => {
+  describe("Error Recovery", () => {
+    it("continues logging after failed operation", () => {
       // Successful operation
       createCase({
-        title: 'Success 1',
-        caseType: 'employment',
+        title: "Success 1",
+        caseType: "employment",
       });
 
       // Failed operation (invalid case type triggers validation error in real app)
       try {
         auditLogger.log({
-          eventType: 'case.create',
-          resourceType: 'case',
-          resourceId: 'fail-test',
-          action: 'create',
+          eventType: "case.create",
+          resourceType: "case",
+          resourceId: "fail-test",
+          action: "create",
           success: false,
-          errorMessage: 'Validation failed',
+          errorMessage: "Validation failed",
         });
       } catch {
         // Expected
@@ -1136,8 +1174,8 @@ describe('AuditLogger E2E', () => {
 
       // Another successful operation
       createCase({
-        title: 'Success 2',
-        caseType: 'family',
+        title: "Success 2",
+        caseType: "family",
       });
 
       const allLogs = auditLogger.query();
@@ -1149,23 +1187,23 @@ describe('AuditLogger E2E', () => {
     });
   });
 
-  describe('Tamper Detection in Real Scenarios', () => {
-    it('detects tampering attempt in multi-step workflow', () => {
+  describe("Tamper Detection in Real Scenarios", () => {
+    it("detects tampering attempt in multi-step workflow", () => {
       // Create a workflow with 5 steps
       const testCase = createCase({
-        title: 'Workflow Case',
-        caseType: 'employment',
+        title: "Workflow Case",
+        caseType: "employment",
       });
 
-      updateCase(testCase.id, { title: 'Updated' });
+      updateCase(testCase.id, { title: "Updated" });
 
       const evidence = createEvidence({
         caseId: testCase.id,
-        title: 'Evidence',
-        evidenceType: 'document',
+        title: "Evidence",
+        evidenceType: "document",
       });
 
-      updateEvidence(evidence.id, { title: 'Updated Evidence' });
+      updateEvidence(evidence.id, { title: "Updated Evidence" });
 
       deleteCase(testCase.id);
 
@@ -1174,18 +1212,18 @@ describe('AuditLogger E2E', () => {
       expect(report.valid).toBe(true);
 
       // Tamper with middle entry (evidence.create)
-      const logs = auditLogger.query({ eventType: 'evidence.create' });
+      const logs = auditLogger.query({ eventType: "evidence.create" });
       expect(logs).toHaveLength(1);
 
-      db.prepare('UPDATE audit_logs SET event_type = ? WHERE id = ?').run(
-        'evidence.delete',
+      db.prepare("UPDATE audit_logs SET event_type = ? WHERE id = ?").run(
+        "evidence.delete",
         logs[0].id,
       );
 
       // Verify tampering is detected
       report = auditLogger.verifyIntegrity();
       expect(report.valid).toBe(false);
-      expect(report.error).toContain('tampered');
+      expect(report.error).toContain("tampered");
     });
   });
 });

@@ -9,11 +9,11 @@
  * Fixes CVSS 9.1 vulnerability: Encryption key in plaintext .env file
  */
 
-import * as fs from 'fs';
-import * as path from 'path';
-import * as crypto from 'crypto';
-import type { SafeStorage } from 'electron';
-import { logger } from '../utils/logger';
+import * as fs from "fs";
+import * as path from "path";
+import * as crypto from "crypto";
+import type { SafeStorage } from "electron";
+import { logger } from "../utils/logger";
 
 /**
  * KeyManager handles secure storage and retrieval of encryption keys
@@ -28,13 +28,10 @@ export class KeyManager {
    * @param safeStorage - Electron safeStorage instance (from main process)
    * @param userDataPath - Electron app.getPath('userData')
    */
-  constructor(
-    safeStorage: SafeStorage,
-    userDataPath: string
-  ) {
+  constructor(safeStorage: SafeStorage, userDataPath: string) {
     this.safeStorage = safeStorage;
     // Store encrypted key in userData directory
-    this.keyFilePath = path.join(userDataPath, '.encryption-key');
+    this.keyFilePath = path.join(userDataPath, ".encryption-key");
   }
 
   /**
@@ -52,15 +49,15 @@ export class KeyManager {
     // Check if safeStorage is available
     if (!this.safeStorage.isEncryptionAvailable()) {
       throw new Error(
-        'safeStorage encryption is not available on this system. ' +
-        'Key cannot be securely loaded.'
+        "safeStorage encryption is not available on this system. " +
+          "Key cannot be securely loaded.",
       );
     }
 
     // Load encrypted key from disk
     if (!fs.existsSync(this.keyFilePath)) {
       throw new Error(
-        'Encryption key not found. Run migration script to move key from .env to safeStorage.'
+        "Encryption key not found. Run migration script to move key from .env to safeStorage.",
       );
     }
 
@@ -68,14 +65,14 @@ export class KeyManager {
 
     // Decrypt using OS keychain
     const decryptedKeyBase64 = this.safeStorage.decryptString(encryptedKey);
-    this.cachedKey = Buffer.from(decryptedKeyBase64, 'base64');
+    this.cachedKey = Buffer.from(decryptedKeyBase64, "base64");
 
     // Verify key length
     if (this.cachedKey.length !== 32) {
       const actualLength = this.cachedKey.length;
       this.cachedKey = null; // Clear invalid key
       throw new Error(
-        `Invalid encryption key: expected 32 bytes, got ${actualLength} bytes`
+        `Invalid encryption key: expected 32 bytes, got ${actualLength} bytes`,
       );
     }
 
@@ -98,15 +95,15 @@ export class KeyManager {
   migrateFromEnv(envKey: string): void {
     if (!this.safeStorage.isEncryptionAvailable()) {
       throw new Error(
-        'safeStorage encryption is not available. Cannot migrate key.'
+        "safeStorage encryption is not available. Cannot migrate key.",
       );
     }
 
     // Validate key format
-    const keyBuffer = Buffer.from(envKey, 'base64');
+    const keyBuffer = Buffer.from(envKey, "base64");
     if (keyBuffer.length !== 32) {
       throw new Error(
-        `Invalid key length: expected 32 bytes, got ${keyBuffer.length} bytes`
+        `Invalid key length: expected 32 bytes, got ${keyBuffer.length} bytes`,
       );
     }
 
@@ -116,8 +113,10 @@ export class KeyManager {
     // Write encrypted key to disk
     fs.writeFileSync(this.keyFilePath, encryptedKey, { mode: 0o600 });
 
-    logger.warn('[KeyManager] Key migrated from .env to safeStorage');
-    logger.warn('[KeyManager] IMPORTANT: Remove ENCRYPTION_KEY_BASE64 from .env file');
+    logger.warn("[KeyManager] Key migrated from .env to safeStorage");
+    logger.warn(
+      "[KeyManager] IMPORTANT: Remove ENCRYPTION_KEY_BASE64 from .env file",
+    );
   }
 
   /**
@@ -130,13 +129,13 @@ export class KeyManager {
   generateNewKey(): string {
     if (!this.safeStorage.isEncryptionAvailable()) {
       throw new Error(
-        'safeStorage encryption is not available. Cannot generate key.'
+        "safeStorage encryption is not available. Cannot generate key.",
       );
     }
 
     // Generate cryptographically secure 32-byte key
     const newKey = crypto.randomBytes(32);
-    const newKeyBase64 = newKey.toString('base64');
+    const newKeyBase64 = newKey.toString("base64");
 
     // Encrypt and store
     const encryptedKey = this.safeStorage.encryptString(newKeyBase64);
@@ -145,7 +144,7 @@ export class KeyManager {
     // Update cache
     this.cachedKey = newKey;
 
-    logger.warn('[KeyManager] New encryption key generated and stored');
+    logger.warn("[KeyManager] New encryption key generated and stored");
     return newKeyBase64;
   }
 
@@ -184,7 +183,7 @@ export class KeyManager {
    */
   validateKeyFile(): { valid: boolean; error?: string } {
     if (!fs.existsSync(this.keyFilePath)) {
-      return { valid: false, error: 'Key file does not exist' };
+      return { valid: false, error: "Key file does not exist" };
     }
 
     try {
@@ -193,7 +192,7 @@ export class KeyManager {
     } catch (error) {
       return {
         valid: false,
-        error: `Key file is not readable: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        error: `Key file is not readable: ${error instanceof Error ? error.message : "Unknown error"}`,
       };
     }
   }
@@ -207,14 +206,16 @@ export class KeyManager {
    */
   async storeKey(keyName: string, value: string): Promise<void> {
     if (!this.safeStorage.isEncryptionAvailable()) {
-      throw new Error('safeStorage encryption is not available. Cannot store key.');
+      throw new Error(
+        "safeStorage encryption is not available. Cannot store key.",
+      );
     }
 
     // Encrypt the value
     const encryptedValue = this.safeStorage.encryptString(value);
 
     // Create keys directory if it doesn't exist
-    const keysDir = path.join(path.dirname(this.keyFilePath), '.keys');
+    const keysDir = path.join(path.dirname(this.keyFilePath), ".keys");
     if (!fs.existsSync(keysDir)) {
       fs.mkdirSync(keysDir, { mode: 0o700, recursive: true });
     }
@@ -232,10 +233,12 @@ export class KeyManager {
    */
   async retrieveKey(keyName: string): Promise<string | null> {
     if (!this.safeStorage.isEncryptionAvailable()) {
-      throw new Error('safeStorage encryption is not available. Cannot retrieve key.');
+      throw new Error(
+        "safeStorage encryption is not available. Cannot retrieve key.",
+      );
     }
 
-    const keysDir = path.join(path.dirname(this.keyFilePath), '.keys');
+    const keysDir = path.join(path.dirname(this.keyFilePath), ".keys");
     const keyFile = path.join(keysDir, `${keyName}.key`);
 
     if (!fs.existsSync(keyFile)) {
@@ -258,7 +261,7 @@ export class KeyManager {
    * @param keyName - Identifier for the key to delete
    */
   async deleteKey(keyName: string): Promise<void> {
-    const keysDir = path.join(path.dirname(this.keyFilePath), '.keys');
+    const keysDir = path.join(path.dirname(this.keyFilePath), ".keys");
     const keyFile = path.join(keysDir, `${keyName}.key`);
 
     if (fs.existsSync(keyFile)) {
@@ -272,7 +275,7 @@ export class KeyManager {
    * @param keyName - Identifier for the key
    */
   hasStoredKey(keyName: string): boolean {
-    const keysDir = path.join(path.dirname(this.keyFilePath), '.keys');
+    const keysDir = path.join(path.dirname(this.keyFilePath), ".keys");
     const keyFile = path.join(keysDir, `${keyName}.key`);
     return fs.existsSync(keyFile);
   }

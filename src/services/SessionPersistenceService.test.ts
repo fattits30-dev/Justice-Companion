@@ -1,21 +1,21 @@
-import path from 'path';
-import { v4 as uuidv4 } from 'uuid';
-import { beforeEach, describe, expect, it, Mock, vi } from 'vitest';
+import path from "path";
+import { v4 as uuidv4 } from "uuid";
+import { beforeEach, describe, expect, it, Mock, vi } from "vitest";
 
 // Mock Electron before importing the service (hoisted to top)
-vi.mock('electron', () => ({
+vi.mock("electron", () => ({
   safeStorage: {
     isEncryptionAvailable: vi.fn(() => true),
-    encryptString: vi.fn((str: string) => Buffer.from('encrypted-' + str)),
-    decryptString: vi.fn(() => 'decrypted'),
+    encryptString: vi.fn((str: string) => Buffer.from("encrypted-" + str)),
+    decryptString: vi.fn(() => "decrypted"),
   },
   app: {
-    getPath: vi.fn(() => '/mock/user/data'),
+    getPath: vi.fn(() => "/mock/user/data"),
   },
 }));
 
 // Mock fs/promises (hoisted to top)
-vi.mock('fs/promises', () => {
+vi.mock("fs/promises", () => {
   const mockFns = {
     access: vi.fn(),
     mkdir: vi.fn(),
@@ -30,7 +30,7 @@ vi.mock('fs/promises', () => {
   };
 });
 
-describe('SessionPersistenceService', () => {
+describe("SessionPersistenceService", () => {
   // Import after mocks are set up
   let SessionPersistenceService: any;
   let service: any;
@@ -39,8 +39,8 @@ describe('SessionPersistenceService', () => {
   let fs: any;
 
   // Use path.join for Windows compatibility
-  const mockUserDataPath = path.join(path.sep, 'mock', 'user', 'data');
-  const mockSessionFilePath = path.join(mockUserDataPath, 'session.enc');
+  const mockUserDataPath = path.join(path.sep, "mock", "user", "data");
+  const mockSessionFilePath = path.join(mockUserDataPath, "session.enc");
   const validSessionId = uuidv4();
 
   beforeEach(async () => {
@@ -49,9 +49,9 @@ describe('SessionPersistenceService', () => {
     vi.clearAllMocks();
 
     // Import modules after reset
-    const electron = await import('electron');
-    const fsModule = await import('fs/promises');
-    const serviceModule = await import('./SessionPersistenceService');
+    const electron = await import("electron");
+    const fsModule = await import("fs/promises");
+    const serviceModule = await import("./SessionPersistenceService");
 
     SessionPersistenceService = serviceModule.SessionPersistenceService;
     mockSafeStorage = electron.safeStorage;
@@ -68,8 +68,8 @@ describe('SessionPersistenceService', () => {
     service = SessionPersistenceService.getInstance();
   });
 
-  describe('isAvailable', () => {
-    it('should return true when encryption is available', async () => {
+  describe("isAvailable", () => {
+    it("should return true when encryption is available", async () => {
       mockSafeStorage.isEncryptionAvailable.mockReturnValue(true);
 
       const result = await service.isAvailable();
@@ -78,7 +78,7 @@ describe('SessionPersistenceService', () => {
       expect(mockSafeStorage.isEncryptionAvailable).toHaveBeenCalled();
     });
 
-    it('should return false when encryption is not available', async () => {
+    it("should return false when encryption is not available", async () => {
       mockSafeStorage.isEncryptionAvailable.mockReturnValue(false);
 
       const result = await service.isAvailable();
@@ -86,9 +86,9 @@ describe('SessionPersistenceService', () => {
       expect(result).toBe(false);
     });
 
-    it('should handle errors gracefully', async () => {
+    it("should handle errors gracefully", async () => {
       mockSafeStorage.isEncryptionAvailable.mockImplementation(() => {
-        throw new Error('Keychain error');
+        throw new Error("Keychain error");
       });
 
       const result = await service.isAvailable();
@@ -96,7 +96,7 @@ describe('SessionPersistenceService', () => {
       expect(result).toBe(false);
     });
 
-    it('should return false when safeStorage API is not available', async () => {
+    it("should return false when safeStorage API is not available", async () => {
       // Temporarily remove the function to simulate unavailable API
       const originalFn = mockSafeStorage.isEncryptionAvailable;
       delete (mockSafeStorage as any).isEncryptionAvailable;
@@ -110,30 +110,37 @@ describe('SessionPersistenceService', () => {
     });
   });
 
-  describe('storeSessionId', () => {
-    const encryptedData = Buffer.from('encrypted-session-data');
+  describe("storeSessionId", () => {
+    const encryptedData = Buffer.from("encrypted-session-data");
 
     beforeEach(() => {
       mockSafeStorage.encryptString.mockReturnValue(encryptedData);
-      (fs.access as Mock).mockRejectedValue(new Error('Not found'));
+      (fs.access as Mock).mockRejectedValue(new Error("Not found"));
       (fs.mkdir as Mock).mockResolvedValue(undefined);
       (fs.writeFile as Mock).mockResolvedValue(undefined);
     });
 
-    it('should store a valid session ID', async () => {
+    it("should store a valid session ID", async () => {
       await service.storeSessionId(validSessionId);
 
-      expect(mockSafeStorage.encryptString).toHaveBeenCalledWith(validSessionId);
-      expect(fs.writeFile).toHaveBeenCalledWith(mockSessionFilePath, encryptedData);
+      expect(mockSafeStorage.encryptString).toHaveBeenCalledWith(
+        validSessionId,
+      );
+      expect(fs.writeFile).toHaveBeenCalledWith(
+        mockSessionFilePath,
+        encryptedData,
+      );
     });
 
-    it('should create userData directory if it does not exist', async () => {
+    it("should create userData directory if it does not exist", async () => {
       await service.storeSessionId(validSessionId);
 
-      expect(fs.mkdir).toHaveBeenCalledWith(mockUserDataPath, { recursive: true });
+      expect(fs.mkdir).toHaveBeenCalledWith(mockUserDataPath, {
+        recursive: true,
+      });
     });
 
-    it('should not create directory if it already exists', async () => {
+    it("should not create directory if it already exists", async () => {
       (fs.access as Mock).mockResolvedValue(undefined);
 
       await service.storeSessionId(validSessionId);
@@ -141,53 +148,57 @@ describe('SessionPersistenceService', () => {
       expect(fs.mkdir).not.toHaveBeenCalled();
     });
 
-    it('should reject invalid session ID format', async () => {
+    it("should reject invalid session ID format", async () => {
       const invalidIds = [
-        '',
-        'not-a-uuid',
-        '12345',
+        "",
+        "not-a-uuid",
+        "12345",
         null as any,
         undefined as any,
         123 as any,
-        'invalid-uuid-format',
+        "invalid-uuid-format",
       ];
 
       for (const invalidId of invalidIds) {
         await expect(service.storeSessionId(invalidId)).rejects.toThrow(
-          'Invalid session ID format'
+          "Invalid session ID format",
         );
       }
 
       expect(mockSafeStorage.encryptString).not.toHaveBeenCalled();
     });
 
-    it('should throw error when encryption is not available', async () => {
+    it("should throw error when encryption is not available", async () => {
       mockSafeStorage.isEncryptionAvailable.mockReturnValue(false);
 
       await expect(service.storeSessionId(validSessionId)).rejects.toThrow(
-        'Encryption not available'
+        "Encryption not available",
       );
     });
 
-    it('should clean up file on write error', async () => {
-      (fs.writeFile as Mock).mockRejectedValue(new Error('Disk full'));
+    it("should clean up file on write error", async () => {
+      (fs.writeFile as Mock).mockRejectedValue(new Error("Disk full"));
       (fs.unlink as Mock).mockResolvedValue(undefined);
 
-      await expect(service.storeSessionId(validSessionId)).rejects.toThrow('Disk full');
+      await expect(service.storeSessionId(validSessionId)).rejects.toThrow(
+        "Disk full",
+      );
 
       expect(fs.unlink).toHaveBeenCalledWith(mockSessionFilePath);
     });
 
-    it('should handle cleanup errors gracefully', async () => {
-      (fs.writeFile as Mock).mockRejectedValue(new Error('Write failed'));
-      (fs.unlink as Mock).mockRejectedValue(new Error('Cleanup failed'));
+    it("should handle cleanup errors gracefully", async () => {
+      (fs.writeFile as Mock).mockRejectedValue(new Error("Write failed"));
+      (fs.unlink as Mock).mockRejectedValue(new Error("Cleanup failed"));
 
-      await expect(service.storeSessionId(validSessionId)).rejects.toThrow('Write failed');
+      await expect(service.storeSessionId(validSessionId)).rejects.toThrow(
+        "Write failed",
+      );
     });
   });
 
-  describe('retrieveSessionId', () => {
-    const encryptedData = Buffer.from('encrypted-session-data');
+  describe("retrieveSessionId", () => {
+    const encryptedData = Buffer.from("encrypted-session-data");
 
     beforeEach(() => {
       mockSafeStorage.decryptString.mockReturnValue(validSessionId);
@@ -195,7 +206,7 @@ describe('SessionPersistenceService', () => {
       (fs.readFile as Mock).mockResolvedValue(encryptedData);
     });
 
-    it('should retrieve and decrypt stored session ID', async () => {
+    it("should retrieve and decrypt stored session ID", async () => {
       const result = await service.retrieveSessionId();
 
       expect(result).toBe(validSessionId);
@@ -203,8 +214,8 @@ describe('SessionPersistenceService', () => {
       expect(mockSafeStorage.decryptString).toHaveBeenCalledWith(encryptedData);
     });
 
-    it('should return null when file does not exist', async () => {
-      (fs.access as Mock).mockRejectedValue(new Error('File not found'));
+    it("should return null when file does not exist", async () => {
+      (fs.access as Mock).mockRejectedValue(new Error("File not found"));
 
       const result = await service.retrieveSessionId();
 
@@ -212,7 +223,7 @@ describe('SessionPersistenceService', () => {
       expect(fs.readFile).not.toHaveBeenCalled();
     });
 
-    it('should return null when encryption is not available', async () => {
+    it("should return null when encryption is not available", async () => {
       mockSafeStorage.isEncryptionAvailable.mockReturnValue(false);
 
       const result = await service.retrieveSessionId();
@@ -220,8 +231,8 @@ describe('SessionPersistenceService', () => {
       expect(result).toBeNull();
     });
 
-    it('should return null and clean up when file is empty', async () => {
-      (fs.readFile as Mock).mockResolvedValue(Buffer.from(''));
+    it("should return null and clean up when file is empty", async () => {
+      (fs.readFile as Mock).mockResolvedValue(Buffer.from(""));
       (fs.unlink as Mock).mockResolvedValue(undefined);
 
       const result = await service.retrieveSessionId();
@@ -230,8 +241,8 @@ describe('SessionPersistenceService', () => {
       expect(fs.unlink).toHaveBeenCalledWith(mockSessionFilePath);
     });
 
-    it('should return null and clean up when decrypted ID is invalid', async () => {
-      mockSafeStorage.decryptString.mockReturnValue('invalid-uuid');
+    it("should return null and clean up when decrypted ID is invalid", async () => {
+      mockSafeStorage.decryptString.mockReturnValue("invalid-uuid");
       (fs.unlink as Mock).mockResolvedValue(undefined);
 
       const result = await service.retrieveSessionId();
@@ -240,9 +251,9 @@ describe('SessionPersistenceService', () => {
       expect(fs.unlink).toHaveBeenCalledWith(mockSessionFilePath);
     });
 
-    it('should handle corrupted files gracefully', async () => {
+    it("should handle corrupted files gracefully", async () => {
       mockSafeStorage.decryptString.mockImplementation(() => {
-        throw new Error('Failed to decrypt data');
+        throw new Error("Failed to decrypt data");
       });
       (fs.unlink as Mock).mockResolvedValue(undefined);
 
@@ -252,8 +263,8 @@ describe('SessionPersistenceService', () => {
       expect(fs.unlink).toHaveBeenCalledWith(mockSessionFilePath);
     });
 
-    it('should handle read errors gracefully', async () => {
-      (fs.readFile as Mock).mockRejectedValue(new Error('Read error'));
+    it("should handle read errors gracefully", async () => {
+      (fs.readFile as Mock).mockRejectedValue(new Error("Read error"));
 
       const result = await service.retrieveSessionId();
 
@@ -261,8 +272,8 @@ describe('SessionPersistenceService', () => {
     });
   });
 
-  describe('clearSession', () => {
-    it('should delete the session file if it exists', async () => {
+  describe("clearSession", () => {
+    it("should delete the session file if it exists", async () => {
       (fs.access as Mock).mockResolvedValue(undefined);
       (fs.unlink as Mock).mockResolvedValue(undefined);
 
@@ -271,22 +282,22 @@ describe('SessionPersistenceService', () => {
       expect(fs.unlink).toHaveBeenCalledWith(mockSessionFilePath);
     });
 
-    it('should handle non-existent file gracefully', async () => {
-      (fs.access as Mock).mockRejectedValue(new Error('File not found'));
+    it("should handle non-existent file gracefully", async () => {
+      (fs.access as Mock).mockRejectedValue(new Error("File not found"));
 
       await expect(service.clearSession()).resolves.not.toThrow();
     });
 
-    it('should handle deletion errors gracefully', async () => {
+    it("should handle deletion errors gracefully", async () => {
       (fs.access as Mock).mockResolvedValue(undefined);
-      (fs.unlink as Mock).mockRejectedValue(new Error('Permission denied'));
+      (fs.unlink as Mock).mockRejectedValue(new Error("Permission denied"));
 
       await expect(service.clearSession()).resolves.not.toThrow();
     });
   });
 
-  describe('hasStoredSession', () => {
-    it('should return true when session file exists and is not empty', async () => {
+  describe("hasStoredSession", () => {
+    it("should return true when session file exists and is not empty", async () => {
       (fs.access as Mock).mockResolvedValue(undefined);
       (fs.stat as Mock).mockResolvedValue({ size: 100 });
 
@@ -295,15 +306,15 @@ describe('SessionPersistenceService', () => {
       expect(result).toBe(true);
     });
 
-    it('should return false when session file does not exist', async () => {
-      (fs.access as Mock).mockRejectedValue(new Error('File not found'));
+    it("should return false when session file does not exist", async () => {
+      (fs.access as Mock).mockRejectedValue(new Error("File not found"));
 
       const result = await service.hasStoredSession();
 
       expect(result).toBe(false);
     });
 
-    it('should return false when session file is empty', async () => {
+    it("should return false when session file is empty", async () => {
       (fs.access as Mock).mockResolvedValue(undefined);
       (fs.stat as Mock).mockResolvedValue({ size: 0 });
 
@@ -312,9 +323,9 @@ describe('SessionPersistenceService', () => {
       expect(result).toBe(false);
     });
 
-    it('should handle stat errors gracefully', async () => {
+    it("should handle stat errors gracefully", async () => {
       (fs.access as Mock).mockResolvedValue(undefined);
-      (fs.stat as Mock).mockRejectedValue(new Error('Stat error'));
+      (fs.stat as Mock).mockRejectedValue(new Error("Stat error"));
 
       const result = await service.hasStoredSession();
 
@@ -322,9 +333,9 @@ describe('SessionPersistenceService', () => {
     });
   });
 
-  describe('getSessionMetadata', () => {
-    it('should return metadata when session file exists', async () => {
-      const mockDate = new Date('2025-01-12T10:00:00Z');
+  describe("getSessionMetadata", () => {
+    it("should return metadata when session file exists", async () => {
+      const mockDate = new Date("2025-01-12T10:00:00Z");
       (fs.stat as Mock).mockResolvedValue({
         size: 256,
         mtime: mockDate,
@@ -340,8 +351,8 @@ describe('SessionPersistenceService', () => {
       });
     });
 
-    it('should return minimal metadata when file does not exist', async () => {
-      (fs.stat as Mock).mockRejectedValue(new Error('File not found'));
+    it("should return minimal metadata when file does not exist", async () => {
+      (fs.stat as Mock).mockRejectedValue(new Error("File not found"));
 
       const result = await service.getSessionMetadata();
 
@@ -351,9 +362,9 @@ describe('SessionPersistenceService', () => {
       });
     });
 
-    it('should include encryption availability status', async () => {
+    it("should include encryption availability status", async () => {
       mockSafeStorage.isEncryptionAvailable.mockReturnValue(false);
-      (fs.stat as Mock).mockRejectedValue(new Error('File not found'));
+      (fs.stat as Mock).mockRejectedValue(new Error("File not found"));
 
       const result = await service.getSessionMetadata();
 
@@ -361,8 +372,8 @@ describe('SessionPersistenceService', () => {
     });
   });
 
-  describe('Singleton pattern', () => {
-    it('should return the same instance', () => {
+  describe("Singleton pattern", () => {
+    it("should return the same instance", () => {
       const instance1 = SessionPersistenceService.getInstance();
       const instance2 = SessionPersistenceService.getInstance();
 
@@ -370,23 +381,23 @@ describe('SessionPersistenceService', () => {
     });
   });
 
-  describe('Security tests', () => {
-    it('should never log decrypted session IDs', async () => {
-      const consoleLogSpy = vi.spyOn(console, 'log');
-      const consoleErrorSpy = vi.spyOn(console, 'error');
-      const consoleWarnSpy = vi.spyOn(console, 'warn');
+  describe("Security tests", () => {
+    it("should never log decrypted session IDs", async () => {
+      const consoleLogSpy = vi.spyOn(console, "log");
+      const consoleErrorSpy = vi.spyOn(console, "error");
+      const consoleWarnSpy = vi.spyOn(console, "warn");
 
       // Set up mocks for this test
-      (fs.access as Mock).mockRejectedValue(new Error('Not found'));
+      (fs.access as Mock).mockRejectedValue(new Error("Not found"));
       (fs.mkdir as Mock).mockResolvedValue(undefined);
       (fs.writeFile as Mock).mockResolvedValue(undefined);
-      mockSafeStorage.encryptString.mockReturnValue(Buffer.from('encrypted'));
+      mockSafeStorage.encryptString.mockReturnValue(Buffer.from("encrypted"));
 
       await service.storeSessionId(validSessionId);
 
       // Reset for retrieval
       (fs.access as Mock).mockResolvedValue(undefined);
-      (fs.readFile as Mock).mockResolvedValue(Buffer.from('encrypted'));
+      (fs.readFile as Mock).mockResolvedValue(Buffer.from("encrypted"));
       mockSafeStorage.decryptString.mockReturnValue(validSessionId);
 
       await service.retrieveSessionId();
@@ -406,17 +417,17 @@ describe('SessionPersistenceService', () => {
       consoleWarnSpy.mockRestore();
     });
 
-    it('should validate UUID v4 format strictly', async () => {
+    it("should validate UUID v4 format strictly", async () => {
       const invalidUUIDs = [
-        'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx', // Not valid hex
-        '550e8400-e29b-11d4-a716-446655440000', // UUID v1
-        '6ba7b810-9dad-31d1-80b4-00c04fd430c8', // UUID v3
-        '00000000000000000000000000000000', // All zeros (no dashes)
+        "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx", // Not valid hex
+        "550e8400-e29b-11d4-a716-446655440000", // UUID v1
+        "6ba7b810-9dad-31d1-80b4-00c04fd430c8", // UUID v3
+        "00000000000000000000000000000000", // All zeros (no dashes)
       ];
 
       for (const invalidId of invalidUUIDs) {
         await expect(service.storeSessionId(invalidId)).rejects.toThrow(
-          'Invalid session ID format'
+          "Invalid session ID format",
         );
       }
     });

@@ -22,7 +22,7 @@ import type {
 } from "../domains/timeline/entities/Deadline.ts";
 import type { ConsentType } from "../domains/settings/entities/Consent.ts";
 import type { Tag, CreateTagInput, UpdateTagInput } from "../models/Tag.ts";
-import { logger } from '../utils/logger';
+import { logger } from "../utils/logger";
 
 /**
  * Response wrapper for all IPC operations
@@ -368,6 +368,28 @@ export interface JusticeAPI {
     onError: (error: string) => void,
     onConversationId?: (conversationId: number) => void,
   ): Promise<void>;
+
+  /**
+   * Get recent chat conversations for a case
+   * @param sessionId - User session ID
+   * @param caseId - Case ID (null for general conversations)
+   * @param limit - Maximum number of conversations to return
+   * @returns Array of recent conversations with metadata
+   */
+  getRecentConversations(
+    sessionId: string,
+    caseId: number | null,
+    limit?: number,
+  ): Promise<
+    IPCResponse<
+      Array<{
+        id: number;
+        title: string;
+        updatedAt: string;
+        messageCount: number;
+      }>
+    >
+  >;
 
   // ===== AI ANALYSIS =====
   /**
@@ -730,18 +752,20 @@ export interface JusticeAPI {
    * @param sessionId - User session ID
    * @returns User profile information
    */
-  getUserProfile(sessionId: string): Promise<IPCResponse<{
-    profile: {
-      id: number;
-      username?: string;
-      name: string;
-      email: string | null;
-      phone?: string;
-      avatarUrl: string | null;
-      createdAt: string;
-      updatedAt: string;
-    };
-  }>>;
+  getUserProfile(sessionId: string): Promise<
+    IPCResponse<{
+      profile: {
+        id: number;
+        username?: string;
+        name: string;
+        email: string | null;
+        phone?: string;
+        avatarUrl: string | null;
+        createdAt: string;
+        updatedAt: string;
+      };
+    }>
+  >;
 
   /**
    * Update user profile
@@ -756,19 +780,21 @@ export interface JusticeAPI {
       name: string;
       email: string | null;
       phone?: string | null;
-    }
-  ): Promise<IPCResponse<{
-    profile: {
-      id: number;
-      username?: string;
-      name: string;
-      email: string | null;
-      phone?: string;
-      avatarUrl: string | null;
-      createdAt: string;
-      updatedAt: string;
-    };
-  }>>;
+    },
+  ): Promise<
+    IPCResponse<{
+      profile: {
+        id: number;
+        username?: string;
+        name: string;
+        email: string | null;
+        phone?: string;
+        avatarUrl: string | null;
+        createdAt: string;
+        updatedAt: string;
+      };
+    }>
+  >;
 
   // ===== SEARCH =====
   search: {

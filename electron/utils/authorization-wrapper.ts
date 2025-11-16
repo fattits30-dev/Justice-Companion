@@ -14,7 +14,7 @@
  * - Audit logging of authorization failures
  * - Standardized error responses
  *
- * Updated: 2025-11-03 - Integrated SessionManager for in-memory validation
+ * Updated: 2025-11-15 - Fixed infinite loop by reusing database session IDs
  */
 
 import {
@@ -23,13 +23,13 @@ import {
   successResponse,
   isIPCResponse,
   type IPCResponse,
-} from './ipc-response.ts';
-import { getSessionManager } from '../services/SessionManager.ts';
-import { AuthorizationMiddleware } from '../../src/middleware/AuthorizationMiddleware.ts';
-import { getRepositories } from '../../src/repositories.ts';
-import { AuditLogger } from '../../src/services/AuditLogger.ts';
-import { getDb } from '../../src/db/database.ts';
-import { EvidenceNotFoundError } from '../../src/errors/DomainErrors.ts';
+} from './ipc-response';
+import { getSessionManager } from '../services/SessionManager';
+import { AuthorizationMiddleware } from '../../src/middleware/AuthorizationMiddleware';
+import { getRepositories } from '../../src/repositories';
+import { AuditLogger } from '../../src/services/AuditLogger';
+import { getDb } from '../../src/db/database';
+import { EvidenceNotFoundError } from '../../src/errors/DomainErrors';
 import { logger } from '../../src/utils/logger';
 
 // AuthorizationError is loaded at runtime via require() to avoid TypeScript path issues
@@ -75,9 +75,10 @@ async function getAuthService() {
  * Uses dual validation strategy:
  * 1. Check in-memory session first (fast, O(1) lookup)
  * 2. If in-memory session invalid/missing, check database (slower but persistent)
- * 3. If database session valid, recreate in-memory session for future calls
+ * 3. If database session valid, recreate in-memory session using THE SAME session ID
  *
  * This provides the speed of in-memory sessions with the persistence of database sessions.
+ * CRITICAL FIX: Reuses database session ID instead of generating new UUID to prevent infinite loops.
  *
  * @param sessionId - Session ID from IPC call
  * @param handler - Handler function that receives validated userId
@@ -129,15 +130,17 @@ export async function withAuthorization<T>(
       ) as IPCResponse<T>;
     }
 
-    // Step 3: Database session valid - recreate in-memory session for future calls
-    // This ensures subsequent IPC calls don't hit the database unnecessarily
+    // Step 3: Database session valid - recreate in-memory session with SAME session ID
+    // CRITICAL FIX: Pass sessionId parameter to reuse database session ID instead of generating new UUID
+    // This prevents infinite loops caused by React detecting sessionId changes
     sessionManager.createSession({
       userId: user.id,
       username: user.username,
       rememberMe: false, // In-memory session uses default 24h expiration
+      sessionId: sessionId,  // REUSE database session ID - prevents infinite loop
     });
     logger.warn(
-      `[Authorization] Recreated in-memory session for user ${user.username} from database session`
+      `[Authorization] Recreated in-memory session ${sessionId} for user ${user.username} from database session`
     );
 
     const result = await handler(user.id);

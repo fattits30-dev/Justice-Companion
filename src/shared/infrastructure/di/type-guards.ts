@@ -24,13 +24,13 @@ import type {
   IEvidenceRepository,
   IUserRepository,
   ISessionRepository,
-} from './repository-interfaces.ts';
+} from "./repository-interfaces.ts";
 import type {
   IAuthenticationService,
   IEncryptionService,
   IAuditLogger,
-} from './service-interfaces.ts';
-import type { IDatabase } from '../../../interfaces/IDatabase.ts';
+} from "./service-interfaces.ts";
+import type { IDatabase } from "../../../interfaces/IDatabase.ts";
 
 // =============================================================================
 // BASE TYPE GUARDS
@@ -43,15 +43,13 @@ import type { IDatabase } from '../../../interfaces/IDatabase.ts';
  * @returns true if object has all methods, false otherwise
  */
 export function hasMethods(obj: unknown, methods: string[]): boolean {
-  if (!obj || typeof obj !== 'object') {
+  if (!obj || typeof obj !== "object") {
     return false;
   }
 
   const target = obj as Record<string, unknown>;
 
-  return methods.every(
-    (method) => typeof target[method] === 'function'
-  );
+  return methods.every((method) => typeof target[method] === "function");
 }
 
 /**
@@ -61,15 +59,13 @@ export function hasMethods(obj: unknown, methods: string[]): boolean {
  * @returns true if object has all properties, false otherwise
  */
 export function hasProperties(obj: unknown, properties: string[]): boolean {
-  if (!obj || typeof obj !== 'object') {
+  if (!obj || typeof obj !== "object") {
     return false;
   }
 
   const target = obj as Record<string, unknown>;
 
-  return properties.every(
-    (prop) => prop in target
-  );
+  return properties.every((prop) => prop in target);
 }
 
 // =============================================================================
@@ -81,11 +77,11 @@ export function hasProperties(obj: unknown, properties: string[]): boolean {
  * All repositories must implement these core methods
  */
 const BASE_REPOSITORY_METHODS = [
-  'create',
-  'findById',
-  'findAll',
-  'update',
-  'delete',
+  "create",
+  "findById",
+  "findAll",
+  "update",
+  "delete",
 ];
 
 /**
@@ -115,10 +111,10 @@ export function isCaseRepository(obj: unknown): obj is ICaseRepository {
 
   // Check case-specific methods
   const caseSpecificMethods = [
-    'findByUserId',
-    'close',
-    'countByStatus',
-    'getStatistics',
+    "findByUserId",
+    "close",
+    "countByStatus",
+    "getStatistics",
   ];
 
   return hasMethods(obj, caseSpecificMethods);
@@ -136,10 +132,10 @@ export function isEvidenceRepository(obj: unknown): obj is IEvidenceRepository {
 
   // Check evidence-specific methods
   const evidenceSpecificMethods = [
-    'findByCaseId',
-    'findByCaseIdPaginated',
-    'countByCase',
-    'countByType',
+    "findByCaseId",
+    "findByCaseIdPaginated",
+    "countByCase",
+    "countByType",
   ];
 
   return hasMethods(obj, evidenceSpecificMethods);
@@ -157,10 +153,10 @@ export function isUserRepository(obj: unknown): obj is IUserRepository {
 
   // Check user-specific methods
   const userSpecificMethods = [
-    'findByUsername',
-    'findByEmail',
-    'updatePassword',
-    'updateLastLogin',
+    "findByUsername",
+    "findByEmail",
+    "updatePassword",
+    "updateLastLogin",
   ];
 
   return hasMethods(obj, userSpecificMethods);
@@ -173,18 +169,18 @@ export function isUserRepository(obj: unknown): obj is IUserRepository {
  */
 export function isSessionRepository(obj: unknown): obj is ISessionRepository {
   // Sessions use string IDs instead of number IDs
-  if (!obj || typeof obj !== 'object') {
+  if (!obj || typeof obj !== "object") {
     return false;
   }
 
   const sessionMethods = [
-    'create',
-    'findById',
-    'findByUserId',
-    'delete',
-    'deleteByUserId',
-    'deleteExpired',
-    'isExpired',
+    "create",
+    "findById",
+    "findByUserId",
+    "delete",
+    "deleteByUserId",
+    "deleteExpired",
+    "isExpired",
   ];
 
   return hasMethods(obj, sessionMethods);
@@ -199,14 +195,16 @@ export function isSessionRepository(obj: unknown): obj is ISessionRepository {
  * @param obj - Object to check
  * @returns true if object implements IAuthenticationService
  */
-export function isAuthenticationService(obj: unknown): obj is IAuthenticationService {
+export function isAuthenticationService(
+  obj: unknown,
+): obj is IAuthenticationService {
   const authMethods = [
-    'register',
-    'login',
-    'logout',
-    'validateSession',
-    'changePassword',
-    'restorePersistedSession',
+    "register",
+    "login",
+    "logout",
+    "validateSession",
+    "changePassword",
+    "restorePersistedSession",
   ];
 
   return hasMethods(obj, authMethods);
@@ -219,11 +217,11 @@ export function isAuthenticationService(obj: unknown): obj is IAuthenticationSer
  */
 export function isEncryptionService(obj: unknown): obj is IEncryptionService {
   const encryptionMethods = [
-    'encrypt',
-    'decrypt',
-    'isEncrypted',
-    'batchEncrypt',
-    'batchDecrypt',
+    "encrypt",
+    "decrypt",
+    "isEncrypted",
+    "batchEncrypt",
+    "batchDecrypt",
   ];
 
   return hasMethods(obj, encryptionMethods);
@@ -235,12 +233,7 @@ export function isEncryptionService(obj: unknown): obj is IEncryptionService {
  * @returns true if object implements IAuditLogger
  */
 export function isAuditLogger(obj: unknown): obj is IAuditLogger {
-  const auditMethods = [
-    'log',
-    'query',
-    'verifyIntegrity',
-    'exportLogs',
-  ];
+  const auditMethods = ["log", "query", "verifyIntegrity", "exportLogs"];
 
   return hasMethods(obj, auditMethods);
 }
@@ -255,12 +248,12 @@ export function isAuditLogger(obj: unknown): obj is IAuditLogger {
  * @returns true if object implements IDatabase
  */
 export function isDatabase(obj: unknown): obj is IDatabase {
-  if (!obj || typeof obj !== 'object') {
+  if (!obj || typeof obj !== "object") {
     return false;
   }
 
-  const dbMethods = ['prepare', 'exec', 'pragma', 'transaction', 'close'];
-  const dbProperties = ['open', 'inTransaction', 'name'];
+  const dbMethods = ["prepare", "exec", "pragma", "transaction", "close"];
+  const dbProperties = ["open", "inTransaction", "name"];
 
   return hasMethods(obj, dbMethods) && hasProperties(obj, dbProperties);
 }
@@ -273,13 +266,13 @@ export function isDatabase(obj: unknown): obj is IDatabase {
  */
 export function isDatabaseManager(obj: unknown): boolean {
   const managerMethods = [
-    'getDatabase',
-    'closeDatabase',
-    'isInitialized',
-    'runMigrations',
-    'rollbackMigration',
-    'createBackup',
-    'restoreBackup',
+    "getDatabase",
+    "closeDatabase",
+    "isInitialized",
+    "runMigrations",
+    "rollbackMigration",
+    "createBackup",
+    "restoreBackup",
   ];
 
   return hasMethods(obj, managerMethods);
@@ -300,15 +293,19 @@ export function validateRepositoryDependencies(deps: {
   auditLogger?: unknown;
 }): void {
   if (deps.db && !isDatabase(deps.db)) {
-    throw new Error('Invalid database dependency: must implement IDatabase');
+    throw new Error("Invalid database dependency: must implement IDatabase");
   }
 
   if (deps.encryptionService && !isEncryptionService(deps.encryptionService)) {
-    throw new Error('Invalid encryption service dependency: must implement IEncryptionService');
+    throw new Error(
+      "Invalid encryption service dependency: must implement IEncryptionService",
+    );
   }
 
   if (deps.auditLogger && !isAuditLogger(deps.auditLogger)) {
-    throw new Error('Invalid audit logger dependency: must implement IAuditLogger');
+    throw new Error(
+      "Invalid audit logger dependency: must implement IAuditLogger",
+    );
   }
 }
 
@@ -324,19 +321,27 @@ export function validateServiceDependencies(deps: {
   encryptionService?: unknown;
 }): void {
   if (deps.userRepository && !isUserRepository(deps.userRepository)) {
-    throw new Error('Invalid user repository dependency: must implement IUserRepository');
+    throw new Error(
+      "Invalid user repository dependency: must implement IUserRepository",
+    );
   }
 
   if (deps.sessionRepository && !isSessionRepository(deps.sessionRepository)) {
-    throw new Error('Invalid session repository dependency: must implement ISessionRepository');
+    throw new Error(
+      "Invalid session repository dependency: must implement ISessionRepository",
+    );
   }
 
   if (deps.auditLogger && !isAuditLogger(deps.auditLogger)) {
-    throw new Error('Invalid audit logger dependency: must implement IAuditLogger');
+    throw new Error(
+      "Invalid audit logger dependency: must implement IAuditLogger",
+    );
   }
 
   if (deps.encryptionService && !isEncryptionService(deps.encryptionService)) {
-    throw new Error('Invalid encryption service dependency: must implement IEncryptionService');
+    throw new Error(
+      "Invalid encryption service dependency: must implement IEncryptionService",
+    );
   }
 }
 
@@ -350,7 +355,10 @@ export function validateServiceDependencies(deps: {
  * @param name - Dependency name (for error messages)
  * @throws Error if dependency is null/undefined
  */
-export function requireDependency<T>(dep: T | null | undefined, name: string): T {
+export function requireDependency<T>(
+  dep: T | null | undefined,
+  name: string,
+): T {
   if (dep === null || dep === undefined) {
     throw new Error(`Required dependency '${name}' is missing`);
   }
@@ -363,7 +371,10 @@ export function requireDependency<T>(dep: T | null | undefined, name: string): T
  * @param fallback - Fallback value
  * @returns Dependency or fallback
  */
-export function getDependencyOrFallback<T>(dep: T | null | undefined, fallback: T): T {
+export function getDependencyOrFallback<T>(
+  dep: T | null | undefined,
+  fallback: T,
+): T {
   return dep ?? fallback;
 }
 
@@ -373,7 +384,7 @@ export function getDependencyOrFallback<T>(dep: T | null | undefined, fallback: 
  * @throws Error if circular dependency detected
  */
 export function validateCircularDependencies(
-  dependencies: Map<string, Set<string>>
+  dependencies: Map<string, Set<string>>,
 ): void {
   const visited = new Set<string>();
   const recursionStack = new Set<string>();
@@ -390,9 +401,7 @@ export function validateCircularDependencies(
             return true;
           }
         } else if (recursionStack.has(dep)) {
-          throw new Error(
-            `Circular dependency detected: ${node} -> ${dep}`
-          );
+          throw new Error(`Circular dependency detected: ${node} -> ${dep}`);
         }
       }
     }
@@ -424,7 +433,7 @@ export function createDependencyErrorMessage(
   serviceName: string,
   dependencyName: string,
   expectedInterface: string,
-  actualType: string
+  actualType: string,
 ): string {
   return `
 Dependency Injection Error in ${serviceName}:
@@ -456,7 +465,7 @@ For more information, see:
  */
 export function createMissingDependencyErrorMessage(
   serviceName: string,
-  dependencyName: string
+  dependencyName: string,
 ): string {
   return `
 Missing Dependency in ${serviceName}:

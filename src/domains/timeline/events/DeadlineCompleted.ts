@@ -3,7 +3,7 @@
  * Fired when a deadline is marked as completed
  */
 export class DeadlineCompleted {
-  public readonly eventType = 'deadline.completed' as const;
+  public readonly eventType = "deadline.completed" as const;
   public readonly occurredAt: Date;
 
   constructor(
@@ -17,7 +17,7 @@ export class DeadlineCompleted {
       wasOverdue?: boolean;
       daysOverdue?: number;
       source?: string;
-    }
+    },
   ) {
     this.occurredAt = new Date();
   }
@@ -33,7 +33,8 @@ export class DeadlineCompleted {
     completedAt?: string | null;
   }): DeadlineCompleted {
     const completedDate = deadline.completedAt || new Date().toISOString();
-    const wasOverdue = new Date(completedDate) > new Date(deadline.deadlineDate);
+    const wasOverdue =
+      new Date(completedDate) > new Date(deadline.deadlineDate);
     let daysOverdue = 0;
 
     if (wasOverdue) {
@@ -50,8 +51,8 @@ export class DeadlineCompleted {
       completedDate,
       {
         wasOverdue,
-        daysOverdue: wasOverdue ? daysOverdue : undefined
-      }
+        daysOverdue: wasOverdue ? daysOverdue : undefined,
+      },
     );
   }
 
@@ -66,7 +67,7 @@ export class DeadlineCompleted {
       caseId: this.caseId,
       userId: this.userId,
       completedAt: this.completedAt,
-      metadata: this.metadata
+      metadata: this.metadata,
     };
   }
 

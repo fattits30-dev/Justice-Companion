@@ -18,6 +18,7 @@ The Legal Research domain provides AI-powered legal research capabilities with i
 ## External API Integrations
 
 ### UK Legal APIs
+
 - **legislation.gov.uk**: UK legislation database
   - Primary and secondary legislation
   - Statutory instruments
@@ -28,6 +29,7 @@ The Legal Research domain provides AI-powered legal research capabilities with i
   - Citations and references
 
 ### AI Integration
+
 - **OpenAI GPT-4**: Legal analysis and summarization
 - **RAG Pipeline**: Context-aware responses
 - **Embeddings**: Semantic search capabilities
@@ -35,17 +37,20 @@ The Legal Research domain provides AI-powered legal research capabilities with i
 ## Research Capabilities
 
 ### Search Types
+
 - **Legislation Search**: Find relevant acts, regulations, statutory instruments
 - **Case Law Search**: Discover precedents, judgments, tribunal decisions
 - **Combined Search**: Comprehensive search across all sources
 
 ### Search Filters
+
 - **Jurisdiction**: England & Wales, Scotland, Northern Ireland
 - **Date Range**: Historical and current law
 - **Court Level**: Supreme Court, Court of Appeal, High Court, etc.
 - **Legislation Type**: Acts, Regulations, Orders, Rules
 
 ### AI Features
+
 - **Summarization**: Condense complex legal texts
 - **Citation Extraction**: Identify relevant citations
 - **Issue Spotting**: Detect legal issues in case facts
@@ -55,6 +60,7 @@ The Legal Research domain provides AI-powered legal research capabilities with i
 ## Business Rules
 
 ### Research Constraints
+
 - Results limited to UK law only
 - Mandatory disclaimer: "This is information, not legal advice"
 - Citations required for all legal statements
@@ -62,6 +68,7 @@ The Legal Research domain provides AI-powered legal research capabilities with i
 - Rate limiting: 100 requests per hour
 
 ### Quality Assurance
+
 - Dual-source verification
 - Citation cross-checking
 - Date validation (current law vs historical)
@@ -71,12 +78,14 @@ The Legal Research domain provides AI-powered legal research capabilities with i
 ## RAG Pipeline
 
 ### Document Processing
+
 1. **Retrieval**: Fetch relevant documents from APIs
 2. **Chunking**: Split documents into processable segments
 3. **Embedding**: Generate semantic embeddings
 4. **Ranking**: Score by relevance to query
 
 ### Response Generation
+
 1. **Context Assembly**: Combine relevant chunks
 2. **Prompt Engineering**: Structure query with context
 3. **Generation**: AI produces response
@@ -94,34 +103,38 @@ The Legal Research domain provides AI-powered legal research capabilities with i
 ## Usage Examples
 
 ```typescript
-import { SearchQuery, LegalIssue, ResearchPerformed } from '@/domains/legal-research';
+import {
+  SearchQuery,
+  LegalIssue,
+  ResearchPerformed,
+} from "@/domains/legal-research";
 
 // Create search query
 const query: SearchQuery = {
-  id: 'uuid-here',
+  id: "uuid-here",
   caseId: 42,
   userId: 123,
-  query: 'unfair dismissal notice period',
-  searchType: 'combined',
+  query: "unfair dismissal notice period",
+  searchType: "combined",
   filters: {
-    jurisdiction: 'england-wales',
+    jurisdiction: "england-wales",
     dateRange: {
-      from: '2020-01-01',
-      to: '2024-12-31'
+      from: "2020-01-01",
+      to: "2024-12-31",
     },
-    courtLevel: ['employment-tribunal', 'employment-appeal-tribunal']
+    courtLevel: ["employment-tribunal", "employment-appeal-tribunal"],
   },
-  createdAt: new Date().toISOString()
+  createdAt: new Date().toISOString(),
 };
 
 // Process search results
 const results = {
   count: 15,
   relevantCitations: [
-    'Employment Rights Act 1996, s.86',
-    'British Home Stores v Burchell [1980] ICR 303'
+    "Employment Rights Act 1996, s.86",
+    "British Home Stores v Burchell [1980] ICR 303",
   ],
-  executionTime: 2500 // milliseconds
+  executionTime: 2500, // milliseconds
 };
 
 // Create research event
@@ -133,24 +146,26 @@ const researchEvent = new ResearchPerformed(
   query.searchType,
   {
     resultsCount: results.count,
-    sources: ['legislation.gov.uk', 'caselaw.nationalarchives.gov.uk'],
+    sources: ["legislation.gov.uk", "caselaw.nationalarchives.gov.uk"],
     executionTime: results.executionTime,
-    model: 'gpt-4',
+    model: "gpt-4",
     relevantCitations: results.relevantCitations,
-    issueTags: ['employment', 'dismissal', 'notice-period']
-  }
+    issueTags: ["employment", "dismissal", "notice-period"],
+  },
 );
 ```
 
 ## Performance Optimization
 
 ### Caching Strategy
+
 - API responses cached for 24 hours
 - Embeddings cached permanently
 - Search results cached for 1 hour
 - Popular queries pre-computed
 
 ### Rate Limiting
+
 - API calls: 100/hour per user
 - AI generations: 50/hour per user
 - Bulk operations: 10/hour
@@ -167,16 +182,20 @@ const researchEvent = new ResearchPerformed(
 ## Compliance & Ethics
 
 ### Legal Disclaimer
+
 All responses include:
+
 > "This information is provided for research purposes only and does not constitute legal advice. Please consult a qualified legal professional for advice specific to your situation."
 
 ### Data Protection
+
 - No client data sent to external APIs
 - Anonymized queries only
 - Local caching of results
 - Audit trail of all searches
 
 ### Accuracy Standards
+
 - Minimum 95% citation accuracy
 - Source verification required
 - Regular validation against official sources

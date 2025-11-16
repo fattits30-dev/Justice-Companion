@@ -1,1 +1,1 @@
-export { DocumentsView } from './documents/DocumentsView.tsx';
+export { DocumentsView } from "./documents/DocumentsView.tsx";

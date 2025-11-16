@@ -1,5 +1,5 @@
 // src/interfaces/IDeadlineRepository.ts
-import type { Deadline } from '../domains/timeline/entities/Deadline.ts';
+import type { Deadline } from "../domains/timeline/entities/Deadline.ts";
 
 export interface IDeadlineRepository {
   findById(id: number): Deadline | null;

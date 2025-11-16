@@ -1,7 +1,6 @@
- 
-import fs from 'fs';
-import { promises as fsPromises } from 'fs';
-import path from 'path';
+import fs from "fs";
+import { promises as fsPromises } from "fs";
+import path from "path";
 
 interface ErrorLogEntry {
   timestamp: string;
@@ -18,8 +17,8 @@ export class ErrorLogger {
   private writeQueue: Promise<void>;
 
   constructor(
-    logDir: string = 'logs',
-    fileName: string = 'errors.log',
+    logDir: string = "logs",
+    fileName: string = "errors.log",
     maxFileSizeKB: number = 500, // 500KB max per file
     maxBackups: number = 3, // Keep 3 backup files
   ) {
@@ -40,7 +39,7 @@ export class ErrorLogger {
   logError(error: Error | string, context?: Record<string, unknown>): void {
     const entry: ErrorLogEntry = {
       timestamp: new Date().toISOString(),
-      type: error instanceof Error ? error.name : 'Error',
+      type: error instanceof Error ? error.name : "Error",
       message: error instanceof Error ? error.message : error,
       stack: error instanceof Error ? error.stack : undefined,
       context,
@@ -49,7 +48,7 @@ export class ErrorLogger {
     const logLine = this.formatLogEntry(entry);
     this.enqueueWrite(async () => {
       await this.rotateIfNeeded();
-      await fsPromises.appendFile(this.logFilePath, `${logLine}\n`, 'utf8');
+      await fsPromises.appendFile(this.logFilePath, `${logLine}\n`, "utf8");
     });
   }
 
@@ -67,8 +66,8 @@ export class ErrorLogger {
       lines.push(`Context: ${JSON.stringify(entry.context)}`);
     }
 
-    lines.push('---');
-    return lines.join('\n');
+    lines.push("---");
+    return lines.join("\n");
   }
 
   /**
@@ -83,7 +82,7 @@ export class ErrorLogger {
         await this.rotateFiles();
       }
     } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
         return;
       }
       throw error;
@@ -106,7 +105,7 @@ export class ErrorLogger {
       try {
         await fsPromises.rename(oldFile, newFile);
       } catch (error) {
-        if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+        if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
           throw error;
         }
       }
@@ -116,7 +115,7 @@ export class ErrorLogger {
     try {
       await fsPromises.rename(this.logFilePath, `${this.logFilePath}.1`);
     } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
         throw error;
       }
     }
@@ -130,7 +129,7 @@ export class ErrorLogger {
       const stats = await fsPromises.stat(this.logFilePath);
       return stats.size / 1024;
     } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
         return 0;
       }
       throw error;
@@ -164,7 +163,7 @@ export class ErrorLogger {
    */
   private enqueueWrite(task: () => Promise<void>): void {
     this.writeQueue = this.writeQueue.then(task).catch((error) => {
-      console.error('ErrorLogger write failed', error);
+      console.error("ErrorLogger write failed", error);
     });
   }
 
@@ -173,11 +172,11 @@ export class ErrorLogger {
    */
   async readRecentErrors(lines: number = 50): Promise<string[]> {
     try {
-      const content = await fsPromises.readFile(this.logFilePath, 'utf8');
-      const allLines = content.split('\n').filter((line) => line.trim());
+      const content = await fsPromises.readFile(this.logFilePath, "utf8");
+      const allLines = content.split("\n").filter((line) => line.trim());
       return allLines.slice(-lines);
     } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
         return [];
       }
       throw error;
@@ -186,20 +185,20 @@ export class ErrorLogger {
 }
 
 // Singleton instance for app-wide use
-export const errorLogger = new ErrorLogger('logs', 'errors.log', 500, 3);
+export const errorLogger = new ErrorLogger("logs", "errors.log", 500, 3);
 
 // Global error handlers for uncaught errors
 export function setupGlobalErrorHandlers(): void {
   // Uncaught exceptions
-  process.on('uncaughtException', (error: Error) => {
-    console.error('Uncaught Exception:', error);
-    errorLogger.logError(error, { type: 'uncaughtException' });
+  process.on("uncaughtException", (error: Error) => {
+    console.error("Uncaught Exception:", error);
+    errorLogger.logError(error, { type: "uncaughtException" });
   });
 
   // Unhandled promise rejections
-  process.on('unhandledRejection', (reason: unknown) => {
-    console.error('Unhandled Rejection:', reason);
+  process.on("unhandledRejection", (reason: unknown) => {
+    console.error("Unhandled Rejection:", reason);
     const error = reason instanceof Error ? reason : new Error(String(reason));
-    errorLogger.logError(error, { type: 'unhandledRejection' });
+    errorLogger.logError(error, { type: "unhandledRejection" });
   });
 }

@@ -1,14 +1,14 @@
 // src/models/Export.ts
-import type { Case } from './Case.ts';
-import type { Evidence } from './Evidence.ts';
-import type { Deadline } from './Deadline.ts';
-import type { Document } from './Document.ts';
-import type { Note } from './Note.ts';
-import type { CaseFact } from './CaseFact.ts';
+import type { Case } from "./Case.ts";
+import type { Evidence } from "./Evidence.ts";
+import type { Deadline } from "./Deadline.ts";
+import type { Document } from "./Document.ts";
+import type { Note } from "./Note.ts";
+import type { CaseFact } from "./CaseFact.ts";
 
 export interface ExportOptions {
-  format: 'pdf' | 'docx';
-  template: 'case-summary' | 'evidence-list' | 'timeline-report' | 'case-notes';
+  format: "pdf" | "docx";
+  template: "case-summary" | "evidence-list" | "timeline-report" | "case-notes";
   includeEvidence?: boolean;
   includeTimeline?: boolean;
   includeNotes?: boolean;
@@ -36,7 +36,7 @@ export interface TimelineEvent {
   title: string;
   description?: string;
   eventDate: string; // ISO 8601 date string
-  eventType: 'deadline' | 'hearing' | 'filing' | 'milestone' | 'other';
+  eventType: "deadline" | "hearing" | "filing" | "milestone" | "other";
   completed: boolean;
   createdAt: string; // ISO 8601 datetime string
   updatedAt: string; // ISO 8601 datetime string
@@ -76,14 +76,18 @@ export interface ExportResult {
   success: boolean;
   filePath: string;
   fileName: string;
-  format: 'pdf' | 'docx';
+  format: "pdf" | "docx";
   size: number; // File size in bytes
   exportedAt: Date;
   template: string;
 }
 
 export interface ExportError {
-  code: 'PERMISSION_DENIED' | 'CASE_NOT_FOUND' | 'EXPORT_FAILED' | 'INVALID_TEMPLATE';
+  code:
+    | "PERMISSION_DENIED"
+    | "CASE_NOT_FOUND"
+    | "EXPORT_FAILED"
+    | "INVALID_TEMPLATE";
   message: string;
   details?: string;
 }
@@ -97,7 +101,7 @@ export interface DocumentStyles {
     fontSize?: number;
     bold?: boolean;
     color?: string;
-    alignment?: 'left' | 'center' | 'right';
+    alignment?: "left" | "center" | "right";
   };
   heading1?: {
     fontSize?: number;

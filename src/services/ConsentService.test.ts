@@ -30,7 +30,7 @@ describe("ConsentService", () => {
       VALUES (1, 'testuser1', 'test1@example.com', 'hash1', 'salt1', 'user'),
              (2, 'testuser2', 'test2@example.com', 'hash2', 'salt2', 'user'),
              (3, 'testuser3', 'test3@example.com', 'hash3', 'salt3', 'user')
-    `
+    `,
     ).run();
 
     auditLogger = new AuditLogger(db);
@@ -52,7 +52,7 @@ describe("ConsentService", () => {
     it("should grant consent for data_processing", () => {
       const consent = consentService.grantConsent(
         TEST_USER_ID,
-        "data_processing"
+        "data_processing",
       );
 
       expect(consent).toBeDefined();
@@ -83,7 +83,7 @@ describe("ConsentService", () => {
 
       const logs = (auditLogger as any).getAllLogs();
       const grantLog = logs.find(
-        (log: any) => log.event_type === "consent.granted"
+        (log: any) => log.event_type === "consent.granted",
       );
 
       expect(grantLog).toBeDefined();
@@ -96,7 +96,7 @@ describe("ConsentService", () => {
       const beforeTime = new Date().getTime();
       const consent = consentService.grantConsent(
         TEST_USER_ID,
-        "ai_processing"
+        "ai_processing",
       );
       const afterTime = new Date().getTime();
 
@@ -125,7 +125,7 @@ describe("ConsentService", () => {
 
       const logs = (auditLogger as any).getAllLogs();
       const revokeLog = logs.find(
-        (log: any) => log.event_type === "consent.revoked"
+        (log: any) => log.event_type === "consent.revoked",
       );
 
       expect(revokeLog).toBeDefined();
@@ -145,7 +145,7 @@ describe("ConsentService", () => {
 
       const consents = consentService.getUserConsents(TEST_USER_ID);
       const revokedConsent = consents.find(
-        (c) => c.consentType === "marketing"
+        (c) => c.consentType === "marketing",
       );
 
       expect(revokedConsent).toBeDefined();
@@ -169,7 +169,7 @@ describe("ConsentService", () => {
     it("should return false for non-existent consent", () => {
       const hasConsent = consentService.hasConsent(
         TEST_USER_ID,
-        "ai_processing"
+        "ai_processing",
       );
       expect(hasConsent).toBe(false);
     });
@@ -219,10 +219,10 @@ describe("ConsentService", () => {
 
       expect(consents).toHaveLength(2);
       const encryptionConsent = consents.find(
-        (c) => c.consentType === "encryption"
+        (c) => c.consentType === "encryption",
       );
       const marketingConsent = consents.find(
-        (c) => c.consentType === "marketing"
+        (c) => c.consentType === "marketing",
       );
 
       expect(encryptionConsent!.revokedAt).toBeNull();
@@ -260,11 +260,11 @@ describe("ConsentService", () => {
       consentService.grantAllConsents(TEST_USER_ID);
 
       expect(consentService.hasConsent(TEST_USER_ID, "data_processing")).toBe(
-        true
+        true,
       );
       expect(consentService.hasConsent(TEST_USER_ID, "encryption")).toBe(true);
       expect(consentService.hasConsent(TEST_USER_ID, "ai_processing")).toBe(
-        true
+        true,
       );
       expect(consentService.hasConsent(TEST_USER_ID, "marketing")).toBe(true);
     });
@@ -275,7 +275,7 @@ describe("ConsentService", () => {
 
       const consents = consentService.getUserConsents(TEST_USER_ID);
       const encryptionConsents = consents.filter(
-        (c) => c.consentType === "encryption"
+        (c) => c.consentType === "encryption",
       );
 
       expect(encryptionConsents).toHaveLength(1); // Should only have 1 encryption consent
@@ -293,7 +293,7 @@ describe("ConsentService", () => {
 
       const logs = (auditLogger as any).getAllLogs();
       const grantLogs = logs.filter(
-        (log: any) => log.event_type === "consent.granted"
+        (log: any) => log.event_type === "consent.granted",
       );
 
       expect(grantLogs).toHaveLength(4);
@@ -309,11 +309,11 @@ describe("ConsentService", () => {
       consentService.revokeAllConsents(TEST_USER_ID);
 
       expect(consentService.hasConsent(TEST_USER_ID, "data_processing")).toBe(
-        false
+        false,
       );
       expect(consentService.hasConsent(TEST_USER_ID, "encryption")).toBe(false);
       expect(consentService.hasConsent(TEST_USER_ID, "ai_processing")).toBe(
-        false
+        false,
       );
       expect(consentService.hasConsent(TEST_USER_ID, "marketing")).toBe(false);
     });
@@ -324,12 +324,12 @@ describe("ConsentService", () => {
       const logs = (auditLogger as any).getAllLogs();
       const revokeAllLog = logs.find(
         (log: any) =>
-          log.event_type === "consent.revoked" && log.resource_id === "all"
+          log.event_type === "consent.revoked" && log.resource_id === "all",
       );
 
       expect(revokeAllLog).toBeDefined();
       expect(JSON.parse(revokeAllLog.details).reason).toBe(
-        "All consents revoked"
+        "All consents revoked",
       );
     });
 
@@ -357,7 +357,7 @@ describe("ConsentService", () => {
     it("should track privacy policy version on consent", () => {
       const consent = consentService.grantConsent(
         TEST_USER_ID,
-        "data_processing"
+        "data_processing",
       );
 
       expect(consent.version).toBe("1.0");
@@ -368,7 +368,7 @@ describe("ConsentService", () => {
 
       const logs = (auditLogger as any).getAllLogs();
       const grantLog = logs.find(
-        (log: any) => log.event_type === "consent.granted"
+        (log: any) => log.event_type === "consent.granted",
       );
 
       expect(JSON.parse(grantLog.details).version).toBe("1.0");
@@ -380,13 +380,13 @@ describe("ConsentService", () => {
       // Grant consent
       consentService.grantConsent(TEST_USER_ID, "ai_processing");
       expect(consentService.hasConsent(TEST_USER_ID, "ai_processing")).toBe(
-        true
+        true,
       );
 
       // Withdraw consent (Article 7.3)
       consentService.revokeConsent(TEST_USER_ID, "ai_processing");
       expect(consentService.hasConsent(TEST_USER_ID, "ai_processing")).toBe(
-        false
+        false,
       );
     });
 
@@ -397,10 +397,10 @@ describe("ConsentService", () => {
       const logs = (auditLogger as any).getAllLogs();
 
       expect(
-        logs.some((log: any) => log.event_type === "consent.granted")
+        logs.some((log: any) => log.event_type === "consent.granted"),
       ).toBe(true);
       expect(
-        logs.some((log: any) => log.event_type === "consent.revoked")
+        logs.some((log: any) => log.event_type === "consent.revoked"),
       ).toBe(true);
     });
   });
@@ -429,7 +429,7 @@ describe("ConsentService", () => {
     it("should work without audit logger", () => {
       const serviceWithoutLogger = new ConsentService(
         consentRepository,
-        null as any
+        null as any,
       );
 
       // Should not throw error
@@ -438,7 +438,7 @@ describe("ConsentService", () => {
       }).not.toThrow();
 
       expect(
-        serviceWithoutLogger.hasConsent(TEST_USER_ID, "data_processing")
+        serviceWithoutLogger.hasConsent(TEST_USER_ID, "data_processing"),
       ).toBe(true);
     });
   });

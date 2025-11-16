@@ -30,7 +30,7 @@ export class CachingDecorator<T> extends RepositoryDecorator<T> {
   constructor(
     repository: T,
     @inject(TYPES.CacheService) private cache: ICacheService,
-    private ttlSeconds?: number
+    private ttlSeconds?: number,
   ) {
     super(repository);
   }
@@ -55,7 +55,7 @@ export class CachingDecorator<T> extends RepositoryDecorator<T> {
       this.cache.set(
         cacheKey,
         result,
-        this.ttlSeconds || this.DEFAULT_TTL_SECONDS
+        this.ttlSeconds || this.DEFAULT_TTL_SECONDS,
       );
     }
 
@@ -109,7 +109,7 @@ export class CachingDecorator<T> extends RepositoryDecorator<T> {
       this.cache.set(
         cacheKey,
         result,
-        this.ttlSeconds || this.DEFAULT_TTL_SECONDS
+        this.ttlSeconds || this.DEFAULT_TTL_SECONDS,
       );
     }
 

@@ -3,10 +3,10 @@
  * Tracks user consent for different data processing activities
  */
 export type ConsentType =
-  | 'data_processing'    // Required for app to function
-  | 'encryption'         // Consent to encrypt sensitive data
-  | 'ai_processing'      // Consent to use AI features
-  | 'marketing';         // Consent to receive marketing communications
+  | "data_processing" // Required for app to function
+  | "encryption" // Consent to encrypt sensitive data
+  | "ai_processing" // Consent to use AI features
+  | "marketing"; // Consent to receive marketing communications
 
 export interface Consent {
   id: number;
@@ -15,7 +15,7 @@ export interface Consent {
   granted: boolean;
   grantedAt: string | null; // ISO 8601 timestamp
   revokedAt: string | null; // ISO 8601 timestamp
-  version: string;          // Privacy policy version
+  version: string; // Privacy policy version
   createdAt: string;
 }
 

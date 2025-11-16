@@ -15,82 +15,82 @@
  * UK Legal Jurisdictions
  */
 export enum UKJurisdiction {
-  ENGLAND_WALES = 'england_wales',
-  SCOTLAND = 'scotland',
-  NORTHERN_IRELAND = 'northern_ireland'
+  ENGLAND_WALES = "england_wales",
+  SCOTLAND = "scotland",
+  NORTHERN_IRELAND = "northern_ireland",
 }
 
 /**
  * Legal Case Types supported by the application
  */
 export enum LegalCaseType {
-  EMPLOYMENT = 'employment',
-  HOUSING = 'housing',
-  BENEFITS = 'benefits',
-  CONSUMER = 'consumer',
-  CIVIL_RIGHTS = 'civil_rights',
-  SMALL_CLAIMS = 'small_claims',
-  FAMILY = 'family',
-  OTHER = 'other'
+  EMPLOYMENT = "employment",
+  HOUSING = "housing",
+  BENEFITS = "benefits",
+  CONSUMER = "consumer",
+  CIVIL_RIGHTS = "civil_rights",
+  SMALL_CLAIMS = "small_claims",
+  FAMILY = "family",
+  OTHER = "other",
 }
 
 /**
  * Document types for AI-assisted drafting
  */
 export enum DocumentType {
-  LETTER = 'letter',
-  WITNESS_STATEMENT = 'witness_statement',
-  TRIBUNAL_SUBMISSION = 'tribunal_submission',
-  COURT_FORM = 'court_form',
-  APPEAL = 'appeal',
-  GRIEVANCE = 'grievance'
+  LETTER = "letter",
+  WITNESS_STATEMENT = "witness_statement",
+  TRIBUNAL_SUBMISSION = "tribunal_submission",
+  COURT_FORM = "court_form",
+  APPEAL = "appeal",
+  GRIEVANCE = "grievance",
 }
 
 /**
  * Priority levels for recommended actions
  */
 export enum ActionPriority {
-  URGENT = 'urgent',
-  HIGH = 'high',
-  MEDIUM = 'medium',
-  LOW = 'low'
+  URGENT = "urgent",
+  HIGH = "high",
+  MEDIUM = "medium",
+  LOW = "low",
 }
 
 /**
  * Severity levels for legal issues
  */
 export enum IssueSeverity {
-  HIGH = 'high',
-  MEDIUM = 'medium',
-  LOW = 'low'
+  HIGH = "high",
+  MEDIUM = "medium",
+  LOW = "low",
 }
 
 /**
  * Importance levels for evidence gaps
  */
 export enum EvidenceImportance {
-  CRITICAL = 'critical',
-  IMPORTANT = 'important',
-  HELPFUL = 'helpful'
+  CRITICAL = "critical",
+  IMPORTANT = "important",
+  HELPFUL = "helpful",
 }
 
 /**
  * Overall evidence strength assessment
  */
 export enum EvidenceStrength {
-  STRONG = 'strong',
-  MODERATE = 'moderate',
-  WEAK = 'weak'
+  STRONG = "strong",
+  MODERATE = "moderate",
+  WEAK = "weak",
 }
 
 /**
  * Legal source types
  */
 export enum LegalSourceType {
-  STATUTE = 'statute',
-  CASE_LAW = 'case_law',
-  REGULATION = 'regulation',
-  GUIDANCE = 'guidance'
+  STATUTE = "statute",
+  CASE_LAW = "case_law",
+  REGULATION = "regulation",
+  GUIDANCE = "guidance",
 }
 
 // ============================================================================
@@ -398,7 +398,7 @@ export interface SuggestedCaseData {
   title: string;
 
   /** Suggested case type */
-  caseType: 'employment' | 'housing' | 'consumer' | 'family' | 'other';
+  caseType: "employment" | "housing" | "consumer" | "family" | "other";
 
   /** Brief description extracted/generated from document */
   description: string;

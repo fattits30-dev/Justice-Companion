@@ -5,13 +5,22 @@
  * in the correct order and with proper dependency injection.
  */
 
-import { Container } from 'inversify';
-import { TYPES } from '../../shared/infrastructure/di/types.ts';
-import type { ICacheService, IAuditLogger } from '../../shared/infrastructure/di/interfaces.ts';
-import { CachingDecorator } from './CachingDecorator.ts';
-import { ValidationDecorator, type ValidationSchemas } from './ValidationDecorator.ts';
-import { LoggingDecorator, type LoggingOptions } from './LoggingDecorator.ts';
-import { ErrorHandlingDecorator, type ErrorHandlingOptions } from './ErrorHandlingDecorator.ts';
+import { Container } from "inversify";
+import { TYPES } from "../../shared/infrastructure/di/types.ts";
+import type {
+  ICacheService,
+  IAuditLogger,
+} from "../../shared/infrastructure/di/interfaces.ts";
+import { CachingDecorator } from "./CachingDecorator.ts";
+import {
+  ValidationDecorator,
+  type ValidationSchemas,
+} from "./ValidationDecorator.ts";
+import { LoggingDecorator, type LoggingOptions } from "./LoggingDecorator.ts";
+import {
+  ErrorHandlingDecorator,
+  type ErrorHandlingOptions,
+} from "./ErrorHandlingDecorator.ts";
 
 /**
  * Configuration for decorator composition
@@ -59,7 +68,7 @@ export class DecoratorFactory {
   static wrapRepository<T>(
     container: Container,
     repository: T,
-    config: DecoratorConfig = {}
+    config: DecoratorConfig = {},
   ): T {
     let decorated: any = repository;
 
@@ -69,7 +78,7 @@ export class DecoratorFactory {
     if (config.enableErrorHandling !== false) {
       decorated = new ErrorHandlingDecorator(
         decorated,
-        config.errorHandlingOptions
+        config.errorHandlingOptions,
       );
     }
 
@@ -79,16 +88,13 @@ export class DecoratorFactory {
       decorated = new LoggingDecorator(
         decorated,
         auditLogger,
-        config.loggingOptions
+        config.loggingOptions,
       );
     }
 
     // 3. Validation - Requires validation schemas
     if (config.enableValidation !== false && config.schemas) {
-      decorated = new ValidationDecorator(
-        decorated,
-        config.schemas
-      );
+      decorated = new ValidationDecorator(decorated, config.schemas);
     }
 
     // 4. Caching - Requires CacheService from container
@@ -97,7 +103,7 @@ export class DecoratorFactory {
       decorated = new CachingDecorator(
         decorated,
         cacheService,
-        config.cacheTtlSeconds
+        config.cacheTtlSeconds,
       );
     }
 

@@ -49,7 +49,7 @@ export class BulkOperationStartedEvent implements DomainEvent {
     public readonly operationType: BulkOperationType,
     public readonly totalItems: number,
     public readonly userId: number,
-    occurredAt?: Date
+    occurredAt?: Date,
   ) {
     this.occurredAt = occurredAt || new Date();
   }
@@ -85,7 +85,7 @@ export class BulkOperationProgressEvent implements DomainEvent {
     public readonly totalItems: number,
     public readonly successCount: number,
     public readonly failureCount: number,
-    occurredAt?: Date
+    occurredAt?: Date,
   ) {
     this.occurredAt = occurredAt || new Date();
   }
@@ -106,7 +106,7 @@ export class BulkOperationProgressEvent implements DomainEvent {
       successCount: this.successCount,
       failureCount: this.failureCount,
       percentComplete: Math.round(
-        (this.processedItems / this.totalItems) * 100
+        (this.processedItems / this.totalItems) * 100,
       ),
     };
   }
@@ -125,7 +125,7 @@ export class BulkOperationCompletedEvent implements DomainEvent {
     public readonly successCount: number,
     public readonly failureCount: number,
     public readonly errors: Array<{ itemId: number; error: string }>,
-    occurredAt?: Date
+    occurredAt?: Date,
   ) {
     this.occurredAt = occurredAt || new Date();
   }
@@ -161,7 +161,7 @@ export class BulkOperationFailedEvent implements DomainEvent {
     public readonly error: string,
     public readonly processedItems: number,
     public readonly totalItems: number,
-    occurredAt?: Date
+    occurredAt?: Date,
   ) {
     this.occurredAt = occurredAt || new Date();
   }
@@ -194,7 +194,7 @@ export class BulkOperationRolledBackEvent implements DomainEvent {
   constructor(
     public readonly operationId: string,
     public readonly reason: string,
-    occurredAt?: Date
+    occurredAt?: Date,
   ) {
     this.occurredAt = occurredAt || new Date();
   }

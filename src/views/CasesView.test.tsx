@@ -235,12 +235,10 @@ describe("CasesView", () => {
     window.justiceAPI.getAllCases = vi
       .fn()
       .mockResolvedValue({ success: true, data: baseCases });
-    const deleteCase = vi
-      .fn()
-      .mockResolvedValue({
-        success: false,
-        error: { message: "Case not found" },
-      });
+    const deleteCase = vi.fn().mockResolvedValue({
+      success: false,
+      error: { message: "Case not found" },
+    });
     window.justiceAPI.deleteCase = deleteCase;
     const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
 

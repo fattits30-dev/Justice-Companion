@@ -3,7 +3,7 @@
  * Fired when a case is updated in the system
  */
 export class CaseUpdated {
-  public readonly eventType = 'case.updated' as const;
+  public readonly eventType = "case.updated" as const;
   public readonly occurredAt: Date;
 
   constructor(
@@ -25,7 +25,7 @@ export class CaseUpdated {
       updatedBy?: string;
       reason?: string;
       source?: string;
-    }
+    },
   ) {
     this.occurredAt = new Date();
   }
@@ -41,7 +41,7 @@ export class CaseUpdated {
       userId: this.userId,
       changes: this.changes,
       previousValues: this.previousValues,
-      metadata: this.metadata
+      metadata: this.metadata,
     };
   }
 
@@ -63,15 +63,17 @@ export class CaseUpdated {
    * Check if status was changed
    */
   isStatusChange(): boolean {
-    return this.changes.status !== undefined &&
-           this.previousValues?.status !== undefined &&
-           this.changes.status !== this.previousValues.status;
+    return (
+      this.changes.status !== undefined &&
+      this.previousValues?.status !== undefined &&
+      this.changes.status !== this.previousValues.status
+    );
   }
 
   /**
    * Check if case was closed
    */
   isCaseClosed(): boolean {
-    return this.isStatusChange() && this.changes.status === 'closed';
+    return this.isStatusChange() && this.changes.status === "closed";
   }
 }

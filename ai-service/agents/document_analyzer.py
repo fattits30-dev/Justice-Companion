@@ -173,6 +173,21 @@ class DocumentAnalyzerAgent(BaseAgent):
                 self._create_fallback_case_data(user_name, filename)
             )
 
+        # POST-PROCESSING: Fix illogical name mismatch warnings
+        # If AI claims mismatch but names actually match (case-insensitive), remove warning
+        if case_data_dict.get('documentOwnershipMismatch') and case_data_dict.get('documentClaimantName'):
+            doc_name = case_data_dict['documentClaimantName'].strip().lower()
+            user_name_lower = (user_name or "").strip().lower()
+
+            if doc_name == user_name_lower:
+                print(f"[DocumentAnalyzer] FIXING illogical warning: '{case_data_dict['documentClaimantName']}' == '{user_name}' (case-insensitive)")
+                # Names match - remove the warning
+                case_data_dict['documentOwnershipMismatch'] = False
+                case_data_dict['documentClaimantName'] = None
+
+                # Remove warning text from analysis (pattern: starts with ⚠️ IMPORTANT:, ends before "This is a...")
+                analysis_text = self._remove_warning_text(analysis_text)
+
         # Inject user's name as claimant (do not extract from document)
         case_data_dict['claimantName'] = user_name or "User"
 
@@ -187,6 +202,37 @@ class DocumentAnalyzerAgent(BaseAgent):
                 analysis_text or response_text,
                 self._create_fallback_case_data(user_name, filename)
             )
+
+    def _remove_warning_text(self, analysis_text: str) -> str:
+        """
+        Remove illogical name mismatch warning from analysis text.
+
+        Pattern: Removes text starting with "⚠️ IMPORTANT:" up to (but not including)
+        the next paragraph starting with "This is a" or similar document type identification.
+
+        Args:
+            analysis_text: Analysis text that may contain warning
+
+        Returns:
+            Analysis text with warning removed and cleaned up
+        """
+        # Pattern 1: Remove warning paragraph (⚠️ IMPORTANT: ... multiple paragraphs ... before actual analysis)
+        # This removes everything from "⚠️ IMPORTANT:" until we hit "This is a" or similar
+        warning_pattern = r'⚠️\s*IMPORTANT:.*?(?=This is a|This document is|The document is|\n\n[A-Z]|\Z)'
+        cleaned = re.sub(warning_pattern, '', analysis_text, flags=re.DOTALL | re.IGNORECASE)
+
+        # Pattern 2: Clean up any remaining isolated warning emoji or fragments
+        cleaned = re.sub(r'⚠️\s*', '', cleaned)
+
+        # Pattern 3: Remove any standalone "IMPORTANT:" text
+        cleaned = re.sub(r'^\s*IMPORTANT:\s*', '', cleaned, flags=re.MULTILINE)
+
+        # Clean up excessive whitespace
+        cleaned = re.sub(r'\n\n\n+', '\n\n', cleaned)  # Max 2 newlines
+        cleaned = cleaned.strip()
+
+        print(f"[DocumentAnalyzer] Removed warning text. Before: {len(analysis_text)} chars, After: {len(cleaned)} chars")
+        return cleaned
 
     def _create_fallback_case_data(self, user_name: str, filename: str) -> SuggestedCaseData:
         """

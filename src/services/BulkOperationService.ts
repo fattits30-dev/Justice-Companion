@@ -65,7 +65,7 @@ export class BulkOperationService {
     eventBus: IEventBus,
     caseRepository: CaseRepository,
     evidenceRepository: EvidenceRepository,
-    _auditLogger: AuditLogger
+    _auditLogger: AuditLogger,
   ) {
     this.db = db;
     this.eventBus = eventBus;
@@ -79,7 +79,7 @@ export class BulkOperationService {
   async bulkDeleteCases(
     caseIds: number[],
     _userId: number,
-    options: BulkOperationOptions = {}
+    options: BulkOperationOptions = {},
   ): Promise<BulkOperationResult> {
     const operationId = uuidv4();
     const operationType: BulkOperationType = "bulk_delete_cases";
@@ -90,8 +90,8 @@ export class BulkOperationService {
         operationId,
         operationType,
         caseIds.length,
-        _userId
-      )
+        _userId,
+      ),
     );
 
     const {
@@ -136,8 +136,8 @@ export class BulkOperationService {
                     successCount + failureCount, // processedItems
                     caseIds.length, // totalItems
                     successCount,
-                    failureCount
-                  )
+                    failureCount,
+                  ),
                 );
               }
             } catch (error) {
@@ -148,7 +148,7 @@ export class BulkOperationService {
 
               if (failFast) {
                 throw new Error(
-                  `Failed to delete case ${caseId}: ${errorMessage}`
+                  `Failed to delete case ${caseId}: ${errorMessage}`,
                 );
               }
             }
@@ -166,8 +166,8 @@ export class BulkOperationService {
           caseIds.length,
           successCount,
           failureCount,
-          errors
-        )
+          errors,
+        ),
       );
 
       return {
@@ -187,8 +187,8 @@ export class BulkOperationService {
         await this.eventBus.publish(
           new BulkOperationRolledBackEvent(
             operationId,
-            "Delete operation failed"
-          )
+            "Delete operation failed",
+          ),
         );
       } catch (rollbackError) {
         // Log rollback failure but don't throw
@@ -200,7 +200,7 @@ export class BulkOperationService {
             service: "BulkOperationService",
             operation: "rollback event",
             operationId,
-          }
+          },
         );
       }
 
@@ -210,8 +210,8 @@ export class BulkOperationService {
           operationId,
           error instanceof Error ? error.message : String(error),
           successCount + failureCount,
-          caseIds.length
-        )
+          caseIds.length,
+        ),
       );
 
       throw error;
@@ -224,7 +224,7 @@ export class BulkOperationService {
   async bulkUpdateCases(
     updates: Array<{ id: number; data: UpdateCaseInput }>,
     userId: number,
-    options: BulkOperationOptions = {}
+    options: BulkOperationOptions = {},
   ): Promise<BulkOperationResult> {
     const operationId = uuidv4();
     const operationType: BulkOperationType = "bulk_update_cases";
@@ -235,8 +235,8 @@ export class BulkOperationService {
         operationId,
         operationType,
         updates.length,
-        userId
-      )
+        userId,
+      ),
     );
 
     const {
@@ -275,8 +275,8 @@ export class BulkOperationService {
                     successCount + failureCount, // processedItems
                     updates.length, // totalItems
                     successCount,
-                    failureCount
-                  )
+                    failureCount,
+                  ),
                 );
               }
             } catch (error) {
@@ -303,8 +303,8 @@ export class BulkOperationService {
           updates.length,
           successCount,
           failureCount,
-          errors
-        )
+          errors,
+        ),
       );
 
       return {
@@ -322,8 +322,8 @@ export class BulkOperationService {
         await this.eventBus.publish(
           new BulkOperationRolledBackEvent(
             operationId,
-            "Update operation failed"
-          )
+            "Update operation failed",
+          ),
         );
       } catch (rollbackError) {
         // Log rollback failure but don't throw
@@ -335,7 +335,7 @@ export class BulkOperationService {
             service: "BulkOperationService",
             operation: "rollback event",
             operationId,
-          }
+          },
         );
       }
 
@@ -345,8 +345,8 @@ export class BulkOperationService {
           operationId,
           error instanceof Error ? error.message : String(error),
           successCount + failureCount,
-          updates.length
-        )
+          updates.length,
+        ),
       );
 
       throw error;
@@ -359,7 +359,7 @@ export class BulkOperationService {
   async bulkArchiveCases(
     caseIds: number[],
     userId: number,
-    options: BulkOperationOptions = {}
+    options: BulkOperationOptions = {},
   ): Promise<BulkOperationResult> {
     const operationId = uuidv4();
     const operationType: BulkOperationType = "bulk_archive_cases";
@@ -369,8 +369,8 @@ export class BulkOperationService {
         operationId,
         operationType,
         caseIds.length,
-        userId
-      )
+        userId,
+      ),
     );
 
     const {
@@ -405,8 +405,8 @@ export class BulkOperationService {
                     successCount + failureCount,
                     caseIds.length,
                     successCount,
-                    failureCount
-                  )
+                    failureCount,
+                  ),
                 );
               }
             } catch (error) {
@@ -417,7 +417,7 @@ export class BulkOperationService {
 
               if (failFast) {
                 throw new Error(
-                  `Failed to archive case ${caseId}: ${errorMessage}`
+                  `Failed to archive case ${caseId}: ${errorMessage}`,
                 );
               }
             }
@@ -433,8 +433,8 @@ export class BulkOperationService {
           caseIds.length,
           successCount,
           failureCount,
-          errors
-        )
+          errors,
+        ),
       );
 
       return {
@@ -451,8 +451,8 @@ export class BulkOperationService {
         await this.eventBus.publish(
           new BulkOperationRolledBackEvent(
             operationId,
-            "Archive operation failed"
-          )
+            "Archive operation failed",
+          ),
         );
       } catch (rollbackError) {
         errorLogger.logError(
@@ -463,7 +463,7 @@ export class BulkOperationService {
             service: "BulkOperationService",
             operation: "rollback event",
             operationId,
-          }
+          },
         );
       }
 
@@ -472,8 +472,8 @@ export class BulkOperationService {
           operationId,
           error instanceof Error ? error.message : String(error),
           successCount + failureCount,
-          caseIds.length
-        )
+          caseIds.length,
+        ),
       );
 
       throw error;
@@ -486,7 +486,7 @@ export class BulkOperationService {
   async bulkDeleteEvidence(
     evidenceIds: number[],
     userId: number,
-    options: BulkOperationOptions = {}
+    options: BulkOperationOptions = {},
   ): Promise<BulkOperationResult> {
     const operationId = uuidv4();
     const operationType: BulkOperationType = "bulk_delete_evidence";
@@ -496,8 +496,8 @@ export class BulkOperationService {
         operationId,
         operationType,
         evidenceIds.length,
-        userId
-      )
+        userId,
+      ),
     );
 
     const {
@@ -532,8 +532,8 @@ export class BulkOperationService {
                     successCount + failureCount,
                     evidenceIds.length,
                     successCount,
-                    failureCount
-                  )
+                    failureCount,
+                  ),
                 );
               }
             } catch (error) {
@@ -544,7 +544,7 @@ export class BulkOperationService {
 
               if (failFast) {
                 throw new Error(
-                  `Failed to delete evidence ${evidenceId}: ${errorMessage}`
+                  `Failed to delete evidence ${evidenceId}: ${errorMessage}`,
                 );
               }
             }
@@ -560,8 +560,8 @@ export class BulkOperationService {
           evidenceIds.length,
           successCount,
           failureCount,
-          errors
-        )
+          errors,
+        ),
       );
 
       return {
@@ -578,8 +578,8 @@ export class BulkOperationService {
         await this.eventBus.publish(
           new BulkOperationRolledBackEvent(
             operationId,
-            "Delete evidence operation failed"
-          )
+            "Delete evidence operation failed",
+          ),
         );
       } catch (rollbackError) {
         errorLogger.logError(
@@ -590,7 +590,7 @@ export class BulkOperationService {
             service: "BulkOperationService",
             operation: "rollback event",
             operationId,
-          }
+          },
         );
       }
 
@@ -599,8 +599,8 @@ export class BulkOperationService {
           operationId,
           error instanceof Error ? error.message : String(error),
           successCount + failureCount,
-          evidenceIds.length
-        )
+          evidenceIds.length,
+        ),
       );
 
       throw error;
@@ -611,7 +611,7 @@ export class BulkOperationService {
    * Get operation progress by reconstructing from events
    */
   async getOperationProgress(
-    operationId: string
+    operationId: string,
   ): Promise<BulkOperationProgress | null> {
     // This is a simplified implementation - in production you'd store operation state
     // For now, return a mock completed operation

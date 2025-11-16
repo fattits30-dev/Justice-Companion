@@ -54,14 +54,14 @@ export class NotificationRepository {
       input.actionUrl || null,
       input.actionLabel || null,
       input.metadata ? JSON.stringify(input.metadata) : null,
-      input.expiresAt?.toISOString() || null
+      input.expiresAt?.toISOString() || null,
     );
 
     const notificationId = result.lastInsertRowid as number;
     const foundNotification = this.findById(notificationId);
     if (!foundNotification) {
       throw new Error(
-        `Failed to create notification with ID: ${notificationId}`
+        `Failed to create notification with ID: ${notificationId}`,
       );
     }
     return foundNotification;
@@ -168,7 +168,7 @@ export class NotificationRepository {
       this.normalizeDateInput(input.readAt),
       input.isRead ?? null,
       input.isDismissed ?? null,
-      id
+      id,
     );
 
     return this.findById(id);
@@ -243,7 +243,7 @@ export class NotificationRepository {
    */
   getStats(userId: number): NotificationStats {
     const totalStmt = this.db.prepare(
-      `SELECT COUNT(*) as count FROM notifications WHERE user_id = ?`
+      `SELECT COUNT(*) as count FROM notifications WHERE user_id = ?`,
     );
     const totalRow = totalStmt.get(userId) as { count: number } | undefined;
     const total = totalRow?.count ?? 0;
@@ -251,7 +251,7 @@ export class NotificationRepository {
     const unread = this.getUnreadCount(userId);
 
     const severityCountsStmt = this.db.prepare(
-      `SELECT severity, COUNT(*) as count FROM notifications WHERE user_id = ? GROUP BY severity`
+      `SELECT severity, COUNT(*) as count FROM notifications WHERE user_id = ? GROUP BY severity`,
     );
     const severityCounts: Record<NotificationSeverity, number> = {
       low: 0,
@@ -270,7 +270,7 @@ export class NotificationRepository {
     }
 
     const typeCountsStmt = this.db.prepare(
-      `SELECT type, COUNT(*) as count FROM notifications WHERE user_id = ? GROUP BY type`
+      `SELECT type, COUNT(*) as count FROM notifications WHERE user_id = ? GROUP BY type`,
     );
     const typeCounts: Record<NotificationType, number> = {
       deadline_reminder: 0,
@@ -325,7 +325,7 @@ export class NotificationRepository {
   }
 
   private normalizeDateInput(
-    value: Date | string | null | undefined
+    value: Date | string | null | undefined,
   ): string | null {
     if (value === null || value === undefined) {
       return null;
@@ -343,7 +343,7 @@ export class NotificationRepository {
   }
 
   private toIsoString(
-    value: string | Date | null | undefined
+    value: string | Date | null | undefined,
   ): string | undefined {
     if (value === null || value === undefined) {
       return undefined;

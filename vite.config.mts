@@ -56,7 +56,7 @@ export default defineConfig({
   // Vitest configuration
   test: {
     globals: true,
-    environment: 'jsdom',
+    environment: 'happy-dom',
     setupFiles: ['./src/test/setup.ts'],
 
     // Run repository tests sequentially to avoid database singleton conflicts
@@ -80,6 +80,13 @@ export default defineConfig({
         '**/*.test.{ts,tsx}',
         '**/*.spec.{ts,tsx}',
       ],
+    },
+
+    // Fix Vitest 4 + jsdom ESM compatibility issue
+    server: {
+      deps: {
+        inline: ['parse5'], // Inline parse5 to fix jsdom ESM/CJS conflict
+      },
     },
   },
 

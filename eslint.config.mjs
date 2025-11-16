@@ -16,8 +16,10 @@ export default tseslint.config(
       "*.config.ts",
       "mcp-server/**/*", // MCP server has its own tsconfig
       "scripts/**/*", // Scripts run outside main project
+      "archived-scripts/**/*", // Archived experimental scripts
       "src/test-utils/**/*", // Test utilities not in main tsconfig
       "e2e/**/*", // Legacy Playwright recordings (superseded by tests/e2e)
+      "e2e-tests/**/*", // Standalone E2E tests (no tsconfig)
       "electron/__tests__/**/*", // Electron tests not in tsconfig.electron.json
       "temp-*.tsx", // Temporary test files
       "temp-*.ts", // Temporary test files

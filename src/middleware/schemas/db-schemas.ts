@@ -5,7 +5,7 @@
  * migrations, backups, status checks, and integrity verification.
  */
 
-import { z } from 'zod';
+import { z } from "zod";
 
 /**
  * Schema for database migration execution
@@ -38,17 +38,20 @@ export const dbMigrateRollbackSchema = z
   .object({
     confirmation: z
       .boolean()
-      .refine((val) => val === true, 'Confirmation is required to rollback migration')
-      .describe('Must be true to confirm rollback'),
+      .refine(
+        (val) => val === true,
+        "Confirmation is required to rollback migration",
+      )
+      .describe("Must be true to confirm rollback"),
 
     steps: z
       .number()
-      .int('Steps must be an integer')
-      .positive('Steps must be positive')
-      .max(10, 'Cannot rollback more than 10 migrations at once')
+      .int("Steps must be an integer")
+      .positive("Steps must be positive")
+      .max(10, "Cannot rollback more than 10 migrations at once")
       .default(1)
       .optional()
-      .describe('Number of migrations to rollback'),
+      .describe("Number of migrations to rollback"),
   })
   .strict();
 
@@ -84,21 +87,24 @@ export const dbBackupSchema = z
       .boolean()
       .default(true)
       .optional()
-      .describe('Whether to include encrypted sensitive data in backup'),
+      .describe("Whether to include encrypted sensitive data in backup"),
 
     compression: z
       .boolean()
       .default(true)
       .optional()
-      .describe('Whether to compress the backup file'),
+      .describe("Whether to compress the backup file"),
 
     // Custom backup name (otherwise uses timestamp)
     name: z
       .string()
-      .max(100, 'Backup name must be less than 100 characters')
-      .regex(/^[a-zA-Z0-9_-]+$/, 'Backup name can only contain letters, numbers, hyphens, and underscores')
+      .max(100, "Backup name must be less than 100 characters")
+      .regex(
+        /^[a-zA-Z0-9_-]+$/,
+        "Backup name can only contain letters, numbers, hyphens, and underscores",
+      )
       .optional()
-      .describe('Optional custom name for backup (default: timestamp)'),
+      .describe("Optional custom name for backup (default: timestamp)"),
   })
   .strict();
 
@@ -117,21 +123,24 @@ export const dbRestoreSchema = z
   .object({
     backupId: z
       .string()
-      .min(1, 'Backup ID is required')
-      .max(200, 'Backup ID too long')
-      .regex(/^[a-zA-Z0-9_-]+$/, 'Invalid backup ID format')
-      .describe('Backup identifier to restore from'),
+      .min(1, "Backup ID is required")
+      .max(200, "Backup ID too long")
+      .regex(/^[a-zA-Z0-9_-]+$/, "Invalid backup ID format")
+      .describe("Backup identifier to restore from"),
 
     confirmation: z
       .boolean()
-      .refine((val) => val === true, 'Confirmation is required to restore database')
-      .describe('Must be true to confirm restore operation'),
+      .refine(
+        (val) => val === true,
+        "Confirmation is required to restore database",
+      )
+      .describe("Must be true to confirm restore operation"),
 
     createBackupFirst: z
       .boolean()
       .default(true)
       .optional()
-      .describe('Create backup of current database before restoring'),
+      .describe("Create backup of current database before restoring"),
   })
   .strict();
 
@@ -149,20 +158,20 @@ export const dbBackupListSchema = z
   .object({
     limit: z
       .number()
-      .int('Limit must be an integer')
-      .positive('Limit must be positive')
-      .max(1000, 'Cannot list more than 1000 backups')
+      .int("Limit must be an integer")
+      .positive("Limit must be positive")
+      .max(1000, "Cannot list more than 1000 backups")
       .default(100)
       .optional()
-      .describe('Maximum number of backups to list'),
+      .describe("Maximum number of backups to list"),
 
     sortOrder: z
-      .enum(['asc', 'desc'], {
-        message: 'Sort order must be asc or desc',
+      .enum(["asc", "desc"], {
+        message: "Sort order must be asc or desc",
       })
-      .default('desc')
+      .default("desc")
       .optional()
-      .describe('Sort by creation date'),
+      .describe("Sort by creation date"),
   })
   .strict();
 
@@ -181,14 +190,17 @@ export const dbBackupDeleteSchema = z
   .object({
     backupId: z
       .string()
-      .min(1, 'Backup ID is required')
-      .max(200, 'Backup ID too long')
-      .regex(/^[a-zA-Z0-9_-]+$/, 'Invalid backup ID format'),
+      .min(1, "Backup ID is required")
+      .max(200, "Backup ID too long")
+      .regex(/^[a-zA-Z0-9_-]+$/, "Invalid backup ID format"),
 
     confirmation: z
       .boolean()
-      .refine((val) => val === true, 'Confirmation is required to delete backup')
-      .describe('Must be true to confirm deletion'),
+      .refine(
+        (val) => val === true,
+        "Confirmation is required to delete backup",
+      )
+      .describe("Must be true to confirm deletion"),
   })
   .strict();
 
@@ -208,13 +220,13 @@ export const dbStatusSchema = z
       .boolean()
       .default(true)
       .optional()
-      .describe('Include per-table statistics'),
+      .describe("Include per-table statistics"),
 
     includeIndexStats: z
       .boolean()
       .default(false)
       .optional()
-      .describe('Include index usage statistics'),
+      .describe("Include index usage statistics"),
   })
   .strict();
 
@@ -235,13 +247,13 @@ export const dbIntegrityCheckSchema = z
       .boolean()
       .default(false)
       .optional()
-      .describe('Perform deep integrity check (slower but more thorough)'),
+      .describe("Perform deep integrity check (slower but more thorough)"),
 
     autoRepair: z
       .boolean()
       .default(false)
       .optional()
-      .describe('Automatically attempt to repair detected issues'),
+      .describe("Automatically attempt to repair detected issues"),
   })
   .strict();
 
@@ -262,19 +274,19 @@ export const dbOptimizeSchema = z
       .boolean()
       .default(true)
       .optional()
-      .describe('Run VACUUM to reclaim space'),
+      .describe("Run VACUUM to reclaim space"),
 
     analyze: z
       .boolean()
       .default(true)
       .optional()
-      .describe('Run ANALYZE to update query planner statistics'),
+      .describe("Run ANALYZE to update query planner statistics"),
 
     reindex: z
       .boolean()
       .default(false)
       .optional()
-      .describe('Rebuild all indexes'),
+      .describe("Rebuild all indexes"),
   })
   .strict();
 
@@ -295,13 +307,13 @@ export const dbExportSchema = z
       .boolean()
       .default(true)
       .optional()
-      .describe('Include table schemas in export'),
+      .describe("Include table schemas in export"),
 
     includeData: z
       .boolean()
       .default(true)
       .optional()
-      .describe('Include table data in export'),
+      .describe("Include table data in export"),
 
     tables: z
       .array(
@@ -309,17 +321,17 @@ export const dbExportSchema = z
           .string()
           .min(1)
           .max(100)
-          .regex(/^[a-zA-Z0-9_]+$/, 'Invalid table name'),
+          .regex(/^[a-zA-Z0-9_]+$/, "Invalid table name"),
       )
-      .max(100, 'Cannot export more than 100 tables')
+      .max(100, "Cannot export more than 100 tables")
       .optional()
-      .describe('Specific tables to export (default: all tables)'),
+      .describe("Specific tables to export (default: all tables)"),
 
     format: z
-      .enum(['sql', 'json', 'csv'], {
-        message: 'Format must be sql, json, or csv',
+      .enum(["sql", "json", "csv"], {
+        message: "Format must be sql, json, or csv",
       })
-      .default('sql')
+      .default("sql")
       .optional(),
   })
   .strict();

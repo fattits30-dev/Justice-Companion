@@ -18,7 +18,7 @@ export class DomainError extends Error {
     code: string,
     message: string,
     statusCode: number = 500,
-    context?: Record<string, unknown>
+    context?: Record<string, unknown>,
   ) {
     super(message);
     this.name = this.constructor.name;
@@ -99,7 +99,7 @@ export class RegistrationError extends DomainError {
       "REGISTRATION_FAILED",
       `Registration failed: ${reason}`,
       400,
-      details
+      details,
     );
   }
 }
@@ -126,7 +126,7 @@ export class EvidenceNotFoundError extends DomainError {
       "EVIDENCE_NOT_FOUND",
       `Evidence with ID ${evidenceId} not found`,
       404,
-      { evidenceId }
+      { evidenceId },
     );
   }
 }
@@ -140,7 +140,7 @@ export class NotificationNotFoundError extends DomainError {
       "NOTIFICATION_NOT_FOUND",
       `Notification with ID ${notificationId} not found`,
       404,
-      { notificationId }
+      { notificationId },
     );
   }
 }
@@ -165,7 +165,7 @@ export class DeadlineNotFoundError extends DomainError {
       "DEADLINE_NOT_FOUND",
       `Deadline with ID ${deadlineId} not found`,
       404,
-      { deadlineId }
+      { deadlineId },
     );
   }
 }
@@ -179,7 +179,7 @@ export class ResourceAlreadyExistsError extends DomainError {
       "ALREADY_EXISTS",
       `${resource} with identifier ${identifier} already exists`,
       409,
-      { resource, identifier }
+      { resource, identifier },
     );
   }
 }
@@ -193,14 +193,14 @@ export class ValidationError extends DomainError {
   constructor(
     fieldOrMessage: string,
     messageOrValidation?: string | Array<{ field: string; message: string }>,
-    validationErrors?: Array<{ field: string; message: string }>
+    validationErrors?: Array<{ field: string; message: string }>,
   ) {
     if (Array.isArray(messageOrValidation)) {
       super(
         "VALIDATION_ERROR",
         `Validation failed for ${fieldOrMessage}`,
         400,
-        { field: fieldOrMessage, validationErrors: messageOrValidation }
+        { field: fieldOrMessage, validationErrors: messageOrValidation },
       );
       return;
     }
@@ -214,7 +214,7 @@ export class ValidationError extends DomainError {
       "VALIDATION_ERROR",
       `Validation failed for ${fieldOrMessage}: ${messageOrValidation}`,
       400,
-      { field: fieldOrMessage, validationErrors }
+      { field: fieldOrMessage, validationErrors },
     );
   }
 }
@@ -228,7 +228,7 @@ export class RequiredFieldError extends DomainError {
       "REQUIRED_FIELD_MISSING",
       `Required field '${fieldName}' is missing`,
       400,
-      { fieldName }
+      { fieldName },
     );
   }
 }
@@ -242,7 +242,7 @@ export class InvalidFileTypeError extends DomainError {
       "INVALID_FILE_TYPE",
       `Invalid file type for ${fileName}. Expected: ${expectedTypes.join(", ")}`,
       400,
-      { fileName, expectedTypes, actualType }
+      { fileName, expectedTypes, actualType },
     );
   }
 }
@@ -305,7 +305,7 @@ export class MigrationError extends DomainError {
       "MIGRATION_ERROR",
       `Migration '${migrationName}' failed: ${reason}`,
       500,
-      { migrationName }
+      { migrationName },
     );
   }
 }
@@ -335,7 +335,7 @@ export class QuotaExceededError extends DomainError {
       "QUOTA_EXCEEDED",
       `Quota exceeded for ${resource}. Used: ${used}, Limit: ${limit}`,
       507,
-      { resource, used, limit }
+      { resource, used, limit },
     );
   }
 }
@@ -363,7 +363,7 @@ export class ConsentRequiredError extends DomainError {
       "CONSENT_REQUIRED",
       `User consent for '${consentType}' required to ${operation}`,
       403,
-      { consentType, operation }
+      { consentType, operation },
     );
   }
 }
@@ -400,7 +400,7 @@ export class AINotConfiguredError extends DomainError {
     super(
       "AI_NOT_CONFIGURED",
       `${provider} not configured. Please set your API key in Settings.`,
-      503
+      503,
     );
   }
 }
@@ -414,7 +414,7 @@ export class AIServiceError extends DomainError {
       "AI_SERVICE_ERROR",
       `${provider} error: ${reason}`,
       statusCode || 503,
-      { provider }
+      { provider },
     );
   }
 }
@@ -448,7 +448,7 @@ export class FileOperationError extends DomainError {
   constructor(
     operation: "read" | "write" | "delete" | "move",
     filePath: string,
-    reason?: string
+    reason?: string,
   ) {
     const message = reason
       ? `Failed to ${operation} file ${filePath}: ${reason}`
@@ -468,7 +468,7 @@ export class InvalidStateError extends DomainError {
       "INVALID_STATE",
       `Cannot ${operation} ${entity} in state '${currentState}'`,
       409,
-      { entity, currentState, operation }
+      { entity, currentState, operation },
     );
   }
 }
@@ -482,7 +482,7 @@ export class BusinessRuleError extends DomainError {
       "BUSINESS_RULE_VIOLATION",
       `Business rule violation - ${rule}: ${violation}`,
       400,
-      { rule }
+      { rule },
     );
   }
 }

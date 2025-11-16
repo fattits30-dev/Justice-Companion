@@ -21,22 +21,26 @@ The Timeline domain manages temporal aspects of legal cases including timeline e
 ### Deadline Management
 
 #### Priority Levels
+
 - **High**: Critical legal deadlines (court dates, filing deadlines)
 - **Medium**: Important but flexible deadlines
 - **Low**: Informational dates and reminders
 
 #### Status States
+
 - **Upcoming**: Future deadline not yet due
 - **Overdue**: Past deadline not completed
 - **Completed**: Deadline marked as done
 
 #### Urgency Rules
+
 - Urgent: Deadline within 7 days
 - Critical: Deadline within 3 days
 - Today: Due today (highest alert)
 - Overdue: Immediate attention required
 
 ### Timeline Event Rules
+
 - Events are immutable once created
 - Events must have a date and title
 - Events linked to specific case
@@ -45,6 +49,7 @@ The Timeline domain manages temporal aspects of legal cases including timeline e
 ## Key Features
 
 ### Intelligent Reminders
+
 - 30 days before: Initial reminder
 - 14 days before: Follow-up reminder
 - 7 days before: Urgent reminder
@@ -53,6 +58,7 @@ The Timeline domain manages temporal aspects of legal cases including timeline e
 - Overdue: Daily reminders
 
 ### Statutory Deadline Tracking
+
 - Employment tribunal: 3 months
 - Housing disputes: 1 year
 - Consumer claims: 6 years
@@ -60,6 +66,7 @@ The Timeline domain manages temporal aspects of legal cases including timeline e
 - Warning when approaching limitation
 
 ### Calendar Integration (Planned)
+
 - Export to iCal format
 - Google Calendar sync
 - Outlook integration
@@ -75,21 +82,29 @@ The Timeline domain manages temporal aspects of legal cases including timeline e
 ## Usage Examples
 
 ```typescript
-import { Deadline, DeadlineCreated, DeadlineCompleted } from '@/domains/timeline';
-import { getDaysUntilDeadline, isDeadlineUrgent, formatDeadlineStatus } from '@/domains/timeline';
+import {
+  Deadline,
+  DeadlineCreated,
+  DeadlineCompleted,
+} from "@/domains/timeline";
+import {
+  getDaysUntilDeadline,
+  isDeadlineUrgent,
+  formatDeadlineStatus,
+} from "@/domains/timeline";
 
 // Create a deadline
 const deadline: Deadline = {
   id: 1,
   caseId: 42,
   userId: 123,
-  title: 'Submit ET1 Form',
-  description: 'Employment tribunal claim form',
-  deadlineDate: '2024-03-15',
-  priority: 'high',
-  status: 'upcoming',
+  title: "Submit ET1 Form",
+  description: "Employment tribunal claim form",
+  deadlineDate: "2024-03-15",
+  priority: "high",
+  status: "upcoming",
   createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString()
+  updatedAt: new Date().toISOString(),
 };
 
 // Check deadline urgency
@@ -103,7 +118,7 @@ console.log(createdEvent.isHighPriority()); // true
 console.log(createdEvent.isUrgent()); // depends on date
 
 // Complete deadline
-deadline.status = 'completed';
+deadline.status = "completed";
 deadline.completedAt = new Date().toISOString();
 const completedEvent = DeadlineCompleted.fromEntity(deadline);
 console.log(completedEvent.wasCompletedLate()); // false if on time

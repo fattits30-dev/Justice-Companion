@@ -5,8 +5,8 @@
  * Used to configure testing environment and add custom matchers.
  */
 
-import '@testing-library/jest-dom';
-import { vi, beforeEach } from 'vitest';
+import "@testing-library/jest-dom";
+import { vi, beforeEach } from "vitest";
 
 // Suppress console errors in tests (optional - remove if you want to see them)
 // const originalError = console.error;
@@ -21,8 +21,11 @@ import { vi, beforeEach } from 'vitest';
 // Using beforeEach to ensure mock persists after Vitest's mockReset between tests
 beforeEach(() => {
   // Only mock in jsdom environment (not in node environment)
-  if (typeof window !== 'undefined' && typeof window.matchMedia === 'undefined') {
-    Object.defineProperty(window, 'matchMedia', {
+  if (
+    typeof window !== "undefined" &&
+    typeof window.matchMedia === "undefined"
+  ) {
+    Object.defineProperty(window, "matchMedia", {
       writable: true,
       configurable: true,
       value: vi.fn((query: string) => ({
@@ -42,7 +45,7 @@ beforeEach(() => {
 // Mock IntersectionObserver (used by some UI libraries)
 class IntersectionObserverMock {
   readonly root: Element | Document | null = null;
-  readonly rootMargin = '';
+  readonly rootMargin = "";
   readonly thresholds: ReadonlyArray<number> = [];
 
   constructor(_callback: unknown, _options?: unknown) {}
@@ -59,7 +62,10 @@ class IntersectionObserverMock {
 }
 
 // Use window.IntersectionObserver instead of global for better compatibility
-if (typeof window !== 'undefined' && typeof window.IntersectionObserver === 'undefined') {
+if (
+  typeof window !== "undefined" &&
+  typeof window.IntersectionObserver === "undefined"
+) {
   (window as any).IntersectionObserver = IntersectionObserverMock;
 }
 
@@ -75,6 +81,9 @@ class ResizeObserverMock {
 }
 
 // Use window.ResizeObserver instead of global for better compatibility
-if (typeof window !== 'undefined' && typeof window.ResizeObserver === 'undefined') {
+if (
+  typeof window !== "undefined" &&
+  typeof window.ResizeObserver === "undefined"
+) {
   (window as any).ResizeObserver = ResizeObserverMock;
 }

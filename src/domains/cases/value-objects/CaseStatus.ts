@@ -3,30 +3,38 @@
  * Encapsulates case status validation and business rules
  */
 export class CaseStatus {
-  private static readonly VALID_STATUSES = ['active', 'closed', 'pending'] as const;
+  private static readonly VALID_STATUSES = [
+    "active",
+    "closed",
+    "pending",
+  ] as const;
 
-  private constructor(private readonly value: 'active' | 'closed' | 'pending') {}
+  private constructor(
+    private readonly value: "active" | "closed" | "pending",
+  ) {}
 
   static create(status: string): CaseStatus {
     if (!CaseStatus.VALID_STATUSES.includes(status as any)) {
-      throw new Error(`Invalid case status: ${status}. Must be one of ${CaseStatus.VALID_STATUSES.join(', ')}`);
+      throw new Error(
+        `Invalid case status: ${status}. Must be one of ${CaseStatus.VALID_STATUSES.join(", ")}`,
+      );
     }
-    return new CaseStatus(status as 'active' | 'closed' | 'pending');
+    return new CaseStatus(status as "active" | "closed" | "pending");
   }
 
   static active(): CaseStatus {
-    return new CaseStatus('active');
+    return new CaseStatus("active");
   }
 
   static closed(): CaseStatus {
-    return new CaseStatus('closed');
+    return new CaseStatus("closed");
   }
 
   static pending(): CaseStatus {
-    return new CaseStatus('pending');
+    return new CaseStatus("pending");
   }
 
-  getValue(): 'active' | 'closed' | 'pending' {
+  getValue(): "active" | "closed" | "pending" {
     return this.value;
   }
 
@@ -39,15 +47,15 @@ export class CaseStatus {
   }
 
   isActive(): boolean {
-    return this.value === 'active';
+    return this.value === "active";
   }
 
   isClosed(): boolean {
-    return this.value === 'closed';
+    return this.value === "closed";
   }
 
   isPending(): boolean {
-    return this.value === 'pending';
+    return this.value === "pending";
   }
 
   canTransitionTo(newStatus: CaseStatus): boolean {

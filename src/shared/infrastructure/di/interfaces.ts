@@ -135,7 +135,7 @@ export interface UserProfileRepository {
   getUserProfileByUserId(userId: number): Promise<UserProfile | null>;
   updateUserProfile(
     userId: number,
-    input: UpdateUserProfileInput
+    input: UpdateUserProfileInput,
   ): Promise<UserProfile>;
   deleteUserProfile(userId: number): Promise<void>;
 }
@@ -163,12 +163,12 @@ export interface ChatConversationRepository {
   getConversationById(id: number): Promise<ChatConversation | null>;
   updateConversation(
     id: number,
-    input: UpdateChatConversationInput
+    input: UpdateChatConversationInput,
   ): Promise<ChatConversation>;
   deleteConversation(id: number): Promise<void>;
   getConversationsByUserId(userId: number): Promise<ChatConversation[]>;
   getConversationWithMessages(
-    conversationId: number
+    conversationId: number,
   ): Promise<ChatConversation | null>;
 }
 
@@ -176,12 +176,12 @@ export interface ConsentRepository {
   createConsent(consentType: ConsentType, userId: number): Promise<Consent>;
   getConsentByTypeAndUserId(
     consentType: ConsentType,
-    userId: number
+    userId: number,
   ): Promise<Consent | null>;
   updateConsent(
     consentType: ConsentType,
     userId: number,
-    consented: boolean
+    consented: boolean,
   ): Promise<Consent>;
   deleteConsent(consentType: ConsentType, userId: number): Promise<void>;
   getAllConsentsByUserId(userId: number): Promise<Consent[]>;
@@ -201,7 +201,7 @@ export interface LegalIssueRepository {
   getLegalIssueById(id: number): Promise<LegalIssue | null>;
   updateLegalIssue(
     id: number,
-    input: UpdateLegalIssueInput
+    input: UpdateLegalIssueInput,
   ): Promise<LegalIssue>;
   deleteLegalIssue(id: number): Promise<void>;
   getLegalIssuesByCaseId(caseId: number): Promise<LegalIssue[]>;
@@ -212,7 +212,7 @@ export interface TimelineEventRepository {
   getTimelineEventById(id: number): Promise<TimelineEvent | null>;
   updateTimelineEvent(
     id: number,
-    input: UpdateTimelineEventInput
+    input: UpdateTimelineEventInput,
   ): Promise<TimelineEvent>;
   deleteTimelineEvent(id: number): Promise<void>;
   getTimelineEventsByCaseId(caseId: number): Promise<TimelineEvent[]>;
@@ -253,7 +253,7 @@ export interface SessionRepository {
   createSession(
     userId: number,
     token: string,
-    expiresAt: Date
+    expiresAt: Date,
   ): Promise<Session>;
   getSessionByToken(token: string): Promise<Session | null>;
   deleteSession(token: string): Promise<void>;

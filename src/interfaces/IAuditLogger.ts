@@ -11,5 +11,8 @@ export interface AuditLogEntry {
 export interface IAuditLogger {
   logAction(entry: AuditLogEntry): void | Promise<void>;
   logFailedAttempt(entry: AuditLogEntry): void | Promise<void>;
-  getAuditLog(userId?: number, limit?: number): AuditLogEntry[] | Promise<AuditLogEntry[]>;
+  getAuditLog(
+    userId?: number,
+    limit?: number,
+  ): AuditLogEntry[] | Promise<AuditLogEntry[]>;
 }

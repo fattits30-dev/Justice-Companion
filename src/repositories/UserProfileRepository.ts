@@ -1,8 +1,14 @@
-import { getDb } from '../db/database.ts';
-import type { UserProfile, UpdateUserProfileInput } from '../domains/settings/entities/UserProfile.ts';
-import { EncryptionService, type EncryptedData } from '../services/EncryptionService.ts';
-import type { AuditLogger } from '../services/AuditLogger.ts';
-import { errorLogger } from '../utils/error-logger.ts';
+import { getDb } from "../db/database.ts";
+import type {
+  UserProfile,
+  UpdateUserProfileInput,
+} from "../domains/settings/entities/UserProfile.ts";
+import {
+  EncryptionService,
+  type EncryptedData,
+} from "../services/EncryptionService.ts";
+import type { AuditLogger } from "../services/AuditLogger.ts";
+import { errorLogger } from "../utils/error-logger.ts";
 
 /**
  * Repository for managing user profile with encryption for PII
@@ -17,10 +23,7 @@ export class UserProfileRepository {
   private encryptionService: EncryptionService;
   private auditLogger?: AuditLogger;
 
-  constructor(
-    encryptionService: EncryptionService,
-    auditLogger?: AuditLogger,
-  ) {
+  constructor(encryptionService: EncryptionService, auditLogger?: AuditLogger) {
     this.encryptionService = encryptionService;
     this.auditLogger = auditLogger;
   }
@@ -43,14 +46,14 @@ export class UserProfileRepository {
 
       // Should never happen (default inserted in migration)
       if (!profile) {
-        throw new Error('User profile not found');
+        throw new Error("User profile not found");
       }
 
       // Decrypt PII fields after SELECT
       const originalName = profile.name;
       const originalEmail = profile.email;
 
-      profile.name = this.decryptField(profile.name) ?? 'Legal User';
+      profile.name = this.decryptField(profile.name) ?? "Legal User";
       profile.email = this.decryptField(profile.email);
 
       // Audit: PII accessed (encrypted name/email fields)
@@ -60,12 +63,12 @@ export class UserProfileRepository {
 
       if (piiAccessed) {
         this.auditLogger?.log({
-          eventType: 'profile.pii_access',
-          resourceType: 'profile',
-          resourceId: '1',
-          action: 'read',
+          eventType: "profile.pii_access",
+          resourceType: "profile",
+          resourceId: "1",
+          action: "read",
           details: {
-            fieldsAccessed: ['name', 'email'],
+            fieldsAccessed: ["name", "email"],
             encrypted: true,
           },
           success: true,
@@ -75,7 +78,7 @@ export class UserProfileRepository {
       return profile;
     } catch (error) {
       errorLogger.logError(error as Error, {
-        context: 'UserProfileRepository.get',
+        context: "UserProfileRepository.get",
       });
       throw error;
     }
@@ -93,7 +96,7 @@ export class UserProfileRepository {
       const params: Record<string, unknown> = {};
 
       if (input.name !== undefined) {
-        updates.push('name = @name');
+        updates.push("name = @name");
         if (input.name && input.name.trim().length > 0) {
           const encryptedName = encryption.encrypt(input.name);
           params.name = encryptedName ? JSON.stringify(encryptedName) : null;
@@ -103,7 +106,7 @@ export class UserProfileRepository {
       }
 
       if (input.email !== undefined) {
-        updates.push('email = @email');
+        updates.push("email = @email");
         if (input.email === null) {
           params.email = null;
         } else if (input.email && input.email.trim().length > 0) {
@@ -115,7 +118,7 @@ export class UserProfileRepository {
       }
 
       if (input.avatarUrl !== undefined) {
-        updates.push('avatar_url = @avatarUrl');
+        updates.push("avatar_url = @avatarUrl");
         params.avatarUrl = input.avatarUrl;
       }
 
@@ -125,7 +128,7 @@ export class UserProfileRepository {
 
       const stmt = db.prepare(`
         UPDATE user_profile
-        SET ${updates.join(', ')}
+        SET ${updates.join(", ")}
         WHERE id = 1
       `);
 
@@ -133,10 +136,10 @@ export class UserProfileRepository {
 
       // Audit: Profile updated
       this.auditLogger?.log({
-        eventType: 'profile.update',
-        resourceType: 'profile',
-        resourceId: '1',
-        action: 'update',
+        eventType: "profile.update",
+        resourceType: "profile",
+        resourceId: "1",
+        action: "update",
         details: {
           fieldsUpdated: Object.keys(input),
         },
@@ -147,16 +150,16 @@ export class UserProfileRepository {
     } catch (error) {
       // Audit: Failed update
       this.auditLogger?.log({
-        eventType: 'profile.update',
-        resourceType: 'profile',
-        resourceId: '1',
-        action: 'update',
+        eventType: "profile.update",
+        resourceType: "profile",
+        resourceId: "1",
+        action: "update",
         success: false,
-        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        errorMessage: error instanceof Error ? error.message : "Unknown error",
       });
 
       errorLogger.logError(error as Error, {
-        context: 'UserProfileRepository.update',
+        context: "UserProfileRepository.update",
       });
       throw error;
     }
@@ -196,7 +199,9 @@ export class UserProfileRepository {
 
   private requireEncryptionService(): EncryptionService {
     if (!this.encryptionService) {
-      throw new Error('EncryptionService not configured for UserProfileRepository');
+      throw new Error(
+        "EncryptionService not configured for UserProfileRepository",
+      );
     }
     return this.encryptionService;
   }

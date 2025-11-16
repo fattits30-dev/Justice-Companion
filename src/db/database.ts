@@ -12,7 +12,7 @@ const resolveDatabasePath = (): string => {
   if (process.versions?.electron) {
     try {
       // Dynamic import only when running in Electron
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
+
       const { app } = require("electron");
       if (app && typeof app.getPath === "function") {
         return path.join(app.getPath("userData"), "justice.db");
@@ -111,7 +111,7 @@ class DatabaseManager {
   public getQueryAnalyzer(): import("../utils/database-query-analyzer.ts").DatabaseQueryAnalyzer {
     const db = this.getDatabase();
     // Lazy load to avoid circular dependencies
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+
     const {
       DatabaseQueryAnalyzer,
     } = require("../utils/database-query-analyzer.ts");

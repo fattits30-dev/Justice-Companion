@@ -51,7 +51,7 @@ export class LoggingDecorator<T> extends RepositoryDecorator<T> {
   constructor(
     repository: T,
     @inject(TYPES.AuditLogger) private auditLogger: IAuditLogger,
-    options: LoggingOptions = {}
+    options: LoggingOptions = {},
   ) {
     super(repository);
 

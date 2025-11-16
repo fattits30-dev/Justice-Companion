@@ -5,16 +5,19 @@ A comprehensive document export system for Justice Companion that enables users 
 ## Features
 
 ### Export Formats
+
 - **PDF** - Professional PDF documents with headers, footers, and page numbers
 - **DOCX** - Microsoft Word documents with proper formatting and tables
 
 ### Built-in Templates
+
 1. **Case Summary** - Complete case details including evidence, timeline, deadlines, notes, and facts
 2. **Evidence List** - Detailed inventory of all case evidence with categorization
 3. **Timeline Report** - Chronological timeline with deadlines and events
 4. **Case Notes** - All notes and observations for the case
 
 ### Key Capabilities
+
 - **Encryption Handling** - Automatically decrypts all encrypted fields before export
 - **Audit Logging** - Every export operation is logged for compliance
 - **Permission Checking** - Validates user access before allowing export
@@ -26,28 +29,36 @@ A comprehensive document export system for Justice Companion that enables users 
 ### Components
 
 #### ExportService (`ExportService.ts`)
+
 Main service orchestrating the export process:
+
 - Validates user permissions
 - Gathers and decrypts case data
 - Coordinates with generators and template engine
 - Manages file saving and audit logging
 
 #### PDFGenerator (`PDFGenerator.ts`)
+
 Generates PDF documents using PDFKit:
+
 - Professional styling with custom fonts and colors
 - Page headers and footers
 - Table of contents capability
 - Automatic page breaks
 
 #### DOCXGenerator (`DOCXGenerator.ts`)
+
 Generates Word documents using the `docx` library:
+
 - Structured document sections
 - Tables with proper formatting
 - Headers and footers with page numbers
 - Style definitions for consistency
 
 #### TemplateEngine (`TemplateEngine.ts`)
+
 Manages export templates:
+
 - Template validation
 - Data formatting for different templates
 - Template metadata management
@@ -59,32 +70,44 @@ Manages export templates:
 ```typescript
 // Export case to PDF
 const result = await window.electron.export.caseToPdf(caseId, userId, {
-  template: 'case-summary',
+  template: "case-summary",
   includeEvidence: true,
   includeTimeline: true,
-  includeNotes: true
+  includeNotes: true,
 });
 
 // Export case to Word
 const result = await window.electron.export.caseToWord(caseId, userId, {
-  template: 'case-summary'
+  template: "case-summary",
 });
 
 // Export specific reports
-const evidenceReport = await window.electron.export.evidenceListToPdf(caseId, userId);
-const timelineReport = await window.electron.export.timelineReportToPdf(caseId, userId);
-const notesReportPdf = await window.electron.export.caseNotesToPdf(caseId, userId);
-const notesReportWord = await window.electron.export.caseNotesToWord(caseId, userId);
+const evidenceReport = await window.electron.export.evidenceListToPdf(
+  caseId,
+  userId,
+);
+const timelineReport = await window.electron.export.timelineReportToPdf(
+  caseId,
+  userId,
+);
+const notesReportPdf = await window.electron.export.caseNotesToPdf(
+  caseId,
+  userId,
+);
+const notesReportWord = await window.electron.export.caseNotesToWord(
+  caseId,
+  userId,
+);
 
 // Get available templates
 const templates = await window.electron.export.getTemplates();
 
 // Custom export with options
 const customExport = await window.electron.export.custom(caseId, userId, {
-  format: 'pdf',
-  template: 'timeline-report',
+  format: "pdf",
+  template: "timeline-report",
   includeEvidence: false,
-  outputPath: '/custom/path/report.pdf'
+  outputPath: "/custom/path/report.pdf",
 });
 ```
 
@@ -92,31 +115,34 @@ const customExport = await window.electron.export.custom(caseId, userId, {
 
 ```typescript
 interface ExportOptions {
-  format: 'pdf' | 'docx';
-  template: 'case-summary' | 'evidence-list' | 'timeline-report' | 'case-notes';
+  format: "pdf" | "docx";
+  template: "case-summary" | "evidence-list" | "timeline-report" | "case-notes";
   includeEvidence?: boolean;
   includeTimeline?: boolean;
   includeNotes?: boolean;
   includeFacts?: boolean;
   includeDocuments?: boolean;
-  outputPath?: string;  // Custom save location
-  fileName?: string;    // Custom filename
+  outputPath?: string; // Custom save location
+  fileName?: string; // Custom filename
 }
 ```
 
 ## File Output
 
 By default, exported files are saved to:
+
 ```
 [Documents]/Justice-Companion/exports/
 ```
 
 File naming convention:
+
 ```
 [caseNumber]-[template]-[timestamp].[format]
 ```
 
 Example:
+
 ```
 CASE-001-case-summary-2024-01-15T14-30-00.pdf
 ```
@@ -124,12 +150,15 @@ CASE-001-case-summary-2024-01-15T14-30-00.pdf
 ## Security
 
 ### Permission Validation
+
 - Validates user has access to the case before export
 - Currently checks if user owns the case
 - Future: Support for shared access permissions
 
 ### Data Decryption
+
 All encrypted fields are automatically decrypted before export:
+
 - Case title and description
 - Evidence titles, descriptions, and file paths
 - Deadline titles and descriptions
@@ -137,7 +166,9 @@ All encrypted fields are automatically decrypted before export:
 - Document filenames and paths
 
 ### Audit Trail
+
 Every export operation is logged with:
+
 - User ID
 - Action type (EXPORT_CASE_PDF, EXPORT_CASE_DOCX)
 - Resource type and ID
@@ -148,6 +179,7 @@ Every export operation is logged with:
 ## Professional Styling
 
 ### PDF Styling
+
 - **Title**: 24pt, bold, navy blue (#1a365d)
 - **Heading 1**: 18pt, bold, blue (#2c5282)
 - **Heading 2**: 14pt, bold, dark gray (#2d3748)
@@ -156,6 +188,7 @@ Every export operation is logged with:
 - **Page margins**: 72pt (1 inch) on all sides
 
 ### Word Styling
+
 - **Title**: 48pt, bold, navy blue, centered
 - **Headings**: Hierarchical with appropriate sizing
 - **Tables**: Professional borders and header shading
@@ -165,7 +198,9 @@ Every export operation is logged with:
 ## Template Details
 
 ### Case Summary Template
+
 Includes:
+
 - Case information (number, status, dates, description)
 - Evidence inventory with categories
 - Timeline events with completion status
@@ -174,7 +209,9 @@ Includes:
 - Case facts with confidence levels
 
 ### Evidence List Template
+
 Includes:
+
 - Case identification
 - Total evidence count
 - Category summary
@@ -186,7 +223,9 @@ Includes:
   - Tags
 
 ### Timeline Report Template
+
 Includes:
+
 - Case identification
 - Event statistics
 - Upcoming deadlines (highlighted in red)
@@ -195,7 +234,9 @@ Includes:
 - Days remaining for deadlines
 
 ### Case Notes Template
+
 Includes:
+
 - Case identification
 - Total notes count
 - Notes grouped by date
@@ -205,6 +246,7 @@ Includes:
 ## Testing
 
 The service includes comprehensive unit tests covering:
+
 - PDF and DOCX generation for all templates
 - Permission validation
 - Data decryption
@@ -214,6 +256,7 @@ The service includes comprehensive unit tests covering:
 - Template selection
 
 Run tests:
+
 ```bash
 pnpm test src/services/export/ExportService.test.ts
 ```

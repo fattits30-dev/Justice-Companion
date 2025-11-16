@@ -63,7 +63,7 @@ describe("NotificationService", () => {
     service = new NotificationService(
       notificationRepo,
       preferencesRepo,
-      auditLogger
+      auditLogger,
     );
   });
 
@@ -95,7 +95,7 @@ describe("NotificationService", () => {
             type: "deadline_reminder",
             severity: "medium",
           }),
-        })
+        }),
       );
     });
 
@@ -115,7 +115,7 @@ describe("NotificationService", () => {
       };
 
       await expect(service.createNotification(input)).rejects.toThrow(
-        "Notification type deadline_reminder is disabled"
+        "Notification type deadline_reminder is disabled",
       );
     });
 
@@ -137,7 +137,7 @@ describe("NotificationService", () => {
       };
 
       await expect(service.createNotification(input)).rejects.toThrow(
-        "Notification blocked during quiet hours"
+        "Notification blocked during quiet hours",
       );
     });
   });
@@ -171,7 +171,7 @@ describe("NotificationService", () => {
           eventType: "notification.read",
           resourceId: "1",
           action: "read",
-        })
+        }),
       );
     });
   });
@@ -190,7 +190,7 @@ describe("NotificationService", () => {
           resourceId: "1",
           action: "update",
           details: { count: 5 },
-        })
+        }),
       );
     });
   });
@@ -206,7 +206,7 @@ describe("NotificationService", () => {
           eventType: "notification.dismiss",
           resourceId: "1",
           action: "update",
-        })
+        }),
       );
     });
   });
@@ -234,7 +234,7 @@ describe("NotificationService", () => {
     it("should create default preferences if none exist", async () => {
       vi.spyOn(preferencesRepo, "findByUser").mockReturnValueOnce(null);
       vi.spyOn(preferencesRepo, "createDefaults").mockReturnValue(
-        mockPreferences
+        mockPreferences,
       );
 
       const result = await service.getPreferences(1);
@@ -260,7 +260,7 @@ describe("NotificationService", () => {
           resourceId: "1",
           action: "update",
           details: { changes: ["soundEnabled", "deadlineReminderDays"] },
-        })
+        }),
       );
     });
   });
@@ -279,7 +279,7 @@ describe("NotificationService", () => {
           resourceType: "notification",
           action: "delete",
           details: { deletedCount: 10 },
-        })
+        }),
       );
     });
 
@@ -305,7 +305,7 @@ describe("NotificationService", () => {
         1,
         "medium",
         "System Warning",
-        "This is a system warning"
+        "This is a system warning",
       );
 
       expect(result.type).toBe("system_warning");
@@ -313,10 +313,10 @@ describe("NotificationService", () => {
         expect.objectContaining({
           type: "system_warning",
           severity: "medium",
-        })
+        }),
       );
       expect(logSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ eventType: "notification.create" })
+        expect.objectContaining({ eventType: "notification.create" }),
       );
     });
   });

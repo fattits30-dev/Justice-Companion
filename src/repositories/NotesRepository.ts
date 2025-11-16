@@ -1,7 +1,10 @@
-import { getDb } from '../db/database.ts';
-import type { Note, CreateNoteInput, UpdateNoteInput } from '../models/Note.ts';
-import { EncryptionService, type EncryptedData } from '../services/EncryptionService.ts';
-import type { AuditLogger } from '../services/AuditLogger.ts';
+import { getDb } from "../db/database.ts";
+import type { Note, CreateNoteInput, UpdateNoteInput } from "../models/Note.ts";
+import {
+  EncryptionService,
+  type EncryptedData,
+} from "../services/EncryptionService.ts";
+import type { AuditLogger } from "../services/AuditLogger.ts";
 
 /**
  * Repository for managing case notes with encryption
@@ -16,10 +19,7 @@ export class NotesRepository {
   private encryptionService: EncryptionService;
   private auditLogger?: AuditLogger;
 
-  constructor(
-    encryptionService: EncryptionService,
-    auditLogger?: AuditLogger,
-  ) {
+  constructor(encryptionService: EncryptionService, auditLogger?: AuditLogger) {
     this.encryptionService = encryptionService;
     this.auditLogger = auditLogger;
   }
@@ -35,7 +35,7 @@ export class NotesRepository {
       // Encrypt content before INSERT (P0 priority field)
       const encryptedContent = encryption.encrypt(input.content);
       if (!encryptedContent) {
-        throw new Error('Failed to encrypt note content');
+        throw new Error("Failed to encrypt note content");
       }
       const contentToStore = JSON.stringify(encryptedContent);
 
@@ -53,10 +53,10 @@ export class NotesRepository {
 
       // Audit: Note created
       this.auditLogger?.log({
-        eventType: 'note.create',
-        resourceType: 'note',
+        eventType: "note.create",
+        resourceType: "note",
         resourceId: createdNote.id.toString(),
-        action: 'create',
+        action: "create",
         details: {
           caseId: input.caseId,
           contentLength: input.content.length,
@@ -68,12 +68,12 @@ export class NotesRepository {
     } catch (error) {
       // Audit: Failed creation
       this.auditLogger?.log({
-        eventType: 'note.create',
-        resourceType: 'note',
-        resourceId: 'unknown',
-        action: 'create',
+        eventType: "note.create",
+        resourceType: "note",
+        resourceId: "unknown",
+        action: "create",
         success: false,
-        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        errorMessage: error instanceof Error ? error.message : "Unknown error",
       });
       throw error;
     }
@@ -105,11 +105,11 @@ export class NotesRepository {
       // Audit: PII accessed (encrypted content field)
       if (originalContent && row.content !== originalContent) {
         this.auditLogger?.log({
-          eventType: 'note.content_access',
-          resourceType: 'note',
+          eventType: "note.content_access",
+          resourceType: "note",
           resourceId: id.toString(),
-          action: 'read',
-          details: { field: 'content', encrypted: true },
+          action: "read",
+          details: { field: "content", encrypted: true },
           success: true,
         });
       }
@@ -155,7 +155,7 @@ export class NotesRepository {
       // Encrypt new content before UPDATE
       const encryptedContent = encryption.encrypt(input.content);
       if (!encryptedContent) {
-        throw new Error('Failed to encrypt note content');
+        throw new Error("Failed to encrypt note content");
       }
       const contentToStore = JSON.stringify(encryptedContent);
 
@@ -174,10 +174,10 @@ export class NotesRepository {
 
       // Audit: Note updated
       this.auditLogger?.log({
-        eventType: 'note.update',
-        resourceType: 'note',
+        eventType: "note.update",
+        resourceType: "note",
         resourceId: id.toString(),
-        action: 'update',
+        action: "update",
         details: {
           contentLength: input.content.length,
         },
@@ -188,12 +188,12 @@ export class NotesRepository {
     } catch (error) {
       // Audit: Failed update
       this.auditLogger?.log({
-        eventType: 'note.update',
-        resourceType: 'note',
+        eventType: "note.update",
+        resourceType: "note",
         resourceId: id.toString(),
-        action: 'update',
+        action: "update",
         success: false,
-        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        errorMessage: error instanceof Error ? error.message : "Unknown error",
       });
       throw error;
     }
@@ -205,16 +205,16 @@ export class NotesRepository {
   delete(id: number): boolean {
     try {
       const db = getDb();
-      const stmt = db.prepare('DELETE FROM notes WHERE id = ?');
+      const stmt = db.prepare("DELETE FROM notes WHERE id = ?");
       const result = stmt.run(id);
       const success = result.changes > 0;
 
       // Audit: Note deleted
       this.auditLogger?.log({
-        eventType: 'note.delete',
-        resourceType: 'note',
+        eventType: "note.delete",
+        resourceType: "note",
         resourceId: id.toString(),
-        action: 'delete',
+        action: "delete",
         success,
       });
 
@@ -222,12 +222,12 @@ export class NotesRepository {
     } catch (error) {
       // Audit: Failed deletion
       this.auditLogger?.log({
-        eventType: 'note.delete',
-        resourceType: 'note',
+        eventType: "note.delete",
+        resourceType: "note",
         resourceId: id.toString(),
-        action: 'delete',
+        action: "delete",
         success: false,
-        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        errorMessage: error instanceof Error ? error.message : "Unknown error",
       });
       throw error;
     }
@@ -240,7 +240,7 @@ export class NotesRepository {
    */
   private decryptContent(storedValue: string | null | undefined): string {
     if (!storedValue) {
-      return '';
+      return "";
     }
 
     // If no encryption service, return as-is (backward compatibility)
@@ -254,7 +254,7 @@ export class NotesRepository {
 
       // Verify it's actually encrypted data format
       if (this.encryptionService.isEncrypted(encryptedData)) {
-        return this.encryptionService.decrypt(encryptedData) ?? '';
+        return this.encryptionService.decrypt(encryptedData) ?? "";
       }
 
       // If it's not encrypted format, treat as legacy plaintext
@@ -267,7 +267,7 @@ export class NotesRepository {
 
   private requireEncryptionService(): EncryptionService {
     if (!this.encryptionService) {
-      throw new Error('EncryptionService not configured for NotesRepository');
+      throw new Error("EncryptionService not configured for NotesRepository");
     }
     return this.encryptionService;
   }
@@ -275,44 +275,54 @@ export class NotesRepository {
   /**
    * Search notes by query string and filters
    */
-  async searchNotes(userId: number, query: string, filters?: any): Promise<Note[]> {
+  async searchNotes(
+    userId: number,
+    query: string,
+    filters?: any,
+  ): Promise<Note[]> {
     const db = getDb();
     const conditions: string[] = [];
     const params: any[] = [];
 
     // Get user's cases first to ensure access control
-    const userCases = db.prepare('SELECT id FROM cases WHERE user_id = ?').all(userId) as { id: number }[];
-    const caseIds = userCases.map(c => c.id);
+    const userCases = db
+      .prepare("SELECT id FROM cases WHERE user_id = ?")
+      .all(userId) as { id: number }[];
+    const caseIds = userCases.map((c) => c.id);
 
     if (caseIds.length === 0) {
       return [];
     }
 
     // Case filter
-    const placeholders = caseIds.map(() => '?').join(',');
+    const placeholders = caseIds.map(() => "?").join(",");
     conditions.push(`case_id IN (${placeholders})`);
     params.push(...caseIds);
 
     // Text search in content
     if (query) {
-      conditions.push('content LIKE ?');
+      conditions.push("content LIKE ?");
       params.push(`%${query}%`);
     }
 
     // Specific case IDs filter
     if (filters?.caseIds && filters.caseIds.length > 0) {
-      const casePlaceholders = filters.caseIds.map(() => '?').join(',');
+      const casePlaceholders = filters.caseIds.map(() => "?").join(",");
       conditions.push(`case_id IN (${casePlaceholders})`);
       params.push(...filters.caseIds);
     }
 
     // Date range filter
     if (filters?.dateRange) {
-      conditions.push('created_at >= ? AND created_at <= ?');
-      params.push(filters.dateRange.from.toISOString(), filters.dateRange.to.toISOString());
+      conditions.push("created_at >= ? AND created_at <= ?");
+      params.push(
+        filters.dateRange.from.toISOString(),
+        filters.dateRange.to.toISOString(),
+      );
     }
 
-    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+    const whereClause =
+      conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 
     const stmt = db.prepare(`
       SELECT
@@ -332,7 +342,7 @@ export class NotesRepository {
     const rows = stmt.all(...params) as Note[];
 
     // Decrypt content
-    return rows.map(row => {
+    return rows.map((row) => {
       row.content = this.decryptContent(row.content);
       return row;
     });
@@ -345,14 +355,16 @@ export class NotesRepository {
     const db = getDb();
 
     // Get user's cases
-    const userCases = db.prepare('SELECT id FROM cases WHERE user_id = ?').all(userId) as { id: number }[];
-    const caseIds = userCases.map(c => c.id);
+    const userCases = db
+      .prepare("SELECT id FROM cases WHERE user_id = ?")
+      .all(userId) as { id: number }[];
+    const caseIds = userCases.map((c) => c.id);
 
     if (caseIds.length === 0) {
       return [];
     }
 
-    const placeholders = caseIds.map(() => '?').join(',');
+    const placeholders = caseIds.map(() => "?").join(",");
     const stmt = db.prepare(`
       SELECT
         id,
@@ -371,7 +383,7 @@ export class NotesRepository {
     const rows = stmt.all(...caseIds) as Note[];
 
     // Decrypt content
-    return rows.map(row => {
+    return rows.map((row) => {
       row.content = this.decryptContent(row.content);
       return row;
     });
@@ -383,5 +395,4 @@ export class NotesRepository {
   async getNote(id: number): Promise<Note | null> {
     return this.findById(id);
   }
-
 }

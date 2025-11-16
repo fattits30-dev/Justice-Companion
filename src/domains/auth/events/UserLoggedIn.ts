@@ -3,7 +3,7 @@
  * Fired when a user successfully logs into the system
  */
 export class UserLoggedIn {
-  public readonly eventType = 'user.logged_in' as const;
+  public readonly eventType = "user.logged_in" as const;
   public readonly occurredAt: Date;
 
   constructor(
@@ -12,10 +12,10 @@ export class UserLoggedIn {
     public readonly metadata?: {
       ipAddress?: string;
       userAgent?: string;
-      loginMethod?: 'password' | 'social' | 'sso';
+      loginMethod?: "password" | "social" | "sso";
       rememberMe?: boolean;
       location?: string;
-    }
+    },
   ) {
     this.occurredAt = new Date();
   }
@@ -23,24 +23,23 @@ export class UserLoggedIn {
   /**
    * Create a UserLoggedIn event from entities
    */
-  static fromEntities(user: {
-    id: number;
-  }, session: {
-    id: string;
-    ipAddress?: string | null;
-    userAgent?: string | null;
-    rememberMe?: boolean;
-  }): UserLoggedIn {
-    return new UserLoggedIn(
-      user.id,
-      session.id,
-      {
-        ipAddress: session.ipAddress || undefined,
-        userAgent: session.userAgent || undefined,
-        loginMethod: 'password',
-        rememberMe: session.rememberMe
-      }
-    );
+  static fromEntities(
+    user: {
+      id: number;
+    },
+    session: {
+      id: string;
+      ipAddress?: string | null;
+      userAgent?: string | null;
+      rememberMe?: boolean;
+    },
+  ): UserLoggedIn {
+    return new UserLoggedIn(user.id, session.id, {
+      ipAddress: session.ipAddress || undefined,
+      userAgent: session.userAgent || undefined,
+      loginMethod: "password",
+      rememberMe: session.rememberMe,
+    });
   }
 
   /**
@@ -52,7 +51,7 @@ export class UserLoggedIn {
       occurredAt: this.occurredAt.toISOString(),
       userId: this.userId,
       sessionId: this.sessionId,
-      metadata: this.metadata
+      metadata: this.metadata,
     };
   }
 

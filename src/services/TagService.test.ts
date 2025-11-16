@@ -84,7 +84,7 @@ function createTestDatabase(): Database.Database {
   // Insert test user
   testDb
     .prepare(
-      "INSERT INTO users (id, username, email, password_hash) VALUES (?, ?, ?, ?)"
+      "INSERT INTO users (id, username, email, password_hash) VALUES (?, ?, ?, ?)",
     )
     .run(testUserId, "testuser", "test@example.com", "hashed_password");
 
@@ -153,7 +153,7 @@ describe("TagService", () => {
     it("should allow same tag name for different users", () => {
       // Create second user
       db.prepare(
-        "INSERT INTO users (id, username, email, password_hash) VALUES (?, ?, ?, ?)"
+        "INSERT INTO users (id, username, email, password_hash) VALUES (?, ?, ?, ?)",
       ).run(2, "user2", "user2@example.com", "hashed_password");
 
       const input: CreateTagInput = {
@@ -189,7 +189,7 @@ describe("TagService", () => {
 
       // Create evidence
       db.prepare(
-        "INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)"
+        "INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)",
       ).run(1, testUserId, 1, "Evidence 1");
 
       // Tag evidence
@@ -207,7 +207,7 @@ describe("TagService", () => {
     it("should only return tags for specified user", () => {
       // Create second user
       db.prepare(
-        "INSERT INTO users (id, username, email, password_hash) VALUES (?, ?, ?, ?)"
+        "INSERT INTO users (id, username, email, password_hash) VALUES (?, ?, ?, ?)",
       ).run(2, "user2", "user2@example.com", "hashed_password");
 
       tagService.createTag(testUserId, { name: "User1Tag", color: "#EF4444" });
@@ -298,7 +298,7 @@ describe("TagService", () => {
 
       // Create and tag evidence
       db.prepare(
-        "INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)"
+        "INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)",
       ).run(1, testUserId, 1, "Evidence 1");
       tagService.tagEvidence(1, tag.id, testUserId);
 
@@ -329,7 +329,7 @@ describe("TagService", () => {
       });
 
       db.prepare(
-        "INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)"
+        "INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)",
       ).run(1, testUserId, 1, "Evidence 1");
 
       tagService.tagEvidence(1, tag.id, testUserId);
@@ -346,7 +346,7 @@ describe("TagService", () => {
       });
 
       db.prepare(
-        "INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)"
+        "INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)",
       ).run(1, testUserId, 1, "Evidence 1");
 
       tagService.tagEvidence(1, tag.id, testUserId);
@@ -367,7 +367,7 @@ describe("TagService", () => {
       });
 
       db.prepare(
-        "INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)"
+        "INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)",
       ).run(1, testUserId, 1, "Evidence 1");
 
       tagService.tagEvidence(1, tag1.id, testUserId);
@@ -386,7 +386,7 @@ describe("TagService", () => {
       });
 
       db.prepare(
-        "INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)"
+        "INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)",
       ).run(1, testUserId, 1, "Evidence 1");
 
       tagService.tagEvidence(1, tag.id, testUserId);
@@ -403,7 +403,7 @@ describe("TagService", () => {
       });
 
       db.prepare(
-        "INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)"
+        "INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)",
       ).run(1, testUserId, 1, "Evidence 1");
 
       expect(() => {
@@ -425,10 +425,10 @@ describe("TagService", () => {
 
       // Create evidence
       db.prepare(
-        "INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)"
+        "INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)",
       ).run(1, testUserId, 1, "Evidence 1");
       db.prepare(
-        "INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)"
+        "INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)",
       ).run(2, testUserId, 1, "Evidence 2");
 
       // Evidence 1 has both tags
@@ -452,7 +452,7 @@ describe("TagService", () => {
     it("should only return evidence owned by user", () => {
       // Create second user
       db.prepare(
-        "INSERT INTO users (id, username, email, password_hash) VALUES (?, ?, ?, ?)"
+        "INSERT INTO users (id, username, email, password_hash) VALUES (?, ?, ?, ?)",
       ).run(2, "user2", "user2@example.com", "hashed_password");
 
       const tag = tagService.createTag(testUserId, {
@@ -462,12 +462,12 @@ describe("TagService", () => {
 
       // Evidence for user 1
       db.prepare(
-        "INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)"
+        "INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)",
       ).run(1, testUserId, 1, "Evidence 1");
 
       // Evidence for user 2
       db.prepare(
-        "INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)"
+        "INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)",
       ).run(2, 2, 1, "Evidence 2");
 
       tagService.tagEvidence(1, tag.id, testUserId);
@@ -493,10 +493,10 @@ describe("TagService", () => {
 
       // Create evidence
       db.prepare(
-        "INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)"
+        "INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)",
       ).run(1, testUserId, 1, "Evidence 1");
       db.prepare(
-        "INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)"
+        "INSERT INTO evidence (id, user_id, case_id, title) VALUES (?, ?, ?, ?)",
       ).run(2, testUserId, 1, "Evidence 2");
 
       // Tag evidence

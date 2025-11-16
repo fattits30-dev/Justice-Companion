@@ -308,20 +308,25 @@ export class AuthenticationService {
           sessionPersisted = true;
         } else {
           logger.warn(
-            "AuthenticationService",
             "Persistent storage not available, Remember Me will not persist across app restarts",
+            {
+              service: "AuthenticationService",
+            },
           );
         }
       } catch (error) {
         // Don't fail login if persistence fails - just log the error
-        logger.error("AuthenticationService", "Failed to persist session:", {
-          error: error,
+        logger.error("Failed to persist session", {
+          service: "AuthenticationService",
+          error,
         });
       }
     } else if (rememberMe && !this.sessionPersistence) {
       logger.warn(
-        "AuthenticationService",
         "Remember Me requested but no persistence handler configured",
+        {
+          service: "AuthenticationService",
+        },
       );
     }
 
@@ -385,11 +390,10 @@ export class AuthenticationService {
           await this.sessionPersistence.clearSession();
         } catch (error) {
           // Don't fail logout if persistence clear fails
-          logger.error(
-            "AuthenticationService",
-            "Failed to clear persisted session:",
-            { error: error },
-          );
+          logger.error("Failed to clear persisted session", {
+            service: "AuthenticationService",
+            error: error,
+          });
         }
       }
 
@@ -592,11 +596,10 @@ export class AuthenticationService {
 
       return { user, session };
     } catch (error) {
-      logger.error(
-        "AuthenticationService",
-        "Error restoring persisted session:",
-        { error: error },
-      );
+      logger.error("Error restoring persisted session", {
+        service: "AuthenticationService",
+        error: error,
+      });
       // Clear any corrupted persisted session
       if (this.sessionPersistence) {
         try {

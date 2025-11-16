@@ -95,7 +95,7 @@ describe.skip("AIServiceFactory (LEGACY - skipped)", () => {
     it("should accept repository without errors", () => {
       const mockRepository = {} as any;
       expect(() =>
-        factory.setCaseFactsRepository(mockRepository)
+        factory.setCaseFactsRepository(mockRepository),
       ).not.toThrow();
     });
   });

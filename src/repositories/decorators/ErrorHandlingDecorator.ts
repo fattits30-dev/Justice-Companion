@@ -12,7 +12,7 @@ import {
   NotFoundError,
 } from "../../errors/RepositoryErrors.ts";
 import { DomainError, DatabaseError } from "../../errors/DomainErrors.ts";
-import { logger } from '../../utils/logger';
+import { logger } from "../../utils/logger";
 
 /**
  * Configuration options for error handling
@@ -147,11 +147,11 @@ export class ErrorHandlingDecorator<T> extends RepositoryDecorator<T> {
   private handleError(
     operation: string,
     error: unknown,
-    context?: Record<string, any>
+    context?: Record<string, any>,
   ): Error {
     // Log error if enabled
     if (this.options.logErrors) {
-      logger.error(`[${operation}] Error occurred:`, error);
+      logger.error("Repository operation failed");
     }
 
     // Preserve all DomainErrors (NotFoundError, ValidationError, etc.) without wrapping
@@ -195,7 +195,7 @@ export class ErrorHandlingDecorator<T> extends RepositoryDecorator<T> {
       return new DatabaseError(
         operation,
         "Database is temporarily locked, please try again",
-        errorCode
+        errorCode,
       );
     }
     // Detect TypeError (usually invalid input)
@@ -286,7 +286,10 @@ export class ErrorHandlingDecorator<T> extends RepositoryDecorator<T> {
   /**
    * Forward call to repository if method exists
    */
-  protected forwardCall<R = unknown>(methodName: string, ...args: unknown[]): Promise<R> {
+  protected forwardCall<R = unknown>(
+    methodName: string,
+    ...args: unknown[]
+  ): Promise<R> {
     const method = (this.repository as any)[methodName];
     if (typeof method !== "function") {
       throw new Error(`Method ${methodName} not found on repository`);

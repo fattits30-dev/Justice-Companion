@@ -1,5 +1,5 @@
-import crypto from 'node:crypto';
-import type { PaginationParams } from './pagination.ts';
+import crypto from "node:crypto";
+import type { PaginationParams } from "./pagination.ts";
 
 /**
  * Cache key generation for decrypted values
@@ -26,9 +26,9 @@ export function generateCacheKey(
   encryptedValue: string,
 ): string {
   const version = crypto
-    .createHash('sha256')
+    .createHash("sha256")
     .update(encryptedValue)
-    .digest('hex')
+    .digest("hex")
     .substring(0, 16); // First 16 chars for brevity
 
   return `${entity}:${id}:${version}`;
@@ -42,10 +42,17 @@ export function generateCacheKey(
  * @param params - Pagination parameters
  * @returns Page cache key string
  */
-export function generatePageCacheKey(entity: string, params: PaginationParams): string {
+export function generatePageCacheKey(
+  entity: string,
+  params: PaginationParams,
+): string {
   const cursorHash = params.cursor
-    ? crypto.createHash('sha256').update(params.cursor).digest('hex').substring(0, 8)
-    : 'start';
+    ? crypto
+        .createHash("sha256")
+        .update(params.cursor)
+        .digest("hex")
+        .substring(0, 8)
+    : "start";
 
-  return `${entity}:page:${cursorHash}:${params.limit}:${params.direction ?? 'desc'}`;
+  return `${entity}:page:${cursorHash}:${params.limit}:${params.direction ?? "desc"}`;
 }

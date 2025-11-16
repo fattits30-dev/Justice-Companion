@@ -1,6 +1,10 @@
-import { getDb } from '../db/database.ts';
-import { getRepositories } from '../repositories.ts';
-import type { Case, CreateCaseInput, UpdateCaseInput } from '../domains/cases/entities/Case.ts';
+import { getDb } from "../db/database.ts";
+import { getRepositories } from "../repositories.ts";
+import type {
+  Case,
+  CreateCaseInput,
+  UpdateCaseInput,
+} from "../domains/cases/entities/Case.ts";
 
 interface CreateCaseWithUser extends CreateCaseInput {
   userId: number;
@@ -20,7 +24,7 @@ class CaseService {
     const createdCase = this.caseRepository.create(caseInput);
 
     this.db
-      .prepare('UPDATE cases SET user_id = ? WHERE id = ?')
+      .prepare("UPDATE cases SET user_id = ? WHERE id = ?")
       .run(userId, createdCase.id);
 
     const persistedCase = this.caseRepository.findById(createdCase.id);
@@ -44,7 +48,7 @@ class CaseService {
   }
 
   closeCase(id: number): Case | null {
-    return this.caseRepository.update(id, { status: 'closed' });
+    return this.caseRepository.update(id, { status: "closed" });
   }
 
   deleteCase(id: number): boolean {

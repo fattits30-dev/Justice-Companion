@@ -5,8 +5,8 @@
  * message sending, session management, and context handling.
  */
 
-import { z } from 'zod';
-import { PATTERNS } from '../utils/constants.ts';
+import { z } from "zod";
+import { PATTERNS } from "../utils/constants.ts";
 
 /**
  * Maximum message length for chat messages
@@ -35,45 +35,45 @@ export const chatSendSchema = z
   .object({
     message: z
       .string()
-      .min(MIN_CHAT_MESSAGE_LENGTH, 'Message cannot be empty')
+      .min(MIN_CHAT_MESSAGE_LENGTH, "Message cannot be empty")
       .max(
         MAX_CHAT_MESSAGE_LENGTH,
         `Message must be less than ${MAX_CHAT_MESSAGE_LENGTH} characters`,
       )
       .trim()
-      .refine((msg) => msg.length > 0, 'Message cannot be only whitespace'),
+      .refine((msg) => msg.length > 0, "Message cannot be only whitespace"),
 
     sessionId: z
       .string()
-      .min(1, 'Session ID is required')
-      .regex(PATTERNS.UUID, 'Invalid session ID format')
-      .describe('UUID v4 session identifier for authentication'),
+      .min(1, "Session ID is required")
+      .regex(PATTERNS.UUID, "Invalid session ID format")
+      .describe("UUID v4 session identifier for authentication"),
 
     caseId: z
       .number({
-        message: 'Case ID must be a number',
+        message: "Case ID must be a number",
       })
-      .int('Case ID must be an integer')
-      .positive('Case ID must be positive')
-      .max(2147483647, 'Case ID exceeds maximum value')
+      .int("Case ID must be an integer")
+      .positive("Case ID must be positive")
+      .max(2147483647, "Case ID exceeds maximum value")
       .optional()
-      .describe('Optional case context for AI responses'),
+      .describe("Optional case context for AI responses"),
 
     // Optional model selection for future multi-model support
     model: z
       .string()
-      .max(100, 'Model name too long')
-      .regex(/^[a-z0-9-_.]+$/i, 'Invalid model name format')
+      .max(100, "Model name too long")
+      .regex(/^[a-z0-9-_.]+$/i, "Invalid model name format")
       .optional()
-      .describe('Optional AI model selection'),
+      .describe("Optional AI model selection"),
 
     // Optional temperature control for response creativity
     temperature: z
       .number()
-      .min(0, 'Temperature must be between 0 and 2')
-      .max(2, 'Temperature must be between 0 and 2')
+      .min(0, "Temperature must be between 0 and 2")
+      .max(2, "Temperature must be between 0 and 2")
       .optional()
-      .describe('Controls response randomness (0=deterministic, 2=creative)'),
+      .describe("Controls response randomness (0=deterministic, 2=creative)"),
 
     // Fields that should NOT be provided by client
     userId: z.never().optional(), // Will be extracted from session
@@ -98,29 +98,29 @@ export const chatGetHistorySchema = z
   .object({
     sessionId: z
       .string()
-      .min(1, 'Session ID is required')
-      .regex(PATTERNS.UUID, 'Invalid session ID format'),
+      .min(1, "Session ID is required")
+      .regex(PATTERNS.UUID, "Invalid session ID format"),
 
     caseId: z
       .number({
-        message: 'Case ID must be a number',
+        message: "Case ID must be a number",
       })
-      .int('Case ID must be an integer')
-      .positive('Case ID must be positive')
+      .int("Case ID must be an integer")
+      .positive("Case ID must be positive")
       .optional(),
 
     limit: z
       .number()
-      .int('Limit must be an integer')
-      .positive('Limit must be positive')
-      .max(1000, 'Limit cannot exceed 1000 messages')
+      .int("Limit must be an integer")
+      .positive("Limit must be positive")
+      .max(1000, "Limit cannot exceed 1000 messages")
       .default(100)
       .optional(),
 
     offset: z
       .number()
-      .int('Offset must be an integer')
-      .min(0, 'Offset cannot be negative')
+      .int("Offset must be an integer")
+      .min(0, "Offset cannot be negative")
       .default(0)
       .optional(),
   })
@@ -141,22 +141,27 @@ export const chatClearHistorySchema = z
   .object({
     sessionId: z
       .string()
-      .min(1, 'Session ID is required')
-      .regex(PATTERNS.UUID, 'Invalid session ID format'),
+      .min(1, "Session ID is required")
+      .regex(PATTERNS.UUID, "Invalid session ID format"),
 
     caseId: z
       .number({
-        message: 'Case ID must be a number',
+        message: "Case ID must be a number",
       })
-      .int('Case ID must be an integer')
-      .positive('Case ID must be positive')
+      .int("Case ID must be an integer")
+      .positive("Case ID must be positive")
       .optional()
-      .describe('If provided, clears only this case conversation; otherwise clears all'),
+      .describe(
+        "If provided, clears only this case conversation; otherwise clears all",
+      ),
 
     confirmation: z
       .boolean()
-      .refine((val) => val === true, 'Confirmation is required to clear history')
-      .describe('Must be true to confirm deletion'),
+      .refine(
+        (val) => val === true,
+        "Confirmation is required to clear history",
+      )
+      .describe("Must be true to confirm deletion"),
   })
   .strict();
 
@@ -176,22 +181,22 @@ export const chatExportSchema = z
   .object({
     sessionId: z
       .string()
-      .min(1, 'Session ID is required')
-      .regex(PATTERNS.UUID, 'Invalid session ID format'),
+      .min(1, "Session ID is required")
+      .regex(PATTERNS.UUID, "Invalid session ID format"),
 
     caseId: z
       .number({
-        message: 'Case ID must be a number',
+        message: "Case ID must be a number",
       })
-      .int('Case ID must be an integer')
-      .positive('Case ID must be positive')
+      .int("Case ID must be an integer")
+      .positive("Case ID must be positive")
       .optional(),
 
     format: z
-      .enum(['json', 'txt', 'pdf', 'markdown'], {
-        message: 'Format must be json, txt, pdf, or markdown',
+      .enum(["json", "txt", "pdf", "markdown"], {
+        message: "Format must be json, txt, pdf, or markdown",
       })
-      .default('json')
+      .default("json")
       .optional(),
 
     includeSystemMessages: z.boolean().default(false).optional(),

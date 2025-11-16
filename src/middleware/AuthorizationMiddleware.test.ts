@@ -1,15 +1,18 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { AuthorizationMiddleware, AuthorizationError } from './AuthorizationMiddleware';
-import { CaseRepository } from '../repositories/CaseRepository';
-import { AuditLogger } from '../services/AuditLogger';
-import type { User } from '../domains/auth/entities/User';
-import type { Case } from '../domains/cases/entities/Case';
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import {
+  AuthorizationMiddleware,
+  AuthorizationError,
+} from "./AuthorizationMiddleware";
+import { CaseRepository } from "../repositories/CaseRepository";
+import { AuditLogger } from "../services/AuditLogger";
+import type { User } from "../domains/auth/entities/User";
+import type { Case } from "../domains/cases/entities/Case";
 
 // Mock dependencies
-vi.mock('../repositories/CaseRepository');
-vi.mock('../services/AuditLogger');
+vi.mock("../repositories/CaseRepository");
+vi.mock("../services/AuditLogger");
 
-describe('AuthorizationMiddleware', () => {
+describe("AuthorizationMiddleware", () => {
   let authMiddleware: AuthorizationMiddleware;
   let mockCaseRepository: {
     findById: ReturnType<typeof vi.fn>;
@@ -21,27 +24,27 @@ describe('AuthorizationMiddleware', () => {
   // Test fixtures
   const createMockUser = (overrides: Partial<User> = {}): User => ({
     id: 1,
-    username: 'testuser',
-    email: 'test@example.com',
-    passwordHash: 'hash',
-    passwordSalt: 'salt',
-    role: 'user',
+    username: "testuser",
+    email: "test@example.com",
+    passwordHash: "hash",
+    passwordSalt: "salt",
+    role: "user",
     isActive: true,
-    createdAt: '2025-01-01T00:00:00.000Z',
-    updatedAt: '2025-01-01T00:00:00.000Z',
-    lastLoginAt: '2025-01-01T00:00:00.000Z',
+    createdAt: "2025-01-01T00:00:00.000Z",
+    updatedAt: "2025-01-01T00:00:00.000Z",
+    lastLoginAt: "2025-01-01T00:00:00.000Z",
     ...overrides,
   });
 
   const createMockCase = (overrides: Partial<Case> = {}): Case => ({
     id: 1,
-    title: 'Test Case',
-    description: 'Test description',
-    caseType: 'employment',
-    status: 'active',
+    title: "Test Case",
+    description: "Test description",
+    caseType: "employment",
+    status: "active",
     userId: 1,
-    createdAt: '2025-01-01T00:00:00.000Z',
-    updatedAt: '2025-01-01T00:00:00.000Z',
+    createdAt: "2025-01-01T00:00:00.000Z",
+    updatedAt: "2025-01-01T00:00:00.000Z",
     ...overrides,
   });
 
@@ -65,8 +68,8 @@ describe('AuthorizationMiddleware', () => {
     );
   });
 
-  describe('verifyCaseOwnership', () => {
-    it('should pass when case exists and user is owner', () => {
+  describe("verifyCaseOwnership", () => {
+    it("should pass when case exists and user is owner", () => {
       const mockCase = createMockCase({ id: 123, userId: 456 });
       mockCaseRepository.findById.mockReturnValue(mockCase);
 
@@ -78,7 +81,7 @@ describe('AuthorizationMiddleware', () => {
       expect(mockAuditLogger.log).not.toHaveBeenCalled();
     });
 
-    it('should pass when case has null userId for backward compatibility', () => {
+    it("should pass when case has null userId for backward compatibility", () => {
       const mockCase = createMockCase({ id: 123, userId: null });
       mockCaseRepository.findById.mockReturnValue(mockCase);
 
@@ -90,7 +93,7 @@ describe('AuthorizationMiddleware', () => {
       expect(mockAuditLogger.log).not.toHaveBeenCalled();
     });
 
-    it('should throw AuthorizationError when case does not exist', () => {
+    it("should throw AuthorizationError when case does not exist", () => {
       mockCaseRepository.findById.mockReturnValue(null);
 
       expect(() => {
@@ -99,12 +102,12 @@ describe('AuthorizationMiddleware', () => {
 
       expect(() => {
         authMiddleware.verifyCaseOwnership(123, 456);
-      }).toThrow('Case not found');
+      }).toThrow("Case not found");
 
       expect(mockCaseRepository.findById).toHaveBeenCalledWith(123);
     });
 
-    it('should log audit event when case does not exist', () => {
+    it("should log audit event when case does not exist", () => {
       mockCaseRepository.findById.mockReturnValue(null);
 
       try {
@@ -114,17 +117,17 @@ describe('AuthorizationMiddleware', () => {
       }
 
       expect(mockAuditLogger.log).toHaveBeenCalledWith({
-        eventType: 'authorization.denied',
-        userId: '456',
-        resourceType: 'case',
-        resourceId: '123',
-        action: 'read',
+        eventType: "authorization.denied",
+        userId: "456",
+        resourceType: "case",
+        resourceId: "123",
+        action: "read",
         success: false,
-        details: { reason: 'Case not found' },
+        details: { reason: "Case not found" },
       });
     });
 
-    it('should throw AuthorizationError when user is not owner', () => {
+    it("should throw AuthorizationError when user is not owner", () => {
       const mockCase = createMockCase({ id: 123, userId: 789 });
       mockCaseRepository.findById.mockReturnValue(mockCase);
 
@@ -134,12 +137,12 @@ describe('AuthorizationMiddleware', () => {
 
       expect(() => {
         authMiddleware.verifyCaseOwnership(123, 456);
-      }).toThrow('Access denied: you do not own this case');
+      }).toThrow("Access denied: you do not own this case");
 
       expect(mockCaseRepository.findById).toHaveBeenCalledWith(123);
     });
 
-    it('should log audit event when user is not owner', () => {
+    it("should log audit event when user is not owner", () => {
       const mockCase = createMockCase({ id: 123, userId: 789 });
       mockCaseRepository.findById.mockReturnValue(mockCase);
 
@@ -150,20 +153,20 @@ describe('AuthorizationMiddleware', () => {
       }
 
       expect(mockAuditLogger.log).toHaveBeenCalledWith({
-        eventType: 'authorization.denied',
-        userId: '456',
-        resourceType: 'case',
-        resourceId: '123',
-        action: 'read',
+        eventType: "authorization.denied",
+        userId: "456",
+        resourceType: "case",
+        resourceId: "123",
+        action: "read",
         success: false,
         details: {
-          reason: 'Not owner',
+          reason: "Not owner",
           ownerId: 789,
         },
       });
     });
 
-    it('should work without audit logger (optional dependency)', () => {
+    it("should work without audit logger (optional dependency)", () => {
       const middlewareWithoutLogger = new AuthorizationMiddleware(
         mockCaseRepository as unknown as CaseRepository,
       );
@@ -179,9 +182,9 @@ describe('AuthorizationMiddleware', () => {
     });
   });
 
-  describe('verifyAdminRole', () => {
-    it('should pass when user has admin role', () => {
-      const adminUser = createMockUser({ id: 1, role: 'admin' });
+  describe("verifyAdminRole", () => {
+    it("should pass when user has admin role", () => {
+      const adminUser = createMockUser({ id: 1, role: "admin" });
 
       expect(() => {
         authMiddleware.verifyAdminRole(adminUser);
@@ -190,8 +193,8 @@ describe('AuthorizationMiddleware', () => {
       expect(mockAuditLogger.log).not.toHaveBeenCalled();
     });
 
-    it('should throw AuthorizationError when user is not admin', () => {
-      const regularUser = createMockUser({ id: 1, role: 'user' });
+    it("should throw AuthorizationError when user is not admin", () => {
+      const regularUser = createMockUser({ id: 1, role: "user" });
 
       expect(() => {
         authMiddleware.verifyAdminRole(regularUser);
@@ -199,11 +202,11 @@ describe('AuthorizationMiddleware', () => {
 
       expect(() => {
         authMiddleware.verifyAdminRole(regularUser);
-      }).toThrow('Access denied: admin role required');
+      }).toThrow("Access denied: admin role required");
     });
 
-    it('should log audit event when user is not admin', () => {
-      const regularUser = createMockUser({ id: 1, role: 'user' });
+    it("should log audit event when user is not admin", () => {
+      const regularUser = createMockUser({ id: 1, role: "user" });
 
       try {
         authMiddleware.verifyAdminRole(regularUser);
@@ -212,25 +215,25 @@ describe('AuthorizationMiddleware', () => {
       }
 
       expect(mockAuditLogger.log).toHaveBeenCalledWith({
-        eventType: 'authorization.denied',
-        userId: '1',
-        resourceType: 'admin',
-        resourceId: 'system',
-        action: 'read',
+        eventType: "authorization.denied",
+        userId: "1",
+        resourceType: "admin",
+        resourceId: "system",
+        action: "read",
         success: false,
         details: {
-          reason: 'Not admin',
-          role: 'user',
+          reason: "Not admin",
+          role: "user",
         },
       });
     });
 
-    it('should work without audit logger (optional dependency)', () => {
+    it("should work without audit logger (optional dependency)", () => {
       const middlewareWithoutLogger = new AuthorizationMiddleware(
         mockCaseRepository as unknown as CaseRepository,
       );
 
-      const regularUser = createMockUser({ id: 1, role: 'user' });
+      const regularUser = createMockUser({ id: 1, role: "user" });
 
       expect(() => {
         middlewareWithoutLogger.verifyAdminRole(regularUser);
@@ -241,8 +244,8 @@ describe('AuthorizationMiddleware', () => {
     });
   });
 
-  describe('verifyUserActive', () => {
-    it('should pass when user is active', () => {
+  describe("verifyUserActive", () => {
+    it("should pass when user is active", () => {
       const activeUser = createMockUser({ id: 1, isActive: true });
 
       expect(() => {
@@ -252,7 +255,7 @@ describe('AuthorizationMiddleware', () => {
       expect(mockAuditLogger.log).not.toHaveBeenCalled();
     });
 
-    it('should throw AuthorizationError when user is not active', () => {
+    it("should throw AuthorizationError when user is not active", () => {
       const inactiveUser = createMockUser({ id: 1, isActive: false });
 
       expect(() => {
@@ -261,10 +264,10 @@ describe('AuthorizationMiddleware', () => {
 
       expect(() => {
         authMiddleware.verifyUserActive(inactiveUser);
-      }).toThrow('Account is inactive');
+      }).toThrow("Account is inactive");
     });
 
-    it('should log audit event when user is not active', () => {
+    it("should log audit event when user is not active", () => {
       const inactiveUser = createMockUser({ id: 1, isActive: false });
 
       try {
@@ -274,17 +277,17 @@ describe('AuthorizationMiddleware', () => {
       }
 
       expect(mockAuditLogger.log).toHaveBeenCalledWith({
-        eventType: 'authorization.denied',
-        userId: '1',
-        resourceType: 'user',
-        resourceId: '1',
-        action: 'read',
+        eventType: "authorization.denied",
+        userId: "1",
+        resourceType: "user",
+        resourceId: "1",
+        action: "read",
         success: false,
-        details: { reason: 'User inactive' },
+        details: { reason: "User inactive" },
       });
     });
 
-    it('should work without audit logger (optional dependency)', () => {
+    it("should work without audit logger (optional dependency)", () => {
       const middlewareWithoutLogger = new AuthorizationMiddleware(
         mockCaseRepository as unknown as CaseRepository,
       );
@@ -300,9 +303,9 @@ describe('AuthorizationMiddleware', () => {
     });
   });
 
-  describe('verifyCanModifyUser', () => {
-    it('should pass when user modifies themselves', () => {
-      const user = createMockUser({ id: 1, role: 'user' });
+  describe("verifyCanModifyUser", () => {
+    it("should pass when user modifies themselves", () => {
+      const user = createMockUser({ id: 1, role: "user" });
 
       expect(() => {
         authMiddleware.verifyCanModifyUser(user, 1);
@@ -311,8 +314,8 @@ describe('AuthorizationMiddleware', () => {
       expect(mockAuditLogger.log).not.toHaveBeenCalled();
     });
 
-    it('should pass when admin modifies another user', () => {
-      const adminUser = createMockUser({ id: 1, role: 'admin' });
+    it("should pass when admin modifies another user", () => {
+      const adminUser = createMockUser({ id: 1, role: "admin" });
 
       expect(() => {
         authMiddleware.verifyCanModifyUser(adminUser, 999);
@@ -321,8 +324,8 @@ describe('AuthorizationMiddleware', () => {
       expect(mockAuditLogger.log).not.toHaveBeenCalled();
     });
 
-    it('should pass when admin modifies themselves', () => {
-      const adminUser = createMockUser({ id: 1, role: 'admin' });
+    it("should pass when admin modifies themselves", () => {
+      const adminUser = createMockUser({ id: 1, role: "admin" });
 
       expect(() => {
         authMiddleware.verifyCanModifyUser(adminUser, 1);
@@ -331,8 +334,8 @@ describe('AuthorizationMiddleware', () => {
       expect(mockAuditLogger.log).not.toHaveBeenCalled();
     });
 
-    it('should throw AuthorizationError when non-admin tries to modify another user', () => {
-      const regularUser = createMockUser({ id: 1, role: 'user' });
+    it("should throw AuthorizationError when non-admin tries to modify another user", () => {
+      const regularUser = createMockUser({ id: 1, role: "user" });
 
       expect(() => {
         authMiddleware.verifyCanModifyUser(regularUser, 2);
@@ -340,11 +343,11 @@ describe('AuthorizationMiddleware', () => {
 
       expect(() => {
         authMiddleware.verifyCanModifyUser(regularUser, 2);
-      }).toThrow('Access denied: you can only modify your own account');
+      }).toThrow("Access denied: you can only modify your own account");
     });
 
-    it('should log audit event when non-admin tries to modify another user', () => {
-      const regularUser = createMockUser({ id: 1, role: 'user' });
+    it("should log audit event when non-admin tries to modify another user", () => {
+      const regularUser = createMockUser({ id: 1, role: "user" });
 
       try {
         authMiddleware.verifyCanModifyUser(regularUser, 999);
@@ -353,25 +356,25 @@ describe('AuthorizationMiddleware', () => {
       }
 
       expect(mockAuditLogger.log).toHaveBeenCalledWith({
-        eventType: 'authorization.denied',
-        userId: '1',
-        resourceType: 'user',
-        resourceId: '999',
-        action: 'update',
+        eventType: "authorization.denied",
+        userId: "1",
+        resourceType: "user",
+        resourceId: "999",
+        action: "update",
         success: false,
         details: {
-          reason: 'Cannot modify other users',
-          role: 'user',
+          reason: "Cannot modify other users",
+          role: "user",
         },
       });
     });
 
-    it('should work without audit logger (optional dependency)', () => {
+    it("should work without audit logger (optional dependency)", () => {
       const middlewareWithoutLogger = new AuthorizationMiddleware(
         mockCaseRepository as unknown as CaseRepository,
       );
 
-      const regularUser = createMockUser({ id: 1, role: 'user' });
+      const regularUser = createMockUser({ id: 1, role: "user" });
 
       expect(() => {
         middlewareWithoutLogger.verifyCanModifyUser(regularUser, 2);
@@ -382,36 +385,36 @@ describe('AuthorizationMiddleware', () => {
     });
   });
 
-  describe('AuthorizationError', () => {
-    it('should be an instance of Error', () => {
-      const error = new AuthorizationError('Test message');
+  describe("AuthorizationError", () => {
+    it("should be an instance of Error", () => {
+      const error = new AuthorizationError("Test message");
       expect(error).toBeInstanceOf(Error);
     });
 
-    it('should have correct name property', () => {
-      const error = new AuthorizationError('Test message');
-      expect(error.name).toBe('AuthorizationError');
+    it("should have correct name property", () => {
+      const error = new AuthorizationError("Test message");
+      expect(error.name).toBe("AuthorizationError");
     });
 
-    it('should have correct message property', () => {
-      const error = new AuthorizationError('Test message');
-      expect(error.message).toBe('Test message');
+    it("should have correct message property", () => {
+      const error = new AuthorizationError("Test message");
+      expect(error.message).toBe("Test message");
     });
 
-    it('should be catchable as specific error type', () => {
+    it("should be catchable as specific error type", () => {
       try {
-        throw new AuthorizationError('Test');
+        throw new AuthorizationError("Test");
       } catch (error) {
         expect(error).toBeInstanceOf(AuthorizationError);
         if (error instanceof AuthorizationError) {
-          expect(error.name).toBe('AuthorizationError');
+          expect(error.name).toBe("AuthorizationError");
         }
       }
     });
   });
 
-  describe('Edge Cases', () => {
-    it('should handle zero IDs correctly', () => {
+  describe("Edge Cases", () => {
+    it("should handle zero IDs correctly", () => {
       const mockCase = createMockCase({ id: 0, userId: 0 });
       mockCaseRepository.findById.mockReturnValue(mockCase);
 
@@ -420,7 +423,7 @@ describe('AuthorizationMiddleware', () => {
       }).not.toThrow();
     });
 
-    it('should handle negative IDs correctly', () => {
+    it("should handle negative IDs correctly", () => {
       const mockCase = createMockCase({ id: -1, userId: -1 });
       mockCaseRepository.findById.mockReturnValue(mockCase);
 
@@ -429,7 +432,7 @@ describe('AuthorizationMiddleware', () => {
       }).not.toThrow();
     });
 
-    it('should handle very large IDs correctly', () => {
+    it("should handle very large IDs correctly", () => {
       const largeId = Number.MAX_SAFE_INTEGER;
       const mockCase = createMockCase({ id: largeId, userId: largeId });
       mockCaseRepository.findById.mockReturnValue(mockCase);
@@ -439,7 +442,7 @@ describe('AuthorizationMiddleware', () => {
       }).not.toThrow();
     });
 
-    it('should convert numeric IDs to strings in audit logs', () => {
+    it("should convert numeric IDs to strings in audit logs", () => {
       const mockCase = createMockCase({ id: 12345, userId: 67890 });
       mockCaseRepository.findById.mockReturnValue(mockCase);
 
@@ -451,15 +454,15 @@ describe('AuthorizationMiddleware', () => {
 
       expect(mockAuditLogger.log).toHaveBeenCalledWith(
         expect.objectContaining({
-          userId: '99999',
-          resourceId: '12345',
+          userId: "99999",
+          resourceId: "12345",
         }),
       );
     });
   });
 
-  describe('Security Scenarios', () => {
-    it('should prevent horizontal privilege escalation (user accessing another user data)', () => {
+  describe("Security Scenarios", () => {
+    it("should prevent horizontal privilege escalation (user accessing another user data)", () => {
       const mockCase = createMockCase({ id: 1, userId: 100 });
       mockCaseRepository.findById.mockReturnValue(mockCase);
 
@@ -469,15 +472,15 @@ describe('AuthorizationMiddleware', () => {
       }).toThrow(AuthorizationError);
     });
 
-    it('should prevent vertical privilege escalation (regular user accessing admin features)', () => {
-      const regularUser = createMockUser({ id: 1, role: 'user' });
+    it("should prevent vertical privilege escalation (regular user accessing admin features)", () => {
+      const regularUser = createMockUser({ id: 1, role: "user" });
 
       expect(() => {
         authMiddleware.verifyAdminRole(regularUser);
       }).toThrow(AuthorizationError);
     });
 
-    it('should prevent inactive users from accessing resources', () => {
+    it("should prevent inactive users from accessing resources", () => {
       const inactiveUser = createMockUser({ id: 1, isActive: false });
 
       expect(() => {
@@ -485,16 +488,16 @@ describe('AuthorizationMiddleware', () => {
       }).toThrow(AuthorizationError);
     });
 
-    it('should prevent non-admin users from modifying other users', () => {
-      const regularUser = createMockUser({ id: 1, role: 'user' });
+    it("should prevent non-admin users from modifying other users", () => {
+      const regularUser = createMockUser({ id: 1, role: "user" });
 
       expect(() => {
         authMiddleware.verifyCanModifyUser(regularUser, 999);
       }).toThrow(AuthorizationError);
     });
 
-    it('should allow admins to perform all admin operations', () => {
-      const adminUser = createMockUser({ id: 1, role: 'admin' });
+    it("should allow admins to perform all admin operations", () => {
+      const adminUser = createMockUser({ id: 1, role: "admin" });
 
       expect(() => {
         authMiddleware.verifyAdminRole(adminUser);
@@ -506,8 +509,8 @@ describe('AuthorizationMiddleware', () => {
     });
   });
 
-  describe('Audit Logging Coverage', () => {
-    it('should audit all authorization failures for case ownership', () => {
+  describe("Audit Logging Coverage", () => {
+    it("should audit all authorization failures for case ownership", () => {
       // Case not found
       mockCaseRepository.findById.mockReturnValue(null);
       try {
@@ -520,7 +523,9 @@ describe('AuthorizationMiddleware', () => {
       vi.clearAllMocks();
 
       // Not owner
-      mockCaseRepository.findById.mockReturnValue(createMockCase({ id: 1, userId: 2 }));
+      mockCaseRepository.findById.mockReturnValue(
+        createMockCase({ id: 1, userId: 2 }),
+      );
       try {
         authMiddleware.verifyCaseOwnership(1, 1);
       } catch {
@@ -529,8 +534,8 @@ describe('AuthorizationMiddleware', () => {
       expect(mockAuditLogger.log).toHaveBeenCalledTimes(1);
     });
 
-    it('should audit admin role failures', () => {
-      const regularUser = createMockUser({ id: 1, role: 'user' });
+    it("should audit admin role failures", () => {
+      const regularUser = createMockUser({ id: 1, role: "user" });
 
       try {
         authMiddleware.verifyAdminRole(regularUser);
@@ -541,13 +546,13 @@ describe('AuthorizationMiddleware', () => {
       expect(mockAuditLogger.log).toHaveBeenCalledTimes(1);
       expect(mockAuditLogger.log).toHaveBeenCalledWith(
         expect.objectContaining({
-          eventType: 'authorization.denied',
-          resourceType: 'admin',
+          eventType: "authorization.denied",
+          resourceType: "admin",
         }),
       );
     });
 
-    it('should audit inactive user failures', () => {
+    it("should audit inactive user failures", () => {
       const inactiveUser = createMockUser({ id: 1, isActive: false });
 
       try {
@@ -559,14 +564,14 @@ describe('AuthorizationMiddleware', () => {
       expect(mockAuditLogger.log).toHaveBeenCalledTimes(1);
       expect(mockAuditLogger.log).toHaveBeenCalledWith(
         expect.objectContaining({
-          eventType: 'authorization.denied',
-          details: { reason: 'User inactive' },
+          eventType: "authorization.denied",
+          details: { reason: "User inactive" },
         }),
       );
     });
 
-    it('should audit user modification failures', () => {
-      const regularUser = createMockUser({ id: 1, role: 'user' });
+    it("should audit user modification failures", () => {
+      const regularUser = createMockUser({ id: 1, role: "user" });
 
       try {
         authMiddleware.verifyCanModifyUser(regularUser, 2);
@@ -577,14 +582,14 @@ describe('AuthorizationMiddleware', () => {
       expect(mockAuditLogger.log).toHaveBeenCalledTimes(1);
       expect(mockAuditLogger.log).toHaveBeenCalledWith(
         expect.objectContaining({
-          eventType: 'authorization.denied',
-          action: 'update',
+          eventType: "authorization.denied",
+          action: "update",
         }),
       );
     });
 
-    it('should not audit successful authorizations', () => {
-      const adminUser = createMockUser({ id: 1, role: 'admin' });
+    it("should not audit successful authorizations", () => {
+      const adminUser = createMockUser({ id: 1, role: "admin" });
       const activeUser = createMockUser({ id: 1, isActive: true });
       const mockCase = createMockCase({ id: 1, userId: 1 });
       mockCaseRepository.findById.mockReturnValue(mockCase);

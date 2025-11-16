@@ -19,7 +19,6 @@
     "jsx": "react-jsx",
 
     /* Module Resolution */
-    "moduleResolution": "node",
     "forceConsistentCasingInFileNames": true,
 
     /* Linting */

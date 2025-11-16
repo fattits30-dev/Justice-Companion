@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { RateLimitService } from './RateLimitService';
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { RateLimitService } from "./RateLimitService";
 
-describe('RateLimitService', () => {
+describe("RateLimitService", () => {
   let service: RateLimitService;
 
   beforeEach(() => {
@@ -19,14 +19,14 @@ describe('RateLimitService', () => {
     vi.clearAllTimers();
   });
 
-  describe('Singleton Pattern', () => {
-    it('should return the same instance', () => {
+  describe("Singleton Pattern", () => {
+    it("should return the same instance", () => {
       const instance1 = RateLimitService.getInstance();
       const instance2 = RateLimitService.getInstance();
       expect(instance1).toBe(instance2);
     });
 
-    it('should create new instance after reset', () => {
+    it("should create new instance after reset", () => {
       const instance1 = RateLimitService.getInstance();
       RateLimitService.resetInstance();
       const instance2 = RateLimitService.getInstance();
@@ -34,22 +34,22 @@ describe('RateLimitService', () => {
     });
   });
 
-  describe('Rate Limiting', () => {
-    it('should allow first login attempt', () => {
-      const result = service.checkRateLimit('testuser');
+  describe("Rate Limiting", () => {
+    it("should allow first login attempt", () => {
+      const result = service.checkRateLimit("testuser");
       expect(result.allowed).toBe(true);
       expect(result.attemptsRemaining).toBe(5);
     });
 
-    it('should track failed attempts', () => {
-      service.recordFailedAttempt('testuser');
-      const result = service.checkRateLimit('testuser');
+    it("should track failed attempts", () => {
+      service.recordFailedAttempt("testuser");
+      const result = service.checkRateLimit("testuser");
       expect(result.allowed).toBe(true);
       expect(result.attemptsRemaining).toBe(4);
     });
 
-    it('should lock account after 5 failed attempts', () => {
-      const username = 'testuser';
+    it("should lock account after 5 failed attempts", () => {
+      const username = "testuser";
 
       // Record 5 failed attempts
       for (let i = 0; i < 5; i++) {
@@ -60,21 +60,21 @@ describe('RateLimitService', () => {
       expect(result.allowed).toBe(false);
       expect(result.remainingTime).toBeDefined();
       expect(result.remainingTime).toBeGreaterThan(0);
-      expect(result.message).toContain('locked');
+      expect(result.message).toContain("locked");
     });
 
-    it('should handle case-insensitive usernames', () => {
-      service.recordFailedAttempt('TestUser');
-      service.recordFailedAttempt('testuser');
-      service.recordFailedAttempt('TESTUSER');
+    it("should handle case-insensitive usernames", () => {
+      service.recordFailedAttempt("TestUser");
+      service.recordFailedAttempt("testuser");
+      service.recordFailedAttempt("TESTUSER");
 
-      const result = service.checkRateLimit('testUser');
+      const result = service.checkRateLimit("testUser");
       expect(result.allowed).toBe(true);
       expect(result.attemptsRemaining).toBe(2); // 5 - 3 attempts
     });
 
-    it('should clear attempts on successful login', () => {
-      const username = 'testuser';
+    it("should clear attempts on successful login", () => {
+      const username = "testuser";
 
       // Record some failed attempts
       service.recordFailedAttempt(username);
@@ -90,7 +90,7 @@ describe('RateLimitService', () => {
     });
   });
 
-  describe('Sliding Window', () => {
+  describe("Sliding Window", () => {
     beforeEach(() => {
       vi.useFakeTimers();
     });
@@ -99,8 +99,8 @@ describe('RateLimitService', () => {
       vi.useRealTimers();
     });
 
-    it('should reset attempts after window expires', () => {
-      const username = 'testuser';
+    it("should reset attempts after window expires", () => {
+      const username = "testuser";
 
       // Record failed attempts
       service.recordFailedAttempt(username);
@@ -115,8 +115,8 @@ describe('RateLimitService', () => {
       expect(result.attemptsRemaining).toBe(5);
     });
 
-    it('should maintain count within sliding window', () => {
-      const username = 'testuser';
+    it("should maintain count within sliding window", () => {
+      const username = "testuser";
 
       // Record 3 attempts
       service.recordFailedAttempt(username);
@@ -132,8 +132,8 @@ describe('RateLimitService', () => {
       expect(result.attemptsRemaining).toBe(2); // 5 - 3
     });
 
-    it('should unlock account after lock duration expires', () => {
-      const username = 'testuser';
+    it("should unlock account after lock duration expires", () => {
+      const username = "testuser";
 
       // Lock the account
       for (let i = 0; i < 5; i++) {
@@ -153,7 +153,7 @@ describe('RateLimitService', () => {
     });
   });
 
-  describe('Cleanup Mechanism', () => {
+  describe("Cleanup Mechanism", () => {
     beforeEach(() => {
       vi.useFakeTimers();
     });
@@ -162,10 +162,10 @@ describe('RateLimitService', () => {
       vi.useRealTimers();
     });
 
-    it('should clean up expired entries automatically', () => {
+    it("should clean up expired entries automatically", () => {
       // Add some attempts
-      service.recordFailedAttempt('user1');
-      service.recordFailedAttempt('user2');
+      service.recordFailedAttempt("user1");
+      service.recordFailedAttempt("user2");
 
       // Get initial statistics
       let stats = service.getStatistics();
@@ -175,15 +175,15 @@ describe('RateLimitService', () => {
       vi.advanceTimersByTime(20 * 60 * 1000);
 
       // Force cleanup by checking rate limit (triggers cleanup)
-      service.checkRateLimit('user3');
+      service.checkRateLimit("user3");
 
       // Check that old entries were cleaned
       stats = service.getStatistics();
       expect(stats.activeAttempts).toBe(0);
     });
 
-    it('should not clean up locked accounts prematurely', () => {
-      const username = 'lockeduser';
+    it("should not clean up locked accounts prematurely", () => {
+      const username = "lockeduser";
 
       // Lock the account
       for (let i = 0; i < 5; i++) {
@@ -194,22 +194,22 @@ describe('RateLimitService', () => {
       vi.advanceTimersByTime(5 * 60 * 1000);
 
       // Trigger cleanup
-      service.checkRateLimit('otheruser');
+      service.checkRateLimit("otheruser");
 
       // Locked account should still be tracked
       expect(service.isLocked(username)).toBe(true);
     });
   });
 
-  describe('Security Logging', () => {
+  describe("Security Logging", () => {
     let consoleLogSpy: any;
     let consoleWarnSpy: any;
     let consoleErrorSpy: any;
 
     beforeEach(() => {
-      consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-      consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-      consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+      consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     });
 
     afterEach(() => {
@@ -218,8 +218,8 @@ describe('RateLimitService', () => {
       consoleErrorSpy.mockRestore();
     });
 
-    it('should log when account is locked', () => {
-      const username = 'testuser';
+    it("should log when account is locked", () => {
+      const username = "testuser";
 
       // Lock the account
       for (let i = 0; i < 5; i++) {
@@ -228,12 +228,13 @@ describe('RateLimitService', () => {
 
       // Structured logger combines all args into single formatted string
       expect(consoleErrorSpy).toHaveBeenCalled();
-      const lastCall = consoleErrorSpy.mock.calls[consoleErrorSpy.mock.calls.length - 1][0];
-      expect(lastCall).toContain('BRUTE FORCE DETECTED for testuser');
+      const lastCall =
+        consoleErrorSpy.mock.calls[consoleErrorSpy.mock.calls.length - 1][0];
+      expect(lastCall).toContain("BRUTE FORCE DETECTED for testuser");
     });
 
-    it('should log rate limit violations', () => {
-      const username = 'testuser';
+    it("should log rate limit violations", () => {
+      const username = "testuser";
 
       // Lock the account
       for (let i = 0; i < 5; i++) {
@@ -245,14 +246,15 @@ describe('RateLimitService', () => {
 
       // Structured logger combines all args into single formatted string
       expect(consoleWarnSpy).toHaveBeenCalled();
-      const lastCall = consoleWarnSpy.mock.calls[consoleWarnSpy.mock.calls.length - 1][0];
-      expect(lastCall).toContain('Rate limit exceeded for testuser');
+      const lastCall =
+        consoleWarnSpy.mock.calls[consoleWarnSpy.mock.calls.length - 1][0];
+      expect(lastCall).toContain("Rate limit exceeded for testuser");
     });
   });
 
-  describe('Helper Methods', () => {
-    it('should correctly report attempt count', () => {
-      const username = 'testuser';
+  describe("Helper Methods", () => {
+    it("should correctly report attempt count", () => {
+      const username = "testuser";
 
       expect(service.getAttemptCount(username)).toBe(0);
 
@@ -266,8 +268,8 @@ describe('RateLimitService', () => {
       expect(service.getAttemptCount(username)).toBe(0);
     });
 
-    it('should correctly check if account is locked', () => {
-      const username = 'testuser';
+    it("should correctly check if account is locked", () => {
+      const username = "testuser";
 
       expect(service.isLocked(username)).toBe(false);
 
@@ -279,15 +281,15 @@ describe('RateLimitService', () => {
       expect(service.isLocked(username)).toBe(true);
     });
 
-    it('should provide accurate statistics', () => {
+    it("should provide accurate statistics", () => {
       // Add various attempts
-      service.recordFailedAttempt('user1');
-      service.recordFailedAttempt('user2');
-      service.recordFailedAttempt('user2');
+      service.recordFailedAttempt("user1");
+      service.recordFailedAttempt("user2");
+      service.recordFailedAttempt("user2");
 
       // Lock one account
       for (let i = 0; i < 5; i++) {
-        service.recordFailedAttempt('lockeduser');
+        service.recordFailedAttempt("lockeduser");
       }
 
       const stats = service.getStatistics();
@@ -297,25 +299,25 @@ describe('RateLimitService', () => {
     });
   });
 
-  describe('Edge Cases', () => {
-    it('should handle empty username gracefully', () => {
-      const result = service.checkRateLimit('');
+  describe("Edge Cases", () => {
+    it("should handle empty username gracefully", () => {
+      const result = service.checkRateLimit("");
       expect(result.allowed).toBe(true);
 
-      service.recordFailedAttempt('');
-      expect(service.getAttemptCount('')).toBe(1);
+      service.recordFailedAttempt("");
+      expect(service.getAttemptCount("")).toBe(1);
     });
 
-    it('should handle whitespace in usernames', () => {
-      service.recordFailedAttempt('  testuser  ');
-      service.recordFailedAttempt('testuser');
+    it("should handle whitespace in usernames", () => {
+      service.recordFailedAttempt("  testuser  ");
+      service.recordFailedAttempt("testuser");
 
-      const result = service.checkRateLimit('testuser');
+      const result = service.checkRateLimit("testuser");
       expect(result.attemptsRemaining).toBe(3); // 5 - 2
     });
 
-    it('should handle rapid successive attempts', () => {
-      const username = 'testuser';
+    it("should handle rapid successive attempts", () => {
+      const username = "testuser";
 
       // Simulate rapid attempts
       for (let i = 0; i < 10; i++) {
@@ -327,8 +329,8 @@ describe('RateLimitService', () => {
       expect(service.getAttemptCount(username)).toBe(5);
     });
 
-    it('should not increment count when already locked', () => {
-      const username = 'testuser';
+    it("should not increment count when already locked", () => {
+      const username = "testuser";
 
       // Lock the account
       for (let i = 0; i < 5; i++) {

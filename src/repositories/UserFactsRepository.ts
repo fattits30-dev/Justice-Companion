@@ -1,7 +1,14 @@
-import { getDb } from '../db/database.ts';
-import type { UserFact, CreateUserFactInput, UpdateUserFactInput } from '../models/UserFact.ts';
-import { EncryptionService, type EncryptedData } from '../services/EncryptionService.ts';
-import type { AuditLogger } from '../services/AuditLogger.ts';
+import { getDb } from "../db/database.ts";
+import type {
+  UserFact,
+  CreateUserFactInput,
+  UpdateUserFactInput,
+} from "../models/UserFact.ts";
+import {
+  EncryptionService,
+  type EncryptedData,
+} from "../services/EncryptionService.ts";
+import type { AuditLogger } from "../services/AuditLogger.ts";
 
 /**
  * Repository for managing user facts with encryption
@@ -16,10 +23,7 @@ export class UserFactsRepository {
   private encryptionService: EncryptionService;
   private auditLogger?: AuditLogger;
 
-  constructor(
-    encryptionService: EncryptionService,
-    auditLogger?: AuditLogger,
-  ) {
+  constructor(encryptionService: EncryptionService, auditLogger?: AuditLogger) {
     this.encryptionService = encryptionService;
     this.auditLogger = auditLogger;
   }
@@ -32,10 +36,12 @@ export class UserFactsRepository {
       const db = getDb();
 
       // Encrypt fact_content before INSERT (P0 priority field - direct PII)
-      const encryptedContent = this.encryptionService?.encrypt(input.factContent);
+      const encryptedContent = this.encryptionService?.encrypt(
+        input.factContent,
+      );
 
       if (!encryptedContent) {
-        throw new Error('EncryptionService is required to create user facts');
+        throw new Error("EncryptionService is required to create user facts");
       }
 
       const contentToStore = JSON.stringify(encryptedContent);
@@ -55,10 +61,10 @@ export class UserFactsRepository {
 
       // Audit: User fact created
       this.auditLogger?.log({
-        eventType: 'user_fact.create',
-        resourceType: 'user_fact',
+        eventType: "user_fact.create",
+        resourceType: "user_fact",
         resourceId: createdFact.id.toString(),
-        action: 'create',
+        action: "create",
         details: {
           caseId: input.caseId,
           factType: input.factType,
@@ -71,12 +77,12 @@ export class UserFactsRepository {
     } catch (error) {
       // Audit: Failed creation
       this.auditLogger?.log({
-        eventType: 'user_fact.create',
-        resourceType: 'user_fact',
-        resourceId: 'unknown',
-        action: 'create',
+        eventType: "user_fact.create",
+        resourceType: "user_fact",
+        resourceId: "unknown",
+        action: "create",
         success: false,
-        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        errorMessage: error instanceof Error ? error.message : "Unknown error",
       });
       throw error;
     }
@@ -109,11 +115,11 @@ export class UserFactsRepository {
       // Audit: PII accessed (encrypted fact_content field)
       if (originalContent && row.factContent !== originalContent) {
         this.auditLogger?.log({
-          eventType: 'user_fact.content_access',
-          resourceType: 'user_fact',
+          eventType: "user_fact.content_access",
+          resourceType: "user_fact",
           resourceId: id.toString(),
-          action: 'read',
-          details: { field: 'fact_content', encrypted: true },
+          action: "read",
+          details: { field: "fact_content", encrypted: true },
           success: true,
         });
       }
@@ -151,12 +157,12 @@ export class UserFactsRepository {
     // Audit: Bulk content access
     if (decryptedRows.length > 0) {
       this.auditLogger?.log({
-        eventType: 'user_fact.content_access',
-        resourceType: 'user_fact',
+        eventType: "user_fact.content_access",
+        resourceType: "user_fact",
         resourceId: `case_${caseId}`,
-        action: 'read',
+        action: "read",
         details: {
-          field: 'fact_content',
+          field: "fact_content",
           encrypted: true,
           count: decryptedRows.length,
         },
@@ -196,12 +202,12 @@ export class UserFactsRepository {
     // Audit: Filtered content access
     if (decryptedRows.length > 0) {
       this.auditLogger?.log({
-        eventType: 'user_fact.content_access',
-        resourceType: 'user_fact',
+        eventType: "user_fact.content_access",
+        resourceType: "user_fact",
         resourceId: `case_${caseId}_type_${factType}`,
-        action: 'read',
+        action: "read",
         details: {
-          field: 'fact_content',
+          field: "fact_content",
           encrypted: true,
           factType,
           count: decryptedRows.length,
@@ -224,18 +230,20 @@ export class UserFactsRepository {
 
       // Encrypt new fact_content if provided
       if (input.factContent !== undefined) {
-        const encryptedContent = this.encryptionService?.encrypt(input.factContent);
+        const encryptedContent = this.encryptionService?.encrypt(
+          input.factContent,
+        );
 
         if (!encryptedContent) {
-          throw new Error('EncryptionService is required to update user facts');
+          throw new Error("EncryptionService is required to update user facts");
         }
 
-        updates.push('fact_content = @factContent');
+        updates.push("fact_content = @factContent");
         params.factContent = JSON.stringify(encryptedContent);
       }
 
       if (input.factType !== undefined) {
-        updates.push('fact_type = @factType');
+        updates.push("fact_type = @factType");
         params.factType = input.factType;
       }
 
@@ -245,7 +253,7 @@ export class UserFactsRepository {
 
       const stmt = db.prepare(`
         UPDATE user_facts
-        SET ${updates.join(', ')}
+        SET ${updates.join(", ")}
         WHERE id = @id
       `);
 
@@ -255,10 +263,10 @@ export class UserFactsRepository {
 
       // Audit: User fact updated
       this.auditLogger?.log({
-        eventType: 'user_fact.update',
-        resourceType: 'user_fact',
+        eventType: "user_fact.update",
+        resourceType: "user_fact",
         resourceId: id.toString(),
-        action: 'update',
+        action: "update",
         details: {
           updatedFields: Object.keys(input),
           contentLength: input.factContent?.length,
@@ -270,12 +278,12 @@ export class UserFactsRepository {
     } catch (error) {
       // Audit: Failed update
       this.auditLogger?.log({
-        eventType: 'user_fact.update',
-        resourceType: 'user_fact',
+        eventType: "user_fact.update",
+        resourceType: "user_fact",
         resourceId: id.toString(),
-        action: 'update',
+        action: "update",
         success: false,
-        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        errorMessage: error instanceof Error ? error.message : "Unknown error",
       });
       throw error;
     }
@@ -287,16 +295,16 @@ export class UserFactsRepository {
   delete(id: number): boolean {
     try {
       const db = getDb();
-      const stmt = db.prepare('DELETE FROM user_facts WHERE id = ?');
+      const stmt = db.prepare("DELETE FROM user_facts WHERE id = ?");
       const result = stmt.run(id);
       const success = result.changes > 0;
 
       // Audit: User fact deleted
       this.auditLogger?.log({
-        eventType: 'user_fact.delete',
-        resourceType: 'user_fact',
+        eventType: "user_fact.delete",
+        resourceType: "user_fact",
         resourceId: id.toString(),
-        action: 'delete',
+        action: "delete",
         success,
       });
 
@@ -304,12 +312,12 @@ export class UserFactsRepository {
     } catch (error) {
       // Audit: Failed deletion
       this.auditLogger?.log({
-        eventType: 'user_fact.delete',
-        resourceType: 'user_fact',
+        eventType: "user_fact.delete",
+        resourceType: "user_fact",
         resourceId: id.toString(),
-        action: 'delete',
+        action: "delete",
         success: false,
-        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        errorMessage: error instanceof Error ? error.message : "Unknown error",
       });
       throw error;
     }
@@ -322,7 +330,7 @@ export class UserFactsRepository {
    */
   private decryptField(storedValue: string | null | undefined): string {
     if (!storedValue) {
-      return '';
+      return "";
     }
 
     // If no encryption service, return as-is (backward compatibility)
@@ -336,7 +344,7 @@ export class UserFactsRepository {
 
       // Verify it's actually encrypted data format
       if (this.encryptionService.isEncrypted(encryptedData)) {
-        return this.encryptionService.decrypt(encryptedData) || '';
+        return this.encryptionService.decrypt(encryptedData) || "";
       }
 
       // If it's not encrypted format, treat as legacy plaintext
@@ -346,5 +354,4 @@ export class UserFactsRepository {
       return storedValue;
     }
   }
-
 }

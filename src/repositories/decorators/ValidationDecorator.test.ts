@@ -89,7 +89,7 @@ describe("ValidationDecorator", () => {
       };
 
       await expect(decorator.create(invalidInput)).rejects.toThrow(
-        ValidationError
+        ValidationError,
       );
     });
 
@@ -100,7 +100,7 @@ describe("ValidationDecorator", () => {
       };
 
       await expect(decorator.create(incompleteInput)).rejects.toThrow(
-        ValidationError
+        ValidationError,
       );
     });
 
@@ -132,7 +132,7 @@ describe("ValidationDecorator", () => {
       };
 
       await expect(decorator.update(1, invalidUpdate)).rejects.toThrow(
-        ValidationError
+        ValidationError,
       );
     });
 
@@ -141,17 +141,17 @@ describe("ValidationDecorator", () => {
 
       // Invalid ID (negative)
       await expect(decorator.update(-1, validUpdate)).rejects.toThrow(
-        ValidationError
+        ValidationError,
       );
 
       // Invalid ID (non-integer)
       await expect(decorator.update(1.5, validUpdate)).rejects.toThrow(
-        ValidationError
+        ValidationError,
       );
 
       // Invalid ID (NaN)
       await expect(decorator.update(NaN, validUpdate)).rejects.toThrow(
-        ValidationError
+        ValidationError,
       );
     });
   });
@@ -166,7 +166,7 @@ describe("ValidationDecorator", () => {
       await expect(decorator.findById(-1)).rejects.toThrow(ValidationError);
       await expect(decorator.findById(0)).rejects.toThrow(ValidationError);
       await expect(decorator.findById(Infinity)).rejects.toThrow(
-        ValidationError
+        ValidationError,
       );
     });
   });
@@ -198,7 +198,7 @@ describe("ValidationDecorator", () => {
       ];
 
       await expect(decorator.createBatch(invalidBatch)).rejects.toThrow(
-        ValidationError
+        ValidationError,
       );
     });
 
@@ -209,7 +209,7 @@ describe("ValidationDecorator", () => {
 
       const invalidIds = [1, -1, 3]; // Contains invalid ID
       await expect(decorator.deleteBatch(invalidIds)).rejects.toThrow(
-        ValidationError
+        ValidationError,
       );
     });
   });
@@ -224,7 +224,7 @@ describe("ValidationDecorator", () => {
     it("should work without schemas", async () => {
       const decoratorWithoutSchemas = new ValidationDecorator(
         mockRepository,
-        {}
+        {},
       );
       const result = await decoratorWithoutSchemas.create({ any: "data" });
       expect(result).toEqual({ id: 1, any: "data" });

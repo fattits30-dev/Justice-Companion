@@ -10,22 +10,22 @@ import {
   Footer,
   PageNumber,
   Packer,
-} from 'docx';
+} from "docx";
 import type {
   CaseExportData,
   EvidenceExportData,
   TimelineExportData,
   NotesExportData,
   TimelineEvent,
-} from '../../models/Export.ts';
-import type { Evidence } from '../../domains/evidence/entities/Evidence.ts';
-import type { Note } from '../../models/Note.ts';
+} from "../../models/Export.ts";
+import type { Evidence } from "../../domains/evidence/entities/Evidence.ts";
+import type { Note } from "../../models/Note.ts";
 
 export class DOCXGenerator {
   async generateCaseSummary(caseData: CaseExportData): Promise<Buffer> {
     // Build children array with proper typing
     const children: (Paragraph | PageBreak)[] = [
-      ...this.createTitle('Case Summary'),
+      ...this.createTitle("Case Summary"),
       ...this.createCaseInfo(caseData),
     ];
 
@@ -48,65 +48,67 @@ export class DOCXGenerator {
     }
 
     const doc = new Document({
-      sections: [{
-        properties: {
-          page: {
-            margin: {
-              top: 1440,
-              right: 1440,
-              bottom: 1440,
-              left: 1440,
+      sections: [
+        {
+          properties: {
+            page: {
+              margin: {
+                top: 1440,
+                right: 1440,
+                bottom: 1440,
+                left: 1440,
+              },
             },
           },
+          headers: {
+            default: new Header({
+              children: [
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: `Case: ${caseData.case.title}`,
+                      bold: true,
+                    }),
+                  ],
+                  alignment: AlignmentType.RIGHT,
+                }),
+              ],
+            }),
+          },
+          footers: {
+            default: new Footer({
+              children: [
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: `Exported by ${caseData.exportedBy} on ${caseData.exportDate.toLocaleDateString()}`,
+                      size: 18,
+                    }),
+                    new TextRun({
+                      text: " | Page ",
+                      size: 18,
+                    }),
+                    new TextRun({
+                      children: [PageNumber.CURRENT],
+                      size: 18,
+                    }),
+                    new TextRun({
+                      text: " of ",
+                      size: 18,
+                    }),
+                    new TextRun({
+                      children: [PageNumber.TOTAL_PAGES],
+                      size: 18,
+                    }),
+                  ],
+                  alignment: AlignmentType.CENTER,
+                }),
+              ],
+            }),
+          },
+          children: children as any,
         },
-        headers: {
-          default: new Header({
-            children: [
-              new Paragraph({
-                children: [
-                  new TextRun({
-                    text: `Case: ${caseData.case.title}`,
-                    bold: true,
-                  }),
-                ],
-                alignment: AlignmentType.RIGHT,
-              }),
-            ],
-          }),
-        },
-        footers: {
-          default: new Footer({
-            children: [
-              new Paragraph({
-                children: [
-                  new TextRun({
-                    text: `Exported by ${caseData.exportedBy} on ${caseData.exportDate.toLocaleDateString()}`,
-                    size: 18,
-                  }),
-                  new TextRun({
-                    text: ' | Page ',
-                    size: 18,
-                  }),
-                  new TextRun({
-                    children: [PageNumber.CURRENT],
-                    size: 18,
-                  }),
-                  new TextRun({
-                    text: ' of ',
-                    size: 18,
-                  }),
-                  new TextRun({
-                    children: [PageNumber.TOTAL_PAGES],
-                    size: 18,
-                  }),
-                ],
-                alignment: AlignmentType.CENTER,
-              }),
-            ],
-          }),
-        },
-        children: children as any,
-      }],
+      ],
     });
 
     return await Packer.toBuffer(doc);
@@ -142,7 +144,7 @@ export class DOCXGenerator {
   private createEvidenceSection(evidenceList: Evidence[]): Paragraph[] {
     const paragraphs: Paragraph[] = [
       new Paragraph({
-        text: 'Evidence',
+        text: "Evidence",
         heading: HeadingLevel.HEADING_2,
         spacing: { after: 200 },
       }),
@@ -154,20 +156,20 @@ export class DOCXGenerator {
           text: evidence.title,
           heading: HeadingLevel.HEADING_3,
           spacing: { after: 100 },
-        })
+        }),
       );
       paragraphs.push(
         new Paragraph({
           text: `Type: ${evidence.evidenceType}`,
           spacing: { after: 100 },
-        })
+        }),
       );
       if (evidence.obtainedDate) {
         paragraphs.push(
           new Paragraph({
             text: `Date Obtained: ${new Date(evidence.obtainedDate).toLocaleDateString()}`,
             spacing: { after: 200 },
-          })
+          }),
         );
       }
     });
@@ -178,7 +180,7 @@ export class DOCXGenerator {
   private createTimelineSection(timelineItems: TimelineEvent[]): Paragraph[] {
     const paragraphs: Paragraph[] = [
       new Paragraph({
-        text: 'Timeline',
+        text: "Timeline",
         heading: HeadingLevel.HEADING_2,
         spacing: { after: 200 },
       }),
@@ -190,21 +192,21 @@ export class DOCXGenerator {
           text: item.title,
           heading: HeadingLevel.HEADING_3,
           spacing: { after: 100 },
-        })
+        }),
       );
       if (item.description) {
         paragraphs.push(
           new Paragraph({
             text: item.description,
             spacing: { after: 100 },
-          })
+          }),
         );
       }
       paragraphs.push(
         new Paragraph({
           text: `Event Date: ${new Date(item.eventDate).toLocaleDateString()}`,
           spacing: { after: 200 },
-        })
+        }),
       );
     });
 
@@ -214,7 +216,7 @@ export class DOCXGenerator {
   private createNotesSection(notes: Note[]): Paragraph[] {
     const paragraphs: Paragraph[] = [
       new Paragraph({
-        text: 'Notes',
+        text: "Notes",
         heading: HeadingLevel.HEADING_2,
         spacing: { after: 200 },
       }),
@@ -223,85 +225,93 @@ export class DOCXGenerator {
     notes.forEach((note) => {
       paragraphs.push(
         new Paragraph({
-          text: note.title || 'Untitled Note',
+          text: note.title || "Untitled Note",
           heading: HeadingLevel.HEADING_3,
           spacing: { after: 100 },
-        })
+        }),
       );
       paragraphs.push(
         new Paragraph({
           text: note.content,
           spacing: { after: 100 },
-        })
+        }),
       );
       paragraphs.push(
         new Paragraph({
           text: `Created: ${new Date(note.createdAt).toLocaleDateString()}`,
           spacing: { after: 200 },
-        })
+        }),
       );
     });
 
     return paragraphs;
   }
 
-  async generateEvidenceList(evidenceData: EvidenceExportData): Promise<Buffer> {
+  async generateEvidenceList(
+    evidenceData: EvidenceExportData,
+  ): Promise<Buffer> {
     const doc = new Document({
-      sections: [{
-        properties: {
-          page: {
-            margin: {
-              top: 1440,
-              right: 1440,
-              bottom: 1440,
-              left: 1440,
+      sections: [
+        {
+          properties: {
+            page: {
+              margin: {
+                top: 1440,
+                right: 1440,
+                bottom: 1440,
+                left: 1440,
+              },
             },
           },
+          children: [
+            ...this.createTitle("Evidence Inventory Report"),
+            new Paragraph({
+              text: `Case: ${evidenceData.caseTitle}`,
+              spacing: { after: 100 },
+            }),
+            new Paragraph({
+              text: `Total Evidence Items: ${evidenceData.totalItems}`,
+              spacing: { after: 200 },
+            }),
+            ...this.createEvidenceSection(evidenceData.evidence),
+          ],
         },
-        children: [
-          ...this.createTitle('Evidence Inventory Report'),
-          new Paragraph({
-            text: `Case: ${evidenceData.caseTitle}`,
-            spacing: { after: 100 },
-          }),
-          new Paragraph({
-            text: `Total Evidence Items: ${evidenceData.totalItems}`,
-            spacing: { after: 200 },
-          }),
-          ...this.createEvidenceSection(evidenceData.evidence),
-        ],
-      }],
+      ],
     });
 
     return await Packer.toBuffer(doc);
   }
 
-  async generateTimelineReport(timelineData: TimelineExportData): Promise<Buffer> {
+  async generateTimelineReport(
+    timelineData: TimelineExportData,
+  ): Promise<Buffer> {
     const doc = new Document({
-      sections: [{
-        properties: {
-          page: {
-            margin: {
-              top: 1440,
-              right: 1440,
-              bottom: 1440,
-              left: 1440,
+      sections: [
+        {
+          properties: {
+            page: {
+              margin: {
+                top: 1440,
+                right: 1440,
+                bottom: 1440,
+                left: 1440,
+              },
             },
           },
+          children: [
+            ...this.createTitle("Timeline Report"),
+            new Paragraph({
+              text: `Case: ${timelineData.caseTitle}`,
+              spacing: { after: 100 },
+            }),
+            new Paragraph({
+              text: `Total Events: ${timelineData.events.length}`,
+              spacing: { after: 200 },
+            }),
+            ...this.createTimelineSection(timelineData.events),
+          ],
         },
-        children: [
-          ...this.createTitle('Timeline Report'),
-          new Paragraph({
-            text: `Case: ${timelineData.caseTitle}`,
-            spacing: { after: 100 },
-          }),
-          new Paragraph({
-            text: `Total Events: ${timelineData.events.length}`,
-            spacing: { after: 200 },
-          }),
-          ...this.createTimelineSection(timelineData.events),
-        ],
-      }],
+      ],
     });
 
     return await Packer.toBuffer(doc);
@@ -309,30 +319,32 @@ export class DOCXGenerator {
 
   async generateCaseNotes(notesData: NotesExportData): Promise<Buffer> {
     const doc = new Document({
-      sections: [{
-        properties: {
-          page: {
-            margin: {
-              top: 1440,
-              right: 1440,
-              bottom: 1440,
-              left: 1440,
+      sections: [
+        {
+          properties: {
+            page: {
+              margin: {
+                top: 1440,
+                right: 1440,
+                bottom: 1440,
+                left: 1440,
+              },
             },
           },
+          children: [
+            ...this.createTitle("Case Notes Report"),
+            new Paragraph({
+              text: `Case: ${notesData.caseTitle}`,
+              spacing: { after: 100 },
+            }),
+            new Paragraph({
+              text: `Total Notes: ${notesData.totalNotes}`,
+              spacing: { after: 200 },
+            }),
+            ...this.createNotesSection(notesData.notes),
+          ],
         },
-        children: [
-          ...this.createTitle('Case Notes Report'),
-          new Paragraph({
-            text: `Case: ${notesData.caseTitle}`,
-            spacing: { after: 100 },
-          }),
-          new Paragraph({
-            text: `Total Notes: ${notesData.totalNotes}`,
-            spacing: { after: 200 },
-          }),
-          ...this.createNotesSection(notesData.notes),
-        ],
-      }],
+      ],
     });
 
     return await Packer.toBuffer(doc);

@@ -1,6 +1,12 @@
-import { SessionRepository } from './SessionRepository.ts';
-import { getCacheService, type CacheService } from '../services/CacheService.ts';
-import type { Session, CreateSessionInput } from '../domains/auth/entities/Session.ts';
+import { SessionRepository } from "./SessionRepository.ts";
+import {
+  getCacheService,
+  type CacheService,
+} from "../services/CacheService.ts";
+import type {
+  Session,
+  CreateSessionInput,
+} from "../domains/auth/entities/Session.ts";
 
 /**
  * Cached wrapper for SessionRepository
@@ -47,7 +53,7 @@ export class CachedSessionRepository {
     return this.cache.getCached(
       cacheKey,
       async () => this.baseRepo.findById(id),
-      'sessions'
+      "sessions",
     );
   }
 
@@ -60,7 +66,7 @@ export class CachedSessionRepository {
     return this.cache.getCached(
       cacheKey,
       async () => this.baseRepo.findByUserId(userId),
-      'sessions'
+      "sessions",
     );
   }
 
@@ -75,7 +81,7 @@ export class CachedSessionRepository {
 
     if (result && session) {
       // Invalidate caches
-      this.cache.invalidate(`session:${id}`, 'sessions');
+      this.cache.invalidate(`session:${id}`, "sessions");
       await this.invalidateUserCaches(session.userId);
     }
 
@@ -103,7 +109,7 @@ export class CachedSessionRepository {
 
     if (result > 0) {
       // Clear all session caches since we don't know which were deleted
-      this.cache.clear('sessions');
+      this.cache.clear("sessions");
     }
 
     return result;
@@ -125,8 +131,8 @@ export class CachedSessionRepository {
     return this.cache.getCached(
       cacheKey,
       async () => this.baseRepo.countActiveSessionsByUserId(userId),
-      'sessions',
-      5 * 60 * 1000 // 5 minute TTL for counts
+      "sessions",
+      5 * 60 * 1000, // 5 minute TTL for counts
     );
   }
 
@@ -135,15 +141,15 @@ export class CachedSessionRepository {
    */
   private async invalidateUserCaches(userId: number): Promise<void> {
     // Invalidate user-specific session list
-    this.cache.invalidate(`session:user:${userId}`, 'sessions');
+    this.cache.invalidate(`session:user:${userId}`, "sessions");
 
     // Invalidate user session count
-    this.cache.invalidate(`session:count:user:${userId}`, 'sessions');
+    this.cache.invalidate(`session:count:user:${userId}`, "sessions");
 
     // Invalidate all individual session caches for this user
     const sessions = this.baseRepo.findByUserId(userId);
     for (const session of sessions) {
-      this.cache.invalidate(`session:${session.id}`, 'sessions');
+      this.cache.invalidate(`session:${session.id}`, "sessions");
     }
   }
 
@@ -154,19 +160,19 @@ export class CachedSessionRepository {
     const sessions = await this.findByUserIdAsync(userId);
 
     // Cache individual sessions
-    const entries = sessions.map(session => ({
+    const entries = sessions.map((session) => ({
       key: `session:${session.id}`,
       fetchFn: async () => session,
     }));
 
-    await this.cache.preload(entries, 'sessions');
+    await this.cache.preload(entries, "sessions");
   }
 
   /**
    * Get cache statistics for monitoring
    */
   getCacheStats() {
-    return this.cache.getStats('sessions');
+    return this.cache.getStats("sessions");
   }
 }
 

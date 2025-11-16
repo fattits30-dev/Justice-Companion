@@ -72,12 +72,13 @@ Every code change MUST follow these principles. No exceptions.
 
 ## MCP Servers (Model Context Protocol)
 
-**STATUS: ALL 8 SERVERS CONFIGURED AND OPERATIONAL**
+**STATUS: ALL 9 SERVERS CONFIGURED AND OPERATIONAL**
 
-Justice Companion has 8 MCP servers providing 80+ specialized tools for development, legal research, AI integration, and automation.
+Justice Companion has 9 MCP servers providing 105+ specialized tools for development, legal research, AI integration, and automation.
 
 ### Server Status
 ```
+✓ Justice Companion (25 tools)    - Custom dev workflow automation (F:\MCPS\mcp-server\)
 ✓ Playwright (14 tools)           - Browser automation for UK legal sites
 ✓ Puppeteer (7 tools)             - Chrome-based web scraping
 ✓ GitHub (26 tools)               - Complete repository management
@@ -87,6 +88,31 @@ Justice Companion has 8 MCP servers providing 80+ specialized tools for developm
 ✓ Context7 (2 tools)              - Up-to-date library docs
 ✓ Hugging Face (7+ tools)         - AI models, datasets, inference API
 ```
+
+### Justice Companion Custom MCP Server
+
+**Location:** `F:\MCPS\mcp-server\`
+**Tools:** 25 specialized development tools
+**Documentation:** See `.cline/` directory
+
+This custom MCP server enforces strict sequential workflows for Justice Companion development:
+
+**Core Features:**
+- File operations (file_manager, search_files, grep_code)
+- Package management (pnpm_command)
+- Database tools (db_migrate, db_backup)
+- Testing (run_tests, type_check, lint_code, format_code)
+- Build automation (build_app)
+- Git operations (git_status, git_diff, git_commit, git_branch)
+- Memory & task management (memory_store, todo_add, etc.)
+
+**Golden Rule:** `sequential_think → do work → audit_tools_used`
+
+**Documentation:**
+- `.cline/QUICK_REFERENCE.md` - One-page cheat sheet
+- `.cline/SYSTEM_PROMPT.md` - AI assistant configuration
+- `F:\MCPS\mcp-server\CLINE_INTEGRATION.md` - Complete guide
+- `F:\MCPS\mcp-server\TOOLS_REFERENCE.md` - All 25 tools documented
 
 ### Configuration Location
 All MCP servers are configured in `.mcp.json` at project root using Windows-compatible command format:

@@ -21,7 +21,7 @@ export class DeadlineReminderScheduler {
   constructor(
     private notificationService: NotificationService,
     private deadlineRepo: DeadlineRepository,
-    private preferencesRepo: NotificationPreferencesRepository
+    private preferencesRepo: NotificationPreferencesRepository,
   ) {}
 
   /**
@@ -32,7 +32,7 @@ export class DeadlineReminderScheduler {
     if (this.isRunning) {
       logger.warn(
         "DeadlineReminderScheduler",
-        "DeadlineReminderScheduler is already running"
+        "DeadlineReminderScheduler is already running",
       );
       return;
     }
@@ -40,7 +40,7 @@ export class DeadlineReminderScheduler {
     this.isRunning = true;
     logger.info(
       "DeadlineReminderScheduler",
-      "Starting DeadlineReminderScheduler"
+      "Starting DeadlineReminderScheduler",
     );
 
     // Run immediately on start
@@ -51,7 +51,7 @@ export class DeadlineReminderScheduler {
       () => {
         this.checkDeadlines();
       },
-      60 * 60 * 1000 // 1 hour
+      60 * 60 * 1000, // 1 hour
     );
   }
 
@@ -71,7 +71,7 @@ export class DeadlineReminderScheduler {
     this.isRunning = false;
     logger.info(
       "DeadlineReminderScheduler",
-      "Stopped DeadlineReminderScheduler"
+      "Stopped DeadlineReminderScheduler",
     );
   }
 
@@ -90,7 +90,7 @@ export class DeadlineReminderScheduler {
     try {
       logger.info(
         "DeadlineReminderScheduler",
-        "Checking for upcoming deadlines"
+        "Checking for upcoming deadlines",
       );
 
       // Get users with deadline reminders enabled
@@ -103,7 +103,7 @@ export class DeadlineReminderScheduler {
         const allDeadlines = this.deadlineRepo.findByUserId(user.userId);
         const now = new Date();
         const reminderThreshold = new Date(
-          now.getTime() + user.reminderDays * 24 * 60 * 60 * 1000
+          now.getTime() + user.reminderDays * 24 * 60 * 60 * 1000,
         );
 
         const upcomingDeadlines = allDeadlines.filter((deadline) => {
@@ -124,7 +124,7 @@ export class DeadlineReminderScheduler {
           if (!lastSent) {
             await this.createDeadlineReminderNotification(
               user.userId,
-              deadline
+              deadline,
             );
 
             // Mark as sent
@@ -140,7 +140,7 @@ export class DeadlineReminderScheduler {
       logger.error(
         "DeadlineReminderScheduler",
         `Error checking deadlines: ${errorMessage}`,
-        { error }
+        { error },
       );
     }
   }
@@ -150,11 +150,11 @@ export class DeadlineReminderScheduler {
    */
   private async createDeadlineReminderNotification(
     userId: number,
-    deadline: any
+    deadline: any,
   ): Promise<void> {
     const daysUntil = Math.ceil(
       (new Date(deadline.deadlineDate).getTime() - Date.now()) /
-        (1000 * 60 * 60 * 24)
+        (1000 * 60 * 60 * 24),
     );
 
     await this.notificationService.createNotification({

@@ -1,12 +1,12 @@
 /// <reference types="vitest/globals" />
 
-import { ErrorLogger } from './error-logger';
-import fs from 'fs';
-import path from 'path';
+import { ErrorLogger } from "./error-logger";
+import fs from "fs";
+import path from "path";
 
-describe('ErrorLogger', () => {
-  const testLogDir = 'logs-test';
-  const testLogFile = 'test-errors.log';
+describe("ErrorLogger", () => {
+  const testLogDir = "logs-test";
+  const testLogFile = "test-errors.log";
   let logger: ErrorLogger;
 
   beforeEach(() => {
@@ -23,44 +23,44 @@ describe('ErrorLogger', () => {
     }
   });
 
-  test('should create log directory if it does not exist', () => {
+  test("should create log directory if it does not exist", () => {
     expect(fs.existsSync(testLogDir)).toBe(true);
   });
 
-  test('should log error to file', async () => {
-    const error = new Error('Test error');
+  test("should log error to file", async () => {
+    const error = new Error("Test error");
     logger.logError(error);
     await logger.waitForFlush();
 
     const logPath = path.join(testLogDir, testLogFile);
     expect(fs.existsSync(logPath)).toBe(true);
 
-    const content = fs.readFileSync(logPath, 'utf8');
-    expect(content).toContain('Test error');
-    expect(content).toContain('Error:');
+    const content = fs.readFileSync(logPath, "utf8");
+    expect(content).toContain("Test error");
+    expect(content).toContain("Error:");
   });
 
-  test('should log string error', async () => {
-    logger.logError('Simple error message');
+  test("should log string error", async () => {
+    logger.logError("Simple error message");
     await logger.waitForFlush();
 
     const logPath = path.join(testLogDir, testLogFile);
-    const content = fs.readFileSync(logPath, 'utf8');
-    expect(content).toContain('Simple error message');
+    const content = fs.readFileSync(logPath, "utf8");
+    expect(content).toContain("Simple error message");
   });
 
-  test('should include context in log', async () => {
-    logger.logError('Error with context', { userId: 123, action: 'save' });
+  test("should include context in log", async () => {
+    logger.logError("Error with context", { userId: 123, action: "save" });
     await logger.waitForFlush();
 
     const logPath = path.join(testLogDir, testLogFile);
-    const content = fs.readFileSync(logPath, 'utf8');
-    expect(content).toContain('Context:');
-    expect(content).toContain('userId');
-    expect(content).toContain('123');
+    const content = fs.readFileSync(logPath, "utf8");
+    expect(content).toContain("Context:");
+    expect(content).toContain("userId");
+    expect(content).toContain("123");
   });
 
-  test('should rotate log file when exceeding max size', async () => {
+  test("should rotate log file when exceeding max size", async () => {
     // Write enough data to exceed 1KB
     for (let i = 0; i < 50; i++) {
       logger.logError(`Error ${i} with some padding text to increase size`);
@@ -77,20 +77,20 @@ describe('ErrorLogger', () => {
     expect(await logger.getLogSizeKB()).toBeLessThan(1);
   });
 
-  test('should read recent errors', async () => {
-    logger.logError('Error 1');
-    logger.logError('Error 2');
-    logger.logError('Error 3');
+  test("should read recent errors", async () => {
+    logger.logError("Error 1");
+    logger.logError("Error 2");
+    logger.logError("Error 3");
     await logger.waitForFlush();
 
     const recent = await logger.readRecentErrors(2);
     expect(recent.length).toBeGreaterThan(0);
-    expect(recent.join('\n')).toContain('Error 3');
+    expect(recent.join("\n")).toContain("Error 3");
   });
 
-  test('should clear all logs', async () => {
-    logger.logError('Error 1');
-    logger.logError('Error 2');
+  test("should clear all logs", async () => {
+    logger.logError("Error 1");
+    logger.logError("Error 2");
     await logger.waitForFlush();
 
     await logger.clearLogs();
@@ -99,10 +99,12 @@ describe('ErrorLogger', () => {
     expect(fs.existsSync(logPath)).toBe(false);
   });
 
-  test('should maintain max number of backups', async () => {
+  test("should maintain max number of backups", async () => {
     // Write enough to trigger multiple rotations
     for (let i = 0; i < 150; i++) {
-      logger.logError(`Error ${i} with padding text to increase file size quickly`);
+      logger.logError(
+        `Error ${i} with padding text to increase file size quickly`,
+      );
     }
     await logger.waitForFlush();
 

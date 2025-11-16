@@ -8,7 +8,7 @@ export interface User {
   email: string;
   passwordHash: string;
   passwordSalt: string;
-  role: 'user' | 'admin';
+  role: "user" | "admin";
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -23,7 +23,7 @@ export interface CreateUserInput {
   email: string;
   passwordHash: string;
   passwordSalt: string;
-  role?: 'user' | 'admin';
+  role?: "user" | "admin";
 }
 
 /**
@@ -32,5 +32,5 @@ export interface CreateUserInput {
 export interface UpdateUserInput {
   email?: string;
   isActive?: boolean;
-  role?: 'user' | 'admin';
+  role?: "user" | "admin";
 }

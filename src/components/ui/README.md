@@ -38,6 +38,7 @@ neutral-50 to neutral-950
 ### Spacing
 
 4px base unit system:
+
 - `0.5` = 2px
 - `1` = 4px
 - `2` = 8px
@@ -98,11 +99,11 @@ Modern button with variants, sizes, loading states, and ripple effect.
 
 ```typescript
 interface ButtonProps {
-  variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
-  size?: 'sm' | 'md' | 'lg';
+  variant?: "primary" | "secondary" | "ghost" | "danger";
+  size?: "sm" | "md" | "lg";
   loading?: boolean;
   icon?: React.ReactNode;
-  iconPosition?: 'left' | 'right';
+  iconPosition?: "left" | "right";
   fullWidth?: boolean;
 }
 ```
@@ -164,8 +165,15 @@ Status badge with variants, icons, and glow effects.
 
 ```typescript
 interface BadgeProps {
-  variant?: 'success' | 'warning' | 'danger' | 'info' | 'neutral' | 'primary' | 'secondary';
-  size?: 'sm' | 'md' | 'lg';
+  variant?:
+    | "success"
+    | "warning"
+    | "danger"
+    | "info"
+    | "neutral"
+    | "primary"
+    | "secondary";
+  size?: "sm" | "md" | "lg";
   icon?: React.ReactNode;
   dot?: boolean;
   glow?: boolean;
@@ -224,7 +232,7 @@ Glassmorphism card with hover effects and customizable header/footer.
 
 ```typescript
 interface CardProps {
-  variant?: 'default' | 'glass' | 'elevated';
+  variant?: "default" | "glass" | "elevated";
   hoverable?: boolean;
   gradientBorder?: boolean;
   shine?: boolean;
@@ -313,36 +321,39 @@ dismissAll()
 #### Examples
 
 ```tsx
-import { showSuccess, showError, showWarning, showInfo, showPromise } from '@/components/ui';
+import {
+  showSuccess,
+  showError,
+  showWarning,
+  showInfo,
+  showPromise,
+} from "@/components/ui";
 
 // Success
-showSuccess('Case created successfully!');
+showSuccess("Case created successfully!");
 
 // Error with action
-showError('Failed to delete case', {
+showError("Failed to delete case", {
   action: {
-    label: 'Retry',
-    onClick: () => retryDelete()
-  }
+    label: "Retry",
+    onClick: () => retryDelete(),
+  },
 });
 
 // Warning
-showWarning('You have unsaved changes');
+showWarning("You have unsaved changes");
 
 // Info with custom title
-showInfo('New update available', {
-  title: 'Update Available'
+showInfo("New update available", {
+  title: "Update Available",
 });
 
 // Promise (async operation)
-showPromise(
-  saveCase(),
-  {
-    loading: 'Saving case...',
-    success: 'Case saved successfully!',
-    error: 'Failed to save case'
-  }
-);
+showPromise(saveCase(), {
+  loading: "Saving case...",
+  success: "Case saved successfully!",
+  error: "Failed to save case",
+});
 ```
 
 #### Features
@@ -365,11 +376,11 @@ Loading skeleton with shimmer animation.
 
 ```typescript
 interface SkeletonProps {
-  variant?: 'text' | 'circular' | 'rectangular' | 'rounded';
+  variant?: "text" | "circular" | "rectangular" | "rounded";
   width?: string | number;
   height?: string | number;
   count?: number;
-  animation?: 'pulse' | 'shimmer' | 'none';
+  animation?: "pulse" | "shimmer" | "none";
 }
 ```
 
@@ -451,9 +462,9 @@ interface CommandItem {
 #### Examples
 
 ```tsx
-import { CommandPalette, useCommandPalette } from '@/components/ui';
-import { Plus, Briefcase, FileText, Settings } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { CommandPalette, useCommandPalette } from "@/components/ui";
+import { Plus, Briefcase, FileText, Settings } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 function MyComponent() {
   const navigate = useNavigate();
@@ -461,46 +472,44 @@ function MyComponent() {
 
   const items: CommandItem[] = [
     {
-      id: 'new-case',
-      label: 'Create New Case',
-      description: 'Start a new legal case',
+      id: "new-case",
+      label: "Create New Case",
+      description: "Start a new legal case",
       icon: <Plus />,
-      group: 'Actions',
-      shortcut: 'Ctrl+N',
-      keywords: ['create', 'new', 'add'],
-      onSelect: () => navigate('/cases/new')
+      group: "Actions",
+      shortcut: "Ctrl+N",
+      keywords: ["create", "new", "add"],
+      onSelect: () => navigate("/cases/new"),
     },
     {
-      id: 'view-cases',
-      label: 'View Cases',
-      description: 'Browse all cases',
+      id: "view-cases",
+      label: "View Cases",
+      description: "Browse all cases",
       icon: <Briefcase />,
-      group: 'Navigation',
-      onSelect: () => navigate('/cases')
+      group: "Navigation",
+      onSelect: () => navigate("/cases"),
     },
     {
-      id: 'documents',
-      label: 'Documents',
-      description: 'Manage documents',
+      id: "documents",
+      label: "Documents",
+      description: "Manage documents",
       icon: <FileText />,
-      group: 'Navigation',
-      onSelect: () => navigate('/documents')
+      group: "Navigation",
+      onSelect: () => navigate("/documents"),
     },
     {
-      id: 'settings',
-      label: 'Settings',
-      description: 'App settings',
+      id: "settings",
+      label: "Settings",
+      description: "App settings",
       icon: <Settings />,
-      group: 'Navigation',
-      onSelect: () => navigate('/settings')
-    }
+      group: "Navigation",
+      onSelect: () => navigate("/settings"),
+    },
   ];
 
   return (
     <>
-      <button onClick={() => setOpen(true)}>
-        Open Command Palette
-      </button>
+      <button onClick={() => setOpen(true)}>Open Command Palette</button>
       <CommandPalette
         items={items}
         open={open}
@@ -532,10 +541,10 @@ function MyComponent() {
 
 ```tsx
 // Named imports (recommended)
-import { Button, Badge, Card } from '@/components/ui';
+import { Button, Badge, Card } from "@/components/ui";
 
 // Individual imports
-import { Button } from '@/components/ui/Button';
+import { Button } from "@/components/ui/Button";
 ```
 
 ### Accessibility
@@ -570,8 +579,8 @@ All components follow WCAG 2.1 AA guidelines:
 ### Login Form
 
 ```tsx
-import { Button, Card, CardHeader } from '@/components/ui';
-import { showError, showSuccess } from '@/components/ui';
+import { Button, Card, CardHeader } from "@/components/ui";
+import { showError, showSuccess } from "@/components/ui";
 
 function LoginForm() {
   const [loading, setLoading] = useState(false);
@@ -582,9 +591,9 @@ function LoginForm() {
 
     try {
       await login();
-      showSuccess('Login successful!');
+      showSuccess("Login successful!");
     } catch (error) {
-      showError('Login failed. Please try again.');
+      showError("Login failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -592,10 +601,7 @@ function LoginForm() {
 
   return (
     <Card variant="glass" className="max-w-md mx-auto">
-      <CardHeader
-        title="Welcome Back"
-        description="Sign in to your account"
-      />
+      <CardHeader title="Welcome Back" description="Sign in to your account" />
       <form onSubmit={handleSubmit} className="space-y-4">
         <input type="email" placeholder="Email" className="..." />
         <input type="password" placeholder="Password" className="..." />
@@ -611,8 +617,8 @@ function LoginForm() {
 ### Dashboard Stats
 
 ```tsx
-import { Card, CardHeader, Badge } from '@/components/ui';
-import { TrendingUp, TrendingDown } from 'lucide-react';
+import { Card, CardHeader, Badge } from "@/components/ui";
+import { TrendingUp, TrendingDown } from "lucide-react";
 
 function StatsCard({ title, value, change, trend }) {
   return (
@@ -621,8 +627,8 @@ function StatsCard({ title, value, change, trend }) {
       <div className="flex items-baseline gap-2">
         <span className="text-3xl font-bold text-white">{value}</span>
         <Badge
-          variant={trend === 'up' ? 'success' : 'danger'}
-          icon={trend === 'up' ? <TrendingUp /> : <TrendingDown />}
+          variant={trend === "up" ? "success" : "danger"}
+          icon={trend === "up" ? <TrendingUp /> : <TrendingDown />}
           size="sm"
         >
           {change}%
@@ -636,7 +642,7 @@ function StatsCard({ title, value, change, trend }) {
 ### Loading State
 
 ```tsx
-import { SkeletonCard } from '@/components/ui';
+import { SkeletonCard } from "@/components/ui";
 
 function CasesList() {
   const { data, isLoading } = useCases();
@@ -653,7 +659,7 @@ function CasesList() {
 
   return (
     <div className="grid grid-cols-3 gap-6">
-      {data.map(caseItem => (
+      {data.map((caseItem) => (
         <CaseCard key={caseItem.id} caseItem={caseItem} />
       ))}
     </div>
@@ -704,11 +710,11 @@ function CasesList() {
 
 ```tsx
 // Before
-alert('Case deleted successfully');
+alert("Case deleted successfully");
 
 // After
-import { showSuccess } from '@/components/ui';
-showSuccess('Case deleted successfully');
+import { showSuccess } from "@/components/ui";
+showSuccess("Case deleted successfully");
 ```
 
 ---

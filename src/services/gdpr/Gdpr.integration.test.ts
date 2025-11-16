@@ -45,18 +45,18 @@ describe("GDPR Integration Tests", () => {
     // Create test user
     const result = db
       .prepare(
-        `INSERT INTO users (username, email, password_hash, password_salt) VALUES (?, ?, ?, ?)`
+        `INSERT INTO users (username, email, password_hash, password_salt) VALUES (?, ?, ?, ?)`,
       )
       .run("testuser", "test@example.com", "hashedpassword", "saltsaltsalt");
     testUserId = result.lastInsertRowid as number;
 
     // Create consent records
     db.prepare(
-      `INSERT INTO consents (user_id, consent_type, granted, version) VALUES (?, ?, ?, ?)`
+      `INSERT INTO consents (user_id, consent_type, granted, version) VALUES (?, ?, ?, ?)`,
     ).run(testUserId, "data_processing", 1, "1.0");
 
     db.prepare(
-      `INSERT INTO consents (user_id, consent_type, granted, version) VALUES (?, ?, ?, ?)`
+      `INSERT INTO consents (user_id, consent_type, granted, version) VALUES (?, ?, ?, ?)`,
     ).run(testUserId, "ai_processing", 1, "1.0");
   });
 
@@ -92,15 +92,15 @@ describe("GDPR Integration Tests", () => {
     it("should export user data with decryption of encrypted fields", async () => {
       // Create case with encrypted description
       const encryptedDescription = encryptionService.encrypt(
-        "Sensitive legal case details"
+        "Sensitive legal case details",
       );
       db.prepare(
-        `INSERT INTO cases (user_id, title, description, case_type) VALUES (?, ?, ?, ?)`
+        `INSERT INTO cases (user_id, title, description, case_type) VALUES (?, ?, ?, ?)`,
       ).run(
         testUserId,
         "Test Case",
         JSON.stringify(encryptedDescription),
-        "employment"
+        "employment",
       );
 
       // Export data
@@ -126,31 +126,31 @@ describe("GDPR Integration Tests", () => {
       // Create data in multiple tables
       const caseResult = db
         .prepare(
-          `INSERT INTO cases (user_id, title, case_type) VALUES (?, ?, ?)`
+          `INSERT INTO cases (user_id, title, case_type) VALUES (?, ?, ?)`,
         )
         .run(testUserId, "Case 1", "employment");
       const caseId = caseResult.lastInsertRowid as number;
 
       db.prepare(
-        `INSERT INTO evidence (case_id, user_id, title, evidence_type, content) VALUES (?, ?, ?, ?, ?)`
+        `INSERT INTO evidence (case_id, user_id, title, evidence_type, content) VALUES (?, ?, ?, ?, ?)`,
       ).run(
         caseId,
         testUserId,
         "Evidence 1",
         "document",
-        "Evidence content placeholder"
+        "Evidence content placeholder",
       );
 
       db.prepare(
-        `INSERT INTO chat_conversations (user_id, case_id, title) VALUES (?, ?, ?)`
+        `INSERT INTO chat_conversations (user_id, case_id, title) VALUES (?, ?, ?)`,
       ).run(testUserId, caseId, "Chat 1");
 
       db.prepare(
-        `INSERT INTO user_facts (case_id, user_id, fact_content, fact_type) VALUES (?, ?, ?, ?)`
+        `INSERT INTO user_facts (case_id, user_id, fact_content, fact_type) VALUES (?, ?, ?, ?)`,
       ).run(caseId, testUserId, "Fact 1", "personal");
 
       db.prepare(
-        `INSERT INTO sessions (id, user_id, expires_at) VALUES (?, ?, ?)`
+        `INSERT INTO sessions (id, user_id, expires_at) VALUES (?, ?, ?)`,
       ).run("session123", testUserId, "2025-12-31");
 
       // Export
@@ -199,61 +199,61 @@ describe("GDPR Integration Tests", () => {
       // Create complex data structure
       const caseResult = db
         .prepare(
-          `INSERT INTO cases (user_id, title, case_type) VALUES (?, ?, ?)`
+          `INSERT INTO cases (user_id, title, case_type) VALUES (?, ?, ?)`,
         )
         .run(testUserId, "Test Case", "employment");
       const caseId = caseResult.lastInsertRowid as number;
 
       const evidenceResult = db
         .prepare(
-          `INSERT INTO evidence (case_id, user_id, title, evidence_type, content) VALUES (?, ?, ?, ?, ?)`
+          `INSERT INTO evidence (case_id, user_id, title, evidence_type, content) VALUES (?, ?, ?, ?, ?)`,
         )
         .run(
           caseId,
           testUserId,
           "Evidence 1",
           "document",
-          "Evidence content placeholder"
+          "Evidence content placeholder",
         );
       const evidenceId = evidenceResult.lastInsertRowid as number;
 
       const timelineResult = db
         .prepare(
-          `INSERT INTO timeline_events (case_id, user_id, event_date, title) VALUES (?, ?, ?, ?)`
+          `INSERT INTO timeline_events (case_id, user_id, event_date, title) VALUES (?, ?, ?, ?)`,
         )
         .run(caseId, testUserId, "2025-01-15", "Timeline Event 1");
       const timelineId = timelineResult.lastInsertRowid as number;
 
       db.prepare(
-        `INSERT INTO event_evidence (event_id, evidence_id) VALUES (?, ?)`
+        `INSERT INTO event_evidence (event_id, evidence_id) VALUES (?, ?)`,
       ).run(timelineId, evidenceId);
 
       db.prepare(
-        `INSERT INTO legal_issues (case_id, user_id, title) VALUES (?, ?, ?)`
+        `INSERT INTO legal_issues (case_id, user_id, title) VALUES (?, ?, ?)`,
       ).run(caseId, testUserId, "Employment Issue");
 
       db.prepare(
-        `INSERT INTO actions (case_id, title, description) VALUES (?, ?, ?)`
+        `INSERT INTO actions (case_id, title, description) VALUES (?, ?, ?)`,
       ).run(caseId, "File complaint", "File employment complaint");
 
       db.prepare(
-        `INSERT INTO notes (case_id, user_id, content) VALUES (?, ?, ?)`
+        `INSERT INTO notes (case_id, user_id, content) VALUES (?, ?, ?)`,
       ).run(caseId, testUserId, "Important note");
 
       db.prepare(
-        `INSERT INTO case_facts (case_id, user_id, fact_content, fact_category) VALUES (?, ?, ?, ?)`
+        `INSERT INTO case_facts (case_id, user_id, fact_content, fact_category) VALUES (?, ?, ?, ?)`,
       ).run(caseId, testUserId, "Key fact", "evidence");
 
       db.prepare(
-        `INSERT INTO chat_conversations (user_id, case_id, title) VALUES (?, ?, ?)`
+        `INSERT INTO chat_conversations (user_id, case_id, title) VALUES (?, ?, ?)`,
       ).run(testUserId, caseId, "Chat");
 
       db.prepare(
-        `INSERT INTO user_facts (case_id, user_id, fact_content, fact_type) VALUES (?, ?, ?, ?)`
+        `INSERT INTO user_facts (case_id, user_id, fact_content, fact_type) VALUES (?, ?, ?, ?)`,
       ).run(caseId, testUserId, "User fact", "personal");
 
       db.prepare(
-        `INSERT INTO sessions (id, user_id, expires_at) VALUES (?, ?, ?)`
+        `INSERT INTO sessions (id, user_id, expires_at) VALUES (?, ?, ?)`,
       ).run("session123", testUserId, "2025-12-31");
 
       // Create audit log (should be preserved) - use auditLogger
@@ -304,7 +304,7 @@ describe("GDPR Integration Tests", () => {
 
     it("should require explicit confirmation", async () => {
       await expect(
-        gdprService.deleteUserData(testUserId, { confirmed: false })
+        gdprService.deleteUserData(testUserId, { confirmed: false }),
       ).rejects.toThrow("explicit confirmation");
     });
 
@@ -321,7 +321,7 @@ describe("GDPR Integration Tests", () => {
     it("should respect foreign key constraints", async () => {
       // Should not throw (foreign keys are properly ordered)
       await expect(
-        gdprService.deleteUserData(testUserId, { confirmed: true })
+        gdprService.deleteUserData(testUserId, { confirmed: true }),
       ).resolves.toBeDefined();
     });
 
@@ -338,7 +338,7 @@ describe("GDPR Integration Tests", () => {
 
       expect(logs.length).toBeGreaterThan(0);
       const deletionLog = logs.find(
-        (log) => log.user_id === testUserId.toString()
+        (log) => log.user_id === testUserId.toString(),
       );
       expect(deletionLog).toBeDefined();
       expect(deletionLog.success).toBe(1);
@@ -354,7 +354,7 @@ describe("GDPR Integration Tests", () => {
 
       // 6th should fail
       await expect(gdprService.exportUserData(testUserId)).rejects.toThrow(
-        "Rate limit exceeded"
+        "Rate limit exceeded",
       );
     });
 
@@ -365,13 +365,13 @@ describe("GDPR Integration Tests", () => {
       // Create new user for second deletion attempt
       const newUserResult = db
         .prepare(
-          `INSERT INTO users (username, email, password_hash, password_salt) VALUES (?, ?, ?, ?)`
+          `INSERT INTO users (username, email, password_hash, password_salt) VALUES (?, ?, ?, ?)`,
         )
         .run("newuser", "new@example.com", "hash", "salt");
       const newUserId = newUserResult.lastInsertRowid as number;
 
       db.prepare(
-        `INSERT INTO consents (user_id, consent_type, granted, version) VALUES (?, ?, ?, ?)`
+        `INSERT INTO consents (user_id, consent_type, granted, version) VALUES (?, ?, ?, ?)`,
       ).run(newUserId, "data_processing", 1, "1.0");
 
       // Second deletion should fail (same user ID tracking)
@@ -386,7 +386,7 @@ describe("GDPR Integration Tests", () => {
 
       // Delete should still work (different rate limit)
       await expect(
-        gdprService.deleteUserData(testUserId, { confirmed: true })
+        gdprService.deleteUserData(testUserId, { confirmed: true }),
       ).resolves.toBeDefined();
     });
   });
@@ -395,22 +395,22 @@ describe("GDPR Integration Tests", () => {
     it("should require data_processing consent for export", async () => {
       // Remove consent
       db.prepare(`DELETE FROM consents WHERE consent_type = ?`).run(
-        "data_processing"
+        "data_processing",
       );
 
       await expect(gdprService.exportUserData(testUserId)).rejects.toThrow(
-        "consent"
+        "consent",
       );
     });
 
     it("should require data_processing consent for delete", async () => {
       // Remove consent
       db.prepare(`DELETE FROM consents WHERE consent_type = ?`).run(
-        "data_processing"
+        "data_processing",
       );
 
       await expect(
-        gdprService.deleteUserData(testUserId, { confirmed: true })
+        gdprService.deleteUserData(testUserId, { confirmed: true }),
       ).rejects.toThrow("consent");
     });
   });

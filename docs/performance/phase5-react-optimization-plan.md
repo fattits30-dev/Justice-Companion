@@ -122,7 +122,7 @@ className="px-5 py-2.5 bg-pink-700 text-white rounded font-bold text-sm transiti
 - Hover states → `hover:bg-pink-800` (CSS, no JS!)
 
 **Timeline-Specific Classes**:
-- Vertical line: `absolute left-4 top-0 bottom-0 w-0.5 bg-gradient-to-b from-pink-700 to-pink-500`
+- Vertical line: `absolute left-4 top-0 bottom-0 w-0.5 bg-linear-to-b from-pink-700 to-pink-500`
 - Timeline dot: `absolute -left-8 top-2 w-4 h-4 rounded-full bg-pink-700 border-4 border-white shadow-[0_0_0_3px_#c2185b]`
 
 **Testing**:

@@ -38,7 +38,7 @@ export interface ValidationSchemas {
 export class ValidationDecorator<T> extends RepositoryDecorator<T> {
   constructor(
     repository: T,
-    private schemas: ValidationSchemas = {}
+    private schemas: ValidationSchemas = {},
   ) {
     super(repository);
   }
@@ -49,7 +49,7 @@ export class ValidationDecorator<T> extends RepositoryDecorator<T> {
   async create(
     input: ValidationSchemas["create"] extends z.ZodSchema
       ? z.infer<ValidationSchemas["create"]>
-      : any
+      : any,
   ): Promise<
     ValidationSchemas["create"] extends z.ZodSchema
       ? z.infer<ValidationSchemas["create"]>
@@ -68,7 +68,7 @@ export class ValidationDecorator<T> extends RepositoryDecorator<T> {
   async createBatch(
     items: ValidationSchemas["create"] extends z.ZodSchema
       ? z.infer<ValidationSchemas["create"]>[]
-      : unknown[]
+      : unknown[],
   ): Promise<
     ValidationSchemas["create"] extends z.ZodSchema
       ? z.infer<ValidationSchemas["create"]>[]
@@ -81,7 +81,7 @@ export class ValidationDecorator<T> extends RepositoryDecorator<T> {
         const validated = this.validate(
           this.schemas.create,
           items[i],
-          `createBatch[${i}]`
+          `createBatch[${i}]`,
         );
         validatedItems.push(validated);
       } else {
@@ -106,7 +106,7 @@ export class ValidationDecorator<T> extends RepositoryDecorator<T> {
     id: number,
     input: ValidationSchemas["update"] extends z.ZodSchema
       ? z.infer<ValidationSchemas["update"]>
-      : any
+      : any,
   ): Promise<
     ValidationSchemas["update"] extends z.ZodSchema
       ? z.infer<ValidationSchemas["update"]>
@@ -126,7 +126,7 @@ export class ValidationDecorator<T> extends RepositoryDecorator<T> {
    * Validate ID and find entity
    */
   async findById(
-    id: number
+    id: number,
   ): Promise<
     ValidationSchemas["findById"] extends z.ZodSchema
       ? z.infer<ValidationSchemas["findById"]>
@@ -145,7 +145,7 @@ export class ValidationDecorator<T> extends RepositoryDecorator<T> {
    * Validate user ID and find entities
    */
   async findByUserId(
-    userId: number
+    userId: number,
   ): Promise<
     ValidationSchemas["findByUserId"] extends z.ZodSchema
       ? z.infer<ValidationSchemas["findByUserId"]>
@@ -212,7 +212,7 @@ export class ValidationDecorator<T> extends RepositoryDecorator<T> {
   private validate<T extends z.ZodSchema>(
     schema: T,
     input: z.infer<T>,
-    operation: string
+    operation: string,
   ): z.infer<T> {
     try {
       return schema.parse(input);
@@ -227,14 +227,14 @@ export class ValidationDecorator<T> extends RepositoryDecorator<T> {
         throw new ValidationError(
           operation,
           `Validation failed: ${error.issues.map((i) => i.message).join(", ")}`,
-          validationErrors
+          validationErrors,
         );
       }
 
       // Fallback for non-Zod errors
       throw new ValidationError(
         operation,
-        `Validation failed: ${(error as Error).message}`
+        `Validation failed: ${(error as Error).message}`,
       );
     }
   }

@@ -59,7 +59,7 @@ class MockRepository {
     }
     if (id === 777) {
       throw new Error(
-        "FOREIGN KEY constraint failed: referenced by other records"
+        "FOREIGN KEY constraint failed: referenced by other records",
       );
     }
     return true;
@@ -85,7 +85,7 @@ describe("ErrorHandlingDecorator", () => {
 
     it("should throw NotFoundError when update returns false", async () => {
       await expect(decorator.update(999, { name: "Test" })).rejects.toThrow(
-        NotFoundError
+        NotFoundError,
       );
     });
 
@@ -180,7 +180,7 @@ describe("ErrorHandlingDecorator", () => {
   describe("Generic errors", () => {
     it("should wrap unknown errors as RepositoryError", async () => {
       vi.spyOn(mockRepository, "findById").mockRejectedValueOnce(
-        new Error("Unknown error")
+        new Error("Unknown error"),
       );
 
       try {
@@ -249,7 +249,7 @@ describe("ErrorHandlingDecorator", () => {
       });
 
       vi.spyOn(mockRepository, "findById").mockRejectedValueOnce(
-        new Error("Test error")
+        new Error("Test error"),
       );
 
       try {

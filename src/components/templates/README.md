@@ -15,10 +15,12 @@ The Case Templates system allows users to quickly create new cases using pre-con
 **Migration:** `src/db/migrations/020_create_templates_system.sql`
 
 Two tables:
+
 - `case_templates` - Stores template definitions (system + user-created)
 - `template_usage` - Tracks template usage and success rates
 
 **Key Features:**
+
 - System templates (built-in, immutable)
 - User templates (custom, editable)
 - JSON fields for flexible template data
@@ -29,6 +31,7 @@ Two tables:
 **Models:** `src/models/CaseTemplate.ts`
 
 Core types:
+
 - `CaseTemplate` - Main template entity
 - `TemplateFields` - Case pre-fill data
 - `TimelineMilestone` - Deadline templates
@@ -38,6 +41,7 @@ Core types:
 **Repository:** `src/repositories/TemplateRepository.ts`
 
 Extends `BaseRepository` with:
+
 - `findAllTemplates(userId)` - Get all visible templates
 - `findWithFilters(filters)` - Advanced search
 - `create()` / `createSystemTemplate()` - Template creation
@@ -50,6 +54,7 @@ Extends `BaseRepository` with:
 **Service:** `src/services/TemplateService.ts`
 
 Orchestrates template operations:
+
 - CRUD operations with authorization
 - Template application to cases
 - Automatic deadline creation from milestones
@@ -58,6 +63,7 @@ Orchestrates template operations:
 **Seeder:** `src/services/TemplateSeeder.ts`
 
 Seeds 8 built-in templates:
+
 1. **Civil Litigation - Contract Dispute**
 2. **Personal Injury Claim**
 3. **Employment Tribunal**
@@ -72,6 +78,7 @@ Seeds 8 built-in templates:
 **Handlers:** `electron/ipc-handlers/templates.ts`
 
 13 IPC handlers:
+
 - `templates:get-all` - List all templates
 - `templates:get-all-with-stats` - List with usage stats
 - `templates:get-by-id` - Get single template
@@ -110,12 +117,14 @@ TypeScript interface: `window.justiceAPI.templates.*`
    - Create custom template button
 
 **Pending Components:**
+
 - `TemplateBuilderDialog` - Multi-step wizard for creating templates
 - `TemplatePreviewDialog` - Detailed template preview with timeline visualization
 
 ## Built-In Templates
 
 ### 1. Civil Litigation - Contract Dispute
+
 **Category:** Civil
 **Case Type:** Consumer
 **Milestones:** 4 (Letter Before Claim → Court Filing)
@@ -123,12 +132,14 @@ TypeScript interface: `window.justiceAPI.templates.*`
 **Evidence:** Contract docs, correspondence, invoices, witness statements
 
 **Timeline:**
+
 - Day 7: Letter Before Claim
 - Day 21: Defendant Response Deadline
 - Day 30: Prepare Claim Form (N1)
 - Day 45: File Court Claim
 
 ### 2. Personal Injury Claim
+
 **Category:** Civil
 **Case Type:** Other
 **Milestones:** 4 (Medical Records → Tribunal Hearing)
@@ -136,12 +147,14 @@ TypeScript interface: `window.justiceAPI.templates.*`
 **Evidence:** Medical records, accident reports, photos, witness statements
 
 **Timeline:**
+
 - Day 7: Obtain medical records
 - Day 14: Instruct medical expert
 - Day 30: Send Letter of Claim
 - Day 51: Defendant Response
 
 ### 3. Employment Tribunal
+
 **Category:** Employment
 **Case Type:** Employment
 **Milestones:** 4 (ACAS Conciliation → Employer Response)
@@ -149,12 +162,14 @@ TypeScript interface: `window.justiceAPI.templates.*`
 **Evidence:** Employment contract, payslips, emails, disciplinary records
 
 **Timeline:**
+
 - Day 7: Submit ACAS Early Conciliation
 - Day 37: Obtain ACAS Certificate
 - Day 44: File ET1 Form (strict deadline)
 - Day 72: Employer Response (ET3)
 
 ### 4. Housing Possession Defense
+
 **Category:** Housing
 **Case Type:** Housing
 **Milestones:** 4 (File Defense → First Hearing)
@@ -162,12 +177,14 @@ TypeScript interface: `window.justiceAPI.templates.*`
 **Evidence:** Tenancy agreement, rent records, Section 21/8 notice, deposit cert
 
 **Timeline:**
+
 - Day 1: Obtain legal advice (URGENT)
 - Day 3: Check deposit protection
 - Day 7: File Defense Form
 - Day 42: First Hearing
 
 ### 5. Family Court - Divorce
+
 **Category:** Family
 **Case Type:** Family
 **Milestones:** 4 (Application → Final Order)
@@ -175,12 +192,14 @@ TypeScript interface: `window.justiceAPI.templates.*`
 **Evidence:** Marriage certificate, Form E, valuations, pension statements
 
 **Timeline:**
+
 - Day 7: Submit Online Divorce Application
 - Day 21: Serve Respondent
 - Day 140: Conditional Order (20-week reflection)
 - Day 182: Final Order (6 weeks + 1 day)
 
 ### 6. Immigration Appeal
+
 **Category:** Immigration
 **Case Type:** Other
 **Milestones:** 4 (File Appeal → Tribunal Hearing)
@@ -188,12 +207,14 @@ TypeScript interface: `window.justiceAPI.templates.*`
 **Evidence:** Home Office letter, passport, sponsor docs, country reports
 
 **Timeline:**
+
 - Day 7: File Notice of Appeal (14-day deadline)
 - Day 28: Home Office Review
 - Day 42: Submit Skeleton Argument
 - Day 120: Tribunal Hearing
 
 ### 7. Landlord-Tenant Dispute
+
 **Category:** Housing
 **Case Type:** Housing
 **Milestones:** 4 (Raise Issue → County Court Claim)
@@ -201,12 +222,14 @@ TypeScript interface: `window.justiceAPI.templates.*`
 **Evidence:** Tenancy agreement, inventory, photos, repair requests
 
 **Timeline:**
+
 - Day 3: Raise issue with landlord
 - Day 21: Landlord Response Period
 - Day 30: Initiate Deposit Scheme ADR
 - Day 60: Submit County Court Claim
 
 ### 8. Debt Recovery
+
 **Category:** Civil
 **Case Type:** Debt
 **Milestones:** 4 (Letter Before Action → Debtor Defense Deadline)
@@ -214,6 +237,7 @@ TypeScript interface: `window.justiceAPI.templates.*`
 **Evidence:** Invoice/loan agreement, proof of delivery, payment reminders
 
 **Timeline:**
+
 - Day 7: Send Letter Before Action
 - Day 21: Debtor Payment Deadline
 - Day 28: Issue County Court Claim (MCOL)
@@ -224,6 +248,7 @@ TypeScript interface: `window.justiceAPI.templates.*`
 ### For Users
 
 **1. Browse Templates:**
+
 ```typescript
 // Open template library
 <TemplateLibrary
@@ -236,43 +261,45 @@ TypeScript interface: `window.justiceAPI.templates.*`
 ```
 
 **2. Apply Template to Case:**
+
 ```typescript
 const response = await window.justiceAPI.templates.apply(templateId, sessionId);
 
 if (response.success) {
-  console.log('Case created:', response.data.case);
-  console.log('Milestones created:', response.data.appliedMilestones);
-  console.log('Checklist:', response.data.appliedChecklistItems);
+  console.log("Case created:", response.data.case);
+  console.log("Milestones created:", response.data.appliedMilestones);
+  console.log("Checklist:", response.data.appliedChecklistItems);
 }
 ```
 
 **3. Create Custom Template:**
+
 ```typescript
 const input: CreateTemplateInput = {
-  name: 'My Custom Template',
-  category: 'civil',
+  name: "My Custom Template",
+  category: "civil",
   templateFields: {
-    titleTemplate: '[Client] - Custom Case',
-    descriptionTemplate: 'Description...',
-    caseType: 'consumer',
-    defaultStatus: 'active',
+    titleTemplate: "[Client] - Custom Case",
+    descriptionTemplate: "Description...",
+    caseType: "consumer",
+    defaultStatus: "active",
   },
-  suggestedEvidenceTypes: ['Custom evidence'],
+  suggestedEvidenceTypes: ["Custom evidence"],
   timelineMilestones: [
     {
-      title: 'Key Date',
-      description: 'Important milestone',
+      title: "Key Date",
+      description: "Important milestone",
       daysFromStart: 30,
       isRequired: true,
-      category: 'deadline',
+      category: "deadline",
     },
   ],
   checklistItems: [
     {
-      title: 'Task 1',
-      description: 'Complete this task',
-      category: 'research',
-      priority: 'high',
+      title: "Task 1",
+      description: "Complete this task",
+      category: "research",
+      priority: "high",
     },
   ],
 };
@@ -283,6 +310,7 @@ const response = await window.justiceAPI.templates.create(input, sessionId);
 ### For Developers
 
 **1. Seed Built-In Templates:**
+
 ```bash
 # Via IPC handler
 await window.justiceAPI.templates.seedDefaults();
@@ -291,6 +319,7 @@ await window.justiceAPI.templates.seedDefaults();
 **2. Add New System Template:**
 
 Edit `src/services/TemplateSeeder.ts`:
+
 ```typescript
 private newTemplate(): CreateTemplateInput {
   return {
@@ -314,12 +343,13 @@ private getBuiltInTemplates(): CreateTemplateInput[] {
 ```
 
 **3. Query Templates:**
+
 ```typescript
 // Search with filters
 const response = await window.justiceAPI.templates.search({
-  category: 'housing',
+  category: "housing",
   isSystemTemplate: true,
-  searchQuery: 'possession',
+  searchQuery: "possession",
 });
 
 // Get popular templates
@@ -400,6 +430,7 @@ idx_usage_user
 ### Unit Tests (Pending)
 
 **TemplateService Tests:** `src/services/TemplateService.test.ts`
+
 - ✓ Create template with validation
 - ✓ Update template with authorization
 - ✓ Delete template (only owner)
@@ -408,6 +439,7 @@ idx_usage_user
 - ✓ Search/filter templates
 
 **TemplateRepository Tests:** `src/repositories/TemplateRepository.test.ts`
+
 - ✓ CRUD operations
 - ✓ Filter by category
 - ✓ System vs user templates
@@ -415,12 +447,14 @@ idx_usage_user
 - ✓ Statistics calculation
 
 **UI Component Tests:**
+
 - `TemplateCard.test.tsx` - Card rendering and interactions
 - `TemplateLibrary.test.tsx` - Search, filters, view modes
 
 ### Integration Tests
 
 Run migration and seed:
+
 ```bash
 pnpm db:migrate
 # Then seed via IPC or direct call
@@ -482,6 +516,7 @@ electron/
 ## Support
 
 For questions or issues:
+
 - Check CLAUDE.md for project architecture
 - Review existing templates in `TemplateSeeder.ts`
 - Test with seed command: `templates:seed-defaults`
@@ -489,6 +524,7 @@ For questions or issues:
 ---
 
 **Implementation Status:**
+
 - ✅ Database migration
 - ✅ Models and types
 - ✅ Repository layer

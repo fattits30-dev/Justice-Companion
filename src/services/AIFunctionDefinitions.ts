@@ -117,7 +117,7 @@ const createCaseFunction = defineChatSessionFunction({
       throw new Error(
         !response.success
           ? response.error?.message || "Unknown error"
-          : "Failed to create case"
+          : "Failed to create case",
       );
     }
   },
@@ -145,7 +145,7 @@ const getCaseFunction = defineChatSessionFunction({
 
     const response = await window.justiceAPI.getCaseById(
       params.caseId.toString(),
-      sessionId
+      sessionId,
     );
 
     if (response.success) {
@@ -173,7 +173,7 @@ const getCaseFunction = defineChatSessionFunction({
       throw new Error(
         !response.success
           ? response.error?.message || "Unknown error"
-          : "Failed to retrieve case"
+          : "Failed to retrieve case",
       );
     }
   },
@@ -227,7 +227,7 @@ const listCasesFunction = defineChatSessionFunction({
       throw new Error(
         !response.success
           ? response.error?.message || "Unknown error"
-          : "Failed to list cases"
+          : "Failed to list cases",
       );
     }
   },
@@ -295,7 +295,7 @@ const updateCaseFunction = defineChatSessionFunction({
     const response = await window.justiceAPI.updateCase(
       params.caseId.toString(),
       input,
-      sessionId
+      sessionId,
     );
 
     if (response.success) {
@@ -371,7 +371,7 @@ const createEvidenceFunction = defineChatSessionFunction({
     required: ["caseId", "title", "evidenceType"],
   },
   handler: async (
-    params: CreateEvidenceParams
+    params: CreateEvidenceParams,
   ): Promise<CreateEvidenceResult> => {
     // Note: sessionId would be needed here once createEvidence IPC is implemented
     // const sessionId = getSessionId();
@@ -400,7 +400,7 @@ const createEvidenceFunction = defineChatSessionFunction({
     // Note: createEvidence IPC method needs to be implemented
     // For now, we'll use a workaround or throw a descriptive error
     throw new Error(
-      "createEvidence IPC method not yet implemented. Use uploadFile instead."
+      "createEvidence IPC method not yet implemented. Use uploadFile instead.",
     );
   },
 });
@@ -427,7 +427,7 @@ const listEvidenceFunction = defineChatSessionFunction({
 
     const response = await window.justiceAPI.getEvidenceByCaseId(
       params.caseId.toString(),
-      sessionId
+      sessionId,
     );
 
     if (response.success && response.data) {
@@ -449,7 +449,7 @@ const listEvidenceFunction = defineChatSessionFunction({
       throw new Error(
         !response.success
           ? response.error?.message || "Unknown error"
-          : "Failed to list evidence"
+          : "Failed to list evidence",
       );
     }
   },
@@ -492,7 +492,7 @@ const storeCaseFactFunction = defineChatSessionFunction({
     required: ["caseId", "factContent", "factCategory"],
   },
   handler: async (
-    params: StoreCaseFactParams
+    params: StoreCaseFactParams,
   ): Promise<StoreCaseFactResult> => {
     const sessionId = getSessionId();
 
@@ -505,7 +505,7 @@ const storeCaseFactFunction = defineChatSessionFunction({
         importance:
           (params.importance as FactImportance | undefined) ?? "medium",
       },
-      sessionId
+      sessionId,
     );
 
     if (response.success && response.data) {
@@ -518,7 +518,7 @@ const storeCaseFactFunction = defineChatSessionFunction({
       throw new Error(
         !response.success
           ? response.error?.message || "Unknown error"
-          : "Failed to store fact"
+          : "Failed to store fact",
       );
     }
   },
@@ -547,7 +547,7 @@ const getCaseFactsFunction = defineChatSessionFunction({
 
     const response = await window.justiceAPI.getCaseFacts(
       params.caseId,
-      sessionId
+      sessionId,
     );
 
     if (response.success && response.data) {
@@ -566,7 +566,7 @@ const getCaseFactsFunction = defineChatSessionFunction({
       throw new Error(
         !response.success
           ? response.error?.message || "Unknown error"
-          : "Failed to get facts"
+          : "Failed to get facts",
       );
     }
   },
@@ -588,7 +588,7 @@ const searchLegislationFunction = defineChatSessionFunction({
     required: ["query"],
   },
   handler: async (
-    params: SearchLegislationParams
+    params: SearchLegislationParams,
   ): Promise<SearchLegislationResult> => {
     const { legalAPIService } = await import("./LegalAPIService.js");
     const keywords = await legalAPIService.extractKeywords(params.query);
@@ -630,7 +630,7 @@ const searchCaseLawFunction = defineChatSessionFunction({
     required: ["query"],
   },
   handler: async (
-    params: SearchCaseLawParams
+    params: SearchCaseLawParams,
   ): Promise<SearchCaseLawResult> => {
     const { legalAPIService } = await import("./LegalAPIService.js");
     const keywords = await legalAPIService.extractKeywords(params.query);
@@ -659,7 +659,7 @@ const classifyQuestionFunction = defineChatSessionFunction({
     required: ["question"],
   },
   handler: async (
-    params: ClassifyQuestionParams
+    params: ClassifyQuestionParams,
   ): Promise<ClassifyQuestionResult> => {
     const { legalAPIService } = await import("./LegalAPIService.js");
     const category = legalAPIService.classifyQuestion(params.question);

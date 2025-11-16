@@ -23,13 +23,13 @@ describe("LegalAPIService", () => {
       expect(
         allKeywordsStr.includes("fired") ||
           allKeywordsStr.includes("dismissed") ||
-          allKeywordsStr.includes("employment")
+          allKeywordsStr.includes("employment"),
       ).toBe(true);
 
       expect(
         allKeywordsStr.includes("pregnant") ||
           allKeywordsStr.includes("pregnancy") ||
-          allKeywordsStr.includes("maternity")
+          allKeywordsStr.includes("maternity"),
       ).toBe(true);
 
       // Should filter out stop words
@@ -47,7 +47,7 @@ describe("LegalAPIService", () => {
       expect(
         allKeywordsStr.includes("landlord") ||
           allKeywordsStr.includes("eviction") ||
-          allKeywordsStr.includes("tenant")
+          allKeywordsStr.includes("tenant"),
       ).toBe(true);
     });
 

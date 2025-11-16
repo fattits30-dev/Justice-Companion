@@ -3,7 +3,7 @@ import type { IEventBus } from "../di/service-interfaces.ts";
 import type { DomainEvent } from "./DomainEvent.ts";
 import { injectable, inject } from "inversify";
 import { TYPES } from "../di/types.ts";
-import { logger } from '../../../utils/logger';
+import { logger } from "../../../utils/logger";
 
 /**
  * Event Bus Implementation
@@ -26,7 +26,7 @@ export class EventBus implements IEventBus {
    */
   subscribe(
     eventType: string,
-    handler: (event: DomainEvent) => void | Promise<void>
+    handler: (event: DomainEvent) => void | Promise<void>,
   ): () => void {
     if (!this.subscribers.has(eventType)) {
       this.subscribers.set(eventType, new Set());
@@ -97,7 +97,7 @@ export class EventBus implements IEventBus {
       fromDate?: Date;
       toDate?: Date;
       eventTypes?: string[];
-    }
+    },
   ): Promise<DomainEvent[]> {
     let sql = "SELECT * FROM events WHERE aggregate_id = ?";
     const params: (string | number)[] = [aggregateId];
@@ -160,7 +160,7 @@ export class EventBus implements IEventBus {
       fromDate?: Date;
       toDate?: Date;
       eventTypes?: string[];
-    }
+    },
   ): Promise<void> {
     const events = await this.getEvents(aggregateId, options);
 

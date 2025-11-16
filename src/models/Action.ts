@@ -1,5 +1,9 @@
-export type ActionPriority = 'low' | 'medium' | 'high' | 'urgent';
-export type ActionStatus = 'pending' | 'in_progress' | 'completed' | 'cancelled';
+export type ActionPriority = "low" | "medium" | "high" | "urgent";
+export type ActionStatus =
+  | "pending"
+  | "in_progress"
+  | "completed"
+  | "cancelled";
 
 export interface Action {
   id: number;

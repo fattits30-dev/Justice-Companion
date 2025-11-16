@@ -7,17 +7,20 @@ Comprehensive input validation system for Justice Companion IPC handlers.
 ### Basic Usage
 
 ```typescript
-import { getValidationMiddleware } from './ValidationMiddleware';
-import { auditLogger } from '../services/AuditLogger';
+import { getValidationMiddleware } from "./ValidationMiddleware";
+import { auditLogger } from "../services/AuditLogger";
 
 // Initialize middleware
 const validationMiddleware = getValidationMiddleware(auditLogger);
 
 // Validate request in IPC handler
-ipcMain.handle('case:create', async (_, request) => {
+ipcMain.handle("case:create", async (_, request) => {
   try {
     // 1. Validate input
-    const validated = await validationMiddleware.validate('case:create', request);
+    const validated = await validationMiddleware.validate(
+      "case:create",
+      request,
+    );
 
     // 2. Process validated data
     return await caseService.create(validated.input);
@@ -52,7 +55,7 @@ const validated = await validationMiddleware.validate(channel, request);
 // 2. AUTHORIZATION: Check user permissions
 const userId = getCurrentUserIdFromSession();
 if (validated.resourceOwnerId !== userId) {
-  throw new Error('Unauthorized');
+  throw new Error("Unauthorized");
 }
 
 // 3. BUSINESS LOGIC: Process validated + authorized request
@@ -78,9 +81,9 @@ export const authRegisterSchema = z.object({
   password: z
     .string()
     .min(12)
-    .refine((pwd) => /[a-z]/.test(pwd), 'Must contain lowercase')
-    .refine((pwd) => /[A-Z]/.test(pwd), 'Must contain uppercase')
-    .refine((pwd) => /[0-9]/.test(pwd), 'Must contain number'),
+    .refine((pwd) => /[a-z]/.test(pwd), "Must contain lowercase")
+    .refine((pwd) => /[A-Z]/.test(pwd), "Must contain uppercase")
+    .refine((pwd) => /[0-9]/.test(pwd), "Must contain number"),
   email: z.string().email(),
 });
 ```
@@ -88,8 +91,8 @@ export const authRegisterSchema = z.object({
 Register schema in `schemas/index.ts`:
 
 ```typescript
-import { IPC_CHANNELS } from '../../types/ipc';
-import { authRegisterSchema } from './auth-schemas';
+import { IPC_CHANNELS } from "../../types/ipc";
+import { authRegisterSchema } from "./auth-schemas";
 
 export const ipcSchemas = {
   [IPC_CHANNELS.AUTH_REGISTER]: authRegisterSchema,
@@ -187,22 +190,22 @@ console.log(metrics);
 ### Unit Tests
 
 ```typescript
-describe('ValidationMiddleware', () => {
-  it('should reject XSS payloads', async () => {
+describe("ValidationMiddleware", () => {
+  it("should reject XSS payloads", async () => {
     const middleware = new ValidationMiddleware();
     const malicious = { title: '<script>alert("xss")</script>' };
 
-    await expect(middleware.validate('case:create', malicious)).rejects.toThrow(
-      'Invalid characters detected'
+    await expect(middleware.validate("case:create", malicious)).rejects.toThrow(
+      "Invalid characters detected",
     );
   });
 
-  it('should validate within 10ms', async () => {
+  it("should validate within 10ms", async () => {
     const middleware = new ValidationMiddleware();
-    const input = { username: 'validuser', password: 'ValidPass123!' };
+    const input = { username: "validuser", password: "ValidPass123!" };
 
     const start = performance.now();
-    await middleware.validate('auth:register', input);
+    await middleware.validate("auth:register", input);
     const duration = performance.now() - start;
 
     expect(duration).toBeLessThan(10);

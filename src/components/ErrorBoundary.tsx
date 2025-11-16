@@ -1,6 +1,6 @@
-import { Component, ErrorInfo, ReactNode } from 'react';
-import { AlertCircle } from 'lucide-react';
-import { logger } from '../utils/logger';
+import { Component, ErrorInfo, ReactNode } from "react";
+import { AlertCircle } from "lucide-react";
+import { logger } from "../utils/logger";
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -12,7 +12,10 @@ interface ErrorBoundaryState {
   error: Error | null;
 }
 
-export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+export class ErrorBoundary extends Component<
+  ErrorBoundaryProps,
+  ErrorBoundaryState
+> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false, error: null };
@@ -23,7 +26,10 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    logger.error('Error boundary caught error:', error, errorInfo);
+    logger.error("Error boundary caught error:", {
+      error,
+      metadata: { errorInfo },
+    });
   }
 
   private handleReload = (): void => {
@@ -44,7 +50,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
               Something went wrong
             </h1>
             <p className="text-white/60 mb-4">
-              {this.state.error?.message || 'An unexpected error occurred'}
+              {this.state.error?.message || "An unexpected error occurred"}
             </p>
             <button
               onClick={this.handleReload}

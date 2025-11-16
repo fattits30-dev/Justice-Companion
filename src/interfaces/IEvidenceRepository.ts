@@ -1,5 +1,5 @@
 // src/interfaces/IEvidenceRepository.ts
-import type { Evidence } from '../domains/evidence/entities/Evidence.ts';
+import type { Evidence } from "../domains/evidence/entities/Evidence.ts";
 
 export interface IEvidenceRepository {
   findById(id: number): Evidence | null;

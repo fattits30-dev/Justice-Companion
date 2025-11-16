@@ -1,24 +1,39 @@
-import type { Case, CreateCaseInput, UpdateCaseInput, CaseStatus } from '../domains/cases/entities/Case.ts';
+import type {
+  Case,
+  CreateCaseInput,
+  UpdateCaseInput,
+  CaseStatus,
+} from "../domains/cases/entities/Case.ts";
 import type {
   ChatConversation,
   ChatMessage,
   CreateConversationInput,
   CreateMessageInput,
   ConversationWithMessages,
-} from '../models/ChatConversation.ts';
-import type { UserProfile, UpdateUserProfileInput } from '../domains/settings/entities/UserProfile.ts';
-import type { AIProviderType } from './ai-providers.ts';
-import type { Evidence, CreateEvidenceInput, UpdateEvidenceInput } from '../domains/evidence/entities/Evidence.ts';
-import type { LegalContext } from './ai.ts';
-import type { CaseFact } from '../domains/cases/entities/CaseFact.ts';
-import type { UserFact } from '../models/UserFact.ts';
-import type { Note } from '../models/Note.ts';
-import type { LegalIssue } from '../domains/legal-research/entities/LegalIssue.ts';
-import type { TimelineEvent } from '../domains/timeline/entities/TimelineEvent.ts';
-import type { User } from '../domains/auth/entities/User.ts';
-import type { Consent, ConsentType } from '../domains/settings/entities/Consent.ts';
-import type { PaginationParams, PaginatedResult } from './pagination.ts';
-import type { Session } from '../domains/auth/entities/Session.ts';
+} from "../models/ChatConversation.ts";
+import type {
+  UserProfile,
+  UpdateUserProfileInput,
+} from "../domains/settings/entities/UserProfile.ts";
+import type { AIProviderType } from "./ai-providers.ts";
+import type {
+  Evidence,
+  CreateEvidenceInput,
+  UpdateEvidenceInput,
+} from "../domains/evidence/entities/Evidence.ts";
+import type { LegalContext } from "./ai.ts";
+import type { CaseFact } from "../domains/cases/entities/CaseFact.ts";
+import type { UserFact } from "../models/UserFact.ts";
+import type { Note } from "../models/Note.ts";
+import type { LegalIssue } from "../domains/legal-research/entities/LegalIssue.ts";
+import type { TimelineEvent } from "../domains/timeline/entities/TimelineEvent.ts";
+import type { User } from "../domains/auth/entities/User.ts";
+import type {
+  Consent,
+  ConsentType,
+} from "../domains/settings/entities/Consent.ts";
+import type { PaginationParams, PaginatedResult } from "./pagination.ts";
+import type { Session } from "../domains/auth/entities/Session.ts";
 
 /**
  * IPC Channel definitions for type-safe communication
@@ -28,83 +43,83 @@ import type { Session } from '../domains/auth/entities/Session.ts';
 // IPC Channels for main <-> renderer communication
 export const IPC_CHANNELS = {
   // Case Management
-  CASE_CREATE: 'case:create',
-  CASE_GET_BY_ID: 'case:getById',
-  CASE_GET_ALL: 'case:getAll',
-  CASE_UPDATE: 'case:update',
-  CASE_DELETE: 'case:delete',
-  CASE_CLOSE: 'case:close',
-  CASE_GET_STATISTICS: 'case:getStatistics',
+  CASE_CREATE: "case:create",
+  CASE_GET_BY_ID: "case:getById",
+  CASE_GET_ALL: "case:getAll",
+  CASE_UPDATE: "case:update",
+  CASE_DELETE: "case:delete",
+  CASE_CLOSE: "case:close",
+  CASE_GET_STATISTICS: "case:getStatistics",
 
   // Evidence Management
-  EVIDENCE_CREATE: 'evidence:create',
-  EVIDENCE_GET_BY_ID: 'evidence:getById',
-  EVIDENCE_GET_ALL: 'evidence:getAll',
-  EVIDENCE_GET_BY_CASE: 'evidence:getByCaseId',
-  EVIDENCE_UPDATE: 'evidence:update',
-  EVIDENCE_DELETE: 'evidence:delete',
+  EVIDENCE_CREATE: "evidence:create",
+  EVIDENCE_GET_BY_ID: "evidence:getById",
+  EVIDENCE_GET_ALL: "evidence:getAll",
+  EVIDENCE_GET_BY_CASE: "evidence:getByCaseId",
+  EVIDENCE_UPDATE: "evidence:update",
+  EVIDENCE_DELETE: "evidence:delete",
 
   // AI Operations
-  AI_CHECK_STATUS: 'ai:checkStatus',
-  AI_CHAT: 'ai:chat',
-  AI_STREAM_START: 'ai:stream:start',
-  AI_STREAM_TOKEN: 'ai:stream:token', // Event (main -> renderer)
-  AI_STREAM_THINK_TOKEN: 'ai:stream:thinkToken', // Event (main -> renderer) - <think> reasoning content
-  AI_STREAM_SOURCES: 'ai:stream:sources', // Event (main -> renderer) - Legal source citations
-  AI_STREAM_COMPLETE: 'ai:stream:complete', // Event (main -> renderer)
-  AI_STREAM_ERROR: 'ai:stream:error', // Event (main -> renderer)
-  AI_STATUS_UPDATE: 'ai:status:update', // Event (main -> renderer) - Progress updates
-  AI_CONFIGURE: 'ai:configure', // Configure OpenAI API credentials
-  AI_TEST_CONNECTION: 'ai:testConnection', // Test OpenAI connection
+  AI_CHECK_STATUS: "ai:checkStatus",
+  AI_CHAT: "ai:chat",
+  AI_STREAM_START: "ai:stream:start",
+  AI_STREAM_TOKEN: "ai:stream:token", // Event (main -> renderer)
+  AI_STREAM_THINK_TOKEN: "ai:stream:thinkToken", // Event (main -> renderer) - <think> reasoning content
+  AI_STREAM_SOURCES: "ai:stream:sources", // Event (main -> renderer) - Legal source citations
+  AI_STREAM_COMPLETE: "ai:stream:complete", // Event (main -> renderer)
+  AI_STREAM_ERROR: "ai:stream:error", // Event (main -> renderer)
+  AI_STATUS_UPDATE: "ai:status:update", // Event (main -> renderer) - Progress updates
+  AI_CONFIGURE: "ai:configure", // Configure OpenAI API credentials
+  AI_TEST_CONNECTION: "ai:testConnection", // Test OpenAI connection
 
   // Model Download Operations
-  MODEL_GET_AVAILABLE: 'model:getAvailable',
-  MODEL_GET_DOWNLOADED: 'model:getDownloaded',
-  MODEL_IS_DOWNLOADED: 'model:isDownloaded',
-  MODEL_DOWNLOAD_START: 'model:download:start',
-  MODEL_DOWNLOAD_PROGRESS: 'model:download:progress', // Event (main -> renderer)
-  MODEL_DELETE: 'model:delete',
+  MODEL_GET_AVAILABLE: "model:getAvailable",
+  MODEL_GET_DOWNLOADED: "model:getDownloaded",
+  MODEL_IS_DOWNLOADED: "model:isDownloaded",
+  MODEL_DOWNLOAD_START: "model:download:start",
+  MODEL_DOWNLOAD_PROGRESS: "model:download:progress", // Event (main -> renderer)
+  MODEL_DELETE: "model:delete",
 
   // File Operations
-  FILE_SELECT: 'file:select',
-  FILE_UPLOAD: 'file:upload',
-  FILE_VIEW: 'file:view',
-  FILE_DOWNLOAD: 'file:download',
-  FILE_PRINT: 'file:print',
-  FILE_EMAIL: 'file:email',
+  FILE_SELECT: "file:select",
+  FILE_UPLOAD: "file:upload",
+  FILE_VIEW: "file:view",
+  FILE_DOWNLOAD: "file:download",
+  FILE_PRINT: "file:print",
+  FILE_EMAIL: "file:email",
 
   // Chat Conversation Operations
-  CONVERSATION_CREATE: 'conversation:create',
-  CONVERSATION_GET: 'conversation:get',
-  CONVERSATION_GET_ALL: 'conversation:getAll',
-  CONVERSATION_GET_RECENT: 'conversation:getRecent',
-  CONVERSATION_LOAD_WITH_MESSAGES: 'conversation:loadWithMessages',
-  CONVERSATION_DELETE: 'conversation:delete',
-  MESSAGE_ADD: 'message:add',
+  CONVERSATION_CREATE: "conversation:create",
+  CONVERSATION_GET: "conversation:get",
+  CONVERSATION_GET_ALL: "conversation:getAll",
+  CONVERSATION_GET_RECENT: "conversation:getRecent",
+  CONVERSATION_LOAD_WITH_MESSAGES: "conversation:loadWithMessages",
+  CONVERSATION_DELETE: "conversation:delete",
+  MESSAGE_ADD: "message:add",
 
   // User Profile Operations
-  PROFILE_GET: 'profile:get',
-  PROFILE_UPDATE: 'profile:update',
+  PROFILE_GET: "profile:get",
+  PROFILE_UPDATE: "profile:update",
 
   // GDPR Operations
-  GDPR_EXPORT_USER_DATA: 'gdpr:exportUserData',
-  GDPR_DELETE_USER_DATA: 'gdpr:deleteUserData',
+  GDPR_EXPORT_USER_DATA: "gdpr:exportUserData",
+  GDPR_DELETE_USER_DATA: "gdpr:deleteUserData",
 
   // Authentication Operations (Phase 1)
-  AUTH_REGISTER: 'auth:register',
-  AUTH_LOGIN: 'auth:login',
-  AUTH_LOGOUT: 'auth:logout',
-  AUTH_GET_CURRENT_USER: 'auth:getCurrentUser',
-  AUTH_CHANGE_PASSWORD: 'auth:changePassword',
+  AUTH_REGISTER: "auth:register",
+  AUTH_LOGIN: "auth:login",
+  AUTH_LOGOUT: "auth:logout",
+  AUTH_GET_CURRENT_USER: "auth:getCurrentUser",
+  AUTH_CHANGE_PASSWORD: "auth:changePassword",
 
   // Consent Operations (Phase 1)
-  CONSENT_GRANT: 'consent:grant',
-  CONSENT_REVOKE: 'consent:revoke',
-  CONSENT_HAS_CONSENT: 'consent:hasConsent',
-  CONSENT_GET_USER_CONSENTS: 'consent:getUserConsents',
+  CONSENT_GRANT: "consent:grant",
+  CONSENT_REVOKE: "consent:revoke",
+  CONSENT_HAS_CONSENT: "consent:hasConsent",
+  CONSENT_GET_USER_CONSENTS: "consent:getUserConsents",
 
   // UI Error Logging
-  LOG_UI_ERROR: 'ui:logError',
+  LOG_UI_ERROR: "ui:logError",
 } as const;
 
 // IPC Request/Response types
@@ -293,7 +308,7 @@ export interface AIConfigureResponse {
 
 export interface AITestConnectionRequest {
   apiKey: string;
-  model?: 'gpt-4o' | 'gpt-4o-mini' | 'gpt-3.5-turbo';
+  model?: "gpt-4o" | "gpt-4o-mini" | "gpt-3.5-turbo";
 }
 
 export interface AITestConnectionResponse {
@@ -322,7 +337,7 @@ export interface DownloadProgress {
   totalBytes: number;
   percentage: number;
   speed: number;
-  status: 'downloading' | 'complete' | 'error' | 'paused';
+  status: "downloading" | "complete" | "error" | "paused";
   error?: string;
 }
 
@@ -373,7 +388,7 @@ export interface ModelDeleteResponse {
 // File IPC Request/Response types
 export interface FileSelectRequest {
   filters?: Array<{ name: string; extensions: string[] }>;
-  properties?: Array<'openFile' | 'multiSelections'>;
+  properties?: Array<"openFile" | "multiSelections">;
 }
 
 export interface FileSelectResponse {
@@ -698,23 +713,37 @@ export interface JusticeCompanionAPI {
   getAllCases(): Promise<IPCResponse<CaseGetAllResponse>>;
   updateCase(
     id: number,
-    input: UpdateCaseInput
+    input: UpdateCaseInput,
   ): Promise<IPCResponse<CaseUpdateResponse>>;
   deleteCase(id: number): Promise<IPCResponse<CaseDeleteResponse>>;
   closeCase(id: number): Promise<IPCResponse<CaseCloseResponse>>;
   getCaseStatistics(): Promise<IPCResponse<CaseGetStatisticsResponse>>;
 
   // Case pagination operations (Phase 2 - Performance Optimization)
-  getAllCasesPaginated(params: PaginationParams): Promise<IPCResponse<{ success: true; data: PaginatedResult<Case> }>>;
-  getCasesByUserPaginated(userId: number, params: PaginationParams): Promise<IPCResponse<{ success: true; data: PaginatedResult<Case> }>>;
-  getCasesByStatusPaginated(status: CaseStatus, params: PaginationParams): Promise<IPCResponse<{ success: true; data: PaginatedResult<Case> }>>;
+  getAllCasesPaginated(
+    params: PaginationParams,
+  ): Promise<IPCResponse<{ success: true; data: PaginatedResult<Case> }>>;
+  getCasesByUserPaginated(
+    userId: number,
+    params: PaginationParams,
+  ): Promise<IPCResponse<{ success: true; data: PaginatedResult<Case> }>>;
+  getCasesByStatusPaginated(
+    status: CaseStatus,
+    params: PaginationParams,
+  ): Promise<IPCResponse<{ success: true; data: PaginatedResult<Case> }>>;
 
   // AI operations
   checkAIStatus(): Promise<IPCResponse<AICheckStatusResponse>>;
   aiChat(request: AIChatRequest): Promise<IPCResponse<AIChatResponse>>;
-  aiStreamStart(request: AIStreamStartRequest): Promise<IPCResponse<AIStreamStartResponse>>;
-  configureAI(request: AIConfigureRequest): Promise<IPCResponse<AIConfigureResponse>>;
-  testAIConnection(request: AITestConnectionRequest): Promise<IPCResponse<AITestConnectionResponse>>;
+  aiStreamStart(
+    request: AIStreamStartRequest,
+  ): Promise<IPCResponse<AIStreamStartResponse>>;
+  configureAI(
+    request: AIConfigureRequest,
+  ): Promise<IPCResponse<AIConfigureResponse>>;
+  testAIConnection(
+    request: AITestConnectionRequest,
+  ): Promise<IPCResponse<AITestConnectionResponse>>;
   // AI streaming events (one-way: main -> renderer)
   // Returns cleanup function to remove listener
   onAIStreamToken(callback: (token: string) => void): () => void;
@@ -725,36 +754,66 @@ export interface JusticeCompanionAPI {
   onAIStatusUpdate(callback: (status: string) => void): () => void;
 
   // Evidence operations
-  createEvidence(input: CreateEvidenceInput): Promise<IPCResponse<EvidenceCreateResponse>>;
+  createEvidence(
+    input: CreateEvidenceInput,
+  ): Promise<IPCResponse<EvidenceCreateResponse>>;
   getEvidenceById(id: number): Promise<IPCResponse<EvidenceGetByIdResponse>>;
-  getAllEvidence(evidenceType?: string): Promise<IPCResponse<EvidenceGetAllResponse>>;
-  getEvidenceByCaseId(caseId: number): Promise<IPCResponse<EvidenceGetByCaseResponse>>;
+  getAllEvidence(
+    evidenceType?: string,
+  ): Promise<IPCResponse<EvidenceGetAllResponse>>;
+  getEvidenceByCaseId(
+    caseId: number,
+  ): Promise<IPCResponse<EvidenceGetByCaseResponse>>;
   updateEvidence(
     id: number,
-    input: UpdateEvidenceInput
+    input: UpdateEvidenceInput,
   ): Promise<IPCResponse<EvidenceUpdateResponse>>;
   deleteEvidence(id: number): Promise<IPCResponse<EvidenceDeleteResponse>>;
 
   // File operations
-  selectFile(request?: FileSelectRequest): Promise<IPCResponse<FileSelectResponse>>;
+  selectFile(
+    request?: FileSelectRequest,
+  ): Promise<IPCResponse<FileSelectResponse>>;
   uploadFile(filePath: string): Promise<IPCResponse<FileUploadResponse>>;
   viewFile(filePath: string): Promise<IPCResponse<FileViewResponse>>;
-  downloadFile(filePath: string, fileName?: string): Promise<IPCResponse<FileDownloadResponse>>;
+  downloadFile(
+    filePath: string,
+    fileName?: string,
+  ): Promise<IPCResponse<FileDownloadResponse>>;
   printFile(filePath: string): Promise<IPCResponse<FilePrintResponse>>;
-  emailFiles(filePaths: string[], subject?: string, body?: string): Promise<IPCResponse<FileEmailResponse>>;
+  emailFiles(
+    filePaths: string[],
+    subject?: string,
+    body?: string,
+  ): Promise<IPCResponse<FileEmailResponse>>;
 
   // Chat Conversation operations
-  createConversation(input: CreateConversationInput): Promise<IPCResponse<ConversationCreateResponse>>;
+  createConversation(
+    input: CreateConversationInput,
+  ): Promise<IPCResponse<ConversationCreateResponse>>;
   getConversation(id: number): Promise<IPCResponse<ConversationGetResponse>>;
-  getAllConversations(caseId?: number | null): Promise<IPCResponse<ConversationGetAllResponse>>;
-  getRecentConversations(caseId: number | null, limit?: number): Promise<IPCResponse<ConversationGetRecentResponse>>;
-  loadConversationWithMessages(conversationId: number): Promise<IPCResponse<ConversationLoadWithMessagesResponse>>;
-  deleteConversation(id: number): Promise<IPCResponse<ConversationDeleteResponse>>;
-  addMessage(input: CreateMessageInput): Promise<IPCResponse<MessageAddResponse>>;
+  getAllConversations(
+    caseId?: number | null,
+  ): Promise<IPCResponse<ConversationGetAllResponse>>;
+  getRecentConversations(
+    caseId: number | null,
+    limit?: number,
+  ): Promise<IPCResponse<ConversationGetRecentResponse>>;
+  loadConversationWithMessages(
+    conversationId: number,
+  ): Promise<IPCResponse<ConversationLoadWithMessagesResponse>>;
+  deleteConversation(
+    id: number,
+  ): Promise<IPCResponse<ConversationDeleteResponse>>;
+  addMessage(
+    input: CreateMessageInput,
+  ): Promise<IPCResponse<MessageAddResponse>>;
 
   // User Profile operations
   getUserProfile(): Promise<IPCResponse<ProfileGetResponse>>;
-  updateUserProfile(input: UpdateUserProfileInput): Promise<IPCResponse<ProfileUpdateResponse>>;
+  updateUserProfile(
+    input: UpdateUserProfileInput,
+  ): Promise<IPCResponse<ProfileUpdateResponse>>;
 
   // Case Facts operations (Memory for AI)
   storeFact(params: {
@@ -768,25 +827,50 @@ export interface JusticeCompanionAPI {
     source?: string;
     confidence?: number;
   }): Promise<IPCResponse<FactsStoreResponse>>;
-  getFacts(caseId: number, factType?: string): Promise<IPCResponse<FactsGetResponse>>;
-  getCaseFacts(caseId: number, factCategory?: string): Promise<IPCResponse<FactsGetResponse>>;
+  getFacts(
+    caseId: number,
+    factType?: string,
+  ): Promise<IPCResponse<FactsGetResponse>>;
+  getCaseFacts(
+    caseId: number,
+    factCategory?: string,
+  ): Promise<IPCResponse<FactsGetResponse>>;
   getFactCount(caseId: number): Promise<IPCResponse<FactsCountResponse>>;
 
   // GDPR operations
   exportUserData(): Promise<IPCResponse<GDPRExportUserDataResponse>>;
-  deleteUserData(confirmation: string): Promise<IPCResponse<GDPRDeleteUserDataResponse>>;
+  deleteUserData(
+    confirmation: string,
+  ): Promise<IPCResponse<GDPRDeleteUserDataResponse>>;
 
   // Authentication operations (Phase 1)
-  registerUser(username: string, password: string, email: string): Promise<IPCResponse<AuthRegisterResponse>>;
-  loginUser(username: string, password: string, rememberMe?: boolean): Promise<IPCResponse<AuthLoginResponse>>;
+  registerUser(
+    username: string,
+    password: string,
+    email: string,
+  ): Promise<IPCResponse<AuthRegisterResponse>>;
+  loginUser(
+    username: string,
+    password: string,
+    rememberMe?: boolean,
+  ): Promise<IPCResponse<AuthLoginResponse>>;
   logoutUser(): Promise<IPCResponse<AuthLogoutResponse>>;
   getCurrentUser(): Promise<IPCResponse<AuthGetCurrentUserResponse>>;
-  changePassword(oldPassword: string, newPassword: string): Promise<IPCResponse<AuthChangePasswordResponse>>;
+  changePassword(
+    oldPassword: string,
+    newPassword: string,
+  ): Promise<IPCResponse<AuthChangePasswordResponse>>;
 
   // Consent operations (Phase 1)
-  grantConsent(consentType: ConsentType): Promise<IPCResponse<ConsentGrantResponse>>;
-  revokeConsent(consentType: ConsentType): Promise<IPCResponse<ConsentRevokeResponse>>;
-  hasConsent(consentType: ConsentType): Promise<IPCResponse<ConsentHasConsentResponse>>;
+  grantConsent(
+    consentType: ConsentType,
+  ): Promise<IPCResponse<ConsentGrantResponse>>;
+  revokeConsent(
+    consentType: ConsentType,
+  ): Promise<IPCResponse<ConsentRevokeResponse>>;
+  hasConsent(
+    consentType: ConsentType,
+  ): Promise<IPCResponse<ConsentHasConsentResponse>>;
   getUserConsents(): Promise<IPCResponse<ConsentGetUserConsentsResponse>>;
 
   // UI Error Logging

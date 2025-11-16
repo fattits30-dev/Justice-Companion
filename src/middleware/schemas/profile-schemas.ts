@@ -5,9 +5,13 @@
  * updates with proper email and URL validation.
  */
 
-import { z } from 'zod';
-import { MAX_EMAIL_LENGTH, MAX_URL_LENGTH, PATTERNS } from '../utils/constants.ts';
-import { sanitizeEmail, sanitizeUrl } from '../utils/sanitizers.ts';
+import { z } from "zod";
+import {
+  MAX_EMAIL_LENGTH,
+  MAX_URL_LENGTH,
+  PATTERNS,
+} from "../utils/constants.ts";
+import { sanitizeEmail, sanitizeUrl } from "../utils/sanitizers.ts";
 
 /**
  * Schema for user profile update request
@@ -19,31 +23,34 @@ export const profileUpdateSchema = z
       .object({
         name: z
           .string()
-          .min(1, 'Name cannot be empty')
-          .max(200, 'Name must be less than 200 characters')
+          .min(1, "Name cannot be empty")
+          .max(200, "Name must be less than 200 characters")
           .regex(
             /^[a-zA-Z\s'-]+$/,
-            'Name can only contain letters, spaces, hyphens, and apostrophes',
+            "Name can only contain letters, spaces, hyphens, and apostrophes",
           )
           .trim()
           .optional(),
 
         email: z
           .string()
-          .max(MAX_EMAIL_LENGTH, `Email must be less than ${MAX_EMAIL_LENGTH} characters`)
+          .max(
+            MAX_EMAIL_LENGTH,
+            `Email must be less than ${MAX_EMAIL_LENGTH} characters`,
+          )
           .transform(sanitizeEmail)
           .refine((email) => {
             if (!email) {
               return true;
             } // Allow empty (null) email
             return PATTERNS.EMAIL.test(email);
-          }, 'Please enter a valid email address')
+          }, "Please enter a valid email address")
           .refine((email) => {
             if (!email) {
               return true;
             }
             // Additional RFC 5321 compliant email validation
-            const parts = email.split('@');
+            const parts = email.split("@");
             if (parts.length !== 2) {
               return false;
             }
@@ -54,10 +61,10 @@ export const profileUpdateSchema = z
             if (local.length > 64) {
               return false;
             }
-            if (local.startsWith('.') || local.endsWith('.')) {
+            if (local.startsWith(".") || local.endsWith(".")) {
               return false;
             }
-            if (local.includes('..')) {
+            if (local.includes("..")) {
               return false;
             }
 
@@ -65,46 +72,58 @@ export const profileUpdateSchema = z
             if (domain.length > 253) {
               return false;
             }
-            if (!domain.includes('.')) {
+            if (!domain.includes(".")) {
               return false;
             }
-            if (domain.startsWith('.') || domain.endsWith('.')) {
+            if (domain.startsWith(".") || domain.endsWith(".")) {
               return false;
             }
-            if (domain.startsWith('-') || domain.endsWith('-')) {
+            if (domain.startsWith("-") || domain.endsWith("-")) {
               return false;
             }
 
             return true;
-          }, 'Invalid email format')
+          }, "Invalid email format")
           .nullable()
           .optional(),
 
         avatarUrl: z
           .string()
-          .max(MAX_URL_LENGTH, `Avatar URL must be less than ${MAX_URL_LENGTH} characters`)
+          .max(
+            MAX_URL_LENGTH,
+            `Avatar URL must be less than ${MAX_URL_LENGTH} characters`,
+          )
           .transform(sanitizeUrl)
           .refine((url) => {
             if (!url) {
               return true;
             } // Allow empty (null) avatar URL
             return PATTERNS.URL.test(url);
-          }, 'Please enter a valid URL')
+          }, "Please enter a valid URL")
           .refine((url) => {
             if (!url) {
               return true;
             }
             // Only allow https URLs for security
-            return url.startsWith('https://');
-          }, 'Avatar URL must use HTTPS protocol')
+            return url.startsWith("https://");
+          }, "Avatar URL must use HTTPS protocol")
           .refine((url) => {
             if (!url) {
               return true;
             }
             // Check if URL points to an image
-            const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'];
-            return imageExtensions.some((ext) => url.toLowerCase().endsWith(ext));
-          }, 'Avatar URL must point to an image file')
+            const imageExtensions = [
+              ".jpg",
+              ".jpeg",
+              ".png",
+              ".gif",
+              ".webp",
+              ".svg",
+            ];
+            return imageExtensions.some((ext) =>
+              url.toLowerCase().endsWith(ext),
+            );
+          }, "Avatar URL must point to an image file")
           .nullable()
           .optional(),
 
@@ -116,7 +135,7 @@ export const profileUpdateSchema = z
       .strict() // No additional properties allowed
       .refine(
         (data) => Object.keys(data).length > 0,
-        'At least one field must be provided for update',
+        "At least one field must be provided for update",
       ),
   })
   .strict();

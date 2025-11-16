@@ -22,7 +22,7 @@ export class TemplateService {
     private templateRepo: TemplateRepository,
     private caseRepo: CaseRepository,
     _deadlineRepo: DeadlineRepository,
-    _auditLogger?: AuditLogger
+    _auditLogger?: AuditLogger,
   ) {
     this._deadlineRepo = _deadlineRepo;
   }
@@ -46,7 +46,7 @@ export class TemplateService {
    */
   async createTemplate(
     input: CreateTemplateInput,
-    userId: number
+    userId: number,
   ): Promise<CaseTemplate> {
     // Validate template fields
     this.validateTemplateInput(input);
@@ -77,7 +77,7 @@ export class TemplateService {
   async updateTemplate(
     id: number,
     input: UpdateTemplateInput,
-    _userId: number
+    _userId: number,
   ): Promise<CaseTemplate | null> {
     // Validate template fields
     this.validateTemplateInput(input);
@@ -133,7 +133,7 @@ export class TemplateService {
   async applyTemplate(
     templateId: number,
     input: CreateCaseInput,
-    _userId: number
+    _userId: number,
   ): Promise<TemplateApplicationResult> {
     const template = this.templateRepo.findTemplateById(templateId);
 
@@ -175,7 +175,7 @@ export class TemplateService {
           title: deadline.title,
           dueDate: deadline.deadlineDate,
         };
-      })
+      }),
     );
 
     // TODO: Add template-specific audit event types
@@ -205,7 +205,7 @@ export class TemplateService {
    * Validate template input
    */
   private validateTemplateInput(
-    input: CreateTemplateInput | UpdateTemplateInput
+    input: CreateTemplateInput | UpdateTemplateInput,
   ): void {
     // Check if name exists (for CreateTemplateInput) or is being updated (for UpdateTemplateInput)
     if ("name" in input && input.name !== undefined) {

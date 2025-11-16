@@ -13,7 +13,7 @@
  * - Multi-turn conversation management
  */
 
-import type { CreateCaseFactInput } from '../domains/cases/entities/CaseFact.ts';
+import type { CreateCaseFactInput } from "../domains/cases/entities/CaseFact.ts";
 
 /**
  * Store a case fact (persistent memory)
@@ -45,30 +45,32 @@ confidence: 0.0-1.0 (1.0 = certain/critical, 0.7 = high, 0.5 = medium, <0.5 = lo
 This maps to importance in database: >=0.9=critical, >=0.7=high, >=0.5=medium, <0.5=low`,
 
   params: {
-    type: 'object' as const,
+    type: "object" as const,
     properties: {
       caseId: {
-        type: 'number' as const,
-        description: 'The case ID to store the fact for',
+        type: "number" as const,
+        description: "The case ID to store the fact for",
       },
       factType: {
-        type: 'string' as const,
-        description: 'Category of fact (timeline, evidence, witness, location, communication, other)',
+        type: "string" as const,
+        description:
+          "Category of fact (timeline, evidence, witness, location, communication, other)",
       },
       factKey: {
-        type: 'string' as const,
-        description: "Unique identifier for this fact (e.g., 'employer_name', 'dismissal_date')",
+        type: "string" as const,
+        description:
+          "Unique identifier for this fact (e.g., 'employer_name', 'dismissal_date')",
       },
       factValue: {
-        type: 'string' as const,
-        description: 'The actual fact value',
+        type: "string" as const,
+        description: "The actual fact value",
       },
       confidence: {
-        type: 'number' as const,
-        description: 'Confidence score 0.0-1.0 (default: 1.0, maps to',
+        type: "number" as const,
+        description: "Confidence score 0.0-1.0 (default: 1.0, maps to",
       },
     },
-    required: ['caseId', 'factType', 'factKey', 'factValue'],
+    required: ["caseId", "factType", "factKey", "factValue"],
   },
 
   /**
@@ -77,6 +79,6 @@ This maps to importance in database: >=0.9=critical, >=0.7=high, >=0.5=medium, <
    */
   execute: async (_args: CreateCaseFactInput) => {
     // Implementation would go here
-    throw new Error('Not implemented');
+    throw new Error("Not implemented");
   },
 };

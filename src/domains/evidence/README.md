@@ -22,16 +22,17 @@ The Evidence domain manages all evidence-related functionality including documen
 
 ### Evidence Types and Constraints
 
-| Type | Max File Size | Allowed Extensions | Requires File |
-|------|--------------|-------------------|---------------|
-| Document | 10MB | .pdf, .doc, .docx, .txt, .rtf, .odt | Yes |
-| Photo | 5MB | .jpg, .jpeg, .png, .gif, .bmp, .tiff, .webp | Yes |
-| Email | 5MB | .eml, .msg, .txt, .pdf | Yes |
-| Recording | 100MB | .mp3, .wav, .m4a, .mp4, .avi, .mov, .webm | Yes |
-| Note | 1MB | .txt, .md, .rtf | No |
-| Witness | 10MB | .pdf, .doc, .docx, .txt | No |
+| Type      | Max File Size | Allowed Extensions                          | Requires File |
+| --------- | ------------- | ------------------------------------------- | ------------- |
+| Document  | 10MB          | .pdf, .doc, .docx, .txt, .rtf, .odt         | Yes           |
+| Photo     | 5MB           | .jpg, .jpeg, .png, .gif, .bmp, .tiff, .webp | Yes           |
+| Email     | 5MB           | .eml, .msg, .txt, .pdf                      | Yes           |
+| Recording | 100MB         | .mp3, .wav, .m4a, .mp4, .avi, .mov, .webm   | Yes           |
+| Note      | 1MB           | .txt, .md, .rtf                             | No            |
+| Witness   | 10MB          | .pdf, .doc, .docx, .txt                     | No            |
 
 ### Evidence Management Rules
+
 - Evidence must be associated with a case
 - File paths are encrypted at rest for security
 - Evidence cannot be modified once uploaded (immutability)
@@ -57,7 +58,7 @@ The Evidence domain manages all evidence-related functionality including documen
 ## Usage Examples
 
 ```typescript
-import { Evidence, EvidenceType } from '@/domains/evidence';
+import { Evidence, EvidenceType } from "@/domains/evidence";
 
 // Create evidence type
 const docType = EvidenceType.document();
@@ -71,13 +72,13 @@ const maxSize = docType.getMaxFileSize(); // 10485760 bytes (10MB)
 const evidence: Evidence = {
   id: 1,
   caseId: 42,
-  title: 'Employment Contract',
-  filePath: '/secure/evidence/contract.pdf',
+  title: "Employment Contract",
+  filePath: "/secure/evidence/contract.pdf",
   content: null,
   evidenceType: docType.getValue(),
-  obtainedDate: '2024-01-15',
+  obtainedDate: "2024-01-15",
   createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString()
+  updatedAt: new Date().toISOString(),
 };
 
 // Evidence upload event

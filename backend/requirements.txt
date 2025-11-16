@@ -1,0 +1,70 @@
+# Justice Companion Python Backend Dependencies
+
+# FastAPI framework
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+
+# Database
+sqlalchemy==2.0.35
+alembic==1.13.3  # Database migrations
+
+# Encryption
+cryptography==43.0.3  # AES-256-GCM encryption via AESGCM
+keyring>=25.5.0  # OS-level secure storage (DPAPI/Keychain/Secret Service)
+
+# Password hashing (already using Python's built-in hashlib.scrypt)
+# No additional library needed for scrypt
+
+# Validation
+pydantic[email]==2.9.2
+pydantic-settings==2.5.2
+
+# CORS middleware
+python-multipart==0.0.12  # For form data handling
+
+# Environment variables
+python-dotenv==1.0.1
+
+# HTTP client (for making requests to external APIs)
+httpx==0.27.2
+aiohttp==3.10.10  # Async HTTP client
+
+# Date/time utilities
+python-dateutil==2.9.0
+
+# JSON handling
+orjson==3.10.7  # Fast JSON serialization
+
+# Testing
+pytest==8.3.3
+pytest-asyncio==0.24.0
+pytest-cov==5.0.0
+reportlab==4.2.5  # For creating test PDFs
+
+# Document parsing
+pypdf==5.1.0  # PDF parsing (replaces pdf-parse)
+python-docx==1.1.2  # DOCX parsing (replaces mammoth)
+
+# AI Provider SDKs
+openai>=1.54.0  # OpenAI API client (supports async)
+anthropic>=0.39.0  # Anthropic Claude API client (supports async)
+huggingface-hub>=0.26.0  # HuggingFace Inference API client (supports async)
+
+# Vector databases and embeddings for RAG
+sentence-transformers>=3.0.0  # Text embeddings (BERT, etc.)
+faiss-cpu>=1.8.0  # Facebook AI Similarity Search (CPU version)
+# Alternative: chromadb>=0.4.0  # Chroma vector database (includes embeddings)
+
+# XML parsing for UK legal APIs
+lxml>=5.1.0  # Fast XML/HTML parsing
+
+# OCR (Optical Character Recognition) for image analysis
+pytesseract>=0.3.10  # Python wrapper for Tesseract OCR
+pillow>=10.0.0  # Image processing library (PIL fork)
+opencv-python>=4.8.0  # Computer vision for image preprocessing
+numpy>=1.24.0  # Required by opencv-python
+
+# Development tools
+black==24.10.0  # Code formatter
+flake8==7.1.1  # Linter
+mypy==1.13.0  # Type checker

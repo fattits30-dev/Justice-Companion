@@ -80,7 +80,7 @@ describe("Facts Repositories Integration Tests", () => {
       `
       INSERT INTO cases (title, case_type)
       VALUES ('Employment Discrimination Case', 'employment')
-    `
+    `,
     ).run();
 
     // Initialize services
@@ -196,7 +196,7 @@ describe("Facts Repositories Integration Tests", () => {
 
       expect(retrievedUserFact!.factContent).toBe("SSN: 123-45-6789");
       expect(retrievedCaseFact!.factContent).toBe(
-        "Location: 123 Main St, City, State"
+        "Location: 123 Main St, City, State",
       );
     });
   });
@@ -351,7 +351,7 @@ describe("Facts Repositories Integration Tests", () => {
 
       // Clear previous content access logs
       db.prepare("DELETE FROM audit_logs WHERE event_type LIKE ?").run(
-        "%content_access%"
+        "%content_access%",
       );
 
       userFactsRepo.findById(userFact.id);
@@ -546,10 +546,10 @@ describe("Facts Repositories Integration Tests", () => {
         .get(randomCaseFact.id) as { fact_content: string };
 
       expect(JSON.parse(storedUserFact.fact_content).algorithm).toBe(
-        "aes-256-gcm"
+        "aes-256-gcm",
       );
       expect(JSON.parse(storedCaseFact.fact_content).algorithm).toBe(
-        "aes-256-gcm"
+        "aes-256-gcm",
       );
 
       // Verify audit trail exists for all operations
@@ -577,7 +577,7 @@ describe("Facts Repositories Integration Tests", () => {
           `
           INSERT INTO user_facts (case_id, fact_content, fact_type)
           VALUES (1, 'Test', 'invalid_type')
-        `
+        `,
         ).run();
       }).toThrow(); // Should throw CHECK constraint error
     });
@@ -588,7 +588,7 @@ describe("Facts Repositories Integration Tests", () => {
           `
           INSERT INTO case_facts (case_id, fact_content, fact_category, importance)
           VALUES (1, 'Test', 'invalid_category', 'medium')
-        `
+        `,
         ).run();
       }).toThrow(); // Should throw CHECK constraint error
     });
@@ -599,7 +599,7 @@ describe("Facts Repositories Integration Tests", () => {
           `
           INSERT INTO case_facts (case_id, fact_content, fact_category, importance)
           VALUES (1, 'Test', 'timeline', 'invalid_importance')
-        `
+        `,
         ).run();
       }).toThrow(); // Should throw CHECK constraint error
     });

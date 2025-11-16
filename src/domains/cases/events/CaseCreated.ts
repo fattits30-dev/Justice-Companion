@@ -1,11 +1,11 @@
-import type { DomainEvent } from '../../../shared/infrastructure/events/DomainEvent.ts';
+import type { DomainEvent } from "../../../shared/infrastructure/events/DomainEvent.ts";
 
 /**
  * CaseCreated Domain Event
  * Fired when a new case is created in the system
  */
 export class CaseCreated implements DomainEvent {
-  public readonly eventType = 'case.created' as const;
+  public readonly eventType = "case.created" as const;
   public readonly occurredAt: Date;
 
   constructor(
@@ -18,7 +18,7 @@ export class CaseCreated implements DomainEvent {
       description?: string;
       createdBy?: string;
       source?: string;
-    }
+    },
   ) {
     this.occurredAt = new Date();
   }
@@ -41,8 +41,8 @@ export class CaseCreated implements DomainEvent {
       case_.caseType,
       case_.status,
       {
-        description: case_.description || undefined
-      }
+        description: case_.description || undefined,
+      },
     );
   }
 
@@ -58,7 +58,7 @@ export class CaseCreated implements DomainEvent {
       title: this.title,
       caseType: this.caseType,
       status: this.status,
-      metadata: this.metadata
+      metadata: this.metadata,
     };
   }
 

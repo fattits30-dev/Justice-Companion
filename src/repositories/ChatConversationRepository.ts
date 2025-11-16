@@ -127,7 +127,7 @@ class ChatConversationRepository {
   findRecentByCase(
     userId: number,
     caseId: number | null,
-    limit: number = 10
+    limit: number = 10,
   ): ChatConversation[] {
     const db = getDb();
 
@@ -222,7 +222,7 @@ class ChatConversationRepository {
   findWithMessagesPaginated(
     conversationId: number,
     limit: number = 50,
-    cursor: string | null = null
+    cursor: string | null = null,
   ):
     | (ConversationWithMessages & {
         nextCursor: string | null;
@@ -344,7 +344,7 @@ class ChatConversationRepository {
           ? null
           : (() => {
               const encryptedThinking = encryption.encrypt(
-                input.thinkingContent
+                input.thinkingContent,
               );
               return encryptedThinking
                 ? JSON.stringify(encryptedThinking)
@@ -361,7 +361,7 @@ class ChatConversationRepository {
         input.role,
         contentToStore,
         thinkingContentToStore,
-        input.tokenCount ?? null
+        input.tokenCount ?? null,
       );
 
       // Get the inserted message
@@ -446,7 +446,7 @@ class ChatConversationRepository {
   private requireEncryptionService(): EncryptionService {
     if (!this.encryptionService) {
       throw new Error(
-        "EncryptionService not configured for ChatConversationRepository"
+        "EncryptionService not configured for ChatConversationRepository",
       );
     }
     return this.encryptionService;
@@ -480,7 +480,7 @@ class ChatConversationRepository {
   async searchConversations(
     userId: number,
     query: string,
-    filters?: any
+    filters?: any,
   ): Promise<ChatConversation[]> {
     const db = getDb();
     const conditions: string[] = [];
@@ -508,7 +508,7 @@ class ChatConversationRepository {
       conditions.push("created_at >= ? AND created_at <= ?");
       params.push(
         filters.dateRange.from.toISOString(),
-        filters.dateRange.to.toISOString()
+        filters.dateRange.to.toISOString(),
       );
     }
 
@@ -581,7 +581,7 @@ class ChatConversationRepository {
    * Get messages for a conversation
    */
   async getConversationMessages(
-    conversationId: number
+    conversationId: number,
   ): Promise<ChatMessage[]> {
     return this.getMessages(conversationId);
   }

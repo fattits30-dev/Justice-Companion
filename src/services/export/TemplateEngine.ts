@@ -4,8 +4,8 @@ import type {
   EvidenceExportData,
   TimelineExportData,
   NotesExportData,
-  TemplateData
-} from '../../models/Export.ts';
+  TemplateData,
+} from "../../models/Export.ts";
 
 export interface Template {
   name: string;
@@ -23,35 +23,39 @@ export class TemplateEngine {
 
   private initializeDefaultTemplates(): void {
     // Case Summary Template
-    this.templates.set('case-summary', {
-      name: 'Case Summary',
-      description: 'Complete case details with evidence, timeline, and notes',
-      sections: ['case', 'evidence', 'timeline', 'notes', 'facts'],
-      format: (data: TemplateData) => this.formatCaseSummary(data as unknown as CaseExportData),
+    this.templates.set("case-summary", {
+      name: "Case Summary",
+      description: "Complete case details with evidence, timeline, and notes",
+      sections: ["case", "evidence", "timeline", "notes", "facts"],
+      format: (data: TemplateData) =>
+        this.formatCaseSummary(data as unknown as CaseExportData),
     });
 
     // Evidence List Template
-    this.templates.set('evidence-list', {
-      name: 'Evidence List',
-      description: 'Detailed inventory of all case evidence',
-      sections: ['evidence'],
-      format: (data: TemplateData) => this.formatEvidenceList(data as unknown as EvidenceExportData),
+    this.templates.set("evidence-list", {
+      name: "Evidence List",
+      description: "Detailed inventory of all case evidence",
+      sections: ["evidence"],
+      format: (data: TemplateData) =>
+        this.formatEvidenceList(data as unknown as EvidenceExportData),
     });
 
     // Timeline Report Template
-    this.templates.set('timeline-report', {
-      name: 'Timeline Report',
-      description: 'Chronological timeline with deadlines and events',
-      sections: ['timeline', 'deadlines'],
-      format: (data: TemplateData) => this.formatTimelineReport(data as unknown as TimelineExportData),
+    this.templates.set("timeline-report", {
+      name: "Timeline Report",
+      description: "Chronological timeline with deadlines and events",
+      sections: ["timeline", "deadlines"],
+      format: (data: TemplateData) =>
+        this.formatTimelineReport(data as unknown as TimelineExportData),
     });
 
     // Case Notes Template
-    this.templates.set('case-notes', {
-      name: 'Case Notes',
-      description: 'All notes and observations for the case',
-      sections: ['notes'],
-      format: (data: TemplateData) => this.formatCaseNotes(data as unknown as NotesExportData),
+    this.templates.set("case-notes", {
+      name: "Case Notes",
+      description: "All notes and observations for the case",
+      sections: ["notes"],
+      format: (data: TemplateData) =>
+        this.formatCaseNotes(data as unknown as NotesExportData),
     });
   }
 
@@ -63,7 +67,10 @@ export class TemplateEngine {
     return Array.from(this.templates.values());
   }
 
-  applyTemplate(templateName: string, data: TemplateData): Record<string, unknown> {
+  applyTemplate(
+    templateName: string,
+    data: TemplateData,
+  ): Record<string, unknown> {
     const template = this.templates.get(templateName);
     if (!template) {
       throw new Error(`Template '${templateName}' not found`);
@@ -78,14 +85,18 @@ export class TemplateEngine {
     return formatted;
   }
 
-  private formatEvidenceList(_data: EvidenceExportData): Record<string, unknown> {
+  private formatEvidenceList(
+    _data: EvidenceExportData,
+  ): Record<string, unknown> {
     const formatted: Record<string, unknown> = {};
 
     // Implementation would go here
     return formatted;
   }
 
-  private formatTimelineReport(_data: TimelineExportData): Record<string, unknown> {
+  private formatTimelineReport(
+    _data: TimelineExportData,
+  ): Record<string, unknown> {
     const formatted: Record<string, unknown> = {};
 
     // Implementation would go here
@@ -94,7 +105,7 @@ export class TemplateEngine {
 
   private formatCaseNotes(_data: NotesExportData): Record<string, unknown> {
     const formatted: Record<string, unknown> = {};
-    
+
     // Implementation would go here
     return formatted;
   }

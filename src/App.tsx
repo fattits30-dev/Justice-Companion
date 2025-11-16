@@ -28,6 +28,7 @@ import { ToastProvider } from "./components/ui/index.ts";
 import { SkeletonCard } from "./components/ui/Skeleton.tsx";
 import { ErrorBoundary } from "./components/ErrorBoundary.tsx";
 import { logger } from "./utils/logger.ts";
+import { apiClient } from "./lib/apiClient.ts";
 
 // Lazy load views for code splitting
 const Dashboard = lazy(() =>
@@ -133,33 +134,58 @@ function DashboardWrapper() {
         setIsLoading(true);
         setError(null);
 
-        // Get sessionId from localStorage
+        // Get sessionId from localStorage (set by AuthContext)
         const sessionId = localStorage.getItem("sessionId");
 
         if (!sessionId) {
-          // No session - ProtectedRoute will handle redirect to login
-          logger.info(
-            "[DashboardWrapper] No sessionId found - user not authenticated",
-            { service: "App" },
-          );
-          setError("No active session");
+          // No session - show empty dashboard
+          setDashboardStats({
+            totalCases: 0,
+            activeCases: 0,
+            totalEvidence: 0,
+            recentActivity: 0,
+            recentCases: [],
+          });
+          setIsLoading(false);
           return;
         }
 
-        // Fetch dashboard stats from backend
-        const response = await window.justiceAPI.getDashboardStats(sessionId);
+        // Fetch dashboard stats using HTTP REST API
+        apiClient.setSessionId(sessionId);
+        const response = await apiClient.dashboard.getStats();
 
-        if (!response.success) {
-          setError(response.error?.message || "Failed to load dashboard stats");
-          return;
-        }
+        // Debug logging
+        console.log("Dashboard response:", JSON.stringify(response, null, 2));
 
-        if (response.data) {
-          setDashboardStats(response.data);
+        // Backend wraps responses in {success, data} format via middleware
+        // Response structure: {success: true, data: {totalCases, activeCases, ...}}
+        if (response.success && response.data) {
+          setDashboardStats({
+            totalCases: response.data.totalCases,
+            activeCases: response.data.activeCases,
+            totalEvidence: response.data.totalEvidence,
+            recentActivity:
+              response.data.overdueDeadlines +
+              response.data.unreadNotifications,
+            recentCases: [], // Will be fetched separately if needed
+          });
+        } else {
+          console.error("Invalid response format:", response);
+          throw new Error("Failed to load dashboard stats");
         }
       } catch (err) {
-        logger.error("Failed to fetch dashboard stats:", err);
+        logger.error("Failed to fetch dashboard stats:", {
+          error: err as Error,
+        });
         setError(err instanceof Error ? err.message : "An error occurred");
+        // Show empty dashboard on error
+        setDashboardStats({
+          totalCases: 0,
+          activeCases: 0,
+          totalEvidence: 0,
+          recentActivity: 0,
+          recentCases: [],
+        });
       } finally {
         setIsLoading(false);
       }
@@ -209,6 +235,7 @@ function DashboardWrapper() {
  */
 function AppRoutes() {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   return (
     <Routes>
@@ -222,7 +249,7 @@ function AppRoutes() {
                 // Navigation handled by AuthRoute
               }}
               onRegisterClick={() => {
-                window.location.href = "/register";
+                navigate("/register");
               }}
             />
           </AuthRoute>
@@ -234,10 +261,10 @@ function AppRoutes() {
           <AuthRoute>
             <RegistrationScreen
               onSuccess={() => {
-                window.location.href = "/login";
+                navigate("/login");
               }}
               onLoginClick={() => {
-                window.location.href = "/login";
+                navigate("/login");
               }}
             />
           </AuthRoute>

@@ -5,19 +5,19 @@
  * Organized by feature area for maintainability.
  */
 
-import { z } from 'zod';
-import { logger } from '../../utils/logger.ts';
-import { IPC_CHANNELS } from '../../types/ipc.ts';
-import * as aiSchemas from './ai-schemas.ts';
-import * as authSchemas from './auth-schemas.ts';
-import * as caseSchemas from './case-schemas.ts';
-import * as consentSchemas from './consent-schemas.ts';
-import * as conversationSchemas from './conversation-schemas.ts';
-import * as evidenceSchemas from './evidence-schemas.ts';
-import * as fileSchemas from './file-schemas.ts';
-import * as gdprSchemas from './gdpr-schemas.ts';
-import * as modelSchemas from './model-schemas.ts';
-import * as profileSchemas from './profile-schemas.ts';
+import { z } from "zod";
+import { logger } from "../../utils/logger.ts";
+import { IPC_CHANNELS } from "../../types/ipc.ts";
+import * as aiSchemas from "./ai-schemas.ts";
+import * as authSchemas from "./auth-schemas.ts";
+import * as caseSchemas from "./case-schemas.ts";
+import * as consentSchemas from "./consent-schemas.ts";
+import * as conversationSchemas from "./conversation-schemas.ts";
+import * as evidenceSchemas from "./evidence-schemas.ts";
+import * as fileSchemas from "./file-schemas.ts";
+import * as gdprSchemas from "./gdpr-schemas.ts";
+import * as modelSchemas from "./model-schemas.ts";
+import * as profileSchemas from "./profile-schemas.ts";
 
 /**
  * Complete mapping of IPC channels to validation schemas
@@ -65,13 +65,17 @@ export const ipcSchemas = {
   [IPC_CHANNELS.FILE_EMAIL]: fileSchemas.fileEmailSchema,
 
   // ===== CHAT CONVERSATION OPERATIONS (7 channels) =====
-  [IPC_CHANNELS.CONVERSATION_CREATE]: conversationSchemas.conversationCreateSchema,
+  [IPC_CHANNELS.CONVERSATION_CREATE]:
+    conversationSchemas.conversationCreateSchema,
   [IPC_CHANNELS.CONVERSATION_GET]: conversationSchemas.conversationGetSchema,
-  [IPC_CHANNELS.CONVERSATION_GET_ALL]: conversationSchemas.conversationGetAllSchema,
-  [IPC_CHANNELS.CONVERSATION_GET_RECENT]: conversationSchemas.conversationGetRecentSchema,
+  [IPC_CHANNELS.CONVERSATION_GET_ALL]:
+    conversationSchemas.conversationGetAllSchema,
+  [IPC_CHANNELS.CONVERSATION_GET_RECENT]:
+    conversationSchemas.conversationGetRecentSchema,
   [IPC_CHANNELS.CONVERSATION_LOAD_WITH_MESSAGES]:
     conversationSchemas.conversationLoadWithMessagesSchema,
-  [IPC_CHANNELS.CONVERSATION_DELETE]: conversationSchemas.conversationDeleteSchema,
+  [IPC_CHANNELS.CONVERSATION_DELETE]:
+    conversationSchemas.conversationDeleteSchema,
   [IPC_CHANNELS.MESSAGE_ADD]: conversationSchemas.messageAddSchema,
 
   // ===== USER PROFILE OPERATIONS (2 channels) =====
@@ -113,13 +117,12 @@ export const TOTAL_IPC_CHANNELS = Object.keys(IPC_CHANNELS).length;
 export const CHANNELS_WITH_VALIDATION = Object.values(ipcSchemas).filter(
   (s) => s !== undefined,
 ).length;
-export const CHANNELS_WITHOUT_VALIDATION = TOTAL_IPC_CHANNELS - CHANNELS_WITH_VALIDATION;
+export const CHANNELS_WITHOUT_VALIDATION =
+  TOTAL_IPC_CHANNELS - CHANNELS_WITH_VALIDATION;
 
 // Log schema registry stats during development
-if (process.env.NODE_ENV === 'development') {
-  logger.warn('Schema Registry', 'Total channels: ${TOTAL_IPC_CHANNELS}');
-  logger.warn('Schema Registry', 'With validation: ${CHANNELS_WITH_VALIDATION}');
-  logger.warn('Schema Registry', 'Without validation: ${CHANNELS_WITHOUT_VALIDATION}');
+if (process.env.NODE_ENV === "development") {
+  logger.warn("Schema Registry");
 }
 
 // Re-export all schema modules for convenient importing

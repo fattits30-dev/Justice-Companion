@@ -1,9 +1,9 @@
-import { errorLogger } from '../utils/error-logger.ts';
-import fs from 'fs';
-import path from 'path';
-import { app } from 'electron';
-import https from 'https';
-import crypto from 'crypto';
+import { errorLogger } from "../utils/error-logger.ts";
+import fs from "fs";
+import path from "path";
+import { app } from "electron";
+import https from "https";
+import crypto from "crypto";
 
 /**
  * Model metadata for available models
@@ -28,7 +28,7 @@ export interface DownloadProgress {
   totalBytes: number;
   percentage: number;
   speed: number; // bytes per second
-  status: 'downloading' | 'complete' | 'error' | 'paused';
+  status: "downloading" | "complete" | "error" | "paused";
   error?: string;
 }
 
@@ -52,46 +52,46 @@ export class ModelDownloadService {
   // Available models catalog
   public readonly availableModels: ModelInfo[] = [
     {
-      id: 'qwen3-8b-q4',
-      name: 'Qwen 3 8B (Q4_K_M)',
-      fileName: 'Qwen_Qwen3-8B-Q4_K_M.gguf',
-      url: 'https://huggingface.co/bartowski/Qwen_Qwen3-8B-GGUF/resolve/main/Qwen_Qwen3-8B-Q4_K_M.gguf',
+      id: "qwen3-8b-q4",
+      name: "Qwen 3 8B (Q4_K_M)",
+      fileName: "Qwen_Qwen3-8B-Q4_K_M.gguf",
+      url: "https://huggingface.co/bartowski/Qwen_Qwen3-8B-GGUF/resolve/main/Qwen_Qwen3-8B-Q4_K_M.gguf",
       size: 5030000000, // ~5.03 GB
-      description: 'Recommended for AMD Radeon RX 6600 (5.86GB VRAM available)',
+      description: "Recommended for AMD Radeon RX 6600 (5.86GB VRAM available)",
       recommended: true,
     },
     {
-      id: 'qwen3-8b-q5',
-      name: 'Qwen 3 8B (Q5_K_M)',
-      fileName: 'Qwen_Qwen3-8B-Q5_K_M.gguf',
-      url: 'https://huggingface.co/bartowski/Qwen_Qwen3-8B-GGUF/resolve/main/Qwen_Qwen3-8B-Q5_K_M.gguf',
+      id: "qwen3-8b-q5",
+      name: "Qwen 3 8B (Q5_K_M)",
+      fileName: "Qwen_Qwen3-8B-Q5_K_M.gguf",
+      url: "https://huggingface.co/bartowski/Qwen_Qwen3-8B-GGUF/resolve/main/Qwen_Qwen3-8B-Q5_K_M.gguf",
       size: 5850000000, // ~5.85 GB
-      description: 'Higher quality, uses all available VRAM',
+      description: "Higher quality, uses all available VRAM",
       recommended: false,
     },
     {
-      id: 'qwen3-8b-iq4',
-      name: 'Qwen 3 8B (IQ4_XS)',
-      fileName: 'Qwen_Qwen3-8B-IQ4_XS.gguf',
-      url: 'https://huggingface.co/bartowski/Qwen_Qwen3-8B-GGUF/resolve/main/Qwen_Qwen3-8B-IQ4_XS.gguf',
+      id: "qwen3-8b-iq4",
+      name: "Qwen 3 8B (IQ4_XS)",
+      fileName: "Qwen_Qwen3-8B-IQ4_XS.gguf",
+      url: "https://huggingface.co/bartowski/Qwen_Qwen3-8B-GGUF/resolve/main/Qwen_Qwen3-8B-IQ4_XS.gguf",
       size: 4560000000, // ~4.56 GB
-      description: 'Smaller, faster, decent quality',
+      description: "Smaller, faster, decent quality",
       recommended: false,
     },
   ];
 
   private constructor() {
     // Models directory: app.getPath('userData')/models/
-    const userDataPath = app.getPath('userData');
-    this.modelsDir = path.join(userDataPath, 'models');
+    const userDataPath = app.getPath("userData");
+    this.modelsDir = path.join(userDataPath, "models");
 
     // Ensure models directory exists
     if (!fs.existsSync(this.modelsDir)) {
       fs.mkdirSync(this.modelsDir, { recursive: true });
     }
 
-    errorLogger.logError('ModelDownloadService initialized', {
-      type: 'info',
+    errorLogger.logError("ModelDownloadService initialized", {
+      type: "info",
       modelsDir: this.modelsDir,
     });
   }
@@ -148,14 +148,14 @@ export class ModelDownloadService {
   ): Promise<boolean> {
     const model = this.availableModels.find((m) => m.id === modelId);
     if (!model) {
-      errorLogger.logError('Model not found in catalog', { modelId });
+      errorLogger.logError("Model not found in catalog", { modelId });
       return false;
     }
 
     // Check if already downloaded
     if (this.isModelDownloaded(modelId)) {
-      errorLogger.logError('Model already downloaded', {
-        type: 'info',
+      errorLogger.logError("Model already downloaded", {
+        type: "info",
         modelId,
       });
       onProgress({
@@ -164,14 +164,14 @@ export class ModelDownloadService {
         totalBytes: model.size,
         percentage: 100,
         speed: 0,
-        status: 'complete',
+        status: "complete",
       });
       return true;
     }
 
     // Check if download already in progress
     if (this.activeDownloads.has(modelId)) {
-      errorLogger.logError('Download already in progress', { modelId });
+      errorLogger.logError("Download already in progress", { modelId });
       return false;
     }
 
@@ -179,8 +179,8 @@ export class ModelDownloadService {
     const tempPath = `${modelPath}.tmp`;
 
     try {
-      errorLogger.logError('Starting model download', {
-        type: 'info',
+      errorLogger.logError("Starting model download", {
+        type: "info",
         modelId,
         url: model.url,
         size: model.size,
@@ -194,13 +194,13 @@ export class ModelDownloadService {
           totalBytes: progress.totalBytes,
           percentage: progress.percentage,
           speed: progress.speed,
-          status: 'downloading',
+          status: "downloading",
         });
       });
 
       // Verify checksum if provided
       if (model.sha256) {
-        errorLogger.logError('Verifying checksum', { type: 'info', modelId });
+        errorLogger.logError("Verifying checksum", { type: "info", modelId });
 
         const hash = await this.calculateSHA256(tempPath);
         if (hash !== model.sha256) {
@@ -209,8 +209,8 @@ export class ModelDownloadService {
           );
         }
 
-        errorLogger.logError('Checksum verified successfully', {
-          type: 'info',
+        errorLogger.logError("Checksum verified successfully", {
+          type: "info",
           modelId,
         });
       }
@@ -218,8 +218,8 @@ export class ModelDownloadService {
       // Move temp file to final location
       fs.renameSync(tempPath, modelPath);
 
-      errorLogger.logError('Model download complete', {
-        type: 'info',
+      errorLogger.logError("Model download complete", {
+        type: "info",
         modelId,
         path: modelPath,
       });
@@ -230,7 +230,7 @@ export class ModelDownloadService {
         totalBytes: model.size,
         percentage: 100,
         speed: 0,
-        status: 'complete',
+        status: "complete",
       });
 
       this.activeDownloads.delete(modelId);
@@ -242,10 +242,10 @@ export class ModelDownloadService {
       }
 
       const errorMessage =
-        error instanceof Error ? error.message : 'Unknown error';
+        error instanceof Error ? error.message : "Unknown error";
 
       errorLogger.logError(error as Error, {
-        context: 'ModelDownloadService.downloadModel',
+        context: "ModelDownloadService.downloadModel",
         modelId,
       });
 
@@ -255,7 +255,7 @@ export class ModelDownloadService {
         totalBytes: model.size,
         percentage: 0,
         speed: 0,
-        status: 'error',
+        status: "error",
         error: errorMessage,
       });
 
@@ -283,12 +283,14 @@ export class ModelDownloadService {
         .get(url, (response) => {
           if (response.statusCode !== 200) {
             reject(
-              new Error(`HTTP ${response.statusCode}: ${response.statusMessage}`),
+              new Error(
+                `HTTP ${response.statusCode}: ${response.statusMessage}`,
+              ),
             );
             return;
           }
 
-          response.on('data', (chunk) => {
+          response.on("data", (chunk) => {
             downloadedBytes += chunk.length;
 
             // Calculate speed every second
@@ -301,29 +303,29 @@ export class ModelDownloadService {
               lastBytes = downloadedBytes;
 
               onProgress({
-                modelId: '',
+                modelId: "",
                 downloadedBytes,
                 totalBytes: totalSize,
                 percentage: (downloadedBytes / totalSize) * 100,
                 speed,
-                status: 'downloading',
+                status: "downloading",
               });
             }
           });
 
           response.pipe(file);
 
-          file.on('finish', () => {
+          file.on("finish", () => {
             file.close();
             resolve();
           });
         })
-        .on('error', (error) => {
+        .on("error", (error) => {
           fs.unlinkSync(destPath);
           reject(error);
         });
 
-      file.on('error', (error) => {
+      file.on("error", (error) => {
         fs.unlinkSync(destPath);
         reject(error);
       });
@@ -335,18 +337,18 @@ export class ModelDownloadService {
    */
   private calculateSHA256(filePath: string): Promise<string> {
     return new Promise((resolve, reject) => {
-      const hash = crypto.createHash('sha256');
+      const hash = crypto.createHash("sha256");
       const stream = fs.createReadStream(filePath);
 
-      stream.on('data', (chunk) => {
+      stream.on("data", (chunk) => {
         hash.update(chunk);
       });
 
-      stream.on('end', () => {
-        resolve(hash.digest('hex'));
+      stream.on("end", () => {
+        resolve(hash.digest("hex"));
       });
 
-      stream.on('error', (error) => {
+      stream.on("error", (error) => {
         reject(error);
       });
     });
@@ -370,8 +372,8 @@ export class ModelDownloadService {
     try {
       fs.unlinkSync(modelPath);
 
-      errorLogger.logError('Model deleted', {
-        type: 'info',
+      errorLogger.logError("Model deleted", {
+        type: "info",
         modelId,
         path: modelPath,
       });
@@ -379,7 +381,7 @@ export class ModelDownloadService {
       return true;
     } catch (error) {
       errorLogger.logError(error as Error, {
-        context: 'ModelDownloadService.deleteModel',
+        context: "ModelDownloadService.deleteModel",
         modelId,
       });
 

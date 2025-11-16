@@ -1,4 +1,4 @@
-import { logger } from '../utils/logger';
+import { logger } from "../utils/logger";
 
 import { createHash, randomUUID } from "node:crypto";
 import type Database from "better-sqlite3";
@@ -66,7 +66,7 @@ export class AuditLogger {
       this.insertAuditLog(entry);
     } catch (error) {
       // CRITICAL: Audit failures should NOT break app
-      logger.error("❌ Audit logging failed:", error);
+      logger.error("❌ Audit logging failed:", { error: error as Error });
     }
   }
 

@@ -29,30 +29,42 @@ export interface PasswordValidationResult {
 export function validatePasswordChange(
   oldPassword: string,
   newPassword: string,
-  confirmPassword: string
+  confirmPassword: string,
 ): PasswordValidationResult {
   if (!oldPassword) {
-    return { isValid: false, error: 'Current password is required' };
+    return { isValid: false, error: "Current password is required" };
   }
 
   if (newPassword.length < 12) {
-    return { isValid: false, error: 'New password must be at least 12 characters' };
+    return {
+      isValid: false,
+      error: "New password must be at least 12 characters",
+    };
   }
 
   if (!/[A-Z]/.test(newPassword)) {
-    return { isValid: false, error: 'Password must contain at least one uppercase letter' };
+    return {
+      isValid: false,
+      error: "Password must contain at least one uppercase letter",
+    };
   }
 
   if (!/[a-z]/.test(newPassword)) {
-    return { isValid: false, error: 'Password must contain at least one lowercase letter' };
+    return {
+      isValid: false,
+      error: "Password must contain at least one lowercase letter",
+    };
   }
 
   if (!/[0-9]/.test(newPassword)) {
-    return { isValid: false, error: 'Password must contain at least one number' };
+    return {
+      isValid: false,
+      error: "Password must contain at least one number",
+    };
   }
 
   if (newPassword !== confirmPassword) {
-    return { isValid: false, error: 'New passwords do not match' };
+    return { isValid: false, error: "New passwords do not match" };
   }
 
   return { isValid: true };

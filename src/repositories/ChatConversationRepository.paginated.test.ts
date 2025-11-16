@@ -1,15 +1,26 @@
-import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll } from 'vitest';
-import { ChatConversationRepository } from './ChatConversationRepository';
-import { EncryptionService } from '../services/EncryptionService';
-import { AuditLogger } from '../services/AuditLogger';
-import { createTestDatabase } from '../test-utils/database-test-helper';
-import { databaseManager } from '../db/database.ts';
-import type { CreateConversationInput, CreateMessageInput } from '../models/ChatConversation';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  beforeAll,
+  afterAll,
+} from "vitest";
+import { ChatConversationRepository } from "./ChatConversationRepository";
+import { EncryptionService } from "../services/EncryptionService";
+import { AuditLogger } from "../services/AuditLogger";
+import { createTestDatabase } from "../test-utils/database-test-helper";
+import { databaseManager } from "../db/database.ts";
+import type {
+  CreateConversationInput,
+  CreateMessageInput,
+} from "../models/ChatConversation";
 
 // Create test database instance at module level
 const testDb = createTestDatabase();
 
-describe('ChatConversationRepository - Cursor Pagination', () => {
+describe("ChatConversationRepository - Cursor Pagination", () => {
   let encryptionService: EncryptionService;
   let auditLogger: AuditLogger;
   let repository: ChatConversationRepository;
@@ -21,7 +32,13 @@ describe('ChatConversationRepository - Cursor Pagination', () => {
       INSERT OR IGNORE INTO users (id, username, password_hash, password_salt, email, created_at)
       VALUES (?, ?, ?, ?, ?, datetime('now'))
     `);
-    userStmt.run(userId, `testuser${userId}`, 'hash', 'salt', `test${userId}@example.com`);
+    userStmt.run(
+      userId,
+      `testuser${userId}`,
+      "hash",
+      "salt",
+      `test${userId}@example.com`,
+    );
   };
 
   // Helper to create test case (optional, for case_id FK)
@@ -31,7 +48,14 @@ describe('ChatConversationRepository - Cursor Pagination', () => {
       INSERT OR IGNORE INTO cases (id, title, description, case_type, status, user_id, created_at)
       VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
     `);
-    caseStmt.run(caseId, `Test Case ${caseId}`, 'Test Description', 'employment', 'active', userId);
+    caseStmt.run(
+      caseId,
+      `Test Case ${caseId}`,
+      "Test Description",
+      "employment",
+      "active",
+      userId,
+    );
   };
 
   beforeAll(() => {
@@ -66,15 +90,15 @@ describe('ChatConversationRepository - Cursor Pagination', () => {
     // Additional cleanup if needed
   });
 
-  describe('findWithMessagesPaginated', () => {
-    it('should return first page of messages', () => {
+  describe("findWithMessagesPaginated", () => {
+    it("should return first page of messages", () => {
       // Create parent user and case (satisfies FK constraints)
       createTestCase(100, 1);
 
       // Create conversation
       const convInput: CreateConversationInput = {
         userId: 1,
-        title: 'Test Conversation',
+        title: "Test Conversation",
         caseId: 100,
       };
       const conversation = repository.create(convInput);
@@ -83,7 +107,7 @@ describe('ChatConversationRepository - Cursor Pagination', () => {
       for (let i = 1; i <= 10; i++) {
         const msgInput: CreateMessageInput = {
           conversationId: conversation.id,
-          role: i % 2 === 0 ? 'assistant' : 'user',
+          role: i % 2 === 0 ? "assistant" : "user",
           content: `Message ${i}`,
           tokenCount: 10,
         };
@@ -99,19 +123,19 @@ describe('ChatConversationRepository - Cursor Pagination', () => {
       expect(result!.nextCursor).toBeTruthy();
 
       // Messages should be in ASC order (oldest first for chat)
-      expect(result!.messages[0].content).toBe('Message 1');
-      expect(result!.messages[1].content).toBe('Message 2');
-      expect(result!.messages[4].content).toBe('Message 5');
+      expect(result!.messages[0].content).toBe("Message 1");
+      expect(result!.messages[1].content).toBe("Message 2");
+      expect(result!.messages[4].content).toBe("Message 5");
     });
 
-    it('should return second page using cursor', () => {
+    it("should return second page using cursor", () => {
       // Create parent user and case (satisfies FK constraints)
       createTestCase(100, 1);
 
       // Create conversation with 10 messages
       const convInput: CreateConversationInput = {
         userId: 1,
-        title: 'Test Conversation',
+        title: "Test Conversation",
         caseId: 100,
       };
       const conversation = repository.create(convInput);
@@ -119,7 +143,7 @@ describe('ChatConversationRepository - Cursor Pagination', () => {
       for (let i = 1; i <= 10; i++) {
         const msgInput: CreateMessageInput = {
           conversationId: conversation.id,
-          role: 'user',
+          role: "user",
           content: `Message ${i}`,
           tokenCount: 10,
         };
@@ -130,29 +154,33 @@ describe('ChatConversationRepository - Cursor Pagination', () => {
       const page1 = repository.findWithMessagesPaginated(conversation.id, 5);
 
       // Get second page using cursor
-      const page2 = repository.findWithMessagesPaginated(conversation.id, 5, page1!.nextCursor);
+      const page2 = repository.findWithMessagesPaginated(
+        conversation.id,
+        5,
+        page1!.nextCursor,
+      );
 
       expect(page2).toBeTruthy();
       expect(page2!.messages).toHaveLength(5);
       expect(page2!.hasMore).toBe(false);
       expect(page2!.nextCursor).toBeNull();
-      expect(page2!.messages[0].content).toBe('Message 6');
-      expect(page2!.messages[4].content).toBe('Message 10');
+      expect(page2!.messages[0].content).toBe("Message 6");
+      expect(page2!.messages[4].content).toBe("Message 10");
     });
 
-    it('should return null for non-existent conversation', () => {
+    it("should return null for non-existent conversation", () => {
       const result = repository.findWithMessagesPaginated(999, 10);
       expect(result).toBeNull();
     });
 
-    it('should decrypt message content and thinking content', () => {
+    it("should decrypt message content and thinking content", () => {
       // Create parent user and case (satisfies FK constraints)
       createTestCase(100, 1);
 
       // Create conversation
       const convInput: CreateConversationInput = {
         userId: 1,
-        title: 'Test Conversation',
+        title: "Test Conversation",
         caseId: 100,
       };
       const conversation = repository.create(convInput);
@@ -161,7 +189,7 @@ describe('ChatConversationRepository - Cursor Pagination', () => {
       for (let i = 1; i <= 5; i++) {
         const msgInput: CreateMessageInput = {
           conversationId: conversation.id,
-          role: 'assistant',
+          role: "assistant",
           content: `Sensitive message ${i}`,
           thinkingContent: `Internal reasoning ${i}`,
           tokenCount: 20,
@@ -179,14 +207,14 @@ describe('ChatConversationRepository - Cursor Pagination', () => {
       });
     });
 
-    it('should handle exact page size boundary', () => {
+    it("should handle exact page size boundary", () => {
       // Create parent user and case (satisfies FK constraints)
       createTestCase(100, 1);
 
       // Create conversation with exactly 10 messages
       const convInput: CreateConversationInput = {
         userId: 1,
-        title: 'Test Conversation',
+        title: "Test Conversation",
         caseId: 100,
       };
       const conversation = repository.create(convInput);
@@ -194,7 +222,7 @@ describe('ChatConversationRepository - Cursor Pagination', () => {
       for (let i = 1; i <= 10; i++) {
         const msgInput: CreateMessageInput = {
           conversationId: conversation.id,
-          role: 'user',
+          role: "user",
           content: `Message ${i}`,
           tokenCount: 10,
         };
@@ -210,14 +238,14 @@ describe('ChatConversationRepository - Cursor Pagination', () => {
       expect(result!.nextCursor).toBeNull();
     });
 
-    it('should handle empty conversation', () => {
+    it("should handle empty conversation", () => {
       // Create parent user and case (satisfies FK constraints)
       createTestCase(100, 1);
 
       // Create conversation with no messages
       const convInput: CreateConversationInput = {
         userId: 1,
-        title: 'Empty Conversation',
+        title: "Empty Conversation",
         caseId: 100,
       };
       const conversation = repository.create(convInput);
@@ -230,14 +258,14 @@ describe('ChatConversationRepository - Cursor Pagination', () => {
       expect(result!.nextCursor).toBeNull();
     });
 
-    it('should create audit log when accessing messages', () => {
+    it("should create audit log when accessing messages", () => {
       // Create parent user and case (satisfies FK constraints)
       createTestCase(100, 1);
 
       // Create conversation with messages
       const convInput: CreateConversationInput = {
         userId: 1,
-        title: 'Test Conversation',
+        title: "Test Conversation",
         caseId: 100,
       };
       const conversation = repository.create(convInput);
@@ -245,7 +273,7 @@ describe('ChatConversationRepository - Cursor Pagination', () => {
       for (let i = 1; i <= 3; i++) {
         const msgInput: CreateMessageInput = {
           conversationId: conversation.id,
-          role: 'user',
+          role: "user",
           content: `Message ${i}`,
           tokenCount: 10,
         };
@@ -263,15 +291,15 @@ describe('ChatConversationRepository - Cursor Pagination', () => {
     });
   });
 
-  describe('Performance comparison', () => {
-    it('should be more memory efficient than findWithMessages', () => {
+  describe("Performance comparison", () => {
+    it("should be more memory efficient than findWithMessages", () => {
       // Create parent user and case (satisfies FK constraints)
       createTestCase(100, 1);
 
       // Create conversation with 100 messages
       const convInput: CreateConversationInput = {
         userId: 1,
-        title: 'Large Conversation',
+        title: "Large Conversation",
         caseId: 100,
       };
       const conversation = repository.create(convInput);
@@ -279,7 +307,7 @@ describe('ChatConversationRepository - Cursor Pagination', () => {
       for (let i = 1; i <= 100; i++) {
         const msgInput: CreateMessageInput = {
           conversationId: conversation.id,
-          role: i % 2 === 0 ? 'assistant' : 'user',
+          role: i % 2 === 0 ? "assistant" : "user",
           content: `Message ${i}`.repeat(100), // ~1.2KB each
           thinkingContent: i % 2 === 0 ? `Thinking ${i}`.repeat(50) : undefined,
           tokenCount: 200,
@@ -288,7 +316,10 @@ describe('ChatConversationRepository - Cursor Pagination', () => {
       }
 
       // Paginated: loads only 10 messages (~12KB)
-      const paginated = repository.findWithMessagesPaginated(conversation.id, 10);
+      const paginated = repository.findWithMessagesPaginated(
+        conversation.id,
+        10,
+      );
       expect(paginated).toBeTruthy();
       expect(paginated!.messages).toHaveLength(10);
 
@@ -300,17 +331,19 @@ describe('ChatConversationRepository - Cursor Pagination', () => {
       // Memory usage: paginated is 10x more efficient
       console.log(`Paginated: ${paginated!.messages.length} messages`);
       console.log(`Non-paginated: ${all!.messages.length} messages`);
-      console.log(`Memory reduction: ${((1 - paginated!.messages.length / all!.messages.length) * 100).toFixed(1)}%`);
+      console.log(
+        `Memory reduction: ${((1 - paginated!.messages.length / all!.messages.length) * 100).toFixed(1)}%`,
+      );
     });
 
-    it('should handle very large conversations gracefully', () => {
+    it("should handle very large conversations gracefully", () => {
       // Create parent user and case (satisfies FK constraints)
       createTestCase(100, 1);
 
       // Create conversation with 1000 messages
       const convInput: CreateConversationInput = {
         userId: 1,
-        title: 'Very Large Conversation',
+        title: "Very Large Conversation",
         caseId: 100,
       };
       const conversation = repository.create(convInput);
@@ -318,7 +351,7 @@ describe('ChatConversationRepository - Cursor Pagination', () => {
       for (let i = 1; i <= 1000; i++) {
         const msgInput: CreateMessageInput = {
           conversationId: conversation.id,
-          role: 'user',
+          role: "user",
           content: `Message ${i}`,
           tokenCount: 10,
         };
@@ -340,15 +373,15 @@ describe('ChatConversationRepository - Cursor Pagination', () => {
     });
   });
 
-  describe('Cursor continuity', () => {
-    it('should allow iteration through all pages', () => {
+  describe("Cursor continuity", () => {
+    it("should allow iteration through all pages", () => {
       // Create parent user and case (satisfies FK constraints)
       createTestCase(100, 1);
 
       // Create conversation with 25 messages
       const convInput: CreateConversationInput = {
         userId: 1,
-        title: 'Test Conversation',
+        title: "Test Conversation",
         caseId: 100,
       };
       const conversation = repository.create(convInput);
@@ -356,7 +389,7 @@ describe('ChatConversationRepository - Cursor Pagination', () => {
       for (let i = 1; i <= 25; i++) {
         const msgInput: CreateMessageInput = {
           conversationId: conversation.id,
-          role: 'user',
+          role: "user",
           content: `Message ${i}`,
           tokenCount: 10,
         };
@@ -369,22 +402,28 @@ describe('ChatConversationRepository - Cursor Pagination', () => {
 
       // Iterate through all pages
       do {
-        const result = repository.findWithMessagesPaginated(conversation.id, 10, cursor);
+        const result = repository.findWithMessagesPaginated(
+          conversation.id,
+          10,
+          cursor,
+        );
         expect(result).toBeTruthy();
 
-        allMessages.push(...result!.messages.map(m => m.content));
+        allMessages.push(...result!.messages.map((m) => m.content));
         cursor = result!.nextCursor;
         pageCount++;
 
         // Safety: prevent infinite loops in tests
-        if (pageCount > 10) {break;}
+        if (pageCount > 10) {
+          break;
+        }
       } while (cursor !== null);
 
       // Should have loaded all 25 messages in 3 pages
       expect(allMessages).toHaveLength(25);
       expect(pageCount).toBe(3); // 10 + 10 + 5
-      expect(allMessages[0]).toBe('Message 1');
-      expect(allMessages[24]).toBe('Message 25');
+      expect(allMessages[0]).toBe("Message 1");
+      expect(allMessages[24]).toBe("Message 25");
     });
   });
 });

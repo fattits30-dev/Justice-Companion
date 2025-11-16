@@ -14,7 +14,7 @@ import * as fs from "fs";
 import * as path from "path";
 
 // Import pdf-parse using require since it doesn't have proper ES6 exports
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+
 const pdfParse = require("pdf-parse");
 
 export interface ParsedDocument {

@@ -5,8 +5,8 @@
  * granting, revoking, and checking consent status with proper type validation.
  */
 
-import { z } from 'zod';
-import { VALID_CONSENT_TYPES } from '../utils/constants.ts';
+import { z } from "zod";
+import { VALID_CONSENT_TYPES } from "../utils/constants.ts";
 
 /**
  * Schema for granting consent
@@ -16,21 +16,21 @@ export const consentGrantSchema = z
   .object({
     consentType: z
       .enum([...VALID_CONSENT_TYPES] as [string, ...string[]], {
-        message: 'Please select a valid consent type',
+        message: "Please select a valid consent type",
       })
       .refine((type) => {
         // Ensure consent type is one of the allowed values
         const allowedTypes = [
-          'data_processing',
-          'encryption',
-          'ai_processing',
-          'marketing',
-          'data_sharing',
-          'analytics',
-          'data_retention',
+          "data_processing",
+          "encryption",
+          "ai_processing",
+          "marketing",
+          "data_sharing",
+          "analytics",
+          "data_retention",
         ];
         return allowedTypes.includes(type);
-      }, 'Invalid consent type'),
+      }, "Invalid consent type"),
   })
   .strict();
 
@@ -42,17 +42,17 @@ export const consentRevokeSchema = z
   .object({
     consentType: z
       .enum([...VALID_CONSENT_TYPES] as [string, ...string[]], {
-        message: 'Please select a valid consent type',
+        message: "Please select a valid consent type",
       })
       .refine(
         (type) => {
           // Cannot revoke mandatory consents
-          const mandatoryConsents = ['data_processing'];
+          const mandatoryConsents = ["data_processing"];
           return !mandatoryConsents.includes(type);
         },
         {
           message:
-            'Cannot revoke mandatory consent - this consent is required for the app to function',
+            "Cannot revoke mandatory consent - this consent is required for the app to function",
         },
       ),
   })
@@ -65,7 +65,7 @@ export const consentRevokeSchema = z
 export const consentHasConsentSchema = z
   .object({
     consentType: z.enum([...VALID_CONSENT_TYPES] as [string, ...string[]], {
-      message: 'Please select a valid consent type',
+      message: "Please select a valid consent type",
     }),
   })
   .strict();

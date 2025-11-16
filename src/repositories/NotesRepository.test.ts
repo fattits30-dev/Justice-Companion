@@ -41,7 +41,7 @@ describe("NotesRepository", () => {
       `
       INSERT INTO cases (title, case_type)
       VALUES ('Test Case', 'employment')
-    `
+    `,
     ).run();
   });
 
@@ -61,7 +61,7 @@ describe("NotesRepository", () => {
       expect(note.id).toBe(1);
       expect(note.caseId).toBe(1);
       expect(note.content).toBe(
-        "This is a sensitive private note about the case."
+        "This is a sensitive private note about the case.",
       );
 
       // Verify content is encrypted in database
@@ -89,7 +89,7 @@ describe("NotesRepository", () => {
         .prepare(
           `
         SELECT * FROM audit_logs WHERE event_type = 'note.create'
-      `
+      `,
         )
         .get() as any;
 
@@ -110,7 +110,7 @@ describe("NotesRepository", () => {
         .prepare(
           `
         SELECT details FROM audit_logs WHERE event_type = 'note.create'
-      `
+      `,
         )
         .get() as { details: string };
 
@@ -144,7 +144,7 @@ describe("NotesRepository", () => {
         .prepare(
           `
         SELECT * FROM audit_logs WHERE event_type = 'note.content_access'
-      `
+      `,
         )
         .get() as any;
 
@@ -214,7 +214,7 @@ describe("NotesRepository", () => {
         .prepare(
           `
         SELECT * FROM audit_logs WHERE event_type = 'note.update' AND resource_id = ?
-      `
+      `,
         )
         .get(created.id.toString()) as any;
 
@@ -255,7 +255,7 @@ describe("NotesRepository", () => {
         .prepare(
           `
         SELECT * FROM audit_logs WHERE event_type = 'note.delete' AND resource_id = ?
-      `
+      `,
         )
         .get(created.id.toString()) as any;
 
@@ -271,7 +271,7 @@ describe("NotesRepository", () => {
         `
         INSERT INTO notes (case_id, content)
         VALUES (?, ?)
-      `
+      `,
       ).run(1, "Legacy plaintext note");
 
       const note = repository.findById(1);
@@ -285,7 +285,7 @@ describe("NotesRepository", () => {
         `
         INSERT INTO notes (case_id, content)
         VALUES (?, ?)
-      `
+      `,
       ).run(1, "");
 
       const note = repository.findById(1);

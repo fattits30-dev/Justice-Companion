@@ -1,10 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { logger } from '../utils/logger';
-
 import { useAuth } from "../contexts/AuthContext.tsx";
 import { SaveToCaseDialog } from "./chat/SaveToCaseDialog.tsx";
 import { MessageItem } from "./chat/MessageItem.tsx";
 import { AICaseCreationDialog } from "./chat/AICaseCreationDialog.tsx";
+import { AIProcessFlowchart } from "../components/chat/AIProcessFlowchart.tsx";
 import { toast } from "sonner";
 import { Upload, FileText, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -53,7 +52,7 @@ export function ChatView() {
         }));
       }
     } catch (error) {
-      logger.error("[ChatView] Failed to load saved messages:", error);
+      console.error("[ChatView] Failed to load saved messages:", error);
     }
     return [];
   });
@@ -112,7 +111,7 @@ export function ChatView() {
             setMessages([]);
           }
         } catch (error) {
-          logger.error(
+          console.error(
             "[ChatView] Failed to load messages for new case:",
             error,
           );
@@ -139,7 +138,7 @@ export function ChatView() {
         : "chatMessages-global";
       localStorage.setItem(storageKey, JSON.stringify(messages));
     } catch (error) {
-      logger.error("[ChatView] Failed to save messages:", error);
+      console.error("[ChatView] Failed to save messages:", error);
     }
   }, [messages, activeCaseId]);
 
@@ -212,7 +211,7 @@ export function ChatView() {
         },
         (error: string) => {
           // Error during streaming
-          logger.error("[ChatView] Streaming error:", error);
+          console.error("[ChatView] Streaming error:", error);
           const errorMessage: Message = {
             id: `error-${Date.now()}`,
             role: "assistant",
@@ -226,12 +225,12 @@ export function ChatView() {
         },
         (conversationId: number) => {
           // Capture conversation ID for memory
-          logger.info("[ChatView] Received conversationId:", conversationId);
+          console.log("[ChatView] Received conversationId:", conversationId);
           setCurrentConversationId(conversationId);
         },
       );
     } catch (error) {
-      logger.error("[ChatView] Send error:", error);
+      console.error("[ChatView] Send error:", error);
       setIsStreaming(false);
     }
   }, [input, isStreaming]);
@@ -345,7 +344,7 @@ export function ChatView() {
           }
         } catch (error) {
           // If we can't check for duplicates, proceed with creation
-          logger.warn(
+          console.warn(
             "[ChatView] Could not check for duplicate cases:",
             error,
           );
@@ -518,36 +517,54 @@ Based on your dismissal letter, here are some general steps many people take whe
 
       const suggestedCaseData = analysisResult.data?.suggestedCaseData;
 
+      // Check if a case is already active
+      const hasActiveCase = !!activeCaseId;
+
       // Add AI analysis message
-      const finalSuggestedCaseData = suggestedCaseData || {
-        title: `Case regarding ${filename}`,
-        caseType: "other",
-        description: `Document uploaded for analysis: ${filename}`,
-        confidence: {
-          title: 0.3,
-          caseType: 0.3,
-          description: 0.3,
-        },
-      };
+      // Only include suggestedCaseData if no case is active (first upload)
+      const finalSuggestedCaseData =
+        !hasActiveCase && suggestedCaseData
+          ? suggestedCaseData
+          : !hasActiveCase
+            ? {
+                title: `Case regarding ${filename}`,
+                caseType: "other",
+                description: `Document uploaded for analysis: ${filename}`,
+                confidence: {
+                  title: 0.3,
+                  caseType: 0.3,
+                  description: 0.3,
+                },
+              }
+            : undefined;
 
       const analysisMessage: Message = {
         id: `analysis-${Date.now()}`,
         role: "assistant",
         content: analysisResult.data!.analysis,
         timestamp: new Date(),
-        documentAnalysis: {
-          filename,
-          suggestedCaseData: finalSuggestedCaseData,
-        },
+        documentAnalysis: finalSuggestedCaseData
+          ? {
+              filename,
+              suggestedCaseData: finalSuggestedCaseData,
+            }
+          : { filename },
       };
 
       setMessages((prev) => [...prev, analysisMessage]);
+
+      // If a case is active, notify user that document was added to case
+      if (hasActiveCase) {
+        toast.info("Document added to active case", {
+          description: `${filename} linked to current case`,
+        });
+      }
 
       toast.success("Document analyzed successfully", {
         description: `Analyzed ${filename}`,
       });
     } catch (error) {
-      logger.error("[ChatView] Document upload error:", error);
+      console.error("[ChatView] Document upload error:", error);
       const errorMessage: Message = {
         id: `error-${Date.now()}`,
         role: "assistant",
@@ -562,7 +579,7 @@ Based on your dismissal letter, here are some general steps many people take whe
     } finally {
       setIsAnalyzingDocument(false);
     }
-  }, []);
+  }, [activeCaseId, user]);
 
   const handleClearChat = useCallback(() => {
     if (messages.length === 0) {
@@ -585,7 +602,7 @@ Based on your dismissal letter, here are some general steps many people take whe
   }, [messages.length, activeCaseId]);
 
   return (
-    <div className="flex flex-col h-full bg-gradient-to-br from-gray-900 via-primary-900 to-gray-900 text-white">
+    <div className="flex flex-col h-full bg-linear-to-br from-gray-900 via-primary-900 to-gray-900 text-white">
       {/* Header */}
       <div className="sticky top-0 z-30 bg-gray-900/80 backdrop-blur-md border-b border-white/10">
         <div className="p-6">
@@ -720,6 +737,16 @@ Based on your dismissal letter, here are some general steps many people take whe
                     </p>
                   </button>
                 </div>
+
+                {/* AI Process Flowchart */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.6 }}
+                  className="mt-12"
+                >
+                  <AIProcessFlowchart />
+                </motion.div>
               </div>
             </motion.div>
           )}
@@ -864,7 +891,7 @@ Based on your dismissal letter, here are some general steps many people take whe
                       <div className="prose prose-invert max-w-none text-white/90">
                         <ReactMarkdown>{currentStreamingMessage}</ReactMarkdown>
                         <motion.span
-                          className="inline-block w-[2px] h-5 ml-1 bg-gradient-to-b from-cyan-400 to-blue-500 rounded-full"
+                          className="inline-block w-[2px] h-5 ml-1 bg-linear-to-b from-cyan-400 to-blue-500 rounded-full"
                           animate={{
                             opacity: [1, 0.3, 1],
                           }}
@@ -888,14 +915,14 @@ Based on your dismissal letter, here are some general steps many people take whe
       </div>
 
       {/* Input area */}
-      <div className="flex-shrink-0 border-t border-white/10 bg-gray-900/80 backdrop-blur-md p-6">
+      <div className="shrink-0 border-t border-white/10 bg-gray-900/80 backdrop-blur-md p-6">
         <div className="max-w-4xl mx-auto">
           <div className="flex gap-3">
             {/* Upload button */}
             <button
               onClick={handleDocumentUpload}
               disabled={isStreaming || isAnalyzingDocument}
-              className="flex-shrink-0 p-3 bg-white/5 hover:bg-white/10 disabled:bg-white/5 disabled:cursor-not-allowed border border-white/10 rounded-lg transition-colors group"
+              className="shrink-0 p-3 bg-white/5 hover:bg-white/10 disabled:bg-white/5 disabled:cursor-not-allowed border border-white/10 rounded-lg transition-colors group"
               title="Upload document for analysis (PDF, DOCX, TXT)"
             >
               {isAnalyzingDocument ? (
@@ -924,7 +951,7 @@ Based on your dismissal letter, here are some general steps many people take whe
               onKeyDown={handleKeyDown}
               placeholder="Ask me anything about UK civil legal matters, or upload a document..."
               disabled={isStreaming || isAnalyzingDocument}
-              className="flex-1 bg-white/5 border border-white/10 rounded-lg p-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
+              className="flex-1 bg-white/5 border border-white/10 rounded-lg p-3 text-white placeholder-gray-500 focus:outline-hidden focus:ring-2 focus:ring-primary-500 resize-none"
               rows={3}
             />
             <button
@@ -1001,7 +1028,7 @@ Based on your dismissal letter, here are some general steps many people take whe
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl max-w-2xl w-full mx-4">
             {/* Header */}
-            <div className="p-6 border-b border-gray-700 flex-shrink-0">
+            <div className="p-6 border-b border-gray-700 shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-yellow-500/20 border border-yellow-500/40 flex items-center justify-center">
                   <svg
@@ -1157,7 +1184,7 @@ Based on your dismissal letter, here are some general steps many people take whe
                             toast.error("Could not find existing case");
                           }
                         } catch (error) {
-                          logger.error(
+                          console.error(
                             "Error switching to existing case:",
                             error,
                           );

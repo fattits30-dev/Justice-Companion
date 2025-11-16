@@ -1,7 +1,7 @@
-import { injectable } from 'inversify';
-import { LRUCache } from 'lru-cache';
-import { errorLogger } from '../utils/error-logger.ts';
-import { logger } from '../utils/logger';
+import { injectable } from "inversify";
+import { LRUCache } from "lru-cache";
+import { errorLogger } from "../utils/error-logger.ts";
+import { logger } from "../utils/logger";
 
 /**
  * Cache statistics for monitoring and debugging
@@ -65,7 +65,10 @@ interface CacheEntry<T> {
 @injectable()
 export class CacheService {
   private caches: Map<string, LRUCache<string, CacheEntry<any>>>;
-  private stats: Map<string, { hits: number; misses: number; evictions: number }>;
+  private stats: Map<
+    string,
+    { hits: number; misses: number; evictions: number }
+  >;
   private enabled: boolean;
 
   /**
@@ -73,31 +76,31 @@ export class CacheService {
    */
   private readonly defaultConfigs: CacheConfig[] = [
     {
-      name: 'sessions',
+      name: "sessions",
       max: 1000,
       ttl: 60 * 60 * 1000, // 1 hour
       updateAgeOnGet: true,
     },
     {
-      name: 'cases',
+      name: "cases",
       max: 500,
       ttl: 5 * 60 * 1000, // 5 minutes
       updateAgeOnGet: true,
     },
     {
-      name: 'evidence',
+      name: "evidence",
       max: 1000,
       ttl: 5 * 60 * 1000, // 5 minutes
       updateAgeOnGet: true,
     },
     {
-      name: 'profiles',
+      name: "profiles",
       max: 200,
       ttl: 30 * 60 * 1000, // 30 minutes
       updateAgeOnGet: true,
     },
     {
-      name: 'default',
+      name: "default",
       max: 500,
       ttl: 10 * 60 * 1000, // 10 minutes default
       updateAgeOnGet: true,
@@ -106,7 +109,7 @@ export class CacheService {
 
   constructor(configs?: CacheConfig[]) {
     // Feature flag for safe rollback
-    this.enabled = process.env.ENABLE_CACHE !== 'false';
+    this.enabled = process.env.ENABLE_CACHE !== "false";
 
     this.caches = new Map();
     this.stats = new Map();
@@ -120,10 +123,12 @@ export class CacheService {
 
     // Log cache initialization
     if (this.enabled) {
-      logger.info('[CacheService] Initialized with caches:',
-        Array.from(this.caches.keys()).join(', '));
+      logger.info(
+        "[CacheService] Initialized with caches:",
+        Array.from(this.caches.keys()).join(", "),
+      );
     } else {
-      logger.info('[CacheService] Cache disabled via feature flag');
+      logger.info("[CacheService] Cache disabled via feature flag");
     }
   }
 
@@ -138,7 +143,7 @@ export class CacheService {
 
       // Track evictions for metrics
       dispose: (_value, _key, reason) => {
-        if (reason === 'evict') {
+        if (reason === "evict") {
           const stats = this.stats.get(config.name);
           if (stats) {
             stats.evictions++;
@@ -163,16 +168,16 @@ export class CacheService {
   async getCached<T>(
     key: string,
     fetchFn: () => Promise<T>,
-    cacheName: string = 'default',
-    ttl?: number
+    cacheName: string = "default",
+    ttl?: number,
   ): Promise<T> {
     // Skip cache if disabled
     if (!this.enabled) {
       return fetchFn();
     }
 
-    const cache = this.caches.get(cacheName) || this.caches.get('default')!;
-    const stats = this.stats.get(cacheName) || this.stats.get('default')!;
+    const cache = this.caches.get(cacheName) || this.caches.get("default")!;
+    const stats = this.stats.get(cacheName) || this.stats.get("default")!;
 
     try {
       // Check cache first
@@ -205,7 +210,7 @@ export class CacheService {
     } catch (error) {
       // Log error but don't fail the operation
       errorLogger.logError(error as Error, {
-        context: 'CacheService.getCached',
+        context: "CacheService.getCached",
         key,
         cacheName,
       });
@@ -222,7 +227,9 @@ export class CacheService {
    * @param cacheName - Optional specific cache, otherwise checks all
    */
   invalidate(key: string, cacheName?: string): void {
-    if (!this.enabled) {return;}
+    if (!this.enabled) {
+      return;
+    }
 
     if (cacheName) {
       const cache = this.caches.get(cacheName);
@@ -245,17 +252,21 @@ export class CacheService {
    * @param cacheName - Optional specific cache, otherwise checks all
    */
   invalidatePattern(pattern: string, cacheName?: string): void {
-    if (!this.enabled) {return;}
+    if (!this.enabled) {
+      return;
+    }
 
     // Convert pattern to regex
-    const regex = new RegExp('^' + pattern.replace(/\*/g, '.*') + '$');
+    const regex = new RegExp("^" + pattern.replace(/\*/g, ".*") + "$");
 
     const cachesToCheck = cacheName
       ? [this.caches.get(cacheName)].filter(Boolean)
       : Array.from(this.caches.values());
 
     for (const cache of cachesToCheck) {
-      if (!cache) {continue;} // Skip undefined caches
+      if (!cache) {
+        continue;
+      } // Skip undefined caches
 
       // Get all keys and filter by pattern
       const keys = Array.from(cache.keys());
@@ -273,7 +284,9 @@ export class CacheService {
    * @param cacheName - Optional cache name, clears all if not specified
    */
   clear(cacheName?: string): void {
-    if (!this.enabled) {return;}
+    if (!this.enabled) {
+      return;
+    }
 
     if (cacheName) {
       const cache = this.caches.get(cacheName);
@@ -330,15 +343,22 @@ export class CacheService {
    * @param cacheName - Cache to inspect
    * @param limit - Max entries to return
    */
-  inspect(cacheName: string, limit: number = 10): Array<{ key: string; entry: CacheEntry<any> }> {
+  inspect(
+    cacheName: string,
+    limit: number = 10,
+  ): Array<{ key: string; entry: CacheEntry<any> }> {
     const cache = this.caches.get(cacheName);
-    if (!cache) {return [];}
+    if (!cache) {
+      return [];
+    }
 
     const entries: Array<{ key: string; entry: CacheEntry<any> }> = [];
     let count = 0;
 
     for (const [key, entry] of cache.entries()) {
-      if (count >= limit) {break;}
+      if (count >= limit) {
+        break;
+      }
       entries.push({ key, entry });
       count++;
     }
@@ -395,12 +415,14 @@ export class CacheService {
    */
   async preload<T>(
     entries: Array<{ key: string; fetchFn: () => Promise<T> }>,
-    cacheName: string = 'default'
+    cacheName: string = "default",
   ): Promise<void> {
-    if (!this.enabled) {return;}
+    if (!this.enabled) {
+      return;
+    }
 
     const promises = entries.map(({ key, fetchFn }) =>
-      this.getCached(key, fetchFn, cacheName)
+      this.getCached(key, fetchFn, cacheName),
     );
 
     await Promise.all(promises);

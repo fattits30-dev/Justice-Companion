@@ -3,7 +3,7 @@
  * Fired when legal research is performed for a case
  */
 export class ResearchPerformed {
-  public readonly eventType = 'research.performed' as const;
+  public readonly eventType = "research.performed" as const;
   public readonly occurredAt: Date;
 
   constructor(
@@ -11,7 +11,7 @@ export class ResearchPerformed {
     public readonly caseId: number,
     public readonly userId: number,
     public readonly query: string,
-    public readonly searchType: 'legislation' | 'caselaw' | 'combined',
+    public readonly searchType: "legislation" | "caselaw" | "combined",
     public readonly metadata?: {
       resultsCount?: number;
       sources?: string[];
@@ -19,7 +19,7 @@ export class ResearchPerformed {
       model?: string;
       relevantCitations?: string[];
       issueTags?: string[];
-    }
+    },
   ) {
     this.occurredAt = new Date();
   }
@@ -36,7 +36,7 @@ export class ResearchPerformed {
       userId: this.userId,
       query: this.query,
       searchType: this.searchType,
-      metadata: this.metadata
+      metadata: this.metadata,
     };
   }
 

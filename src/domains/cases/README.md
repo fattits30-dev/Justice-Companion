@@ -24,11 +24,13 @@ The Cases domain is responsible for managing legal cases within the Justice Comp
 ## Business Rules
 
 ### Case Status Transitions
+
 - **Pending** → Active or Closed
 - **Active** → Closed only
 - **Closed** → No transitions allowed (immutable)
 
 ### Case Types and Statutory Limitations
+
 - Employment: 90 days (3 months for employment tribunal)
 - Housing: 365 days (1 year)
 - Consumer: 2190 days (6 years)
@@ -37,6 +39,7 @@ The Cases domain is responsible for managing legal cases within the Justice Comp
 - Other: 2190 days (default 6 years)
 
 ### Case Facts
+
 - Categories: timeline, evidence, witness, location, communication, other
 - Importance levels: low, medium, high, critical
 - Facts are immutable once created (audit trail)
@@ -58,18 +61,18 @@ The Cases domain is responsible for managing legal cases within the Justice Comp
 ## Usage Examples
 
 ```typescript
-import { Case, CaseStatus, CaseType } from '@/domains/cases';
+import { Case, CaseStatus, CaseType } from "@/domains/cases";
 
 // Create a new case
 const newCase: Case = {
   id: 1,
-  title: 'Unfair Dismissal Claim',
-  description: 'Wrongful termination from ABC Corp',
+  title: "Unfair Dismissal Claim",
+  description: "Wrongful termination from ABC Corp",
   caseType: CaseType.employment().getValue(),
   status: CaseStatus.active().getValue(),
   userId: 123,
   createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString()
+  updatedAt: new Date().toISOString(),
 };
 
 // Check status transition

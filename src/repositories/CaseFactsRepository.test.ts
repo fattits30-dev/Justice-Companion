@@ -42,7 +42,7 @@ describe("CaseFactsRepository", () => {
       `
       INSERT INTO cases (title, case_type)
       VALUES ('Test Case', 'employment')
-    `
+    `,
     ).run();
   });
 
@@ -197,7 +197,7 @@ describe("CaseFactsRepository", () => {
 
       // Clear previous audit logs
       db.prepare("DELETE FROM audit_logs WHERE event_type = ?").run(
-        "case_fact.content_access"
+        "case_fact.content_access",
       );
 
       repository.findById(created.id);
@@ -264,7 +264,7 @@ describe("CaseFactsRepository", () => {
 
       // Clear previous audit logs
       db.prepare("DELETE FROM audit_logs WHERE event_type = ?").run(
-        "case_fact.content_access"
+        "case_fact.content_access",
       );
 
       repository.findByCaseId(1);
@@ -306,10 +306,10 @@ describe("CaseFactsRepository", () => {
       expect(timelineFacts).toHaveLength(2);
       expect(witnessFacts).toHaveLength(1);
       expect(
-        timelineFacts.every((f: CaseFact) => f.factCategory === "timeline")
+        timelineFacts.every((f: CaseFact) => f.factCategory === "timeline"),
       ).toBe(true);
       expect(
-        witnessFacts.every((f: CaseFact) => f.factCategory === "witness")
+        witnessFacts.every((f: CaseFact) => f.factCategory === "witness"),
       ).toBe(true);
     });
 
@@ -327,7 +327,7 @@ describe("CaseFactsRepository", () => {
 
       // Clear previous audit logs
       db.prepare("DELETE FROM audit_logs WHERE event_type = ?").run(
-        "case_fact.content_access"
+        "case_fact.content_access",
       );
 
       repository.findByCategory(1, "location");
@@ -372,10 +372,10 @@ describe("CaseFactsRepository", () => {
       expect(criticalFacts).toHaveLength(2);
       expect(lowFacts).toHaveLength(1);
       expect(
-        criticalFacts.every((f: CaseFact) => f.importance === "critical")
+        criticalFacts.every((f: CaseFact) => f.importance === "critical"),
       ).toBe(true);
       expect(lowFacts.every((f: CaseFact) => f.importance === "low")).toBe(
-        true
+        true,
       );
     });
 
@@ -509,7 +509,7 @@ describe("CaseFactsRepository", () => {
         `
         INSERT INTO case_facts (case_id, fact_content, fact_category, importance)
         VALUES (?, ?, ?, ?)
-      `
+      `,
       ).run(1, "Plaintext fact", "timeline", "medium");
 
       const found = repository.findById(1);

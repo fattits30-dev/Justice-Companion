@@ -1,10 +1,10 @@
-import crypto from 'node:crypto';
+import crypto from "node:crypto";
 
 /**
  * Encrypted data format with authentication
  */
 export interface EncryptedData {
-  algorithm: 'aes-256-gcm';
+  algorithm: "aes-256-gcm";
   ciphertext: string; // base64 encoded
   iv: string; // base64 encoded initialization vector
   authTag: string; // base64 encoded authentication tag
@@ -29,7 +29,7 @@ export interface EncryptedData {
  * ```
  */
 export class EncryptionService {
-  private readonly algorithm = 'aes-256-gcm' as const;
+  private readonly algorithm = "aes-256-gcm" as const;
   private readonly version = 1;
   private readonly ivLength = 12; // 96 bits is standard for GCM
   private readonly key: Buffer;
@@ -40,7 +40,7 @@ export class EncryptionService {
    */
   constructor(key: Buffer | string) {
     // Convert base64 string to Buffer if needed
-    this.key = typeof key === 'string' ? Buffer.from(key, 'base64') : key;
+    this.key = typeof key === "string" ? Buffer.from(key, "base64") : key;
 
     // CRITICAL: Verify key length (256 bits = 32 bytes)
     if (this.key.length !== 32) {
@@ -75,8 +75,8 @@ export class EncryptionService {
       const cipher = crypto.createCipheriv(this.algorithm, this.key, iv);
 
       // Encrypt data
-      let ciphertext = cipher.update(plaintext, 'utf8', 'base64');
-      ciphertext += cipher.final('base64');
+      let ciphertext = cipher.update(plaintext, "utf8", "base64");
+      ciphertext += cipher.final("base64");
 
       // Get authentication tag (proves data hasn't been tampered with)
       const authTag = cipher.getAuthTag();
@@ -84,13 +84,15 @@ export class EncryptionService {
       return {
         algorithm: this.algorithm,
         ciphertext,
-        iv: iv.toString('base64'),
-        authTag: authTag.toString('base64'),
+        iv: iv.toString("base64"),
+        authTag: authTag.toString("base64"),
         version: this.version,
       };
     } catch (error) {
       // CRITICAL: Never log plaintext or key material
-      throw new Error(`Encryption failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Encryption failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     }
   }
 
@@ -114,17 +116,19 @@ export class EncryptionService {
     try {
       // Validate encrypted data structure
       if (!this.isEncrypted(encryptedData)) {
-        throw new Error('Invalid encrypted data format');
+        throw new Error("Invalid encrypted data format");
       }
 
       // Check algorithm version
       if (encryptedData.algorithm !== this.algorithm) {
-        throw new Error(`Unsupported algorithm: ${encryptedData.algorithm as string}`);
+        throw new Error(
+          `Unsupported algorithm: ${encryptedData.algorithm as string}`,
+        );
       }
 
       // Decode base64 components
-      const iv = Buffer.from(encryptedData.iv, 'base64');
-      const authTag = Buffer.from(encryptedData.authTag, 'base64');
+      const iv = Buffer.from(encryptedData.iv, "base64");
+      const authTag = Buffer.from(encryptedData.authTag, "base64");
 
       // Create decipher
       const decipher = crypto.createDecipheriv(this.algorithm, this.key, iv);
@@ -133,14 +137,20 @@ export class EncryptionService {
       decipher.setAuthTag(authTag);
 
       // Decrypt data
-      let plaintext = decipher.update(encryptedData.ciphertext, 'base64', 'utf8');
-      plaintext += decipher.final('utf8');
+      let plaintext = decipher.update(
+        encryptedData.ciphertext,
+        "base64",
+        "utf8",
+      );
+      plaintext += decipher.final("utf8");
 
       return plaintext;
     } catch (_error) {
       // CRITICAL: Don't leak plaintext, key material, or detailed errors
       // Authentication tag verification failures will throw here
-      throw new Error('Decryption failed: data may be corrupted or tampered with');
+      throw new Error(
+        "Decryption failed: data may be corrupted or tampered with",
+      );
     }
   }
 
@@ -151,18 +161,18 @@ export class EncryptionService {
    * @returns true if data is EncryptedData, false otherwise
    */
   isEncrypted(data: unknown): data is EncryptedData {
-    if (!data || typeof data !== 'object') {
+    if (!data || typeof data !== "object") {
       return false;
     }
 
     const obj = data as Record<string, unknown>;
 
     return (
-      typeof obj.algorithm === 'string' &&
-      typeof obj.ciphertext === 'string' &&
-      typeof obj.iv === 'string' &&
-      typeof obj.authTag === 'string' &&
-      typeof obj.version === 'number'
+      typeof obj.algorithm === "string" &&
+      typeof obj.ciphertext === "string" &&
+      typeof obj.iv === "string" &&
+      typeof obj.authTag === "string" &&
+      typeof obj.version === "number"
     );
   }
 
@@ -192,7 +202,10 @@ export class EncryptionService {
    * NOTE: This method requires the old EncryptionService instance to decrypt,
    * then uses newService to encrypt. Caller must handle batch re-encryption.
    */
-  rotateKey(oldEncryptedData: EncryptedData, newService: EncryptionService): EncryptedData | null {
+  rotateKey(
+    oldEncryptedData: EncryptedData,
+    newService: EncryptionService,
+  ): EncryptedData | null {
     // Decrypt with old key (this instance)
     const plaintext = this.decrypt(oldEncryptedData);
 
@@ -216,7 +229,9 @@ export class EncryptionService {
    * - Authentication tags prevent tampering
    * - Maintains same security guarantees as individual encryption
    */
-  batchEncrypt(plaintexts: Array<string | null | undefined>): Array<EncryptedData | null> {
+  batchEncrypt(
+    plaintexts: Array<string | null | undefined>,
+  ): Array<EncryptedData | null> {
     const results: Array<EncryptedData | null> = [];
 
     for (const plaintext of plaintexts) {
@@ -234,8 +249,8 @@ export class EncryptionService {
         const cipher = crypto.createCipheriv(this.algorithm, this.key, iv);
 
         // Encrypt data
-        let ciphertext = cipher.update(plaintext, 'utf8', 'base64');
-        ciphertext += cipher.final('base64');
+        let ciphertext = cipher.update(plaintext, "utf8", "base64");
+        ciphertext += cipher.final("base64");
 
         // Get authentication tag
         const authTag = cipher.getAuthTag();
@@ -243,16 +258,16 @@ export class EncryptionService {
         results.push({
           algorithm: this.algorithm,
           ciphertext,
-          iv: iv.toString('base64'),
-          authTag: authTag.toString('base64'),
+          iv: iv.toString("base64"),
+          authTag: authTag.toString("base64"),
           version: this.version,
         });
       } catch (error) {
         // CRITICAL: Never log plaintext or key material
         throw new Error(
           `Batch encryption failed at index ${results.length}: ${
-            error instanceof Error ? error.message : 'Unknown error'
-          }`
+            error instanceof Error ? error.message : "Unknown error"
+          }`,
         );
       }
     }
@@ -276,7 +291,9 @@ export class EncryptionService {
    * - Throws error if any data has been tampered with
    * - Maintains same security guarantees as individual decryption
    */
-  batchDecrypt(encryptedDataArray: Array<EncryptedData | null | undefined>): Array<string | null> {
+  batchDecrypt(
+    encryptedDataArray: Array<EncryptedData | null | undefined>,
+  ): Array<string | null> {
     const results: Array<string | null> = [];
 
     for (let i = 0; i < encryptedDataArray.length; i++) {
@@ -290,17 +307,19 @@ export class EncryptionService {
       try {
         // Validate encrypted data structure
         if (!this.isEncrypted(encryptedData)) {
-          throw new Error('Invalid encrypted data format');
+          throw new Error("Invalid encrypted data format");
         }
 
         // Check algorithm version
         if (encryptedData.algorithm !== this.algorithm) {
-          throw new Error(`Unsupported algorithm: ${encryptedData.algorithm as string}`);
+          throw new Error(
+            `Unsupported algorithm: ${encryptedData.algorithm as string}`,
+          );
         }
 
         // Decode base64 components
-        const iv = Buffer.from(encryptedData.iv, 'base64');
-        const authTag = Buffer.from(encryptedData.authTag, 'base64');
+        const iv = Buffer.from(encryptedData.iv, "base64");
+        const authTag = Buffer.from(encryptedData.authTag, "base64");
 
         // Create decipher for this ciphertext
         const decipher = crypto.createDecipheriv(this.algorithm, this.key, iv);
@@ -309,14 +328,18 @@ export class EncryptionService {
         decipher.setAuthTag(authTag);
 
         // Decrypt data
-        let plaintext = decipher.update(encryptedData.ciphertext, 'base64', 'utf8');
-        plaintext += decipher.final('utf8');
+        let plaintext = decipher.update(
+          encryptedData.ciphertext,
+          "base64",
+          "utf8",
+        );
+        plaintext += decipher.final("utf8");
 
         results.push(plaintext);
       } catch (_error) {
         // CRITICAL: Don't leak plaintext, key material, or detailed errors
         throw new Error(
-          `Batch decryption failed at index ${i}: data may be corrupted or tampered with`
+          `Batch decryption failed at index ${i}: data may be corrupted or tampered with`,
         );
       }
     }

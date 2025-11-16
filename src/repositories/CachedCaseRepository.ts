@@ -1,8 +1,16 @@
-import { CaseRepository } from './CaseRepository.ts';
-import { getCacheService, type CacheService } from '../services/CacheService.ts';
-import { EncryptionService } from '../services/EncryptionService.ts';
-import type { AuditLogger } from '../services/AuditLogger.ts';
-import type { Case, CreateCaseInput, UpdateCaseInput, CaseStatus } from '../domains/cases/entities/Case.ts';
+import { CaseRepository } from "./CaseRepository.ts";
+import {
+  getCacheService,
+  type CacheService,
+} from "../services/CacheService.ts";
+import { EncryptionService } from "../services/EncryptionService.ts";
+import type { AuditLogger } from "../services/AuditLogger.ts";
+import type {
+  Case,
+  CreateCaseInput,
+  UpdateCaseInput,
+  CaseStatus,
+} from "../domains/cases/entities/Case.ts";
 
 /**
  * Cached wrapper for CaseRepository
@@ -23,10 +31,7 @@ export class CachedCaseRepository {
   private baseRepo: CaseRepository;
   private cache: CacheService;
 
-  constructor(
-    encryptionService: EncryptionService,
-    auditLogger?: AuditLogger
-  ) {
+  constructor(encryptionService: EncryptionService, auditLogger?: AuditLogger) {
     this.baseRepo = new CaseRepository(encryptionService, auditLogger);
     this.cache = getCacheService();
   }
@@ -40,11 +45,7 @@ export class CachedCaseRepository {
     // No need to invalidate - new case won't be cached yet
     // But we could pre-cache it
     const cacheKey = `case:${createdCase.id}`;
-    await this.cache.getCached(
-      cacheKey,
-      async () => createdCase,
-      'cases'
-    );
+    await this.cache.getCached(cacheKey, async () => createdCase, "cases");
 
     return createdCase;
   }
@@ -58,7 +59,7 @@ export class CachedCaseRepository {
     return this.cache.getCached(
       cacheKey,
       async () => this.baseRepo.findById(id),
-      'cases'
+      "cases",
     );
   }
 
@@ -66,12 +67,12 @@ export class CachedCaseRepository {
    * Find all cases with optional status filter (with caching)
    */
   async findAllAsync(status?: CaseStatus): Promise<Case[]> {
-    const cacheKey = status ? `cases:status:${status}` : 'cases:all';
+    const cacheKey = status ? `cases:status:${status}` : "cases:all";
 
     return this.cache.getCached(
       cacheKey,
       async () => this.baseRepo.findAll(status),
-      'cases'
+      "cases",
     );
   }
 
@@ -83,18 +84,14 @@ export class CachedCaseRepository {
 
     if (updatedCase) {
       // Invalidate specific case cache
-      this.cache.invalidate(`case:${id}`, 'cases');
+      this.cache.invalidate(`case:${id}`, "cases");
 
       // Invalidate list caches (since status might have changed)
-      this.cache.invalidatePattern('cases:*', 'cases');
+      this.cache.invalidatePattern("cases:*", "cases");
 
       // Pre-cache the updated case
       const cacheKey = `case:${id}`;
-      await this.cache.getCached(
-        cacheKey,
-        async () => updatedCase,
-        'cases'
-      );
+      await this.cache.getCached(cacheKey, async () => updatedCase, "cases");
     }
 
     return updatedCase;
@@ -108,13 +105,13 @@ export class CachedCaseRepository {
 
     if (result) {
       // Invalidate specific case cache
-      this.cache.invalidate(`case:${id}`, 'cases');
+      this.cache.invalidate(`case:${id}`, "cases");
 
       // Invalidate list caches
-      this.cache.invalidatePattern('cases:*', 'cases');
+      this.cache.invalidatePattern("cases:*", "cases");
 
       // Invalidate related evidence caches
-      this.cache.invalidatePattern(`evidence:case:${id}:*`, 'evidence');
+      this.cache.invalidatePattern(`evidence:case:${id}:*`, "evidence");
     }
 
     return result;
@@ -124,34 +121,37 @@ export class CachedCaseRepository {
    * Close a case
    */
   async closeAsync(id: number): Promise<Case | null> {
-    return this.updateAsync(id, { status: 'closed' });
+    return this.updateAsync(id, { status: "closed" });
   }
 
   /**
    * Get case count by status with caching
    */
   async countByStatusAsync(): Promise<Record<CaseStatus, number>> {
-    const cacheKey = 'cases:count:by-status';
+    const cacheKey = "cases:count:by-status";
 
     return this.cache.getCached(
       cacheKey,
       async () => this.baseRepo.countByStatus(),
-      'cases',
-      10 * 60 * 1000 // 10 minute TTL for counts
+      "cases",
+      10 * 60 * 1000, // 10 minute TTL for counts
     );
   }
 
   /**
    * Get case statistics with caching
    */
-  async getStatisticsAsync(): Promise<{ totalCases: number; statusCounts: Record<CaseStatus, number> }> {
-    const cacheKey = 'cases:statistics';
+  async getStatisticsAsync(): Promise<{
+    totalCases: number;
+    statusCounts: Record<CaseStatus, number>;
+  }> {
+    const cacheKey = "cases:statistics";
 
     return this.cache.getCached(
       cacheKey,
       async () => this.baseRepo.getStatistics(),
-      'cases',
-      10 * 60 * 1000 // 10 minute TTL for statistics
+      "cases",
+      10 * 60 * 1000, // 10 minute TTL for statistics
     );
   }
 
@@ -170,7 +170,7 @@ export class CachedCaseRepository {
         const cached = await this.cache.getCached(
           cacheKey,
           async () => null,
-          'cases'
+          "cases",
         );
         if (cached) {
           return { id, case: cached };
@@ -187,7 +187,7 @@ export class CachedCaseRepository {
     // Fetch all misses from database
     if (misses.length > 0) {
       const fetchedCases = await Promise.all(
-        misses.map(id => this.findByIdAsync(id))
+        misses.map((id) => this.findByIdAsync(id)),
       );
 
       // Build a map of fetched cases
@@ -198,7 +198,7 @@ export class CachedCaseRepository {
 
       // Combine cache hits and fetched cases in original order
       for (const id of ids) {
-        const cacheResult = cacheResults.find(r => r.id === id);
+        const cacheResult = cacheResults.find((r) => r.id === id);
         if (cacheResult?.case) {
           results.push(cacheResult.case);
         } else {
@@ -208,7 +208,7 @@ export class CachedCaseRepository {
     } else {
       // All were cache hits
       for (const id of ids) {
-        const cacheResult = cacheResults.find(r => r.id === id);
+        const cacheResult = cacheResults.find((r) => r.id === id);
         results.push(cacheResult?.case || null);
       }
     }
@@ -223,25 +223,25 @@ export class CachedCaseRepository {
     const cases = await this.findAllAsync(status);
 
     // Cache individual cases
-    const entries = cases.map(caseItem => ({
+    const entries = cases.map((caseItem) => ({
       key: `case:${caseItem.id}`,
       fetchFn: async () => caseItem,
     }));
 
-    await this.cache.preload(entries, 'cases');
+    await this.cache.preload(entries, "cases");
   }
 
   /**
    * Invalidate all case-related caches
    */
   invalidateAll(): void {
-    this.cache.clear('cases');
+    this.cache.clear("cases");
   }
 
   /**
    * Get cache statistics for monitoring
    */
   getCacheStats() {
-    return this.cache.getStats('cases');
+    return this.cache.getStats("cases");
   }
 }

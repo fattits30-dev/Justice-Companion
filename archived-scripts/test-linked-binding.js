@@ -6,8 +6,11 @@ if (process._linkedBinding) {
 
   // Try different names
   const namesToTry = ['electron', 'atom', 'electronMain', 'electron_browser_app', 'atom_browser_app'];
+  let appFound = false;
 
   for (const name of namesToTry) {
+    if (appFound) break;
+
     console.log(`\nTrying _linkedBinding('${name}'):`);
     try {
       const binding = process._linkedBinding(name);
@@ -26,7 +29,7 @@ if (process._linkedBinding) {
         });
 
         // Don't exit immediately, let whenReady fire
-        return;
+        appFound = true;
       }
     } catch (e) {
       console.log(`  ERROR: ${e.message}`);

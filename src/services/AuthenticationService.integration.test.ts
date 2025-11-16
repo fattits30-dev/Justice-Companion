@@ -31,7 +31,7 @@ describe("AuthenticationService Integration - Rate Limiting", () => {
     authService = new AuthenticationService(
       userRepository,
       sessionRepository,
-      auditLogger
+      auditLogger,
     );
 
     // Reset rate limiter singleton for each test
@@ -54,12 +54,12 @@ describe("AuthenticationService Integration - Rate Limiting", () => {
       await authService.register(
         "testuser",
         "TestPassword123!",
-        "test@example.com"
+        "test@example.com",
       );
 
       // Try to login with wrong password
       await expect(
-        authService.login("testuser", "WrongPassword123!")
+        authService.login("testuser", "WrongPassword123!"),
       ).rejects.toThrow("Invalid credentials");
     });
 
@@ -68,19 +68,19 @@ describe("AuthenticationService Integration - Rate Limiting", () => {
       await authService.register(
         "testuser",
         "TestPassword123!",
-        "test@example.com"
+        "test@example.com",
       );
 
       // Make 5 failed login attempts
       for (let i = 0; i < 5; i++) {
         await expect(
-          authService.login("testuser", "WrongPassword123!")
+          authService.login("testuser", "WrongPassword123!"),
         ).rejects.toThrow("Invalid credentials");
       }
 
       // 6th attempt should be blocked
       await expect(
-        authService.login("testuser", "WrongPassword123!")
+        authService.login("testuser", "WrongPassword123!"),
       ).rejects.toThrow(/Account temporarily locked/);
     });
 
@@ -89,13 +89,13 @@ describe("AuthenticationService Integration - Rate Limiting", () => {
       await authService.register(
         "testuser",
         "TestPassword123!",
-        "test@example.com"
+        "test@example.com",
       );
 
       // Make 5 failed login attempts
       for (let i = 0; i < 5; i++) {
         await expect(
-          authService.login("testuser", "WrongPassword123!")
+          authService.login("testuser", "WrongPassword123!"),
         ).rejects.toThrow("Invalid credentials");
       }
 
@@ -113,13 +113,13 @@ describe("AuthenticationService Integration - Rate Limiting", () => {
       await authService.register(
         "testuser",
         "TestPassword123!",
-        "test@example.com"
+        "test@example.com",
       );
 
       // Make 3 failed attempts
       for (let i = 0; i < 3; i++) {
         await expect(
-          authService.login("testuser", "WrongPassword123!")
+          authService.login("testuser", "WrongPassword123!"),
         ).rejects.toThrow("Invalid credentials");
       }
 
@@ -130,12 +130,12 @@ describe("AuthenticationService Integration - Rate Limiting", () => {
 
       // Can make more attempts after successful login
       await expect(
-        authService.login("testuser", "WrongPassword123!")
+        authService.login("testuser", "WrongPassword123!"),
       ).rejects.toThrow("Invalid credentials");
 
       // Should not be locked yet (only 1 attempt after reset)
       await expect(
-        authService.login("testuser", "TestPassword123!")
+        authService.login("testuser", "TestPassword123!"),
       ).resolves.toBeDefined();
     });
 
@@ -144,33 +144,33 @@ describe("AuthenticationService Integration - Rate Limiting", () => {
       await authService.register(
         "testuser",
         "TestPassword123!",
-        "test@example.com"
+        "test@example.com",
       );
 
       // Make failed attempts with different case
       await expect(
-        authService.login("TestUser", "WrongPassword123!")
+        authService.login("TestUser", "WrongPassword123!"),
       ).rejects.toThrow("Invalid credentials");
 
       await expect(
-        authService.login("TESTUSER", "WrongPassword123!")
+        authService.login("TESTUSER", "WrongPassword123!"),
       ).rejects.toThrow("Invalid credentials");
 
       await expect(
-        authService.login("testuser", "WrongPassword123!")
+        authService.login("testuser", "WrongPassword123!"),
       ).rejects.toThrow("Invalid credentials");
 
       await expect(
-        authService.login("TeStUsEr", "WrongPassword123!")
+        authService.login("TeStUsEr", "WrongPassword123!"),
       ).rejects.toThrow("Invalid credentials");
 
       await expect(
-        authService.login("testUSER", "WrongPassword123!")
+        authService.login("testUSER", "WrongPassword123!"),
       ).rejects.toThrow("Invalid credentials");
 
       // 6th attempt should be blocked regardless of case
       await expect(
-        authService.login("testuser", "WrongPassword123!")
+        authService.login("testuser", "WrongPassword123!"),
       ).rejects.toThrow(/Account temporarily locked/);
     });
 
@@ -178,13 +178,13 @@ describe("AuthenticationService Integration - Rate Limiting", () => {
       // Make 5 failed attempts for non-existent user
       for (let i = 0; i < 5; i++) {
         await expect(
-          authService.login("nonexistent", "Password123!")
+          authService.login("nonexistent", "Password123!"),
         ).rejects.toThrow("Invalid credentials");
       }
 
       // 6th attempt should be blocked
       await expect(
-        authService.login("nonexistent", "Password123!")
+        authService.login("nonexistent", "Password123!"),
       ).rejects.toThrow(/Account temporarily locked/);
     });
 
@@ -193,20 +193,20 @@ describe("AuthenticationService Integration - Rate Limiting", () => {
       const { user } = await authService.register(
         "testuser",
         "TestPassword123!",
-        "test@example.com"
+        "test@example.com",
       );
       db.prepare("UPDATE users SET is_active = 0 WHERE id = ?").run(user.id);
 
       // Make 5 failed attempts
       for (let i = 0; i < 5; i++) {
         await expect(
-          authService.login("testuser", "TestPassword123!")
+          authService.login("testuser", "TestPassword123!"),
         ).rejects.toThrow("Account is inactive");
       }
 
       // 6th attempt should be blocked
       await expect(
-        authService.login("testuser", "TestPassword123!")
+        authService.login("testuser", "TestPassword123!"),
       ).rejects.toThrow(/Account temporarily locked/);
     });
   });
@@ -225,19 +225,19 @@ describe("AuthenticationService Integration - Rate Limiting", () => {
       await authService.register(
         "testuser",
         "TestPassword123!",
-        "test@example.com"
+        "test@example.com",
       );
 
       // Lock the account
       for (let i = 0; i < 5; i++) {
         await expect(
-          authService.login("testuser", "WrongPassword123!")
+          authService.login("testuser", "WrongPassword123!"),
         ).rejects.toThrow("Invalid credentials");
       }
 
       // Should be locked
       await expect(
-        authService.login("testuser", "TestPassword123!")
+        authService.login("testuser", "TestPassword123!"),
       ).rejects.toThrow(/Account temporarily locked/);
 
       // Move time forward 16 minutes
@@ -253,13 +253,13 @@ describe("AuthenticationService Integration - Rate Limiting", () => {
       await authService.register(
         "testuser",
         "TestPassword123!",
-        "test@example.com"
+        "test@example.com",
       );
 
       // Make 3 failed attempts
       for (let i = 0; i < 3; i++) {
         await expect(
-          authService.login("testuser", "WrongPassword123!")
+          authService.login("testuser", "WrongPassword123!"),
         ).rejects.toThrow("Invalid credentials");
       }
 
@@ -269,7 +269,7 @@ describe("AuthenticationService Integration - Rate Limiting", () => {
       // Counter should be reset, can make 5 more attempts
       for (let i = 0; i < 4; i++) {
         await expect(
-          authService.login("testuser", "WrongPassword123!")
+          authService.login("testuser", "WrongPassword123!"),
         ).rejects.toThrow("Invalid credentials");
       }
 

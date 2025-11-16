@@ -1,4 +1,10 @@
-export type EvidenceType = 'document' | 'photo' | 'email' | 'recording' | 'note' | 'witness';
+export type EvidenceType =
+  | "document"
+  | "photo"
+  | "email"
+  | "recording"
+  | "note"
+  | "witness";
 
 export interface Evidence {
   id: number;

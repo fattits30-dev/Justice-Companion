@@ -14,10 +14,10 @@
  * License: MIT
  */
 
-import axios, { AxiosInstance, AxiosError } from 'axios';
-import FormData from 'form-data';
-import * as fs from 'fs';
-import { logger } from '../utils/logger';
+import axios, { AxiosInstance, AxiosError } from "axios";
+import FormData from "form-data";
+import * as fs from "fs";
+import { logger } from "../utils/logger";
 
 // Request/Response types matching Python service
 export interface ParsedDocument {
@@ -59,7 +59,7 @@ export interface SuggestedCaseData {
   documentOwnershipMismatch: boolean;
   documentClaimantName: string | null;
   title: string;
-  caseType: 'employment' | 'housing' | 'consumer' | 'family' | 'other';
+  caseType: "employment" | "housing" | "consumer" | "family" | "other";
   description: string;
   claimantName: string;
   opposingParty: string | null;
@@ -97,7 +97,7 @@ export class PythonAIClient {
       baseURL: config.baseURL,
       timeout: config.timeout || 120000, // 120 seconds default
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     });
 
@@ -112,12 +112,12 @@ export class PythonAIClient {
    */
   async isAvailable(): Promise<boolean> {
     try {
-      const response = await this.client.get('/health', {
+      const response = await this.client.get("/health", {
         timeout: 5000, // Quick health check
       });
-      return response.status === 200 && response.data.status === 'healthy';
+      return response.status === 200 && response.data.status === "healthy";
     } catch (error) {
-      logger.warn('[PythonAIClient] Service not available', { error });
+      logger.warn("[PythonAIClient] Service not available", { error });
       return false;
     }
   }
@@ -135,7 +135,7 @@ export class PythonAIClient {
     model_ready: boolean;
     available_agents: string[];
   }> {
-    const response = await this.client.get('/api/v1/info');
+    const response = await this.client.get("/api/v1/info");
     return response.data;
   }
 
@@ -147,28 +147,28 @@ export class PythonAIClient {
    * @throws Error if analysis fails or service unavailable
    */
   async analyzeDocument(
-    request: DocumentAnalysisRequest
+    request: DocumentAnalysisRequest,
   ): Promise<DocumentAnalysisResponse> {
     return this.retry(async () => {
       try {
-        logger.info('[PythonAIClient] Analyzing document', {
+        logger.info("[PythonAIClient] Analyzing document", {
           filename: request.document.filename,
           wordCount: request.document.wordCount,
         });
 
         const response = await this.client.post<DocumentAnalysisResponse>(
-          '/api/v1/analyze-document',
-          request
+          "/api/v1/analyze-document",
+          request,
         );
 
-        logger.info('[PythonAIClient] Document analyzed successfully', {
+        logger.info("[PythonAIClient] Document analyzed successfully", {
           analysisLength: response.data.analysis.length,
           caseType: response.data.suggestedCaseData.caseType,
         });
 
         return response.data;
       } catch (error) {
-        this.handleError(error, 'Document analysis failed');
+        this.handleError(error, "Document analysis failed");
         throw error;
       }
     });
@@ -192,7 +192,7 @@ export class PythonAIClient {
     userName: string,
     sessionId: string,
     userEmail?: string | null,
-    userQuestion?: string
+    userQuestion?: string,
   ): Promise<DocumentAnalysisResponse> {
     return this.retry(async () => {
       try {
@@ -201,26 +201,26 @@ export class PythonAIClient {
           throw new Error(`Image file not found: ${imagePath}`);
         }
 
-        logger.info('[PythonAIClient] Analyzing image with OCR', {
+        logger.info("[PythonAIClient] Analyzing image with OCR", {
           imagePath,
           userName,
         });
 
         // Create form data
         const form = new FormData();
-        form.append('file', fs.createReadStream(imagePath));
-        form.append('userName', userName);
-        form.append('sessionId', sessionId);
+        form.append("file", fs.createReadStream(imagePath));
+        form.append("userName", userName);
+        form.append("sessionId", sessionId);
         if (userEmail) {
-          form.append('userEmail', userEmail);
+          form.append("userEmail", userEmail);
         }
         if (userQuestion) {
-          form.append('userQuestion', userQuestion);
+          form.append("userQuestion", userQuestion);
         }
 
         // Send multipart/form-data request
         const response = await this.client.post<DocumentAnalysisResponse>(
-          '/api/v1/analyze-image',
+          "/api/v1/analyze-image",
           form,
           {
             headers: {
@@ -228,10 +228,10 @@ export class PythonAIClient {
             },
             maxBodyLength: Infinity,
             maxContentLength: Infinity,
-          }
+          },
         );
 
-        logger.info('[PythonAIClient] Image analyzed successfully', {
+        logger.info("[PythonAIClient] Image analyzed successfully", {
           analysisLength: response.data.analysis.length,
           caseType: response.data.suggestedCaseData.caseType,
           ocrConfidence: (response.data.metadata as any)?.ocr?.ocr_confidence,
@@ -239,7 +239,7 @@ export class PythonAIClient {
 
         return response.data;
       } catch (error) {
-        this.handleError(error, 'Image analysis failed');
+        this.handleError(error, "Image analysis failed");
         throw error;
       }
     });
@@ -276,16 +276,20 @@ export class PythonAIClient {
 
         // Exponential backoff: 1s, 2s, 4s
         const delay = this.retryDelay * Math.pow(2, attempt);
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        logger.warn(`[PythonAIClient] Retry attempt ${attempt + 1}/${this.maxRetries} in ${delay}ms`, {
-          error: errorMessage,
-        });
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        logger.warn(
+          `[PythonAIClient] Retry attempt ${attempt + 1}/${this.maxRetries} in ${delay}ms`,
+          {
+            error: errorMessage,
+          },
+        );
 
         await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }
 
-    throw lastError || new Error('Max retries exceeded');
+    throw lastError || new Error("Max retries exceeded");
   }
 
   /**
@@ -301,25 +305,27 @@ export class PythonAIClient {
       if (axiosError.response) {
         // Server responded with error status
         const status = axiosError.response.status;
-        const data = axiosError.response.data as { error?: string; detail?: string } | undefined;
+        const data = axiosError.response.data as
+          | { error?: string; detail?: string }
+          | undefined;
 
         logger.error(`[PythonAIClient] ${context}`, {
           status,
-          error: data?.error || data?.detail || 'Unknown error',
+          error: data?.error || data?.detail || "Unknown error",
           url: axiosError.config?.url,
         });
 
         if (status === 503) {
           throw new Error(
-            'Python AI service unavailable. AI model may not be initialized or Tesseract OCR not installed.'
+            "Python AI service unavailable. AI model may not be initialized or Tesseract OCR not installed.",
           );
         } else if (status === 400) {
           throw new Error(
-            `Invalid request: ${data?.error || data?.detail || 'Bad request'}`
+            `Invalid request: ${data?.error || data?.detail || "Bad request"}`,
           );
         } else {
           throw new Error(
-            `Python AI service error (${status}): ${data?.error || data?.detail || 'Unknown error'}`
+            `Python AI service error (${status}): ${data?.error || data?.detail || "Unknown error"}`,
           );
         }
       } else if (axiosError.request) {
@@ -328,7 +334,7 @@ export class PythonAIClient {
           url: axiosError.config?.url,
         });
         throw new Error(
-          'Python AI service unreachable. Is the service running on port 5051?'
+          "Python AI service unreachable. Is the service running on port 5051?",
         );
       } else {
         // Request setup error
@@ -354,7 +360,7 @@ export class PythonAIClient {
  * @returns Configured Python AI client
  */
 export function createPythonAIClient(
-  baseURL: string = 'http://localhost:5051'
+  baseURL: string = "http://localhost:5051",
 ): PythonAIClient {
   return new PythonAIClient({
     baseURL,

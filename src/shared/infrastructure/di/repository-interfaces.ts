@@ -26,41 +26,41 @@ import type {
   Case,
   CreateCaseInput,
   UpdateCaseInput,
-  CaseStatus
-} from '../../../domains/cases/entities/Case.ts';
+  CaseStatus,
+} from "../../../domains/cases/entities/Case.ts";
 import type {
   Evidence,
   CreateEvidenceInput,
-  UpdateEvidenceInput
-} from '../../../domains/evidence/entities/Evidence.ts';
+  UpdateEvidenceInput,
+} from "../../../domains/evidence/entities/Evidence.ts";
 import type {
   User,
   CreateUserInput,
-  UpdateUserInput
-} from '../../../domains/auth/entities/User.ts';
+  UpdateUserInput,
+} from "../../../domains/auth/entities/User.ts";
 import type {
   Session,
-  CreateSessionInput
-} from '../../../domains/auth/entities/Session.ts';
+  CreateSessionInput,
+} from "../../../domains/auth/entities/Session.ts";
 import type {
   Deadline,
   CreateDeadlineInput,
   UpdateDeadlineInput,
-  DeadlineWithCase
-} from '../../../domains/timeline/entities/Deadline.ts';
+  DeadlineWithCase,
+} from "../../../domains/timeline/entities/Deadline.ts";
 import type {
   ChatConversation,
   ChatMessage,
   ConversationWithMessages,
   CreateConversationInput,
-  CreateMessageInput
-} from '../../../models/ChatConversation.ts';
+  CreateMessageInput,
+} from "../../../models/ChatConversation.ts";
 import type {
   Consent,
   CreateConsentInput,
-  ConsentType
-} from '../../../domains/settings/entities/Consent.ts';
-import type { PaginatedResult } from '../../../types/pagination.ts';
+  ConsentType,
+} from "../../../domains/settings/entities/Consent.ts";
+import type { PaginatedResult } from "../../../types/pagination.ts";
 
 // =============================================================================
 // CORE REPOSITORY INTERFACES
@@ -133,7 +133,7 @@ export interface ICaseRepository {
    */
   getStatistics(): {
     totalCases: number;
-    statusCounts: Record<CaseStatus, number>
+    statusCounts: Record<CaseStatus, number>;
   };
 }
 
@@ -181,7 +181,7 @@ export interface IEvidenceRepository {
   findByCaseIdPaginated(
     caseId: number,
     limit?: number,
-    cursor?: string | null
+    cursor?: string | null,
   ): PaginatedResult<Evidence>;
 
   /**
@@ -202,7 +202,7 @@ export interface IEvidenceRepository {
   findAllPaginated(
     evidenceType?: string,
     limit?: number,
-    cursor?: string | null
+    cursor?: string | null,
   ): PaginatedResult<Evidence>;
 
   /**
@@ -477,7 +477,11 @@ export interface IChatConversationRepository {
    * @param limit - Maximum number of conversations to return
    * @returns Array of recent conversations
    */
-  findRecentByCase(userId: number, caseId: number | null, limit?: number): ChatConversation[];
+  findRecentByCase(
+    userId: number,
+    caseId: number | null,
+    limit?: number,
+  ): ChatConversation[];
 
   /**
    * Get conversation with all its messages (deprecated - use findWithMessagesPaginated)
@@ -497,8 +501,13 @@ export interface IChatConversationRepository {
   findWithMessagesPaginated(
     conversationId: number,
     limit?: number,
-    cursor?: string | null
-  ): (ConversationWithMessages & { nextCursor: string | null; hasMore: boolean }) | null;
+    cursor?: string | null,
+  ):
+    | (ConversationWithMessages & {
+        nextCursor: string | null;
+        hasMore: boolean;
+      })
+    | null;
 
   /**
    * Delete conversation and all its messages (CASCADE)

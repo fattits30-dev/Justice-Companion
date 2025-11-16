@@ -3,20 +3,22 @@ import "dotenv/config";
 import { app, BrowserWindow, safeStorage } from "electron";
 import path from "path";
 
-import { setupIpcHandlers } from './ipc-handlers/index.ts';
-import { initializeDatabase } from './database-init.ts';
-import { KeyManager } from '../src/services/KeyManager.ts';
-import { BackupScheduler } from '../src/services/backup/BackupScheduler.ts';
-import { databaseManager } from '../src/db/database.ts';
-import { setKeyManager } from './services/KeyManagerService.ts';
-import { logger } from '../src/utils/logger.ts';
-
-const __dirname = path.dirname(require.main?.filename || process.argv[1]);
+// IPC handlers removed - using Python FastAPI backend instead
+import { initializeDatabase } from './database-init';
+import { KeyManager } from '../src/services/KeyManager';
+import { BackupScheduler } from '../src/services/backup/BackupScheduler';
+import { databaseManager } from '../src/db/database';
+import { setKeyManager } from './services/KeyManagerService';
+import { PythonProcessManager } from './services/PythonProcessManager';
+import { BackendProcessManager } from './services/BackendProcessManager';
+import { logger } from '../src/utils/logger';
 
 const env = { NODE_ENV: process.env.NODE_ENV };
 
 let keyManager: KeyManager | null = null;
 let backupScheduler: BackupScheduler | null = null;
+let pythonServiceManager: PythonProcessManager | null = null;
+let backendProcessManager: BackendProcessManager | null = null;
 
 export function getKeyManager(): KeyManager {
   if (!keyManager) {
@@ -28,7 +30,8 @@ export function getKeyManager(): KeyManager {
 function createMainWindow(): BrowserWindow {
   logger.info("Creating main window", { service: "Main" });
 
-  const preloadPath = path.resolve(__dirname, "../dist/electron/preload.js");
+  // In bundled code, main.js and preload.js are in the same directory (dist/electron)
+  const preloadPath = path.join(__dirname, "preload.js");
   logger.info("Preload path", { service: "Main", path: preloadPath });
 
   const window = new BrowserWindow({
@@ -54,8 +57,8 @@ function createMainWindow(): BrowserWindow {
     window.loadURL("http://localhost:5176");
     window.webContents.openDevTools();
   } else if (env.NODE_ENV === "test") {
-    // In test mode, load the built files
-    window.loadFile(path.join(__dirname, "../dist/renderer/index.html"));
+    // In test mode, load the built files (dist/electron/../renderer = dist/renderer)
+    window.loadFile(path.join(__dirname, "../renderer/index.html"));
   } else {
     window.loadFile(path.join(__dirname, "../renderer/index.html"));
   }
@@ -122,11 +125,33 @@ app.whenReady().then(async () => {
     // Skip MainApplication for now to get basic functionality working
     // const _mainApp = new MainApplication(deps);
 
-    // Skip IPC handlers in test mode to avoid database dependencies
-    if (env.NODE_ENV !== "test") {
-      setupIpcHandlers();
-    } else {
-      logger.info("Skipping IPC handlers in test mode", { service: "Main" });
+    // Start Python FastAPI backend (HTTP REST API on port 8000)
+    try {
+      backendProcessManager = new BackendProcessManager({
+        port: 8000,
+        host: '127.0.0.1',
+        autoRestart: true,
+        healthCheckInterval: 30000, // Check health every 30 seconds
+        maxRestarts: 5,
+      });
+      await backendProcessManager.start();
+      logger.info("Python FastAPI backend started successfully", { service: "Main", port: 8000 });
+    } catch (error) {
+      logger.error("Failed to start Python FastAPI backend", { service: "Main", error });
+      // This is critical - app won't work without backend
+      if (env.NODE_ENV !== "test") {
+        throw error;
+      }
+    }
+
+    // Start Python AI service
+    try {
+      pythonServiceManager = new PythonProcessManager({ port: 5051 });
+      await pythonServiceManager.start();
+      logger.info("Python AI service started successfully", { service: "Main", port: 5051 });
+    } catch (error) {
+      logger.error("Failed to start Python AI service, will use TypeScript fallback", { service: "Main", error });
+      // Don't crash the app - TypeScript AI service can be used as fallback
     }
 
     // Initialize backup scheduler
@@ -167,6 +192,26 @@ app.on("activate", () => {
 });
 
 app.on("before-quit", async () => {
+  // Gracefully stop Python FastAPI backend
+  if (backendProcessManager) {
+    try {
+      await backendProcessManager.stop();
+      logger.info("Python FastAPI backend stopped", { service: "Main" });
+    } catch (error) {
+      logger.error("Error stopping Python FastAPI backend", { service: "Main", error });
+    }
+  }
+
+  // Gracefully stop Python AI service
+  if (pythonServiceManager) {
+    try {
+      await pythonServiceManager.stop();
+      logger.info("Python AI service stopped", { service: "Main" });
+    } catch (error) {
+      logger.error("Error stopping Python AI service", { service: "Main", error });
+    }
+  }
+
   // Gracefully stop backup scheduler
   if (backupScheduler) {
     try {

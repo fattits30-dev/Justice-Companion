@@ -5,9 +5,9 @@
  * tracking progress, and coordinating multi-agent workflows.
  */
 
-export { ConfigManager } from './ConfigManager.ts';
-export { ProjectPlanner } from './ProjectPlanner.ts';
-export { TodoManager } from './TodoManager.ts';
+export { ConfigManager } from "./ConfigManager.ts";
+export { ProjectPlanner } from "./ProjectPlanner.ts";
+export { TodoManager } from "./TodoManager.ts";
 
 export type {
   WorkflowTask,
@@ -24,4 +24,4 @@ export type {
   MCPPlanAdd,
   MCPPlanStatus,
   WorkflowSummary,
-} from './types.ts';
+} from "./types.ts";

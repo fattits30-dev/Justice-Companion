@@ -1,5 +1,5 @@
 // src/interfaces/IDocumentRepository.ts
-import type { Document } from '../models/Document.ts';
+import type { Document } from "../models/Document.ts";
 
 export interface IDocumentRepository {
   findById(id: number): Document | null;

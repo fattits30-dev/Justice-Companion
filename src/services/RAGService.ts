@@ -31,7 +31,7 @@ export class RAGService {
    */
   async processQuestion(
     question: string,
-    caseId?: number
+    caseId?: number,
   ): Promise<AIResponse> {
     try {
       errorLogger.logError("RAGService.processQuestion started", {
@@ -93,7 +93,7 @@ export class RAGService {
       // PHASE 5: Safety Validation
       if (aiResponse.success) {
         const validationResult = this.validateResponse(
-          aiResponse.message.content
+          aiResponse.message.content,
         );
 
         if (!validationResult.valid) {
@@ -113,7 +113,7 @@ export class RAGService {
 
         // Ensure disclaimer is present
         aiResponse.message.content = this.enforceDisclaimer(
-          aiResponse.message.content
+          aiResponse.message.content,
         );
       }
 
@@ -163,7 +163,7 @@ export class RAGService {
    */
   private async fetchLegalContext(
     keywords: string[],
-    category: string
+    category: string,
   ): Promise<LegalContext> {
     try {
       // Query all APIs in parallel for speed
@@ -176,11 +176,11 @@ export class RAGService {
       // Assemble context with limits to prevent token overflow
       const context: LegalContext = {
         legislation: this.limitAndSortLegislation(
-          legislation as LegislationResult[]
+          legislation as LegislationResult[],
         ),
         caseLaw: this.limitAndSortCaseLaw(caseLaw as CaseResult[]),
         knowledgeBase: this.limitKnowledgeBase(
-          knowledgeBase as KnowledgeEntry[]
+          knowledgeBase as KnowledgeEntry[],
         ),
       };
 
@@ -206,7 +206,7 @@ export class RAGService {
    * Sort by relevance score if available
    */
   private limitAndSortLegislation(
-    results: LegislationResult[]
+    results: LegislationResult[],
   ): LegislationResult[] {
     // Sort by relevance score (descending)
     const sorted = [...results].sort((a, b) => {

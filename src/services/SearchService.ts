@@ -87,7 +87,7 @@ export class SearchService {
     private readonly chatRepo: ChatConversationRepository,
     private readonly notesRepo: NotesRepository,
     private readonly encryptionService: EncryptionService,
-    private readonly auditLogger: AuditLogger
+    private readonly auditLogger: AuditLogger,
   ) {}
 
   /**
@@ -141,7 +141,7 @@ export class SearchService {
           query.filters,
           entityTypes,
           limit,
-          offset
+          offset,
         );
 
         results.push(...searchResults.results);
@@ -152,7 +152,7 @@ export class SearchService {
       const sortedResults = this.sortResults(
         results,
         query.sortBy || "relevance",
-        query.sortOrder || "desc"
+        query.sortOrder || "desc",
       );
 
       const executionTime = Date.now() - startTime;
@@ -192,7 +192,7 @@ export class SearchService {
     filters: SearchFilters | undefined,
     entityTypes: SearchEntityType[],
     limit: number,
-    offset: number
+    offset: number,
   ): Promise<{ results: SearchResult[]; total: number }> {
     const results: SearchResult[] = [];
 
@@ -215,7 +215,7 @@ export class SearchService {
       whereConditions.push("created_at >= ? AND created_at <= ?");
       params.push(
         filters.dateRange.from.toISOString(),
-        filters.dateRange.to.toISOString()
+        filters.dateRange.to.toISOString(),
       );
     }
 
@@ -255,7 +255,7 @@ export class SearchService {
         const result = await this.transformSearchResult(
           row,
           rank,
-          originalQuery
+          originalQuery,
         );
         if (result) {
           results.push(result);
@@ -271,7 +271,7 @@ export class SearchService {
           operation: "searchWithFTS5",
           userId,
           ftsQuery,
-        }
+        },
       );
 
       return this.fallbackSearch(
@@ -280,7 +280,7 @@ export class SearchService {
         filters,
         entityTypes,
         limit,
-        offset
+        offset,
       );
     }
   }
@@ -294,7 +294,7 @@ export class SearchService {
     filters: SearchFilters | undefined,
     entityTypes: SearchEntityType[],
     limit: number,
-    offset: number
+    offset: number,
   ): Promise<{ results: SearchResult[]; total: number }> {
     const results: SearchResult[] = [];
     let total = 0;
@@ -303,7 +303,7 @@ export class SearchService {
       const { results: caseResults, count } = await this.collectCaseResults(
         userId,
         query,
-        filters
+        filters,
       );
       results.push(...caseResults);
       total += count;
@@ -327,7 +327,7 @@ export class SearchService {
       const { results: noteResults, count } = await this.collectNoteResults(
         userId,
         query,
-        filters
+        filters,
       );
       results.push(...noteResults);
       total += count;
@@ -342,7 +342,7 @@ export class SearchService {
   private async collectCaseResults(
     userId: number,
     query: string,
-    filters: SearchFilters | undefined
+    filters: SearchFilters | undefined,
   ): Promise<{ results: SearchResult[]; count: number }> {
     const cases = await this.caseRepo.searchCases(userId, query, filters);
     const results = cases.map(
@@ -354,14 +354,14 @@ export class SearchService {
           excerpt: this.extractExcerpt(caseItem.description ?? "", query),
           relevanceScore: this.calculateRelevance(
             `${caseItem.title} ${caseItem.description ?? ""}`,
-            query
+            query,
           ),
           createdAt: caseItem.createdAt,
           metadata: {
             status: caseItem.status,
             caseType: caseItem.caseType,
           },
-        }) satisfies SearchResult
+        }) satisfies SearchResult,
     );
 
     return { results, count: cases.length };
@@ -370,12 +370,12 @@ export class SearchService {
   private async collectEvidenceResults(
     userId: number,
     query: string,
-    filters: SearchFilters | undefined
+    filters: SearchFilters | undefined,
   ): Promise<{ results: SearchResult[]; count: number }> {
     const evidence = await this.evidenceRepo.searchEvidence(
       userId,
       query,
-      filters
+      filters,
     );
 
     const results: SearchResult[] = [];
@@ -389,7 +389,7 @@ export class SearchService {
         excerpt: this.extractExcerpt(item.content ?? "", query),
         relevanceScore: this.calculateRelevance(
           `${item.title} ${item.content ?? ""}`,
-          query
+          query,
         ),
         caseId: item.caseId,
         caseTitle: caseItem?.title,
@@ -407,12 +407,12 @@ export class SearchService {
   private async collectConversationResults(
     userId: number,
     query: string,
-    filters: SearchFilters | undefined
+    filters: SearchFilters | undefined,
   ): Promise<{ results: SearchResult[]; count: number }> {
     const conversations = await this.chatRepo.searchConversations(
       userId,
       query,
-      filters
+      filters,
     );
 
     const results: SearchResult[] = [];
@@ -443,7 +443,7 @@ export class SearchService {
   private async collectNoteResults(
     userId: number,
     query: string,
-    filters: SearchFilters | undefined
+    filters: SearchFilters | undefined,
   ): Promise<{ results: SearchResult[]; count: number }> {
     const notes = await this.notesRepo.searchNotes(userId, query, filters);
     const results: SearchResult[] = [];
@@ -460,7 +460,7 @@ export class SearchService {
         excerpt: this.extractExcerpt(note.content, query),
         relevanceScore: this.calculateRelevance(
           `${note.title ?? ""} ${note.content}`,
-          query
+          query,
         ),
         caseId: note.caseId ?? undefined,
         caseTitle: caseItem?.title,
@@ -480,7 +480,7 @@ export class SearchService {
   private async transformSearchResult(
     row: SearchIndexRow,
     relevanceScore: number,
-    searchTerm: string
+    searchTerm: string,
   ): Promise<SearchResult | null> {
     try {
       const content = this.resolveContent(row);
@@ -506,7 +506,7 @@ export class SearchService {
           operation: "transformSearchResult",
           entityType: row?.entity_type,
           entityId: row?.entity_id,
-        }
+        },
       );
       return null;
     }
@@ -531,14 +531,14 @@ export class SearchService {
           operation: "transformSearchResult.decrypt",
           entityType: row.entity_type,
           entityId: row.entity_id,
-        }
+        },
       );
       return rawContent;
     }
   }
 
   private async resolveCaseTitle(
-    row: SearchIndexRow
+    row: SearchIndexRow,
   ): Promise<string | undefined> {
     if (typeof row.case_id !== "number") {
       return undefined;
@@ -556,7 +556,7 @@ export class SearchService {
           entityType: row.entity_type,
           entityId: row.entity_id,
           caseId: row.case_id,
-        }
+        },
       );
       return undefined;
     }
@@ -592,7 +592,7 @@ export class SearchService {
   }
 
   private buildConversationMetadata(
-    row: SearchIndexRow
+    row: SearchIndexRow,
   ): Record<string, unknown> {
     return row.message_count === undefined || row.message_count === null
       ? {}
@@ -625,7 +625,7 @@ export class SearchService {
   private extractExcerpt(
     content: string,
     query: string,
-    maxLength = 150
+    maxLength = 150,
   ): string {
     if (!content) {
       return "";
@@ -734,7 +734,7 @@ export class SearchService {
   private sortResults(
     results: SearchResult[],
     sortBy: string,
-    sortOrder: string
+    sortOrder: string,
   ): SearchResult[] {
     return results.sort((a, b) => {
       let comparison = 0;
@@ -762,7 +762,7 @@ export class SearchService {
   async saveSearch(
     userId: number,
     name: string,
-    query: SearchQuery
+    query: SearchQuery,
   ): Promise<SavedSearch> {
     const queryJson = JSON.stringify(query);
 
@@ -771,7 +771,7 @@ export class SearchService {
         `
       INSERT INTO saved_searches (user_id, name, query_json, created_at)
       VALUES (?, ?, ?, CURRENT_TIMESTAMP)
-    `
+    `,
       )
       .run(userId, name, queryJson);
 
@@ -803,7 +803,7 @@ export class SearchService {
       SELECT * FROM saved_searches
       WHERE user_id = ?
       ORDER BY last_used_at DESC NULLS LAST, created_at DESC
-    `
+    `,
       )
       .all(userId) as SavedSearch[];
   }
@@ -833,7 +833,7 @@ export class SearchService {
    */
   async executeSavedSearch(
     userId: number,
-    searchId: number
+    searchId: number,
   ): Promise<SearchResponse> {
     const savedSearch = this.db
       .prepare("SELECT * FROM saved_searches WHERE id = ? AND user_id = ?")
@@ -850,7 +850,7 @@ export class SearchService {
       UPDATE saved_searches
       SET last_used_at = CURRENT_TIMESTAMP, use_count = use_count + 1
       WHERE id = ?
-    `
+    `,
       )
       .run(searchId);
 
@@ -865,7 +865,7 @@ export class SearchService {
   async getSearchSuggestions(
     userId: number,
     prefix: string,
-    limit: number = 5
+    limit: number = 5,
   ): Promise<string[]> {
     // This could be enhanced with more sophisticated suggestion logic
     const recentSearches = this.db
@@ -876,7 +876,7 @@ export class SearchService {
       WHERE user_id = ? AND query_json LIKE ?
       ORDER BY last_used_at DESC NULLS LAST
       LIMIT ?
-    `
+    `,
       )
       .all(userId, `%"query":"${prefix}%`, limit) as { query_json: string }[];
 

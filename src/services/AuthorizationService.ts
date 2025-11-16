@@ -23,7 +23,7 @@ export class AuthorizationService {
    */
   async hasPermission(
     userId: number,
-    permissionName: string
+    permissionName: string,
   ): Promise<PermissionCheckResult> {
     const query = `
       SELECT COUNT(*) as count
@@ -52,7 +52,7 @@ export class AuthorizationService {
    */
   async hasAllPermissions(
     userId: number,
-    permissionNames: string[]
+    permissionNames: string[],
   ): Promise<PermissionCheckResult> {
     for (const permissionName of permissionNames) {
       const result = await this.hasPermission(userId, permissionName);
@@ -72,7 +72,7 @@ export class AuthorizationService {
    */
   async hasAnyPermission(
     userId: number,
-    permissionNames: string[]
+    permissionNames: string[],
   ): Promise<PermissionCheckResult> {
     for (const permissionName of permissionNames) {
       const result = await this.hasPermission(userId, permissionName);
@@ -194,7 +194,7 @@ export class AuthorizationService {
   async assignRole(
     userId: number,
     roleId: number,
-    assignedBy: number
+    assignedBy: number,
   ): Promise<void> {
     const stmt = this.db.prepare(`
       INSERT OR IGNORE INTO user_roles (user_id, role_id, assigned_by)

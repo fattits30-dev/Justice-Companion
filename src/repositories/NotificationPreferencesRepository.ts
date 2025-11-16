@@ -44,7 +44,7 @@ export class NotificationPreferencesRepository {
       input.desktopNotificationsEnabled !== false ? 1 : 0,
       input.quietHoursEnabled ? 1 : 0,
       input.quietHoursStart || "22:00",
-      input.quietHoursEnd || "08:00"
+      input.quietHoursEnd || "08:00",
     );
 
     return this.findById(result.lastInsertRowid as number)!;
@@ -100,7 +100,7 @@ export class NotificationPreferencesRepository {
    */
   update(
     userId: number,
-    input: UpdateNotificationPreferencesInput
+    input: UpdateNotificationPreferencesInput,
   ): NotificationPreferences {
     const updates: string[] = [];
     const params: any[] = [];
@@ -208,7 +208,10 @@ export class NotificationPreferencesRepository {
    * Get all users with deadline reminders enabled
    * (for scheduler to check)
    */
-  getUsersWithDeadlineReminders(): Array<{ userId: number; reminderDays: number }> {
+  getUsersWithDeadlineReminders(): Array<{
+    userId: number;
+    reminderDays: number;
+  }> {
     const stmt = this.db.prepare(`
       SELECT user_id, deadline_reminder_days
       FROM notification_preferences
@@ -216,7 +219,7 @@ export class NotificationPreferencesRepository {
     `);
 
     const rows = stmt.all() as any[];
-    return rows.map(row => ({
+    return rows.map((row) => ({
       userId: row.user_id,
       reminderDays: row.deadline_reminder_days,
     }));
@@ -237,7 +240,9 @@ export class NotificationPreferencesRepository {
     `);
 
     const row = stmt.get(userId) as any;
-    if (!row) {return true;} // Default to enabled if no preferences exist
+    if (!row) {
+      return true;
+    } // Default to enabled if no preferences exist
 
     return (
       row.deadline_reminders_enabled === 1 ||

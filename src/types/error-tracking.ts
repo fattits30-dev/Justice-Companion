@@ -4,7 +4,7 @@
  * Comprehensive types for the enhanced error tracking system.
  */
 
-export type ErrorLevel = 'debug' | 'info' | 'warning' | 'error' | 'critical';
+export type ErrorLevel = "debug" | "info" | "warning" | "error" | "critical";
 
 export interface ErrorContext {
   /** User ID if authenticated */
@@ -105,10 +105,10 @@ export interface ErrorMetrics {
     count: number;
   }>;
   /** Trend indicators */
-  errorRateTrend: 'up' | 'down' | 'stable';
-  errorsTrend: 'up' | 'down' | 'stable';
-  usersTrend: 'up' | 'down' | 'stable';
-  mttrTrend: 'up' | 'down' | 'stable';
+  errorRateTrend: "up" | "down" | "stable";
+  errorsTrend: "up" | "down" | "stable";
+  usersTrend: "up" | "down" | "stable";
+  mttrTrend: "up" | "down" | "stable";
 }
 
 export interface Alert {
@@ -117,7 +117,7 @@ export interface Alert {
   /** Alert rule name */
   name: string;
   /** Alert severity */
-  severity: 'info' | 'warning' | 'critical';
+  severity: "info" | "warning" | "critical";
   /** Alert message */
   message: string;
   /** Current value that triggered alert */
@@ -144,9 +144,9 @@ export interface AlertRule {
   /** Time window for evaluation (milliseconds) */
   window: number;
   /** Alert severity */
-  severity: 'info' | 'warning' | 'critical';
+  severity: "info" | "warning" | "critical";
   /** Alert channels (console, notification, file, email, slack) */
-  channels: Array<'console' | 'notification' | 'file' | 'email' | 'slack'>;
+  channels: Array<"console" | "notification" | "file" | "email" | "slack">;
   /** Cooldown period between alerts (milliseconds) */
   cooldown: number;
   /** Optional filter function */
@@ -225,9 +225,13 @@ export interface PerformanceMetrics {
 
 export interface Anomaly {
   /** Anomaly type */
-  type: 'response_time_spike' | 'error_rate_increase' | 'apdex_degradation' | 'resource_usage_high';
+  type:
+    | "response_time_spike"
+    | "error_rate_increase"
+    | "apdex_degradation"
+    | "resource_usage_high";
   /** Anomaly severity */
-  severity: 'info' | 'warning' | 'critical';
+  severity: "info" | "warning" | "critical";
   /** Current value */
   current: number;
   /** Baseline value */

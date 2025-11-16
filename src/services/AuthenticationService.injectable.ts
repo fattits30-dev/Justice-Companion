@@ -48,7 +48,7 @@ export class AuthenticationServiceInjectable implements IAuthenticationService {
     @inject(TYPES.RateLimitService)
     private readonly rateLimitService: IRateLimitService,
     @inject(TYPES.SessionPersistenceService)
-    private readonly sessionPersistence?: ISessionPersistenceHandler
+    private readonly sessionPersistence?: ISessionPersistenceHandler,
   ) {}
 
   /**
@@ -57,7 +57,7 @@ export class AuthenticationServiceInjectable implements IAuthenticationService {
   async register(
     username: string,
     password: string,
-    email: string
+    email: string,
   ): Promise<User> {
     const normalizedUsername = username?.trim();
     const normalizedEmail = email?.trim().toLowerCase();
@@ -100,9 +100,9 @@ export class AuthenticationServiceInjectable implements IAuthenticationService {
       details: { username: normalizedUsername, email: normalizedEmail },
     });
 
-    logger.info("AuthenticationService", "User registered", {
-      username: normalizedUsername,
-      email: normalizedEmail,
+    logger.info("User registered", {
+      service: "AuthenticationService",
+      metadata: { username: normalizedUsername, email: normalizedEmail },
     });
 
     return user;
@@ -116,7 +116,7 @@ export class AuthenticationServiceInjectable implements IAuthenticationService {
     password: string,
     rememberMe: boolean = false,
     ipAddress?: string,
-    userAgent?: string
+    userAgent?: string,
   ): Promise<{ user: User; session: Session }> {
     const rateLimitResult = this.rateLimitService.checkRateLimit(username);
 
@@ -173,7 +173,7 @@ export class AuthenticationServiceInjectable implements IAuthenticationService {
     const passwordValid = await this.verifyPassword(
       password,
       user.passwordHash,
-      user.passwordSalt
+      user.passwordSalt,
     );
 
     if (!passwordValid) {
@@ -205,13 +205,13 @@ export class AuthenticationServiceInjectable implements IAuthenticationService {
           await this.sessionPersistence.storeSessionId(session.id);
           sessionPersisted = true;
         } else {
-          logger.warn(
-            "AuthenticationService",
-            "Session persistence unavailable for Remember Me"
-          );
+          logger.warn("Session persistence unavailable for Remember Me", {
+            service: "AuthenticationService",
+          });
         }
       } catch (error) {
-        logger.error("AuthenticationService", "Failed to persist session", {
+        logger.error("Failed to persist session", {
+          service: "AuthenticationService",
           error,
         });
       }
@@ -236,10 +236,9 @@ export class AuthenticationServiceInjectable implements IAuthenticationService {
       userAgent,
     });
 
-    logger.info("AuthenticationService", "User logged in", {
-      username,
-      rememberMe,
-      sessionPersisted,
+    logger.info("User logged in", {
+      service: "AuthenticationService",
+      metadata: { username, rememberMe, sessionPersisted },
     });
 
     return { user, session };
@@ -277,11 +276,10 @@ export class AuthenticationServiceInjectable implements IAuthenticationService {
       try {
         await this.sessionPersistence.clearSession();
       } catch (error) {
-        logger.error(
-          "AuthenticationService",
-          "Failed to clear persisted session",
-          { error }
-        );
+        logger.error("Failed to clear persisted session", {
+          service: "AuthenticationService",
+          error,
+        });
       }
     }
 
@@ -297,7 +295,10 @@ export class AuthenticationServiceInjectable implements IAuthenticationService {
       details: { sessionCleared: true },
     });
 
-    logger.info("AuthenticationService", "User logged out", { sessionId });
+    logger.info("User logged out", {
+      service: "AuthenticationService",
+      sessionId,
+    });
   }
 
   /**
@@ -328,7 +329,7 @@ export class AuthenticationServiceInjectable implements IAuthenticationService {
   async changePassword(
     userId: number,
     oldPassword: string,
-    newPassword: string
+    newPassword: string,
   ): Promise<void> {
     const user = this.userRepository.findById(userId);
 
@@ -339,7 +340,7 @@ export class AuthenticationServiceInjectable implements IAuthenticationService {
     const isValid = await this.verifyPassword(
       oldPassword,
       user.passwordHash,
-      user.passwordSalt
+      user.passwordSalt,
     );
 
     if (!isValid) {
@@ -371,7 +372,10 @@ export class AuthenticationServiceInjectable implements IAuthenticationService {
       success: true,
     });
 
-    logger.info("AuthenticationService", "Password changed", { userId });
+    logger.info("Password changed", {
+      service: "AuthenticationService",
+      metadata: { userId },
+    });
   }
 
   /**
@@ -433,11 +437,10 @@ export class AuthenticationServiceInjectable implements IAuthenticationService {
 
       return { user, session };
     } catch (error) {
-      logger.error(
-        "AuthenticationService",
-        "Error restoring persisted session",
-        { error }
-      );
+      logger.error("Error restoring persisted session", {
+        service: "AuthenticationService",
+        error,
+      });
 
       try {
         await this.sessionPersistence.clearSession();
@@ -466,15 +469,16 @@ export class AuthenticationServiceInjectable implements IAuthenticationService {
       });
     }
 
-    logger.info("AuthenticationService", "Expired sessions cleaned", {
-      deletedCount,
+    logger.info("Expired sessions cleaned", {
+      service: "AuthenticationService",
+      metadata: { deletedCount },
     });
 
     return deletedCount;
   }
 
   private async generatePasswordHash(
-    password: string
+    password: string,
   ): Promise<{ hash: string; salt: string }> {
     const salt = crypto.randomBytes(this.SALT_LENGTH);
     const derived = (await scrypt(password, salt, this.KEY_LENGTH)) as Buffer;
@@ -488,12 +492,12 @@ export class AuthenticationServiceInjectable implements IAuthenticationService {
   private async verifyPassword(
     password: string,
     passwordHash: string,
-    passwordSalt: string
+    passwordSalt: string,
   ): Promise<boolean> {
     const derived = (await scrypt(
       password,
       Buffer.from(passwordSalt, "hex"),
-      this.KEY_LENGTH
+      this.KEY_LENGTH,
     )) as Buffer;
     const stored = Buffer.from(passwordHash, "hex");
 
@@ -503,25 +507,25 @@ export class AuthenticationServiceInjectable implements IAuthenticationService {
   private validatePasswordStrength(password: string): void {
     if (password.length < 12) {
       throw new AuthenticationError(
-        "Password must be at least 12 characters long"
+        "Password must be at least 12 characters long",
       );
     }
 
     if (!/[A-Z]/.test(password)) {
       throw new AuthenticationError(
-        "Password must contain at least one uppercase letter"
+        "Password must contain at least one uppercase letter",
       );
     }
 
     if (!/[a-z]/.test(password)) {
       throw new AuthenticationError(
-        "Password must contain at least one lowercase letter"
+        "Password must contain at least one lowercase letter",
       );
     }
 
     if (!/[0-9]/.test(password)) {
       throw new AuthenticationError(
-        "Password must contain at least one number"
+        "Password must contain at least one number",
       );
     }
   }
@@ -532,7 +536,7 @@ export class AuthenticationServiceInjectable implements IAuthenticationService {
       rememberMe: boolean;
       ipAddress?: string;
       userAgent?: string;
-    }
+    },
   ): Session {
     const sessionDuration = options.rememberMe
       ? this.REMEMBER_ME_DURATION_MS

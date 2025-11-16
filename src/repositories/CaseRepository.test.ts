@@ -1,14 +1,22 @@
-import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll } from 'vitest';
-import { createTestDatabase } from '../test-utils/database-test-helper';
-import { databaseManager } from '../db/database.ts';
-import { CaseRepository } from './CaseRepository';
-import { EncryptionService } from '../services/EncryptionService';
-import type { CreateCaseInput } from '../domains/cases/entities/Case';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  beforeAll,
+  afterAll,
+} from "vitest";
+import { createTestDatabase } from "../test-utils/database-test-helper";
+import { databaseManager } from "../db/database.ts";
+import { CaseRepository } from "./CaseRepository";
+import { EncryptionService } from "../services/EncryptionService";
+import type { CreateCaseInput } from "../domains/cases/entities/Case";
 
 // Create test database helper at module level
 const testDbHelper = createTestDatabase();
 
-describe('CaseRepository with Encryption', () => {
+describe("CaseRepository with Encryption", () => {
   let repository: CaseRepository;
   let encryptionService: EncryptionService;
   let testKey: Buffer;
@@ -43,48 +51,51 @@ describe('CaseRepository with Encryption', () => {
     // Additional cleanup if needed
   });
 
-  describe('Encryption on Write Operations', () => {
-    it('should store encrypted case description in database', () => {
+  describe("Encryption on Write Operations", () => {
+    it("should store encrypted case description in database", () => {
       const caseInput: CreateCaseInput = {
-        title: 'Employment Dispute',
-        caseType: 'employment',
-        description: 'Confidential client details: John Doe was wrongfully terminated.',
+        title: "Employment Dispute",
+        caseType: "employment",
+        description:
+          "Confidential client details: John Doe was wrongfully terminated.",
       };
 
       const createdCase = repository.create(caseInput);
 
       // Query database directly to verify encryption
-      const rawRow = testDbHelper.getDatabase()
-        .prepare('SELECT description FROM cases WHERE id = ?')
+      const rawRow = testDbHelper
+        .getDatabase()
+        .prepare("SELECT description FROM cases WHERE id = ?")
         .get(createdCase.id) as {
         description: string | null;
       };
 
       expect(rawRow.description).toBeTruthy();
-      expect(rawRow.description).not.toContain('Confidential');
-      expect(rawRow.description).not.toContain('John Doe');
-      expect(rawRow.description).not.toContain('wrongfully terminated');
+      expect(rawRow.description).not.toContain("Confidential");
+      expect(rawRow.description).not.toContain("John Doe");
+      expect(rawRow.description).not.toContain("wrongfully terminated");
 
       // Verify it's JSON-encoded encrypted data
       const encryptedData = JSON.parse(rawRow.description!);
-      expect(encryptedData).toHaveProperty('algorithm', 'aes-256-gcm');
-      expect(encryptedData).toHaveProperty('ciphertext');
-      expect(encryptedData).toHaveProperty('iv');
-      expect(encryptedData).toHaveProperty('authTag');
-      expect(encryptedData).toHaveProperty('version', 1);
+      expect(encryptedData).toHaveProperty("algorithm", "aes-256-gcm");
+      expect(encryptedData).toHaveProperty("ciphertext");
+      expect(encryptedData).toHaveProperty("iv");
+      expect(encryptedData).toHaveProperty("authTag");
+      expect(encryptedData).toHaveProperty("version", 1);
     });
 
-    it('should store null for empty description', () => {
+    it("should store null for empty description", () => {
       const caseInput: CreateCaseInput = {
-        title: 'Test Case',
-        caseType: 'consumer',
-        description: '',
+        title: "Test Case",
+        caseType: "consumer",
+        description: "",
       };
 
       const createdCase = repository.create(caseInput);
 
-      const rawRow = testDbHelper.getDatabase()
-        .prepare('SELECT description FROM cases WHERE id = ?')
+      const rawRow = testDbHelper
+        .getDatabase()
+        .prepare("SELECT description FROM cases WHERE id = ?")
         .get(createdCase.id) as {
         description: string | null;
       };
@@ -92,43 +103,45 @@ describe('CaseRepository with Encryption', () => {
       expect(rawRow.description).toBeNull();
     });
 
-    it('should update and encrypt case description', () => {
+    it("should update and encrypt case description", () => {
       // Create initial case
       const createdCase = repository.create({
-        title: 'Initial Case',
-        caseType: 'housing',
-        description: 'Initial description',
+        title: "Initial Case",
+        caseType: "housing",
+        description: "Initial description",
       });
 
       // Update description
       const updated = repository.update(createdCase.id, {
-        description: 'Updated sensitive information: SSN 123-45-6789',
+        description: "Updated sensitive information: SSN 123-45-6789",
       });
 
       expect(updated).toBeTruthy();
 
       // Verify encryption in database
-      const rawRow = testDbHelper.getDatabase()
-        .prepare('SELECT description FROM cases WHERE id = ?')
+      const rawRow = testDbHelper
+        .getDatabase()
+        .prepare("SELECT description FROM cases WHERE id = ?")
         .get(createdCase.id) as {
         description: string | null;
       };
 
-      expect(rawRow.description).not.toContain('SSN');
-      expect(rawRow.description).not.toContain('123-45-6789');
+      expect(rawRow.description).not.toContain("SSN");
+      expect(rawRow.description).not.toContain("123-45-6789");
 
       const encryptedData = JSON.parse(rawRow.description!);
-      expect(encryptedData).toHaveProperty('algorithm', 'aes-256-gcm');
+      expect(encryptedData).toHaveProperty("algorithm", "aes-256-gcm");
     });
   });
 
-  describe('Decryption on Read Operations', () => {
-    it('should decrypt case description on retrieval', () => {
-      const description = 'Attorney-client privileged communication about discrimination case';
+  describe("Decryption on Read Operations", () => {
+    it("should decrypt case description on retrieval", () => {
+      const description =
+        "Attorney-client privileged communication about discrimination case";
 
       const createdCase = repository.create({
-        title: 'Test Case',
-        caseType: 'employment',
+        title: "Test Case",
+        caseType: "employment",
         description,
       });
 
@@ -138,11 +151,23 @@ describe('CaseRepository with Encryption', () => {
       expect(retrievedCase!.description).toBe(description);
     });
 
-    it('should decrypt all case descriptions in findAll', () => {
+    it("should decrypt all case descriptions in findAll", () => {
       const cases = [
-        { title: 'Case 1', caseType: 'employment' as const, description: 'Sensitive info 1' },
-        { title: 'Case 2', caseType: 'housing' as const, description: 'Sensitive info 2' },
-        { title: 'Case 3', caseType: 'consumer' as const, description: 'Sensitive info 3' },
+        {
+          title: "Case 1",
+          caseType: "employment" as const,
+          description: "Sensitive info 1",
+        },
+        {
+          title: "Case 2",
+          caseType: "housing" as const,
+          description: "Sensitive info 2",
+        },
+        {
+          title: "Case 3",
+          caseType: "consumer" as const,
+          description: "Sensitive info 3",
+        },
       ];
 
       const createdIds = cases.map((c) => repository.create(c).id);
@@ -158,10 +183,10 @@ describe('CaseRepository with Encryption', () => {
       });
     });
 
-    it('should handle null descriptions correctly', () => {
+    it("should handle null descriptions correctly", () => {
       const createdCase = repository.create({
-        title: 'No Description Case',
-        caseType: 'family',
+        title: "No Description Case",
+        caseType: "family",
       });
 
       const retrieved = repository.findById(createdCase.id);
@@ -170,15 +195,21 @@ describe('CaseRepository with Encryption', () => {
     });
   });
 
-  describe('Backward Compatibility', () => {
-    it('should handle legacy plaintext descriptions', () => {
+  describe("Backward Compatibility", () => {
+    it("should handle legacy plaintext descriptions", () => {
       // Manually insert plaintext description (simulating legacy data)
-      const result = testDbHelper.getDatabase()
+      const result = testDbHelper
+        .getDatabase()
         .prepare(
           `INSERT INTO cases (title, case_type, description, status)
-         VALUES (?, ?, ?, ?)`
+         VALUES (?, ?, ?, ?)`,
         )
-        .run('Legacy Case', 'consumer', 'This is plaintext from old version', 'active');
+        .run(
+          "Legacy Case",
+          "consumer",
+          "This is plaintext from old version",
+          "active",
+        );
 
       const caseId = result.lastInsertRowid as number;
 
@@ -186,42 +217,50 @@ describe('CaseRepository with Encryption', () => {
       const retrievedCase = repository.findById(caseId);
 
       expect(retrievedCase).toBeTruthy();
-      expect(retrievedCase!.description).toBe('This is plaintext from old version');
+      expect(retrievedCase!.description).toBe(
+        "This is plaintext from old version",
+      );
     });
 
-    it('should throw when encryption service is not configured', () => {
+    it("should throw when encryption service is not configured", () => {
       const repoWithoutEncryption = new CaseRepository(undefined as any);
 
       expect(() =>
         repoWithoutEncryption.create({
-          title: 'Unencrypted Case',
-          caseType: 'debt',
-          description: 'This will be stored as plaintext',
-        })
-      ).toThrow('EncryptionService not configured for CaseRepository');
+          title: "Unencrypted Case",
+          caseType: "debt",
+          description: "This will be stored as plaintext",
+        }),
+      ).toThrow("EncryptionService not configured for CaseRepository");
     });
   });
 
-  describe('Encryption Security Properties', () => {
-    it('should use unique IVs for same description encrypted multiple times', () => {
-      const description = 'Repeated confidential information';
+  describe("Encryption Security Properties", () => {
+    it("should use unique IVs for same description encrypted multiple times", () => {
+      const description = "Repeated confidential information";
 
       const case1 = repository.create({
-        title: 'Case 1',
-        caseType: 'employment',
+        title: "Case 1",
+        caseType: "employment",
         description,
       });
 
       const case2 = repository.create({
-        title: 'Case 2',
-        caseType: 'employment',
+        title: "Case 2",
+        caseType: "employment",
         description,
       });
 
-      const row1 = testDbHelper.getDatabase().prepare('SELECT description FROM cases WHERE id = ?').get(case1.id) as {
+      const row1 = testDbHelper
+        .getDatabase()
+        .prepare("SELECT description FROM cases WHERE id = ?")
+        .get(case1.id) as {
         description: string;
       };
-      const row2 = testDbHelper.getDatabase().prepare('SELECT description FROM cases WHERE id = ?').get(case2.id) as {
+      const row2 = testDbHelper
+        .getDatabase()
+        .prepare("SELECT description FROM cases WHERE id = ?")
+        .get(case2.id) as {
         description: string;
       };
 
@@ -234,12 +273,12 @@ describe('CaseRepository with Encryption', () => {
       expect(encrypted1.authTag).not.toBe(encrypted2.authTag);
     });
 
-    it('should fail decryption with wrong key', () => {
-      const description = 'Highly confidential case details';
+    it("should fail decryption with wrong key", () => {
+      const description = "Highly confidential case details";
 
       const createdCase = repository.create({
-        title: 'Encrypted Case',
-        caseType: 'family',
+        title: "Encrypted Case",
+        caseType: "family",
         description,
       });
 
@@ -259,13 +298,14 @@ describe('CaseRepository with Encryption', () => {
     });
   });
 
-  describe('Round-Trip Testing', () => {
-    it('should successfully encrypt and decrypt unicode characters', () => {
-      const description = 'Legal notice in Chinese: 法律通知 📄 ⚖️ Arabic: إشعار قانوني';
+  describe("Round-Trip Testing", () => {
+    it("should successfully encrypt and decrypt unicode characters", () => {
+      const description =
+        "Legal notice in Chinese: 法律通知 📄 ⚖️ Arabic: إشعار قانوني";
 
       const createdCase = repository.create({
-        title: 'Unicode Case',
-        caseType: 'other',
+        title: "Unicode Case",
+        caseType: "other",
         description,
       });
 
@@ -273,13 +313,13 @@ describe('CaseRepository with Encryption', () => {
       expect(retrieved!.description).toBe(description);
     });
 
-    it('should handle large descriptions (10KB+)', () => {
+    it("should handle large descriptions (10KB+)", () => {
       // Generate 10KB of text
-      const largeDescription = 'Legal case details: '.repeat(500); // ~10KB
+      const largeDescription = "Legal case details: ".repeat(500); // ~10KB
 
       const createdCase = repository.create({
-        title: 'Large Case',
-        caseType: 'employment',
+        title: "Large Case",
+        caseType: "employment",
         description: largeDescription,
       });
 
@@ -287,13 +327,13 @@ describe('CaseRepository with Encryption', () => {
       expect(retrieved!.description).toBe(largeDescription);
     });
 
-    it('should handle special legal characters', () => {
+    it("should handle special legal characters", () => {
       const description =
-        '§123.45(a)(1) - "Plaintiff" vs. \'Defendant\' @ 50% liability [cite: 2024 WL 12345]';
+        "§123.45(a)(1) - \"Plaintiff\" vs. 'Defendant' @ 50% liability [cite: 2024 WL 12345]";
 
       const createdCase = repository.create({
-        title: 'Special Chars Case',
-        caseType: 'consumer',
+        title: "Special Chars Case",
+        caseType: "consumer",
         description,
       });
 

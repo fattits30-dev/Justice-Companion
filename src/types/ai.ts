@@ -4,7 +4,7 @@
  */
 
 // Chat message roles
-export type MessageRole = 'system' | 'user' | 'assistant';
+export type MessageRole = "system" | "user" | "assistant";
 
 // Chat message structure
 export interface ChatMessage {
@@ -28,8 +28,8 @@ export interface AIConfig {
 
 // Default AI configuration
 export const DEFAULT_AI_CONFIG: AIConfig = {
-  endpoint: '', // Deprecated - using integrated AI
-  model: 'local-model',
+  endpoint: "", // Deprecated - using integrated AI
+  model: "local-model",
   temperature: 0.3, // Low temperature for factual legal information
   maxTokens: 2000,
   stream: false,
@@ -167,9 +167,9 @@ export function buildContextString(context: LegalContext): string {
 
   // Add legislation
   if (context.legislation.length > 0) {
-    parts.push('=== RELEVANT LEGISLATION ===');
+    parts.push("=== RELEVANT LEGISLATION ===");
     context.legislation.forEach((law) => {
-      parts.push(`\n${law.title}${law.section ? ` - ${law.section}` : ''}`);
+      parts.push(`\n${law.title}${law.section ? ` - ${law.section}` : ""}`);
       parts.push(law.content);
       parts.push(`Source: ${law.url}\n`);
     });
@@ -177,9 +177,11 @@ export function buildContextString(context: LegalContext): string {
 
   // Add case law
   if (context.caseLaw.length > 0) {
-    parts.push('\n=== RELEVANT CASE LAW ===');
+    parts.push("\n=== RELEVANT CASE LAW ===");
     context.caseLaw.forEach((caseItem) => {
-      parts.push(`\n${caseItem.citation} - ${caseItem.court} (${caseItem.date})`);
+      parts.push(
+        `\n${caseItem.citation} - ${caseItem.court} (${caseItem.date})`,
+      );
       parts.push(caseItem.summary);
       if (caseItem.outcome) {
         parts.push(`Outcome: ${caseItem.outcome}`);
@@ -190,35 +192,40 @@ export function buildContextString(context: LegalContext): string {
 
   // Add knowledge base
   if (context.knowledgeBase.length > 0) {
-    parts.push('\n=== KNOWLEDGE BASE ===');
+    parts.push("\n=== KNOWLEDGE BASE ===");
     context.knowledgeBase.forEach((entry) => {
       parts.push(`\n${entry.topic} (${entry.category})`);
       parts.push(entry.content);
       if (entry.sources.length > 0) {
-        parts.push(`Sources: ${entry.sources.join(', ')}\n`);
+        parts.push(`Sources: ${entry.sources.join(", ")}\n`);
       }
     });
   }
 
-  return parts.join('\n');
+  return parts.join("\n");
 }
 
 // Function to build complete system prompt with context
 export function buildSystemPrompt(context: LegalContext): string {
   const contextString = buildContextString(context);
-  return SYSTEM_PROMPT_TEMPLATE.replace('{context}', contextString);
+  return SYSTEM_PROMPT_TEMPLATE.replace("{context}", contextString);
 }
 
 // Extract sources from AI response for citation display
 // NOTE: Returns ALL sources from context for transparency, not just cited ones
 // This is important for legal apps - users should see what was searched
-export function extractSources(_response: string, context: LegalContext): string[] {
+export function extractSources(
+  _response: string,
+  context: LegalContext,
+): string[] {
   const sources: string[] = [];
 
   // Add ALL legislation sources (with valid URLs)
   context.legislation.forEach((law) => {
     if (law.url) {
-      sources.push(`${law.title}${law.section ? ` ${law.section}` : ''} - ${law.url}`);
+      sources.push(
+        `${law.title}${law.section ? ` ${law.section}` : ""} - ${law.url}`,
+      );
     }
   });
 

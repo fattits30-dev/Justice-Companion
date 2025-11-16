@@ -1,6 +1,12 @@
-import { getDb } from '../db/database.ts';
-import type { Session, CreateSessionInput } from '../domains/auth/entities/Session.ts';
-import { getCacheService, type CacheService } from '../services/CacheService.ts';
+import { getDb } from "../db/database.ts";
+import type {
+  Session,
+  CreateSessionInput,
+} from "../domains/auth/entities/Session.ts";
+import {
+  getCacheService,
+  type CacheService,
+} from "../services/CacheService.ts";
 
 /**
  * Raw database row from sessions table
@@ -60,8 +66,8 @@ export class SessionRepository {
     const session = this.findByIdDirect(input.id)!;
 
     // Cache the newly created session
-    this.cache.invalidate(`session:${input.id}`, 'sessions');
-    this.cache.invalidate(`session:user:${input.userId}`, 'sessions');
+    this.cache.invalidate(`session:${input.id}`, "sessions");
+    this.cache.invalidate(`session:user:${input.userId}`, "sessions");
 
     return session;
   }
@@ -126,7 +132,7 @@ export class SessionRepository {
 
     const rows = stmt.all(userId) as SessionRow[];
     // Convert INTEGER (0/1) back to boolean for each session
-    return rows.map(row => ({
+    return rows.map((row) => ({
       ...row,
       rememberMe: row.rememberMe === 1,
     })) as Session[];
@@ -137,7 +143,7 @@ export class SessionRepository {
    */
   delete(id: string): boolean {
     const db = getDb();
-    const stmt = db.prepare('DELETE FROM sessions WHERE id = ?');
+    const stmt = db.prepare("DELETE FROM sessions WHERE id = ?");
     const result = stmt.run(id);
     return result.changes > 0;
   }
@@ -147,7 +153,7 @@ export class SessionRepository {
    */
   deleteByUserId(userId: number): number {
     const db = getDb();
-    const stmt = db.prepare('DELETE FROM sessions WHERE user_id = ?');
+    const stmt = db.prepare("DELETE FROM sessions WHERE user_id = ?");
     const result = stmt.run(userId);
     return result.changes;
   }

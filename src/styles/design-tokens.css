@@ -79,8 +79,17 @@
   --bg-overlay: rgba(2, 6, 23, 0.85);
 
   /* Gradients */
-  --bg-gradient-primary: linear-gradient(135deg, #020617 0%, #1e3a8a 50%, #020617 100%);
-  --bg-gradient-card: linear-gradient(145deg, rgba(30, 41, 59, 0.4) 0%, rgba(15, 23, 42, 0.6) 100%);
+  --bg-gradient-primary: linear-gradient(
+    135deg,
+    #020617 0%,
+    #1e3a8a 50%,
+    #020617 100%
+  );
+  --bg-gradient-card: linear-gradient(
+    145deg,
+    rgba(30, 41, 59, 0.4) 0%,
+    rgba(15, 23, 42, 0.6) 100%
+  );
   --bg-gradient-hover: linear-gradient(
     145deg,
     rgba(59, 130, 246, 0.1) 0%,
@@ -102,9 +111,12 @@
 
   /* Shadows */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.25);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+  --shadow-md:
+    0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+  --shadow-lg:
+    0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+  --shadow-xl:
+    0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
   --shadow-glow: 0 0 20px rgba(59, 130, 246, 0.3);
   --shadow-glow-lg: 0 0 40px rgba(59, 130, 246, 0.4);
 
@@ -197,7 +209,11 @@
 /* === Utility Classes === */
 
 .text-gradient {
-  background: linear-gradient(135deg, var(--color-primary-400) 0%, var(--color-primary-600) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-primary-400) 0%,
+    var(--color-primary-600) 100%
+  );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

@@ -4,11 +4,9 @@
  * SECURITY: Prevents sensitive data leakage in production logs
  * PERFORMANCE: Efficient logging with proper formatting
  * COMPLIANCE: GDPR-compliant, no PII in logs
+ *
+ * RENDERER-SAFE: Uses console in browser, winston in main process
  */
-
-import winston from "winston";
-import path from "path";
-import { app } from "electron";
 
 // Log levels
 export enum LogLevel {
@@ -71,33 +69,98 @@ function sanitizeObject(obj: Record<string, unknown>): Record<string, unknown> {
   return sanitized;
 }
 
-// Custom format for security and readability
-const secureFormat = winston.format.combine(
-  winston.format.timestamp(),
-  winston.format.errors({ stack: true }),
-  winston.format.json({
-    replacer: (_key: string, value: unknown) => {
-      // Additional sanitization for JSON output
-      if (typeof value === "object" && value !== null) {
-        return sanitizeObject(value as Record<string, unknown>);
-      }
-      return sanitizeValue(value);
-    },
-  }),
-);
+// Simple logger interface
+interface Logger {
+  error(message: string, context?: LogContext): void;
+  warn(message: string, context?: LogContext): void;
+  info(message: string, context?: LogContext): void;
+  debug(message: string, context?: LogContext): void;
+  log(level: string, message: string, context?: LogContext): void;
+}
 
-// Create logger instance
-let loggerInstance: winston.Logger;
+// Browser-safe console logger for renderer process
+class ConsoleLogger implements Logger {
+  private isDevelopment = import.meta.env?.DEV ?? true;
 
-function createLogger(): winston.Logger {
+  error(message: string, context?: LogContext): void {
+    console.error(
+      message,
+      context ? sanitizeObject(context as Record<string, unknown>) : "",
+    );
+  }
+
+  warn(message: string, context?: LogContext): void {
+    console.warn(
+      message,
+      context ? sanitizeObject(context as Record<string, unknown>) : "",
+    );
+  }
+
+  info(message: string, context?: LogContext): void {
+    if (this.isDevelopment) {
+      console.info(
+        message,
+        context ? sanitizeObject(context as Record<string, unknown>) : "",
+      );
+    }
+  }
+
+  debug(message: string, context?: LogContext): void {
+    if (this.isDevelopment) {
+      console.debug(
+        message,
+        context ? sanitizeObject(context as Record<string, unknown>) : "",
+      );
+    }
+  }
+
+  log(level: string, message: string, context?: LogContext): void {
+    if (this.isDevelopment) {
+      console.log(
+        `[${level.toUpperCase()}] ${message}`,
+        context ? sanitizeObject(context as Record<string, unknown>) : "",
+      );
+    }
+  }
+}
+
+// Winston logger for main process (lazy loaded)
+let winstonLoggerInstance: Logger | null = null;
+
+async function createWinstonLogger(): Promise<Logger> {
+  // Dynamically import winston and dependencies (Node.js only)
+  const winston = await import("winston");
+  const path = await import("path");
+
+  let app: any;
+  try {
+    const electron = await import("electron");
+    app = electron.app;
+  } catch {
+    app = undefined;
+  }
+
   const isDevelopment = process.env.NODE_ENV === "development";
   const isTest = process.env.NODE_ENV === "test";
 
-  const transports: winston.transport[] = [];
+  const secureFormat = winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.errors({ stack: true }),
+    winston.format.json({
+      replacer: (_key: string, value: unknown) => {
+        if (typeof value === "object" && value !== null) {
+          return sanitizeObject(value as Record<string, unknown>);
+        }
+        return sanitizeValue(value);
+      },
+    }),
+  );
 
-  // File transport for all environments
-  if (!isTest) {
-    const logDir = app?.getPath("logs") || path.join(process.cwd(), "logs");
+  const transports: any[] = [];
+
+  // File transport ONLY in main process
+  if (!isTest && app) {
+    const logDir = app.getPath("logs");
 
     transports.push(
       new winston.transports.File({
@@ -146,12 +209,37 @@ function createLogger(): winston.Logger {
   });
 }
 
+// Detect if we're in renderer process
+const isRenderer =
+  typeof window !== "undefined" && typeof window.document !== "undefined";
+
 // Get or create logger instance
-export function getLogger(): winston.Logger {
+let loggerInstance: Logger | null = null;
+
+export function getLogger(): Logger {
   if (!loggerInstance) {
-    loggerInstance = createLogger();
+    if (isRenderer) {
+      // Browser environment - use console logger
+      loggerInstance = new ConsoleLogger();
+    } else {
+      // Main process - use winston (but we can't await here)
+      // Return console logger as fallback until winston loads
+      loggerInstance = new ConsoleLogger();
+
+      // Load winston async in background
+      createWinstonLogger()
+        .then((winstonLogger) => {
+          winstonLoggerInstance = winstonLogger;
+          loggerInstance = winstonLogger;
+        })
+        .catch((err) => {
+          console.error("Failed to load winston logger:", err);
+        });
+    }
   }
-  return loggerInstance;
+
+  // Return winston if loaded, otherwise console logger
+  return winstonLoggerInstance || loggerInstance;
 }
 
 // Convenience logging functions
@@ -206,8 +294,8 @@ export function logAudit(action: string, context?: LogContext): void {
 
 // Legacy console.log replacement (for gradual migration)
 export function legacyLog(message: string, ...args: unknown[]): void {
-  if (process.env.NODE_ENV === "development") {
-    // In development, still show console for debugging
+  if (isRenderer || process.env.NODE_ENV === "development") {
+    // In development or renderer, show console for debugging
     console.log(`[LEGACY] ${message}`, ...args);
   }
 
@@ -219,7 +307,5 @@ export function legacyLog(message: string, ...args: unknown[]): void {
 }
 
 // Export default logger instance
-export default getLogger();
-
-// Named export for backward compatibility
 export const logger = getLogger();
+export default logger;
