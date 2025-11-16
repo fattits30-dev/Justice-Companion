@@ -15,10 +15,11 @@ sentencepiece>=0.1.99
 safetensors>=0.4.2
 
 # AI and LLM - OpenAI (OPTIONAL - Fallback)
-openai==1.12.0
+openai==2.8.0
 
 # Data validation and serialization
 pydantic>=2.6.0
+pydantic-settings>=2.0.0
 python-multipart>=0.0.12  # Fixes: HIGH DoS via deformed multipart boundary (CVE-2024-xxxx)
 
 # HTTP client for API calls
