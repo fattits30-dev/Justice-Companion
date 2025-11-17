@@ -3180,6 +3180,58 @@ export class ApiClient {
         `/chat/conversations/${conversationId}`,
       );
     },
+
+    /**
+     * Upload a document for analysis
+     */
+    uploadDocument: async (
+      file: File,
+      userQuestion?: string,
+    ): Promise<ApiResponse<{ filePath: string }>> => {
+      const formData = new FormData();
+      formData.append("file", file);
+      if (userQuestion) {
+        formData.append("userQuestion", userQuestion);
+      }
+
+      const url = new URL(`${this.config.baseURL}/chat/upload-document`);
+      const headers: Record<string, string> = {};
+
+      if (this.sessionId) {
+        headers["X-Session-Id"] = this.sessionId;
+      }
+
+      const response = await fetch(url.toString(), {
+        method: "POST",
+        headers,
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new ApiError(
+          response.status,
+          errorData.detail || errorData.message || "Upload failed",
+          "UPLOAD_ERROR",
+          errorData,
+        );
+      }
+
+      return await response.json();
+    },
+
+    /**
+     * Analyze a document that has been uploaded
+     */
+    analyzeDocument: async (
+      filePath: string,
+      userQuestion?: string,
+    ): Promise<ApiResponse<any>> => {
+      return this.post<ApiResponse<any>>("/chat/analyze-document", {
+        filePath,
+        userQuestion,
+      });
+    },
   };
 }
 
@@ -3227,9 +3279,21 @@ export class ApiError extends Error {
  * ALWAYS use Python FastAPI backend (HTTP REST API)
  */
 
-// Always use HTTP REST API (Python FastAPI backend on port 8000)
+// Get base URL from environment variables (supports PWA deployment)
+// Development: http://localhost:8000
+// Production: https://justice-companion.up.railway.app
+const getBaseURL = (): string => {
+  // Check for Vite environment variable first (PWA deployment)
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+
+  // Fallback to localhost for local development
+  return "http://127.0.0.1:8000";
+};
+
 export const apiClient = new ApiClient({
-  baseURL: "http://127.0.0.1:8000", // FastAPI backend URL
+  baseURL: getBaseURL(),
 });
 
 /**

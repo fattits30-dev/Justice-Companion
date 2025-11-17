@@ -27,6 +27,7 @@ import { MainLayout } from "./components/layouts/MainLayout.tsx";
 import { ToastProvider } from "./components/ui/index.ts";
 import { SkeletonCard } from "./components/ui/Skeleton.tsx";
 import { ErrorBoundary } from "./components/ErrorBoundary.tsx";
+import { InstallPrompt } from "./components/pwa/InstallPrompt.tsx";
 import { logger } from "./utils/logger.ts";
 import { apiClient } from "./lib/apiClient.ts";
 
@@ -353,6 +354,7 @@ function App() {
       <BrowserRouter>
         <AuthProvider>
           <ToastProvider />
+          <InstallPrompt />
           <AppRoutes />
         </AuthProvider>
       </BrowserRouter>

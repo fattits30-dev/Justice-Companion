@@ -9,6 +9,10 @@ The Electron frontend will make HTTP requests to this backend instead of using I
 import os
 import sys
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Add parent directory to Python path for absolute imports
 backend_dir = Path(__file__).parent
@@ -28,7 +32,7 @@ from backend.routes.cases import router as cases_router
 from backend.routes.dashboard import router as dashboard_router
 from backend.routes.profile import router as profile_router
 from backend.routes.evidence import router as evidence_router
-from backend.routes.chat import router as chat_router
+from backend.routes.chat_enhanced import router as chat_router
 from backend.routes.database import router as database_router
 from backend.routes.deadlines import router as deadlines_router
 from backend.routes.export import router as export_router
@@ -146,19 +150,60 @@ class ResponseWrapperMiddleware(BaseHTTPMiddleware):
 # Add response wrapper middleware - wraps all 200 OK JSON responses for frontend
 app.add_middleware(ResponseWrapperMiddleware)
 
-# CORS configuration for Electron frontend
-# IMPORTANT: Electron apps may use file:// protocol or custom schemes
-# Setting allow_origins=["*"] with allow_credentials=True is not allowed by browsers
-# So we use a permissive regex pattern instead
-app.add_middleware(
-    CORSMiddleware,
-    allow_origin_regex=".*",  # Allow all origins (regex pattern)
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"],
-    allow_headers=["*"],
-    expose_headers=["*"],
-    max_age=3600,  # Cache preflight requests for 1 hour
-)
+# CORS configuration for frontend (Electron + PWA)
+# Cloud-ready: Supports both local development and production PWA
+def get_allowed_origins() -> list:
+    """
+    Get allowed CORS origins from environment.
+
+    Development: Allow localhost for Electron app
+    Production: Allow specific PWA domain
+    """
+    allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "")
+
+    if allowed_origins_env:
+        # Production: Parse comma-separated origins from env var
+        # Example: ALLOWED_ORIGINS=https://app.justicecompanion.com,https://justicecompanion.netlify.app
+        origins = [origin.strip() for origin in allowed_origins_env.split(",") if origin.strip()]
+    else:
+        # Development: Default to localhost for Electron app
+        origins = [
+            "http://localhost:5176",  # Vite dev server
+            "http://localhost:5173",  # Vite dev server (alternate port)
+            "http://127.0.0.1:5176",  # Localhost IPv4
+            "http://127.0.0.1:5173",  # Localhost IPv4 (alternate)
+        ]
+
+    print(f"CORS allowed origins: {origins}")
+    return origins
+
+
+# Add CORS middleware with environment-based origins
+allowed_origins = get_allowed_origins()
+
+# Special case: If allowed_origins is ["*"], use regex pattern
+if allowed_origins == ["*"]:
+    # Allow all origins (development/testing only)
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origin_regex=".*",  # Allow all origins
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"],
+        allow_headers=["*"],
+        expose_headers=["*"],
+        max_age=3600,
+    )
+else:
+    # Production: Specific origins only
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=allowed_origins,
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"],
+        allow_headers=["*"],
+        expose_headers=["*"],
+        max_age=3600,  # Cache preflight requests for 1 hour
+    )
 
 # Register API routes
 app.include_router(auth_router)  # Authentication routes at /auth/*
@@ -210,14 +255,20 @@ async def root():
 if __name__ == "__main__":
     import uvicorn
 
-    # Get port from environment or default to 8000
+    # Get configuration from environment
     port = int(os.getenv("PORT", "8000"))
+    host = os.getenv("HOST", "127.0.0.1")  # Cloud platforms use 0.0.0.0, local uses 127.0.0.1
+    reload = os.getenv("RELOAD", "true").lower() == "true"  # Auto-reload in development only
+
+    print(f"Starting Justice Companion Backend on {host}:{port}")
+    print(f"Environment: {'Development' if reload else 'Production'}")
+    print(f"Database: {os.getenv('DATABASE_URL', 'SQLite (local)')}")
 
     # Run with uvicorn
     uvicorn.run(
         "backend.main:app",
-        host="127.0.0.1",  # Only allow local connections
+        host=host,  # Cloud-ready: 0.0.0.0 for cloud, 127.0.0.1 for local
         port=port,
-        reload=True,  # Auto-reload on code changes (development only)
+        reload=reload,  # Auto-reload on code changes (development only)
         log_level="info",
     )

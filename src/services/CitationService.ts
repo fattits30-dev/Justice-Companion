@@ -1,4 +1,4 @@
-// @ts-expect-error - Package lacks TypeScript declarations
+// @ts-ignore - Package lacks TypeScript declarations
 import {
   getCitations,
   cleanText,

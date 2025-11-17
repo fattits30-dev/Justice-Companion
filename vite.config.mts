@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
+import { VitePWA } from 'vite-plugin-pwa';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
@@ -46,6 +47,66 @@ export default defineConfig({
         process: true,
         Buffer: true,
         global: true
+      }
+    }),
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: ['favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
+      manifest: {
+        name: 'Justice Companion - UK Legal AI Assistant',
+        short_name: 'JusticeAI',
+        description: 'Privacy-first AI-powered case management for UK legal matters',
+        theme_color: '#1e40af',
+        background_color: '#0B1120',
+        display: 'standalone',
+        orientation: 'portrait',
+        scope: '/',
+        start_url: '/',
+        icons: [
+          {
+            src: '/pwa-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: '/pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: '/pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable'
+          }
+        ]
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/.*\.railway\.app\/api\/.*/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'api-cache',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 300
+              },
+              networkTimeoutSeconds: 3
+            }
+          },
+          {
+            urlPattern: /^https:\/\/.*\.railway\.app\/chat\/.*/i,
+            handler: 'NetworkOnly'
+          }
+        ]
+      },
+      devOptions: {
+        enabled: true,
+        type: 'module'
       }
     })
   ],
@@ -114,6 +175,16 @@ export default defineConfig({
       protocol: 'ws',
       host: 'localhost'
     }
+  },
+
+  // Preview server configuration
+  preview: {
+    port: 4173,
+    host: true, // Listen on all network interfaces
+    strictPort: false,
+    cors: true,
+    // Allow Docker host to access preview server
+    allowedHosts: ['host.docker.internal', '.railway.app', '.netlify.app']
   },
 
   // Path aliases

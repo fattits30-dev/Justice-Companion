@@ -22,7 +22,7 @@ Usage:
     app.include_router(chat_router)
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status, UploadFile, File
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field, field_validator
 from typing import Optional, List, Dict, Any, AsyncIterator
@@ -589,6 +589,79 @@ async def draft_document(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Document drafting failed: {str(e)}",
+        )
+
+
+@router.post("/upload-document")
+async def upload_document(
+    file: UploadFile = File(..., description="Document file to upload"),
+    user_id: int = Depends(get_current_user),
+):
+    """
+    Upload a document for analysis.
+
+    Saves the file temporarily and returns the file path for subsequent analysis.
+    Supported formats: PDF, DOCX, TXT
+    Max file size: 10MB
+
+    Returns:
+        { "success": true, "data": { "filePath": "/path/to/file" } }
+    """
+    try:
+        import tempfile
+        import shutil
+        from pathlib import Path
+
+        # Validate file type
+        allowed_extensions = ['.pdf', '.docx', '.txt', '.doc']
+        file_ext = Path(file.filename or "").suffix.lower()
+        if file_ext not in allowed_extensions:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Unsupported file type. Allowed: {', '.join(allowed_extensions)}"
+            )
+
+        # Validate file size (10MB max)
+        max_size = 10 * 1024 * 1024  # 10MB
+        file.file.seek(0, 2)  # Seek to end
+        file_size = file.file.tell()
+        file.file.seek(0)  # Reset to beginning
+
+        if file_size > max_size:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"File too large. Maximum size: 10MB"
+            )
+
+        # Create temp directory if it doesn't exist
+        temp_dir = Path(tempfile.gettempdir()) / "justice-companion" / "uploads" / str(user_id)
+        temp_dir.mkdir(parents=True, exist_ok=True)
+
+        # Save file with unique name
+        import time
+        timestamp = int(time.time())
+        safe_filename = f"{timestamp}_{file.filename}"
+        file_path = temp_dir / safe_filename
+
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+
+        logger.info(f"Document uploaded: {file_path} (user_id={user_id})")
+
+        return {
+            "success": True,
+            "data": {
+                "filePath": str(file_path)
+            }
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception(f"Document upload failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Document upload failed: {str(e)}",
         )
 
 

@@ -1,5 +1,8 @@
 """
 SQLAlchemy base model and database configuration.
+
+Supports both SQLite (local development) and PostgreSQL (cloud production).
+Database URL is determined by environment variable DATABASE_URL.
 """
 
 from sqlalchemy import create_engine
@@ -9,17 +12,61 @@ from typing import Generator
 import os
 
 # Database configuration
-# IMPORTANT: Use same database as Electron app (justice.db in project root)
-# Electron app creates justice.db via src/db/database.ts
-DATABASE_PATH = os.getenv("DATABASE_PATH", "justice.db")
-SQLALCHEMY_DATABASE_URL = f"sqlite:///{DATABASE_PATH}"
+# Cloud-ready: Use DATABASE_URL env var if available (Railway, Heroku, etc.)
+# Otherwise default to SQLite for local development
+def get_database_url() -> str:
+    """
+    Get database URL from environment or default to SQLite.
 
-# Create engine with SQLite-specific options
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL,
-    connect_args={"check_same_thread": False},  # Required for SQLite
-    echo=False,  # Set to True for SQL query logging
-)
+    Cloud platforms (Railway, Heroku) automatically provide DATABASE_URL.
+    Local development uses SQLite file.
+    """
+    database_url = os.getenv("DATABASE_URL")
+
+    if database_url:
+        # Cloud database (PostgreSQL)
+        # Some platforms provide postgres:// which needs to be postgresql://
+        if database_url.startswith("postgres://"):
+            database_url = database_url.replace("postgres://", "postgresql://", 1)
+        return database_url
+    else:
+        # Local development (SQLite)
+        # IMPORTANT: Use same database as Electron app (justice.db in project root)
+        database_path = os.getenv("DATABASE_PATH", "justice.db")
+        return f"sqlite:///{database_path}"
+
+
+# Get database URL
+SQLALCHEMY_DATABASE_URL = get_database_url()
+
+# Determine database type
+is_sqlite = SQLALCHEMY_DATABASE_URL.startswith("sqlite")
+is_postgresql = SQLALCHEMY_DATABASE_URL.startswith("postgresql")
+
+# Create engine with database-specific options
+if is_sqlite:
+    # SQLite configuration
+    engine = create_engine(
+        SQLALCHEMY_DATABASE_URL,
+        connect_args={"check_same_thread": False},  # Required for SQLite
+        echo=False,  # Set to True for SQL query logging
+    )
+elif is_postgresql:
+    # PostgreSQL configuration with connection pooling
+    engine = create_engine(
+        SQLALCHEMY_DATABASE_URL,
+        pool_size=10,  # Max 10 connections in pool
+        max_overflow=20,  # Allow 20 additional connections if pool full
+        pool_pre_ping=True,  # Verify connections before using
+        pool_recycle=3600,  # Recycle connections after 1 hour
+        echo=False,  # Set to True for SQL query logging
+    )
+else:
+    # Fallback to basic configuration
+    engine = create_engine(
+        SQLALCHEMY_DATABASE_URL,
+        echo=False,
+    )
 
 # Session factory
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
