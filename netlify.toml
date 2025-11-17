@@ -1,0 +1,7 @@
+[build]
+  command = "npm run build"
+  publish = "dist/renderer"
+
+[build.environment]
+  NODE_VERSION = "20.18.0"
+  NPM_VERSION = "10.9.4"
