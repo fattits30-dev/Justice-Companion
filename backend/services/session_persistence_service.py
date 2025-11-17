@@ -53,7 +53,6 @@ from datetime import datetime, timezone
 from typing import Optional, Dict, Any, List
 from uuid import UUID
 from sqlalchemy.orm import Session
-from sqlalchemy import text
 
 from backend.models.session import Session as SessionModel
 from backend.models.user import User
@@ -61,7 +60,6 @@ from backend.models.user import User
 
 class SessionPersistenceError(Exception):
     """Exception raised for session persistence errors."""
-    pass
 
 
 class SessionPersistenceService:
@@ -74,8 +72,7 @@ class SessionPersistenceService:
 
     # UUID v4 validation pattern
     UUID_V4_PATTERN = re.compile(
-        r'^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$',
-        re.IGNORECASE
+        r"^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE
     )
 
     def __init__(self, db: Session, audit_logger=None):
@@ -121,7 +118,7 @@ class SessionPersistenceService:
         action: str,
         success: bool,
         details: Optional[Dict[str, Any]] = None,
-        error_message: Optional[str] = None
+        error_message: Optional[str] = None,
     ):
         """Log audit event if audit logger is configured."""
         if self.audit_logger:
@@ -133,7 +130,7 @@ class SessionPersistenceService:
                 action=action,
                 details=details or {},
                 success=success,
-                error_message=error_message
+                error_message=error_message,
             )
 
     async def is_session_valid(self, session_id: str) -> bool:
@@ -153,9 +150,7 @@ class SessionPersistenceService:
             return False
 
         try:
-            session = self.db.query(SessionModel).filter(
-                SessionModel.id == session_id
-            ).first()
+            session = self.db.query(SessionModel).filter(SessionModel.id == session_id).first()
 
             if not session:
                 return False
@@ -173,7 +168,7 @@ class SessionPersistenceService:
                     session_id=session_id,
                     action="delete",
                     success=True,
-                    details={"reason": "Session expired during validation"}
+                    details={"reason": "Session expired during validation"},
                 )
 
                 return False
@@ -187,7 +182,7 @@ class SessionPersistenceService:
                 session_id=session_id,
                 action="read",
                 success=False,
-                error_message=str(e)
+                error_message=str(e),
             )
             return False
 
@@ -229,15 +224,13 @@ class SessionPersistenceService:
                 session_id=session_id,
                 action="read",
                 success=False,
-                details={"reason": "Invalid session ID format (expected UUID v4)"}
+                details={"reason": "Invalid session ID format (expected UUID v4)"},
             )
             return None
 
         try:
             # Query session with user join
-            session = self.db.query(SessionModel).filter(
-                SessionModel.id == session_id
-            ).first()
+            session = self.db.query(SessionModel).filter(SessionModel.id == session_id).first()
 
             if not session:
                 self._log_audit(
@@ -246,7 +239,7 @@ class SessionPersistenceService:
                     session_id=session_id,
                     action="read",
                     success=False,
-                    details={"reason": "Session not found"}
+                    details={"reason": "Session not found"},
                 )
                 return None
 
@@ -264,7 +257,7 @@ class SessionPersistenceService:
                     session_id=session_id,
                     action="delete",
                     success=False,
-                    details={"reason": "Session expired"}
+                    details={"reason": "Session expired"},
                 )
 
                 return None
@@ -283,7 +276,7 @@ class SessionPersistenceService:
                     session_id=session_id,
                     action="delete",
                     success=False,
-                    details={"reason": "User not found (orphaned session)"}
+                    details={"reason": "User not found (orphaned session)"},
                 )
 
                 return None
@@ -296,7 +289,7 @@ class SessionPersistenceService:
                     session_id=session_id,
                     action="read",
                     success=False,
-                    details={"reason": "User account is inactive"}
+                    details={"reason": "User account is inactive"},
                 )
                 return None
 
@@ -306,13 +299,10 @@ class SessionPersistenceService:
                 session_id=session_id,
                 action="read",
                 success=True,
-                details={"username": user.username}
+                details={"username": user.username},
             )
 
-            return {
-                "session": session.to_dict(),
-                "user": user.to_dict()
-            }
+            return {"session": session.to_dict(), "user": user.to_dict()}
 
         except Exception as e:
             self._log_audit(
@@ -321,15 +311,12 @@ class SessionPersistenceService:
                 session_id=session_id,
                 action="read",
                 success=False,
-                error_message=str(e)
+                error_message=str(e),
             )
             return None
 
     async def update_session_activity(
-        self,
-        session_id: str,
-        ip_address: Optional[str] = None,
-        user_agent: Optional[str] = None
+        self, session_id: str, ip_address: Optional[str] = None, user_agent: Optional[str] = None
     ) -> bool:
         """
         Update session last activity timestamp and optional metadata.
@@ -350,9 +337,7 @@ class SessionPersistenceService:
             return False
 
         try:
-            session = self.db.query(SessionModel).filter(
-                SessionModel.id == session_id
-            ).first()
+            session = self.db.query(SessionModel).filter(SessionModel.id == session_id).first()
 
             if not session:
                 return False
@@ -380,7 +365,7 @@ class SessionPersistenceService:
                 session_id=session_id,
                 action="update",
                 success=False,
-                error_message=str(e)
+                error_message=str(e),
             )
             return False
 
@@ -402,9 +387,7 @@ class SessionPersistenceService:
             return False
 
         try:
-            session = self.db.query(SessionModel).filter(
-                SessionModel.id == session_id
-            ).first()
+            session = self.db.query(SessionModel).filter(SessionModel.id == session_id).first()
 
             if not session:
                 # Session doesn't exist - not an error condition
@@ -422,7 +405,7 @@ class SessionPersistenceService:
                 session_id=session_id,
                 action="delete",
                 success=True,
-                details={"reason": "Manual session clear (logout)"}
+                details={"reason": "Manual session clear (logout)"},
             )
 
             return True
@@ -434,7 +417,7 @@ class SessionPersistenceService:
                 session_id=session_id,
                 action="delete",
                 success=False,
-                error_message=str(e)
+                error_message=str(e),
             )
             return False
 
@@ -455,9 +438,7 @@ class SessionPersistenceService:
             return False
 
         try:
-            session = self.db.query(SessionModel).filter(
-                SessionModel.id == session_id
-            ).first()
+            session = self.db.query(SessionModel).filter(SessionModel.id == session_id).first()
 
             return session is not None
 
@@ -489,16 +470,14 @@ class SessionPersistenceService:
         metadata = {
             "exists": False,
             "expired": False,
-            "is_valid_uuid": self._is_valid_uuid_v4(session_id)
+            "is_valid_uuid": self._is_valid_uuid_v4(session_id),
         }
 
         if not metadata["is_valid_uuid"]:
             return metadata
 
         try:
-            session = self.db.query(SessionModel).filter(
-                SessionModel.id == session_id
-            ).first()
+            session = self.db.query(SessionModel).filter(SessionModel.id == session_id).first()
 
             if not session:
                 return metadata
@@ -533,9 +512,9 @@ class SessionPersistenceService:
             now = datetime.now(timezone.utc)
 
             # Query expired sessions
-            expired_sessions = self.db.query(SessionModel).filter(
-                SessionModel.expires_at < now
-            ).all()
+            expired_sessions = (
+                self.db.query(SessionModel).filter(SessionModel.expires_at < now).all()
+            )
 
             deleted_count = len(expired_sessions)
 
@@ -543,9 +522,9 @@ class SessionPersistenceService:
                 return 0
 
             # Delete expired sessions
-            self.db.query(SessionModel).filter(
-                SessionModel.expires_at < now
-            ).delete(synchronize_session=False)
+            self.db.query(SessionModel).filter(SessionModel.expires_at < now).delete(
+                synchronize_session=False
+            )
 
             self.db.commit()
 
@@ -557,8 +536,8 @@ class SessionPersistenceService:
                 success=True,
                 details={
                     "deleted_count": deleted_count,
-                    "reason": "Periodic cleanup of expired sessions"
-                }
+                    "reason": "Periodic cleanup of expired sessions",
+                },
             )
 
             return deleted_count
@@ -570,7 +549,7 @@ class SessionPersistenceService:
                 session_id="system",
                 action="delete",
                 success=False,
-                error_message=str(e)
+                error_message=str(e),
             )
             return 0
 
@@ -591,10 +570,11 @@ class SessionPersistenceService:
             now = datetime.now(timezone.utc)
 
             # Query active (non-expired) sessions for user
-            sessions = self.db.query(SessionModel).filter(
-                SessionModel.user_id == user_id,
-                SessionModel.expires_at > now
-            ).all()
+            sessions = (
+                self.db.query(SessionModel)
+                .filter(SessionModel.user_id == user_id, SessionModel.expires_at > now)
+                .all()
+            )
 
             return [session.to_dict() for session in sessions]
 
@@ -605,14 +585,12 @@ class SessionPersistenceService:
                 session_id="system",
                 action="read",
                 success=False,
-                error_message=str(e)
+                error_message=str(e),
             )
             return []
 
     async def revoke_user_sessions(
-        self,
-        user_id: int,
-        except_session_id: Optional[str] = None
+        self, user_id: int, except_session_id: Optional[str] = None
     ) -> int:
         """
         Revoke all sessions for a user (e.g., after password change).
@@ -625,9 +603,7 @@ class SessionPersistenceService:
             Number of sessions revoked
         """
         try:
-            query = self.db.query(SessionModel).filter(
-                SessionModel.user_id == user_id
-            )
+            query = self.db.query(SessionModel).filter(SessionModel.user_id == user_id)
 
             # Optionally exclude current session
             if except_session_id:
@@ -652,8 +628,8 @@ class SessionPersistenceService:
                 details={
                     "revoked_count": revoked_count,
                     "except_session_id": except_session_id,
-                    "reason": "User sessions revoked (password change or security event)"
-                }
+                    "reason": "User sessions revoked (password change or security event)",
+                },
             )
 
             return revoked_count
@@ -665,6 +641,6 @@ class SessionPersistenceService:
                 session_id="system",
                 action="delete",
                 success=False,
-                error_message=str(e)
+                error_message=str(e),
             )
             return 0

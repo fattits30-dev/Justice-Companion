@@ -28,12 +28,11 @@ Security:
 - All operations audited
 """
 
-from typing import List, Dict, Any, Optional, Tuple
+from typing import List, Dict, Any, Optional
 from datetime import datetime, timezone
 import logging
 import re
 from pydantic import BaseModel, Field, ConfigDict, field_validator
-from fastapi import HTTPException
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -46,6 +45,7 @@ logger = logging.getLogger(__name__)
 
 class LegislationResult(BaseModel):
     """Legislation search result from legislation.gov.uk."""
+
     title: str = Field(..., description="e.g., 'Employment Rights Act 1996'")
     section: Optional[str] = Field(None, description="e.g., 'Section 94'")
     content: str = Field(..., description="Actual text of the law")
@@ -57,6 +57,7 @@ class LegislationResult(BaseModel):
 
 class CaseResult(BaseModel):
     """Case law search result from caselaw.nationalarchives.gov.uk."""
+
     citation: str = Field(..., description="e.g., 'Smith v ABC Ltd [2024] ET/12345/24'")
     court: str = Field(..., description="e.g., 'Employment Tribunal'")
     date: str = Field(..., description="ISO date string")
@@ -70,6 +71,7 @@ class CaseResult(BaseModel):
 
 class KnowledgeEntry(BaseModel):
     """Knowledge base entry (cached FAQs, guides)."""
+
     topic: str = Field(..., description="e.g., 'Unfair Dismissal'")
     category: str = Field(..., description="e.g., 'Employment'")
     content: str = Field(..., description="Information text")
@@ -80,6 +82,7 @@ class KnowledgeEntry(BaseModel):
 
 class LegalContext(BaseModel):
     """Legal context from RAG retrieval."""
+
     legislation: List[LegislationResult] = Field(default_factory=list)
     case_law: List[CaseResult] = Field(default_factory=list)
     knowledge_base: List[KnowledgeEntry] = Field(default_factory=list)
@@ -89,10 +92,11 @@ class LegalContext(BaseModel):
 
 class ProcessQuestionInput(BaseModel):
     """Input model for processing a user question."""
+
     question: str = Field(..., min_length=1, max_length=2000, description="User's legal question")
     case_id: Optional[int] = Field(None, gt=0, description="Optional case ID for context")
 
-    @field_validator('question')
+    @field_validator("question")
     @classmethod
     def validate_question(cls, v: str) -> str:
         """Validate question is not empty after stripping whitespace."""
@@ -105,6 +109,7 @@ class ProcessQuestionInput(BaseModel):
 
 class AIResponse(BaseModel):
     """AI response with sources and citations."""
+
     success: bool = Field(..., description="Whether response was successful")
     message: Optional[str] = Field(None, description="AI response content")
     sources: List[str] = Field(default_factory=list, description="Citations used")
@@ -117,6 +122,7 @@ class AIResponse(BaseModel):
 
 class ValidationResult(BaseModel):
     """Result of response safety validation."""
+
     valid: bool = Field(..., description="Whether response passed validation")
     violations: List[str] = Field(default_factory=list, description="List of safety violations")
 
@@ -125,11 +131,14 @@ class ValidationResult(BaseModel):
 
 class RAGStatistics(BaseModel):
     """Statistics about last RAG query (for debugging/monitoring)."""
+
     has_stats: bool = Field(..., description="Whether statistics are available")
     message: Optional[str] = Field(None, description="Status message")
     legislation_count: Optional[int] = Field(None, description="Number of legislation results")
     case_law_count: Optional[int] = Field(None, description="Number of case law results")
-    knowledge_base_count: Optional[int] = Field(None, description="Number of knowledge base results")
+    knowledge_base_count: Optional[int] = Field(
+        None, description="Number of knowledge base results"
+    )
     total_context_size: Optional[int] = Field(None, description="Total context size in characters")
 
     model_config = ConfigDict(from_attributes=True)
@@ -161,13 +170,13 @@ class RAGService:
 
     # Advice language patterns (CRITICAL - never give advice)
     ADVICE_PATTERNS = [
-        re.compile(r'\byou should\b', re.IGNORECASE),
-        re.compile(r'\bi recommend\b', re.IGNORECASE),
-        re.compile(r'\byou must\b', re.IGNORECASE),
-        re.compile(r'\bi advise\b', re.IGNORECASE),
-        re.compile(r'\byou ought to\b', re.IGNORECASE),
-        re.compile(r'\bmy advice is\b', re.IGNORECASE),
-        re.compile(r'\bi suggest you\b', re.IGNORECASE),
+        re.compile(r"\byou should\b", re.IGNORECASE),
+        re.compile(r"\bi recommend\b", re.IGNORECASE),
+        re.compile(r"\byou must\b", re.IGNORECASE),
+        re.compile(r"\bi advise\b", re.IGNORECASE),
+        re.compile(r"\byou ought to\b", re.IGNORECASE),
+        re.compile(r"\bmy advice is\b", re.IGNORECASE),
+        re.compile(r"\bi suggest you\b", re.IGNORECASE),
     ]
 
     # Context limits to prevent token overflow
@@ -175,12 +184,7 @@ class RAGService:
     MAX_CASE_LAW_RESULTS = 3
     MAX_KNOWLEDGE_BASE_RESULTS = 3
 
-    def __init__(
-        self,
-        legal_api_service,
-        ai_service,
-        audit_logger=None
-    ):
+    def __init__(self, legal_api_service, ai_service, audit_logger=None):
         """
         Initialize RAG service.
 
@@ -195,10 +199,7 @@ class RAGService:
         self._last_query_stats: Optional[Dict[str, Any]] = None
 
     async def process_question(
-        self,
-        question: str,
-        case_id: Optional[int] = None,
-        user_id: Optional[int] = None
+        self, question: str, case_id: Optional[int] = None, user_id: Optional[int] = None
     ) -> AIResponse:
         """
         Process user question and return legal information response.
@@ -232,10 +233,12 @@ class RAGService:
                     resource_id="question",
                     action="process",
                     details={"question_length": len(question), "case_id": case_id},
-                    success=True
+                    success=True,
                 )
 
-            logger.info(f"RAGService.process_question started - question length: {len(question)}, case_id: {case_id}")
+            logger.info(
+                f"RAGService.process_question started - question length: {len(question)}, case_id: {case_id}"
+            )
 
             # PHASE 1: Question Analysis
             keywords = await self._extract_and_analyze_question(question)
@@ -259,7 +262,7 @@ class RAGService:
                         action="process",
                         details={"keywords": keywords, "category": category},
                         success=False,
-                        error_message="No legal context found"
+                        error_message="No legal context found",
                     )
 
                 return AIResponse(
@@ -268,7 +271,7 @@ class RAGService:
                         "I don't have information on that specific topic. "
                         "Please try rephrasing your question or consult a qualified solicitor."
                     ),
-                    code="NO_CONTEXT"
+                    code="NO_CONTEXT",
                 )
 
             logger.info(
@@ -282,14 +285,12 @@ class RAGService:
                 "case_law_count": len(context.case_law),
                 "knowledge_base_count": len(context.knowledge_base),
                 "total_context_size": self._calculate_context_size(context),
-                "timestamp": datetime.now(timezone.utc).isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
 
             # PHASE 4: AI Response Generation
             ai_response = await self.ai_service.chat(
-                messages=[{"role": "user", "content": question}],
-                context=context,
-                case_id=case_id
+                messages=[{"role": "user", "content": question}], context=context, case_id=case_id
             )
 
             # PHASE 5: Safety Validation
@@ -310,14 +311,14 @@ class RAGService:
                             action="validate",
                             details={"violations": validation_result.violations},
                             success=False,
-                            error_message="Response failed safety validation"
+                            error_message="Response failed safety validation",
                         )
 
                     # Return safe fallback response
                     return AIResponse(
                         success=False,
                         error="Response validation failed. Please rephrase your question.",
-                        code="SAFETY_VIOLATION"
+                        code="SAFETY_VIOLATION",
                     )
 
                 # Ensure disclaimer is present
@@ -333,9 +334,9 @@ class RAGService:
                     action="process",
                     details={
                         "success": ai_response.success,
-                        "sources_count": len(ai_response.sources) if ai_response.success else 0
+                        "sources_count": len(ai_response.sources) if ai_response.success else 0,
                     },
-                    success=True
+                    success=True,
                 )
 
             logger.info(
@@ -357,13 +358,13 @@ class RAGService:
                     action="process",
                     details={"error": str(error)},
                     success=False,
-                    error_message=str(error)
+                    error_message=str(error),
                 )
 
             return AIResponse(
                 success=False,
                 error="An error occurred processing your question. Please try again.",
-                code="EXCEPTION"
+                code="EXCEPTION",
             )
 
     async def fetch_context_for_question(self, question: str) -> LegalContext:
@@ -392,10 +393,7 @@ class RAGService:
             RAGStatistics with context counts and sizes
         """
         if not self._last_query_stats:
-            return RAGStatistics(
-                has_stats=False,
-                message="Statistics tracking not yet implemented"
-            )
+            return RAGStatistics(has_stats=False, message="Statistics tracking not yet implemented")
 
         return RAGStatistics(
             has_stats=True,
@@ -403,7 +401,7 @@ class RAGService:
             case_law_count=self._last_query_stats.get("case_law_count"),
             knowledge_base_count=self._last_query_stats.get("knowledge_base_count"),
             total_context_size=self._last_query_stats.get("total_context_size"),
-            message=f"Last query at {self._last_query_stats.get('timestamp')}"
+            message=f"Last query at {self._last_query_stats.get('timestamp')}",
         )
 
     # ========================================================================
@@ -429,11 +427,7 @@ class RAGService:
         # Return all keywords (already filtered by extract_keywords)
         return keywords_dict.get("all", [])
 
-    async def _fetch_legal_context(
-        self,
-        keywords: List[str],
-        category: str
-    ) -> LegalContext:
+    async def _fetch_legal_context(self, keywords: List[str], category: str) -> LegalContext:
         """
         Fetch legal context from all sources in parallel.
 
@@ -456,7 +450,7 @@ class RAGService:
                 self.legal_api_service.search_legislation(keywords),
                 self.legal_api_service.search_case_law(keywords),
                 self.legal_api_service.search_knowledge_base(keywords),
-                return_exceptions=True  # Don't fail if one API fails
+                return_exceptions=True,  # Don't fail if one API fails
             )
 
             legislation, case_law, knowledge_base = results
@@ -476,7 +470,7 @@ class RAGService:
             context = LegalContext(
                 legislation=self._limit_and_sort_legislation(legislation),
                 case_law=self._limit_and_sort_case_law(case_law),
-                knowledge_base=self._limit_knowledge_base(knowledge_base)
+                knowledge_base=self._limit_knowledge_base(knowledge_base),
             )
 
             return context
@@ -485,16 +479,9 @@ class RAGService:
             logger.error(f"Failed to fetch legal context: {error}", exc_info=True)
 
             # Return empty context on API failure (don't crash)
-            return LegalContext(
-                legislation=[],
-                case_law=[],
-                knowledge_base=[]
-            )
+            return LegalContext(legislation=[], case_law=[], knowledge_base=[])
 
-    def _limit_and_sort_legislation(
-        self,
-        results: List[Dict[str, Any]]
-    ) -> List[LegislationResult]:
+    def _limit_and_sort_legislation(self, results: List[Dict[str, Any]]) -> List[LegislationResult]:
         """
         Limit legislation results to top 5 most relevant.
         Sort by relevance score if available.
@@ -518,16 +505,13 @@ class RAGService:
         sorted_results = sorted(
             legislation_results,
             key=lambda x: x.relevance if x.relevance is not None else 0.0,
-            reverse=True
+            reverse=True,
         )
 
         # Limit to top 5 to prevent context overflow
-        return sorted_results[:self.MAX_LEGISLATION_RESULTS]
+        return sorted_results[: self.MAX_LEGISLATION_RESULTS]
 
-    def _limit_and_sort_case_law(
-        self,
-        results: List[Dict[str, Any]]
-    ) -> List[CaseResult]:
+    def _limit_and_sort_case_law(self, results: List[Dict[str, Any]]) -> List[CaseResult]:
         """
         Limit case law results to top 3 most relevant.
         Sort by relevance score if available.
@@ -551,16 +535,13 @@ class RAGService:
         sorted_results = sorted(
             case_results,
             key=lambda x: x.relevance if x.relevance is not None else 0.0,
-            reverse=True
+            reverse=True,
         )
 
         # Limit to top 3 to prevent context overflow
-        return sorted_results[:self.MAX_CASE_LAW_RESULTS]
+        return sorted_results[: self.MAX_CASE_LAW_RESULTS]
 
-    def _limit_knowledge_base(
-        self,
-        results: List[Dict[str, Any]]
-    ) -> List[KnowledgeEntry]:
+    def _limit_knowledge_base(self, results: List[Dict[str, Any]]) -> List[KnowledgeEntry]:
         """
         Limit knowledge base results to top 3.
 
@@ -580,7 +561,7 @@ class RAGService:
                 continue
 
         # Limit to top 3
-        return knowledge_results[:self.MAX_KNOWLEDGE_BASE_RESULTS]
+        return knowledge_results[: self.MAX_KNOWLEDGE_BASE_RESULTS]
 
     def _has_valid_context(self, context: LegalContext) -> bool:
         """
@@ -628,10 +609,7 @@ class RAGService:
         if len(response) < 50:
             violations.append("Response too short to be informative")
 
-        return ValidationResult(
-            valid=len(violations) == 0,
-            violations=violations
-        )
+        return ValidationResult(valid=len(violations) == 0, violations=violations)
 
     def _enforce_disclaimer(self, response: str) -> str:
         """

@@ -17,7 +17,6 @@ Run examples:
 import asyncio
 import logging
 from datetime import datetime
-from pathlib import Path
 
 from backend.services.backup.backup_retention_policy import BackupRetentionPolicy
 from backend.services.backup.backup_service import BackupService
@@ -25,8 +24,7 @@ from backend.services.backup.backup_service import BackupService
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -40,15 +38,12 @@ async def example_basic_retention():
     """
     Basic example: Apply retention policy to keep 5 most recent backups.
     """
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXAMPLE 1: Basic Retention Policy")
-    print("="*60)
+    print("=" * 60)
 
     # Initialize services
-    backup_service = BackupService(
-        db_path="/path/to/justice.db",
-        backups_dir="/path/to/backups"
-    )
+    backup_service = BackupService(db_path="/path/to/justice.db", backups_dir="/path/to/backups")
 
     policy = BackupRetentionPolicy(backup_service=backup_service)
 
@@ -75,14 +70,11 @@ async def example_retention_preview():
     """
     Preview what would happen before applying retention policy.
     """
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXAMPLE 2: Retention Policy Preview")
-    print("="*60)
+    print("=" * 60)
 
-    backup_service = BackupService(
-        db_path="/path/to/justice.db",
-        backups_dir="/path/to/backups"
-    )
+    backup_service = BackupService(db_path="/path/to/justice.db", backups_dir="/path/to/backups")
 
     policy = BackupRetentionPolicy(backup_service=backup_service)
 
@@ -120,14 +112,11 @@ async def example_cleanup_empty():
     """
     Remove corrupted or failed backup files (0 bytes).
     """
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXAMPLE 3: Cleanup Empty Backups")
-    print("="*60)
+    print("=" * 60)
 
-    backup_service = BackupService(
-        db_path="/path/to/justice.db",
-        backups_dir="/path/to/backups"
-    )
+    backup_service = BackupService(db_path="/path/to/justice.db", backups_dir="/path/to/backups")
 
     policy = BackupRetentionPolicy(backup_service=backup_service)
 
@@ -153,14 +142,11 @@ async def example_cleanup_old_protected():
     Remove very old protected backups (migration/restore).
     Use with caution!
     """
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXAMPLE 4: Cleanup Old Protected Backups")
-    print("="*60)
+    print("=" * 60)
 
-    backup_service = BackupService(
-        db_path="/path/to/justice.db",
-        backups_dir="/path/to/backups"
-    )
+    backup_service = BackupService(db_path="/path/to/justice.db", backups_dir="/path/to/backups")
 
     policy = BackupRetentionPolicy(backup_service=backup_service)
 
@@ -187,14 +173,11 @@ async def example_complete_cleanup():
     """
     Complete cleanup workflow: empty + retention + old protected.
     """
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXAMPLE 5: Complete Cleanup Workflow")
-    print("="*60)
+    print("=" * 60)
 
-    backup_service = BackupService(
-        db_path="/path/to/justice.db",
-        backups_dir="/path/to/backups"
-    )
+    backup_service = BackupService(db_path="/path/to/justice.db", backups_dir="/path/to/backups")
 
     policy = BackupRetentionPolicy(backup_service=backup_service)
 
@@ -235,14 +218,11 @@ async def example_scheduled_cleanup():
     """
     Daily scheduled cleanup task (e.g., run at 3 AM).
     """
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXAMPLE 6: Scheduled Cleanup Task")
-    print("="*60)
+    print("=" * 60)
 
-    backup_service = BackupService(
-        db_path="/path/to/justice.db",
-        backups_dir="/path/to/backups"
-    )
+    backup_service = BackupService(db_path="/path/to/justice.db", backups_dir="/path/to/backups")
 
     policy = BackupRetentionPolicy(backup_service=backup_service)
 
@@ -272,9 +252,9 @@ async def example_with_audit_logger():
     """
     Use retention policy with audit logging.
     """
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXAMPLE 7: Integration with Audit Logger")
-    print("="*60)
+    print("=" * 60)
 
     from backend.services.audit_logger import AuditLogger
 
@@ -282,17 +262,11 @@ async def example_with_audit_logger():
     # db = SessionLocal()
     db = None  # Replace with actual DB session
 
-    backup_service = BackupService(
-        db_path="/path/to/justice.db",
-        backups_dir="/path/to/backups"
-    )
+    backup_service = BackupService(db_path="/path/to/justice.db", backups_dir="/path/to/backups")
 
     # Initialize with audit logger
     audit_logger = AuditLogger(db) if db else None
-    policy = BackupRetentionPolicy(
-        backup_service=backup_service,
-        audit_logger=audit_logger
-    )
+    policy = BackupRetentionPolicy(backup_service=backup_service, audit_logger=audit_logger)
 
     try:
         deleted_count = await policy.apply_retention_policy(keep_count=5)
@@ -313,14 +287,11 @@ async def example_error_handling():
     """
     Demonstrate proper error handling patterns.
     """
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXAMPLE 8: Error Handling Patterns")
-    print("="*60)
+    print("=" * 60)
 
-    backup_service = BackupService(
-        db_path="/path/to/justice.db",
-        backups_dir="/path/to/backups"
-    )
+    backup_service = BackupService(db_path="/path/to/justice.db", backups_dir="/path/to/backups")
 
     policy = BackupRetentionPolicy(backup_service=backup_service)
 
@@ -367,11 +338,12 @@ def example_fastapi_integration():
     """
     Example FastAPI routes for backup retention.
     """
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXAMPLE 9: FastAPI Integration")
-    print("="*60)
+    print("=" * 60)
 
-    print("""
+    print(
+        """
 FastAPI routes example:
 
 ```python
@@ -484,7 +456,8 @@ Usage:
 - GET /api/backups/retention/summary?keep_count=7
 - POST /api/backups/retention/cleanup/empty
 - POST /api/backups/retention/cleanup/old-protected?days_old=90
-""")
+"""
+    )
 
 
 # ============================================================================
@@ -496,11 +469,12 @@ async def example_background_scheduler():
     """
     Example background task for scheduled cleanup.
     """
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXAMPLE 10: Background Task Scheduler")
-    print("="*60)
+    print("=" * 60)
 
-    print("""
+    print(
+        """
 Background scheduler example using APScheduler:
 
 ```python
@@ -549,7 +523,8 @@ scheduler.add_job(
 
 scheduler.start()
 ```
-""")
+"""
+    )
 
 
 # ============================================================================
@@ -559,9 +534,9 @@ scheduler.start()
 
 async def main():
     """Run all examples."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("BACKUP RETENTION POLICY - USAGE EXAMPLES")
-    print("="*60)
+    print("=" * 60)
     print("\nNote: These examples use placeholder paths.")
     print("Replace '/path/to/justice.db' with actual database path.\n")
 
@@ -579,9 +554,9 @@ async def main():
     example_fastapi_integration()
     await example_background_scheduler()
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("✅ All examples completed")
-    print("="*60)
+    print("=" * 60)
 
 
 if __name__ == "__main__":

@@ -1,8 +1,9 @@
-@import './styles/design-tokens.css' layer(base);
+@import "./styles/design-tokens.css";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-@import 'tailwindcss';
-
-@theme {
+:root {
   /* Color System - Calming Royal Blue Primary */
   --color-primary-50: #f0f4ff;
   --color-primary-100: #e0e9ff;
@@ -84,7 +85,9 @@
   --color-neutral-950: #0c0a09;
 
   /* Font Family */
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'Noto Sans', sans-serif;
+  --font-sans:
+    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
+    "Helvetica Neue", "Arial", "Noto Sans", sans-serif;
 }
 
 :root {

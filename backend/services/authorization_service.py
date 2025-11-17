@@ -20,7 +20,6 @@ Security:
 """
 
 from typing import Optional, List, Dict, Any
-from datetime import datetime
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from fastapi import HTTPException
@@ -30,22 +29,20 @@ from pydantic import BaseModel, Field, ConfigDict
 
 class PermissionDeniedError(Exception):
     """Exception raised when user lacks required permission."""
-    pass
 
 
 class RoleNotFoundError(Exception):
     """Exception raised when role is not found."""
-    pass
 
 
 class PermissionNotFoundError(Exception):
     """Exception raised when permission is not found."""
-    pass
 
 
 # Pydantic models for input/output
 class PermissionCheckResult(BaseModel):
     """Result of a permission check."""
+
     allowed: bool = Field(..., description="Whether permission is granted")
     reason: Optional[str] = Field(None, description="Reason if permission denied")
 
@@ -54,6 +51,7 @@ class PermissionCheckResult(BaseModel):
 
 class Permission(BaseModel):
     """Permission entity model."""
+
     id: int
     name: str = Field(..., description="Permission name (e.g., 'cases.create')")
     resource: str = Field(..., description="Resource type (e.g., 'cases')")
@@ -66,6 +64,7 @@ class Permission(BaseModel):
 
 class Role(BaseModel):
     """Role entity model with permissions."""
+
     id: int
     name: str = Field(..., description="Role name (e.g., 'admin', 'user')")
     display_name: str = Field(..., description="Human-readable role name")
@@ -80,6 +79,7 @@ class Role(BaseModel):
 
 class AssignRoleInput(BaseModel):
     """Input model for assigning a role to a user."""
+
     user_id: int = Field(..., description="User ID to assign role to")
     role_id: int = Field(..., description="Role ID to assign")
     assigned_by: int = Field(..., description="User ID performing the assignment")
@@ -87,6 +87,7 @@ class AssignRoleInput(BaseModel):
 
 class RemoveRoleInput(BaseModel):
     """Input model for removing a role from a user."""
+
     user_id: int = Field(..., description="User ID to remove role from")
     role_id: int = Field(..., description="Role ID to remove")
 
@@ -100,11 +101,7 @@ class AuthorizationService:
     Role assignments and removals are audit-logged.
     """
 
-    def __init__(
-        self,
-        db: Session,
-        audit_logger=None
-    ):
+    def __init__(self, db: Session, audit_logger=None):
         """
         Initialize authorization service.
 
@@ -123,7 +120,7 @@ class AuthorizationService:
         action: str,
         success: bool,
         details: Optional[Dict[str, Any]] = None,
-        error_message: Optional[str] = None
+        error_message: Optional[str] = None,
     ) -> None:
         """Log audit event if audit logger is configured."""
         if self.audit_logger:
@@ -135,14 +132,10 @@ class AuthorizationService:
                 action=action,
                 success=success,
                 details=details or {},
-                error_message=error_message
+                error_message=error_message,
             )
 
-    async def has_permission(
-        self,
-        user_id: int,
-        permission_name: str
-    ) -> PermissionCheckResult:
+    async def has_permission(self, user_id: int, permission_name: str) -> PermissionCheckResult:
         """
         Check if user has a specific permission.
 
@@ -153,18 +146,19 @@ class AuthorizationService:
         Returns:
             Permission check result with allowed status and optional reason
         """
-        query = text("""
+        query = text(
+            """
             SELECT COUNT(*) as count
             FROM user_roles ur
             JOIN role_permissions rp ON ur.role_id = rp.role_id
             JOIN permissions p ON rp.permission_id = p.id
             WHERE ur.user_id = :user_id AND p.name = :permission_name
-        """)
+        """
+        )
 
-        result = self.db.execute(query, {
-            "user_id": user_id,
-            "permission_name": permission_name
-        }).fetchone()
+        result = self.db.execute(
+            query, {"user_id": user_id, "permission_name": permission_name}
+        ).fetchone()
 
         count = result[0] if result else 0
         allowed = count > 0
@@ -176,21 +170,15 @@ class AuthorizationService:
                 resource_id=permission_name,
                 action="check",
                 success=False,
-                details={
-                    "permission": permission_name,
-                    "reason": "Permission not granted"
-                }
+                details={"permission": permission_name, "reason": "Permission not granted"},
             )
 
         return PermissionCheckResult(
-            allowed=allowed,
-            reason=None if allowed else f"Missing permission: {permission_name}"
+            allowed=allowed, reason=None if allowed else f"Missing permission: {permission_name}"
         )
 
     async def has_all_permissions(
-        self,
-        user_id: int,
-        permission_names: List[str]
+        self, user_id: int, permission_names: List[str]
     ) -> PermissionCheckResult:
         """
         Check if user has ALL specified permissions (AND logic).
@@ -210,9 +198,7 @@ class AuthorizationService:
         return PermissionCheckResult(allowed=True)
 
     async def has_any_permission(
-        self,
-        user_id: int,
-        permission_names: List[str]
+        self, user_id: int, permission_names: List[str]
     ) -> PermissionCheckResult:
         """
         Check if user has ANY of the specified permissions (OR logic).
@@ -230,8 +216,7 @@ class AuthorizationService:
                 return PermissionCheckResult(allowed=True)
 
         return PermissionCheckResult(
-            allowed=False,
-            reason=f"Missing any of: {', '.join(permission_names)}"
+            allowed=False, reason=f"Missing any of: {', '.join(permission_names)}"
         )
 
     async def get_user_permissions(self, user_id: int) -> List[Permission]:
@@ -244,14 +229,16 @@ class AuthorizationService:
         Returns:
             List of unique permissions the user has
         """
-        query = text("""
+        query = text(
+            """
             SELECT DISTINCT p.id, p.name, p.resource, p.action, p.description, p.created_at
             FROM user_roles ur
             JOIN role_permissions rp ON ur.role_id = rp.role_id
             JOIN permissions p ON rp.permission_id = p.id
             WHERE ur.user_id = :user_id
             ORDER BY p.resource, p.action
-        """)
+        """
+        )
 
         result = self.db.execute(query, {"user_id": user_id})
         rows = result.fetchall()
@@ -263,7 +250,7 @@ class AuthorizationService:
                 resource=row[2],
                 action=row[3],
                 description=row[4],
-                created_at=row[5]
+                created_at=row[5],
             )
             for row in rows
         ]
@@ -278,14 +265,16 @@ class AuthorizationService:
         Returns:
             List of roles with embedded permissions
         """
-        query = text("""
+        query = text(
+            """
             SELECT r.id, r.name, r.display_name, r.description, r.is_system_role,
                    r.created_at, r.updated_at
             FROM user_roles ur
             JOIN roles r ON ur.role_id = r.id
             WHERE ur.user_id = :user_id
             ORDER BY r.name
-        """)
+        """
+        )
 
         result = self.db.execute(query, {"user_id": user_id})
         rows = result.fetchall()
@@ -295,16 +284,18 @@ class AuthorizationService:
             # Load permissions for each role
             permissions = await self.get_role_permissions(row[0])
 
-            roles.append(Role(
-                id=row[0],
-                name=row[1],
-                display_name=row[2],
-                description=row[3],
-                is_system_role=bool(row[4]),
-                created_at=row[5],
-                updated_at=row[6],
-                permissions=permissions
-            ))
+            roles.append(
+                Role(
+                    id=row[0],
+                    name=row[1],
+                    display_name=row[2],
+                    description=row[3],
+                    is_system_role=bool(row[4]),
+                    created_at=row[5],
+                    updated_at=row[6],
+                    permissions=permissions,
+                )
+            )
 
         return roles
 
@@ -319,26 +310,20 @@ class AuthorizationService:
         Returns:
             True if user has the role, False otherwise
         """
-        query = text("""
+        query = text(
+            """
             SELECT COUNT(*) as count
             FROM user_roles ur
             JOIN roles r ON ur.role_id = r.id
             WHERE ur.user_id = :user_id AND r.name = :role_name
-        """)
+        """
+        )
 
-        result = self.db.execute(query, {
-            "user_id": user_id,
-            "role_name": role_name
-        }).fetchone()
+        result = self.db.execute(query, {"user_id": user_id, "role_name": role_name}).fetchone()
 
         return result[0] > 0 if result else False
 
-    async def assign_role(
-        self,
-        user_id: int,
-        role_id: int,
-        assigned_by: int
-    ) -> None:
+    async def assign_role(self, user_id: int, role_id: int, assigned_by: int) -> None:
         """
         Assign a role to a user.
 
@@ -352,8 +337,7 @@ class AuthorizationService:
         """
         # Verify role exists
         role_check = self.db.execute(
-            text("SELECT id FROM roles WHERE id = :role_id"),
-            {"role_id": role_id}
+            text("SELECT id FROM roles WHERE id = :role_id"), {"role_id": role_id}
         ).fetchone()
 
         if not role_check:
@@ -361,16 +345,16 @@ class AuthorizationService:
 
         try:
             # INSERT OR IGNORE to prevent duplicate assignments
-            stmt = text("""
+            stmt = text(
+                """
                 INSERT OR IGNORE INTO user_roles (user_id, role_id, assigned_by)
                 VALUES (:user_id, :role_id, :assigned_by)
-            """)
+            """
+            )
 
-            self.db.execute(stmt, {
-                "user_id": user_id,
-                "role_id": role_id,
-                "assigned_by": assigned_by
-            })
+            self.db.execute(
+                stmt, {"user_id": user_id, "role_id": role_id, "assigned_by": assigned_by}
+            )
             self.db.commit()
 
             self._log_audit(
@@ -379,11 +363,7 @@ class AuthorizationService:
                 resource_id=f"user:{user_id}",
                 action="assign",
                 success=True,
-                details={
-                    "target_user_id": user_id,
-                    "role_id": role_id,
-                    "assigned_by": assigned_by
-                }
+                details={"target_user_id": user_id, "role_id": role_id, "assigned_by": assigned_by},
             )
 
         except Exception as error:
@@ -394,15 +374,11 @@ class AuthorizationService:
                 resource_id=f"user:{user_id}",
                 action="assign",
                 success=False,
-                error_message=str(error)
+                error_message=str(error),
             )
             raise
 
-    async def remove_role(
-        self,
-        user_id: int,
-        role_id: int
-    ) -> None:
+    async def remove_role(self, user_id: int, role_id: int) -> None:
         """
         Remove a role from a user.
 
@@ -411,15 +387,14 @@ class AuthorizationService:
             role_id: Role ID to remove
         """
         try:
-            stmt = text("""
+            stmt = text(
+                """
                 DELETE FROM user_roles
                 WHERE user_id = :user_id AND role_id = :role_id
-            """)
+            """
+            )
 
-            result = self.db.execute(stmt, {
-                "user_id": user_id,
-                "role_id": role_id
-            })
+            result = self.db.execute(stmt, {"user_id": user_id, "role_id": role_id})
             self.db.commit()
 
             self._log_audit(
@@ -431,8 +406,8 @@ class AuthorizationService:
                 details={
                     "target_user_id": user_id,
                     "role_id": role_id,
-                    "rows_affected": result.rowcount
-                }
+                    "rows_affected": result.rowcount,
+                },
             )
 
         except Exception as error:
@@ -443,7 +418,7 @@ class AuthorizationService:
                 resource_id=f"user:{user_id}",
                 action="remove",
                 success=False,
-                error_message=str(error)
+                error_message=str(error),
             )
             raise
 
@@ -454,12 +429,14 @@ class AuthorizationService:
         Returns:
             List of all roles with embedded permissions
         """
-        query = text("""
+        query = text(
+            """
             SELECT id, name, display_name, description, is_system_role,
                    created_at, updated_at
             FROM roles
             ORDER BY name
-        """)
+        """
+        )
 
         result = self.db.execute(query)
         rows = result.fetchall()
@@ -469,16 +446,18 @@ class AuthorizationService:
             # Load permissions for each role
             permissions = await self.get_role_permissions(row[0])
 
-            roles.append(Role(
-                id=row[0],
-                name=row[1],
-                display_name=row[2],
-                description=row[3],
-                is_system_role=bool(row[4]),
-                created_at=row[5],
-                updated_at=row[6],
-                permissions=permissions
-            ))
+            roles.append(
+                Role(
+                    id=row[0],
+                    name=row[1],
+                    display_name=row[2],
+                    description=row[3],
+                    is_system_role=bool(row[4]),
+                    created_at=row[5],
+                    updated_at=row[6],
+                    permissions=permissions,
+                )
+            )
 
         return roles
 
@@ -492,13 +471,15 @@ class AuthorizationService:
         Returns:
             List of permissions granted to the role
         """
-        query = text("""
+        query = text(
+            """
             SELECT p.id, p.name, p.resource, p.action, p.description, p.created_at
             FROM role_permissions rp
             JOIN permissions p ON rp.permission_id = p.id
             WHERE rp.role_id = :role_id
             ORDER BY p.resource, p.action
-        """)
+        """
+        )
 
         result = self.db.execute(query, {"role_id": role_id})
         rows = result.fetchall()
@@ -510,16 +491,12 @@ class AuthorizationService:
                 resource=row[2],
                 action=row[3],
                 description=row[4],
-                created_at=row[5]
+                created_at=row[5],
             )
             for row in rows
         ]
 
-    async def require_permission(
-        self,
-        user_id: int,
-        permission_name: str
-    ) -> None:
+    async def require_permission(self, user_id: int, permission_name: str) -> None:
         """
         Require a permission (raises HTTPException if not granted).
         Convenience method for API route guards.
@@ -533,16 +510,9 @@ class AuthorizationService:
         """
         result = await self.has_permission(user_id, permission_name)
         if not result.allowed:
-            raise HTTPException(
-                status_code=403,
-                detail=f"Permission denied: {result.reason}"
-            )
+            raise HTTPException(status_code=403, detail=f"Permission denied: {result.reason}")
 
-    async def require_role(
-        self,
-        user_id: int,
-        role_name: str
-    ) -> None:
+    async def require_role(self, user_id: int, role_name: str) -> None:
         """
         Require a specific role (raises HTTPException if not assigned).
         Convenience method for API route guards.
@@ -562,9 +532,6 @@ class AuthorizationService:
                 resource_id=role_name,
                 action="check",
                 success=False,
-                details={"required_role": role_name}
+                details={"required_role": role_name},
             )
-            raise HTTPException(
-                status_code=403,
-                detail=f"Role required: {role_name}"
-            )
+            raise HTTPException(status_code=403, detail=f"Role required: {role_name}")

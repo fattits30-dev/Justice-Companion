@@ -31,8 +31,8 @@ Usage:
 import time
 import json
 import logging
-from typing import Dict, Optional, Literal, TypedDict
-from dataclasses import dataclass, field, asdict
+from typing import Dict
+from dataclasses import dataclass, asdict
 from enum import Enum
 
 # Configure logger
@@ -41,6 +41,7 @@ logger = logging.getLogger(__name__)
 
 class StartupPhase(str, Enum):
     """Enumeration of all startup phases."""
+
     MODULE_LOAD = "module_load"
     APP_READY = "app_ready"
     LOADING_WINDOW_SHOWN = "loading_window_shown"
@@ -55,6 +56,7 @@ class StartupPhase(str, Enum):
 @dataclass
 class StartupTimestamps:
     """Timestamps for all startup phases (in milliseconds since epoch)."""
+
     module_load: float  # When main module is first loaded
     app_ready: float = 0  # When application becomes ready
     loading_window_shown: float = 0  # When loading window becomes visible
@@ -69,6 +71,7 @@ class StartupTimestamps:
 @dataclass
 class StartupPhaseMetrics:
     """Calculated metrics for startup phases."""
+
     # Time relative to app_ready (in milliseconds)
     time_to_loading_window: float = 0
     time_to_critical_services: float = 0
@@ -93,6 +96,7 @@ class StartupPhaseMetrics:
 @dataclass
 class PerformanceThreshold:
     """Performance thresholds for visual indicators."""
+
     good: float  # Green checkmark if <= this value (ms)
     warning: float  # Yellow warning if <= this value (ms), red X otherwise
 
@@ -111,9 +115,7 @@ class StartupMetrics:
 
         Sets the module_load timestamp to the current time.
         """
-        self.timestamps = StartupTimestamps(
-            module_load=self._get_current_time_ms()
-        )
+        self.timestamps = StartupTimestamps(module_load=self._get_current_time_ms())
 
     @staticmethod
     def _get_current_time_ms() -> float:
@@ -164,14 +166,10 @@ class StartupMetrics:
 
         # Times relative to app_ready
         time_to_loading_window = (
-            ts.loading_window_shown - app_ready
-            if ts.loading_window_shown > 0
-            else 0
+            ts.loading_window_shown - app_ready if ts.loading_window_shown > 0 else 0
         )
         time_to_critical_services = (
-            ts.critical_services_ready - app_ready
-            if ts.critical_services_ready > 0
-            else 0
+            ts.critical_services_ready - app_ready if ts.critical_services_ready > 0 else 0
         )
         time_to_critical_handlers = (
             ts.critical_handlers_registered - app_ready
@@ -179,43 +177,29 @@ class StartupMetrics:
             else 0
         )
         time_to_main_window_created = (
-            ts.main_window_created - app_ready
-            if ts.main_window_created > 0
-            else 0
+            ts.main_window_created - app_ready if ts.main_window_created > 0 else 0
         )
         time_to_main_window_shown = (
-            ts.main_window_shown - app_ready
-            if ts.main_window_shown > 0
-            else 0
+            ts.main_window_shown - app_ready if ts.main_window_shown > 0 else 0
         )
         time_to_non_critical_services = (
-            ts.non_critical_services_ready - app_ready
-            if ts.non_critical_services_ready > 0
-            else 0
+            ts.non_critical_services_ready - app_ready if ts.non_critical_services_ready > 0 else 0
         )
         time_to_all_handlers = (
-            ts.all_handlers_registered - app_ready
-            if ts.all_handlers_registered > 0
-            else 0
+            ts.all_handlers_registered - app_ready if ts.all_handlers_registered > 0 else 0
         )
 
         # Phase deltas
         loading_to_services = time_to_critical_services - time_to_loading_window
         services_to_handlers = time_to_critical_handlers - time_to_critical_services
         handlers_to_main_window = time_to_main_window_shown - time_to_critical_handlers
-        main_window_to_non_critical = (
-            time_to_non_critical_services - time_to_main_window_shown
-        )
-        non_critical_to_complete = (
-            time_to_all_handlers - time_to_non_critical_services
-        )
+        main_window_to_non_critical = time_to_non_critical_services - time_to_main_window_shown
+        non_critical_to_complete = time_to_all_handlers - time_to_non_critical_services
 
         # Total times
         total_startup_time = self._get_current_time_ms() - ts.module_load
         perceived_startup_time = (
-            ts.main_window_shown - ts.module_load
-            if ts.main_window_shown > 0
-            else 0
+            ts.main_window_shown - ts.module_load if ts.main_window_shown > 0 else 0
         )
 
         return StartupPhaseMetrics(
@@ -257,11 +241,7 @@ class StartupMetrics:
             return f"{ms / 1000:.1f}s"
         return f"{ms / 60000:.1f}m"
 
-    def _format_with_indicator(
-        self,
-        ms: float,
-        threshold: PerformanceThreshold
-    ) -> str:
+    def _format_with_indicator(self, ms: float, threshold: PerformanceThreshold) -> str:
         """
         Format a duration with visual performance indicator.
 
@@ -377,9 +357,7 @@ class StartupMetrics:
                     "  • Critical services initialization is slow - consider parallelizing"
                 )
             if metrics.time_to_main_window_shown > 400:
-                logger.warning(
-                    "  • Main window taking too long - check application bundle size"
-                )
+                logger.warning("  • Main window taking too long - check application bundle size")
         elif metrics.perceived_startup_time < 400:
             logger.info("\nExcellent startup performance! Target achieved.")
 

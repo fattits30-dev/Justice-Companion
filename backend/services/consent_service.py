@@ -27,7 +27,6 @@ from typing import Optional, List, Dict, Any
 from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
-from fastapi import HTTPException
 from pydantic import BaseModel, Field, ConfigDict
 
 from backend.models.consent import Consent, ConsentType
@@ -37,6 +36,7 @@ from backend.services.audit_logger import AuditLogger
 # Pydantic models for input/output
 class GrantConsentInput(BaseModel):
     """Input model for granting consent."""
+
     consent_type: ConsentType = Field(..., description="Type of consent to grant")
 
     model_config = ConfigDict(use_enum_values=True)
@@ -44,6 +44,7 @@ class GrantConsentInput(BaseModel):
 
 class ConsentResponse(BaseModel):
     """Response model for consent data."""
+
     id: int
     user_id: int
     consent_type: str
@@ -68,11 +69,7 @@ class ConsentService:
     # Current privacy policy version (increment when privacy policy changes)
     CURRENT_PRIVACY_VERSION = "1.0"
 
-    def __init__(
-        self,
-        db: Session,
-        audit_logger: Optional[AuditLogger] = None
-    ):
+    def __init__(self, db: Session, audit_logger: Optional[AuditLogger] = None):
         """
         Initialize consent service.
 
@@ -90,7 +87,7 @@ class ConsentService:
         resource_id: str,
         action: str,
         success: bool,
-        details: Optional[Dict[str, Any]] = None
+        details: Optional[Dict[str, Any]] = None,
     ) -> None:
         """
         Log audit event if audit logger is configured.
@@ -111,14 +108,10 @@ class ConsentService:
                 resource_id=resource_id,
                 action=action,
                 success=success,
-                details=details or {}
+                details=details or {},
             )
 
-    def grant_consent(
-        self,
-        user_id: int,
-        consent_type: ConsentType
-    ) -> Consent:
+    def grant_consent(self, user_id: int, consent_type: ConsentType) -> Consent:
         """
         Grant consent for specific type.
 
@@ -145,11 +138,13 @@ class ConsentService:
         now = datetime.now(timezone.utc)
         consent = Consent(
             user_id=user_id,
-            consent_type=consent_type.value if isinstance(consent_type, ConsentType) else consent_type,
+            consent_type=(
+                consent_type.value if isinstance(consent_type, ConsentType) else consent_type
+            ),
             granted=True,
             granted_at=now,
             version=self.CURRENT_PRIVACY_VERSION,
-            revoked_at=None
+            revoked_at=None,
         )
 
         self.db.add(consent)
@@ -163,19 +158,12 @@ class ConsentService:
             resource_id=str(consent.id),
             action="create",
             success=True,
-            details={
-                "consentType": consent.consent_type,
-                "version": self.CURRENT_PRIVACY_VERSION
-            }
+            details={"consentType": consent.consent_type, "version": self.CURRENT_PRIVACY_VERSION},
         )
 
         return consent
 
-    def revoke_consent(
-        self,
-        user_id: int,
-        consent_type: ConsentType
-    ) -> None:
+    def revoke_consent(self, user_id: int, consent_type: ConsentType) -> None:
         """
         Revoke consent (GDPR Article 7.3 - Right to withdraw consent).
 
@@ -204,14 +192,10 @@ class ConsentService:
                 resource_id=str(consent.id),
                 action="update",
                 success=True,
-                details={"consentType": consent.consent_type}
+                details={"consentType": consent.consent_type},
             )
 
-    def has_active_consent(
-        self,
-        user_id: int,
-        consent_type: ConsentType
-    ) -> bool:
+    def has_active_consent(self, user_id: int, consent_type: ConsentType) -> bool:
         """
         Check if user has active consent for a specific type.
 
@@ -225,11 +209,7 @@ class ConsentService:
         consent = self._find_active_consent(user_id, consent_type)
         return consent is not None
 
-    def has_consent(
-        self,
-        user_id: int,
-        consent_type: ConsentType
-    ) -> bool:
+    def has_consent(self, user_id: int, consent_type: ConsentType) -> bool:
         """
         Alias for has_active_consent() - for test compatibility.
 
@@ -242,10 +222,7 @@ class ConsentService:
         """
         return self.has_active_consent(user_id, consent_type)
 
-    def get_active_consents(
-        self,
-        user_id: int
-    ) -> List[Consent]:
+    def get_active_consents(self, user_id: int) -> List[Consent]:
         """
         Get all active consents for a user.
 
@@ -255,19 +232,15 @@ class ConsentService:
         Returns:
             List[Consent]: List of active (not revoked) consent records
         """
-        consents = self.db.query(Consent).filter(
-            and_(
-                Consent.user_id == user_id,
-                Consent.revoked_at.is_(None)
-            )
-        ).all()
+        consents = (
+            self.db.query(Consent)
+            .filter(and_(Consent.user_id == user_id, Consent.revoked_at.is_(None)))
+            .all()
+        )
 
         return consents
 
-    def get_user_consents(
-        self,
-        user_id: int
-    ) -> List[Consent]:
+    def get_user_consents(self, user_id: int) -> List[Consent]:
         """
         Get all consents for a user (active and revoked).
 
@@ -279,16 +252,16 @@ class ConsentService:
         Returns:
             List[Consent]: List of all consent records (active and revoked)
         """
-        consents = self.db.query(Consent).filter(
-            Consent.user_id == user_id
-        ).order_by(Consent.created_at.desc()).all()
+        consents = (
+            self.db.query(Consent)
+            .filter(Consent.user_id == user_id)
+            .order_by(Consent.created_at.desc())
+            .all()
+        )
 
         return consents
 
-    def has_required_consents(
-        self,
-        user_id: int
-    ) -> bool:
+    def has_required_consents(self, user_id: int) -> bool:
         """
         Check if user has all required consents.
 
@@ -302,10 +275,7 @@ class ConsentService:
         """
         return self.has_active_consent(user_id, ConsentType.DATA_PROCESSING)
 
-    def grant_all_consents(
-        self,
-        user_id: int
-    ) -> List[Consent]:
+    def grant_all_consents(self, user_id: int) -> List[Consent]:
         """
         Grant all consent types at once (convenience method).
 
@@ -337,10 +307,7 @@ class ConsentService:
 
         return created_consents
 
-    def revoke_all_consents(
-        self,
-        user_id: int
-    ) -> None:
+    def revoke_all_consents(self, user_id: int) -> None:
         """
         Revoke all consents for a user (GDPR Article 7.3).
 
@@ -371,17 +338,10 @@ class ConsentService:
             resource_id="all",
             action="update",
             success=True,
-            details={
-                "reason": "All consents revoked",
-                "revokedCount": len(active_consents)
-            }
+            details={"reason": "All consents revoked", "revokedCount": len(active_consents)},
         )
 
-    def _find_active_consent(
-        self,
-        user_id: int,
-        consent_type: ConsentType
-    ) -> Optional[Consent]:
+    def _find_active_consent(self, user_id: int, consent_type: ConsentType) -> Optional[Consent]:
         """
         Find active consent for user and type.
 
@@ -394,14 +354,20 @@ class ConsentService:
         Returns:
             Optional[Consent]: Active consent record or None if not found
         """
-        consent_type_str = consent_type.value if isinstance(consent_type, ConsentType) else consent_type
+        consent_type_str = (
+            consent_type.value if isinstance(consent_type, ConsentType) else consent_type
+        )
 
-        consent = self.db.query(Consent).filter(
-            and_(
-                Consent.user_id == user_id,
-                Consent.consent_type == consent_type_str,
-                Consent.revoked_at.is_(None)
+        consent = (
+            self.db.query(Consent)
+            .filter(
+                and_(
+                    Consent.user_id == user_id,
+                    Consent.consent_type == consent_type_str,
+                    Consent.revoked_at.is_(None),
+                )
             )
-        ).first()
+            .first()
+        )
 
         return consent

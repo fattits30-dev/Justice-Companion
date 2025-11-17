@@ -55,6 +55,7 @@ try:
         SupraCitation,
         FullLawCitation,
     )
+
     EYECITE_AVAILABLE = True
 except ImportError as e:
     EYECITE_AVAILABLE = False
@@ -89,6 +90,7 @@ class CitationMetadata:
         chapter: Statute chapter number
         pin_cite: Pinpoint citation (specific page reference)
     """
+
     volume: Optional[str] = None
     reporter: Optional[str] = None
     page: Optional[str] = None
@@ -116,6 +118,7 @@ class ExtractedCitation:
         span: Tuple of (start_index, end_index) in original text
         metadata: Structured metadata extracted from citation
     """
+
     text: str
     type: str
     span: Tuple[int, int]
@@ -127,7 +130,7 @@ class ExtractedCitation:
             "text": self.text,
             "type": self.type,
             "span": list(self.span),
-            "metadata": self.metadata.to_dict()
+            "metadata": self.metadata.to_dict(),
         }
 
 
@@ -158,8 +161,7 @@ class CitationService:
         """
         if not EYECITE_AVAILABLE:
             logger.error(
-                "CitationService requires eyecite library. "
-                "Install with: pip install eyecite"
+                "CitationService requires eyecite library. " "Install with: pip install eyecite"
             )
             raise ImportError(
                 "eyecite library is required for CitationService. "
@@ -167,9 +169,7 @@ class CitationService:
             )
 
     def extract_citations(
-        self,
-        text: str,
-        remove_ambiguous: bool = False
+        self, text: str, remove_ambiguous: bool = False
     ) -> List[ExtractedCitation]:
         """
         Extract all legal citations from text.
@@ -197,19 +197,15 @@ class CitationService:
                 return []
 
             # Clean text (remove HTML, normalize whitespace)
-            cleaned = clean_text(text, ['html', 'inline_whitespace'])
+            cleaned = clean_text(text, ["html", "inline_whitespace"])
 
             # Extract citations
             # Note: Python eyecite doesn't have overlapHandling parameter
             # It automatically handles overlaps by default
-            citations = get_citations(
-                cleaned,
-                remove_ambiguous=remove_ambiguous
-            )
+            citations = get_citations(cleaned, remove_ambiguous=remove_ambiguous)
 
             logger.info(
-                f"Extracted {len(citations)} citations from text "
-                f"(length: {len(text)} chars)"
+                f"Extracted {len(citations)} citations from text " f"(length: {len(text)} chars)"
             )
 
             # Convert to our format
@@ -239,42 +235,81 @@ class CitationService:
         metadata = CitationMetadata()
 
         # Extract from groups dict (volume, reporter, page, section, chapter)
-        if hasattr(citation, 'groups') and citation.groups:
+        if hasattr(citation, "groups") and citation.groups:
             groups = citation.groups
             # groups is a dict, not an object
             if isinstance(groups, dict):
-                metadata.volume = str(groups['volume']) if 'volume' in groups and groups['volume'] else None
-                metadata.reporter = str(groups['reporter']) if 'reporter' in groups and groups['reporter'] else None
-                metadata.page = str(groups['page']) if 'page' in groups and groups['page'] else None
-                metadata.section = str(groups['section']) if 'section' in groups and groups['section'] else None
-                metadata.chapter = str(groups['chapter']) if 'chapter' in groups and groups['chapter'] else None
+                metadata.volume = (
+                    str(groups["volume"]) if "volume" in groups and groups["volume"] else None
+                )
+                metadata.reporter = (
+                    str(groups["reporter"]) if "reporter" in groups and groups["reporter"] else None
+                )
+                metadata.page = str(groups["page"]) if "page" in groups and groups["page"] else None
+                metadata.section = (
+                    str(groups["section"]) if "section" in groups and groups["section"] else None
+                )
+                metadata.chapter = (
+                    str(groups["chapter"]) if "chapter" in groups and groups["chapter"] else None
+                )
 
         # Extract year and court from metadata object
-        if hasattr(citation, 'metadata') and citation.metadata:
+        if hasattr(citation, "metadata") and citation.metadata:
             cite_meta = citation.metadata
             # Can be dict or object with attributes
             if isinstance(cite_meta, dict):
-                metadata.year = str(cite_meta['year']) if 'year' in cite_meta and cite_meta['year'] else None
-                metadata.court = str(cite_meta['court']) if 'court' in cite_meta and cite_meta['court'] else None
-                metadata.plaintiff = str(cite_meta['plaintiff']) if 'plaintiff' in cite_meta and cite_meta['plaintiff'] else None
-                metadata.defendant = str(cite_meta['defendant']) if 'defendant' in cite_meta and cite_meta['defendant'] else None
-                metadata.pin_cite = str(cite_meta['pin_cite']) if 'pin_cite' in cite_meta and cite_meta['pin_cite'] else None
+                metadata.year = (
+                    str(cite_meta["year"]) if "year" in cite_meta and cite_meta["year"] else None
+                )
+                metadata.court = (
+                    str(cite_meta["court"]) if "court" in cite_meta and cite_meta["court"] else None
+                )
+                metadata.plaintiff = (
+                    str(cite_meta["plaintiff"])
+                    if "plaintiff" in cite_meta and cite_meta["plaintiff"]
+                    else None
+                )
+                metadata.defendant = (
+                    str(cite_meta["defendant"])
+                    if "defendant" in cite_meta and cite_meta["defendant"]
+                    else None
+                )
+                metadata.pin_cite = (
+                    str(cite_meta["pin_cite"])
+                    if "pin_cite" in cite_meta and cite_meta["pin_cite"]
+                    else None
+                )
             else:
                 # Object with attributes
-                metadata.year = str(cite_meta.year) if hasattr(cite_meta, 'year') and cite_meta.year else None
-                metadata.court = str(cite_meta.court) if hasattr(cite_meta, 'court') and cite_meta.court else None
-                metadata.plaintiff = str(cite_meta.plaintiff) if hasattr(cite_meta, 'plaintiff') and cite_meta.plaintiff else None
-                metadata.defendant = str(cite_meta.defendant) if hasattr(cite_meta, 'defendant') and cite_meta.defendant else None
-                metadata.pin_cite = str(cite_meta.pin_cite) if hasattr(cite_meta, 'pin_cite') and cite_meta.pin_cite else None
+                metadata.year = (
+                    str(cite_meta.year) if hasattr(cite_meta, "year") and cite_meta.year else None
+                )
+                metadata.court = (
+                    str(cite_meta.court)
+                    if hasattr(cite_meta, "court") and cite_meta.court
+                    else None
+                )
+                metadata.plaintiff = (
+                    str(cite_meta.plaintiff)
+                    if hasattr(cite_meta, "plaintiff") and cite_meta.plaintiff
+                    else None
+                )
+                metadata.defendant = (
+                    str(cite_meta.defendant)
+                    if hasattr(cite_meta, "defendant") and cite_meta.defendant
+                    else None
+                )
+                metadata.pin_cite = (
+                    str(cite_meta.pin_cite)
+                    if hasattr(cite_meta, "pin_cite") and cite_meta.pin_cite
+                    else None
+                )
 
         # Get matched text
         matched_text = citation.matched_text()
 
         return ExtractedCitation(
-            text=matched_text,
-            type=citation_type,
-            span=span,
-            metadata=metadata
+            text=matched_text, type=citation_type, span=span, metadata=metadata
         )
 
     def highlight_citations(self, text: str) -> str:
@@ -301,7 +336,7 @@ class CitationService:
                 return text
 
             # Clean text
-            cleaned = clean_text(text, ['html', 'inline_whitespace'])
+            cleaned = clean_text(text, ["html", "inline_whitespace"])
 
             # Get citations
             citations = get_citations(cleaned)
@@ -315,9 +350,9 @@ class CitationService:
                 span = citation.span()
                 citation_type = citation.__class__.__name__
                 # Escape citation type for safe HTML attribute
-                safe_type = citation_type.replace('"', '&quot;')
+                safe_type = citation_type.replace('"', "&quot;")
                 before_tag = f'<mark class="legal-citation" data-citation-type="{safe_type}">'
-                after_tag = '</mark>'
+                after_tag = "</mark>"
                 annotations.append((span, before_tag, after_tag))
 
             # Apply annotations
@@ -471,6 +506,7 @@ class CitationService:
 
 
 # Module-level utility functions for convenience
+
 
 def extract_citations_from_text(text: str) -> List[ExtractedCitation]:
     """

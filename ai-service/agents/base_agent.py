@@ -14,8 +14,6 @@ License: MIT
 
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Optional, TYPE_CHECKING
-from pathlib import Path
-import json
 
 if TYPE_CHECKING:
     from services.model_client import ModelClient
@@ -29,7 +27,7 @@ class BaseAgent(ABC):
     Works with any ModelClient implementation (HuggingFace, OpenAI, etc.)
     """
 
-    def __init__(self, model_client: 'ModelClient', config: Dict[str, Any]):
+    def __init__(self, model_client: "ModelClient", config: Dict[str, Any]):
         """
         Initialize the agent with model client and configuration.
 
@@ -67,7 +65,6 @@ class BaseAgent(ABC):
             ValueError: If request is invalid
             RuntimeError: If model generation fails
         """
-        pass
 
     @abstractmethod
     def load_prompt(self) -> str:
@@ -92,7 +89,6 @@ class BaseAgent(ABC):
                     return f.read()
             ```
         """
-        pass
 
     def _validate_request(self, request: Any) -> bool:
         """

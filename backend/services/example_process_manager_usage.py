@@ -10,9 +10,9 @@ import os
 
 # Direct import to avoid dependency issues
 import importlib.util
+
 spec = importlib.util.spec_from_file_location(
-    "process_manager",
-    os.path.join(os.path.dirname(__file__), "process_manager.py")
+    "process_manager", os.path.join(os.path.dirname(__file__), "process_manager.py")
 )
 process_manager_module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(process_manager_module)
@@ -230,14 +230,16 @@ async def main():
     except Exception as e:
         print(f"\n✗ Example failed: {e}")
         import traceback
+
         traceback.print_exc()
 
 
 if __name__ == "__main__":
     # Fix Windows console encoding
-    if sys.platform == 'win32':
+    if sys.platform == "win32":
         import codecs
-        sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
-        sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, 'strict')
+
+        sys.stdout = codecs.getwriter("utf-8")(sys.stdout.buffer, "strict")
+        sys.stderr = codecs.getwriter("utf-8")(sys.stderr.buffer, "strict")
 
     asyncio.run(main())

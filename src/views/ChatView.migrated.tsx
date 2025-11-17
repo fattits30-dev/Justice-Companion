@@ -56,7 +56,7 @@ export function ChatView() {
 
   const [input, setInput] = useState("");
   const [_showThinking, _setShowThinking] = useState(false);
-  const [currentConversationId, setCurrentConversationId] = useState<
+  const [_currentConversationId, setCurrentConversationId] = useState<
     number | null
   >(null);
 
@@ -72,8 +72,8 @@ export function ChatView() {
 
   // Duplicate case warning state
   const [isDuplicateWarningOpen, setIsDuplicateWarningOpen] = useState(false);
-  const [duplicateCaseData, setDuplicateCaseData] = useState<any>(null);
-  const [existingCaseTitle, setExistingCaseTitle] = useState<string>("");
+  const [_duplicateCaseData, setDuplicateCaseData] = useState<any>(null);
+  const [_existingCaseTitle, setExistingCaseTitle] = useState<string>("");
 
   // Document upload state
   const [isAnalyzingDocument, setIsAnalyzingDocument] = useState(false);
@@ -534,7 +534,7 @@ Based on your dismissal letter, here are some general steps many people take whe
       </div>
 
       {/* Messages area */}
-      <div className="flex-1 overflow-y-auto" style={{ minHeight: 0 }}>
+      <div className="flex-1 overflow-y-auto min-h-0">
         <AnimatePresence mode="wait">
           {messages.length === 0 && !isStreaming && (
             <motion.div
@@ -673,7 +673,6 @@ Based on your dismissal letter, here are some general steps many people take whe
                     onSaveToCase={handleSaveToCase}
                     onCreateCase={handleCreateCase}
                     showThinking={_showThinking}
-                    style={{}}
                   />
                 </motion.div>
               ))}
@@ -702,14 +701,8 @@ Based on your dismissal letter, here are some general steps many people take whe
                     >
                       <div className="flex space-x-1">
                         <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce"></div>
-                        <div
-                          className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce"
-                          style={{ animationDelay: "0.1s" }}
-                        ></div>
-                        <div
-                          className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce"
-                          style={{ animationDelay: "0.2s" }}
-                        ></div>
+                        <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce [animation-delay:0.1s]"></div>
+                        <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce [animation-delay:0.2s]"></div>
                       </div>
                       <span className="text-sm text-white/70">
                         AI is thinking...

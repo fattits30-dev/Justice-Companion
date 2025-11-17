@@ -69,7 +69,7 @@ class AuditLogger:
         ip_address: Optional[str] = None,
         user_agent: Optional[str] = None,
         success: bool = True,
-        error_message: Optional[str] = None
+        error_message: Optional[str] = None,
     ) -> None:
         """
         Log an audit event (immutable, blockchain-style).
@@ -114,7 +114,7 @@ class AuditLogger:
                 "error_message": error_message,
                 "previous_log_hash": previous_hash,
                 "integrity_hash": "",  # Calculate next
-                "created_at": created_at
+                "created_at": created_at,
             }
 
             # Calculate integrity hash
@@ -137,7 +137,7 @@ class AuditLogger:
         user_id: Optional[str] = None,
         success: Optional[bool] = None,
         limit: Optional[int] = None,
-        offset: Optional[int] = None
+        offset: Optional[int] = None,
     ) -> List[Dict[str, Any]]:
         """
         Query audit logs with optional filters.
@@ -232,10 +232,7 @@ class AuditLogger:
             rows = result.fetchall()
 
             if not rows:
-                return {
-                    "valid": True,
-                    "totalLogs": 0
-                }
+                return {"valid": True, "totalLogs": 0}
 
             entries = [self._map_row_to_entry(dict(row._mapping)) for row in rows]
             previous_hash = None
@@ -250,7 +247,7 @@ class AuditLogger:
                         "totalLogs": len(entries),
                         "brokenAt": i,
                         "brokenLog": entry,
-                        "error": "Integrity hash mismatch - log entry may have been tampered with"
+                        "error": "Integrity hash mismatch - log entry may have been tampered with",
                     }
 
                 # Verify chain linking
@@ -260,22 +257,15 @@ class AuditLogger:
                         "totalLogs": len(entries),
                         "brokenAt": i,
                         "brokenLog": entry,
-                        "error": "Chain broken - previousLogHash does not match previous entry"
+                        "error": "Chain broken - previousLogHash does not match previous entry",
                     }
 
                 previous_hash = entry["integrity_hash"]
 
-            return {
-                "valid": True,
-                "totalLogs": len(entries)
-            }
+            return {"valid": True, "totalLogs": len(entries)}
 
         except Exception as e:
-            return {
-                "valid": False,
-                "totalLogs": 0,
-                "error": str(e)
-            }
+            return {"valid": False, "totalLogs": 0, "error": str(e)}
 
     def export_logs(
         self,
@@ -283,7 +273,7 @@ class AuditLogger:
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
         resource_type: Optional[str] = None,
-        resource_id: Optional[str] = None
+        resource_id: Optional[str] = None,
     ) -> str:
         """
         Export audit logs in JSON or CSV format.
@@ -302,7 +292,7 @@ class AuditLogger:
             start_date=start_date,
             end_date=end_date,
             resource_type=resource_type,
-            resource_id=resource_id
+            resource_id=resource_id,
         )
 
         if format == "json":
@@ -314,10 +304,21 @@ class AuditLogger:
 
         # CSV headers
         headers = [
-            "id", "timestamp", "event_type", "user_id", "resource_type",
-            "resource_id", "action", "details", "ip_address", "user_agent",
-            "success", "error_message", "integrity_hash", "previous_log_hash",
-            "created_at"
+            "id",
+            "timestamp",
+            "event_type",
+            "user_id",
+            "resource_type",
+            "resource_id",
+            "action",
+            "details",
+            "ip_address",
+            "user_agent",
+            "success",
+            "error_message",
+            "integrity_hash",
+            "previous_log_hash",
+            "created_at",
         ]
 
         # Build CSV rows
@@ -338,7 +339,7 @@ class AuditLogger:
                 log.get("error_message", ""),
                 log.get("integrity_hash", ""),
                 log.get("previous_log_hash", ""),
-                log.get("created_at", "")
+                log.get("created_at", ""),
             ]
             rows.append(",".join([self._escape_csv_field(str(field)) for field in row]))
 
@@ -369,7 +370,7 @@ class AuditLogger:
             "action": entry["action"],
             "details": entry.get("details"),
             "success": entry["success"],
-            "previous_log_hash": entry.get("previous_log_hash")
+            "previous_log_hash": entry.get("previous_log_hash"),
         }
 
         # Deterministic JSON string (same input = same hash)
@@ -412,23 +413,26 @@ class AuditLogger:
             )
         """
 
-        self.db.execute(text(sql), {
-            "id": entry["id"],
-            "timestamp": entry["timestamp"],
-            "event_type": entry["event_type"],
-            "user_id": entry.get("user_id"),
-            "resource_type": entry["resource_type"],
-            "resource_id": entry["resource_id"],
-            "action": entry["action"],
-            "details": json.dumps(entry["details"]) if entry.get("details") else None,
-            "ip_address": entry.get("ip_address"),
-            "user_agent": entry.get("user_agent"),
-            "success": 1 if entry["success"] else 0,
-            "error_message": entry.get("error_message"),
-            "integrity_hash": entry["integrity_hash"],
-            "previous_log_hash": entry.get("previous_log_hash"),
-            "created_at": entry["created_at"]
-        })
+        self.db.execute(
+            text(sql),
+            {
+                "id": entry["id"],
+                "timestamp": entry["timestamp"],
+                "event_type": entry["event_type"],
+                "user_id": entry.get("user_id"),
+                "resource_type": entry["resource_type"],
+                "resource_id": entry["resource_id"],
+                "action": entry["action"],
+                "details": json.dumps(entry["details"]) if entry.get("details") else None,
+                "ip_address": entry.get("ip_address"),
+                "user_agent": entry.get("user_agent"),
+                "success": 1 if entry["success"] else 0,
+                "error_message": entry.get("error_message"),
+                "integrity_hash": entry["integrity_hash"],
+                "previous_log_hash": entry.get("previous_log_hash"),
+                "created_at": entry["created_at"],
+            },
+        )
         self.db.commit()
 
     def _map_row_to_entry(self, row: Dict[str, Any]) -> Dict[str, Any]:
@@ -464,7 +468,7 @@ class AuditLogger:
             "error_message": row.get("error_message"),
             "integrity_hash": row["integrity_hash"],
             "previous_log_hash": row.get("previous_log_hash"),
-            "created_at": row["created_at"]
+            "created_at": row["created_at"],
         }
 
     def _escape_csv_field(self, field: str) -> str:
@@ -484,6 +488,7 @@ class AuditLogger:
 
 # ===== HELPER FUNCTION FOR EASY USAGE =====
 
+
 def log_audit_event(
     db: Session,
     event_type: str,
@@ -495,7 +500,7 @@ def log_audit_event(
     ip_address: Optional[str] = None,
     user_agent: Optional[str] = None,
     success: bool = True,
-    error_message: Optional[str] = None
+    error_message: Optional[str] = None,
 ) -> None:
     """
     Helper function to log an audit event.
@@ -541,5 +546,5 @@ def log_audit_event(
         ip_address=ip_address,
         user_agent=user_agent,
         success=success,
-        error_message=error_message
+        error_message=error_message,
     )

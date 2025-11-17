@@ -29,30 +29,22 @@ __all__ = [
 
 # Optional imports (require python-docx)
 try:
-    from .docx_generator import (
-        DOCXGenerator,
-        CaseExportData,
-        EvidenceExportData,
-        TimelineExportData,
-        NotesExportData,
-        Case,
-        Evidence,
-        Note,
-        TimelineEvent,
-    )
+    pass
 
-    __all__.extend([
-        # DOCX Generator (optional)
-        "DOCXGenerator",
-        "CaseExportData",
-        "EvidenceExportData",
-        "TimelineExportData",
-        "NotesExportData",
-        "Case",
-        "Evidence",
-        "Note",
-        "TimelineEvent",
-    ])
+    __all__.extend(
+        [
+            # DOCX Generator (optional)
+            "DOCXGenerator",
+            "CaseExportData",
+            "EvidenceExportData",
+            "TimelineExportData",
+            "NotesExportData",
+            "Case",
+            "Evidence",
+            "Note",
+            "TimelineEvent",
+        ]
+    )
 except ImportError:
     # python-docx not installed, DOCX generator unavailable
     pass

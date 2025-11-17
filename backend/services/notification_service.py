@@ -19,23 +19,22 @@ Security:
 """
 
 from typing import Optional, List, Dict, Any, Protocol
-from datetime import datetime, time
+from datetime import datetime
 from sqlalchemy.orm import Session
-from sqlalchemy import and_, func
+from sqlalchemy import and_
 from fastapi import HTTPException
 
 from backend.models.notification import (
     Notification,
     NotificationPreferences,
     NotificationType,
-    NotificationSeverity
+    NotificationSeverity,
 )
 from backend.services.audit_logger import AuditLogger
 
 
 class NotificationError(Exception):
     """Exception raised for notification-specific errors."""
-    pass
 
 
 class NotificationEventHandler(Protocol):
@@ -60,6 +59,7 @@ from pydantic import BaseModel, Field, ConfigDict
 
 class CreateNotificationInput(BaseModel):
     """Input model for creating a new notification."""
+
     user_id: int = Field(..., description="User ID to send notification to")
     type: NotificationType = Field(..., description="Type of notification")
     severity: NotificationSeverity = Field(..., description="Notification severity")
@@ -75,6 +75,7 @@ class CreateNotificationInput(BaseModel):
 
 class NotificationFilters(BaseModel):
     """Filters for querying notifications."""
+
     unread_only: Optional[bool] = Field(False, description="Filter unread notifications only")
     type: Optional[NotificationType] = Field(None, description="Filter by notification type")
     severity: Optional[NotificationSeverity] = Field(None, description="Filter by severity")
@@ -88,6 +89,7 @@ class NotificationFilters(BaseModel):
 
 class NotificationStats(BaseModel):
     """Notification statistics."""
+
     total: int
     unread: int
     urgent: int
@@ -99,6 +101,7 @@ class NotificationStats(BaseModel):
 
 class UpdateNotificationPreferencesInput(BaseModel):
     """Input model for updating notification preferences."""
+
     deadline_reminders_enabled: Optional[bool] = None
     deadline_reminder_days: Optional[int] = Field(None, ge=1, le=30)
     case_updates_enabled: Optional[bool] = None
@@ -119,11 +122,7 @@ class NotificationService:
     All operations verify user ownership to prevent unauthorized access.
     """
 
-    def __init__(
-        self,
-        db: Session,
-        audit_logger: Optional[AuditLogger] = None
-    ):
+    def __init__(self, db: Session, audit_logger: Optional[AuditLogger] = None):
         """
         Initialize notification service.
 
@@ -152,7 +151,7 @@ class NotificationService:
         action: str,
         success: bool = True,
         details: Optional[Dict[str, Any]] = None,
-        error_message: Optional[str] = None
+        error_message: Optional[str] = None,
     ) -> None:
         """Log audit event if audit logger is configured."""
         if self.audit_logger:
@@ -164,13 +163,11 @@ class NotificationService:
                 action=action,
                 success=success,
                 details=details or {},
-                error_message=error_message
+                error_message=error_message,
             )
 
     def _should_send_notification(
-        self,
-        notification_type: NotificationType,
-        prefs: NotificationPreferences
+        self, notification_type: NotificationType, prefs: NotificationPreferences
     ) -> bool:
         """
         Check if notification should be sent based on user preferences.
@@ -219,10 +216,7 @@ class NotificationService:
         else:
             return current_time >= start or current_time < end
 
-    async def create_notification(
-        self,
-        input_data: CreateNotificationInput
-    ) -> Notification:
+    async def create_notification(self, input_data: CreateNotificationInput) -> Notification:
         """
         Create a new notification with preference checking.
 
@@ -246,14 +240,9 @@ class NotificationService:
                     resource_id="blocked",
                     action="create",
                     success=False,
-                    details={
-                        "type": input_data.type.value,
-                        "reason": "Notification type disabled"
-                    }
+                    details={"type": input_data.type.value, "reason": "Notification type disabled"},
                 )
-                raise NotificationError(
-                    f"Notification type {input_data.type.value} is disabled"
-                )
+                raise NotificationError(f"Notification type {input_data.type.value} is disabled")
 
             # Check if we're in quiet hours
             if self._is_in_quiet_hours(prefs):
@@ -263,7 +252,7 @@ class NotificationService:
                     resource_id="blocked",
                     action="create",
                     success=False,
-                    details={"reason": "Quiet hours active"}
+                    details={"reason": "Quiet hours active"},
                 )
                 raise NotificationError("Notification blocked during quiet hours")
 
@@ -277,7 +266,7 @@ class NotificationService:
                 action_url=input_data.action_url,
                 action_label=input_data.action_label,
                 notification_metadata=input_data.metadata,
-                expires_at=input_data.expires_at
+                expires_at=input_data.expires_at,
             )
 
             self.db.add(notification)
@@ -291,10 +280,7 @@ class NotificationService:
                 resource_id=str(notification.id),
                 action="create",
                 success=True,
-                details={
-                    "type": input_data.type.value,
-                    "severity": input_data.severity.value
-                }
+                details={"type": input_data.type.value, "severity": input_data.severity.value},
             )
 
             # Emit event to handlers
@@ -313,14 +299,12 @@ class NotificationService:
                 resource_id="unknown",
                 action="create",
                 success=False,
-                error_message=str(error)
+                error_message=str(error),
             )
             raise NotificationError(f"Failed to create notification: {str(error)}")
 
     async def get_notifications(
-        self,
-        user_id: int,
-        filters: Optional[NotificationFilters] = None
+        self, user_id: int, filters: Optional[NotificationFilters] = None
     ) -> List[Notification]:
         """
         Get notifications for a user with optional filters.
@@ -337,7 +321,7 @@ class NotificationService:
 
             if filters:
                 if filters.unread_only:
-                    query = query.filter(Notification.is_read == False)
+                    query = query.filter(~Notification.is_read)
 
                 if filters.type:
                     query = query.filter(Notification.type == filters.type.value)
@@ -347,12 +331,12 @@ class NotificationService:
 
                 if not filters.include_expired:
                     query = query.filter(
-                        (Notification.expires_at.is_(None)) |
-                        (Notification.expires_at > datetime.now())
+                        (Notification.expires_at.is_(None))
+                        | (Notification.expires_at > datetime.now())
                     )
 
                 if not filters.include_dismissed:
-                    query = query.filter(Notification.is_dismissed == False)
+                    query = query.filter(~Notification.is_dismissed)
 
                 if filters.offset:
                     query = query.offset(filters.offset)
@@ -370,14 +354,12 @@ class NotificationService:
                 resource_id="all",
                 action="read",
                 success=False,
-                error_message=str(error)
+                error_message=str(error),
             )
             raise NotificationError(f"Failed to retrieve notifications: {str(error)}")
 
     async def get_notification_by_id(
-        self,
-        notification_id: int,
-        user_id: int
+        self, notification_id: int, user_id: int
     ) -> Optional[Notification]:
         """
         Get a notification by ID with ownership verification.
@@ -392,9 +374,9 @@ class NotificationService:
         Raises:
             HTTPException: 403 if user doesn't own the notification
         """
-        notification = self.db.query(Notification).filter(
-            Notification.id == notification_id
-        ).first()
+        notification = (
+            self.db.query(Notification).filter(Notification.id == notification_id).first()
+        )
 
         if not notification:
             return None
@@ -406,11 +388,11 @@ class NotificationService:
                 resource_id=str(notification_id),
                 action="read",
                 success=False,
-                details={"reason": "User does not own this notification"}
+                details={"reason": "User does not own this notification"},
             )
             raise HTTPException(
                 status_code=403,
-                detail="Unauthorized: You do not have permission to access this notification"
+                detail="Unauthorized: You do not have permission to access this notification",
             )
 
         return notification
@@ -430,8 +412,7 @@ class NotificationService:
 
         if not notification:
             raise HTTPException(
-                status_code=404,
-                detail=f"Notification with ID {notification_id} not found"
+                status_code=404, detail=f"Notification with ID {notification_id} not found"
             )
 
         notification.is_read = True
@@ -443,7 +424,7 @@ class NotificationService:
             user_id=user_id,
             resource_id=str(notification_id),
             action="read",
-            success=True
+            success=True,
         )
 
         # Emit event to handlers
@@ -461,17 +442,10 @@ class NotificationService:
             Number of notifications marked as read
         """
         try:
-            count = self.db.query(Notification).filter(
-                and_(
-                    Notification.user_id == user_id,
-                    Notification.is_read == False
-                )
-            ).update(
-                {
-                    "is_read": True,
-                    "read_at": datetime.now()
-                },
-                synchronize_session=False
+            count = (
+                self.db.query(Notification)
+                .filter(and_(Notification.user_id == user_id, ~Notification.is_read))
+                .update({"is_read": True, "read_at": datetime.now()}, synchronize_session=False)
             )
             self.db.commit()
 
@@ -481,7 +455,7 @@ class NotificationService:
                 resource_id="bulk",
                 action="update",
                 success=True,
-                details={"count": count}
+                details={"count": count},
             )
 
             return count
@@ -505,8 +479,7 @@ class NotificationService:
 
         if not notification:
             raise HTTPException(
-                status_code=404,
-                detail=f"Notification with ID {notification_id} not found"
+                status_code=404, detail=f"Notification with ID {notification_id} not found"
             )
 
         notification.is_dismissed = True
@@ -517,7 +490,7 @@ class NotificationService:
             user_id=user_id,
             resource_id=str(notification_id),
             action="update",
-            success=True
+            success=True,
         )
 
         # Emit event to handlers
@@ -534,13 +507,17 @@ class NotificationService:
         Returns:
             Count of unread notifications
         """
-        return self.db.query(Notification).filter(
-            and_(
-                Notification.user_id == user_id,
-                Notification.is_read == False,
-                Notification.is_dismissed == False
+        return (
+            self.db.query(Notification)
+            .filter(
+                and_(
+                    Notification.user_id == user_id,
+                    ~Notification.is_read,
+                    ~Notification.is_dismissed,
+                )
             )
-        ).count()
+            .count()
+        )
 
     async def get_stats(self, user_id: int) -> NotificationStats:
         """
@@ -552,9 +529,7 @@ class NotificationService:
         Returns:
             Notification statistics
         """
-        notifications = self.db.query(Notification).filter(
-            Notification.user_id == user_id
-        ).all()
+        notifications = self.db.query(Notification).filter(Notification.user_id == user_id).all()
 
         total = len(notifications)
         unread = sum(1 for n in notifications if not n.is_read and not n.is_dismissed)
@@ -579,7 +554,7 @@ class NotificationService:
             high=high,
             medium=medium,
             low=low,
-            by_type=by_type
+            by_type=by_type,
         )
 
     async def get_preferences(self, user_id: int) -> NotificationPreferences:
@@ -592,9 +567,11 @@ class NotificationService:
         Returns:
             User notification preferences
         """
-        prefs = self.db.query(NotificationPreferences).filter(
-            NotificationPreferences.user_id == user_id
-        ).first()
+        prefs = (
+            self.db.query(NotificationPreferences)
+            .filter(NotificationPreferences.user_id == user_id)
+            .first()
+        )
 
         if prefs:
             return prefs
@@ -610,15 +587,13 @@ class NotificationService:
             user_id=user_id,
             resource_id=str(prefs.id),
             action="create",
-            success=True
+            success=True,
         )
 
         return prefs
 
     async def update_preferences(
-        self,
-        user_id: int,
-        updates: UpdateNotificationPreferencesInput
+        self, user_id: int, updates: UpdateNotificationPreferencesInput
     ) -> NotificationPreferences:
         """
         Update user notification preferences.
@@ -654,7 +629,7 @@ class NotificationService:
                 resource_id=str(prefs.id),
                 action="update",
                 success=True,
-                details={"changes": fields_updated}
+                details={"changes": fields_updated},
             )
 
             return prefs
@@ -671,12 +646,16 @@ class NotificationService:
             Number of notifications deleted
         """
         try:
-            deleted_count = self.db.query(Notification).filter(
-                and_(
-                    Notification.expires_at.isnot(None),
-                    Notification.expires_at <= datetime.now()
+            deleted_count = (
+                self.db.query(Notification)
+                .filter(
+                    and_(
+                        Notification.expires_at.isnot(None),
+                        Notification.expires_at <= datetime.now(),
+                    )
                 )
-            ).delete(synchronize_session=False)
+                .delete(synchronize_session=False)
+            )
 
             self.db.commit()
 
@@ -687,7 +666,7 @@ class NotificationService:
                     resource_id="bulk",
                     action="delete",
                     success=True,
-                    details={"deletedCount": deleted_count}
+                    details={"deletedCount": deleted_count},
                 )
 
             return deleted_count
@@ -697,11 +676,7 @@ class NotificationService:
             raise NotificationError(f"Failed to cleanup expired notifications: {str(error)}")
 
     async def create_system_notification(
-        self,
-        user_id: int,
-        severity: NotificationSeverity,
-        title: str,
-        message: str
+        self, user_id: int, severity: NotificationSeverity, title: str, message: str
     ) -> Notification:
         """
         Create a system notification with automatic type determination.
@@ -731,6 +706,6 @@ class NotificationService:
                 type=notification_type,
                 severity=severity,
                 title=title,
-                message=message
+                message=message,
             )
         )

@@ -23,7 +23,7 @@ Service Layer Integration:
 - Dependency injection for clean architecture
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Header, Query, status, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, status, Request
 from pydantic import BaseModel, Field, field_validator
 from typing import Optional, List, Dict, Any
 from sqlalchemy.orm import Session
@@ -36,8 +36,6 @@ from backend.services.tag_service import (
     TagService,
     CreateTagInput,
     UpdateTagInput,
-    TagResponse as ServiceTagResponse,
-    TagStatistics as ServiceTagStatistics
 )
 from backend.services.audit_logger import AuditLogger
 
@@ -47,11 +45,14 @@ router = APIRouter(prefix="/tags", tags=["tags"])
 # ===== PYDANTIC REQUEST MODELS =====
 class CreateTagRequest(BaseModel):
     """Request model for creating a new tag."""
+
     name: str = Field(..., min_length=1, max_length=50, description="Tag name")
-    color: str = Field(..., pattern=r"^#[0-9A-Fa-f]{6}$", description="Hex color code (e.g., #FF0000)")
+    color: str = Field(
+        ..., pattern=r"^#[0-9A-Fa-f]{6}$", description="Hex color code (e.g., #FF0000)"
+    )
     description: Optional[str] = Field(None, max_length=200, description="Optional tag description")
 
-    @field_validator('name')
+    @field_validator("name")
     @classmethod
     def strip_and_validate_name(cls, v):
         v = v.strip()
@@ -59,21 +60,22 @@ class CreateTagRequest(BaseModel):
             raise ValueError("Tag name cannot be empty")
         return v
 
-    @field_validator('color')
+    @field_validator("color")
     @classmethod
     def validate_hex_color(cls, v):
-        if not v or len(v) != 7 or not v.startswith('#'):
+        if not v or len(v) != 7 or not v.startswith("#"):
             raise ValueError("Valid hex color is required (e.g., #FF0000)")
         return v.upper()
 
 
 class UpdateTagRequest(BaseModel):
     """Request model for updating an existing tag."""
+
     name: Optional[str] = Field(None, min_length=1, max_length=50)
     color: Optional[str] = Field(None, pattern=r"^#[0-9A-Fa-f]{6}$")
     description: Optional[str] = Field(None, max_length=200)
 
-    @field_validator('name')
+    @field_validator("name")
     @classmethod
     def strip_name(cls, v):
         if v:
@@ -82,26 +84,28 @@ class UpdateTagRequest(BaseModel):
                 raise ValueError("Tag name cannot be empty")
         return v
 
-    @field_validator('color')
+    @field_validator("color")
     @classmethod
     def validate_hex_color(cls, v):
-        if v and (len(v) != 7 or not v.startswith('#')):
+        if v and (len(v) != 7 or not v.startswith("#")):
             raise ValueError("Valid hex color is required (e.g., #FF0000)")
         return v.upper() if v else None
 
 
 class SearchCasesByTagsRequest(BaseModel):
     """Request model for searching cases by tags."""
+
     tag_ids: List[int] = Field(..., min_length=1, description="List of tag IDs to search for")
     match_all: bool = Field(
         True,
-        description="If true, cases must have ALL tags (AND logic). If false, cases must have ANY tag (OR logic)."
+        description="If true, cases must have ALL tags (AND logic). If false, cases must have ANY tag (OR logic).",
     )
 
 
 # ===== PYDANTIC RESPONSE MODELS =====
 class TagResponse(BaseModel):
     """Response model for tag data."""
+
     id: int
     userId: int
     name: str
@@ -117,6 +121,7 @@ class TagResponse(BaseModel):
 
 class CaseTagResponse(BaseModel):
     """Response model for case-tag association."""
+
     caseId: int
     tagId: int
     createdAt: str
@@ -127,12 +132,14 @@ class CaseTagResponse(BaseModel):
 
 class DeleteTagResponse(BaseModel):
     """Response model for tag deletion."""
+
     deleted: bool
     id: int
 
 
 class TagStatisticsResponse(BaseModel):
     """Response model for tag statistics."""
+
     totalTags: int
     tagsWithCases: int
     mostUsedTags: List[Dict[str, Any]]
@@ -141,6 +148,7 @@ class TagStatisticsResponse(BaseModel):
 
 class SearchCasesByTagsResponse(BaseModel):
     """Response model for tag search results."""
+
     caseIds: List[int]
     matchAll: bool
     tagIds: List[int]
@@ -175,9 +183,9 @@ def tag_to_response(tag: Tag) -> TagResponse:
         name=tag.name,
         color=tag.color,
         description=tag.description,
-        usageCount=getattr(tag, 'usage_count', 0),
+        usageCount=getattr(tag, "usage_count", 0),
         createdAt=tag.created_at.isoformat() if tag.created_at else None,
-        updatedAt=tag.updated_at.isoformat() if tag.updated_at else None
+        updatedAt=tag.updated_at.isoformat() if tag.updated_at else None,
     )
 
 
@@ -201,17 +209,12 @@ async def create_tag(
 
     # Convert request to service input
     input_data = CreateTagInput(
-        name=tag_request.name,
-        color=tag_request.color,
-        description=tag_request.description
+        name=tag_request.name, color=tag_request.color, description=tag_request.description
     )
 
     # Create tag via service layer
     tag = tag_service.create_tag(
-        user_id=user_id,
-        input_data=input_data,
-        ip_address=ip_address,
-        user_agent=user_agent
+        user_id=user_id, input_data=input_data, ip_address=ip_address, user_agent=user_agent
     )
 
     return tag_to_response(tag)
@@ -219,8 +222,7 @@ async def create_tag(
 
 @router.get("", response_model=List[TagResponse])
 async def list_tags(
-    user_id: int = Depends(get_current_user),
-    tag_service: TagService = Depends(get_tag_service)
+    user_id: int = Depends(get_current_user), tag_service: TagService = Depends(get_tag_service)
 ):
     """
     List all tags for the authenticated user.
@@ -237,9 +239,11 @@ async def list_tags(
 @router.get("/search", response_model=SearchCasesByTagsResponse)
 async def search_cases_by_tags(
     tag_ids: str = Query(..., description="Comma-separated list of tag IDs (e.g., '1,2,3')"),
-    match_all: bool = Query(True, description="If true, cases must have ALL tags (AND). If false, ANY tag (OR)."),
+    match_all: bool = Query(
+        True, description="If true, cases must have ALL tags (AND). If false, ANY tag (OR)."
+    ),
     user_id: int = Depends(get_current_user),
-    tag_service: TagService = Depends(get_tag_service)
+    tag_service: TagService = Depends(get_tag_service),
 ):
     """
     Search cases by tags with AND or OR logic.
@@ -258,40 +262,29 @@ async def search_cases_by_tags(
     """
     try:
         # Parse tag_ids from comma-separated string
-        tag_id_list = [int(tid.strip()) for tid in tag_ids.split(',') if tid.strip()]
+        tag_id_list = [int(tid.strip()) for tid in tag_ids.split(",") if tid.strip()]
 
         if not tag_id_list:
-            raise HTTPException(
-                status_code=400,
-                detail="At least one tag ID is required"
-            )
+            raise HTTPException(status_code=400, detail="At least one tag ID is required")
 
         # Search via service layer
         case_ids = tag_service.search_cases_by_tags(
-            user_id=user_id,
-            tag_ids=tag_id_list,
-            match_all=match_all
+            user_id=user_id, tag_ids=tag_id_list, match_all=match_all
         )
 
         return SearchCasesByTagsResponse(
-            caseIds=case_ids,
-            matchAll=match_all,
-            tagIds=tag_id_list,
-            resultCount=len(case_ids)
+            caseIds=case_ids, matchAll=match_all, tagIds=tag_id_list, resultCount=len(case_ids)
         )
 
     except ValueError as e:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Invalid tag_ids format: {str(e)}"
-        )
+        raise HTTPException(status_code=400, detail=f"Invalid tag_ids format: {str(e)}")
 
 
 @router.get("/{tag_id}", response_model=TagResponse)
 async def get_tag(
     tag_id: int,
     user_id: int = Depends(get_current_user),
-    tag_service: TagService = Depends(get_tag_service)
+    tag_service: TagService = Depends(get_tag_service),
 ):
     """
     Get a specific tag by ID.
@@ -300,16 +293,11 @@ async def get_tag(
 
     **Service Layer:** Uses TagService.get_tag_by_id()
     """
-    tag = tag_service.get_tag_by_id(
-        tag_id=tag_id,
-        user_id=user_id,
-        include_usage_count=True
-    )
+    tag = tag_service.get_tag_by_id(tag_id=tag_id, user_id=user_id, include_usage_count=True)
 
     if not tag:
         raise HTTPException(
-            status_code=404,
-            detail=f"Tag with ID {tag_id} not found or unauthorized"
+            status_code=404, detail=f"Tag with ID {tag_id} not found or unauthorized"
         )
 
     return tag_to_response(tag)
@@ -321,7 +309,7 @@ async def update_tag(
     tag_id: int,
     tag_request: UpdateTagRequest,
     user_id: int = Depends(get_current_user),
-    tag_service: TagService = Depends(get_tag_service)
+    tag_service: TagService = Depends(get_tag_service),
 ):
     """
     Update an existing tag.
@@ -336,15 +324,12 @@ async def update_tag(
     # Ensure at least one field is provided
     if tag_request.name is None and tag_request.color is None and tag_request.description is None:
         raise HTTPException(
-            status_code=400,
-            detail="At least one field must be provided for update"
+            status_code=400, detail="At least one field must be provided for update"
         )
 
     # Convert request to service input
     input_data = UpdateTagInput(
-        name=tag_request.name,
-        color=tag_request.color,
-        description=tag_request.description
+        name=tag_request.name, color=tag_request.color, description=tag_request.description
     )
 
     # Update tag via service layer
@@ -353,7 +338,7 @@ async def update_tag(
         user_id=user_id,
         input_data=input_data,
         ip_address=ip_address,
-        user_agent=user_agent
+        user_agent=user_agent,
     )
 
     return tag_to_response(tag)
@@ -364,7 +349,7 @@ async def delete_tag(
     request: Request,
     tag_id: int,
     user_id: int = Depends(get_current_user),
-    tag_service: TagService = Depends(get_tag_service)
+    tag_service: TagService = Depends(get_tag_service),
 ):
     """
     Delete a tag.
@@ -378,10 +363,7 @@ async def delete_tag(
 
     # Delete tag via service layer
     tag_service.delete_tag(
-        tag_id=tag_id,
-        user_id=user_id,
-        ip_address=ip_address,
-        user_agent=user_agent
+        tag_id=tag_id, user_id=user_id, ip_address=ip_address, user_agent=user_agent
     )
 
     return DeleteTagResponse(deleted=True, id=tag_id)
@@ -393,7 +375,7 @@ async def attach_tag_to_case(
     tag_id: int,
     case_id: int,
     user_id: int = Depends(get_current_user),
-    tag_service: TagService = Depends(get_tag_service)
+    tag_service: TagService = Depends(get_tag_service),
 ):
     """
     Attach a tag to a case.
@@ -411,15 +393,17 @@ async def attach_tag_to_case(
         case_id=case_id,
         user_id=user_id,
         ip_address=ip_address,
-        user_agent=user_agent
+        user_agent=user_agent,
     )
 
     return {
         "success": True,
-        "message": "Tag attached to case successfully" if was_attached else "Tag already attached to case",
+        "message": (
+            "Tag attached to case successfully" if was_attached else "Tag already attached to case"
+        ),
         "caseId": case_id,
         "tagId": tag_id,
-        "wasAttached": was_attached
+        "wasAttached": was_attached,
     }
 
 
@@ -429,7 +413,7 @@ async def remove_tag_from_case(
     tag_id: int,
     case_id: int,
     user_id: int = Depends(get_current_user),
-    tag_service: TagService = Depends(get_tag_service)
+    tag_service: TagService = Depends(get_tag_service),
 ):
     """
     Remove a tag from a case.
@@ -447,15 +431,17 @@ async def remove_tag_from_case(
         case_id=case_id,
         user_id=user_id,
         ip_address=ip_address,
-        user_agent=user_agent
+        user_agent=user_agent,
     )
 
     return {
         "success": True,
-        "message": "Tag removed from case successfully" if was_removed else "Tag was not attached to case",
+        "message": (
+            "Tag removed from case successfully" if was_removed else "Tag was not attached to case"
+        ),
         "caseId": case_id,
         "tagId": tag_id,
-        "removed": was_removed
+        "removed": was_removed,
     }
 
 
@@ -464,7 +450,7 @@ async def list_cases_with_tag(
     tag_id: int,
     user_id: int = Depends(get_current_user),
     tag_service: TagService = Depends(get_tag_service),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     List all cases that have a specific tag.
@@ -486,8 +472,9 @@ async def list_cases_with_tag(
         return []
 
     # Query case details from database
-    placeholders = ','.join([f':id_{i}' for i in range(len(case_ids))])
-    query = text(f"""
+    placeholders = ",".join([f":id_{i}" for i in range(len(case_ids))])
+    query = text(
+        f"""
         SELECT
             c.id,
             c.title,
@@ -507,10 +494,11 @@ async def list_cases_with_tag(
         FROM cases c
         WHERE c.id IN ({placeholders}) AND c.user_id = :user_id
         ORDER BY c.updated_at DESC
-    """)
+    """
+    )
 
-    params = {f'id_{i}': case_id for i, case_id in enumerate(case_ids)}
-    params['user_id'] = user_id
+    params = {f"id_{i}": case_id for i, case_id in enumerate(case_ids)}
+    params["user_id"] = user_id
 
     cases = db.execute(query, params).fetchall()
 
@@ -518,8 +506,12 @@ async def list_cases_with_tag(
     result = []
     for case in cases:
         case_dict = dict(case._mapping)
-        case_dict['createdAt'] = case_dict['createdAt'].isoformat() if case_dict.get('createdAt') else None
-        case_dict['updatedAt'] = case_dict['updatedAt'].isoformat() if case_dict.get('updatedAt') else None
+        case_dict["createdAt"] = (
+            case_dict["createdAt"].isoformat() if case_dict.get("createdAt") else None
+        )
+        case_dict["updatedAt"] = (
+            case_dict["updatedAt"].isoformat() if case_dict.get("updatedAt") else None
+        )
         result.append(case_dict)
 
     return result
@@ -530,7 +522,7 @@ async def list_tags_for_case(
     case_id: int,
     user_id: int = Depends(get_current_user),
     tag_service: TagService = Depends(get_tag_service),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     List all tags for a specific case.
@@ -541,14 +533,12 @@ async def list_tags_for_case(
     """
     # Verify user owns the case
     from sqlalchemy import text
+
     case_check = text("SELECT id FROM cases WHERE id = :case_id AND user_id = :user_id")
     case_exists = db.execute(case_check, {"case_id": case_id, "user_id": user_id}).fetchone()
 
     if not case_exists:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Case with ID {case_id} not found"
-        )
+        raise HTTPException(status_code=404, detail=f"Case with ID {case_id} not found")
 
     # Get tags via service layer
     tags = tag_service.get_case_tags(case_id=case_id, user_id=user_id)
@@ -558,8 +548,7 @@ async def list_tags_for_case(
 
 @router.get("/statistics", response_model=TagStatisticsResponse)
 async def get_tag_statistics(
-    user_id: int = Depends(get_current_user),
-    tag_service: TagService = Depends(get_tag_service)
+    user_id: int = Depends(get_current_user), tag_service: TagService = Depends(get_tag_service)
 ):
     """
     Get tag usage statistics for the authenticated user.
@@ -578,28 +567,26 @@ async def get_tag_statistics(
     # Convert most_used_tag to dict format for response
     most_used_tags = []
     if stats.most_used_tag:
-        most_used_tags.append({
-            "id": stats.most_used_tag.id,
-            "name": stats.most_used_tag.name,
-            "color": stats.most_used_tag.color,
-            "usageCount": stats.most_used_tag.usage_count
-        })
+        most_used_tags.append(
+            {
+                "id": stats.most_used_tag.id,
+                "name": stats.most_used_tag.name,
+                "color": stats.most_used_tag.color,
+                "usageCount": stats.most_used_tag.usage_count,
+            }
+        )
 
     # Get all tags to build unused_tags list
     all_tags = tag_service.get_tags(user_id=user_id, include_usage_count=True)
     unused_tags = [
-        {
-            "id": tag.id,
-            "name": tag.name,
-            "color": tag.color
-        }
+        {"id": tag.id, "name": tag.name, "color": tag.color}
         for tag in all_tags
-        if getattr(tag, 'usage_count', 0) == 0
+        if getattr(tag, "usage_count", 0) == 0
     ]
 
     return TagStatisticsResponse(
         totalTags=stats.total_tags,
         tagsWithCases=stats.total_tagged_cases,
         mostUsedTags=most_used_tags,
-        unusedTags=unused_tags
+        unusedTags=unused_tags,
     )

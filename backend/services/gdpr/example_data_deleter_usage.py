@@ -17,16 +17,15 @@ from backend.services.gdpr.data_deleter import (
     DataDeleter,
     GdprDeleteOptions,
     DeletionNotConfirmedError,
-    DeletionError
 )
 from backend.services.audit_logger import AuditLogger
 
 
 def example_basic_deletion():
     """Example 1: Basic user data deletion."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Example 1: Basic User Data Deletion")
-    print("="*60)
+    print("=" * 60)
 
     # Setup database connection
     engine = create_engine("sqlite:///test_deletion.db")
@@ -42,9 +41,8 @@ def example_basic_deletion():
         result = deleter.delete_all_user_data(
             user_id=123,
             options=GdprDeleteOptions(
-                confirmed=True,
-                reason="User requested account deletion via settings page"
-            )
+                confirmed=True, reason="User requested account deletion via settings page"
+            ),
         )
 
         # Check results
@@ -69,9 +67,9 @@ def example_basic_deletion():
 
 def example_validation_before_deletion():
     """Example 2: Validate before deletion."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Example 2: Validate Before Deletion")
-    print("="*60)
+    print("=" * 60)
 
     # Setup database connection
     engine = create_engine("sqlite:///test_deletion.db")
@@ -115,9 +113,8 @@ def example_validation_before_deletion():
         result = deleter.delete_all_user_data(
             user_id=user_id,
             options=GdprDeleteOptions(
-                confirmed=True,
-                reason="User confirmed deletion after validation"
-            )
+                confirmed=True, reason="User confirmed deletion after validation"
+            ),
         )
 
         print(f"✅ Deletion completed successfully")
@@ -131,9 +128,9 @@ def example_validation_before_deletion():
 
 def example_error_handling():
     """Example 3: Error handling."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Example 3: Error Handling")
-    print("="*60)
+    print("=" * 60)
 
     # Setup database connection
     engine = create_engine("sqlite:///test_deletion.db")
@@ -151,8 +148,7 @@ def example_error_handling():
         print("\n❌ Attempt 1: Without confirmation...")
         try:
             result = deleter.delete_all_user_data(
-                user_id=user_id,
-                options=GdprDeleteOptions(confirmed=False)
+                user_id=user_id, options=GdprDeleteOptions(confirmed=False)
             )
         except DeletionNotConfirmedError as e:
             print(f"   Caught expected error: {e}")
@@ -168,10 +164,7 @@ def example_error_handling():
         existing_user_id = 123
         result = deleter.delete_all_user_data(
             user_id=existing_user_id,
-            options=GdprDeleteOptions(
-                confirmed=True,
-                reason="Test deletion"
-            )
+            options=GdprDeleteOptions(confirmed=True, reason="Test deletion"),
         )
         print(f"   Deletion successful: {result.success}")
 
@@ -183,9 +176,9 @@ def example_error_handling():
 
 def example_with_statistics():
     """Example 4: Deletion with detailed statistics."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Example 4: Deletion with Detailed Statistics")
-    print("="*60)
+    print("=" * 60)
 
     # Setup database connection
     engine = create_engine("sqlite:///test_deletion.db")
@@ -208,26 +201,27 @@ def example_with_statistics():
             try:
                 result = db.execute(
                     text(f"SELECT COUNT(*) FROM {table} WHERE user_id = :user_id"),
-                    {"user_id": user_id}
+                    {"user_id": user_id},
                 )
                 count = result.fetchone()[0]
                 before_counts[table] = count
                 print(f"  - {table}: {count} records")
-            except:
+            except Exception:
                 before_counts[table] = 0
 
         # Execute deletion
         print(f"\n🗑️  Executing deletion...")
         result = deleter.delete_all_user_data(
-            user_id=user_id,
-            options=GdprDeleteOptions(confirmed=True)
+            user_id=user_id, options=GdprDeleteOptions(confirmed=True)
         )
 
         # Show deletion statistics
         print(f"\n✅ Deletion completed:")
         print(f"  - Success: {result.success}")
         print(f"  - Date: {result.deletion_date}")
-        print(f"  - Total tables affected: {len([c for c in result.deleted_counts.values() if c > 0])}")
+        print(
+            f"  - Total tables affected: {len([c for c in result.deleted_counts.values() if c > 0])}"
+        )
         print(f"  - Total records deleted: {sum(result.deleted_counts.values())}")
 
         print(f"\n📈 Breakdown by table:")
@@ -248,9 +242,9 @@ def example_with_statistics():
 
 def example_batch_deletion():
     """Example 5: Batch deletion of multiple users."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Example 5: Batch Deletion of Multiple Users")
-    print("="*60)
+    print("=" * 60)
 
     # Setup database connection
     engine = create_engine("sqlite:///test_deletion.db")
@@ -279,9 +273,8 @@ def example_batch_deletion():
                 result = deleter.delete_all_user_data(
                     user_id=user_id,
                     options=GdprDeleteOptions(
-                        confirmed=True,
-                        reason="Batch deletion - inactive accounts"
-                    )
+                        confirmed=True, reason="Batch deletion - inactive accounts"
+                    ),
                 )
 
                 if result.success:
@@ -310,9 +303,9 @@ def example_batch_deletion():
 
 
 if __name__ == "__main__":
-    print("="*60)
+    print("=" * 60)
     print("DataDeleter Service - Usage Examples")
-    print("="*60)
+    print("=" * 60)
 
     # Run examples
     example_basic_deletion()
@@ -321,6 +314,6 @@ if __name__ == "__main__":
     example_with_statistics()
     example_batch_deletion()
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("All examples completed!")
-    print("="*60)
+    print("=" * 60)

@@ -17,9 +17,6 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from backend.services.authorization_service import (
     AuthorizationService,
-    PermissionCheckResult,
-    Permission,
-    Role
 )
 
 
@@ -30,7 +27,9 @@ def setup_test_database():
     db = SessionLocal()
 
     # Create RBAC schema
-    db.execute(text("""
+    db.execute(
+        text(
+            """
         CREATE TABLE roles (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL UNIQUE,
@@ -40,9 +39,13 @@ def setup_test_database():
             created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
             updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
         )
-    """))
+    """
+        )
+    )
 
-    db.execute(text("""
+    db.execute(
+        text(
+            """
         CREATE TABLE permissions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL UNIQUE,
@@ -51,18 +54,26 @@ def setup_test_database():
             description TEXT,
             created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
         )
-    """))
+    """
+        )
+    )
 
-    db.execute(text("""
+    db.execute(
+        text(
+            """
         CREATE TABLE role_permissions (
             role_id INTEGER NOT NULL,
             permission_id INTEGER NOT NULL,
             created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY (role_id, permission_id)
         )
-    """))
+    """
+        )
+    )
 
-    db.execute(text("""
+    db.execute(
+        text(
+            """
         CREATE TABLE user_roles (
             user_id INTEGER NOT NULL,
             role_id INTEGER NOT NULL,
@@ -70,18 +81,26 @@ def setup_test_database():
             assigned_by INTEGER,
             PRIMARY KEY (user_id, role_id)
         )
-    """))
+    """
+        )
+    )
 
     # Seed data
-    db.execute(text("""
+    db.execute(
+        text(
+            """
         INSERT INTO roles (id, name, display_name, description, is_system_role)
         VALUES
             (1, 'admin', 'Administrator', 'Full system access', 1),
             (2, 'user', 'Standard User', 'Standard user access', 1),
             (3, 'viewer', 'Viewer', 'Read-only access', 1)
-    """))
+    """
+        )
+    )
 
-    db.execute(text("""
+    db.execute(
+        text(
+            """
         INSERT INTO permissions (id, name, resource, action, description)
         VALUES
             (1, 'cases.create', 'cases', 'create', 'Create cases'),
@@ -93,26 +112,36 @@ def setup_test_database():
             (7, 'users.update', 'users', 'update', 'Edit users'),
             (8, 'users.delete', 'users', 'delete', 'Delete users'),
             (9, 'export.data', 'export', 'execute', 'Export data')
-    """))
+    """
+        )
+    )
 
     # Assign permissions to roles
-    db.execute(text("""
+    db.execute(
+        text(
+            """
         INSERT INTO role_permissions (role_id, permission_id)
         VALUES
             (1, 1), (1, 2), (1, 3), (1, 4),
             (1, 5), (1, 6), (1, 7), (1, 8), (1, 9),
             (2, 1), (2, 2), (2, 3), (2, 4), (2, 9),
             (3, 2), (3, 6)
-    """))
+    """
+        )
+    )
 
     # Assign roles to users
-    db.execute(text("""
+    db.execute(
+        text(
+            """
         INSERT INTO user_roles (user_id, role_id, assigned_by)
         VALUES
             (1, 1, NULL),  -- User 1 is admin
             (2, 2, 1),     -- User 2 is standard user
             (3, 3, 1)      -- User 3 is viewer
-    """))
+    """
+        )
+    )
 
     db.commit()
     return db
@@ -147,15 +176,13 @@ async def example_2_multiple_permissions_and():
 
     # Admin should have all case permissions
     result = await auth_service.has_all_permissions(
-        user_id=1,
-        permission_names=["cases.create", "cases.read", "cases.update", "cases.delete"]
+        user_id=1, permission_names=["cases.create", "cases.read", "cases.update", "cases.delete"]
     )
     print(f"Admin has all case permissions: {result.allowed}")
 
     # Standard user has case permissions but not user management
     result = await auth_service.has_all_permissions(
-        user_id=2,
-        permission_names=["cases.create", "users.create"]
+        user_id=2, permission_names=["cases.create", "users.create"]
     )
     print(f"Standard user has cases + users permissions: {result.allowed}")
     if not result.allowed:
@@ -173,15 +200,13 @@ async def example_3_multiple_permissions_or():
 
     # Viewer can read cases OR users (has cases.read)
     result = await auth_service.has_any_permission(
-        user_id=3,
-        permission_names=["cases.read", "users.read"]
+        user_id=3, permission_names=["cases.read", "users.read"]
     )
     print(f"Viewer has any read permission: {result.allowed}")
 
     # Viewer cannot create anything
     result = await auth_service.has_any_permission(
-        user_id=3,
-        permission_names=["cases.create", "users.create", "cases.delete"]
+        user_id=3, permission_names=["cases.create", "users.create", "cases.delete"]
     )
     print(f"Viewer has any create/delete permission: {result.allowed}")
     if not result.allowed:
@@ -268,9 +293,7 @@ async def example_7_assign_role():
 
     # Assign standard user role
     await auth_service.assign_role(
-        user_id=4,
-        role_id=2,  # Standard user role
-        assigned_by=1  # Assigned by admin
+        user_id=4, role_id=2, assigned_by=1  # Standard user role  # Assigned by admin
     )
     print("Assigned 'user' role to User 4")
 
@@ -349,10 +372,7 @@ async def example_10_require_permission_guard():
     async def create_case_endpoint(user_id: int):
         try:
             # Guard: Require permission
-            await auth_service.require_permission(
-                user_id=user_id,
-                permission_name="cases.create"
-            )
+            await auth_service.require_permission(user_id=user_id, permission_name="cases.create")
             return "Case created successfully!"
         except HTTPException as e:
             return f"Error {e.status_code}: {e.detail}"
@@ -381,10 +401,7 @@ async def example_11_require_role_guard():
     async def admin_endpoint(user_id: int):
         try:
             # Guard: Require admin role
-            await auth_service.require_role(
-                user_id=user_id,
-                role_name="admin"
-            )
+            await auth_service.require_role(user_id=user_id, role_name="admin")
             return "Admin operation completed!"
         except HTTPException as e:
             return f"Error {e.status_code}: {e.detail}"
@@ -421,10 +438,7 @@ async def example_12_complex_permission_scenario():
             return True
 
         # Check if user has required permissions
-        result = await auth_service.has_all_permissions(
-            user_id,
-            ["cases.read", "export.data"]
-        )
+        result = await auth_service.has_all_permissions(user_id, ["cases.read", "export.data"])
 
         if result.allowed:
             print(f"  User {user_id} has required permissions - export allowed")

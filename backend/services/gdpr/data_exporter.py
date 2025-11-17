@@ -47,11 +47,7 @@ class TableExport:
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
-        return {
-            "tableName": self.table_name,
-            "records": self.records,
-            "count": self.count
-        }
+        return {"tableName": self.table_name, "records": self.records, "count": self.count}
 
 
 class ExportMetadata:
@@ -63,7 +59,7 @@ class ExportMetadata:
         user_id: int,
         schema_version: str,
         export_format: str,
-        total_records: int
+        total_records: int,
     ):
         """
         Initialize export metadata.
@@ -88,7 +84,7 @@ class ExportMetadata:
             "userId": self.user_id,
             "schemaVersion": self.schema_version,
             "format": self.format,
-            "totalRecords": self.total_records
+            "totalRecords": self.total_records,
         }
 
 
@@ -111,9 +107,8 @@ class UserDataExport:
         return {
             "metadata": self.metadata.to_dict(),
             "userData": {
-                key: table_export.to_dict()
-                for key, table_export in self.user_data.items()
-            }
+                key: table_export.to_dict() for key, table_export in self.user_data.items()
+            },
         }
 
 
@@ -124,7 +119,7 @@ class GdprExportOptions:
         self,
         export_format: str = "json",
         include_files: bool = False,
-        date_range: Optional[Dict[str, str]] = None
+        date_range: Optional[Dict[str, str]] = None,
     ):
         """
         Initialize export options.
@@ -164,9 +159,7 @@ class DataExporter:
         self.encryption_service = encryption_service
 
     def export_all_user_data(
-        self,
-        user_id: int,
-        options: Optional[GdprExportOptions] = None
+        self, user_id: int, options: Optional[GdprExportOptions] = None
     ) -> UserDataExport:
         """
         Export all user data across 13 tables with decryption.
@@ -214,7 +207,7 @@ class DataExporter:
             user_id=user_id,
             schema_version=self._get_schema_version(),
             export_format=options.format,
-            total_records=total_records
+            total_records=total_records,
         )
 
         return UserDataExport(metadata=metadata, user_data=user_data)
@@ -231,12 +224,14 @@ class DataExporter:
         Returns:
             TableExport with user profile data
         """
-        query = text("""
+        query = text(
+            """
             SELECT
                 id, username, email, created_at, updated_at, last_login_at
             FROM users
             WHERE id = :user_id
-        """)
+        """
+        )
 
         result = self.db.execute(query, {"user_id": user_id})
         row = result.fetchone()
@@ -251,11 +246,7 @@ class DataExporter:
         else:
             records = []
 
-        return TableExport(
-            table_name="users",
-            records=records,
-            count=len(records)
-        )
+        return TableExport(table_name="users", records=records, count=len(records))
 
     def _export_cases(self, user_id: int) -> TableExport:
         """
@@ -269,11 +260,13 @@ class DataExporter:
         Returns:
             TableExport with case data
         """
-        query = text("""
+        query = text(
+            """
             SELECT * FROM cases
             WHERE user_id = :user_id
             ORDER BY created_at DESC
-        """)
+        """
+        )
 
         result = self.db.execute(query, {"user_id": user_id})
         cases = [dict(row._mapping) for row in result.fetchall()]
@@ -292,11 +285,7 @@ class DataExporter:
 
             decrypted_cases.append(case)
 
-        return TableExport(
-            table_name="cases",
-            records=decrypted_cases,
-            count=len(decrypted_cases)
-        )
+        return TableExport(table_name="cases", records=decrypted_cases, count=len(decrypted_cases))
 
     def _export_evidence(self, user_id: int) -> TableExport:
         """
@@ -310,13 +299,15 @@ class DataExporter:
         Returns:
             TableExport with evidence data
         """
-        query = text("""
+        query = text(
+            """
             SELECT e.*
             FROM evidence e
             JOIN cases c ON e.case_id = c.id
             WHERE c.user_id = :user_id
             ORDER BY e.created_at DESC
-        """)
+        """
+        )
 
         result = self.db.execute(query, {"user_id": user_id})
         evidence_records = [dict(row._mapping) for row in result.fetchall()]
@@ -336,9 +327,7 @@ class DataExporter:
             decrypted_evidence.append(record)
 
         return TableExport(
-            table_name="evidence",
-            records=decrypted_evidence,
-            count=len(decrypted_evidence)
+            table_name="evidence", records=decrypted_evidence, count=len(decrypted_evidence)
         )
 
     def _export_legal_issues(self, user_id: int) -> TableExport:
@@ -351,13 +340,15 @@ class DataExporter:
         Returns:
             TableExport with legal issues data
         """
-        query = text("""
+        query = text(
+            """
             SELECT li.*
             FROM legal_issues li
             JOIN cases c ON li.case_id = c.id
             WHERE c.user_id = :user_id
             ORDER BY li.created_at DESC
-        """)
+        """
+        )
 
         result = self.db.execute(query, {"user_id": user_id})
         issues = [dict(row._mapping) for row in result.fetchall()]
@@ -368,11 +359,7 @@ class DataExporter:
                 if issue.get(key):
                     issue[key] = issue[key].isoformat()
 
-        return TableExport(
-            table_name="legal_issues",
-            records=issues,
-            count=len(issues)
-        )
+        return TableExport(table_name="legal_issues", records=issues, count=len(issues))
 
     def _export_timeline_events(self, user_id: int) -> TableExport:
         """
@@ -386,13 +373,15 @@ class DataExporter:
         Returns:
             TableExport with timeline events data
         """
-        query = text("""
+        query = text(
+            """
             SELECT te.*
             FROM timeline_events te
             JOIN cases c ON te.case_id = c.id
             WHERE c.user_id = :user_id
             ORDER BY te.event_date DESC
-        """)
+        """
+        )
 
         result = self.db.execute(query, {"user_id": user_id})
         events = [dict(row._mapping) for row in result.fetchall()]
@@ -412,9 +401,7 @@ class DataExporter:
             decrypted_events.append(event)
 
         return TableExport(
-            table_name="timeline_events",
-            records=decrypted_events,
-            count=len(decrypted_events)
+            table_name="timeline_events", records=decrypted_events, count=len(decrypted_events)
         )
 
     def _export_actions(self, user_id: int) -> TableExport:
@@ -429,13 +416,15 @@ class DataExporter:
         Returns:
             TableExport with actions data
         """
-        query = text("""
+        query = text(
+            """
             SELECT a.*
             FROM actions a
             JOIN cases c ON a.case_id = c.id
             WHERE c.user_id = :user_id
             ORDER BY a.due_date DESC
-        """)
+        """
+        )
 
         result = self.db.execute(query, {"user_id": user_id})
         actions = [dict(row._mapping) for row in result.fetchall()]
@@ -455,9 +444,7 @@ class DataExporter:
             decrypted_actions.append(action)
 
         return TableExport(
-            table_name="actions",
-            records=decrypted_actions,
-            count=len(decrypted_actions)
+            table_name="actions", records=decrypted_actions, count=len(decrypted_actions)
         )
 
     def _export_notes(self, user_id: int) -> TableExport:
@@ -472,13 +459,15 @@ class DataExporter:
         Returns:
             TableExport with notes data
         """
-        query = text("""
+        query = text(
+            """
             SELECT n.*
             FROM notes n
             JOIN cases c ON n.case_id = c.id
             WHERE c.user_id = :user_id
             ORDER BY n.created_at DESC
-        """)
+        """
+        )
 
         result = self.db.execute(query, {"user_id": user_id})
         notes = [dict(row._mapping) for row in result.fetchall()]
@@ -497,11 +486,7 @@ class DataExporter:
 
             decrypted_notes.append(note)
 
-        return TableExport(
-            table_name="notes",
-            records=decrypted_notes,
-            count=len(decrypted_notes)
-        )
+        return TableExport(table_name="notes", records=decrypted_notes, count=len(decrypted_notes))
 
     def _export_chat_conversations(self, user_id: int) -> TableExport:
         """
@@ -513,11 +498,13 @@ class DataExporter:
         Returns:
             TableExport with chat conversations data
         """
-        query = text("""
+        query = text(
+            """
             SELECT * FROM chat_conversations
             WHERE user_id = :user_id
             ORDER BY created_at DESC
-        """)
+        """
+        )
 
         result = self.db.execute(query, {"user_id": user_id})
         conversations = [dict(row._mapping) for row in result.fetchall()]
@@ -529,9 +516,7 @@ class DataExporter:
                     conversation[key] = conversation[key].isoformat()
 
         return TableExport(
-            table_name="chat_conversations",
-            records=conversations,
-            count=len(conversations)
+            table_name="chat_conversations", records=conversations, count=len(conversations)
         )
 
     def _export_chat_messages(self, user_id: int) -> TableExport:
@@ -546,13 +531,15 @@ class DataExporter:
         Returns:
             TableExport with chat messages data
         """
-        query = text("""
+        query = text(
+            """
             SELECT m.*
             FROM chat_messages m
             JOIN chat_conversations c ON m.conversation_id = c.id
             WHERE c.user_id = :user_id
             ORDER BY m.timestamp DESC
-        """)
+        """
+        )
 
         result = self.db.execute(query, {"user_id": user_id})
         messages = [dict(row._mapping) for row in result.fetchall()]
@@ -575,9 +562,7 @@ class DataExporter:
             decrypted_messages.append(msg)
 
         return TableExport(
-            table_name="chat_messages",
-            records=decrypted_messages,
-            count=len(decrypted_messages)
+            table_name="chat_messages", records=decrypted_messages, count=len(decrypted_messages)
         )
 
     def _export_user_facts(self, user_id: int) -> TableExport:
@@ -590,11 +575,13 @@ class DataExporter:
         Returns:
             TableExport with user facts data
         """
-        query = text("""
+        query = text(
+            """
             SELECT * FROM user_facts
             WHERE user_id = :user_id
             ORDER BY created_at DESC
-        """)
+        """
+        )
 
         result = self.db.execute(query, {"user_id": user_id})
         facts = [dict(row._mapping) for row in result.fetchall()]
@@ -605,11 +592,7 @@ class DataExporter:
                 if fact.get(key):
                     fact[key] = fact[key].isoformat()
 
-        return TableExport(
-            table_name="user_facts",
-            records=facts,
-            count=len(facts)
-        )
+        return TableExport(table_name="user_facts", records=facts, count=len(facts))
 
     def _export_case_facts(self, user_id: int) -> TableExport:
         """
@@ -621,13 +604,15 @@ class DataExporter:
         Returns:
             TableExport with case facts data
         """
-        query = text("""
+        query = text(
+            """
             SELECT cf.*
             FROM case_facts cf
             JOIN cases c ON cf.case_id = c.id
             WHERE c.user_id = :user_id
             ORDER BY cf.created_at DESC
-        """)
+        """
+        )
 
         result = self.db.execute(query, {"user_id": user_id})
         facts = [dict(row._mapping) for row in result.fetchall()]
@@ -638,11 +623,7 @@ class DataExporter:
                 if fact.get(key):
                     fact[key] = fact[key].isoformat()
 
-        return TableExport(
-            table_name="case_facts",
-            records=facts,
-            count=len(facts)
-        )
+        return TableExport(table_name="case_facts", records=facts, count=len(facts))
 
     def _export_sessions(self, user_id: int) -> TableExport:
         """
@@ -656,12 +637,14 @@ class DataExporter:
         Returns:
             TableExport with session data
         """
-        query = text("""
+        query = text(
+            """
             SELECT id, user_id, created_at, expires_at, ip_address, user_agent
             FROM sessions
             WHERE user_id = :user_id
             ORDER BY created_at DESC
-        """)
+        """
+        )
 
         result = self.db.execute(query, {"user_id": user_id})
         sessions = [dict(row._mapping) for row in result.fetchall()]
@@ -672,11 +655,7 @@ class DataExporter:
                 if session.get(key):
                     session[key] = session[key].isoformat()
 
-        return TableExport(
-            table_name="sessions",
-            records=sessions,
-            count=len(sessions)
-        )
+        return TableExport(table_name="sessions", records=sessions, count=len(sessions))
 
     def _export_consents(self, user_id: int) -> TableExport:
         """
@@ -688,11 +667,13 @@ class DataExporter:
         Returns:
             TableExport with consent data
         """
-        query = text("""
+        query = text(
+            """
             SELECT * FROM consents
             WHERE user_id = :user_id
             ORDER BY created_at DESC
-        """)
+        """
+        )
 
         result = self.db.execute(query, {"user_id": user_id})
         consents = [dict(row._mapping) for row in result.fetchall()]
@@ -703,11 +684,7 @@ class DataExporter:
                 if consent.get(key):
                     consent[key] = consent[key].isoformat()
 
-        return TableExport(
-            table_name="consents",
-            records=consents,
-            count=len(consents)
-        )
+        return TableExport(table_name="consents", records=consents, count=len(consents))
 
     def _try_decrypt_field(self, field_value: str) -> str:
         """
@@ -724,9 +701,11 @@ class DataExporter:
             encrypted_data = json.loads(field_value)
 
             # Check if it has encrypted structure
-            if (isinstance(encrypted_data, dict) and
-                "ciphertext" in encrypted_data and
-                "iv" in encrypted_data):
+            if (
+                isinstance(encrypted_data, dict)
+                and "ciphertext" in encrypted_data
+                and "iv" in encrypted_data
+            ):
                 # Convert to EncryptedData object
                 encrypted_obj = EncryptedData.from_dict(encrypted_data)
                 # Decrypt
@@ -746,9 +725,11 @@ class DataExporter:
             Schema version string or "0" if not available
         """
         try:
-            query = text("""
+            query = text(
+                """
                 SELECT MAX(version) as version FROM migrations
-            """)
+            """
+            )
             result = self.db.execute(query)
             row = result.fetchone()
             return str(row.version) if row and row.version else "0"
@@ -783,7 +764,7 @@ class DataExporter:
             Path(file_path).parent.mkdir(parents=True, exist_ok=True)
 
             # Convert to dictionary and save as JSON
-            with open(file_path, 'w', encoding='utf-8') as f:
+            with open(file_path, "w", encoding="utf-8") as f:
                 json.dump(export_data.to_dict(), f, indent=2, ensure_ascii=False)
 
             logger.info(f"Exported user data to {file_path}")

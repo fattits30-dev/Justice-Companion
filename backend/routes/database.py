@@ -34,12 +34,10 @@ Security:
 """
 
 import os
-import sqlite3
-from datetime import datetime, timezone, timedelta
-from pathlib import Path
-from typing import Optional, List, Dict, Any
+from datetime import datetime, timezone
+from typing import List, Dict, Any
 
-from fastapi import APIRouter, Depends, HTTPException, Header, Query, status, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, Query, status, BackgroundTasks
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import text
 from sqlalchemy.orm import Session
@@ -50,8 +48,7 @@ from backend.models.backup import (
     BackupSettingsUpdate,
     BackupSettingsResponse,
     BackupMetadataResponse,
-    BackupFrequency,
-    RetentionSummaryResponse
+    RetentionSummaryResponse,
 )
 from backend.services.auth_service import AuthenticationService
 from backend.services.backup.backup_service import BackupService
@@ -102,14 +99,11 @@ def check_rate_limit(user_id: int, operation: str, max_requests: int, window_hou
             reset_date = datetime.fromtimestamp(limit_info["resetAt"] / 1000, tz=timezone.utc)
             raise HTTPException(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                detail=f"Rate limit exceeded for {operation}. Try again after {reset_date.isoformat()}"
+                detail=f"Rate limit exceeded for {operation}. Try again after {reset_date.isoformat()}",
             )
         limit_info["count"] += 1
     else:
-        _rate_limits[key] = {
-            "count": 1,
-            "resetAt": now.timestamp() * 1000 + window_ms
-        }
+        _rate_limits[key] = {"count": 1, "resetAt": now.timestamp() * 1000 + window_ms}
 
 
 # ===== HELPER FUNCTIONS =====
@@ -125,11 +119,13 @@ def get_table_metadata(db: Session) -> Dict[str, Any]:
     """
     try:
         # Get all user tables (exclude SQLite internal tables)
-        tables_query = text("""
+        tables_query = text(
+            """
             SELECT name FROM sqlite_master
             WHERE type='table' AND name NOT LIKE 'sqlite_%'
             ORDER BY name
-        """)
+        """
+        )
 
         result = db.execute(tables_query)
         tables = [row[0] for row in result.fetchall()]
@@ -145,22 +141,16 @@ def get_table_metadata(db: Session) -> Dict[str, Any]:
             table_counts[table_name] = count
             total_records += count
 
-        return {
-            "tables": table_counts,
-            "table_count": len(tables),
-            "total_records": total_records
-        }
+        return {"tables": table_counts, "table_count": len(tables), "total_records": total_records}
     except Exception as e:
         logger.error(f"Failed to get table metadata: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to get table metadata: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to get table metadata: {str(e)}")
 
 
 # ===== PYDANTIC MODELS =====
 class DatabaseStatsResponse(BaseModel):
     """Response model for database statistics."""
+
     connected: bool
     database_path: str
     database_size_bytes: int
@@ -175,6 +165,7 @@ class DatabaseStatsResponse(BaseModel):
 
 class CreateBackupResponse(BaseModel):
     """Response model for backup creation."""
+
     filename: str
     path: str
     size_bytes: int
@@ -187,15 +178,17 @@ class CreateBackupResponse(BaseModel):
 
 class ListBackupsResponse(BaseModel):
     """Response model for listing backups."""
+
     backups: List[BackupMetadataResponse]
     count: int
 
 
 class RestoreBackupRequest(BaseModel):
     """Request model for restoring a backup."""
+
     backup_filename: str = Field(..., min_length=1, max_length=255)
 
-    @field_validator('backup_filename')
+    @field_validator("backup_filename")
     @classmethod
     def validate_filename(cls, v):
         """Validate filename doesn't contain path traversal characters."""
@@ -206,6 +199,7 @@ class RestoreBackupRequest(BaseModel):
 
 class RestoreBackupResponse(BaseModel):
     """Response model for backup restoration."""
+
     restored: bool
     message: str
     pre_restore_backup: str
@@ -213,6 +207,7 @@ class RestoreBackupResponse(BaseModel):
 
 class OptimizeResponse(BaseModel):
     """Response model for database optimization (VACUUM + ANALYZE)."""
+
     success: bool
     message: str
     size_before_bytes: int
@@ -224,12 +219,14 @@ class OptimizeResponse(BaseModel):
 
 class DeleteBackupResponse(BaseModel):
     """Response model for backup deletion."""
+
     deleted: bool
     message: str
 
 
 class ApplyRetentionResponse(BaseModel):
     """Response model for applying retention policy."""
+
     deleted_count: int
     message: str
     summary: RetentionSummaryResponse
@@ -237,6 +234,7 @@ class ApplyRetentionResponse(BaseModel):
 
 class SchedulerStatsResponse(BaseModel):
     """Response model for scheduler statistics."""
+
     is_running: bool
     check_interval_seconds: int
     enabled_backup_settings: int
@@ -251,28 +249,21 @@ def get_auth_service(db: Session = Depends(get_db)) -> AuthenticationService:
 
 def get_backup_service(db: Session = Depends(get_db)) -> BackupService:
     """Get backup service instance."""
-    return BackupService(
-        db_path=DATABASE_PATH,
-        backups_dir=BACKUP_DIR
-    )
+    return BackupService(db_path=DATABASE_PATH, backups_dir=BACKUP_DIR)
 
 
 def get_retention_policy(
-    backup_service: BackupService = Depends(get_backup_service),
-    db: Session = Depends(get_db)
+    backup_service: BackupService = Depends(get_backup_service), db: Session = Depends(get_db)
 ) -> BackupRetentionPolicy:
     """Get retention policy service instance."""
     audit_logger = AuditLogger(db)
-    return BackupRetentionPolicy(
-        backup_service=backup_service,
-        audit_logger=audit_logger
-    )
+    return BackupRetentionPolicy(backup_service=backup_service, audit_logger=audit_logger)
 
 
 def get_backup_scheduler(
     db: Session = Depends(get_db),
     backup_service: BackupService = Depends(get_backup_service),
-    retention_policy: BackupRetentionPolicy = Depends(get_retention_policy)
+    retention_policy: BackupRetentionPolicy = Depends(get_retention_policy),
 ) -> BackupScheduler:
     """Get backup scheduler service instance."""
     audit_logger = AuditLogger(db)
@@ -280,7 +271,7 @@ def get_backup_scheduler(
         db=db,
         backup_service=backup_service,
         retention_policy=retention_policy,
-        audit_logger=audit_logger
+        audit_logger=audit_logger,
     )
 
 
@@ -290,8 +281,7 @@ def get_audit_logger(db: Session = Depends(get_db)) -> AuditLogger:
 
 
 async def require_admin_user(
-    user_id: int = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    user_id: int = Depends(get_current_user), db: Session = Depends(get_db)
 ) -> int:
     """
     Verify the authenticated user has admin privileges.
@@ -305,16 +295,13 @@ async def require_admin_user(
     user = result.fetchone()
 
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
     # Check if user has admin role
     if user[0] != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Admin privileges required for this operation"
+            detail="Admin privileges required for this operation",
         )
 
     return user_id
@@ -322,10 +309,7 @@ async def require_admin_user(
 
 # ===== BACKGROUND TASKS =====
 async def background_create_backup(
-    backup_service: BackupService,
-    audit_logger: AuditLogger,
-    user_id: int,
-    db: Session
+    backup_service: BackupService, audit_logger: AuditLogger, user_id: int, db: Session
 ) -> None:
     """Background task for creating backup."""
     try:
@@ -337,11 +321,8 @@ async def background_create_backup(
             resource_type="backup",
             resource_id=backup.filename,
             action="create",
-            details={
-                "filename": backup.filename,
-                "size_bytes": backup.size
-            },
-            success=True
+            details={"filename": backup.filename, "size_bytes": backup.size},
+            success=True,
         )
 
         logger.info(f"Background backup created: {backup.filename}")
@@ -356,15 +337,12 @@ async def background_create_backup(
             resource_id="unknown",
             action="create",
             success=False,
-            error_message=str(e)
+            error_message=str(e),
         )
 
 
 async def background_optimize_database(
-    db_path: str,
-    audit_logger: AuditLogger,
-    user_id: int,
-    db: Session
+    db_path: str, audit_logger: AuditLogger, user_id: int, db: Session
 ) -> None:
     """Background task for optimizing database."""
     try:
@@ -394,9 +372,9 @@ async def background_optimize_database(
                 "size_before_bytes": size_before,
                 "size_after_bytes": size_after,
                 "space_reclaimed_bytes": space_reclaimed,
-                "operations": ["VACUUM", "ANALYZE"]
+                "operations": ["VACUUM", "ANALYZE"],
             },
-            success=True
+            success=True,
         )
 
         logger.info(f"Background optimization completed: reclaimed {space_reclaimed} bytes")
@@ -411,7 +389,7 @@ async def background_optimize_database(
             resource_id="main",
             action="optimize",
             success=False,
-            error_message=str(e)
+            error_message=str(e),
         )
 
 
@@ -421,7 +399,7 @@ async def get_database_stats(
     user_id: int = Depends(get_current_user),
     db: Session = Depends(get_db),
     backup_service: BackupService = Depends(get_backup_service),
-    audit_logger: AuditLogger = Depends(get_audit_logger)
+    audit_logger: AuditLogger = Depends(get_audit_logger),
 ):
     """
     Get database statistics (table counts, size, backup info).
@@ -452,7 +430,7 @@ async def get_database_stats(
             resource_type="database",
             resource_id="main",
             action="view",
-            success=True
+            success=True,
         )
 
         return {
@@ -465,17 +443,14 @@ async def get_database_stats(
             "tables": metadata["tables"],
             "backups_count": len(backups),
             "backups_size_bytes": backups_size_bytes,
-            "backups_size_mb": backups_size_mb
+            "backups_size_mb": backups_size_mb,
         }
 
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Failed to get database stats: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to get database stats: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to get database stats: {str(e)}")
 
 
 @router.post("/backup", response_model=CreateBackupResponse, status_code=status.HTTP_201_CREATED)
@@ -483,7 +458,7 @@ async def create_backup(
     user_id: int = Depends(get_current_user),
     db: Session = Depends(get_db),
     backup_service: BackupService = Depends(get_backup_service),
-    audit_logger: AuditLogger = Depends(get_audit_logger)
+    audit_logger: AuditLogger = Depends(get_audit_logger),
 ):
     """
     Create a database backup.
@@ -505,7 +480,7 @@ async def create_backup(
         backup_metadata = {
             "version": "1.0.0",
             "record_count": metadata["total_records"],
-            "tables": list(metadata["tables"].keys())
+            "tables": list(metadata["tables"].keys()),
         }
 
         # Convert size to MB
@@ -518,11 +493,8 @@ async def create_backup(
             resource_type="backup",
             resource_id=backup.filename,
             action="create",
-            details={
-                "filename": backup.filename,
-                "size_bytes": backup.size
-            },
-            success=True
+            details={"filename": backup.filename, "size_bytes": backup.size},
+            success=True,
         )
 
         return {
@@ -533,7 +505,7 @@ async def create_backup(
             "created_at": backup.created_at,
             "is_valid": True,
             "is_protected": backup.is_protected,
-            "metadata": backup_metadata
+            "metadata": backup_metadata,
         }
 
     except HTTPException:
@@ -549,13 +521,10 @@ async def create_backup(
             resource_id="unknown",
             action="create",
             success=False,
-            error_message=str(e)
+            error_message=str(e),
         )
 
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to create backup: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to create backup: {str(e)}")
 
 
 @router.get("/backups", response_model=ListBackupsResponse)
@@ -563,7 +532,7 @@ async def list_backups(
     user_id: int = Depends(get_current_user),
     db: Session = Depends(get_db),
     backup_service: BackupService = Depends(get_backup_service),
-    audit_logger: AuditLogger = Depends(get_audit_logger)
+    audit_logger: AuditLogger = Depends(get_audit_logger),
 ):
     """
     List all available database backups.
@@ -589,20 +558,14 @@ async def list_backups(
             resource_id="all",
             action="list",
             details={"count": len(backups)},
-            success=True
+            success=True,
         )
 
-        return {
-            "backups": backups,
-            "count": len(backups)
-        }
+        return {"backups": backups, "count": len(backups)}
 
     except Exception as e:
         logger.error(f"Failed to list backups: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to list backups: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to list backups: {str(e)}")
 
 
 @router.get("/backups/{backup_filename}", response_model=BackupMetadataResponse)
@@ -611,7 +574,7 @@ async def get_backup_details(
     user_id: int = Depends(get_current_user),
     db: Session = Depends(get_db),
     backup_service: BackupService = Depends(get_backup_service),
-    audit_logger: AuditLogger = Depends(get_audit_logger)
+    audit_logger: AuditLogger = Depends(get_audit_logger),
 ):
     """
     Get details for a specific backup file.
@@ -626,18 +589,14 @@ async def get_backup_details(
         # Validate filename (prevent path traversal)
         if "/" in backup_filename or "\\" in backup_filename or ".." in backup_filename:
             raise HTTPException(
-                status_code=400,
-                detail="Invalid backup filename - path traversal not allowed"
+                status_code=400, detail="Invalid backup filename - path traversal not allowed"
             )
 
         # Get backup metadata
         backup = backup_service.get_backup_by_filename(backup_filename)
 
         if not backup:
-            raise HTTPException(
-                status_code=404,
-                detail="Backup file not found"
-            )
+            raise HTTPException(status_code=404, detail="Backup file not found")
 
         # Log audit event
         audit_logger.log(
@@ -646,7 +605,7 @@ async def get_backup_details(
             resource_type="backup",
             resource_id=backup_filename,
             action="view",
-            success=True
+            success=True,
         )
 
         return backup
@@ -655,10 +614,7 @@ async def get_backup_details(
         raise
     except Exception as e:
         logger.error(f"Failed to get backup details: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to get backup details: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to get backup details: {str(e)}")
 
 
 @router.post("/restore", response_model=RestoreBackupResponse)
@@ -667,7 +623,7 @@ async def restore_backup(
     user_id: int = Depends(require_admin_user),
     db: Session = Depends(get_db),
     backup_service: BackupService = Depends(get_backup_service),
-    audit_logger: AuditLogger = Depends(get_audit_logger)
+    audit_logger: AuditLogger = Depends(get_audit_logger),
 ):
     """
     Restore database from a backup (ADMIN ONLY).
@@ -698,24 +654,21 @@ async def restore_backup(
             action="restore",
             details={
                 "backup_filename": backup_filename,
-                "pre_restore_backup": "pre_restore_backup"
+                "pre_restore_backup": "pre_restore_backup",
             },
-            success=True
+            success=True,
         )
 
         return {
             "restored": True,
             "message": "Database restored successfully",
-            "pre_restore_backup": "pre_restore_backup.db"
+            "pre_restore_backup": "pre_restore_backup.db",
         }
 
     except HTTPException:
         raise
     except FileNotFoundError as e:
-        raise HTTPException(
-            status_code=404,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         logger.error(f"Failed to restore backup: {str(e)}", exc_info=True)
 
@@ -727,13 +680,10 @@ async def restore_backup(
             resource_id=request.backup_filename,
             action="restore",
             success=False,
-            error_message=str(e)
+            error_message=str(e),
         )
 
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to restore backup: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to restore backup: {str(e)}")
 
 
 @router.post("/optimize", response_model=OptimizeResponse)
@@ -742,7 +692,7 @@ async def optimize_database(
     user_id: int = Depends(require_admin_user),
     db: Session = Depends(get_db),
     backup_service: BackupService = Depends(get_backup_service),
-    audit_logger: AuditLogger = Depends(get_audit_logger)
+    audit_logger: AuditLogger = Depends(get_audit_logger),
 ):
     """
     Optimize database with VACUUM and ANALYZE (ADMIN ONLY).
@@ -792,9 +742,9 @@ async def optimize_database(
                 "size_before_bytes": size_before,
                 "size_after_bytes": size_after,
                 "space_reclaimed_bytes": space_reclaimed,
-                "operations": ["VACUUM", "ANALYZE"]
+                "operations": ["VACUUM", "ANALYZE"],
             },
-            success=True
+            success=True,
         )
 
         return {
@@ -804,7 +754,7 @@ async def optimize_database(
             "size_after_bytes": size_after,
             "space_reclaimed_bytes": space_reclaimed,
             "space_reclaimed_mb": space_reclaimed_mb,
-            "analyze_completed": True
+            "analyze_completed": True,
         }
 
     except Exception as e:
@@ -818,13 +768,10 @@ async def optimize_database(
             resource_id="main",
             action="optimize",
             success=False,
-            error_message=str(e)
+            error_message=str(e),
         )
 
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to optimize database: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to optimize database: {str(e)}")
 
 
 @router.delete("/backups/{backup_filename}", response_model=DeleteBackupResponse)
@@ -834,7 +781,7 @@ async def delete_backup(
     user_id: int = Depends(require_admin_user),
     db: Session = Depends(get_db),
     backup_service: BackupService = Depends(get_backup_service),
-    audit_logger: AuditLogger = Depends(get_audit_logger)
+    audit_logger: AuditLogger = Depends(get_audit_logger),
 ):
     """
     Delete a database backup (ADMIN ONLY).
@@ -860,30 +807,18 @@ async def delete_backup(
             resource_type="backup",
             resource_id=backup_filename,
             action="delete",
-            details={
-                "filename": backup_filename,
-                "force": force
-            },
-            success=True
+            details={"filename": backup_filename, "force": force},
+            success=True,
         )
 
-        return {
-            "deleted": True,
-            "message": "Backup deleted successfully"
-        }
+        return {"deleted": True, "message": "Backup deleted successfully"}
 
     except HTTPException:
         raise
     except FileNotFoundError:
-        raise HTTPException(
-            status_code=404,
-            detail="Backup file not found"
-        )
+        raise HTTPException(status_code=404, detail="Backup file not found")
     except PermissionError as e:
-        raise HTTPException(
-            status_code=403,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=403, detail=str(e))
     except Exception as e:
         logger.error(f"Failed to delete backup: {str(e)}", exc_info=True)
 
@@ -895,16 +830,14 @@ async def delete_backup(
             resource_id=backup_filename,
             action="delete",
             success=False,
-            error_message=str(e)
+            error_message=str(e),
         )
 
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to delete backup: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to delete backup: {str(e)}")
 
 
 # ===== BACKUP SCHEDULER ROUTES =====
+
 
 @router.post("/backup/schedule", response_model=BackupSettingsResponse)
 async def configure_backup_schedule(
@@ -912,7 +845,7 @@ async def configure_backup_schedule(
     user_id: int = Depends(get_current_user),
     db: Session = Depends(get_db),
     scheduler: BackupScheduler = Depends(get_backup_scheduler),
-    audit_logger: AuditLogger = Depends(get_audit_logger)
+    audit_logger: AuditLogger = Depends(get_audit_logger),
 ):
     """
     Configure automated backup schedule.
@@ -940,9 +873,9 @@ async def configure_backup_schedule(
                 "enabled": result.enabled,
                 "frequency": result.frequency,
                 "backup_time": result.backup_time,
-                "keep_count": result.keep_count
+                "keep_count": result.keep_count,
             },
-            success=True
+            success=True,
         )
 
         return result
@@ -957,12 +890,11 @@ async def configure_backup_schedule(
             resource_id="unknown",
             action="configure",
             success=False,
-            error_message=str(e)
+            error_message=str(e),
         )
 
         raise HTTPException(
-            status_code=500,
-            detail=f"Failed to configure backup schedule: {str(e)}"
+            status_code=500, detail=f"Failed to configure backup schedule: {str(e)}"
         )
 
 
@@ -970,7 +902,7 @@ async def configure_backup_schedule(
 async def get_backup_schedule(
     user_id: int = Depends(get_current_user),
     scheduler: BackupScheduler = Depends(get_backup_scheduler),
-    audit_logger: AuditLogger = Depends(get_audit_logger)
+    audit_logger: AuditLogger = Depends(get_audit_logger),
 ):
     """
     Get backup schedule settings for authenticated user.
@@ -988,8 +920,7 @@ async def get_backup_schedule(
 
         if not settings:
             raise HTTPException(
-                status_code=404,
-                detail="No backup schedule configured for this user"
+                status_code=404, detail="No backup schedule configured for this user"
             )
 
         # Log audit event
@@ -999,7 +930,7 @@ async def get_backup_schedule(
             resource_type="backup_schedule",
             resource_id=str(settings.id),
             action="view",
-            success=True
+            success=True,
         )
 
         return settings
@@ -1008,17 +939,14 @@ async def get_backup_schedule(
         raise
     except Exception as e:
         logger.error(f"Failed to get backup schedule: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to get backup schedule: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to get backup schedule: {str(e)}")
 
 
 @router.delete("/backup/schedule", status_code=status.HTTP_204_NO_CONTENT)
 async def disable_backup_schedule(
     user_id: int = Depends(get_current_user),
     scheduler: BackupScheduler = Depends(get_backup_scheduler),
-    audit_logger: AuditLogger = Depends(get_audit_logger)
+    audit_logger: AuditLogger = Depends(get_audit_logger),
 ):
     """
     Disable automated backup schedule for authenticated user.
@@ -1038,7 +966,7 @@ async def disable_backup_schedule(
             resource_type="backup_schedule",
             resource_id=str(user_id),
             action="disable",
-            success=True
+            success=True,
         )
 
         return None
@@ -1053,13 +981,10 @@ async def disable_backup_schedule(
             resource_id=str(user_id),
             action="disable",
             success=False,
-            error_message=str(e)
+            error_message=str(e),
         )
 
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to disable backup schedule: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to disable backup schedule: {str(e)}")
 
 
 @router.post("/retention", response_model=ApplyRetentionResponse)
@@ -1067,7 +992,7 @@ async def apply_retention_policy(
     keep_count: int = Query(..., ge=1, le=30, description="Number of backups to retain"),
     user_id: int = Depends(require_admin_user),
     retention_policy: BackupRetentionPolicy = Depends(get_retention_policy),
-    audit_logger: AuditLogger = Depends(get_audit_logger)
+    audit_logger: AuditLogger = Depends(get_audit_logger),
 ):
     """
     Apply retention policy to cleanup old backups (ADMIN ONLY).
@@ -1098,22 +1023,19 @@ async def apply_retention_policy(
             details={
                 "keep_count": keep_count,
                 "deleted_count": deleted_count,
-                "summary": summary.dict()
+                "summary": summary.dict(),
             },
-            success=True
+            success=True,
         )
 
         return {
             "deleted_count": deleted_count,
             "message": f"Retention policy applied: deleted {deleted_count} old backup(s)",
-            "summary": summary
+            "summary": summary,
         }
 
     except ValueError as e:
-        raise HTTPException(
-            status_code=400,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.error(f"Failed to apply retention policy: {str(e)}", exc_info=True)
 
@@ -1124,20 +1046,17 @@ async def apply_retention_policy(
             resource_id="policy",
             action="apply",
             success=False,
-            error_message=str(e)
+            error_message=str(e),
         )
 
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to apply retention policy: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to apply retention policy: {str(e)}")
 
 
 @router.get("/scheduler/stats", response_model=SchedulerStatsResponse)
 async def get_scheduler_stats(
     user_id: int = Depends(require_admin_user),
     scheduler: BackupScheduler = Depends(get_backup_scheduler),
-    audit_logger: AuditLogger = Depends(get_audit_logger)
+    audit_logger: AuditLogger = Depends(get_audit_logger),
 ):
     """
     Get backup scheduler statistics (ADMIN ONLY).
@@ -1160,19 +1079,16 @@ async def get_scheduler_stats(
             resource_type="backup_scheduler",
             resource_id="stats",
             action="view",
-            success=True
+            success=True,
         )
 
         return {
             "is_running": stats["is_running"],
             "check_interval_seconds": stats["check_interval_seconds"],
             "enabled_backup_settings": stats["enabled_backup_settings"],
-            "total_backup_settings": stats["total_backup_settings"]
+            "total_backup_settings": stats["total_backup_settings"],
         }
 
     except Exception as e:
         logger.error(f"Failed to get scheduler stats: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to get scheduler stats: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to get scheduler stats: {str(e)}")

@@ -11,20 +11,18 @@ Demonstrates:
 
 import asyncio
 import logging
-from pathlib import Path
 
 from backend.services.auto_updater import (
     AutoUpdater,
     AutoUpdaterConfig,
     UpdateChannel,
-    format_file_size
+    format_file_size,
 )
 
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -36,15 +34,10 @@ async def example_basic_update_check():
     print("=" * 60)
 
     # Create updater with default configuration
-    config = AutoUpdaterConfig(
-        check_on_startup=False,
-        channel=UpdateChannel.STABLE
-    )
+    config = AutoUpdaterConfig(check_on_startup=False, channel=UpdateChannel.STABLE)
 
     async with AutoUpdater(
-        repo="justice-companion/justice-companion",
-        current_version="1.0.0",
-        config=config
+        repo="justice-companion/justice-companion", current_version="1.0.0", config=config
     ) as updater:
         # Check for updates
         result = await updater.check_for_updates()
@@ -74,15 +67,10 @@ async def example_download_with_progress():
     print("EXAMPLE 2: Download Update with Progress")
     print("=" * 60)
 
-    config = AutoUpdaterConfig(
-        check_on_startup=False,
-        channel=UpdateChannel.STABLE
-    )
+    config = AutoUpdaterConfig(check_on_startup=False, channel=UpdateChannel.STABLE)
 
     async with AutoUpdater(
-        repo="justice-companion/justice-companion",
-        current_version="1.0.0",
-        config=config
+        repo="justice-companion/justice-companion", current_version="1.0.0", config=config
     ) as updater:
         # Check for updates
         result = await updater.check_for_updates()
@@ -124,9 +112,7 @@ async def example_version_comparison():
     config = AutoUpdaterConfig(check_on_startup=False)
 
     async with AutoUpdater(
-        repo="justice-companion/justice-companion",
-        current_version="1.0.0",
-        config=config
+        repo="justice-companion/justice-companion", current_version="1.0.0", config=config
     ) as updater:
         versions = [
             ("1.0.0", "1.1.0"),
@@ -155,15 +141,10 @@ async def example_beta_channel():
     print("=" * 60)
 
     # Configure for beta channel
-    config = AutoUpdaterConfig(
-        check_on_startup=False,
-        channel=UpdateChannel.BETA
-    )
+    config = AutoUpdaterConfig(check_on_startup=False, channel=UpdateChannel.BETA)
 
     async with AutoUpdater(
-        repo="justice-companion/justice-companion",
-        current_version="1.0.0",
-        config=config
+        repo="justice-companion/justice-companion", current_version="1.0.0", config=config
     ) as updater:
         print(f"Update channel: {updater.config.channel.value}")
 
@@ -188,9 +169,7 @@ async def example_status_monitoring():
     config = AutoUpdaterConfig(check_on_startup=False)
 
     async with AutoUpdater(
-        repo="justice-companion/justice-companion",
-        current_version="1.0.0",
-        config=config
+        repo="justice-companion/justice-companion", current_version="1.0.0", config=config
     ) as updater:
         # Get initial status
         status = updater.get_status()
@@ -223,14 +202,11 @@ async def example_custom_update_server():
 
     # Configure custom update server
     config = AutoUpdaterConfig(
-        check_on_startup=False,
-        update_server_url="https://updates.example.com/justice-companion"
+        check_on_startup=False, update_server_url="https://updates.example.com/justice-companion"
     )
 
     async with AutoUpdater(
-        repo="justice-companion/justice-companion",
-        current_version="1.0.0",
-        config=config
+        repo="justice-companion/justice-companion", current_version="1.0.0", config=config
     ) as updater:
         print(f"Update source: {updater.get_update_source()}")
 
@@ -250,15 +226,10 @@ async def example_startup_check():
     print("=" * 60)
 
     # Configure to check on startup
-    config = AutoUpdaterConfig(
-        check_on_startup=True,
-        channel=UpdateChannel.STABLE
-    )
+    config = AutoUpdaterConfig(check_on_startup=True, channel=UpdateChannel.STABLE)
 
     async with AutoUpdater(
-        repo="justice-companion/justice-companion",
-        current_version="1.0.0",
-        config=config
+        repo="justice-companion/justice-companion", current_version="1.0.0", config=config
     ) as updater:
         # Initialize will automatically check for updates
         await updater.initialize()

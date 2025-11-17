@@ -13,72 +13,69 @@ Features:
 """
 
 import json
-import os
-from typing import Optional, List, Dict, Any
-from datetime import datetime
-from sqlalchemy.orm import Session
-from sqlalchemy import func
+from typing import List, Optional, Dict, Any
 
-from backend.models.case import Case, CaseStatus, CaseType
+from sqlalchemy import func
+from sqlalchemy.orm import Session, make_transient
+
+from backend.models.case import Case, CaseStatus
+from backend.schemas.case import CaseCreate, CaseUpdate
 from backend.services.encryption_service import EncryptionService, EncryptedData
 from backend.services.audit_logger import AuditLogger
 
 
-class CreateCaseInput:
-    """Input for creating a new case."""
-    def __init__(self, title: str, description: Optional[str], case_type: str, user_id: int):
-        self.title = title
-        self.description = description
-        self.case_type = case_type
-        self.user_id = user_id
-
-
-class UpdateCaseInput:
-    """Input for updating an existing case."""
+class CaseRepository:
     def __init__(
         self,
-        title: Optional[str] = None,
-        description: Optional[str] = None,
-        case_type: Optional[str] = None,
-        status: Optional[str] = None
+        db: Session,
+        encryption_service: EncryptionService,
+        audit_logger: Optional[AuditLogger] = None,
     ):
-        self.title = title
-        self.description = description
-        self.case_type = case_type
-        self.status = status
-
-
-class CaseRepository:
-    """
-    Case repository for legal case management.
-    Ported from TypeScript CaseRepository with identical functionality.
-
-    Security:
-    - Encrypts description field before INSERT/UPDATE
-    - Decrypts description after SELECT
-    - Handles legacy plaintext data gracefully
-    - Batch decryption for performance
-    """
-
-    def __init__(self, db: Session, encryption_service: EncryptionService, audit_logger: Optional[AuditLogger] = None):
-        """
-        Initialize case repository.
-
-        Args:
-            db: SQLAlchemy database session
-            encryption_service: Encryption service for description field
-            audit_logger: Optional audit logger for security events
-        """
         self.db = db
         self.encryption_service = encryption_service
         self.audit_logger = audit_logger
 
-    def create(self, input_data: CreateCaseInput) -> Case:
+    def _encrypt_description(self, description: Optional[str]) -> Optional[str]:
+        if not description:
+            return None
+        encrypted_data = self.encryption_service.encrypt(description)
+        return json.dumps(encrypted_data.to_dict()) if encrypted_data else None
+
+    def _decrypt_description(self, description: Optional[str]) -> Optional[str]:
+        if not description:
+            return None
+        try:
+            encrypted_dict = json.loads(description)
+            # Check if it looks like our encrypted data structure
+            if (
+                isinstance(encrypted_dict, dict)
+                and "ciphertext" in encrypted_dict
+                and "iv" in encrypted_dict
+            ):
+                encrypted_data = EncryptedData.from_dict(encrypted_dict)
+                return self.encryption_service.decrypt(encrypted_data)
+            return description  # Not our format, return as is
+        except (json.JSONDecodeError, TypeError, KeyError):
+            # If it's not valid JSON or doesn't match EncryptedData format,
+            # assume it's not encrypted or corrupted.
+            return description
+
+    def _detach_and_decrypt(self, case: Case) -> Case:
+        """Detach from session and decrypt description to avoid type errors."""
+        self.db.expunge(case)
+        make_transient(case)
+        description_value = getattr(case, "description", None)
+        decrypted_description = self._decrypt_description(description_value)
+        setattr(case, "description", decrypted_description)
+        return case
+
+    def create_case(self, case_data: CaseCreate, user_id: str) -> Case:
         """
         Create a new case.
 
         Args:
-            input_data: CreateCaseInput with case details
+            case_data: CaseCreate with case details
+            user_id: User ID
 
         Returns:
             Created Case model with decrypted description
@@ -87,193 +84,95 @@ class CaseRepository:
             RuntimeError: If encryption or database operation fails
         """
         try:
-            encryption = self._require_encryption_service()
-
-            # Encrypt description before INSERT
-            description_to_store: Optional[str] = None
-            if input_data.description:
-                encrypted_description = encryption.encrypt(input_data.description)
-                if encrypted_description:
-                    description_to_store = json.dumps(encrypted_description.to_dict())
+            encrypted_description = self._encrypt_description(case_data.description)
 
             # Create case model
-            case = Case(
-                title=input_data.title,
-                description=description_to_store,
-                case_type=CaseType(input_data.case_type),
-                status=CaseStatus.active,
-                user_id=input_data.user_id
+            db_case = Case(
+                title=case_data.title,
+                description=encrypted_description,
+                case_type=case_data.case_type,
+                status=CaseStatus.ACTIVE,
+                user_id=user_id,
             )
 
-            self.db.add(case)
+            self.db.add(db_case)
             self.db.commit()
-            self.db.refresh(case)
-
-            # Decrypt description for return value
-            case.description = self._decrypt_description(case.description)
+            self.db.refresh(db_case)
 
             # Audit: Case created
             if self.audit_logger:
-                self.audit_logger.log({
-                    "event_type": "case.create",
-                    "resource_type": "case",
-                    "resource_id": str(case.id),
-                    "action": "create",
-                    "user_id": input_data.user_id,
-                    "details": {
-                        "title": case.title,
-                        "case_type": input_data.case_type
-                    },
-                    "success": True
-                })
+                self.audit_logger.log(
+                    event_type="case.create",
+                    user_id=user_id,
+                    resource_type="case",
+                    resource_id=str(db_case.id),
+                    action="create",
+                    details={"title": db_case.title, "case_type": case_data.case_type},
+                    success=True,
+                )
 
-            return case
+            # Decrypt description for return value
+            return self._detach_and_decrypt(db_case)
 
         except Exception as error:
             # Audit: Failed case creation
             if self.audit_logger:
-                self.audit_logger.log({
-                    "event_type": "case.create",
-                    "resource_type": "case",
-                    "resource_id": "unknown",
-                    "action": "create",
-                    "success": False,
-                    "error_message": str(error)
-                })
+                self.audit_logger.log(
+                    event_type="case.create",
+                    user_id=user_id,
+                    resource_type="case",
+                    resource_id="unknown",
+                    action="create",
+                    details={},
+                    success=False,
+                    error_message=str(error),
+                )
             raise RuntimeError(f"Failed to create case: {str(error)}")
 
-    def find_by_id(self, case_id: int) -> Optional[Case]:
+    def get_case_by_id(
+        self, case_id: int, user_id: Optional[str] = None, decrypt: bool = False
+    ) -> Optional[Case]:
         """
         Find case by ID.
 
         Args:
             case_id: Case ID
+            user_id: Optional user ID for auditing
+            decrypt: Whether to decrypt the description
 
         Returns:
             Case model with decrypted description or None if not found
         """
         case = self.db.query(Case).filter(Case.id == case_id).first()
-
-        if case:
-            # Decrypt description after SELECT
-            original_description = case.description
-            case.description = self._decrypt_description(case.description)
-
-            # Audit: PII accessed (encrypted description field)
-            if self.audit_logger and original_description and case.description != original_description:
-                self.audit_logger.log({
-                    "event_type": "case.pii_access",
-                    "resource_type": "case",
-                    "resource_id": str(case_id),
-                    "action": "read",
-                    "details": {"field": "description", "encrypted": True},
-                    "success": True
-                })
-
+        if case and decrypt:
+            return self._detach_and_decrypt(case)
         return case
 
-    def find_by_user_id(self, user_id: int) -> List[Case]:
+    def get_all_cases(self, skip: int = 0, limit: int = 100, decrypt: bool = False) -> List[Case]:
         """
-        Find all cases belonging to a specific user.
+        Get all cases with optional pagination and decryption.
 
         Args:
-            user_id: User ID
+            skip: Number of records to skip (for pagination)
+            limit: Maximum number of records to return
+            decrypt: Whether to decrypt the description fields
 
         Returns:
-            List of Case models with decrypted descriptions
+            List of Case models
         """
-        cases = self.db.query(Case).filter(Case.user_id == user_id).all()
+        cases = self.db.query(Case).offset(skip).limit(limit).all()
+        if decrypt:
+            return [self._detach_and_decrypt(case) for case in cases]
+        return cases
 
-        # Decrypt descriptions if encryption service is available
-        return [self._decrypt_case(case) for case in cases]
-
-    def find_all(self, status: Optional[str] = None) -> List[Case]:
-        """
-        Find all cases with optional status filter.
-
-        Args:
-            status: Optional status filter ("active", "closed", "pending")
-
-        Returns:
-            List of Case models with decrypted descriptions
-        """
-        query = self.db.query(Case)
-
-        if status:
-            query = query.filter(Case.status == CaseStatus(status))
-
-        cases = query.all()
-
-        # Use batch decryption if enabled and encryption service is available
-        use_batch_encryption = os.getenv("ENABLE_BATCH_ENCRYPTION", "true").lower() != "false"
-
-        if use_batch_encryption and self.encryption_service and len(cases) > 0:
-            try:
-                # Collect all encrypted descriptions for batch decryption
-                encrypted_descriptions: List[Optional[EncryptedData]] = []
-
-                for case in cases:
-                    if not case.description:
-                        encrypted_descriptions.append(None)
-                        continue
-
-                    try:
-                        encrypted_dict = json.loads(case.description)
-                        if self.encryption_service.is_encrypted(encrypted_dict):
-                            encrypted_data = EncryptedData.from_dict(encrypted_dict)
-                            encrypted_descriptions.append(encrypted_data)
-                        else:
-                            encrypted_descriptions.append(None)  # Legacy plaintext
-                    except (json.JSONDecodeError, KeyError):
-                        encrypted_descriptions.append(None)  # Legacy plaintext
-
-                # Batch decrypt all encrypted descriptions
-                decrypted_descriptions = self.encryption_service.batch_decrypt(encrypted_descriptions)
-
-                # Map decrypted descriptions back to cases
-                result = []
-                for i, case in enumerate(cases):
-                    # If we have a decrypted value from batch, use it
-                    if encrypted_descriptions[i] is not None:
-                        case.description = decrypted_descriptions[i]
-                    elif case.description and encrypted_descriptions[i] is None:
-                        # Legacy plaintext or failed parse - keep original
-                        pass
-
-                    result.append(case)
-
-                return result
-
-            except Exception as error:
-                # Graceful fallback for legacy or corrupted entries
-                if self.audit_logger:
-                    self.audit_logger.log({
-                        "event_type": "encryption.decrypt",
-                        "resource_type": "case",
-                        "resource_id": "batch",
-                        "action": "decrypt",
-                        "details": {
-                            "count": len(cases),
-                            "reason": "batch_decrypt_failed",
-                            "strategy": "batch_fallback"
-                        },
-                        "success": False,
-                        "error_message": str(error)
-                    })
-
-                # Fallback to individual decryption
-                return [self._decrypt_case(case) for case in cases]
-
-        # Fallback to individual decryption
-        return [self._decrypt_case(case) for case in cases]
-
-    def update(self, case_id: int, input_data: UpdateCaseInput) -> Optional[Case]:
+    def update_case(self, case_id: int, input_data: CaseUpdate, user_id: str) -> Optional[Case]:
         """
         Update case.
 
         Args:
             case_id: Case ID
-            input_data: UpdateCaseInput with fields to update
+            input_data: CaseUpdate with fields to update
+            user_id: User ID
 
         Returns:
             Updated Case model with decrypted description or None if not found
@@ -287,75 +186,57 @@ class CaseRepository:
             if not case:
                 return None
 
-            encryption = self._require_encryption_service()
-            fields_updated = []
+            update_data = input_data.model_dump(exclude_unset=True)
+            updated_fields = []
 
-            # Update fields
-            if input_data.title is not None:
-                case.title = input_data.title
-                fields_updated.append("title")
+            if "title" in update_data:
+                case.title = update_data["title"]
+                updated_fields.append("title")
 
-            if input_data.description is not None:
-                # Encrypt description before UPDATE
-                if input_data.description:
-                    encrypted_description = encryption.encrypt(input_data.description)
-                    case.description = json.dumps(encrypted_description.to_dict()) if encrypted_description else None
-                else:
-                    case.description = None
-                fields_updated.append("description")
+            if "description" in update_data:
+                setattr(case, "description", self._encrypt_description(update_data["description"]))
+                updated_fields.append("description")
 
-            if input_data.case_type is not None:
-                case.case_type = CaseType(input_data.case_type)
-                fields_updated.append("case_type")
+            if updated_fields:
+                self.db.commit()
+                self.db.refresh(case)
 
-            if input_data.status is not None:
-                case.status = CaseStatus(input_data.status)
-                fields_updated.append("status")
+            if self.audit_logger and updated_fields:
+                self.audit_logger.log(
+                    event_type="case.update",
+                    user_id=user_id,
+                    resource_type="case",
+                    resource_id=str(case_id),
+                    action="update",
+                    details={"updated_fields": updated_fields},
+                    success=True,
+                )
 
-            if len(fields_updated) == 0:
-                # No changes
-                case.description = self._decrypt_description(case.description)
-                return case
-
-            # Update timestamp (SQLAlchemy handles this automatically with onupdate)
-            self.db.commit()
-            self.db.refresh(case)
-
-            # Decrypt description for return value
-            case.description = self._decrypt_description(case.description)
-
-            # Audit: Case updated
-            if self.audit_logger:
-                self.audit_logger.log({
-                    "event_type": "case.update",
-                    "resource_type": "case",
-                    "resource_id": str(case_id),
-                    "action": "update",
-                    "details": {"fields_updated": fields_updated},
-                    "success": True
-                })
-
-            return case
+            # Decrypt for return
+            return self._detach_and_decrypt(case)
 
         except Exception as error:
             # Audit: Failed update
             if self.audit_logger:
-                self.audit_logger.log({
-                    "event_type": "case.update",
-                    "resource_type": "case",
-                    "resource_id": str(case_id),
-                    "action": "update",
-                    "success": False,
-                    "error_message": str(error)
-                })
+                self.audit_logger.log(
+                    event_type="case.update",
+                    user_id=user_id,
+                    resource_type="case",
+                    resource_id=str(case_id),
+                    action="update",
+                    details={},
+                    success=False,
+                    error_message=str(error),
+                )
             raise RuntimeError(f"Failed to update case: {str(error)}")
 
-    def delete(self, case_id: int) -> bool:
+    def delete_case(self, case_id: int, user_id: str) -> bool:
         """
         Delete case (cascades to related records via foreign keys).
 
         Args:
             case_id: Case ID
+            user_id: User ID for auditing
 
         Returns:
             True if case was deleted, False if not found
@@ -372,40 +253,32 @@ class CaseRepository:
 
             # Audit: Case deleted
             if self.audit_logger:
-                self.audit_logger.log({
-                    "event_type": "case.delete",
-                    "resource_type": "case",
-                    "resource_id": str(case_id),
-                    "action": "delete",
-                    "success": success
-                })
+                self.audit_logger.log(
+                    event_type="case.delete",
+                    user_id=user_id,
+                    resource_type="case",
+                    resource_id=str(case_id),
+                    action="delete",
+                    details={},
+                    success=success,
+                )
 
             return success
 
         except Exception as error:
             # Audit: Failed deletion
             if self.audit_logger:
-                self.audit_logger.log({
-                    "event_type": "case.delete",
-                    "resource_type": "case",
-                    "resource_id": str(case_id),
-                    "action": "delete",
-                    "success": False,
-                    "error_message": str(error)
-                })
+                self.audit_logger.log(
+                    event_type="case.delete",
+                    user_id=user_id,
+                    resource_type="case",
+                    resource_id=str(case_id),
+                    action="delete",
+                    details={},
+                    success=False,
+                    error_message=str(error),
+                )
             raise RuntimeError(f"Failed to delete case: {str(error)}")
-
-    def close(self, case_id: int) -> Optional[Case]:
-        """
-        Close a case.
-
-        Args:
-            case_id: Case ID
-
-        Returns:
-            Updated Case model or None if not found
-        """
-        return self.update(case_id, UpdateCaseInput(status="closed"))
 
     def count_by_status(self) -> Dict[str, int]:
         """
@@ -414,42 +287,22 @@ class CaseRepository:
         Returns:
             Dictionary mapping status to count
         """
-        results = self.db.query(
-            Case.status,
-            func.count(Case.id).label('count')
-        ).group_by(Case.status).all()
+        results = (
+            self.db.query(Case.status, func.count(Case.id).label("count"))
+            .group_by(Case.status)
+            .all()
+        )
 
-        counts = {
-            "active": 0,
-            "closed": 0,
-            "pending": 0
-        }
+        counts = {"active": 0, "closed": 0, "pending": 0}
 
         for status, count in results:
-            counts[status.value] = count
+            if status in counts:
+                counts[status] = count
 
         return counts
 
-    def get_statistics(self) -> Dict[str, Any]:
-        """
-        Get case statistics (total count + status breakdown).
-
-        Returns:
-            Dictionary with totalCases and statusCounts
-        """
-        status_counts = self.count_by_status()
-        total_cases = sum(status_counts.values())
-
-        return {
-            "totalCases": total_cases,
-            "statusCounts": status_counts
-        }
-
     def search_cases(
-        self,
-        user_id: int,
-        query: str,
-        filters: Optional[Dict[str, Any]] = None
+        self, user_id: int, query: str, filters: Optional[Dict[str, Any]] = None
     ) -> List[Case]:
         """
         Search cases by query string and filters.
@@ -470,10 +323,7 @@ class CaseRepository:
         # Text search (NOTE: This searches encrypted descriptions, so won't match)
         # For proper search, you'd need to decrypt all descriptions first
         if query:
-            query_builder = query_builder.filter(
-                (Case.title.like(f"%{query}%")) |
-                (Case.description.like(f"%{query}%"))
-            )
+            query_builder = query_builder.filter((Case.title.like(f"%{query}%")))
 
         # Status filter
         if filters and filters.get("case_status"):
@@ -484,15 +334,14 @@ class CaseRepository:
         if filters and filters.get("date_range"):
             date_range = filters["date_range"]
             query_builder = query_builder.filter(
-                Case.created_at >= date_range["from"],
-                Case.created_at <= date_range["to"]
+                Case.created_at >= date_range["from"], Case.created_at <= date_range["to"]
             )
 
         # Execute query
         cases = query_builder.order_by(Case.created_at.desc()).all()
 
         # Decrypt descriptions
-        return [self._decrypt_case(case) for case in cases]
+        return [self._detach_and_decrypt(case) for case in cases]
 
     def get_by_user_id(self, user_id: int) -> List[Case]:
         """
@@ -504,12 +353,15 @@ class CaseRepository:
         Returns:
             List of Case models with decrypted descriptions
         """
-        cases = self.db.query(Case).filter(
-            Case.user_id == user_id
-        ).order_by(Case.created_at.desc()).all()
+        cases = (
+            self.db.query(Case)
+            .filter(Case.user_id == user_id)
+            .order_by(Case.created_at.desc())
+            .all()
+        )
 
         # Decrypt descriptions
-        return [self._decrypt_case(case) for case in cases]
+        return [self._detach_and_decrypt(case) for case in cases]
 
     def get(self, case_id: int) -> Optional[Case]:
         """
@@ -521,41 +373,9 @@ class CaseRepository:
         Returns:
             Case model with decrypted description or None if not found
         """
-        return self.find_by_id(case_id)
+        return self.get_case_by_id(case_id, decrypt=True)
 
     # Private helper methods
-
-    def _decrypt_description(self, stored_value: Optional[str]) -> Optional[str]:
-        """
-        Decrypt description field with backward compatibility.
-
-        Args:
-            stored_value: Encrypted JSON string or legacy plaintext
-
-        Returns:
-            Decrypted plaintext or None
-        """
-        if not stored_value:
-            return None
-
-        # If no encryption service, return as-is (backward compatibility)
-        if not self.encryption_service:
-            return stored_value
-
-        try:
-            # Try to parse as encrypted data
-            encrypted_dict = json.loads(stored_value)
-
-            # Verify it's actually encrypted data format
-            if self.encryption_service.is_encrypted(encrypted_dict):
-                encrypted_data = EncryptedData.from_dict(encrypted_dict)
-                return self.encryption_service.decrypt(encrypted_data)
-
-            # If it's not encrypted format, treat as legacy plaintext
-            return stored_value
-        except (json.JSONDecodeError, KeyError, RuntimeError):
-            # JSON parse failed or decryption failed - likely legacy plaintext data
-            return stored_value
 
     def _decrypt_case(self, case: Case) -> Case:
         """
@@ -567,22 +387,7 @@ class CaseRepository:
         Returns:
             Case model with decrypted description
         """
-        if not case.description:
-            return case
-
-        if not self.encryption_service:
-            return case
-
-        try:
-            encrypted_dict = json.loads(case.description)
-            if self.encryption_service.is_encrypted(encrypted_dict):
-                encrypted_data = EncryptedData.from_dict(encrypted_dict)
-                case.description = self.encryption_service.decrypt(encrypted_data)
-        except (json.JSONDecodeError, KeyError, RuntimeError):
-            # Legacy plaintext or decryption failure - keep as-is
-            pass
-
-        return case
+        return self._detach_and_decrypt(case)
 
     def _require_encryption_service(self) -> EncryptionService:
         """

@@ -24,7 +24,11 @@ import asyncio
 import logging
 
 from backend.models.deadline import Deadline, DeadlineStatus
-from backend.models.notification import NotificationPreferences, NotificationType, NotificationSeverity
+from backend.models.notification import (
+    NotificationPreferences,
+    NotificationType,
+    NotificationSeverity,
+)
 from backend.services.notification_service import NotificationService, CreateNotificationInput
 from backend.services.audit_logger import AuditLogger
 
@@ -54,7 +58,7 @@ class DeadlineReminderScheduler:
         db: Session,
         notification_service: NotificationService,
         audit_logger: Optional[AuditLogger] = None,
-        check_interval: int = 3600  # 1 hour in seconds
+        check_interval: int = 3600,  # 1 hour in seconds
     ):
         """
         Initialize deadline reminder scheduler.
@@ -81,7 +85,7 @@ class DeadlineReminderScheduler:
         action: str,
         success: bool = True,
         details: Optional[Dict] = None,
-        error_message: Optional[str] = None
+        error_message: Optional[str] = None,
     ) -> None:
         """Log audit event if audit logger is configured."""
         if self.audit_logger:
@@ -93,7 +97,7 @@ class DeadlineReminderScheduler:
                 action=action,
                 success=success,
                 details=details or {},
-                error_message=error_message
+                error_message=error_message,
             )
 
     def start(self) -> None:
@@ -120,7 +124,7 @@ class DeadlineReminderScheduler:
             user_id=None,
             resource_id="scheduler",
             action="start",
-            success=True
+            success=True,
         )
 
     def stop(self) -> None:
@@ -144,7 +148,7 @@ class DeadlineReminderScheduler:
             user_id=None,
             resource_id="scheduler",
             action="stop",
-            success=True
+            success=True,
         )
 
     async def _run_scheduler(self) -> None:
@@ -197,8 +201,7 @@ class DeadlineReminderScheduler:
                 try:
                     # Get upcoming deadlines for this user
                     upcoming_deadlines = self._get_upcoming_deadlines(
-                        prefs.user_id,
-                        prefs.deadline_reminder_days
+                        prefs.user_id, prefs.deadline_reminder_days
                     )
 
                     for deadline in upcoming_deadlines:
@@ -208,8 +211,7 @@ class DeadlineReminderScheduler:
                         if reminder_key not in self._sent_reminders:
                             # Send reminder notification
                             await self._create_deadline_reminder_notification(
-                                prefs.user_id,
-                                deadline
+                                prefs.user_id, deadline
                             )
 
                             # Mark as sent to prevent duplicates
@@ -219,7 +221,7 @@ class DeadlineReminderScheduler:
                 except Exception as user_error:
                     logger.error(
                         f"Error processing reminders for user {prefs.user_id}: {str(user_error)}",
-                        exc_info=True
+                        exc_info=True,
                     )
                     # Continue with next user even if one fails
                     continue
@@ -232,7 +234,7 @@ class DeadlineReminderScheduler:
                 resource_id="bulk",
                 action="check",
                 success=True,
-                details={"reminders_sent": reminder_count}
+                details={"reminders_sent": reminder_count},
             )
 
         except Exception as error:
@@ -244,7 +246,7 @@ class DeadlineReminderScheduler:
                 resource_id="bulk",
                 action="check",
                 success=False,
-                error_message=str(error)
+                error_message=str(error),
             )
 
     def _get_users_with_deadline_reminders(self) -> list[NotificationPreferences]:
@@ -254,15 +256,13 @@ class DeadlineReminderScheduler:
         Returns:
             List of notification preferences for users with deadline reminders enabled
         """
-        return self.db.query(NotificationPreferences).filter(
-            NotificationPreferences.deadline_reminders_enabled == True
-        ).all()
+        return (
+            self.db.query(NotificationPreferences)
+            .filter(NotificationPreferences.deadline_reminders_enabled)
+            .all()
+        )
 
-    def _get_upcoming_deadlines(
-        self,
-        user_id: int,
-        reminder_days: int
-    ) -> list[Deadline]:
+    def _get_upcoming_deadlines(self, user_id: int, reminder_days: int) -> list[Deadline]:
         """
         Get upcoming deadlines for a user within the reminder threshold.
 
@@ -281,19 +281,25 @@ class DeadlineReminderScheduler:
         # 2. Are not completed
         # 3. Are not soft-deleted
         # 4. Have deadline_date in the future but within reminder threshold
-        deadlines = self.db.query(Deadline).filter(
-            and_(
-                Deadline.user_id == user_id,
-                Deadline.status != DeadlineStatus.COMPLETED.value,
-                Deadline.deleted_at.is_(None)
+        deadlines = (
+            self.db.query(Deadline)
+            .filter(
+                and_(
+                    Deadline.user_id == user_id,
+                    Deadline.status != DeadlineStatus.COMPLETED.value,
+                    Deadline.deleted_at.is_(None),
+                )
             )
-        ).all()
+            .all()
+        )
 
         # Filter by date range (deadline_date is stored as ISO string)
         upcoming = []
         for deadline in deadlines:
             try:
-                deadline_date = datetime.fromisoformat(deadline.deadline_date.replace('Z', '+00:00'))
+                deadline_date = datetime.fromisoformat(
+                    deadline.deadline_date.replace("Z", "+00:00")
+                )
 
                 # Check if deadline is in future and within reminder threshold
                 if now < deadline_date <= reminder_threshold:
@@ -301,16 +307,14 @@ class DeadlineReminderScheduler:
             except (ValueError, AttributeError) as error:
                 logger.warning(
                     f"Invalid deadline date for deadline {deadline.id}: {deadline.deadline_date}",
-                    exc_info=True
+                    exc_info=True,
                 )
                 continue
 
         return upcoming
 
     async def _create_deadline_reminder_notification(
-        self,
-        user_id: int,
-        deadline: Deadline
+        self, user_id: int, deadline: Deadline
     ) -> None:
         """
         Create a deadline reminder notification.
@@ -325,7 +329,7 @@ class DeadlineReminderScheduler:
         try:
             # Calculate days until deadline
             now = datetime.now()
-            deadline_date = datetime.fromisoformat(deadline.deadline_date.replace('Z', '+00:00'))
+            deadline_date = datetime.fromisoformat(deadline.deadline_date.replace("Z", "+00:00"))
             days_until = (deadline_date - now).days
 
             # Ensure minimum of 0 days (for today)
@@ -356,8 +360,8 @@ class DeadlineReminderScheduler:
                         "deadlineId": deadline.id,
                         "caseId": deadline.case_id,
                         "daysUntil": days_until,
-                        "deadlineDate": deadline.deadline_date
-                    }
+                        "deadlineDate": deadline.deadline_date,
+                    },
                 )
             )
 
@@ -372,17 +376,14 @@ class DeadlineReminderScheduler:
                 resource_id=str(deadline.id),
                 action="create",
                 success=True,
-                details={
-                    "deadline_title": deadline.title,
-                    "days_until": days_until
-                }
+                details={"deadline_title": deadline.title, "days_until": days_until},
             )
 
         except Exception as error:
             logger.error(
                 f"Failed to create deadline reminder for user {user_id}, "
                 f"deadline {deadline.id}: {str(error)}",
-                exc_info=True
+                exc_info=True,
             )
 
             self._log_audit(
@@ -391,7 +392,7 @@ class DeadlineReminderScheduler:
                 resource_id=str(deadline.id),
                 action="create",
                 success=False,
-                error_message=str(error)
+                error_message=str(error),
             )
 
     def clear_sent_reminders(self) -> None:
@@ -412,7 +413,7 @@ class DeadlineReminderScheduler:
             resource_id="cache",
             action="clear",
             success=True,
-            details={"cleared_count": count}
+            details={"cleared_count": count},
         )
 
     def get_stats(self) -> Dict[str, any]:
@@ -426,5 +427,5 @@ class DeadlineReminderScheduler:
         return {
             "is_running": self.is_running,
             "check_interval_seconds": self.check_interval,
-            "sent_reminders_count": len(self._sent_reminders)
+            "sent_reminders_count": len(self._sent_reminders),
         }

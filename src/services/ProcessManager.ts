@@ -268,7 +268,7 @@ export class ProcessManager {
    */
   public logError(error: Error, context?: Record<string, unknown>): void {
     // Log to console for immediate feedback
-    logger.error("[ProcessManager]", error.message, {
+    logger.error(error.message, {
       service: "ProcessManager",
       ...context,
     });

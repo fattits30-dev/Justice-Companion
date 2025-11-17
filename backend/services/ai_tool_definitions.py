@@ -35,6 +35,7 @@ class AIProviderType(str, Enum):
         MISTRAL: Mistral AI models
         PERPLEXITY: Perplexity AI models
     """
+
     OPENAI = "openai"
     ANTHROPIC = "anthropic"
     HUGGINGFACE = "huggingface"
@@ -49,6 +50,7 @@ class AIProviderType(str, Enum):
 
 class ToolParameterType(str, Enum):
     """JSON Schema parameter types."""
+
     STRING = "string"
     NUMBER = "number"
     INTEGER = "integer"
@@ -69,6 +71,7 @@ class ToolParameter(BaseModel):
         items: Optional array item schema (for array types)
         properties: Optional nested properties (for object types)
     """
+
     model_config = ConfigDict(use_enum_values=True)
 
     type: ToolParameterType
@@ -88,6 +91,7 @@ class ToolParameters(BaseModel):
         properties: Dictionary of parameter names to parameter definitions
         required: List of required parameter names
     """
+
     type: Literal["object"] = "object"
     properties: Dict[str, Union[ToolParameter, Dict[str, Any]]] = Field(default_factory=dict)
     required: List[str] = Field(default_factory=list)
@@ -102,6 +106,7 @@ class ToolFunction(BaseModel):
         description: Clear description of what the function does
         parameters: JSON Schema defining function parameters
     """
+
     name: str = Field(..., pattern="^[a-z_][a-z0-9_]*$")
     description: str = Field(..., min_length=10)
     parameters: ToolParameters
@@ -137,18 +142,19 @@ class AITool(BaseModel):
         ...     )
         ... )
     """
+
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     type: Literal["function"] = "function"
     function: ToolFunction
     handler: Optional[Callable[[Dict[str, Any]], Coroutine[Any, Any, Any]]] = Field(
-        default=None,
-        exclude=True  # Don't serialize handler when converting to dict
+        default=None, exclude=True  # Don't serialize handler when converting to dict
     )
 
 
 class LegalJurisdiction(str, Enum):
     """UK legal jurisdictions supported by Justice Companion."""
+
     EMPLOYMENT = "employment"
     HOUSING = "housing"
     CONSUMER = "consumer"
@@ -251,23 +257,22 @@ class AIToolDefinitions:
                     type="object",
                     properties={
                         "query": ToolParameter(
-                            type=ToolParameterType.STRING,
-                            description="Search query for case law"
+                            type=ToolParameterType.STRING, description="Search query for case law"
                         ),
                         "jurisdiction": ToolParameter(
                             type=ToolParameterType.STRING,
                             description="Legal jurisdiction to search",
-                            enum=[j.value for j in LegalJurisdiction]
+                            enum=[j.value for j in LegalJurisdiction],
                         ),
                         "limit": ToolParameter(
                             type=ToolParameterType.NUMBER,
                             description="Maximum number of results",
-                            default=5
-                        )
+                            default=5,
+                        ),
                     },
-                    required=["query", "jurisdiction"]
-                )
-            )
+                    required=["query", "jurisdiction"],
+                ),
+            ),
         )
 
     @staticmethod
@@ -296,16 +301,15 @@ class AIToolDefinitions:
                     properties={
                         "statute": ToolParameter(
                             type=ToolParameterType.STRING,
-                            description="Name of statute or regulation"
+                            description="Name of statute or regulation",
                         ),
                         "section": ToolParameter(
-                            type=ToolParameterType.STRING,
-                            description="Specific section if known"
-                        )
+                            type=ToolParameterType.STRING, description="Specific section if known"
+                        ),
                     },
-                    required=["statute"]
-                )
-            )
+                    required=["statute"],
+                ),
+            ),
         )
 
     @staticmethod
@@ -330,11 +334,11 @@ class AIToolDefinitions:
                         "case_type": ToolParameter(
                             type=ToolParameterType.STRING,
                             description="Type of legal case",
-                            enum=[j.value for j in LegalJurisdiction]
+                            enum=[j.value for j in LegalJurisdiction],
                         ),
                         "start_date": ToolParameter(
                             type=ToolParameterType.STRING,
-                            description="Start date for calculation (ISO 8601 format)"
+                            description="Start date for calculation (ISO 8601 format)",
                         ),
                         "event_type": ToolParameter(
                             type=ToolParameterType.STRING,
@@ -344,13 +348,13 @@ class AIToolDefinitions:
                                 "notice_received",
                                 "hearing_scheduled",
                                 "judgment_issued",
-                                "appeal_window"
-                            ]
-                        )
+                                "appeal_window",
+                            ],
+                        ),
                     },
-                    required=["case_type", "start_date", "event_type"]
-                )
-            )
+                    required=["case_type", "start_date", "event_type"],
+                ),
+            ),
         )
 
     @staticmethod
@@ -374,7 +378,7 @@ class AIToolDefinitions:
                     properties={
                         "document_text": ToolParameter(
                             type=ToolParameterType.STRING,
-                            description="Text content of the document to analyze"
+                            description="Text content of the document to analyze",
                         ),
                         "document_type": ToolParameter(
                             type=ToolParameterType.STRING,
@@ -387,8 +391,8 @@ class AIToolDefinitions:
                                 "correspondence",
                                 "court_order",
                                 "statute",
-                                "regulation"
-                            ]
+                                "regulation",
+                            ],
                         ),
                         "focus_areas": ToolParameter(
                             type=ToolParameterType.ARRAY,
@@ -402,14 +406,14 @@ class AIToolDefinitions:
                                     "rights",
                                     "definitions",
                                     "termination_clauses",
-                                    "dispute_resolution"
-                                ]
-                            }
-                        )
+                                    "dispute_resolution",
+                                ],
+                            },
+                        ),
                     },
-                    required=["document_text", "document_type"]
-                )
-            )
+                    required=["document_text", "document_type"],
+                ),
+            ),
         )
 
     @staticmethod
@@ -442,23 +446,23 @@ class AIToolDefinitions:
                                 "particulars_of_claim",
                                 "defence",
                                 "counterclaim",
-                                "appeal_notice"
-                            ]
+                                "appeal_notice",
+                            ],
                         ),
                         "jurisdiction": ToolParameter(
                             type=ToolParameterType.STRING,
                             description="Legal jurisdiction",
-                            enum=[j.value for j in LegalJurisdiction]
+                            enum=[j.value for j in LegalJurisdiction],
                         ),
                         "case_details": ToolParameter(
                             type=ToolParameterType.OBJECT,
                             description="Case information to populate the form",
-                            properties={}  # Would be defined based on form type
-                        )
+                            properties={},  # Would be defined based on form type
+                        ),
                     },
-                    required=["form_type", "jurisdiction"]
-                )
-            )
+                    required=["form_type", "jurisdiction"],
+                ),
+            ),
         )
 
     @staticmethod
@@ -537,7 +541,7 @@ class AIToolDefinitions:
         return {
             "name": tool.function.name,
             "description": tool.function.description,
-            "input_schema": tool.function.parameters.model_dump(exclude_none=True)
+            "input_schema": tool.function.parameters.model_dump(exclude_none=True),
         }
 
 

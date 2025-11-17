@@ -22,11 +22,10 @@ Security:
 import json
 import re
 import time
-from typing import Optional, Dict, Any, List, Tuple
+from typing import Optional, Dict, Any, List
 from datetime import datetime
 from sqlalchemy.orm import Session
 from sqlalchemy import text
-from fastapi import HTTPException
 
 from backend.services.encryption_service import EncryptionService, EncryptedData
 from backend.services.audit_logger import log_audit_event
@@ -63,11 +62,7 @@ class SearchIndexBuilder:
         print(f"Total documents: {stats['total_documents']}")
     """
 
-    def __init__(
-        self,
-        db: Session,
-        encryption_service: Optional[EncryptionService] = None
-    ):
+    def __init__(self, db: Session, encryption_service: Optional[EncryptionService] = None):
         """
         Initialize search index builder.
 
@@ -153,9 +148,9 @@ class SearchIndexBuilder:
                 details={
                     "total_users": len(users),
                     "total_indexed": total_indexed,
-                    "execution_time_ms": execution_time
+                    "execution_time_ms": execution_time,
                 },
-                success=True
+                success=True,
             )
 
         except Exception as error:
@@ -169,7 +164,7 @@ class SearchIndexBuilder:
                 resource_id="global",
                 action="rebuild",
                 details={"error": str(error)},
-                success=False
+                success=False,
             )
             raise Exception(f"Failed to rebuild search index: {str(error)}")
 
@@ -193,8 +188,7 @@ class SearchIndexBuilder:
 
             # Clear only this user's index entries
             self.db.execute(
-                text("DELETE FROM search_index WHERE user_id = :user_id"),
-                {"user_id": user_id}
+                text("DELETE FROM search_index WHERE user_id = :user_id"), {"user_id": user_id}
             )
 
             total_indexed = 0
@@ -235,11 +229,8 @@ class SearchIndexBuilder:
                 resource_type="search_index",
                 resource_id=f"user_{user_id}",
                 action="rebuild",
-                details={
-                    "total_indexed": total_indexed,
-                    "execution_time_ms": execution_time
-                },
-                success=True
+                details={"total_indexed": total_indexed, "execution_time_ms": execution_time},
+                success=True,
             )
 
         except Exception as error:
@@ -253,7 +244,7 @@ class SearchIndexBuilder:
                 resource_id=f"user_{user_id}",
                 action="rebuild",
                 details={"error": str(error)},
-                success=False
+                success=False,
             )
             raise Exception(f"Failed to rebuild search index for user {user_id}: {str(error)}")
 
@@ -279,7 +270,8 @@ class SearchIndexBuilder:
             tags = self._extract_tags(content)
 
             # Insert into search index
-            query = text("""
+            query = text(
+                """
                 INSERT OR REPLACE INTO search_index (
                     entity_type, entity_id, user_id, case_id, title, content, tags, created_at,
                     status, case_type
@@ -287,20 +279,24 @@ class SearchIndexBuilder:
                     :entity_type, :entity_id, :user_id, :case_id, :title, :content, :tags, :created_at,
                     :status, :case_type
                 )
-            """)
+            """
+            )
 
-            self.db.execute(query, {
-                "entity_type": "case",
-                "entity_id": case_data["id"],
-                "user_id": case_data["user_id"],
-                "case_id": case_data["id"],
-                "title": title,
-                "content": content,
-                "tags": tags,
-                "created_at": case_data.get("created_at", datetime.utcnow().isoformat()),
-                "status": case_data.get("status"),
-                "case_type": case_data.get("case_type")
-            })
+            self.db.execute(
+                query,
+                {
+                    "entity_type": "case",
+                    "entity_id": case_data["id"],
+                    "user_id": case_data["user_id"],
+                    "case_id": case_data["id"],
+                    "title": title,
+                    "content": content,
+                    "tags": tags,
+                    "created_at": case_data.get("created_at", datetime.utcnow().isoformat()),
+                    "status": case_data.get("status"),
+                    "case_type": case_data.get("case_type"),
+                },
+            )
             self.db.commit()
 
         except Exception as error:
@@ -312,7 +308,7 @@ class SearchIndexBuilder:
                 resource_id=str(case_data.get("id")),
                 action="index",
                 details={"error": str(error)},
-                success=False
+                success=False,
             )
             # Don't raise - continue indexing other items
 
@@ -345,7 +341,8 @@ class SearchIndexBuilder:
             tags = self._extract_tags(full_content)
 
             # Insert into search index
-            query = text("""
+            query = text(
+                """
                 INSERT OR REPLACE INTO search_index (
                     entity_type, entity_id, user_id, case_id, title, content, tags, created_at,
                     evidence_type, file_path
@@ -353,20 +350,24 @@ class SearchIndexBuilder:
                     :entity_type, :entity_id, :user_id, :case_id, :title, :content, :tags, :created_at,
                     :evidence_type, :file_path
                 )
-            """)
+            """
+            )
 
-            self.db.execute(query, {
-                "entity_type": "evidence",
-                "entity_id": evidence_data["id"],
-                "user_id": case_data["user_id"],
-                "case_id": evidence_data["case_id"],
-                "title": title,
-                "content": full_content,
-                "tags": tags,
-                "created_at": evidence_data.get("created_at", datetime.utcnow().isoformat()),
-                "evidence_type": evidence_data.get("evidence_type"),
-                "file_path": file_path
-            })
+            self.db.execute(
+                query,
+                {
+                    "entity_type": "evidence",
+                    "entity_id": evidence_data["id"],
+                    "user_id": case_data["user_id"],
+                    "case_id": evidence_data["case_id"],
+                    "title": title,
+                    "content": full_content,
+                    "tags": tags,
+                    "created_at": evidence_data.get("created_at", datetime.utcnow().isoformat()),
+                    "evidence_type": evidence_data.get("evidence_type"),
+                    "file_path": file_path,
+                },
+            )
             self.db.commit()
 
         except Exception as error:
@@ -377,11 +378,8 @@ class SearchIndexBuilder:
                 resource_type="evidence",
                 resource_id=str(evidence_data.get("id")),
                 action="index",
-                details={
-                    "case_id": evidence_data.get("case_id"),
-                    "error": str(error)
-                },
-                success=False
+                details={"case_id": evidence_data.get("case_id"), "error": str(error)},
+                success=False,
             )
             # Don't raise - continue indexing other items
 
@@ -396,15 +394,16 @@ class SearchIndexBuilder:
         """
         try:
             # Get messages for content
-            messages_query = text("""
+            messages_query = text(
+                """
                 SELECT content
                 FROM chat_messages
                 WHERE conversation_id = :conversation_id
                 ORDER BY created_at
-            """)
+            """
+            )
             messages_result = self.db.execute(
-                messages_query,
-                {"conversation_id": conversation_data["id"]}
+                messages_query, {"conversation_id": conversation_data["id"]}
             ).fetchall()
 
             message_content = " ".join([row[0] for row in messages_result if row[0]])
@@ -413,7 +412,8 @@ class SearchIndexBuilder:
             tags = self._extract_tags(content)
 
             # Insert into search index
-            query = text("""
+            query = text(
+                """
                 INSERT OR REPLACE INTO search_index (
                     entity_type, entity_id, user_id, case_id, title, content, tags, created_at,
                     message_count
@@ -421,19 +421,25 @@ class SearchIndexBuilder:
                     :entity_type, :entity_id, :user_id, :case_id, :title, :content, :tags, :created_at,
                     :message_count
                 )
-            """)
+            """
+            )
 
-            self.db.execute(query, {
-                "entity_type": "conversation",
-                "entity_id": conversation_data["id"],
-                "user_id": conversation_data["user_id"],
-                "case_id": conversation_data.get("case_id"),
-                "title": conversation_data.get("title", "Untitled Conversation"),
-                "content": content,
-                "tags": tags,
-                "created_at": conversation_data.get("created_at", datetime.utcnow().isoformat()),
-                "message_count": conversation_data.get("message_count", len(messages_result))
-            })
+            self.db.execute(
+                query,
+                {
+                    "entity_type": "conversation",
+                    "entity_id": conversation_data["id"],
+                    "user_id": conversation_data["user_id"],
+                    "case_id": conversation_data.get("case_id"),
+                    "title": conversation_data.get("title", "Untitled Conversation"),
+                    "content": content,
+                    "tags": tags,
+                    "created_at": conversation_data.get(
+                        "created_at", datetime.utcnow().isoformat()
+                    ),
+                    "message_count": conversation_data.get("message_count", len(messages_result)),
+                },
+            )
             self.db.commit()
 
         except Exception as error:
@@ -444,11 +450,8 @@ class SearchIndexBuilder:
                 resource_type="conversation",
                 resource_id=str(conversation_data.get("id")),
                 action="index",
-                details={
-                    "case_id": conversation_data.get("case_id"),
-                    "error": str(error)
-                },
-                success=False
+                details={"case_id": conversation_data.get("case_id"), "error": str(error)},
+                success=False,
             )
             # Don't raise - continue indexing other items
 
@@ -470,7 +473,8 @@ class SearchIndexBuilder:
             tags = self._extract_tags(full_content)
 
             # Insert into search index
-            query = text("""
+            query = text(
+                """
                 INSERT OR REPLACE INTO search_index (
                     entity_type, entity_id, user_id, case_id, title, content, tags, created_at,
                     is_pinned
@@ -478,19 +482,23 @@ class SearchIndexBuilder:
                     :entity_type, :entity_id, :user_id, :case_id, :title, :content, :tags, :created_at,
                     :is_pinned
                 )
-            """)
+            """
+            )
 
-            self.db.execute(query, {
-                "entity_type": "note",
-                "entity_id": note_data["id"],
-                "user_id": note_data["user_id"],
-                "case_id": note_data.get("case_id"),
-                "title": title,
-                "content": full_content,
-                "tags": tags,
-                "created_at": note_data.get("created_at", datetime.utcnow().isoformat()),
-                "is_pinned": 1 if note_data.get("is_pinned") else 0
-            })
+            self.db.execute(
+                query,
+                {
+                    "entity_type": "note",
+                    "entity_id": note_data["id"],
+                    "user_id": note_data["user_id"],
+                    "case_id": note_data.get("case_id"),
+                    "title": title,
+                    "content": full_content,
+                    "tags": tags,
+                    "created_at": note_data.get("created_at", datetime.utcnow().isoformat()),
+                    "is_pinned": 1 if note_data.get("is_pinned") else 0,
+                },
+            )
             self.db.commit()
 
         except Exception as error:
@@ -501,11 +509,8 @@ class SearchIndexBuilder:
                 resource_type="note",
                 resource_id=str(note_data.get("id")),
                 action="index",
-                details={
-                    "case_id": note_data.get("case_id"),
-                    "error": str(error)
-                },
-                success=False
+                details={"case_id": note_data.get("case_id"), "error": str(error)},
+                success=False,
             )
             # Don't raise - continue indexing other items
 
@@ -518,14 +523,13 @@ class SearchIndexBuilder:
             entity_id: Entity ID to remove
         """
         try:
-            query = text("""
+            query = text(
+                """
                 DELETE FROM search_index
                 WHERE entity_type = :entity_type AND entity_id = :entity_id
-            """)
-            self.db.execute(query, {
-                "entity_type": entity_type,
-                "entity_id": entity_id
-            })
+            """
+            )
+            self.db.execute(query, {"entity_type": entity_type, "entity_id": entity_id})
             self.db.commit()
 
             log_audit_event(
@@ -535,7 +539,7 @@ class SearchIndexBuilder:
                 resource_type=entity_type,
                 resource_id=str(entity_id),
                 action="delete",
-                success=True
+                success=True,
             )
 
         except Exception as error:
@@ -547,7 +551,7 @@ class SearchIndexBuilder:
                 resource_id=str(entity_id),
                 action="delete",
                 details={"error": str(error)},
-                success=False
+                success=False,
             )
             raise Exception(f"Failed to remove {entity_type} {entity_id} from index: {str(error)}")
 
@@ -592,7 +596,7 @@ class SearchIndexBuilder:
                 resource_id=str(entity_id),
                 action="update",
                 details={"error": str(error)},
-                success=False
+                success=False,
             )
             raise Exception(f"Failed to update {entity_type} {entity_id} in index: {str(error)}")
 
@@ -621,7 +625,7 @@ class SearchIndexBuilder:
                 resource_type="search_index",
                 resource_id="global",
                 action="optimize",
-                success=True
+                success=True,
             )
 
         except Exception as error:
@@ -633,7 +637,7 @@ class SearchIndexBuilder:
                 resource_id="global",
                 action="optimize",
                 details={"error": str(error)},
-                success=False
+                success=False,
             )
             raise Exception(f"Failed to optimize search index: {str(error)}")
 
@@ -654,26 +658,30 @@ class SearchIndexBuilder:
             total_documents = total_result[0] if total_result else 0
 
             # By type
-            by_type_query = text("""
+            by_type_query = text(
+                """
                 SELECT entity_type, COUNT(*) as count
                 FROM search_index
                 GROUP BY entity_type
-            """)
+            """
+            )
             by_type_results = self.db.execute(by_type_query).fetchall()
             documents_by_type = {row[0]: row[1] for row in by_type_results}
 
             # Last updated
-            last_update_query = text("""
+            last_update_query = text(
+                """
                 SELECT MAX(created_at) as last_updated
                 FROM search_index
-            """)
+            """
+            )
             last_update_result = self.db.execute(last_update_query).fetchone()
             last_updated = last_update_result[0] if last_update_result else None
 
             return {
                 "total_documents": total_documents,
                 "documents_by_type": documents_by_type,
-                "last_updated": last_updated
+                "last_updated": last_updated,
             }
 
         except Exception as error:
@@ -747,12 +755,14 @@ class SearchIndexBuilder:
 
     async def _get_user_evidence(self, user_id: int) -> List[Dict[str, Any]]:
         """Get all evidence for a user."""
-        query = text("""
+        query = text(
+            """
             SELECT e.*
             FROM evidence e
             INNER JOIN cases c ON e.case_id = c.id
             WHERE c.user_id = :user_id
-        """)
+        """
+        )
         results = self.db.execute(query, {"user_id": user_id}).fetchall()
         return [dict(row._mapping) for row in results]
 

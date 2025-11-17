@@ -24,12 +24,11 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from backend.services.gdpr import (
-    GdprService,
     GdprExportOptions,
     GdprDeleteOptions,
     RateLimitError,
     ConsentRequiredError,
-    create_gdpr_service
+    create_gdpr_service,
 )
 from backend.services.encryption_service import EncryptionService
 from backend.services.audit_logger import AuditLogger
@@ -64,9 +63,7 @@ async def example_export_user_data():
 
     # Create GDPR service
     gdpr_service = create_gdpr_service(
-        db=db,
-        encryption_service=encryption_service,
-        audit_logger=audit_logger
+        db=db, encryption_service=encryption_service, audit_logger=audit_logger
     )
 
     # User ID to export
@@ -77,8 +74,7 @@ async def example_export_user_data():
         print(f"\nExporting data for user {user_id}...")
 
         export_result = await gdpr_service.export_user_data(
-            user_id=user_id,
-            options=GdprExportOptions(export_format="json")
+            user_id=user_id, options=GdprExportOptions(export_format="json")
         )
 
         # Display results
@@ -137,9 +133,7 @@ async def example_delete_user_data():
     audit_logger = AuditLogger(db)
 
     gdpr_service = create_gdpr_service(
-        db=db,
-        encryption_service=encryption_service,
-        audit_logger=audit_logger
+        db=db, encryption_service=encryption_service, audit_logger=audit_logger
     )
 
     # User ID to delete
@@ -159,9 +153,8 @@ async def example_delete_user_data():
         delete_result = await gdpr_service.delete_user_data(
             user_id=user_id,
             options=GdprDeleteOptions(
-                confirmed=True,  # MUST be True
-                reason="User requested account deletion"
-            )
+                confirmed=True, reason="User requested account deletion"  # MUST be True
+            ),
         )
 
         # Display results
@@ -213,9 +206,7 @@ async def example_export_before_delete():
     audit_logger = AuditLogger(db)
 
     gdpr_service = create_gdpr_service(
-        db=db,
-        encryption_service=encryption_service,
-        audit_logger=audit_logger
+        db=db, encryption_service=encryption_service, audit_logger=audit_logger
     )
 
     user_id = 1
@@ -229,8 +220,8 @@ async def example_export_before_delete():
             options=GdprDeleteOptions(
                 confirmed=True,
                 export_before_delete=True,  # Creates backup automatically
-                reason="User requested deletion with backup"
-            )
+                reason="User requested deletion with backup",
+            ),
         )
 
         # Display results
@@ -278,9 +269,7 @@ async def example_rate_limit_handling():
     audit_logger = AuditLogger(db)
 
     gdpr_service = create_gdpr_service(
-        db=db,
-        encryption_service=encryption_service,
-        audit_logger=audit_logger
+        db=db, encryption_service=encryption_service, audit_logger=audit_logger
     )
 
     user_id = 1
@@ -293,8 +282,7 @@ async def example_rate_limit_handling():
             print(f"\n  Attempt {attempt}...", end=" ")
 
             export_result = await gdpr_service.export_user_data(
-                user_id=user_id,
-                options=GdprExportOptions(export_format="json")
+                user_id=user_id, options=GdprExportOptions(export_format="json")
             )
 
             print(f"✓ Success ({export_result.metadata['totalRecords']} records)")
@@ -339,9 +327,7 @@ async def example_consent_verification():
     audit_logger = AuditLogger(db)
 
     gdpr_service = create_gdpr_service(
-        db=db,
-        encryption_service=encryption_service,
-        audit_logger=audit_logger
+        db=db, encryption_service=encryption_service, audit_logger=audit_logger
     )
 
     # Try exporting for user without consent

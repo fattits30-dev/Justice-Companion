@@ -16,10 +16,9 @@ Key Features:
 
 import logging
 import threading
-import time
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +34,7 @@ class RateLimitAttempt:
         last_attempt_at: Timestamp of most recent attempt
         locked_until: Timestamp when lock expires (None if not locked)
     """
+
     count: int = 0
     first_attempt_at: datetime = field(default_factory=datetime.now)
     last_attempt_at: datetime = field(default_factory=datetime.now)
@@ -52,6 +52,7 @@ class RateLimitResult:
         attempts_remaining: Number of attempts remaining before lockout
         message: Human-readable message
     """
+
     allowed: bool
     remaining_time: Optional[int] = None
     attempts_remaining: Optional[int] = None
@@ -68,6 +69,7 @@ class RateLimitConfig:
         window_seconds: Time window in seconds for rate limiting
         lock_duration_seconds: Duration of lockout in seconds
     """
+
     max_attempts: int
     window_seconds: int
     lock_duration_seconds: int
@@ -222,9 +224,7 @@ class RateLimitService:
             if attempt.count >= config.max_attempts:
                 # Lock if configured
                 if config.lock_duration_seconds > 0:
-                    attempt.locked_until = now + timedelta(
-                        seconds=config.lock_duration_seconds
-                    )
+                    attempt.locked_until = now + timedelta(seconds=config.lock_duration_seconds)
                     logger.warning(
                         f"Account locked for user {user_id}, operation '{operation}'. "
                         f"Attempts: {attempt.count}, Lock duration: {config.lock_duration_seconds}s"
@@ -280,13 +280,17 @@ class RateLimitService:
                     locked_until=None,
                 )
                 self._attempts[key] = attempt
-                logger.debug(f"First failed attempt recorded for user {user_id}, operation '{operation}'")
+                logger.debug(
+                    f"First failed attempt recorded for user {user_id}, operation '{operation}'"
+                )
                 return
 
             # If already locked, don't increment further
             if attempt.locked_until and attempt.locked_until > now:
                 attempt.last_attempt_at = now
-                logger.debug(f"Attempt on locked account for user {user_id}, operation '{operation}'")
+                logger.debug(
+                    f"Attempt on locked account for user {user_id}, operation '{operation}'"
+                )
                 return
 
             # Check if we're still within the sliding window
@@ -298,7 +302,9 @@ class RateLimitService:
                 attempt.first_attempt_at = now
                 attempt.last_attempt_at = now
                 attempt.locked_until = None
-                logger.debug(f"Window expired, reset attempts for user {user_id}, operation '{operation}'")
+                logger.debug(
+                    f"Window expired, reset attempts for user {user_id}, operation '{operation}'"
+                )
             else:
                 # Increment count only if not at max
                 if attempt.count < config.max_attempts:
@@ -308,9 +314,7 @@ class RateLimitService:
                 # Lock if max attempts reached
                 if attempt.count >= config.max_attempts and not attempt.locked_until:
                     if config.lock_duration_seconds > 0:
-                        attempt.locked_until = now + timedelta(
-                            seconds=config.lock_duration_seconds
-                        )
+                        attempt.locked_until = now + timedelta(seconds=config.lock_duration_seconds)
                         logger.error(
                             f"RATE LIMIT EXCEEDED for user {user_id}, operation '{operation}'. "
                             f"Account locked for {config.lock_duration_seconds}s"

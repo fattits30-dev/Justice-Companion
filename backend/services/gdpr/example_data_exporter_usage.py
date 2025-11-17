@@ -11,10 +11,7 @@ Usage examples:
 4. Save to file with custom path
 """
 
-import os
-import sys
 import json
-import base64
 from pathlib import Path
 from datetime import datetime
 
@@ -63,14 +60,11 @@ def example_2_export_with_options(db, encryption_service):
     options = GdprExportOptions(
         export_format="json",
         include_files=False,
-        date_range=None  # Could filter by date range if needed
+        date_range=None,  # Could filter by date range if needed
     )
 
     # Export with options
-    export_result = exporter.export_all_user_data(
-        user_id=1,
-        options=options
-    )
+    export_result = exporter.export_all_user_data(user_id=1, options=options)
 
     print(f"Exported in {options.format} format")
     print(f"Total records: {export_result.metadata.total_records}")
@@ -98,18 +92,27 @@ def example_3_inspect_decrypted_data(db, encryption_service):
         print(f"\nCase data (decrypted):")
         print(f"  ID: {case.get('id')}")
         print(f"  Title: {case.get('title')}")
-        print(f"  Description: {case.get('description')[:50]}..."
-              if case.get('description') else "  Description: None")
+        print(
+            f"  Description: {case.get('description')[:50]}..."
+            if case.get("description")
+            else "  Description: None"
+        )
         print(f"  Status: {case.get('status')}")
 
     # Inspect decrypted chat messages
     if export_result.user_data["chatMessages"].count > 0:
         message = export_result.user_data["chatMessages"].records[0]
         print(f"\nChat message (decrypted):")
-        print(f"  Message: {message.get('message')[:50]}..."
-              if message.get('message') else "  Message: None")
-        print(f"  Response: {message.get('response')[:50]}..."
-              if message.get('response') else "  Response: None")
+        print(
+            f"  Message: {message.get('message')[:50]}..."
+            if message.get("message")
+            else "  Message: None"
+        )
+        print(
+            f"  Response: {message.get('response')[:50]}..."
+            if message.get("response")
+            else "  Response: None"
+        )
 
     return export_result
 
@@ -143,7 +146,7 @@ def example_4_save_to_file(db, encryption_service):
     print(f"File size: {file_path.stat().st_size} bytes")
 
     # Verify file contents
-    with open(file_path, 'r', encoding='utf-8') as f:
+    with open(file_path, "r", encoding="utf-8") as f:
         loaded_data = json.load(f)
 
     print(f"Verified: {loaded_data['metadata']['totalRecords']} records")
@@ -254,7 +257,8 @@ def example_6_security_considerations():
     """
     print("\n=== Example 6: Security Considerations ===")
 
-    print("""
+    print(
+        """
 Security Best Practices:
 
 1. Password Hashes:
@@ -291,7 +295,8 @@ Security Best Practices:
    - Provide data in machine-readable format (JSON)
    - Include all personal data across all tables
    - Preserve consent records as required by law
-""")
+"""
+    )
 
 
 def main():

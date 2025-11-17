@@ -11,7 +11,6 @@ Run with:
 import asyncio
 import tempfile
 import os
-from pathlib import Path
 
 from backend.services.ai_service_factory import (
     AIServiceFactory,
@@ -20,13 +19,14 @@ from backend.services.ai_service_factory import (
     LegalContext,
     LegislationResult,
     CaseResult,
-    get_ai_service_factory
+    get_ai_service_factory,
 )
 
 
 # ============================================================================
 # EXAMPLE 1: Basic Factory Initialization
 # ============================================================================
+
 
 def example_1_basic_initialization():
     """
@@ -50,8 +50,7 @@ def example_1_basic_initialization():
 
         # Initialize factory with model path
         factory = AIServiceFactory.get_instance(
-            model_path=model_path,
-            audit_logger=None  # Optional audit logger
+            model_path=model_path, audit_logger=None  # Optional audit logger
         )
 
         print(f"[OK] Factory initialized successfully")
@@ -69,13 +68,14 @@ def example_1_basic_initialization():
         AIServiceFactory.reset_instance()
         try:
             os.unlink(model_path)
-        except:
+        except Exception:
             pass
 
 
 # ============================================================================
 # EXAMPLE 2: Configure Multiple Providers
 # ============================================================================
+
 
 def example_2_configure_providers():
     """
@@ -104,10 +104,7 @@ def example_2_configure_providers():
         print(f"  Current provider: {factory.get_current_provider()}")
 
         # Configure OpenAI
-        factory.configure_openai(
-            api_key="sk-test-api-key",
-            model="gpt-4o"
-        )
+        factory.configure_openai(api_key="sk-test-api-key", model="gpt-4o")
 
         print(f"[OK] OpenAI configured and activated")
         print(f"  Current provider: {factory.get_current_provider()}")
@@ -128,13 +125,14 @@ def example_2_configure_providers():
         AIServiceFactory.reset_instance()
         try:
             os.unlink(model_path)
-        except:
+        except Exception:
             pass
 
 
 # ============================================================================
 # EXAMPLE 3: Handle Chat Requests
 # ============================================================================
+
 
 async def example_3_handle_chat_requests():
     """
@@ -161,12 +159,9 @@ async def example_3_handle_chat_requests():
         # Create a simple chat request
         simple_request = AIChatRequest(
             messages=[
-                AIChatMessage(
-                    role="user",
-                    content="What are my rights regarding unfair dismissal?"
-                )
+                AIChatMessage(role="user", content="What are my rights regarding unfair dismissal?")
             ],
-            case_id=123
+            case_id=123,
         )
 
         print("[OK] Created simple chat request")
@@ -185,10 +180,7 @@ async def example_3_handle_chat_requests():
         # Create request with legal context
         context_request = AIChatRequest(
             messages=[
-                AIChatMessage(
-                    role="user",
-                    content="What does this legislation say about my case?"
-                )
+                AIChatMessage(role="user", content="What does this legislation say about my case?")
             ],
             context=LegalContext(
                 legislation=[
@@ -196,7 +188,7 @@ async def example_3_handle_chat_requests():
                         title="Employment Rights Act 1996",
                         section="Section 94",
                         content="An employee has the right not to be unfairly dismissed...",
-                        url="https://www.legislation.gov.uk/ukpga/1996/18/section/94"
+                        url="https://www.legislation.gov.uk/ukpga/1996/18/section/94",
                     )
                 ],
                 case_law=[
@@ -206,12 +198,12 @@ async def example_3_handle_chat_requests():
                         date="2024-01-15",
                         summary="Claimant successfully argued unfair dismissal...",
                         outcome="Claimant successful",
-                        url="https://example.com/case/12345"
+                        url="https://example.com/case/12345",
                     )
                 ],
-                knowledge_base=[]
+                knowledge_base=[],
             ),
-            case_id=456
+            case_id=456,
         )
 
         print("\n[OK] Created request with legal context")
@@ -234,13 +226,14 @@ async def example_3_handle_chat_requests():
         AIServiceFactory.reset_instance()
         try:
             os.unlink(model_path)
-        except:
+        except Exception:
             pass
 
 
 # ============================================================================
 # EXAMPLE 4: Case Facts Repository Integration
 # ============================================================================
+
 
 def example_4_case_facts_repository():
     """
@@ -270,7 +263,7 @@ def example_4_case_facts_repository():
                 return {
                     "case_id": case_id,
                     "title": "Employment Case",
-                    "facts": ["Fact 1", "Fact 2"]
+                    "facts": ["Fact 1", "Fact 2"],
                 }
 
         mock_repository = MockCaseFactsRepository()
@@ -281,19 +274,22 @@ def example_4_case_facts_repository():
         factory.set_case_facts_repository(mock_repository)
 
         print("[OK] Repository set on integrated service")
-        print(f"  Repository available: {factory.integrated_service.case_facts_repository is not None}")
+        print(
+            f"  Repository available: {factory.integrated_service.case_facts_repository is not None}"
+        )
 
     finally:
         AIServiceFactory.reset_instance()
         try:
             os.unlink(model_path)
-        except:
+        except Exception:
             pass
 
 
 # ============================================================================
 # EXAMPLE 5: Model Validation
 # ============================================================================
+
 
 def example_5_model_validation():
     """
@@ -339,13 +335,14 @@ def example_5_model_validation():
         AIServiceFactory.reset_instance()
         try:
             os.unlink(model_path)
-        except:
+        except Exception:
             pass
 
 
 # ============================================================================
 # EXAMPLE 6: Thread Safety
 # ============================================================================
+
 
 def example_6_thread_safety():
     """
@@ -401,13 +398,14 @@ def example_6_thread_safety():
         AIServiceFactory.reset_instance()
         try:
             os.unlink(model_path)
-        except:
+        except Exception:
             pass
 
 
 # ============================================================================
 # EXAMPLE 7: Using the Helper Function
 # ============================================================================
+
 
 def example_7_helper_function():
     """
@@ -451,13 +449,14 @@ def example_7_helper_function():
         AIServiceFactory.reset_instance()
         try:
             os.unlink(model_path)
-        except:
+        except Exception:
             pass
 
 
 # ============================================================================
 # MAIN EXECUTION
 # ============================================================================
+
 
 def main():
     """Run all examples"""

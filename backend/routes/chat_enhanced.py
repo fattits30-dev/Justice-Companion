@@ -22,13 +22,11 @@ Usage:
     app.include_router(chat_router)
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field, field_validator
 from typing import Optional, List, Dict, Any, AsyncIterator
-from datetime import datetime
 from sqlalchemy.orm import Session
-import asyncio
 import json
 import os
 import logging
@@ -40,8 +38,7 @@ from backend.services.chat_service import (
     CreateConversationInput,
     CreateMessageInput,
     ConversationResponse,
-    MessageResponse,
-    ConversationWithMessagesResponse
+    ConversationWithMessagesResponse,
 )
 from backend.services.unified_ai_service import (
     UnifiedAIService,
@@ -51,7 +48,7 @@ from backend.services.unified_ai_service import (
     EvidenceAnalysisRequest,
     DocumentDraftRequest,
     ParsedDocument,
-    UserProfile
+    UserProfile,
 )
 from backend.services.rag_service import RAGService, build_system_prompt, extract_sources
 from backend.services.encryption_service import EncryptionService
@@ -65,14 +62,16 @@ router = APIRouter(prefix="/chat", tags=["chat"])
 
 # ===== PYDANTIC REQUEST MODELS =====
 
+
 class ChatStreamRequest(BaseModel):
     """Request model for streaming chat with legal research."""
+
     message: str = Field(..., min_length=1, max_length=10000, description="User message")
     conversationId: Optional[int] = Field(None, description="Existing conversation ID")
     caseId: Optional[int] = Field(None, description="Case ID for context")
     useRAG: bool = Field(True, description="Whether to use RAG for legal context")
 
-    @field_validator('message')
+    @field_validator("message")
     @classmethod
     def strip_message(cls, v):
         return v.strip()
@@ -80,12 +79,13 @@ class ChatStreamRequest(BaseModel):
 
 class ChatSendRequest(BaseModel):
     """Request model for non-streaming chat."""
+
     message: str = Field(..., min_length=1, max_length=10000, description="User message")
     conversationId: Optional[int] = Field(None, description="Existing conversation ID")
     caseId: Optional[int] = Field(None, description="Case ID for context")
     useRAG: bool = Field(True, description="Whether to use RAG for legal context")
 
-    @field_validator('message')
+    @field_validator("message")
     @classmethod
     def strip_message(cls, v):
         return v.strip()
@@ -93,11 +93,15 @@ class ChatSendRequest(BaseModel):
 
 class DocumentAnalysisRequest(BaseModel):
     """Request model for document analysis."""
+
     filePath: str = Field(..., min_length=1, max_length=1000, description="Path to document file")
-    userQuestion: Optional[str] = Field(None, max_length=1000, description="Optional user question about document")
+    userQuestion: Optional[str] = Field(
+        None, max_length=1000, description="Optional user question about document"
+    )
 
 
 # ===== DEPENDENCY INJECTION =====
+
 
 def get_encryption_service(db: Session = Depends(get_db)) -> EncryptionService:
     """
@@ -110,7 +114,7 @@ def get_encryption_service(db: Session = Depends(get_db)) -> EncryptionService:
     if not encryption_key:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Encryption key not configured"
+            detail="Encryption key not configured",
         )
     return EncryptionService(encryption_key)
 
@@ -123,15 +127,13 @@ def get_audit_logger(db: Session = Depends(get_db)) -> AuditLogger:
 def get_chat_service(
     db: Session = Depends(get_db),
     encryption_service: EncryptionService = Depends(get_encryption_service),
-    audit_logger: AuditLogger = Depends(get_audit_logger)
+    audit_logger: AuditLogger = Depends(get_audit_logger),
 ) -> ChatService:
     """Get chat service instance with dependencies."""
     return ChatService(db, encryption_service, audit_logger)
 
 
-def get_ai_service(
-    audit_logger: AuditLogger = Depends(get_audit_logger)
-) -> UnifiedAIService:
+def get_ai_service(audit_logger: AuditLogger = Depends(get_audit_logger)) -> UnifiedAIService:
     """
     Get AI service instance.
 
@@ -144,16 +146,11 @@ def get_ai_service(
 
     if not api_key:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="AI API key not configured"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="AI API key not configured"
         )
 
     config = AIProviderConfig(
-        provider=provider,
-        api_key=api_key,
-        model=model,
-        temperature=0.7,
-        max_tokens=4096
+        provider=provider, api_key=api_key, model=model, temperature=0.7, max_tokens=4096
     )
 
     return UnifiedAIService(config, audit_logger)
@@ -161,7 +158,7 @@ def get_ai_service(
 
 def get_rag_service(
     ai_service: UnifiedAIService = Depends(get_ai_service),
-    audit_logger: AuditLogger = Depends(get_audit_logger)
+    audit_logger: AuditLogger = Depends(get_audit_logger),
 ) -> RAGService:
     """
     Get RAG service instance.
@@ -169,6 +166,7 @@ def get_rag_service(
     RAG service requires LegalAPIService for UK legal sources.
     This is a stub - implement LegalAPIService separately.
     """
+
     # TODO: Implement LegalAPIService
     # For now, use a mock service that returns empty results
     class MockLegalAPIService:
@@ -193,13 +191,14 @@ def get_rag_service(
 
 # ===== HELPER FUNCTIONS =====
 
+
 def generate_conversation_title(message: str) -> str:
     """Generate conversation title from first user message."""
     if len(message) <= 100:
         return message
 
     truncated = message[:100]
-    last_space = truncated.rfind(' ')
+    last_space = truncated.rfind(" ")
     if last_space > 50:
         truncated = truncated[:last_space]
 
@@ -207,6 +206,7 @@ def generate_conversation_title(message: str) -> str:
 
 
 # ===== STREAMING IMPLEMENTATION =====
+
 
 async def stream_ai_chat(
     message: str,
@@ -217,7 +217,7 @@ async def stream_ai_chat(
     chat_service: ChatService,
     ai_service: UnifiedAIService,
     rag_service: RAGService,
-    db: Session
+    db: Session,
 ) -> AsyncIterator[str]:
     """
     Stream AI chat response with RAG context and save to database.
@@ -242,9 +242,7 @@ async def stream_ai_chat(
 
                 # Convert messages to ChatMessage format
                 for msg in conversation.messages:
-                    history_messages.append(
-                        ChatMessage(role=msg.role, content=msg.content)
-                    )
+                    history_messages.append(ChatMessage(role=msg.role, content=msg.content))
             except Exception as e:
                 logger.error(f"Failed to load conversation history: {e}")
                 # Continue without history
@@ -264,11 +262,11 @@ async def stream_ai_chat(
                 # Continue without RAG
 
         # Build messages array
-        messages = [
-            ChatMessage(role="system", content=system_prompt)
-        ] + history_messages + [
-            ChatMessage(role="user", content=message)
-        ]
+        messages = (
+            [ChatMessage(role="system", content=system_prompt)]
+            + history_messages
+            + [ChatMessage(role="user", content=message)]
+        )
 
         # Stream AI response
         full_response = ""
@@ -288,26 +286,20 @@ async def stream_ai_chat(
             title = generate_conversation_title(message)
 
             conversation_input = CreateConversationInput(
-                user_id=user_id,
-                case_id=case_id,
-                title=title
+                user_id=user_id, case_id=case_id, title=title
             )
             conversation = await chat_service.create_conversation(conversation_input)
             conversation_id = conversation.id
 
         # Save user message
         user_message_input = CreateMessageInput(
-            conversation_id=conversation_id,
-            role="user",
-            content=message
+            conversation_id=conversation_id, role="user", content=message
         )
         await chat_service.add_message(user_message_input, user_id)
 
         # Save assistant message
         assistant_message_input = CreateMessageInput(
-            conversation_id=conversation_id,
-            role="assistant",
-            content=full_response
+            conversation_id=conversation_id, role="assistant", content=full_response
         )
         await chat_service.add_message(assistant_message_input, user_id)
 
@@ -317,24 +309,17 @@ async def stream_ai_chat(
             yield f"data: {json.dumps(sources_data)}\n\n"
 
         # Send final event with conversation ID
-        final_data = {
-            "type": "complete",
-            "conversationId": conversation_id,
-            "done": True
-        }
+        final_data = {"type": "complete", "conversationId": conversation_id, "done": True}
         yield f"data: {json.dumps(final_data)}\n\n"
 
     except Exception as e:
         logger.exception(f"Streaming error: {e}")
-        error_data = {
-            "type": "error",
-            "error": str(e),
-            "done": True
-        }
+        error_data = {"type": "error", "error": str(e), "done": True}
         yield f"data: {json.dumps(error_data)}\n\n"
 
 
 # ===== ROUTES =====
+
 
 @router.post("/stream")
 async def stream_chat(
@@ -343,7 +328,7 @@ async def stream_chat(
     db: Session = Depends(get_db),
     chat_service: ChatService = Depends(get_chat_service),
     ai_service: UnifiedAIService = Depends(get_ai_service),
-    rag_service: RAGService = Depends(get_rag_service)
+    rag_service: RAGService = Depends(get_rag_service),
 ):
     """
     Stream AI chat response using Server-Sent Events (SSE).
@@ -371,14 +356,14 @@ async def stream_chat(
                 chat_service=chat_service,
                 ai_service=ai_service,
                 rag_service=rag_service,
-                db=db
+                db=db,
             ),
             media_type="text/event-stream",
             headers={
                 "Cache-Control": "no-cache",
                 "Connection": "keep-alive",
-                "X-Accel-Buffering": "no"
-            }
+                "X-Accel-Buffering": "no",
+            },
         )
 
     except HTTPException:
@@ -387,7 +372,7 @@ async def stream_chat(
         logger.exception(f"Stream chat failed: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Streaming chat failed: {str(e)}"
+            detail=f"Streaming chat failed: {str(e)}",
         )
 
 
@@ -397,7 +382,7 @@ async def send_chat(
     user_id: int = Depends(get_current_user),
     chat_service: ChatService = Depends(get_chat_service),
     ai_service: UnifiedAIService = Depends(get_ai_service),
-    rag_service: RAGService = Depends(get_rag_service)
+    rag_service: RAGService = Depends(get_rag_service),
 ):
     """
     Send chat message and get non-streaming response.
@@ -422,9 +407,7 @@ async def send_chat(
             conversation = await chat_service.load_conversation(conversation_id, user_id)
 
             for msg in conversation.messages:
-                history_messages.append(
-                    ChatMessage(role=msg.role, content=msg.content)
-                )
+                history_messages.append(ChatMessage(role=msg.role, content=msg.content))
 
         # Fetch legal context if RAG enabled
         system_prompt = "You are Justice Companion AI, a helpful legal assistant for UK civil legal matters. Remember: You offer information and guidance, not legal advice."
@@ -437,11 +420,11 @@ async def send_chat(
                 sources = extract_sources(context)
 
         # Build messages and get response
-        messages = [
-            ChatMessage(role="system", content=system_prompt)
-        ] + history_messages + [
-            ChatMessage(role="user", content=request.message)
-        ]
+        messages = (
+            [ChatMessage(role="system", content=system_prompt)]
+            + history_messages
+            + [ChatMessage(role="user", content=request.message)]
+        )
 
         response = await ai_service.chat(messages)
 
@@ -449,9 +432,7 @@ async def send_chat(
         if not conversation_id:
             title = generate_conversation_title(request.message)
             conversation_input = CreateConversationInput(
-                user_id=user_id,
-                case_id=request.caseId,
-                title=title
+                user_id=user_id, case_id=request.caseId, title=title
             )
             conversation = await chat_service.create_conversation(conversation_input)
             conversation_id = conversation.id
@@ -459,35 +440,24 @@ async def send_chat(
         # Save messages
         await chat_service.add_message(
             CreateMessageInput(
-                conversation_id=conversation_id,
-                role="user",
-                content=request.message
+                conversation_id=conversation_id, role="user", content=request.message
             ),
-            user_id
+            user_id,
         )
 
         await chat_service.add_message(
-            CreateMessageInput(
-                conversation_id=conversation_id,
-                role="assistant",
-                content=response
-            ),
-            user_id
+            CreateMessageInput(conversation_id=conversation_id, role="assistant", content=response),
+            user_id,
         )
 
-        return {
-            "response": response,
-            "conversationId": conversation_id,
-            "sources": sources
-        }
+        return {"response": response, "conversationId": conversation_id, "sources": sources}
 
     except HTTPException:
         raise
     except Exception as e:
         logger.exception(f"Send chat failed: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Chat send failed: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Chat send failed: {str(e)}"
         )
 
 
@@ -496,7 +466,7 @@ async def analyze_case(
     request: CaseAnalysisRequest,
     user_id: int = Depends(get_current_user),
     ai_service: UnifiedAIService = Depends(get_ai_service),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Analyze case with AI and provide structured legal analysis.
@@ -510,13 +480,13 @@ async def analyze_case(
     try:
         # Verify case belongs to user
         from sqlalchemy import text
+
         check_query = text("SELECT id FROM cases WHERE id = :case_id AND user_id = :user_id")
         case = db.execute(check_query, {"case_id": request.case_id, "user_id": user_id}).fetchone()
 
         if not case:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Case not found or unauthorized"
+                status_code=status.HTTP_404_NOT_FOUND, detail="Case not found or unauthorized"
             )
 
         # Call AI service for analysis
@@ -530,7 +500,7 @@ async def analyze_case(
         logger.exception(f"Case analysis failed: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Case analysis failed: {str(e)}"
+            detail=f"Case analysis failed: {str(e)}",
         )
 
 
@@ -539,7 +509,7 @@ async def analyze_evidence(
     request: EvidenceAnalysisRequest,
     user_id: int = Depends(get_current_user),
     ai_service: UnifiedAIService = Depends(get_ai_service),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Analyze existing evidence and identify gaps.
@@ -553,13 +523,13 @@ async def analyze_evidence(
     try:
         # Verify case belongs to user
         from sqlalchemy import text
+
         check_query = text("SELECT id FROM cases WHERE id = :case_id AND user_id = :user_id")
         case = db.execute(check_query, {"case_id": request.case_id, "user_id": user_id}).fetchone()
 
         if not case:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Case not found or unauthorized"
+                status_code=status.HTTP_404_NOT_FOUND, detail="Case not found or unauthorized"
             )
 
         # Call AI service for evidence analysis
@@ -573,7 +543,7 @@ async def analyze_evidence(
         logger.exception(f"Evidence analysis failed: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Evidence analysis failed: {str(e)}"
+            detail=f"Evidence analysis failed: {str(e)}",
         )
 
 
@@ -582,7 +552,7 @@ async def draft_document(
     request: DocumentDraftRequest,
     user_id: int = Depends(get_current_user),
     ai_service: UnifiedAIService = Depends(get_ai_service),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Draft legal document with AI assistance.
@@ -596,16 +566,15 @@ async def draft_document(
     try:
         # Verify case belongs to user
         from sqlalchemy import text
+
         check_query = text("SELECT id FROM cases WHERE id = :case_id AND user_id = :user_id")
-        case = db.execute(check_query, {
-            "case_id": request.context.case_id,
-            "user_id": user_id
-        }).fetchone()
+        case = db.execute(
+            check_query, {"case_id": request.context.case_id, "user_id": user_id}
+        ).fetchone()
 
         if not case:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Case not found or unauthorized"
+                status_code=status.HTTP_404_NOT_FOUND, detail="Case not found or unauthorized"
             )
 
         # Call AI service for document drafting
@@ -619,7 +588,7 @@ async def draft_document(
         logger.exception(f"Document drafting failed: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Document drafting failed: {str(e)}"
+            detail=f"Document drafting failed: {str(e)}",
         )
 
 
@@ -628,7 +597,7 @@ async def analyze_document(
     request: DocumentAnalysisRequest,
     user_id: int = Depends(get_current_user),
     ai_service: UnifiedAIService = Depends(get_ai_service),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Analyze uploaded document with AI and extract case data.
@@ -644,10 +613,7 @@ async def analyze_document(
 
         # Validate file exists
         if not os.path.exists(request.filePath):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="File not found"
-            )
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="File not found")
 
         # TODO: Implement document parser
         # For now, use a mock parser
@@ -656,24 +622,22 @@ async def analyze_document(
             filename=filename,
             text="Mock document text - implement parser",
             word_count=100,
-            file_type="pdf"
+            file_type="pdf",
         )
 
         # Get user profile
         from sqlalchemy import text
+
         user_query = text("SELECT username, email FROM users WHERE id = :user_id")
         user = db.execute(user_query, {"user_id": user_id}).fetchone()
 
         user_profile = UserProfile(
-            name=user.username if user else "User",
-            email=user.email if user else None
+            name=user.username if user else "User", email=user.email if user else None
         )
 
         # Call AI service for extraction
         extraction = await ai_service.extract_case_data_from_document(
-            parsed_doc,
-            user_profile,
-            request.userQuestion
+            parsed_doc, user_profile, request.userQuestion
         )
 
         return extraction
@@ -684,7 +648,7 @@ async def analyze_document(
         logger.exception(f"Document analysis failed: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Document analysis failed: {str(e)}"
+            detail=f"Document analysis failed: {str(e)}",
         )
 
 
@@ -693,7 +657,7 @@ async def get_conversations(
     case_id: Optional[int] = Query(None, description="Filter by case ID"),
     limit: int = Query(10, ge=1, le=100, description="Maximum number of conversations"),
     user_id: int = Depends(get_current_user),
-    chat_service: ChatService = Depends(get_chat_service)
+    chat_service: ChatService = Depends(get_chat_service),
 ):
     """
     Get recent chat conversations for the user.
@@ -710,9 +674,7 @@ async def get_conversations(
     """
     try:
         conversations = await chat_service.get_recent_conversations_by_case(
-            user_id=user_id,
-            case_id=case_id,
-            limit=limit
+            user_id=user_id, case_id=case_id, limit=limit
         )
 
         return conversations
@@ -721,7 +683,7 @@ async def get_conversations(
         logger.exception(f"Failed to get conversations: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get conversations: {str(e)}"
+            detail=f"Failed to get conversations: {str(e)}",
         )
 
 
@@ -729,7 +691,7 @@ async def get_conversations(
 async def get_conversation(
     conversation_id: int,
     user_id: int = Depends(get_current_user),
-    chat_service: ChatService = Depends(get_chat_service)
+    chat_service: ChatService = Depends(get_chat_service),
 ):
     """
     Get a specific conversation with all messages.
@@ -756,7 +718,7 @@ async def get_conversation(
         logger.exception(f"Failed to load conversation: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to load conversation: {str(e)}"
+            detail=f"Failed to load conversation: {str(e)}",
         )
 
 
@@ -764,7 +726,7 @@ async def get_conversation(
 async def delete_conversation(
     conversation_id: int,
     user_id: int = Depends(get_current_user),
-    chat_service: ChatService = Depends(get_chat_service)
+    chat_service: ChatService = Depends(get_chat_service),
 ):
     """
     Delete a conversation and all its messages.
@@ -784,10 +746,7 @@ async def delete_conversation(
     try:
         await chat_service.delete_conversation(conversation_id, user_id)
 
-        return {
-            "success": True,
-            "message": f"Conversation {conversation_id} deleted successfully"
-        }
+        return {"success": True, "message": f"Conversation {conversation_id} deleted successfully"}
 
     except HTTPException:
         raise
@@ -795,5 +754,5 @@ async def delete_conversation(
         logger.exception(f"Failed to delete conversation: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to delete conversation: {str(e)}"
+            detail=f"Failed to delete conversation: {str(e)}",
         )

@@ -73,7 +73,8 @@ export class NotificationService {
       const prefs = await this.getPreferences(input.userId);
 
       if (!this.shouldSendNotification(input.type, prefs)) {
-        logger.info("NotificationService", "Notification type disabled", {
+        logger.info("Notification type disabled", {
+          service: "NotificationService",
           type: input.type,
           userId: input.userId,
         });
@@ -84,13 +85,10 @@ export class NotificationService {
 
       // Check if we're in quiet hours
       if (this.isInQuietHours(prefs)) {
-        logger.info(
-          "NotificationService",
-          "Blocking notification during quiet hours",
-          {
-            userId: input.userId,
-          },
-        );
+        logger.info("Blocking notification during quiet hours", {
+          service: "NotificationService",
+          userId: input.userId,
+        });
         throw new NotificationError("Notification blocked during quiet hours");
       }
 
@@ -125,13 +123,13 @@ export class NotificationService {
       }
       const errorData =
         error instanceof Error
-          ? { message: error.message, stack: error.stack }
-          : { error };
-      logger.error(
-        "NotificationService",
-        "Failed to create notification",
-        errorData,
-      );
+          ? {
+              service: "NotificationService",
+              message: error.message,
+              stack: error.stack,
+            }
+          : { service: "NotificationService", error };
+      logger.error("Failed to create notification", errorData);
       throw new NotificationError("Failed to create notification");
     }
   }

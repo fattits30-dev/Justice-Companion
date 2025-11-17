@@ -107,7 +107,7 @@ export const ExportMenu: React.FC<ExportMenuProps> = ({
         onClick={() => setIsOpen(!isOpen)}
         disabled={isExporting}
         className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-xs text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-hidden focus:ring-3 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-        aria-haspopup="true"
+        aria-haspopup="menu"
         aria-expanded={isOpen}
       >
         {isExporting ? (
@@ -300,6 +300,7 @@ export const ExportMenu: React.FC<ExportMenuProps> = ({
             <button
               onClick={() => setError(null)}
               className="ml-4 text-red-700 hover:text-red-900"
+              aria-label="Close error notification"
             >
               <svg
                 className="h-4 w-4"

@@ -34,20 +34,19 @@ from backend.services.encryption_service import EncryptionService
 
 class ProfileValidationError(Exception):
     """Exception raised for profile validation failures."""
-    pass
 
 
 class ProfileUpdateError(Exception):
     """Exception raised for profile update failures."""
-    pass
 
 
 # Pydantic models for input/output
-from pydantic import BaseModel, Field, field_validator, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class UserProfileData(BaseModel):
     """Basic user profile data."""
+
     firstName: str = Field("", description="User's first name")
     lastName: str = Field("", description="User's last name")
     email: str = Field("", description="User's email address")
@@ -58,6 +57,7 @@ class UserProfileData(BaseModel):
 
 class ExtendedUserProfileData(UserProfileData):
     """Extended user profile with computed fields."""
+
     fullName: str = Field("", description="Full name (computed)")
     initials: str = Field("U", description="User initials (computed)")
 
@@ -66,6 +66,7 @@ class ExtendedUserProfileData(UserProfileData):
 
 class ProfileFormData(BaseModel):
     """Profile form data used in frontend components."""
+
     firstName: str = Field("", description="User's first name")
     lastName: str = Field("", description="User's last name")
     email: str = Field("", description="User's email address")
@@ -76,10 +77,10 @@ class ProfileFormData(BaseModel):
 
 class ProfileValidationResult(BaseModel):
     """Profile validation result with field-level errors."""
+
     isValid: bool = Field(..., description="Whether profile is valid")
     errors: Dict[str, Optional[str]] = Field(
-        default_factory=dict,
-        description="Field-level error messages"
+        default_factory=dict, description="Field-level error messages"
     )
 
     model_config = ConfigDict(populate_by_name=True)
@@ -87,6 +88,7 @@ class ProfileValidationResult(BaseModel):
 
 class ProfileUpdateResult(BaseModel):
     """Profile update operation result."""
+
     success: bool = Field(..., description="Whether update succeeded")
     message: str = Field(..., description="Result message")
     updatedFields: Optional[UserProfileData] = Field(None, description="Updated profile fields")
@@ -96,6 +98,7 @@ class ProfileUpdateResult(BaseModel):
 
 class ProfileResponse(BaseModel):
     """Response model for profile data."""
+
     id: int
     name: str
     firstName: Optional[str]
@@ -111,6 +114,7 @@ class ProfileResponse(BaseModel):
 
 class ExtendedProfileResponse(ProfileResponse):
     """Extended profile response with computed fields."""
+
     fullName: str
     initials: str
 
@@ -130,10 +134,7 @@ class ProfileService:
     PROFILE_ID = 1  # Single row ID (enforced by CHECK constraint)
 
     def __init__(
-        self,
-        db: Session,
-        encryption_service: Optional[EncryptionService] = None,
-        audit_logger=None
+        self, db: Session, encryption_service: Optional[EncryptionService] = None, audit_logger=None
     ):
         """
         Initialize profile service.
@@ -163,20 +164,22 @@ class ProfileService:
         resource_id: str,
         action: str,
         success: bool,
-        details: Optional[Dict[str, Any]] = None
+        details: Optional[Dict[str, Any]] = None,
     ):
         """Log audit event if audit logger is configured."""
         if self.audit_logger:
-            self.audit_logger.log({
-                "event_type": event_type,
-                "user_id": str(user_id) if user_id else None,
-                "resource_type": "profile",
-                "resource_id": resource_id,
-                "action": action,
-                "success": success,
-                "details": details or {},
-                "timestamp": datetime.utcnow().isoformat()
-            })
+            self.audit_logger.log(
+                {
+                    "event_type": event_type,
+                    "user_id": str(user_id) if user_id else None,
+                    "resource_type": "profile",
+                    "resource_id": resource_id,
+                    "action": action,
+                    "success": success,
+                    "details": details or {},
+                    "timestamp": datetime.utcnow().isoformat(),
+                }
+            )
 
     async def get(self) -> Optional[UserProfileData]:
         """
@@ -186,9 +189,7 @@ class ProfileService:
             UserProfileData if profile exists, None otherwise.
         """
         try:
-            profile = self.db.query(UserProfile).filter(
-                UserProfile.id == self.PROFILE_ID
-            ).first()
+            profile = self.db.query(UserProfile).filter(UserProfile.id == self.PROFILE_ID).first()
 
             if not profile:
                 self._log_audit(
@@ -197,7 +198,7 @@ class ProfileService:
                     resource_id=str(self.PROFILE_ID),
                     action="read",
                     success=False,
-                    details={"reason": "Profile not found"}
+                    details={"reason": "Profile not found"},
                 )
                 return None
 
@@ -216,7 +217,7 @@ class ProfileService:
                         resource_id=str(self.PROFILE_ID),
                         action="decrypt",
                         success=False,
-                        details={"field": "email", "error": str(e)}
+                        details={"field": "email", "error": str(e)},
                     )
 
             if self.encryption_service and phone:
@@ -229,7 +230,7 @@ class ProfileService:
                         resource_id=str(self.PROFILE_ID),
                         action="decrypt",
                         success=False,
-                        details={"field": "phone", "error": str(e)}
+                        details={"field": "phone", "error": str(e)},
                     )
 
             # Return None if no meaningful profile data exists
@@ -241,14 +242,14 @@ class ProfileService:
                 user_id=None,
                 resource_id=str(self.PROFILE_ID),
                 action="read",
-                success=True
+                success=True,
             )
 
             return UserProfileData(
                 firstName=profile.first_name or "",
                 lastName=profile.last_name or "",
                 email=email or "",
-                phone=phone or None
+                phone=phone or None,
             )
 
         except SQLAlchemyError as e:
@@ -258,14 +259,12 @@ class ProfileService:
                 resource_id=str(self.PROFILE_ID),
                 action="read",
                 success=False,
-                details={"error": str(e)}
+                details={"error": str(e)},
             )
             return None
 
     async def update(
-        self,
-        profile_data: Dict[str, Any],
-        max_retries: int = 3
+        self, profile_data: Dict[str, Any], max_retries: int = 3
     ) -> ProfileUpdateResult:
         """
         Update user profile data with retry logic and exponential backoff.
@@ -285,10 +284,7 @@ class ProfileService:
                 current_profile = await self.get()
                 if not current_profile:
                     current_profile = UserProfileData(
-                        firstName="",
-                        lastName="",
-                        email="",
-                        phone=None
+                        firstName="", lastName="", email="", phone=None
                     )
 
                 # Merge with updates
@@ -304,18 +300,15 @@ class ProfileService:
                 # Validate the updated profile
                 validation = self.validate(updated_profile.model_dump())
                 if not validation.isValid:
-                    error_messages = ", ".join(
-                        msg for msg in validation.errors.values() if msg
-                    )
+                    error_messages = ", ".join(msg for msg in validation.errors.values() if msg)
                     return ProfileUpdateResult(
-                        success=False,
-                        message=f"Profile validation failed: {error_messages}"
+                        success=False, message=f"Profile validation failed: {error_messages}"
                     )
 
                 # Get or create database profile
-                db_profile = self.db.query(UserProfile).filter(
-                    UserProfile.id == self.PROFILE_ID
-                ).first()
+                db_profile = (
+                    self.db.query(UserProfile).filter(UserProfile.id == self.PROFILE_ID).first()
+                )
 
                 if not db_profile:
                     # Create new profile (single row with id=1)
@@ -325,7 +318,7 @@ class ProfileService:
                         first_name="",
                         last_name="",
                         email=None,
-                        phone=None
+                        phone=None,
                     )
                     self.db.add(db_profile)
 
@@ -371,13 +364,13 @@ class ProfileService:
                     resource_id=str(self.PROFILE_ID),
                     action="update",
                     success=True,
-                    details={"attempt": attempt}
+                    details={"attempt": attempt},
                 )
 
                 return ProfileUpdateResult(
                     success=True,
                     message="Profile updated successfully",
-                    updatedFields=updated_profile
+                    updatedFields=updated_profile,
                 )
 
             except SQLAlchemyError as e:
@@ -390,16 +383,12 @@ class ProfileService:
                     resource_id=str(self.PROFILE_ID),
                     action="update",
                     success=False,
-                    details={
-                        "attempt": attempt,
-                        "max_retries": max_retries,
-                        "error": str(e)
-                    }
+                    details={"attempt": attempt, "max_retries": max_retries, "error": str(e)},
                 )
 
                 # Exponential backoff (if not last attempt)
                 if attempt < max_retries:
-                    backoff_ms = (2 ** attempt) * 100  # 200ms, 400ms, 800ms
+                    backoff_ms = (2**attempt) * 100  # 200ms, 400ms, 800ms
                     time.sleep(backoff_ms / 1000.0)
 
             except Exception as e:
@@ -412,20 +401,17 @@ class ProfileService:
                     resource_id=str(self.PROFILE_ID),
                     action="update",
                     success=False,
-                    details={
-                        "attempt": attempt,
-                        "error": str(e)
-                    }
+                    details={"attempt": attempt, "error": str(e)},
                 )
 
                 if attempt < max_retries:
-                    backoff_ms = (2 ** attempt) * 100
+                    backoff_ms = (2**attempt) * 100
                     time.sleep(backoff_ms / 1000.0)
 
         # All retries failed
         return ProfileUpdateResult(
             success=False,
-            message=f"Failed to update profile after {max_retries} attempts: {str(last_error)}"
+            message=f"Failed to update profile after {max_retries} attempts: {str(last_error)}",
         )
 
     def validate(self, profile_data: Dict[str, Any]) -> ProfileValidationResult:
@@ -450,7 +436,7 @@ class ProfileService:
         # Email validation (if provided)
         email = profile_data.get("email", "")
         if email and email.strip():
-            email_regex = re.compile(r'^[^\s@]+@[^\s@]+\.[^\s@]+$')
+            email_regex = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
             if not email_regex.match(email.strip()):
                 errors["email"] = "Please enter a valid email address"
                 is_valid = False
@@ -459,8 +445,8 @@ class ProfileService:
         phone = profile_data.get("phone", "")
         if phone and phone.strip():
             # Remove common formatting characters
-            phone_cleaned = re.sub(r'[\s\-()]', '', phone)
-            phone_regex = re.compile(r'^[+]?[1-9][\d]{0,15}$')
+            phone_cleaned = re.sub(r"[\s\-()]", "", phone)
+            phone_regex = re.compile(r"^[+]?[1-9][\d]{0,15}$")
             if not phone_regex.match(phone_cleaned):
                 errors["phone"] = "Please enter a valid phone number"
                 is_valid = False
@@ -480,10 +466,7 @@ class ProfileService:
                 errors["lastName"] = "Last name contains invalid characters"
                 is_valid = False
 
-        return ProfileValidationResult(
-            isValid=is_valid,
-            errors=errors
-        )
+        return ProfileValidationResult(isValid=is_valid, errors=errors)
 
     async def clear(self) -> None:
         """
@@ -493,9 +476,9 @@ class ProfileService:
         it resets fields to default values.
         """
         try:
-            db_profile = self.db.query(UserProfile).filter(
-                UserProfile.id == self.PROFILE_ID
-            ).first()
+            db_profile = (
+                self.db.query(UserProfile).filter(UserProfile.id == self.PROFILE_ID).first()
+            )
 
             if db_profile:
                 # Reset to default values
@@ -515,7 +498,7 @@ class ProfileService:
                     user_id=None,
                     resource_id=str(self.PROFILE_ID),
                     action="delete",
-                    success=True
+                    success=True,
                 )
 
         except SQLAlchemyError as e:
@@ -526,12 +509,9 @@ class ProfileService:
                 resource_id=str(self.PROFILE_ID),
                 action="delete",
                 success=False,
-                details={"error": str(e)}
+                details={"error": str(e)},
             )
-            raise HTTPException(
-                status_code=500,
-                detail=f"Failed to clear profile: {str(e)}"
-            )
+            raise HTTPException(status_code=500, detail=f"Failed to clear profile: {str(e)}")
 
     async def get_extended(self) -> Optional[ExtendedUserProfileData]:
         """
@@ -546,10 +526,7 @@ class ProfileService:
         now = time.time() * 1000  # Convert to milliseconds
 
         # Return cached result if still valid
-        if (
-            self._extended_profile_cache
-            and (now - self._cache_timestamp) < self.CACHE_DURATION_MS
-        ):
+        if self._extended_profile_cache and (now - self._cache_timestamp) < self.CACHE_DURATION_MS:
             return ExtendedUserProfileData(**self._extended_profile_cache)
 
         # Get base profile
@@ -577,7 +554,7 @@ class ProfileService:
             email=profile.email,
             phone=profile.phone,
             fullName=full_name,
-            initials=initials
+            initials=initials,
         )
 
         # Cache result
@@ -600,7 +577,7 @@ class ProfileService:
             firstName=form_data.firstName.strip(),
             lastName=form_data.lastName.strip(),
             email=form_data.email.strip(),
-            phone=form_data.phone.strip() or None
+            phone=form_data.phone.strip() or None,
         )
 
     def profile_to_form_data(self, profile: Optional[UserProfileData]) -> ProfileFormData:
@@ -614,16 +591,11 @@ class ProfileService:
             ProfileFormData with default empty strings
         """
         if not profile:
-            return ProfileFormData(
-                firstName="",
-                lastName="",
-                email="",
-                phone=""
-            )
+            return ProfileFormData(firstName="", lastName="", email="", phone="")
 
         return ProfileFormData(
             firstName=profile.firstName or "",
             lastName=profile.lastName or "",
             email=profile.email or "",
-            phone=profile.phone or ""
+            phone=profile.phone or "",
         )

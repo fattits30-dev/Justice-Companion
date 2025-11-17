@@ -41,7 +41,7 @@ Usage:
 import time
 import threading
 import logging
-from typing import Optional, Dict, Any, List, Callable
+from typing import Optional, Dict, Any, List
 from dataclasses import dataclass
 from collections import OrderedDict
 
@@ -59,6 +59,7 @@ class CacheEntry:
         ttl_seconds: Time-to-live in seconds
         access_count: Number of times entry was accessed
     """
+
     value: str
     timestamp: float
     ttl_seconds: int
@@ -96,7 +97,7 @@ class DecryptionCache:
         self,
         audit_logger: Optional[Any] = None,
         max_size: int = DEFAULT_MAX_SIZE,
-        default_ttl: int = DEFAULT_TTL_SECONDS
+        default_ttl: int = DEFAULT_TTL_SECONDS,
     ):
         """
         Initialize DecryptionCache with LRU eviction and TTL support.
@@ -115,12 +116,7 @@ class DecryptionCache:
         self._lock = threading.RLock()
 
         # Statistics for monitoring
-        self._stats = {
-            "hits": 0,
-            "misses": 0,
-            "evictions": 0,
-            "sets": 0
-        }
+        self._stats = {"hits": 0, "misses": 0, "evictions": 0, "sets": 0}
 
         # Log initialization
         if self.audit_logger:
@@ -130,16 +126,12 @@ class DecryptionCache:
                 resource_type="cache",
                 resource_id="decryption-cache",
                 action="create",
-                details={
-                    "max_size": max_size,
-                    "default_ttl_seconds": default_ttl
-                },
-                success=True
+                details={"max_size": max_size, "default_ttl_seconds": default_ttl},
+                success=True,
             )
 
         logger.info(
-            f"[DecryptionCache] Initialized with max_size={max_size}, "
-            f"ttl={default_ttl}s"
+            f"[DecryptionCache] Initialized with max_size={max_size}, " f"ttl={default_ttl}s"
         )
 
     def get(self, key: str) -> Optional[str]:
@@ -196,10 +188,7 @@ class DecryptionCache:
             effective_ttl = ttl if ttl is not None else self.default_ttl
 
             entry = CacheEntry(
-                value=value,
-                timestamp=time.time(),
-                ttl_seconds=effective_ttl,
-                access_count=0
+                value=value, timestamp=time.time(), ttl_seconds=effective_ttl, access_count=0
             )
 
             # Update existing entry
@@ -225,7 +214,7 @@ class DecryptionCache:
                     resource_id=key,
                     action="create",
                     details={"ttl_seconds": effective_ttl},
-                    success=True
+                    success=True,
                 )
 
     def invalidate_entity(self, entity: str, entity_id: Any) -> int:
@@ -268,7 +257,7 @@ class DecryptionCache:
                 resource_id=f"{entity}:{entity_id}",
                 action="delete",
                 details={"keys_deleted": len(keys_to_delete)},
-                success=True
+                success=True,
             )
 
         logger.debug(
@@ -317,7 +306,7 @@ class DecryptionCache:
                 resource_id=entity,
                 action="delete",
                 details={"keys_deleted": len(keys_to_delete)},
-                success=True
+                success=True,
             )
 
         logger.debug(
@@ -344,12 +333,7 @@ class DecryptionCache:
             self._cache.clear()
 
             # Reset statistics
-            self._stats = {
-                "hits": 0,
-                "misses": 0,
-                "evictions": 0,
-                "sets": 0
-            }
+            self._stats = {"hits": 0, "misses": 0, "evictions": 0, "sets": 0}
 
         # Audit log
         if self.audit_logger:
@@ -359,11 +343,8 @@ class DecryptionCache:
                 resource_type="cache",
                 resource_id="decryption-cache",
                 action="delete",
-                details={
-                    "entries_cleared": size,
-                    "reason": reason
-                },
-                success=True
+                details={"entries_cleared": size, "reason": reason},
+                success=True,
             )
 
         logger.info(f"[DecryptionCache] Cleared {size} entries. Reason: {reason}")
@@ -409,9 +390,9 @@ class DecryptionCache:
                 action="delete",
                 details={
                     "keys_deleted": len(keys_to_delete),
-                    "article": "GDPR Article 17 - Right to Erasure"
+                    "article": "GDPR Article 17 - Right to Erasure",
                 },
-                success=True
+                success=True,
             )
 
         logger.info(
@@ -443,16 +424,17 @@ class DecryptionCache:
         with self._lock:
             for key, entry in self._cache.items():
                 if f"user:{user_id}" in key:
-                    report.append({
-                        "key": key,
-                        "size_bytes": len(entry.value.encode("utf-8")),
-                        "created_at": time.strftime(
-                            "%Y-%m-%d %H:%M:%S",
-                            time.localtime(entry.timestamp)
-                        ),
-                        "ttl_seconds": entry.ttl_seconds,
-                        "access_count": entry.access_count
-                    })
+                    report.append(
+                        {
+                            "key": key,
+                            "size_bytes": len(entry.value.encode("utf-8")),
+                            "created_at": time.strftime(
+                                "%Y-%m-%d %H:%M:%S", time.localtime(entry.timestamp)
+                            ),
+                            "ttl_seconds": entry.ttl_seconds,
+                            "access_count": entry.access_count,
+                        }
+                    )
 
         # Audit log
         if self.audit_logger:
@@ -464,9 +446,9 @@ class DecryptionCache:
                 action="read",
                 details={
                     "entries_found": len(report),
-                    "article": "GDPR Article 15 - Right of Access"
+                    "article": "GDPR Article 15 - Right of Access",
                 },
-                success=True
+                success=True,
             )
 
         return report
@@ -497,7 +479,7 @@ class DecryptionCache:
                 "hit_rate": round(hit_rate, 2),
                 "evictions": self._stats["evictions"],
                 "sets": self._stats["sets"],
-                "default_ttl_seconds": self.default_ttl
+                "default_ttl_seconds": self.default_ttl,
             }
 
     def cleanup_expired(self) -> int:
@@ -523,8 +505,7 @@ class DecryptionCache:
                 self._evict_entry(key, "expired")
 
         logger.debug(
-            f"[DecryptionCache] Cleanup: removed {len(keys_to_delete)} "
-            f"expired entries"
+            f"[DecryptionCache] Cleanup: removed {len(keys_to_delete)} " f"expired entries"
         )
 
         return len(keys_to_delete)
@@ -566,7 +547,7 @@ class DecryptionCache:
                     resource_id=key,
                     action="evict",
                     details={"reason": reason},
-                    success=True
+                    success=True,
                 )
 
     def _record_hit(self, key: str) -> None:
@@ -585,7 +566,7 @@ class DecryptionCache:
                 resource_type="cache",
                 resource_id=key,
                 action="read",
-                success=True
+                success=True,
             )
 
     def _record_miss(self, key: str) -> None:
@@ -604,7 +585,7 @@ class DecryptionCache:
                 resource_type="cache",
                 resource_id=key,
                 action="read",
-                success=False
+                success=False,
             )
 
 
@@ -617,7 +598,7 @@ _instance_lock = threading.Lock()
 def get_decryption_cache(
     audit_logger: Optional[Any] = None,
     max_size: int = DecryptionCache.DEFAULT_MAX_SIZE,
-    default_ttl: int = DecryptionCache.DEFAULT_TTL_SECONDS
+    default_ttl: int = DecryptionCache.DEFAULT_TTL_SECONDS,
 ) -> DecryptionCache:
     """
     Get or create the global DecryptionCache singleton instance.
@@ -646,9 +627,7 @@ def get_decryption_cache(
             # Double-check locking pattern
             if _decryption_cache_instance is None:
                 _decryption_cache_instance = DecryptionCache(
-                    audit_logger=audit_logger,
-                    max_size=max_size,
-                    default_ttl=default_ttl
+                    audit_logger=audit_logger, max_size=max_size, default_ttl=default_ttl
                 )
 
     return _decryption_cache_instance

@@ -12,6 +12,7 @@ import path from 'path';
 import axios from 'axios';
 import { app } from 'electron';
 import { logger } from '../../src/utils/logger';
+import { PortManager } from '../utils/PortManager';
 
 export interface PythonProcessConfig {
   port?: number;
@@ -31,6 +32,9 @@ export class PythonProcessManager {
   private healthCheckTimer: NodeJS.Timeout | null = null;
   private restartAttempts: number = 0;
   private readonly maxRestartAttempts: number = 3;
+  private startingState: 'idle' | 'starting' | 'started' = 'idle';
+  private startMutex: Promise<void> | null = null;
+  private isShuttingDown: boolean = false;
 
   constructor(config: PythonProcessConfig = {}) {
     this.port = config.port ?? 5051;
@@ -48,13 +52,48 @@ export class PythonProcessManager {
   }
 
   /**
-   * Start the Python AI service
+   * Start the Python AI service with mutex pattern to prevent concurrent starts
    */
   async start(): Promise<void> {
-    if (this.pythonProcess) {
+    // Return early if already started
+    if (this.startingState === 'started') {
       logger.info('[Python] Service already running');
       return;
     }
+
+    // Wait for pending start to complete
+    if (this.startingState === 'starting') {
+      logger.info('[Python] Start already in progress, waiting...');
+      if (this.startMutex) {
+        await this.startMutex;
+      }
+      return;
+    }
+
+    // Set state and create mutex
+    this.startingState = 'starting';
+    this.startMutex = this._doStart();
+
+    try {
+      await this.startMutex;
+      this.startingState = 'started';
+    } catch (error) {
+      this.startingState = 'idle';
+      throw error;
+    } finally {
+      this.startMutex = null;
+    }
+  }
+
+  /**
+   * Internal start method with port cleanup
+   */
+  private async _doStart(): Promise<void> {
+    // Step 1: Kill any existing processes on this port
+    await this.killExistingProcesses();
+
+    // Step 2: Verify port is available
+    await this.verifyPortAvailable();
 
     const isDev = !app.isPackaged;
 
@@ -122,11 +161,18 @@ export class PythonProcessManager {
     this.pythonProcess.on('exit', (code: number | null, signal: string | null) => {
       logger.error(`[Python] Process exited with code ${code}, signal ${signal}`);
       this.pythonProcess = null;
+      this.startingState = 'idle';
 
       // Clear health check timer
       if (this.healthCheckTimer) {
         clearInterval(this.healthCheckTimer);
         this.healthCheckTimer = null;
+      }
+
+      // Don't auto-restart if shutting down
+      if (this.isShuttingDown) {
+        logger.info('[Python] Skipping auto-restart (shutting down)');
+        return;
       }
 
       // Attempt auto-restart if enabled and not too many attempts
@@ -159,6 +205,41 @@ export class PythonProcessManager {
     this.startHealthCheckMonitoring();
 
     logger.info('[Python] Service started successfully');
+  }
+
+  /**
+   * Kill any existing processes using the backend port
+   * Uses PortManager utility for cross-platform compatibility
+   */
+  private async killExistingProcesses(): Promise<void> {
+    try {
+      logger.info(`[Python] Checking for existing processes on port ${this.port}...`);
+      const killedPids = await PortManager.killProcessesOnPort(this.port, 3);
+
+      if (killedPids.length > 0) {
+        logger.info(`[Python] Killed ${killedPids.length} existing process(es)`);
+        // Wait for port to be released
+        await PortManager.waitForPortAvailable(this.port, 5000);
+      } else {
+        logger.info('[Python] No existing processes found');
+      }
+    } catch (error) {
+      logger.warn('[Python] Port cleanup encountered issues, attempting start anyway', { error });
+      // Don't throw - attempt to start anyway
+    }
+  }
+
+  /**
+   * Verify port is available before starting
+   */
+  private async verifyPortAvailable(): Promise<void> {
+    const available = await PortManager.isPortAvailable(this.port);
+    if (!available) {
+      throw new Error(
+        `Port ${this.port} is still occupied after cleanup. ` +
+          `Please manually kill processes using port ${this.port} and try again.`
+      );
+    }
   }
 
   /**
@@ -243,9 +324,12 @@ export class PythonProcessManager {
   }
 
   /**
-   * Stop the Python service
+   * Stop the Python service with graceful → force kill cascade
    */
   stop(): void {
+    this.isShuttingDown = true;
+    this.startingState = 'idle';
+
     if (this.healthCheckTimer) {
       clearInterval(this.healthCheckTimer);
       this.healthCheckTimer = null;
@@ -253,8 +337,23 @@ export class PythonProcessManager {
 
     if (this.pythonProcess) {
       logger.info('[Python] Stopping service...');
+
+      // Try graceful shutdown first
       this.pythonProcess.kill('SIGTERM');
-      this.pythonProcess = null;
+
+      // Force kill after 5 seconds if not stopped
+      const forceKillTimer = setTimeout(() => {
+        if (this.pythonProcess) {
+          logger.warn('[Python] Force killing process (graceful shutdown timed out)');
+          this.pythonProcess.kill('SIGKILL');
+        }
+      }, 5000);
+
+      // Clear force kill timer if process exits gracefully
+      this.pythonProcess.once('exit', () => {
+        clearTimeout(forceKillTimer);
+        this.pythonProcess = null;
+      });
     }
   }
 

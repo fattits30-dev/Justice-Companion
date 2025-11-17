@@ -17,7 +17,6 @@ from backend.services.export.pdf_generator import (
     PDFGenerator,
     CaseExportData,
     EvidenceExportData,
-    TimelineExportData,
     NotesExportData,
     CaseData,
     Evidence,
@@ -250,9 +249,11 @@ async def example_case_summary():
 
     print(f"✓ Case summary PDF generated: {output_path}")
     print(f"  File size: {len(pdf_bytes):,} bytes")
-    print(f"  Sections: Case info, {len(case_data.evidence)} evidence items, "
-          f"{len(case_data.timeline)} timeline events, {len(case_data.deadlines)} deadlines, "
-          f"{len(case_data.notes)} notes, {len(case_data.facts)} facts")
+    print(
+        f"  Sections: Case info, {len(case_data.evidence)} evidence items, "
+        f"{len(case_data.timeline)} timeline events, {len(case_data.deadlines)} deadlines, "
+        f"{len(case_data.notes)} notes, {len(case_data.facts)} facts"
+    )
 
 
 async def example_evidence_list():
@@ -442,6 +443,7 @@ async def main():
     except Exception as e:
         print(f"\n✗ Error: {e}")
         import traceback
+
         traceback.print_exc()
         return 1
 

@@ -60,7 +60,6 @@ from typing import Optional, List, Dict, Any
 from uuid import uuid4
 from pydantic import BaseModel, Field, ConfigDict
 from sqlalchemy.orm import Session
-from fastapi import HTTPException, status
 
 from backend.models.session import Session as SessionModel
 from backend.models.user import User
@@ -77,6 +76,7 @@ class InMemorySession(BaseModel):
     Represents a cached session in memory for fast validation.
     Matches the TypeScript InMemorySession interface.
     """
+
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     id: str = Field(..., description="UUID v4 session ID")
@@ -94,6 +94,7 @@ class SessionValidationResult(BaseModel):
     Returned by validate_session() method.
     Matches the TypeScript SessionValidationResult interface.
     """
+
     valid: bool = Field(..., description="Whether session is valid")
     user_id: Optional[int] = Field(None, description="User ID if session valid")
     username: Optional[str] = Field(None, description="Username if session valid")
@@ -101,7 +102,6 @@ class SessionValidationResult(BaseModel):
 
 class SessionManagerError(Exception):
     """Exception raised for session manager errors."""
-    pass
 
 
 class SessionManager:
@@ -130,12 +130,7 @@ class SessionManager:
     REMEMBER_ME_DURATION_DAYS = 30
     CLEANUP_INTERVAL_MINUTES = 5  # For periodic cleanup
 
-    def __init__(
-        self,
-        db: Session,
-        audit_logger=None,
-        enable_memory_cache: bool = False
-    ):
+    def __init__(self, db: Session, audit_logger=None, enable_memory_cache: bool = False):
         """
         Initialize SessionManager.
 
@@ -163,7 +158,7 @@ class SessionManager:
         action: str,
         success: bool,
         details: Optional[Dict[str, Any]] = None,
-        error_message: Optional[str] = None
+        error_message: Optional[str] = None,
     ):
         """Log audit event if audit logger is configured."""
         if self.audit_logger:
@@ -175,7 +170,7 @@ class SessionManager:
                 action=action,
                 details=details or {},
                 success=success,
-                error_message=error_message
+                error_message=error_message,
             )
 
     def _calculate_expiration(self, remember_me: bool) -> datetime:
@@ -201,7 +196,7 @@ class SessionManager:
         username: str,
         remember_me: bool = False,
         ip_address: Optional[str] = None,
-        user_agent: Optional[str] = None
+        user_agent: Optional[str] = None,
     ) -> str:
         """
         Create a new session for a user.
@@ -231,7 +226,7 @@ class SessionManager:
                 session_id="unknown",
                 action="create",
                 success=False,
-                error_message="User not found"
+                error_message="User not found",
             )
             raise SessionManagerError(f"User {user_id} not found")
 
@@ -243,7 +238,7 @@ class SessionManager:
                 session_id="unknown",
                 action="create",
                 success=False,
-                error_message="User account is inactive"
+                error_message="User account is inactive",
             )
             raise SessionManagerError(f"User {user_id} account is inactive")
 
@@ -262,7 +257,7 @@ class SessionManager:
                 expires_at=expires_at,
                 created_at=created_at,
                 ip_address=ip_address,
-                user_agent=user_agent
+                user_agent=user_agent,
             )
             self.db.add(db_session)
             self.db.commit()
@@ -275,7 +270,7 @@ class SessionManager:
                     username=username,
                     created_at=created_at,
                     expires_at=expires_at,
-                    remember_me=remember_me
+                    remember_me=remember_me,
                 )
                 self._memory_cache[session_id] = memory_session
 
@@ -289,8 +284,8 @@ class SessionManager:
                     "username": username,
                     "remember_me": remember_me,
                     "expires_at": expires_at.isoformat(),
-                    "cached": self.enable_memory_cache
-                }
+                    "cached": self.enable_memory_cache,
+                },
             )
 
             logger.info(
@@ -308,7 +303,7 @@ class SessionManager:
                 session_id=session_id,
                 action="create",
                 success=False,
-                error_message=str(e)
+                error_message=str(e),
             )
             raise SessionManagerError(f"Failed to create session: {str(e)}")
 
@@ -336,9 +331,7 @@ class SessionManager:
 
                 # Remove from database
                 try:
-                    self.db.query(SessionModel).filter(
-                        SessionModel.id == session_id
-                    ).delete()
+                    self.db.query(SessionModel).filter(SessionModel.id == session_id).delete()
                     self.db.commit()
                 except Exception as e:
                     logger.error(f"Failed to delete expired session {session_id}: {e}")
@@ -352,16 +345,12 @@ class SessionManager:
 
             # Cached session is valid
             return SessionValidationResult(
-                valid=True,
-                user_id=cached_session.user_id,
-                username=cached_session.username
+                valid=True, user_id=cached_session.user_id, username=cached_session.username
             )
 
         # Query database
         try:
-            db_session = self.db.query(SessionModel).filter(
-                SessionModel.id == session_id
-            ).first()
+            db_session = self.db.query(SessionModel).filter(SessionModel.id == session_id).first()
 
             if not db_session:
                 return SessionValidationResult(valid=False)
@@ -399,15 +388,11 @@ class SessionManager:
                     username=user.username,
                     created_at=db_session.created_at,
                     expires_at=db_session.expires_at,
-                    remember_me=(db_session.expires_at - db_session.created_at).days > 1
+                    remember_me=(db_session.expires_at - db_session.created_at).days > 1,
                 )
                 self._memory_cache[session_id] = memory_session
 
-            return SessionValidationResult(
-                valid=True,
-                user_id=user.id,
-                username=user.username
-            )
+            return SessionValidationResult(valid=True, user_id=user.id, username=user.username)
 
         except Exception as e:
             logger.error(f"Session validation error for {session_id}: {e}")
@@ -433,9 +418,7 @@ class SessionManager:
 
         # Remove from database
         try:
-            db_session = self.db.query(SessionModel).filter(
-                SessionModel.id == session_id
-            ).first()
+            db_session = self.db.query(SessionModel).filter(SessionModel.id == session_id).first()
 
             if db_session:
                 user_id = db_session.user_id
@@ -452,12 +435,10 @@ class SessionManager:
                     session_id=session_id,
                     action="delete",
                     success=True,
-                    details={"username": username}
+                    details={"username": username},
                 )
 
-                logger.info(
-                    f"[SessionManager] Destroyed session {session_id} for user {username}"
-                )
+                logger.info(f"[SessionManager] Destroyed session {session_id} for user {username}")
 
                 return True
 
@@ -471,7 +452,7 @@ class SessionManager:
                 session_id=session_id,
                 action="delete",
                 success=False,
-                error_message=str(e)
+                error_message=str(e),
             )
             logger.error(f"Failed to destroy session {session_id}: {e}")
             return False
@@ -503,16 +484,16 @@ class SessionManager:
 
         # Clean database
         try:
-            expired_sessions = self.db.query(SessionModel).filter(
-                SessionModel.expires_at < now
-            ).all()
+            expired_sessions = (
+                self.db.query(SessionModel).filter(SessionModel.expires_at < now).all()
+            )
 
             db_cleaned = len(expired_sessions)
 
             if db_cleaned > 0:
-                self.db.query(SessionModel).filter(
-                    SessionModel.expires_at < now
-                ).delete(synchronize_session=False)
+                self.db.query(SessionModel).filter(SessionModel.expires_at < now).delete(
+                    synchronize_session=False
+                )
 
                 self.db.commit()
 
@@ -526,9 +507,11 @@ class SessionManager:
                     success=True,
                     details={
                         "deleted_count": cleaned_count,
-                        "memory_cache_cleaned": len(expired_cache_ids) if self.enable_memory_cache else 0,
-                        "database_cleaned": db_cleaned
-                    }
+                        "memory_cache_cleaned": (
+                            len(expired_cache_ids) if self.enable_memory_cache else 0
+                        ),
+                        "database_cleaned": db_cleaned,
+                    },
                 )
 
                 logger.info(
@@ -554,11 +537,7 @@ class SessionManager:
             - database: Total sessions in database
             - active: Non-expired sessions in database
         """
-        result = {
-            "memory_cache": 0,
-            "database": 0,
-            "active": 0
-        }
+        result = {"memory_cache": 0, "database": 0, "active": 0}
 
         # Count memory cache
         if self.enable_memory_cache:
@@ -569,9 +548,9 @@ class SessionManager:
             result["database"] = self.db.query(SessionModel).count()
 
             now = datetime.now(timezone.utc)
-            result["active"] = self.db.query(SessionModel).filter(
-                SessionModel.expires_at > now
-            ).count()
+            result["active"] = (
+                self.db.query(SessionModel).filter(SessionModel.expires_at > now).count()
+            )
 
         except Exception as e:
             logger.error(f"Failed to get session counts: {e}")
@@ -593,9 +572,7 @@ class SessionManager:
         # Query database
         try:
             now = datetime.now(timezone.utc)
-            sessions = self.db.query(SessionModel).filter(
-                SessionModel.expires_at > now
-            ).all()
+            sessions = self.db.query(SessionModel).filter(SessionModel.expires_at > now).all()
 
             return [session.id for session in sessions]
 
@@ -619,10 +596,11 @@ class SessionManager:
         try:
             now = datetime.now(timezone.utc)
 
-            sessions = self.db.query(SessionModel).filter(
-                SessionModel.user_id == user_id,
-                SessionModel.expires_at > now
-            ).all()
+            sessions = (
+                self.db.query(SessionModel)
+                .filter(SessionModel.user_id == user_id, SessionModel.expires_at > now)
+                .all()
+            )
 
             return [session.to_dict() for session in sessions]
 
@@ -631,9 +609,7 @@ class SessionManager:
             return []
 
     async def revoke_user_sessions(
-        self,
-        user_id: int,
-        except_session_id: Optional[str] = None
+        self, user_id: int, except_session_id: Optional[str] = None
     ) -> int:
         """
         Revoke all sessions for a user (e.g., after password change).
@@ -651,9 +627,7 @@ class SessionManager:
 
         try:
             # Get sessions to revoke
-            query = self.db.query(SessionModel).filter(
-                SessionModel.user_id == user_id
-            )
+            query = self.db.query(SessionModel).filter(SessionModel.user_id == user_id)
 
             if except_session_id:
                 query = query.filter(SessionModel.id != except_session_id)
@@ -680,8 +654,8 @@ class SessionManager:
                 details={
                     "revoked_count": revoked_count,
                     "except_session_id": except_session_id,
-                    "reason": "User sessions revoked (password change or security event)"
-                }
+                    "reason": "User sessions revoked (password change or security event)",
+                },
             )
 
             logger.info(
@@ -702,9 +676,7 @@ _session_manager_instance: Optional[SessionManager] = None
 
 
 def get_session_manager(
-    db: Session,
-    audit_logger=None,
-    enable_memory_cache: bool = False
+    db: Session, audit_logger=None, enable_memory_cache: bool = False
 ) -> SessionManager:
     """
     Get or create SessionManager singleton instance.
@@ -721,9 +693,7 @@ def get_session_manager(
 
     if _session_manager_instance is None:
         _session_manager_instance = SessionManager(
-            db=db,
-            audit_logger=audit_logger,
-            enable_memory_cache=enable_memory_cache
+            db=db, audit_logger=audit_logger, enable_memory_cache=enable_memory_cache
         )
 
     return _session_manager_instance

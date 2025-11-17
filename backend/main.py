@@ -65,8 +65,9 @@ app = FastAPI(
     title="Justice Companion API",
     description="REST API backend for Justice Companion desktop application",
     version="1.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
+
 
 # Response wrapper middleware to match frontend expectations
 class ResponseWrapperMiddleware(BaseHTTPMiddleware):
@@ -76,6 +77,7 @@ class ResponseWrapperMiddleware(BaseHTTPMiddleware):
 
     Excludes: /health, /docs, /redoc, /openapi.json
     """
+
     async def dispatch(self, request: Request, call_next):
         print(f"[ResponseWrapperMiddleware] Intercepting request: {request.url.path}")
 
@@ -89,44 +91,57 @@ class ResponseWrapperMiddleware(BaseHTTPMiddleware):
 
         # Only wrap successful JSON responses
         if response.status_code == 200:
-            # Read the original response body
-            body = b""
+            # Read the original response body from the streaming response
+            body_bytes = []
             async for chunk in response.body_iterator:
-                body += chunk
+                body_bytes.append(chunk)
+            body = b"".join(body_bytes)
 
             # Try to parse as JSON
             try:
-                data = json.loads(body.decode())
+                data = json.loads(bytes(body).decode())
 
                 # If response is already wrapped with success field, don't wrap again
                 if isinstance(data, dict) and "success" in data:
+                    # Remove Content-Length - Response will recalculate it
+                    headers = dict(response.headers)
+                    headers.pop("content-length", None)
+
                     return Response(
                         content=body,
                         status_code=response.status_code,
                         media_type="application/json",
-                        headers=dict(response.headers)
+                        headers=headers,
                     )
 
                 # Wrap the response
-                wrapped = {
-                    "success": True,
-                    "data": data
-                }
+                wrapped = {"success": True, "data": data}
+
+                # Remove Content-Length from headers - JSONResponse will recalculate it
+                headers = dict(response.headers)
+                headers.pop("content-length", None)
 
                 return JSONResponse(
                     content=wrapped,
                     status_code=response.status_code,
-                    headers=dict(response.headers)
+                    headers=headers,
                 )
-            except (json.JSONDecodeError, UnicodeDecodeError):
-                # Not JSON or decode error - return original response
+            except json.JSONDecodeError:
+                # Not a JSON response, return as is
+                # Remove Content-Length - Response will recalculate it
+                headers = dict(response.headers)
+                headers.pop("content-length", None)
+
                 return Response(
                     content=body,
                     status_code=response.status_code,
-                    headers=dict(response.headers)
+                    media_type=response.media_type,
+                    headers=headers,
                 )
 
+        # For non-200 responses, return as is
         return response
+
 
 # Add response wrapper middleware - wraps all 200 OK JSON responses for frontend
 app.add_middleware(ResponseWrapperMiddleware)
@@ -161,9 +176,12 @@ app.include_router(templates_router)  # Template management routes at /templates
 app.include_router(search_router)  # Full-text search routes at /search/*
 app.include_router(port_status_router)  # Port management routes at /port/*
 app.include_router(action_logs_router)  # Action log monitoring routes at /action-logs/*
-app.include_router(ui_router)  # UI dialog routes at /dialog/* (501 Not Implemented - see route docs)
+app.include_router(
+    ui_router
+)  # UI dialog routes at /dialog/* (501 Not Implemented - see route docs)
 app.include_router(ai_status_router)  # AI service status routes at /ai/*
 app.include_router(ai_config_router)  # AI configuration routes at /ai/*
+
 
 # Health check endpoint
 @app.get("/health")
@@ -172,11 +190,7 @@ async def health_check():
     Health check endpoint for monitoring.
     Returns 200 OK if backend is running.
     """
-    return {
-        "status": "healthy",
-        "service": "Justice Companion Backend",
-        "version": "1.0.0"
-    }
+    return {"status": "healthy", "service": "Justice Companion Backend", "version": "1.0.0"}
 
 
 # Root endpoint
@@ -205,6 +219,5 @@ if __name__ == "__main__":
         host="127.0.0.1",  # Only allow local connections
         port=port,
         reload=True,  # Auto-reload on code changes (development only)
-        log_level="info"
+        log_level="info",
     )
-

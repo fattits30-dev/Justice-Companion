@@ -23,7 +23,7 @@ Services Integrated:
 - AuditLogger: Immutable audit trail for all operations
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Header, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field, validator
 from typing import Optional, List, Dict, Any
 from datetime import datetime
@@ -43,13 +43,13 @@ from backend.services.case_service import (
     CaseNotFoundError,
     SearchFilters,
     CaseType,
-    CaseStatus
+    CaseStatus,
 )
 from backend.services.bulk_operation_service import (
     BulkOperationService,
     BulkOperationOptions,
     BulkOperationResult,
-    CaseUpdate
+    CaseUpdate,
 )
 from backend.services.encryption_service import EncryptionService
 from backend.services.audit_logger import AuditLogger
@@ -67,6 +67,7 @@ VALID_IMPORTANCE_LEVELS = ["low", "medium", "high", "critical"]
 # ===== PYDANTIC REQUEST MODELS (for legacy endpoints) =====
 class CreateCaseRequest(BaseModel):
     """Request model for creating a new case (legacy format)."""
+
     title: str = Field(..., min_length=1, max_length=200, description="Case title")
     description: Optional[str] = Field(None, max_length=10000, description="Case description")
     caseType: str = Field(..., description="Type of legal case")
@@ -75,37 +76,39 @@ class CreateCaseRequest(BaseModel):
     courtName: Optional[str] = Field(None, max_length=200, description="Court name")
     judge: Optional[str] = Field(None, max_length=100, description="Judge name")
     opposingParty: Optional[str] = Field(None, max_length=200, description="Opposing party name")
-    opposingCounsel: Optional[str] = Field(None, max_length=200, description="Opposing counsel name")
+    opposingCounsel: Optional[str] = Field(
+        None, max_length=200, description="Opposing counsel name"
+    )
     nextHearingDate: Optional[str] = Field(None, description="Next hearing date (YYYY-MM-DD)")
     filingDeadline: Optional[str] = Field(None, description="Filing deadline (YYYY-MM-DD)")
 
-    @validator('caseType')
+    @validator("caseType")
     def validate_case_type(cls, v):
         if v not in VALID_CASE_TYPES:
             raise ValueError(f"Please select a valid case type: {', '.join(VALID_CASE_TYPES)}")
         return v
 
-    @validator('status')
+    @validator("status")
     def validate_status(cls, v):
         if v not in VALID_CASE_STATUSES:
             raise ValueError(f"Please select a valid status: {', '.join(VALID_CASE_STATUSES)}")
         return v
 
-    @validator('caseNumber')
+    @validator("caseNumber")
     def validate_case_number(cls, v):
-        if v and not all(c.isalnum() or c in ['-', '/', ' '] for c in v):
+        if v and not all(c.isalnum() or c in ["-", "/", " "] for c in v):
             raise ValueError("Case number contains invalid characters")
         return v.strip() if v else None
 
-    @validator('title', 'description', 'courtName', 'judge', 'opposingParty', 'opposingCounsel')
+    @validator("title", "description", "courtName", "judge", "opposingParty", "opposingCounsel")
     def strip_strings(cls, v):
         return v.strip() if v else None
 
-    @validator('nextHearingDate', 'filingDeadline')
+    @validator("nextHearingDate", "filingDeadline")
     def validate_date_format(cls, v):
         if v:
             try:
-                datetime.strptime(v, '%Y-%m-%d')
+                datetime.strptime(v, "%Y-%m-%d")
             except ValueError:
                 raise ValueError("Invalid date format (use YYYY-MM-DD)")
         return v
@@ -113,6 +116,7 @@ class CreateCaseRequest(BaseModel):
 
 class UpdateCaseRequest(BaseModel):
     """Request model for updating an existing case (legacy format)."""
+
     title: Optional[str] = Field(None, min_length=1, max_length=200)
     description: Optional[str] = Field(None, max_length=10000)
     caseType: Optional[str] = None
@@ -125,33 +129,33 @@ class UpdateCaseRequest(BaseModel):
     nextHearingDate: Optional[str] = None
     filingDeadline: Optional[str] = None
 
-    @validator('caseType')
+    @validator("caseType")
     def validate_case_type(cls, v):
         if v and v not in VALID_CASE_TYPES:
             raise ValueError(f"Please select a valid case type: {', '.join(VALID_CASE_TYPES)}")
         return v
 
-    @validator('status')
+    @validator("status")
     def validate_status(cls, v):
         if v and v not in VALID_CASE_STATUSES:
             raise ValueError(f"Please select a valid status: {', '.join(VALID_CASE_STATUSES)}")
         return v
 
-    @validator('caseNumber')
+    @validator("caseNumber")
     def validate_case_number(cls, v):
-        if v and not all(c.isalnum() or c in ['-', '/', ' '] for c in v):
+        if v and not all(c.isalnum() or c in ["-", "/", " "] for c in v):
             raise ValueError("Case number contains invalid characters")
         return v.strip() if v else None
 
-    @validator('title', 'description', 'courtName', 'judge', 'opposingParty', 'opposingCounsel')
+    @validator("title", "description", "courtName", "judge", "opposingParty", "opposingCounsel")
     def strip_strings(cls, v):
         return v.strip() if v else None
 
-    @validator('nextHearingDate', 'filingDeadline')
+    @validator("nextHearingDate", "filingDeadline")
     def validate_date_format(cls, v):
         if v:
             try:
-                datetime.strptime(v, '%Y-%m-%d')
+                datetime.strptime(v, "%Y-%m-%d")
             except ValueError:
                 raise ValueError("Invalid date format (use YYYY-MM-DD)")
         return v
@@ -159,42 +163,46 @@ class UpdateCaseRequest(BaseModel):
 
 class CreateCaseFactRequest(BaseModel):
     """Request model for creating a case fact."""
+
     caseId: int = Field(..., gt=0, description="Case ID")
     factContent: str = Field(..., min_length=1, max_length=10000, description="Fact content")
     factCategory: str = Field(..., description="Fact category")
     importance: str = Field(default="medium", description="Importance level")
 
-    @validator('factCategory')
+    @validator("factCategory")
     def validate_category(cls, v):
         if v not in VALID_FACT_CATEGORIES:
             raise ValueError(f"Invalid fact category: {', '.join(VALID_FACT_CATEGORIES)}")
         return v
 
-    @validator('importance')
+    @validator("importance")
     def validate_importance(cls, v):
         if v not in VALID_IMPORTANCE_LEVELS:
             raise ValueError(f"Invalid importance level: {', '.join(VALID_IMPORTANCE_LEVELS)}")
         return v
 
-    @validator('factContent')
+    @validator("factContent")
     def strip_content(cls, v):
         return v.strip()
 
 
 class BulkDeleteRequest(BaseModel):
     """Request model for bulk delete operation."""
+
     case_ids: List[int] = Field(..., min_items=1, description="List of case IDs to delete")
     fail_fast: bool = Field(default=True, description="Stop on first error and rollback")
 
 
 class BulkUpdateRequest(BaseModel):
     """Request model for bulk update operation."""
+
     updates: List[CaseUpdate] = Field(..., min_items=1, description="List of case updates")
     fail_fast: bool = Field(default=True, description="Stop on first error and rollback")
 
 
 class BulkArchiveRequest(BaseModel):
     """Request model for bulk archive operation."""
+
     case_ids: List[int] = Field(..., min_items=1, description="List of case IDs to archive")
     fail_fast: bool = Field(default=True, description="Stop on first error and rollback")
 
@@ -202,6 +210,7 @@ class BulkArchiveRequest(BaseModel):
 # ===== PYDANTIC RESPONSE MODELS (for legacy endpoints) =====
 class LegacyCaseResponse(BaseModel):
     """Response model for case data (legacy format with camelCase)."""
+
     id: int
     title: str
     description: Optional[str]
@@ -224,6 +233,7 @@ class LegacyCaseResponse(BaseModel):
 
 class CaseFactResponse(BaseModel):
     """Response model for case fact data."""
+
     id: int
     caseId: int
     factContent: str
@@ -238,12 +248,14 @@ class CaseFactResponse(BaseModel):
 
 class DeleteCaseResponse(BaseModel):
     """Response model for case deletion."""
+
     deleted: bool
     id: int
 
 
 class PaginationMetadata(BaseModel):
     """Pagination metadata for list responses."""
+
     total: int
     page: int
     page_size: int
@@ -252,6 +264,7 @@ class PaginationMetadata(BaseModel):
 
 class CaseListResponse(BaseModel):
     """Response model for case list with pagination."""
+
     cases: List[LegacyCaseResponse]
     pagination: PaginationMetadata
 
@@ -275,7 +288,7 @@ def get_encryption_service() -> EncryptionService:
     if not key_base64:
         # WARNING: Generating temporary key - data will be lost on restart
         key = EncryptionService.generate_key()
-        key_base64 = base64.b64encode(key).decode('utf-8')
+        key_base64 = base64.b64encode(key).decode("utf-8")
         print("WARNING: No ENCRYPTION_KEY_BASE64 found. Using temporary key.")
 
     return EncryptionService(key_base64)
@@ -289,25 +302,17 @@ def get_audit_logger(db: Session = Depends(get_db)) -> AuditLogger:
 def get_case_service(
     db: Session = Depends(get_db),
     encryption_service: EncryptionService = Depends(get_encryption_service),
-    audit_logger: AuditLogger = Depends(get_audit_logger)
+    audit_logger: AuditLogger = Depends(get_audit_logger),
 ) -> CaseService:
     """Get case service instance with dependencies."""
-    return CaseService(
-        db=db,
-        encryption_service=encryption_service,
-        audit_logger=audit_logger
-    )
+    return CaseService(db=db, encryption_service=encryption_service, audit_logger=audit_logger)
 
 
 def get_bulk_operation_service(
-    db: Session = Depends(get_db),
-    audit_logger: AuditLogger = Depends(get_audit_logger)
+    db: Session = Depends(get_db), audit_logger: AuditLogger = Depends(get_audit_logger)
 ) -> BulkOperationService:
     """Get bulk operation service instance with dependencies."""
-    return BulkOperationService(
-        db=db,
-        audit_logger=audit_logger
-    )
+    return BulkOperationService(db=db, audit_logger=audit_logger)
 
 
 # ===== HELPER FUNCTIONS =====
@@ -336,18 +341,19 @@ def convert_to_legacy_format(case: CaseResponse) -> LegacyCaseResponse:
         nextHearingDate=None,
         filingDeadline=None,
         createdAt=case.created_at,
-        updatedAt=case.updated_at
+        updatedAt=case.updated_at,
     )
 
 
 # ===== ROUTES =====
+
 
 @router.post("", response_model=LegacyCaseResponse, status_code=status.HTTP_201_CREATED)
 async def create_case(
     request: CreateCaseRequest,
     user_id: int = Depends(get_current_user),
     case_service: CaseService = Depends(get_case_service),
-    ai_metadata: Optional[Dict[str, Any]] = None
+    ai_metadata: Optional[Dict[str, Any]] = None,
 ):
     """
     Create a new case.
@@ -375,7 +381,7 @@ async def create_case(
         service_input = CreateCaseInput(
             title=request.title,
             description=request.description,
-            case_type=CaseType(request.caseType)
+            case_type=CaseType(request.caseType),
         )
 
         # Create case using service layer
@@ -392,7 +398,7 @@ async def create_case(
                     resource_id=str(case_response.id),
                     action="create",
                     details={"aiMetadata": ai_metadata},
-                    success=True
+                    success=True,
                 )
 
         # Convert to legacy format
@@ -409,12 +415,14 @@ async def list_cases(
     user_id: int = Depends(get_current_user),
     case_service: CaseService = Depends(get_case_service),
     status_filter: Optional[str] = Query(None, alias="status", description="Filter by case status"),
-    case_type_filter: Optional[str] = Query(None, alias="caseType", description="Filter by case type"),
+    case_type_filter: Optional[str] = Query(
+        None, alias="caseType", description="Filter by case type"
+    ),
     search_query: Optional[str] = Query(None, alias="q", description="Search cases by title"),
     page: int = Query(1, ge=1, description="Page number (1-indexed)"),
     page_size: int = Query(50, ge=1, le=100, description="Items per page (max 100)"),
     sort_by: str = Query("updated_at", description="Sort field (created_at, updated_at, title)"),
-    sort_order: str = Query("desc", description="Sort order (asc, desc)")
+    sort_order: str = Query("desc", description="Sort order (asc, desc)"),
 ):
     """
     List all cases for the authenticated user with filtering and pagination.
@@ -444,15 +452,13 @@ async def list_cases(
         if status_filter or case_type_filter:
             filters = SearchFilters(
                 case_status=[CaseStatus(status_filter)] if status_filter else None,
-                case_type=[CaseType(case_type_filter)] if case_type_filter else None
+                case_type=[CaseType(case_type_filter)] if case_type_filter else None,
             )
 
         # Get cases from service layer
         if search_query or filters:
             cases = await case_service.search_cases(
-                user_id=user_id,
-                query=search_query,
-                filters=filters
+                user_id=user_id, query=search_query, filters=filters
             )
         else:
             cases = await case_service.get_all_cases(user_id)
@@ -478,7 +484,7 @@ async def list_cases(
 async def get_case(
     case_id: int,
     user_id: int = Depends(get_current_user),
-    case_service: CaseService = Depends(get_case_service)
+    case_service: CaseService = Depends(get_case_service),
 ):
     """
     Get a specific case by ID.
@@ -501,8 +507,7 @@ async def get_case(
 
     except CaseNotFoundError:
         raise HTTPException(
-            status_code=404,
-            detail=f"Case with ID {case_id} not found or unauthorized"
+            status_code=404, detail=f"Case with ID {case_id} not found or unauthorized"
         )
     except HTTPException as e:
         # Re-raise 403 from service layer as 404 (don't leak existence)
@@ -518,7 +523,7 @@ async def update_case(
     case_id: int,
     request: UpdateCaseRequest,
     user_id: int = Depends(get_current_user),
-    case_service: CaseService = Depends(get_case_service)
+    case_service: CaseService = Depends(get_case_service),
 ):
     """
     Update an existing case.
@@ -546,19 +551,21 @@ async def update_case(
             title=request.title,
             description=request.description,
             case_type=CaseType(request.caseType) if request.caseType else None,
-            status=CaseStatus(request.status) if request.status else None
+            status=CaseStatus(request.status) if request.status else None,
         )
 
         # Ensure at least one field is provided
-        if all(field is None for field in [
-            service_input.title,
-            service_input.description,
-            service_input.case_type,
-            service_input.status
-        ]):
+        if all(
+            field is None
+            for field in [
+                service_input.title,
+                service_input.description,
+                service_input.case_type,
+                service_input.status,
+            ]
+        ):
             raise HTTPException(
-                status_code=400,
-                detail="At least one field must be provided for update"
+                status_code=400, detail="At least one field must be provided for update"
             )
 
         # Update case using service layer
@@ -584,7 +591,7 @@ async def update_case(
 async def delete_case(
     case_id: int,
     user_id: int = Depends(get_current_user),
-    case_service: CaseService = Depends(get_case_service)
+    case_service: CaseService = Depends(get_case_service),
 ):
     """
     Delete a case.
@@ -623,11 +630,12 @@ async def delete_case(
 
 # ===== BULK OPERATIONS =====
 
+
 @router.post("/bulk/delete", response_model=BulkOperationResult)
 async def bulk_delete_cases(
     request: BulkDeleteRequest,
     user_id: int = Depends(get_current_user),
-    bulk_service: BulkOperationService = Depends(get_bulk_operation_service)
+    bulk_service: BulkOperationService = Depends(get_bulk_operation_service),
 ):
     """
     Bulk delete multiple cases.
@@ -655,9 +663,7 @@ async def bulk_delete_cases(
     try:
         options = BulkOperationOptions(fail_fast=request.fail_fast)
         result = await bulk_service.bulk_delete_cases(
-            case_ids=request.case_ids,
-            user_id=user_id,
-            options=options
+            case_ids=request.case_ids, user_id=user_id, options=options
         )
         return result
 
@@ -671,7 +677,7 @@ async def bulk_delete_cases(
 async def bulk_update_cases(
     request: BulkUpdateRequest,
     user_id: int = Depends(get_current_user),
-    bulk_service: BulkOperationService = Depends(get_bulk_operation_service)
+    bulk_service: BulkOperationService = Depends(get_bulk_operation_service),
 ):
     """
     Bulk update multiple cases.
@@ -702,9 +708,7 @@ async def bulk_update_cases(
     try:
         options = BulkOperationOptions(fail_fast=request.fail_fast)
         result = await bulk_service.bulk_update_cases(
-            updates=request.updates,
-            user_id=user_id,
-            options=options
+            updates=request.updates, user_id=user_id, options=options
         )
         return result
 
@@ -718,7 +722,7 @@ async def bulk_update_cases(
 async def bulk_archive_cases(
     request: BulkArchiveRequest,
     user_id: int = Depends(get_current_user),
-    bulk_service: BulkOperationService = Depends(get_bulk_operation_service)
+    bulk_service: BulkOperationService = Depends(get_bulk_operation_service),
 ):
     """
     Bulk archive multiple cases (set status to 'closed').
@@ -746,9 +750,7 @@ async def bulk_archive_cases(
     try:
         options = BulkOperationOptions(fail_fast=request.fail_fast)
         result = await bulk_service.bulk_archive_cases(
-            case_ids=request.case_ids,
-            user_id=user_id,
-            options=options
+            case_ids=request.case_ids, user_id=user_id, options=options
         )
         return result
 
@@ -760,13 +762,16 @@ async def bulk_archive_cases(
 
 # ===== CASE FACTS (Legacy endpoints - kept for backward compatibility) =====
 
-@router.post("/{case_id}/facts", response_model=CaseFactResponse, status_code=status.HTTP_201_CREATED)
+
+@router.post(
+    "/{case_id}/facts", response_model=CaseFactResponse, status_code=status.HTTP_201_CREATED
+)
 async def create_case_fact(
     case_id: int,
     request: CreateCaseFactRequest,
     user_id: int = Depends(get_current_user),
     case_service: CaseService = Depends(get_case_service),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Create a fact associated with a case.
@@ -801,27 +806,33 @@ async def create_case_fact(
         if request.caseId != case_id:
             raise HTTPException(
                 status_code=400,
-                detail=f"Case ID mismatch: path has {case_id}, body has {request.caseId}"
+                detail=f"Case ID mismatch: path has {case_id}, body has {request.caseId}",
             )
 
         # Create case fact (raw SQL - TODO: migrate to service layer)
-        insert_query = text("""
+        insert_query = text(
+            """
             INSERT INTO case_facts (case_id, fact_content, fact_category, importance, created_at, updated_at)
             VALUES (:case_id, :fact_content, :fact_category, :importance, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-        """)
+        """
+        )
 
-        result = db.execute(insert_query, {
-            "case_id": request.caseId,
-            "fact_content": request.factContent,
-            "fact_category": request.factCategory,
-            "importance": request.importance
-        })
+        result = db.execute(
+            insert_query,
+            {
+                "case_id": request.caseId,
+                "fact_content": request.factContent,
+                "fact_category": request.factCategory,
+                "importance": request.importance,
+            },
+        )
         db.commit()
 
         fact_id = result.lastrowid
 
         # Fetch created fact
-        select_query = text("""
+        select_query = text(
+            """
             SELECT
                 id,
                 case_id as caseId,
@@ -832,12 +843,14 @@ async def create_case_fact(
                 updated_at as updatedAt
             FROM case_facts
             WHERE id = :fact_id
-        """)
+        """
+        )
 
         created_fact = db.execute(select_query, {"fact_id": fact_id}).fetchone()
 
         # Log audit event
         from backend.services.audit_logger import log_audit_event
+
         log_audit_event(
             db=db,
             event_type="case_fact.create",
@@ -845,17 +858,18 @@ async def create_case_fact(
             resource_type="case_fact",
             resource_id=str(fact_id),
             action="create",
-            details={
-                "caseId": request.caseId,
-                "category": request.factCategory
-            },
-            success=True
+            details={"caseId": request.caseId, "category": request.factCategory},
+            success=True,
         )
 
         # Convert to dict
         fact_dict = dict(created_fact._mapping)
-        fact_dict['createdAt'] = fact_dict['createdAt'].isoformat() if fact_dict.get('createdAt') else None
-        fact_dict['updatedAt'] = fact_dict['updatedAt'].isoformat() if fact_dict.get('updatedAt') else None
+        fact_dict["createdAt"] = (
+            fact_dict["createdAt"].isoformat() if fact_dict.get("createdAt") else None
+        )
+        fact_dict["updatedAt"] = (
+            fact_dict["updatedAt"].isoformat() if fact_dict.get("updatedAt") else None
+        )
 
         return fact_dict
 
@@ -871,7 +885,7 @@ async def list_case_facts(
     case_id: int,
     user_id: int = Depends(get_current_user),
     case_service: CaseService = Depends(get_case_service),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     List all facts for a specific case.
@@ -897,7 +911,8 @@ async def list_case_facts(
             raise
 
         # Get case facts (raw SQL - TODO: migrate to service layer)
-        facts_query = text("""
+        facts_query = text(
+            """
             SELECT
                 id,
                 case_id as caseId,
@@ -909,7 +924,8 @@ async def list_case_facts(
             FROM case_facts
             WHERE case_id = :case_id
             ORDER BY created_at DESC
-        """)
+        """
+        )
 
         facts = db.execute(facts_query, {"case_id": case_id}).fetchall()
 
@@ -917,8 +933,12 @@ async def list_case_facts(
         result = []
         for fact in facts:
             fact_dict = dict(fact._mapping)
-            fact_dict['createdAt'] = fact_dict['createdAt'].isoformat() if fact_dict.get('createdAt') else None
-            fact_dict['updatedAt'] = fact_dict['updatedAt'].isoformat() if fact_dict.get('updatedAt') else None
+            fact_dict["createdAt"] = (
+                fact_dict["createdAt"].isoformat() if fact_dict.get("createdAt") else None
+            )
+            fact_dict["updatedAt"] = (
+                fact_dict["updatedAt"].isoformat() if fact_dict.get("updatedAt") else None
+            )
             result.append(fact_dict)
 
         return result

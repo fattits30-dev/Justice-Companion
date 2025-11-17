@@ -42,12 +42,10 @@ logger = logging.getLogger(__name__)
 
 class SecureStorageError(Exception):
     """Base exception for secure storage errors."""
-    pass
 
 
 class EncryptionNotAvailableError(SecureStorageError):
     """Raised when OS-level encryption is not available."""
-    pass
 
 
 class SecureStorageService:
@@ -63,7 +61,7 @@ class SecureStorageService:
 
     SERVICE_NAME = "JusticeCompanion"
 
-    _instance: Optional['SecureStorageService'] = None
+    _instance: Optional["SecureStorageService"] = None
     _lock = threading.Lock()
 
     def __init__(self):
@@ -76,7 +74,7 @@ class SecureStorageService:
         self._init_lock = threading.Lock()
 
     @classmethod
-    def get_instance(cls) -> 'SecureStorageService':
+    def get_instance(cls) -> "SecureStorageService":
         """
         Get singleton instance of SecureStorageService.
 
@@ -108,10 +106,7 @@ class SecureStorageService:
 
             try:
                 # Run keyring detection in thread pool to avoid blocking
-                await asyncio.get_event_loop().run_in_executor(
-                    None,
-                    self._detect_keyring_backend
-                )
+                await asyncio.get_event_loop().run_in_executor(None, self._detect_keyring_backend)
 
                 if not self._encryption_available:
                     logger.warning(
@@ -192,8 +187,7 @@ class SecureStorageService:
         try:
             # Run keyring operation in thread pool to avoid blocking
             await asyncio.get_event_loop().run_in_executor(
-                None,
-                lambda: keyring.set_password(self.SERVICE_NAME, key, value)
+                None, lambda: keyring.set_password(self.SERVICE_NAME, key, value)
             )
 
             logger.debug(f"[SecureStorage] Successfully stored key: {key}")
@@ -228,8 +222,7 @@ class SecureStorageService:
         try:
             # Run keyring operation in thread pool to avoid blocking
             value = await asyncio.get_event_loop().run_in_executor(
-                None,
-                lambda: keyring.get_password(self.SERVICE_NAME, key)
+                None, lambda: keyring.get_password(self.SERVICE_NAME, key)
             )
 
             if value:
@@ -266,8 +259,7 @@ class SecureStorageService:
         try:
             # Run keyring operation in thread pool to avoid blocking
             await asyncio.get_event_loop().run_in_executor(
-                None,
-                lambda: keyring.delete_password(self.SERVICE_NAME, key)
+                None, lambda: keyring.delete_password(self.SERVICE_NAME, key)
             )
 
             logger.info(f"[SecureStorage] Successfully deleted key: {key}")
@@ -343,9 +335,7 @@ class SecureStorageService:
                 errors.append(f"{key}: {e}")
 
         if errors:
-            logger.warning(
-                f"[SecureStorage] Some keys could not be deleted: {', '.join(errors)}"
-            )
+            logger.warning(f"[SecureStorage] Some keys could not be deleted: {', '.join(errors)}")
         else:
             logger.info("[SecureStorage] Successfully cleared all known API keys")
 
@@ -394,11 +384,7 @@ class SecureStorageService:
                 "encryption_available": False,
             }
 
-        backend_name = (
-            self._keyring_backend.__class__.__name__
-            if self._keyring_backend
-            else "None"
-        )
+        backend_name = self._keyring_backend.__class__.__name__ if self._keyring_backend else "None"
 
         return {
             "initialized": self._initialized,

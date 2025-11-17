@@ -137,11 +137,10 @@ export class DeadlineReminderScheduler {
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
-      logger.error(
-        "DeadlineReminderScheduler",
-        `Error checking deadlines: ${errorMessage}`,
-        { error },
-      );
+      logger.error(`Error checking deadlines: ${errorMessage}`, {
+        service: "DeadlineReminderScheduler",
+        error,
+      });
     }
   }
 

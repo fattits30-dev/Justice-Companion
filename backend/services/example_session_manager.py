@@ -18,6 +18,7 @@ from backend.services.session_manager import SessionManager, get_session_manager
 # Database Setup
 # ============================================================================
 
+
 def setup_test_database():
     """Create in-memory test database with sample data."""
     engine = create_engine("sqlite:///:memory:", echo=False)
@@ -34,7 +35,7 @@ def setup_test_database():
             password_hash="dummy_hash_1",
             password_salt="dummy_salt_1",
             role="user",
-            is_active=True
+            is_active=True,
         ),
         User(
             username="jane_smith",
@@ -42,7 +43,7 @@ def setup_test_database():
             password_hash="dummy_hash_2",
             password_salt="dummy_salt_2",
             role="admin",
-            is_active=True
+            is_active=True,
         ),
         User(
             username="inactive_user",
@@ -50,8 +51,8 @@ def setup_test_database():
             password_hash="dummy_hash_3",
             password_salt="dummy_salt_3",
             role="user",
-            is_active=False
-        )
+            is_active=False,
+        ),
     ]
 
     for user in users:
@@ -66,6 +67,7 @@ def setup_test_database():
 # Example 1: Basic Session Creation and Validation
 # ============================================================================
 
+
 async def example_basic_session():
     """
     Example 1: Basic session creation and validation.
@@ -75,9 +77,9 @@ async def example_basic_session():
     - Validating the session
     - Destroying the session (logout)
     """
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("Example 1: Basic Session Creation and Validation")
-    print("="*70 + "\n")
+    print("=" * 70 + "\n")
 
     db, engine = setup_test_database()
 
@@ -92,9 +94,7 @@ async def example_basic_session():
         # Create session
         print("\n1. Creating session...")
         session_id = await manager.create_session(
-            user_id=user.id,
-            username=user.username,
-            remember_me=False
+            user_id=user.id, username=user.username, remember_me=False
         )
         print(f"   ✓ Session created: {session_id}")
 
@@ -124,6 +124,7 @@ async def example_basic_session():
 # Example 2: Remember Me Sessions
 # ============================================================================
 
+
 async def example_remember_me():
     """
     Example 2: Remember Me sessions with extended expiration.
@@ -132,9 +133,9 @@ async def example_remember_me():
     - Creating a remember_me session (30 days)
     - Comparing expiration times
     """
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("Example 2: Remember Me Sessions")
-    print("="*70 + "\n")
+    print("=" * 70 + "\n")
 
     db, engine = setup_test_database()
 
@@ -145,15 +146,14 @@ async def example_remember_me():
         # Create standard session (24 hours)
         print("1. Creating standard session (24 hours)...")
         standard_session_id = await manager.create_session(
-            user_id=user.id,
-            username=user.username,
-            remember_me=False
+            user_id=user.id, username=user.username, remember_me=False
         )
 
         from backend.models.session import Session as SessionModel
-        standard_session = db.query(SessionModel).filter(
-            SessionModel.id == standard_session_id
-        ).first()
+
+        standard_session = (
+            db.query(SessionModel).filter(SessionModel.id == standard_session_id).first()
+        )
 
         expiry_delta = standard_session.expires_at - standard_session.created_at
         hours = expiry_delta.total_seconds() / 3600
@@ -163,14 +163,12 @@ async def example_remember_me():
         # Create remember_me session (30 days)
         print("\n2. Creating remember_me session (30 days)...")
         remember_session_id = await manager.create_session(
-            user_id=user.id,
-            username=user.username,
-            remember_me=True
+            user_id=user.id, username=user.username, remember_me=True
         )
 
-        remember_session = db.query(SessionModel).filter(
-            SessionModel.id == remember_session_id
-        ).first()
+        remember_session = (
+            db.query(SessionModel).filter(SessionModel.id == remember_session_id).first()
+        )
 
         expiry_delta = remember_session.expires_at - remember_session.created_at
         days = expiry_delta.total_seconds() / 86400
@@ -192,6 +190,7 @@ async def example_remember_me():
 # Example 3: Memory Cache Performance
 # ============================================================================
 
+
 async def example_memory_cache():
     """
     Example 3: Memory cache for fast validation.
@@ -201,9 +200,9 @@ async def example_memory_cache():
     - Cache hit performance
     - Session count monitoring
     """
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("Example 3: Memory Cache Performance")
-    print("="*70 + "\n")
+    print("=" * 70 + "\n")
 
     db, engine = setup_test_database()
 
@@ -216,9 +215,7 @@ async def example_memory_cache():
         session_ids = []
         for i in range(3):
             session_id = await manager_cached.create_session(
-                user_id=user.id,
-                username=user.username,
-                remember_me=False
+                user_id=user.id, username=user.username, remember_me=False
             )
             session_ids.append(session_id)
             print(f"   ✓ Session {i+1}: {session_id}")
@@ -251,6 +248,7 @@ async def example_memory_cache():
 # Example 4: Session Cleanup
 # ============================================================================
 
+
 async def example_cleanup():
     """
     Example 4: Automatic expired session cleanup.
@@ -260,9 +258,9 @@ async def example_cleanup():
     - Manually expiring sessions
     - Running cleanup
     """
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("Example 4: Session Cleanup")
-    print("="*70 + "\n")
+    print("=" * 70 + "\n")
 
     db, engine = setup_test_database()
 
@@ -275,9 +273,7 @@ async def example_cleanup():
         session_ids = []
         for i in range(5):
             session_id = await manager.create_session(
-                user_id=user.id,
-                username=user.username,
-                remember_me=False
+                user_id=user.id, username=user.username, remember_me=False
             )
             session_ids.append(session_id)
 
@@ -290,15 +286,14 @@ async def example_cleanup():
         from backend.models.session import Session as SessionModel
 
         for i in range(3):
-            db_session = db.query(SessionModel).filter(
-                SessionModel.id == session_ids[i]
-            ).first()
+            db_session = db.query(SessionModel).filter(SessionModel.id == session_ids[i]).first()
             db_session.expires_at = datetime.now(timezone.utc) - timedelta(hours=1)
 
             # Also expire in cache
             if session_ids[i] in manager._memory_cache:
-                manager._memory_cache[session_ids[i]].expires_at = \
-                    datetime.now(timezone.utc) - timedelta(hours=1)
+                manager._memory_cache[session_ids[i]].expires_at = datetime.now(
+                    timezone.utc
+                ) - timedelta(hours=1)
 
         db.commit()
         print(f"   ✓ Expired sessions: {session_ids[:3]}")
@@ -324,6 +319,7 @@ async def example_cleanup():
 # Example 5: User Session Management
 # ============================================================================
 
+
 async def example_user_sessions():
     """
     Example 5: Managing multiple sessions for a user.
@@ -334,9 +330,9 @@ async def example_user_sessions():
     - Revoking specific sessions
     - Revoking all except current session
     """
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("Example 5: User Session Management")
-    print("="*70 + "\n")
+    print("=" * 70 + "\n")
 
     db, engine = setup_test_database()
 
@@ -355,7 +351,7 @@ async def example_user_sessions():
                 username=user.username,
                 remember_me=False,
                 ip_address=f"192.168.1.{100+i}",
-                user_agent=device
+                user_agent=device,
             )
             session_ids.append(session_id)
             print(f"   ✓ Device {i+1}: {device}")
@@ -379,8 +375,7 @@ async def example_user_sessions():
         print(f"   Current session (keeping): {current_session_id}")
 
         revoked = await manager.revoke_user_sessions(
-            user_id=user.id,
-            except_session_id=current_session_id
+            user_id=user.id, except_session_id=current_session_id
         )
         print(f"   ✓ Revoked: {revoked} sessions")
 
@@ -399,6 +394,7 @@ async def example_user_sessions():
 # Example 6: Security Event (Password Change)
 # ============================================================================
 
+
 async def example_security_event():
     """
     Example 6: Handling security events (password change).
@@ -409,9 +405,9 @@ async def example_security_event():
     - Revoking all sessions except current
     - Force re-authentication
     """
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("Example 6: Security Event (Password Change)")
-    print("="*70 + "\n")
+    print("=" * 70 + "\n")
 
     db, engine = setup_test_database()
 
@@ -424,9 +420,7 @@ async def example_security_event():
         session_ids = []
         for i in range(4):
             session_id = await manager.create_session(
-                user_id=user.id,
-                username=user.username,
-                remember_me=False
+                user_id=user.id, username=user.username, remember_me=False
             )
             session_ids.append(session_id)
 
@@ -440,8 +434,7 @@ async def example_security_event():
         # Revoke all other sessions for security
         print("\n3. Revoking all other sessions for security...")
         revoked = await manager.revoke_user_sessions(
-            user_id=user.id,
-            except_session_id=current_session_id
+            user_id=user.id, except_session_id=current_session_id
         )
         print(f"   ✓ Revoked: {revoked} sessions")
         print(f"   ✓ Current session preserved")
@@ -468,6 +461,7 @@ async def example_security_event():
 # Example 7: Inactive User Handling
 # ============================================================================
 
+
 async def example_inactive_user():
     """
     Example 7: Handling inactive user sessions.
@@ -477,9 +471,9 @@ async def example_inactive_user():
     - Deactivating user account
     - Session validation fails for inactive user
     """
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("Example 7: Inactive User Handling")
-    print("="*70 + "\n")
+    print("=" * 70 + "\n")
 
     db, engine = setup_test_database()
 
@@ -493,7 +487,7 @@ async def example_inactive_user():
             password_hash="hash",
             password_salt="salt",
             role="user",
-            is_active=True
+            is_active=True,
         )
         db.add(user)
         db.commit()
@@ -502,9 +496,7 @@ async def example_inactive_user():
         # Create session
         print("1. Creating session for active user...")
         session_id = await manager.create_session(
-            user_id=user.id,
-            username=user.username,
-            remember_me=False
+            user_id=user.id, username=user.username, remember_me=False
         )
         print(f"   ✓ Session created: {session_id}")
 
@@ -534,6 +526,7 @@ async def example_inactive_user():
 # Example 8: Singleton Pattern
 # ============================================================================
 
+
 async def example_singleton():
     """
     Example 8: Using get_session_manager() singleton.
@@ -543,9 +536,9 @@ async def example_singleton():
     - Verifying same instance returned
     - Singleton pattern benefits
     """
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("Example 8: Singleton Pattern")
-    print("="*70 + "\n")
+    print("=" * 70 + "\n")
 
     db, engine = setup_test_database()
 
@@ -578,11 +571,12 @@ async def example_singleton():
 # Main Function - Run All Examples
 # ============================================================================
 
+
 async def run_all_examples():
     """Run all examples sequentially."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("SessionManager Service - Usage Examples")
-    print("="*70)
+    print("=" * 70)
 
     examples = [
         ("Basic Session Creation and Validation", example_basic_session),
@@ -604,9 +598,9 @@ async def run_all_examples():
         if i < len(examples):
             input("\nPress Enter to continue to next example...")
 
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("All examples completed!")
-    print("="*70 + "\n")
+    print("=" * 70 + "\n")
 
 
 # ============================================================================

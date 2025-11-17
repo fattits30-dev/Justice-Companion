@@ -16,20 +16,18 @@ License: MIT
 
 import asyncio
 from pathlib import Path
-from typing import Optional
 
 from backend.services.python_ai_client import (
     PythonAIClientService,
     create_python_ai_client_service,
     DocumentAnalysisRequest,
     ImageAnalysisRequest,
-    DocumentAnalysisResponse
 )
 from backend.services.unified_ai_service import (
     AIProviderConfig,
     AIProviderType,
     ParsedDocument,
-    UserProfile
+    UserProfile,
 )
 from fastapi import HTTPException
 
@@ -38,11 +36,12 @@ from fastapi import HTTPException
 # EXAMPLE 1: Basic Service Initialization
 # ============================================================================
 
+
 async def example_basic_initialization():
     """Example: Initialize service with OpenAI."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXAMPLE 1: Basic Service Initialization")
-    print("="*60 + "\n")
+    print("=" * 60 + "\n")
 
     # Method 1: Using factory function (recommended)
     service = create_python_ai_client_service(
@@ -50,7 +49,7 @@ async def example_basic_initialization():
         api_key="sk-your-api-key-here",
         model="gpt-4-turbo",
         timeout=120,
-        max_retries=3
+        max_retries=3,
     )
 
     # Method 2: Using constructor directly
@@ -59,15 +58,10 @@ async def example_basic_initialization():
         api_key="sk-your-api-key-here",
         model="gpt-4-turbo",
         temperature=0.7,
-        max_tokens=4096
+        max_tokens=4096,
     )
 
-    service = PythonAIClientService(
-        ai_config=config,
-        timeout=120,
-        max_retries=3,
-        retry_delay=1000
-    )
+    service = PythonAIClientService(ai_config=config, timeout=120, max_retries=3, retry_delay=1000)
 
     print(f"✓ Service initialized with {config.provider.value}/{config.model}")
 
@@ -78,11 +72,12 @@ async def example_basic_initialization():
 # EXAMPLE 2: Health Checks
 # ============================================================================
 
+
 async def example_health_checks(service: PythonAIClientService):
     """Example: Check service health and availability."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXAMPLE 2: Health Checks")
-    print("="*60 + "\n")
+    print("=" * 60 + "\n")
 
     # Check availability
     is_available = await service.is_available()
@@ -110,11 +105,12 @@ async def example_health_checks(service: PythonAIClientService):
 # EXAMPLE 3: Document Text Analysis
 # ============================================================================
 
+
 async def example_document_analysis(service: PythonAIClientService):
     """Example: Analyze document text and extract case data."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXAMPLE 3: Document Text Analysis")
-    print("="*60 + "\n")
+    print("=" * 60 + "\n")
 
     # Create parsed document (would come from document parser in real usage)
     document = ParsedDocument(
@@ -150,21 +146,18 @@ async def example_document_analysis(service: PythonAIClientService):
                 (Employee)
         """,
         word_count=145,
-        file_type="pdf"
+        file_type="pdf",
     )
 
     # Create user profile
-    user_profile = UserProfile(
-        name="John Smith",
-        email="john.smith@example.com"
-    )
+    user_profile = UserProfile(name="John Smith", email="john.smith@example.com")
 
     # Create analysis request
     request = DocumentAnalysisRequest(
         document=document,
         user_profile=user_profile,
         session_id="example-session-uuid-12345",
-        user_question="What are the key terms of this employment contract?"
+        user_question="What are the key terms of this employment contract?",
     )
 
     try:
@@ -175,13 +168,13 @@ async def example_document_analysis(service: PythonAIClientService):
         # Display conversational analysis
         print(f"\n{'─'*60}")
         print("CONVERSATIONAL ANALYSIS")
-        print('─'*60)
+        print("─" * 60)
         print(result.analysis)
 
         # Display structured case data
         print(f"\n{'─'*60}")
         print("EXTRACTED CASE DATA")
-        print('─'*60)
+        print("─" * 60)
         case_data = result.suggested_case_data
         print(f"Title: {case_data.title}")
         print(f"Case Type: {case_data.case_type}")
@@ -194,7 +187,7 @@ async def example_document_analysis(service: PythonAIClientService):
         # Display confidence scores
         print(f"\n{'─'*60}")
         print("CONFIDENCE SCORES")
-        print('─'*60)
+        print("─" * 60)
         confidence = case_data.confidence
         print(f"Title: {confidence.title:.2%}")
         print(f"Case Type: {confidence.case_type:.2%}")
@@ -205,7 +198,7 @@ async def example_document_analysis(service: PythonAIClientService):
         # Display metadata
         print(f"\n{'─'*60}")
         print("METADATA")
-        print('─'*60)
+        print("─" * 60)
         if result.metadata:
             print(f"Provider: {result.metadata.get('provider')}")
             print(f"Model: {result.metadata.get('model')}")
@@ -221,11 +214,12 @@ async def example_document_analysis(service: PythonAIClientService):
 # EXAMPLE 4: Image OCR Analysis
 # ============================================================================
 
+
 async def example_image_ocr_analysis(service: PythonAIClientService):
     """Example: Analyze scanned image with OCR."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXAMPLE 4: Image OCR Analysis")
-    print("="*60 + "\n")
+    print("=" * 60 + "\n")
 
     # NOTE: This requires a real image file and Tesseract OCR installed
     image_path = "/path/to/scanned_contract.jpg"
@@ -245,7 +239,7 @@ async def example_image_ocr_analysis(service: PythonAIClientService):
         user_name="Alice Johnson",
         session_id="example-session-uuid-67890",
         user_email="alice@example.com",
-        user_question="What does this document contain?"
+        user_question="What does this document contain?",
     )
 
     try:
@@ -257,7 +251,7 @@ async def example_image_ocr_analysis(service: PythonAIClientService):
         # Display OCR metadata
         print(f"\n{'─'*60}")
         print("OCR RESULTS")
-        print('─'*60)
+        print("─" * 60)
         ocr_metadata = result.metadata.get("ocr", {})
         print(f"Confidence: {ocr_metadata.get('confidence', 0):.2%}")
         print(f"Words Extracted: {ocr_metadata.get('word_count', 0)}")
@@ -267,13 +261,13 @@ async def example_image_ocr_analysis(service: PythonAIClientService):
         # Display conversational analysis
         print(f"\n{'─'*60}")
         print("ANALYSIS")
-        print('─'*60)
+        print("─" * 60)
         print(result.analysis)
 
         # Display extracted case data
         print(f"\n{'─'*60}")
         print("EXTRACTED CASE DATA")
-        print('─'*60)
+        print("─" * 60)
         case_data = result.suggested_case_data
         print(f"Title: {case_data.title}")
         print(f"Case Type: {case_data.case_type}")
@@ -297,19 +291,18 @@ async def example_image_ocr_analysis(service: PythonAIClientService):
 # EXAMPLE 5: Error Handling
 # ============================================================================
 
+
 async def example_error_handling(service: PythonAIClientService):
     """Example: Handle various error scenarios."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXAMPLE 5: Error Handling")
-    print("="*60 + "\n")
+    print("=" * 60 + "\n")
 
     # Scenario 1: Invalid file path
     print("Scenario 1: Invalid file path")
     try:
         request = ImageAnalysisRequest(
-            image_path="/nonexistent/file.jpg",
-            user_name="Test User",
-            session_id="test-session"
+            image_path="/nonexistent/file.jpg", user_name="Test User", session_id="test-session"
         )
         print("❌ Should have raised ValueError")
     except ValueError as e:
@@ -319,14 +312,9 @@ async def example_error_handling(service: PythonAIClientService):
     print("\nScenario 2: Empty document text")
     try:
         request = DocumentAnalysisRequest(
-            document=ParsedDocument(
-                filename="empty.txt",
-                text="",
-                word_count=0,
-                file_type="txt"
-            ),
+            document=ParsedDocument(filename="empty.txt", text="", word_count=0, file_type="txt"),
             user_profile=UserProfile(name="Test User"),
-            session_id="test-session"
+            session_id="test-session",
         )
 
         result = await service.analyze_document(request)
@@ -346,19 +334,17 @@ async def example_error_handling(service: PythonAIClientService):
 # EXAMPLE 6: Multi-Provider Configuration
 # ============================================================================
 
+
 async def example_multi_provider():
     """Example: Configure different AI providers."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXAMPLE 6: Multi-Provider Configuration")
-    print("="*60 + "\n")
+    print("=" * 60 + "\n")
 
     # OpenAI (GPT-4)
     print("Provider 1: OpenAI GPT-4")
     openai_service = create_python_ai_client_service(
-        provider="openai",
-        api_key="sk-your-openai-key",
-        model="gpt-4-turbo",
-        temperature=0.7
+        provider="openai", api_key="sk-your-openai-key", model="gpt-4-turbo", temperature=0.7
     )
     info = await openai_service.get_info()
     print(f"  Model Provider: {info.model_provider}")
@@ -370,7 +356,7 @@ async def example_multi_provider():
         provider="anthropic",
         api_key="sk-ant-your-anthropic-key",
         model="claude-3-5-sonnet-20241022",
-        temperature=0.7
+        temperature=0.7,
     )
     info = await anthropic_service.get_info()
     print(f"  Model Provider: {info.model_provider}")
@@ -381,7 +367,7 @@ async def example_multi_provider():
         provider="huggingface",
         api_key="hf_your-huggingface-key",
         model="meta-llama/Meta-Llama-3.1-70B-Instruct",
-        temperature=0.3
+        temperature=0.3,
     )
     info = await huggingface_service.get_info()
     print(f"  Model Provider: {info.model_provider}")
@@ -392,14 +378,16 @@ async def example_multi_provider():
 # EXAMPLE 7: FastAPI Integration
 # ============================================================================
 
+
 async def example_fastapi_integration():
     """Example: Use service in FastAPI endpoint."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXAMPLE 7: FastAPI Integration")
-    print("="*60 + "\n")
+    print("=" * 60 + "\n")
 
     print("FastAPI endpoint example:")
-    print("""
+    print(
+        """
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form
 from backend.services.python_ai_client import (
     PythonAIClientService,
@@ -466,18 +454,20 @@ async def analyze_image(
     os.remove(temp_path)
 
     return result
-    """)
+    """
+    )
 
 
 # ============================================================================
 # MAIN FUNCTION
 # ============================================================================
 
+
 async def main():
     """Run all examples."""
-    print("╔" + "="*58 + "╗")
-    print("║" + " "*10 + "Python AI Client Service Examples" + " "*14 + "║")
-    print("╚" + "="*58 + "╝")
+    print("╔" + "=" * 58 + "╗")
+    print("║" + " " * 10 + "Python AI Client Service Examples" + " " * 14 + "║")
+    print("╚" + "=" * 58 + "╝")
 
     try:
         # Example 1: Initialize service
@@ -501,13 +491,14 @@ async def main():
         # Example 7: FastAPI integration
         await example_fastapi_integration()
 
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("✓ All examples completed successfully!")
-        print("="*60 + "\n")
+        print("=" * 60 + "\n")
 
     except Exception as e:
         print(f"\n❌ Example failed: {e}")
         import traceback
+
         traceback.print_exc()
 
 

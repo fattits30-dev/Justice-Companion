@@ -45,11 +45,24 @@ class User(Base):
     deadlines = relationship("Deadline", back_populates="user", cascade="all, delete-orphan")
     tags = relationship("Tag", back_populates="user", cascade="all, delete-orphan")
     templates = relationship("CaseTemplate", back_populates="user", cascade="all, delete-orphan")
-    template_usages = relationship("TemplateUsage", back_populates="user", cascade="all, delete-orphan")
-    notifications = relationship("Notification", back_populates="user", cascade="all, delete-orphan")
-    notification_preferences = relationship("NotificationPreferences", back_populates="user", cascade="all, delete-orphan", uselist=False)
-    profile = relationship("UserProfile", back_populates="user", cascade="all, delete-orphan", uselist=False)
-    ai_provider_configs = relationship("AIProviderConfig", back_populates="user", cascade="all, delete-orphan")
+    template_usages = relationship(
+        "TemplateUsage", back_populates="user", cascade="all, delete-orphan"
+    )
+    notifications = relationship(
+        "Notification", back_populates="user", cascade="all, delete-orphan"
+    )
+    notification_preferences = relationship(
+        "NotificationPreferences",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        uselist=False,
+    )
+    profile = relationship(
+        "UserProfile", back_populates="user", cascade="all, delete-orphan", uselist=False
+    )
+    ai_provider_configs = relationship(
+        "AIProviderConfig", back_populates="user", cascade="all, delete-orphan"
+    )
 
     def to_dict(self):
         """Convert User model to dictionary for JSON serialization."""
@@ -59,9 +72,11 @@ class User(Base):
             "email": self.email,
             "role": self.role,
             "is_active": self.is_active,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
-            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
-            "last_login_at": self.last_login_at.isoformat() if self.last_login_at else None,
+            "created_at": self.created_at.isoformat() if self.created_at is not None else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at is not None else None,
+            "last_login_at": (
+                self.last_login_at.isoformat() if self.last_login_at is not None else None
+            ),
         }
 
     def __repr__(self):

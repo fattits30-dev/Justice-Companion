@@ -153,6 +153,8 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
     onDelete(notification.id);
   };
 
+  const ariaRole = onClick ? "button" : "region";
+
   return (
     <div
       className={`
@@ -164,7 +166,7 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
         transition-all duration-200
       `}
       onClick={handleCardClick}
-      role={onClick ? "button" : "article"}
+      role={ariaRole}
       tabIndex={onClick ? 0 : undefined}
       onKeyDown={(e) => {
         if (onClick && (e.key === "Enter" || e.key === " ")) {

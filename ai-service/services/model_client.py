@@ -11,10 +11,8 @@ License: MIT
 """
 
 import os
-import json
 from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional
-import httpx
 
 
 class ModelClient(ABC):
@@ -49,7 +47,6 @@ class ModelClient(ABC):
         Raises:
             Exception: If generation fails
         """
-        pass
 
     def get_metadata(self) -> Dict[str, Any]:
         """
@@ -111,7 +108,7 @@ class HuggingFaceLocalClient(ModelClient):
             self.model = AutoModelForSeq2SeqLM.from_pretrained(
                 model_name,
                 torch_dtype=torch.float16 if self.device == "cuda" else torch.float32,
-                low_cpu_mem_usage=True
+                low_cpu_mem_usage=True,
             )
             self.model.to(self.device)
             self.model.eval()
@@ -139,6 +136,9 @@ class HuggingFaceLocalClient(ModelClient):
         """
         await self._load_model()
 
+        assert self.model is not None, "Model not loaded"
+        assert self.tokenizer is not None, "Tokenizer not loaded"
+
         # Combine system prompt and user prompt
         full_prompt = prompt
         if system_prompt:
@@ -149,10 +149,7 @@ class HuggingFaceLocalClient(ModelClient):
 
             # Tokenize input
             inputs = self.tokenizer(
-                full_prompt,
-                return_tensors="pt",
-                max_length=4096,
-                truncation=True
+                full_prompt, return_tensors="pt", max_length=4096, truncation=True
             ).to(self.device)
 
             # Generate response
@@ -163,7 +160,7 @@ class HuggingFaceLocalClient(ModelClient):
                     temperature=self.temperature,
                     do_sample=True,
                     top_p=0.95,
-                    num_return_sequences=1
+                    num_return_sequences=1,
                 )
 
             # Decode output
@@ -219,6 +216,7 @@ class HuggingFaceAPIClient(ModelClient):
         self.max_tokens = config.get("max_tokens", 2000)
         self.temperature = config.get("temperature", 0.7)
         self.top_p = config.get("top_p", 0.7)
+        self._init_client()
 
     def _init_client(self):
         """Lazy-initialize HuggingFace InferenceClient"""
@@ -227,11 +225,11 @@ class HuggingFaceAPIClient(ModelClient):
 
         try:
             from huggingface_hub import InferenceClient
+
             self.client = InferenceClient(api_key=self.api_token)
         except ImportError:
             raise RuntimeError(
-                "huggingface_hub not installed. "
-                "Install with: pip install huggingface_hub"
+                "huggingface_hub not installed. " "Install with: pip install huggingface_hub"
             )
 
     async def generate(self, prompt: str, system_prompt: Optional[str] = None) -> str:
@@ -249,6 +247,8 @@ class HuggingFaceAPIClient(ModelClient):
         """
         self._init_client()
 
+        assert self.client is not None, "HuggingFace InferenceClient not initialized"
+
         # Prepare messages (OpenAI-compatible format)
         messages = []
         if system_prompt:
@@ -263,11 +263,14 @@ class HuggingFaceAPIClient(ModelClient):
                 temperature=self.temperature,
                 top_p=self.top_p,
                 max_tokens=self.max_tokens,
-                stream=False
+                stream=False,
             )
 
             # Extract generated text
-            return response.choices[0].message.content
+            content = response.choices[0].message.content
+            if content is None:
+                raise RuntimeError("API response content is None")
+            return content
 
         except Exception as e:
             if "503" in str(e):
@@ -316,20 +319,19 @@ class OpenAIClient(ModelClient):
         self.client = None
         self.max_tokens = config.get("max_tokens", 2000)
         self.temperature = config.get("temperature", 0.7)
+        self._init_client()
 
-    async def _init_client(self):
+    def _init_client(self):
         """Lazy-initialize OpenAI client"""
         if self.client is not None:
             return
 
         try:
             from openai import AsyncOpenAI
+
             self.client = AsyncOpenAI(api_key=self.api_key)
         except ImportError:
-            raise RuntimeError(
-                "openai package not installed. "
-                "Install with: pip install openai"
-            )
+            raise RuntimeError("openai package not installed. " "Install with: pip install openai")
 
     async def generate(self, prompt: str, system_prompt: Optional[str] = None) -> str:
         """
@@ -342,7 +344,9 @@ class OpenAIClient(ModelClient):
         Returns:
             Generated text
         """
-        await self._init_client()
+        self._init_client()
+
+        assert self.client is not None, "OpenAI client not initialized"
 
         messages = []
         if system_prompt:
@@ -357,7 +361,10 @@ class OpenAIClient(ModelClient):
                 temperature=self.temperature,
             )
 
-            return response.choices[0].message.content
+            content = response.choices[0].message.content
+            if content is None:
+                raise RuntimeError("API response content is None")
+            return content
 
         except Exception as e:
             raise RuntimeError(f"OpenAI API error: {e}")

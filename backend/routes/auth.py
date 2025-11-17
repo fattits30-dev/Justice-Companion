@@ -36,6 +36,7 @@ router = APIRouter(prefix="/auth", tags=["authentication"])
 
 # ===== Pydantic request/response models =====
 
+
 class RegisterRequest(BaseModel):
     """
     User registration request.
@@ -45,13 +46,16 @@ class RegisterRequest(BaseModel):
     - Password: OWASP requirements (12+ chars, uppercase, lowercase, number)
     - Email: Valid email format
     """
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "username": "john_doe",
-            "password": "SecurePass123!",
-            "email": "john@example.com"
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "username": "john_doe",
+                "password": "SecurePass123!",
+                "email": "john@example.com",
+            }
         }
-    })
+    )
 
     username: str = Field(..., min_length=3, max_length=50)
     password: str = Field(..., min_length=12)
@@ -67,13 +71,12 @@ class LoginRequest(BaseModel):
         password: Password
         remember_me: If True, session lasts 30 days instead of 24 hours
     """
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "username": "john_doe",
-            "password": "SecurePass123!",
-            "remember_me": False
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {"username": "john_doe", "password": "SecurePass123!", "remember_me": False}
         }
-    })
+    )
 
     username: str = Field(..., min_length=3)
     password: str = Field(..., min_length=1)
@@ -82,11 +85,10 @@ class LoginRequest(BaseModel):
 
 class LogoutRequest(BaseModel):
     """User logout request."""
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "session_id": "550e8400-e29b-41d4-a716-446655440000"
-        }
-    })
+
+    model_config = ConfigDict(
+        json_schema_extra={"example": {"session_id": "550e8400-e29b-41d4-a716-446655440000"}}
+    )
 
     session_id: str = Field(..., min_length=36, max_length=36)
 
@@ -98,13 +100,16 @@ class ChangePasswordRequest(BaseModel):
     Requires old password for verification (prevents unauthorized changes).
     All existing sessions will be invalidated for security.
     """
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "user_id": 1,
-            "old_password": "OldSecurePass123!",
-            "new_password": "NewSecurePass456!"
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "user_id": 1,
+                "old_password": "OldSecurePass123!",
+                "new_password": "NewSecurePass456!",
+            }
         }
-    })
+    )
 
     user_id: int = Field(..., gt=0)
     old_password: str = Field(..., min_length=1)
@@ -113,6 +118,7 @@ class ChangePasswordRequest(BaseModel):
 
 class UserResponse(BaseModel):
     """User data response (excludes sensitive fields like password_hash)."""
+
     id: int
     username: str
     email: str
@@ -122,6 +128,7 @@ class UserResponse(BaseModel):
 
 class SessionResponse(BaseModel):
     """Session data response."""
+
     id: str
     user_id: int
     expires_at: str
@@ -133,12 +140,14 @@ class AuthResponse(BaseModel):
 
     Returned after successful login or registration.
     """
+
     user: UserResponse
     session: SessionResponse
 
 
 class SuccessResponse(BaseModel):
     """Generic success response for operations without data payload."""
+
     success: bool
     message: Optional[str] = None
     data: Optional[dict] = None
@@ -146,17 +155,20 @@ class SuccessResponse(BaseModel):
 
 class RateLimitInfo(BaseModel):
     """Rate limit information (returned in error responses)."""
+
     retry_after_seconds: int
     attempts_remaining: Optional[int] = None
 
 
 class ErrorResponse(BaseModel):
     """Standard error response."""
+
     detail: str
     rate_limit_info: Optional[RateLimitInfo] = None
 
 
 # ===== Dependency injection functions =====
+
 
 def get_auth_service(db: Session = Depends(get_db)) -> AuthenticationService:
     """
@@ -181,16 +193,14 @@ def get_session_manager(db: Session = Depends(get_db)) -> SessionManager:
     """
     audit_logger = AuditLogger(db)
     return SessionManager(
-        db=db,
-        audit_logger=audit_logger,
-        enable_memory_cache=False  # Use database for persistence
+        db=db, audit_logger=audit_logger, enable_memory_cache=False  # Use database for persistence
     )
 
 
 async def get_current_user(
     request: Request,
     db: Session = Depends(get_db),
-    session_manager: SessionManager = Depends(get_session_manager)
+    session_manager: SessionManager = Depends(get_session_manager),
 ) -> int:
     """
     FastAPI dependency to get current authenticated user ID.
@@ -219,7 +229,7 @@ async def get_current_user(
     else:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Not authenticated - no session ID provided"
+            detail="Not authenticated - no session ID provided",
         )
 
     # Validate session
@@ -227,21 +237,18 @@ async def get_current_user(
 
     if not validation_result or not validation_result.valid:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired session"
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired session"
         )
 
     # Return user_id from validation result
     if not validation_result.user_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not found"
-        )
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
 
     return validation_result.user_id
 
 
 # ===== Routes =====
+
 
 @router.post(
     "/register",
@@ -251,14 +258,14 @@ async def get_current_user(
         201: {"description": "User registered successfully"},
         400: {"description": "Invalid input or user already exists", "model": ErrorResponse},
         429: {"description": "Rate limit exceeded", "model": ErrorResponse},
-        500: {"description": "Internal server error", "model": ErrorResponse}
-    }
+        500: {"description": "Internal server error", "model": ErrorResponse},
+    },
 )
 async def register(
     request: RegisterRequest,
     http_request: Request,
     auth_service: AuthenticationService = Depends(get_auth_service),
-    rate_limiter: RateLimitService = Depends(get_rate_limiter)
+    rate_limiter: RateLimitService = Depends(get_rate_limiter),
 ):
     """
     Register a new user.
@@ -289,10 +296,7 @@ async def register(
     # Note: We use IP for registration rate limiting to prevent mass account creation
     ip_hash = hash(ip_address)  # Use hash to create numeric ID
     rate_limit_result = rate_limiter.check_rate_limit(
-        user_id=ip_hash,
-        operation="register",
-        max_requests=3,
-        window_seconds=3600  # 1 hour
+        user_id=ip_hash, operation="register", max_requests=3, window_seconds=3600  # 1 hour
     )
 
     if not rate_limit_result.allowed:
@@ -303,16 +307,14 @@ async def register(
                 "message": "Too many registration attempts. Please try again later.",
                 "rate_limit_info": {
                     "retry_after_seconds": rate_limit_result.remaining_time or 3600
-                }
-            }
+                },
+            },
         )
 
     try:
         # Register user (includes auto-login)
         result = await auth_service.register(
-            username=request.username,
-            password=request.password,
-            email=request.email
+            username=request.username, password=request.password, email=request.email
         )
 
         # Reset rate limit on successful registration
@@ -324,24 +326,21 @@ async def register(
                 "username": result["user"]["username"],
                 "email": result["user"]["email"],
                 "role": result["user"]["role"],
-                "is_active": result["user"]["is_active"]
+                "is_active": result["user"]["is_active"],
             },
-            "session": result["session"]
+            "session": result["session"],
         }
 
     except AuthenticationError as e:
         # Increment rate limit on failed attempt
         rate_limiter.increment(ip_hash, "register")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
         # Increment rate limit on error
         rate_limiter.increment(ip_hash, "register")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Registration failed: {str(e)}"
+            detail=f"Registration failed: {str(e)}",
         )
 
 
@@ -352,15 +351,15 @@ async def register(
         200: {"description": "Login successful"},
         401: {"description": "Invalid credentials", "model": ErrorResponse},
         429: {"description": "Too many login attempts - account locked", "model": ErrorResponse},
-        500: {"description": "Internal server error", "model": ErrorResponse}
-    }
+        500: {"description": "Internal server error", "model": ErrorResponse},
+    },
 )
 async def login(
     request_data: LoginRequest,
     http_request: Request,
     auth_service: AuthenticationService = Depends(get_auth_service),
     rate_limiter: RateLimitService = Depends(get_rate_limiter),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Login user and create session.
@@ -386,6 +385,7 @@ async def login(
 
     # Get user ID for rate limiting (we need to query first)
     from backend.models.user import User
+
     user = db.query(User).filter(User.username == request_data.username).first()
 
     if not user:
@@ -393,26 +393,18 @@ async def login(
         # Use username hash as temporary ID
         username_hash = abs(hash(request_data.username))
         rate_limiter.increment(username_hash, "login")
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid credentials"
-        )
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 
     # Check rate limit BEFORE attempting login
-    rate_limit_result = rate_limiter.check_rate_limit(
-        user_id=user.id,
-        operation="login"
-    )
+    rate_limit_result = rate_limiter.check_rate_limit(user_id=user.id, operation="login")
 
     if not rate_limit_result.allowed:
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail={
                 "message": f"Too many login attempts. Account locked for {rate_limit_result.remaining_time} seconds.",
-                "rate_limit_info": {
-                    "retry_after_seconds": rate_limit_result.remaining_time
-                }
-            }
+                "rate_limit_info": {"retry_after_seconds": rate_limit_result.remaining_time},
+            },
         )
 
     try:
@@ -422,7 +414,7 @@ async def login(
             password=request_data.password,
             remember_me=request_data.remember_me,
             ip_address=ip_address,
-            user_agent=user_agent
+            user_agent=user_agent,
         )
 
         # Reset rate limit on successful login
@@ -434,9 +426,9 @@ async def login(
                 "username": result["user"]["username"],
                 "email": result["user"]["email"],
                 "role": result["user"]["role"],
-                "is_active": result["user"]["is_active"]
+                "is_active": result["user"]["is_active"],
             },
-            "session": result["session"]
+            "session": result["session"],
         }
 
     except AuthenticationError as e:
@@ -448,17 +440,13 @@ async def login(
 
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail={
-                "message": str(e),
-                "attempts_remaining": remaining
-            }
+            detail={"message": str(e), "attempts_remaining": remaining},
         )
     except Exception as e:
         # Increment rate limit on error
         rate_limiter.increment(user.id, "login")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Login failed: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Login failed: {str(e)}"
         )
 
 
@@ -467,12 +455,11 @@ async def login(
     response_model=SuccessResponse,
     responses={
         200: {"description": "Logout successful"},
-        500: {"description": "Internal server error", "model": ErrorResponse}
-    }
+        500: {"description": "Internal server error", "model": ErrorResponse},
+    },
 )
 async def logout(
-    request: LogoutRequest,
-    session_manager: SessionManager = Depends(get_session_manager)
+    request: LogoutRequest, session_manager: SessionManager = Depends(get_session_manager)
 ):
     """
     Logout user and delete session.
@@ -491,20 +478,13 @@ async def logout(
         if not success:
             # Session not found (maybe already expired/deleted)
             # Still return success for idempotency
-            return {
-                "success": True,
-                "message": "Already logged out or session not found"
-            }
+            return {"success": True, "message": "Already logged out or session not found"}
 
-        return {
-            "success": True,
-            "message": "Logged out successfully"
-        }
+        return {"success": True, "message": "Logged out successfully"}
 
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Logout failed: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Logout failed: {str(e)}"
         )
 
 
@@ -514,13 +494,13 @@ async def logout(
     responses={
         200: {"description": "Session validated successfully"},
         404: {"description": "Session not found or expired", "model": ErrorResponse},
-        500: {"description": "Internal server error", "model": ErrorResponse}
-    }
+        500: {"description": "Internal server error", "model": ErrorResponse},
+    },
 )
 async def get_session(
     session_id: str,
     session_manager: SessionManager = Depends(get_session_manager),
-    auth_service: AuthenticationService = Depends(get_auth_service)
+    auth_service: AuthenticationService = Depends(get_auth_service),
 ):
     """
     Get session and user information.
@@ -542,8 +522,7 @@ async def get_session(
 
         if not validation_result.valid:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Session not found or expired"
+                status_code=status.HTTP_404_NOT_FOUND, detail="Session not found or expired"
             )
 
         # Get full session details
@@ -551,18 +530,14 @@ async def get_session(
 
         if not session:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Session not found or expired"
+                status_code=status.HTTP_404_NOT_FOUND, detail="Session not found or expired"
             )
 
         # Get user for this session
         user = auth_service.validate_session(session_id)
 
         if not user:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
         return {
             "user": {
@@ -570,13 +545,13 @@ async def get_session(
                 "username": user.username,
                 "email": user.email,
                 "role": user.role,
-                "is_active": user.is_active
+                "is_active": user.is_active,
             },
             "session": {
                 "id": session.id,
                 "user_id": session.user_id,
-                "expires_at": session.expires_at.isoformat()
-            }
+                "expires_at": session.expires_at.isoformat(),
+            },
         }
 
     except HTTPException:
@@ -584,7 +559,7 @@ async def get_session(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get session: {str(e)}"
+            detail=f"Failed to get session: {str(e)}",
         )
 
 
@@ -595,14 +570,14 @@ async def get_session(
         200: {"description": "Password changed successfully"},
         400: {"description": "Invalid password or validation error", "model": ErrorResponse},
         429: {"description": "Too many password change attempts", "model": ErrorResponse},
-        500: {"description": "Internal server error", "model": ErrorResponse}
-    }
+        500: {"description": "Internal server error", "model": ErrorResponse},
+    },
 )
 async def change_password(
     request: ChangePasswordRequest,
     auth_service: AuthenticationService = Depends(get_auth_service),
     session_manager: SessionManager = Depends(get_session_manager),
-    rate_limiter: RateLimitService = Depends(get_rate_limiter)
+    rate_limiter: RateLimitService = Depends(get_rate_limiter),
 ):
     """
     Change user password.
@@ -629,7 +604,7 @@ async def change_password(
         user_id=request.user_id,
         operation="password_change",
         max_requests=5,
-        window_seconds=3600  # 1 hour
+        window_seconds=3600,  # 1 hour
     )
 
     if not rate_limit_result.allowed:
@@ -639,8 +614,8 @@ async def change_password(
                 "message": "Too many password change attempts. Please try again later.",
                 "rate_limit_info": {
                     "retry_after_seconds": rate_limit_result.remaining_time or 3600
-                }
-            }
+                },
+            },
         )
 
     try:
@@ -648,7 +623,7 @@ async def change_password(
         await auth_service.change_password(
             user_id=request.user_id,
             old_password=request.old_password,
-            new_password=request.new_password
+            new_password=request.new_password,
         )
 
         # Reset rate limit on success
@@ -659,22 +634,19 @@ async def change_password(
 
         return {
             "success": True,
-            "message": "Password changed successfully. All sessions have been invalidated."
+            "message": "Password changed successfully. All sessions have been invalidated.",
         }
 
     except AuthenticationError as e:
         # Increment rate limit on failure
         rate_limiter.increment(request.user_id, "password_change")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
         # Increment rate limit on error
         rate_limiter.increment(request.user_id, "password_change")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Password change failed: {str(e)}"
+            detail=f"Password change failed: {str(e)}",
         )
 
 
@@ -683,12 +655,10 @@ async def change_password(
     response_model=SuccessResponse,
     responses={
         200: {"description": "Sessions cleaned up successfully"},
-        500: {"description": "Internal server error", "model": ErrorResponse}
-    }
+        500: {"description": "Internal server error", "model": ErrorResponse},
+    },
 )
-async def cleanup_sessions(
-    session_manager: SessionManager = Depends(get_session_manager)
-):
+async def cleanup_sessions(session_manager: SessionManager = Depends(get_session_manager)):
     """
     Cleanup expired sessions (admin/system endpoint).
 
@@ -710,13 +680,13 @@ async def cleanup_sessions(
         return {
             "success": True,
             "message": f"Cleaned up {deleted_count} expired sessions",
-            "data": {"deleted_count": deleted_count}
+            "data": {"deleted_count": deleted_count},
         }
 
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Session cleanup failed: {str(e)}"
+            detail=f"Session cleanup failed: {str(e)}",
         )
 
 
@@ -725,13 +695,11 @@ async def cleanup_sessions(
     response_model=dict,
     responses={
         200: {"description": "Rate limit status retrieved"},
-        500: {"description": "Internal server error", "model": ErrorResponse}
-    }
+        500: {"description": "Internal server error", "model": ErrorResponse},
+    },
 )
 async def get_rate_limit_status(
-    user_id: int,
-    operation: str,
-    rate_limiter: RateLimitService = Depends(get_rate_limiter)
+    user_id: int, operation: str, rate_limiter: RateLimitService = Depends(get_rate_limiter)
 ):
     """
     Get rate limit status for a user and operation.
@@ -762,11 +730,11 @@ async def get_rate_limit_status(
             "attempts_remaining": remaining,
             "is_locked": is_locked,
             "attempt_count": attempt_count,
-            "reset_time": reset_time.isoformat() if reset_time else None
+            "reset_time": reset_time.isoformat() if reset_time else None,
         }
 
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get rate limit status: {str(e)}"
+            detail=f"Failed to get rate limit status: {str(e)}",
         )

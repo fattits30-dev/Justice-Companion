@@ -19,10 +19,9 @@ Changes from direct DB queries to service layer:
 - Consistent error handling with proper exceptions
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Header, Query, status
-from pydantic import BaseModel, Field, validator
-from typing import Optional, List, Dict, Any
-from datetime import datetime
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from pydantic import BaseModel
+from typing import Optional, List
 from sqlalchemy.orm import Session
 
 from backend.models.base import get_db
@@ -35,9 +34,8 @@ from backend.services.template_service import (
     CreateCaseFromTemplateInput,
     TemplateResponse,
     TemplateNotFoundError,
-    UnauthorizedError,
     DatabaseError,
-    ValidationError
+    ValidationError,
 )
 from backend.services.template_seeder import TemplateSeeder
 from backend.services.audit_logger import AuditLogger
@@ -50,8 +48,10 @@ router = APIRouter(prefix="/templates", tags=["templates"])
 # Request models are imported from template_service
 # Response models used by FastAPI for OpenAPI schema generation
 
+
 class DeleteTemplateResponse(BaseModel):
     """Response model for template deletion."""
+
     deleted: bool
     id: int
 
@@ -68,16 +68,14 @@ def get_audit_logger(db: Session = Depends(get_db)) -> AuditLogger:
 
 
 def get_template_service(
-    db: Session = Depends(get_db),
-    audit_logger: AuditLogger = Depends(get_audit_logger)
+    db: Session = Depends(get_db), audit_logger: AuditLogger = Depends(get_audit_logger)
 ) -> TemplateService:
     """Get template service instance with dependency injection."""
     return TemplateService(db=db, audit_logger=audit_logger)
 
 
 def get_template_seeder(
-    db: Session = Depends(get_db),
-    audit_logger: AuditLogger = Depends(get_audit_logger)
+    db: Session = Depends(get_db), audit_logger: AuditLogger = Depends(get_audit_logger)
 ) -> TemplateSeeder:
     """Get template seeder instance with dependency injection."""
     return TemplateSeeder(db=db, audit_logger=audit_logger)
@@ -88,7 +86,7 @@ def get_template_seeder(
 async def create_template(
     request: CreateTemplateInput,
     user_id: int = Depends(get_current_user),
-    template_service: TemplateService = Depends(get_template_service)
+    template_service: TemplateService = Depends(get_template_service),
 ):
     """
     Create a new template.
@@ -99,10 +97,7 @@ async def create_template(
     """
     try:
         # Create template via service layer
-        template = await template_service.create_template(
-            input_data=request,
-            user_id=user_id
-        )
+        template = await template_service.create_template(input_data=request, user_id=user_id)
         return template
 
     except ValidationError as e:
@@ -114,7 +109,7 @@ async def create_template(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create template: {str(e)}"
+            detail=f"Failed to create template: {str(e)}",
         )
 
 
@@ -122,7 +117,7 @@ async def create_template(
 async def list_templates(
     user_id: int = Depends(get_current_user),
     template_service: TemplateService = Depends(get_template_service),
-    category: Optional[str] = Query(None, description="Filter by category")
+    category: Optional[str] = Query(None, description="Filter by category"),
 ):
     """
     List all templates available to the authenticated user.
@@ -140,14 +135,12 @@ async def list_templates(
             except ValueError:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Invalid category. Valid options: {', '.join([c.value for c in TemplateCategory])}"
+                    detail=f"Invalid category. Valid options: {', '.join([c.value for c in TemplateCategory])}",
                 )
 
         # Get templates via service layer
         templates = await template_service.get_all_templates(
-            user_id=user_id,
-            category=category_enum,
-            include_system=True
+            user_id=user_id, category=category_enum, include_system=True
         )
         return templates
 
@@ -158,7 +151,7 @@ async def list_templates(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to list templates: {str(e)}"
+            detail=f"Failed to list templates: {str(e)}",
         )
 
 
@@ -166,7 +159,7 @@ async def list_templates(
 async def get_template(
     template_id: int,
     user_id: int = Depends(get_current_user),
-    template_service: TemplateService = Depends(get_template_service)
+    template_service: TemplateService = Depends(get_template_service),
 ):
     """
     Get a specific template by ID.
@@ -176,8 +169,7 @@ async def get_template(
     """
     try:
         template = await template_service.get_template_by_id(
-            template_id=template_id,
-            user_id=user_id
+            template_id=template_id, user_id=user_id
         )
         return template
 
@@ -190,7 +182,7 @@ async def get_template(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get template: {str(e)}"
+            detail=f"Failed to get template: {str(e)}",
         )
 
 
@@ -199,7 +191,7 @@ async def update_template(
     template_id: int,
     request: UpdateTemplateInput,
     user_id: int = Depends(get_current_user),
-    template_service: TemplateService = Depends(get_template_service)
+    template_service: TemplateService = Depends(get_template_service),
 ):
     """
     Update an existing template.
@@ -210,9 +202,7 @@ async def update_template(
     """
     try:
         template = await template_service.update_template(
-            template_id=template_id,
-            user_id=user_id,
-            input_data=request
+            template_id=template_id, user_id=user_id, input_data=request
         )
         return template
 
@@ -231,15 +221,17 @@ async def update_template(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to update template: {str(e)}"
+            detail=f"Failed to update template: {str(e)}",
         )
 
 
-@router.delete("/{template_id}", response_model=DeleteTemplateResponse, status_code=status.HTTP_200_OK)
+@router.delete(
+    "/{template_id}", response_model=DeleteTemplateResponse, status_code=status.HTTP_200_OK
+)
 async def delete_template(
     template_id: int,
     user_id: int = Depends(get_current_user),
-    template_service: TemplateService = Depends(get_template_service)
+    template_service: TemplateService = Depends(get_template_service),
 ):
     """
     Delete a template.
@@ -249,17 +241,14 @@ async def delete_template(
     Automatically logs audit event via TemplateService.
     """
     try:
-        deleted = await template_service.delete_template(
-            template_id=template_id,
-            user_id=user_id
-        )
+        deleted = await template_service.delete_template(template_id=template_id, user_id=user_id)
 
         if deleted:
             return {"deleted": True, "id": template_id}
         else:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to delete template"
+                detail="Failed to delete template",
             )
 
     except TemplateNotFoundError as e:
@@ -274,7 +263,7 @@ async def delete_template(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to delete template: {str(e)}"
+            detail=f"Failed to delete template: {str(e)}",
         )
 
 
@@ -283,7 +272,7 @@ async def apply_template(
     template_id: int,
     request: CreateCaseFromTemplateInput,
     user_id: int = Depends(get_current_user),
-    template_service: TemplateService = Depends(get_template_service)
+    template_service: TemplateService = Depends(get_template_service),
 ):
     """
     Apply template to create a new case with variable substitution.
@@ -299,9 +288,7 @@ async def apply_template(
     """
     try:
         result = await template_service.apply_template(
-            template_id=template_id,
-            user_id=user_id,
-            input_data=request
+            template_id=template_id, user_id=user_id, input_data=request
         )
 
         return {
@@ -309,7 +296,7 @@ async def apply_template(
             "appliedMilestones": result.appliedMilestones,
             "appliedChecklistItems": result.appliedChecklistItems,
             "templateId": result.templateId,
-            "templateName": result.templateName
+            "templateName": result.templateName,
         }
 
     except TemplateNotFoundError as e:
@@ -324,14 +311,14 @@ async def apply_template(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to apply template: {str(e)}"
+            detail=f"Failed to apply template: {str(e)}",
         )
 
 
 @router.post("/seed")
 async def seed_templates(
     _: int = Depends(get_current_user),  # Require authentication
-    template_seeder: TemplateSeeder = Depends(get_template_seeder)
+    template_seeder: TemplateSeeder = Depends(get_template_seeder),
 ):
     """
     Seed system templates into the database.
@@ -357,11 +344,11 @@ async def seed_templates(
         return {
             "success": True,
             "message": f"Template seeding complete: {result['seeded']} seeded, {result['skipped']} skipped, {result['failed']} failed",
-            "stats": result
+            "stats": result,
         }
 
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to seed templates: {str(e)}"
+            detail=f"Failed to seed templates: {str(e)}",
         )

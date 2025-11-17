@@ -13,9 +13,8 @@ Example endpoints:
 Author: Justice Companion Development Team
 """
 
-from fastapi import APIRouter, HTTPException, Depends, Response
+from fastapi import APIRouter, HTTPException, Depends
 from fastapi.responses import StreamingResponse
-from typing import Optional
 from datetime import datetime
 import io
 
@@ -26,9 +25,6 @@ from .docx_generator import (
     TimelineExportData,
     NotesExportData,
     Case,
-    Evidence,
-    Note,
-    TimelineEvent,
 )
 
 # Create router
@@ -96,9 +92,7 @@ async def export_case_summary_docx(
         return StreamingResponse(
             io.BytesIO(docx_bytes),
             media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            headers={
-                "Content-Disposition": f"attachment; filename={filename}"
-            }
+            headers={"Content-Disposition": f"attachment; filename={filename}"},
         )
 
     except PermissionError:
@@ -139,9 +133,7 @@ async def export_evidence_list_docx(
         return StreamingResponse(
             io.BytesIO(docx_bytes),
             media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            headers={
-                "Content-Disposition": f"attachment; filename={filename}"
-            }
+            headers={"Content-Disposition": f"attachment; filename={filename}"},
         )
 
     except PermissionError:
@@ -182,9 +174,7 @@ async def export_timeline_report_docx(
         return StreamingResponse(
             io.BytesIO(docx_bytes),
             media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            headers={
-                "Content-Disposition": f"attachment; filename={filename}"
-            }
+            headers={"Content-Disposition": f"attachment; filename={filename}"},
         )
 
     except PermissionError:
@@ -225,9 +215,7 @@ async def export_case_notes_docx(
         return StreamingResponse(
             io.BytesIO(docx_bytes),
             media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            headers={
-                "Content-Disposition": f"attachment; filename={filename}"
-            }
+            headers={"Content-Disposition": f"attachment; filename={filename}"},
         )
 
     except PermissionError:
@@ -240,6 +228,7 @@ async def export_case_notes_docx(
 
 # Helper functions (replace with actual database queries)
 
+
 def _fetch_case_data(case_id: int, db, current_user) -> CaseExportData:
     """
     Fetch complete case data from database.
@@ -249,16 +238,13 @@ def _fetch_case_data(case_id: int, db, current_user) -> CaseExportData:
     # Example implementation - replace with actual queries
     return CaseExportData(
         case=Case(
-            id=case_id,
-            title="Example Case",
-            description="Example description",
-            status="active"
+            id=case_id, title="Example Case", description="Example description", status="active"
         ),
         evidence=[],
         timeline=[],
         notes=[],
         export_date=datetime.now(),
-        exported_by=current_user["email"]
+        exported_by=current_user["email"],
     )
 
 
@@ -274,7 +260,7 @@ def _fetch_evidence_data(case_id: int, db, current_user) -> EvidenceExportData:
         evidence=[],
         export_date=datetime.now(),
         exported_by=current_user["email"],
-        total_items=0
+        total_items=0,
     )
 
 
@@ -289,7 +275,7 @@ def _fetch_timeline_data(case_id: int, db, current_user) -> TimelineExportData:
         case_title="Example Case",
         events=[],
         export_date=datetime.now(),
-        exported_by=current_user["email"]
+        exported_by=current_user["email"],
     )
 
 
@@ -305,7 +291,7 @@ def _fetch_notes_data(case_id: int, db, current_user) -> NotesExportData:
         notes=[],
         export_date=datetime.now(),
         exported_by=current_user["email"],
-        total_notes=0
+        total_notes=0,
     )
 
 

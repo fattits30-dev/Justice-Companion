@@ -100,6 +100,7 @@ async def trigger_manual_check():
 # Example 2: Standalone Script for Testing
 # =========================================
 
+
 async def standalone_scheduler_demo():
     """
     Standalone demo showing scheduler usage outside of FastAPI.
@@ -120,11 +121,7 @@ async def standalone_scheduler_demo():
     print("Setting up test data...")
 
     # Create user
-    user = User(
-        username="demo_user",
-        password_hash="hash",
-        password_salt="salt"
-    )
+    user = User(username="demo_user", password_hash="hash", password_salt="salt")
     db.add(user)
     db.commit()
     db.refresh(user)
@@ -133,17 +130,13 @@ async def standalone_scheduler_demo():
     prefs = NotificationPreferences(
         user_id=user.id,
         deadline_reminders_enabled=True,
-        deadline_reminder_days=7  # Remind 7 days before deadline
+        deadline_reminder_days=7,  # Remind 7 days before deadline
     )
     db.add(prefs)
     db.commit()
 
     # Create case
-    case = Case(
-        user_id=user.id,
-        title="Example Legal Case",
-        status="active"
-    )
+    case = Case(user_id=user.id, title="Example Legal Case", status="active")
     db.add(case)
     db.commit()
     db.refresh(case)
@@ -157,7 +150,7 @@ async def standalone_scheduler_demo():
             description="Submit motion by this date",
             deadline_date=(datetime.now() + timedelta(days=3)).isoformat(),
             priority=DeadlinePriority.HIGH.value,
-            status=DeadlineStatus.UPCOMING.value
+            status=DeadlineStatus.UPCOMING.value,
         ),
         Deadline(
             user_id=user.id,
@@ -166,7 +159,7 @@ async def standalone_scheduler_demo():
             description="Respond to discovery requests",
             deadline_date=(datetime.now() + timedelta(days=5)).isoformat(),
             priority=DeadlinePriority.MEDIUM.value,
-            status=DeadlineStatus.UPCOMING.value
+            status=DeadlineStatus.UPCOMING.value,
         ),
         Deadline(
             user_id=user.id,
@@ -174,8 +167,8 @@ async def standalone_scheduler_demo():
             title="Trial Preparation Meeting",
             deadline_date=(datetime.now() + timedelta(days=30)).isoformat(),
             priority=DeadlinePriority.LOW.value,
-            status=DeadlineStatus.UPCOMING.value
-        )
+            status=DeadlineStatus.UPCOMING.value,
+        ),
     ]
 
     for deadline in deadlines:
@@ -194,7 +187,7 @@ async def standalone_scheduler_demo():
         db=db,
         notification_service=notification_service,
         audit_logger=audit_logger,
-        check_interval=5  # Check every 5 seconds for demo
+        check_interval=5,  # Check every 5 seconds for demo
     )
 
     print("\nStarting deadline reminder scheduler...")
@@ -233,6 +226,7 @@ async def standalone_scheduler_demo():
 # Example 3: Custom Scheduler with Different Intervals
 # ====================================================
 
+
 class CustomDeadlineScheduler:
     """
     Wrapper around DeadlineReminderScheduler with custom configuration.
@@ -243,18 +237,13 @@ class CustomDeadlineScheduler:
     - Integration with other services
     """
 
-    def __init__(
-        self,
-        db,
-        notification_service,
-        audit_logger=None
-    ):
+    def __init__(self, db, notification_service, audit_logger=None):
         # Create scheduler with default interval
         self.scheduler = DeadlineReminderScheduler(
             db=db,
             notification_service=notification_service,
             audit_logger=audit_logger,
-            check_interval=1800  # 30 minutes default
+            check_interval=1800,  # 30 minutes default
         )
 
         self.db = db
@@ -289,31 +278,36 @@ class CustomDeadlineScheduler:
         for special use cases.
         """
         # Get all users with reminders enabled
-        users_with_reminders = self.db.query(NotificationPreferences).filter(
-            NotificationPreferences.deadline_reminders_enabled == True
-        ).all()
+        users_with_reminders = (
+            self.db.query(NotificationPreferences)
+            .filter(NotificationPreferences.deadline_reminders_enabled)
+            .all()
+        )
 
         for prefs in users_with_reminders:
             # Get only critical deadlines
-            critical_deadlines = self.db.query(Deadline).filter(
-                Deadline.user_id == prefs.user_id,
-                Deadline.priority == DeadlinePriority.CRITICAL.value,
-                Deadline.status != DeadlineStatus.COMPLETED.value,
-                Deadline.deleted_at.is_(None)
-            ).all()
+            critical_deadlines = (
+                self.db.query(Deadline)
+                .filter(
+                    Deadline.user_id == prefs.user_id,
+                    Deadline.priority == DeadlinePriority.CRITICAL.value,
+                    Deadline.status != DeadlineStatus.COMPLETED.value,
+                    Deadline.deleted_at.is_(None),
+                )
+                .all()
+            )
 
             # Process critical deadlines with scheduler logic
             for deadline in critical_deadlines:
                 deadline_date = datetime.fromisoformat(
-                    deadline.deadline_date.replace('Z', '+00:00')
+                    deadline.deadline_date.replace("Z", "+00:00")
                 )
 
                 # Send immediate notification for critical deadlines
                 # within next 24 hours
                 if deadline_date <= datetime.now() + timedelta(days=1):
                     await self.scheduler._create_deadline_reminder_notification(
-                        prefs.user_id,
-                        deadline
+                        prefs.user_id, deadline
                     )
 
     def stop(self):
@@ -323,6 +317,7 @@ class CustomDeadlineScheduler:
 
 # Example 4: Monitoring and Alerting
 # ==================================
+
 
 class SchedulerMonitor:
     """
@@ -372,9 +367,7 @@ class SchedulerMonitor:
             return {"status": "not_started"}
 
         uptime = (datetime.now() - self.start_time).total_seconds()
-        error_rate = (
-            self.error_count / self.check_count if self.check_count > 0 else 0
-        )
+        error_rate = self.error_count / self.check_count if self.check_count > 0 else 0
 
         return {
             "status": "healthy" if error_rate < 0.1 else "degraded",
@@ -382,7 +375,7 @@ class SchedulerMonitor:
             "total_checks": self.check_count,
             "error_count": self.error_count,
             "error_rate": error_rate,
-            "is_running": self.scheduler.is_running
+            "is_running": self.scheduler.is_running,
         }
 
 

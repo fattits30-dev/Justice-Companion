@@ -31,17 +31,14 @@ from backend.services.encryption_service import EncryptionService, EncryptedData
 
 class ProfileNotFoundError(Exception):
     """Exception raised when profile is not found."""
-    pass
 
 
 class ValidationError(Exception):
     """Exception raised for invalid input data."""
-    pass
 
 
 class DatabaseError(Exception):
     """Exception raised for database operation failures."""
-    pass
 
 
 # Pydantic models for input/output
@@ -50,6 +47,7 @@ from pydantic import BaseModel, Field, field_validator
 
 class UpdateUserProfileInput(BaseModel):
     """Input model for updating user profile."""
+
     name: Optional[str] = Field(None, min_length=1, max_length=255, description="User's full name")
     email: Optional[str] = Field(None, description="User's email address")
     avatar_url: Optional[str] = Field(None, description="URL to user's avatar image")
@@ -59,27 +57,28 @@ class UpdateUserProfileInput(BaseModel):
     username: Optional[str] = Field(None, description="Username")
     phone: Optional[str] = Field(None, description="Phone number")
 
-    @field_validator('email')
+    @field_validator("email")
     @classmethod
     def validate_email(cls, v: Optional[str]) -> Optional[str]:
         """Validate email format."""
         if v is not None and v.strip():
-            email_regex = r'^[^\s@]+@[^\s@]+\.[^\s@]+$'
+            email_regex = r"^[^\s@]+@[^\s@]+\.[^\s@]+$"
             if not re.match(email_regex, v.strip()):
-                raise ValueError('Invalid email format')
+                raise ValueError("Invalid email format")
         return v
 
-    @field_validator('name')
+    @field_validator("name")
     @classmethod
     def validate_name(cls, v: Optional[str]) -> Optional[str]:
         """Validate name is not empty."""
-        if v is not None and v.strip() == '':
-            raise ValueError('Name cannot be empty')
+        if v is not None and v.strip() == "":
+            raise ValueError("Name cannot be empty")
         return v
 
 
 class UserProfileResponse(BaseModel):
     """Response model for user profile data."""
+
     id: int
     user_id: int
     name: str
@@ -106,12 +105,7 @@ class UserProfileService:
     Name and email fields are encrypted using AES-256-GCM.
     """
 
-    def __init__(
-        self,
-        db: Session,
-        encryption_service: EncryptionService,
-        audit_logger=None
-    ):
+    def __init__(self, db: Session, encryption_service: EncryptionService, audit_logger=None):
         """
         Initialize user profile service.
 
@@ -145,12 +139,12 @@ class UserProfileService:
                 details={
                     "reason": "User does not own this profile",
                     "profile_owner": profile.user_id,
-                    "requesting_user": user_id
-                }
+                    "requesting_user": user_id,
+                },
             )
             raise HTTPException(
                 status_code=403,
-                detail="Unauthorized: You do not have permission to access this profile"
+                detail="Unauthorized: You do not have permission to access this profile",
             )
 
     def _encrypt_field(self, plaintext: Optional[str]) -> Optional[str]:
@@ -206,20 +200,22 @@ class UserProfileService:
         action: str,
         success: bool,
         details: Optional[Dict[str, Any]] = None,
-        error_message: Optional[str] = None
+        error_message: Optional[str] = None,
     ) -> None:
         """Log audit event if audit logger is configured."""
         if self.audit_logger:
-            self.audit_logger.log({
-                "event_type": event_type,
-                "user_id": str(user_id) if user_id else None,
-                "resource_type": "profile",
-                "resource_id": resource_id,
-                "action": action,
-                "success": success,
-                "details": details or {},
-                "error_message": error_message
-            })
+            self.audit_logger.log(
+                {
+                    "event_type": event_type,
+                    "user_id": str(user_id) if user_id else None,
+                    "resource_type": "profile",
+                    "resource_id": resource_id,
+                    "action": action,
+                    "success": success,
+                    "details": details or {},
+                    "error_message": error_message,
+                }
+            )
 
     async def get_profile(self, user_id: int) -> UserProfileResponse:
         """
@@ -236,16 +232,14 @@ class UserProfileService:
             DatabaseError: If database operation fails
         """
         try:
-            profile = self.db.query(UserProfile).filter(
-                UserProfile.user_id == user_id
-            ).first()
+            profile = self.db.query(UserProfile).filter(UserProfile.user_id == user_id).first()
 
             # Auto-create profile if it doesn't exist
             if not profile:
                 profile = UserProfile(
                     user_id=user_id,
                     name=self._encrypt_field("Legal User"),  # Default encrypted name
-                    email=None
+                    email=None,
                 )
                 self.db.add(profile)
                 self.db.commit()
@@ -257,7 +251,7 @@ class UserProfileService:
                     resource_id=str(profile.id),
                     action="create",
                     success=True,
-                    details={"reason": "Profile auto-created on first access"}
+                    details={"reason": "Profile auto-created on first access"},
                 )
 
             # Decrypt PII fields
@@ -268,9 +262,8 @@ class UserProfileService:
             profile.email = self._decrypt_field(profile.email)
 
             # Audit: PII accessed (encrypted name/email fields)
-            pii_accessed = (
-                (original_name and profile.name != original_name) or
-                (original_email and profile.email != original_email)
+            pii_accessed = (original_name and profile.name != original_name) or (
+                original_email and profile.email != original_email
             )
 
             if pii_accessed:
@@ -280,10 +273,7 @@ class UserProfileService:
                     resource_id=str(profile.id),
                     action="read",
                     success=True,
-                    details={
-                        "fields_accessed": ["name", "email"],
-                        "encrypted": True
-                    }
+                    details={"fields_accessed": ["name", "email"], "encrypted": True},
                 )
 
             return UserProfileResponse.model_validate(profile)
@@ -295,14 +285,12 @@ class UserProfileService:
                 resource_id="unknown",
                 action="read",
                 success=False,
-                error_message=str(error)
+                error_message=str(error),
             )
             raise DatabaseError(f"Failed to retrieve profile: {str(error)}")
 
     async def update_profile(
-        self,
-        user_id: int,
-        input_data: UpdateUserProfileInput
+        self, user_id: int, input_data: UpdateUserProfileInput
     ) -> UserProfileResponse:
         """
         Update user profile with ownership verification.
@@ -320,16 +308,12 @@ class UserProfileService:
             DatabaseError: If database operation fails
         """
         try:
-            profile = self.db.query(UserProfile).filter(
-                UserProfile.user_id == user_id
-            ).first()
+            profile = self.db.query(UserProfile).filter(UserProfile.user_id == user_id).first()
 
             # Auto-create profile if it doesn't exist
             if not profile:
                 profile = UserProfile(
-                    user_id=user_id,
-                    name=self._encrypt_field("Legal User"),
-                    email=None
+                    user_id=user_id, name=self._encrypt_field("Legal User"), email=None
                 )
                 self.db.add(profile)
                 self.db.flush()
@@ -390,7 +374,7 @@ class UserProfileService:
                 resource_id=str(profile.id),
                 action="update",
                 success=True,
-                details={"fields_updated": fields_updated}
+                details={"fields_updated": fields_updated},
             )
 
             return UserProfileResponse.model_validate(profile)
@@ -405,7 +389,7 @@ class UserProfileService:
                 resource_id="unknown",
                 action="update",
                 success=False,
-                error_message=str(error)
+                error_message=str(error),
             )
             raise DatabaseError(f"Failed to update profile: {str(error)}")
 
@@ -424,9 +408,7 @@ class UserProfileService:
             DatabaseError: If database operation fails
         """
         try:
-            profile = self.db.query(UserProfile).filter(
-                UserProfile.user_id == user_id
-            ).first()
+            profile = self.db.query(UserProfile).filter(UserProfile.user_id == user_id).first()
 
             if not profile:
                 raise ProfileNotFoundError(f"Profile for user {user_id} not found")
@@ -439,7 +421,7 @@ class UserProfileService:
                 user_id=user_id,
                 resource_id=str(profile.id),
                 action="delete",
-                success=True
+                success=True,
             )
 
             return True
@@ -454,6 +436,6 @@ class UserProfileService:
                 resource_id="unknown",
                 action="delete",
                 success=False,
-                error_message=str(error)
+                error_message=str(error),
             )
             raise DatabaseError(f"Failed to delete profile: {str(error)}")

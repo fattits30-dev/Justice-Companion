@@ -1,4 +1,4 @@
-// @ts-expect-error - Optional dependency for legal citation extraction, types not available
+// @ts-expect-error - Package lacks TypeScript declarations
 import {
   getCitations,
   cleanText,
@@ -54,7 +54,8 @@ export class CitationService {
         removeAmbiguous: false,
       });
 
-      logger.info("CitationService", "Extracted citations", {
+      logger.info("Extracted citations", {
+        service: "CitationService",
         count: citations.length,
         textLength: text.length,
       });
@@ -64,7 +65,10 @@ export class CitationService {
         this.convertCitation(citation),
       );
     } catch (error) {
-      logger.error("CitationService", "Failed to extract citations", { error });
+      logger.error("Failed to extract citations", {
+        service: "CitationService",
+        error,
+      });
       return [];
     }
   }
@@ -158,7 +162,8 @@ export class CitationService {
         ]),
       );
     } catch (error) {
-      logger.error("CitationService", "Failed to highlight citations", {
+      logger.error("Failed to highlight citations", {
+        service: "CitationService",
         error,
       });
       return text;

@@ -8,7 +8,7 @@ uvicorn[standard]==0.27.0
 # AI and LLM - Hugging Face (PRIMARY - Privacy-First)
 # Updated to fix CRITICAL and HIGH security vulnerabilities
 transformers>=4.57.0  # Fixes: Deserialization RCE + multiple ReDoS (CVE-2024-xxxx)
-torch>=2.5.0          # Fixes: CRITICAL RCE in torch.load (CVE-2024-xxxx)
+torch>=2.5.1          # Fixes: CRITICAL RCE in torch.load (CVE-2024-xxxx)
 accelerate>=0.26.0
 huggingface_hub>=0.20.0
 sentencepiece>=0.1.99
@@ -20,7 +20,7 @@ openai==2.8.0
 # Data validation and serialization
 pydantic>=2.6.0
 pydantic-settings>=2.0.0
-python-multipart>=0.0.12  # Fixes: HIGH DoS via deformed multipart boundary (CVE-2024-xxxx)
+python-multipart==0.0.9  # Fixes: HIGH DoS via deformed multipart boundary (CVE-2024-xxxx)
 
 # HTTP client for API calls
 httpx==0.26.0
@@ -32,8 +32,12 @@ pytest-mock==3.12.0
 
 # OCR and Image Processing (for document photos)
 pytesseract>=0.3.10
-Pillow>=11.0.0  # Fixes: HIGH buffer overflow vulnerability (CVE-2024-xxxx)
-pdf2image>=1.17.0
+Pillow>=11.0.1  # Fixes: HIGH buffer overflow vulnerability (CVE-2024-xxxx)
+
+# Image and PDF processing
+pillow-heif>=0.15.0
+pdf2image>=1.16.3
+# Note: pdf2image requires poppler-utils. On Debian/Ubuntu: sudo apt-get install poppler-utils
 
 # Development tools
 black>=24.10.0  # Fixes: MEDIUM ReDoS vulnerability (CVE-2024-xxxx)

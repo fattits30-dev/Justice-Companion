@@ -40,7 +40,7 @@ class ImageProcessorService:
         # Configure Tesseract path for Windows if provided
         if tesseract_path:
             pytesseract.pytesseract.tesseract_cmd = tesseract_path
-        elif os.name == 'nt':
+        elif os.name == "nt":
             # Common Windows installation paths
             common_paths = [
                 r"C:\Program Files\Tesseract-OCR\tesseract.exe",
@@ -66,10 +66,7 @@ class ImageProcessorService:
             return False
 
     def extract_text_from_image(
-        self,
-        image_path: str,
-        preprocess: bool = True,
-        lang: str = "eng"
+        self, image_path: str, preprocess: bool = True, lang: str = "eng"
     ) -> Tuple[str, dict]:
         """
         Extract text from image using OCR.
@@ -112,21 +109,11 @@ class ImageProcessorService:
             # Get OCR metadata (confidence, etc.)
             try:
                 ocr_data = pytesseract.image_to_data(
-                    image,
-                    lang=lang,
-                    output_type=pytesseract.Output.DICT
+                    image, lang=lang, output_type=pytesseract.Output.DICT
                 )
                 # Calculate average confidence
-                confidences = [
-                    int(conf)
-                    for conf in ocr_data["conf"]
-                    if conf != "-1"
-                ]
-                avg_confidence = (
-                    sum(confidences) / len(confidences)
-                    if confidences
-                    else 0
-                )
+                confidences = [int(conf) for conf in ocr_data["conf"] if conf != "-1"]
+                avg_confidence = sum(confidences) / len(confidences) if confidences else 0
             except Exception:
                 avg_confidence = 0
 
@@ -159,7 +146,7 @@ class ImageProcessorService:
         Returns:
             Preprocessed PIL Image
         """
-        from PIL import ImageEnhance, ImageFilter
+        from PIL import ImageEnhance
 
         # Convert to grayscale
         if image.mode != "L":
@@ -194,6 +181,7 @@ class ImageProcessorService:
             # Try to import pillow-heif
             try:
                 from pillow_heif import register_heif_opener
+
                 register_heif_opener()
             except ImportError:
                 raise RuntimeError(
@@ -217,10 +205,7 @@ class ImageProcessorService:
             raise RuntimeError(f"HEIC to JPG conversion failed: {e}")
 
     def extract_text_from_pdf(
-        self,
-        pdf_path: str,
-        first_page: int = 1,
-        last_page: Optional[int] = None
+        self, pdf_path: str, first_page: int = 1, last_page: Optional[int] = None
     ) -> Tuple[str, dict]:
         """
         Extract text from scanned PDF using OCR.
@@ -278,14 +263,9 @@ class ImageProcessorService:
                 # Get confidence
                 try:
                     ocr_data = pytesseract.image_to_data(
-                        processed_image,
-                        output_type=pytesseract.Output.DICT
+                        processed_image, output_type=pytesseract.Output.DICT
                     )
-                    confidences = [
-                        int(conf)
-                        for conf in ocr_data["conf"]
-                        if conf != "-1"
-                    ]
+                    confidences = [int(conf) for conf in ocr_data["conf"] if conf != "-1"]
                     if confidences:
                         total_confidence += sum(confidences) / len(confidences)
                 except Exception:

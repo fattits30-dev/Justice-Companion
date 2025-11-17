@@ -26,10 +26,9 @@ Usage:
 
 import asyncio
 import logging
-import json
 import time
 import xml.etree.ElementTree as ET
-from typing import List, Dict, Any, Optional, Set, Tuple
+from typing import List, Dict, Any, Optional, Set
 from datetime import datetime, timezone
 from dataclasses import dataclass, field, asdict
 from enum import Enum
@@ -49,6 +48,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class LegislationResult:
     """Legislation search result from legislation.gov.uk"""
+
     title: str
     content: str
     url: str
@@ -59,6 +59,7 @@ class LegislationResult:
 @dataclass
 class CaseResult:
     """Case law search result from Find Case Law API"""
+
     citation: str
     court: str
     date: str
@@ -71,6 +72,7 @@ class CaseResult:
 @dataclass
 class KnowledgeEntry:
     """Knowledge base entry (cached FAQs, guides)"""
+
     topic: str
     category: str
     content: str
@@ -80,6 +82,7 @@ class KnowledgeEntry:
 @dataclass
 class LegalSearchResults:
     """Combined search results from all APIs"""
+
     legislation: List[LegislationResult]
     cases: List[CaseResult]
     knowledge_base: List[KnowledgeEntry]
@@ -90,6 +93,7 @@ class LegalSearchResults:
 @dataclass
 class ExtractedKeywords:
     """Extracted keywords from natural language question"""
+
     all: List[str]
     legal: List[str]
     general: List[str]
@@ -98,6 +102,7 @@ class ExtractedKeywords:
 @dataclass
 class CacheEntry:
     """Cache entry with expiration"""
+
     data: Any
     timestamp: int
     expires_at: int
@@ -105,6 +110,7 @@ class CacheEntry:
 
 class LegalCategory(str, Enum):
     """Legal category classifications"""
+
     EMPLOYMENT = "employment"
     DISCRIMINATION = "discrimination"
     HOUSING = "housing"
@@ -122,6 +128,7 @@ class LegalCategory(str, Enum):
 
 class APIConfig:
     """API configuration constants"""
+
     LEGISLATION_BASE_URL = "https://www.legislation.gov.uk"
     CASELAW_BASE_URL = "https://caselaw.nationalarchives.gov.uk"
     TIMEOUT_SECONDS = 10.0
@@ -135,30 +142,83 @@ class APIConfig:
 # Legal terms dictionary for keyword extraction
 LEGAL_TERMS_DICTIONARY: Dict[str, List[str]] = {
     "employment": [
-        "fired", "dismissed", "redundancy", "employment", "unfair dismissal",
-        "constructive dismissal", "contract", "wages", "salary", "notice period",
-        "disciplinary", "grievance", "maternity", "paternity", "pregnant", "pregnancy"
+        "fired",
+        "dismissed",
+        "redundancy",
+        "employment",
+        "unfair dismissal",
+        "constructive dismissal",
+        "contract",
+        "wages",
+        "salary",
+        "notice period",
+        "disciplinary",
+        "grievance",
+        "maternity",
+        "paternity",
+        "pregnant",
+        "pregnancy",
     ],
     "discrimination": [
-        "discrimination", "protected characteristic", "harassment", "victimisation",
-        "equality", "race", "gender", "disability", "age", "religion", "sexual orientation"
+        "discrimination",
+        "protected characteristic",
+        "harassment",
+        "victimisation",
+        "equality",
+        "race",
+        "gender",
+        "disability",
+        "age",
+        "religion",
+        "sexual orientation",
     ],
     "housing": [
-        "eviction", "tenant", "landlord", "rent", "housing", "tenancy",
-        "deposit", "repairs", "notice", "possession", "section 21", "section 8"
+        "eviction",
+        "tenant",
+        "landlord",
+        "rent",
+        "housing",
+        "tenancy",
+        "deposit",
+        "repairs",
+        "notice",
+        "possession",
+        "section 21",
+        "section 8",
     ],
     "family": [
-        "custody", "divorce", "child", "maintenance", "contact", "residence",
-        "separation", "matrimonial", "parental responsibility"
+        "custody",
+        "divorce",
+        "child",
+        "maintenance",
+        "contact",
+        "residence",
+        "separation",
+        "matrimonial",
+        "parental responsibility",
     ],
     "consumer": [
-        "refund", "warranty", "guarantee", "faulty", "consumer rights",
-        "sale of goods", "services", "complaint", "product"
+        "refund",
+        "warranty",
+        "guarantee",
+        "faulty",
+        "consumer rights",
+        "sale of goods",
+        "services",
+        "complaint",
+        "product",
     ],
     "criminal": [
-        "arrest", "charge", "bail", "police", "prosecution", "defence",
-        "sentence", "conviction", "caution"
-    ]
+        "arrest",
+        "charge",
+        "bail",
+        "police",
+        "prosecution",
+        "defence",
+        "sentence",
+        "conviction",
+        "caution",
+    ],
 }
 
 
@@ -170,16 +230,52 @@ CATEGORY_TO_COURT_MAP: Dict[str, List[str]] = {
     "family": ["ewfc", "ewca", "uksc"],  # Family Court, Court of Appeal, Supreme Court
     "consumer": ["ewca", "ewhc"],  # Court of Appeal, High Court
     "criminal": ["uksc", "ewca", "ewhc"],  # Supreme Court, Court of Appeal, High Court
-    "civil": ["ewca", "ewhc", "uksc"]  # Court of Appeal, High Court, Supreme Court
+    "civil": ["ewca", "ewhc", "uksc"],  # Court of Appeal, High Court, Supreme Court
 }
 
 
 # Common English stop words to filter out
 STOP_WORDS: Set[str] = {
-    "a", "an", "and", "are", "as", "at", "be", "by", "can", "for", "from",
-    "has", "he", "she", "in", "is", "it", "its", "of", "on", "that", "the",
-    "to", "was", "will", "with", "i", "my", "me", "am", "being", "been",
-    "do", "does", "did", "would", "could", "should", "may", "might"
+    "a",
+    "an",
+    "and",
+    "are",
+    "as",
+    "at",
+    "be",
+    "by",
+    "can",
+    "for",
+    "from",
+    "has",
+    "he",
+    "she",
+    "in",
+    "is",
+    "it",
+    "its",
+    "of",
+    "on",
+    "that",
+    "the",
+    "to",
+    "was",
+    "will",
+    "with",
+    "i",
+    "my",
+    "me",
+    "am",
+    "being",
+    "been",
+    "do",
+    "does",
+    "did",
+    "would",
+    "could",
+    "should",
+    "may",
+    "might",
 }
 
 
@@ -199,9 +295,10 @@ def is_network_error(error: Exception) -> bool:
         True if network error, False otherwise
     """
     error_msg = str(error).lower()
-    return any(keyword in error_msg for keyword in [
-        "timeout", "network", "connection", "refused", "not found"
-    ]) or isinstance(error, (httpx.TimeoutException, httpx.NetworkError, httpx.ConnectError))
+    return any(
+        keyword in error_msg
+        for keyword in ["timeout", "network", "connection", "refused", "not found"]
+    ) or isinstance(error, (httpx.TimeoutException, httpx.NetworkError, httpx.ConnectError))
 
 
 def should_retry(error: Exception, attempt: int) -> bool:
@@ -230,7 +327,7 @@ def get_retry_delay(attempt: int) -> float:
     Returns:
         Delay in seconds
     """
-    return APIConfig.RETRY_DELAY_SECONDS * (2 ** attempt)
+    return APIConfig.RETRY_DELAY_SECONDS * (2**attempt)
 
 
 # ============================================================================
@@ -256,8 +353,7 @@ class LegalAPIService:
         self.audit_logger = audit_logger
         self.cache: Dict[str, CacheEntry] = {}
         self.client = httpx.AsyncClient(
-            timeout=APIConfig.TIMEOUT_SECONDS,
-            headers={"User-Agent": "Justice Companion/1.0"}
+            timeout=APIConfig.TIMEOUT_SECONDS, headers={"User-Agent": "Justice Companion/1.0"}
         )
 
         logger.info("LegalAPIService initialized")
@@ -304,14 +400,14 @@ class LegalAPIService:
 
             if cached:
                 logger.info(f"Returning cached results for key: {cache_key}")
-                cached['cached'] = True
+                cached["cached"] = True
                 return cached
 
             # Fetch from APIs in parallel
             legislation, cases, knowledge_base = await asyncio.gather(
                 self._search_legislation_internal(keywords.all),
                 self._search_case_law_internal(keywords.all, category),
-                self.search_knowledge_base(keywords.all)
+                self.search_knowledge_base(keywords.all),
             )
 
             results = {
@@ -319,12 +415,15 @@ class LegalAPIService:
                 "cases": [asdict(item) for item in cases],
                 "knowledge_base": [asdict(item) for item in knowledge_base],
                 "cached": False,
-                "timestamp": int(time.time() * 1000)  # Milliseconds
+                "timestamp": int(time.time() * 1000),  # Milliseconds
             }
 
             # Cache results
-            ttl = (APIConfig.CACHE_TTL_HOURS if len(legislation) > 0 or len(cases) > 0
-                   else APIConfig.EMPTY_CACHE_TTL_HOURS)
+            ttl = (
+                APIConfig.CACHE_TTL_HOURS
+                if len(legislation) > 0 or len(cases) > 0
+                else APIConfig.EMPTY_CACHE_TTL_HOURS
+            )
             self._set_cache(cache_key, results, ttl)
 
             logger.info(
@@ -345,9 +444,9 @@ class LegalAPIService:
                         details={
                             "question": question[:100],
                             "category": category,
-                            "results_count": len(legislation) + len(cases)
+                            "results_count": len(legislation) + len(cases),
                         },
-                        success=True
+                        success=True,
                     )
                 except Exception as audit_error:
                     logger.warning(f"Audit logging failed: {audit_error}")
@@ -357,7 +456,7 @@ class LegalAPIService:
         except Exception as error:
             logger.error(
                 f"searchLegalInfo error: {error}",
-                extra={"question": question, "is_offline": is_network_error(error)}
+                extra={"question": question, "is_offline": is_network_error(error)},
             )
 
             # Return empty results on error (graceful degradation)
@@ -366,7 +465,7 @@ class LegalAPIService:
                 "cases": [],
                 "knowledge_base": [],
                 "cached": False,
-                "timestamp": int(time.time() * 1000)
+                "timestamp": int(time.time() * 1000),
             }
 
     def clear_cache(self) -> None:
@@ -416,7 +515,7 @@ class LegalAPIService:
         # Remove punctuation and split into words
         words = []
         for word in question.lower().replace(",", "").replace(".", "").replace("?", "").split():
-            cleaned = ''.join(c for c in word if c.isalnum() or c.isspace())
+            cleaned = "".join(c for c in word if c.isalnum() or c.isspace())
             if len(cleaned) > 2 and cleaned not in STOP_WORDS:
                 words.append(cleaned)
 
@@ -426,7 +525,9 @@ class LegalAPIService:
         # Match against legal dictionary
         for word in words:
             for term in all_terms:
-                if (term in word or word in term or term in question.lower()) and term not in legal_terms:
+                if (
+                    term in word or word in term or term in question.lower()
+                ) and term not in legal_terms:
                     legal_terms.append(term)
 
         # Keep original meaningful words as general keywords
@@ -440,11 +541,7 @@ class LegalAPIService:
             f"legal: {legal_terms[:5]}, general: {general_keywords[:5]}"
         )
 
-        return ExtractedKeywords(
-            all=all_keywords,
-            legal=legal_terms,
-            general=general_keywords
-        )
+        return ExtractedKeywords(all=all_keywords, legal=legal_terms, general=general_keywords)
 
     # ==========================================================================
     # API CLIENTS
@@ -484,6 +581,7 @@ class LegalAPIService:
             query = " ".join(keywords)
             # Use Atom feed endpoint for UK Public General Acts
             from urllib.parse import quote
+
             url = f"{APIConfig.LEGISLATION_BASE_URL}/ukpga/data.feed?title={quote(query)}"
 
             logger.info(f"Searching legislation.gov.uk - url: {url}, keywords: {keywords[:5]}")
@@ -493,7 +591,7 @@ class LegalAPIService:
             if response.status_code != 200:
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail=f"Legislation API returned {response.status_code}"
+                    detail=f"Legislation API returned {response.status_code}",
                 )
 
             xml_text = response.text
@@ -504,14 +602,12 @@ class LegalAPIService:
         except Exception as error:
             logger.error(
                 f"searchLegislationInternal error: {error}",
-                extra={"keywords": keywords, "is_offline": is_network_error(error)}
+                extra={"keywords": keywords, "is_offline": is_network_error(error)},
             )
             return []
 
     async def search_case_law(
-        self,
-        query: str | List[str],
-        category: Optional[str] = None
+        self, query: str | List[str], category: Optional[str] = None
     ) -> List[Dict[str, Any]]:
         """
         Search case law by query (interface compliance).
@@ -529,15 +625,12 @@ class LegalAPIService:
             return [asdict(item) for item in results]
         except Exception as error:
             logger.error(
-                f"searchCaseLaw error: {error}",
-                extra={"query": query, "category": category}
+                f"searchCaseLaw error: {error}", extra={"query": query, "category": category}
             )
             return []
 
     async def _search_case_law_internal(
-        self,
-        keywords: List[str],
-        category: str = "general"
+        self, keywords: List[str], category: str = "general"
     ) -> List[CaseResult]:
         """
         Search Find Case Law API (internal implementation).
@@ -559,6 +652,7 @@ class LegalAPIService:
 
             # Build URL with court filtering if category matches
             from urllib.parse import quote
+
             url = f"{APIConfig.CASELAW_BASE_URL}/atom.xml?query={quote(query)}"
 
             # Add court filtering based on question category
@@ -577,7 +671,7 @@ class LegalAPIService:
             if response.status_code != 200:
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail=f"Case Law API returned {response.status_code}"
+                    detail=f"Case Law API returned {response.status_code}",
                 )
 
             xml_text = response.text
@@ -591,8 +685,8 @@ class LegalAPIService:
                 extra={
                     "keywords": keywords,
                     "category": category,
-                    "is_offline": is_network_error(error)
-                }
+                    "is_offline": is_network_error(error),
+                },
             )
             return []
 
@@ -616,7 +710,7 @@ class LegalAPIService:
             if response.status_code != 200:
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail=f"Legislation API returned {response.status_code}"
+                    detail=f"Legislation API returned {response.status_code}",
                 )
 
             return response.text
@@ -624,7 +718,7 @@ class LegalAPIService:
         except Exception as error:
             logger.error(
                 f"getLegislation error: {error}",
-                extra={"id": legislation_id, "is_offline": is_network_error(error)}
+                extra={"id": legislation_id, "is_offline": is_network_error(error)},
             )
             return None
 
@@ -648,7 +742,7 @@ class LegalAPIService:
             if response.status_code != 200:
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail=f"Case Law API returned {response.status_code}"
+                    detail=f"Case Law API returned {response.status_code}",
                 )
 
             return response.json()
@@ -656,7 +750,7 @@ class LegalAPIService:
         except Exception as error:
             logger.error(
                 f"getCaseLaw error: {error}",
-                extra={"id": case_id, "is_offline": is_network_error(error)}
+                extra={"id": case_id, "is_offline": is_network_error(error)},
             )
             return None
 
@@ -680,21 +774,14 @@ class LegalAPIService:
             return []
 
         except Exception as error:
-            logger.error(
-                f"searchKnowledgeBase error: {error}",
-                extra={"keywords": keywords}
-            )
+            logger.error(f"searchKnowledgeBase error: {error}", extra={"keywords": keywords})
             return []
 
     # ==========================================================================
     # HTTP CLIENT WITH RETRY LOGIC
     # ==========================================================================
 
-    async def _fetch_with_retry(
-        self,
-        url: str,
-        attempt: int = 0
-    ) -> httpx.Response:
+    async def _fetch_with_retry(self, url: str, attempt: int = 0) -> httpx.Response:
         """
         Fetch with automatic retry and timeout handling.
 
@@ -727,11 +814,7 @@ class LegalAPIService:
     # RESPONSE PARSERS
     # ==========================================================================
 
-    def _parse_atom_feed_to_legislation(
-        self,
-        xml_text: str,
-        query: str
-    ) -> List[LegislationResult]:
+    def _parse_atom_feed_to_legislation(self, xml_text: str, query: str) -> List[LegislationResult]:
         """
         Parse Atom XML feed to legislation results.
 
@@ -749,52 +832,55 @@ class LegalAPIService:
             root = ET.fromstring(xml_text)
 
             # Handle Atom namespace
-            ns = {'atom': 'http://www.w3.org/2005/Atom'}
+            ns = {"atom": "http://www.w3.org/2005/Atom"}
 
-            entries = root.findall('.//atom:entry', ns)
+            entries = root.findall(".//atom:entry", ns)
             results: List[LegislationResult] = []
 
             for index, entry in enumerate(entries[:5]):  # Limit to 5 results
                 # Extract title
-                title_elem = entry.find('atom:title', ns)
+                title_elem = entry.find("atom:title", ns)
                 title = title_elem.text if title_elem is not None else "Unknown"
 
                 # Extract summary or content
-                summary_elem = entry.find('atom:summary', ns)
-                content_elem = entry.find('atom:content', ns)
+                summary_elem = entry.find("atom:summary", ns)
+                content_elem = entry.find("atom:content", ns)
                 summary = (
-                    summary_elem.text if summary_elem is not None
-                    else content_elem.text if content_elem is not None
-                    else "No summary available"
+                    summary_elem.text
+                    if summary_elem is not None
+                    else content_elem.text if content_elem is not None else "No summary available"
                 )
 
                 # Extract link (prefer 'alternate' rel)
-                links = entry.findall('atom:link', ns)
+                links = entry.findall("atom:link", ns)
                 link = ""
                 for link_elem in links:
-                    href = link_elem.get('href', '')
-                    rel = link_elem.get('rel', '')
-                    if rel == 'alternate':
+                    href = link_elem.get("href", "")
+                    rel = link_elem.get("rel", "")
+                    if rel == "alternate":
                         link = href
                         break
                 if not link and links:
-                    link = links[0].get('href', '')
+                    link = links[0].get("href", "")
 
                 # Extract section from title if present
                 section = None
                 if "Section" in title:
                     import re
-                    match = re.search(r'Section (\d+[A-Z]?)', title, re.IGNORECASE)
+
+                    match = re.search(r"Section (\d+[A-Z]?)", title, re.IGNORECASE)
                     if match:
                         section = match.group(0)
 
-                results.append(LegislationResult(
-                    title=title.strip(),
-                    section=section,
-                    content=summary.strip()[:500],  # Limit content length
-                    url=link,
-                    relevance=1.0 - index * 0.1  # Simple relevance scoring
-                ))
+                results.append(
+                    LegislationResult(
+                        title=title.strip(),
+                        section=section,
+                        content=summary.strip()[:500],  # Limit content length
+                        url=link,
+                        relevance=1.0 - index * 0.1,  # Simple relevance scoring
+                    )
+                )
 
             return results
 
@@ -802,11 +888,7 @@ class LegalAPIService:
             logger.error(f"parseAtomFeedToLegislation error: {error}")
             return []
 
-    def _parse_atom_feed_to_case_law(
-        self,
-        xml_text: str,
-        query: str
-    ) -> List[CaseResult]:
+    def _parse_atom_feed_to_case_law(self, xml_text: str, query: str) -> List[CaseResult]:
         """
         Parse Atom XML feed to case law results.
 
@@ -824,63 +906,70 @@ class LegalAPIService:
             root = ET.fromstring(xml_text)
 
             # Handle Atom namespace
-            ns = {'atom': 'http://www.w3.org/2005/Atom'}
+            ns = {"atom": "http://www.w3.org/2005/Atom"}
 
-            entries = root.findall('.//atom:entry', ns)
+            entries = root.findall(".//atom:entry", ns)
             results: List[CaseResult] = []
 
             for index, entry in enumerate(entries[:5]):  # Limit to 5 results
                 # Extract title (case citation)
-                title_elem = entry.find('atom:title', ns)
+                title_elem = entry.find("atom:title", ns)
                 title = title_elem.text if title_elem is not None else "Unknown Case"
 
                 # Extract summary or content
-                summary_elem = entry.find('atom:summary', ns)
-                content_elem = entry.find('atom:content', ns)
+                summary_elem = entry.find("atom:summary", ns)
+                content_elem = entry.find("atom:content", ns)
                 summary = (
-                    summary_elem.text if summary_elem is not None
-                    else content_elem.text if content_elem is not None
-                    else "No summary available"
+                    summary_elem.text
+                    if summary_elem is not None
+                    else content_elem.text if content_elem is not None else "No summary available"
                 )
 
                 # Extract date (updated or published)
-                updated_elem = entry.find('atom:updated', ns)
-                published_elem = entry.find('atom:published', ns)
+                updated_elem = entry.find("atom:updated", ns)
+                published_elem = entry.find("atom:published", ns)
                 date_str = (
-                    updated_elem.text if updated_elem is not None
-                    else published_elem.text if published_elem is not None
-                    else datetime.now(timezone.utc).isoformat()
+                    updated_elem.text
+                    if updated_elem is not None
+                    else (
+                        published_elem.text
+                        if published_elem is not None
+                        else datetime.now(timezone.utc).isoformat()
+                    )
                 )
-                date = date_str.split('T')[0]  # Extract date part only
+                date = date_str.split("T")[0]  # Extract date part only
 
                 # Extract link (prefer 'alternate' rel)
-                links = entry.findall('atom:link', ns)
+                links = entry.findall("atom:link", ns)
                 link = ""
                 for link_elem in links:
-                    href = link_elem.get('href', '')
-                    rel = link_elem.get('rel', '')
-                    if rel == 'alternate':
+                    href = link_elem.get("href", "")
+                    rel = link_elem.get("rel", "")
+                    if rel == "alternate":
                         link = href
                         break
                 if not link and links:
-                    link = links[0].get('href', '')
+                    link = links[0].get("href", "")
 
                 # Extract court from title (typically in brackets)
                 court = "UK Court"
                 import re
-                court_match = re.search(r'\[(.*?)\]', title)
+
+                court_match = re.search(r"\[(.*?)\]", title)
                 if court_match:
                     court = court_match.group(1)
 
-                results.append(CaseResult(
-                    citation=title.strip(),
-                    court=court,
-                    date=date,
-                    summary=summary.strip()[:500],  # Limit summary length
-                    url=link,
-                    outcome=None,  # Not typically in atom feed
-                    relevance=1.0 - index * 0.1  # Simple relevance scoring
-                ))
+                results.append(
+                    CaseResult(
+                        citation=title.strip(),
+                        court=court,
+                        date=date,
+                        summary=summary.strip()[:500],  # Limit summary length
+                        url=link,
+                        outcome=None,  # Not typically in atom feed
+                        relevance=1.0 - index * 0.1,  # Simple relevance scoring
+                    )
+                )
 
             return results
 
@@ -943,7 +1032,7 @@ class LegalAPIService:
         entry = CacheEntry(
             data=data,
             timestamp=current_time_ms,
-            expires_at=current_time_ms + ttl_hours * 60 * 60 * 1000
+            expires_at=current_time_ms + ttl_hours * 60 * 60 * 1000,
         )
 
         self.cache[key] = entry

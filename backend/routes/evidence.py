@@ -35,10 +35,10 @@ import logging
 
 from backend.models.base import get_db
 from backend.routes.auth import get_current_user
-from backend.services.document_parser_service import DocumentParserService, ParsedDocument
-from backend.services.citation_service import CitationService, ExtractedCitation
+from backend.services.document_parser_service import DocumentParserService
+from backend.services.citation_service import CitationService
 from backend.services.encryption_service import EncryptionService
-from backend.services.audit_logger import AuditLogger, log_audit_event
+from backend.services.audit_logger import AuditLogger
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -56,43 +56,50 @@ UPLOAD_DIR = Path("uploads/evidence")  # Evidence file storage
 # ===== PYDANTIC REQUEST MODELS =====
 class CreateEvidenceRequest(BaseModel):
     """Request model for creating/uploading evidence."""
+
     caseId: int = Field(..., gt=0, description="Case ID this evidence belongs to")
     evidenceType: str = Field(..., description="Type of evidence")
     title: str = Field(..., min_length=1, max_length=500, description="Evidence title")
-    description: Optional[str] = Field(None, max_length=10000, description="Evidence description (deprecated, use content)")
-    filePath: Optional[str] = Field(None, max_length=1000, description="File path for file-based evidence")
+    description: Optional[str] = Field(
+        None, max_length=10000, description="Evidence description (deprecated, use content)"
+    )
+    filePath: Optional[str] = Field(
+        None, max_length=1000, description="File path for file-based evidence"
+    )
     content: Optional[str] = Field(None, description="Text content for note-based evidence")
     obtainedDate: Optional[str] = Field(None, description="Date evidence was obtained (YYYY-MM-DD)")
 
-    @field_validator('evidenceType')
+    @field_validator("evidenceType")
     @classmethod
     def validate_evidence_type(cls, v):
         if v not in VALID_EVIDENCE_TYPES:
-            raise ValueError(f"Invalid evidence type. Must be one of: {', '.join(VALID_EVIDENCE_TYPES)}")
+            raise ValueError(
+                f"Invalid evidence type. Must be one of: {', '.join(VALID_EVIDENCE_TYPES)}"
+            )
         return v
 
-    @field_validator('title')
+    @field_validator("title")
     @classmethod
     def strip_title(cls, v):
         return v.strip()
 
-    @field_validator('obtainedDate')
+    @field_validator("obtainedDate")
     @classmethod
     def validate_date_format(cls, v):
         if v:
             try:
-                datetime.strptime(v, '%Y-%m-%d')
+                datetime.strptime(v, "%Y-%m-%d")
             except ValueError:
                 raise ValueError("Invalid date format (use YYYY-MM-DD)")
         return v
 
-    @field_validator('content', 'filePath')
+    @field_validator("content", "filePath")
     @classmethod
     def validate_file_or_content(cls, v, info):
         """Ensure either filePath OR content is provided, but not both."""
-        if info.field_name == 'content':
+        if info.field_name == "content":
             values = info.data
-            file_path = values.get('filePath')
+            file_path = values.get("filePath")
             if v and file_path:
                 raise ValueError("Cannot provide both filePath and content")
             if not v and not file_path:
@@ -102,29 +109,32 @@ class CreateEvidenceRequest(BaseModel):
 
 class UpdateEvidenceRequest(BaseModel):
     """Request model for updating evidence metadata."""
+
     title: Optional[str] = Field(None, min_length=1, max_length=500)
     description: Optional[str] = Field(None, max_length=10000)
     evidenceType: Optional[str] = None
     obtainedDate: Optional[str] = None
 
-    @field_validator('evidenceType')
+    @field_validator("evidenceType")
     @classmethod
     def validate_evidence_type(cls, v):
         if v and v not in VALID_EVIDENCE_TYPES:
-            raise ValueError(f"Invalid evidence type. Must be one of: {', '.join(VALID_EVIDENCE_TYPES)}")
+            raise ValueError(
+                f"Invalid evidence type. Must be one of: {', '.join(VALID_EVIDENCE_TYPES)}"
+            )
         return v
 
-    @field_validator('title', 'description')
+    @field_validator("title", "description")
     @classmethod
     def strip_strings(cls, v):
         return v.strip() if v else None
 
-    @field_validator('obtainedDate')
+    @field_validator("obtainedDate")
     @classmethod
     def validate_date_format(cls, v):
         if v:
             try:
-                datetime.strptime(v, '%Y-%m-%d')
+                datetime.strptime(v, "%Y-%m-%d")
             except ValueError:
                 raise ValueError("Invalid date format (use YYYY-MM-DD)")
         return v
@@ -133,6 +143,7 @@ class UpdateEvidenceRequest(BaseModel):
 # ===== PYDANTIC RESPONSE MODELS =====
 class EvidenceResponse(BaseModel):
     """Response model for evidence data."""
+
     id: int
     caseId: int
     evidenceType: str
@@ -150,6 +161,7 @@ class EvidenceResponse(BaseModel):
 
 class ParsedDocumentResponse(BaseModel):
     """Response model for parsed document data."""
+
     text: str = Field(..., description="Extracted plain text content")
     filename: str = Field(..., description="Original filename")
     file_type: str = Field(..., description="Document type (pdf, docx, txt)")
@@ -160,35 +172,39 @@ class ParsedDocumentResponse(BaseModel):
 
 class CitationResponse(BaseModel):
     """Response model for extracted citation."""
+
     text: str = Field(..., description="Citation text")
     type: str = Field(..., description="Citation type (FullCaseCitation, FullLawCitation, etc.)")
     span: List[int] = Field(..., description="[start, end] position in text")
     metadata: Dict[str, Any] = Field(..., description="Structured citation metadata")
-    court_listener_link: Optional[str] = Field(None, description="CourtListener search link (case citations only)")
+    court_listener_link: Optional[str] = Field(
+        None, description="CourtListener search link (case citations only)"
+    )
 
 
 class CitationListResponse(BaseModel):
     """Response model for citation list with summary."""
+
     citations: List[CitationResponse]
     summary: Dict[str, Any] = Field(..., description="Citation statistics")
 
 
 class DeleteEvidenceResponse(BaseModel):
     """Response model for evidence deletion."""
+
     success: bool
 
 
 class FileUploadResponse(BaseModel):
     """Response model for file upload with parsing."""
+
     evidence: EvidenceResponse
     parsed_document: Optional[ParsedDocumentResponse] = None
     citations: Optional[List[CitationResponse]] = None
 
 
 # ===== DEPENDENCY INJECTION =====
-def get_document_parser_service(
-    db: Session = Depends(get_db)
-) -> DocumentParserService:
+def get_document_parser_service(db: Session = Depends(get_db)) -> DocumentParserService:
     """Get DocumentParserService instance with audit logger."""
     audit_logger = AuditLogger(db)
     return DocumentParserService(audit_logger=audit_logger, max_file_size=MAX_FILE_SIZE)
@@ -212,7 +228,7 @@ def get_encryption_service() -> EncryptionService:
     if not key_base64:
         # WARNING: Generating temporary key - data will be lost on restart
         key = EncryptionService.generate_key()
-        key_base64 = base64.b64encode(key).decode('utf-8')
+        key_base64 = base64.b64encode(key).decode("utf-8")
         logger.warning("No ENCRYPTION_KEY_BASE64 found. Using temporary key.")
 
     return EncryptionService(key_base64)
@@ -245,7 +261,7 @@ def verify_case_ownership(db: Session, case_id: int, user_id: int) -> bool:
     if not result:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Case with ID {case_id} not found or unauthorized"
+            detail=f"Case with ID {case_id} not found or unauthorized",
         )
 
     return True
@@ -266,18 +282,20 @@ def verify_evidence_ownership(db: Session, evidence_id: int, user_id: int) -> bo
     Raises:
         HTTPException: If evidence not found or unauthorized
     """
-    query = text("""
+    query = text(
+        """
         SELECT e.id
         FROM evidence e
         INNER JOIN cases c ON e.case_id = c.id
         WHERE e.id = :evidence_id AND c.user_id = :user_id
-    """)
+    """
+    )
     result = db.execute(query, {"evidence_id": evidence_id, "user_id": user_id}).fetchone()
 
     if not result:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Evidence with ID {evidence_id} not found or unauthorized"
+            detail=f"Evidence with ID {evidence_id} not found or unauthorized",
         )
 
     return True
@@ -298,7 +316,7 @@ def validate_file_upload(file: UploadFile) -> None:
     if file_ext not in SUPPORTED_DOCUMENT_FORMATS:
         raise HTTPException(
             status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-            detail=f"Unsupported file format. Supported formats: {', '.join(SUPPORTED_DOCUMENT_FORMATS)}"
+            detail=f"Unsupported file format. Supported formats: {', '.join(SUPPORTED_DOCUMENT_FORMATS)}",
         )
 
     # Check file size (if available in headers)
@@ -333,12 +351,12 @@ async def save_uploaded_file(file: UploadFile, case_id: int) -> str:
     if len(content) > MAX_FILE_SIZE:
         raise HTTPException(
             status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-            detail=f"File size exceeds maximum allowed size of {MAX_FILE_SIZE / 1024 / 1024:.1f}MB"
+            detail=f"File size exceeds maximum allowed size of {MAX_FILE_SIZE / 1024 / 1024:.1f}MB",
         )
 
     # Write to disk
     try:
-        with open(file_path, 'wb') as f:
+        with open(file_path, "wb") as f:
             f.write(content)
 
         logger.info(f"Saved uploaded file: {file_path} ({len(content)} bytes)")
@@ -348,17 +366,18 @@ async def save_uploaded_file(file: UploadFile, case_id: int) -> str:
         logger.error(f"Failed to save uploaded file: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to save uploaded file: {str(e)}"
+            detail=f"Failed to save uploaded file: {str(e)}",
         )
 
 
 # ===== ROUTES =====
 
+
 @router.get("", response_model=List[EvidenceResponse])
 async def list_all_evidence(
     user_id: int = Depends(get_current_user),
     db: Session = Depends(get_db),
-    case_id: Optional[int] = None
+    case_id: Optional[int] = None,
 ):
     """
     List all evidence for user's cases.
@@ -378,7 +397,8 @@ async def list_all_evidence(
             # Verify case ownership first
             verify_case_ownership(db, case_id, user_id)
 
-            query = text("""
+            query = text(
+                """
                 SELECT
                     id,
                     case_id as caseId,
@@ -392,11 +412,13 @@ async def list_all_evidence(
                 FROM evidence
                 WHERE case_id = :case_id
                 ORDER BY created_at DESC
-            """)
+            """
+            )
             evidence_items = db.execute(query, {"case_id": case_id}).fetchall()
         else:
             # Get all evidence for user's cases
-            query = text("""
+            query = text(
+                """
                 SELECT
                     e.id,
                     e.case_id as caseId,
@@ -411,16 +433,23 @@ async def list_all_evidence(
                 INNER JOIN cases c ON e.case_id = c.id
                 WHERE c.user_id = :user_id
                 ORDER BY e.created_at DESC
-            """)
+            """
+            )
             evidence_items = db.execute(query, {"user_id": user_id}).fetchall()
 
         # Convert to list of dicts
         result = []
         for item in evidence_items:
             evidence_dict = dict(item._mapping)
-            evidence_dict['uploadedAt'] = evidence_dict['createdAt'].isoformat() if evidence_dict.get('createdAt') else None
-            evidence_dict['createdAt'] = evidence_dict['createdAt'].isoformat() if evidence_dict.get('createdAt') else None
-            evidence_dict['updatedAt'] = evidence_dict['updatedAt'].isoformat() if evidence_dict.get('updatedAt') else None
+            evidence_dict["uploadedAt"] = (
+                evidence_dict["createdAt"].isoformat() if evidence_dict.get("createdAt") else None
+            )
+            evidence_dict["createdAt"] = (
+                evidence_dict["createdAt"].isoformat() if evidence_dict.get("createdAt") else None
+            )
+            evidence_dict["updatedAt"] = (
+                evidence_dict["updatedAt"].isoformat() if evidence_dict.get("updatedAt") else None
+            )
             result.append(evidence_dict)
 
         return result
@@ -431,15 +460,13 @@ async def list_all_evidence(
         logger.error(f"Failed to list evidence: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to list evidence: {str(e)}"
+            detail=f"Failed to list evidence: {str(e)}",
         )
 
 
 @router.get("/{evidence_id}", response_model=EvidenceResponse)
 async def get_evidence(
-    evidence_id: int,
-    user_id: int = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    evidence_id: int, user_id: int = Depends(get_current_user), db: Session = Depends(get_db)
 ):
     """
     Get specific evidence by ID.
@@ -455,7 +482,8 @@ async def get_evidence(
         verify_evidence_ownership(db, evidence_id, user_id)
 
         # Fetch evidence
-        query = text("""
+        query = text(
+            """
             SELECT
                 id,
                 case_id as caseId,
@@ -468,21 +496,28 @@ async def get_evidence(
                 updated_at as updatedAt
             FROM evidence
             WHERE id = :evidence_id
-        """)
+        """
+        )
 
         evidence = db.execute(query, {"evidence_id": evidence_id}).fetchone()
 
         if not evidence:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Evidence with ID {evidence_id} not found"
+                detail=f"Evidence with ID {evidence_id} not found",
             )
 
         # Convert to dict
         evidence_dict = dict(evidence._mapping)
-        evidence_dict['uploadedAt'] = evidence_dict['createdAt'].isoformat() if evidence_dict.get('createdAt') else None
-        evidence_dict['createdAt'] = evidence_dict['createdAt'].isoformat() if evidence_dict.get('createdAt') else None
-        evidence_dict['updatedAt'] = evidence_dict['updatedAt'].isoformat() if evidence_dict.get('updatedAt') else None
+        evidence_dict["uploadedAt"] = (
+            evidence_dict["createdAt"].isoformat() if evidence_dict.get("createdAt") else None
+        )
+        evidence_dict["createdAt"] = (
+            evidence_dict["createdAt"].isoformat() if evidence_dict.get("createdAt") else None
+        )
+        evidence_dict["updatedAt"] = (
+            evidence_dict["updatedAt"].isoformat() if evidence_dict.get("updatedAt") else None
+        )
 
         return evidence_dict
 
@@ -492,7 +527,7 @@ async def get_evidence(
         logger.error(f"Failed to get evidence: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get evidence: {str(e)}"
+            detail=f"Failed to get evidence: {str(e)}",
         )
 
 
@@ -501,7 +536,7 @@ async def create_evidence(
     request: CreateEvidenceRequest,
     user_id: int = Depends(get_current_user),
     db: Session = Depends(get_db),
-    audit_logger: AuditLogger = Depends(get_audit_logger)
+    audit_logger: AuditLogger = Depends(get_audit_logger),
 ):
     """
     Upload/create new evidence for a case.
@@ -528,7 +563,8 @@ async def create_evidence(
         verify_case_ownership(db, request.caseId, user_id)
 
         # Insert evidence
-        insert_query = text("""
+        insert_query = text(
+            """
             INSERT INTO evidence (
                 case_id, title, file_path, content, evidence_type,
                 obtained_date, created_at, updated_at
@@ -537,22 +573,27 @@ async def create_evidence(
                 :case_id, :title, :file_path, :content, :evidence_type,
                 :obtained_date, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
             )
-        """)
+        """
+        )
 
-        result = db.execute(insert_query, {
-            "case_id": request.caseId,
-            "title": request.title,
-            "file_path": request.filePath,
-            "content": request.content,
-            "evidence_type": request.evidenceType,
-            "obtained_date": request.obtainedDate
-        })
+        result = db.execute(
+            insert_query,
+            {
+                "case_id": request.caseId,
+                "title": request.title,
+                "file_path": request.filePath,
+                "content": request.content,
+                "evidence_type": request.evidenceType,
+                "obtained_date": request.obtainedDate,
+            },
+        )
         db.commit()
 
         evidence_id = result.lastrowid
 
         # Fetch created evidence
-        select_query = text("""
+        select_query = text(
+            """
             SELECT
                 id,
                 case_id as caseId,
@@ -565,7 +606,8 @@ async def create_evidence(
                 updated_at as updatedAt
             FROM evidence
             WHERE id = :evidence_id
-        """)
+        """
+        )
 
         created_evidence = db.execute(select_query, {"evidence_id": evidence_id}).fetchone()
 
@@ -579,16 +621,22 @@ async def create_evidence(
             details={
                 "caseId": request.caseId,
                 "evidenceType": request.evidenceType,
-                "title": request.title
+                "title": request.title,
             },
-            success=True
+            success=True,
         )
 
         # Convert to dict
         evidence_dict = dict(created_evidence._mapping)
-        evidence_dict['uploadedAt'] = evidence_dict['createdAt'].isoformat() if evidence_dict.get('createdAt') else None
-        evidence_dict['createdAt'] = evidence_dict['createdAt'].isoformat() if evidence_dict.get('createdAt') else None
-        evidence_dict['updatedAt'] = evidence_dict['updatedAt'].isoformat() if evidence_dict.get('updatedAt') else None
+        evidence_dict["uploadedAt"] = (
+            evidence_dict["createdAt"].isoformat() if evidence_dict.get("createdAt") else None
+        )
+        evidence_dict["createdAt"] = (
+            evidence_dict["createdAt"].isoformat() if evidence_dict.get("createdAt") else None
+        )
+        evidence_dict["updatedAt"] = (
+            evidence_dict["updatedAt"].isoformat() if evidence_dict.get("updatedAt") else None
+        )
 
         return evidence_dict
 
@@ -601,7 +649,7 @@ async def create_evidence(
             resource_id="unknown",
             action="upload",
             success=False,
-            error_message=str(e)
+            error_message=str(e),
         )
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
@@ -619,13 +667,13 @@ async def create_evidence(
             resource_id="unknown",
             action="upload",
             success=False,
-            error_message=str(e)
+            error_message=str(e),
         )
 
         logger.error(f"Failed to create evidence: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create evidence: {str(e)}"
+            detail=f"Failed to create evidence: {str(e)}",
         )
 
 
@@ -642,7 +690,7 @@ async def upload_evidence_file(
     db: Session = Depends(get_db),
     parser_service: DocumentParserService = Depends(get_document_parser_service),
     citation_service: CitationService = Depends(get_citation_service),
-    audit_logger: AuditLogger = Depends(get_audit_logger)
+    audit_logger: AuditLogger = Depends(get_audit_logger),
 ):
     """
     Upload evidence file with automatic document parsing and citation extraction.
@@ -679,7 +727,8 @@ async def upload_evidence_file(
         file_path = await save_uploaded_file(file, case_id)
 
         # Create evidence record
-        insert_query = text("""
+        insert_query = text(
+            """
             INSERT INTO evidence (
                 case_id, title, file_path, evidence_type,
                 obtained_date, created_at, updated_at
@@ -688,21 +737,26 @@ async def upload_evidence_file(
                 :case_id, :title, :file_path, :evidence_type,
                 :obtained_date, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
             )
-        """)
+        """
+        )
 
-        result = db.execute(insert_query, {
-            "case_id": case_id,
-            "title": title,
-            "file_path": file_path,
-            "evidence_type": evidence_type,
-            "obtained_date": obtained_date
-        })
+        result = db.execute(
+            insert_query,
+            {
+                "case_id": case_id,
+                "title": title,
+                "file_path": file_path,
+                "evidence_type": evidence_type,
+                "obtained_date": obtained_date,
+            },
+        )
         db.commit()
 
         evidence_id = result.lastrowid
 
         # Fetch created evidence
-        select_query = text("""
+        select_query = text(
+            """
             SELECT
                 id,
                 case_id as caseId,
@@ -715,13 +769,20 @@ async def upload_evidence_file(
                 updated_at as updatedAt
             FROM evidence
             WHERE id = :evidence_id
-        """)
+        """
+        )
 
         created_evidence = db.execute(select_query, {"evidence_id": evidence_id}).fetchone()
         evidence_dict = dict(created_evidence._mapping)
-        evidence_dict['uploadedAt'] = evidence_dict['createdAt'].isoformat() if evidence_dict.get('createdAt') else None
-        evidence_dict['createdAt'] = evidence_dict['createdAt'].isoformat() if evidence_dict.get('createdAt') else None
-        evidence_dict['updatedAt'] = evidence_dict['updatedAt'].isoformat() if evidence_dict.get('updatedAt') else None
+        evidence_dict["uploadedAt"] = (
+            evidence_dict["createdAt"].isoformat() if evidence_dict.get("createdAt") else None
+        )
+        evidence_dict["createdAt"] = (
+            evidence_dict["createdAt"].isoformat() if evidence_dict.get("createdAt") else None
+        )
+        evidence_dict["updatedAt"] = (
+            evidence_dict["updatedAt"].isoformat() if evidence_dict.get("updatedAt") else None
+        )
 
         # Parse document (if requested)
         parsed_doc = None
@@ -736,7 +797,7 @@ async def upload_evidence_file(
                     file_type=parsed.file_type,
                     page_count=parsed.page_count,
                     word_count=parsed.word_count,
-                    metadata=parsed.metadata.to_dict() if parsed.metadata else None
+                    metadata=parsed.metadata.to_dict() if parsed.metadata else None,
                 )
 
                 # Extract citations (if requested)
@@ -749,12 +810,16 @@ async def upload_evidence_file(
                                 type=citation.type,
                                 span=list(citation.span),
                                 metadata=citation.metadata.to_dict(),
-                                court_listener_link=citation_service.get_court_listener_link(citation)
+                                court_listener_link=citation_service.get_court_listener_link(
+                                    citation
+                                ),
                             )
                             for citation in citations
                         ]
 
-                        logger.info(f"Extracted {len(citations_list)} citations from evidence {evidence_id}")
+                        logger.info(
+                            f"Extracted {len(citations_list)} citations from evidence {evidence_id}"
+                        )
 
                     except Exception as e:
                         logger.warning(f"Citation extraction failed (non-critical): {e}")
@@ -776,15 +841,13 @@ async def upload_evidence_file(
                 "filename": file.filename,
                 "file_size": os.path.getsize(file_path),
                 "parsed": parsed_doc is not None,
-                "citations_extracted": len(citations_list) if citations_list else 0
+                "citations_extracted": len(citations_list) if citations_list else 0,
             },
-            success=True
+            success=True,
         )
 
         return FileUploadResponse(
-            evidence=evidence_dict,
-            parsed_document=parsed_doc,
-            citations=citations_list
+            evidence=evidence_dict, parsed_document=parsed_doc, citations=citations_list
         )
 
     except HTTPException:
@@ -802,12 +865,12 @@ async def upload_evidence_file(
             resource_id="unknown",
             action="upload",
             success=False,
-            error_message=str(e)
+            error_message=str(e),
         )
 
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to upload evidence file: {str(e)}"
+            detail=f"Failed to upload evidence file: {str(e)}",
         )
 
 
@@ -816,7 +879,7 @@ async def parse_evidence_document(
     evidence_id: int,
     user_id: int = Depends(get_current_user),
     db: Session = Depends(get_db),
-    parser_service: DocumentParserService = Depends(get_document_parser_service)
+    parser_service: DocumentParserService = Depends(get_document_parser_service),
 ):
     """
     Re-parse evidence document and extract text/metadata.
@@ -838,7 +901,7 @@ async def parse_evidence_document(
         if not result or not result[0]:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Evidence does not have an associated file"
+                detail="Evidence does not have an associated file",
             )
 
         file_path = result[0]
@@ -852,7 +915,7 @@ async def parse_evidence_document(
             file_type=parsed.file_type,
             page_count=parsed.page_count,
             word_count=parsed.word_count,
-            metadata=parsed.metadata.to_dict() if parsed.metadata else None
+            metadata=parsed.metadata.to_dict() if parsed.metadata else None,
         )
 
     except HTTPException:
@@ -861,7 +924,7 @@ async def parse_evidence_document(
         logger.error(f"Failed to parse evidence document: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to parse document: {str(e)}"
+            detail=f"Failed to parse document: {str(e)}",
         )
 
 
@@ -871,7 +934,7 @@ async def extract_evidence_citations(
     user_id: int = Depends(get_current_user),
     db: Session = Depends(get_db),
     parser_service: DocumentParserService = Depends(get_document_parser_service),
-    citation_service: CitationService = Depends(get_citation_service)
+    citation_service: CitationService = Depends(get_citation_service),
 ):
     """
     Extract legal citations from evidence document.
@@ -898,7 +961,7 @@ async def extract_evidence_citations(
         if not result:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Evidence with ID {evidence_id} not found"
+                detail=f"Evidence with ID {evidence_id} not found",
             )
 
         file_path, content = result
@@ -914,7 +977,7 @@ async def extract_evidence_citations(
         else:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Evidence has no file or content to extract citations from"
+                detail="Evidence has no file or content to extract citations from",
             )
 
         # Extract citations
@@ -927,7 +990,7 @@ async def extract_evidence_citations(
                 type=citation.type,
                 span=list(citation.span),
                 metadata=citation.metadata.to_dict(),
-                court_listener_link=citation_service.get_court_listener_link(citation)
+                court_listener_link=citation_service.get_court_listener_link(citation),
             )
             for citation in citations
         ]
@@ -937,10 +1000,7 @@ async def extract_evidence_citations(
 
         logger.info(f"Extracted {len(citations_list)} citations from evidence {evidence_id}")
 
-        return CitationListResponse(
-            citations=citations_list,
-            summary=summary
-        )
+        return CitationListResponse(citations=citations_list, summary=summary)
 
     except HTTPException:
         raise
@@ -948,15 +1008,13 @@ async def extract_evidence_citations(
         logger.error(f"Failed to extract citations: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to extract citations: {str(e)}"
+            detail=f"Failed to extract citations: {str(e)}",
         )
 
 
 @router.get("/case/{case_id}", response_model=List[EvidenceResponse])
 async def list_case_evidence(
-    case_id: int,
-    user_id: int = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    case_id: int, user_id: int = Depends(get_current_user), db: Session = Depends(get_db)
 ):
     """
     List all evidence for a specific case.
@@ -972,7 +1030,8 @@ async def list_case_evidence(
         verify_case_ownership(db, case_id, user_id)
 
         # Fetch evidence
-        query = text("""
+        query = text(
+            """
             SELECT
                 id,
                 case_id as caseId,
@@ -986,7 +1045,8 @@ async def list_case_evidence(
             FROM evidence
             WHERE case_id = :case_id
             ORDER BY created_at DESC
-        """)
+        """
+        )
 
         evidence_items = db.execute(query, {"case_id": case_id}).fetchall()
 
@@ -994,9 +1054,15 @@ async def list_case_evidence(
         result = []
         for item in evidence_items:
             evidence_dict = dict(item._mapping)
-            evidence_dict['uploadedAt'] = evidence_dict['createdAt'].isoformat() if evidence_dict.get('createdAt') else None
-            evidence_dict['createdAt'] = evidence_dict['createdAt'].isoformat() if evidence_dict.get('createdAt') else None
-            evidence_dict['updatedAt'] = evidence_dict['updatedAt'].isoformat() if evidence_dict.get('updatedAt') else None
+            evidence_dict["uploadedAt"] = (
+                evidence_dict["createdAt"].isoformat() if evidence_dict.get("createdAt") else None
+            )
+            evidence_dict["createdAt"] = (
+                evidence_dict["createdAt"].isoformat() if evidence_dict.get("createdAt") else None
+            )
+            evidence_dict["updatedAt"] = (
+                evidence_dict["updatedAt"].isoformat() if evidence_dict.get("updatedAt") else None
+            )
             result.append(evidence_dict)
 
         return result
@@ -1007,7 +1073,7 @@ async def list_case_evidence(
         logger.error(f"Failed to list case evidence: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to list evidence: {str(e)}"
+            detail=f"Failed to list evidence: {str(e)}",
         )
 
 
@@ -1017,7 +1083,7 @@ async def update_evidence(
     request: UpdateEvidenceRequest,
     user_id: int = Depends(get_current_user),
     db: Session = Depends(get_db),
-    audit_logger: AuditLogger = Depends(get_audit_logger)
+    audit_logger: AuditLogger = Depends(get_audit_logger),
 ):
     """
     Update evidence metadata.
@@ -1039,15 +1105,18 @@ async def update_evidence(
         verify_evidence_ownership(db, evidence_id, user_id)
 
         # Ensure at least one field is provided
-        if all(field is None for field in [
-            request.title,
-            request.description,
-            request.evidenceType,
-            request.obtainedDate
-        ]):
+        if all(
+            field is None
+            for field in [
+                request.title,
+                request.description,
+                request.evidenceType,
+                request.obtainedDate,
+            ]
+        ):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="At least one field must be provided for update"
+                detail="At least one field must be provided for update",
             )
 
         # Build dynamic update query
@@ -1072,17 +1141,20 @@ async def update_evidence(
 
         update_fields.append("updated_at = CURRENT_TIMESTAMP")
 
-        update_query = text(f"""
+        update_query = text(
+            f"""
             UPDATE evidence
             SET {', '.join(update_fields)}
             WHERE id = :evidence_id
-        """)
+        """
+        )
 
         db.execute(update_query, params)
         db.commit()
 
         # Fetch updated evidence
-        select_query = text("""
+        select_query = text(
+            """
             SELECT
                 id,
                 case_id as caseId,
@@ -1095,7 +1167,8 @@ async def update_evidence(
                 updated_at as updatedAt
             FROM evidence
             WHERE id = :evidence_id
-        """)
+        """
+        )
 
         updated_evidence = db.execute(select_query, {"evidence_id": evidence_id}).fetchone()
 
@@ -1107,14 +1180,20 @@ async def update_evidence(
             resource_id=str(evidence_id),
             action="update",
             details={"fields_updated": list(params.keys())},
-            success=True
+            success=True,
         )
 
         # Convert to dict
         evidence_dict = dict(updated_evidence._mapping)
-        evidence_dict['uploadedAt'] = evidence_dict['createdAt'].isoformat() if evidence_dict.get('createdAt') else None
-        evidence_dict['createdAt'] = evidence_dict['createdAt'].isoformat() if evidence_dict.get('createdAt') else None
-        evidence_dict['updatedAt'] = evidence_dict['updatedAt'].isoformat() if evidence_dict.get('updatedAt') else None
+        evidence_dict["uploadedAt"] = (
+            evidence_dict["createdAt"].isoformat() if evidence_dict.get("createdAt") else None
+        )
+        evidence_dict["createdAt"] = (
+            evidence_dict["createdAt"].isoformat() if evidence_dict.get("createdAt") else None
+        )
+        evidence_dict["updatedAt"] = (
+            evidence_dict["updatedAt"].isoformat() if evidence_dict.get("updatedAt") else None
+        )
 
         return evidence_dict
 
@@ -1125,16 +1204,18 @@ async def update_evidence(
         logger.error(f"Failed to update evidence: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to update evidence: {str(e)}"
+            detail=f"Failed to update evidence: {str(e)}",
         )
 
 
-@router.delete("/{evidence_id}", response_model=DeleteEvidenceResponse, status_code=status.HTTP_200_OK)
+@router.delete(
+    "/{evidence_id}", response_model=DeleteEvidenceResponse, status_code=status.HTTP_200_OK
+)
 async def delete_evidence(
     evidence_id: int,
     user_id: int = Depends(get_current_user),
     db: Session = Depends(get_db),
-    audit_logger: AuditLogger = Depends(get_audit_logger)
+    audit_logger: AuditLogger = Depends(get_audit_logger),
 ):
     """
     Delete evidence by ID.
@@ -1165,7 +1246,7 @@ async def delete_evidence(
         if result.rowcount == 0:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Evidence with ID {evidence_id} not found"
+                detail=f"Evidence with ID {evidence_id} not found",
             )
 
         # Delete file from disk (if exists)
@@ -1183,7 +1264,7 @@ async def delete_evidence(
             resource_type="evidence",
             resource_id=str(evidence_id),
             action="delete",
-            success=True
+            success=True,
         )
 
         return {"success": True}
@@ -1201,11 +1282,11 @@ async def delete_evidence(
             resource_id=str(evidence_id),
             action="delete",
             success=False,
-            error_message=str(e)
+            error_message=str(e),
         )
 
         logger.error(f"Failed to delete evidence: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to delete evidence: {str(e)}"
+            detail=f"Failed to delete evidence: {str(e)}",
         )

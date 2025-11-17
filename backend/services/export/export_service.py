@@ -38,8 +38,8 @@ import json
 import csv
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union, Literal
-from io import BytesIO, StringIO
+from typing import Any, Dict, List, Optional, Literal
+from io import StringIO
 
 from fastapi import HTTPException, status
 from pydantic import BaseModel, Field, field_validator, ConfigDict
@@ -51,8 +51,10 @@ from backend.services.audit_logger import AuditLogger
 
 # ===== PYDANTIC MODELS =====
 
+
 class ExportFormat(BaseModel):
     """Enumeration of supported export formats."""
+
     PDF: str = "pdf"
     DOCX: str = "docx"
     JSON: str = "json"
@@ -61,6 +63,7 @@ class ExportFormat(BaseModel):
 
 class ExportTemplate(BaseModel):
     """Export template types."""
+
     CASE_SUMMARY: str = "case-summary"
     EVIDENCE_LIST: str = "evidence-list"
     TIMELINE_REPORT: str = "timeline-report"
@@ -82,6 +85,7 @@ class ExportOptions(BaseModel):
         output_path: Custom output file path (optional)
         file_name: Custom file name (optional)
     """
+
     format: Literal["pdf", "docx", "json", "csv"]
     template: Literal["case-summary", "evidence-list", "timeline-report", "case-notes"]
     include_evidence: bool = True
@@ -101,7 +105,7 @@ class ExportOptions(BaseModel):
                 "include_timeline": True,
                 "include_notes": True,
                 "include_facts": True,
-                "include_documents": True
+                "include_documents": True,
             }
         }
     )
@@ -109,6 +113,7 @@ class ExportOptions(BaseModel):
 
 class TimelineEvent(BaseModel):
     """Timeline event representing a case milestone or deadline."""
+
     id: int
     case_id: int
     title: str
@@ -119,12 +124,12 @@ class TimelineEvent(BaseModel):
     created_at: str
     updated_at: str
 
-    @field_validator('event_date', 'created_at', 'updated_at')
+    @field_validator("event_date", "created_at", "updated_at")
     @classmethod
     def validate_iso_date(cls, v: str) -> str:
         """Validate ISO 8601 date format."""
         try:
-            datetime.fromisoformat(v.replace('Z', '+00:00'))
+            datetime.fromisoformat(v.replace("Z", "+00:00"))
             return v
         except ValueError:
             raise ValueError(f"Invalid ISO 8601 date format: {v}")
@@ -138,6 +143,7 @@ class CaseExportData(BaseModel):
     deadlines, notes, facts, and documents. Includes metadata about
     the export operation.
     """
+
     case: Dict[str, Any]  # Case entity
     evidence: List[Dict[str, Any]] = Field(default_factory=list)
     timeline: List[TimelineEvent] = Field(default_factory=list)
@@ -153,6 +159,7 @@ class CaseExportData(BaseModel):
 
 class EvidenceExportData(BaseModel):
     """Structured data for evidence list exports."""
+
     case_id: int
     case_title: str
     evidence: List[Dict[str, Any]]
@@ -164,6 +171,7 @@ class EvidenceExportData(BaseModel):
 
 class TimelineExportData(BaseModel):
     """Structured data for timeline report exports."""
+
     case_id: int
     case_title: str
     events: List[TimelineEvent]
@@ -176,6 +184,7 @@ class TimelineExportData(BaseModel):
 
 class NotesExportData(BaseModel):
     """Structured data for case notes exports."""
+
     case_id: int
     case_title: str
     notes: List[Dict[str, Any]]
@@ -191,6 +200,7 @@ class ExportResult(BaseModel):
     Contains metadata about the generated export file including
     path, size, format, and timestamp.
     """
+
     success: bool = True
     file_path: str
     file_name: str
@@ -208,13 +218,14 @@ class ExportResult(BaseModel):
                 "format": "pdf",
                 "size": 245632,
                 "exported_at": "2025-01-13T14:30:00",
-                "template": "case-summary"
+                "template": "case-summary",
             }
         }
     )
 
 
 # ===== EXPORT SERVICE =====
+
 
 class ExportService:
     """
@@ -248,7 +259,7 @@ class ExportService:
         audit_logger: Optional[AuditLogger] = None,
         pdf_generator: Optional[Any] = None,
         docx_generator: Optional[Any] = None,
-        export_dir: Optional[str] = None
+        export_dir: Optional[str] = None,
     ):
         """
         Initialize export service with dependencies.
@@ -281,6 +292,7 @@ class ExportService:
         if pdf_generator is None:
             try:
                 from backend.services.export.pdf_generator import PDFGenerator
+
                 self.pdf_generator = PDFGenerator()
             except ImportError:
                 self.pdf_generator = None
@@ -290,6 +302,7 @@ class ExportService:
         if docx_generator is None:
             try:
                 from backend.services.export.docx_generator import DOCXGenerator
+
                 self.docx_generator = DOCXGenerator()
             except ImportError:
                 self.docx_generator = None
@@ -315,13 +328,15 @@ class ExportService:
             self.export_dir.mkdir(parents=True, exist_ok=True)
         except Exception as error:
             if self.audit_logger:
-                self.audit_logger.log({
-                    "event_type": "export.directory_error",
-                    "action": "create_directory",
-                    "success": False,
-                    "error_message": str(error),
-                    "details": {"export_dir": str(self.export_dir)}
-                })
+                self.audit_logger.log(
+                    {
+                        "event_type": "export.directory_error",
+                        "action": "create_directory",
+                        "success": False,
+                        "error_message": str(error),
+                        "details": {"export_dir": str(self.export_dir)},
+                    }
+                )
 
     async def _validate_user_access(self, user_id: int, case_id: int) -> bool:
         """
@@ -344,37 +359,40 @@ class ExportService:
         case_data = await self.case_repo.find_by_id(case_id)
         if not case_data:
             if self.audit_logger:
-                self.audit_logger.log({
-                    "event_type": "export.case_not_found",
-                    "user_id": str(user_id),
-                    "resource_id": str(case_id),
-                    "action": "validate_access",
-                    "success": False,
-                    "details": {"reason": "Case not found"}
-                })
+                self.audit_logger.log(
+                    {
+                        "event_type": "export.case_not_found",
+                        "user_id": str(user_id),
+                        "resource_id": str(case_id),
+                        "action": "validate_access",
+                        "success": False,
+                        "details": {"reason": "Case not found"},
+                    }
+                )
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Case with ID {case_id} not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"Case with ID {case_id} not found"
             )
 
         # Verify ownership
         if case_data.get("user_id") != user_id and case_data.get("userId") != user_id:
             if self.audit_logger:
-                self.audit_logger.log({
-                    "event_type": "export.unauthorized_access",
-                    "user_id": str(user_id),
-                    "resource_id": str(case_id),
-                    "action": "validate_access",
-                    "success": False,
-                    "details": {
-                        "reason": "User does not own this case",
-                        "case_owner": case_data.get("user_id") or case_data.get("userId"),
-                        "requesting_user": user_id
+                self.audit_logger.log(
+                    {
+                        "event_type": "export.unauthorized_access",
+                        "user_id": str(user_id),
+                        "resource_id": str(case_id),
+                        "action": "validate_access",
+                        "success": False,
+                        "details": {
+                            "reason": "User does not own this case",
+                            "case_owner": case_data.get("user_id") or case_data.get("userId"),
+                            "requesting_user": user_id,
+                        },
                     }
-                })
+                )
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Permission denied: You do not have access to this case"
+                detail="Permission denied: You do not have access to this case",
             )
 
         return True
@@ -409,10 +427,7 @@ class ExportService:
             return encrypted_data
 
     async def _gather_case_data(
-        self,
-        case_id: int,
-        user_id: int,
-        options: ExportOptions
+        self, case_id: int, user_id: int, options: ExportOptions
     ) -> CaseExportData:
         """
         Gather and decrypt all case-related data for export.
@@ -434,25 +449,19 @@ class ExportService:
         # Get user data
         user = await self.user_repo.find_by_id(user_id)
         if not user:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
         username = user.get("username", "Unknown User")
 
         # Get case data
         case_data = await self.case_repo.find_by_id(case_id)
         if not case_data:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Case not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Case not found")
 
         # Decrypt case fields
         decrypted_case = {
             **case_data,
             "title": await self._decrypt_field(case_data.get("title")),
-            "description": await self._decrypt_field(case_data.get("description"))
+            "description": await self._decrypt_field(case_data.get("description")),
         }
 
         # Gather evidence if requested
@@ -460,12 +469,15 @@ class ExportService:
         if options.include_evidence:
             raw_evidence = await self.evidence_repo.find_by_case_id(case_id)
             for e in raw_evidence:
-                evidence_list.append({
-                    **e,
-                    "title": await self._decrypt_field(e.get("title")),
-                    "file_path": await self._decrypt_field(e.get("file_path")),
-                    "file_path": await self._decrypt_field(e.get("filePath"))
-                })
+                evidence_list.append(
+                    {
+                        **e,
+                        "title": await self._decrypt_field(e.get("title")),
+                        "file_path": await self._decrypt_field(
+                            e.get("file_path") or e.get("filePath")
+                        ),
+                    }
+                )
 
         # Gather timeline events (from deadlines)
         timeline_events: List[TimelineEvent] = []
@@ -477,35 +489,37 @@ class ExportService:
                 decrypted_desc = await self._decrypt_field(d.get("description"))
 
                 # Add to deadlines list
-                deadlines_list.append({
-                    **d,
-                    "title": decrypted_title,
-                    "description": decrypted_desc
-                })
+                deadlines_list.append(
+                    {**d, "title": decrypted_title, "description": decrypted_desc}
+                )
 
                 # Create timeline event from deadline
-                timeline_events.append(TimelineEvent(
-                    id=d.get("id"),
-                    case_id=d.get("case_id") or d.get("caseId"),
-                    title=decrypted_title or "Untitled",
-                    description=decrypted_desc,
-                    event_date=d.get("deadline_date") or d.get("deadlineDate"),
-                    event_type="deadline",
-                    completed=d.get("status") == "completed",
-                    created_at=d.get("created_at") or d.get("createdAt"),
-                    updated_at=d.get("updated_at") or d.get("updatedAt")
-                ))
+                timeline_events.append(
+                    TimelineEvent(
+                        id=d.get("id"),
+                        case_id=d.get("case_id") or d.get("caseId"),
+                        title=decrypted_title or "Untitled",
+                        description=decrypted_desc,
+                        event_date=d.get("deadline_date") or d.get("deadlineDate"),
+                        event_type="deadline",
+                        completed=d.get("status") == "completed",
+                        created_at=d.get("created_at") or d.get("createdAt"),
+                        updated_at=d.get("updated_at") or d.get("updatedAt"),
+                    )
+                )
 
         # Gather notes if requested
         notes_list: List[Dict[str, Any]] = []
         if options.include_notes:
             raw_notes = await self.note_repo.find_by_case_id(case_id)
             for n in raw_notes:
-                notes_list.append({
-                    **n,
-                    "title": await self._decrypt_field(n.get("title")),
-                    "content": await self._decrypt_field(n.get("content"))
-                })
+                notes_list.append(
+                    {
+                        **n,
+                        "title": await self._decrypt_field(n.get("title")),
+                        "content": await self._decrypt_field(n.get("content")),
+                    }
+                )
 
         # Gather facts (placeholder - empty for now)
         facts_list: List[Dict[str, Any]] = []
@@ -518,12 +532,18 @@ class ExportService:
         if options.include_documents:
             raw_documents = await self.document_repo.find_by_case_id(case_id)
             for d in raw_documents:
-                documents_list.append({
-                    **d,
-                    "file_name": await self._decrypt_field(d.get("file_name") or d.get("fileName")),
-                    "file_path": await self._decrypt_field(d.get("file_path") or d.get("filePath")),
-                    "description": await self._decrypt_field(d.get("description"))
-                })
+                documents_list.append(
+                    {
+                        **d,
+                        "file_name": await self._decrypt_field(
+                            d.get("file_name") or d.get("fileName")
+                        ),
+                        "file_path": await self._decrypt_field(
+                            d.get("file_path") or d.get("filePath")
+                        ),
+                        "description": await self._decrypt_field(d.get("description")),
+                    }
+                )
 
         return CaseExportData(
             case=decrypted_case,
@@ -534,7 +554,7 @@ class ExportService:
             facts=facts_list,
             documents=documents_list,
             export_date=datetime.now(),
-            exported_by=username
+            exported_by=username,
         )
 
     def _prepare_evidence_data(self, case_data: CaseExportData) -> EvidenceExportData:
@@ -549,7 +569,9 @@ class ExportService:
         """
         category_summary: Dict[str, int] = {}
         for evidence in case_data.evidence:
-            category = evidence.get("evidence_type") or evidence.get("evidenceType") or "Uncategorized"
+            category = (
+                evidence.get("evidence_type") or evidence.get("evidenceType") or "Uncategorized"
+            )
             category_summary[category] = category_summary.get(category, 0) + 1
 
         return EvidenceExportData(
@@ -559,7 +581,7 @@ class ExportService:
             export_date=case_data.export_date,
             exported_by=case_data.exported_by,
             total_items=len(case_data.evidence),
-            category_summary=category_summary
+            category_summary=category_summary,
         )
 
     def _prepare_timeline_data(self, case_data: CaseExportData) -> TimelineExportData:
@@ -574,14 +596,12 @@ class ExportService:
         """
         now = datetime.now()
         upcoming_deadlines = [
-            d for d in case_data.deadlines
+            d
+            for d in case_data.deadlines
             if datetime.fromisoformat(d.get("deadline_date") or d.get("deadlineDate")) > now
             and d.get("status") != "completed"
         ]
-        completed_events = [
-            e for e in case_data.timeline
-            if e.completed
-        ]
+        completed_events = [e for e in case_data.timeline if e.completed]
 
         return TimelineExportData(
             case_id=case_data.case.get("id"),
@@ -591,7 +611,7 @@ class ExportService:
             export_date=case_data.export_date,
             exported_by=case_data.exported_by,
             upcoming_deadlines=upcoming_deadlines,
-            completed_events=completed_events
+            completed_events=completed_events,
         )
 
     def _prepare_notes_data(self, case_data: CaseExportData) -> NotesExportData:
@@ -610,15 +630,11 @@ class ExportService:
             notes=case_data.notes,
             export_date=case_data.export_date,
             exported_by=case_data.exported_by,
-            total_notes=len(case_data.notes)
+            total_notes=len(case_data.notes),
         )
 
     async def _save_file(
-        self,
-        buffer: bytes,
-        case_data: CaseExportData,
-        options: ExportOptions,
-        extension: str
+        self, buffer: bytes, case_data: CaseExportData, options: ExportOptions, extension: str
     ) -> str:
         """
         Save export buffer to file with proper naming and permissions.
@@ -637,7 +653,10 @@ class ExportService:
         else:
             # Generate filename
             timestamp = datetime.now().isoformat().replace(":", "-").replace(".", "-")[:19]
-            file_name = options.file_name or f"case-{case_data.case.get('id')}-{options.template}-{timestamp}.{extension}"
+            file_name = (
+                options.file_name
+                or f"case-{case_data.case.get('id')}-{options.template}-{timestamp}.{extension}"
+            )
             file_path = self.export_dir / file_name
 
         # Ensure directory exists
@@ -649,10 +668,7 @@ class ExportService:
         return str(file_path.absolute())
 
     async def export_case_to_pdf(
-        self,
-        case_id: int,
-        user_id: int,
-        options: Optional[ExportOptions] = None
+        self, case_id: int, user_id: int, options: Optional[ExportOptions] = None
     ) -> ExportResult:
         """
         Export case to PDF format with template-based generation.
@@ -674,7 +690,7 @@ class ExportService:
         if not self.pdf_generator:
             raise HTTPException(
                 status_code=status.HTTP_501_NOT_IMPLEMENTED,
-                detail="PDF generation not available - reportlab not installed"
+                detail="PDF generation not available - reportlab not installed",
             )
 
         # Set default options
@@ -686,7 +702,7 @@ class ExportService:
                 include_timeline=True,
                 include_notes=True,
                 include_facts=True,
-                include_documents=True
+                include_documents=True,
             )
 
         try:
@@ -716,19 +732,21 @@ class ExportService:
 
             # Log export
             if self.audit_logger:
-                self.audit_logger.log({
-                    "event_type": "export.case_pdf",
-                    "user_id": str(user_id),
-                    "resource_type": "case",
-                    "resource_id": str(case_id),
-                    "action": "export",
-                    "success": True,
-                    "details": {
-                        "template": options.template,
-                        "file_path": file_path,
-                        "file_size": len(pdf_buffer)
+                self.audit_logger.log(
+                    {
+                        "event_type": "export.case_pdf",
+                        "user_id": str(user_id),
+                        "resource_type": "case",
+                        "resource_id": str(case_id),
+                        "action": "export",
+                        "success": True,
+                        "details": {
+                            "template": options.template,
+                            "file_path": file_path,
+                            "file_size": len(pdf_buffer),
+                        },
                     }
-                })
+                )
 
             return ExportResult(
                 success=True,
@@ -737,31 +755,30 @@ class ExportService:
                 format="pdf",
                 size=len(pdf_buffer),
                 exported_at=datetime.now(),
-                template=options.template
+                template=options.template,
             )
 
         except HTTPException:
             raise
         except Exception as error:
             if self.audit_logger:
-                self.audit_logger.log({
-                    "event_type": "export.case_pdf",
-                    "user_id": str(user_id),
-                    "resource_id": str(case_id),
-                    "action": "export",
-                    "success": False,
-                    "error_message": str(error)
-                })
+                self.audit_logger.log(
+                    {
+                        "event_type": "export.case_pdf",
+                        "user_id": str(user_id),
+                        "resource_id": str(case_id),
+                        "action": "export",
+                        "success": False,
+                        "error_message": str(error),
+                    }
+                )
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Failed to export case to PDF: {str(error)}"
+                detail=f"Failed to export case to PDF: {str(error)}",
             )
 
     async def export_case_to_word(
-        self,
-        case_id: int,
-        user_id: int,
-        options: Optional[ExportOptions] = None
+        self, case_id: int, user_id: int, options: Optional[ExportOptions] = None
     ) -> ExportResult:
         """
         Export case to Microsoft Word DOCX format.
@@ -783,7 +800,7 @@ class ExportService:
         if not self.docx_generator:
             raise HTTPException(
                 status_code=status.HTTP_501_NOT_IMPLEMENTED,
-                detail="DOCX generation not available - python-docx not installed"
+                detail="DOCX generation not available - python-docx not installed",
             )
 
         # Set default options
@@ -795,7 +812,7 @@ class ExportService:
                 include_timeline=True,
                 include_notes=True,
                 include_facts=True,
-                include_documents=True
+                include_documents=True,
             )
 
         try:
@@ -825,19 +842,21 @@ class ExportService:
 
             # Log export
             if self.audit_logger:
-                self.audit_logger.log({
-                    "event_type": "export.case_docx",
-                    "user_id": str(user_id),
-                    "resource_type": "case",
-                    "resource_id": str(case_id),
-                    "action": "export",
-                    "success": True,
-                    "details": {
-                        "template": options.template,
-                        "file_path": file_path,
-                        "file_size": len(docx_buffer)
+                self.audit_logger.log(
+                    {
+                        "event_type": "export.case_docx",
+                        "user_id": str(user_id),
+                        "resource_type": "case",
+                        "resource_id": str(case_id),
+                        "action": "export",
+                        "success": True,
+                        "details": {
+                            "template": options.template,
+                            "file_path": file_path,
+                            "file_size": len(docx_buffer),
+                        },
                     }
-                })
+                )
 
             return ExportResult(
                 success=True,
@@ -846,31 +865,29 @@ class ExportService:
                 format="docx",
                 size=len(docx_buffer),
                 exported_at=datetime.now(),
-                template=options.template
+                template=options.template,
             )
 
         except HTTPException:
             raise
         except Exception as error:
             if self.audit_logger:
-                self.audit_logger.log({
-                    "event_type": "export.case_docx",
-                    "user_id": str(user_id),
-                    "resource_id": str(case_id),
-                    "action": "export",
-                    "success": False,
-                    "error_message": str(error)
-                })
+                self.audit_logger.log(
+                    {
+                        "event_type": "export.case_docx",
+                        "user_id": str(user_id),
+                        "resource_id": str(case_id),
+                        "action": "export",
+                        "success": False,
+                        "error_message": str(error),
+                    }
+                )
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Failed to export case to DOCX: {str(error)}"
+                detail=f"Failed to export case to DOCX: {str(error)}",
             )
 
-    async def export_evidence_list_to_pdf(
-        self,
-        case_id: int,
-        user_id: int
-    ) -> ExportResult:
+    async def export_evidence_list_to_pdf(self, case_id: int, user_id: int) -> ExportResult:
         """
         Export evidence list to PDF format.
 
@@ -893,15 +910,11 @@ class ExportService:
                 include_timeline=False,
                 include_notes=False,
                 include_facts=False,
-                include_documents=False
-            )
+                include_documents=False,
+            ),
         )
 
-    async def export_timeline_report_to_pdf(
-        self,
-        case_id: int,
-        user_id: int
-    ) -> ExportResult:
+    async def export_timeline_report_to_pdf(self, case_id: int, user_id: int) -> ExportResult:
         """
         Export timeline report to PDF format.
 
@@ -924,15 +937,11 @@ class ExportService:
                 include_timeline=True,
                 include_notes=False,
                 include_facts=False,
-                include_documents=False
-            )
+                include_documents=False,
+            ),
         )
 
-    async def export_case_notes_to_pdf(
-        self,
-        case_id: int,
-        user_id: int
-    ) -> ExportResult:
+    async def export_case_notes_to_pdf(self, case_id: int, user_id: int) -> ExportResult:
         """
         Export case notes to PDF format.
 
@@ -955,15 +964,11 @@ class ExportService:
                 include_timeline=False,
                 include_notes=True,
                 include_facts=False,
-                include_documents=False
-            )
+                include_documents=False,
+            ),
         )
 
-    async def export_case_notes_to_word(
-        self,
-        case_id: int,
-        user_id: int
-    ) -> ExportResult:
+    async def export_case_notes_to_word(self, case_id: int, user_id: int) -> ExportResult:
         """
         Export case notes to DOCX format.
 
@@ -986,15 +991,12 @@ class ExportService:
                 include_timeline=False,
                 include_notes=True,
                 include_facts=False,
-                include_documents=False
-            )
+                include_documents=False,
+            ),
         )
 
     async def export_case_to_json(
-        self,
-        case_id: int,
-        user_id: int,
-        options: Optional[ExportOptions] = None
+        self, case_id: int, user_id: int, options: Optional[ExportOptions] = None
     ) -> ExportResult:
         """
         Export case data to JSON format.
@@ -1022,7 +1024,7 @@ class ExportService:
                 include_timeline=True,
                 include_notes=True,
                 include_facts=True,
-                include_documents=True
+                include_documents=True,
             )
 
         try:
@@ -1034,25 +1036,24 @@ class ExportService:
 
             # Convert to JSON
             json_str = json.dumps(case_data.dict(), indent=2, default=str)
-            json_bytes = json_str.encode('utf-8')
+            json_bytes = json_str.encode("utf-8")
 
             # Save to file
             file_path = await self._save_file(json_bytes, case_data, options, "json")
 
             # Log export
             if self.audit_logger:
-                self.audit_logger.log({
-                    "event_type": "export.case_json",
-                    "user_id": str(user_id),
-                    "resource_type": "case",
-                    "resource_id": str(case_id),
-                    "action": "export",
-                    "success": True,
-                    "details": {
-                        "file_path": file_path,
-                        "file_size": len(json_bytes)
+                self.audit_logger.log(
+                    {
+                        "event_type": "export.case_json",
+                        "user_id": str(user_id),
+                        "resource_type": "case",
+                        "resource_id": str(case_id),
+                        "action": "export",
+                        "success": True,
+                        "details": {"file_path": file_path, "file_size": len(json_bytes)},
                     }
-                })
+                )
 
             return ExportResult(
                 success=True,
@@ -1061,31 +1062,30 @@ class ExportService:
                 format="json",
                 size=len(json_bytes),
                 exported_at=datetime.now(),
-                template="json-export"
+                template="json-export",
             )
 
         except HTTPException:
             raise
         except Exception as error:
             if self.audit_logger:
-                self.audit_logger.log({
-                    "event_type": "export.case_json",
-                    "user_id": str(user_id),
-                    "resource_id": str(case_id),
-                    "action": "export",
-                    "success": False,
-                    "error_message": str(error)
-                })
+                self.audit_logger.log(
+                    {
+                        "event_type": "export.case_json",
+                        "user_id": str(user_id),
+                        "resource_id": str(case_id),
+                        "action": "export",
+                        "success": False,
+                        "error_message": str(error),
+                    }
+                )
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Failed to export case to JSON: {str(error)}"
+                detail=f"Failed to export case to JSON: {str(error)}",
             )
 
     async def export_case_to_csv(
-        self,
-        case_id: int,
-        user_id: int,
-        options: Optional[ExportOptions] = None
+        self, case_id: int, user_id: int, options: Optional[ExportOptions] = None
     ) -> ExportResult:
         """
         Export case data to CSV format.
@@ -1113,7 +1113,7 @@ class ExportService:
                 include_timeline=True,
                 include_notes=True,
                 include_facts=True,
-                include_documents=True
+                include_documents=True,
             )
 
         try:
@@ -1131,26 +1131,28 @@ class ExportService:
                 writer.writeheader()
                 writer.writerows(case_data.evidence)
 
-            csv_bytes = output.getvalue().encode('utf-8')
+            csv_bytes = output.getvalue().encode("utf-8")
 
             # Save to file
             file_path = await self._save_file(csv_bytes, case_data, options, "csv")
 
             # Log export
             if self.audit_logger:
-                self.audit_logger.log({
-                    "event_type": "export.case_csv",
-                    "user_id": str(user_id),
-                    "resource_type": "case",
-                    "resource_id": str(case_id),
-                    "action": "export",
-                    "success": True,
-                    "details": {
-                        "file_path": file_path,
-                        "file_size": len(csv_bytes),
-                        "rows": len(case_data.evidence)
+                self.audit_logger.log(
+                    {
+                        "event_type": "export.case_csv",
+                        "user_id": str(user_id),
+                        "resource_type": "case",
+                        "resource_id": str(case_id),
+                        "action": "export",
+                        "success": True,
+                        "details": {
+                            "file_path": file_path,
+                            "file_size": len(csv_bytes),
+                            "rows": len(case_data.evidence),
+                        },
                     }
-                })
+                )
 
             return ExportResult(
                 success=True,
@@ -1159,22 +1161,24 @@ class ExportService:
                 format="csv",
                 size=len(csv_bytes),
                 exported_at=datetime.now(),
-                template="csv-export"
+                template="csv-export",
             )
 
         except HTTPException:
             raise
         except Exception as error:
             if self.audit_logger:
-                self.audit_logger.log({
-                    "event_type": "export.case_csv",
-                    "user_id": str(user_id),
-                    "resource_id": str(case_id),
-                    "action": "export",
-                    "success": False,
-                    "error_message": str(error)
-                })
+                self.audit_logger.log(
+                    {
+                        "event_type": "export.case_csv",
+                        "user_id": str(user_id),
+                        "resource_id": str(case_id),
+                        "action": "export",
+                        "success": False,
+                        "error_message": str(error),
+                    }
+                )
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Failed to export case to CSV: {str(error)}"
+                detail=f"Failed to export case to CSV: {str(error)}",
             )

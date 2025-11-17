@@ -30,22 +30,18 @@ from backend.services.encryption_service import EncryptionService, EncryptedData
 
 class CaseNotFoundError(Exception):
     """Exception raised when case is not found."""
-    pass
 
 
 class UnauthorizedError(Exception):
     """Exception raised when user doesn't own the case."""
-    pass
 
 
 class DatabaseError(Exception):
     """Exception raised for database operation failures."""
-    pass
 
 
 class ValidationError(Exception):
     """Exception raised for invalid input data."""
-    pass
 
 
 # Pydantic models for input/output
@@ -54,6 +50,7 @@ from pydantic import BaseModel, Field, ConfigDict
 
 class CreateCaseInput(BaseModel):
     """Input model for creating a new case."""
+
     title: str = Field(..., min_length=1, max_length=255, description="Case title")
     description: Optional[str] = Field(None, description="Case description (optional)")
     case_type: CaseType = Field(..., description="Type of legal case")
@@ -63,6 +60,7 @@ class CreateCaseInput(BaseModel):
 
 class UpdateCaseInput(BaseModel):
     """Input model for updating an existing case."""
+
     title: Optional[str] = Field(None, min_length=1, max_length=255, description="Case title")
     description: Optional[str] = Field(None, description="Case description")
     case_type: Optional[CaseType] = Field(None, description="Type of legal case")
@@ -73,6 +71,7 @@ class UpdateCaseInput(BaseModel):
 
 class CaseResponse(BaseModel):
     """Response model for case data."""
+
     id: int
     title: str
     description: Optional[str]
@@ -87,6 +86,7 @@ class CaseResponse(BaseModel):
 
 class SearchFilters(BaseModel):
     """Search filters for case queries."""
+
     case_status: Optional[List[CaseStatus]] = Field(None, description="Filter by status")
     case_type: Optional[List[CaseType]] = Field(None, description="Filter by case type")
     date_from: Optional[datetime] = Field(None, description="Filter by creation date (from)")
@@ -103,12 +103,7 @@ class CaseService:
     All operations verify user ownership to prevent unauthorized access.
     """
 
-    def __init__(
-        self,
-        db: Session,
-        encryption_service: EncryptionService,
-        audit_logger=None
-    ):
+    def __init__(self, db: Session, encryption_service: EncryptionService, audit_logger=None):
         """
         Initialize case service.
 
@@ -142,12 +137,12 @@ class CaseService:
                 details={
                     "reason": "User does not own this case",
                     "case_owner": case.user_id,
-                    "requesting_user": user_id
-                }
+                    "requesting_user": user_id,
+                },
             )
             raise HTTPException(
                 status_code=403,
-                detail="Unauthorized: You do not have permission to access this case"
+                detail="Unauthorized: You do not have permission to access this case",
             )
 
     def _encrypt_description(self, description: Optional[str]) -> Optional[str]:
@@ -184,6 +179,7 @@ class CaseService:
         try:
             # Try to parse as encrypted data
             import json
+
             encrypted_dict = json.loads(encrypted_str)
 
             if self.encryption_service.is_encrypted(encrypted_dict):
@@ -204,20 +200,22 @@ class CaseService:
         action: str,
         success: bool,
         details: Optional[Dict[str, Any]] = None,
-        error_message: Optional[str] = None
+        error_message: Optional[str] = None,
     ) -> None:
         """Log audit event if audit logger is configured."""
         if self.audit_logger:
-            self.audit_logger.log({
-                "event_type": event_type,
-                "user_id": str(user_id) if user_id else None,
-                "resource_type": "case",
-                "resource_id": resource_id,
-                "action": action,
-                "success": success,
-                "details": details or {},
-                "error_message": error_message
-            })
+            self.audit_logger.log(
+                {
+                    "event_type": event_type,
+                    "user_id": str(user_id) if user_id else None,
+                    "resource_type": "case",
+                    "resource_id": resource_id,
+                    "action": action,
+                    "success": success,
+                    "details": details or {},
+                    "error_message": error_message,
+                }
+            )
 
     async def create_case(self, input_data: CreateCaseInput, user_id: int) -> CaseResponse:
         """
@@ -244,7 +242,7 @@ class CaseService:
                 description=encrypted_description,
                 case_type=input_data.case_type,
                 status=CaseStatus.ACTIVE,
-                user_id=user_id
+                user_id=user_id,
             )
 
             self.db.add(case)
@@ -262,8 +260,12 @@ class CaseService:
                 success=True,
                 details={
                     "title": case.title,
-                    "case_type": case.case_type.value if isinstance(case.case_type, CaseType) else case.case_type
-                }
+                    "case_type": (
+                        case.case_type.value
+                        if isinstance(case.case_type, CaseType)
+                        else case.case_type
+                    ),
+                },
             )
 
             return CaseResponse.model_validate(case)
@@ -276,7 +278,7 @@ class CaseService:
                 resource_id="unknown",
                 action="create",
                 success=False,
-                error_message=str(error)
+                error_message=str(error),
             )
             raise DatabaseError(f"Failed to create case: {str(error)}")
 
@@ -291,7 +293,12 @@ class CaseService:
             List of user's cases
         """
         try:
-            cases = self.db.query(Case).filter(Case.user_id == user_id).order_by(Case.created_at.desc()).all()
+            cases = (
+                self.db.query(Case)
+                .filter(Case.user_id == user_id)
+                .order_by(Case.created_at.desc())
+                .all()
+            )
 
             # Decrypt descriptions
             for case in cases:
@@ -306,7 +313,7 @@ class CaseService:
                 resource_id="all",
                 action="read",
                 success=False,
-                error_message=str(error)
+                error_message=str(error),
             )
             raise DatabaseError(f"Failed to retrieve cases: {str(error)}")
 
@@ -334,7 +341,7 @@ class CaseService:
                 resource_id=str(case_id),
                 action="read",
                 success=False,
-                details={"reason": "Case not found"}
+                details={"reason": "Case not found"},
             )
             raise CaseNotFoundError(f"Case with ID {case_id} not found")
 
@@ -353,16 +360,13 @@ class CaseService:
                 resource_id=str(case_id),
                 action="read",
                 success=True,
-                details={"field": "description", "encrypted": True}
+                details={"field": "description", "encrypted": True},
             )
 
         return CaseResponse.model_validate(case)
 
     async def update_case(
-        self,
-        case_id: int,
-        user_id: int,
-        input_data: UpdateCaseInput
+        self, case_id: int, user_id: int, input_data: UpdateCaseInput
     ) -> CaseResponse:
         """
         Update a case with ownership verification.
@@ -420,7 +424,7 @@ class CaseService:
                 resource_id=str(case_id),
                 action="update",
                 success=True,
-                details={"fields_updated": fields_updated}
+                details={"fields_updated": fields_updated},
             )
 
             return CaseResponse.model_validate(case)
@@ -433,7 +437,7 @@ class CaseService:
                 resource_id=str(case_id),
                 action="update",
                 success=False,
-                error_message=str(error)
+                error_message=str(error),
             )
             raise DatabaseError(f"Failed to update case: {str(error)}")
 
@@ -453,9 +457,7 @@ class CaseService:
             HTTPException: 403 if user doesn't own the case
         """
         return await self.update_case(
-            case_id=case_id,
-            user_id=user_id,
-            input_data=UpdateCaseInput(status=CaseStatus.CLOSED)
+            case_id=case_id, user_id=user_id, input_data=UpdateCaseInput(status=CaseStatus.CLOSED)
         )
 
     async def delete_case(self, case_id: int, user_id: int) -> bool:
@@ -492,7 +494,7 @@ class CaseService:
                 user_id=user_id,
                 resource_id=str(case_id),
                 action="delete",
-                success=True
+                success=True,
             )
 
             return True
@@ -505,15 +507,12 @@ class CaseService:
                 resource_id=str(case_id),
                 action="delete",
                 success=False,
-                error_message=str(error)
+                error_message=str(error),
             )
             raise DatabaseError(f"Failed to delete case: {str(error)}")
 
     async def search_cases(
-        self,
-        user_id: int,
-        query: Optional[str] = None,
-        filters: Optional[SearchFilters] = None
+        self, user_id: int, query: Optional[str] = None, filters: Optional[SearchFilters] = None
     ) -> List[CaseResponse]:
         """
         Search user's cases by query string and filters.
@@ -560,10 +559,7 @@ class CaseService:
 
             # Execute query
             cases = (
-                self.db.query(Case)
-                .filter(and_(*conditions))
-                .order_by(Case.created_at.desc())
-                .all()
+                self.db.query(Case).filter(and_(*conditions)).order_by(Case.created_at.desc()).all()
             )
 
             # Decrypt descriptions
@@ -579,7 +575,7 @@ class CaseService:
                 resource_id="search",
                 action="read",
                 success=False,
-                error_message=str(error)
+                error_message=str(error),
             )
             raise DatabaseError(f"Failed to search cases: {str(error)}")
 
@@ -596,21 +592,16 @@ class CaseService:
         try:
             cases = self.db.query(Case).filter(Case.user_id == user_id).all()
 
-            status_counts = {
-                "active": 0,
-                "closed": 0,
-                "pending": 0
-            }
+            status_counts = {"active": 0, "closed": 0, "pending": 0}
 
             for case in cases:
-                status_key = case.status.value if isinstance(case.status, CaseStatus) else case.status
+                status_key = (
+                    case.status.value if isinstance(case.status, CaseStatus) else case.status
+                )
                 if status_key in status_counts:
                     status_counts[status_key] += 1
 
-            return {
-                "total_cases": len(cases),
-                "status_counts": status_counts
-            }
+            return {"total_cases": len(cases), "status_counts": status_counts}
 
         except Exception as error:
             raise DatabaseError(f"Failed to get case statistics: {str(error)}")

@@ -30,7 +30,9 @@ class UserProfile(Base):
     __tablename__ = "user_profile"
 
     id = Column(Integer, primary_key=True, autoincrement=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True, index=True)
+    user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True, index=True
+    )
     name = Column(Text, nullable=False, default="Legal User")  # Encrypted PII
     email = Column(Text, nullable=True)  # Encrypted PII
     avatar_url = Column(Text, nullable=True)
@@ -47,7 +49,9 @@ class UserProfile(Base):
     last_name = Column(String, nullable=True)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
 
     # Relationships
     user = relationship("User", back_populates="profile")
@@ -76,8 +80,8 @@ class UserProfile(Base):
             # Legacy fields for backward compatibility
             "first_name": self.first_name,
             "last_name": self.last_name,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
-            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+            "created_at": self.created_at.isoformat() if self.created_at is not None else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at is not None else None,
         }
 
     def to_extended_dict(self):
@@ -89,20 +93,20 @@ class UserProfile(Base):
         """
         # Compute full name from first_name + last_name or full_name field
         full_name = ""
-        if self.full_name:
+        if self.full_name is not None:
             full_name = self.full_name
-        elif self.first_name and self.last_name:
+        elif self.first_name is not None and self.last_name is not None:
             full_name = f"{self.first_name} {self.last_name}".strip()
-        elif self.name:
+        elif self.name is not None:
             full_name = self.name
 
         # Compute initials
         initials = "U"  # Default
-        if self.first_name and self.last_name:
+        if self.first_name is not None and self.last_name is not None:
             initials = f"{self.first_name[0]}{self.last_name[0]}".upper()
-        elif self.first_name:
+        elif self.first_name is not None:
             initials = self.first_name[0].upper()
-        elif self.name:
+        elif self.name is not None:
             parts = self.name.split()
             if len(parts) >= 2:
                 initials = f"{parts[0][0]}{parts[1][0]}".upper()

@@ -16,16 +16,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from backend.models.base import Base
-from backend.models.backup import (
-    BackupSettings,
-    BackupSettingsUpdate,
-    BackupFrequency
-)
-from backend.services.backup import (
-    BackupScheduler,
-    BackupService,
-    BackupRetentionPolicy
-)
+from backend.models.backup import BackupSettingsUpdate, BackupFrequency
+from backend.services.backup import BackupScheduler, BackupService, BackupRetentionPolicy
 from backend.services.audit_logger import AuditLogger
 
 
@@ -43,12 +35,10 @@ DATABASE_URL = "sqlite:///justice.db"
 # Setup
 # ============================================================================
 
+
 def setup_database():
     """Initialize database connection."""
-    engine = create_engine(
-        DATABASE_URL,
-        connect_args={"timeout": 30}
-    )
+    engine = create_engine(DATABASE_URL, connect_args={"timeout": 30})
 
     # Create tables if not exist
     Base.metadata.create_all(engine)
@@ -60,18 +50,14 @@ def setup_database():
 def setup_services(db_session):
     """Initialize all backup services."""
     # Create backup service for file operations
-    backup_service = BackupService(
-        db_path=DB_PATH,
-        backups_dir=BACKUPS_DIR
-    )
+    backup_service = BackupService(db_path=DB_PATH, backups_dir=BACKUPS_DIR)
 
     # Create audit logger (optional)
     audit_logger = AuditLogger(db_session)
 
     # Create retention policy service
     retention_policy = BackupRetentionPolicy(
-        backup_service=backup_service,
-        audit_logger=audit_logger
+        backup_service=backup_service, audit_logger=audit_logger
     )
 
     # Get singleton scheduler instance
@@ -79,7 +65,7 @@ def setup_services(db_session):
         db=db_session,
         backup_service=backup_service,
         retention_policy=retention_policy,
-        audit_logger=audit_logger
+        audit_logger=audit_logger,
     )
 
     return backup_service, retention_policy, scheduler
@@ -88,6 +74,7 @@ def setup_services(db_session):
 # ============================================================================
 # Example 1: Basic Setup
 # ============================================================================
+
 
 async def example_basic_setup():
     """Example: Initialize and start scheduler."""
@@ -120,6 +107,7 @@ async def example_basic_setup():
 # Example 2: Configure User Backup Settings
 # ============================================================================
 
+
 async def example_configure_settings():
     """Example: Configure backup settings for a user."""
     print("\n=== Example 2: Configure User Backup Settings ===\n")
@@ -137,8 +125,8 @@ async def example_configure_settings():
             enabled=True,
             frequency=BackupFrequency.DAILY,
             backup_time="03:00",  # 3 AM
-            keep_count=7  # Keep 7 most recent backups
-        )
+            keep_count=7,  # Keep 7 most recent backups
+        ),
     )
 
     print(f"Settings created:")
@@ -152,10 +140,7 @@ async def example_configure_settings():
     print(f"\nUpdating backup settings for user {user_id}...")
     settings = scheduler.update_backup_settings(
         user_id=user_id,
-        input_data=BackupSettingsUpdate(
-            frequency=BackupFrequency.WEEKLY,
-            keep_count=14
-        )
+        input_data=BackupSettingsUpdate(frequency=BackupFrequency.WEEKLY, keep_count=14),
     )
 
     print(f"Settings updated:")
@@ -181,6 +166,7 @@ async def example_configure_settings():
 # ============================================================================
 # Example 3: Manual Backup Operations
 # ============================================================================
+
 
 async def example_manual_backups():
     """Example: Create and manage backups manually."""
@@ -237,6 +223,7 @@ async def example_manual_backups():
 # Example 4: Retention Policy Management
 # ============================================================================
 
+
 async def example_retention_policy():
     """Example: Manage backup retention policies."""
     print("\n=== Example 4: Retention Policy Management ===\n")
@@ -274,6 +261,7 @@ async def example_retention_policy():
 # Example 5: Scheduled Backups in Action
 # ============================================================================
 
+
 async def example_scheduled_backups():
     """Example: Run scheduled backups."""
     print("\n=== Example 5: Scheduled Backups in Action ===\n")
@@ -290,11 +278,8 @@ async def example_scheduled_backups():
     settings = scheduler.update_backup_settings(
         user_id=user_id,
         input_data=BackupSettingsUpdate(
-            enabled=True,
-            frequency=BackupFrequency.DAILY,
-            backup_time=past_time,
-            keep_count=5
-        )
+            enabled=True, frequency=BackupFrequency.DAILY, backup_time=past_time, keep_count=5
+        ),
     )
 
     print(f"Settings configured:")
@@ -323,6 +308,7 @@ async def example_scheduled_backups():
 # Example 6: Enable/Disable Backups
 # ============================================================================
 
+
 async def example_enable_disable():
     """Example: Enable and disable backups."""
     print("\n=== Example 6: Enable/Disable Backups ===\n")
@@ -335,8 +321,7 @@ async def example_enable_disable():
     # Disable backups
     print(f"Disabling backups for user {user_id}...")
     settings = scheduler.update_backup_settings(
-        user_id=user_id,
-        input_data=BackupSettingsUpdate(enabled=False)
+        user_id=user_id, input_data=BackupSettingsUpdate(enabled=False)
     )
 
     print(f"Backups disabled:")
@@ -346,8 +331,7 @@ async def example_enable_disable():
     # Enable backups
     print(f"\nEnabling backups for user {user_id}...")
     settings = scheduler.update_backup_settings(
-        user_id=user_id,
-        input_data=BackupSettingsUpdate(enabled=True)
+        user_id=user_id, input_data=BackupSettingsUpdate(enabled=True)
     )
 
     print(f"Backups enabled:")
@@ -358,6 +342,7 @@ async def example_enable_disable():
 # ============================================================================
 # Example 7: Monitoring and Statistics
 # ============================================================================
+
 
 async def example_monitoring():
     """Example: Monitor scheduler and get statistics."""
@@ -398,6 +383,7 @@ async def example_monitoring():
 # Example 8: Error Handling
 # ============================================================================
 
+
 async def example_error_handling():
     """Example: Handle errors gracefully."""
     print("\n=== Example 8: Error Handling ===\n")
@@ -432,6 +418,7 @@ async def example_error_handling():
 # ============================================================================
 # Example 9: Advanced Retention
 # ============================================================================
+
 
 async def example_advanced_retention():
     """Example: Advanced retention operations."""
@@ -471,6 +458,7 @@ async def example_advanced_retention():
 # Example 10: Complete Workflow
 # ============================================================================
 
+
 async def example_complete_workflow():
     """Example: Complete backup workflow from start to finish."""
     print("\n=== Example 10: Complete Backup Workflow ===\n")
@@ -485,11 +473,8 @@ async def example_complete_workflow():
     settings = scheduler.update_backup_settings(
         user_id=user_id,
         input_data=BackupSettingsUpdate(
-            enabled=True,
-            frequency=BackupFrequency.DAILY,
-            backup_time="03:00",
-            keep_count=7
-        )
+            enabled=True, frequency=BackupFrequency.DAILY, backup_time="03:00", keep_count=7
+        ),
     )
     print(f"  ✓ Settings configured for user {user_id}")
 
@@ -536,6 +521,7 @@ async def example_complete_workflow():
 # ============================================================================
 # Main
 # ============================================================================
+
 
 async def main():
     """Run all examples."""

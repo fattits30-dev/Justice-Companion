@@ -14,7 +14,6 @@ import json
 import re
 import time
 from typing import Optional, List, Dict, Any, Tuple
-from datetime import datetime
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 
@@ -24,15 +23,17 @@ from backend.services.audit_logger import log_audit_event
 
 # ===== TYPE DEFINITIONS =====
 
+
 class SearchFilters:
     """Filters for search queries."""
+
     def __init__(
         self,
         case_status: Optional[List[str]] = None,
         date_range: Optional[Dict[str, str]] = None,
         entity_types: Optional[List[str]] = None,
         tags: Optional[List[str]] = None,
-        case_ids: Optional[List[int]] = None
+        case_ids: Optional[List[int]] = None,
     ):
         self.case_status = case_status or []
         self.date_range = date_range
@@ -43,6 +44,7 @@ class SearchFilters:
 
 class SearchQuery:
     """Search query with filters and pagination."""
+
     def __init__(
         self,
         query: str,
@@ -50,7 +52,7 @@ class SearchQuery:
         sort_by: str = "relevance",
         sort_order: str = "desc",
         limit: int = 20,
-        offset: int = 0
+        offset: int = 0,
     ):
         self.query = query.strip()
         self.filters = filters
@@ -62,6 +64,7 @@ class SearchQuery:
 
 class SearchResult:
     """Individual search result item."""
+
     def __init__(
         self,
         id: int,
@@ -72,7 +75,7 @@ class SearchResult:
         case_id: Optional[int] = None,
         case_title: Optional[str] = None,
         created_at: str = "",
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
     ):
         self.id = id
         self.type = type
@@ -95,19 +98,20 @@ class SearchResult:
             "caseId": self.case_id,
             "caseTitle": self.case_title,
             "createdAt": self.created_at,
-            "metadata": self.metadata
+            "metadata": self.metadata,
         }
 
 
 class SearchResponse:
     """Response model for search results."""
+
     def __init__(
         self,
         results: List[SearchResult],
         total: int,
         has_more: bool,
         query: SearchQuery,
-        execution_time: int
+        execution_time: int,
     ):
         self.results = results
         self.total = total
@@ -121,12 +125,13 @@ class SearchResponse:
             "results": [r.to_dict() for r in self.results],
             "total": self.total,
             "hasMore": self.has_more,
-            "executionTime": self.execution_time
+            "executionTime": self.execution_time,
         }
 
 
 class SavedSearch:
     """Saved search query for later reuse."""
+
     def __init__(
         self,
         id: int,
@@ -135,7 +140,7 @@ class SavedSearch:
         query_json: str,
         created_at: str,
         last_used_at: Optional[str] = None,
-        use_count: int = 0
+        use_count: int = 0,
     ):
         self.id = id
         self.user_id = user_id
@@ -147,6 +152,7 @@ class SavedSearch:
 
 
 # ===== SEARCH SERVICE =====
+
 
 class SearchService:
     """
@@ -167,11 +173,7 @@ class SearchService:
             print(f"{result.type}: {result.title}")
     """
 
-    def __init__(
-        self,
-        db: Session,
-        encryption_service: Optional[EncryptionService] = None
-    ):
+    def __init__(self, db: Session, encryption_service: Optional[EncryptionService] = None):
         """
         Initialize search service.
 
@@ -208,11 +210,8 @@ class SearchService:
             resource_type="search",
             resource_id="global",
             action="read",
-            details={
-                "query": query.query,
-                "filters": self._serialize_filters(query.filters)
-            },
-            success=True
+            details={"query": query.query, "filters": self._serialize_filters(query.filters)},
+            success=True,
         )
 
         # Default entity types if not specified
@@ -228,7 +227,7 @@ class SearchService:
                 filters=query.filters,
                 entity_types=entity_types,
                 limit=query.limit,
-                offset=query.offset
+                offset=query.offset,
             )
         except Exception:
             # Fallback to LIKE search if FTS5 fails
@@ -238,25 +237,23 @@ class SearchService:
                 filters=query.filters,
                 entity_types=entity_types,
                 limit=query.limit,
-                offset=query.offset
+                offset=query.offset,
             )
 
         # Sort results
         sorted_results = self._sort_results(
-            results=results,
-            sort_by=query.sort_by,
-            sort_order=query.sort_order
+            results=results, sort_by=query.sort_by, sort_order=query.sort_order
         )
 
         # Calculate execution time
         execution_time = int((time.time() - start_time) * 1000)
 
         return SearchResponse(
-            results=sorted_results[:query.limit],
+            results=sorted_results[: query.limit],
             total=total,
             has_more=total > query.offset + query.limit,
             query=query,
-            execution_time=execution_time
+            execution_time=execution_time,
         )
 
     def _search_with_fts5(
@@ -266,7 +263,7 @@ class SearchService:
         filters: Optional[SearchFilters],
         entity_types: List[str],
         limit: int,
-        offset: int
+        offset: int,
     ) -> Tuple[List[SearchResult], int]:
         """
         Search using SQLite FTS5 full-text search with BM25 ranking.
@@ -317,15 +314,18 @@ class SearchService:
         where_clause = " AND ".join(where_conditions)
 
         # Count query
-        count_query = text(f"""
+        count_query = text(
+            f"""
             SELECT COUNT(*) as total
             FROM search_index
             WHERE search_index MATCH :fts_query
               AND {where_clause}
-        """)
+        """
+        )
 
         # Search query with BM25 ranking
-        search_query = text(f"""
+        search_query = text(
+            f"""
             SELECT
                 si.*,
                 bm25(search_index) AS rank
@@ -334,7 +334,8 @@ class SearchService:
               AND {where_clause}
             ORDER BY rank
             LIMIT :limit OFFSET :offset
-        """)
+        """
+        )
 
         params["limit"] = limit
         params["offset"] = offset
@@ -350,9 +351,7 @@ class SearchService:
             row_dict = dict(row._mapping)
             rank = abs(row_dict.get("rank", 0))
             result = self._transform_search_result(
-                row=row_dict,
-                relevance_score=rank,
-                search_term=original_query
+                row=row_dict, relevance_score=rank, search_term=original_query
             )
             if result:
                 results.append(result)
@@ -366,7 +365,7 @@ class SearchService:
         filters: Optional[SearchFilters],
         entity_types: List[str],
         limit: int,
-        offset: int
+        offset: int,
     ) -> Tuple[List[SearchResult], int]:
         """
         Fallback search using LIKE queries when FTS5 is not available.
@@ -387,53 +386,43 @@ class SearchService:
 
         if "case" in entity_types:
             case_results, case_count = self._collect_case_results(
-                user_id=user_id,
-                query=query,
-                filters=filters
+                user_id=user_id, query=query, filters=filters
             )
             results.extend(case_results)
             total += case_count
 
         if "evidence" in entity_types:
             evidence_results, evidence_count = self._collect_evidence_results(
-                user_id=user_id,
-                query=query,
-                filters=filters
+                user_id=user_id, query=query, filters=filters
             )
             results.extend(evidence_results)
             total += evidence_count
 
         if "conversation" in entity_types:
             conversation_results, conversation_count = self._collect_conversation_results(
-                user_id=user_id,
-                query=query,
-                filters=filters
+                user_id=user_id, query=query, filters=filters
             )
             results.extend(conversation_results)
             total += conversation_count
 
         if "note" in entity_types:
             note_results, note_count = self._collect_note_results(
-                user_id=user_id,
-                query=query,
-                filters=filters
+                user_id=user_id, query=query, filters=filters
             )
             results.extend(note_results)
             total += note_count
 
         # Apply pagination
-        return results[offset:offset + limit], total
+        return results[offset: offset + limit], total
 
     def _collect_case_results(
-        self,
-        user_id: int,
-        query: str,
-        filters: Optional[SearchFilters]
+        self, user_id: int, query: str, filters: Optional[SearchFilters]
     ) -> Tuple[List[SearchResult], int]:
         """Search cases using LIKE query."""
         like_pattern = f"%{query}%"
 
-        case_query = text("""
+        case_query = text(
+            """
             SELECT
                 id as entity_id,
                 'case' as entity_type,
@@ -447,12 +436,10 @@ class SearchService:
             WHERE user_id = :user_id
               AND (title LIKE :pattern OR description LIKE :pattern)
             LIMIT 100
-        """)
+        """
+        )
 
-        rows = self.db.execute(case_query, {
-            "user_id": user_id,
-            "pattern": like_pattern
-        }).fetchall()
+        rows = self.db.execute(case_query, {"user_id": user_id, "pattern": like_pattern}).fetchall()
 
         results = []
         for row in rows:
@@ -460,33 +447,33 @@ class SearchService:
             content = row_dict.get("content") or ""
             title = row_dict.get("title") or ""
 
-            results.append(SearchResult(
-                id=row_dict["entity_id"],
-                type="case",
-                title=title,
-                excerpt=self._extract_excerpt(content, query),
-                relevance_score=self._calculate_relevance(f"{title} {content}", query),
-                case_id=None,
-                case_title=None,
-                created_at=row_dict.get("created_at", ""),
-                metadata={
-                    "status": row_dict.get("status"),
-                    "caseType": row_dict.get("case_type")
-                }
-            ))
+            results.append(
+                SearchResult(
+                    id=row_dict["entity_id"],
+                    type="case",
+                    title=title,
+                    excerpt=self._extract_excerpt(content, query),
+                    relevance_score=self._calculate_relevance(f"{title} {content}", query),
+                    case_id=None,
+                    case_title=None,
+                    created_at=row_dict.get("created_at", ""),
+                    metadata={
+                        "status": row_dict.get("status"),
+                        "caseType": row_dict.get("case_type"),
+                    },
+                )
+            )
 
         return results, len(results)
 
     def _collect_evidence_results(
-        self,
-        user_id: int,
-        query: str,
-        filters: Optional[SearchFilters]
+        self, user_id: int, query: str, filters: Optional[SearchFilters]
     ) -> Tuple[List[SearchResult], int]:
         """Search evidence using LIKE query."""
         like_pattern = f"%{query}%"
 
-        evidence_query = text("""
+        evidence_query = text(
+            """
             SELECT
                 e.id as entity_id,
                 'evidence' as entity_type,
@@ -502,12 +489,12 @@ class SearchService:
             WHERE e.user_id = :user_id
               AND (e.title LIKE :pattern OR e.content LIKE :pattern)
             LIMIT 100
-        """)
+        """
+        )
 
-        rows = self.db.execute(evidence_query, {
-            "user_id": user_id,
-            "pattern": like_pattern
-        }).fetchall()
+        rows = self.db.execute(
+            evidence_query, {"user_id": user_id, "pattern": like_pattern}
+        ).fetchall()
 
         results = []
         for row in rows:
@@ -515,33 +502,33 @@ class SearchService:
             content = row_dict.get("content") or ""
             title = row_dict.get("title") or ""
 
-            results.append(SearchResult(
-                id=row_dict["entity_id"],
-                type="evidence",
-                title=title,
-                excerpt=self._extract_excerpt(content, query),
-                relevance_score=self._calculate_relevance(f"{title} {content}", query),
-                case_id=row_dict.get("case_id"),
-                case_title=row_dict.get("case_title"),
-                created_at=row_dict.get("created_at", ""),
-                metadata={
-                    "evidenceType": row_dict.get("evidence_type"),
-                    "filePath": row_dict.get("file_path")
-                }
-            ))
+            results.append(
+                SearchResult(
+                    id=row_dict["entity_id"],
+                    type="evidence",
+                    title=title,
+                    excerpt=self._extract_excerpt(content, query),
+                    relevance_score=self._calculate_relevance(f"{title} {content}", query),
+                    case_id=row_dict.get("case_id"),
+                    case_title=row_dict.get("case_title"),
+                    created_at=row_dict.get("created_at", ""),
+                    metadata={
+                        "evidenceType": row_dict.get("evidence_type"),
+                        "filePath": row_dict.get("file_path"),
+                    },
+                )
+            )
 
         return results, len(results)
 
     def _collect_conversation_results(
-        self,
-        user_id: int,
-        query: str,
-        filters: Optional[SearchFilters]
+        self, user_id: int, query: str, filters: Optional[SearchFilters]
     ) -> Tuple[List[SearchResult], int]:
         """Search conversations using LIKE query."""
         like_pattern = f"%{query}%"
 
-        conversation_query = text("""
+        conversation_query = text(
+            """
             SELECT
                 cc.id as entity_id,
                 'conversation' as entity_type,
@@ -555,44 +542,42 @@ class SearchService:
             WHERE cc.user_id = :user_id
               AND cc.title LIKE :pattern
             LIMIT 100
-        """)
+        """
+        )
 
-        rows = self.db.execute(conversation_query, {
-            "user_id": user_id,
-            "pattern": like_pattern
-        }).fetchall()
+        rows = self.db.execute(
+            conversation_query, {"user_id": user_id, "pattern": like_pattern}
+        ).fetchall()
 
         results = []
         for row in rows:
             row_dict = dict(row._mapping)
             title = row_dict.get("title") or "Untitled Conversation"
 
-            results.append(SearchResult(
-                id=row_dict["entity_id"],
-                type="conversation",
-                title=title,
-                excerpt=self._extract_excerpt(title, query),
-                relevance_score=self._calculate_relevance(title, query),
-                case_id=row_dict.get("case_id"),
-                case_title=row_dict.get("case_title"),
-                created_at=row_dict.get("created_at", ""),
-                metadata={
-                    "messageCount": row_dict.get("message_count", 0)
-                }
-            ))
+            results.append(
+                SearchResult(
+                    id=row_dict["entity_id"],
+                    type="conversation",
+                    title=title,
+                    excerpt=self._extract_excerpt(title, query),
+                    relevance_score=self._calculate_relevance(title, query),
+                    case_id=row_dict.get("case_id"),
+                    case_title=row_dict.get("case_title"),
+                    created_at=row_dict.get("created_at", ""),
+                    metadata={"messageCount": row_dict.get("message_count", 0)},
+                )
+            )
 
         return results, len(results)
 
     def _collect_note_results(
-        self,
-        user_id: int,
-        query: str,
-        filters: Optional[SearchFilters]
+        self, user_id: int, query: str, filters: Optional[SearchFilters]
     ) -> Tuple[List[SearchResult], int]:
         """Search notes using LIKE query."""
         like_pattern = f"%{query}%"
 
-        note_query = text("""
+        note_query = text(
+            """
             SELECT
                 n.id as entity_id,
                 'note' as entity_type,
@@ -607,12 +592,10 @@ class SearchService:
             WHERE n.user_id = :user_id
               AND (n.title LIKE :pattern OR n.content LIKE :pattern)
             LIMIT 100
-        """)
+        """
+        )
 
-        rows = self.db.execute(note_query, {
-            "user_id": user_id,
-            "pattern": like_pattern
-        }).fetchall()
+        rows = self.db.execute(note_query, {"user_id": user_id, "pattern": like_pattern}).fetchall()
 
         results = []
         for row in rows:
@@ -620,27 +603,24 @@ class SearchService:
             content = row_dict.get("content") or ""
             title = row_dict.get("title") or "Untitled Note"
 
-            results.append(SearchResult(
-                id=row_dict["entity_id"],
-                type="note",
-                title=title,
-                excerpt=self._extract_excerpt(content, query),
-                relevance_score=self._calculate_relevance(f"{title} {content}", query),
-                case_id=row_dict.get("case_id"),
-                case_title=row_dict.get("case_title"),
-                created_at=row_dict.get("created_at", ""),
-                metadata={
-                    "isPinned": bool(row_dict.get("is_pinned"))
-                }
-            ))
+            results.append(
+                SearchResult(
+                    id=row_dict["entity_id"],
+                    type="note",
+                    title=title,
+                    excerpt=self._extract_excerpt(content, query),
+                    relevance_score=self._calculate_relevance(f"{title} {content}", query),
+                    case_id=row_dict.get("case_id"),
+                    case_title=row_dict.get("case_title"),
+                    created_at=row_dict.get("created_at", ""),
+                    metadata={"isPinned": bool(row_dict.get("is_pinned"))},
+                )
+            )
 
         return results, len(results)
 
     def _transform_search_result(
-        self,
-        row: Dict[str, Any],
-        relevance_score: float,
-        search_term: str
+        self, row: Dict[str, Any], relevance_score: float, search_term: str
     ) -> Optional[SearchResult]:
         """
         Transform a search index row to a SearchResult object.
@@ -672,7 +652,7 @@ class SearchService:
                 case_id=row.get("case_id"),
                 case_title=case_title,
                 created_at=row.get("created_at", ""),
-                metadata=metadata
+                metadata=metadata,
             )
         except Exception:
             # Log error and return None
@@ -741,17 +721,18 @@ class SearchService:
 
         if entity_type == "case":
             return {
-                k: v for k, v in {
-                    "status": row.get("status"),
-                    "caseType": row.get("case_type")
-                }.items() if v is not None
+                k: v
+                for k, v in {"status": row.get("status"), "caseType": row.get("case_type")}.items()
+                if v is not None
             }
         elif entity_type == "evidence":
             return {
-                k: v for k, v in {
+                k: v
+                for k, v in {
                     "evidenceType": row.get("evidence_type"),
-                    "filePath": row.get("file_path")
-                }.items() if v is not None
+                    "filePath": row.get("file_path"),
+                }.items()
+                if v is not None
             }
         elif entity_type == "conversation":
             message_count = row.get("message_count")
@@ -784,12 +765,7 @@ class SearchService:
         # Build FTS5 query with prefix matching
         return " OR ".join([f'"{term}"*' for term in terms])
 
-    def _extract_excerpt(
-        self,
-        content: str,
-        query: str,
-        max_length: int = 150
-    ) -> str:
+    def _extract_excerpt(self, content: str, query: str, max_length: int = 150) -> str:
         """
         Extract an excerpt from content around the query terms.
 
@@ -872,10 +848,7 @@ class SearchService:
         return score
 
     def _sort_results(
-        self,
-        results: List[SearchResult],
-        sort_by: str,
-        sort_order: str
+        self, results: List[SearchResult], sort_by: str, sort_order: str
     ) -> List[SearchResult]:
         """
         Sort search results by specified criteria.
@@ -888,16 +861,12 @@ class SearchService:
         Returns:
             Sorted list of search results
         """
-        reverse = (sort_order == "desc")
+        reverse = sort_order == "desc"
 
         if sort_by == "relevance":
             return sorted(results, key=lambda r: r.relevance_score, reverse=reverse)
         elif sort_by == "date":
-            return sorted(
-                results,
-                key=lambda r: r.created_at or "",
-                reverse=reverse
-            )
+            return sorted(results, key=lambda r: r.created_at or "", reverse=reverse)
         elif sort_by == "title":
             return sorted(results, key=lambda r: r.title.lower(), reverse=reverse)
 
@@ -912,17 +881,12 @@ class SearchService:
             "dateRange": filters.date_range,
             "entityTypes": filters.entity_types,
             "tags": filters.tags,
-            "caseIds": filters.case_ids
+            "caseIds": filters.case_ids,
         }
 
     # ===== SAVED SEARCHES =====
 
-    def save_search(
-        self,
-        user_id: int,
-        name: str,
-        query: SearchQuery
-    ) -> SavedSearch:
+    def save_search(self, user_id: int, name: str, query: SearchQuery) -> SavedSearch:
         """
         Save a search query for later reuse.
 
@@ -934,25 +898,27 @@ class SearchService:
         Returns:
             SavedSearch object
         """
-        query_json = json.dumps({
-            "query": query.query,
-            "filters": self._serialize_filters(query.filters),
-            "sortBy": query.sort_by,
-            "sortOrder": query.sort_order,
-            "limit": query.limit,
-            "offset": query.offset
-        })
+        query_json = json.dumps(
+            {
+                "query": query.query,
+                "filters": self._serialize_filters(query.filters),
+                "sortBy": query.sort_by,
+                "sortOrder": query.sort_order,
+                "limit": query.limit,
+                "offset": query.offset,
+            }
+        )
 
-        insert_query = text("""
+        insert_query = text(
+            """
             INSERT INTO saved_searches (user_id, name, query_json, created_at, use_count)
             VALUES (:user_id, :name, :query_json, CURRENT_TIMESTAMP, 0)
-        """)
+        """
+        )
 
-        result = self.db.execute(insert_query, {
-            "user_id": user_id,
-            "name": name,
-            "query_json": query_json
-        })
+        result = self.db.execute(
+            insert_query, {"user_id": user_id, "name": name, "query_json": query_json}
+        )
         self.db.commit()
 
         search_id = result.lastrowid
@@ -966,7 +932,7 @@ class SearchService:
             resource_id=str(search_id),
             action="create",
             details={"name": name},
-            success=True
+            success=True,
         )
 
         # Fetch and return the saved search
@@ -980,7 +946,7 @@ class SearchService:
             query_json=saved_row[3],
             created_at=saved_row[4],
             last_used_at=saved_row[5],
-            use_count=saved_row[6]
+            use_count=saved_row[6],
         )
 
     def get_saved_searches(self, user_id: int) -> List[SavedSearch]:
@@ -993,12 +959,14 @@ class SearchService:
         Returns:
             List of SavedSearch objects
         """
-        query = text("""
+        query = text(
+            """
             SELECT id, user_id, name, query_json, created_at, last_used_at, use_count
             FROM saved_searches
             WHERE user_id = :user_id
             ORDER BY last_used_at DESC, created_at DESC
-        """)
+        """
+        )
 
         rows = self.db.execute(query, {"user_id": user_id}).fetchall()
 
@@ -1010,7 +978,7 @@ class SearchService:
                 query_json=row[3],
                 created_at=row[4],
                 last_used_at=row[5],
-                use_count=row[6]
+                use_count=row[6],
             )
             for row in rows
         ]
@@ -1026,15 +994,14 @@ class SearchService:
         Returns:
             True if deleted, False if not found
         """
-        delete_query = text("""
+        delete_query = text(
+            """
             DELETE FROM saved_searches
             WHERE id = :search_id AND user_id = :user_id
-        """)
+        """
+        )
 
-        result = self.db.execute(delete_query, {
-            "search_id": search_id,
-            "user_id": user_id
-        })
+        result = self.db.execute(delete_query, {"search_id": search_id, "user_id": user_id})
         self.db.commit()
 
         if result.rowcount > 0:
@@ -1045,17 +1012,13 @@ class SearchService:
                 resource_type="search.saved",
                 resource_id=str(search_id),
                 action="delete",
-                success=True
+                success=True,
             )
             return True
 
         return False
 
-    def execute_saved_search(
-        self,
-        user_id: int,
-        search_id: int
-    ) -> SearchResponse:
+    def execute_saved_search(self, user_id: int, search_id: int) -> SearchResponse:
         """
         Execute a previously saved search.
 
@@ -1070,27 +1033,30 @@ class SearchService:
             ValueError: If saved search not found
         """
         # Get saved search
-        select_query = text("""
+        select_query = text(
+            """
             SELECT query_json
             FROM saved_searches
             WHERE id = :search_id AND user_id = :user_id
-        """)
+        """
+        )
 
-        saved_row = self.db.execute(select_query, {
-            "search_id": search_id,
-            "user_id": user_id
-        }).fetchone()
+        saved_row = self.db.execute(
+            select_query, {"search_id": search_id, "user_id": user_id}
+        ).fetchone()
 
         if not saved_row:
             raise ValueError("Saved search not found")
 
         # Update last_used_at and use_count
-        update_query = text("""
+        update_query = text(
+            """
             UPDATE saved_searches
             SET last_used_at = CURRENT_TIMESTAMP,
                 use_count = use_count + 1
             WHERE id = :search_id
-        """)
+        """
+        )
         self.db.execute(update_query, {"search_id": search_id})
         self.db.commit()
 
@@ -1103,7 +1069,7 @@ class SearchService:
                 date_range=query_dict["filters"].get("dateRange"),
                 entity_types=query_dict["filters"].get("entityTypes"),
                 tags=query_dict["filters"].get("tags"),
-                case_ids=query_dict["filters"].get("caseIds")
+                case_ids=query_dict["filters"].get("caseIds"),
             )
 
         query = SearchQuery(
@@ -1112,17 +1078,12 @@ class SearchService:
             sort_by=query_dict.get("sortBy", "relevance"),
             sort_order=query_dict.get("sortOrder", "desc"),
             limit=query_dict.get("limit", 20),
-            offset=query_dict.get("offset", 0)
+            offset=query_dict.get("offset", 0),
         )
 
         return self.search(user_id=user_id, query=query)
 
-    def get_search_suggestions(
-        self,
-        user_id: int,
-        prefix: str,
-        limit: int = 5
-    ) -> List[str]:
+    def get_search_suggestions(self, user_id: int, prefix: str, limit: int = 5) -> List[str]:
         """
         Get search suggestions based on user's search history.
 
@@ -1134,20 +1095,20 @@ class SearchService:
         Returns:
             List of search query strings
         """
-        query = text("""
+        query = text(
+            """
             SELECT DISTINCT query_json
             FROM saved_searches
             WHERE user_id = :user_id
               AND query_json LIKE :pattern
             ORDER BY last_used_at DESC, created_at DESC
             LIMIT :limit
-        """)
+        """
+        )
 
-        rows = self.db.execute(query, {
-            "user_id": user_id,
-            "pattern": f'%"query":"{prefix}%',
-            "limit": limit
-        }).fetchall()
+        rows = self.db.execute(
+            query, {"user_id": user_id, "pattern": f'%"query":"{prefix}%', "limit": limit}
+        ).fetchall()
 
         suggestions = []
         for row in rows:

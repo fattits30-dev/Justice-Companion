@@ -20,8 +20,7 @@ from service_container import (
     initialize_service_container,
     get_encryption_service,
     get_audit_logger,
-    get_key_manager,
-    reset_service_container
+    reset_service_container,
 )
 from encryption_service import EncryptionService
 from audit_logger import AuditLogger
@@ -52,10 +51,7 @@ def example_application_startup():
 
     # Step 2: Initialize service container
     print("\n2. Initializing service container...")
-    initialize_service_container(
-        encryption_service=encryption_service,
-        audit_logger=audit_logger
-    )
+    initialize_service_container(encryption_service=encryption_service, audit_logger=audit_logger)
     print("   [OK] Service container initialized")
 
     # Step 3: Use services from anywhere in application
@@ -98,8 +94,8 @@ def example_service_usage_in_repository():
             audit = get_audit_logger()
 
             # Encrypt sensitive fields
-            encrypted_title = encryption.encrypt(case_data['title'])
-            encrypted_desc = encryption.encrypt(case_data['description'])
+            encrypted_title = encryption.encrypt(case_data["title"])
+            encrypted_desc = encryption.encrypt(case_data["description"])
 
             print(f"\n   Saving case: {case_data['title']}")
             print(f"   [OK] Encrypted title: {encrypted_title.ciphertext[:40]}...")
@@ -108,18 +104,13 @@ def example_service_usage_in_repository():
             # Log the action (in production, this would actually log to DB)
             print(f"   [OK] Logged audit event: case.created")
 
-            return {
-                'id': 'case-123',
-                'title': encrypted_title,
-                'description': encrypted_desc
-            }
+            return {"id": "case-123", "title": encrypted_title, "description": encrypted_desc}
 
     # Use the repository
     repo = CaseRepository()
-    case = repo.save_case({
-        'title': 'Smith v. Jones',
-        'description': 'Employment discrimination case'
-    })
+    case = repo.save_case(
+        {"title": "Smith v. Jones", "description": "Employment discrimination case"}
+    )
 
     print(f"\n[OK] Case saved with ID: {case['id']}")
 
@@ -153,10 +144,7 @@ def example_testing_scenario():
     new_encryption = EncryptionService(new_key)
     new_audit = AuditLogger(db=None)
 
-    initialize_service_container(
-        encryption_service=new_encryption,
-        audit_logger=new_audit
-    )
+    initialize_service_container(encryption_service=new_encryption, audit_logger=new_audit)
     print("   [OK] Container reinitialized")
 
     # Use new services
@@ -214,8 +202,7 @@ def example_singleton_pattern():
     # Reinitialize container first
     encryption_key = os.urandom(32)
     initialize_service_container(
-        encryption_service=EncryptionService(encryption_key),
-        audit_logger=AuditLogger(db=None)
+        encryption_service=EncryptionService(encryption_key), audit_logger=AuditLogger(db=None)
     )
 
     print("\nGetting container instance multiple ways...")
@@ -226,6 +213,7 @@ def example_singleton_pattern():
 
     # Get via module function
     from service_container import get_container
+
     container2 = get_container()
     print(f"   Container 2 ID: {id(container2)}")
 
@@ -274,6 +262,7 @@ def main():
     except Exception as e:
         print(f"\n[X] Error running examples: {e}")
         import traceback
+
         traceback.print_exc()
 
     finally:

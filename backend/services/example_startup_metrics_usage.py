@@ -10,8 +10,8 @@ import sys
 # Set UTF-8 encoding for Windows console
 if sys.platform == "win32":
     try:
-        sys.stdout.reconfigure(encoding='utf-8')
-    except:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except Exception:
         pass
 
 from startup_metrics import (
@@ -164,7 +164,8 @@ def example_integration_with_fastapi():
     print("Example 5: FastAPI Integration Pattern")
     print("=" * 70 + "\n")
 
-    print("""
+    print(
+        """
 # Integration with FastAPI backend
 
 from fastapi import FastAPI
@@ -205,7 +206,8 @@ async def export_startup_metrics_endpoint():
 
     json_str = startup_metrics.export_metrics()
     return JSONResponse(content=json.loads(json_str))
-    """)
+    """
+    )
 
 
 def example_save_metrics_to_file():
@@ -224,6 +226,7 @@ def example_save_metrics_to_file():
     os.makedirs(output_dir, exist_ok=True)
 
     import datetime
+
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"startup_metrics_{timestamp}.json"
     filepath = os.path.join(output_dir, filename)

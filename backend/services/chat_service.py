@@ -21,7 +21,7 @@ Security:
 from typing import Optional, List, Dict, Any, Literal
 from datetime import datetime
 from sqlalchemy.orm import Session
-from sqlalchemy import and_, desc
+from sqlalchemy import desc
 from fastapi import HTTPException
 from pydantic import BaseModel, Field, ConfigDict
 
@@ -32,27 +32,24 @@ from backend.services.encryption_service import EncryptionService
 # Custom Exceptions
 class ConversationNotFoundError(Exception):
     """Exception raised when conversation is not found."""
-    pass
 
 
 class UnauthorizedError(Exception):
     """Exception raised when user doesn't own the conversation."""
-    pass
 
 
 class DatabaseError(Exception):
     """Exception raised for database operation failures."""
-    pass
 
 
 class ValidationError(Exception):
     """Exception raised for invalid input data."""
-    pass
 
 
 # Pydantic Input/Output Models
 class CreateConversationInput(BaseModel):
     """Input model for creating a new conversation."""
+
     user_id: int = Field(..., gt=0, description="User ID (conversation owner)")
     case_id: Optional[int] = Field(None, description="Optional case ID for context")
     title: str = Field(..., min_length=1, max_length=255, description="Conversation title")
@@ -62,6 +59,7 @@ class CreateConversationInput(BaseModel):
 
 class CreateMessageInput(BaseModel):
     """Input model for adding a message to a conversation."""
+
     conversation_id: int = Field(..., gt=0, description="Conversation ID")
     role: Literal["user", "assistant", "system"] = Field(..., description="Message role")
     content: str = Field(..., min_length=1, description="Message content")
@@ -73,6 +71,7 @@ class CreateMessageInput(BaseModel):
 
 class ConversationResponse(BaseModel):
     """Response model for conversation data."""
+
     id: int
     user_id: int
     case_id: Optional[int]
@@ -86,6 +85,7 @@ class ConversationResponse(BaseModel):
 
 class MessageResponse(BaseModel):
     """Response model for message data."""
+
     id: int
     conversation_id: int
     role: str
@@ -99,6 +99,7 @@ class MessageResponse(BaseModel):
 
 class ConversationWithMessagesResponse(ConversationResponse):
     """Response model for conversation with all messages."""
+
     messages: List[MessageResponse] = []
 
     model_config = ConfigDict(from_attributes=True)
@@ -106,6 +107,7 @@ class ConversationWithMessagesResponse(ConversationResponse):
 
 class StartConversationInput(BaseModel):
     """Input model for starting a new conversation with first message."""
+
     user_id: int = Field(..., gt=0, description="User ID (conversation owner)")
     case_id: Optional[int] = Field(None, description="Optional case ID for context")
     first_message: CreateMessageInput = Field(..., description="First message in conversation")
@@ -122,10 +124,7 @@ class ChatService:
     """
 
     def __init__(
-        self,
-        db: Session,
-        encryption_service: Optional[EncryptionService] = None,
-        audit_logger=None
+        self, db: Session, encryption_service: Optional[EncryptionService] = None, audit_logger=None
     ):
         """
         Initialize chat service.
@@ -160,12 +159,12 @@ class ChatService:
                 details={
                     "reason": "User does not own this conversation",
                     "conversation_owner": conversation.user_id,
-                    "requesting_user": user_id
-                }
+                    "requesting_user": user_id,
+                },
             )
             raise HTTPException(
                 status_code=403,
-                detail="Unauthorized: You do not have permission to access this conversation"
+                detail="Unauthorized: You do not have permission to access this conversation",
             )
 
     def _log_audit(
@@ -176,20 +175,22 @@ class ChatService:
         action: str,
         success: bool,
         details: Optional[Dict[str, Any]] = None,
-        error_message: Optional[str] = None
+        error_message: Optional[str] = None,
     ) -> None:
         """Log audit event if audit logger is configured."""
         if self.audit_logger:
-            self.audit_logger.log({
-                "event_type": event_type,
-                "user_id": str(user_id) if user_id else None,
-                "resource_type": "chat_conversation",
-                "resource_id": resource_id,
-                "action": action,
-                "success": success,
-                "details": details or {},
-                "error_message": error_message
-            })
+            self.audit_logger.log(
+                {
+                    "event_type": event_type,
+                    "user_id": str(user_id) if user_id else None,
+                    "resource_type": "chat_conversation",
+                    "resource_id": resource_id,
+                    "action": action,
+                    "success": success,
+                    "details": details or {},
+                    "error_message": error_message,
+                }
+            )
 
     def _update_message_count(self, conversation_id: int) -> None:
         """
@@ -198,22 +199,23 @@ class ChatService:
         Args:
             conversation_id: Conversation ID to update
         """
-        conversation = self.db.query(ChatConversation).filter(
-            ChatConversation.id == conversation_id
-        ).first()
+        conversation = (
+            self.db.query(ChatConversation).filter(ChatConversation.id == conversation_id).first()
+        )
 
         if conversation:
-            message_count = self.db.query(ChatMessage).filter(
-                ChatMessage.conversation_id == conversation_id
-            ).count()
+            message_count = (
+                self.db.query(ChatMessage)
+                .filter(ChatMessage.conversation_id == conversation_id)
+                .count()
+            )
 
             conversation.message_count = message_count
             conversation.updated_at = datetime.utcnow().isoformat()
             self.db.commit()
 
     async def create_conversation(
-        self,
-        input_data: CreateConversationInput
+        self, input_data: CreateConversationInput
     ) -> ConversationResponse:
         """
         Create a new conversation for the user.
@@ -234,7 +236,7 @@ class ChatService:
                 user_id=input_data.user_id,
                 case_id=input_data.case_id,
                 title=input_data.title,
-                message_count=0
+                message_count=0,
             )
 
             self.db.add(conversation)
@@ -247,10 +249,7 @@ class ChatService:
                 resource_id=str(conversation.id),
                 action="create",
                 success=True,
-                details={
-                    "title": conversation.title,
-                    "case_id": input_data.case_id
-                }
+                details={"title": conversation.title, "case_id": input_data.case_id},
             )
 
             return ConversationResponse.model_validate(conversation)
@@ -263,15 +262,11 @@ class ChatService:
                 resource_id="unknown",
                 action="create",
                 success=False,
-                error_message=str(error)
+                error_message=str(error),
             )
             raise DatabaseError(f"Failed to create conversation: {str(error)}")
 
-    async def get_conversation(
-        self,
-        conversation_id: int,
-        user_id: int
-    ) -> ConversationResponse:
+    async def get_conversation(self, conversation_id: int, user_id: int) -> ConversationResponse:
         """
         Get a conversation by ID with ownership verification.
 
@@ -286,9 +281,9 @@ class ChatService:
             ConversationNotFoundError: If conversation doesn't exist
             HTTPException: 403 if user doesn't own the conversation
         """
-        conversation = self.db.query(ChatConversation).filter(
-            ChatConversation.id == conversation_id
-        ).first()
+        conversation = (
+            self.db.query(ChatConversation).filter(ChatConversation.id == conversation_id).first()
+        )
 
         if not conversation:
             self._log_audit(
@@ -297,7 +292,7 @@ class ChatService:
                 resource_id=str(conversation_id),
                 action="read",
                 success=False,
-                details={"reason": "Conversation not found"}
+                details={"reason": "Conversation not found"},
             )
             raise ConversationNotFoundError(f"Conversation with ID {conversation_id} not found")
 
@@ -307,9 +302,7 @@ class ChatService:
         return ConversationResponse.model_validate(conversation)
 
     async def get_all_conversations(
-        self,
-        user_id: int,
-        case_id: Optional[int] = None
+        self, user_id: int, case_id: Optional[int] = None
     ) -> List[ConversationResponse]:
         """
         Get all conversations for a user, optionally filtered by case.
@@ -322,9 +315,7 @@ class ChatService:
             List of user's conversations
         """
         try:
-            query = self.db.query(ChatConversation).filter(
-                ChatConversation.user_id == user_id
-            )
+            query = self.db.query(ChatConversation).filter(ChatConversation.user_id == user_id)
 
             if case_id is not None:
                 query = query.filter(ChatConversation.case_id == case_id)
@@ -340,15 +331,12 @@ class ChatService:
                 resource_id="all",
                 action="read",
                 success=False,
-                error_message=str(error)
+                error_message=str(error),
             )
             raise DatabaseError(f"Failed to retrieve conversations: {str(error)}")
 
     async def get_recent_conversations_by_case(
-        self,
-        user_id: int,
-        case_id: Optional[int],
-        limit: int = 10
+        self, user_id: int, case_id: Optional[int], limit: int = 10
     ) -> List[ConversationResponse]:
         """
         Get recent conversations for a specific case.
@@ -364,13 +352,10 @@ class ChatService:
         """
         try:
             query = self.db.query(ChatConversation).filter(
-                ChatConversation.user_id == user_id,
-                ChatConversation.case_id == case_id
+                ChatConversation.user_id == user_id, ChatConversation.case_id == case_id
             )
 
-            conversations = query.order_by(
-                desc(ChatConversation.updated_at)
-            ).limit(limit).all()
+            conversations = query.order_by(desc(ChatConversation.updated_at)).limit(limit).all()
 
             return [ConversationResponse.model_validate(conv) for conv in conversations]
 
@@ -381,14 +366,12 @@ class ChatService:
                 resource_id=f"case_{case_id}" if case_id else "general",
                 action="read",
                 success=False,
-                error_message=str(error)
+                error_message=str(error),
             )
             raise DatabaseError(f"Failed to retrieve recent conversations: {str(error)}")
 
     async def load_conversation(
-        self,
-        conversation_id: int,
-        user_id: int
+        self, conversation_id: int, user_id: int
     ) -> ConversationWithMessagesResponse:
         """
         Load a full conversation with all messages.
@@ -405,9 +388,9 @@ class ChatService:
             ConversationNotFoundError: If conversation doesn't exist
             HTTPException: 403 if user doesn't own the conversation
         """
-        conversation = self.db.query(ChatConversation).filter(
-            ChatConversation.id == conversation_id
-        ).first()
+        conversation = (
+            self.db.query(ChatConversation).filter(ChatConversation.id == conversation_id).first()
+        )
 
         if not conversation:
             raise ConversationNotFoundError(f"Conversation with ID {conversation_id} not found")
@@ -416,9 +399,12 @@ class ChatService:
         self._verify_ownership(conversation, user_id)
 
         # Load messages
-        messages = self.db.query(ChatMessage).filter(
-            ChatMessage.conversation_id == conversation_id
-        ).order_by(ChatMessage.timestamp.asc()).all()
+        messages = (
+            self.db.query(ChatMessage)
+            .filter(ChatMessage.conversation_id == conversation_id)
+            .order_by(ChatMessage.timestamp.asc())
+            .all()
+        )
 
         # Build response
         response_data = conversation.to_dict(include_messages=False)
@@ -427,9 +413,7 @@ class ChatService:
         return ConversationWithMessagesResponse(**response_data)
 
     async def add_message(
-        self,
-        input_data: CreateMessageInput,
-        user_id: Optional[int] = None
+        self, input_data: CreateMessageInput, user_id: Optional[int] = None
     ) -> MessageResponse:
         """
         Add a message to a conversation.
@@ -447,9 +431,11 @@ class ChatService:
             DatabaseError: If database operation fails
         """
         # Verify conversation exists
-        conversation = self.db.query(ChatConversation).filter(
-            ChatConversation.id == input_data.conversation_id
-        ).first()
+        conversation = (
+            self.db.query(ChatConversation)
+            .filter(ChatConversation.id == input_data.conversation_id)
+            .first()
+        )
 
         if not conversation:
             raise ConversationNotFoundError(
@@ -467,7 +453,7 @@ class ChatService:
                 role=input_data.role,
                 content=input_data.content,
                 thinking_content=input_data.thinking_content,
-                token_count=input_data.token_count
+                token_count=input_data.token_count,
             )
 
             self.db.add(message)
@@ -486,8 +472,8 @@ class ChatService:
                 details={
                     "conversation_id": input_data.conversation_id,
                     "role": input_data.role,
-                    "has_thinking": input_data.thinking_content is not None
-                }
+                    "has_thinking": input_data.thinking_content is not None,
+                },
             )
 
             return MessageResponse.model_validate(message)
@@ -500,15 +486,11 @@ class ChatService:
                 resource_id="unknown",
                 action="create",
                 success=False,
-                error_message=str(error)
+                error_message=str(error),
             )
             raise DatabaseError(f"Failed to add message: {str(error)}")
 
-    async def delete_conversation(
-        self,
-        conversation_id: int,
-        user_id: int
-    ) -> bool:
+    async def delete_conversation(self, conversation_id: int, user_id: int) -> bool:
         """
         Delete a conversation and all its messages.
 
@@ -524,9 +506,9 @@ class ChatService:
             HTTPException: 403 if user doesn't own the conversation
             DatabaseError: If database operation fails
         """
-        conversation = self.db.query(ChatConversation).filter(
-            ChatConversation.id == conversation_id
-        ).first()
+        conversation = (
+            self.db.query(ChatConversation).filter(ChatConversation.id == conversation_id).first()
+        )
 
         if not conversation:
             raise ConversationNotFoundError(f"Conversation with ID {conversation_id} not found")
@@ -544,7 +526,7 @@ class ChatService:
                 user_id=user_id,
                 resource_id=str(conversation_id),
                 action="delete",
-                success=True
+                success=True,
             )
 
             return True
@@ -557,15 +539,12 @@ class ChatService:
                 resource_id=str(conversation_id),
                 action="delete",
                 success=False,
-                error_message=str(error)
+                error_message=str(error),
             )
             raise DatabaseError(f"Failed to delete conversation: {str(error)}")
 
     async def start_new_conversation(
-        self,
-        user_id: int,
-        case_id: Optional[int],
-        first_message: Dict[str, Any]
+        self, user_id: int, case_id: Optional[int], first_message: Dict[str, Any]
     ) -> ConversationWithMessagesResponse:
         """
         Create conversation with first message.
@@ -589,9 +568,7 @@ class ChatService:
 
             # Create conversation
             conversation_input = CreateConversationInput(
-                user_id=user_id,
-                case_id=case_id,
-                title=title
+                user_id=user_id, case_id=case_id, title=title
             )
             conversation = await self.create_conversation(conversation_input)
 
@@ -601,7 +578,7 @@ class ChatService:
                 role=first_message.get("role", "user"),
                 content=content,
                 thinking_content=first_message.get("thinking_content"),
-                token_count=first_message.get("token_count")
+                token_count=first_message.get("token_count"),
             )
             message = await self.add_message(message_input)
 
@@ -618,15 +595,11 @@ class ChatService:
                 resource_id="unknown",
                 action="create",
                 success=False,
-                error_message=str(error)
+                error_message=str(error),
             )
             raise DatabaseError(f"Failed to start new conversation: {str(error)}")
 
-    async def verify_ownership(
-        self,
-        conversation_id: int,
-        user_id: int
-    ) -> bool:
+    async def verify_ownership(self, conversation_id: int, user_id: int) -> bool:
         """
         Verify that a user owns a conversation.
 
@@ -641,9 +614,9 @@ class ChatService:
             ConversationNotFoundError: If conversation doesn't exist
             HTTPException: 403 if user doesn't own the conversation
         """
-        conversation = self.db.query(ChatConversation).filter(
-            ChatConversation.id == conversation_id
-        ).first()
+        conversation = (
+            self.db.query(ChatConversation).filter(ChatConversation.id == conversation_id).first()
+        )
 
         if not conversation:
             raise ConversationNotFoundError(f"Conversation with ID {conversation_id} not found")

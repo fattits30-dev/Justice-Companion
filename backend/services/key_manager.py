@@ -42,18 +42,14 @@ Example:
     api_key = await key_manager.retrieve_key("openai_api_key")
 """
 
-import os
 import asyncio
 import base64
 import secrets
 import threading
-import shutil
 from pathlib import Path
 from typing import Optional, Dict, Any
 import logging
-from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 import keyring
-from keyring.errors import KeyringError
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -61,17 +57,14 @@ logger = logging.getLogger(__name__)
 
 class KeyManagerError(Exception):
     """Base exception for KeyManager errors."""
-    pass
 
 
 class EncryptionNotAvailableError(KeyManagerError):
     """Raised when OS-level encryption is not available."""
-    pass
 
 
 class InvalidKeyError(KeyManagerError):
     """Raised when encryption key is invalid."""
-    pass
 
 
 class KeyManager:
@@ -131,18 +124,14 @@ class KeyManager:
 
         try:
             # Run in thread pool to avoid blocking
-            backend = await asyncio.get_event_loop().run_in_executor(
-                None,
-                keyring.get_keyring
-            )
+            backend = await asyncio.get_event_loop().run_in_executor(None, keyring.get_keyring)
 
             backend_name = backend.__class__.__name__
 
             # Check if we have a real backend or the fail backend
             if backend_name in ["fail.Keyring", "Keyring"]:
                 logger.warning(
-                    f"[KeyManager] No secure keyring backend available. "
-                    f"Backend: {backend_name}"
+                    f"[KeyManager] No secure keyring backend available. " f"Backend: {backend_name}"
                 )
                 self._encryption_available = False
             else:
@@ -204,8 +193,7 @@ class KeyManager:
         # Retrieve key from keyring
         try:
             key_base64 = await asyncio.get_event_loop().run_in_executor(
-                None,
-                lambda: keyring.get_password(self.SERVICE_NAME, self.KEY_IDENTIFIER)
+                None, lambda: keyring.get_password(self.SERVICE_NAME, self.KEY_IDENTIFIER)
             )
 
             if not key_base64:
@@ -254,8 +242,7 @@ class KeyManager:
 
         try:
             key_base64 = await asyncio.get_event_loop().run_in_executor(
-                None,
-                lambda: keyring.get_password(self.SERVICE_NAME, self.KEY_IDENTIFIER)
+                None, lambda: keyring.get_password(self.SERVICE_NAME, self.KEY_IDENTIFIER)
             )
             return key_base64 is not None
         except Exception as e:
@@ -306,10 +293,8 @@ class KeyManager:
             await asyncio.get_event_loop().run_in_executor(
                 None,
                 lambda: keyring.set_password(
-                    self.SERVICE_NAME,
-                    self.KEY_IDENTIFIER,
-                    env_key  # Store as base64 string
-                )
+                    self.SERVICE_NAME, self.KEY_IDENTIFIER, env_key  # Store as base64 string
+                ),
             )
 
             logger.warning(
@@ -350,17 +335,15 @@ class KeyManager:
 
         # Generate cryptographically secure 32-byte key
         new_key = secrets.token_bytes(self.KEY_LENGTH)
-        new_key_base64 = base64.b64encode(new_key).decode('utf-8')
+        new_key_base64 = base64.b64encode(new_key).decode("utf-8")
 
         # Store in keyring
         try:
             await asyncio.get_event_loop().run_in_executor(
                 None,
                 lambda: keyring.set_password(
-                    self.SERVICE_NAME,
-                    self.KEY_IDENTIFIER,
-                    new_key_base64
-                )
+                    self.SERVICE_NAME, self.KEY_IDENTIFIER, new_key_base64
+                ),
             )
 
             logger.warning("[KeyManager] New encryption key generated and stored")
@@ -404,31 +387,24 @@ class KeyManager:
         if await self.has_key():
             try:
                 old_key_base64 = await asyncio.get_event_loop().run_in_executor(
-                    None,
-                    lambda: keyring.get_password(
-                        self.SERVICE_NAME,
-                        self.KEY_IDENTIFIER
-                    )
+                    None, lambda: keyring.get_password(self.SERVICE_NAME, self.KEY_IDENTIFIER)
                 )
 
                 if old_key_base64:
                     # Create backup with timestamp
                     import time
+
                     timestamp = int(time.time())
                     backup_identifier = f"{self.KEY_IDENTIFIER}_backup_{timestamp}"
 
                     await asyncio.get_event_loop().run_in_executor(
                         None,
                         lambda: keyring.set_password(
-                            self.SERVICE_NAME,
-                            backup_identifier,
-                            old_key_base64
-                        )
+                            self.SERVICE_NAME, backup_identifier, old_key_base64
+                        ),
                     )
 
-                    logger.warning(
-                        f"[KeyManager] Old key backed up as: {backup_identifier}"
-                    )
+                    logger.warning(f"[KeyManager] Old key backed up as: {backup_identifier}")
 
             except Exception as e:
                 logger.warning(f"[KeyManager] Failed to backup old key: {e}")
@@ -475,33 +451,21 @@ class KeyManager:
                 print(f"Key validation failed: {result['error']}")
         """
         if not await self._check_encryption_available():
-            return {
-                "valid": False,
-                "error": "OS-level encryption is not available"
-            }
+            return {"valid": False, "error": "OS-level encryption is not available"}
 
         if not await self.has_key():
-            return {
-                "valid": False,
-                "error": "Key does not exist in secure storage"
-            }
+            return {"valid": False, "error": "Key does not exist in secure storage"}
 
         try:
             # Try to retrieve and validate key
             key = await self.get_key()
             if len(key) != self.KEY_LENGTH:
-                return {
-                    "valid": False,
-                    "error": f"Invalid key length: {len(key)} bytes"
-                }
+                return {"valid": False, "error": f"Invalid key length: {len(key)} bytes"}
 
             return {"valid": True}
 
         except Exception as e:
-            return {
-                "valid": False,
-                "error": f"Key validation failed: {str(e)}"
-            }
+            return {"valid": False, "error": f"Key validation failed: {str(e)}"}
 
     async def store_key(self, key_name: str, value: str) -> None:
         """
@@ -537,12 +501,7 @@ class KeyManager:
         try:
             identifier = f"stored_key_{key_name}"
             await asyncio.get_event_loop().run_in_executor(
-                None,
-                lambda: keyring.set_password(
-                    self.SERVICE_NAME,
-                    identifier,
-                    value
-                )
+                None, lambda: keyring.set_password(self.SERVICE_NAME, identifier, value)
             )
 
             logger.debug(f"[KeyManager] Successfully stored key: {key_name}")
@@ -583,8 +542,7 @@ class KeyManager:
         try:
             identifier = f"stored_key_{key_name}"
             value = await asyncio.get_event_loop().run_in_executor(
-                None,
-                lambda: keyring.get_password(self.SERVICE_NAME, identifier)
+                None, lambda: keyring.get_password(self.SERVICE_NAME, identifier)
             )
 
             if value:
@@ -621,8 +579,7 @@ class KeyManager:
         try:
             identifier = f"stored_key_{key_name}"
             await asyncio.get_event_loop().run_in_executor(
-                None,
-                lambda: keyring.delete_password(self.SERVICE_NAME, identifier)
+                None, lambda: keyring.delete_password(self.SERVICE_NAME, identifier)
             )
 
             logger.info(f"[KeyManager] Successfully deleted key: {key_name}")
@@ -680,11 +637,7 @@ class KeyManager:
             print(f"Backend: {info['backend']}")
             print(f"Encryption available: {info['encryption_available']}")
         """
-        backend_name = (
-            self._keyring_backend.__class__.__name__
-            if self._keyring_backend
-            else None
-        )
+        backend_name = self._keyring_backend.__class__.__name__ if self._keyring_backend else None
 
         return {
             "encryption_available": self.is_encryption_available(),
@@ -710,4 +663,4 @@ def generate_encryption_key() -> str:
         # Use this for initial setup or key rotation
     """
     key = secrets.token_bytes(32)  # 32 bytes = 256 bits
-    return base64.b64encode(key).decode('utf-8')
+    return base64.b64encode(key).decode("utf-8")

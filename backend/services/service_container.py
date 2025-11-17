@@ -38,12 +38,12 @@ from typing import Optional, Any, TYPE_CHECKING
 if TYPE_CHECKING:
     from backend.services.encryption_service import EncryptionService
     from backend.services.audit_logger import AuditLogger
+
     # KeyManager will be created later
 
 
 class ServiceContainerError(Exception):
     """Raised when service container is not properly initialized."""
-    pass
 
 
 class ServiceContainer:
@@ -60,10 +60,10 @@ class ServiceContainer:
     """
 
     # Singleton instance
-    _instance: Optional['ServiceContainer'] = None
+    _instance: Optional["ServiceContainer"] = None
     _lock: threading.Lock = threading.Lock()
 
-    def __new__(cls) -> 'ServiceContainer':
+    def __new__(cls) -> "ServiceContainer":
         """Ensure only one instance exists (singleton pattern)."""
         if cls._instance is None:
             with cls._lock:
@@ -74,18 +74,18 @@ class ServiceContainer:
     def __init__(self):
         """Initialize service container with empty service slots."""
         # Only initialize once
-        if not hasattr(self, '_initialized'):
-            self._encryption_service: Optional['EncryptionService'] = None
-            self._audit_logger: Optional['AuditLogger'] = None
+        if not hasattr(self, "_initialized"):
+            self._encryption_service: Optional["EncryptionService"] = None
+            self._audit_logger: Optional["AuditLogger"] = None
             self._key_manager: Optional[Any] = None  # KeyManager type not yet defined
             self._service_lock = threading.Lock()
             self._initialized = True
 
     def initialize(
         self,
-        encryption_service: 'EncryptionService',
-        audit_logger: 'AuditLogger',
-        key_manager: Any = None  # Optional for now
+        encryption_service: "EncryptionService",
+        audit_logger: "AuditLogger",
+        key_manager: Any = None,  # Optional for now
     ) -> None:
         """
         Initialize the service container with shared services.
@@ -129,7 +129,7 @@ class ServiceContainer:
             self._audit_logger = audit_logger
             self._key_manager = key_manager
 
-    def get_encryption_service(self) -> 'EncryptionService':
+    def get_encryption_service(self) -> "EncryptionService":
         """
         Get the encryption service instance.
 
@@ -150,7 +150,7 @@ class ServiceContainer:
             )
         return self._encryption_service
 
-    def get_audit_logger(self) -> 'AuditLogger':
+    def get_audit_logger(self) -> "AuditLogger":
         """
         Get the audit logger instance.
 
@@ -170,8 +170,7 @@ class ServiceContainer:
         """
         if self._audit_logger is None:
             raise ServiceContainerError(
-                "ServiceContainer not initialized. "
-                "Call initialize() with audit_logger first."
+                "ServiceContainer not initialized. " "Call initialize() with audit_logger first."
             )
         return self._audit_logger
 
@@ -191,8 +190,7 @@ class ServiceContainer:
         """
         if self._key_manager is None:
             raise ServiceContainerError(
-                "ServiceContainer not initialized. "
-                "Call initialize() with key_manager first."
+                "ServiceContainer not initialized. " "Call initialize() with key_manager first."
             )
         return self._key_manager
 
@@ -208,9 +206,9 @@ class ServiceContainer:
                 container.initialize(...)
         """
         return (
-            self._encryption_service is not None or
-            self._audit_logger is not None or
-            self._key_manager is not None
+            self._encryption_service is not None
+            or self._audit_logger is not None
+            or self._key_manager is not None
         )
 
     def reset(self) -> None:
@@ -263,9 +261,7 @@ def get_container() -> ServiceContainer:
 
 
 def initialize_service_container(
-    encryption_service: 'EncryptionService',
-    audit_logger: 'AuditLogger',
-    key_manager: Any = None
+    encryption_service: "EncryptionService", audit_logger: "AuditLogger", key_manager: Any = None
 ) -> None:
     """
     Initialize the global service container with shared services.
@@ -291,7 +287,7 @@ def initialize_service_container(
     container.initialize(encryption_service, audit_logger, key_manager)
 
 
-def get_encryption_service() -> 'EncryptionService':
+def get_encryption_service() -> "EncryptionService":
     """
     Get the encryption service from global container.
 
@@ -310,7 +306,7 @@ def get_encryption_service() -> 'EncryptionService':
     return get_container().get_encryption_service()
 
 
-def get_audit_logger() -> 'AuditLogger':
+def get_audit_logger() -> "AuditLogger":
     """
     Get the audit logger from global container.
 

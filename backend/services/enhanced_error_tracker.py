@@ -33,7 +33,6 @@ Usage:
 """
 
 import hashlib
-import json
 import logging
 import random
 import re
@@ -42,7 +41,7 @@ from datetime import datetime, timezone
 from typing import Dict, List, Any, Optional, Literal, Callable
 from uuid import uuid4
 from collections import defaultdict
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass
 
 from pydantic import BaseModel, Field, ConfigDict
 
@@ -59,6 +58,7 @@ TrendDirection = Literal["up", "down", "stable"]
 # Pydantic Models
 class ErrorContext(BaseModel):
     """Context information for an error"""
+
     model_config = ConfigDict(extra="allow")
 
     user_id: Optional[str] = None
@@ -72,6 +72,7 @@ class ErrorContext(BaseModel):
 
 class ErrorData(BaseModel):
     """Complete error data structure"""
+
     id: str = Field(default_factory=lambda: str(uuid4()))
     name: str = "Error"
     message: str
@@ -85,6 +86,7 @@ class ErrorData(BaseModel):
 
 class ErrorGroup(BaseModel):
     """Group of similar errors"""
+
     fingerprint: str
     first_seen: float
     last_seen: float
@@ -98,6 +100,7 @@ class ErrorGroup(BaseModel):
 
 class Alert(BaseModel):
     """Alert triggered by error conditions"""
+
     id: str = Field(default_factory=lambda: str(uuid4()))
     name: str
     severity: AlertSeverity
@@ -112,6 +115,7 @@ class Alert(BaseModel):
 
 class AlertRule(BaseModel):
     """Configuration for alert rules"""
+
     name: str
     condition: str
     threshold: Any
@@ -124,22 +128,25 @@ class AlertRule(BaseModel):
 
 class SamplingConfig(BaseModel):
     """Sampling rates for different error levels"""
+
     critical: float = 1.0  # 100% - Always log critical
-    error: float = 1.0     # 100% - Always log errors
-    warning: float = 0.5   # 50% - Sample warnings
-    info: float = 0.1      # 10% - Sample info
-    debug: float = 0.01    # 1% - Rarely log debug
+    error: float = 1.0  # 100% - Always log errors
+    warning: float = 0.5  # 50% - Sample warnings
+    info: float = 0.1  # 10% - Sample info
+    debug: float = 0.01  # 1% - Rarely log debug
 
 
 class RateLimitConfig(BaseModel):
     """Rate limiting configuration"""
+
     max_errors_per_group: int = 100  # Max 100 errors/min per group
-    max_total_errors: int = 1000     # Max 1000 errors/min total
-    window_ms: int = 60 * 1000       # 1 minute window
+    max_total_errors: int = 1000  # Max 1000 errors/min total
+    window_ms: int = 60 * 1000  # 1 minute window
 
 
 class CircuitBreakerConfig(BaseModel):
     """Circuit breaker configuration"""
+
     timeout: int = 3000
     failure_threshold: int = 5
     reset_timeout: int = 30000
@@ -148,6 +155,7 @@ class CircuitBreakerConfig(BaseModel):
 
 class ErrorTrackerConfig(BaseModel):
     """Complete error tracker configuration"""
+
     sampling: SamplingConfig = Field(default_factory=SamplingConfig)
     rate_limit: RateLimitConfig = Field(default_factory=RateLimitConfig)
     alert_rules: List[AlertRule] = Field(default_factory=list)
@@ -158,6 +166,7 @@ class ErrorTrackerConfig(BaseModel):
 
 class ErrorTrackerStats(BaseModel):
     """Statistics for error tracker"""
+
     total_errors: int = 0
     total_groups: int = 0
     errors_sampled: int = 0
@@ -171,6 +180,7 @@ class ErrorTrackerStats(BaseModel):
 
 class ErrorDistribution(BaseModel):
     """Error distribution by type"""
+
     type: str
     count: int
     percentage: float
@@ -178,6 +188,7 @@ class ErrorDistribution(BaseModel):
 
 class TopError(BaseModel):
     """Top error by frequency"""
+
     fingerprint: str
     message: str
     count: int
@@ -186,6 +197,7 @@ class TopError(BaseModel):
 
 class ErrorMetrics(BaseModel):
     """Complete error metrics for dashboard"""
+
     total_errors: int
     error_rate: float
     affected_users: int
@@ -205,6 +217,7 @@ class ErrorMetrics(BaseModel):
 @dataclass
 class RateLimiter:
     """Rate limiter for a specific error group"""
+
     count: int = 0
     reset_at: float = 0.0
 
@@ -303,9 +316,8 @@ class EnhancedErrorTracker:
                 self.stats.avg_processing_time = processing_time
             else:
                 self.stats.avg_processing_time = (
-                    (self.stats.avg_processing_time * (self.stats.total_errors - 1) + processing_time)
-                    / self.stats.total_errors
-                )
+                    self.stats.avg_processing_time * (self.stats.total_errors - 1) + processing_time
+                ) / self.stats.total_errors
 
         except Exception as e:
             # Error tracking should never crash the app
@@ -361,9 +373,9 @@ class EnhancedErrorTracker:
 
         # Combine components for fingerprint
         components = [
-            error.name,                                    # Error type
-            normalized_message,                            # Normalized message
-            location,                                      # File:line
+            error.name,  # Error type
+            normalized_message,  # Normalized message
+            location,  # File:line
             error.context.component if error.context else None,  # Component name
         ]
 
@@ -394,23 +406,23 @@ class EnhancedErrorTracker:
             Normalized message with dynamic values replaced
         """
         # Remove UUIDs (before numbers to avoid partial replacement)
-        message = re.sub(r'[a-f0-9-]{36}', '<UUID>', message, flags=re.IGNORECASE)
+        message = re.sub(r"[a-f0-9-]{36}", "<UUID>", message, flags=re.IGNORECASE)
 
         # Remove URLs (before paths)
-        message = re.sub(r'https?://[^\s]+', '<URL>', message)
+        message = re.sub(r"https?://[^\s]+", "<URL>", message)
 
         # Remove timestamps (before numbers to preserve timestamp pattern)
-        message = re.sub(r'\d{4}-\d{2}-\d{2}[T\s]\d{2}:\d{2}:\d{2}', '<TIME>', message)
+        message = re.sub(r"\d{4}-\d{2}-\d{2}[T\s]\d{2}:\d{2}:\d{2}", "<TIME>", message)
 
         # Remove memory addresses (before numbers)
-        message = re.sub(r'0x[0-9a-fA-F]+', '<ADDR>', message)
+        message = re.sub(r"0x[0-9a-fA-F]+", "<ADDR>", message)
 
         # Remove file paths (Windows and Unix)
-        message = re.sub(r'[A-Z]:\\[\w\\]+', '<PATH>', message)
-        message = re.sub(r'/[\w/]+', '<PATH>', message)
+        message = re.sub(r"[A-Z]:\\[\w\\]+", "<PATH>", message)
+        message = re.sub(r"/[\w/]+", "<PATH>", message)
 
         # Remove numbers (last to avoid interfering with other patterns)
-        message = re.sub(r'\b\d+\b', '<NUM>', message)
+        message = re.sub(r"\b\d+\b", "<NUM>", message)
 
         return message.strip()
 
@@ -431,25 +443,25 @@ class EnhancedErrorTracker:
             return "unknown"
 
         # Try Node.js/Chrome stack format
-        match = re.search(r'at\s+(.+?)\s*\((.+?):(\d+):(\d+)\)', stack)
+        match = re.search(r"at\s+(.+?)\s*\((.+?):(\d+):(\d+)\)", stack)
         if match:
             file, line = match.group(2), match.group(3)
             # Normalize file path (keep src/ onwards)
-            normalized_file = re.sub(r'.*[\\/](src[\\/].+)$', r'\1', file)
+            normalized_file = re.sub(r".*[\\/](src[\\/].+)$", r"\1", file)
             return f"{normalized_file}:{line}"
 
         # Try Firefox stack format
-        alt_match = re.search(r'(.+?)@(.+?):(\d+):(\d+)', stack)
+        alt_match = re.search(r"(.+?)@(.+?):(\d+):(\d+)", stack)
         if alt_match:
             file, line = alt_match.group(2), alt_match.group(3)
-            normalized_file = re.sub(r'.*[\\/](src[\\/].+)$', r'\1', file)
+            normalized_file = re.sub(r".*[\\/](src[\\/].+)$", r"\1", file)
             return f"{normalized_file}:{line}"
 
         # Try Python stack format
         py_match = re.search(r'File "(.+?)", line (\d+)', stack)
         if py_match:
             file, line = py_match.group(1), py_match.group(2)
-            normalized_file = re.sub(r'.*[\\/](backend[\\/].+)$', r'\1', file)
+            normalized_file = re.sub(r".*[\\/](backend[\\/].+)$", r"\1", file)
             return f"{normalized_file}:{line}"
 
         return "unknown"
@@ -474,8 +486,7 @@ class EnhancedErrorTracker:
         if not limiter or now > limiter.reset_at:
             # Reset rate limiter
             self.rate_limiters[fingerprint] = RateLimiter(
-                count=1,
-                reset_at=now + self.config.rate_limit.window_ms
+                count=1, reset_at=now + self.config.rate_limit.window_ms
             )
             return False
 
@@ -537,7 +548,7 @@ class EnhancedErrorTracker:
                 last_seen=now,
                 count=1,
                 errors=[error],
-                pattern=self._normalize_message(error.message)
+                pattern=self._normalize_message(error.message),
             )
 
             self.error_groups[fingerprint] = group
@@ -569,7 +580,7 @@ class EnhancedErrorTracker:
                     "timestamp": error.timestamp,
                     "context": error.context.model_dump() if error.context else {},
                     "tags": error.tags,
-                }
+                },
             )
         except Exception as e:
             # Silently fail - error logging should never crash app
@@ -598,10 +609,7 @@ class EnhancedErrorTracker:
             self.stats.alerts_triggered += 1
 
             # Log alert
-            logger.warning(
-                f"Alert triggered: {alert.name}",
-                extra={"alert": alert.model_dump()}
-            )
+            logger.warning(f"Alert triggered: {alert.name}", extra={"alert": alert.model_dump()})
 
     async def get_metrics(self, time_range: str = "1h") -> ErrorMetrics:
         """
@@ -637,8 +645,7 @@ class EnhancedErrorTracker:
 
         # Filter groups within time range
         recent_groups = [
-            group for group in self.error_groups.values()
-            if group.last_seen >= start_time
+            group for group in self.error_groups.values() if group.last_seen >= start_time
         ]
 
         # Calculate metrics
@@ -668,7 +675,7 @@ class EnhancedErrorTracker:
             ErrorDistribution(
                 type=error_type,
                 count=count,
-                percentage=(count / total_errors * 100) if total_errors > 0 else 0.0
+                percentage=(count / total_errors * 100) if total_errors > 0 else 0.0,
             )
             for error_type, count in distribution_map.items()
         ]
@@ -680,7 +687,9 @@ class EnhancedErrorTracker:
                 fingerprint=group.fingerprint,
                 message=group.pattern,
                 count=group.count,
-                last_seen=datetime.fromtimestamp(group.last_seen / 1000, tz=timezone.utc).isoformat()
+                last_seen=datetime.fromtimestamp(
+                    group.last_seen / 1000, tz=timezone.utc
+                ).isoformat(),
             )
             for group in sorted(recent_groups, key=lambda g: g.count, reverse=True)[:10]
         ]
@@ -690,8 +699,7 @@ class EnhancedErrorTracker:
         for group in recent_groups:
             all_recent_errors.extend(group.errors)
         all_recent_errors.sort(
-            key=lambda e: datetime.fromisoformat(e.timestamp).timestamp(),
-            reverse=True
+            key=lambda e: datetime.fromisoformat(e.timestamp).timestamp(), reverse=True
         )
         recent_errors = all_recent_errors[:50]
 
@@ -772,7 +780,7 @@ async def track_error(
     tracker: EnhancedErrorTracker,
     error: Exception,
     level: ErrorLevel = "error",
-    context: Optional[Dict[str, Any]] = None
+    context: Optional[Dict[str, Any]] = None,
 ) -> None:
     """
     Convenience function to track a Python exception.
@@ -785,10 +793,12 @@ async def track_error(
     """
     import traceback
 
-    await tracker.track_error({
-        "name": error.__class__.__name__,
-        "message": str(error),
-        "stack": traceback.format_exc(),
-        "level": level,
-        "context": context or {},
-    })
+    await tracker.track_error(
+        {
+            "name": error.__class__.__name__,
+            "message": str(error),
+            "stack": traceback.format_exc(),
+            "level": level,
+            "context": context or {},
+        }
+    )

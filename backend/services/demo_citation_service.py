@@ -9,44 +9,41 @@ import sys
 import io
 
 # Fix Windows console encoding for Unicode characters
-if sys.platform == 'win32':
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+if sys.platform == "win32":
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
 from citation_service import CitationService
 
+
 def main():
-    print("="*70)
+    print("=" * 70)
     print(" CitationService Demo - Legal Citation Extraction")
-    print("="*70)
+    print("=" * 70)
 
     service = CitationService()
     print("[OK] Service initialized successfully\n")
 
     tests = [
-        {
-            "name": "U.S. Supreme Court citation",
-            "text": "See 410 U.S. 113",
-            "show_details": True
-        },
+        {"name": "U.S. Supreme Court citation", "text": "See 410 U.S. 113", "show_details": True},
         {
             "name": "Full case name with year",
             "text": "Roe v. Wade, 410 U.S. 113 (1973)",
-            "show_details": True
+            "show_details": True,
         },
         {
             "name": "Federal statute (U.S. Code)",
             "text": "Under 42 U.S.C. § 1983, plaintiffs may sue state officials",
-            "show_details": True
+            "show_details": True,
         },
         {
             "name": "Multiple citations",
             "text": "Compare 410 U.S. 113 with 505 U.S. 833 and see 42 U.S.C. § 1983",
-            "show_details": False
+            "show_details": False,
         },
         {
             "name": "Federal Circuit Court",
             "text": "In Smith v. Jones, 123 F.3d 456 (9th Cir. 2000)",
-            "show_details": True
+            "show_details": True,
         },
     ]
 
@@ -57,10 +54,10 @@ def main():
         print(f"Input: {test['text']}")
         print()
 
-        citations = service.extract_citations(test['text'])
+        citations = service.extract_citations(test["text"])
         print(f"Found: {len(citations)} citation(s)")
 
-        if citations and test['show_details']:
+        if citations and test["show_details"]:
             for j, c in enumerate(citations, 1):
                 print(f"\n  Citation {j}:")
                 print(f"    Text: {c.text}")
@@ -103,7 +100,7 @@ def main():
 
     print(f"Total citations found: {summary['total_count']}")
     print(f"\nBreakdown by type:")
-    for cite_type, count in summary['by_type'].items():
+    for cite_type, count in summary["by_type"].items():
         print(f"  {cite_type}: {count}")
 
     print(f"\nCategories:")
@@ -128,7 +125,8 @@ def main():
 
     print(f"\n{'='*70}")
     print("[OK] All tests completed successfully!")
-    print("="*70)
+    print("=" * 70)
+
 
 if __name__ == "__main__":
     try:
@@ -140,4 +138,5 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"Unexpected error: {e}")
         import traceback
+
         traceback.print_exc()

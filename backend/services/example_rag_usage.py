@@ -12,6 +12,7 @@ This demonstrates:
 import asyncio
 from typing import Optional
 
+
 # Mock services for demonstration (replace with real implementations)
 class MockLegalAPIService:
     """Mock LegalAPIService for demonstration."""
@@ -42,7 +43,7 @@ class MockLegalAPIService:
                 "section": "Section 94",
                 "content": "An employee has the right not to be unfairly dismissed by his employer.",
                 "url": "https://www.legislation.gov.uk/ukpga/1996/18/section/94",
-                "relevance": 0.95
+                "relevance": 0.95,
             }
         ]
 
@@ -58,7 +59,7 @@ class MockLegalAPIService:
                 "summary": "Claimant successfully proved unfair dismissal due to lack of fair procedure.",
                 "outcome": "Claimant successful",
                 "url": "https://caselaw.nationalarchives.gov.uk/eat/2024/123",
-                "relevance": 0.90
+                "relevance": 0.90,
             }
         ]
 
@@ -75,7 +76,7 @@ class MockLegalAPIService:
                     "valid reason or fair procedure. The law requires employers to have one of "
                     "five potentially fair reasons and to follow a fair process."
                 ),
-                "sources": ["ACAS Code of Practice 2024", "Citizens Advice Guide"]
+                "sources": ["ACAS Code of Practice 2024", "Citizens Advice Guide"],
             }
         ]
 
@@ -109,20 +110,30 @@ class MockAIService:
             message=response_text,
             sources=[
                 "Employment Rights Act 1996 Section 94 - https://www.legislation.gov.uk/ukpga/1996/18/section/94",
-                "Smith v ABC Ltd [2024] ET/12345/24 - https://caselaw.nationalarchives.gov.uk/eat/2024/123"
+                "Smith v ABC Ltd [2024] ET/12345/24 - https://caselaw.nationalarchives.gov.uk/eat/2024/123",
             ],
-            tokens_used=250
+            tokens_used=250,
         )
 
 
 class MockAuditLogger:
     """Mock AuditLogger for demonstration."""
 
-    def log(self, event_type: str, user_id: Optional[str], resource_type: str,
-            resource_id: str, action: str, details: Optional[dict] = None,
-            success: bool = True, error_message: Optional[str] = None):
+    def log(
+        self,
+        event_type: str,
+        user_id: Optional[str],
+        resource_type: str,
+        resource_id: str,
+        action: str,
+        details: Optional[dict] = None,
+        success: bool = True,
+        error_message: Optional[str] = None,
+    ):
         """Log audit event (mock)."""
-        print(f"[AUDIT] {event_type}: {action} on {resource_type}/{resource_id} by user {user_id} - {'✓' if success else '✗'}")
+        print(
+            f"[AUDIT] {event_type}: {action} on {resource_type}/{resource_id} by user {user_id} - {'✓' if success else '✗'}"
+        )
         if details:
             print(f"        Details: {details}")
         if error_message:
@@ -136,9 +147,9 @@ class MockAuditLogger:
 
 async def example_basic_processing():
     """Demonstrate basic question processing."""
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("EXAMPLE 1: Basic Question Processing")
-    print("="*80 + "\n")
+    print("=" * 80 + "\n")
 
     from backend.services.rag_service import RAGService
 
@@ -149,20 +160,14 @@ async def example_basic_processing():
 
     # Create RAG service
     rag_service = RAGService(
-        legal_api_service=legal_api,
-        ai_service=ai_service,
-        audit_logger=audit_logger
+        legal_api_service=legal_api, ai_service=ai_service, audit_logger=audit_logger
     )
 
     # Process question
     question = "What are my rights if I was unfairly dismissed from my job?"
     print(f"Question: {question}\n")
 
-    response = await rag_service.process_question(
-        question=question,
-        case_id=123,
-        user_id=456
-    )
+    response = await rag_service.process_question(question=question, case_id=123, user_id=456)
 
     # Display response
     if response.success:
@@ -187,9 +192,9 @@ async def example_basic_processing():
 
 async def example_context_fetching():
     """Demonstrate context fetching for streaming integration."""
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("EXAMPLE 2: Context Fetching for Streaming")
-    print("="*80 + "\n")
+    print("=" * 80 + "\n")
 
     from backend.services.rag_service import RAGService, build_context_string
 
@@ -198,10 +203,7 @@ async def example_context_fetching():
     ai_service = MockAIService()
 
     # Create RAG service
-    rag_service = RAGService(
-        legal_api_service=legal_api,
-        ai_service=ai_service
-    )
+    rag_service = RAGService(legal_api_service=legal_api, ai_service=ai_service)
 
     # Fetch context
     question = "What is unfair dismissal?"
@@ -229,9 +231,9 @@ async def example_context_fetching():
 
 async def example_statistics():
     """Demonstrate query statistics monitoring."""
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("EXAMPLE 3: Query Statistics Monitoring")
-    print("="*80 + "\n")
+    print("=" * 80 + "\n")
 
     from backend.services.rag_service import RAGService
 
@@ -240,25 +242,19 @@ async def example_statistics():
     ai_service = MockAIService()
 
     # Create RAG service
-    rag_service = RAGService(
-        legal_api_service=legal_api,
-        ai_service=ai_service
-    )
+    rag_service = RAGService(legal_api_service=legal_api, ai_service=ai_service)
 
     # Process multiple questions
     questions = [
         "What is unfair dismissal?",
         "Can I be fired while pregnant?",
-        "What is the notice period for redundancy?"
+        "What is the notice period for redundancy?",
     ]
 
     for i, question in enumerate(questions, 1):
         print(f"\nProcessing question {i}/{len(questions)}: {question}")
 
-        response = await rag_service.process_question(
-            question=question,
-            user_id=789
-        )
+        response = await rag_service.process_question(question=question, user_id=789)
 
         if response.success:
             print(f"  ✓ Success")
@@ -266,8 +262,10 @@ async def example_statistics():
             # Get statistics for this query
             stats = rag_service.get_last_query_stats()
             if stats.has_stats:
-                print(f"  📊 Stats: {stats.legislation_count} legislation, "
-                      f"{stats.case_law_count} cases, {stats.knowledge_base_count} KB entries")
+                print(
+                    f"  📊 Stats: {stats.legislation_count} legislation, "
+                    f"{stats.case_law_count} cases, {stats.knowledge_base_count} KB entries"
+                )
                 print(f"     Context size: {stats.total_context_size} characters")
         else:
             print(f"  ✗ Failed: {response.code}")
@@ -280,9 +278,9 @@ async def example_statistics():
 
 async def example_error_handling():
     """Demonstrate error handling scenarios."""
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("EXAMPLE 4: Error Handling")
-    print("="*80 + "\n")
+    print("=" * 80 + "\n")
 
     from backend.services.rag_service import RAGService
 
@@ -290,8 +288,10 @@ async def example_error_handling():
     class EmptyLegalAPIService(MockLegalAPIService):
         async def search_legislation(self, keywords):
             return []
+
         async def search_case_law(self, keywords):
             return []
+
         async def search_knowledge_base(self, keywords):
             return []
 
@@ -300,16 +300,13 @@ async def example_error_handling():
     audit_logger = MockAuditLogger()
 
     rag_service = RAGService(
-        legal_api_service=legal_api,
-        ai_service=ai_service,
-        audit_logger=audit_logger
+        legal_api_service=legal_api, ai_service=ai_service, audit_logger=audit_logger
     )
 
     # Test 1: Question with no context
     print("Test 1: Question with no legal context")
     response = await rag_service.process_question(
-        question="What is the meaning of life?",
-        user_id=999
+        question="What is the meaning of life?", user_id=999
     )
 
     if not response.success:
@@ -337,9 +334,9 @@ async def example_error_handling():
 
 async def main():
     """Run all examples."""
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("RAG SERVICE USAGE EXAMPLES")
-    print("="*80)
+    print("=" * 80)
 
     try:
         await example_basic_processing()
@@ -347,13 +344,14 @@ async def main():
         await example_statistics()
         await example_error_handling()
 
-        print("\n" + "="*80)
+        print("\n" + "=" * 80)
         print("ALL EXAMPLES COMPLETED SUCCESSFULLY")
-        print("="*80 + "\n")
+        print("=" * 80 + "\n")
 
     except Exception as e:
         print(f"\n✗ Error running examples: {e}")
         import traceback
+
         traceback.print_exc()
 
 

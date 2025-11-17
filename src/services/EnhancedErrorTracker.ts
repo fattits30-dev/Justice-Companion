@@ -135,7 +135,8 @@ export class EnhancedErrorTracker extends EventEmitter {
         this.stats.totalErrors;
     } catch (error) {
       // Error tracking should never crash the app
-      logger.error("App", "EnhancedErrorTracker: Failed to track error", {
+      logger.error("EnhancedErrorTracker: Failed to track error", {
+        service: "App",
         error: error,
       });
     }
@@ -319,7 +320,7 @@ export class EnhancedErrorTracker extends EventEmitter {
       });
     } catch (error) {
       // Silently fail - error logging should never crash app
-      logger.error("App", "Failed to persist error", { error: error });
+      logger.error("Failed to persist error", { service: "App", error: error });
     }
   }
 

@@ -14,6 +14,7 @@ import json
 
 class NotificationType(str, enum.Enum):
     """Notification type enumeration matching database CHECK constraint."""
+
     DEADLINE_REMINDER = "deadline_reminder"
     CASE_STATUS_CHANGE = "case_status_change"
     EVIDENCE_UPLOADED = "evidence_uploaded"
@@ -25,6 +26,7 @@ class NotificationType(str, enum.Enum):
 
 class NotificationSeverity(str, enum.Enum):
     """Notification severity enumeration matching database CHECK constraint."""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -55,7 +57,9 @@ class Notification(Base):
     __tablename__ = "notifications"
 
     id = Column(Integer, primary_key=True, autoincrement=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
     type = Column(String, nullable=False)
     severity = Column(String, nullable=False)
     title = Column(String, nullable=False)
@@ -75,7 +79,7 @@ class Notification(Base):
     @property
     def notification_metadata(self) -> Optional[Dict[str, Any]]:
         """Parse metadata_json into a dictionary."""
-        if self.metadata_json:
+        if self.metadata_json is not None and isinstance(self.metadata_json, str):
             try:
                 return json.loads(self.metadata_json)
             except (json.JSONDecodeError, TypeError):
@@ -104,9 +108,9 @@ class Notification(Base):
             "metadata": self.notification_metadata,
             "isRead": bool(self.is_read),
             "isDismissed": bool(self.is_dismissed),
-            "createdAt": self.created_at.isoformat() if self.created_at else None,
-            "readAt": self.read_at.isoformat() if self.read_at else None,
-            "expiresAt": self.expires_at.isoformat() if self.expires_at else None,
+            "createdAt": self.created_at.isoformat() if self.created_at is not None else None,
+            "readAt": self.read_at.isoformat() if self.read_at is not None else None,
+            "expiresAt": self.expires_at.isoformat() if self.expires_at is not None else None,
         }
 
     def __repr__(self):
@@ -137,7 +141,9 @@ class NotificationPreferences(Base):
     __tablename__ = "notification_preferences"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True, index=True)
+    user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True, index=True
+    )
 
     # Notification type toggles
     deadline_reminders_enabled = Column(Boolean, nullable=False, default=True)
@@ -176,8 +182,8 @@ class NotificationPreferences(Base):
             "quietHoursEnabled": bool(self.quiet_hours_enabled),
             "quietHoursStart": self.quiet_hours_start,
             "quietHoursEnd": self.quiet_hours_end,
-            "createdAt": self.created_at.isoformat() if self.created_at else None,
-            "updatedAt": self.updated_at.isoformat() if self.updated_at else None,
+            "createdAt": self.created_at.isoformat() if self.created_at is not None else None,
+            "updatedAt": self.updated_at.isoformat() if self.updated_at is not None else None,
         }
 
     def __repr__(self):

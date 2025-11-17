@@ -3,7 +3,15 @@ Evidence model for legal case evidence management.
 Migrated from src/domains/evidence/entities/Evidence.ts
 """
 
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Enum as SQLEnum, CheckConstraint
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    DateTime,
+    ForeignKey,
+    Enum as SQLEnum,
+    CheckConstraint,
+)
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from backend.models.base import Base
@@ -12,6 +20,7 @@ import enum
 
 class EvidenceType(str, enum.Enum):
     """Evidence type enumeration matching database CHECK constraint."""
+
     DOCUMENT = "document"
     PHOTO = "photo"
     EMAIL = "email"
@@ -39,13 +48,14 @@ class Evidence(Base):
     __tablename__ = "evidence"
 
     id = Column(Integer, primary_key=True, autoincrement=True, index=True)
-    case_id = Column(Integer, ForeignKey("cases.id", ondelete="CASCADE"), nullable=False, index=True)
+    case_id = Column(
+        Integer, ForeignKey("cases.id", ondelete="CASCADE"), nullable=False, index=True
+    )
     title = Column(String, nullable=False)
     file_path = Column(String, nullable=True)
     content = Column(String, nullable=True)
     evidence_type = Column(
-        SQLEnum(EvidenceType, name="evidence_type", native_enum=False),
-        nullable=False
+        SQLEnum(EvidenceType, name="evidence_type", native_enum=False), nullable=False
     )
     obtained_date = Column(String, nullable=True)  # Stored as TEXT in SQLite
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -58,7 +68,7 @@ class Evidence(Base):
     __table_args__ = (
         CheckConstraint(
             "(file_path IS NOT NULL AND content IS NULL) OR (file_path IS NULL AND content IS NOT NULL)",
-            name="check_evidence_file_or_content"
+            name="check_evidence_file_or_content",
         ),
     )
 
@@ -70,10 +80,14 @@ class Evidence(Base):
             "title": self.title,
             "filePath": self.file_path,
             "content": self.content,
-            "evidenceType": self.evidence_type.value if isinstance(self.evidence_type, EvidenceType) else self.evidence_type,
+            "evidenceType": (
+                self.evidence_type.value
+                if isinstance(self.evidence_type, EvidenceType)
+                else self.evidence_type
+            ),
             "obtainedDate": self.obtained_date,
-            "createdAt": self.created_at.isoformat() if self.created_at else None,
-            "updatedAt": self.updated_at.isoformat() if self.updated_at else None,
+            "createdAt": self.created_at.isoformat() if self.created_at is not None else None,
+            "updatedAt": self.updated_at.isoformat() if self.updated_at is not None else None,
         }
 
     def __repr__(self):

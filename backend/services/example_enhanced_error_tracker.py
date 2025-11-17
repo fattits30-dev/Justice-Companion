@@ -20,7 +20,6 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from backend.services.enhanced_error_tracker import (
     EnhancedErrorTracker,
-    ErrorTrackerConfig,
     track_error,
 )
 
@@ -32,34 +31,40 @@ async def basic_error_tracking():
     tracker = EnhancedErrorTracker()
 
     # Track a simple error
-    await tracker.track_error({
-        "name": "DatabaseError",
-        "message": "Failed to connect to database",
-        "level": "error",
-    })
+    await tracker.track_error(
+        {
+            "name": "DatabaseError",
+            "message": "Failed to connect to database",
+            "level": "error",
+        }
+    )
 
     # Track an error with context
-    await tracker.track_error({
-        "name": "ValidationError",
-        "message": "Invalid email format",
-        "level": "warning",
-        "context": {
-            "user_id": "user-123",
-            "component": "UserRegistration",
-            "operation": "validate_email",
-        },
-    })
+    await tracker.track_error(
+        {
+            "name": "ValidationError",
+            "message": "Invalid email format",
+            "level": "warning",
+            "context": {
+                "user_id": "user-123",
+                "component": "UserRegistration",
+                "operation": "validate_email",
+            },
+        }
+    )
 
     # Track a critical error with stack trace
-    await tracker.track_error({
-        "name": "SystemError",
-        "message": "Out of memory",
-        "level": "critical",
-        "stack": "SystemError: Out of memory\n    at allocate (memory.py:42:10)",
-        "context": {
-            "component": "MemoryManager",
-        },
-    })
+    await tracker.track_error(
+        {
+            "name": "SystemError",
+            "message": "Out of memory",
+            "level": "critical",
+            "stack": "SystemError: Out of memory\n    at allocate (memory.py:42:10)",
+            "context": {
+                "component": "MemoryManager",
+            },
+        }
+    )
 
     # Get statistics
     stats = tracker.get_stats()
@@ -77,15 +82,17 @@ async def error_grouping_demo():
 
     # Track the same error multiple times with different values
     for user_id in [101, 102, 103, 104, 105]:
-        await tracker.track_error({
-            "name": "NotFoundError",
-            "message": f"User {user_id} not found",
-            "level": "error",
-            "context": {
-                "user_id": f"user-{user_id}",
-                "component": "UserService",
-            },
-        })
+        await tracker.track_error(
+            {
+                "name": "NotFoundError",
+                "message": f"User {user_id} not found",
+                "level": "error",
+                "context": {
+                    "user_id": f"user-{user_id}",
+                    "component": "UserService",
+                },
+            }
+        )
 
     # All errors should be grouped together (numbers are normalized)
     print(f"Total errors tracked: {tracker.stats.total_errors}")
@@ -106,21 +113,25 @@ async def rate_limiting_demo():
     print("\n=== Example 3: Rate Limiting ===\n")
 
     # Create tracker with low rate limit for demo
-    tracker = EnhancedErrorTracker(config={
-        "rate_limit": {
-            "max_errors_per_group": 5,
-            "max_total_errors": 100,
-            "window_ms": 60000,
+    tracker = EnhancedErrorTracker(
+        config={
+            "rate_limit": {
+                "max_errors_per_group": 5,
+                "max_total_errors": 100,
+                "window_ms": 60000,
+            }
         }
-    })
+    )
 
     # Try to track the same error 10 times
     print("Tracking same error 10 times...")
     for i in range(10):
-        await tracker.track_error({
-            "name": "RateLimitTest",
-            "message": "Test error",
-        })
+        await tracker.track_error(
+            {
+                "name": "RateLimitTest",
+                "message": "Test error",
+            }
+        )
 
     stats = tracker.get_stats()
     print(f"\nTotal errors tracked: {stats.total_errors}")
@@ -137,20 +148,24 @@ async def sampling_demo():
     # Track many debug errors (1% sampling rate)
     print("Tracking 100 debug errors (1% sampling rate)...")
     for i in range(100):
-        await tracker.track_error({
-            "name": "DebugMessage",
-            "message": f"Debug message {i}",
-            "level": "debug",
-        })
+        await tracker.track_error(
+            {
+                "name": "DebugMessage",
+                "message": f"Debug message {i}",
+                "level": "debug",
+            }
+        )
 
     # Track critical errors (100% sampling rate)
     print("Tracking 10 critical errors (100% sampling rate)...")
     for i in range(10):
-        await tracker.track_error({
-            "name": "CriticalError",
-            "message": f"Critical error {i}",
-            "level": "critical",
-        })
+        await tracker.track_error(
+            {
+                "name": "CriticalError",
+                "message": f"Critical error {i}",
+                "level": "critical",
+            }
+        )
 
     stats = tracker.get_stats()
     print(f"\nTotal errors tracked: {stats.total_errors}")
@@ -167,11 +182,13 @@ async def alert_demo():
     # Track same error 10 times to trigger alert
     print("Tracking same error 10 times to trigger alert...")
     for i in range(10):
-        await tracker.track_error({
-            "name": "RepeatedError",
-            "message": "This error keeps happening",
-            "level": "error",
-        })
+        await tracker.track_error(
+            {
+                "name": "RepeatedError",
+                "message": "This error keeps happening",
+                "level": "error",
+            }
+        )
 
     stats = tracker.get_stats()
     print(f"\nAlerts triggered: {stats.alerts_triggered}")
@@ -180,11 +197,13 @@ async def alert_demo():
     # Track 10 more to trigger another alert
     print("\nTracking 10 more errors...")
     for i in range(10):
-        await tracker.track_error({
-            "name": "RepeatedError",
-            "message": "This error keeps happening",
-            "level": "error",
-        })
+        await tracker.track_error(
+            {
+                "name": "RepeatedError",
+                "message": "This error keeps happening",
+                "level": "error",
+            }
+        )
 
     stats = tracker.get_stats()
     print(f"Alerts triggered: {stats.alerts_triggered}")
@@ -198,26 +217,32 @@ async def metrics_demo():
     tracker = EnhancedErrorTracker()
 
     # Track various errors
-    await tracker.track_error({
-        "name": "DatabaseError",
-        "message": "Connection failed",
-        "level": "error",
-        "context": {"user_id": "user-1"},
-    })
+    await tracker.track_error(
+        {
+            "name": "DatabaseError",
+            "message": "Connection failed",
+            "level": "error",
+            "context": {"user_id": "user-1"},
+        }
+    )
 
-    await tracker.track_error({
-        "name": "ValidationError",
-        "message": "Invalid input",
-        "level": "warning",
-        "context": {"user_id": "user-2"},
-    })
+    await tracker.track_error(
+        {
+            "name": "ValidationError",
+            "message": "Invalid input",
+            "level": "warning",
+            "context": {"user_id": "user-2"},
+        }
+    )
 
-    await tracker.track_error({
-        "name": "DatabaseError",
-        "message": "Query timeout",
-        "level": "error",
-        "context": {"user_id": "user-1"},
-    })
+    await tracker.track_error(
+        {
+            "name": "DatabaseError",
+            "message": "Query timeout",
+            "level": "error",
+            "context": {"user_id": "user-1"},
+        }
+    )
 
     # Get metrics
     metrics = await tracker.get_metrics(time_range="1h")
@@ -257,7 +282,7 @@ async def exception_tracking_demo():
             context={
                 "component": "Calculator",
                 "operation": "divide",
-            }
+            },
         )
 
     # Track a validation error
@@ -273,7 +298,7 @@ async def exception_tracking_demo():
                 "component": "UserValidator",
                 "operation": "validate_email",
                 "input": "invalid-email",
-            }
+            },
         )
 
     stats = tracker.get_stats()
@@ -296,9 +321,11 @@ async def cleanup_demo():
     # Track some errors
     print("Tracking 5 errors...")
     for i in range(5):
-        await tracker.track_error({
-            "message": f"Error {i}",
-        })
+        await tracker.track_error(
+            {
+                "message": f"Error {i}",
+            }
+        )
 
     print(f"Error groups: {len(tracker.error_groups)}")
 
@@ -310,9 +337,11 @@ async def cleanup_demo():
     # Track more errors
     print("\nTracking 3 more errors...")
     for i in range(3):
-        await tracker.track_error({
-            "message": f"New error {i}",
-        })
+        await tracker.track_error(
+            {
+                "message": f"New error {i}",
+            }
+        )
 
     print(f"Error groups: {len(tracker.error_groups)}")
 
@@ -336,9 +365,9 @@ async def custom_config_demo():
         "sampling": {
             "critical": 1.0,
             "error": 1.0,
-            "warning": 0.8,   # 80% of warnings
-            "info": 0.3,      # 30% of info
-            "debug": 0.05,    # 5% of debug
+            "warning": 0.8,  # 80% of warnings
+            "info": 0.3,  # 30% of info
+            "debug": 0.05,  # 5% of debug
         },
         "rate_limit": {
             "max_errors_per_group": 50,
@@ -361,10 +390,12 @@ async def custom_config_demo():
     # Track some errors
     print("\nTracking 10 info messages...")
     for i in range(10):
-        await tracker.track_error({
-            "message": f"Info message {i}",
-            "level": "info",
-        })
+        await tracker.track_error(
+            {
+                "message": f"Info message {i}",
+                "level": "info",
+            }
+        )
 
     stats = tracker.get_stats()
     print(f"\nTracked: {stats.total_errors} (~3 expected with 30% sampling)")
@@ -382,11 +413,13 @@ async def performance_monitoring_demo():
     start_time = time.time()
 
     for i in range(100):
-        await tracker.track_error({
-            "name": f"Error{i % 5}",  # 5 different error types
-            "message": f"Test error {i}",
-            "level": "error",
-        })
+        await tracker.track_error(
+            {
+                "name": f"Error{i % 5}",  # 5 different error types
+                "message": f"Test error {i}",
+                "level": "error",
+            }
+        )
 
     elapsed = time.time() - start_time
 

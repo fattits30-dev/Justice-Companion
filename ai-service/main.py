@@ -9,11 +9,11 @@ Prioritizes Hugging Face (local + API) for privacy-first operation.
 Author: Justice Companion Team
 License: MIT
 """
+
 import logging
 import os
 import sys
 import tempfile
-import traceback
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Optional
@@ -21,6 +21,7 @@ from typing import Optional
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from pydantic import ConfigDict
 from pydantic_settings import BaseSettings
 import uvicorn
 
@@ -40,14 +41,21 @@ from models.responses import DocumentAnalysisResponse
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='[%(asctime)s] %(levelname)s [%(name)s]: %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
+    format="[%(asctime)s] %(levelname)s [%(name)s]: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
 )
 logger = logging.getLogger(__name__)
 
 
 class Settings(BaseSettings):
     """Application settings with environment variable support."""
+
+    # Pydantic configuration - disable protected namespace warnings for model_name field
+    model_config = ConfigDict(
+        env_file=".env",
+        case_sensitive=False,
+        protected_namespaces=(),  # Disable protected namespace warnings (we use model_name intentionally)
+    )
 
     # Service configuration
     version: str = "1.0.0"
@@ -74,10 +82,6 @@ class Settings(BaseSettings):
     max_file_size: int = 10 * 1024 * 1024  # 10MB
     allowed_extensions: set = {".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".tif", ".heic", ".pdf"}
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = False
-
 
 # Global settings and model client
 settings = Settings()
@@ -99,7 +103,7 @@ class ImageAnalysisService:
         user_name: str,
         user_email: Optional[str],
         session_id: str,
-        user_question: Optional[str]
+        user_question: Optional[str],
     ) -> DocumentAnalysisResponse:
         """
         Analyze an uploaded image file and extract legal document information.
@@ -137,7 +141,7 @@ class ImageAnalysisService:
                 document=parsed_document,
                 userProfile=user_profile,
                 sessionId=session_id,
-                userQuestion=user_question
+                userQuestion=user_question,
             )
 
             # Execute AI analysis
@@ -172,7 +176,7 @@ class ImageAnalysisService:
         if file_extension not in self.settings.allowed_extensions:
             raise HTTPException(
                 status_code=400,
-                detail=f"Unsupported file type: {file_extension}. Supported: {', '.join(self.settings.allowed_extensions)}"
+                detail=f"Unsupported file type: {file_extension}. Supported: {', '.join(self.settings.allowed_extensions)}",
             )
 
         # Create temporary file path
@@ -198,7 +202,7 @@ class ImageAnalysisService:
                     "  Windows: https://github.com/UB-Mannheim/tesseract/wiki\n"
                     "  macOS: brew install tesseract\n"
                     "  Linux: apt-get install tesseract-ocr"
-                )
+                ),
             )
 
         file_extension = Path(filename).suffix.lower()
@@ -223,17 +227,17 @@ class ImageAnalysisService:
         else:
             raise HTTPException(
                 status_code=400,
-                detail=f"Unsupported file type: {file_extension}. Supported: JPG, PNG, BMP, TIFF, PDF, HEIC"
+                detail=f"Unsupported file type: {file_extension}. Supported: JPG, PNG, BMP, TIFF, PDF, HEIC",
             )
 
         # Validate extracted text
         if not text.strip():
             raise HTTPException(
                 status_code=400,
-                detail="No text found in image. Image may be blank, too low quality, or not contain readable text."
+                detail="No text found in image. Image may be blank, too low quality, or not contain readable text.",
             )
 
-        confidence = ocr_metadata.get('ocr_confidence', 0)
+        confidence = ocr_metadata.get("ocr_confidence", 0)
         logger.info(f"Extracted {len(text)} characters (confidence: {confidence:.1f}%)")
 
         return text, ocr_metadata
@@ -244,10 +248,7 @@ class ImageAnalysisService:
         file_extension = Path(filename).suffix.lower().lstrip(".")
 
         return ParsedDocument(
-            filename=filename,
-            text=text,
-            wordCount=word_count,
-            fileType=file_extension
+            filename=filename, text=text, wordCount=word_count, fileType=file_extension
         )
 
     async def _execute_analysis(self, request: DocumentAnalysisRequest) -> DocumentAnalysisResponse:
@@ -347,7 +348,7 @@ app = FastAPI(
     title=settings.service_name,
     version=settings.version,
     description="AI-powered legal assistant microservice",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # CORS middleware - allow requests from Electron renderer
@@ -370,21 +371,14 @@ async def root():
         "service": settings.service_name,
         "version": settings.version,
         "status": "running",
-        "endpoints": {
-            "health": "/health",
-            "api_v1": "/api/v1"
-        }
+        "endpoints": {"health": "/health", "api_v1": "/api/v1"},
     }
 
 
 @app.get("/health")
 async def health_check():
     """Health check endpoint for PythonProcessManager"""
-    return {
-        "status": "healthy",
-        "service": settings.service_name,
-        "version": settings.version
-    }
+    return {"status": "healthy", "service": settings.service_name, "version": settings.version}
 
 
 @app.get("/api/v1/info")
@@ -400,8 +394,8 @@ async def api_info():
             "document_analyzer",
             "case_suggester",
             "conversation",
-            "legal_researcher"
-        ]
+            "legal_researcher",
+        ],
     }
 
 
@@ -426,7 +420,7 @@ async def analyze_document(request: DocumentAnalysisRequest):
     if model_client is None:
         raise HTTPException(
             status_code=503,
-            detail="AI model not initialized. Set HF_TOKEN or OPENAI_API_KEY environment variable."
+            detail="AI model not initialized. Set HF_TOKEN or OPENAI_API_KEY environment variable.",
         )
 
     try:
@@ -495,7 +489,7 @@ async def analyze_image(
     if model_client is None:
         raise HTTPException(
             status_code=503,
-            detail="AI model not initialized. Set HF_TOKEN or OPENAI_API_KEY environment variable."
+            detail="AI model not initialized. Set HF_TOKEN or OPENAI_API_KEY environment variable.",
         )
 
     try:
@@ -506,7 +500,7 @@ async def analyze_image(
             user_name=userName,
             user_email=userEmail,
             session_id=sessionId,
-            user_question=userQuestion
+            user_question=userQuestion,
         )
 
     except HTTPException:
@@ -535,11 +529,7 @@ async def http_exception_handler(request, exc):
     """Custom HTTP exception handler"""
     logger.warning(f"HTTP exception: {exc.status_code} - {exc.detail}")
     return JSONResponse(
-        status_code=exc.status_code,
-        content={
-            "error": exc.detail,
-            "status_code": exc.status_code
-        }
+        status_code=exc.status_code, content={"error": exc.detail, "status_code": exc.status_code}
     )
 
 
@@ -549,11 +539,7 @@ async def general_exception_handler(request, exc):
     logger.error(f"Unhandled exception: {exc}", exc_info=True)
     return JSONResponse(
         status_code=500,
-        content={
-            "error": "Internal server error",
-            "message": str(exc),
-            "status_code": 500
-        }
+        content={"error": "Internal server error", "message": str(exc), "status_code": 500},
     )
 
 
@@ -570,7 +556,7 @@ if __name__ == "__main__":
             port=settings.port,
             log_level="info",
             access_log=True,
-            reload=True
+            reload=True,
         )
     else:
         uvicorn.run(
@@ -579,5 +565,5 @@ if __name__ == "__main__":
             port=settings.port,
             log_level="info",
             access_log=True,
-            reload=False
+            reload=False,
         )

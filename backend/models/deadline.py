@@ -3,7 +3,14 @@ Deadline model for case deadline/milestone management.
 Migrated from electron/ipc-handlers/deadlines.ts
 """
 
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Enum as SQLEnum, CheckConstraint
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    DateTime,
+    ForeignKey,
+    Enum as SQLEnum,
+)
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from backend.models.base import Base
@@ -12,6 +19,7 @@ import enum
 
 class DeadlinePriority(str, enum.Enum):
     """Deadline priority enumeration matching database CHECK constraint."""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -20,6 +28,7 @@ class DeadlinePriority(str, enum.Enum):
 
 class DeadlineStatus(str, enum.Enum):
     """Deadline status enumeration matching database CHECK constraint."""
+
     UPCOMING = "upcoming"
     OVERDUE = "overdue"
     COMPLETED = "completed"
@@ -47,20 +56,24 @@ class Deadline(Base):
     __tablename__ = "deadlines"
 
     id = Column(Integer, primary_key=True, autoincrement=True, index=True)
-    case_id = Column(Integer, ForeignKey("cases.id", ondelete="CASCADE"), nullable=False, index=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    case_id = Column(
+        Integer, ForeignKey("cases.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
     title = Column(String, nullable=False)
     description = Column(String, nullable=True)
     deadline_date = Column(String, nullable=False)  # ISO 8601 date format stored as TEXT
     priority = Column(
         SQLEnum(DeadlinePriority, name="deadline_priority", native_enum=False),
         nullable=False,
-        default=DeadlinePriority.MEDIUM
+        default=DeadlinePriority.MEDIUM,
     )
     status = Column(
         SQLEnum(DeadlineStatus, name="deadline_status", native_enum=False),
         nullable=False,
-        default=DeadlineStatus.UPCOMING
+        default=DeadlineStatus.UPCOMING,
     )
     completed_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -81,12 +94,16 @@ class Deadline(Base):
             "description": self.description,
             "deadlineDate": self.deadline_date,
             "dueDate": self.deadline_date,  # Alias for compatibility
-            "priority": self.priority.value if isinstance(self.priority, DeadlinePriority) else self.priority,
+            "priority": (
+                self.priority.value
+                if isinstance(self.priority, DeadlinePriority)
+                else self.priority
+            ),
             "status": self.status.value if isinstance(self.status, DeadlineStatus) else self.status,
-            "completedAt": self.completed_at.isoformat() if self.completed_at else None,
-            "createdAt": self.created_at.isoformat() if self.created_at else None,
-            "updatedAt": self.updated_at.isoformat() if self.updated_at else None,
-            "deletedAt": self.deleted_at.isoformat() if self.deleted_at else None,
+            "completedAt": self.completed_at.isoformat() if self.completed_at is not None else None,
+            "createdAt": self.created_at.isoformat() if self.created_at is not None else None,
+            "updatedAt": self.updated_at.isoformat() if self.updated_at is not None else None,
+            "deletedAt": self.deleted_at.isoformat() if self.deleted_at is not None else None,
         }
 
     def __repr__(self):

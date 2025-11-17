@@ -19,10 +19,9 @@ Service Layer Architecture:
 - Uses AuditLogger for comprehensive audit trail
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Header, Query, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, List, Dict, Any
-from datetime import datetime
 from sqlalchemy.orm import Session
 
 from backend.models.base import get_db
@@ -32,7 +31,6 @@ from backend.services.notification_service import (
     NotificationService,
     NotificationFilters,
     UpdateNotificationPreferencesInput,
-    CreateNotificationInput
 )
 from backend.services.deadline_reminder_scheduler import DeadlineReminderScheduler
 from backend.services.encryption_service import EncryptionService
@@ -40,8 +38,6 @@ from backend.services.audit_logger import AuditLogger
 from backend.models.notification import (
     NotificationType,
     NotificationSeverity,
-    Notification,
-    NotificationPreferences
 )
 
 
@@ -50,34 +46,54 @@ router = APIRouter(prefix="/notifications", tags=["notifications"])
 
 # ===== PYDANTIC REQUEST MODELS =====
 
+
 class UpdateNotificationPreferencesRequest(BaseModel):
     """Request model for updating notification preferences."""
+
     deadlineRemindersEnabled: Optional[bool] = Field(None, description="Enable deadline reminders")
-    deadlineReminderDays: Optional[int] = Field(None, ge=1, le=90, description="Days before deadline to remind")
+    deadlineReminderDays: Optional[int] = Field(
+        None, ge=1, le=90, description="Days before deadline to remind"
+    )
     caseUpdatesEnabled: Optional[bool] = Field(None, description="Enable case update notifications")
-    evidenceUpdatesEnabled: Optional[bool] = Field(None, description="Enable evidence update notifications")
+    evidenceUpdatesEnabled: Optional[bool] = Field(
+        None, description="Enable evidence update notifications"
+    )
     systemAlertsEnabled: Optional[bool] = Field(None, description="Enable system alerts")
     soundEnabled: Optional[bool] = Field(None, description="Enable notification sounds")
-    desktopNotificationsEnabled: Optional[bool] = Field(None, description="Enable desktop notifications")
+    desktopNotificationsEnabled: Optional[bool] = Field(
+        None, description="Enable desktop notifications"
+    )
     quietHoursEnabled: Optional[bool] = Field(None, description="Enable quiet hours")
-    quietHoursStart: Optional[str] = Field(None, pattern=r'^([0-1][0-9]|2[0-3]):[0-5][0-9]$', description="Quiet hours start time (HH:MM)")
-    quietHoursEnd: Optional[str] = Field(None, pattern=r'^([0-1][0-9]|2[0-3]):[0-5][0-9]$', description="Quiet hours end time (HH:MM)")
+    quietHoursStart: Optional[str] = Field(
+        None,
+        pattern=r"^([0-1][0-9]|2[0-3]):[0-5][0-9]$",
+        description="Quiet hours start time (HH:MM)",
+    )
+    quietHoursEnd: Optional[str] = Field(
+        None,
+        pattern=r"^([0-1][0-9]|2[0-3]):[0-5][0-9]$",
+        description="Quiet hours end time (HH:MM)",
+    )
 
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "deadlineRemindersEnabled": True,
-            "deadlineReminderDays": 7,
-            "quietHoursEnabled": True,
-            "quietHoursStart": "22:00",
-            "quietHoursEnd": "08:00"
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "deadlineRemindersEnabled": True,
+                "deadlineReminderDays": 7,
+                "quietHoursEnabled": True,
+                "quietHoursStart": "22:00",
+                "quietHoursEnd": "08:00",
+            }
         }
-    })
+    )
 
 
 # ===== PYDANTIC RESPONSE MODELS =====
 
+
 class NotificationResponse(BaseModel):
     """Response model for notification data."""
+
     id: int
     userId: int
     type: str
@@ -110,14 +126,15 @@ class NotificationResponse(BaseModel):
                 "isDismissed": False,
                 "createdAt": "2025-01-15T10:30:00Z",
                 "readAt": None,
-                "expiresAt": None
+                "expiresAt": None,
             }
-        }
+        },
     )
 
 
 class NotificationPreferencesResponse(BaseModel):
     """Response model for notification preferences."""
+
     id: int
     userId: int
     deadlineRemindersEnabled: bool
@@ -150,14 +167,15 @@ class NotificationPreferencesResponse(BaseModel):
                 "quietHoursStart": "22:00",
                 "quietHoursEnd": "08:00",
                 "createdAt": "2025-01-01T00:00:00Z",
-                "updatedAt": "2025-01-15T10:30:00Z"
+                "updatedAt": "2025-01-15T10:30:00Z",
             }
-        }
+        },
     )
 
 
 class UnreadCountResponse(BaseModel):
     """Response model for unread notification count."""
+
     count: int
 
     model_config = ConfigDict(json_schema_extra={"example": {"count": 5}})
@@ -165,6 +183,7 @@ class UnreadCountResponse(BaseModel):
 
 class NotificationStatsResponse(BaseModel):
     """Response model for notification statistics."""
+
     total: int
     unread: int
     urgent: int
@@ -173,27 +192,30 @@ class NotificationStatsResponse(BaseModel):
     low: int
     byType: Dict[str, int]
 
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "total": 25,
-            "unread": 5,
-            "urgent": 2,
-            "high": 3,
-            "medium": 10,
-            "low": 10,
-            "byType": {
-                "deadline_reminder": 5,
-                "case_status_change": 10,
-                "evidence_uploaded": 5,
-                "document_updated": 3,
-                "system_alert": 2
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "total": 25,
+                "unread": 5,
+                "urgent": 2,
+                "high": 3,
+                "medium": 10,
+                "low": 10,
+                "byType": {
+                    "deadline_reminder": 5,
+                    "case_status_change": 10,
+                    "evidence_uploaded": 5,
+                    "document_updated": 3,
+                    "system_alert": 2,
+                },
             }
         }
-    })
+    )
 
 
 class MarkAllReadResponse(BaseModel):
     """Response model for mark all as read operation."""
+
     count: int
 
     model_config = ConfigDict(json_schema_extra={"example": {"count": 5}})
@@ -201,6 +223,7 @@ class MarkAllReadResponse(BaseModel):
 
 class DeleteNotificationResponse(BaseModel):
     """Response model for notification deletion."""
+
     deleted: bool
     id: int
 
@@ -209,15 +232,19 @@ class DeleteNotificationResponse(BaseModel):
 
 class SuccessResponse(BaseModel):
     """Generic success response."""
+
     success: bool
     message: str
 
-    model_config = ConfigDict(json_schema_extra={
-        "example": {"success": True, "message": "Operation completed successfully"}
-    })
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {"success": True, "message": "Operation completed successfully"}
+        }
+    )
 
 
 # ===== DEPENDENCIES =====
+
 
 def get_auth_service(db: Session = Depends(get_db)) -> AuthenticationService:
     """Get authentication service instance."""
@@ -227,14 +254,13 @@ def get_auth_service(db: Session = Depends(get_db)) -> AuthenticationService:
 def get_encryption_service() -> EncryptionService:
     """Get encryption service instance."""
     import os
-    import base64
 
     # Get encryption key from environment
     key_base64 = os.environ.get("ENCRYPTION_KEY_BASE64")
     if not key_base64:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Encryption key not configured"
+            detail="Encryption key not configured",
         )
 
     return EncryptionService(key=key_base64)
@@ -246,8 +272,7 @@ def get_audit_logger(db: Session = Depends(get_db)) -> AuditLogger:
 
 
 def get_notification_service(
-    db: Session = Depends(get_db),
-    audit_logger: AuditLogger = Depends(get_audit_logger)
+    db: Session = Depends(get_db), audit_logger: AuditLogger = Depends(get_audit_logger)
 ) -> NotificationService:
     """Get notification service instance with dependencies."""
     return NotificationService(db=db, audit_logger=audit_logger)
@@ -256,18 +281,19 @@ def get_notification_service(
 def get_deadline_scheduler(
     db: Session = Depends(get_db),
     notification_service: NotificationService = Depends(get_notification_service),
-    audit_logger: AuditLogger = Depends(get_audit_logger)
+    audit_logger: AuditLogger = Depends(get_audit_logger),
 ) -> DeadlineReminderScheduler:
     """Get deadline reminder scheduler instance."""
     return DeadlineReminderScheduler(
         db=db,
         notification_service=notification_service,
         audit_logger=audit_logger,
-        check_interval=3600  # 1 hour
+        check_interval=3600,  # 1 hour
     )
 
 
 # ===== ROUTES =====
+
 
 @router.get(
     "",
@@ -289,7 +315,7 @@ def get_deadline_scheduler(
     - `includeDismissed`: Include dismissed notifications (default: false)
 
     **Authentication:** Requires valid session ID in Authorization header or session_id query param.
-    """
+    """,
 )
 async def list_notifications(
     user_id: int = Depends(get_current_user),
@@ -300,7 +326,7 @@ async def list_notifications(
     limit: Optional[int] = Query(50, ge=1, le=500),
     offset: Optional[int] = Query(0, ge=0),
     include_expired: Optional[bool] = Query(False, alias="includeExpired"),
-    include_dismissed: Optional[bool] = Query(False, alias="includeDismissed")
+    include_dismissed: Optional[bool] = Query(False, alias="includeDismissed"),
 ):
     """List user's notifications with optional filters."""
     try:
@@ -311,7 +337,7 @@ async def list_notifications(
             limit=limit,
             offset=offset,
             include_expired=include_expired or False,
-            include_dismissed=include_dismissed or False
+            include_dismissed=include_dismissed or False,
         )
 
         notifications = await notification_service.get_notifications(user_id, filters)
@@ -322,7 +348,7 @@ async def list_notifications(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to list notifications: {str(e)}"
+            detail=f"Failed to list notifications: {str(e)}",
         )
 
 
@@ -334,11 +360,11 @@ async def list_notifications(
     Get count of unread, non-dismissed, non-expired notifications for the user.
 
     **Authentication:** Requires valid session ID.
-    """
+    """,
 )
 async def get_unread_count(
     user_id: int = Depends(get_current_user),
-    notification_service: NotificationService = Depends(get_notification_service)
+    notification_service: NotificationService = Depends(get_notification_service),
 ):
     """Get count of unread notifications."""
     try:
@@ -348,7 +374,7 @@ async def get_unread_count(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get unread count: {str(e)}"
+            detail=f"Failed to get unread count: {str(e)}",
         )
 
 
@@ -368,11 +394,11 @@ async def get_unread_count(
     Excludes dismissed and expired notifications.
 
     **Authentication:** Requires valid session ID.
-    """
+    """,
 )
 async def get_notification_stats(
     user_id: int = Depends(get_current_user),
-    notification_service: NotificationService = Depends(get_notification_service)
+    notification_service: NotificationService = Depends(get_notification_service),
 ):
     """Get notification statistics."""
     try:
@@ -386,13 +412,13 @@ async def get_notification_stats(
             "high": stats.high,
             "medium": stats.medium,
             "low": stats.low,
-            "byType": stats.by_type
+            "byType": stats.by_type,
         }
 
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get notification stats: {str(e)}"
+            detail=f"Failed to get notification stats: {str(e)}",
         )
 
 
@@ -408,12 +434,12 @@ async def get_notification_stats(
 
     **Authentication:** Requires valid session ID.
     **Authorization:** User must own the notification.
-    """
+    """,
 )
 async def mark_notification_read(
     notification_id: int,
     user_id: int = Depends(get_current_user),
-    notification_service: NotificationService = Depends(get_notification_service)
+    notification_service: NotificationService = Depends(get_notification_service),
 ):
     """Mark a notification as read."""
     try:
@@ -425,7 +451,7 @@ async def mark_notification_read(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to mark notification as read: {str(e)}"
+            detail=f"Failed to mark notification as read: {str(e)}",
         )
 
 
@@ -440,11 +466,11 @@ async def mark_notification_read(
     Returns count of notifications updated.
 
     **Authentication:** Requires valid session ID.
-    """
+    """,
 )
 async def mark_all_notifications_read(
     user_id: int = Depends(get_current_user),
-    notification_service: NotificationService = Depends(get_notification_service)
+    notification_service: NotificationService = Depends(get_notification_service),
 ):
     """Mark all notifications as read."""
     try:
@@ -454,7 +480,7 @@ async def mark_all_notifications_read(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to mark all notifications as read: {str(e)}"
+            detail=f"Failed to mark all notifications as read: {str(e)}",
         )
 
 
@@ -470,12 +496,12 @@ async def mark_all_notifications_read(
 
     **Authentication:** Requires valid session ID.
     **Authorization:** User must own the notification.
-    """
+    """,
 )
 async def delete_notification(
     notification_id: int,
     user_id: int = Depends(get_current_user),
-    notification_service: NotificationService = Depends(get_notification_service)
+    notification_service: NotificationService = Depends(get_notification_service),
 ):
     """Dismiss/delete a notification."""
     try:
@@ -487,7 +513,7 @@ async def delete_notification(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to delete notification: {str(e)}"
+            detail=f"Failed to delete notification: {str(e)}",
         )
 
 
@@ -507,11 +533,11 @@ async def delete_notification(
     - Quiet hours: 22:00 - 08:00
 
     **Authentication:** Requires valid session ID.
-    """
+    """,
 )
 async def get_notification_preferences(
     user_id: int = Depends(get_current_user),
-    notification_service: NotificationService = Depends(get_notification_service)
+    notification_service: NotificationService = Depends(get_notification_service),
 ):
     """Get user's notification preferences."""
     try:
@@ -521,7 +547,7 @@ async def get_notification_preferences(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get notification preferences: {str(e)}"
+            detail=f"Failed to get notification preferences: {str(e)}",
         )
 
 
@@ -548,12 +574,12 @@ async def get_notification_preferences(
     - `quietHoursEnd`: Quiet hours end time (HH:MM format)
 
     **Authentication:** Requires valid session ID.
-    """
+    """,
 )
 async def update_notification_preferences(
     request: UpdateNotificationPreferencesRequest,
     user_id: int = Depends(get_current_user),
-    notification_service: NotificationService = Depends(get_notification_service)
+    notification_service: NotificationService = Depends(get_notification_service),
 ):
     """Update user's notification preferences."""
     try:
@@ -568,7 +594,7 @@ async def update_notification_preferences(
             desktop_notifications_enabled=request.desktopNotificationsEnabled,
             quiet_hours_enabled=request.quietHoursEnabled,
             quiet_hours_start=request.quietHoursStart,
-            quiet_hours_end=request.quietHoursEnd
+            quiet_hours_end=request.quietHoursEnd,
         )
 
         prefs = await notification_service.update_preferences(user_id, updates)
@@ -577,11 +603,12 @@ async def update_notification_preferences(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to update notification preferences: {str(e)}"
+            detail=f"Failed to update notification preferences: {str(e)}",
         )
 
 
 # ===== ADMIN/SYSTEM ROUTES =====
+
 
 @router.post(
     "/scheduler/start",
@@ -595,10 +622,10 @@ async def update_notification_preferences(
 
     **Note:** This is an internal/admin endpoint and should be protected
     in production deployments.
-    """
+    """,
 )
 async def start_deadline_scheduler(
-    scheduler: DeadlineReminderScheduler = Depends(get_deadline_scheduler)
+    scheduler: DeadlineReminderScheduler = Depends(get_deadline_scheduler),
 ):
     """Start the deadline reminder scheduler."""
     try:
@@ -608,7 +635,7 @@ async def start_deadline_scheduler(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to start scheduler: {str(e)}"
+            detail=f"Failed to start scheduler: {str(e)}",
         )
 
 
@@ -622,10 +649,10 @@ async def start_deadline_scheduler(
 
     **Note:** This is an internal/admin endpoint and should be protected
     in production deployments.
-    """
+    """,
 )
 async def stop_deadline_scheduler(
-    scheduler: DeadlineReminderScheduler = Depends(get_deadline_scheduler)
+    scheduler: DeadlineReminderScheduler = Depends(get_deadline_scheduler),
 ):
     """Stop the deadline reminder scheduler."""
     try:
@@ -635,7 +662,7 @@ async def stop_deadline_scheduler(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to stop scheduler: {str(e)}"
+            detail=f"Failed to stop scheduler: {str(e)}",
         )
 
 
@@ -650,10 +677,10 @@ async def stop_deadline_scheduler(
 
     **Note:** This is an internal/admin endpoint and should be protected
     in production deployments.
-    """
+    """,
 )
 async def trigger_deadline_check(
-    scheduler: DeadlineReminderScheduler = Depends(get_deadline_scheduler)
+    scheduler: DeadlineReminderScheduler = Depends(get_deadline_scheduler),
 ):
     """Manually trigger deadline check."""
     try:
@@ -663,7 +690,7 @@ async def trigger_deadline_check(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to trigger deadline check: {str(e)}"
+            detail=f"Failed to trigger deadline check: {str(e)}",
         )
 
 
@@ -680,10 +707,10 @@ async def trigger_deadline_check(
 
     **Note:** This is an internal/admin endpoint and should be protected
     in production deployments.
-    """
+    """,
 )
 async def get_scheduler_stats(
-    scheduler: DeadlineReminderScheduler = Depends(get_deadline_scheduler)
+    scheduler: DeadlineReminderScheduler = Depends(get_deadline_scheduler),
 ):
     """Get scheduler statistics."""
     try:
@@ -693,5 +720,5 @@ async def get_scheduler_stats(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get scheduler stats: {str(e)}"
+            detail=f"Failed to get scheduler stats: {str(e)}",
         )

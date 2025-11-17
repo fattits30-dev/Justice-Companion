@@ -40,7 +40,9 @@ class AIProviderConfig(Base):
     __tablename__ = "ai_provider_configs"
 
     id = Column(Integer, primary_key=True, autoincrement=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
     provider = Column(String, nullable=False, index=True)  # openai, anthropic, etc.
     encrypted_api_key = Column(String, nullable=False)  # Encrypted with EncryptionService
     model = Column(String, nullable=False)  # Model name

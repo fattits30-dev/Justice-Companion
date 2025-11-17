@@ -20,16 +20,13 @@ License: MIT
 """
 
 from typing import Optional, Dict, Any, List, Literal
-from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 import asyncio
 import logging
-import json
-import re
 
 from pydantic import BaseModel, Field, ConfigDict, field_validator
-from fastapi import HTTPException, UploadFile
+from fastapi import HTTPException
 
 # AI service imports
 try:
@@ -37,28 +34,20 @@ try:
     from backend.services.unified_ai_service import (
         UnifiedAIService,
         AIProviderConfig,
-        ChatMessage,
         ParsedDocument,
         UserProfile,
-        DocumentExtractionResponse,
-        SuggestedCaseData,
-        FieldConfidence,
         ExtractionSource,
-        AIProviderType
+        AIProviderType,
     )
 except ImportError:
     # Fall back to relative import (when running tests)
     from unified_ai_service import (
         UnifiedAIService,
         AIProviderConfig,
-        ChatMessage,
         ParsedDocument,
         UserProfile,
-        DocumentExtractionResponse,
-        SuggestedCaseData,
-        FieldConfidence,
         ExtractionSource,
-        AIProviderType
+        AIProviderType,
     )
 
 # Type aliases
@@ -72,8 +61,10 @@ logger = logging.getLogger(__name__)
 # PYDANTIC MODELS - Request/Response Types
 # ============================================================================
 
+
 class ConfidenceScores(BaseModel):
     """Confidence scores for extracted fields (0.0-1.0)"""
+
     title: float = Field(..., ge=0.0, le=1.0)
     case_type: float = Field(..., ge=0.0, le=1.0)
     description: float = Field(..., ge=0.0, le=1.0)
@@ -88,13 +79,12 @@ class ConfidenceScores(BaseModel):
 
 class SuggestedCaseDataResponse(BaseModel):
     """Suggested case data extracted from document"""
+
     document_ownership_mismatch: bool = Field(
-        False,
-        description="Whether document claimant name differs from user name"
+        False, description="Whether document claimant name differs from user name"
     )
     document_claimant_name: Optional[str] = Field(
-        None,
-        description="Claimant name found in document (if different from user)"
+        None, description="Claimant name found in document (if different from user)"
     )
     title: str = Field(..., min_length=1, description="Case title")
     case_type: CaseType = Field(..., description="Legal case type")
@@ -103,18 +93,13 @@ class SuggestedCaseDataResponse(BaseModel):
     opposing_party: Optional[str] = Field(None, description="Opposing party name")
     case_number: Optional[str] = Field(None, description="Court/tribunal case number")
     court_name: Optional[str] = Field(None, description="Court or tribunal name")
-    filing_deadline: Optional[str] = Field(
-        None,
-        description="Filing deadline in YYYY-MM-DD format"
-    )
+    filing_deadline: Optional[str] = Field(None, description="Filing deadline in YYYY-MM-DD format")
     next_hearing_date: Optional[str] = Field(
-        None,
-        description="Next hearing date in YYYY-MM-DD format"
+        None, description="Next hearing date in YYYY-MM-DD format"
     )
     confidence: ConfidenceScores = Field(..., description="Confidence scores for each field")
     extracted_from: Dict[str, Optional[ExtractionSource]] = Field(
-        default_factory=dict,
-        description="Source text for each extracted field"
+        default_factory=dict, description="Source text for each extracted field"
     )
 
     model_config = ConfigDict(from_attributes=True)
@@ -122,6 +107,7 @@ class SuggestedCaseDataResponse(BaseModel):
 
 class DocumentAnalysisRequest(BaseModel):
     """Request for document analysis"""
+
     document: ParsedDocument = Field(..., description="Parsed document with text content")
     user_profile: UserProfile = Field(..., description="User profile information")
     session_id: str = Field(..., min_length=1, description="Session UUID")
@@ -132,10 +118,10 @@ class DocumentAnalysisRequest(BaseModel):
 
 class DocumentAnalysisResponse(BaseModel):
     """Response from document analysis"""
+
     analysis: str = Field(..., description="Conversational analysis for user")
     suggested_case_data: SuggestedCaseDataResponse = Field(
-        ...,
-        description="Structured case data extracted from document"
+        ..., description="Structured case data extracted from document"
     )
     metadata: Optional[Dict[str, Any]] = Field(None, description="Additional metadata")
 
@@ -144,13 +130,13 @@ class DocumentAnalysisResponse(BaseModel):
 
 class OCRResult(BaseModel):
     """OCR processing result"""
+
     text: str = Field(..., description="Extracted text from image")
     confidence: float = Field(..., ge=0.0, le=1.0, description="OCR confidence score")
     word_count: int = Field(..., ge=0, description="Number of words extracted")
     language: str = Field(default="eng", description="Detected language")
     preprocessing_applied: List[str] = Field(
-        default_factory=list,
-        description="Preprocessing steps applied"
+        default_factory=list, description="Preprocessing steps applied"
     )
 
     model_config = ConfigDict(from_attributes=True)
@@ -158,6 +144,7 @@ class OCRResult(BaseModel):
 
 class ImageAnalysisRequest(BaseModel):
     """Request for image analysis with OCR"""
+
     image_path: str = Field(..., description="Path to image file")
     user_name: str = Field(..., min_length=1, description="User's full name")
     session_id: str = Field(..., min_length=1, description="Session UUID")
@@ -180,6 +167,7 @@ class ImageAnalysisRequest(BaseModel):
 
 class ServiceHealthResponse(BaseModel):
     """Health check response"""
+
     status: Literal["healthy", "unhealthy"]
     service: str = "Python AI Service"
     version: str = "1.0.0"
@@ -192,17 +180,14 @@ class ServiceHealthResponse(BaseModel):
 
 class ServiceInfoResponse(BaseModel):
     """Service information response"""
+
     api_version: str = "v1"
     service: str = "Python AI Service"
     version: str = "1.0.0"
     model_provider: str
     model_ready: bool
     available_agents: List[str] = Field(
-        default_factory=lambda: [
-            "document_analyzer",
-            "ocr_processor",
-            "case_extractor"
-        ]
+        default_factory=lambda: ["document_analyzer", "ocr_processor", "case_extractor"]
     )
 
     model_config = ConfigDict(from_attributes=True)
@@ -211,6 +196,7 @@ class ServiceInfoResponse(BaseModel):
 # ============================================================================
 # PYTHON AI CLIENT SERVICE - Server-Side Implementation
 # ============================================================================
+
 
 class PythonAIClientService:
     """
@@ -254,7 +240,7 @@ class PythonAIClientService:
         timeout: int = 120,
         max_retries: int = 3,
         retry_delay: int = 1000,
-        audit_logger: Optional[Any] = None
+        audit_logger: Optional[Any] = None,
     ):
         """
         Initialize Python AI Client Service.
@@ -276,10 +262,7 @@ class PythonAIClientService:
         self.audit_logger = audit_logger
 
         # Initialize AI service
-        self.ai_service = UnifiedAIService(
-            config=ai_config,
-            audit_logger=audit_logger
-        )
+        self.ai_service = UnifiedAIService(config=ai_config, audit_logger=audit_logger)
 
         logger.info(
             f"Initialized PythonAIClientService with {ai_config.provider.value}/{ai_config.model}"
@@ -318,7 +301,7 @@ class PythonAIClientService:
         return ServiceHealthResponse(
             status="healthy" if is_ready else "unhealthy",
             ai_provider=self.ai_config.provider.value,
-            model_ready=is_ready
+            model_ready=is_ready,
         )
 
     async def get_info(self) -> ServiceInfoResponse:
@@ -335,14 +318,10 @@ class PythonAIClientService:
         is_ready = await self.is_available()
 
         return ServiceInfoResponse(
-            model_provider=self.ai_config.provider.value,
-            model_ready=is_ready
+            model_provider=self.ai_config.provider.value, model_ready=is_ready
         )
 
-    async def analyze_document(
-        self,
-        request: DocumentAnalysisRequest
-    ) -> DocumentAnalysisResponse:
+    async def analyze_document(self, request: DocumentAnalysisRequest) -> DocumentAnalysisResponse:
         """
         Analyze document text and extract structured case data.
 
@@ -370,14 +349,10 @@ class PythonAIClientService:
             >>> result = await service.analyze_document(request)
             >>> print(result.suggested_case_data.case_type)
         """
-        return await self._retry_operation(
-            self._analyze_document_impl,
-            request
-        )
+        return await self._retry_operation(self._analyze_document_impl, request)
 
     async def _analyze_document_impl(
-        self,
-        request: DocumentAnalysisRequest
+        self, request: DocumentAnalysisRequest
     ) -> DocumentAnalysisResponse:
         """Internal implementation of document analysis with retry support."""
         try:
@@ -390,17 +365,19 @@ class PythonAIClientService:
             extraction_result = await self.ai_service.extract_case_data_from_document(
                 parsed_doc=request.document,
                 user_profile=request.user_profile,
-                user_question=request.user_question
+                user_question=request.user_question,
             )
 
             # Convert to response format
             suggested_case_data = SuggestedCaseDataResponse(
-                document_ownership_mismatch=extraction_result.suggested_case_data.document_ownership_mismatch or False,
+                document_ownership_mismatch=extraction_result.suggested_case_data.document_ownership_mismatch
+                or False,
                 document_claimant_name=extraction_result.suggested_case_data.document_claimant_name,
                 title=extraction_result.suggested_case_data.title,
                 case_type=extraction_result.suggested_case_data.case_type,
                 description=extraction_result.suggested_case_data.description,
-                claimant_name=extraction_result.suggested_case_data.claimant_name or request.user_profile.name,
+                claimant_name=extraction_result.suggested_case_data.claimant_name
+                or request.user_profile.name,
                 opposing_party=extraction_result.suggested_case_data.opposing_party,
                 case_number=extraction_result.suggested_case_data.case_number,
                 court_name=extraction_result.suggested_case_data.court_name,
@@ -414,14 +391,12 @@ class PythonAIClientService:
                     case_number=extraction_result.suggested_case_data.confidence.case_number,
                     court_name=extraction_result.suggested_case_data.confidence.court_name,
                     filing_deadline=extraction_result.suggested_case_data.confidence.filing_deadline,
-                    next_hearing_date=extraction_result.suggested_case_data.confidence.next_hearing_date
+                    next_hearing_date=extraction_result.suggested_case_data.confidence.next_hearing_date,
                 ),
-                extracted_from=extraction_result.suggested_case_data.extracted_from
+                extracted_from=extraction_result.suggested_case_data.extracted_from,
             )
 
-            logger.info(
-                f"Document analyzed successfully: {suggested_case_data.case_type} case"
-            )
+            logger.info(f"Document analyzed successfully: {suggested_case_data.case_type} case")
 
             return DocumentAnalysisResponse(
                 analysis=extraction_result.analysis,
@@ -429,21 +404,15 @@ class PythonAIClientService:
                 metadata={
                     "provider": self.ai_config.provider.value,
                     "model": self.ai_config.model,
-                    "timestamp": datetime.utcnow().isoformat()
-                }
+                    "timestamp": datetime.utcnow().isoformat(),
+                },
             )
 
         except Exception as error:
             logger.error(f"Document analysis failed: {error}", exc_info=True)
-            raise HTTPException(
-                status_code=500,
-                detail=f"Document analysis failed: {str(error)}"
-            )
+            raise HTTPException(status_code=500, detail=f"Document analysis failed: {str(error)}")
 
-    async def analyze_image(
-        self,
-        request: ImageAnalysisRequest
-    ) -> DocumentAnalysisResponse:
+    async def analyze_image(self, request: ImageAnalysisRequest) -> DocumentAnalysisResponse:
         """
         Analyze image using OCR and extract structured case data.
 
@@ -473,15 +442,9 @@ class PythonAIClientService:
             >>> result = await service.analyze_image(request)
             >>> print(result.metadata["ocr"]["confidence"])
         """
-        return await self._retry_operation(
-            self._analyze_image_impl,
-            request
-        )
+        return await self._retry_operation(self._analyze_image_impl, request)
 
-    async def _analyze_image_impl(
-        self,
-        request: ImageAnalysisRequest
-    ) -> DocumentAnalysisResponse:
+    async def _analyze_image_impl(self, request: ImageAnalysisRequest) -> DocumentAnalysisResponse:
         """Internal implementation of image analysis with OCR."""
         try:
             logger.info(f"Analyzing image with OCR: {request.image_path}")
@@ -500,29 +463,28 @@ class PythonAIClientService:
                 filename=filename,
                 text=ocr_result.text,
                 word_count=ocr_result.word_count,
-                file_type=Path(request.image_path).suffix.lstrip(".")
+                file_type=Path(request.image_path).suffix.lstrip("."),
             )
 
             # Step 3: Analyze extracted text
-            user_profile = UserProfile(
-                name=request.user_name,
-                email=request.user_email
-            )
+            user_profile = UserProfile(name=request.user_name, email=request.user_email)
 
             extraction_result = await self.ai_service.extract_case_data_from_document(
                 parsed_doc=parsed_doc,
                 user_profile=user_profile,
-                user_question=request.user_question
+                user_question=request.user_question,
             )
 
             # Convert to response format
             suggested_case_data = SuggestedCaseDataResponse(
-                document_ownership_mismatch=extraction_result.suggested_case_data.document_ownership_mismatch or False,
+                document_ownership_mismatch=extraction_result.suggested_case_data.document_ownership_mismatch
+                or False,
                 document_claimant_name=extraction_result.suggested_case_data.document_claimant_name,
                 title=extraction_result.suggested_case_data.title,
                 case_type=extraction_result.suggested_case_data.case_type,
                 description=extraction_result.suggested_case_data.description,
-                claimant_name=extraction_result.suggested_case_data.claimant_name or request.user_name,
+                claimant_name=extraction_result.suggested_case_data.claimant_name
+                or request.user_name,
                 opposing_party=extraction_result.suggested_case_data.opposing_party,
                 case_number=extraction_result.suggested_case_data.case_number,
                 court_name=extraction_result.suggested_case_data.court_name,
@@ -536,9 +498,9 @@ class PythonAIClientService:
                     case_number=extraction_result.suggested_case_data.confidence.case_number,
                     court_name=extraction_result.suggested_case_data.confidence.court_name,
                     filing_deadline=extraction_result.suggested_case_data.confidence.filing_deadline,
-                    next_hearing_date=extraction_result.suggested_case_data.confidence.next_hearing_date
+                    next_hearing_date=extraction_result.suggested_case_data.confidence.next_hearing_date,
                 ),
-                extracted_from=extraction_result.suggested_case_data.extracted_from
+                extracted_from=extraction_result.suggested_case_data.extracted_from,
             )
 
             logger.info(
@@ -557,9 +519,9 @@ class PythonAIClientService:
                         "confidence": ocr_result.confidence,
                         "word_count": ocr_result.word_count,
                         "language": ocr_result.language,
-                        "preprocessing": ocr_result.preprocessing_applied
-                    }
-                }
+                        "preprocessing": ocr_result.preprocessing_applied,
+                    },
+                },
             )
 
         except Exception as error:
@@ -569,13 +531,10 @@ class PythonAIClientService:
             if "tesseract" in str(error).lower():
                 raise HTTPException(
                     status_code=503,
-                    detail="Tesseract OCR not installed. Install with: apt-get install tesseract-ocr (Linux) or brew install tesseract (macOS)"
+                    detail="Tesseract OCR not installed. Install with: apt-get install tesseract-ocr (Linux) or brew install tesseract (macOS)",
                 )
 
-            raise HTTPException(
-                status_code=500,
-                detail=f"Image analysis failed: {str(error)}"
-            )
+            raise HTTPException(status_code=500, detail=f"Image analysis failed: {str(error)}")
 
     async def _perform_ocr(self, image_path: str) -> OCRResult:
         """
@@ -646,9 +605,11 @@ class PythonAIClientService:
                     center = (w // 2, h // 2)
                     M = cv2.getRotationMatrix2D(center, angle, 1.0)
                     img_deskewed = cv2.warpAffine(
-                        img_denoised, M, (w, h),
+                        img_denoised,
+                        M,
+                        (w, h),
                         flags=cv2.INTER_CUBIC,
-                        borderMode=cv2.BORDER_REPLICATE
+                        borderMode=cv2.BORDER_REPLICATE,
                     )
                     preprocessing_steps.append(f"deskew_{angle:.1f}deg")
                 else:
@@ -662,17 +623,16 @@ class PythonAIClientService:
             preprocessing_steps.append("contrast_enhance")
 
             # 5. Binarization (Otsu's thresholding)
-            _, img_binary = cv2.threshold(
-                img_enhanced, 0, 255,
-                cv2.THRESH_BINARY + cv2.THRESH_OTSU
-            )
+            _, img_binary = cv2.threshold(img_enhanced, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
             preprocessing_steps.append("binarize")
 
             # Convert back to PIL Image
             processed_image = Image.fromarray(img_binary)
 
             # Run Tesseract OCR
-            custom_config = r'--oem 3 --psm 6'  # OEM 3: Default, PSM 6: Assume uniform block of text
+            custom_config = (
+                r"--oem 3 --psm 6"  # OEM 3: Default, PSM 6: Assume uniform block of text
+            )
 
             # Extract text
             text = pytesseract.image_to_string(processed_image, config=custom_config)
@@ -681,10 +641,7 @@ class PythonAIClientService:
             data = pytesseract.image_to_data(processed_image, output_type=pytesseract.Output.DICT)
 
             # Calculate average confidence (excluding -1 values)
-            confidences = [
-                float(conf) for conf in data["conf"]
-                if conf != -1 and conf != "-1"
-            ]
+            confidences = [float(conf) for conf in data["conf"] if conf != -1 and conf != "-1"]
             avg_confidence = sum(confidences) / len(confidences) if confidences else 0.0
 
             # Count words
@@ -702,18 +659,14 @@ class PythonAIClientService:
                 confidence=avg_confidence / 100.0,  # Convert to 0.0-1.0
                 word_count=word_count,
                 language="eng",
-                preprocessing_applied=preprocessing_steps
+                preprocessing_applied=preprocessing_steps,
             )
 
         except Exception as error:
             logger.error(f"OCR processing failed: {error}", exc_info=True)
             raise RuntimeError(f"OCR processing failed: {str(error)}")
 
-    async def _retry_operation(
-        self,
-        operation_func,
-        request
-    ) -> DocumentAnalysisResponse:
+    async def _retry_operation(self, operation_func, request) -> DocumentAnalysisResponse:
         """
         Retry operation with exponential backoff.
 
@@ -754,7 +707,7 @@ class PythonAIClientService:
                     break
 
                 # Calculate delay with exponential backoff
-                delay_ms = self.retry_delay_ms * (2 ** attempt)
+                delay_ms = self.retry_delay_ms * (2**attempt)
                 delay_sec = delay_ms / 1000.0
 
                 logger.warning(
@@ -771,7 +724,7 @@ class PythonAIClientService:
                 if attempt == self.max_retries:
                     break
 
-                delay_ms = self.retry_delay_ms * (2 ** attempt)
+                delay_ms = self.retry_delay_ms * (2**attempt)
                 delay_sec = delay_ms / 1000.0
 
                 logger.warning(
@@ -787,13 +740,14 @@ class PythonAIClientService:
 
         raise HTTPException(
             status_code=500,
-            detail=f"Operation failed after {self.max_retries} retries: {error_msg}"
+            detail=f"Operation failed after {self.max_retries} retries: {error_msg}",
         )
 
 
 # ============================================================================
 # HELPER FUNCTIONS
 # ============================================================================
+
 
 def create_python_ai_client_service(
     provider: str = "openai",
@@ -804,7 +758,7 @@ def create_python_ai_client_service(
     max_tokens: int = 4096,
     timeout: int = 120,
     max_retries: int = 3,
-    audit_logger: Optional[Any] = None
+    audit_logger: Optional[Any] = None,
 ) -> PythonAIClientService:
     """
     Factory function to create Python AI Client Service.
@@ -838,12 +792,9 @@ def create_python_ai_client_service(
         model=model,
         endpoint=endpoint,
         temperature=temperature,
-        max_tokens=max_tokens
+        max_tokens=max_tokens,
     )
 
     return PythonAIClientService(
-        ai_config=ai_config,
-        timeout=timeout,
-        max_retries=max_retries,
-        audit_logger=audit_logger
+        ai_config=ai_config, timeout=timeout, max_retries=max_retries, audit_logger=audit_logger
     )

@@ -33,11 +33,9 @@ from reportlab.platypus import (
     Paragraph,
     Spacer,
     PageBreak,
-    Table,
-    TableStyle,
 )
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.enums import TA_CENTER, TA_LEFT
+from reportlab.lib.enums import TA_CENTER
 from reportlab.pdfgen import canvas as pdf_canvas
 from pydantic import BaseModel, Field, validator
 
@@ -324,9 +322,7 @@ class PDFGenerator:
             )
         )
 
-    async def generate_case_summary(
-        self, case_data: CaseExportData
-    ) -> bytes:
+    async def generate_case_summary(self, case_data: CaseExportData) -> bytes:
         """
         Generate a comprehensive case summary PDF.
 
@@ -447,18 +443,14 @@ class PDFGenerator:
                     },
                 )
 
-            logger.info(
-                f"Case summary PDF generated successfully. Size: {len(pdf_bytes)} bytes"
-            )
+            logger.info(f"Case summary PDF generated successfully. Size: {len(pdf_bytes)} bytes")
             return pdf_bytes
 
         except Exception as e:
             logger.error(f"Failed to generate case summary PDF: {str(e)}", exc_info=True)
             raise
 
-    async def generate_evidence_list(
-        self, evidence_data: EvidenceExportData
-    ) -> bytes:
+    async def generate_evidence_list(self, evidence_data: EvidenceExportData) -> bytes:
         """
         Generate an evidence inventory report PDF.
 
@@ -478,9 +470,7 @@ class PDFGenerator:
             Exception: If PDF generation fails.
         """
         try:
-            logger.info(
-                f"Generating evidence list PDF for case #{evidence_data.case_id}"
-            )
+            logger.info(f"Generating evidence list PDF for case #{evidence_data.case_id}")
 
             buffer = BytesIO()
             doc = SimpleDocTemplate(
@@ -496,9 +486,7 @@ class PDFGenerator:
 
             # Title
             story.append(
-                Paragraph(
-                    "Evidence Inventory Report", self.reportlab_styles["CustomTitle"]
-                )
+                Paragraph("Evidence Inventory Report", self.reportlab_styles["CustomTitle"])
             )
             story.append(Spacer(1, 0.2 * inch))
 
@@ -541,9 +529,7 @@ class PDFGenerator:
                 story.append(Spacer(1, 0.2 * inch))
 
             # Detailed Evidence List
-            story.append(
-                Paragraph("Evidence Details", self.reportlab_styles["CustomHeading1"])
-            )
+            story.append(Paragraph("Evidence Details", self.reportlab_styles["CustomHeading1"]))
             story.extend(self._build_evidence_section(evidence_data.evidence))
 
             # Build PDF
@@ -574,18 +560,14 @@ class PDFGenerator:
                     },
                 )
 
-            logger.info(
-                f"Evidence list PDF generated successfully. Size: {len(pdf_bytes)} bytes"
-            )
+            logger.info(f"Evidence list PDF generated successfully. Size: {len(pdf_bytes)} bytes")
             return pdf_bytes
 
         except Exception as e:
             logger.error(f"Failed to generate evidence list PDF: {str(e)}", exc_info=True)
             raise
 
-    async def generate_timeline_report(
-        self, timeline_data: TimelineExportData
-    ) -> bytes:
+    async def generate_timeline_report(self, timeline_data: TimelineExportData) -> bytes:
         """
         Generate a timeline report PDF with deadlines.
 
@@ -607,9 +589,7 @@ class PDFGenerator:
             Exception: If PDF generation fails.
         """
         try:
-            logger.info(
-                f"Generating timeline report PDF for case #{timeline_data.case_id}"
-            )
+            logger.info(f"Generating timeline report PDF for case #{timeline_data.case_id}")
 
             buffer = BytesIO()
             doc = SimpleDocTemplate(
@@ -624,9 +604,7 @@ class PDFGenerator:
             story = []
 
             # Title
-            story.append(
-                Paragraph("Timeline Report", self.reportlab_styles["CustomTitle"])
-            )
+            story.append(Paragraph("Timeline Report", self.reportlab_styles["CustomTitle"]))
             story.append(Spacer(1, 0.2 * inch))
 
             # Case info
@@ -665,9 +643,7 @@ class PDFGenerator:
                     )
                 )
                 story.extend(
-                    self._build_deadlines_section(
-                        timeline_data.upcoming_deadlines, urgent=True
-                    )
+                    self._build_deadlines_section(timeline_data.upcoming_deadlines, urgent=True)
                 )
                 story.append(Spacer(1, 0.2 * inch))
 
@@ -675,9 +651,7 @@ class PDFGenerator:
             if timeline_data.events:
                 if len(story) > 20:
                     story.append(PageBreak())
-                story.append(
-                    Paragraph("Timeline Events", self.reportlab_styles["CustomHeading1"])
-                )
+                story.append(Paragraph("Timeline Events", self.reportlab_styles["CustomHeading1"]))
                 story.extend(self._build_timeline_section(timeline_data.events))
 
             # Completed Events
@@ -690,9 +664,7 @@ class PDFGenerator:
                         self.reportlab_styles["CustomHeading1"],
                     )
                 )
-                story.extend(
-                    self._build_timeline_section(timeline_data.completed_events)
-                )
+                story.extend(self._build_timeline_section(timeline_data.completed_events))
 
             # Build PDF
             doc.build(
@@ -723,15 +695,11 @@ class PDFGenerator:
                     },
                 )
 
-            logger.info(
-                f"Timeline report PDF generated successfully. Size: {len(pdf_bytes)} bytes"
-            )
+            logger.info(f"Timeline report PDF generated successfully. Size: {len(pdf_bytes)} bytes")
             return pdf_bytes
 
         except Exception as e:
-            logger.error(
-                f"Failed to generate timeline report PDF: {str(e)}", exc_info=True
-            )
+            logger.error(f"Failed to generate timeline report PDF: {str(e)}", exc_info=True)
             raise
 
     async def generate_case_notes(self, notes_data: NotesExportData) -> bytes:
@@ -769,9 +737,7 @@ class PDFGenerator:
             story = []
 
             # Title
-            story.append(
-                Paragraph("Case Notes Report", self.reportlab_styles["CustomTitle"])
-            )
+            story.append(Paragraph("Case Notes Report", self.reportlab_styles["CustomTitle"]))
             story.append(Spacer(1, 0.2 * inch))
 
             # Case info
@@ -796,9 +762,7 @@ class PDFGenerator:
             story.append(Spacer(1, 0.3 * inch))
 
             # Notes Section
-            story.append(
-                Paragraph("Notes", self.reportlab_styles["CustomHeading1"])
-            )
+            story.append(Paragraph("Notes", self.reportlab_styles["CustomHeading1"]))
             story.extend(self._build_notes_section(notes_data.notes))
 
             # Build PDF
@@ -829,9 +793,7 @@ class PDFGenerator:
                     },
                 )
 
-            logger.info(
-                f"Case notes PDF generated successfully. Size: {len(pdf_bytes)} bytes"
-            )
+            logger.info(f"Case notes PDF generated successfully. Size: {len(pdf_bytes)} bytes")
             return pdf_bytes
 
         except Exception as e:
@@ -846,33 +808,23 @@ class PDFGenerator:
         """Build case information section."""
         elements = []
 
-        elements.append(
-            Paragraph("Case Information", self.reportlab_styles["CustomHeading1"])
-        )
+        elements.append(Paragraph("Case Information", self.reportlab_styles["CustomHeading1"]))
 
         elements.append(
-            Paragraph(
-                f"<b>Case ID:</b> #{case.id}", self.reportlab_styles["CustomBody"]
-            )
+            Paragraph(f"<b>Case ID:</b> #{case.id}", self.reportlab_styles["CustomBody"])
         )
         elements.append(
-            Paragraph(
-                f"<b>Type:</b> {case.case_type}", self.reportlab_styles["CustomBody"]
-            )
+            Paragraph(f"<b>Type:</b> {case.case_type}", self.reportlab_styles["CustomBody"])
         )
         elements.append(
-            Paragraph(
-                f"<b>Status:</b> {case.status}", self.reportlab_styles["CustomBody"]
-            )
+            Paragraph(f"<b>Status:</b> {case.status}", self.reportlab_styles["CustomBody"])
         )
 
         created_date = datetime.fromisoformat(case.created_at).strftime("%Y-%m-%d")
         updated_date = datetime.fromisoformat(case.updated_at).strftime("%Y-%m-%d")
 
         elements.append(
-            Paragraph(
-                f"<b>Created:</b> {created_date}", self.reportlab_styles["CustomBody"]
-            )
+            Paragraph(f"<b>Created:</b> {created_date}", self.reportlab_styles["CustomBody"])
         )
         elements.append(
             Paragraph(
@@ -886,9 +838,7 @@ class PDFGenerator:
             elements.append(
                 Paragraph("<b><u>Description:</u></b>", self.reportlab_styles["CustomBody"])
             )
-            elements.append(
-                Paragraph(case.description, self.reportlab_styles["CustomBody"])
-            )
+            elements.append(Paragraph(case.description, self.reportlab_styles["CustomBody"]))
 
         elements.append(Spacer(1, 0.2 * inch))
         return elements
@@ -897,9 +847,7 @@ class PDFGenerator:
         """Build evidence section with detailed items."""
         elements = []
 
-        elements.append(
-            Paragraph("Evidence", self.reportlab_styles["CustomHeading1"])
-        )
+        elements.append(Paragraph("Evidence", self.reportlab_styles["CustomHeading1"]))
 
         for index, item in enumerate(evidence, start=1):
             elements.append(Spacer(1, 0.1 * inch))
@@ -917,9 +865,7 @@ class PDFGenerator:
             )
 
             if item.obtained_date:
-                obtained_date = datetime.fromisoformat(item.obtained_date).strftime(
-                    "%Y-%m-%d"
-                )
+                obtained_date = datetime.fromisoformat(item.obtained_date).strftime("%Y-%m-%d")
                 elements.append(
                     Paragraph(
                         f"<b>Date Obtained:</b> {obtained_date}",
@@ -961,9 +907,7 @@ class PDFGenerator:
             )
 
             if event.description:
-                elements.append(
-                    Paragraph(event.description, self.reportlab_styles["CustomBody"])
-                )
+                elements.append(Paragraph(event.description, self.reportlab_styles["CustomBody"]))
 
             elements.append(
                 Paragraph(
@@ -993,9 +937,7 @@ class PDFGenerator:
             deadline_date = deadline_date_obj.strftime("%Y-%m-%d")
 
             # Determine color based on status
-            is_overdue = (
-                deadline_date_obj < datetime.now() and deadline.status != "completed"
-            )
+            is_overdue = deadline_date_obj < datetime.now() and deadline.status != "completed"
 
             if is_overdue:
                 color = "#ef4444"  # Red
@@ -1058,9 +1000,7 @@ class PDFGenerator:
                     )
                 )
 
-            elements.append(
-                Paragraph(note.content, self.reportlab_styles["CustomBody"])
-            )
+            elements.append(Paragraph(note.content, self.reportlab_styles["CustomBody"]))
 
         return elements
 
@@ -1068,9 +1008,7 @@ class PDFGenerator:
         """Build case facts section."""
         elements = []
 
-        elements.append(
-            Paragraph("Case Facts", self.reportlab_styles["CustomHeading1"])
-        )
+        elements.append(Paragraph("Case Facts", self.reportlab_styles["CustomHeading1"]))
 
         for index, fact in enumerate(facts, start=1):
             elements.append(Spacer(1, 0.1 * inch))
@@ -1122,15 +1060,11 @@ class PDFGenerator:
 
         # Center page number
         page_width = A4[0]
-        canvas.drawCentredString(
-            page_width / 2, self.page_margins.bottom / 2, page_num_text
-        )
+        canvas.drawCentredString(page_width / 2, self.page_margins.bottom / 2, page_num_text)
 
         # Export info below page number
         export_info = f"Exported by {exported_by} on {export_date.strftime('%Y-%m-%d')}"
-        canvas.drawCentredString(
-            page_width / 2, (self.page_margins.bottom / 2) - 15, export_info
-        )
+        canvas.drawCentredString(page_width / 2, (self.page_margins.bottom / 2) - 15, export_info)
 
         canvas.restoreState()
 
@@ -1142,7 +1076,6 @@ class PDFGenerator:
 
 async def example_usage():
     """Example usage of PDFGenerator service."""
-    from backend.services.audit_logger import AuditLogger
 
     # Create audit logger (mock for example)
     audit_logger = None  # Replace with actual AuditLogger instance

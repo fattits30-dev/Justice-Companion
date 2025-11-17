@@ -42,10 +42,10 @@ import os
 import socket
 import threading
 import time
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, asdict
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Tuple, Any
+from typing import Dict, List, Optional, Set, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -62,6 +62,7 @@ class PortConfig:
         description: Human-readable description of service
         required: Whether port allocation is required for service
     """
+
     service: str
     default_port: int
     range: Optional[Tuple[int, int]] = None
@@ -81,6 +82,7 @@ class PortAllocation:
         status: Allocation status ('allocated', 'in_use', 'error')
         message: Optional human-readable message
     """
+
     service: str
     requested_port: int
     allocated_port: int
@@ -100,6 +102,7 @@ class PortStatus:
         pid: Optional process ID using the port
         allocated_at: Timestamp when port was allocated
     """
+
     port: int
     service: str
     in_use: bool
@@ -118,6 +121,7 @@ class PortManagerConfig:
         max_retries: Maximum retries for port operations
         retry_delay: Delay between retries in seconds
     """
+
     port_config_path: Optional[str] = None
     enable_auto_allocation: bool = True
     max_retries: int = 10
@@ -131,28 +135,28 @@ DEFAULT_PORT_CONFIGS: List[PortConfig] = [
         default_port=5176,
         range=(5173, 5180),
         description="Vite development server",
-        required=True
+        required=True,
     ),
     PortConfig(
         service="python-ai-service",
         default_port=5050,
         range=(5050, 5060),
         description="Python AI document analysis service",
-        required=False
+        required=False,
     ),
     PortConfig(
         service="electron-dev-api",
         default_port=8080,
         range=(8080, 8090),
         description="Electron development API server",
-        required=False
+        required=False,
     ),
     PortConfig(
         service="playwright-debug",
         default_port=9323,
         range=(9320, 9330),
         description="Playwright debugger",
-        required=False
+        required=False,
     ),
 ]
 
@@ -193,12 +197,12 @@ class PortManager:
         # Try to load from config file first
         if self.config.port_config_path and os.path.exists(self.config.port_config_path):
             try:
-                with open(self.config.port_config_path, 'r', encoding='utf-8') as f:
+                with open(self.config.port_config_path, "r", encoding="utf-8") as f:
                     config_data = json.load(f)
 
                 # Load custom configs
-                if 'portConfigs' in config_data:
-                    custom_configs = config_data['portConfigs']
+                if "portConfigs" in config_data:
+                    custom_configs = config_data["portConfigs"]
                 elif isinstance(config_data, list):
                     custom_configs = config_data
                 else:
@@ -206,8 +210,8 @@ class PortManager:
 
                 for config_dict in custom_configs:
                     # Convert range from list to tuple if present
-                    if 'range' in config_dict and config_dict['range']:
-                        config_dict['range'] = tuple(config_dict['range'])
+                    if "range" in config_dict and config_dict["range"]:
+                        config_dict["range"] = tuple(config_dict["range"])
 
                     config = PortConfig(**config_dict)
                     self.port_configs[config.service] = config
@@ -218,7 +222,7 @@ class PortManager:
             except Exception as e:
                 logger.error(
                     f"[PortManager] Failed to load config from {self.config.port_config_path}: {e}",
-                    exc_info=True
+                    exc_info=True,
                 )
                 self._load_default_configs()
         else:
@@ -233,7 +237,7 @@ class PortManager:
             f"[PortManager] Loaded default port configurations for {len(self.port_configs)} services"
         )
 
-    async def is_port_available(self, port: int, host: str = '127.0.0.1') -> bool:
+    async def is_port_available(self, port: int, host: str = "127.0.0.1") -> bool:
         """
         Check if a port is available.
 
@@ -267,10 +271,7 @@ class PortManager:
             return False
 
     async def find_available_port(
-        self,
-        start_port: int,
-        end_port: Optional[int] = None,
-        host: str = '127.0.0.1'
+        self, start_port: int, end_port: Optional[int] = None, host: str = "127.0.0.1"
     ) -> Optional[int]:
         """
         Find an available port within a range.
@@ -325,7 +326,7 @@ class PortManager:
                     requested_port=0,
                     allocated_port=0,
                     status="error",
-                    message=f"No port configuration found for service: {service_name}"
+                    message=f"No port configuration found for service: {service_name}",
                 )
                 self.allocated_ports[service_name] = allocation
                 return allocation
@@ -346,7 +347,7 @@ class PortManager:
                     requested_port=config.default_port,
                     allocated_port=config.default_port,
                     status="allocated",
-                    message=f"Allocated default port {config.default_port}"
+                    message=f"Allocated default port {config.default_port}",
                 )
                 self.allocated_ports[service_name] = allocation
                 logger.info(
@@ -365,7 +366,7 @@ class PortManager:
                         allocated_port=available_port,
                         status="allocated",
                         message=f"Default port {config.default_port} was in use. "
-                                f"Allocated alternative port {available_port}"
+                        f"Allocated alternative port {available_port}",
                     )
                     self.allocated_ports[service_name] = allocation
                     logger.info(
@@ -379,7 +380,7 @@ class PortManager:
                 requested_port=config.default_port,
                 allocated_port=0,
                 status="in_use",
-                message=f"Port {config.default_port} is in use and no alternatives available"
+                message=f"Port {config.default_port} is in use and no alternatives available",
             )
             self.allocated_ports[service_name] = allocation
             logger.error(f"[PortManager] Failed to allocate port for {service_name}")
@@ -505,15 +506,14 @@ class PortManager:
             logger.debug(f"[PortManager] Stopped monitoring port {port} for {service_name}")
         except Exception as e:
             logger.error(
-                f"[PortManager] Error monitoring port {port} for {service_name}: {e}",
-                exc_info=True
+                f"[PortManager] Error monitoring port {port} for {service_name}: {e}", exc_info=True
             )
 
     def start_port_monitoring(
         self,
         service_name: str,
         interval: float = 5.0,
-        loop: Optional[asyncio.AbstractEventLoop] = None
+        loop: Optional[asyncio.AbstractEventLoop] = None,
     ) -> None:
         """
         Start monitoring port availability.
@@ -597,12 +597,14 @@ class PortManager:
             for service_name, allocation in self.allocated_ports.items():
                 if allocation.status == "allocated":
                     in_use = not await self.is_port_available(allocation.allocated_port)
-                    statuses.append(PortStatus(
-                        port=allocation.allocated_port,
-                        service=service_name,
-                        in_use=in_use,
-                        allocated_at=datetime.now()
-                    ))
+                    statuses.append(
+                        PortStatus(
+                            port=allocation.allocated_port,
+                            service=service_name,
+                            in_use=in_use,
+                            allocated_at=datetime.now(),
+                        )
+                    )
 
         return statuses
 
@@ -630,8 +632,8 @@ class PortManager:
             for config in self.port_configs.values():
                 config_dict = asdict(config)
                 # Convert tuple to list for JSON serialization
-                if config_dict.get('range'):
-                    config_dict['range'] = list(config_dict['range'])
+                if config_dict.get("range"):
+                    config_dict["range"] = list(config_dict["range"])
                 configs.append(config_dict)
 
             # Convert allocations to dict format
@@ -643,7 +645,7 @@ class PortManager:
             config_data = {
                 "timestamp": datetime.now().isoformat(),
                 "portConfigs": configs,
-                "allocations": allocations
+                "allocations": allocations,
             }
 
         try:
@@ -651,7 +653,7 @@ class PortManager:
             Path(config_path).parent.mkdir(parents=True, exist_ok=True)
 
             # Write configuration
-            with open(config_path, 'w', encoding='utf-8') as f:
+            with open(config_path, "w", encoding="utf-8") as f:
                 json.dump(config_data, f, indent=2)
 
             logger.info(
@@ -660,8 +662,7 @@ class PortManager:
             )
         except Exception as e:
             logger.error(
-                f"[PortManager] Failed to save configuration to {config_path}: {e}",
-                exc_info=True
+                f"[PortManager] Failed to save configuration to {config_path}: {e}", exc_info=True
             )
             raise
 
@@ -673,9 +674,7 @@ class PortManager:
             service_name: Name of the service
             port: Port number that became available
         """
-        logger.info(
-            f"[PortManager] Port {port} for {service_name} is now available"
-        )
+        logger.info(f"[PortManager] Port {port} for {service_name} is now available")
 
     def get_environment_variables(self) -> Dict[str, str]:
         """
@@ -694,17 +693,13 @@ class PortManager:
         with self._lock:
             for service, allocation in self.allocated_ports.items():
                 if allocation.status == "allocated":
-                    env_key = service.upper().replace('-', '_') + '_PORT'
+                    env_key = service.upper().replace("-", "_") + "_PORT"
                     env[env_key] = str(allocation.allocated_port)
 
         return env
 
     async def wait_for_port(
-        self,
-        port: int,
-        timeout: float = 30.0,
-        check_interval: float = 1.0,
-        host: str = '127.0.0.1'
+        self, port: int, timeout: float = 30.0, check_interval: float = 1.0, host: str = "127.0.0.1"
     ) -> bool:
         """
         Wait for a port to become in use (service started).

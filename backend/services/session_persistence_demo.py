@@ -9,7 +9,7 @@ import sys
 import os
 
 # Add parent directory to path for imports
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
 from uuid import uuid4
 
@@ -23,9 +23,9 @@ print()
 import re
 
 UUID_V4_PATTERN = re.compile(
-    r'^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$',
-    re.IGNORECASE
+    r"^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE
 )
+
 
 def is_valid_uuid_v4(session_id: str) -> bool:
     """Validate that a string is a properly formatted UUID v4."""
@@ -37,6 +37,7 @@ def is_valid_uuid_v4(session_id: str) -> bool:
 
     try:
         from uuid import UUID
+
         uuid_obj = UUID(session_id, version=4)
         return str(uuid_obj) == session_id
     except (ValueError, AttributeError):
@@ -68,7 +69,8 @@ print()
 
 print("2. SERVICE METHODS")
 print("-" * 70)
-print("""
+print(
+    """
 The SessionPersistenceService provides the following key methods:
 
 ✓ is_session_valid(session_id: str) -> bool
@@ -117,14 +119,16 @@ The SessionPersistenceService provides the following key methods:
   - Optionally keeps current session (except_session_id)
   - Used after password change or security events
   - Returns count of revoked sessions
-""")
+"""
+)
 
 print()
 print()
 
 print("3. SECURITY FEATURES")
 print("-" * 70)
-print("""
+print(
+    """
 ✓ UUID v4 Validation:
   - All session IDs must be valid UUID v4 format
   - Prevents session ID guessing attacks
@@ -154,14 +158,16 @@ print("""
   - Never throws exceptions on validation errors
   - Returns None/False for invalid operations
   - Logs errors to audit trail for investigation
-""")
+"""
+)
 
 print()
 print()
 
 print("4. ARCHITECTURAL NOTES")
 print("-" * 70)
-print("""
+print(
+    """
 This Python service replaces the TypeScript SessionPersistenceService
 which used Electron's safeStorage API for file-based session persistence.
 
@@ -185,7 +191,8 @@ Both implementations:
 - Provide metadata access
 - Comprehensive audit logging
 - Security-first design
-""")
+"""
+)
 
 print()
 print("=" * 70)

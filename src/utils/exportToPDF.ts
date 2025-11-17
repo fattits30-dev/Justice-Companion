@@ -47,7 +47,10 @@ export async function exportChatToPDF(
   try {
     await html2pdf().set(options).from(html).save();
   } catch (error) {
-    logger.error("Export", "PDF export failed:", { error: error as Error });
+    logger.error("PDF export failed:", {
+      service: "Export",
+      error: error as Error,
+    });
 
     alert("Failed to export PDF. Please try again.");
   }

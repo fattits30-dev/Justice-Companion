@@ -24,9 +24,9 @@ def example_1_basic_seeding():
     """
     Example 1: Basic template seeding with in-memory database.
     """
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("Example 1: Basic Template Seeding")
-    print("="*70)
+    print("=" * 70)
 
     # Create in-memory database for demo
     engine = create_engine("sqlite:///:memory:")
@@ -34,7 +34,8 @@ def example_1_basic_seeding():
     db = Session()
 
     # Create tables (simplified for demo)
-    db.execute("""
+    db.execute(
+        """
         CREATE TABLE IF NOT EXISTS case_templates (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
@@ -49,7 +50,8 @@ def example_1_basic_seeding():
             created_at TEXT NOT NULL DEFAULT (datetime('now')),
             updated_at TEXT NOT NULL DEFAULT (datetime('now'))
         )
-    """)
+    """
+    )
     db.commit()
 
     # Initialize seeder
@@ -66,13 +68,15 @@ def example_1_basic_seeding():
     print(f"  Skipped: {result['skipped']}")
     print(f"  Failed: {result['failed']}")
 
-    if result['template_names']:
+    if result["template_names"]:
         print(f"\n📝 Templates created:")
-        for name in result['template_names']:
+        for name in result["template_names"]:
             print(f"  - {name}")
 
     # Verify templates in database
-    templates = db.execute("SELECT name FROM case_templates WHERE is_system_template = 1").fetchall()
+    templates = db.execute(
+        "SELECT name FROM case_templates WHERE is_system_template = 1"
+    ).fetchall()
     print(f"\n✓ {len(templates)} system templates in database")
 
     db.close()
@@ -82,9 +86,9 @@ def example_2_idempotency_check():
     """
     Example 2: Demonstrate idempotency (running twice doesn't create duplicates).
     """
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("Example 2: Idempotency Check")
-    print("="*70)
+    print("=" * 70)
 
     # Create in-memory database
     engine = create_engine("sqlite:///:memory:")
@@ -92,7 +96,8 @@ def example_2_idempotency_check():
     db = Session()
 
     # Create tables
-    db.execute("""
+    db.execute(
+        """
         CREATE TABLE IF NOT EXISTS case_templates (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
@@ -107,7 +112,8 @@ def example_2_idempotency_check():
             created_at TEXT NOT NULL DEFAULT (datetime('now')),
             updated_at TEXT NOT NULL DEFAULT (datetime('now'))
         )
-    """)
+    """
+    )
     db.commit()
 
     seeder = TemplateSeeder(db)
@@ -125,7 +131,9 @@ def example_2_idempotency_check():
     print(f"  Skipped: {result2['skipped']}")
 
     # Verify no duplicates
-    count = db.execute("SELECT COUNT(*) FROM case_templates WHERE is_system_template = 1").fetchone()[0]
+    count = db.execute(
+        "SELECT COUNT(*) FROM case_templates WHERE is_system_template = 1"
+    ).fetchone()[0]
     print(f"\n✓ Total system templates in database: {count}")
     print(f"  (Should be 8, not 16)")
 
@@ -139,9 +147,9 @@ def example_3_with_audit_logging():
     """
     Example 3: Template seeding with audit logging.
     """
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("Example 3: Seeding with Audit Logging")
-    print("="*70)
+    print("=" * 70)
 
     # Create in-memory database
     engine = create_engine("sqlite:///:memory:")
@@ -149,7 +157,8 @@ def example_3_with_audit_logging():
     db = Session()
 
     # Create tables (including audit log)
-    db.execute("""
+    db.execute(
+        """
         CREATE TABLE IF NOT EXISTS case_templates (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
@@ -164,8 +173,10 @@ def example_3_with_audit_logging():
             created_at TEXT NOT NULL DEFAULT (datetime('now')),
             updated_at TEXT NOT NULL DEFAULT (datetime('now'))
         )
-    """)
-    db.execute("""
+    """
+    )
+    db.execute(
+        """
         CREATE TABLE IF NOT EXISTS audit_logs (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             event_type TEXT NOT NULL,
@@ -178,7 +189,8 @@ def example_3_with_audit_logging():
             error_message TEXT,
             created_at TEXT NOT NULL DEFAULT (datetime('now'))
         )
-    """)
+    """
+    )
     db.commit()
 
     # Initialize audit logger
@@ -193,16 +205,20 @@ def example_3_with_audit_logging():
     print(f"\n✓ Seeded {result['seeded']} templates")
 
     # Check audit logs
-    audit_count = db.execute("SELECT COUNT(*) FROM audit_logs WHERE event_type LIKE 'template.%'").fetchone()[0]
+    audit_count = db.execute(
+        "SELECT COUNT(*) FROM audit_logs WHERE event_type LIKE 'template.%'"
+    ).fetchone()[0]
     print(f"✓ {audit_count} audit log entries created")
 
     # Display some audit log entries
-    logs = db.execute("""
+    logs = db.execute(
+        """
         SELECT event_type, action, success, details
         FROM audit_logs
         WHERE event_type LIKE 'template.%'
         LIMIT 5
-    """).fetchall()
+    """
+    ).fetchall()
 
     if logs:
         print("\n📊 Sample audit log entries:")
@@ -218,9 +234,9 @@ def example_4_error_handling():
     """
     Example 4: Demonstrate error handling and rollback.
     """
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("Example 4: Error Handling")
-    print("="*70)
+    print("=" * 70)
 
     # Create in-memory database
     engine = create_engine("sqlite:///:memory:")
@@ -228,7 +244,8 @@ def example_4_error_handling():
     db = Session()
 
     # Create tables with a constraint that will cause error
-    db.execute("""
+    db.execute(
+        """
         CREATE TABLE IF NOT EXISTS case_templates (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL UNIQUE,  -- UNIQUE constraint
@@ -243,7 +260,8 @@ def example_4_error_handling():
             created_at TEXT NOT NULL DEFAULT (datetime('now')),
             updated_at TEXT NOT NULL DEFAULT (datetime('now'))
         )
-    """)
+    """
+    )
     db.commit()
 
     seeder = TemplateSeeder(db)
@@ -271,9 +289,9 @@ def example_5_inspect_template_details():
     """
     Example 5: Inspect details of seeded templates.
     """
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("Example 5: Inspect Template Details")
-    print("="*70)
+    print("=" * 70)
 
     # Create in-memory database
     engine = create_engine("sqlite:///:memory:")
@@ -281,7 +299,8 @@ def example_5_inspect_template_details():
     db = Session()
 
     # Create tables
-    db.execute("""
+    db.execute(
+        """
         CREATE TABLE IF NOT EXISTS case_templates (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
@@ -296,7 +315,8 @@ def example_5_inspect_template_details():
             created_at TEXT NOT NULL DEFAULT (datetime('now')),
             updated_at TEXT NOT NULL DEFAULT (datetime('now'))
         )
-    """)
+    """
+    )
     db.commit()
 
     seeder = TemplateSeeder(db)
@@ -306,12 +326,14 @@ def example_5_inspect_template_details():
     print(f"  ✓ Seeded {result['seeded']} templates")
 
     # Fetch and display template details
-    templates = db.execute("""
+    templates = db.execute(
+        """
         SELECT id, name, category, description
         FROM case_templates
         WHERE is_system_template = 1
         ORDER BY category, name
-    """).fetchall()
+    """
+    ).fetchall()
 
     print("\n📝 Template Details:")
     current_category = None
@@ -327,13 +349,15 @@ def example_5_inspect_template_details():
 
     # Show statistics by category
     print("\n📊 Templates by Category:")
-    category_counts = db.execute("""
+    category_counts = db.execute(
+        """
         SELECT category, COUNT(*) as count
         FROM case_templates
         WHERE is_system_template = 1
         GROUP BY category
         ORDER BY count DESC
-    """).fetchall()
+    """
+    ).fetchall()
 
     for category, count in category_counts:
         print(f"  {category}: {count} template(s)")
@@ -345,9 +369,9 @@ def example_6_cli_script():
     """
     Example 6: CLI-style script for production use.
     """
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("Example 6: Production CLI Script")
-    print("="*70)
+    print("=" * 70)
 
     # Create in-memory database
     engine = create_engine("sqlite:///:memory:")
@@ -355,7 +379,8 @@ def example_6_cli_script():
     db = Session()
 
     # Create tables
-    db.execute("""
+    db.execute(
+        """
         CREATE TABLE IF NOT EXISTS case_templates (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
@@ -370,33 +395,34 @@ def example_6_cli_script():
             created_at TEXT NOT NULL DEFAULT (datetime('now')),
             updated_at TEXT NOT NULL DEFAULT (datetime('now'))
         )
-    """)
+    """
+    )
     db.commit()
 
     seeder = TemplateSeeder(db)
 
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("Justice Companion - Template Seeder")
-    print("="*70)
+    print("=" * 70)
     print("\nSeeding system templates...")
 
     try:
         result = seeder.seed_all()
 
-        print("\n" + "="*70)
+        print("\n" + "=" * 70)
         print("Seeding Results")
-        print("="*70)
+        print("=" * 70)
         print(f"Total templates: {result['total_templates']}")
         print(f"✓ Seeded: {result['seeded']}")
         print(f"⊘ Skipped (already exist): {result['skipped']}")
         print(f"✗ Failed: {result['failed']}")
 
-        if result['template_names']:
+        if result["template_names"]:
             print("\nTemplates seeded:")
-            for name in result['template_names']:
+            for name in result["template_names"]:
                 print(f"  • {name}")
 
-        if result['failed'] > 0:
+        if result["failed"] > 0:
             print("\n⚠ Some templates failed to seed. Check logs for details.")
             return False
 
@@ -412,9 +438,9 @@ def example_6_cli_script():
 
 def main():
     """Run all examples."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("TemplateSeeder - Example Usage")
-    print("="*70)
+    print("=" * 70)
     print("\nThis script demonstrates various uses of the TemplateSeeder service.")
     print("Each example uses an in-memory database for demonstration.")
 
@@ -424,7 +450,7 @@ def main():
         example_3_with_audit_logging,
         example_4_error_handling,
         example_5_inspect_template_details,
-        example_6_cli_script
+        example_6_cli_script,
     ]
 
     for i, example_func in enumerate(examples, 1):
@@ -433,16 +459,17 @@ def main():
         except Exception as e:
             print(f"\n✗ Example {i} failed: {e}")
             import traceback
+
             traceback.print_exc()
 
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("✅ All examples complete!")
-    print("="*70)
+    print("=" * 70)
     print("\nFor more information, see:")
     print("  • TEMPLATE_SEEDER_README.md - Complete documentation")
     print("  • TEMPLATE_SEEDER_MIGRATION.md - Migration guide")
     print("  • test_template_seeder.py - Comprehensive test suite")
-    print("="*70 + "\n")
+    print("=" * 70 + "\n")
 
 
 if __name__ == "__main__":

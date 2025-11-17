@@ -11,16 +11,17 @@ import os
 from datetime import datetime
 
 # Fix Windows console encoding
-if sys.platform == 'win32':
+if sys.platform == "win32":
     import codecs
-    sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
-    sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, 'strict')
+
+    sys.stdout = codecs.getwriter("utf-8")(sys.stdout.buffer, "strict")
+    sys.stderr = codecs.getwriter("utf-8")(sys.stderr.buffer, "strict")
 
 # Direct import by loading the module file
 import importlib.util
+
 spec = importlib.util.spec_from_file_location(
-    "process_manager",
-    os.path.join(os.path.dirname(__file__), "process_manager.py")
+    "process_manager", os.path.join(os.path.dirname(__file__), "process_manager.py")
 )
 process_manager_module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(process_manager_module)
@@ -72,7 +73,7 @@ async def test_port_operations():
 
     # Test with a free port
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.bind(('127.0.0.1', 0))
+        s.bind(("127.0.0.1", 0))
         free_port = s.getsockname()[1]
 
     in_use = await pm.is_port_in_use(free_port)
@@ -81,7 +82,7 @@ async def test_port_operations():
     # Test with an occupied port
     test_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     test_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    test_socket.bind(('127.0.0.1', 0))
+    test_socket.bind(("127.0.0.1", 0))
     test_socket.listen(1)
     occupied_port = test_socket.getsockname()[1]
 
@@ -229,6 +230,7 @@ def main():
         print(f"X Test failed: {e}")
         print("=" * 70 + "\n")
         import traceback
+
         traceback.print_exc()
         return 1
 

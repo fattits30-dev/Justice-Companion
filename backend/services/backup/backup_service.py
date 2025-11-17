@@ -17,7 +17,6 @@ Security:
 - Prevents accidental deletion of protected backups
 """
 
-import os
 import shutil
 from typing import List, Optional
 from datetime import datetime
@@ -43,11 +42,7 @@ class BackupService:
         db_path: Path to the active database file
     """
 
-    def __init__(
-        self,
-        db_path: str,
-        backups_dir: Optional[str] = None
-    ):
+    def __init__(self, db_path: str, backups_dir: Optional[str] = None):
         """
         Initialize backup service.
 
@@ -66,7 +61,9 @@ class BackupService:
         # Ensure backups directory exists
         self.backups_dir.mkdir(parents=True, exist_ok=True)
 
-        logger.info(f"BackupService initialized with db_path={self.db_path}, backups_dir={self.backups_dir}")
+        logger.info(
+            f"BackupService initialized with db_path={self.db_path}, backups_dir={self.backups_dir}"
+        )
 
     def create_backup(self, custom_filename: Optional[str] = None) -> BackupMetadataResponse:
         """
@@ -107,7 +104,7 @@ class BackupService:
                 filepath=str(backup_path),
                 size=stats.st_size,
                 created_at=datetime.fromtimestamp(stats.st_ctime).isoformat(),
-                is_protected=is_protected
+                is_protected=is_protected,
             )
 
             logger.info(f"Database backup created: {filename} ({stats.st_size} bytes)")
@@ -172,7 +169,7 @@ class BackupService:
                         filepath=str(file_path),
                         size=stats.st_size,
                         created_at=datetime.fromtimestamp(stats.st_ctime).isoformat(),
-                        is_protected=is_protected
+                        is_protected=is_protected,
                     )
                     backups.append(metadata)
 
@@ -256,7 +253,7 @@ class BackupService:
             filepath=str(backup_path),
             size=stats.st_size,
             created_at=datetime.fromtimestamp(stats.st_ctime).isoformat(),
-            is_protected=is_protected
+            is_protected=is_protected,
         )
 
     def _is_protected_backup(self, filename: str) -> bool:

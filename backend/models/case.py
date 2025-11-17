@@ -12,6 +12,7 @@ import enum
 
 class CaseType(str, enum.Enum):
     """Case type enumeration matching database CHECK constraint."""
+
     EMPLOYMENT = "employment"
     HOUSING = "housing"
     CONSUMER = "consumer"
@@ -22,6 +23,7 @@ class CaseType(str, enum.Enum):
 
 class CaseStatus(str, enum.Enum):
     """Case status enumeration matching database CHECK constraint."""
+
     ACTIVE = "active"
     CLOSED = "closed"
     PENDING = "pending"
@@ -47,14 +49,11 @@ class Case(Base):
     id = Column(Integer, primary_key=True, autoincrement=True, index=True)
     title = Column(String, nullable=False)
     description = Column(String, nullable=True)
-    case_type = Column(
-        SQLEnum(CaseType, name="case_type", native_enum=False),
-        nullable=False
-    )
+    case_type = Column(SQLEnum(CaseType, name="case_type", native_enum=False), nullable=False)
     status = Column(
         SQLEnum(CaseStatus, name="case_status", native_enum=False),
         nullable=False,
-        default=CaseStatus.ACTIVE
+        default=CaseStatus.ACTIVE,
     )
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -73,11 +72,13 @@ class Case(Base):
             "id": self.id,
             "title": self.title,
             "description": self.description,
-            "case_type": self.case_type.value if isinstance(self.case_type, CaseType) else self.case_type,
+            "case_type": (
+                self.case_type.value if isinstance(self.case_type, CaseType) else self.case_type
+            ),
             "status": self.status.value if isinstance(self.status, CaseStatus) else self.status,
             "user_id": self.user_id,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
-            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+            "created_at": self.created_at.isoformat() if self.created_at is not None else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at is not None else None,
         }
 
     def __repr__(self):

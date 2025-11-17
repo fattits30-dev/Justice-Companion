@@ -18,7 +18,7 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
 
-from fastapi import FastAPI, HTTPException, BackgroundTasks, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
@@ -26,8 +26,6 @@ from backend.services.auto_updater import (
     AutoUpdater,
     AutoUpdaterConfig,
     UpdateChannel,
-    UpdateInfo,
-    format_file_size
 )
 
 
@@ -43,6 +41,7 @@ logger = logging.getLogger(__name__)
 
 class UpdateCheckResponse(BaseModel):
     """Response model for update check."""
+
     update_available: bool
     current_version: str
     latest_version: Optional[str] = None
@@ -52,11 +51,13 @@ class UpdateCheckResponse(BaseModel):
 
 class UpdateDownloadRequest(BaseModel):
     """Request model for update download."""
+
     output_path: Optional[str] = None
 
 
 class UpdateDownloadResponse(BaseModel):
     """Response model for update download."""
+
     success: bool
     file_path: Optional[str] = None
     error: Optional[str] = None
@@ -65,6 +66,7 @@ class UpdateDownloadResponse(BaseModel):
 
 class UpdateStatusResponse(BaseModel):
     """Response model for update status."""
+
     current_version: str
     latest_version: Optional[str] = None
     checking: bool = False
@@ -77,6 +79,7 @@ class UpdateStatusResponse(BaseModel):
 
 class UpdateConfigRequest(BaseModel):
     """Request model for update configuration."""
+
     check_on_startup: bool = True
     channel: str = "stable"
     timeout_seconds: int = 30
@@ -112,16 +115,13 @@ async def lifespan(app: FastAPI):
     logger.info("Starting AutoUpdater service...")
 
     config = AutoUpdaterConfig(
-        check_on_startup=True,
-        channel=UpdateChannel.STABLE,
-        timeout_seconds=30,
-        max_retries=3
+        check_on_startup=True, channel=UpdateChannel.STABLE, timeout_seconds=30, max_retries=3
     )
 
     updater = AutoUpdater(
         repo="justice-companion/justice-companion",
         current_version="1.0.0",  # TODO: Get from package/config
-        config=config
+        config=config,
     )
 
     # Initialize and check for updates
@@ -147,7 +147,7 @@ app = FastAPI(
     title="Justice Companion - Auto Updater API",
     description="REST API for application update management",
     version="1.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 
@@ -216,7 +216,7 @@ async def check_updates():
             current_version=result.current_version,
             latest_version=result.latest_version,
             update_info=result.update_info.to_dict() if result.update_info else None,
-            error=result.error
+            error=result.error,
         )
 
     except Exception as e:
@@ -247,15 +247,14 @@ async def download_update(request: UpdateDownloadRequest):
 
         # Download update
         download_result = await updater.download_update(
-            check_result.update_info,
-            request.output_path
+            check_result.update_info, request.output_path
         )
 
         return UpdateDownloadResponse(
             success=download_result.success,
             file_path=download_result.file_path,
             error=download_result.error,
-            checksum_verified=download_result.checksum_verified
+            checksum_verified=download_result.checksum_verified,
         )
 
     except HTTPException:
@@ -287,7 +286,7 @@ async def get_update_status():
             downloading=status.downloading,
             update_downloaded=status.update_downloaded,
             download_progress=status.download_progress,
-            error=status.error
+            error=status.error,
         )
 
     except Exception as e:
@@ -311,7 +310,7 @@ async def get_update_info():
         "update_source": updater.get_update_source(),
         "channel": updater.config.channel.value,
         "enabled": updater.is_enabled(),
-        "last_check": last_check_time.isoformat() if last_check_time else None
+        "last_check": last_check_time.isoformat() if last_check_time else None,
     }
 
 
@@ -356,9 +355,7 @@ async def download_update_stream():
             updater.on_download_progress(on_progress)
 
             # Start download in background
-            download_task = asyncio.create_task(
-                updater.download_update(update_info)
-            )
+            download_task = asyncio.create_task(updater.download_update(update_info))
 
             # Stream progress updates
             while not download_task.done():
@@ -380,10 +377,7 @@ async def download_update_stream():
             logger.exception("Error in download stream")
             yield f"data: {{'status': 'error', 'error': '{str(e)}'}}\n\n"
 
-    return StreamingResponse(
-        event_generator(),
-        media_type="text/event-stream"
-    )
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 
 # ============================================================================
@@ -411,10 +405,7 @@ async def websocket_endpoint(websocket: WebSocket):
             if command == "check":
                 # Check for updates
                 result = await updater.check_for_updates()
-                await websocket.send_json({
-                    "type": "check_result",
-                    "data": result.to_dict()
-                })
+                await websocket.send_json({"type": "check_result", "data": result.to_dict()})
 
             elif command == "download":
                 # Download update with progress
@@ -423,10 +414,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 if check_result.update_available and check_result.update_info:
                     # Register progress callback
                     async def send_progress(percent: float):
-                        await websocket.send_json({
-                            "type": "progress",
-                            "progress": percent
-                        })
+                        await websocket.send_json({"type": "progress", "progress": percent})
 
                     # Note: Need to handle async callback differently
                     def on_progress(percent: float):
@@ -437,23 +425,16 @@ async def websocket_endpoint(websocket: WebSocket):
                     # Download
                     download_result = await updater.download_update(check_result.update_info)
 
-                    await websocket.send_json({
-                        "type": "download_result",
-                        "data": download_result.to_dict()
-                    })
+                    await websocket.send_json(
+                        {"type": "download_result", "data": download_result.to_dict()}
+                    )
                 else:
-                    await websocket.send_json({
-                        "type": "error",
-                        "error": "No update available"
-                    })
+                    await websocket.send_json({"type": "error", "error": "No update available"})
 
             elif command == "status":
                 # Get status
                 status = updater.get_status()
-                await websocket.send_json({
-                    "type": "status",
-                    "data": status.to_dict()
-                })
+                await websocket.send_json({"type": "status", "data": status.to_dict()})
 
     except WebSocketDisconnect:
         logger.info("WebSocket client disconnected")
@@ -487,7 +468,7 @@ async def health_check():
     return {
         "status": "healthy",
         "updater_enabled": updater is not None and updater.is_enabled(),
-        "timestamp": datetime.now().isoformat()
+        "timestamp": datetime.now().isoformat(),
     }
 
 
@@ -499,9 +480,4 @@ async def health_check():
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(
-        app,
-        host="127.0.0.1",
-        port=8000,
-        log_level="info"
-    )
+    uvicorn.run(app, host="127.0.0.1", port=8000, log_level="info")

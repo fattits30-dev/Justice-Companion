@@ -41,10 +41,9 @@ Routes:
 - POST /gdpr/consents - Update user consents
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Header, Query, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field, field_validator, ConfigDict
-from typing import Optional, Dict, Any, List
-from datetime import datetime, timezone
+from typing import Optional, Dict, List
 from sqlalchemy.orm import Session
 import logging
 import os
@@ -66,11 +65,13 @@ router = APIRouter(prefix="/gdpr", tags=["gdpr"])
 
 # ===== PYDANTIC REQUEST/RESPONSE MODELS =====
 
+
 class GdprExportRequest(BaseModel):
     """Request model for GDPR data export (Article 20)."""
+
     format: str = Field(default="json", description="Export format (json or csv)")
 
-    @field_validator('format')
+    @field_validator("format")
     @classmethod
     def validate_format(cls, v):
         if v not in ["json", "csv"]:
@@ -82,6 +83,7 @@ class GdprExportRequest(BaseModel):
 
 class GdprExportResponse(BaseModel):
     """Response model for GDPR data export."""
+
     success: bool
     filePath: str
     totalRecords: int
@@ -94,11 +96,12 @@ class GdprExportResponse(BaseModel):
 
 class GdprDeleteRequest(BaseModel):
     """Request model for GDPR account deletion (Article 17)."""
+
     confirmed: bool = Field(..., description="User must explicitly confirm deletion")
     exportBeforeDelete: bool = Field(default=False, description="Export data before deletion")
     reason: Optional[str] = Field(None, max_length=500, description="Optional reason for deletion")
 
-    @field_validator('confirmed')
+    @field_validator("confirmed")
     @classmethod
     def validate_confirmed(cls, v):
         if not v:
@@ -110,6 +113,7 @@ class GdprDeleteRequest(BaseModel):
 
 class GdprDeleteResponse(BaseModel):
     """Response model for GDPR account deletion."""
+
     success: bool
     deletionDate: str
     deletedCounts: Dict[str, int]
@@ -123,6 +127,7 @@ class GdprDeleteResponse(BaseModel):
 
 class ConsentRecord(BaseModel):
     """Consent record model."""
+
     id: int
     consentType: str
     granted: bool
@@ -135,6 +140,7 @@ class ConsentRecord(BaseModel):
 
 class ConsentsResponse(BaseModel):
     """Response model for user consents."""
+
     consents: List[ConsentRecord]
 
     model_config = ConfigDict(from_attributes=True)
@@ -142,6 +148,7 @@ class ConsentsResponse(BaseModel):
 
 class UpdateConsentRequest(BaseModel):
     """Request model for updating consent."""
+
     consentType: str = Field(..., description="Type of consent (e.g., data_processing, marketing)")
     granted: bool = Field(..., description="Whether consent is granted")
 
@@ -149,6 +156,7 @@ class UpdateConsentRequest(BaseModel):
 
 
 # ===== DEPENDENCY INJECTION =====
+
 
 def get_auth_service(db: Session = Depends(get_db)) -> AuthenticationService:
     """Get authentication service instance."""
@@ -169,8 +177,7 @@ def get_audit_logger(db: Session = Depends(get_db)) -> AuditLogger:
 
 
 def get_consent_service(
-    db: Session = Depends(get_db),
-    audit_logger: AuditLogger = Depends(get_audit_logger)
+    db: Session = Depends(get_db), audit_logger: AuditLogger = Depends(get_audit_logger)
 ) -> ConsentService:
     """Get consent service instance."""
     return ConsentService(db, audit_logger)
@@ -179,7 +186,7 @@ def get_consent_service(
 def get_gdpr_service(
     db: Session = Depends(get_db),
     encryption_service: EncryptionService = Depends(get_encryption_service),
-    audit_logger: AuditLogger = Depends(get_audit_logger)
+    audit_logger: AuditLogger = Depends(get_audit_logger),
 ) -> GdprService:
     """
     Get GDPR service instance.
@@ -191,17 +198,18 @@ def get_gdpr_service(
         db=db,
         encryption_service=encryption_service,
         audit_logger=audit_logger,
-        rate_limit_service=None  # TODO: Add Redis-based RateLimitService in production
+        rate_limit_service=None,  # TODO: Add Redis-based RateLimitService in production
     )
 
 
 # ===== ROUTES =====
 
+
 @router.post("/export", response_model=GdprExportResponse)
 async def gdpr_export(
     request: GdprExportRequest,
     user_id: int = Depends(get_current_user),
-    gdpr_service: GdprService = Depends(get_gdpr_service)
+    gdpr_service: GdprService = Depends(get_gdpr_service),
 ):
     """
     Export all user data (GDPR Article 20 - Data Portability).
@@ -235,14 +243,16 @@ async def gdpr_export(
         export_options = GdprExportOptions(export_format=request.format)
         export_result = await gdpr_service.export_user_data(user_id, export_options)
 
-        logger.info(f"GDPR export complete: {export_result.metadata['totalRecords']} records exported")
+        logger.info(
+            f"GDPR export complete: {export_result.metadata['totalRecords']} records exported"
+        )
 
         return GdprExportResponse(
             success=True,
             filePath=export_result.file_path or "",
             totalRecords=export_result.metadata["totalRecords"],
             exportDate=export_result.metadata["exportDate"],
-            format=export_result.metadata["format"]
+            format=export_result.metadata["format"],
         )
 
     except HTTPException:
@@ -251,8 +261,7 @@ async def gdpr_export(
     except Exception as e:
         logger.error(f"GDPR export failed: {e}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Export failed: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Export failed: {str(e)}"
         )
 
 
@@ -260,7 +269,7 @@ async def gdpr_export(
 async def gdpr_delete(
     request: GdprDeleteRequest,
     user_id: int = Depends(get_current_user),
-    gdpr_service: GdprService = Depends(get_gdpr_service)
+    gdpr_service: GdprService = Depends(get_gdpr_service),
 ):
     """
     Delete all user data (GDPR Article 17 - Right to Erasure).
@@ -297,14 +306,14 @@ async def gdpr_delete(
         if not request.confirmed:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Deletion requires explicit confirmation (confirmed: true)"
+                detail="Deletion requires explicit confirmation (confirmed: true)",
             )
 
         # Call service layer (handles consent check, optional export, deletion, audit)
         delete_options = GdprDeleteOptions(
             confirmed=request.confirmed,
             export_before_delete=request.exportBeforeDelete,
-            reason=request.reason
+            reason=request.reason,
         )
         delete_result = await gdpr_service.delete_user_data(user_id, delete_options)
 
@@ -319,7 +328,7 @@ async def gdpr_delete(
             deletedCounts=delete_result.deleted_counts,
             preservedAuditLogs=delete_result.preserved_audit_logs,
             preservedConsents=delete_result.preserved_consents,
-            exportPath=delete_result.export_path
+            exportPath=delete_result.export_path,
         )
 
     except HTTPException:
@@ -328,15 +337,14 @@ async def gdpr_delete(
     except Exception as e:
         logger.error(f"GDPR deletion failed: {e}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Deletion failed: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Deletion failed: {str(e)}"
         )
 
 
 @router.get("/consents", response_model=ConsentsResponse)
 async def get_consents(
     user_id: int = Depends(get_current_user),
-    consent_service: ConsentService = Depends(get_consent_service)
+    consent_service: ConsentService = Depends(get_consent_service),
 ):
     """
     Get user's consent records.
@@ -366,7 +374,7 @@ async def get_consents(
                 granted=consent.granted,
                 grantedAt=consent.granted_at.isoformat() if consent.granted_at else None,
                 revokedAt=consent.revoked_at.isoformat() if consent.revoked_at else None,
-                createdAt=consent.created_at.isoformat()
+                createdAt=consent.created_at.isoformat(),
             )
             consent_records.append(consent_record)
 
@@ -376,7 +384,7 @@ async def get_consents(
         logger.error(f"Failed to get consents: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get consents: {str(e)}"
+            detail=f"Failed to get consents: {str(e)}",
         )
 
 
@@ -384,7 +392,7 @@ async def get_consents(
 async def update_consent(
     request: UpdateConsentRequest,
     user_id: int = Depends(get_current_user),
-    consent_service: ConsentService = Depends(get_consent_service)
+    consent_service: ConsentService = Depends(get_consent_service),
 ):
     """
     Update user consent.
@@ -414,7 +422,7 @@ async def update_consent(
         except ValueError:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid consent type: {request.consentType}"
+                detail=f"Invalid consent type: {request.consentType}",
             )
 
         # Call service layer
@@ -424,15 +432,11 @@ async def update_consent(
                 "success": True,
                 "consentType": consent.consent_type,
                 "granted": consent.granted,
-                "id": consent.id
+                "id": consent.id,
             }
         else:
             consent_service.revoke_consent(user_id, consent_type)
-            return {
-                "success": True,
-                "consentType": request.consentType,
-                "granted": False
-            }
+            return {"success": True, "consentType": request.consentType, "granted": False}
 
     except HTTPException:
         raise
@@ -440,5 +444,5 @@ async def update_consent(
         logger.error(f"Failed to update consent: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to update consent: {str(e)}"
+            detail=f"Failed to update consent: {str(e)}",
         )

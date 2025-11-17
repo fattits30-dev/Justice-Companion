@@ -36,18 +36,19 @@ import time
 import threading
 import logging
 from typing import Optional, Any, Dict, List, Callable, Awaitable, TypeVar, Generic
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from collections import OrderedDict
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 @dataclass
 class CacheStats:
     """Cache statistics for monitoring and debugging."""
+
     name: str
     hits: int
     misses: int
@@ -60,6 +61,7 @@ class CacheStats:
 @dataclass
 class CacheConfig:
     """Configuration for a named cache instance."""
+
     name: str
     max_items: int  # Maximum items in cache
     ttl_ms: Optional[int] = None  # Time to live in milliseconds
@@ -69,6 +71,7 @@ class CacheConfig:
 @dataclass
 class CacheEntry(Generic[T]):
     """Cache entry metadata for debugging."""
+
     value: T
     timestamp: float  # Unix timestamp in seconds
     access_count: int = 0
@@ -87,7 +90,7 @@ class LRUCache(Generic[T]):
         max_items: int,
         ttl_ms: Optional[int] = None,
         update_age_on_get: bool = True,
-        on_evict: Optional[Callable[[str, str], None]] = None
+        on_evict: Optional[Callable[[str, str], None]] = None,
     ):
         """
         Initialize LRU cache.
@@ -134,12 +137,7 @@ class LRUCache(Generic[T]):
 
             return entry
 
-    def set(
-        self,
-        key: str,
-        entry: CacheEntry[T],
-        ttl_ms: Optional[int] = None
-    ) -> None:
+    def set(self, key: str, entry: CacheEntry[T], ttl_ms: Optional[int] = None) -> None:
         """
         Set cache value with TTL.
 
@@ -235,34 +233,28 @@ class CacheService:
     # Default cache configurations for different data types
     DEFAULT_CONFIGS: List[CacheConfig] = [
         CacheConfig(
-            name="sessions",
-            max_items=1000,
-            ttl_ms=60 * 60 * 1000,  # 1 hour
-            update_age_on_get=True
+            name="sessions", max_items=1000, ttl_ms=60 * 60 * 1000, update_age_on_get=True  # 1 hour
         ),
         CacheConfig(
-            name="cases",
-            max_items=500,
-            ttl_ms=5 * 60 * 1000,  # 5 minutes
-            update_age_on_get=True
+            name="cases", max_items=500, ttl_ms=5 * 60 * 1000, update_age_on_get=True  # 5 minutes
         ),
         CacheConfig(
             name="evidence",
             max_items=1000,
             ttl_ms=5 * 60 * 1000,  # 5 minutes
-            update_age_on_get=True
+            update_age_on_get=True,
         ),
         CacheConfig(
             name="profiles",
             max_items=200,
             ttl_ms=30 * 60 * 1000,  # 30 minutes
-            update_age_on_get=True
+            update_age_on_get=True,
         ),
         CacheConfig(
             name="default",
             max_items=500,
             ttl_ms=10 * 60 * 1000,  # 10 minutes default
-            update_age_on_get=True
+            update_age_on_get=True,
         ),
     ]
 
@@ -301,6 +293,7 @@ class CacheService:
         Args:
             config: Cache configuration
         """
+
         def on_evict(key: str, reason: str) -> None:
             """Callback for tracking evictions."""
             if reason == "evict":
@@ -313,23 +306,19 @@ class CacheService:
             max_items=config.max_items,
             ttl_ms=config.ttl_ms,
             update_age_on_get=config.update_age_on_get,
-            on_evict=on_evict
+            on_evict=on_evict,
         )
 
         with self._lock:
             self._caches[config.name] = cache
-            self._stats[config.name] = {
-                "hits": 0,
-                "misses": 0,
-                "evictions": 0
-            }
+            self._stats[config.name] = {"hits": 0, "misses": 0, "evictions": 0}
 
     async def get_cached(
         self,
         key: str,
         fetch_fn: Callable[[], Awaitable[T]],
         cache_name: str = "default",
-        ttl_ms: Optional[int] = None
+        ttl_ms: Optional[int] = None,
     ) -> T:
         """
         Get cached value or fetch from source (cache-aside pattern).
@@ -375,12 +364,7 @@ class CacheService:
             value = await fetch_fn()
 
             # Store in cache with metadata
-            entry = CacheEntry(
-                value=value,
-                timestamp=time.time(),
-                access_count=0,
-                ttl_ms=ttl_ms
-            )
+            entry = CacheEntry(value=value, timestamp=time.time(), access_count=0, ttl_ms=ttl_ms)
 
             cache.set(key, entry, ttl_ms=ttl_ms)
 
@@ -390,12 +374,8 @@ class CacheService:
             # Log error but don't fail the operation
             logger.error(
                 f"[CacheService] Error in get_cached: {error}",
-                extra={
-                    "context": "CacheService.get_cached",
-                    "key": key,
-                    "cache_name": cache_name
-                },
-                exc_info=True
+                extra={"context": "CacheService.get_cached", "key": key, "cache_name": cache_name},
+                exc_info=True,
             )
 
             # Fallback to direct fetch on cache error
@@ -422,11 +402,7 @@ class CacheService:
                 for cache in self._caches.values():
                     cache.delete(key)
 
-    def invalidate_pattern(
-        self,
-        pattern: str,
-        cache_name: Optional[str] = None
-    ) -> None:
+    def invalidate_pattern(self, pattern: str, cache_name: Optional[str] = None) -> None:
         """
         Invalidate all keys matching a pattern.
 
@@ -445,9 +421,7 @@ class CacheService:
 
         with self._lock:
             caches_to_check = (
-                [self._caches.get(cache_name)]
-                if cache_name
-                else list(self._caches.values())
+                [self._caches.get(cache_name)] if cache_name else list(self._caches.values())
             )
 
         for cache in caches_to_check:
@@ -493,9 +467,7 @@ class CacheService:
         results: List[CacheStats] = []
 
         with self._lock:
-            caches_to_report = (
-                [cache_name] if cache_name else list(self._caches.keys())
-            )
+            caches_to_report = [cache_name] if cache_name else list(self._caches.keys())
 
             for name in caches_to_report:
                 cache = self._caches.get(name)
@@ -505,23 +477,21 @@ class CacheService:
                     total = stats["hits"] + stats["misses"]
                     hit_rate = (stats["hits"] / total * 100) if total > 0 else 0
 
-                    results.append(CacheStats(
-                        name=name,
-                        hits=stats["hits"],
-                        misses=stats["misses"],
-                        hit_rate=round(hit_rate, 2),
-                        size=cache.size,
-                        max_size=cache.max_items,
-                        evictions=stats["evictions"]
-                    ))
+                    results.append(
+                        CacheStats(
+                            name=name,
+                            hits=stats["hits"],
+                            misses=stats["misses"],
+                            hit_rate=round(hit_rate, 2),
+                            size=cache.size,
+                            max_size=cache.max_items,
+                            evictions=stats["evictions"],
+                        )
+                    )
 
         return results
 
-    def inspect(
-        self,
-        cache_name: str,
-        limit: int = 10
-    ) -> List[Dict[str, Any]]:
+    def inspect(self, cache_name: str, limit: int = 10) -> List[Dict[str, Any]]:
         """
         Get detailed information about cache entries (for debugging).
 
@@ -543,13 +513,15 @@ class CacheService:
                 if idx >= limit:
                     break
 
-                entries.append({
-                    "key": key,
-                    "timestamp": datetime.fromtimestamp(entry.timestamp).isoformat(),
-                    "access_count": entry.access_count,
-                    "ttl_ms": entry.ttl_ms,
-                    "value_type": type(entry.value).__name__
-                })
+                entries.append(
+                    {
+                        "key": key,
+                        "timestamp": datetime.fromtimestamp(entry.timestamp).isoformat(),
+                        "access_count": entry.access_count,
+                        "ttl_ms": entry.ttl_ms,
+                        "value_type": type(entry.value).__name__,
+                    }
+                )
 
             return entries
 
@@ -561,9 +533,7 @@ class CacheService:
             cache_name: Optional cache name, resets all if not specified
         """
         with self._lock:
-            caches_to_reset = (
-                [cache_name] if cache_name else list(self._stats.keys())
-            )
+            caches_to_reset = [cache_name] if cache_name else list(self._stats.keys())
 
             for name in caches_to_reset:
                 stats = self._stats.get(name)
@@ -595,11 +565,7 @@ class CacheService:
 
         logger.info(f"[CacheService] Cache {'enabled' if enabled else 'disabled'}")
 
-    async def preload(
-        self,
-        entries: List[Dict[str, Any]],
-        cache_name: str = "default"
-    ) -> None:
+    async def preload(self, entries: List[Dict[str, Any]], cache_name: str = "default") -> None:
         """
         Preload cache with multiple entries.
 
@@ -622,14 +588,7 @@ class CacheService:
 
         import asyncio
 
-        tasks = [
-            self.get_cached(
-                entry["key"],
-                entry["fetch_fn"],
-                cache_name
-            )
-            for entry in entries
-        ]
+        tasks = [self.get_cached(entry["key"], entry["fetch_fn"], cache_name) for entry in entries]
 
         await asyncio.gather(*tasks, return_exceptions=True)
 

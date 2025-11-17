@@ -16,6 +16,7 @@ from backend.services.encryption_service import EncryptionService
 
 # ===== SETUP =====
 
+
 def get_database_session():
     """Create database session (replace with your actual DB config)."""
     engine = create_engine("sqlite:///justice_companion.db")
@@ -31,6 +32,7 @@ def get_encryption_service():
 
 
 # ===== EXAMPLE 1: FULL INDEX REBUILD (ADMIN ONLY) =====
+
 
 async def example_full_rebuild():
     """
@@ -65,6 +67,7 @@ async def example_full_rebuild():
 
 
 # ===== EXAMPLE 2: USER-SPECIFIC INDEX REBUILD =====
+
 
 async def example_user_rebuild():
     """
@@ -104,6 +107,7 @@ async def example_user_rebuild():
 
 # ===== EXAMPLE 3: INDEX A NEW CASE =====
 
+
 async def example_index_case():
     """
     Example: Index a single case.
@@ -126,7 +130,7 @@ async def example_index_case():
         "description": "Contract dispute over payment terms for services rendered on 2025-01-15. Contact: attorney@lawfirm.com",
         "case_type": "civil",
         "status": "active",
-        "created_at": datetime.utcnow().isoformat()
+        "created_at": datetime.utcnow().isoformat(),
     }
 
     try:
@@ -150,6 +154,7 @@ async def example_index_case():
 
 
 # ===== EXAMPLE 4: INDEX EVIDENCE WITH ENCRYPTED CONTENT =====
+
 
 async def example_index_encrypted_evidence():
     """
@@ -177,7 +182,7 @@ async def example_index_encrypted_evidence():
         "content": json.dumps(encrypted_data.to_dict()),  # Encrypted
         "evidence_type": "document",
         "file_path": "/evidence/confidential.pdf",
-        "created_at": datetime.utcnow().isoformat()
+        "created_at": datetime.utcnow().isoformat(),
     }
 
     try:
@@ -197,6 +202,7 @@ async def example_index_encrypted_evidence():
 
 
 # ===== EXAMPLE 5: INDEX A CONVERSATION =====
+
 
 async def example_index_conversation():
     """
@@ -218,7 +224,7 @@ async def example_index_conversation():
         "title": "Legal Research on Contract Law #research",
         "case_id": 1,
         "message_count": 10,
-        "created_at": datetime.utcnow().isoformat()
+        "created_at": datetime.utcnow().isoformat(),
     }
 
     try:
@@ -237,6 +243,7 @@ async def example_index_conversation():
 
 
 # ===== EXAMPLE 6: INDEX A NOTE =====
+
 
 async def example_index_note():
     """
@@ -259,7 +266,7 @@ async def example_index_note():
         "content": "Discussed settlement options. Next meeting: 2025-02-01. Call client at +1-555-1234.",
         "case_id": 1,
         "is_pinned": True,
-        "created_at": datetime.utcnow().isoformat()
+        "created_at": datetime.utcnow().isoformat(),
     }
 
     try:
@@ -282,6 +289,7 @@ async def example_index_note():
 
 
 # ===== EXAMPLE 7: UPDATE EXISTING INDEX ENTRY =====
+
 
 async def example_update_index():
     """
@@ -323,6 +331,7 @@ async def example_update_index():
 
 # ===== EXAMPLE 8: REMOVE FROM INDEX =====
 
+
 async def example_remove_from_index():
     """
     Example: Remove an item from the index.
@@ -356,6 +365,7 @@ async def example_remove_from_index():
 
 # ===== EXAMPLE 9: OPTIMIZE INDEX =====
 
+
 async def example_optimize_index():
     """
     Example: Optimize the FTS5 index.
@@ -388,6 +398,7 @@ async def example_optimize_index():
 
 # ===== EXAMPLE 10: GET INDEX STATISTICS =====
 
+
 async def example_get_statistics():
     """
     Example: Get comprehensive index statistics.
@@ -410,15 +421,17 @@ async def example_get_statistics():
         print(f"  Total documents: {stats['total_documents']}")
 
         print("\n  Documents by type:")
-        for entity_type, count in stats['documents_by_type'].items():
-            percentage = (count / stats['total_documents'] * 100) if stats['total_documents'] > 0 else 0
+        for entity_type, count in stats["documents_by_type"].items():
+            percentage = (
+                (count / stats["total_documents"] * 100) if stats["total_documents"] > 0 else 0
+            )
             print(f"    {entity_type:12s}: {count:5d} ({percentage:5.1f}%)")
 
         print(f"\n  Last updated: {stats['last_updated']}")
 
         # Estimate index size
         avg_doc_size_kb = 2  # Average 2KB per document
-        estimated_size_mb = (stats['total_documents'] * avg_doc_size_kb) / 1024
+        estimated_size_mb = (stats["total_documents"] * avg_doc_size_kb) / 1024
         print(f"\n  Estimated index size: ~{estimated_size_mb:.1f} MB")
 
     except Exception as e:
@@ -428,6 +441,7 @@ async def example_get_statistics():
 
 
 # ===== EXAMPLE 11: TAG EXTRACTION DEMO =====
+
 
 async def example_tag_extraction():
     """
@@ -460,9 +474,9 @@ async def example_tag_extraction():
 
     print("\nTag breakdown:")
     tag_list = tags.split()
-    hashtags = [t for t in tag_list if not any(c in t for c in ['@', '-', '+'])]
-    emails = [t for t in tag_list if '@' in t]
-    phones = [t for t in tag_list if '+' in t or '-' in t]
+    hashtags = [t for t in tag_list if not any(c in t for c in ["@", "-", "+"])]
+    emails = [t for t in tag_list if "@" in t]
+    phones = [t for t in tag_list if "+" in t or "-" in t]
 
     print(f"  Hashtags: {hashtags}")
     print(f"  Emails: {emails}")
@@ -472,6 +486,7 @@ async def example_tag_extraction():
 
 
 # ===== EXAMPLE 12: BULK INDEXING WORKFLOW =====
+
 
 async def example_bulk_indexing():
     """
@@ -496,7 +511,7 @@ async def example_bulk_indexing():
             "description": f"Description for case {i}",
             "case_type": "civil",
             "status": "active",
-            "created_at": datetime.utcnow().isoformat()
+            "created_at": datetime.utcnow().isoformat(),
         }
         for i in range(1, 11)
     ]
@@ -528,6 +543,7 @@ async def example_bulk_indexing():
 
 
 # ===== MAIN: RUN ALL EXAMPLES =====
+
 
 async def main():
     """Run all examples."""

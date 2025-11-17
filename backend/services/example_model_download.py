@@ -17,7 +17,7 @@ from pathlib import Path
 from backend.services.model_download_service import (
     ModelDownloadService,
     DownloadProgress,
-    DownloadStatus
+    DownloadStatus,
 )
 
 
@@ -69,8 +69,7 @@ async def main():
     print()
 
     service = ModelDownloadService(
-        models_dir=str(models_dir),
-        audit_logger=None  # Optional: pass AuditLogger instance
+        models_dir=str(models_dir), audit_logger=None  # Optional: pass AuditLogger instance
     )
 
     # List available models
@@ -102,10 +101,7 @@ async def main():
         print()
 
     # Download recommended model
-    recommended_model = next(
-        (m for m in available_models if m["recommended"]),
-        None
-    )
+    recommended_model = next((m for m in available_models if m["recommended"]), None)
 
     if recommended_model:
         model_id = recommended_model["id"]
@@ -124,9 +120,7 @@ async def main():
 
             # Download with progress tracking
             success = await service.download_model(
-                model_id=model_id,
-                progress_callback=progress_callback,
-                user_id="demo-user"
+                model_id=model_id, progress_callback=progress_callback, user_id="demo-user"
             )
 
             print()
@@ -157,8 +151,10 @@ async def main():
             if "error" in verification:
                 print(f"     Error: {verification['error']}")
             elif not verification.get("size_match"):
-                print(f"     Size mismatch: expected {format_bytes(verification['expected_size'])}, "
-                      f"got {format_bytes(verification['actual_size'])}")
+                print(
+                    f"     Size mismatch: expected {format_bytes(verification['expected_size'])}, "
+                    f"got {format_bytes(verification['actual_size'])}"
+                )
             elif not verification.get("checksum_match"):
                 print(f"     Checksum mismatch!")
         print()
@@ -200,10 +196,7 @@ async def download_specific_model(model_id: str):
     print(f"Downloading model: {model_id}")
     print()
 
-    success = await service.download_model(
-        model_id=model_id,
-        progress_callback=progress_callback
-    )
+    success = await service.download_model(model_id=model_id, progress_callback=progress_callback)
 
     if success:
         model_path = service.get_model_path(model_id)

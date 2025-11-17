@@ -71,32 +71,57 @@ function sanitizeObject(obj: Record<string, unknown>): Record<string, unknown> {
 
 // Simple logger interface
 interface Logger {
-  error(message: string, context?: LogContext): void;
-  warn(message: string, context?: LogContext): void;
-  info(message: string, context?: LogContext): void;
-  debug(message: string, context?: LogContext): void;
-  log(level: string, message: string, context?: LogContext): void;
+  error(
+    message: string,
+    context?: LogContext | Record<string, unknown> | unknown,
+  ): void;
+  warn(
+    message: string,
+    context?: LogContext | Record<string, unknown> | unknown,
+  ): void;
+  info(
+    message: string,
+    context?: LogContext | Record<string, unknown> | unknown,
+  ): void;
+  debug(
+    message: string,
+    context?: LogContext | Record<string, unknown> | unknown,
+  ): void;
+  log(
+    level: string,
+    message: string,
+    context?: LogContext | Record<string, unknown> | unknown,
+  ): void;
 }
 
 // Browser-safe console logger for renderer process
 class ConsoleLogger implements Logger {
   private isDevelopment = import.meta.env?.DEV ?? true;
 
-  error(message: string, context?: LogContext): void {
+  error(
+    message: string,
+    context?: LogContext | Record<string, unknown> | unknown,
+  ): void {
     console.error(
       message,
       context ? sanitizeObject(context as Record<string, unknown>) : "",
     );
   }
 
-  warn(message: string, context?: LogContext): void {
+  warn(
+    message: string,
+    context?: LogContext | Record<string, unknown> | unknown,
+  ): void {
     console.warn(
       message,
       context ? sanitizeObject(context as Record<string, unknown>) : "",
     );
   }
 
-  info(message: string, context?: LogContext): void {
+  info(
+    message: string,
+    context?: LogContext | Record<string, unknown> | unknown,
+  ): void {
     if (this.isDevelopment) {
       console.info(
         message,
@@ -105,7 +130,10 @@ class ConsoleLogger implements Logger {
     }
   }
 
-  debug(message: string, context?: LogContext): void {
+  debug(
+    message: string,
+    context?: LogContext | Record<string, unknown> | unknown,
+  ): void {
     if (this.isDevelopment) {
       console.debug(
         message,
@@ -114,7 +142,11 @@ class ConsoleLogger implements Logger {
     }
   }
 
-  log(level: string, message: string, context?: LogContext): void {
+  log(
+    level: string,
+    message: string,
+    context?: LogContext | Record<string, unknown> | unknown,
+  ): void {
     if (this.isDevelopment) {
       console.log(
         `[${level.toUpperCase()}] ${message}`,

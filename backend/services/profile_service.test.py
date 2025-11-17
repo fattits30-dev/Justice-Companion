@@ -5,19 +5,15 @@ Tests profile CRUD operations, validation, caching, and encryption.
 
 import pytest
 import time
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from datetime import datetime
 
 from backend.models.base import Base
 from backend.models.profile import UserProfile
 from backend.services.profile_service import (
     ProfileService,
     UserProfileData,
-    ProfileValidationResult,
-    ProfileUpdateResult,
-    ExtendedUserProfileData,
     ProfileFormData,
 )
 from backend.services.encryption_service import EncryptionService
@@ -34,12 +30,7 @@ def db_session():
 
     # Create initial profile row (id=1)
     profile = UserProfile(
-        id=1,
-        name="Legal User",
-        first_name=None,
-        last_name=None,
-        email=None,
-        phone=None
+        id=1, name="Legal User", first_name=None, last_name=None, email=None, phone=None
     )
     session.add(profile)
     session.commit()
@@ -69,9 +60,7 @@ def audit_logger():
 def profile_service(db_session, encryption_service, audit_logger):
     """Create ProfileService instance."""
     return ProfileService(
-        db=db_session,
-        encryption_service=encryption_service,
-        audit_logger=audit_logger
+        db=db_session, encryption_service=encryption_service, audit_logger=audit_logger
     )
 
 
@@ -132,7 +121,7 @@ class TestProfileServiceUpdate:
             "firstName": "Alice",
             "lastName": "Johnson",
             "email": "alice@example.com",
-            "phone": "+9876543210"
+            "phone": "+9876543210",
         }
 
         result = await profile_service.update(profile_data)
@@ -176,7 +165,7 @@ class TestProfileServiceUpdate:
         profile_data = {
             "firstName": "John",
             "lastName": "Doe",
-            "email": "invalid-email"  # Invalid email
+            "email": "invalid-email",  # Invalid email
         }
 
         result = await profile_service.update(profile_data)
@@ -199,11 +188,7 @@ class TestProfileServiceUpdate:
 
         monkeypatch.setattr(db_session, "commit", mock_commit)
 
-        profile_data = {
-            "firstName": "Retry",
-            "lastName": "Test",
-            "email": "retry@example.com"
-        }
+        profile_data = {"firstName": "Retry", "lastName": "Test", "email": "retry@example.com"}
 
         result = await profile_service.update(profile_data, max_retries=3)
 
@@ -220,7 +205,7 @@ class TestProfileServiceValidation:
             "firstName": "John",
             "lastName": "Doe",
             "email": "john@example.com",
-            "phone": "+1234567890"
+            "phone": "+1234567890",
         }
 
         result = profile_service.validate(profile_data)
@@ -248,7 +233,7 @@ class TestProfileServiceValidation:
             "firstName": "John",
             "lastName": "Doe",
             "email": "john@example.com",
-            "phone": "abc123"  # Invalid phone
+            "phone": "abc123",  # Invalid phone
         }
 
         result = profile_service.validate(profile_data)
@@ -262,7 +247,7 @@ class TestProfileServiceValidation:
         profile_data = {
             "firstName": "John123",  # Numbers not allowed
             "lastName": "Doe@",  # Special characters not allowed
-            "email": "john@example.com"
+            "email": "john@example.com",
         }
 
         result = profile_service.validate(profile_data)
@@ -289,7 +274,7 @@ class TestProfileServiceValidation:
         profile_data = {
             "firstName": "Mary-Jane",
             "lastName": "O'Connor",
-            "email": "mary@example.com"
+            "email": "mary@example.com",
         }
 
         result = profile_service.validate(profile_data)
@@ -431,7 +416,7 @@ class TestProfileServiceConversions:
             firstName="  John  ",
             lastName="  Doe  ",
             email="  john@example.com  ",
-            phone="  +1234567890  "
+            phone="  +1234567890  ",
         )
 
         result = profile_service.form_data_to_profile(form_data)
@@ -444,10 +429,7 @@ class TestProfileServiceConversions:
     def test_profile_to_form_data_with_data(self, profile_service):
         """Test converting profile data to form data."""
         profile = UserProfileData(
-            firstName="Jane",
-            lastName="Smith",
-            email="jane@example.com",
-            phone="+9876543210"
+            firstName="Jane", lastName="Smith", email="jane@example.com", phone="+9876543210"
         )
 
         result = profile_service.profile_to_form_data(profile)
@@ -489,11 +471,9 @@ class TestProfileServiceAuditLogging:
     @pytest.mark.asyncio
     async def test_audit_logging_on_update(self, profile_service, audit_logger):
         """Test audit log on update operation."""
-        await profile_service.update({
-            "firstName": "Audit",
-            "lastName": "Test",
-            "email": "audit@example.com"
-        })
+        await profile_service.update(
+            {"firstName": "Audit", "lastName": "Test", "email": "audit@example.com"}
+        )
 
         # Verify audit log called
         assert audit_logger.log.called

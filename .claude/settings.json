@@ -1,3 +1,5 @@
 {
-  "alwaysThinkingEnabled": true
+  "enableAllProjectMcpServers": true,
+  "alwaysThinkingEnabled": true,
+  "outputStyle": "professional-developer"
 }

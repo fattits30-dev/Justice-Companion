@@ -29,9 +29,9 @@ REFACTORED: Now uses service layer instead of direct database queries
 - AuthenticationService for session validation
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Header, Query, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field, field_validator
-from typing import Optional, Literal, List, Dict, Any
+from typing import Optional, List, Dict
 from sqlalchemy.orm import Session
 import os
 import re
@@ -43,12 +43,6 @@ from backend.services.ai_provider_config_service import (
     AIProviderConfigService,
     AIProviderType,
     AIProviderConfigInput,
-    AIProviderConfigOutput,
-    AIProviderConfigSummary,
-    AIProviderMetadata,
-    ValidationResult,
-    TestResult,
-    AI_PROVIDER_METADATA
 )
 from backend.services.encryption_service import EncryptionService
 from backend.services.audit_logger import AuditLogger
@@ -58,13 +52,19 @@ router = APIRouter(prefix="/ai", tags=["ai-configuration"])
 
 # ===== PYDANTIC MODELS =====
 
+
 class ConfigureProviderRequest(BaseModel):
     """Request to configure AI provider."""
+
     api_key: str = Field(..., min_length=1, description="API key for the provider")
     model: str = Field(..., min_length=1, description="Model name/ID to use")
     endpoint: Optional[str] = Field(None, description="Custom API endpoint (for custom providers)")
-    temperature: Optional[float] = Field(0.7, ge=0.0, le=2.0, description="Sampling temperature (0.0-2.0)")
-    max_tokens: Optional[int] = Field(2048, ge=1, le=100000, description="Maximum tokens to generate")
+    temperature: Optional[float] = Field(
+        0.7, ge=0.0, le=2.0, description="Sampling temperature (0.0-2.0)"
+    )
+    max_tokens: Optional[int] = Field(
+        2048, ge=1, le=100000, description="Maximum tokens to generate"
+    )
     top_p: Optional[float] = Field(1.0, ge=0.0, le=1.0, description="Nucleus sampling top_p value")
     enabled: bool = Field(True, description="Whether this configuration is enabled")
 
@@ -80,7 +80,7 @@ class ConfigureProviderRequest(BaseModel):
         if len(v) > 500:
             raise ValueError("API key must be less than 500 characters")
         # Basic format validation (alphanumeric, hyphens, underscores)
-        if not re.match(r'^[a-zA-Z0-9_\-\.]+$', v):
+        if not re.match(r"^[a-zA-Z0-9_\-\.]+$", v):
             raise ValueError("API key contains invalid characters")
         return v
 
@@ -105,12 +105,12 @@ class ConfigureProviderRequest(BaseModel):
                 return None  # Allow clearing endpoint
 
             # URL validation
-            url_regex = r'^https?://[^\s/$.?#].[^\s]*$'
+            url_regex = r"^https?://[^\s/$.?#].[^\s]*$"
             if not re.match(url_regex, v):
                 raise ValueError("Please enter a valid URL")
 
             # Prefer HTTPS for security
-            if not v.startswith('https://'):
+            if not v.startswith("https://"):
                 raise ValueError("Endpoint URL should use HTTPS protocol for security")
 
             if len(v) > 500:
@@ -121,6 +121,7 @@ class ConfigureProviderRequest(BaseModel):
 
 class UpdateApiKeyRequest(BaseModel):
     """Request to update provider API key."""
+
     api_key: str = Field(..., min_length=10, max_length=500, description="New API key")
 
     @field_validator("api_key")
@@ -130,13 +131,14 @@ class UpdateApiKeyRequest(BaseModel):
         v = v.strip()
         if not v:
             raise ValueError("API key cannot be empty")
-        if not re.match(r'^[a-zA-Z0-9_\-\.]+$', v):
+        if not re.match(r"^[a-zA-Z0-9_\-\.]+$", v):
             raise ValueError("API key contains invalid characters")
         return v
 
 
 class ConfigSummaryResponse(BaseModel):
     """Response model for provider configuration summary (without API key)."""
+
     id: int
     provider: str
     model: str
@@ -155,6 +157,7 @@ class ConfigSummaryResponse(BaseModel):
 
 class ConfigureSuccessResponse(BaseModel):
     """Response after successfully configuring AI provider."""
+
     provider: str
     message: str
     config_id: int
@@ -162,6 +165,7 @@ class ConfigureSuccessResponse(BaseModel):
 
 class TestConnectionResponse(BaseModel):
     """Response from testing AI provider connection."""
+
     success: bool
     message: Optional[str] = None
     error: Optional[str] = None
@@ -169,12 +173,14 @@ class TestConnectionResponse(BaseModel):
 
 class ValidateConfigResponse(BaseModel):
     """Response from configuration validation."""
+
     valid: bool
     errors: List[str] = Field(default_factory=list)
 
 
 class ProviderMetadataResponse(BaseModel):
     """Response model for provider metadata."""
+
     name: str
     default_endpoint: str
     supports_streaming: bool
@@ -187,6 +193,7 @@ class ProviderMetadataResponse(BaseModel):
 
 
 # ===== DEPENDENCIES =====
+
 
 def get_auth_service(db: Session = Depends(get_db)) -> AuthenticationService:
     """Get authentication service instance."""
@@ -212,22 +219,21 @@ def get_audit_logger(db: Session = Depends(get_db)) -> AuditLogger:
 def get_config_service(
     db: Session = Depends(get_db),
     encryption_service: EncryptionService = Depends(get_encryption_service),
-    audit_logger: AuditLogger = Depends(get_audit_logger)
+    audit_logger: AuditLogger = Depends(get_audit_logger),
 ) -> AIProviderConfigService:
     """Get AI provider configuration service instance."""
     return AIProviderConfigService(
-        db=db,
-        encryption_service=encryption_service,
-        audit_logger=audit_logger
+        db=db, encryption_service=encryption_service, audit_logger=audit_logger
     )
 
 
 # ===== ROUTES =====
 
+
 @router.get("/config", response_model=List[ConfigSummaryResponse])
 async def list_configurations(
     user_id: int = Depends(get_current_user),
-    config_service: AIProviderConfigService = Depends(get_config_service)
+    config_service: AIProviderConfigService = Depends(get_config_service),
 ):
     """
     Get all AI provider configurations for authenticated user.
@@ -259,7 +265,7 @@ async def list_configurations(
                 enabled=config.enabled,
                 is_active=config.is_active,
                 created_at=config.created_at.isoformat(),
-                updated_at=config.updated_at.isoformat()
+                updated_at=config.updated_at.isoformat(),
             )
             for config in configs
         ]
@@ -267,14 +273,14 @@ async def list_configurations(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to list AI configurations: {str(e)}"
+            detail=f"Failed to list AI configurations: {str(e)}",
         )
 
 
 @router.get("/config/active", response_model=Optional[ConfigSummaryResponse])
 async def get_active_configuration(
     user_id: int = Depends(get_current_user),
-    config_service: AIProviderConfigService = Depends(get_config_service)
+    config_service: AIProviderConfigService = Depends(get_config_service),
 ):
     """
     Get active AI provider configuration for authenticated user.
@@ -307,13 +313,13 @@ async def get_active_configuration(
             enabled=config.enabled,
             is_active=config.is_active,
             created_at=config.created_at.isoformat(),
-            updated_at=config.updated_at.isoformat()
+            updated_at=config.updated_at.isoformat(),
         )
 
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get active AI configuration: {str(e)}"
+            detail=f"Failed to get active AI configuration: {str(e)}",
         )
 
 
@@ -321,7 +327,7 @@ async def get_active_configuration(
 async def get_configuration(
     provider: str,
     user_id: int = Depends(get_current_user),
-    config_service: AIProviderConfigService = Depends(get_config_service)
+    config_service: AIProviderConfigService = Depends(get_config_service),
 ):
     """
     Get specific AI provider configuration (with decrypted API key).
@@ -347,19 +353,16 @@ async def get_configuration(
         except ValueError:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid provider: {provider}. Supported providers: {', '.join([p.value for p in AIProviderType])}"
+                detail=f"Invalid provider: {provider}. Supported providers: {', '.join([p.value for p in AIProviderType])}",
             )
 
         # Get configuration with decrypted API key
-        config = await config_service.get_provider_config(
-            user_id=user_id,
-            provider=provider_enum
-        )
+        config = await config_service.get_provider_config(user_id=user_id, provider=provider_enum)
 
         if not config:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Provider '{provider}' is not configured"
+                detail=f"Provider '{provider}' is not configured",
             )
 
         # Return summary (API key included in config but not in response model for security)
@@ -374,7 +377,7 @@ async def get_configuration(
             enabled=config.enabled,
             is_active=config.is_active,
             created_at=config.created_at.isoformat(),
-            updated_at=config.updated_at.isoformat()
+            updated_at=config.updated_at.isoformat(),
         )
 
     except HTTPException:
@@ -382,7 +385,7 @@ async def get_configuration(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get AI configuration: {str(e)}"
+            detail=f"Failed to get AI configuration: {str(e)}",
         )
 
 
@@ -391,7 +394,7 @@ async def configure_provider(
     provider: str,
     request: ConfigureProviderRequest,
     user_id: int = Depends(get_current_user),
-    config_service: AIProviderConfigService = Depends(get_config_service)
+    config_service: AIProviderConfigService = Depends(get_config_service),
 ):
     """
     Configure AI provider for the authenticated user.
@@ -443,7 +446,7 @@ async def configure_provider(
         except ValueError:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid provider: {provider}. Supported providers: {', '.join([p.value for p in AIProviderType])}"
+                detail=f"Invalid provider: {provider}. Supported providers: {', '.join([p.value for p in AIProviderType])}",
             )
 
         # Build configuration input
@@ -455,19 +458,16 @@ async def configure_provider(
             temperature=request.temperature,
             max_tokens=request.max_tokens,
             top_p=request.top_p,
-            enabled=request.enabled
+            enabled=request.enabled,
         )
 
         # Save configuration using service layer
-        result = await config_service.set_provider_config(
-            user_id=user_id,
-            config=config_input
-        )
+        result = await config_service.set_provider_config(user_id=user_id, config=config_input)
 
         return ConfigureSuccessResponse(
             provider=result.provider,
             message=f"AI provider '{result.provider}' configured successfully",
-            config_id=result.id
+            config_id=result.id,
         )
 
     except HTTPException:
@@ -475,7 +475,7 @@ async def configure_provider(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to configure AI provider: {str(e)}"
+            detail=f"Failed to configure AI provider: {str(e)}",
         )
 
 
@@ -483,7 +483,7 @@ async def configure_provider(
 async def delete_configuration(
     provider: str,
     user_id: int = Depends(get_current_user),
-    config_service: AIProviderConfigService = Depends(get_config_service)
+    config_service: AIProviderConfigService = Depends(get_config_service),
 ):
     """
     Delete AI provider configuration.
@@ -508,25 +508,20 @@ async def delete_configuration(
         except ValueError:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid provider: {provider}. Supported providers: {', '.join([p.value for p in AIProviderType])}"
+                detail=f"Invalid provider: {provider}. Supported providers: {', '.join([p.value for p in AIProviderType])}",
             )
 
         # Delete configuration using service layer
-        await config_service.remove_provider_config(
-            user_id=user_id,
-            provider=provider_enum
-        )
+        await config_service.remove_provider_config(user_id=user_id, provider=provider_enum)
 
-        return {
-            "message": f"AI provider '{provider}' deleted successfully"
-        }
+        return {"message": f"AI provider '{provider}' deleted successfully"}
 
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to delete AI configuration: {str(e)}"
+            detail=f"Failed to delete AI configuration: {str(e)}",
         )
 
 
@@ -534,7 +529,7 @@ async def delete_configuration(
 async def activate_provider(
     provider: str,
     user_id: int = Depends(get_current_user),
-    config_service: AIProviderConfigService = Depends(get_config_service)
+    config_service: AIProviderConfigService = Depends(get_config_service),
 ):
     """
     Set provider as active for the user.
@@ -559,14 +554,11 @@ async def activate_provider(
         except ValueError:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid provider: {provider}. Supported providers: {', '.join([p.value for p in AIProviderType])}"
+                detail=f"Invalid provider: {provider}. Supported providers: {', '.join([p.value for p in AIProviderType])}",
             )
 
         # Set active provider using service layer
-        result = await config_service.set_active_provider(
-            user_id=user_id,
-            provider=provider_enum
-        )
+        result = await config_service.set_active_provider(user_id=user_id, provider=provider_enum)
 
         return ConfigSummaryResponse(
             id=result.id,
@@ -579,7 +571,7 @@ async def activate_provider(
             enabled=result.enabled,
             is_active=result.is_active,
             created_at=result.created_at.isoformat(),
-            updated_at=result.updated_at.isoformat()
+            updated_at=result.updated_at.isoformat(),
         )
 
     except HTTPException:
@@ -587,7 +579,7 @@ async def activate_provider(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to activate AI provider: {str(e)}"
+            detail=f"Failed to activate AI provider: {str(e)}",
         )
 
 
@@ -596,7 +588,7 @@ async def update_api_key(
     provider: str,
     request: UpdateApiKeyRequest,
     user_id: int = Depends(get_current_user),
-    config_service: AIProviderConfigService = Depends(get_config_service)
+    config_service: AIProviderConfigService = Depends(get_config_service),
 ):
     """
     Update API key for a provider configuration.
@@ -621,19 +613,18 @@ async def update_api_key(
         except ValueError:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid provider: {provider}. Supported providers: {', '.join([p.value for p in AIProviderType])}"
+                detail=f"Invalid provider: {provider}. Supported providers: {', '.join([p.value for p in AIProviderType])}",
             )
 
         # Get existing configuration
         existing_config = await config_service.get_provider_config(
-            user_id=user_id,
-            provider=provider_enum
+            user_id=user_id, provider=provider_enum
         )
 
         if not existing_config:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Provider '{provider}' is not configured"
+                detail=f"Provider '{provider}' is not configured",
             )
 
         # Update configuration with new API key
@@ -645,24 +636,19 @@ async def update_api_key(
             temperature=existing_config.temperature,
             max_tokens=existing_config.max_tokens,
             top_p=existing_config.top_p,
-            enabled=existing_config.enabled
+            enabled=existing_config.enabled,
         )
 
-        await config_service.set_provider_config(
-            user_id=user_id,
-            config=config_input
-        )
+        await config_service.set_provider_config(user_id=user_id, config=config_input)
 
-        return {
-            "message": f"API key for '{provider}' updated successfully"
-        }
+        return {"message": f"API key for '{provider}' updated successfully"}
 
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to update API key: {str(e)}"
+            detail=f"Failed to update API key: {str(e)}",
         )
 
 
@@ -671,7 +657,7 @@ async def validate_configuration(
     provider: str,
     request: ConfigureProviderRequest,
     user_id: int = Depends(get_current_user),
-    config_service: AIProviderConfigService = Depends(get_config_service)
+    config_service: AIProviderConfigService = Depends(get_config_service),
 ):
     """
     Validate provider configuration without saving.
@@ -700,7 +686,7 @@ async def validate_configuration(
         except ValueError:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid provider: {provider}. Supported providers: {', '.join([p.value for p in AIProviderType])}"
+                detail=f"Invalid provider: {provider}. Supported providers: {', '.join([p.value for p in AIProviderType])}",
             )
 
         # Build configuration input
@@ -712,15 +698,14 @@ async def validate_configuration(
             temperature=request.temperature,
             max_tokens=request.max_tokens,
             top_p=request.top_p,
-            enabled=request.enabled
+            enabled=request.enabled,
         )
 
         # Validate using service layer
         validation_result = config_service.validate_config(config_input)
 
         return ValidateConfigResponse(
-            valid=validation_result.valid,
-            errors=validation_result.errors
+            valid=validation_result.valid, errors=validation_result.errors
         )
 
     except HTTPException:
@@ -728,7 +713,7 @@ async def validate_configuration(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to validate configuration: {str(e)}"
+            detail=f"Failed to validate configuration: {str(e)}",
         )
 
 
@@ -736,7 +721,7 @@ async def validate_configuration(
 async def test_connection(
     provider: str,
     user_id: int = Depends(get_current_user),
-    config_service: AIProviderConfigService = Depends(get_config_service)
+    config_service: AIProviderConfigService = Depends(get_config_service),
 ):
     """
     Test connection to the configured AI provider.
@@ -764,34 +749,28 @@ async def test_connection(
         except ValueError:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid provider: {provider}. Supported providers: {', '.join([p.value for p in AIProviderType])}"
+                detail=f"Invalid provider: {provider}. Supported providers: {', '.join([p.value for p in AIProviderType])}",
             )
 
         # Test provider using service layer
-        test_result = await config_service.test_provider(
-            user_id=user_id,
-            provider=provider_enum
-        )
+        test_result = await config_service.test_provider(user_id=user_id, provider=provider_enum)
 
         return TestConnectionResponse(
             success=test_result.success,
             message=f"Connection to {provider} successful" if test_result.success else None,
-            error=test_result.error
+            error=test_result.error,
         )
 
     except HTTPException:
         raise
     except Exception as e:
-        return TestConnectionResponse(
-            success=False,
-            error=f"Failed to test connection: {str(e)}"
-        )
+        return TestConnectionResponse(success=False, error=f"Failed to test connection: {str(e)}")
 
 
 @router.get("/providers", response_model=Dict[str, ProviderMetadataResponse])
 async def list_providers(
     user_id: int = Depends(get_current_user),
-    config_service: AIProviderConfigService = Depends(get_config_service)
+    config_service: AIProviderConfigService = Depends(get_config_service),
 ):
     """
     Get metadata for all supported AI providers.
@@ -814,14 +793,13 @@ async def list_providers(
 
         # Convert to response models
         return {
-            provider: ProviderMetadataResponse(**meta)
-            for provider, meta in metadata_dict.items()
+            provider: ProviderMetadataResponse(**meta) for provider, meta in metadata_dict.items()
         }
 
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to list providers: {str(e)}"
+            detail=f"Failed to list providers: {str(e)}",
         )
 
 
@@ -829,7 +807,7 @@ async def list_providers(
 async def get_provider_metadata(
     provider: str,
     user_id: int = Depends(get_current_user),
-    config_service: AIProviderConfigService = Depends(get_config_service)
+    config_service: AIProviderConfigService = Depends(get_config_service),
 ):
     """
     Get metadata for a specific AI provider.
@@ -851,7 +829,7 @@ async def get_provider_metadata(
         except ValueError:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid provider: {provider}. Supported providers: {', '.join([p.value for p in AIProviderType])}"
+                detail=f"Invalid provider: {provider}. Supported providers: {', '.join([p.value for p in AIProviderType])}",
             )
 
         # Get metadata using service layer
@@ -863,7 +841,7 @@ async def get_provider_metadata(
             supports_streaming=metadata.supports_streaming,
             default_model=metadata.default_model,
             max_context_tokens=metadata.max_context_tokens,
-            available_models=metadata.available_models
+            available_models=metadata.available_models,
         )
 
     except HTTPException:
@@ -871,5 +849,5 @@ async def get_provider_metadata(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get provider metadata: {str(e)}"
+            detail=f"Failed to get provider metadata: {str(e)}",
         )

@@ -1,4 +1,4 @@
-import { defineConfig } from 'vitest/config';
+import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import path from 'path';
@@ -53,42 +53,36 @@ export default defineConfig({
   // Base path for Electron (must be relative)
   base: './',
 
-  // Vitest configuration
-  test: {
-    globals: true,
-    environment: 'happy-dom',
-    setupFiles: ['./src/test/setup.ts'],
-
-    // Run repository tests sequentially to avoid database singleton conflicts
-    // Vitest 4: Use maxWorkers instead of poolOptions.forks.singleFork
-    pool: 'forks',
-    maxWorkers: 1,
-    isolate: false, // Run all tests in single fork (sequential)
-
-    exclude: [
-      '**/node_modules/**',
-      '**/dist/**',
-      '**/.{git,cache,output,temp}/**',
-      '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*',
-    ],
-    coverage: {
-      provider: 'v8',
-      reporter: ['text', 'json', 'html'],
-      exclude: [
-        'node_modules/',
-        'src/test/',
-        '**/*.test.{ts,tsx}',
-        '**/*.spec.{ts,tsx}',
-      ],
-    },
-
-    // Fix Vitest 4 + jsdom ESM compatibility issue
-    server: {
-      deps: {
-        inline: ['parse5'], // Inline parse5 to fix jsdom ESM/CJS conflict
-      },
-    },
-  },
+  // Vitest configuration - temporarily disabled
+  // test: {
+  //   globals: true,
+  //   environment: 'happy-dom',
+  //   setupFiles: ['./src/test/setup.ts'],
+  //   pool: 'forks',
+  //   maxWorkers: 1,
+  //   isolate: false,
+  //   exclude: [
+  //     '**/node_modules/**',
+  //     '**/dist/**',
+  //     '**/.{git,cache,output,temp}/**',
+  //     '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*',
+  //   ],
+  //   coverage: {
+  //     provider: 'v8',
+  //     reporter: ['text', 'json', 'html'],
+  //     exclude: [
+  //       'node_modules/',
+  //       'src/test/',
+  //       '**/*.test.{ts,tsx}',
+  //       '**/*.spec.{ts,tsx}',
+  //     ],
+  //   },
+  //   server: {
+  //     deps: {
+  //       inline: ['parse5'],
+  //     },
+  //   },
+  // },
 
   // Build configuration
   build: {

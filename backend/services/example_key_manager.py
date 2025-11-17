@@ -7,7 +7,6 @@ This file demonstrates all KeyManager functionality with practical examples.
 import asyncio
 import os
 import base64
-from pathlib import Path
 from backend.services.key_manager import KeyManager, generate_encryption_key
 from backend.services.encryption_service import EncryptionService
 
@@ -230,9 +229,7 @@ async def example_error_handling():
     print("\n=== Example 7: Error Handling ===\n")
 
     from backend.services.key_manager import (
-        EncryptionNotAvailableError,
         InvalidKeyError,
-        KeyManagerError,
     )
 
     user_data_path = os.path.expanduser("~/.justice-companion-error-test")
@@ -409,6 +406,7 @@ async def main():
     except Exception as e:
         print(f"\n✗ Error running examples: {e}")
         import traceback
+
         traceback.print_exc()
 
 

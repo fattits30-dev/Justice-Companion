@@ -11,17 +11,16 @@ Security properties:
 - Thread-safe encryption/decryption operations
 """
 
-import json
 import base64
 import os
 import threading
 from typing import Optional, Dict, Any, List, Union
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-from cryptography.hazmat.backends import default_backend
 
 
 class EncryptedData:
     """Encrypted data format with authentication."""
+
     def __init__(self, algorithm: str, ciphertext: str, iv: str, auth_tag: str, version: int):
         self.algorithm = algorithm
         self.ciphertext = ciphertext
@@ -36,18 +35,18 @@ class EncryptedData:
             "ciphertext": self.ciphertext,
             "iv": self.iv,
             "authTag": self.auth_tag,
-            "version": self.version
+            "version": self.version,
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'EncryptedData':
+    def from_dict(cls, data: Dict[str, Any]) -> "EncryptedData":
         """Create EncryptedData from dictionary."""
         return cls(
             algorithm=data["algorithm"],
             ciphertext=data["ciphertext"],
             iv=data["iv"],
             auth_tag=data.get("authTag", data.get("auth_tag")),  # Support both formats
-            version=data["version"]
+            version=data["version"],
         )
 
 
@@ -118,7 +117,7 @@ class EncryptionService:
             iv = os.urandom(self.IV_LENGTH)
 
             # Encrypt and get ciphertext with auth tag
-            plaintext_bytes = plaintext.encode('utf-8')
+            plaintext_bytes = plaintext.encode("utf-8")
             ciphertext_with_tag = self.cipher.encrypt(iv, plaintext_bytes, None)
 
             # Split ciphertext and auth tag (last 16 bytes is auth tag for GCM)
@@ -127,10 +126,10 @@ class EncryptionService:
 
             return EncryptedData(
                 algorithm=self.ALGORITHM,
-                ciphertext=base64.b64encode(ciphertext).decode('utf-8'),
-                iv=base64.b64encode(iv).decode('utf-8'),
-                auth_tag=base64.b64encode(auth_tag).decode('utf-8'),
-                version=self.VERSION
+                ciphertext=base64.b64encode(ciphertext).decode("utf-8"),
+                iv=base64.b64encode(iv).decode("utf-8"),
+                auth_tag=base64.b64encode(auth_tag).decode("utf-8"),
+                version=self.VERSION,
             )
         except Exception as error:
             # CRITICAL: Never log plaintext or key material
@@ -177,7 +176,7 @@ class EncryptionService:
             # Decrypt data (verifies auth tag automatically)
             plaintext_bytes = self.cipher.decrypt(iv, ciphertext_with_tag, None)
 
-            return plaintext_bytes.decode('utf-8')
+            return plaintext_bytes.decode("utf-8")
         except Exception:
             # CRITICAL: Don't leak plaintext, key material, or detailed errors
             # Authentication tag verification failures will throw here
@@ -239,13 +238,13 @@ class EncryptionService:
                 results.append(encrypted)
             except Exception as error:
                 # CRITICAL: Never log plaintext or key material
-                raise RuntimeError(
-                    f"Batch encryption failed at index {len(results)}: {str(error)}"
-                )
+                raise RuntimeError(f"Batch encryption failed at index {len(results)}: {str(error)}")
 
         return results
 
-    def batch_decrypt(self, encrypted_data_array: List[Optional[EncryptedData]]) -> List[Optional[str]]:
+    def batch_decrypt(
+        self, encrypted_data_array: List[Optional[EncryptedData]]
+    ) -> List[Optional[str]]:
         """
         Batch decrypt multiple ciphertexts with optimized performance.
 
@@ -283,9 +282,7 @@ class EncryptionService:
         return results
 
     def rotate_key(
-        self,
-        old_encrypted_data: EncryptedData,
-        new_service: "EncryptionService"
+        self, old_encrypted_data: EncryptedData, new_service: "EncryptionService"
     ) -> Optional[EncryptedData]:
         """
         Rotate encryption key by re-encrypting data with new key.

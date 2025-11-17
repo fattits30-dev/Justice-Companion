@@ -61,7 +61,7 @@ async def main():
     # Example 3: Parse from buffer
     print("3. Parsing from Buffer:")
     buffer_content = "This is content loaded from memory, not a file."
-    buffer = buffer_content.encode('utf-8')
+    buffer = buffer_content.encode("utf-8")
 
     result = await service.parse_document_buffer(buffer, "memory_document.txt")
     print(f"   ✓ Parsed {result.word_count} words from buffer")
@@ -82,13 +82,7 @@ async def main():
 
     # Example 5: Check if file is supported
     print("5. File Support Detection:")
-    test_files = [
-        "document.pdf",
-        "report.docx",
-        "notes.txt",
-        "image.jpg",
-        "data.csv"
-    ]
+    test_files = ["document.pdf", "report.docx", "notes.txt", "image.jpg", "data.csv"]
 
     for filename in test_files:
         supported = service.is_supported(filename)
@@ -114,5 +108,5 @@ async def main():
     print("=" * 80)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     asyncio.run(main())

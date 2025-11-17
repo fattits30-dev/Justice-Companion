@@ -10,12 +10,9 @@
  * @module components/gdpr/GdprDashboard
  */
 
-import React, { useState, useEffect } from "react";
-import { apiClient, ApiError } from "../../lib/apiClient.ts";
-import type {
-  ConsentRecord,
-  DeleteDataResponse,
-} from "../../lib/types/gdpr.ts";
+import React, { useState, useEffect, useCallback } from "react";
+import { apiClient, ApiError } from "../../lib/apiClient";
+import type { ConsentRecord, DeleteDataResponse } from "../../lib/types/gdpr";
 
 interface GdprDashboardProps {
   sessionId: string;
@@ -37,12 +34,7 @@ export const GdprDashboard: React.FC<GdprDashboardProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  // Load consents on mount
-  useEffect(() => {
-    loadConsents();
-  }, []);
-
-  const loadConsents = async () => {
+  const loadConsents = useCallback(async () => {
     try {
       apiClient.setSessionId(sessionId);
       const response = await apiClient.gdpr.getConsents();
@@ -54,7 +46,12 @@ export const GdprDashboard: React.FC<GdprDashboardProps> = ({
       console.error("Failed to load consents:", err);
       setError(err instanceof Error ? err.message : "Failed to load consents");
     }
-  };
+  }, [sessionId]);
+
+  // Load consents on mount
+  useEffect(() => {
+    loadConsents();
+  }, [loadConsents]);
 
   const handleExport = async () => {
     try {
@@ -195,33 +192,31 @@ export const GdprDashboard: React.FC<GdprDashboardProps> = ({
         </p>
 
         <div className="mb-4">
-          <label className="block text-sm font-medium mb-2">
+          <label
+            id="export-format-label"
+            className="block text-sm font-medium mb-2"
+          >
             Export Format
           </label>
           <select
+            aria-labelledby="export-format-label"
             value={exportFormat}
             onChange={(e) => setExportFormat(e.target.value as "json" | "csv")}
             className="w-full p-2 border rounded"
-            disabled={isExporting}
           >
-            <option value="json">JSON (structured data)</option>
-            <option value="csv">CSV (spreadsheet compatible)</option>
+            <option value="json">JSON</option>
+            <option value="csv">CSV</option>
           </select>
         </div>
 
         <button
+          type="button"
           onClick={handleExport}
-          disabled={isExporting || !getConsentValue("data_processing")}
-          className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          disabled={isExporting}
+          className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 disabled:bg-gray-400"
         >
           {isExporting ? "Exporting..." : "Export Data"}
         </button>
-
-        {!getConsentValue("data_processing") && (
-          <p className="mt-2 text-sm text-red-600">
-            You must grant data processing consent to export data.
-          </p>
-        )}
       </section>
 
       {/* Article 17 - Right to Erasure */}
@@ -230,213 +225,159 @@ export const GdprDashboard: React.FC<GdprDashboardProps> = ({
           Delete Your Account (Article 17)
         </h2>
         <p className="mb-4 text-gray-700">
-          Permanently delete all your data from our system. This action cannot
-          be undone.
+          You can permanently delete your account and all associated data. This
+          action is irreversible.
         </p>
         <p className="mb-4 text-sm text-gray-600">
           Rate limit: 1 deletion per 30 days
         </p>
-        <p className="mb-4 text-sm text-yellow-700">
-          Note: Audit logs and consent records will be preserved for legal
-          compliance.
-        </p>
 
-        {!showDeleteConfirm ? (
-          <button
-            onClick={() => setShowDeleteConfirm(true)}
-            disabled={!getConsentValue("data_erasure_request")}
-            className="px-6 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-          >
-            Delete My Account
-          </button>
-        ) : (
-          <div className="border-2 border-red-400 p-4 rounded">
-            <h3 className="text-xl font-semibold mb-4 text-red-700">
-              Confirm Account Deletion
-            </h3>
-            <p className="mb-4 text-red-600 font-bold">
-              WARNING: This will permanently delete all your data. This action
-              cannot be undone.
-            </p>
-
-            <div className="mb-4">
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={exportBeforeDelete}
-                  onChange={(e) => setExportBeforeDelete(e.target.checked)}
-                  className="mr-2"
-                />
-                <span className="text-sm">Export my data before deletion</span>
-              </label>
-            </div>
-
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-2">
-                Reason for deletion (optional)
-              </label>
-              <textarea
-                value={deleteReason}
-                onChange={(e) => setDeleteReason(e.target.value)}
-                className="w-full p-2 border rounded"
-                rows={3}
-                maxLength={500}
-                placeholder="Why are you deleting your account?"
-              />
-            </div>
-
-            <div className="flex gap-4">
-              <button
-                onClick={handleDeleteAccount}
-                disabled={isDeleting}
-                className="px-6 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:bg-gray-400"
-              >
-                {isDeleting ? "Deleting..." : "Confirm Deletion"}
-              </button>
-              <button
-                onClick={() => setShowDeleteConfirm(false)}
-                disabled={isDeleting}
-                className="px-6 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
-
-        {!getConsentValue("data_erasure_request") && (
-          <p className="mt-2 text-sm text-red-600">
-            You must grant data erasure consent to delete your account.
-          </p>
-        )}
+        <button
+          type="button"
+          onClick={() => setShowDeleteConfirm(true)}
+          disabled={isDeleting}
+          className="w-full bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700 disabled:bg-gray-400"
+        >
+          Delete Account
+        </button>
       </section>
 
       {/* Consent Management */}
-      <section className="mb-8 p-6 bg-white rounded-lg shadow-sm">
+      <section className="p-6 bg-white rounded-lg shadow-sm">
         <h2 className="text-2xl font-semibold mb-4">Consent Management</h2>
         <p className="mb-4 text-gray-700">
-          Manage your data processing consents. These consents control what
-          operations you can perform.
+          Manage your consent for data processing activities.
         </p>
 
         <div className="space-y-4">
-          <div className="flex items-center justify-between p-3 border rounded">
-            <div>
-              <h3 className="font-medium">Data Processing</h3>
-              <p className="text-sm text-gray-600">
-                Required for exporting your data
-              </p>
-            </div>
-            <label className="flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={getConsentValue("data_processing")}
-                onChange={(e) =>
-                  handleConsentChange("data_processing", e.target.checked)
-                }
-                className="sr-only"
-              />
-              <div
-                className={`w-12 h-6 rounded-full transition ${
-                  getConsentValue("data_processing")
-                    ? "bg-blue-600"
-                    : "bg-gray-300"
-                }`}
-              >
-                <div
-                  className={`w-4 h-4 bg-white rounded-full shadow transform transition ${
-                    getConsentValue("data_processing")
-                      ? "translate-x-7 mt-1"
-                      : "translate-x-1 mt-1"
-                  }`}
-                />
-              </div>
+          <div className="flex items-center justify-between">
+            <label htmlFor="consent-terms" className="font-medium">
+              Terms of Service
             </label>
+            <input
+              id="consent-terms"
+              type="checkbox"
+              checked={getConsentValue("terms_of_service")}
+              onChange={(e) =>
+                handleConsentChange("terms_of_service", e.target.checked)
+              }
+              className="h-6 w-6 rounded"
+            />
           </div>
-
-          <div className="flex items-center justify-between p-3 border rounded">
-            <div>
-              <h3 className="font-medium">Data Erasure Request</h3>
-              <p className="text-sm text-gray-600">
-                Required for deleting your account
-              </p>
-            </div>
-            <label className="flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={getConsentValue("data_erasure_request")}
-                onChange={(e) =>
-                  handleConsentChange("data_erasure_request", e.target.checked)
-                }
-                className="sr-only"
-              />
-              <div
-                className={`w-12 h-6 rounded-full transition ${
-                  getConsentValue("data_erasure_request")
-                    ? "bg-blue-600"
-                    : "bg-gray-300"
-                }`}
-              >
-                <div
-                  className={`w-4 h-4 bg-white rounded-full shadow transform transition ${
-                    getConsentValue("data_erasure_request")
-                      ? "translate-x-7 mt-1"
-                      : "translate-x-1 mt-1"
-                  }`}
-                />
-              </div>
+          <div className="flex items-center justify-between">
+            <label htmlFor="consent-privacy" className="font-medium">
+              Privacy Policy
             </label>
+            <input
+              id="consent-privacy"
+              type="checkbox"
+              checked={getConsentValue("privacy_policy")}
+              onChange={(e) =>
+                handleConsentChange("privacy_policy", e.target.checked)
+              }
+              className="h-6 w-6 rounded"
+            />
+          </div>
+          <div className="flex items-center justify-between">
+            <label htmlFor="consent-analytics" className="font-medium">
+              Analytics Tracking
+            </label>
+            <input
+              id="consent-analytics"
+              type="checkbox"
+              checked={getConsentValue("analytics_tracking")}
+              onChange={(e) =>
+                handleConsentChange("analytics_tracking", e.target.checked)
+              }
+              className="h-6 w-6 rounded"
+            />
+          </div>
+          <div className="flex items-center justify-between">
+            <label htmlFor="consent-marketing" className="font-medium">
+              Marketing Communications
+            </label>
+            <input
+              id="consent-marketing"
+              type="checkbox"
+              checked={getConsentValue("marketing_communications")}
+              onChange={(e) =>
+                handleConsentChange(
+                  "marketing_communications",
+                  e.target.checked,
+                )
+              }
+              className="h-6 w-6 rounded"
+            />
           </div>
         </div>
       </section>
 
-      {/* Consent History */}
-      {consents.length > 0 && (
-        <section className="mb-8 p-6 bg-white rounded-lg shadow-sm">
-          <h2 className="text-2xl font-semibold mb-4">Consent History</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead className="border-b">
-                <tr>
-                  <th className="p-2">Consent Type</th>
-                  <th className="p-2">Status</th>
-                  <th className="p-2">Granted At</th>
-                  <th className="p-2">Revoked At</th>
-                </tr>
-              </thead>
-              <tbody>
-                {consents.map((consent) => (
-                  <tr key={consent.id} className="border-b">
-                    <td className="p-2">{consent.consentType}</td>
-                    <td className="p-2">
-                      <span
-                        className={`px-2 py-1 rounded text-sm ${
-                          consent.granted && !consent.revokedAt
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {consent.granted && !consent.revokedAt
-                          ? "Active"
-                          : "Revoked"}
-                      </span>
-                    </td>
-                    <td className="p-2 text-sm text-gray-600">
-                      {consent.grantedAt
-                        ? new Date(consent.grantedAt).toLocaleString()
-                        : "-"}
-                    </td>
-                    <td className="p-2 text-sm text-gray-600">
-                      {consent.revokedAt
-                        ? new Date(consent.revokedAt).toLocaleString()
-                        : "-"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      {/* Deletion Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-modal-title"
+        >
+          <div className="bg-white p-8 rounded-lg shadow-2xl max-w-md w-full">
+            <h2 id="delete-modal-title" className="text-2xl font-bold mb-4">
+              Confirm Account Deletion
+            </h2>
+            <p className="mb-4">
+              This action is permanent and cannot be undone. Are you sure you
+              want to delete your account?
+            </p>
+            <div className="mb-4">
+              <label
+                htmlFor="export-before-delete"
+                className="flex items-center"
+              >
+                <input
+                  id="export-before-delete"
+                  type="checkbox"
+                  checked={exportBeforeDelete}
+                  onChange={(e) => setExportBeforeDelete(e.target.checked)}
+                  className="h-5 w-5 rounded mr-2"
+                />
+                <span>Export my data before deleting</span>
+              </label>
+            </div>
+            <div className="mb-6">
+              <label
+                htmlFor="delete-reason"
+                className="block text-sm font-medium mb-2"
+              >
+                Reason for leaving (optional)
+              </label>
+              <textarea
+                id="delete-reason"
+                value={deleteReason}
+                onChange={(e) => setDeleteReason(e.target.value)}
+                className="w-full p-2 border rounded"
+                rows={3}
+                placeholder="Your feedback helps us improve."
+              />
+            </div>
+            <div className="flex justify-end space-x-4">
+              <button
+                type="button"
+                onClick={() => setShowDeleteConfirm(false)}
+                className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteAccount}
+                disabled={isDeleting}
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:bg-gray-400"
+              >
+                {isDeleting ? "Deleting..." : "Confirm Deletion"}
+              </button>
+            </div>
           </div>
-        </section>
+        </div>
       )}
     </div>
   );

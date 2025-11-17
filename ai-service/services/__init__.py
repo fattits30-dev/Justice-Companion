@@ -15,8 +15,8 @@ from .model_client import (
 )
 
 __all__ = [
-    'ModelClient',
-    'HuggingFaceLocalClient',
-    'HuggingFaceAPIClient',
-    'OpenAIClient',
+    "ModelClient",
+    "HuggingFaceLocalClient",
+    "HuggingFaceAPIClient",
+    "OpenAIClient",
 ]

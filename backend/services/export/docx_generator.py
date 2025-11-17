@@ -21,12 +21,11 @@ Python Version: 3.12+
 """
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
-from pathlib import Path
+from typing import Any, List, Optional
 import io
 
 from docx import Document
-from docx.shared import Pt, Inches, RGBColor
+from docx.shared import Pt, Inches
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
@@ -43,20 +42,17 @@ class TimelineEvent(BaseModel):
     title: str
     description: Optional[str] = None
     event_date: str  # ISO 8601 date string
-    event_type: str = Field(
-        ...,
-        pattern="^(deadline|hearing|filing|milestone|other)$"
-    )
+    event_type: str = Field(..., pattern="^(deadline|hearing|filing|milestone|other)$")
     completed: bool = False
     created_at: str
     updated_at: str
 
-    @field_validator('event_date', 'created_at', 'updated_at')
+    @field_validator("event_date", "created_at", "updated_at")
     @classmethod
     def validate_iso_date(cls, v: str) -> str:
         """Validate ISO 8601 date format."""
         try:
-            datetime.fromisoformat(v.replace('Z', '+00:00'))
+            datetime.fromisoformat(v.replace("Z", "+00:00"))
             return v
         except ValueError:
             raise ValueError(f"Invalid ISO 8601 date format: {v}")
@@ -70,10 +66,7 @@ class Evidence(BaseModel):
     title: str
     file_path: Optional[str] = None
     content: Optional[str] = None
-    evidence_type: str = Field(
-        ...,
-        pattern="^(document|photo|email|recording|note|witness)$"
-    )
+    evidence_type: str = Field(..., pattern="^(document|photo|email|recording|note|witness)$")
     obtained_date: Optional[str] = None
     created_at: str
     updated_at: Optional[str] = None
@@ -194,10 +187,7 @@ class DOCXGenerator:
         """
         self.audit_logger = audit_logger
 
-    async def generate_case_summary(
-        self,
-        case_data: CaseExportData
-    ) -> bytes:
+    async def generate_case_summary(self, case_data: CaseExportData) -> bytes:
         """
         Generate comprehensive case summary DOCX document.
 
@@ -244,7 +234,7 @@ class DOCXGenerator:
             # Add footer with export info and page numbers
             self._add_footer(
                 doc,
-                f"Exported by {case_data.exported_by} on {case_data.export_date.strftime('%Y-%m-%d')}"
+                f"Exported by {case_data.exported_by} on {case_data.export_date.strftime('%Y-%m-%d')}",
             )
 
             # Title section
@@ -271,9 +261,7 @@ class DOCXGenerator:
             # Log audit event
             if self.audit_logger:
                 await self._log_audit(
-                    "case_summary_generated",
-                    case_data.case.id,
-                    case_data.exported_by
+                    "case_summary_generated", case_data.case.id, case_data.exported_by
                 )
 
             # Convert to bytes
@@ -282,17 +270,11 @@ class DOCXGenerator:
         except Exception as e:
             if self.audit_logger:
                 await self._log_audit(
-                    "case_summary_failed",
-                    case_data.case.id,
-                    case_data.exported_by,
-                    error=str(e)
+                    "case_summary_failed", case_data.case.id, case_data.exported_by, error=str(e)
                 )
             raise
 
-    async def generate_evidence_list(
-        self,
-        evidence_data: EvidenceExportData
-    ) -> bytes:
+    async def generate_evidence_list(self, evidence_data: EvidenceExportData) -> bytes:
         """
         Generate evidence inventory report DOCX document.
 
@@ -329,7 +311,7 @@ class DOCXGenerator:
             self._add_header(doc, f"Evidence Report: {evidence_data.case_title}")
             self._add_footer(
                 doc,
-                f"Exported by {evidence_data.exported_by} on {evidence_data.export_date.strftime('%Y-%m-%d')}"
+                f"Exported by {evidence_data.exported_by} on {evidence_data.export_date.strftime('%Y-%m-%d')}",
             )
 
             # Title
@@ -350,9 +332,7 @@ class DOCXGenerator:
             # Log audit event
             if self.audit_logger:
                 await self._log_audit(
-                    "evidence_list_generated",
-                    evidence_data.case_id,
-                    evidence_data.exported_by
+                    "evidence_list_generated", evidence_data.case_id, evidence_data.exported_by
                 )
 
             return self._document_to_bytes(doc)
@@ -363,14 +343,11 @@ class DOCXGenerator:
                     "evidence_list_failed",
                     evidence_data.case_id,
                     evidence_data.exported_by,
-                    error=str(e)
+                    error=str(e),
                 )
             raise
 
-    async def generate_timeline_report(
-        self,
-        timeline_data: TimelineExportData
-    ) -> bytes:
+    async def generate_timeline_report(self, timeline_data: TimelineExportData) -> bytes:
         """
         Generate timeline report DOCX document.
 
@@ -406,7 +383,7 @@ class DOCXGenerator:
             self._add_header(doc, f"Timeline Report: {timeline_data.case_title}")
             self._add_footer(
                 doc,
-                f"Exported by {timeline_data.exported_by} on {timeline_data.export_date.strftime('%Y-%m-%d')}"
+                f"Exported by {timeline_data.exported_by} on {timeline_data.export_date.strftime('%Y-%m-%d')}",
             )
 
             # Title
@@ -427,9 +404,7 @@ class DOCXGenerator:
             # Log audit event
             if self.audit_logger:
                 await self._log_audit(
-                    "timeline_report_generated",
-                    timeline_data.case_id,
-                    timeline_data.exported_by
+                    "timeline_report_generated", timeline_data.case_id, timeline_data.exported_by
                 )
 
             return self._document_to_bytes(doc)
@@ -440,14 +415,11 @@ class DOCXGenerator:
                     "timeline_report_failed",
                     timeline_data.case_id,
                     timeline_data.exported_by,
-                    error=str(e)
+                    error=str(e),
                 )
             raise
 
-    async def generate_case_notes(
-        self,
-        notes_data: NotesExportData
-    ) -> bytes:
+    async def generate_case_notes(self, notes_data: NotesExportData) -> bytes:
         """
         Generate case notes report DOCX document.
 
@@ -484,7 +456,7 @@ class DOCXGenerator:
             self._add_header(doc, f"Case Notes: {notes_data.case_title}")
             self._add_footer(
                 doc,
-                f"Exported by {notes_data.exported_by} on {notes_data.export_date.strftime('%Y-%m-%d')}"
+                f"Exported by {notes_data.exported_by} on {notes_data.export_date.strftime('%Y-%m-%d')}",
             )
 
             # Title
@@ -505,9 +477,7 @@ class DOCXGenerator:
             # Log audit event
             if self.audit_logger:
                 await self._log_audit(
-                    "case_notes_generated",
-                    notes_data.case_id,
-                    notes_data.exported_by
+                    "case_notes_generated", notes_data.case_id, notes_data.exported_by
                 )
 
             return self._document_to_bytes(doc)
@@ -515,10 +485,7 @@ class DOCXGenerator:
         except Exception as e:
             if self.audit_logger:
                 await self._log_audit(
-                    "case_notes_failed",
-                    notes_data.case_id,
-                    notes_data.exported_by,
-                    error=str(e)
+                    "case_notes_failed", notes_data.case_id, notes_data.exported_by, error=str(e)
                 )
             raise
 
@@ -584,15 +551,15 @@ class DOCXGenerator:
     def _add_page_number(self, paragraph) -> None:
         """Add current page number field to paragraph."""
         run = paragraph.add_run()
-        fldChar1 = OxmlElement('w:fldChar')
-        fldChar1.set(qn('w:fldCharType'), 'begin')
+        fldChar1 = OxmlElement("w:fldChar")
+        fldChar1.set(qn("w:fldCharType"), "begin")
 
-        instrText = OxmlElement('w:instrText')
-        instrText.set(qn('xml:space'), 'preserve')
-        instrText.text = 'PAGE'
+        instrText = OxmlElement("w:instrText")
+        instrText.set(qn("xml:space"), "preserve")
+        instrText.text = "PAGE"
 
-        fldChar2 = OxmlElement('w:fldChar')
-        fldChar2.set(qn('w:fldCharType'), 'end')
+        fldChar2 = OxmlElement("w:fldChar")
+        fldChar2.set(qn("w:fldCharType"), "end")
 
         run._r.append(fldChar1)
         run._r.append(instrText)
@@ -602,15 +569,15 @@ class DOCXGenerator:
     def _add_total_pages(self, paragraph) -> None:
         """Add total pages field to paragraph."""
         run = paragraph.add_run()
-        fldChar1 = OxmlElement('w:fldChar')
-        fldChar1.set(qn('w:fldCharType'), 'begin')
+        fldChar1 = OxmlElement("w:fldChar")
+        fldChar1.set(qn("w:fldCharType"), "begin")
 
-        instrText = OxmlElement('w:instrText')
-        instrText.set(qn('xml:space'), 'preserve')
-        instrText.text = 'NUMPAGES'
+        instrText = OxmlElement("w:instrText")
+        instrText.set(qn("xml:space"), "preserve")
+        instrText.text = "NUMPAGES"
 
-        fldChar2 = OxmlElement('w:fldChar')
-        fldChar2.set(qn('w:fldCharType'), 'end')
+        fldChar2 = OxmlElement("w:fldChar")
+        fldChar2.set(qn("w:fldCharType"), "end")
 
         run._r.append(fldChar1)
         run._r.append(instrText)
@@ -678,7 +645,7 @@ class DOCXGenerator:
             if evidence.obtained_date:
                 try:
                     obtained_date = datetime.fromisoformat(
-                        evidence.obtained_date.replace('Z', '+00:00')
+                        evidence.obtained_date.replace("Z", "+00:00")
                     )
                     p = doc.add_paragraph()
                     p.add_run(f"Date Obtained: {obtained_date.strftime('%Y-%m-%d')}")
@@ -712,9 +679,7 @@ class DOCXGenerator:
 
             # Event date
             try:
-                event_date = datetime.fromisoformat(
-                    item.event_date.replace('Z', '+00:00')
-                )
+                event_date = datetime.fromisoformat(item.event_date.replace("Z", "+00:00"))
                 p = doc.add_paragraph()
                 p.add_run(f"Event Date: {event_date.strftime('%Y-%m-%d')}")
                 p.space_after = Pt(10)
@@ -747,9 +712,7 @@ class DOCXGenerator:
 
             # Created date
             try:
-                created_date = datetime.fromisoformat(
-                    note.created_at.replace('Z', '+00:00')
-                )
+                created_date = datetime.fromisoformat(note.created_at.replace("Z", "+00:00"))
                 p = doc.add_paragraph()
                 p.add_run(f"Created: {created_date.strftime('%Y-%m-%d')}")
                 p.space_after = Pt(10)
@@ -773,11 +736,7 @@ class DOCXGenerator:
         return buffer.read()
 
     async def _log_audit(
-        self,
-        action: str,
-        case_id: int,
-        user: str,
-        error: Optional[str] = None
+        self, action: str, case_id: int, user: str, error: Optional[str] = None
     ) -> None:
         """
         Log audit event for export operation.
@@ -788,14 +747,14 @@ class DOCXGenerator:
             user: User who performed export
             error: Optional error message if operation failed
         """
-        if self.audit_logger and hasattr(self.audit_logger, 'log'):
+        if self.audit_logger and hasattr(self.audit_logger, "log"):
             try:
                 await self.audit_logger.log(
                     action=action,
                     resource_type="case",
                     resource_id=case_id,
                     user=user,
-                    metadata={"error": error} if error else None
+                    metadata={"error": error} if error else None,
                 )
             except Exception:
                 # Don't let audit logging errors break exports

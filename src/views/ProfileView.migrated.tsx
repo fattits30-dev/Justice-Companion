@@ -285,8 +285,7 @@ export function ProfileViewMigrated() {
               </h3>
               <div className="w-full bg-white/10 rounded-full h-2 mb-3">
                 <div
-                  className={`${getCompletenessColor()} h-2 rounded-full transition-all`}
-                  style={{ width: `${completeness.percentage}%` }}
+                  className={`${getCompletenessColor()} h-2 rounded-full transition-all w-full`}
                 />
               </div>
               {completeness.missingFields.length > 0 && (

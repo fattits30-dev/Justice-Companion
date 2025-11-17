@@ -12,18 +12,21 @@ Routes:
 - GET /search/suggestions - Get search suggestions
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Header, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field, validator
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 from sqlalchemy.orm import Session
-import json
 import re
 
 from backend.models.base import get_db
 from backend.services.auth_service import AuthenticationService
 from backend.routes.auth import get_current_user
-from backend.services.search_service import SearchService, SearchQuery, SearchFilters as ServiceSearchFilters
+from backend.services.search_service import (
+    SearchService,
+    SearchQuery,
+    SearchFilters as ServiceSearchFilters,
+)
 from backend.services.search_index_builder import SearchIndexBuilder
 from backend.services.encryption_service import EncryptionService
 from backend.services.audit_logger import AuditLogger
@@ -41,32 +44,33 @@ VALID_CASE_STATUSES = ["active", "closed", "pending"]
 # ===== PYDANTIC REQUEST MODELS =====
 class SearchFilters(BaseModel):
     """Filters for search queries."""
+
     caseStatus: Optional[List[str]] = None
     dateRange: Optional[Dict[str, str]] = None  # {"from": "2025-01-01", "to": "2025-12-31"}
     entityTypes: Optional[List[str]] = None
     tags: Optional[List[str]] = None
     caseIds: Optional[List[int]] = None
 
-    @validator('caseStatus', each_item=True)
+    @validator("caseStatus", each_item=True)
     def validate_case_status(cls, v):
         if v and v not in VALID_CASE_STATUSES:
             raise ValueError(f"Invalid case status: {v}")
         return v
 
-    @validator('entityTypes', each_item=True)
+    @validator("entityTypes", each_item=True)
     def validate_entity_types(cls, v):
         if v and v not in VALID_ENTITY_TYPES:
             raise ValueError(f"Invalid entity type: {v}")
         return v
 
-    @validator('dateRange')
+    @validator("dateRange")
     def validate_date_range(cls, v):
         if v:
-            if 'from' not in v or 'to' not in v:
+            if "from" not in v or "to" not in v:
                 raise ValueError("Date range must have 'from' and 'to' fields")
             try:
-                datetime.strptime(v['from'], '%Y-%m-%d')
-                datetime.strptime(v['to'], '%Y-%m-%d')
+                datetime.strptime(v["from"], "%Y-%m-%d")
+                datetime.strptime(v["to"], "%Y-%m-%d")
             except ValueError:
                 raise ValueError("Invalid date format (use YYYY-MM-DD)")
         return v
@@ -74,6 +78,7 @@ class SearchFilters(BaseModel):
 
 class SearchRequest(BaseModel):
     """Request model for search."""
+
     query: str = Field(..., min_length=1, max_length=500, description="Search query")
     filters: Optional[SearchFilters] = None
     sortBy: str = Field(default="relevance", description="Sort field")
@@ -81,29 +86,32 @@ class SearchRequest(BaseModel):
     limit: int = Field(default=20, ge=1, le=100, description="Results per page")
     offset: int = Field(default=0, ge=0, description="Pagination offset")
 
-    @validator('sortBy')
+    @validator("sortBy")
     def validate_sort_by(cls, v):
         if v not in VALID_SORT_BY:
             raise ValueError(f"Invalid sortBy: {v}. Must be one of: {', '.join(VALID_SORT_BY)}")
         return v
 
-    @validator('sortOrder')
+    @validator("sortOrder")
     def validate_sort_order(cls, v):
         if v not in VALID_SORT_ORDER:
-            raise ValueError(f"Invalid sortOrder: {v}. Must be one of: {', '.join(VALID_SORT_ORDER)}")
+            raise ValueError(
+                f"Invalid sortOrder: {v}. Must be one of: {', '.join(VALID_SORT_ORDER)}"
+            )
         return v
 
-    @validator('query')
+    @validator("query")
     def strip_query(cls, v):
         return v.strip()
 
 
 class SaveSearchRequest(BaseModel):
     """Request model for saving a search."""
+
     name: str = Field(..., min_length=1, max_length=100, description="Search name")
     query: SearchRequest
 
-    @validator('name')
+    @validator("name")
     def strip_name(cls, v):
         return v.strip()
 
@@ -111,6 +119,7 @@ class SaveSearchRequest(BaseModel):
 # ===== PYDANTIC RESPONSE MODELS =====
 class SearchResultItem(BaseModel):
     """Individual search result."""
+
     id: int
     type: str  # "case" | "evidence" | "conversation" | "note" | "document"
     title: str
@@ -124,6 +133,7 @@ class SearchResultItem(BaseModel):
 
 class SearchResponse(BaseModel):
     """Response model for search results."""
+
     results: List[SearchResultItem]
     total: int
     hasMore: bool
@@ -132,6 +142,7 @@ class SearchResponse(BaseModel):
 
 class SavedSearchResponse(BaseModel):
     """Response model for saved search."""
+
     id: int
     name: str
     queryJson: str
@@ -142,6 +153,7 @@ class SavedSearchResponse(BaseModel):
 
 class RebuildIndexResponse(BaseModel):
     """Response model for index rebuild."""
+
     success: bool
     message: str
 
@@ -150,11 +162,12 @@ class RebuildIndexResponse(BaseModel):
 def get_encryption_service() -> EncryptionService:
     """Get encryption service instance."""
     import os
+
     encryption_key = os.getenv("ENCRYPTION_KEY_BASE64")
     if not encryption_key:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Encryption key not configured"
+            detail="Encryption key not configured",
         )
     return EncryptionService(key=encryption_key)
 
@@ -166,7 +179,7 @@ def get_auth_service(db: Session = Depends(get_db)) -> AuthenticationService:
 
 def get_search_service(
     db: Session = Depends(get_db),
-    encryption_service: EncryptionService = Depends(get_encryption_service)
+    encryption_service: EncryptionService = Depends(get_encryption_service),
 ) -> SearchService:
     """Get search service instance."""
     return SearchService(db=db, encryption_service=encryption_service)
@@ -174,7 +187,7 @@ def get_search_service(
 
 def get_index_builder(
     db: Session = Depends(get_db),
-    encryption_service: EncryptionService = Depends(get_encryption_service)
+    encryption_service: EncryptionService = Depends(get_encryption_service),
 ) -> SearchIndexBuilder:
     """Get search index builder instance."""
     return SearchIndexBuilder(db=db, encryption_service=encryption_service)
@@ -260,12 +273,7 @@ def calculate_relevance(text: str, query: str) -> float:
 
 
 def search_with_fts5(
-    db: Session,
-    user_id: int,
-    query: str,
-    filters: Optional[SearchFilters],
-    limit: int,
-    offset: int
+    db: Session, user_id: int, query: str, filters: Optional[SearchFilters], limit: int, offset: int
 ) -> Dict[str, Any]:
     """Search using SQLite FTS5 full-text search."""
     from sqlalchemy import text
@@ -300,15 +308,18 @@ def search_with_fts5(
     where_clause = " AND ".join(where_conditions)
 
     # Count query
-    count_query = text(f"""
+    count_query = text(
+        f"""
         SELECT COUNT(*) as total
         FROM search_index
         WHERE search_index MATCH :fts_query
           AND {where_clause}
-    """)
+    """
+    )
 
     # Search query
-    search_query = text(f"""
+    search_query = text(
+        f"""
         SELECT
             si.*,
             bm25(search_index) AS rank
@@ -317,7 +328,8 @@ def search_with_fts5(
           AND {where_clause}
         ORDER BY rank
         LIMIT :limit OFFSET :offset
-    """)
+    """
+    )
 
     try:
         # Get total count
@@ -332,46 +344,42 @@ def search_with_fts5(
             result_dict = dict(row._mapping)
 
             # Calculate relevance score from rank
-            rank = abs(result_dict.get('rank', 0))
+            rank = abs(result_dict.get("rank", 0))
             relevance_score = 100.0 / (1.0 + rank) if rank > 0 else 100.0
 
             # Extract excerpt
-            content = result_dict.get('content', '') or ''
+            content = result_dict.get("content", "") or ""
             excerpt = extract_excerpt(content, query)
 
             # Build result item
             result_item = {
-                "id": result_dict.get('entity_id'),
-                "type": result_dict.get('entity_type'),
-                "title": result_dict.get('title', ''),
+                "id": result_dict.get("entity_id"),
+                "type": result_dict.get("entity_type"),
+                "title": result_dict.get("title", ""),
                 "excerpt": excerpt,
                 "relevanceScore": relevance_score,
-                "caseId": result_dict.get('case_id'),
+                "caseId": result_dict.get("case_id"),
                 "caseTitle": None,  # TODO: Resolve case title
-                "createdAt": result_dict.get('created_at', ''),
-                "metadata": {}
+                "createdAt": result_dict.get("created_at", ""),
+                "metadata": {},
             }
 
             # Add type-specific metadata
-            entity_type = result_dict.get('entity_type')
-            if entity_type == 'case':
+            entity_type = result_dict.get("entity_type")
+            if entity_type == "case":
                 result_item["metadata"] = {
-                    "status": result_dict.get('status'),
-                    "caseType": result_dict.get('case_type')
+                    "status": result_dict.get("status"),
+                    "caseType": result_dict.get("case_type"),
                 }
-            elif entity_type == 'evidence':
+            elif entity_type == "evidence":
                 result_item["metadata"] = {
-                    "evidenceType": result_dict.get('evidence_type'),
-                    "filePath": result_dict.get('file_path')
+                    "evidenceType": result_dict.get("evidence_type"),
+                    "filePath": result_dict.get("file_path"),
                 }
-            elif entity_type == 'conversation':
-                result_item["metadata"] = {
-                    "messageCount": result_dict.get('message_count')
-                }
-            elif entity_type == 'note':
-                result_item["metadata"] = {
-                    "isPinned": bool(result_dict.get('is_pinned'))
-                }
+            elif entity_type == "conversation":
+                result_item["metadata"] = {"messageCount": result_dict.get("message_count")}
+            elif entity_type == "note":
+                result_item["metadata"] = {"isPinned": bool(result_dict.get("is_pinned"))}
 
             results.append(result_item)
 
@@ -383,12 +391,7 @@ def search_with_fts5(
 
 
 def search_with_like(
-    db: Session,
-    user_id: int,
-    query: str,
-    filters: Optional[SearchFilters],
-    limit: int,
-    offset: int
+    db: Session, user_id: int, query: str, filters: Optional[SearchFilters], limit: int, offset: int
 ) -> Dict[str, Any]:
     """Fallback search using LIKE queries when FTS5 is not available."""
     from sqlalchemy import text
@@ -398,11 +401,14 @@ def search_with_like(
 
     # Prepare LIKE pattern
     like_pattern = f"%{query}%"
-    entity_types = filters.entityTypes if filters and filters.entityTypes else ["case", "evidence", "note"]
+    entity_types = (
+        filters.entityTypes if filters and filters.entityTypes else ["case", "evidence", "note"]
+    )
 
     # Search cases
     if "case" in entity_types:
-        case_query = text("""
+        case_query = text(
+            """
             SELECT
                 id as entity_id,
                 'case' as entity_type,
@@ -416,38 +422,39 @@ def search_with_like(
             WHERE user_id = :user_id
               AND (title LIKE :pattern OR description LIKE :pattern)
             LIMIT :limit
-        """)
+        """
+        )
 
-        case_rows = db.execute(case_query, {
-            "user_id": user_id,
-            "pattern": like_pattern,
-            "limit": limit
-        }).fetchall()
+        case_rows = db.execute(
+            case_query, {"user_id": user_id, "pattern": like_pattern, "limit": limit}
+        ).fetchall()
 
         for row in case_rows:
             row_dict = dict(row._mapping)
-            results.append({
-                "id": row_dict['entity_id'],
-                "type": "case",
-                "title": row_dict['title'],
-                "excerpt": extract_excerpt(row_dict.get('content', ''), query),
-                "relevanceScore": calculate_relevance(
-                    f"{row_dict['title']} {row_dict.get('content', '')}",
-                    query
-                ),
-                "caseId": None,
-                "caseTitle": None,
-                "createdAt": row_dict.get('created_at', ''),
-                "metadata": {
-                    "status": row_dict.get('status'),
-                    "caseType": row_dict.get('case_type')
+            results.append(
+                {
+                    "id": row_dict["entity_id"],
+                    "type": "case",
+                    "title": row_dict["title"],
+                    "excerpt": extract_excerpt(row_dict.get("content", ""), query),
+                    "relevanceScore": calculate_relevance(
+                        f"{row_dict['title']} {row_dict.get('content', '')}", query
+                    ),
+                    "caseId": None,
+                    "caseTitle": None,
+                    "createdAt": row_dict.get("created_at", ""),
+                    "metadata": {
+                        "status": row_dict.get("status"),
+                        "caseType": row_dict.get("case_type"),
+                    },
                 }
-            })
+            )
         total += len(case_rows)
 
     # Search evidence
     if "evidence" in entity_types:
-        evidence_query = text("""
+        evidence_query = text(
+            """
             SELECT
                 e.id as entity_id,
                 'evidence' as entity_type,
@@ -463,38 +470,39 @@ def search_with_like(
             WHERE e.user_id = :user_id
               AND (e.title LIKE :pattern OR e.content LIKE :pattern)
             LIMIT :limit
-        """)
+        """
+        )
 
-        evidence_rows = db.execute(evidence_query, {
-            "user_id": user_id,
-            "pattern": like_pattern,
-            "limit": limit
-        }).fetchall()
+        evidence_rows = db.execute(
+            evidence_query, {"user_id": user_id, "pattern": like_pattern, "limit": limit}
+        ).fetchall()
 
         for row in evidence_rows:
             row_dict = dict(row._mapping)
-            results.append({
-                "id": row_dict['entity_id'],
-                "type": "evidence",
-                "title": row_dict['title'],
-                "excerpt": extract_excerpt(row_dict.get('content', ''), query),
-                "relevanceScore": calculate_relevance(
-                    f"{row_dict['title']} {row_dict.get('content', '')}",
-                    query
-                ),
-                "caseId": row_dict.get('case_id'),
-                "caseTitle": row_dict.get('case_title'),
-                "createdAt": row_dict.get('created_at', ''),
-                "metadata": {
-                    "evidenceType": row_dict.get('evidence_type'),
-                    "filePath": row_dict.get('file_path')
+            results.append(
+                {
+                    "id": row_dict["entity_id"],
+                    "type": "evidence",
+                    "title": row_dict["title"],
+                    "excerpt": extract_excerpt(row_dict.get("content", ""), query),
+                    "relevanceScore": calculate_relevance(
+                        f"{row_dict['title']} {row_dict.get('content', '')}", query
+                    ),
+                    "caseId": row_dict.get("case_id"),
+                    "caseTitle": row_dict.get("case_title"),
+                    "createdAt": row_dict.get("created_at", ""),
+                    "metadata": {
+                        "evidenceType": row_dict.get("evidence_type"),
+                        "filePath": row_dict.get("file_path"),
+                    },
                 }
-            })
+            )
         total += len(evidence_rows)
 
     # Search notes
     if "note" in entity_types:
-        note_query = text("""
+        note_query = text(
+            """
             SELECT
                 n.id as entity_id,
                 'note' as entity_type,
@@ -509,39 +517,37 @@ def search_with_like(
             WHERE n.user_id = :user_id
               AND (n.title LIKE :pattern OR n.content LIKE :pattern)
             LIMIT :limit
-        """)
+        """
+        )
 
-        note_rows = db.execute(note_query, {
-            "user_id": user_id,
-            "pattern": like_pattern,
-            "limit": limit
-        }).fetchall()
+        note_rows = db.execute(
+            note_query, {"user_id": user_id, "pattern": like_pattern, "limit": limit}
+        ).fetchall()
 
         for row in note_rows:
             row_dict = dict(row._mapping)
-            results.append({
-                "id": row_dict['entity_id'],
-                "type": "note",
-                "title": row_dict['title'],
-                "excerpt": extract_excerpt(row_dict.get('content', ''), query),
-                "relevanceScore": calculate_relevance(
-                    f"{row_dict['title']} {row_dict.get('content', '')}",
-                    query
-                ),
-                "caseId": row_dict.get('case_id'),
-                "caseTitle": row_dict.get('case_title'),
-                "createdAt": row_dict.get('created_at', ''),
-                "metadata": {
-                    "isPinned": bool(row_dict.get('is_pinned'))
+            results.append(
+                {
+                    "id": row_dict["entity_id"],
+                    "type": "note",
+                    "title": row_dict["title"],
+                    "excerpt": extract_excerpt(row_dict.get("content", ""), query),
+                    "relevanceScore": calculate_relevance(
+                        f"{row_dict['title']} {row_dict.get('content', '')}", query
+                    ),
+                    "caseId": row_dict.get("case_id"),
+                    "caseTitle": row_dict.get("case_title"),
+                    "createdAt": row_dict.get("created_at", ""),
+                    "metadata": {"isPinned": bool(row_dict.get("is_pinned"))},
                 }
-            })
+            )
         total += len(note_rows)
 
     # Sort by relevance
-    results.sort(key=lambda x: x['relevanceScore'], reverse=True)
+    results.sort(key=lambda x: x["relevanceScore"], reverse=True)
 
     # Apply pagination
-    paginated_results = results[offset:offset + limit]
+    paginated_results = results[offset: offset + limit]
 
     return {"results": paginated_results, "total": total}
 
@@ -551,7 +557,7 @@ def search_with_like(
 async def search(
     request: SearchRequest,
     user_id: int = Depends(get_current_user),
-    search_service: SearchService = Depends(get_search_service)
+    search_service: SearchService = Depends(get_search_service),
 ):
     """
     Full-text search across cases, evidence, conversations, and notes.
@@ -584,7 +590,7 @@ async def search(
                 date_range=request.filters.dateRange,
                 entity_types=request.filters.entityTypes,
                 tags=request.filters.tags,
-                case_ids=request.filters.caseIds
+                case_ids=request.filters.caseIds,
             )
 
         # Create search query
@@ -594,7 +600,7 @@ async def search(
             sort_by=request.sortBy,
             sort_order=request.sortOrder,
             limit=request.limit,
-            offset=request.offset
+            offset=request.offset,
         )
 
         # Execute search using service
@@ -605,20 +611,17 @@ async def search(
             "results": [r.to_dict() for r in response.results],
             "total": response.total,
             "hasMore": response.has_more,
-            "executionTime": response.execution_time
+            "executionTime": response.execution_time,
         }
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Search failed: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")
 
 
 @router.post("/rebuild-index", response_model=RebuildIndexResponse, status_code=status.HTTP_200_OK)
 async def rebuild_search_index(
     user_id: int = Depends(get_current_user),
-    index_builder: SearchIndexBuilder = Depends(get_index_builder)
+    index_builder: SearchIndexBuilder = Depends(get_index_builder),
 ):
     """
     Rebuild the search index for the authenticated user.
@@ -637,23 +640,17 @@ async def rebuild_search_index(
     try:
         await index_builder.rebuild_index_for_user(user_id=user_id)
 
-        return {
-            "success": True,
-            "message": f"Search index rebuilt for user {user_id}"
-        }
+        return {"success": True, "message": f"Search index rebuilt for user {user_id}"}
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to rebuild search index: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to rebuild search index: {str(e)}")
 
 
 @router.post("/save", response_model=SavedSearchResponse, status_code=status.HTTP_201_CREATED)
 async def save_search(
     request: SaveSearchRequest,
     user_id: int = Depends(get_current_user),
-    search_service: SearchService = Depends(get_search_service)
+    search_service: SearchService = Depends(get_search_service),
 ):
     """
     Save a search query for later reuse.
@@ -672,7 +669,7 @@ async def save_search(
                 date_range=request.query.filters.dateRange,
                 entity_types=request.query.filters.entityTypes,
                 tags=request.query.filters.tags,
-                case_ids=request.query.filters.caseIds
+                case_ids=request.query.filters.caseIds,
             )
 
         # Create search query
@@ -682,15 +679,11 @@ async def save_search(
             sort_by=request.query.sortBy,
             sort_order=request.query.sortOrder,
             limit=request.query.limit,
-            offset=request.query.offset
+            offset=request.query.offset,
         )
 
         # Save using service
-        saved_search = search_service.save_search(
-            user_id=user_id,
-            name=request.name,
-            query=query
-        )
+        saved_search = search_service.save_search(user_id=user_id, name=request.name, query=query)
 
         return {
             "id": saved_search.id,
@@ -698,20 +691,17 @@ async def save_search(
             "queryJson": saved_search.query_json,
             "createdAt": saved_search.created_at,
             "lastUsedAt": saved_search.last_used_at,
-            "useCount": saved_search.use_count
+            "useCount": saved_search.use_count,
         }
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to save search: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to save search: {str(e)}")
 
 
 @router.get("/saved", response_model=List[SavedSearchResponse])
 async def list_saved_searches(
     user_id: int = Depends(get_current_user),
-    search_service: SearchService = Depends(get_search_service)
+    search_service: SearchService = Depends(get_search_service),
 ):
     """
     Get all saved searches for the authenticated user.
@@ -728,23 +718,20 @@ async def list_saved_searches(
                 "queryJson": s.query_json,
                 "createdAt": s.created_at,
                 "lastUsedAt": s.last_used_at,
-                "useCount": s.use_count
+                "useCount": s.use_count,
             }
             for s in saved_searches
         ]
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to list saved searches: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to list saved searches: {str(e)}")
 
 
 @router.delete("/saved/{search_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_saved_search(
     search_id: int,
     user_id: int = Depends(get_current_user),
-    search_service: SearchService = Depends(get_search_service)
+    search_service: SearchService = Depends(get_search_service),
 ):
     """
     Delete a saved search.
@@ -755,27 +742,21 @@ async def delete_saved_search(
         deleted = search_service.delete_saved_search(user_id=user_id, search_id=search_id)
 
         if not deleted:
-            raise HTTPException(
-                status_code=404,
-                detail="Saved search not found"
-            )
+            raise HTTPException(status_code=404, detail="Saved search not found")
 
         return None
 
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to delete saved search: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to delete saved search: {str(e)}")
 
 
 @router.post("/saved/{search_id}/execute", response_model=SearchResponse)
 async def execute_saved_search(
     search_id: int,
     user_id: int = Depends(get_current_user),
-    search_service: SearchService = Depends(get_search_service)
+    search_service: SearchService = Depends(get_search_service),
 ):
     """
     Execute a previously saved search.
@@ -793,19 +774,13 @@ async def execute_saved_search(
             "results": [r.to_dict() for r in response.results],
             "total": response.total,
             "hasMore": response.has_more,
-            "executionTime": response.execution_time
+            "executionTime": response.execution_time,
         }
 
     except ValueError as e:
-        raise HTTPException(
-            status_code=404,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to execute saved search: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to execute saved search: {str(e)}")
 
 
 @router.get("/suggestions", response_model=List[str])
@@ -813,7 +788,7 @@ async def get_search_suggestions(
     prefix: str = Query(..., min_length=1, max_length=100),
     limit: int = Query(default=5, ge=1, le=20),
     user_id: int = Depends(get_current_user),
-    search_service: SearchService = Depends(get_search_service)
+    search_service: SearchService = Depends(get_search_service),
 ):
     """
     Get search suggestions based on user's search history.
@@ -825,24 +800,21 @@ async def get_search_suggestions(
     """
     try:
         suggestions = search_service.get_search_suggestions(
-            user_id=user_id,
-            prefix=prefix,
-            limit=limit
+            user_id=user_id, prefix=prefix, limit=limit
         )
 
         return suggestions
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to get suggestions: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to get suggestions: {str(e)}")
 
 
 # ===== INDEX MANAGEMENT ENDPOINTS =====
 
+
 class IndexStatsResponse(BaseModel):
     """Response model for index statistics."""
+
     totalDocuments: int
     documentsByType: Dict[str, int]
     lastUpdated: Optional[str]
@@ -851,7 +823,7 @@ class IndexStatsResponse(BaseModel):
 @router.get("/index/stats", response_model=IndexStatsResponse)
 async def get_index_statistics(
     user_id: int = Depends(get_current_user),
-    index_builder: SearchIndexBuilder = Depends(get_index_builder)
+    index_builder: SearchIndexBuilder = Depends(get_index_builder),
 ):
     """
     Get search index statistics.
@@ -867,20 +839,17 @@ async def get_index_statistics(
         return {
             "totalDocuments": stats["total_documents"],
             "documentsByType": stats["documents_by_type"],
-            "lastUpdated": stats["last_updated"]
+            "lastUpdated": stats["last_updated"],
         }
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to get index statistics: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to get index statistics: {str(e)}")
 
 
 @router.post("/index/optimize", response_model=RebuildIndexResponse)
 async def optimize_search_index(
     user_id: int = Depends(get_current_user),
-    index_builder: SearchIndexBuilder = Depends(get_index_builder)
+    index_builder: SearchIndexBuilder = Depends(get_index_builder),
 ):
     """
     Optimize the FTS5 search index for better performance.
@@ -898,24 +867,19 @@ async def optimize_search_index(
     try:
         await index_builder.optimize_index()
 
-        return {
-            "success": True,
-            "message": "Search index optimized successfully"
-        }
+        return {"success": True, "message": "Search index optimized successfully"}
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to optimize search index: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to optimize search index: {str(e)}")
 
 
 class UpdateIndexRequest(BaseModel):
     """Request model for updating a single entity in index."""
+
     entityType: str = Field(..., description="Entity type (case, evidence, conversation, note)")
     entityId: int = Field(..., description="Entity ID to update")
 
-    @validator('entityType')
+    @validator("entityType")
     def validate_entity_type(cls, v):
         valid_types = ["case", "evidence", "conversation", "note"]
         if v not in valid_types:
@@ -927,7 +891,7 @@ class UpdateIndexRequest(BaseModel):
 async def update_index_entity(
     request: UpdateIndexRequest,
     user_id: int = Depends(get_current_user),
-    index_builder: SearchIndexBuilder = Depends(get_index_builder)
+    index_builder: SearchIndexBuilder = Depends(get_index_builder),
 ):
     """
     Update a single entity in the search index.
@@ -941,20 +905,16 @@ async def update_index_entity(
     """
     try:
         await index_builder.update_in_index(
-            entity_type=request.entityType,
-            entity_id=request.entityId
+            entity_type=request.entityType, entity_id=request.entityId
         )
 
         return {
             "success": True,
-            "message": f"Updated {request.entityType} {request.entityId} in search index"
+            "message": f"Updated {request.entityType} {request.entityId} in search index",
         }
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to update index: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to update index: {str(e)}")
 
 
 @router.delete("/index/{entity_type}/{entity_id}", response_model=RebuildIndexResponse)
@@ -962,7 +922,7 @@ async def remove_from_index(
     entity_type: str,
     entity_id: int,
     user_id: int = Depends(get_current_user),
-    index_builder: SearchIndexBuilder = Depends(get_index_builder)
+    index_builder: SearchIndexBuilder = Depends(get_index_builder),
 ):
     """
     Remove an entity from the search index.
@@ -980,22 +940,13 @@ async def remove_from_index(
     if entity_type not in valid_types:
         raise HTTPException(
             status_code=400,
-            detail=f"Invalid entity type: {entity_type}. Must be one of: {', '.join(valid_types)}"
+            detail=f"Invalid entity type: {entity_type}. Must be one of: {', '.join(valid_types)}",
         )
 
     try:
-        await index_builder.remove_from_index(
-            entity_type=entity_type,
-            entity_id=entity_id
-        )
+        await index_builder.remove_from_index(entity_type=entity_type, entity_id=entity_id)
 
-        return {
-            "success": True,
-            "message": f"Removed {entity_type} {entity_id} from search index"
-        }
+        return {"success": True, "message": f"Removed {entity_type} {entity_id} from search index"}
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to remove from index: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to remove from index: {str(e)}")

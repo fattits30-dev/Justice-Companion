@@ -47,7 +47,6 @@ from backend.services.template_service import (
     TemplateFields,
     TimelineMilestone,
     ChecklistItem,
-    ValidationError
 )
 from backend.models.case import CaseType, CaseStatus
 
@@ -57,12 +56,10 @@ logger = logging.getLogger(__name__)
 
 class TemplateSeederError(Exception):
     """Base exception for template seeder errors."""
-    pass
 
 
 class TemplateValidationError(Exception):
     """Exception raised when template validation fails."""
-    pass
 
 
 class TemplateSeeder:
@@ -95,7 +92,7 @@ class TemplateSeeder:
         action: str,
         success: bool,
         details: Optional[Dict[str, Any]] = None,
-        error_message: Optional[str] = None
+        error_message: Optional[str] = None,
     ) -> None:
         """
         Log audit event if audit logger is configured.
@@ -108,16 +105,18 @@ class TemplateSeeder:
             error_message: Optional error message if operation failed
         """
         if self.audit_logger:
-            self.audit_logger.log({
-                "event_type": event_type,
-                "user_id": None,  # System operation
-                "resource_type": "template",
-                "resource_id": "system",
-                "action": action,
-                "success": success,
-                "details": details or {},
-                "error_message": error_message
-            })
+            self.audit_logger.log(
+                {
+                    "event_type": event_type,
+                    "user_id": None,  # System operation
+                    "resource_type": "template",
+                    "resource_id": "system",
+                    "action": action,
+                    "success": success,
+                    "details": details or {},
+                    "error_message": error_message,
+                }
+            )
 
     def _validate_template(self, template: CreateTemplateInput) -> None:
         """
@@ -166,10 +165,7 @@ class TemplateSeeder:
         """
         existing = (
             self.db.query(CaseTemplate)
-            .filter(
-                CaseTemplate.name == name,
-                CaseTemplate.is_system_template == 1
-            )
+            .filter(CaseTemplate.name == name, CaseTemplate.is_system_template == 1)
             .first()
         )
         return existing is not None
@@ -195,13 +191,17 @@ class TemplateSeeder:
                     event_type="template.seed",
                     action="skip",
                     success=True,
-                    details={"name": template_input.name, "reason": "already_exists"}
+                    details={"name": template_input.name, "reason": "already_exists"},
                 )
                 return
 
             # Create template instance
             # Handle both enum and string values for category
-            category_value = template_input.category.value if hasattr(template_input.category, 'value') else template_input.category
+            category_value = (
+                template_input.category.value
+                if hasattr(template_input.category, "value")
+                else template_input.category
+            )
 
             template = CaseTemplate(
                 name=template_input.name,
@@ -210,13 +210,15 @@ class TemplateSeeder:
                 is_system_template=1,  # Mark as system template
                 user_id=None,  # System templates have no owner
                 template_fields_json=json.dumps(template_input.templateFields.model_dump()),
-                suggested_evidence_types_json=json.dumps(template_input.suggestedEvidenceTypes or []),
+                suggested_evidence_types_json=json.dumps(
+                    template_input.suggestedEvidenceTypes or []
+                ),
                 timeline_milestones_json=json.dumps(
                     [m.model_dump() for m in (template_input.timelineMilestones or [])]
                 ),
                 checklist_items_json=json.dumps(
                     [c.model_dump() for c in (template_input.checklistItems or [])]
-                )
+                ),
             )
 
             self.db.add(template)
@@ -230,8 +232,8 @@ class TemplateSeeder:
                 details={
                     "name": template.name,
                     "category": template.category,
-                    "template_id": template.id
-                }
+                    "template_id": template.id,
+                },
             )
 
         except TemplateValidationError as e:
@@ -242,7 +244,7 @@ class TemplateSeeder:
                 action="create",
                 success=False,
                 details={"name": template_input.name},
-                error_message=f"Validation error: {str(e)}"
+                error_message=f"Validation error: {str(e)}",
             )
             raise TemplateSeederError(f"Failed to validate template: {str(e)}")
 
@@ -254,7 +256,7 @@ class TemplateSeeder:
                 action="create",
                 success=False,
                 details={"name": template_input.name},
-                error_message=str(e)
+                error_message=str(e),
             )
             raise TemplateSeederError(f"Failed to create template: {str(e)}")
 
@@ -304,7 +306,7 @@ class TemplateSeeder:
             "seeded": seeded,
             "skipped": skipped,
             "failed": failed,
-            "template_names": template_names
+            "template_names": template_names,
         }
 
         logger.info(
@@ -312,10 +314,7 @@ class TemplateSeeder:
         )
 
         self._log_audit(
-            event_type="template.seed_all",
-            action="seed_all",
-            success=(failed == 0),
-            details=result
+            event_type="template.seed_all", action="seed_all", success=(failed == 0), details=result
         )
 
         return result
@@ -348,14 +347,14 @@ class TemplateSeeder:
                 titleTemplate="[Client Name] v [Defendant] - Contract Dispute",
                 descriptionTemplate="Contract dispute regarding [brief description of contract]. Alleged breach: [describe breach]. Damages sought: £[amount].",
                 caseType=CaseType.CONSUMER,
-                defaultStatus=CaseStatus.ACTIVE
+                defaultStatus=CaseStatus.ACTIVE,
             ),
             suggestedEvidenceTypes=[
                 "Contract documents",
                 "Correspondence (emails, letters)",
                 "Invoice/payment records",
                 "Witness statements",
-                "Expert reports (if applicable)"
+                "Expert reports (if applicable)",
             ],
             timelineMilestones=[
                 TimelineMilestone(
@@ -363,29 +362,29 @@ class TemplateSeeder:
                     description="Send detailed letter of claim to defendant outlining breach and proposed resolution",
                     daysFromStart=7,
                     isRequired=True,
-                    category="filing"
+                    category="filing",
                 ),
                 TimelineMilestone(
                     title="Defendant Response Deadline",
                     description="Defendant must acknowledge claim within 14 days",
                     daysFromStart=21,
                     isRequired=True,
-                    category="deadline"
+                    category="deadline",
                 ),
                 TimelineMilestone(
                     title="Prepare Claim Form (N1)",
                     description="Draft particulars of claim if settlement not reached",
                     daysFromStart=30,
                     isRequired=False,
-                    category="filing"
+                    category="filing",
                 ),
                 TimelineMilestone(
                     title="File Court Claim",
                     description="Issue claim at county court if no settlement",
                     daysFromStart=45,
                     isRequired=False,
-                    category="filing"
-                )
+                    category="filing",
+                ),
             ],
             checklistItems=[
                 ChecklistItem(
@@ -393,30 +392,30 @@ class TemplateSeeder:
                     description="Collect original contract, amendments, and related agreements",
                     category="evidence",
                     priority="high",
-                    daysFromStart=1
+                    daysFromStart=1,
                 ),
                 ChecklistItem(
                     title="Calculate damages",
                     description="Itemize all losses with supporting documentation",
                     category="research",
                     priority="high",
-                    daysFromStart=3
+                    daysFromStart=3,
                 ),
                 ChecklistItem(
                     title="Check court fees",
                     description="Verify current court fee based on claim value (£25-£10,000)",
                     category="filing",
                     priority="medium",
-                    daysFromStart=5
+                    daysFromStart=5,
                 ),
                 ChecklistItem(
                     title="Draft witness statements",
                     description="Prepare factual witness statements from all relevant parties",
                     category="evidence",
                     priority="medium",
-                    daysFromStart=14
-                )
-            ]
+                    daysFromStart=14,
+                ),
+            ],
         )
 
     def _personal_injury_template(self) -> CreateTemplateInput:
@@ -429,7 +428,7 @@ class TemplateSeeder:
                 titleTemplate="[Claimant Name] - Personal Injury Claim",
                 descriptionTemplate="Personal injury claim arising from [incident type] on [date]. Injuries sustained: [list injuries]. Liable party: [defendant name].",
                 caseType=CaseType.OTHER,
-                defaultStatus=CaseStatus.ACTIVE
+                defaultStatus=CaseStatus.ACTIVE,
             ),
             suggestedEvidenceTypes=[
                 "Medical records and reports",
@@ -437,7 +436,7 @@ class TemplateSeeder:
                 "Photographs of injuries/accident scene",
                 "Witness statements",
                 "Pay slips (for loss of earnings)",
-                "Receipts for expenses"
+                "Receipts for expenses",
             ],
             timelineMilestones=[
                 TimelineMilestone(
@@ -445,29 +444,29 @@ class TemplateSeeder:
                     description="Request GP notes and hospital records with patient consent",
                     daysFromStart=7,
                     isRequired=True,
-                    category="other"
+                    category="other",
                 ),
                 TimelineMilestone(
                     title="Instruct medical expert",
                     description="Arrange independent medical examination and prognosis report",
                     daysFromStart=14,
                     isRequired=True,
-                    category="other"
+                    category="other",
                 ),
                 TimelineMilestone(
                     title="Send Letter of Claim",
                     description="Formal notification to defendant/insurer with injury details",
                     daysFromStart=30,
                     isRequired=True,
-                    category="filing"
+                    category="filing",
                 ),
                 TimelineMilestone(
                     title="Defendant Response",
                     description="Insurer must respond within 21 days acknowledging claim",
                     daysFromStart=51,
                     isRequired=True,
-                    category="deadline"
-                )
+                    category="deadline",
+                ),
             ],
             checklistItems=[
                 ChecklistItem(
@@ -475,30 +474,30 @@ class TemplateSeeder:
                     description="Document incident details while memory is fresh",
                     category="communication",
                     priority="high",
-                    daysFromStart=1
+                    daysFromStart=1,
                 ),
                 ChecklistItem(
                     title="Photograph injuries",
                     description="Take detailed photos of all visible injuries and update weekly",
                     category="evidence",
                     priority="high",
-                    daysFromStart=1
+                    daysFromStart=1,
                 ),
                 ChecklistItem(
                     title="Identify liable party",
                     description="Determine defendant and obtain insurance details",
                     category="research",
                     priority="high",
-                    daysFromStart=3
+                    daysFromStart=3,
                 ),
                 ChecklistItem(
                     title="Calculate special damages",
                     description="Itemize all out-of-pocket expenses and lost earnings",
                     category="research",
                     priority="medium",
-                    daysFromStart=7
-                )
-            ]
+                    daysFromStart=7,
+                ),
+            ],
         )
 
     def _employment_tribunal_template(self) -> CreateTemplateInput:
@@ -511,7 +510,7 @@ class TemplateSeeder:
                 titleTemplate="[Claimant Name] v [Employer] - Employment Tribunal",
                 descriptionTemplate="Employment tribunal claim for [type: unfair dismissal/discrimination/etc]. Employment dates: [start] to [end]. Grounds: [brief description].",
                 caseType=CaseType.EMPLOYMENT,
-                defaultStatus=CaseStatus.ACTIVE
+                defaultStatus=CaseStatus.ACTIVE,
             ),
             suggestedEvidenceTypes=[
                 "Employment contract",
@@ -519,7 +518,7 @@ class TemplateSeeder:
                 "Emails and written communications",
                 "Disciplinary/grievance records",
                 "Performance reviews",
-                "Witness statements from colleagues"
+                "Witness statements from colleagues",
             ],
             timelineMilestones=[
                 TimelineMilestone(
@@ -527,29 +526,29 @@ class TemplateSeeder:
                     description="Mandatory step before tribunal claim (min 1 month process)",
                     daysFromStart=7,
                     isRequired=True,
-                    category="filing"
+                    category="filing",
                 ),
                 TimelineMilestone(
                     title="Obtain ACAS Certificate",
                     description="Wait for ACAS certificate (issued if conciliation fails)",
                     daysFromStart=37,
                     isRequired=True,
-                    category="deadline"
+                    category="deadline",
                 ),
                 TimelineMilestone(
                     title="File ET1 Form",
                     description="Submit tribunal claim within 1 month of ACAS cert (strict deadline)",
                     daysFromStart=44,
                     isRequired=True,
-                    category="filing"
+                    category="filing",
                 ),
                 TimelineMilestone(
                     title="Employer Response (ET3)",
                     description="Employer must respond within 28 days of service",
                     daysFromStart=72,
                     isRequired=True,
-                    category="deadline"
-                )
+                    category="deadline",
+                ),
             ],
             checklistItems=[
                 ChecklistItem(
@@ -557,30 +556,30 @@ class TemplateSeeder:
                     description="Verify claim is within 3 months less 1 day of dismissal/incident",
                     category="filing",
                     priority="high",
-                    daysFromStart=1
+                    daysFromStart=1,
                 ),
                 ChecklistItem(
                     title="Gather employment documents",
                     description="Collect contract, handbook, policies, and correspondence",
                     category="evidence",
                     priority="high",
-                    daysFromStart=1
+                    daysFromStart=1,
                 ),
                 ChecklistItem(
                     title="Calculate compensation",
                     description="Determine financial losses and statutory award limits",
                     category="research",
                     priority="medium",
-                    daysFromStart=5
+                    daysFromStart=5,
                 ),
                 ChecklistItem(
                     title="Draft witness list",
                     description="Identify colleagues who can support claim",
                     category="evidence",
                     priority="medium",
-                    daysFromStart=10
-                )
-            ]
+                    daysFromStart=10,
+                ),
+            ],
         )
 
     def _housing_possession_defense_template(self) -> CreateTemplateInput:
@@ -593,7 +592,7 @@ class TemplateSeeder:
                 titleTemplate="Defense - [Landlord] v [Tenant] - Possession Claim",
                 descriptionTemplate="Defense to possession claim. Property: [address]. Tenancy type: [AST/regulated/etc]. Notice received: [date]. Grounds: [Section 21/Section 8 grounds].",
                 caseType=CaseType.HOUSING,
-                defaultStatus=CaseStatus.ACTIVE
+                defaultStatus=CaseStatus.ACTIVE,
             ),
             suggestedEvidenceTypes=[
                 "Tenancy agreement",
@@ -601,7 +600,7 @@ class TemplateSeeder:
                 "Notice (Section 21/8)",
                 "Correspondence with landlord",
                 "Photos of property condition",
-                "Deposit protection certificate"
+                "Deposit protection certificate",
             ],
             timelineMilestones=[
                 TimelineMilestone(
@@ -609,29 +608,29 @@ class TemplateSeeder:
                     description="Submit defense to court within 14 days of service",
                     daysFromStart=7,
                     isRequired=True,
-                    category="filing"
+                    category="filing",
                 ),
                 TimelineMilestone(
                     title="Check deposit protection",
                     description="Verify landlord protected deposit within 30 days of tenancy",
                     daysFromStart=3,
                     isRequired=True,
-                    category="other"
+                    category="other",
                 ),
                 TimelineMilestone(
                     title="Obtain legal advice",
                     description="Urgent appointment with housing solicitor or advice service",
                     daysFromStart=1,
                     isRequired=True,
-                    category="other"
+                    category="other",
                 ),
                 TimelineMilestone(
                     title="First Hearing",
                     description="Attend possession hearing (approx 4-8 weeks after filing)",
                     daysFromStart=42,
                     isRequired=True,
-                    category="hearing"
-                )
+                    category="hearing",
+                ),
             ],
             checklistItems=[
                 ChecklistItem(
@@ -639,30 +638,30 @@ class TemplateSeeder:
                     description="Verify notice period, format, and procedural requirements",
                     category="research",
                     priority="high",
-                    daysFromStart=1
+                    daysFromStart=1,
                 ),
                 ChecklistItem(
                     title="Review tenancy agreement",
                     description="Check for landlord breaches (e.g., no deposit protection)",
                     category="evidence",
                     priority="high",
-                    daysFromStart=1
+                    daysFromStart=1,
                 ),
                 ChecklistItem(
                     title="Apply for discretionary housing payment",
                     description="Emergency funds from local council if rent arrears",
                     category="other",
                     priority="medium",
-                    daysFromStart=2
+                    daysFromStart=2,
                 ),
                 ChecklistItem(
                     title="Gather rent payment evidence",
                     description="Bank statements showing all rent payments made",
                     category="evidence",
                     priority="high",
-                    daysFromStart=3
-                )
-            ]
+                    daysFromStart=3,
+                ),
+            ],
         )
 
     def _family_court_divorce_template(self) -> CreateTemplateInput:
@@ -675,7 +674,7 @@ class TemplateSeeder:
                 titleTemplate="Divorce - [Petitioner] and [Respondent]",
                 descriptionTemplate="Divorce petition. Marriage date: [date]. Separation date: [date]. Grounds: Irretrievable breakdown. Children: [number]. Financial settlement: [disputed/agreed].",
                 caseType=CaseType.FAMILY,
-                defaultStatus=CaseStatus.ACTIVE
+                defaultStatus=CaseStatus.ACTIVE,
             ),
             suggestedEvidenceTypes=[
                 "Marriage certificate",
@@ -683,7 +682,7 @@ class TemplateSeeder:
                 "Property valuations",
                 "Pension statements",
                 "Bank statements (last 12 months)",
-                "Child arrangement proposals"
+                "Child arrangement proposals",
             ],
             timelineMilestones=[
                 TimelineMilestone(
@@ -691,29 +690,29 @@ class TemplateSeeder:
                     description="File application via gov.uk portal (£593 court fee)",
                     daysFromStart=7,
                     isRequired=True,
-                    category="filing"
+                    category="filing",
                 ),
                 TimelineMilestone(
                     title="Serve Respondent",
                     description="Court serves respondent (or personal service if required)",
                     daysFromStart=21,
                     isRequired=True,
-                    category="other"
+                    category="other",
                 ),
                 TimelineMilestone(
                     title="Conditional Order (20 weeks)",
                     description="Apply for conditional order after 20-week reflection period",
                     daysFromStart=140,
                     isRequired=True,
-                    category="filing"
+                    category="filing",
                 ),
                 TimelineMilestone(
                     title="Final Order (6 weeks + 1 day)",
                     description="Apply for final order to complete divorce",
                     daysFromStart=182,
                     isRequired=True,
-                    category="filing"
-                )
+                    category="filing",
+                ),
             ],
             checklistItems=[
                 ChecklistItem(
@@ -721,30 +720,30 @@ class TemplateSeeder:
                     description="Original or certified copy required for application",
                     category="evidence",
                     priority="high",
-                    daysFromStart=1
+                    daysFromStart=1,
                 ),
                 ChecklistItem(
                     title="Complete financial disclosure",
                     description="Full Form E with all assets, debts, income, and pensions",
                     category="filing",
                     priority="high",
-                    daysFromStart=7
+                    daysFromStart=7,
                 ),
                 ChecklistItem(
                     title="Draft child arrangements",
                     description="Propose living arrangements, contact, and maintenance",
                     category="filing",
                     priority="medium",
-                    daysFromStart=14
+                    daysFromStart=14,
                 ),
                 ChecklistItem(
                     title="Attend MIAM (Mediation)",
                     description="Mandatory Information and Assessment Meeting (unless exempt)",
                     category="other",
                     priority="high",
-                    daysFromStart=10
-                )
-            ]
+                    daysFromStart=10,
+                ),
+            ],
         )
 
     def _immigration_appeal_template(self) -> CreateTemplateInput:
@@ -757,7 +756,7 @@ class TemplateSeeder:
                 titleTemplate="Immigration Appeal - [Appellant Name]",
                 descriptionTemplate="Appeal against [visa refusal/deportation/asylum refusal]. Home Office reference: [ref]. Decision date: [date]. Grounds: [Article 8/human rights/asylum grounds].",
                 caseType=CaseType.OTHER,
-                defaultStatus=CaseStatus.ACTIVE
+                defaultStatus=CaseStatus.ACTIVE,
             ),
             suggestedEvidenceTypes=[
                 "Home Office decision letter",
@@ -765,7 +764,7 @@ class TemplateSeeder:
                 "Sponsor documents (if family visa)",
                 "Evidence of relationship/employment",
                 "Country expert reports",
-                "Character references"
+                "Character references",
             ],
             timelineMilestones=[
                 TimelineMilestone(
@@ -773,29 +772,29 @@ class TemplateSeeder:
                     description="Submit appeal to First-tier Tribunal (14-day deadline)",
                     daysFromStart=7,
                     isRequired=True,
-                    category="filing"
+                    category="filing",
                 ),
                 TimelineMilestone(
                     title="Home Office Review",
                     description="UKVI reviews decision (may withdraw or maintain)",
                     daysFromStart=28,
                     isRequired=True,
-                    category="deadline"
+                    category="deadline",
                 ),
                 TimelineMilestone(
                     title="Submit Skeleton Argument",
                     description="Detailed legal grounds and evidence summary",
                     daysFromStart=42,
                     isRequired=True,
-                    category="filing"
+                    category="filing",
                 ),
                 TimelineMilestone(
                     title="Tribunal Hearing",
                     description="Oral hearing before immigration judge (approx 3-6 months)",
                     daysFromStart=120,
                     isRequired=True,
-                    category="hearing"
-                )
+                    category="hearing",
+                ),
             ],
             checklistItems=[
                 ChecklistItem(
@@ -803,30 +802,30 @@ class TemplateSeeder:
                     description="14 days for in-country, 28 days for out-of-country appeals",
                     category="filing",
                     priority="high",
-                    daysFromStart=1
+                    daysFromStart=1,
                 ),
                 ChecklistItem(
                     title="Obtain Home Office bundle",
                     description="Request all documents HO relied on for decision",
                     category="evidence",
                     priority="high",
-                    daysFromStart=3
+                    daysFromStart=3,
                 ),
                 ChecklistItem(
                     title="Gather supporting evidence",
                     description="Collect all evidence not submitted with original application",
                     category="evidence",
                     priority="high",
-                    daysFromStart=5
+                    daysFromStart=5,
                 ),
                 ChecklistItem(
                     title="Instruct expert witness (if needed)",
                     description="Country expert for asylum or medical expert for health grounds",
                     category="other",
                     priority="medium",
-                    daysFromStart=14
-                )
-            ]
+                    daysFromStart=14,
+                ),
+            ],
         )
 
     def _landlord_tenant_dispute_template(self) -> CreateTemplateInput:
@@ -839,7 +838,7 @@ class TemplateSeeder:
                 titleTemplate="[Tenant] - Dispute with [Landlord]",
                 descriptionTemplate="Dispute type: [deposit/disrepair/unlawful eviction]. Property: [address]. Tenancy dates: [start] to [end/ongoing]. Issue: [brief description].",
                 caseType=CaseType.HOUSING,
-                defaultStatus=CaseStatus.ACTIVE
+                defaultStatus=CaseStatus.ACTIVE,
             ),
             suggestedEvidenceTypes=[
                 "Tenancy agreement",
@@ -847,7 +846,7 @@ class TemplateSeeder:
                 "Photos of property condition",
                 "Repair requests and responses",
                 "Rent payment records",
-                "Correspondence with landlord"
+                "Correspondence with landlord",
             ],
             timelineMilestones=[
                 TimelineMilestone(
@@ -855,29 +854,29 @@ class TemplateSeeder:
                     description="Formal written notice of disrepair/deposit dispute",
                     daysFromStart=3,
                     isRequired=True,
-                    category="other"
+                    category="other",
                 ),
                 TimelineMilestone(
                     title="Landlord Response Period",
                     description="Landlord must respond within reasonable time (14-28 days)",
                     daysFromStart=21,
                     isRequired=False,
-                    category="deadline"
+                    category="deadline",
                 ),
                 TimelineMilestone(
                     title="Initiate Deposit Scheme ADR",
                     description="Free dispute resolution via TDS/DPS/MyDeposits",
                     daysFromStart=30,
                     isRequired=False,
-                    category="other"
+                    category="other",
                 ),
                 TimelineMilestone(
                     title="Submit County Court Claim",
                     description="File N1 claim form if ADR fails (last resort)",
                     daysFromStart=60,
                     isRequired=False,
-                    category="filing"
-                )
+                    category="filing",
+                ),
             ],
             checklistItems=[
                 ChecklistItem(
@@ -885,30 +884,30 @@ class TemplateSeeder:
                     description="Verify deposit registered with TDS, DPS, or MyDeposits",
                     category="research",
                     priority="high",
-                    daysFromStart=1
+                    daysFromStart=1,
                 ),
                 ChecklistItem(
                     title="Document property condition",
                     description="Timestamped photos and video walkthrough",
                     category="evidence",
                     priority="high",
-                    daysFromStart=1
+                    daysFromStart=1,
                 ),
                 ChecklistItem(
                     title="Review tenancy agreement",
                     description="Check repair obligations and dispute resolution clauses",
                     category="research",
                     priority="medium",
-                    daysFromStart=2
+                    daysFromStart=2,
                 ),
                 ChecklistItem(
                     title="Calculate damages/compensation",
                     description="Itemize losses or cost of repairs with quotes",
                     category="research",
                     priority="medium",
-                    daysFromStart=7
-                )
-            ]
+                    daysFromStart=7,
+                ),
+            ],
         )
 
     def _debt_recovery_template(self) -> CreateTemplateInput:
@@ -921,7 +920,7 @@ class TemplateSeeder:
                 titleTemplate="[Creditor] v [Debtor] - Debt Recovery",
                 descriptionTemplate="Debt recovery claim. Amount owed: £[amount]. Invoice/loan date: [date]. Payment due: [date]. Debtor response: [ignored/disputed/partial payment].",
                 caseType=CaseType.DEBT,
-                defaultStatus=CaseStatus.ACTIVE
+                defaultStatus=CaseStatus.ACTIVE,
             ),
             suggestedEvidenceTypes=[
                 "Invoice or loan agreement",
@@ -929,7 +928,7 @@ class TemplateSeeder:
                 "Payment reminders sent",
                 "Debtor correspondence",
                 "Bank statements showing non-payment",
-                "Credit report (for insolvency check)"
+                "Credit report (for insolvency check)",
             ],
             timelineMilestones=[
                 TimelineMilestone(
@@ -937,29 +936,29 @@ class TemplateSeeder:
                     description="Final demand giving 14 days to pay or face legal action",
                     daysFromStart=7,
                     isRequired=True,
-                    category="other"
+                    category="other",
                 ),
                 TimelineMilestone(
                     title="Debtor Payment Deadline",
                     description="Deadline for payment or response to letter",
                     daysFromStart=21,
                     isRequired=True,
-                    category="deadline"
+                    category="deadline",
                 ),
                 TimelineMilestone(
                     title="Issue County Court Claim (N1)",
                     description="File claim online (MCOL) or via court if no payment",
                     daysFromStart=28,
                     isRequired=False,
-                    category="filing"
+                    category="filing",
                 ),
                 TimelineMilestone(
                     title="Debtor Defense Deadline",
                     description="Debtor has 14 days to acknowledge or defend",
                     daysFromStart=42,
                     isRequired=False,
-                    category="deadline"
-                )
+                    category="deadline",
+                ),
             ],
             checklistItems=[
                 ChecklistItem(
@@ -967,28 +966,28 @@ class TemplateSeeder:
                     description="Check debt is within 6 years (12 for specialty debts)",
                     category="research",
                     priority="high",
-                    daysFromStart=1
+                    daysFromStart=1,
                 ),
                 ChecklistItem(
                     title="Check debtor solvency",
                     description="Search Companies House or credit reference agencies",
                     category="research",
                     priority="high",
-                    daysFromStart=2
+                    daysFromStart=2,
                 ),
                 ChecklistItem(
                     title="Calculate total owed",
                     description="Include principal, interest (8% statutory), and costs",
                     category="research",
                     priority="high",
-                    daysFromStart=3
+                    daysFromStart=3,
                 ),
                 ChecklistItem(
                     title="Prepare enforcement options",
                     description="Research bailiffs, charging orders, attachment of earnings",
                     category="research",
                     priority="medium",
-                    daysFromStart=14
-                )
-            ]
+                    daysFromStart=14,
+                ),
+            ],
         )

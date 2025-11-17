@@ -23,12 +23,11 @@ REFACTORED: Now uses service layer instead of direct database queries
 - AuditLogger for comprehensive audit trail
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Header, Query, status
-from pydantic import BaseModel, Field, validator, EmailStr
+from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel, Field, validator
 from typing import Optional, Dict, Any
 from sqlalchemy.orm import Session
 import os
-import base64
 import re
 
 from backend.models.base import get_db
@@ -37,11 +36,9 @@ from backend.routes.auth import get_current_user
 from backend.services.profile_service import (
     ProfileService,
     UserProfileData,
-    ExtendedUserProfileData,
     ProfileUpdateResult,
-    ProfileValidationResult,
-    ProfileFormData
 )
+
 # UserProfileService not needed for single-user profile (id=1)
 # from backend.services.user_profile_service import UserProfileService
 from backend.services.encryption_service import EncryptionService
@@ -52,16 +49,24 @@ router = APIRouter(prefix="/profile", tags=["profile"])
 
 # ===== PYDANTIC REQUEST/RESPONSE MODELS =====
 
+
 class UpdateProfileRequest(BaseModel):
     """Request model for updating user profile."""
+
     name: Optional[str] = Field(None, min_length=1, max_length=200, description="User's full name")
     email: Optional[str] = Field(None, max_length=255, description="User's email address")
-    avatarUrl: Optional[str] = Field(None, max_length=2000, description="Avatar image URL (HTTPS only)")
-    firstName: Optional[str] = Field(None, min_length=1, max_length=100, description="User's first name")
-    lastName: Optional[str] = Field(None, min_length=1, max_length=100, description="User's last name")
+    avatarUrl: Optional[str] = Field(
+        None, max_length=2000, description="Avatar image URL (HTTPS only)"
+    )
+    firstName: Optional[str] = Field(
+        None, min_length=1, max_length=100, description="User's first name"
+    )
+    lastName: Optional[str] = Field(
+        None, min_length=1, max_length=100, description="User's last name"
+    )
     phone: Optional[str] = Field(None, max_length=20, description="User's phone number")
 
-    @validator('name')
+    @validator("name")
     def validate_name(cls, v):
         if v is not None:
             v = v.strip()
@@ -74,7 +79,7 @@ class UpdateProfileRequest(BaseModel):
                 raise ValueError("Name must be less than 200 characters")
         return v
 
-    @validator('email')
+    @validator("email")
     def validate_email(cls, v):
         if v is not None:
             v = v.strip()
@@ -82,12 +87,12 @@ class UpdateProfileRequest(BaseModel):
                 return None  # Allow clearing email
 
             # Basic email regex
-            email_regex = r'^[^\s@]+@[^\s@]+\.[^\s@]+$'
+            email_regex = r"^[^\s@]+@[^\s@]+\.[^\s@]+$"
             if not re.match(email_regex, v):
                 raise ValueError("Please enter a valid email address")
 
             # RFC 5321 compliant email validation
-            parts = v.split('@')
+            parts = v.split("@")
             if len(parts) != 2:
                 raise ValueError("Invalid email format")
 
@@ -96,24 +101,24 @@ class UpdateProfileRequest(BaseModel):
             # Check local part (before @)
             if len(local) > 64:
                 raise ValueError("Email local part too long (max 64 characters)")
-            if local.startswith('.') or local.endswith('.'):
+            if local.startswith(".") or local.endswith("."):
                 raise ValueError("Email local part cannot start or end with a dot")
-            if '..' in local:
+            if ".." in local:
                 raise ValueError("Email local part cannot contain consecutive dots")
 
             # Check domain part (after @)
             if len(domain) > 253:
                 raise ValueError("Email domain too long (max 253 characters)")
-            if '.' not in domain:
+            if "." not in domain:
                 raise ValueError("Email domain must contain at least one dot")
-            if domain.startswith('.') or domain.endswith('.'):
+            if domain.startswith(".") or domain.endswith("."):
                 raise ValueError("Email domain cannot start or end with a dot")
-            if domain.startswith('-') or domain.endswith('-'):
+            if domain.startswith("-") or domain.endswith("-"):
                 raise ValueError("Email domain cannot start or end with a hyphen")
 
         return v
 
-    @validator('avatarUrl')
+    @validator("avatarUrl")
     def validate_avatar_url(cls, v):
         if v is not None:
             v = v.strip()
@@ -121,25 +126,27 @@ class UpdateProfileRequest(BaseModel):
                 return None  # Allow clearing avatar URL
 
             # URL validation
-            url_regex = r'^https?://[^\s/$.?#].[^\s]*$'
+            url_regex = r"^https?://[^\s/$.?#].[^\s]*$"
             if not re.match(url_regex, v):
                 raise ValueError("Please enter a valid URL")
 
             # Only allow HTTPS for security
-            if not v.startswith('https://'):
+            if not v.startswith("https://"):
                 raise ValueError("Avatar URL must use HTTPS protocol")
 
             # Check if URL points to an image
-            image_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg']
+            image_extensions = [".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg"]
             if not any(v.lower().endswith(ext) for ext in image_extensions):
-                raise ValueError("Avatar URL must point to an image file (.jpg, .jpeg, .png, .gif, .webp, .svg)")
+                raise ValueError(
+                    "Avatar URL must point to an image file (.jpg, .jpeg, .png, .gif, .webp, .svg)"
+                )
 
             if len(v) > 2000:
                 raise ValueError("Avatar URL must be less than 2000 characters")
 
         return v
 
-    @validator('firstName', 'lastName')
+    @validator("firstName", "lastName")
     def validate_names(cls, v):
         if v is not None:
             v = v.strip()
@@ -150,15 +157,15 @@ class UpdateProfileRequest(BaseModel):
                 raise ValueError("Name can only contain letters, spaces, hyphens, and apostrophes")
         return v
 
-    @validator('phone')
+    @validator("phone")
     def validate_phone(cls, v):
         if v is not None:
             v = v.strip()
             if v == "":
                 return None  # Allow clearing phone
             # Remove common formatting characters
-            phone_cleaned = re.sub(r'[\s\-()]', '', v)
-            phone_regex = re.compile(r'^[+]?[1-9][\d]{0,15}$')
+            phone_cleaned = re.sub(r"[\s\-()]", "", v)
+            phone_regex = re.compile(r"^[+]?[1-9][\d]{0,15}$")
             if not phone_regex.match(phone_cleaned):
                 raise ValueError("Please enter a valid phone number")
         return v
@@ -166,25 +173,27 @@ class UpdateProfileRequest(BaseModel):
 
 class ChangePasswordRequest(BaseModel):
     """Request model for changing password."""
+
     currentPassword: str = Field(..., min_length=12, description="Current password")
     newPassword: str = Field(..., min_length=12, description="New password")
 
-    @validator('newPassword')
+    @validator("newPassword")
     def validate_password_strength(cls, v):
         """Validate password meets OWASP requirements."""
         if len(v) < 12:
             raise ValueError("Password must be at least 12 characters (OWASP requirement)")
-        if not re.search(r'[A-Z]', v):
+        if not re.search(r"[A-Z]", v):
             raise ValueError("Password must contain at least one uppercase letter")
-        if not re.search(r'[a-z]', v):
+        if not re.search(r"[a-z]", v):
             raise ValueError("Password must contain at least one lowercase letter")
-        if not re.search(r'[0-9]', v):
+        if not re.search(r"[0-9]", v):
             raise ValueError("Password must contain at least one number")
         return v
 
 
 class ProfileResponse(BaseModel):
     """Response model for user profile data."""
+
     id: int
     name: str
     email: Optional[str] = None
@@ -203,18 +212,23 @@ class ProfileResponse(BaseModel):
 
 class ProfileCompletenessResponse(BaseModel):
     """Response model for profile completeness indicator."""
+
     percentage: int = Field(..., ge=0, le=100, description="Profile completion percentage")
-    missingFields: list[str] = Field(default_factory=list, description="List of missing required fields")
+    missingFields: list[str] = Field(
+        default_factory=list, description="List of missing required fields"
+    )
     completedFields: list[str] = Field(default_factory=list, description="List of completed fields")
 
 
 class PasswordChangeResponse(BaseModel):
     """Response model for password change operation."""
+
     success: bool
     message: str
 
 
 # ===== DEPENDENCIES =====
+
 
 def get_auth_service(db: Session = Depends(get_db)) -> AuthenticationService:
     """Get authentication service instance."""
@@ -240,19 +254,18 @@ def get_audit_logger(db: Session = Depends(get_db)) -> AuditLogger:
 def get_profile_service(
     db: Session = Depends(get_db),
     encryption_service: EncryptionService = Depends(get_encryption_service),
-    audit_logger: AuditLogger = Depends(get_audit_logger)
+    audit_logger: AuditLogger = Depends(get_audit_logger),
 ) -> ProfileService:
     """Get profile service instance (for single-row profile table)."""
-    return ProfileService(
-        db=db,
-        encryption_service=encryption_service,
-        audit_logger=audit_logger
-    )
+    return ProfileService(db=db, encryption_service=encryption_service, audit_logger=audit_logger)
 
 
 # ===== HELPER FUNCTIONS =====
 
-def calculate_profile_completeness(profile: Optional[UserProfileData]) -> ProfileCompletenessResponse:
+
+def calculate_profile_completeness(
+    profile: Optional[UserProfileData],
+) -> ProfileCompletenessResponse:
     """
     Calculate profile completeness percentage and identify missing fields.
 
@@ -264,9 +277,7 @@ def calculate_profile_completeness(profile: Optional[UserProfileData]) -> Profil
     """
     if not profile:
         return ProfileCompletenessResponse(
-            percentage=0,
-            missingFields=["firstName", "lastName", "email"],
-            completedFields=[]
+            percentage=0, missingFields=["firstName", "lastName", "email"], completedFields=[]
         )
 
     required_fields = ["firstName", "lastName", "email"]
@@ -294,18 +305,17 @@ def calculate_profile_completeness(profile: Optional[UserProfileData]) -> Profil
     percentage = int((len(completed_fields) / total_fields) * 100)
 
     return ProfileCompletenessResponse(
-        percentage=percentage,
-        missingFields=missing_fields,
-        completedFields=completed_fields
+        percentage=percentage, missingFields=missing_fields, completedFields=completed_fields
     )
 
 
 # ===== ROUTES =====
 
+
 @router.get("", response_model=ProfileResponse)
 async def get_profile(
     user_id: int = Depends(get_current_user),
-    profile_service: ProfileService = Depends(get_profile_service)
+    profile_service: ProfileService = Depends(get_profile_service),
 ):
     """
     Get current user's profile with decrypted PII fields.
@@ -328,10 +338,7 @@ async def get_profile(
 
         if not extended_profile:
             # No profile exists - return default
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Profile not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found")
 
         # Convert to response model
         return ProfileResponse(
@@ -345,7 +352,7 @@ async def get_profile(
             fullName=extended_profile.fullName,
             initials=extended_profile.initials,
             createdAt="",  # TODO: Add from database
-            updatedAt=""   # TODO: Add from database
+            updatedAt="",  # TODO: Add from database
         )
 
     except HTTPException:
@@ -353,7 +360,7 @@ async def get_profile(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get profile: {str(e)}"
+            detail=f"Failed to get profile: {str(e)}",
         )
 
 
@@ -361,7 +368,7 @@ async def get_profile(
 async def update_profile(
     request: UpdateProfileRequest,
     user_id: int = Depends(get_current_user),
-    profile_service: ProfileService = Depends(get_profile_service)
+    profile_service: ProfileService = Depends(get_profile_service),
 ):
     """
     Update current user's profile with validation and encryption.
@@ -422,15 +429,11 @@ async def update_profile(
 
         # Update profile using service layer (with retry logic)
         result: ProfileUpdateResult = await profile_service.update(
-            profile_data=update_data,
-            max_retries=3
+            profile_data=update_data, max_retries=3
         )
 
         if not result.success:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=result.message
-            )
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=result.message)
 
         # Return updated profile
         return await get_profile(user_id=user_id, profile_service=profile_service)
@@ -440,7 +443,7 @@ async def update_profile(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to update profile: {str(e)}"
+            detail=f"Failed to update profile: {str(e)}",
         )
 
 
@@ -448,7 +451,7 @@ async def update_profile(
 async def change_password(
     request: ChangePasswordRequest,
     user_id: int = Depends(get_current_user),
-    auth_service: AuthenticationService = Depends(get_auth_service)
+    auth_service: AuthenticationService = Depends(get_auth_service),
 ):
     """
     Change user password with verification and OWASP validation.
@@ -476,40 +479,32 @@ async def change_password(
     try:
         # Change password using authentication service
         await auth_service.change_password(
-            user_id=user_id,
-            old_password=request.currentPassword,
-            new_password=request.newPassword
+            user_id=user_id, old_password=request.currentPassword, new_password=request.newPassword
         )
 
         return PasswordChangeResponse(
             success=True,
-            message="Password changed successfully. All sessions have been invalidated. Please log in again."
+            message="Password changed successfully. All sessions have been invalidated. Please log in again.",
         )
 
     except Exception as e:
         # Authentication service throws AuthenticationError with specific messages
         error_message = str(e)
         if "Invalid current password" in error_message:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail=error_message
-            )
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=error_message)
         elif "Password must" in error_message:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=error_message
-            )
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error_message)
         else:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Failed to change password: {error_message}"
+                detail=f"Failed to change password: {error_message}",
             )
 
 
 @router.get("/completeness", response_model=ProfileCompletenessResponse)
 async def get_profile_completeness(
     user_id: int = Depends(get_current_user),
-    profile_service: ProfileService = Depends(get_profile_service)
+    profile_service: ProfileService = Depends(get_profile_service),
 ):
     """
     Get profile completeness indicator.
@@ -539,5 +534,5 @@ async def get_profile_completeness(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to calculate profile completeness: {str(e)}"
+            detail=f"Failed to calculate profile completeness: {str(e)}",
         )

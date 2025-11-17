@@ -7,18 +7,15 @@ to manage OpenAI, Anthropic, and other provider API keys.
 
 import asyncio
 import logging
-from typing import Optional
 
 from secure_storage_service import (
     SecureStorageService,
-    SecureStorageError,
     secure_storage,
 )
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 

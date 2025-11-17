@@ -123,6 +123,63 @@ Desktop.ini
 $RECYCLE.BIN/
 
 # ============================================================================
+# Root Level Scripts & Logs (Project-specific)
+# ============================================================================
+# Standalone scripts
+check-sessions.mjs
+cleanup-launchers.js
+remove-ts-extensions.js
+replace-console-logs.js
+verify-action-logs-table.mjs
+fix_python_lint.py
+backendmain.py
+test-debug.js
+fix-any-types*.js
+fix-any-types.mjs
+fix-decorator-types.js
+fix-forwardcall-types.js
+
+# Temporary test files
+temp-test.tsx
+
+# Executables
+claude.exe
+
+# Specific reports and logs that don't match generic patterns
+ANY-TYPE-REFACTOR-REPORT.md
+AUTH_MIGRATION_SUMMARY.md
+BLOCKING_ERRORS_FIXED.md
+CHATVIEW_AI_ACTION_INTEGRATION_SUMMARY.md
+CITATION_SERVICE_MIGRATION_SUMMARY.md
+CLINE-SETUP-COMPLETE.md
+COMPREHENSIVE-CODE-REVIEW-REPORT.md
+DOCUMENTATION-REVIEW-REPORT.md
+DRIZZLE_MIGRATION_REPORT.md
+ELECTRON_38_MIGRATION_REPORT.md
+EVIDENCE-MIGRATION-SUMMARY.md
+FIXES-APPLIED.md
+HUGGINGFACE_MCP_SETUP.md
+MIGRATION.md
+PHASE-2-OCR-COMPLETE.md
+PYTHON_AI_MIGRATION_PHASES.md
+REFACTORING-SUMMARY.txt
+SECURITY_AUDIT_REPORT.md
+SECURITY_AUDIT_SUMMARY.md
+SECURITY_CHECKLIST.md
+SECURITY_FIX_INSTRUCTIONS.md
+SECURITY_STATUS.md
+SETUP_CHECKLIST.md
+VSCODE-DEBUG-FIXED.md
+VSCODE-SETUP-COMPLETE.md
+workspace_fixes_summary.md
+any-warnings.txt
+lint-full.txt
+test-results.txt
+type-check-results.txt
+vite.log
+codac_test_output.log
+
+# ============================================================================
 # Temporary Files
 # ============================================================================
 tmp/
@@ -162,6 +219,12 @@ fix-*.sh
 fix-*.mjs
 *-fix.ps1
 *-fix.sh
+
+# Exclude specific markdown files from being ignored
+!README.md
+!CONTRIBUTING.md
+!SECURITY.md
+!QUICK_START.md
 
 # ============================================================================
 # Claude Code Local Settings
@@ -224,6 +287,8 @@ lint-output.txt
 # Test databases
 mydatabase.db
 test.db
+justice-companion.db
+justice.db
 
 
 # AI Tool Directories (local only, not committed)

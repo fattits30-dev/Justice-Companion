@@ -9,6 +9,6 @@ from agents.base_agent import BaseAgent
 from agents.document_analyzer import DocumentAnalyzerAgent
 
 __all__ = [
-    'BaseAgent',
-    'DocumentAnalyzerAgent',
+    "BaseAgent",
+    "DocumentAnalyzerAgent",
 ]

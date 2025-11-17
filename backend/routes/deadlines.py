@@ -31,9 +31,13 @@ from backend.models.base import get_db
 from backend.models.deadline import Deadline, DeadlinePriority, DeadlineStatus
 from backend.routes.auth import get_current_user
 from backend.services.deadline_reminder_scheduler import DeadlineReminderScheduler
-from backend.services.notification_service import NotificationService, CreateNotificationInput, NotificationError
+from backend.services.notification_service import (
+    NotificationService,
+    CreateNotificationInput,
+    NotificationError,
+)
 from backend.models.notification import NotificationType, NotificationSeverity
-from backend.services.encryption_service import EncryptionService, EncryptedData
+from backend.services.encryption_service import EncryptionService
 from backend.services.audit_logger import AuditLogger
 import os
 import base64
@@ -42,6 +46,7 @@ router = APIRouter(prefix="/deadlines", tags=["deadlines"])
 
 
 # ===== DEPENDENCY INJECTION =====
+
 
 def get_encryption_service() -> EncryptionService:
     """
@@ -56,7 +61,7 @@ def get_encryption_service() -> EncryptionService:
     if not key_base64:
         # WARNING: Generating temporary key - data will be lost on restart
         key = EncryptionService.generate_key()
-        key_base64 = base64.b64encode(key).decode('utf-8')
+        key_base64 = base64.b64encode(key).decode("utf-8")
         print("WARNING: No ENCRYPTION_KEY_BASE64 found. Using temporary key.")
 
     return EncryptionService(key_base64)
@@ -72,7 +77,7 @@ def get_notification_service(
 
 def get_deadline_scheduler(
     db: Session = Depends(get_db),
-    notification_service: NotificationService = Depends(get_notification_service)
+    notification_service: NotificationService = Depends(get_notification_service),
 ) -> DeadlineReminderScheduler:
     """Get deadline reminder scheduler instance."""
     audit_logger = AuditLogger(db)
@@ -86,47 +91,53 @@ def get_audit_logger(db: Session = Depends(get_db)) -> AuditLogger:
 
 # ===== PYDANTIC REQUEST MODELS =====
 
+
 class CreateDeadlineRequest(BaseModel):
     """Request model for creating a deadline."""
+
     caseId: int = Field(..., gt=0, description="Case ID this deadline belongs to")
     title: str = Field(..., min_length=1, max_length=500, description="Deadline title")
     description: Optional[str] = Field(None, max_length=10000, description="Deadline description")
     deadlineDate: Optional[str] = Field(None, description="Due date (YYYY-MM-DD or ISO 8601)")
     dueDate: Optional[str] = Field(None, description="Due date alias (YYYY-MM-DD or ISO 8601)")
     priority: Optional[str] = Field("medium", description="Priority level")
-    reminderDays: Optional[int] = Field(None, ge=1, le=30, description="Days before deadline to send reminder")
+    reminderDays: Optional[int] = Field(
+        None, ge=1, le=30, description="Days before deadline to send reminder"
+    )
 
-    @validator('priority')
+    @validator("priority")
     def validate_priority(cls, v):
         if v:
             try:
                 DeadlinePriority(v)
             except ValueError:
-                raise ValueError(f"Invalid priority. Must be one of: {', '.join([p.value for p in DeadlinePriority])}")
+                raise ValueError(
+                    f"Invalid priority. Must be one of: {', '.join([p.value for p in DeadlinePriority])}"
+                )
         return v
 
-    @validator('title')
+    @validator("title")
     def strip_title(cls, v):
         return v.strip()
 
-    @validator('deadlineDate', 'dueDate')
+    @validator("deadlineDate", "dueDate")
     def validate_date_format(cls, v):
         if v:
             try:
                 # Try parsing as ISO 8601 date (YYYY-MM-DD)
-                datetime.strptime(v, '%Y-%m-%d')
+                datetime.strptime(v, "%Y-%m-%d")
             except ValueError:
                 try:
                     # Try parsing as full ISO 8601 datetime
-                    datetime.fromisoformat(v.replace('Z', '+00:00'))
+                    datetime.fromisoformat(v.replace("Z", "+00:00"))
                 except ValueError:
                     raise ValueError("Invalid date format (use YYYY-MM-DD or ISO 8601)")
         return v
 
-    @validator('deadlineDate', always=True)
+    @validator("deadlineDate", always=True)
     def validate_deadline_or_due_date(cls, v, values):
         """Ensure either deadlineDate or dueDate is provided."""
-        due_date = values.get('dueDate')
+        due_date = values.get("dueDate")
         if not v and not due_date:
             raise ValueError("Must provide either deadlineDate or dueDate")
         # Use deadlineDate if provided, otherwise use dueDate
@@ -135,6 +146,7 @@ class CreateDeadlineRequest(BaseModel):
 
 class UpdateDeadlineRequest(BaseModel):
     """Request model for updating a deadline."""
+
     title: Optional[str] = Field(None, min_length=1, max_length=500, description="Deadline title")
     description: Optional[str] = Field(None, max_length=10000, description="Deadline description")
     deadlineDate: Optional[str] = Field(None, description="Due date (YYYY-MM-DD or ISO 8601)")
@@ -142,38 +154,42 @@ class UpdateDeadlineRequest(BaseModel):
     priority: Optional[str] = Field(None, description="Priority level")
     status: Optional[str] = Field(None, description="Deadline status")
 
-    @validator('priority')
+    @validator("priority")
     def validate_priority(cls, v):
         if v:
             try:
                 DeadlinePriority(v)
             except ValueError:
-                raise ValueError(f"Invalid priority. Must be one of: {', '.join([p.value for p in DeadlinePriority])}")
+                raise ValueError(
+                    f"Invalid priority. Must be one of: {', '.join([p.value for p in DeadlinePriority])}"
+                )
         return v
 
-    @validator('status')
+    @validator("status")
     def validate_status(cls, v):
         if v:
             try:
                 DeadlineStatus(v)
             except ValueError:
-                raise ValueError(f"Invalid status. Must be one of: {', '.join([s.value for s in DeadlineStatus])}")
+                raise ValueError(
+                    f"Invalid status. Must be one of: {', '.join([s.value for s in DeadlineStatus])}"
+                )
         return v
 
-    @validator('title')
+    @validator("title")
     def strip_title(cls, v):
         if v:
             return v.strip()
         return v
 
-    @validator('deadlineDate', 'dueDate')
+    @validator("deadlineDate", "dueDate")
     def validate_date_format(cls, v):
         if v:
             try:
-                datetime.strptime(v, '%Y-%m-%d')
+                datetime.strptime(v, "%Y-%m-%d")
             except ValueError:
                 try:
-                    datetime.fromisoformat(v.replace('Z', '+00:00'))
+                    datetime.fromisoformat(v.replace("Z", "+00:00"))
                 except ValueError:
                     raise ValueError("Invalid date format (use YYYY-MM-DD or ISO 8601)")
         return v
@@ -181,13 +197,16 @@ class UpdateDeadlineRequest(BaseModel):
 
 class ScheduleReminderRequest(BaseModel):
     """Request model for scheduling a deadline reminder."""
+
     reminderDays: int = Field(..., ge=1, le=30, description="Days before deadline to send reminder")
 
 
 # ===== PYDANTIC RESPONSE MODELS =====
 
+
 class DeadlineResponse(BaseModel):
     """Response model for deadline data."""
+
     id: int
     caseId: int
     userId: int
@@ -207,11 +226,13 @@ class DeadlineResponse(BaseModel):
 
 class DeleteDeadlineResponse(BaseModel):
     """Response model for deadline deletion."""
+
     deleted: bool
 
 
 class ReminderInfoResponse(BaseModel):
     """Response model for reminder information."""
+
     deadlineId: int
     hasReminder: bool
     reminderDays: Optional[int]
@@ -219,6 +240,7 @@ class ReminderInfoResponse(BaseModel):
 
 
 # ===== HELPER FUNCTIONS =====
+
 
 def verify_case_ownership(db: Session, case_id: int, user_id: int) -> bool:
     """
@@ -236,14 +258,13 @@ def verify_case_ownership(db: Session, case_id: int, user_id: int) -> bool:
         HTTPException: If case not found or unauthorized
     """
     from backend.models.case import Case
-    case = db.query(Case).filter(
-        and_(Case.id == case_id, Case.user_id == user_id)
-    ).first()
+
+    case = db.query(Case).filter(and_(Case.id == case_id, Case.user_id == user_id)).first()
 
     if not case:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Case with ID {case_id} not found or unauthorized"
+            detail=f"Case with ID {case_id} not found or unauthorized",
         )
 
     return True
@@ -264,23 +285,23 @@ def verify_deadline_ownership(db: Session, deadline_id: int, user_id: int) -> De
     Raises:
         HTTPException: If deadline not found or unauthorized
     """
-    deadline = db.query(Deadline).join(Deadline.case).filter(
-        and_(
-            Deadline.id == deadline_id,
-            Deadline.deleted_at.is_(None)
-        )
-    ).first()
+    deadline = (
+        db.query(Deadline)
+        .join(Deadline.case)
+        .filter(and_(Deadline.id == deadline_id, Deadline.deleted_at.is_(None)))
+        .first()
+    )
 
     if not deadline:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Deadline with ID {deadline_id} not found"
+            detail=f"Deadline with ID {deadline_id} not found",
         )
 
     if deadline.case.user_id != user_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Unauthorized: You do not have permission to access this deadline"
+            detail="Unauthorized: You do not have permission to access this deadline",
         )
 
     return deadline
@@ -290,7 +311,7 @@ async def create_deadline_notification(
     notification_service: NotificationService,
     user_id: int,
     deadline: Deadline,
-    action: str = "created"
+    action: str = "created",
 ) -> None:
     """
     Create a notification for deadline events.
@@ -315,11 +336,7 @@ async def create_deadline_notification(
                 severity=severity,
                 title=f"Deadline {action}: {deadline.title}",
                 message=f"Your deadline '{deadline.title}' has been {action}.",
-                metadata={
-                    "deadlineId": deadline.id,
-                    "caseId": deadline.case_id,
-                    "action": action
-                }
+                metadata={"deadlineId": deadline.id, "caseId": deadline.case_id, "action": action},
             )
         )
     except NotificationError:
@@ -329,13 +346,14 @@ async def create_deadline_notification(
 
 # ===== ROUTES =====
 
+
 @router.post("", response_model=DeadlineResponse, status_code=status.HTTP_201_CREATED)
 async def create_deadline(
     request: CreateDeadlineRequest,
     user_id: int = Depends(get_current_user),
     db: Session = Depends(get_db),
     notification_service: NotificationService = Depends(get_notification_service),
-    audit_logger: AuditLogger = Depends(get_audit_logger)
+    audit_logger: AuditLogger = Depends(get_audit_logger),
 ):
     """
     Create a new deadline for a case with optional reminder scheduling.
@@ -366,7 +384,7 @@ async def create_deadline(
             description=request.description,
             deadline_date=deadline_date,
             priority=DeadlinePriority(request.priority or "medium"),
-            status=DeadlineStatus.UPCOMING
+            status=DeadlineStatus.UPCOMING,
         )
 
         db.add(deadline)
@@ -384,9 +402,9 @@ async def create_deadline(
                 "caseId": request.caseId,
                 "title": request.title,
                 "priority": deadline.priority.value,
-                "reminderDays": request.reminderDays
+                "reminderDays": request.reminderDays,
             },
-            success=True
+            success=True,
         )
 
         # Create notification for deadline creation
@@ -403,7 +421,7 @@ async def create_deadline(
             resource_id="unknown",
             action="create",
             success=False,
-            error_message=str(e)
+            error_message=str(e),
         )
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
@@ -419,11 +437,11 @@ async def create_deadline(
             resource_id="unknown",
             action="create",
             success=False,
-            error_message=str(e)
+            error_message=str(e),
         )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create deadline: {str(e)}"
+            detail=f"Failed to create deadline: {str(e)}",
         )
 
 
@@ -435,7 +453,7 @@ async def list_all_deadlines(
     limit: int = Query(50, ge=1, le=100, description="Results per page"),
     offset: int = Query(0, ge=0, description="Pagination offset"),
     user_id: int = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     List all deadlines for the authenticated user with optional filters.
@@ -445,11 +463,10 @@ async def list_all_deadlines(
     """
     try:
         # Build base query - all user's deadlines
-        query = db.query(Deadline).join(Deadline.case).filter(
-            and_(
-                Deadline.case.has(user_id=user_id),
-                Deadline.deleted_at.is_(None)
-            )
+        query = (
+            db.query(Deadline)
+            .join(Deadline.case)
+            .filter(and_(Deadline.case.has(user_id=user_id), Deadline.deleted_at.is_(None)))
         )
 
         # Apply optional filters
@@ -463,7 +480,7 @@ async def list_all_deadlines(
             except ValueError:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Invalid status. Must be one of: {', '.join([s.value for s in DeadlineStatus])}"
+                    detail=f"Invalid status. Must be one of: {', '.join([s.value for s in DeadlineStatus])}",
                 )
 
         if priority:
@@ -473,19 +490,16 @@ async def list_all_deadlines(
             except ValueError:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Invalid priority. Must be one of: {', '.join([p.value for p in DeadlinePriority])}"
+                    detail=f"Invalid priority. Must be one of: {', '.join([p.value for p in DeadlinePriority])}",
                 )
 
         # Get total count before pagination
         total_count = query.count()
 
         # Calculate overdue count
-        today = datetime.now().strftime('%Y-%m-%d')
+        today = datetime.now().strftime("%Y-%m-%d")
         overdue_count = query.filter(
-            and_(
-                Deadline.deadline_date < today,
-                Deadline.status != DeadlineStatus.COMPLETED
-            )
+            and_(Deadline.deadline_date < today, Deadline.status != DeadlineStatus.COMPLETED)
         ).count()
 
         # Apply pagination and ordering
@@ -498,7 +512,7 @@ async def list_all_deadlines(
             "overdueCount": overdue_count,
             "limit": limit,
             "offset": offset,
-            "hasMore": (offset + len(deadlines)) < total_count
+            "hasMore": (offset + len(deadlines)) < total_count,
         }
 
     except HTTPException:
@@ -506,15 +520,13 @@ async def list_all_deadlines(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get deadlines: {str(e)}"
+            detail=f"Failed to get deadlines: {str(e)}",
         )
 
 
 @router.get("/case/{case_id}", response_model=List[DeadlineResponse])
 async def list_case_deadlines(
-    case_id: int,
-    user_id: int = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    case_id: int, user_id: int = Depends(get_current_user), db: Session = Depends(get_db)
 ):
     """
     List all deadlines for a specific case.
@@ -527,12 +539,12 @@ async def list_case_deadlines(
         verify_case_ownership(db, case_id, user_id)
 
         # Fetch deadlines
-        deadlines = db.query(Deadline).filter(
-            and_(
-                Deadline.case_id == case_id,
-                Deadline.deleted_at.is_(None)
-            )
-        ).order_by(Deadline.deadline_date.asc()).all()
+        deadlines = (
+            db.query(Deadline)
+            .filter(and_(Deadline.case_id == case_id, Deadline.deleted_at.is_(None)))
+            .order_by(Deadline.deadline_date.asc())
+            .all()
+        )
 
         return [d.to_dict() for d in deadlines]
 
@@ -541,7 +553,7 @@ async def list_case_deadlines(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to list deadlines: {str(e)}"
+            detail=f"Failed to list deadlines: {str(e)}",
         )
 
 
@@ -549,7 +561,7 @@ async def list_case_deadlines(
 async def list_upcoming_deadlines(
     days: int = Query(30, ge=1, le=365, description="Number of days to look ahead"),
     user_id: int = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Get upcoming deadlines for the authenticated user.
@@ -559,31 +571,36 @@ async def list_upcoming_deadlines(
     """
     try:
         # Calculate date threshold
-        threshold_date = (datetime.now() + timedelta(days=days)).strftime('%Y-%m-%d')
+        threshold_date = (datetime.now() + timedelta(days=days)).strftime("%Y-%m-%d")
 
         # Fetch upcoming deadlines across all user's cases
-        deadlines = db.query(Deadline).join(Deadline.case).filter(
-            and_(
-                Deadline.case.has(user_id=user_id),
-                Deadline.deleted_at.is_(None),
-                Deadline.status != DeadlineStatus.COMPLETED,
-                Deadline.deadline_date <= threshold_date
+        deadlines = (
+            db.query(Deadline)
+            .join(Deadline.case)
+            .filter(
+                and_(
+                    Deadline.case.has(user_id=user_id),
+                    Deadline.deleted_at.is_(None),
+                    Deadline.status != DeadlineStatus.COMPLETED,
+                    Deadline.deadline_date <= threshold_date,
+                )
             )
-        ).order_by(Deadline.deadline_date.asc()).all()
+            .order_by(Deadline.deadline_date.asc())
+            .all()
+        )
 
         return [d.to_dict() for d in deadlines]
 
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get upcoming deadlines: {str(e)}"
+            detail=f"Failed to get upcoming deadlines: {str(e)}",
         )
 
 
 @router.get("/overdue", response_model=List[DeadlineResponse])
 async def list_overdue_deadlines(
-    user_id: int = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    user_id: int = Depends(get_current_user), db: Session = Depends(get_db)
 ):
     """
     Get overdue deadlines for the authenticated user.
@@ -593,17 +610,23 @@ async def list_overdue_deadlines(
     """
     try:
         # Get current date
-        today = datetime.now().strftime('%Y-%m-%d')
+        today = datetime.now().strftime("%Y-%m-%d")
 
         # Fetch overdue deadlines
-        deadlines = db.query(Deadline).join(Deadline.case).filter(
-            and_(
-                Deadline.case.has(user_id=user_id),
-                Deadline.deleted_at.is_(None),
-                Deadline.status != DeadlineStatus.COMPLETED,
-                Deadline.deadline_date < today
+        deadlines = (
+            db.query(Deadline)
+            .join(Deadline.case)
+            .filter(
+                and_(
+                    Deadline.case.has(user_id=user_id),
+                    Deadline.deleted_at.is_(None),
+                    Deadline.status != DeadlineStatus.COMPLETED,
+                    Deadline.deadline_date < today,
+                )
             )
-        ).order_by(Deadline.deadline_date.asc()).all()
+            .order_by(Deadline.deadline_date.asc())
+            .all()
+        )
 
         # Update status to overdue
         for deadline in deadlines:
@@ -617,7 +640,7 @@ async def list_overdue_deadlines(
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get overdue deadlines: {str(e)}"
+            detail=f"Failed to get overdue deadlines: {str(e)}",
         )
 
 
@@ -628,7 +651,7 @@ async def update_deadline(
     user_id: int = Depends(get_current_user),
     db: Session = Depends(get_db),
     notification_service: NotificationService = Depends(get_notification_service),
-    audit_logger: AuditLogger = Depends(get_audit_logger)
+    audit_logger: AuditLogger = Depends(get_audit_logger),
 ):
     """
     Update an existing deadline.
@@ -681,8 +704,7 @@ async def update_deadline(
 
         if not changed_fields:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="No fields to update"
+                status_code=status.HTTP_400_BAD_REQUEST, detail="No fields to update"
             )
 
         db.commit()
@@ -695,11 +717,8 @@ async def update_deadline(
             resource_type="deadline",
             resource_id=str(deadline_id),
             action="update",
-            details={
-                "changed_fields": changed_fields,
-                **update_params
-            },
-            success=True
+            details={"changed_fields": changed_fields, **update_params},
+            success=True,
         )
 
         # Create notification for deadline update
@@ -716,7 +735,7 @@ async def update_deadline(
             resource_id=str(deadline_id),
             action="update",
             success=False,
-            error_message=str(e)
+            error_message=str(e),
         )
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
@@ -732,11 +751,11 @@ async def update_deadline(
             resource_id=str(deadline_id),
             action="update",
             success=False,
-            error_message=str(e)
+            error_message=str(e),
         )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to update deadline: {str(e)}"
+            detail=f"Failed to update deadline: {str(e)}",
         )
 
 
@@ -745,7 +764,7 @@ async def delete_deadline(
     deadline_id: int,
     user_id: int = Depends(get_current_user),
     db: Session = Depends(get_db),
-    audit_logger: AuditLogger = Depends(get_audit_logger)
+    audit_logger: AuditLogger = Depends(get_audit_logger),
 ):
     """
     Delete a deadline by ID (soft delete).
@@ -772,11 +791,8 @@ async def delete_deadline(
             resource_type="deadline",
             resource_id=str(deadline_id),
             action="delete",
-            details={
-                "title": deadline.title,
-                "case_id": deadline.case_id
-            },
-            success=True
+            details={"title": deadline.title, "case_id": deadline.case_id},
+            success=True,
         )
 
         return {"deleted": True}
@@ -793,11 +809,11 @@ async def delete_deadline(
             resource_id=str(deadline_id),
             action="delete",
             success=False,
-            error_message=str(e)
+            error_message=str(e),
         )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to delete deadline: {str(e)}"
+            detail=f"Failed to delete deadline: {str(e)}",
         )
 
 
@@ -807,7 +823,7 @@ async def complete_deadline(
     user_id: int = Depends(get_current_user),
     db: Session = Depends(get_db),
     notification_service: NotificationService = Depends(get_notification_service),
-    audit_logger: AuditLogger = Depends(get_audit_logger)
+    audit_logger: AuditLogger = Depends(get_audit_logger),
 ):
     """
     Mark a deadline as complete.
@@ -836,11 +852,8 @@ async def complete_deadline(
             resource_type="deadline",
             resource_id=str(deadline_id),
             action="complete",
-            details={
-                "title": deadline.title,
-                "case_id": deadline.case_id
-            },
-            success=True
+            details={"title": deadline.title, "case_id": deadline.case_id},
+            success=True,
         )
 
         # Create notification for deadline completion
@@ -860,19 +873,17 @@ async def complete_deadline(
             resource_id=str(deadline_id),
             action="complete",
             success=False,
-            error_message=str(e)
+            error_message=str(e),
         )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to complete deadline: {str(e)}"
+            detail=f"Failed to complete deadline: {str(e)}",
         )
 
 
 @router.get("/{deadline_id}/reminders", response_model=ReminderInfoResponse)
 async def get_deadline_reminder_info(
-    deadline_id: int,
-    user_id: int = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    deadline_id: int, user_id: int = Depends(get_current_user), db: Session = Depends(get_db)
 ):
     """
     Get reminder information for a deadline.
@@ -888,9 +899,12 @@ async def get_deadline_reminder_info(
 
         # Get user's notification preferences
         from backend.models.notification import NotificationPreferences
-        prefs = db.query(NotificationPreferences).filter(
-            NotificationPreferences.user_id == user_id
-        ).first()
+
+        prefs = (
+            db.query(NotificationPreferences)
+            .filter(NotificationPreferences.user_id == user_id)
+            .first()
+        )
 
         has_reminder = False
         reminder_days = None
@@ -902,7 +916,9 @@ async def get_deadline_reminder_info(
 
             # Calculate scheduled reminder date
             try:
-                deadline_date = datetime.fromisoformat(deadline.deadline_date.replace('Z', '+00:00'))
+                deadline_date = datetime.fromisoformat(
+                    deadline.deadline_date.replace("Z", "+00:00")
+                )
                 reminder_date = deadline_date - timedelta(days=reminder_days)
                 scheduled_for = reminder_date.isoformat()
             except (ValueError, AttributeError):
@@ -912,7 +928,7 @@ async def get_deadline_reminder_info(
             "deadlineId": deadline_id,
             "hasReminder": has_reminder,
             "reminderDays": reminder_days,
-            "scheduledFor": scheduled_for
+            "scheduledFor": scheduled_for,
         }
 
     except HTTPException:
@@ -920,7 +936,7 @@ async def get_deadline_reminder_info(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get reminder info: {str(e)}"
+            detail=f"Failed to get reminder info: {str(e)}",
         )
 
 
@@ -931,7 +947,7 @@ async def schedule_deadline_reminder(
     user_id: int = Depends(get_current_user),
     db: Session = Depends(get_db),
     notification_service: NotificationService = Depends(get_notification_service),
-    audit_logger: AuditLogger = Depends(get_audit_logger)
+    audit_logger: AuditLogger = Depends(get_audit_logger),
 ):
     """
     Schedule or update a reminder for a deadline.
@@ -951,7 +967,6 @@ async def schedule_deadline_reminder(
         deadline = verify_deadline_ownership(db, deadline_id, user_id)
 
         # Get or create notification preferences
-        from backend.models.notification import NotificationPreferences
         from backend.services.notification_service import UpdateNotificationPreferencesInput
 
         prefs = await notification_service.get_preferences(user_id)
@@ -960,15 +975,14 @@ async def schedule_deadline_reminder(
         await notification_service.update_preferences(
             user_id,
             UpdateNotificationPreferencesInput(
-                deadline_reminders_enabled=True,
-                deadline_reminder_days=request.reminderDays
-            )
+                deadline_reminders_enabled=True, deadline_reminder_days=request.reminderDays
+            ),
         )
 
         # Calculate scheduled reminder date
         scheduled_for = None
         try:
-            deadline_date = datetime.fromisoformat(deadline.deadline_date.replace('Z', '+00:00'))
+            deadline_date = datetime.fromisoformat(deadline.deadline_date.replace("Z", "+00:00"))
             reminder_date = deadline_date - timedelta(days=request.reminderDays)
             scheduled_for = reminder_date.isoformat()
         except (ValueError, AttributeError):
@@ -981,18 +995,15 @@ async def schedule_deadline_reminder(
             resource_type="deadline",
             resource_id=str(deadline_id),
             action="schedule_reminder",
-            details={
-                "reminder_days": request.reminderDays,
-                "scheduled_for": scheduled_for
-            },
-            success=True
+            details={"reminder_days": request.reminderDays, "scheduled_for": scheduled_for},
+            success=True,
         )
 
         return {
             "deadlineId": deadline_id,
             "hasReminder": True,
             "reminderDays": request.reminderDays,
-            "scheduledFor": scheduled_for
+            "scheduledFor": scheduled_for,
         }
 
     except HTTPException:
@@ -1006,9 +1017,9 @@ async def schedule_deadline_reminder(
             resource_id=str(deadline_id),
             action="schedule_reminder",
             success=False,
-            error_message=str(e)
+            error_message=str(e),
         )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to schedule reminder: {str(e)}"
+            detail=f"Failed to schedule reminder: {str(e)}",
         )

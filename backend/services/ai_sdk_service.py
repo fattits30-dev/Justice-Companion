@@ -29,32 +29,19 @@ Features:
 - Type hints for Python 3.9+
 """
 
-from typing import (
-    List,
-    Dict,
-    Any,
-    Optional,
-    AsyncIterator,
-    Callable,
-    Literal,
-    Union
-)
+from typing import List, Dict, Any, Optional, Callable, Union
 from enum import Enum
 from pydantic import BaseModel, Field, ConfigDict, field_validator
-from fastapi import HTTPException
-import asyncio
 import logging
 from datetime import datetime
 
 # AI Provider SDKs
 try:
-    import openai
     from openai import AsyncOpenAI
 except ImportError:
     AsyncOpenAI = None
 
 try:
-    import anthropic
     from anthropic import AsyncAnthropic
 except ImportError:
     AsyncAnthropic = None
@@ -73,8 +60,10 @@ logger = logging.getLogger(__name__)
 # Enums and Type Definitions
 # ============================================================================
 
+
 class AIProviderType(str, Enum):
     """Supported AI provider types."""
+
     OPENAI = "openai"
     ANTHROPIC = "anthropic"
     HUGGINGFACE = "huggingface"
@@ -89,6 +78,7 @@ class AIProviderType(str, Enum):
 
 class MessageRole(str, Enum):
     """Chat message role types."""
+
     SYSTEM = "system"
     USER = "user"
     ASSISTANT = "assistant"
@@ -98,8 +88,10 @@ class MessageRole(str, Enum):
 # Pydantic Models
 # ============================================================================
 
+
 class ChatMessage(BaseModel):
     """Chat message model."""
+
     role: MessageRole = Field(..., description="Message role")
     content: str = Field(..., min_length=1, description="Message content")
 
@@ -108,6 +100,7 @@ class ChatMessage(BaseModel):
 
 class AIProviderConfig(BaseModel):
     """AI provider configuration."""
+
     provider: AIProviderType = Field(..., description="AI provider type")
     api_key: str = Field(..., min_length=1, description="API key for the provider")
     model: str = Field(..., min_length=1, description="Model name to use")
@@ -133,6 +126,7 @@ class StreamingCallbacks(BaseModel):
     Note: Pydantic models don't support callable fields directly.
     This is used as a documentation model. Actual callbacks are passed as functions.
     """
+
     on_token: Optional[str] = Field(None, description="Callback for each token")
     on_complete: Optional[str] = Field(None, description="Callback when streaming completes")
     on_error: Optional[str] = Field(None, description="Callback for errors")
@@ -143,6 +137,7 @@ class StreamingCallbacks(BaseModel):
 
 class ProviderCapabilities(BaseModel):
     """Provider capabilities response."""
+
     name: str = Field(..., description="Provider display name")
     supports_streaming: bool = Field(..., description="Whether provider supports streaming")
     max_context_tokens: int = Field(..., description="Maximum context window size")
@@ -234,29 +229,27 @@ AI_PROVIDER_METADATA: Dict[AIProviderType, Dict[str, Any]] = {
 # Custom Exceptions
 # ============================================================================
 
+
 class AIServiceError(Exception):
     """Base exception for AI service errors."""
-    pass
 
 
 class ProviderNotSupportedError(AIServiceError):
     """Exception raised when provider is not supported."""
-    pass
 
 
 class ProviderNotConfiguredError(AIServiceError):
     """Exception raised when provider is not properly configured."""
-    pass
 
 
 class StreamingError(AIServiceError):
     """Exception raised during streaming operations."""
-    pass
 
 
 # ============================================================================
 # AI SDK Service
 # ============================================================================
+
 
 class AISDKService:
     """
@@ -278,11 +271,7 @@ class AISDKService:
         >>> print(response)
     """
 
-    def __init__(
-        self,
-        config: AIProviderConfig,
-        audit_logger: Optional[Any] = None
-    ):
+    def __init__(self, config: AIProviderConfig, audit_logger: Optional[Any] = None):
         """
         Initialize AI SDK Service.
 
@@ -317,10 +306,7 @@ class AISDKService:
                     raise ProviderNotSupportedError(
                         "Anthropic SDK not installed. Install with: pip install anthropic"
                     )
-                self.client = AsyncAnthropic(
-                    api_key=api_key,
-                    base_url=endpoint
-                )
+                self.client = AsyncAnthropic(api_key=api_key, base_url=endpoint)
                 logger.info(f"Initialized Anthropic client with model: {self.config.model}")
 
             elif provider in {
@@ -337,10 +323,7 @@ class AISDKService:
                     raise ProviderNotSupportedError(
                         "OpenAI SDK not installed. Install with: pip install openai"
                     )
-                self.client = AsyncOpenAI(
-                    api_key=api_key,
-                    base_url=endpoint
-                )
+                self.client = AsyncOpenAI(api_key=api_key, base_url=endpoint)
                 logger.info(f"Initialized {provider.value} client with model: {self.config.model}")
 
             elif provider in {AIProviderType.QWEN, AIProviderType.HUGGINGFACE}:
@@ -349,10 +332,7 @@ class AISDKService:
                     raise ProviderNotSupportedError(
                         "HuggingFace SDK not installed. Install with: pip install huggingface-hub"
                     )
-                self.client = AsyncInferenceClient(
-                    token=api_key,
-                    base_url=endpoint
-                )
+                self.client = AsyncInferenceClient(token=api_key, base_url=endpoint)
                 logger.info(f"Initialized HuggingFace client with model: {self.config.model}")
 
             else:
@@ -368,7 +348,7 @@ class AISDKService:
         action: str,
         success: bool,
         details: Optional[Dict[str, Any]] = None,
-        error_message: Optional[str] = None
+        error_message: Optional[str] = None,
     ) -> None:
         """
         Log audit event if audit logger is configured.
@@ -381,20 +361,22 @@ class AISDKService:
             error_message: Error message if operation failed
         """
         if self.audit_logger:
-            self.audit_logger.log({
-                "event_type": event_type,
-                "resource_type": "ai_service",
-                "resource_id": self.config.provider.value,
-                "action": action,
-                "success": success,
-                "details": {
-                    "provider": self.config.provider.value,
-                    "model": self.config.model,
-                    **(details or {})
-                },
-                "error_message": error_message,
-                "timestamp": datetime.utcnow().isoformat()
-            })
+            self.audit_logger.log(
+                {
+                    "event_type": event_type,
+                    "resource_type": "ai_service",
+                    "resource_id": self.config.provider.value,
+                    "action": action,
+                    "success": success,
+                    "details": {
+                        "provider": self.config.provider.value,
+                        "model": self.config.model,
+                        **(details or {}),
+                    },
+                    "error_message": error_message,
+                    "timestamp": datetime.utcnow().isoformat(),
+                }
+            )
 
     def get_provider(self) -> AIProviderType:
         """
@@ -434,11 +416,7 @@ class AISDKService:
         """
         return self.client is not None and len(self.config.api_key) > 0
 
-    async def chat(
-        self,
-        messages: List[ChatMessage],
-        **kwargs
-    ) -> str:
+    async def chat(self, messages: List[ChatMessage], **kwargs) -> str:
         """
         Chat completion without streaming.
 
@@ -454,9 +432,7 @@ class AISDKService:
             AIServiceError: If chat completion fails
         """
         if not self.client:
-            raise ProviderNotConfiguredError(
-                f"{self.config.provider.value} client not configured"
-            )
+            raise ProviderNotConfiguredError(f"{self.config.provider.value} client not configured")
 
         try:
             logger.info(f"Starting non-streaming chat with {self.config.provider.value}")
@@ -473,10 +449,7 @@ class AISDKService:
                 event_type="ai.chat",
                 action="completion",
                 success=True,
-                details={
-                    "message_count": len(messages),
-                    "response_length": len(response)
-                }
+                details={"message_count": len(messages), "response_length": len(response)},
             )
 
             return response
@@ -484,18 +457,11 @@ class AISDKService:
         except Exception as error:
             logger.error(f"Chat error with {self.config.provider.value}: {str(error)}")
             self._log_audit(
-                event_type="ai.chat",
-                action="completion",
-                success=False,
-                error_message=str(error)
+                event_type="ai.chat", action="completion", success=False, error_message=str(error)
             )
             raise AIServiceError(f"Chat completion failed: {str(error)}")
 
-    async def _chat_openai_compatible(
-        self,
-        messages: List[ChatMessage],
-        **kwargs
-    ) -> str:
+    async def _chat_openai_compatible(self, messages: List[ChatMessage], **kwargs) -> str:
         """
         Chat completion for OpenAI-compatible providers.
 
@@ -508,10 +474,7 @@ class AISDKService:
         """
         client = self.client
 
-        formatted_messages = [
-            {"role": msg.role.value, "content": msg.content}
-            for msg in messages
-        ]
+        formatted_messages = [{"role": msg.role.value, "content": msg.content} for msg in messages]
 
         response = await client.chat.completions.create(
             model=self.config.model,
@@ -519,16 +482,12 @@ class AISDKService:
             temperature=self.config.temperature,
             max_tokens=self.config.max_tokens,
             top_p=self.config.top_p,
-            **kwargs
+            **kwargs,
         )
 
         return response.choices[0].message.content or ""
 
-    async def _chat_anthropic(
-        self,
-        messages: List[ChatMessage],
-        **kwargs
-    ) -> str:
+    async def _chat_anthropic(self, messages: List[ChatMessage], **kwargs) -> str:
         """
         Chat completion for Anthropic (Claude).
 
@@ -543,8 +502,7 @@ class AISDKService:
 
         # Anthropic requires system message separate
         system_message = next(
-            (msg.content for msg in messages if msg.role == MessageRole.SYSTEM),
-            ""
+            (msg.content for msg in messages if msg.role == MessageRole.SYSTEM), ""
         )
 
         conversation_messages = [
@@ -559,7 +517,7 @@ class AISDKService:
             messages=conversation_messages,
             max_tokens=self.config.max_tokens,
             temperature=self.config.temperature,
-            **kwargs
+            **kwargs,
         )
 
         # Extract text from content blocks
@@ -570,11 +528,7 @@ class AISDKService:
 
         return result
 
-    async def _chat_huggingface(
-        self,
-        messages: List[ChatMessage],
-        **kwargs
-    ) -> str:
+    async def _chat_huggingface(self, messages: List[ChatMessage], **kwargs) -> str:
         """
         Chat completion for HuggingFace Inference API.
 
@@ -587,10 +541,7 @@ class AISDKService:
         """
         client = self.client
 
-        formatted_messages = [
-            {"role": msg.role.value, "content": msg.content}
-            for msg in messages
-        ]
+        formatted_messages = [{"role": msg.role.value, "content": msg.content} for msg in messages]
 
         response = await client.chat_completion(
             model=self.config.model,
@@ -598,7 +549,7 @@ class AISDKService:
             temperature=self.config.temperature,
             max_tokens=self.config.max_tokens,
             top_p=self.config.top_p,
-            **kwargs
+            **kwargs,
         )
 
         return response.choices[0].message.content or ""
@@ -610,7 +561,7 @@ class AISDKService:
         on_complete: Optional[Callable[[str], None]] = None,
         on_error: Optional[Callable[[Exception], None]] = None,
         on_function_call: Optional[Callable[[str, Any, Any], None]] = None,
-        **kwargs
+        **kwargs,
     ) -> None:
         """
         Stream chat completion with token-by-token delivery.
@@ -645,7 +596,7 @@ class AISDKService:
                     on_complete=on_complete,
                     on_error=on_error,
                     on_function_call=on_function_call,
-                    **kwargs
+                    **kwargs,
                 )
             elif self.config.provider in {AIProviderType.QWEN, AIProviderType.HUGGINGFACE}:
                 await self._stream_huggingface(
@@ -653,7 +604,7 @@ class AISDKService:
                     on_token=on_token,
                     on_complete=on_complete,
                     on_error=on_error,
-                    **kwargs
+                    **kwargs,
                 )
             else:
                 # OpenAI-compatible providers
@@ -663,16 +614,13 @@ class AISDKService:
                     on_complete=on_complete,
                     on_error=on_error,
                     on_function_call=on_function_call,
-                    **kwargs
+                    **kwargs,
                 )
 
         except Exception as error:
             logger.error(f"Stream chat error with {self.config.provider.value}: {str(error)}")
             self._log_audit(
-                event_type="ai.stream",
-                action="streaming",
-                success=False,
-                error_message=str(error)
+                event_type="ai.stream", action="streaming", success=False, error_message=str(error)
             )
             if on_error:
                 on_error(error if isinstance(error, Exception) else Exception(str(error)))
@@ -684,7 +632,7 @@ class AISDKService:
         on_complete: Optional[Callable[[str], None]] = None,
         on_error: Optional[Callable[[Exception], None]] = None,
         on_function_call: Optional[Callable[[str, Any, Any], None]] = None,
-        **kwargs
+        **kwargs,
     ) -> None:
         """
         Stream chat for OpenAI-compatible providers.
@@ -700,10 +648,7 @@ class AISDKService:
         client = self.client
         full_response = ""
 
-        formatted_messages = [
-            {"role": msg.role.value, "content": msg.content}
-            for msg in messages
-        ]
+        formatted_messages = [{"role": msg.role.value, "content": msg.content} for msg in messages]
 
         try:
             stream = await client.chat.completions.create(
@@ -713,7 +658,7 @@ class AISDKService:
                 max_tokens=self.config.max_tokens,
                 top_p=self.config.top_p,
                 stream=True,
-                **kwargs
+                **kwargs,
             )
 
             async for chunk in stream:
@@ -740,10 +685,7 @@ class AISDKService:
                 event_type="ai.stream",
                 action="streaming",
                 success=True,
-                details={
-                    "message_count": len(messages),
-                    "response_length": len(full_response)
-                }
+                details={"message_count": len(messages), "response_length": len(full_response)},
             )
 
         except Exception as error:
@@ -758,7 +700,7 @@ class AISDKService:
         on_complete: Optional[Callable[[str], None]] = None,
         on_error: Optional[Callable[[Exception], None]] = None,
         on_function_call: Optional[Callable[[str, Any, Any], None]] = None,
-        **kwargs
+        **kwargs,
     ) -> None:
         """
         Stream chat for Anthropic (Claude).
@@ -776,8 +718,7 @@ class AISDKService:
 
         # Anthropic requires system message separate
         system_message = next(
-            (msg.content for msg in messages if msg.role == MessageRole.SYSTEM),
-            ""
+            (msg.content for msg in messages if msg.role == MessageRole.SYSTEM), ""
         )
 
         conversation_messages = [
@@ -793,7 +734,7 @@ class AISDKService:
                 messages=conversation_messages,
                 max_tokens=self.config.max_tokens,
                 temperature=self.config.temperature,
-                **kwargs
+                **kwargs,
             ) as stream:
                 async for event in stream:
                     # Handle text deltas
@@ -817,10 +758,7 @@ class AISDKService:
                 event_type="ai.stream",
                 action="streaming",
                 success=True,
-                details={
-                    "message_count": len(messages),
-                    "response_length": len(full_response)
-                }
+                details={"message_count": len(messages), "response_length": len(full_response)},
             )
 
         except Exception as error:
@@ -834,7 +772,7 @@ class AISDKService:
         on_token: Optional[Callable[[str], None]] = None,
         on_complete: Optional[Callable[[str], None]] = None,
         on_error: Optional[Callable[[Exception], None]] = None,
-        **kwargs
+        **kwargs,
     ) -> None:
         """
         Stream chat for HuggingFace Inference API.
@@ -849,10 +787,7 @@ class AISDKService:
         client = self.client
         full_response = ""
 
-        formatted_messages = [
-            {"role": msg.role.value, "content": msg.content}
-            for msg in messages
-        ]
+        formatted_messages = [{"role": msg.role.value, "content": msg.content} for msg in messages]
 
         try:
             stream = await client.chat_completion(
@@ -862,7 +797,7 @@ class AISDKService:
                 max_tokens=self.config.max_tokens,
                 top_p=self.config.top_p,
                 stream=True,
-                **kwargs
+                **kwargs,
             )
 
             async for chunk in stream:
@@ -881,10 +816,7 @@ class AISDKService:
                 event_type="ai.stream",
                 action="streaming",
                 success=True,
-                details={
-                    "message_count": len(messages),
-                    "response_length": len(full_response)
-                }
+                details={"message_count": len(messages), "response_length": len(full_response)},
             )
 
         except Exception as error:
@@ -906,13 +838,14 @@ class AISDKService:
             supports_streaming=metadata["supports_streaming"],
             max_context_tokens=metadata["max_context_tokens"],
             current_model=self.config.model,
-            endpoint=self.config.endpoint or metadata["default_endpoint"]
+            endpoint=self.config.endpoint or metadata["default_endpoint"],
         )
 
 
 # ============================================================================
 # Helper Functions
 # ============================================================================
+
 
 def create_ai_sdk_service(
     provider: str,
@@ -921,7 +854,7 @@ def create_ai_sdk_service(
     endpoint: Optional[str] = None,
     temperature: float = 0.7,
     max_tokens: int = 4096,
-    audit_logger: Optional[Any] = None
+    audit_logger: Optional[Any] = None,
 ) -> AISDKService:
     """
     Factory function to create an AI SDK service instance.
@@ -951,7 +884,7 @@ def create_ai_sdk_service(
         model=model,
         endpoint=endpoint,
         temperature=temperature,
-        max_tokens=max_tokens
+        max_tokens=max_tokens,
     )
 
     return AISDKService(config=config, audit_logger=audit_logger)

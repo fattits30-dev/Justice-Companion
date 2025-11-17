@@ -44,6 +44,7 @@ logger = logging.getLogger(__name__)
 # Pydantic Models for Input/Output Validation
 # ============================================================================
 
+
 class GdprDeleteOptions(BaseModel):
     """
     Options for GDPR data deletion operation.
@@ -53,18 +54,10 @@ class GdprDeleteOptions(BaseModel):
         export_before_delete: Export data before deletion
         reason: Optional reason for deletion (for audit log)
     """
-    confirmed: bool = Field(
-        ...,
-        description="Explicit confirmation flag - MUST be True to proceed"
-    )
-    export_before_delete: bool = Field(
-        False,
-        description="Export data before deletion"
-    )
-    reason: Optional[str] = Field(
-        None,
-        description="Reason for deletion (stored in audit log)"
-    )
+
+    confirmed: bool = Field(..., description="Explicit confirmation flag - MUST be True to proceed")
+    export_before_delete: bool = Field(False, description="Export data before deletion")
+    reason: Optional[str] = Field(None, description="Reason for deletion (stored in audit log)")
 
     model_config = ConfigDict(use_enum_values=True)
 
@@ -82,28 +75,16 @@ class GdprDeleteResult(BaseModel):
         export_path: Optional path to export file if generated
         error: Error message if deletion failed
     """
+
     success: bool = Field(..., description="Whether deletion succeeded")
     deletion_date: str = Field(..., description="ISO 8601 deletion timestamp")
     deleted_counts: Dict[str, int] = Field(
-        default_factory=dict,
-        description="Counts of records deleted from each table"
+        default_factory=dict, description="Counts of records deleted from each table"
     )
-    preserved_audit_logs: int = Field(
-        0,
-        description="Number of audit log records preserved"
-    )
-    preserved_consents: int = Field(
-        0,
-        description="Number of consent records preserved"
-    )
-    export_path: Optional[str] = Field(
-        None,
-        description="Path to export file if created"
-    )
-    error: Optional[str] = Field(
-        None,
-        description="Error message if deletion failed"
-    )
+    preserved_audit_logs: int = Field(0, description="Number of audit log records preserved")
+    preserved_consents: int = Field(0, description="Number of consent records preserved")
+    export_path: Optional[str] = Field(None, description="Path to export file if created")
+    error: Optional[str] = Field(None, description="Error message if deletion failed")
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -112,19 +93,19 @@ class GdprDeleteResult(BaseModel):
 # Custom Exceptions
 # ============================================================================
 
+
 class DeletionNotConfirmedError(Exception):
     """Exception raised when deletion is attempted without confirmation."""
-    pass
 
 
 class DeletionError(Exception):
     """Exception raised when deletion operation fails."""
-    pass
 
 
 # ============================================================================
 # DataDeleter Service
 # ============================================================================
+
 
 class DataDeleter:
     """
@@ -173,11 +154,7 @@ class DataDeleter:
         self.db = db
         self.audit_logger = audit_logger
 
-    def delete_all_user_data(
-        self,
-        user_id: int,
-        options: GdprDeleteOptions
-    ) -> GdprDeleteResult:
+    def delete_all_user_data(self, user_id: int, options: GdprDeleteOptions) -> GdprDeleteResult:
         """
         Delete ALL user data across 13 tables (preserves audit logs + consents).
 
@@ -212,8 +189,7 @@ class DataDeleter:
         # Safety check: Explicit confirmation required
         if not options.confirmed:
             raise DeletionNotConfirmedError(
-                "GDPR deletion requires explicit confirmation. "
-                "Set options.confirmed = True."
+                "GDPR deletion requires explicit confirmation. " "Set options.confirmed = True."
             )
 
         deletion_date = datetime.now(timezone.utc).isoformat()
@@ -230,22 +206,14 @@ class DataDeleter:
                     action="delete",
                     details={
                         "reason": options.reason or "User requested deletion",
-                        "confirmed": options.confirmed
+                        "confirmed": options.confirmed,
                     },
-                    success=True
+                    success=True,
                 )
 
             # Count preserved records BEFORE deletion
-            preserved_audit_logs_count = self._count_records(
-                "audit_logs",
-                "user_id",
-                str(user_id)
-            )
-            preserved_consents_count = self._count_records(
-                "consents",
-                "user_id",
-                user_id
-            )
+            preserved_audit_logs_count = self._count_records("audit_logs", "user_id", str(user_id))
+            preserved_consents_count = self._count_records("consents", "user_id", user_id)
 
             # Save consents BEFORE deletion (will be restored after)
             saved_consents = self._fetch_consents(user_id)
@@ -286,9 +254,9 @@ class DataDeleter:
                         "deleted_counts": deleted_counts,
                         "preserved_audit_logs": preserved_audit_logs_count,
                         "preserved_consents": preserved_consents_count,
-                        "reason": options.reason
+                        "reason": options.reason,
                     },
-                    success=True
+                    success=True,
                 )
 
             return GdprDeleteResult(
@@ -296,7 +264,7 @@ class DataDeleter:
                 deletion_date=deletion_date,
                 deleted_counts=deleted_counts,
                 preserved_audit_logs=preserved_audit_logs_count,
-                preserved_consents=preserved_consents_count
+                preserved_consents=preserved_consents_count,
             )
 
         except Exception as e:
@@ -310,7 +278,7 @@ class DataDeleter:
                     action="delete",
                     details={"reason": options.reason},
                     success=False,
-                    error_message=str(e)
+                    error_message=str(e),
                 )
 
             # Re-raise with context
@@ -355,7 +323,7 @@ class DataDeleter:
                 )
             )
             """,
-            {"user_id": user_id}
+            {"user_id": user_id},
         )
 
         # Step 2: Delete timeline_events (FK → cases)
@@ -366,7 +334,7 @@ class DataDeleter:
                 SELECT id FROM cases WHERE user_id = :user_id
             )
             """,
-            {"user_id": user_id}
+            {"user_id": user_id},
         )
 
         # Step 3: Delete case_facts (FK → cases)
@@ -377,7 +345,7 @@ class DataDeleter:
                 SELECT id FROM cases WHERE user_id = :user_id
             )
             """,
-            {"user_id": user_id}
+            {"user_id": user_id},
         )
 
         # Step 4: Delete legal_issues (FK → cases)
@@ -388,7 +356,7 @@ class DataDeleter:
                 SELECT id FROM cases WHERE user_id = :user_id
             )
             """,
-            {"user_id": user_id}
+            {"user_id": user_id},
         )
 
         # Step 5: Delete actions (FK → cases)
@@ -399,7 +367,7 @@ class DataDeleter:
                 SELECT id FROM cases WHERE user_id = :user_id
             )
             """,
-            {"user_id": user_id}
+            {"user_id": user_id},
         )
 
         # Step 6: Delete notes (FK → cases)
@@ -410,7 +378,7 @@ class DataDeleter:
                 SELECT id FROM cases WHERE user_id = :user_id
             )
             """,
-            {"user_id": user_id}
+            {"user_id": user_id},
         )
 
         # Step 7: Delete evidence (FK → cases)
@@ -421,7 +389,7 @@ class DataDeleter:
                 SELECT id FROM cases WHERE user_id = :user_id
             )
             """,
-            {"user_id": user_id}
+            {"user_id": user_id},
         )
 
         # Step 8: Delete chat_messages (FK → chat_conversations)
@@ -432,37 +400,32 @@ class DataDeleter:
                 SELECT id FROM chat_conversations WHERE user_id = :user_id
             )
             """,
-            {"user_id": user_id}
+            {"user_id": user_id},
         )
 
         # Step 9: Delete chat_conversations (FK → users)
         deleted_counts["chat_conversations"] = self._execute_delete(
-            "DELETE FROM chat_conversations WHERE user_id = :user_id",
-            {"user_id": user_id}
+            "DELETE FROM chat_conversations WHERE user_id = :user_id", {"user_id": user_id}
         )
 
         # Step 10: Delete cases (FK → users)
         deleted_counts["cases"] = self._execute_delete(
-            "DELETE FROM cases WHERE user_id = :user_id",
-            {"user_id": user_id}
+            "DELETE FROM cases WHERE user_id = :user_id", {"user_id": user_id}
         )
 
         # Step 11: Delete user_facts (FK → users)
         deleted_counts["user_facts"] = self._execute_delete(
-            "DELETE FROM user_facts WHERE user_id = :user_id",
-            {"user_id": user_id}
+            "DELETE FROM user_facts WHERE user_id = :user_id", {"user_id": user_id}
         )
 
         # Step 12: Delete sessions (FK → users)
         deleted_counts["sessions"] = self._execute_delete(
-            "DELETE FROM sessions WHERE user_id = :user_id",
-            {"user_id": user_id}
+            "DELETE FROM sessions WHERE user_id = :user_id", {"user_id": user_id}
         )
 
         # Step 13: Delete users (root table)
         deleted_counts["users"] = self._execute_delete(
-            "DELETE FROM users WHERE id = :user_id",
-            {"user_id": user_id}
+            "DELETE FROM users WHERE id = :user_id", {"user_id": user_id}
         )
 
         return deleted_counts
@@ -481,12 +444,7 @@ class DataDeleter:
         result = self.db.execute(text(sql), params)
         return result.rowcount
 
-    def _count_records(
-        self,
-        table: str,
-        column: str,
-        value: Any
-    ) -> int:
+    def _count_records(self, table: str, column: str, value: Any) -> int:
         """
         Count records in a table matching a condition.
 
@@ -525,11 +483,7 @@ class DataDeleter:
 
         return consents
 
-    def _restore_consents(
-        self,
-        user_id: int,
-        consents: List[Dict[str, Any]]
-    ) -> None:
+    def _restore_consents(self, user_id: int, consents: List[Dict[str, Any]]) -> None:
         """
         Restore consent records after deletion (GDPR requirement).
 
@@ -540,10 +494,7 @@ class DataDeleter:
             consents: List of consent records to restore
         """
         # First, ensure any existing consents are deleted (cleanup for re-runs)
-        self.db.execute(
-            text("DELETE FROM consents WHERE user_id = :user_id"),
-            {"user_id": user_id}
-        )
+        self.db.execute(text("DELETE FROM consents WHERE user_id = :user_id"), {"user_id": user_id})
 
         # Restore each consent record
         for consent in consents:
@@ -556,16 +507,19 @@ class DataDeleter:
                     :revoked_at, :version, :created_at
                 )
             """
-            self.db.execute(text(sql), {
-                "id": consent["id"],
-                "user_id": consent["user_id"],
-                "consent_type": consent["consent_type"],
-                "granted": consent["granted"],
-                "granted_at": consent["granted_at"],
-                "revoked_at": consent.get("revoked_at"),
-                "version": consent["version"],
-                "created_at": consent["created_at"]
-            })
+            self.db.execute(
+                text(sql),
+                {
+                    "id": consent["id"],
+                    "user_id": consent["user_id"],
+                    "consent_type": consent["consent_type"],
+                    "granted": consent["granted"],
+                    "granted_at": consent["granted_at"],
+                    "revoked_at": consent.get("revoked_at"),
+                    "version": consent["version"],
+                    "created_at": consent["created_at"],
+                },
+            )
 
     def validate_deletion(self, user_id: int) -> Dict[str, Any]:
         """
@@ -603,44 +557,40 @@ class DataDeleter:
                 "valid": False,
                 "user_exists": False,
                 "active_sessions": 0,
-                "warnings": ["User does not exist"]
+                "warnings": ["User does not exist"],
             }
 
         # Count active sessions
         active_sessions = self._count_records("sessions", "user_id", user_id)
         if active_sessions > 0:
-            warnings.append(
-                f"User has {active_sessions} active session(s) "
-                "that will be deleted"
-            )
+            warnings.append(f"User has {active_sessions} active session(s) " "that will be deleted")
 
         # Count cases
         case_count = self._count_records("cases", "user_id", user_id)
         if case_count > 0:
-            warnings.append(
-                f"User has {case_count} case(s) that will be permanently deleted"
-            )
+            warnings.append(f"User has {case_count} case(s) that will be permanently deleted")
 
         # Count evidence
         evidence_count = self.db.execute(
-            text("""
+            text(
+                """
                 SELECT COUNT(*) FROM evidence
                 WHERE case_id IN (
                     SELECT id FROM cases WHERE user_id = :user_id
                 )
-            """),
-            {"user_id": user_id}
+            """
+            ),
+            {"user_id": user_id},
         ).fetchone()[0]
 
         if evidence_count > 0:
             warnings.append(
-                f"User has {evidence_count} evidence record(s) "
-                "that will be permanently deleted"
+                f"User has {evidence_count} evidence record(s) " "that will be permanently deleted"
             )
 
         return {
             "valid": True,
             "user_exists": True,
             "active_sessions": active_sessions,
-            "warnings": warnings
+            "warnings": warnings,
         }

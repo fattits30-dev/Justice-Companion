@@ -232,6 +232,7 @@ export function EvidenceUpload({
           <button
             onClick={onClose}
             className="p-2 text-white/70 hover:text-white transition-colors rounded-lg hover:bg-white/5"
+            aria-label="Close"
           >
             <X className="h-5 w-5" />
           </button>
@@ -277,6 +278,7 @@ export function EvidenceUpload({
           onChange={handleFileSelect}
           className="hidden"
           accept="*/*"
+          aria-label="File upload"
         />
       </motion.div>
 
@@ -363,6 +365,7 @@ export function EvidenceUpload({
                         removeFile(index);
                       }}
                       className="p-2 text-white/70 hover:text-white transition-colors rounded-lg hover:bg-white/5"
+                      aria-label="Remove file"
                     >
                       <X className="h-4 w-4" />
                     </button>

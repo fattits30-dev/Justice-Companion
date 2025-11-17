@@ -49,6 +49,7 @@ from backend.services.encryption_service import EncryptionService
 
 class AIProviderType(str, Enum):
     """Supported AI provider types."""
+
     OPENAI = "openai"
     ANTHROPIC = "anthropic"
     HUGGINGFACE = "huggingface"
@@ -63,6 +64,7 @@ class AIProviderType(str, Enum):
 
 class AIProviderMetadata(BaseModel):
     """Provider metadata information."""
+
     name: str
     default_endpoint: str
     supports_streaming: bool
@@ -73,6 +75,7 @@ class AIProviderMetadata(BaseModel):
 
 class AIProviderConfigInput(BaseModel):
     """Input model for creating/updating AI provider configuration."""
+
     provider: AIProviderType
     api_key: str = Field(..., min_length=1)
     model: str = Field(..., min_length=1)
@@ -82,14 +85,14 @@ class AIProviderConfigInput(BaseModel):
     top_p: Optional[float] = Field(None, ge=0, le=1)
     enabled: bool = True
 
-    @validator('api_key')
+    @validator("api_key")
     def validate_api_key(cls, v):
         """Validate API key is not empty."""
         if not v or not v.strip():
             raise ValueError("API key cannot be empty")
         return v.strip()
 
-    @validator('model')
+    @validator("model")
     def validate_model(cls, v):
         """Validate model name is not empty."""
         if not v or not v.strip():
@@ -99,6 +102,7 @@ class AIProviderConfigInput(BaseModel):
 
 class AIProviderConfigOutput(BaseModel):
     """Output model for AI provider configuration (with decrypted API key)."""
+
     id: int
     user_id: int
     provider: str
@@ -119,6 +123,7 @@ class AIProviderConfigOutput(BaseModel):
 
 class AIProviderConfigSummary(BaseModel):
     """Summary model for AI provider configuration (without API key)."""
+
     id: int
     user_id: int
     provider: str
@@ -138,12 +143,14 @@ class AIProviderConfigSummary(BaseModel):
 
 class ValidationResult(BaseModel):
     """Result of configuration validation."""
+
     valid: bool
     errors: List[str]
 
 
 class TestResult(BaseModel):
     """Result of provider connection test."""
+
     success: bool
     error: Optional[str] = None
 
@@ -157,11 +164,20 @@ AI_PROVIDER_METADATA: Dict[AIProviderType, AIProviderMetadata] = {
         default_model="gpt-4-turbo",
         max_context_tokens=128000,
         available_models=[
-            "gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-4-turbo-preview",
-            "gpt-4-0125-preview", "gpt-4-1106-preview", "gpt-4", "gpt-4-0613",
-            "gpt-3.5-turbo", "gpt-3.5-turbo-0125", "gpt-3.5-turbo-1106",
-            "gpt-3.5-turbo-16k", "gpt-3.5-turbo-instruct"
-        ]
+            "gpt-4o",
+            "gpt-4o-mini",
+            "gpt-4-turbo",
+            "gpt-4-turbo-preview",
+            "gpt-4-0125-preview",
+            "gpt-4-1106-preview",
+            "gpt-4",
+            "gpt-4-0613",
+            "gpt-3.5-turbo",
+            "gpt-3.5-turbo-0125",
+            "gpt-3.5-turbo-1106",
+            "gpt-3.5-turbo-16k",
+            "gpt-3.5-turbo-instruct",
+        ],
     ),
     AIProviderType.ANTHROPIC: AIProviderMetadata(
         name="Anthropic",
@@ -170,12 +186,17 @@ AI_PROVIDER_METADATA: Dict[AIProviderType, AIProviderMetadata] = {
         default_model="claude-3-5-sonnet-20241022",
         max_context_tokens=200000,
         available_models=[
-            "claude-3-5-sonnet-20241022", "claude-3-5-haiku-20241022",
-            "claude-3-opus-20240229", "claude-3-sonnet-20240229",
-            "claude-3-haiku-20240307", "claude-3-5-sonnet-latest",
-            "claude-3-5-haiku-latest", "claude-2.1", "claude-2.0",
-            "claude-instant-1.2"
-        ]
+            "claude-3-5-sonnet-20241022",
+            "claude-3-5-haiku-20241022",
+            "claude-3-opus-20240229",
+            "claude-3-sonnet-20240229",
+            "claude-3-haiku-20240307",
+            "claude-3-5-sonnet-latest",
+            "claude-3-5-haiku-latest",
+            "claude-2.1",
+            "claude-2.0",
+            "claude-instant-1.2",
+        ],
     ),
     AIProviderType.HUGGINGFACE: AIProviderMetadata(
         name="Hugging Face",
@@ -189,8 +210,8 @@ AI_PROVIDER_METADATA: Dict[AIProviderType, AIProviderMetadata] = {
             "meta-llama/Meta-Llama-3.1-8B-Instruct",
             "mistralai/Mistral-7B-Instruct-v0.3",
             "Qwen/Qwen2.5-72B-Instruct",
-            "google/gemma-2-27b-it"
-        ]
+            "google/gemma-2-27b-it",
+        ],
     ),
     AIProviderType.QWEN: AIProviderMetadata(
         name="Qwen 2.5-72B",
@@ -199,9 +220,11 @@ AI_PROVIDER_METADATA: Dict[AIProviderType, AIProviderMetadata] = {
         default_model="Qwen/Qwen2.5-72B-Instruct",
         max_context_tokens=32768,
         available_models=[
-            "Qwen/Qwen2.5-72B-Instruct", "Qwen/Qwen2.5-32B-Instruct",
-            "Qwen/Qwen2.5-14B-Instruct", "Qwen/Qwen2.5-7B-Instruct"
-        ]
+            "Qwen/Qwen2.5-72B-Instruct",
+            "Qwen/Qwen2.5-32B-Instruct",
+            "Qwen/Qwen2.5-14B-Instruct",
+            "Qwen/Qwen2.5-7B-Instruct",
+        ],
     ),
     AIProviderType.GOOGLE: AIProviderMetadata(
         name="Google AI",
@@ -210,9 +233,12 @@ AI_PROVIDER_METADATA: Dict[AIProviderType, AIProviderMetadata] = {
         default_model="gemini-2.0-flash-exp",
         max_context_tokens=1000000,
         available_models=[
-            "gemini-2.0-flash-exp", "gemini-1.5-pro-latest",
-            "gemini-1.5-flash-latest", "gemini-1.5-pro", "gemini-1.5-flash"
-        ]
+            "gemini-2.0-flash-exp",
+            "gemini-1.5-pro-latest",
+            "gemini-1.5-flash-latest",
+            "gemini-1.5-pro",
+            "gemini-1.5-flash",
+        ],
     ),
     AIProviderType.COHERE: AIProviderMetadata(
         name="Cohere",
@@ -221,9 +247,13 @@ AI_PROVIDER_METADATA: Dict[AIProviderType, AIProviderMetadata] = {
         default_model="command-r-plus",
         max_context_tokens=128000,
         available_models=[
-            "command-r-plus", "command-r", "command-r-plus-08-2024",
-            "command-r-08-2024", "command-light", "command"
-        ]
+            "command-r-plus",
+            "command-r",
+            "command-r-plus-08-2024",
+            "command-r-08-2024",
+            "command-light",
+            "command",
+        ],
     ),
     AIProviderType.TOGETHER: AIProviderMetadata(
         name="Together AI",
@@ -235,8 +265,8 @@ AI_PROVIDER_METADATA: Dict[AIProviderType, AIProviderMetadata] = {
             "meta-llama/Meta-Llama-3.1-405B-Instruct-Turbo",
             "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
             "mistralai/Mixtral-8x7B-Instruct-v0.1",
-            "Qwen/Qwen2.5-72B-Instruct"
-        ]
+            "Qwen/Qwen2.5-72B-Instruct",
+        ],
     ),
     AIProviderType.ANYSCALE: AIProviderMetadata(
         name="Anyscale",
@@ -247,8 +277,8 @@ AI_PROVIDER_METADATA: Dict[AIProviderType, AIProviderMetadata] = {
         available_models=[
             "meta-llama/Meta-Llama-3.1-70B-Instruct",
             "meta-llama/Meta-Llama-3.1-8B-Instruct",
-            "mistralai/Mixtral-8x7B-Instruct-v0.1"
-        ]
+            "mistralai/Mixtral-8x7B-Instruct-v0.1",
+        ],
     ),
     AIProviderType.MISTRAL: AIProviderMetadata(
         name="Mistral AI",
@@ -257,9 +287,11 @@ AI_PROVIDER_METADATA: Dict[AIProviderType, AIProviderMetadata] = {
         default_model="mistral-large-latest",
         max_context_tokens=128000,
         available_models=[
-            "mistral-large-latest", "mistral-medium-latest",
-            "mistral-small-latest", "mistral-tiny"
-        ]
+            "mistral-large-latest",
+            "mistral-medium-latest",
+            "mistral-small-latest",
+            "mistral-tiny",
+        ],
     ),
     AIProviderType.PERPLEXITY: AIProviderMetadata(
         name="Perplexity",
@@ -270,8 +302,8 @@ AI_PROVIDER_METADATA: Dict[AIProviderType, AIProviderMetadata] = {
         available_models=[
             "llama-3.1-sonar-large-128k-online",
             "llama-3.1-sonar-small-128k-online",
-            "llama-3.1-sonar-huge-128k-online"
-        ]
+            "llama-3.1-sonar-huge-128k-online",
+        ],
     ),
 }
 
@@ -284,12 +316,7 @@ class AIProviderConfigService:
     All operations are audited and per-user isolated.
     """
 
-    def __init__(
-        self,
-        db: Session,
-        encryption_service: EncryptionService,
-        audit_logger=None
-    ):
+    def __init__(self, db: Session, encryption_service: EncryptionService, audit_logger=None):
         """
         Initialize AI provider configuration service.
 
@@ -317,16 +344,14 @@ class AIProviderConfigService:
                     action=action,
                     user_id=user_id,
                     resource_type="ai_provider_config",
-                    details=details
+                    details=details,
                 )
             except Exception as e:
                 # Don't fail operations due to audit logging errors
                 print(f"[AIProviderConfigService] Audit logging failed: {e}")
 
     async def set_provider_config(
-        self,
-        user_id: int,
-        config: AIProviderConfigInput
+        self, user_id: int, config: AIProviderConfigInput
     ) -> AIProviderConfigSummary:
         """
         Set configuration for an AI provider.
@@ -350,7 +375,7 @@ class AIProviderConfigService:
             if not validation.valid:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Invalid configuration: {', '.join(validation.errors)}"
+                    detail=f"Invalid configuration: {', '.join(validation.errors)}",
                 )
 
             # Encrypt API key
@@ -358,19 +383,23 @@ class AIProviderConfigService:
             if not encrypted_key:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="Failed to encrypt API key"
+                    detail="Failed to encrypt API key",
                 )
 
             # Serialize encrypted data to JSON
             encrypted_key_json = json.dumps(encrypted_key.to_dict())
 
             # Check if configuration already exists for this provider
-            existing_config = self.db.query(AIProviderConfig).filter(
-                and_(
-                    AIProviderConfig.user_id == user_id,
-                    AIProviderConfig.provider == config.provider.value
+            existing_config = (
+                self.db.query(AIProviderConfig)
+                .filter(
+                    and_(
+                        AIProviderConfig.user_id == user_id,
+                        AIProviderConfig.provider == config.provider.value,
+                    )
                 )
-            ).first()
+                .first()
+            )
 
             if existing_config:
                 # Update existing configuration
@@ -387,9 +416,11 @@ class AIProviderConfigService:
                 action = "ai_config.update"
             else:
                 # Check if user has any configurations (to determine if this should be active)
-                user_config_count = self.db.query(AIProviderConfig).filter(
-                    AIProviderConfig.user_id == user_id
-                ).count()
+                user_config_count = (
+                    self.db.query(AIProviderConfig)
+                    .filter(AIProviderConfig.user_id == user_id)
+                    .count()
+                )
 
                 # Create new configuration
                 db_config = AIProviderConfig(
@@ -402,7 +433,7 @@ class AIProviderConfigService:
                     max_tokens=config.max_tokens,
                     top_p=config.top_p,
                     enabled=config.enabled,
-                    is_active=(user_config_count == 0)  # First provider is active
+                    is_active=(user_config_count == 0),  # First provider is active
                 )
                 self.db.add(db_config)
                 action = "ai_config.create"
@@ -417,8 +448,8 @@ class AIProviderConfigService:
                 details={
                     "provider": config.provider.value,
                     "model": config.model,
-                    "config_id": db_config.id
-                }
+                    "config_id": db_config.id,
+                },
             )
 
             return AIProviderConfigSummary.from_orm(db_config)
@@ -429,13 +460,11 @@ class AIProviderConfigService:
             self.db.rollback()
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Failed to save provider configuration: {str(e)}"
+                detail=f"Failed to save provider configuration: {str(e)}",
             )
 
     async def get_provider_config(
-        self,
-        user_id: int,
-        provider: AIProviderType
+        self, user_id: int, provider: AIProviderType
     ) -> Optional[AIProviderConfigOutput]:
         """
         Get configuration for a specific provider (including decrypted API key).
@@ -451,12 +480,16 @@ class AIProviderConfigService:
             HTTPException: If decryption fails or database error occurs
         """
         try:
-            db_config = self.db.query(AIProviderConfig).filter(
-                and_(
-                    AIProviderConfig.user_id == user_id,
-                    AIProviderConfig.provider == provider.value
+            db_config = (
+                self.db.query(AIProviderConfig)
+                .filter(
+                    and_(
+                        AIProviderConfig.user_id == user_id,
+                        AIProviderConfig.provider == provider.value,
+                    )
                 )
-            ).first()
+                .first()
+            )
 
             if not db_config:
                 return None
@@ -464,13 +497,14 @@ class AIProviderConfigService:
             # Decrypt API key
             encrypted_data_dict = json.loads(db_config.encrypted_api_key)
             from backend.services.encryption_service import EncryptedData
+
             encrypted_data = EncryptedData.from_dict(encrypted_data_dict)
 
             decrypted_key = self.encryption_service.decrypt(encrypted_data)
             if not decrypted_key:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="Failed to decrypt API key"
+                    detail="Failed to decrypt API key",
                 )
 
             # Build output model
@@ -487,7 +521,7 @@ class AIProviderConfigService:
                 enabled=db_config.enabled,
                 is_active=db_config.is_active,
                 created_at=db_config.created_at,
-                updated_at=db_config.updated_at
+                updated_at=db_config.updated_at,
             )
 
         except HTTPException:
@@ -495,13 +529,10 @@ class AIProviderConfigService:
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Failed to get provider configuration: {str(e)}"
+                detail=f"Failed to get provider configuration: {str(e)}",
             )
 
-    async def get_active_provider_config(
-        self,
-        user_id: int
-    ) -> Optional[AIProviderConfigOutput]:
+    async def get_active_provider_config(self, user_id: int) -> Optional[AIProviderConfigOutput]:
         """
         Get active provider configuration for a user.
 
@@ -515,12 +546,13 @@ class AIProviderConfigService:
             HTTPException: If decryption fails or database error occurs
         """
         try:
-            db_config = self.db.query(AIProviderConfig).filter(
-                and_(
-                    AIProviderConfig.user_id == user_id,
-                    AIProviderConfig.is_active == True
+            db_config = (
+                self.db.query(AIProviderConfig)
+                .filter(
+                    and_(AIProviderConfig.user_id == user_id, AIProviderConfig.is_active)
                 )
-            ).first()
+                .first()
+            )
 
             if not db_config:
                 return None
@@ -528,13 +560,14 @@ class AIProviderConfigService:
             # Decrypt API key
             encrypted_data_dict = json.loads(db_config.encrypted_api_key)
             from backend.services.encryption_service import EncryptedData
+
             encrypted_data = EncryptedData.from_dict(encrypted_data_dict)
 
             decrypted_key = self.encryption_service.decrypt(encrypted_data)
             if not decrypted_key:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="Failed to decrypt API key"
+                    detail="Failed to decrypt API key",
                 )
 
             # Build output model
@@ -551,7 +584,7 @@ class AIProviderConfigService:
                 enabled=db_config.enabled,
                 is_active=db_config.is_active,
                 created_at=db_config.created_at,
-                updated_at=db_config.updated_at
+                updated_at=db_config.updated_at,
             )
 
         except HTTPException:
@@ -559,13 +592,11 @@ class AIProviderConfigService:
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Failed to get active provider configuration: {str(e)}"
+                detail=f"Failed to get active provider configuration: {str(e)}",
             )
 
     async def set_active_provider(
-        self,
-        user_id: int,
-        provider: AIProviderType
+        self, user_id: int, provider: AIProviderType
     ) -> AIProviderConfigSummary:
         """
         Set active provider for a user.
@@ -584,23 +615,27 @@ class AIProviderConfigService:
         """
         try:
             # Verify provider is configured
-            target_config = self.db.query(AIProviderConfig).filter(
-                and_(
-                    AIProviderConfig.user_id == user_id,
-                    AIProviderConfig.provider == provider.value
+            target_config = (
+                self.db.query(AIProviderConfig)
+                .filter(
+                    and_(
+                        AIProviderConfig.user_id == user_id,
+                        AIProviderConfig.provider == provider.value,
+                    )
                 )
-            ).first()
+                .first()
+            )
 
             if not target_config:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Provider {provider.value} is not configured"
+                    detail=f"Provider {provider.value} is not configured",
                 )
 
             # Deactivate all providers for this user
-            self.db.query(AIProviderConfig).filter(
-                AIProviderConfig.user_id == user_id
-            ).update({"is_active": False})
+            self.db.query(AIProviderConfig).filter(AIProviderConfig.user_id == user_id).update(
+                {"is_active": False}
+            )
 
             # Activate target provider
             target_config.is_active = True
@@ -613,10 +648,7 @@ class AIProviderConfigService:
             self._log_audit(
                 action="ai_config.set_active",
                 user_id=user_id,
-                details={
-                    "provider": provider.value,
-                    "config_id": target_config.id
-                }
+                details={"provider": provider.value, "config_id": target_config.id},
             )
 
             return AIProviderConfigSummary.from_orm(target_config)
@@ -627,7 +659,7 @@ class AIProviderConfigService:
             self.db.rollback()
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Failed to set active provider: {str(e)}"
+                detail=f"Failed to set active provider: {str(e)}",
             )
 
     def get_active_provider(self, user_id: int) -> Optional[AIProviderType]:
@@ -641,12 +673,13 @@ class AIProviderConfigService:
             Active provider type, or None if no active provider
         """
         try:
-            db_config = self.db.query(AIProviderConfig).filter(
-                and_(
-                    AIProviderConfig.user_id == user_id,
-                    AIProviderConfig.is_active == True
+            db_config = (
+                self.db.query(AIProviderConfig)
+                .filter(
+                    and_(AIProviderConfig.user_id == user_id, AIProviderConfig.is_active)
                 )
-            ).first()
+                .first()
+            )
 
             if not db_config:
                 return None
@@ -668,12 +701,16 @@ class AIProviderConfigService:
             True if provider is configured, False otherwise
         """
         try:
-            count = self.db.query(AIProviderConfig).filter(
-                and_(
-                    AIProviderConfig.user_id == user_id,
-                    AIProviderConfig.provider == provider.value
+            count = (
+                self.db.query(AIProviderConfig)
+                .filter(
+                    and_(
+                        AIProviderConfig.user_id == user_id,
+                        AIProviderConfig.provider == provider.value,
+                    )
                 )
-            ).count()
+                .count()
+            )
 
             return count > 0
 
@@ -691,19 +728,16 @@ class AIProviderConfigService:
             List of configured provider types
         """
         try:
-            configs = self.db.query(AIProviderConfig).filter(
-                AIProviderConfig.user_id == user_id
-            ).all()
+            configs = (
+                self.db.query(AIProviderConfig).filter(AIProviderConfig.user_id == user_id).all()
+            )
 
             return [AIProviderType(config.provider) for config in configs]
 
         except Exception:
             return []
 
-    def list_provider_configs(
-        self,
-        user_id: int
-    ) -> List[AIProviderConfigSummary]:
+    def list_provider_configs(self, user_id: int) -> List[AIProviderConfigSummary]:
         """
         List all provider configurations for a user (without API keys).
 
@@ -714,23 +748,22 @@ class AIProviderConfigService:
             List of provider configuration summaries
         """
         try:
-            configs = self.db.query(AIProviderConfig).filter(
-                AIProviderConfig.user_id == user_id
-            ).order_by(AIProviderConfig.is_active.desc(), AIProviderConfig.created_at.asc()).all()
+            configs = (
+                self.db.query(AIProviderConfig)
+                .filter(AIProviderConfig.user_id == user_id)
+                .order_by(AIProviderConfig.is_active.desc(), AIProviderConfig.created_at.asc())
+                .all()
+            )
 
             return [AIProviderConfigSummary.from_orm(config) for config in configs]
 
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Failed to list provider configurations: {str(e)}"
+                detail=f"Failed to list provider configurations: {str(e)}",
             )
 
-    async def remove_provider_config(
-        self,
-        user_id: int,
-        provider: AIProviderType
-    ) -> None:
+    async def remove_provider_config(self, user_id: int, provider: AIProviderType) -> None:
         """
         Remove provider configuration.
 
@@ -744,17 +777,21 @@ class AIProviderConfigService:
             HTTPException: If provider not found or database error occurs
         """
         try:
-            db_config = self.db.query(AIProviderConfig).filter(
-                and_(
-                    AIProviderConfig.user_id == user_id,
-                    AIProviderConfig.provider == provider.value
+            db_config = (
+                self.db.query(AIProviderConfig)
+                .filter(
+                    and_(
+                        AIProviderConfig.user_id == user_id,
+                        AIProviderConfig.provider == provider.value,
+                    )
                 )
-            ).first()
+                .first()
+            )
 
             if not db_config:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Provider {provider.value} is not configured"
+                    detail=f"Provider {provider.value} is not configured",
                 )
 
             was_active = db_config.is_active
@@ -765,9 +802,11 @@ class AIProviderConfigService:
 
             # If this was the active provider, try to activate another
             if was_active:
-                remaining_configs = self.db.query(AIProviderConfig).filter(
-                    AIProviderConfig.user_id == user_id
-                ).first()
+                remaining_configs = (
+                    self.db.query(AIProviderConfig)
+                    .filter(AIProviderConfig.user_id == user_id)
+                    .first()
+                )
 
                 if remaining_configs:
                     remaining_configs.is_active = True
@@ -778,10 +817,7 @@ class AIProviderConfigService:
             self._log_audit(
                 action="ai_config.delete",
                 user_id=user_id,
-                details={
-                    "provider": provider.value,
-                    "was_active": was_active
-                }
+                details={"provider": provider.value, "was_active": was_active},
             )
 
         except HTTPException:
@@ -790,13 +826,10 @@ class AIProviderConfigService:
             self.db.rollback()
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Failed to remove provider configuration: {str(e)}"
+                detail=f"Failed to remove provider configuration: {str(e)}",
             )
 
-    def get_provider_metadata(
-        self,
-        provider: AIProviderType
-    ) -> AIProviderMetadata:
+    def get_provider_metadata(self, provider: AIProviderType) -> AIProviderMetadata:
         """
         Get metadata for a provider.
 
@@ -813,7 +846,7 @@ class AIProviderConfigService:
         if not metadata:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Unknown provider: {provider.value}"
+                detail=f"Unknown provider: {provider.value}",
             )
         return metadata
 
@@ -825,14 +858,10 @@ class AIProviderConfigService:
             Dictionary of provider metadata keyed by provider type
         """
         return {
-            provider.value: metadata.dict()
-            for provider, metadata in AI_PROVIDER_METADATA.items()
+            provider.value: metadata.dict() for provider, metadata in AI_PROVIDER_METADATA.items()
         }
 
-    def validate_config(
-        self,
-        config: AIProviderConfigInput
-    ) -> ValidationResult:
+    def validate_config(self, config: AIProviderConfigInput) -> ValidationResult:
         """
         Validate provider configuration.
 
@@ -867,16 +896,9 @@ class AIProviderConfigService:
             if config.top_p < 0 or config.top_p > 1:
                 errors.append("Top P must be between 0 and 1")
 
-        return ValidationResult(
-            valid=len(errors) == 0,
-            errors=errors
-        )
+        return ValidationResult(valid=len(errors) == 0, errors=errors)
 
-    async def test_provider(
-        self,
-        user_id: int,
-        provider: AIProviderType
-    ) -> TestResult:
+    async def test_provider(self, user_id: int, provider: AIProviderType) -> TestResult:
         """
         Test provider connection with a simple message.
 
@@ -891,20 +913,11 @@ class AIProviderConfigService:
             # Get provider configuration
             config = await self.get_provider_config(user_id, provider)
             if not config:
-                return TestResult(
-                    success=False,
-                    error="Provider not configured"
-                )
+                return TestResult(success=False, error="Provider not configured")
 
             # TODO: Implement actual provider test using UnifiedAIService
             # For now, just verify configuration exists
-            return TestResult(
-                success=True,
-                error=None
-            )
+            return TestResult(success=True, error=None)
 
         except Exception as e:
-            return TestResult(
-                success=False,
-                error=str(e)
-            )
+            return TestResult(success=False, error=str(e))

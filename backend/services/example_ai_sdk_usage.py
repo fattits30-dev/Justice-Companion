@@ -27,11 +27,12 @@ from backend.services.ai_sdk_service import (
 # Example 1: Simple Non-Streaming Chat (OpenAI)
 # ============================================================================
 
+
 async def example_openai_chat():
     """Example: Simple chat with OpenAI GPT-4."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Example 1: OpenAI Non-Streaming Chat")
-    print("="*60)
+    print("=" * 60)
 
     # Configure OpenAI
     config = AIProviderConfig(
@@ -39,7 +40,7 @@ async def example_openai_chat():
         api_key=os.getenv("OPENAI_API_KEY", "sk-test-key"),
         model="gpt-4-turbo",
         temperature=0.7,
-        max_tokens=1000
+        max_tokens=1000,
     )
 
     # Create service
@@ -52,14 +53,11 @@ async def example_openai_chat():
 
     # Create messages
     messages = [
-        ChatMessage(
-            role=MessageRole.SYSTEM,
-            content="You are a helpful legal assistant."
-        ),
+        ChatMessage(role=MessageRole.SYSTEM, content="You are a helpful legal assistant."),
         ChatMessage(
             role=MessageRole.USER,
-            content="What is the statute of limitations for breach of contract in the UK?"
-        )
+            content="What is the statute of limitations for breach of contract in the UK?",
+        ),
     ]
 
     try:
@@ -75,11 +73,12 @@ async def example_openai_chat():
 # Example 2: Streaming Chat with Callbacks (Anthropic)
 # ============================================================================
 
+
 async def example_anthropic_streaming():
     """Example: Streaming chat with Anthropic Claude."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Example 2: Anthropic Streaming Chat")
-    print("="*60)
+    print("=" * 60)
 
     # Configure Anthropic
     config = AIProviderConfig(
@@ -87,7 +86,7 @@ async def example_anthropic_streaming():
         api_key=os.getenv("ANTHROPIC_API_KEY", "sk-ant-test-key"),
         model="claude-3-5-sonnet-20241022",
         temperature=0.7,
-        max_tokens=2000
+        max_tokens=2000,
     )
 
     # Create service
@@ -100,12 +99,12 @@ async def example_anthropic_streaming():
     messages = [
         ChatMessage(
             role=MessageRole.SYSTEM,
-            content="You are a UK legal expert specializing in employment law."
+            content="You are a UK legal expert specializing in employment law.",
         ),
         ChatMessage(
             role=MessageRole.USER,
-            content="Explain the key rights under the Employment Rights Act 1996."
-        )
+            content="Explain the key rights under the Employment Rights Act 1996.",
+        ),
     ]
 
     # Define callbacks
@@ -128,10 +127,7 @@ async def example_anthropic_streaming():
     try:
         # Stream chat
         await service.stream_chat(
-            messages,
-            on_token=on_token,
-            on_complete=on_complete,
-            on_error=on_error
+            messages, on_token=on_token, on_complete=on_complete, on_error=on_error
         )
 
     except Exception as e:
@@ -142,24 +138,25 @@ async def example_anthropic_streaming():
 # Example 3: Provider Capabilities
 # ============================================================================
 
+
 async def example_provider_capabilities():
     """Example: Check provider capabilities."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Example 3: Provider Capabilities")
-    print("="*60)
+    print("=" * 60)
 
     providers = [
         (AIProviderType.OPENAI, "gpt-4-turbo", "sk-test-openai"),
         (AIProviderType.ANTHROPIC, "claude-3-5-sonnet-20241022", "sk-test-anthropic"),
-        (AIProviderType.TOGETHER, "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo", "sk-test-together"),
+        (
+            AIProviderType.TOGETHER,
+            "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
+            "sk-test-together",
+        ),
     ]
 
     for provider, model, api_key in providers:
-        config = AIProviderConfig(
-            provider=provider,
-            api_key=api_key,
-            model=model
-        )
+        config = AIProviderConfig(provider=provider, api_key=api_key, model=model)
 
         service = AISDKService(config)
         capabilities = service.get_provider_capabilities()
@@ -175,17 +172,18 @@ async def example_provider_capabilities():
 # Example 4: Switching Providers
 # ============================================================================
 
+
 async def example_switching_providers():
     """Example: Switch between providers dynamically."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Example 4: Switching Providers")
-    print("="*60)
+    print("=" * 60)
 
     # Start with OpenAI
     openai_config = AIProviderConfig(
         provider=AIProviderType.OPENAI,
         api_key=os.getenv("OPENAI_API_KEY", "sk-test-key"),
-        model="gpt-4-turbo"
+        model="gpt-4-turbo",
     )
 
     service = AISDKService(openai_config)
@@ -196,7 +194,7 @@ async def example_switching_providers():
     anthropic_config = AIProviderConfig(
         provider=AIProviderType.ANTHROPIC,
         api_key=os.getenv("ANTHROPIC_API_KEY", "sk-ant-test-key"),
-        model="claude-3-5-sonnet-20241022"
+        model="claude-3-5-sonnet-20241022",
     )
 
     service.update_config(anthropic_config)
@@ -208,24 +206,21 @@ async def example_switching_providers():
 # Example 5: Error Handling
 # ============================================================================
 
+
 async def example_error_handling():
     """Example: Proper error handling."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Example 5: Error Handling")
-    print("="*60)
+    print("=" * 60)
 
     # Invalid API key
     config = AIProviderConfig(
-        provider=AIProviderType.OPENAI,
-        api_key="invalid-key",
-        model="gpt-4-turbo"
+        provider=AIProviderType.OPENAI, api_key="invalid-key", model="gpt-4-turbo"
     )
 
     service = AISDKService(config)
 
-    messages = [
-        ChatMessage(role=MessageRole.USER, content="Hello")
-    ]
+    messages = [ChatMessage(role=MessageRole.USER, content="Hello")]
 
     try:
         response = await service.chat(messages)
@@ -239,11 +234,12 @@ async def example_error_handling():
 # Example 6: Using Factory Function
 # ============================================================================
 
+
 async def example_factory_function():
     """Example: Use factory function for quick setup."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Example 6: Factory Function")
-    print("="*60)
+    print("=" * 60)
 
     # Quick setup with factory function
     service = create_ai_sdk_service(
@@ -251,7 +247,7 @@ async def example_factory_function():
         api_key=os.getenv("OPENAI_API_KEY", "sk-test-key"),
         model="gpt-4-turbo",
         temperature=0.5,
-        max_tokens=500
+        max_tokens=500,
     )
 
     print(f"Provider: {service.get_provider().value}")
@@ -264,6 +260,7 @@ async def example_factory_function():
 # Example 7: Audit Logging Integration
 # ============================================================================
 
+
 class SimpleAuditLogger:
     """Simple audit logger for demonstration."""
 
@@ -273,15 +270,15 @@ class SimpleAuditLogger:
         print(f"  Action: {event['action']}")
         print(f"  Success: {event['success']}")
         print(f"  Provider: {event['details'].get('provider', 'N/A')}")
-        if event.get('error_message'):
+        if event.get("error_message"):
             print(f"  Error: {event['error_message']}")
 
 
 async def example_audit_logging():
     """Example: Integration with audit logger."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Example 7: Audit Logging")
-    print("="*60)
+    print("=" * 60)
 
     # Create audit logger
     audit_logger = SimpleAuditLogger()
@@ -290,14 +287,12 @@ async def example_audit_logging():
     config = AIProviderConfig(
         provider=AIProviderType.OPENAI,
         api_key=os.getenv("OPENAI_API_KEY", "sk-test-key"),
-        model="gpt-3.5-turbo"
+        model="gpt-3.5-turbo",
     )
 
     service = AISDKService(config, audit_logger=audit_logger)
 
-    messages = [
-        ChatMessage(role=MessageRole.USER, content="Hello, how are you?")
-    ]
+    messages = [ChatMessage(role=MessageRole.USER, content="Hello, how are you?")]
 
     try:
         response = await service.chat(messages)
@@ -310,45 +305,37 @@ async def example_audit_logging():
 # Example 8: Multi-Turn Conversation
 # ============================================================================
 
+
 async def example_multi_turn_conversation():
     """Example: Multi-turn conversation."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Example 8: Multi-Turn Conversation")
-    print("="*60)
+    print("=" * 60)
 
     config = AIProviderConfig(
         provider=AIProviderType.OPENAI,
         api_key=os.getenv("OPENAI_API_KEY", "sk-test-key"),
-        model="gpt-4-turbo"
+        model="gpt-4-turbo",
     )
 
     service = AISDKService(config)
 
     # Build conversation history
     messages: List[ChatMessage] = [
-        ChatMessage(
-            role=MessageRole.SYSTEM,
-            content="You are a helpful assistant."
-        ),
+        ChatMessage(role=MessageRole.SYSTEM, content="You are a helpful assistant."),
     ]
 
     # Turn 1
-    messages.append(
-        ChatMessage(role=MessageRole.USER, content="What is Python?")
-    )
+    messages.append(ChatMessage(role=MessageRole.USER, content="What is Python?"))
 
     response1 = await service.chat(messages)
     print(f"\nUser: What is Python?")
     print(f"Assistant: {response1[:100]}...")
 
-    messages.append(
-        ChatMessage(role=MessageRole.ASSISTANT, content=response1)
-    )
+    messages.append(ChatMessage(role=MessageRole.ASSISTANT, content=response1))
 
     # Turn 2
-    messages.append(
-        ChatMessage(role=MessageRole.USER, content="What are its main uses?")
-    )
+    messages.append(ChatMessage(role=MessageRole.USER, content="What are its main uses?"))
 
     response2 = await service.chat(messages)
     print(f"\nUser: What are its main uses?")
@@ -359,11 +346,12 @@ async def example_multi_turn_conversation():
 # Main Function
 # ============================================================================
 
+
 async def main():
     """Run all examples."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("AI SDK Service - Usage Examples")
-    print("="*60)
+    print("=" * 60)
 
     # Run examples
     examples = [

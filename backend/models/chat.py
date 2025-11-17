@@ -26,11 +26,12 @@ from sqlalchemy import Column, Integer, String, Text, ForeignKey, CheckConstrain
 from sqlalchemy.orm import relationship
 from backend.models.base import Base
 from datetime import datetime
-from typing import Optional, List, Dict, Any
+from typing import Dict, Any
 
 
 class ChatConversation(Base):
     """Chat conversation model - represents a persistent chat session."""
+
     __tablename__ = "chat_conversations"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -38,11 +39,15 @@ class ChatConversation(Base):
     case_id = Column(Integer, ForeignKey("cases.id"), nullable=True, index=True)
     title = Column(Text, nullable=False)
     created_at = Column(String, nullable=False, default=lambda: datetime.utcnow().isoformat())
-    updated_at = Column(String, nullable=False, default=lambda: datetime.utcnow().isoformat(), index=True)
+    updated_at = Column(
+        String, nullable=False, default=lambda: datetime.utcnow().isoformat(), index=True
+    )
     message_count = Column(Integer, nullable=False, default=0)
 
     # Relationships
-    messages = relationship("ChatMessage", back_populates="conversation", cascade="all, delete-orphan")
+    messages = relationship(
+        "ChatMessage", back_populates="conversation", cascade="all, delete-orphan"
+    )
 
     def to_dict(self, include_messages: bool = False) -> Dict[str, Any]:
         """
@@ -61,7 +66,7 @@ class ChatConversation(Base):
             "title": self.title,
             "createdAt": self.created_at,
             "updatedAt": self.updated_at,
-            "messageCount": self.message_count
+            "messageCount": self.message_count,
         }
 
         if include_messages:
@@ -72,14 +77,21 @@ class ChatConversation(Base):
 
 class ChatMessage(Base):
     """Chat message model - individual messages within a conversation."""
+
     __tablename__ = "chat_messages"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    conversation_id = Column(Integer, ForeignKey("chat_conversations.id"), nullable=False, index=True)
-    role = Column(String, CheckConstraint("role IN ('user', 'assistant', 'system')"), nullable=False)
+    conversation_id = Column(
+        Integer, ForeignKey("chat_conversations.id"), nullable=False, index=True
+    )
+    role = Column(
+        String, CheckConstraint("role IN ('user', 'assistant', 'system')"), nullable=False
+    )
     content = Column(Text, nullable=False)
     thinking_content = Column(Text, nullable=True)
-    timestamp = Column(String, nullable=False, default=lambda: datetime.utcnow().isoformat(), index=True)
+    timestamp = Column(
+        String, nullable=False, default=lambda: datetime.utcnow().isoformat(), index=True
+    )
     token_count = Column(Integer, nullable=True)
 
     # Relationships
@@ -99,5 +111,5 @@ class ChatMessage(Base):
             "content": self.content,
             "thinkingContent": self.thinking_content,
             "timestamp": self.timestamp,
-            "tokenCount": self.token_count
+            "tokenCount": self.token_count,
         }

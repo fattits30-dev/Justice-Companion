@@ -30,7 +30,9 @@ class Tag(Base):
     __tablename__ = "tags"
 
     id = Column(Integer, primary_key=True, autoincrement=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
     name = Column(String, nullable=False)
     color = Column(String, nullable=False, default="#6B7280")
     description = Column(String, nullable=True)
@@ -43,9 +45,9 @@ class Tag(Base):
 
     # Unique constraint: user cannot have duplicate tag names
     __table_args__ = (
-        Index('idx_tags_user_name', 'user_id', 'name', unique=True),
-        Index('idx_tags_user', 'user_id'),
-        Index('idx_tags_name', 'name'),
+        Index("idx_tags_user_name", "user_id", "name", unique=True),
+        Index("idx_tags_user", "user_id"),
+        Index("idx_tags_name", "name"),
     )
 
     def to_dict(self):
@@ -56,8 +58,8 @@ class Tag(Base):
             "name": self.name,
             "color": self.color,
             "description": self.description,
-            "createdAt": self.created_at.isoformat() if self.created_at else None,
-            "updatedAt": self.updated_at.isoformat() if self.updated_at else None,
+            "createdAt": self.created_at.isoformat() if self.created_at is not None else None,
+            "updatedAt": self.updated_at.isoformat() if self.updated_at is not None else None,
         }
 
     def __repr__(self):
@@ -79,8 +81,12 @@ class CaseTag(Base):
 
     __tablename__ = "case_tags"
 
-    case_id = Column(Integer, ForeignKey("cases.id", ondelete="CASCADE"), primary_key=True, nullable=False)
-    tag_id = Column(Integer, ForeignKey("tags.id", ondelete="CASCADE"), primary_key=True, nullable=False)
+    case_id = Column(
+        Integer, ForeignKey("cases.id", ondelete="CASCADE"), primary_key=True, nullable=False
+    )
+    tag_id = Column(
+        Integer, ForeignKey("tags.id", ondelete="CASCADE"), primary_key=True, nullable=False
+    )
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # Relationships
@@ -89,8 +95,8 @@ class CaseTag(Base):
 
     # Indexes for performance
     __table_args__ = (
-        Index('idx_case_tags_case', 'case_id'),
-        Index('idx_case_tags_tag', 'tag_id'),
+        Index("idx_case_tags_case", "case_id"),
+        Index("idx_case_tags_tag", "tag_id"),
     )
 
     def to_dict(self):
@@ -98,7 +104,7 @@ class CaseTag(Base):
         return {
             "caseId": self.case_id,
             "tagId": self.tag_id,
-            "createdAt": self.created_at.isoformat() if self.created_at else None,
+            "createdAt": self.created_at.isoformat() if self.created_at is not None else None,
         }
 
     def __repr__(self):

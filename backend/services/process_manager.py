@@ -45,14 +45,12 @@ Example:
 
 import asyncio
 import logging
-import os
 import platform
-import subprocess
 import threading
 import signal
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Dict, List, Optional, Callable, Awaitable, Union, Set
+from typing import Dict, List, Optional, Callable, Awaitable, Union
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +64,7 @@ class ProcessInfo:
         pid: Process ID (None if not found)
         name: Optional process name
     """
+
     pid: Optional[int] = None
     name: Optional[str] = None
 
@@ -80,6 +79,7 @@ class PortStatus:
         name: Service name using this port
         in_use: Whether the port is currently in use
     """
+
     port: int
     name: str
     in_use: bool
@@ -95,6 +95,7 @@ class ProcessStatus:
         start_time: When the process manager was initialized
         ports: List of managed port statuses
     """
+
     is_running: bool
     start_time: datetime
     ports: List[PortStatus] = field(default_factory=list)
@@ -143,14 +144,14 @@ class ProcessManager:
             if self._single_instance_lock:
                 logger.error(
                     "[ProcessManager] Another instance is already running",
-                    extra={"service": "ProcessManager", "operation": "enforce_single_instance"}
+                    extra={"service": "ProcessManager", "operation": "enforce_single_instance"},
                 )
                 return False
 
             self._single_instance_lock = True
             logger.info(
                 "[ProcessManager] Single instance lock acquired",
-                extra={"service": "ProcessManager"}
+                extra={"service": "ProcessManager"},
             )
             return True
 
@@ -171,14 +172,14 @@ class ProcessManager:
         """
         logger.warning(
             "[ProcessManager] Second instance callback registered (requires external implementation)",
-            extra={"service": "ProcessManager"}
+            extra={"service": "ProcessManager"},
         )
         # Store callback for potential future use
-        if not hasattr(self, '_second_instance_callbacks'):
+        if not hasattr(self, "_second_instance_callbacks"):
             self._second_instance_callbacks: List[Callable[[], None]] = []
         self._second_instance_callbacks.append(callback)
 
-    async def is_port_in_use(self, port: int, host: str = '127.0.0.1') -> bool:
+    async def is_port_in_use(self, port: int, host: str = "127.0.0.1") -> bool:
         """
         Check if a port is currently in use.
 
@@ -205,14 +206,14 @@ class ProcessManager:
         except socket.error as e:
             logger.debug(
                 f"[ProcessManager] Error checking port {port}: {e}",
-                extra={"service": "ProcessManager", "port": port}
+                extra={"service": "ProcessManager", "port": port},
             )
             return False
         except Exception as e:
             logger.error(
                 f"[ProcessManager] Unexpected error checking port {port}: {e}",
                 exc_info=True,
-                extra={"service": "ProcessManager", "port": port}
+                extra={"service": "ProcessManager", "port": port},
             )
             return False
 
@@ -243,15 +244,15 @@ class ProcessManager:
                 result = await asyncio.create_subprocess_shell(
                     f"netstat -ano | findstr :{port}",
                     stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE
+                    stderr=asyncio.subprocess.PIPE,
                 )
                 stdout, _ = await result.communicate()
-                output = stdout.decode('utf-8', errors='ignore').strip()
+                output = stdout.decode("utf-8", errors="ignore").strip()
 
                 if output:
-                    lines = output.split('\n')
+                    lines = output.split("\n")
                     for line in lines:
-                        if 'LISTENING' in line:
+                        if "LISTENING" in line:
                             # Extract PID from end of line
                             parts = line.split()
                             if parts:
@@ -266,10 +267,10 @@ class ProcessManager:
                 result = await asyncio.create_subprocess_shell(
                     f"lsof -i :{port} -t",
                     stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE
+                    stderr=asyncio.subprocess.PIPE,
                 )
                 stdout, _ = await result.communicate()
-                output = stdout.decode('utf-8', errors='ignore').strip()
+                output = stdout.decode("utf-8", errors="ignore").strip()
 
                 if output:
                     try:
@@ -283,7 +284,7 @@ class ProcessManager:
         except Exception as e:
             logger.debug(
                 f"[ProcessManager] Error finding process on port {port}: {e}",
-                extra={"service": "ProcessManager", "port": port}
+                extra={"service": "ProcessManager", "port": port},
             )
             return ProcessInfo(pid=None)
 
@@ -305,11 +306,7 @@ class ProcessManager:
                 in_use = await self.is_port_in_use(port)
                 ports.append(PortStatus(port=port, name=name, in_use=in_use))
 
-        return ProcessStatus(
-            is_running=True,
-            start_time=self.start_time,
-            ports=ports
-        )
+        return ProcessStatus(is_running=True, start_time=self.start_time, ports=ports)
 
     def register_managed_port(self, port: int, name: str) -> None:
         """
@@ -326,13 +323,10 @@ class ProcessManager:
             self.managed_ports[port] = name
             logger.info(
                 f"[ProcessManager] Registered managed port {port} ({name})",
-                extra={"service": "ProcessManager", "port": port, "name": name}
+                extra={"service": "ProcessManager", "port": port, "name": name},
             )
 
-    def add_shutdown_handler(
-        self,
-        handler: Callable[[], Union[None, Awaitable[None]]]
-    ) -> None:
+    def add_shutdown_handler(self, handler: Callable[[], Union[None, Awaitable[None]]]) -> None:
         """
         Add shutdown handler to be called on cleanup.
 
@@ -350,7 +344,7 @@ class ProcessManager:
             self.shutdown_handlers.append(handler)
             logger.debug(
                 "[ProcessManager] Added shutdown handler",
-                extra={"service": "ProcessManager", "handler_count": len(self.shutdown_handlers)}
+                extra={"service": "ProcessManager", "handler_count": len(self.shutdown_handlers)},
             )
 
     async def kill_process_on_port(self, port: int) -> bool:
@@ -378,7 +372,7 @@ class ProcessManager:
             if not process_info.pid:
                 logger.debug(
                     f"[ProcessManager] No process found on port {port}",
-                    extra={"service": "ProcessManager", "port": port}
+                    extra={"service": "ProcessManager", "port": port},
                 )
                 return False
 
@@ -387,11 +381,7 @@ class ProcessManager:
             if success:
                 logger.info(
                     f"[ProcessManager] Killed process {process_info.pid} on port {port}",
-                    extra={
-                        "service": "ProcessManager",
-                        "port": port,
-                        "pid": process_info.pid
-                    }
+                    extra={"service": "ProcessManager", "port": port, "pid": process_info.pid},
                 )
 
             return success
@@ -400,7 +390,7 @@ class ProcessManager:
             logger.error(
                 f"[ProcessManager] Error killing process on port {port}: {e}",
                 exc_info=True,
-                extra={"service": "ProcessManager", "port": port}
+                extra={"service": "ProcessManager", "port": port},
             )
             return False
 
@@ -414,8 +404,7 @@ class ProcessManager:
             >>> await process_manager.cleanup_on_startup()
         """
         logger.info(
-            "[ProcessManager] Starting cleanup on startup",
-            extra={"service": "ProcessManager"}
+            "[ProcessManager] Starting cleanup on startup", extra={"service": "ProcessManager"}
         )
 
         with self._lock:
@@ -427,19 +416,18 @@ class ProcessManager:
                 if in_use:
                     logger.info(
                         f"[ProcessManager] Port {port} ({name}) is in use, attempting cleanup...",
-                        extra={"service": "ProcessManager", "port": port, "name": name}
+                        extra={"service": "ProcessManager", "port": port, "name": name},
                     )
                     await self.kill_process_on_port(port)
             except Exception as e:
                 # Log error but don't throw - cleanup should continue
                 self.log_error(
                     e if isinstance(e, Exception) else Exception(str(e)),
-                    {"operation": "cleanup_on_startup", "port": port, "name": name}
+                    {"operation": "cleanup_on_startup", "port": port, "name": name},
                 )
 
         logger.info(
-            "[ProcessManager] Cleanup on startup completed",
-            extra={"service": "ProcessManager"}
+            "[ProcessManager] Cleanup on startup completed", extra={"service": "ProcessManager"}
         )
 
     def register_shutdown_handlers(self) -> None:
@@ -451,10 +439,11 @@ class ProcessManager:
         Example:
             >>> process_manager.register_shutdown_handlers()
         """
+
         def signal_handler(signum, frame):
             logger.info(
                 f"[ProcessManager] Received signal {signum}, initiating shutdown",
-                extra={"service": "ProcessManager", "signal": signum}
+                extra={"service": "ProcessManager", "signal": signum},
             )
             # Run shutdown handlers synchronously
             asyncio.run(self.execute_shutdown_handlers())
@@ -465,7 +454,7 @@ class ProcessManager:
 
         logger.info(
             "[ProcessManager] Registered shutdown signal handlers",
-            extra={"service": "ProcessManager"}
+            extra={"service": "ProcessManager"},
         )
 
     def on_shutdown(self, callback: Callable[[], Union[None, Awaitable[None]]]) -> None:
@@ -505,11 +494,7 @@ class ProcessManager:
         """
         self.register_managed_port(port, name)
 
-    async def ensure_port_available(
-        self,
-        port: int,
-        max_retries: int = 1
-    ) -> bool:
+    async def ensure_port_available(self, port: int, max_retries: int = 1) -> bool:
         """
         Ensure port is available.
 
@@ -533,7 +518,7 @@ class ProcessManager:
 
             logger.info(
                 f"[ProcessManager] Port {port} in use, attempting to free (attempt {attempt + 1}/{max_retries})",
-                extra={"service": "ProcessManager", "port": port, "attempt": attempt + 1}
+                extra={"service": "ProcessManager", "port": port, "attempt": attempt + 1},
             )
 
             await self.kill_process_on_port(port)
@@ -561,11 +546,7 @@ class ProcessManager:
         if context:
             error_context.update(context)
 
-        logger.error(
-            f"[ProcessManager] {error}",
-            exc_info=True,
-            extra=error_context
-        )
+        logger.error(f"[ProcessManager] {error}", exc_info=True, extra=error_context)
 
     async def kill_process_by_id(self, pid: int) -> bool:
         """
@@ -594,22 +575,20 @@ class ProcessManager:
                 result = await asyncio.create_subprocess_shell(
                     f"taskkill /PID {pid} /F",
                     stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE
+                    stderr=asyncio.subprocess.PIPE,
                 )
                 await result.communicate()
 
             else:
                 # Linux/macOS: Use kill
                 result = await asyncio.create_subprocess_shell(
-                    f"kill -9 {pid}",
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE
+                    f"kill -9 {pid}", stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
                 )
                 await result.communicate()
 
             logger.info(
                 f"[ProcessManager] Killed process {pid}",
-                extra={"service": "ProcessManager", "pid": pid}
+                extra={"service": "ProcessManager", "pid": pid},
             )
             return True
 
@@ -617,7 +596,7 @@ class ProcessManager:
             logger.error(
                 f"[ProcessManager] Error killing process {pid}: {e}",
                 exc_info=True,
-                extra={"service": "ProcessManager", "pid": pid}
+                extra={"service": "ProcessManager", "pid": pid},
             )
             return False
 
@@ -633,8 +612,7 @@ class ProcessManager:
         """
         if self._shutdown_in_progress:
             logger.warning(
-                "[ProcessManager] Shutdown already in progress",
-                extra={"service": "ProcessManager"}
+                "[ProcessManager] Shutdown already in progress", extra={"service": "ProcessManager"}
             )
             return
 
@@ -642,7 +620,7 @@ class ProcessManager:
 
         logger.info(
             f"[ProcessManager] Executing {len(self.shutdown_handlers)} shutdown handlers",
-            extra={"service": "ProcessManager"}
+            extra={"service": "ProcessManager"},
         )
 
         with self._lock:
@@ -657,19 +635,18 @@ class ProcessManager:
 
                 logger.debug(
                     f"[ProcessManager] Executed shutdown handler {i + 1}/{len(handlers)}",
-                    extra={"service": "ProcessManager"}
+                    extra={"service": "ProcessManager"},
                 )
 
             except Exception as e:
                 logger.error(
                     f"[ProcessManager] Error in shutdown handler {i + 1}: {e}",
                     exc_info=True,
-                    extra={"service": "ProcessManager", "handler_index": i}
+                    extra={"service": "ProcessManager", "handler_index": i},
                 )
 
         logger.info(
-            "[ProcessManager] All shutdown handlers executed",
-            extra={"service": "ProcessManager"}
+            "[ProcessManager] All shutdown handlers executed", extra={"service": "ProcessManager"}
         )
 
 

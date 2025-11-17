@@ -13,7 +13,7 @@ import json
 import time
 import re
 from pathlib import Path
-from typing import Dict, Any
+from typing import Any
 
 from agents.base_agent import BaseAgent
 from models.requests import DocumentAnalysisRequest
@@ -44,7 +44,8 @@ class DocumentAnalyzerAgent(BaseAgent):
             Prompt template string with placeholders
         """
         import os
-        prompt_path = Path(__file__).parent.parent / 'prompts' / 'current' / 'document_analysis.txt'
+
+        prompt_path = Path(__file__).parent.parent / "prompts" / "current" / "document_analysis.txt"
 
         # Debug logging
         print(f"[DocumentAnalyzer] Loading prompt from: {prompt_path}")
@@ -53,7 +54,7 @@ class DocumentAnalyzerAgent(BaseAgent):
         print(f"[DocumentAnalyzer] Current working directory: {os.getcwd()}")
         print(f"[DocumentAnalyzer] __file__ location: {Path(__file__).absolute()}")
 
-        with open(prompt_path, 'r', encoding='utf-8') as f:
+        with open(prompt_path, "r", encoding="utf-8") as f:
             return f.read()
 
     async def execute(self, request: DocumentAnalysisRequest) -> DocumentAnalysisResponse:
@@ -91,23 +92,21 @@ class DocumentAnalyzerAgent(BaseAgent):
             file_type=request.document.fileType.upper(),
             word_count=request.document.wordCount,
             document_text=request.document.text,
-            user_question_section=user_question_section
+            user_question_section=user_question_section,
         )
 
         # Prepare system prompt
         system_prompt = "You are Justice Companion AI, a legal document analysis specialist for UK civil legal matters. Provide both conversational analysis and structured data extraction."
 
         # Call model client (HuggingFace, OpenAI, etc.)
-        provider = self.get_model_metadata().get('provider', 'Unknown')
+        provider = self.get_model_metadata().get("provider", "Unknown")
         print(f"[DocumentAnalyzer] Calling {provider} for document: {request.document.filename}")
         response_text = await self.generate(formatted_prompt, system_prompt)
         print(f"[DocumentAnalyzer] Received response ({len(response_text)} chars)")
 
         # Parse response into analysis and JSON
         analysis_text, suggested_case_data = self._parse_response(
-            response_text,
-            request.userProfile.name,
-            request.document.filename
+            response_text, request.userProfile.name, request.document.filename
         )
 
         # Calculate elapsed time
@@ -115,22 +114,17 @@ class DocumentAnalyzerAgent(BaseAgent):
 
         # Get model metadata
         metadata = self.get_model_metadata()
-        metadata['latencyMs'] = elapsed_ms
-        metadata['promptVersion'] = 'v1'
-        metadata['responseLength'] = len(response_text)
+        metadata["latencyMs"] = elapsed_ms
+        metadata["promptVersion"] = "v1"
+        metadata["responseLength"] = len(response_text)
 
         # Build response
         return DocumentAnalysisResponse(
-            analysis=analysis_text,
-            suggestedCaseData=suggested_case_data,
-            metadata=metadata
+            analysis=analysis_text, suggestedCaseData=suggested_case_data, metadata=metadata
         )
 
     def _parse_response(
-        self,
-        response_text: str,
-        user_name: str,
-        filename: str
+        self, response_text: str, user_name: str, filename: str
     ) -> tuple[str, SuggestedCaseData]:
         """
         Parse AI response into analysis text and structured case data.
@@ -144,15 +138,12 @@ class DocumentAnalyzerAgent(BaseAgent):
             Tuple of (analysis_text, suggested_case_data)
         """
         # Try to find JSON block
-        json_match = re.search(r'```json\s*\n([\s\S]*?)\n```', response_text)
+        json_match = re.search(r"```json\s*\n([\s\S]*?)\n```", response_text)
 
         if not json_match:
             print("[DocumentAnalyzer] WARNING: No JSON block found in response")
             # Fallback: return full text as analysis with low-confidence defaults
-            return (
-                response_text,
-                self._create_fallback_case_data(user_name, filename)
-            )
+            return (response_text, self._create_fallback_case_data(user_name, filename))
 
         # Split analysis and JSON
         json_start = json_match.start()
@@ -170,26 +161,30 @@ class DocumentAnalyzerAgent(BaseAgent):
             print(f"[DocumentAnalyzer] Failed JSON: {json_str[:200]}...")
             return (
                 analysis_text or response_text,
-                self._create_fallback_case_data(user_name, filename)
+                self._create_fallback_case_data(user_name, filename),
             )
 
         # POST-PROCESSING: Fix illogical name mismatch warnings
         # If AI claims mismatch but names actually match (case-insensitive), remove warning
-        if case_data_dict.get('documentOwnershipMismatch') and case_data_dict.get('documentClaimantName'):
-            doc_name = case_data_dict['documentClaimantName'].strip().lower()
+        if case_data_dict.get("documentOwnershipMismatch") and case_data_dict.get(
+            "documentClaimantName"
+        ):
+            doc_name = case_data_dict["documentClaimantName"].strip().lower()
             user_name_lower = (user_name or "").strip().lower()
 
             if doc_name == user_name_lower:
-                print(f"[DocumentAnalyzer] FIXING illogical warning: '{case_data_dict['documentClaimantName']}' == '{user_name}' (case-insensitive)")
+                print(
+                    f"[DocumentAnalyzer] FIXING illogical warning: '{case_data_dict['documentClaimantName']}' == '{user_name}' (case-insensitive)"
+                )
                 # Names match - remove the warning
-                case_data_dict['documentOwnershipMismatch'] = False
-                case_data_dict['documentClaimantName'] = None
+                case_data_dict["documentOwnershipMismatch"] = False
+                case_data_dict["documentClaimantName"] = None
 
                 # Remove warning text from analysis (pattern: starts with ⚠️ IMPORTANT:, ends before "This is a...")
                 analysis_text = self._remove_warning_text(analysis_text)
 
         # Inject user's name as claimant (do not extract from document)
-        case_data_dict['claimantName'] = user_name or "User"
+        case_data_dict["claimantName"] = user_name or "User"
 
         # Validate and create SuggestedCaseData
         try:
@@ -200,7 +195,7 @@ class DocumentAnalyzerAgent(BaseAgent):
             print(f"[DocumentAnalyzer] ERROR: Pydantic validation failed: {e}")
             return (
                 analysis_text or response_text,
-                self._create_fallback_case_data(user_name, filename)
+                self._create_fallback_case_data(user_name, filename),
             )
 
     def _remove_warning_text(self, analysis_text: str) -> str:
@@ -218,20 +213,24 @@ class DocumentAnalyzerAgent(BaseAgent):
         """
         # Pattern 1: Remove warning paragraph (⚠️ IMPORTANT: ... multiple paragraphs ... before actual analysis)
         # This removes everything from "⚠️ IMPORTANT:" until we hit "This is a" or similar
-        warning_pattern = r'⚠️\s*IMPORTANT:.*?(?=This is a|This document is|The document is|\n\n[A-Z]|\Z)'
-        cleaned = re.sub(warning_pattern, '', analysis_text, flags=re.DOTALL | re.IGNORECASE)
+        warning_pattern = (
+            r"⚠️\s*IMPORTANT:.*?(?=This is a|This document is|The document is|\n\n[A-Z]|\Z)"
+        )
+        cleaned = re.sub(warning_pattern, "", analysis_text, flags=re.DOTALL | re.IGNORECASE)
 
         # Pattern 2: Clean up any remaining isolated warning emoji or fragments
-        cleaned = re.sub(r'⚠️\s*', '', cleaned)
+        cleaned = re.sub(r"⚠️\s*", "", cleaned)
 
         # Pattern 3: Remove any standalone "IMPORTANT:" text
-        cleaned = re.sub(r'^\s*IMPORTANT:\s*', '', cleaned, flags=re.MULTILINE)
+        cleaned = re.sub(r"^\s*IMPORTANT:\s*", "", cleaned, flags=re.MULTILINE)
 
         # Clean up excessive whitespace
-        cleaned = re.sub(r'\n\n\n+', '\n\n', cleaned)  # Max 2 newlines
+        cleaned = re.sub(r"\n\n\n+", "\n\n", cleaned)  # Max 2 newlines
         cleaned = cleaned.strip()
 
-        print(f"[DocumentAnalyzer] Removed warning text. Before: {len(analysis_text)} chars, After: {len(cleaned)} chars")
+        print(
+            f"[DocumentAnalyzer] Removed warning text. Before: {len(analysis_text)} chars, After: {len(cleaned)} chars"
+        )
         return cleaned
 
     def _create_fallback_case_data(self, user_name: str, filename: str) -> SuggestedCaseData:
@@ -266,9 +265,9 @@ class DocumentAnalyzerAgent(BaseAgent):
                 caseNumber=0.0,
                 courtName=0.0,
                 filingDeadline=0.0,
-                nextHearingDate=0.0
+                nextHearingDate=0.0,
             ),
-            extractedFrom=ExtractedFields()
+            extractedFrom=ExtractedFields(),
         )
 
     def _validate_request(self, request: Any) -> bool:
@@ -285,7 +284,7 @@ class DocumentAnalyzerAgent(BaseAgent):
             return False
 
         # Check required fields
-        if not hasattr(request, 'document') or not hasattr(request, 'userProfile'):
+        if not hasattr(request, "document") or not hasattr(request, "userProfile"):
             return False
 
         # Check document has text

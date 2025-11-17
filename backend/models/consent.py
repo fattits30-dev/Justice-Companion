@@ -6,7 +6,6 @@ Tracks user consent for different data processing activities as required by GDPR
 """
 
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Index, CheckConstraint
-from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from enum import Enum
 from backend.models.base import Base
@@ -21,6 +20,7 @@ class ConsentType(str, Enum):
     - ai_processing: Consent to use AI features (optional)
     - marketing: Consent to receive marketing communications (optional)
     """
+
     DATA_PROCESSING = "data_processing"
     ENCRYPTION = "encryption"
     AI_PROCESSING = "ai_processing"
@@ -61,7 +61,7 @@ class Consent(Base):
     __table_args__ = (
         CheckConstraint(
             "consent_type IN ('data_processing', 'encryption', 'ai_processing', 'marketing')",
-            name="ck_consents_type"
+            name="ck_consents_type",
         ),
         # Composite index for user_id + consent_type lookups
         Index("idx_consents_user_type", "user_id", "consent_type"),
@@ -76,15 +76,15 @@ class Consent(Base):
             "userId": self.user_id,
             "consentType": self.consent_type,
             "granted": self.granted,
-            "grantedAt": self.granted_at.isoformat() if self.granted_at else None,
-            "revokedAt": self.revoked_at.isoformat() if self.revoked_at else None,
+            "grantedAt": self.granted_at.isoformat() if self.granted_at is not None else None,
+            "revokedAt": self.revoked_at.isoformat() if self.revoked_at is not None else None,
             "version": self.version,
-            "createdAt": self.created_at.isoformat() if self.created_at else None,
+            "createdAt": self.created_at.isoformat() if self.created_at is not None else None,
         }
 
     def is_active(self) -> bool:
         """Check if consent is currently active (granted and not revoked)."""
-        return self.granted and self.revoked_at is None
+        return bool(self.granted) and self.revoked_at is None
 
     def __repr__(self):
         return (

@@ -114,6 +114,7 @@ export class BackendProcessManager {
 
   /**
    * Kill any existing processes using the backend port
+   * Uses aggressive retry strategy with multiple kill methods
    */
   private async killExistingProcesses(): Promise<void> {
     try {
@@ -141,26 +142,116 @@ export class BackendProcessManager {
           pids: Array.from(pids),
         });
 
+        // Kill each process with retry logic
         for (const pid of pids) {
-          try {
-            await execAsync(`taskkill /F /PID ${pid}`);
-            logger.info(`Killed process ${pid}`, { service: 'BackendProcessManager' });
-          } catch (error) {
-            logger.warn(`Failed to kill process ${pid}`, {
-              service: 'BackendProcessManager',
-              error,
-            });
-          }
+          await this.killProcessWithRetry(pid);
         }
 
-        // Wait a moment for processes to fully terminate
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        // Wait longer for processes to fully terminate
+        logger.info('Waiting for processes to terminate...', { service: 'BackendProcessManager' });
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+
+        // Verify all processes are killed
+        await this.verifyProcessesKilled(pids);
       } else {
         logger.info('No existing processes found', { service: 'BackendProcessManager' });
       }
     } catch (error) {
       // No processes found (netstat returned no results)
       logger.info('No existing processes on port', { service: 'BackendProcessManager' });
+    }
+  }
+
+  /**
+   * Kill a single process with retry logic and multiple strategies
+   */
+  private async killProcessWithRetry(pid: string, maxAttempts = 3): Promise<void> {
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        // Try taskkill with /F flag (force kill)
+        await execAsync(`taskkill /F /PID ${pid}`, { timeout: 5000 });
+        logger.info(`Successfully killed process ${pid}`, {
+          service: 'BackendProcessManager',
+          attempt,
+        });
+        return;
+      } catch (error: any) {
+        const errorMessage = error?.message || String(error);
+
+        // Check if process already terminated
+        if (errorMessage.includes('not found') || errorMessage.includes('No tasks')) {
+          logger.info(`Process ${pid} already terminated`, { service: 'BackendProcessManager' });
+          return;
+        }
+
+        // Check if access denied
+        if (errorMessage.includes('Access is denied')) {
+          logger.warn(`Access denied for process ${pid}, trying alternative method...`, {
+            service: 'BackendProcessManager',
+            attempt,
+          });
+
+          // Try with /T flag to kill child processes (might help with permissions)
+          try {
+            await execAsync(`taskkill /F /T /PID ${pid}`, { timeout: 5000 });
+            logger.info(`Successfully killed process ${pid} with /T flag`, {
+              service: 'BackendProcessManager',
+              attempt,
+            });
+            return;
+          } catch (treeError: any) {
+            if (attempt === maxAttempts) {
+              logger.warn(
+                `Failed to kill process ${pid} after ${maxAttempts} attempts (access denied). Process may be protected or already terminated.`,
+                { service: 'BackendProcessManager' }
+              );
+            }
+          }
+        } else {
+          logger.warn(`Failed to kill process ${pid} on attempt ${attempt}`, {
+            service: 'BackendProcessManager',
+            error: errorMessage,
+          });
+        }
+
+        // Wait before retry
+        if (attempt < maxAttempts) {
+          await new Promise((resolve) => setTimeout(resolve, 500));
+        }
+      }
+    }
+  }
+
+  /**
+   * Verify all processes were successfully killed
+   */
+  private async verifyProcessesKilled(pids: Set<string>): Promise<void> {
+    try {
+      const { stdout } = await execAsync(`netstat -ano | findstr :${this.config.port}`);
+      const remainingPids = new Set<string>();
+
+      const lines = stdout.trim().split('\n');
+      for (const line of lines) {
+        const parts = line.trim().split(/\s+/);
+        if (parts.length >= 5 && parts[3].includes('LISTENING')) {
+          const pid = parts[4];
+          if (pids.has(pid)) {
+            remainingPids.add(pid);
+          }
+        }
+      }
+
+      if (remainingPids.size > 0) {
+        logger.warn(`${remainingPids.size} process(es) still alive after cleanup`, {
+          service: 'BackendProcessManager',
+          pids: Array.from(remainingPids),
+        });
+      } else {
+        logger.info('All processes successfully terminated', { service: 'BackendProcessManager' });
+      }
+    } catch (error) {
+      // No processes on port (good - they were all killed)
+      logger.info('Port is clear, all processes terminated', { service: 'BackendProcessManager' });
     }
   }
 

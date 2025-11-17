@@ -64,6 +64,7 @@ logger = logging.getLogger(__name__)
 # Pydantic Models for Input/Output
 # ============================================================================
 
+
 class BulkOperationOptions(BaseModel):
     """
     Options for bulk operation execution.
@@ -73,6 +74,7 @@ class BulkOperationOptions(BaseModel):
         progress_interval: Emit progress events every N items (default: 10)
         batch_size: Maximum items to process in a single transaction (default: 1000)
     """
+
     fail_fast: bool = Field(default=True, description="Stop on first error and rollback")
     progress_interval: int = Field(default=10, ge=1, description="Progress notification interval")
     batch_size: int = Field(default=1000, ge=1, le=10000, description="Items per transaction batch")
@@ -82,6 +84,7 @@ class BulkOperationOptions(BaseModel):
 
 class BulkOperationError(BaseModel):
     """Individual item error in bulk operation."""
+
     item_id: int = Field(..., description="ID of the item that failed")
     error: str = Field(..., description="Error message")
 
@@ -100,6 +103,7 @@ class BulkOperationResult(BaseModel):
         errors: List of errors for failed items
         rolled_back: Whether the operation was rolled back
     """
+
     operation_id: str = Field(..., description="Unique operation identifier")
     total_items: int = Field(..., ge=0, description="Total items to process")
     success_count: int = Field(..., ge=0, description="Successfully processed items")
@@ -112,6 +116,7 @@ class BulkOperationResult(BaseModel):
 
 class CaseUpdate(BaseModel):
     """Individual case update in bulk operation."""
+
     id: int = Field(..., ge=1, description="Case ID to update")
     title: Optional[str] = Field(None, min_length=1, max_length=255, description="New case title")
     description: Optional[str] = Field(None, description="New case description")
@@ -128,6 +133,7 @@ class BulkOperationProgress(BaseModel):
     Note: This is a planned feature. Currently returns mock data.
     Requires event store implementation for proper operation state reconstruction.
     """
+
     operation_id: str = Field(..., description="Operation UUID")
     operation_type: str = Field(..., description="Type of bulk operation")
     total_items: int = Field(..., ge=0, description="Total items to process")
@@ -145,6 +151,7 @@ class BulkOperationProgress(BaseModel):
 # ============================================================================
 # BulkOperationService Class
 # ============================================================================
+
 
 class BulkOperationService:
     """
@@ -165,7 +172,7 @@ class BulkOperationService:
         db: Session,
         audit_logger: Optional[AuditLogger] = None,
         case_service: Optional[Any] = None,
-        evidence_service: Optional[Any] = None
+        evidence_service: Optional[Any] = None,
     ):
         """
         Initialize BulkOperationService.
@@ -194,7 +201,7 @@ class BulkOperationService:
         action: str,
         details: Optional[Dict[str, Any]] = None,
         success: bool = True,
-        error_message: Optional[str] = None
+        error_message: Optional[str] = None,
     ) -> None:
         """
         Log audit event (never throws exceptions).
@@ -219,7 +226,7 @@ class BulkOperationService:
                     action=action,
                     details=details,
                     success=success,
-                    error_message=error_message
+                    error_message=error_message,
                 )
             except Exception as e:
                 logger.warning(f"Failed to log audit event: {e}")
@@ -261,17 +268,16 @@ class BulkOperationService:
         # Verify case ownership
         case = self.db.query(Case).filter(Case.id == evidence.case_id).first()
         if not case or case.user_id != user_id:
-            raise HTTPException(status_code=403, detail=f"Unauthorized access to evidence {evidence_id}")
+            raise HTTPException(
+                status_code=403, detail=f"Unauthorized access to evidence {evidence_id}"
+            )
 
     # ========================================================================
     # Public Bulk Operation Methods
     # ========================================================================
 
     async def bulk_delete_cases(
-        self,
-        case_ids: List[int],
-        user_id: int,
-        options: Optional[BulkOperationOptions] = None
+        self, case_ids: List[int], user_id: int, options: Optional[BulkOperationOptions] = None
     ) -> BulkOperationResult:
         """
         Delete multiple cases in a transaction.
@@ -313,8 +319,8 @@ class BulkOperationService:
                 "operation_type": operation_type,
                 "total_items": len(case_ids),
                 "fail_fast": opts.fail_fast,
-                "batch_size": opts.batch_size
-            }
+                "batch_size": opts.batch_size,
+            },
         )
 
         success_count = 0
@@ -341,7 +347,9 @@ class BulkOperationService:
                             # Delete case
                             deleted = self.db.query(Case).filter(Case.id == case_id).delete()
                             if deleted == 0:
-                                raise HTTPException(status_code=404, detail=f"Case {case_id} not found")
+                                raise HTTPException(
+                                    status_code=404, detail=f"Case {case_id} not found"
+                                )
 
                             success_count += 1
 
@@ -352,11 +360,18 @@ class BulkOperationService:
                                 resource_type="case",
                                 resource_id=str(case_id),
                                 action="delete",
-                                details={"operation_id": operation_id, "batch": f"{batch_start}-{batch_end}"}
+                                details={
+                                    "operation_id": operation_id,
+                                    "batch": f"{batch_start}-{batch_end}",
+                                },
                             )
 
                         except (HTTPException, SQLAlchemyError) as item_error:
-                            error_message = str(item_error.detail if isinstance(item_error, HTTPException) else item_error)
+                            error_message = str(
+                                item_error.detail
+                                if isinstance(item_error, HTTPException)
+                                else item_error
+                            )
                             errors.append(BulkOperationError(item_id=case_id, error=error_message))
                             failure_count += 1
 
@@ -369,7 +384,7 @@ class BulkOperationService:
                                 action="delete",
                                 details={"operation_id": operation_id, "error": error_message},
                                 success=False,
-                                error_message=error_message
+                                error_message=error_message,
                             )
 
                             if opts.fail_fast:
@@ -393,10 +408,10 @@ class BulkOperationService:
                             action="rollback",
                             details={
                                 "reason": "Delete operation failed in fail_fast mode",
-                                "error": str(batch_error)
+                                "error": str(batch_error),
                             },
                             success=False,
-                            error_message=str(batch_error)
+                            error_message=str(batch_error),
                         )
                         raise
 
@@ -411,8 +426,8 @@ class BulkOperationService:
                     "total_items": len(case_ids),
                     "success_count": success_count,
                     "failure_count": failure_count,
-                    "errors": len(errors)
-                }
+                    "errors": len(errors),
+                },
             )
 
             return BulkOperationResult(
@@ -421,7 +436,7 @@ class BulkOperationService:
                 success_count=success_count,
                 failure_count=failure_count,
                 errors=errors,
-                rolled_back=rolled_back
+                rolled_back=rolled_back,
             )
 
         except Exception as error:
@@ -435,10 +450,10 @@ class BulkOperationService:
                 details={
                     "total_items": len(case_ids),
                     "processed_items": success_count + failure_count,
-                    "error": str(error)
+                    "error": str(error),
                 },
                 success=False,
-                error_message=str(error)
+                error_message=str(error),
             )
             raise
 
@@ -446,7 +461,7 @@ class BulkOperationService:
         self,
         updates: List[CaseUpdate],
         user_id: int,
-        options: Optional[BulkOperationOptions] = None
+        options: Optional[BulkOperationOptions] = None,
     ) -> BulkOperationResult:
         """
         Update multiple cases in a transaction.
@@ -488,8 +503,8 @@ class BulkOperationService:
                 "operation_type": operation_type,
                 "total_items": len(updates),
                 "fail_fast": opts.fail_fast,
-                "batch_size": opts.batch_size
-            }
+                "batch_size": opts.batch_size,
+            },
         )
 
         success_count = 0
@@ -513,24 +528,28 @@ class BulkOperationService:
                             # Build update dict (only non-None fields)
                             update_data = {}
                             if update.title is not None:
-                                update_data['title'] = update.title
+                                update_data["title"] = update.title
                             if update.description is not None:
-                                update_data['description'] = update.description
+                                update_data["description"] = update.description
                             if update.case_type is not None:
-                                update_data['case_type'] = update.case_type
+                                update_data["case_type"] = update.case_type
                             if update.status is not None:
-                                update_data['status'] = update.status
+                                update_data["status"] = update.status
 
                             if not update_data:
                                 raise ValueError("No fields to update")
 
                             # Add updated_at timestamp
-                            update_data['updated_at'] = datetime.now(timezone.utc)
+                            update_data["updated_at"] = datetime.now(timezone.utc)
 
                             # Update case
-                            updated = self.db.query(Case).filter(Case.id == update.id).update(update_data)
+                            updated = (
+                                self.db.query(Case).filter(Case.id == update.id).update(update_data)
+                            )
                             if updated == 0:
-                                raise HTTPException(status_code=404, detail=f"Case {update.id} not found")
+                                raise HTTPException(
+                                    status_code=404, detail=f"Case {update.id} not found"
+                                )
 
                             success_count += 1
 
@@ -544,13 +563,19 @@ class BulkOperationService:
                                 details={
                                     "operation_id": operation_id,
                                     "batch": f"{batch_start}-{batch_end}",
-                                    "updated_fields": list(update_data.keys())
-                                }
+                                    "updated_fields": list(update_data.keys()),
+                                },
                             )
 
                         except (HTTPException, SQLAlchemyError, ValueError) as item_error:
-                            error_message = str(item_error.detail if isinstance(item_error, HTTPException) else item_error)
-                            errors.append(BulkOperationError(item_id=update.id, error=error_message))
+                            error_message = str(
+                                item_error.detail
+                                if isinstance(item_error, HTTPException)
+                                else item_error
+                            )
+                            errors.append(
+                                BulkOperationError(item_id=update.id, error=error_message)
+                            )
                             failure_count += 1
 
                             # Audit: Case update failed
@@ -562,7 +587,7 @@ class BulkOperationService:
                                 action="update",
                                 details={"operation_id": operation_id, "error": error_message},
                                 success=False,
-                                error_message=error_message
+                                error_message=error_message,
                             )
 
                             if opts.fail_fast:
@@ -586,10 +611,10 @@ class BulkOperationService:
                             action="rollback",
                             details={
                                 "reason": "Update operation failed in fail_fast mode",
-                                "error": str(batch_error)
+                                "error": str(batch_error),
                             },
                             success=False,
-                            error_message=str(batch_error)
+                            error_message=str(batch_error),
                         )
                         raise
 
@@ -604,8 +629,8 @@ class BulkOperationService:
                     "total_items": len(updates),
                     "success_count": success_count,
                     "failure_count": failure_count,
-                    "errors": len(errors)
-                }
+                    "errors": len(errors),
+                },
             )
 
             return BulkOperationResult(
@@ -614,7 +639,7 @@ class BulkOperationService:
                 success_count=success_count,
                 failure_count=failure_count,
                 errors=errors,
-                rolled_back=rolled_back
+                rolled_back=rolled_back,
             )
 
         except Exception as error:
@@ -628,18 +653,15 @@ class BulkOperationService:
                 details={
                     "total_items": len(updates),
                     "processed_items": success_count + failure_count,
-                    "error": str(error)
+                    "error": str(error),
                 },
                 success=False,
-                error_message=str(error)
+                error_message=str(error),
             )
             raise
 
     async def bulk_archive_cases(
-        self,
-        case_ids: List[int],
-        user_id: int,
-        options: Optional[BulkOperationOptions] = None
+        self, case_ids: List[int], user_id: int, options: Optional[BulkOperationOptions] = None
     ) -> BulkOperationResult:
         """
         Archive multiple cases by setting status to 'closed'.
@@ -681,8 +703,8 @@ class BulkOperationService:
                 "operation_type": operation_type,
                 "total_items": len(case_ids),
                 "fail_fast": opts.fail_fast,
-                "batch_size": opts.batch_size
-            }
+                "batch_size": opts.batch_size,
+            },
         )
 
         success_count = 0
@@ -704,12 +726,20 @@ class BulkOperationService:
                             self._verify_case_ownership(case_id, user_id)
 
                             # Archive case (set status to closed)
-                            updated = self.db.query(Case).filter(Case.id == case_id).update({
-                                'status': CaseStatus.CLOSED,
-                                'updated_at': datetime.now(timezone.utc)
-                            })
+                            updated = (
+                                self.db.query(Case)
+                                .filter(Case.id == case_id)
+                                .update(
+                                    {
+                                        "status": CaseStatus.CLOSED,
+                                        "updated_at": datetime.now(timezone.utc),
+                                    }
+                                )
+                            )
                             if updated == 0:
-                                raise HTTPException(status_code=404, detail=f"Case {case_id} not found")
+                                raise HTTPException(
+                                    status_code=404, detail=f"Case {case_id} not found"
+                                )
 
                             success_count += 1
 
@@ -720,11 +750,18 @@ class BulkOperationService:
                                 resource_type="case",
                                 resource_id=str(case_id),
                                 action="archive",
-                                details={"operation_id": operation_id, "batch": f"{batch_start}-{batch_end}"}
+                                details={
+                                    "operation_id": operation_id,
+                                    "batch": f"{batch_start}-{batch_end}",
+                                },
                             )
 
                         except (HTTPException, SQLAlchemyError) as item_error:
-                            error_message = str(item_error.detail if isinstance(item_error, HTTPException) else item_error)
+                            error_message = str(
+                                item_error.detail
+                                if isinstance(item_error, HTTPException)
+                                else item_error
+                            )
                             errors.append(BulkOperationError(item_id=case_id, error=error_message))
                             failure_count += 1
 
@@ -737,7 +774,7 @@ class BulkOperationService:
                                 action="archive",
                                 details={"operation_id": operation_id, "error": error_message},
                                 success=False,
-                                error_message=error_message
+                                error_message=error_message,
                             )
 
                             if opts.fail_fast:
@@ -761,10 +798,10 @@ class BulkOperationService:
                             action="rollback",
                             details={
                                 "reason": "Archive operation failed in fail_fast mode",
-                                "error": str(batch_error)
+                                "error": str(batch_error),
                             },
                             success=False,
-                            error_message=str(batch_error)
+                            error_message=str(batch_error),
                         )
                         raise
 
@@ -779,8 +816,8 @@ class BulkOperationService:
                     "total_items": len(case_ids),
                     "success_count": success_count,
                     "failure_count": failure_count,
-                    "errors": len(errors)
-                }
+                    "errors": len(errors),
+                },
             )
 
             return BulkOperationResult(
@@ -789,7 +826,7 @@ class BulkOperationService:
                 success_count=success_count,
                 failure_count=failure_count,
                 errors=errors,
-                rolled_back=rolled_back
+                rolled_back=rolled_back,
             )
 
         except Exception as error:
@@ -803,18 +840,15 @@ class BulkOperationService:
                 details={
                     "total_items": len(case_ids),
                     "processed_items": success_count + failure_count,
-                    "error": str(error)
+                    "error": str(error),
                 },
                 success=False,
-                error_message=str(error)
+                error_message=str(error),
             )
             raise
 
     async def bulk_delete_evidence(
-        self,
-        evidence_ids: List[int],
-        user_id: int,
-        options: Optional[BulkOperationOptions] = None
+        self, evidence_ids: List[int], user_id: int, options: Optional[BulkOperationOptions] = None
     ) -> BulkOperationResult:
         """
         Delete multiple evidence items in a transaction.
@@ -856,8 +890,8 @@ class BulkOperationService:
                 "operation_type": operation_type,
                 "total_items": len(evidence_ids),
                 "fail_fast": opts.fail_fast,
-                "batch_size": opts.batch_size
-            }
+                "batch_size": opts.batch_size,
+            },
         )
 
         success_count = 0
@@ -879,9 +913,13 @@ class BulkOperationService:
                             self._verify_evidence_ownership(evidence_id, user_id)
 
                             # Delete evidence
-                            deleted = self.db.query(Evidence).filter(Evidence.id == evidence_id).delete()
+                            deleted = (
+                                self.db.query(Evidence).filter(Evidence.id == evidence_id).delete()
+                            )
                             if deleted == 0:
-                                raise HTTPException(status_code=404, detail=f"Evidence {evidence_id} not found")
+                                raise HTTPException(
+                                    status_code=404, detail=f"Evidence {evidence_id} not found"
+                                )
 
                             success_count += 1
 
@@ -892,12 +930,21 @@ class BulkOperationService:
                                 resource_type="evidence",
                                 resource_id=str(evidence_id),
                                 action="delete",
-                                details={"operation_id": operation_id, "batch": f"{batch_start}-{batch_end}"}
+                                details={
+                                    "operation_id": operation_id,
+                                    "batch": f"{batch_start}-{batch_end}",
+                                },
                             )
 
                         except (HTTPException, SQLAlchemyError) as item_error:
-                            error_message = str(item_error.detail if isinstance(item_error, HTTPException) else item_error)
-                            errors.append(BulkOperationError(item_id=evidence_id, error=error_message))
+                            error_message = str(
+                                item_error.detail
+                                if isinstance(item_error, HTTPException)
+                                else item_error
+                            )
+                            errors.append(
+                                BulkOperationError(item_id=evidence_id, error=error_message)
+                            )
                             failure_count += 1
 
                             # Audit: Evidence deletion failed
@@ -909,7 +956,7 @@ class BulkOperationService:
                                 action="delete",
                                 details={"operation_id": operation_id, "error": error_message},
                                 success=False,
-                                error_message=error_message
+                                error_message=error_message,
                             )
 
                             if opts.fail_fast:
@@ -933,10 +980,10 @@ class BulkOperationService:
                             action="rollback",
                             details={
                                 "reason": "Delete evidence operation failed in fail_fast mode",
-                                "error": str(batch_error)
+                                "error": str(batch_error),
                             },
                             success=False,
-                            error_message=str(batch_error)
+                            error_message=str(batch_error),
                         )
                         raise
 
@@ -951,8 +998,8 @@ class BulkOperationService:
                     "total_items": len(evidence_ids),
                     "success_count": success_count,
                     "failure_count": failure_count,
-                    "errors": len(errors)
-                }
+                    "errors": len(errors),
+                },
             )
 
             return BulkOperationResult(
@@ -961,7 +1008,7 @@ class BulkOperationService:
                 success_count=success_count,
                 failure_count=failure_count,
                 errors=errors,
-                rolled_back=rolled_back
+                rolled_back=rolled_back,
             )
 
         except Exception as error:
@@ -975,17 +1022,14 @@ class BulkOperationService:
                 details={
                     "total_items": len(evidence_ids),
                     "processed_items": success_count + failure_count,
-                    "error": str(error)
+                    "error": str(error),
                 },
                 success=False,
-                error_message=str(error)
+                error_message=str(error),
             )
             raise
 
-    async def get_operation_progress(
-        self,
-        operation_id: str
-    ) -> Optional[BulkOperationProgress]:
+    async def get_operation_progress(self, operation_id: str) -> Optional[BulkOperationProgress]:
         """
         Get operation progress by reconstructing from events.
 
@@ -1022,7 +1066,7 @@ class BulkOperationService:
                 status="completed",
                 errors=[],
                 started_at=datetime.now(timezone.utc),
-                completed_at=datetime.now(timezone.utc)
+                completed_at=datetime.now(timezone.utc),
             )
         except Exception as e:
             logger.warning(f"Failed to get operation progress for {operation_id}: {e}")

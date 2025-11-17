@@ -37,9 +37,8 @@ import logging
 from backend.models.backup import (
     BackupSettings,
     BackupFrequency,
-    BackupSettingsCreate,
     BackupSettingsUpdate,
-    BackupSettingsResponse
+    BackupSettingsResponse,
 )
 from backend.services.backup.backup_service import BackupService
 from backend.services.backup.backup_retention_policy import BackupRetentionPolicy
@@ -81,7 +80,7 @@ class BackupScheduler:
         backup_service: BackupService,
         retention_policy: BackupRetentionPolicy,
         audit_logger=None,
-        check_interval: int = 60  # 1 minute
+        check_interval: int = 60,  # 1 minute
     ):
         """
         Initialize backup scheduler.
@@ -109,7 +108,7 @@ class BackupScheduler:
         db: Session,
         backup_service: BackupService,
         retention_policy: BackupRetentionPolicy,
-        audit_logger=None
+        audit_logger=None,
     ) -> "BackupScheduler":
         """
         Get singleton instance of BackupScheduler.
@@ -135,7 +134,7 @@ class BackupScheduler:
         action: str,
         success: bool = True,
         details: Optional[Dict] = None,
-        error_message: Optional[str] = None
+        error_message: Optional[str] = None,
     ) -> None:
         """Log audit event if audit logger is configured."""
         if self.audit_logger:
@@ -147,7 +146,7 @@ class BackupScheduler:
                 action=action,
                 success=success,
                 details=details or {},
-                error_message=error_message
+                error_message=error_message,
             )
 
     async def start(self) -> None:
@@ -182,7 +181,7 @@ class BackupScheduler:
                 user_id=None,
                 resource_id="scheduler",
                 action="start",
-                success=True
+                success=True,
             )
 
         except Exception as error:
@@ -195,7 +194,7 @@ class BackupScheduler:
                 resource_id="scheduler",
                 action="start",
                 success=False,
-                error_message=str(error)
+                error_message=str(error),
             )
 
             raise
@@ -222,7 +221,7 @@ class BackupScheduler:
                 user_id=None,
                 resource_id="scheduler",
                 action="stop",
-                success=True
+                success=True,
             )
 
         except Exception as error:
@@ -234,7 +233,7 @@ class BackupScheduler:
                 resource_id="scheduler",
                 action="stop",
                 success=False,
-                error_message=str(error)
+                error_message=str(error),
             )
 
     async def _run_scheduler(self) -> None:
@@ -270,12 +269,12 @@ class BackupScheduler:
             now = datetime.utcnow()
 
             # Get all enabled backup settings where next_backup_at <= NOW
-            due_backups = self.db.query(BackupSettings).filter(
-                and_(
-                    BackupSettings.enabled == True,
-                    BackupSettings.next_backup_at <= now
-                )
-            ).order_by(BackupSettings.next_backup_at.asc()).all()
+            due_backups = (
+                self.db.query(BackupSettings)
+                .filter(and_(BackupSettings.enabled, BackupSettings.next_backup_at <= now))
+                .order_by(BackupSettings.next_backup_at.asc())
+                .all()
+            )
 
             if len(due_backups) == 0:
                 return
@@ -295,7 +294,7 @@ class BackupScheduler:
                 resource_id="check",
                 action="check",
                 success=False,
-                error_message=str(error)
+                error_message=str(error),
             )
 
     async def _run_scheduled_backup(self, settings: BackupSettings) -> None:
@@ -316,9 +315,7 @@ class BackupScheduler:
             filename = f"auto_backup_user{settings.user_id}_{timestamp}"
             backup = self.backup_service.create_backup(filename)
 
-            logger.info(
-                f"Auto-backup created: {backup.filename} ({backup.size} bytes)"
-            )
+            logger.info(f"Auto-backup created: {backup.filename} ({backup.size} bytes)")
 
             # Apply retention policy
             deleted_count = await self.retention_policy.apply_retention_policy(settings.keep_count)
@@ -329,8 +326,7 @@ class BackupScheduler:
             # Update last_backup_at and calculate next_backup_at
             last_backup_at = datetime.utcnow()
             next_backup_at = self._calculate_next_backup_time(
-                settings.frequency,
-                settings.backup_time
+                settings.frequency, settings.backup_time
             )
 
             settings.last_backup_at = last_backup_at
@@ -339,9 +335,7 @@ class BackupScheduler:
 
             self.db.commit()
 
-            logger.info(
-                f"Next backup for user {settings.user_id} scheduled for {next_backup_at}"
-            )
+            logger.info(f"Next backup for user {settings.user_id} scheduled for {next_backup_at}")
 
             self._log_audit(
                 event_type="backup_scheduler.backup_completed",
@@ -354,8 +348,8 @@ class BackupScheduler:
                     "size": backup.size,
                     "frequency": settings.frequency,
                     "next_backup_at": next_backup_at.isoformat(),
-                    "deleted_old_backups": deleted_count
-                }
+                    "deleted_old_backups": deleted_count,
+                },
             )
 
         except Exception as error:
@@ -363,7 +357,7 @@ class BackupScheduler:
 
             logger.error(
                 f"Failed to run scheduled backup for user {settings.user_id}: {str(error)}",
-                exc_info=True
+                exc_info=True,
             )
 
             self._log_audit(
@@ -372,7 +366,7 @@ class BackupScheduler:
                 resource_id=str(settings.id),
                 action="backup",
                 success=False,
-                error_message=str(error)
+                error_message=str(error),
             )
 
     def _calculate_next_backup_time(self, frequency: str, backup_time: str) -> datetime:
@@ -418,9 +412,9 @@ class BackupScheduler:
             Backup settings or None if not found
         """
         try:
-            settings = self.db.query(BackupSettings).filter(
-                BackupSettings.user_id == user_id
-            ).first()
+            settings = (
+                self.db.query(BackupSettings).filter(BackupSettings.user_id == user_id).first()
+            )
 
             if settings:
                 return BackupSettingsResponse.model_validate(settings)
@@ -432,9 +426,7 @@ class BackupScheduler:
             return None
 
     def update_backup_settings(
-        self,
-        user_id: int,
-        input_data: BackupSettingsUpdate
+        self, user_id: int, input_data: BackupSettingsUpdate
     ) -> BackupSettingsResponse:
         """
         Update or create backup settings for a user.
@@ -451,9 +443,9 @@ class BackupScheduler:
         """
         try:
             # Check if settings exist
-            existing = self.db.query(BackupSettings).filter(
-                BackupSettings.user_id == user_id
-            ).first()
+            existing = (
+                self.db.query(BackupSettings).filter(BackupSettings.user_id == user_id).first()
+            )
 
             now = datetime.utcnow()
 
@@ -474,8 +466,7 @@ class BackupScheduler:
                 # Recalculate next backup time if enabled
                 if existing.enabled:
                     existing.next_backup_at = self._calculate_next_backup_time(
-                        existing.frequency,
-                        existing.backup_time
+                        existing.frequency, existing.backup_time
                     )
                 else:
                     existing.next_backup_at = None
@@ -492,7 +483,7 @@ class BackupScheduler:
                     user_id=user_id,
                     resource_id=str(existing.id),
                     action="update",
-                    success=True
+                    success=True,
                 )
 
                 return BackupSettingsResponse.model_validate(existing)
@@ -502,18 +493,21 @@ class BackupScheduler:
                 new_settings = BackupSettings(
                     user_id=user_id,
                     enabled=input_data.enabled if input_data.enabled is not None else True,
-                    frequency=input_data.frequency.value if input_data.frequency else BackupFrequency.DAILY.value,
+                    frequency=(
+                        input_data.frequency.value
+                        if input_data.frequency
+                        else BackupFrequency.DAILY.value
+                    ),
                     backup_time=input_data.backup_time if input_data.backup_time else "03:00",
                     keep_count=input_data.keep_count if input_data.keep_count is not None else 7,
                     created_at=now,
-                    updated_at=now
+                    updated_at=now,
                 )
 
                 # Calculate next backup time if enabled
                 if new_settings.enabled:
                     new_settings.next_backup_at = self._calculate_next_backup_time(
-                        new_settings.frequency,
-                        new_settings.backup_time
+                        new_settings.frequency, new_settings.backup_time
                     )
 
                 self.db.add(new_settings)
@@ -527,7 +521,7 @@ class BackupScheduler:
                     user_id=user_id,
                     resource_id=str(new_settings.id),
                     action="create",
-                    success=True
+                    success=True,
                 )
 
                 return BackupSettingsResponse.model_validate(new_settings)
@@ -543,7 +537,7 @@ class BackupScheduler:
                 resource_id="unknown",
                 action="update",
                 success=False,
-                error_message=str(error)
+                error_message=str(error),
             )
 
             raise
@@ -557,9 +551,9 @@ class BackupScheduler:
             check interval, and number of enabled backup settings
         """
         try:
-            enabled_count = self.db.query(BackupSettings).filter(
-                BackupSettings.enabled == True
-            ).count()
+            enabled_count = (
+                self.db.query(BackupSettings).filter(BackupSettings.enabled).count()
+            )
 
             total_count = self.db.query(BackupSettings).count()
 
@@ -567,7 +561,7 @@ class BackupScheduler:
                 "is_running": self.is_running,
                 "check_interval_seconds": self.check_interval,
                 "enabled_backup_settings": enabled_count,
-                "total_backup_settings": total_count
+                "total_backup_settings": total_count,
             }
 
         except Exception as error:
@@ -577,5 +571,5 @@ class BackupScheduler:
                 "check_interval_seconds": self.check_interval,
                 "enabled_backup_settings": 0,
                 "total_backup_settings": 0,
-                "error": str(error)
+                "error": str(error),
             }

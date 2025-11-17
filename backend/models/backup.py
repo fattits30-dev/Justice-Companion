@@ -20,6 +20,7 @@ from backend.models.base import Base
 
 class BackupFrequency(str, Enum):
     """Backup frequency options."""
+
     DAILY = "daily"
     WEEKLY = "weekly"
     MONTHLY = "monthly"
@@ -76,11 +77,19 @@ class BackupSettings(Base):
 
 # Pydantic models for validation and serialization
 
+
 class BackupSettingsCreate(BaseModel):
     """Input model for creating backup settings."""
+
     enabled: bool = Field(default=True, description="Enable automatic backups")
-    frequency: BackupFrequency = Field(default=BackupFrequency.DAILY, description="Backup frequency")
-    backup_time: str = Field(default="03:00", pattern=r"^([0-1][0-9]|2[0-3]):[0-5][0-9]$", description="Backup time (HH:MM)")
+    frequency: BackupFrequency = Field(
+        default=BackupFrequency.DAILY, description="Backup frequency"
+    )
+    backup_time: str = Field(
+        default="03:00",
+        pattern=r"^([0-1][0-9]|2[0-3]):[0-5][0-9]$",
+        description="Backup time (HH:MM)",
+    )
     keep_count: int = Field(default=7, ge=1, le=30, description="Number of backups to retain")
 
     model_config = ConfigDict(use_enum_values=True)
@@ -88,9 +97,12 @@ class BackupSettingsCreate(BaseModel):
 
 class BackupSettingsUpdate(BaseModel):
     """Input model for updating backup settings."""
+
     enabled: Optional[bool] = Field(None, description="Enable automatic backups")
     frequency: Optional[BackupFrequency] = Field(None, description="Backup frequency")
-    backup_time: Optional[str] = Field(None, pattern=r"^([0-1][0-9]|2[0-3]):[0-5][0-9]$", description="Backup time (HH:MM)")
+    backup_time: Optional[str] = Field(
+        None, pattern=r"^([0-1][0-9]|2[0-3]):[0-5][0-9]$", description="Backup time (HH:MM)"
+    )
     keep_count: Optional[int] = Field(None, ge=1, le=30, description="Number of backups to retain")
 
     model_config = ConfigDict(use_enum_values=True)
@@ -98,6 +110,7 @@ class BackupSettingsUpdate(BaseModel):
 
 class BackupSettingsResponse(BaseModel):
     """Response model for backup settings."""
+
     id: int
     user_id: int
     enabled: bool
@@ -114,17 +127,21 @@ class BackupSettingsResponse(BaseModel):
 
 class BackupMetadataResponse(BaseModel):
     """Response model for backup file metadata."""
+
     filename: str = Field(..., description="Backup filename")
     filepath: str = Field(..., description="Full path to backup file")
     size: int = Field(..., description="File size in bytes")
     created_at: str = Field(..., description="Backup creation timestamp (ISO format)")
-    is_protected: bool = Field(default=False, description="Whether backup is protected from retention policy")
+    is_protected: bool = Field(
+        default=False, description="Whether backup is protected from retention policy"
+    )
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class RetentionSummaryResponse(BaseModel):
     """Response model for retention policy summary."""
+
     total: int = Field(..., description="Total number of backups")
     protected: int = Field(..., description="Number of protected backups")
     to_keep: int = Field(..., description="Number of backups to keep")

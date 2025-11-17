@@ -24,14 +24,13 @@ from .responses import (
 
 __all__ = [
     # Request models
-    'DocumentAnalysisRequest',
-    'ParsedDocument',
-    'UserProfile',
-
+    "DocumentAnalysisRequest",
+    "ParsedDocument",
+    "UserProfile",
     # Response models
-    'DocumentAnalysisResponse',
-    'SuggestedCaseData',
-    'ConfidenceScores',
-    'ExtractionSource',
-    'ExtractedFields',
+    "DocumentAnalysisResponse",
+    "SuggestedCaseData",
+    "ConfidenceScores",
+    "ExtractionSource",
+    "ExtractedFields",
 ]

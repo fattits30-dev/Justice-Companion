@@ -358,27 +358,33 @@ export class ApiClient {
       }>
     > => {
       try {
-        // Backend returns data directly (not wrapped in success/data envelope)
-        const directResponse = await this.post<{
-          user: {
-            id: number;
-            username: string;
-            email: string;
-            role: string;
-            is_active: boolean;
-          };
-          session: {
-            id: string;
-            user_id: number;
-            expires_at: string;
+        // Backend wraps 200 OK responses with {success: true, data: {...}}
+        const wrappedResponse = await this.post<{
+          success: true;
+          data: {
+            user: {
+              id: number;
+              username: string;
+              email: string;
+              role: string;
+              is_active: boolean;
+            };
+            session: {
+              id: string;
+              user_id: number;
+              expires_at: string;
+            };
           };
         }>("/auth/login", { username, password, remember_me });
+
+        // Extract the data from the wrapped response
+        const directResponse = wrappedResponse.data;
 
         // Store session ID after successful login
         this.setSessionId(directResponse.session.id);
         localStorage.setItem("sessionId", directResponse.session.id);
 
-        // Wrap in ApiResponse format for consistency
+        // Return in ApiResponse format for consistency
         return {
           success: true,
           data: directResponse,
@@ -570,7 +576,7 @@ export class ApiClient {
      * Get all evidence for a case (alias for list)
      */
     listByCase: async (caseId: number): Promise<ApiResponse<Evidence[]>> => {
-      return this.list(caseId);
+      return this.evidence.list(caseId);
     },
 
     /**

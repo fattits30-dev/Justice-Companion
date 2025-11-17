@@ -30,17 +30,14 @@ NO AUTHENTICATION REQUIRED - System monitoring endpoints.
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field, ConfigDict, field_validator
 from typing import Optional, List, Dict, Any, Literal
-from datetime import datetime, timezone
+from datetime import datetime
 from sqlalchemy.orm import Session
 
 from backend.models.base import get_db
 from backend.services.enhanced_error_tracker import (
     EnhancedErrorTracker,
     ErrorData,
-    ErrorMetrics,
-    ErrorTrackerStats,
     ErrorLevel,
-    ErrorContext
 )
 from backend.services.audit_logger import AuditLogger
 
@@ -49,6 +46,7 @@ router = APIRouter(prefix="/action-logs", tags=["action-logs"])
 
 
 # ===== DEPENDENCY INJECTION =====
+
 
 def get_error_tracker(db: Session = Depends(get_db)) -> EnhancedErrorTracker:
     """
@@ -72,10 +70,16 @@ def get_audit_logger(db: Session = Depends(get_db)) -> AuditLogger:
 
 # ===== PYDANTIC REQUEST MODELS =====
 
+
 class LogActionRequest(BaseModel):
     """Request model for logging an action."""
-    service: str = Field(..., min_length=1, max_length=100, description="Service name (e.g., 'CaseService')")
-    action: str = Field(..., min_length=1, max_length=100, description="Action name (e.g., 'createCase')")
+
+    service: str = Field(
+        ..., min_length=1, max_length=100, description="Service name (e.g., 'CaseService')"
+    )
+    action: str = Field(
+        ..., min_length=1, max_length=100, description="Action name (e.g., 'createCase')"
+    )
     status: Literal["success", "failed"] = Field(..., description="Action status")
     duration: int = Field(..., ge=0, le=3600000, description="Duration in milliseconds")
     level: ErrorLevel = Field(default="info", description="Severity level")
@@ -83,25 +87,28 @@ class LogActionRequest(BaseModel):
     stack: Optional[str] = Field(None, description="Stack trace if available")
     context: Optional[Dict[str, Any]] = Field(None, description="Additional context")
 
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "service": "CaseService",
-            "action": "createCase",
-            "status": "success",
-            "duration": 45,
-            "level": "info"
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "service": "CaseService",
+                "action": "createCase",
+                "status": "success",
+                "duration": 45,
+                "level": "info",
+            }
         }
-    })
+    )
 
 
 class SearchLogsRequest(BaseModel):
     """Request model for searching logs."""
+
     keyword: str = Field(..., min_length=1, max_length=200, description="Search keyword")
     level: Optional[ErrorLevel] = Field(None, description="Filter by severity level")
     service: Optional[str] = Field(None, description="Filter by service name")
     limit: int = Field(default=50, ge=1, le=500, description="Maximum results")
 
-    @field_validator('keyword')
+    @field_validator("keyword")
     @classmethod
     def strip_keyword(cls, v: str) -> str:
         return v.strip()
@@ -109,8 +116,10 @@ class SearchLogsRequest(BaseModel):
 
 # ===== PYDANTIC RESPONSE MODELS =====
 
+
 class ActionLogResponse(BaseModel):
     """Response model for a single action log entry."""
+
     id: str
     timestamp: str
     service: Optional[str] = None
@@ -122,39 +131,38 @@ class ActionLogResponse(BaseModel):
     fingerprint: Optional[str] = None
     context: Optional[Dict[str, Any]] = None
 
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "id": "550e8400-e29b-41d4-a716-446655440000",
-            "timestamp": "2025-11-13T12:00:00Z",
-            "service": "CaseService",
-            "action": "createCase",
-            "level": "info",
-            "name": "ActionSuccess",
-            "message": "Case created successfully",
-            "fingerprint": "abc123def456"
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "id": "550e8400-e29b-41d4-a716-446655440000",
+                "timestamp": "2025-11-13T12:00:00Z",
+                "service": "CaseService",
+                "action": "createCase",
+                "level": "info",
+                "name": "ActionSuccess",
+                "message": "Case created successfully",
+                "fingerprint": "abc123def456",
+            }
         }
-    })
+    )
 
 
 class ActionLogsListResponse(BaseModel):
     """Response model for list of action logs."""
+
     logs: List[ActionLogResponse]
     total: int
     limit: int
     offset: int
 
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "logs": [],
-            "total": 150,
-            "limit": 50,
-            "offset": 0
-        }
-    })
+    model_config = ConfigDict(
+        json_schema_extra={"example": {"logs": [], "total": 150, "limit": 50, "offset": 0}}
+    )
 
 
 class ActionStatsResponse(BaseModel):
     """Response model for action log statistics."""
+
     total_errors: int
     total_groups: int
     errors_sampled: int
@@ -163,21 +171,24 @@ class ActionStatsResponse(BaseModel):
     avg_processing_time: float
     memory_usage: float
 
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "total_errors": 150,
-            "total_groups": 12,
-            "errors_sampled": 45,
-            "errors_rate_limited": 3,
-            "alerts_triggered": 2,
-            "avg_processing_time": 2.5,
-            "memory_usage": 0.5
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "total_errors": 150,
+                "total_groups": 12,
+                "errors_sampled": 45,
+                "errors_rate_limited": 3,
+                "alerts_triggered": 2,
+                "avg_processing_time": 2.5,
+                "memory_usage": 0.5,
+            }
         }
-    })
+    )
 
 
 class ActionMetricsResponse(BaseModel):
     """Response model for comprehensive error metrics."""
+
     total_errors: int
     error_rate: float
     affected_users: int
@@ -186,33 +197,36 @@ class ActionMetricsResponse(BaseModel):
     top_errors: List[Dict[str, Any]]
     recent_errors: List[ActionLogResponse]
 
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "total_errors": 150,
-            "error_rate": 0.05,
-            "affected_users": 12,
-            "mttr": 900000,
-            "error_distribution": [],
-            "top_errors": [],
-            "recent_errors": []
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "total_errors": 150,
+                "error_rate": 0.05,
+                "affected_users": 12,
+                "mttr": 900000,
+                "error_distribution": [],
+                "top_errors": [],
+                "recent_errors": [],
+            }
         }
-    })
+    )
 
 
 class ClearLogsResponse(BaseModel):
     """Response model for clearing logs."""
+
     message: str
     cleared_groups: int
 
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "message": "Action logs cleared successfully",
-            "cleared_groups": 12
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {"message": "Action logs cleared successfully", "cleared_groups": 12}
         }
-    })
+    )
 
 
 # ===== HELPER FUNCTIONS =====
+
 
 def _map_error_data_to_response(error: ErrorData) -> ActionLogResponse:
     """
@@ -243,14 +257,12 @@ def _map_error_data_to_response(error: ErrorData) -> ActionLogResponse:
         message=error.message,
         stack=error.stack,
         fingerprint=error.fingerprint,
-        context=error.context.model_dump() if error.context else None
+        context=error.context.model_dump() if error.context else None,
     )
 
 
 def _get_recent_errors_from_tracker(
-    tracker: EnhancedErrorTracker,
-    limit: int,
-    level_filter: Optional[ErrorLevel] = None
+    tracker: EnhancedErrorTracker, limit: int, level_filter: Optional[ErrorLevel] = None
 ) -> List[ErrorData]:
     """
     Get recent errors from tracker with optional level filtering.
@@ -275,8 +287,7 @@ def _get_recent_errors_from_tracker(
 
     # Sort by timestamp (most recent first)
     all_errors.sort(
-        key=lambda e: datetime.fromisoformat(e.timestamp.replace('Z', '+00:00')),
-        reverse=True
+        key=lambda e: datetime.fromisoformat(e.timestamp.replace("Z", "+00:00")), reverse=True
     )
 
     return all_errors[:limit]
@@ -284,11 +295,12 @@ def _get_recent_errors_from_tracker(
 
 # ===== ROUTES =====
 
+
 @router.get("/recent", response_model=ActionLogsListResponse)
 async def get_recent_actions(
     limit: int = Query(100, ge=1, le=1000, description="Maximum number of logs to return"),
     offset: int = Query(0, ge=0, description="Pagination offset"),
-    tracker: EnhancedErrorTracker = Depends(get_error_tracker)
+    tracker: EnhancedErrorTracker = Depends(get_error_tracker),
 ):
     """
     Get recent action logs.
@@ -311,22 +323,19 @@ async def get_recent_actions(
         recent_errors = _get_recent_errors_from_tracker(tracker, limit + offset)
 
         # Apply pagination
-        paginated_errors = recent_errors[offset:offset + limit]
+        paginated_errors = recent_errors[offset: offset + limit]
 
         # Map to response models
         logs = [_map_error_data_to_response(error) for error in paginated_errors]
 
         return ActionLogsListResponse(
-            logs=logs,
-            total=len(recent_errors),
-            limit=limit,
-            offset=offset
+            logs=logs, total=len(recent_errors), limit=limit, offset=offset
         )
 
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get recent actions: {str(e)}"
+            detail=f"Failed to get recent actions: {str(e)}",
         )
 
 
@@ -334,7 +343,7 @@ async def get_recent_actions(
 async def get_failed_actions(
     limit: int = Query(50, ge=1, le=1000, description="Maximum number of failed logs to return"),
     offset: int = Query(0, ge=0, description="Pagination offset"),
-    tracker: EnhancedErrorTracker = Depends(get_error_tracker)
+    tracker: EnhancedErrorTracker = Depends(get_error_tracker),
 ):
     """
     Get failed action logs.
@@ -357,28 +366,22 @@ async def get_failed_actions(
         all_errors = _get_recent_errors_from_tracker(tracker, 10000)
 
         # Filter by ERROR and CRITICAL levels
-        failed_errors = [
-            e for e in all_errors
-            if e.level in ["error", "critical"]
-        ]
+        failed_errors = [e for e in all_errors if e.level in ["error", "critical"]]
 
         # Apply pagination
-        paginated_errors = failed_errors[offset:offset + limit]
+        paginated_errors = failed_errors[offset: offset + limit]
 
         # Map to response models
         logs = [_map_error_data_to_response(error) for error in paginated_errors]
 
         return ActionLogsListResponse(
-            logs=logs,
-            total=len(failed_errors),
-            limit=limit,
-            offset=offset
+            logs=logs, total=len(failed_errors), limit=limit, offset=offset
         )
 
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get failed actions: {str(e)}"
+            detail=f"Failed to get failed actions: {str(e)}",
         )
 
 
@@ -386,7 +389,7 @@ async def get_failed_actions(
 async def get_error_logs(
     limit: int = Query(50, ge=1, le=1000, description="Maximum number of error logs to return"),
     offset: int = Query(0, ge=0, description="Pagination offset"),
-    tracker: EnhancedErrorTracker = Depends(get_error_tracker)
+    tracker: EnhancedErrorTracker = Depends(get_error_tracker),
 ):
     """
     Get error logs (severity: ERROR, CRITICAL).
@@ -411,7 +414,7 @@ async def get_error_logs(
 async def get_warning_logs(
     limit: int = Query(50, ge=1, le=1000, description="Maximum number of warning logs to return"),
     offset: int = Query(0, ge=0, description="Pagination offset"),
-    tracker: EnhancedErrorTracker = Depends(get_error_tracker)
+    tracker: EnhancedErrorTracker = Depends(get_error_tracker),
 ):
     """
     Get warning logs (severity: WARNING).
@@ -437,22 +440,19 @@ async def get_warning_logs(
         warning_errors = [e for e in all_errors if e.level == "warning"]
 
         # Apply pagination
-        paginated_errors = warning_errors[offset:offset + limit]
+        paginated_errors = warning_errors[offset: offset + limit]
 
         # Map to response models
         logs = [_map_error_data_to_response(error) for error in paginated_errors]
 
         return ActionLogsListResponse(
-            logs=logs,
-            total=len(warning_errors),
-            limit=limit,
-            offset=offset
+            logs=logs, total=len(warning_errors), limit=limit, offset=offset
         )
 
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get warning logs: {str(e)}"
+            detail=f"Failed to get warning logs: {str(e)}",
         )
 
 
@@ -461,7 +461,7 @@ async def get_logs_by_level(
     level: ErrorLevel,
     limit: int = Query(50, ge=1, le=1000, description="Maximum number of logs to return"),
     offset: int = Query(0, ge=0, description="Pagination offset"),
-    tracker: EnhancedErrorTracker = Depends(get_error_tracker)
+    tracker: EnhancedErrorTracker = Depends(get_error_tracker),
 ):
     """
     Get logs by severity level.
@@ -489,22 +489,19 @@ async def get_logs_by_level(
         level_errors = _get_recent_errors_from_tracker(tracker, 10000, level_filter=level)
 
         # Apply pagination
-        paginated_errors = level_errors[offset:offset + limit]
+        paginated_errors = level_errors[offset: offset + limit]
 
         # Map to response models
         logs = [_map_error_data_to_response(error) for error in paginated_errors]
 
         return ActionLogsListResponse(
-            logs=logs,
-            total=len(level_errors),
-            limit=limit,
-            offset=offset
+            logs=logs, total=len(level_errors), limit=limit, offset=offset
         )
 
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get logs by level: {str(e)}"
+            detail=f"Failed to get logs by level: {str(e)}",
         )
 
 
@@ -513,7 +510,7 @@ async def get_actions_by_service(
     service: str,
     limit: int = Query(100, ge=1, le=1000, description="Maximum number of logs to return"),
     offset: int = Query(0, ge=0, description="Pagination offset"),
-    tracker: EnhancedErrorTracker = Depends(get_error_tracker)
+    tracker: EnhancedErrorTracker = Depends(get_error_tracker),
 ):
     """
     Get action logs for a specific service.
@@ -546,29 +543,24 @@ async def get_actions_by_service(
                     service_errors.append(error)
 
         # Apply pagination
-        paginated_errors = service_errors[offset:offset + limit]
+        paginated_errors = service_errors[offset: offset + limit]
 
         # Map to response models
         logs = [_map_error_data_to_response(error) for error in paginated_errors]
 
         return ActionLogsListResponse(
-            logs=logs,
-            total=len(service_errors),
-            limit=limit,
-            offset=offset
+            logs=logs, total=len(service_errors), limit=limit, offset=offset
         )
 
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get actions by service: {str(e)}"
+            detail=f"Failed to get actions by service: {str(e)}",
         )
 
 
 @router.get("/stats", response_model=ActionStatsResponse)
-async def get_action_stats(
-    tracker: EnhancedErrorTracker = Depends(get_error_tracker)
-):
+async def get_action_stats(tracker: EnhancedErrorTracker = Depends(get_error_tracker)):
     """
     Get action log statistics.
 
@@ -599,20 +591,22 @@ async def get_action_stats(
             errors_rate_limited=stats.errors_rate_limited,
             alerts_triggered=stats.alerts_triggered,
             avg_processing_time=stats.avg_processing_time,
-            memory_usage=stats.memory_usage
+            memory_usage=stats.memory_usage,
         )
 
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get action stats: {str(e)}"
+            detail=f"Failed to get action stats: {str(e)}",
         )
 
 
 @router.get("/metrics", response_model=ActionMetricsResponse)
 async def get_action_metrics(
-    time_range: str = Query("1h", pattern="^(1h|6h|24h|7d|30d)$", description="Time range for metrics"),
-    tracker: EnhancedErrorTracker = Depends(get_error_tracker)
+    time_range: str = Query(
+        "1h", pattern="^(1h|6h|24h|7d|30d)$", description="Time range for metrics"
+    ),
+    tracker: EnhancedErrorTracker = Depends(get_error_tracker),
 ):
     """
     Get comprehensive error metrics for dashboard.
@@ -640,11 +634,7 @@ async def get_action_metrics(
 
         # Map error distribution
         error_distribution = [
-            {
-                "type": dist.type,
-                "count": dist.count,
-                "percentage": dist.percentage
-            }
+            {"type": dist.type, "count": dist.count, "percentage": dist.percentage}
             for dist in metrics.error_distribution
         ]
 
@@ -654,16 +644,13 @@ async def get_action_metrics(
                 "fingerprint": error.fingerprint,
                 "message": error.message,
                 "count": error.count,
-                "last_seen": error.last_seen
+                "last_seen": error.last_seen,
             }
             for error in metrics.top_errors
         ]
 
         # Map recent errors
-        recent_errors = [
-            _map_error_data_to_response(error)
-            for error in metrics.recent_errors
-        ]
+        recent_errors = [_map_error_data_to_response(error) for error in metrics.recent_errors]
 
         return ActionMetricsResponse(
             total_errors=metrics.total_errors,
@@ -672,13 +659,13 @@ async def get_action_metrics(
             mttr=metrics.mttr,
             error_distribution=error_distribution,
             top_errors=top_errors,
-            recent_errors=recent_errors
+            recent_errors=recent_errors,
         )
 
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get action metrics: {str(e)}"
+            detail=f"Failed to get action metrics: {str(e)}",
         )
 
 
@@ -689,7 +676,7 @@ async def search_logs(
     service: Optional[str] = Query(None, description="Filter by service name"),
     limit: int = Query(50, ge=1, le=500, description="Maximum results"),
     offset: int = Query(0, ge=0, description="Pagination offset"),
-    tracker: EnhancedErrorTracker = Depends(get_error_tracker)
+    tracker: EnhancedErrorTracker = Depends(get_error_tracker),
 ):
     """
     Search logs by keyword.
@@ -721,9 +708,9 @@ async def search_logs(
         for error in all_errors:
             # Check if keyword matches message, name, or stack
             matches = (
-                keyword_lower in error.message.lower() or
-                keyword_lower in error.name.lower() or
-                (error.stack and keyword_lower in error.stack.lower())
+                keyword_lower in error.message.lower()
+                or keyword_lower in error.name.lower()
+                or (error.stack and keyword_lower in error.stack.lower())
             )
 
             if matches:
@@ -744,29 +731,24 @@ async def search_logs(
                 matching_errors.append(error)
 
         # Apply pagination
-        paginated_errors = matching_errors[offset:offset + limit]
+        paginated_errors = matching_errors[offset: offset + limit]
 
         # Map to response models
         logs = [_map_error_data_to_response(error) for error in paginated_errors]
 
         return ActionLogsListResponse(
-            logs=logs,
-            total=len(matching_errors),
-            limit=limit,
-            offset=offset
+            logs=logs, total=len(matching_errors), limit=limit, offset=offset
         )
 
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to search logs: {str(e)}"
+            detail=f"Failed to search logs: {str(e)}",
         )
 
 
 @router.post("/clear", response_model=ClearLogsResponse, status_code=status.HTTP_200_OK)
-async def clear_action_logs(
-    tracker: EnhancedErrorTracker = Depends(get_error_tracker)
-):
+async def clear_action_logs(tracker: EnhancedErrorTracker = Depends(get_error_tracker)):
     """
     Clear all action logs from memory.
 
@@ -789,14 +771,13 @@ async def clear_action_logs(
         tracker.clear_groups()
 
         return ClearLogsResponse(
-            message="Action logs cleared successfully",
-            cleared_groups=groups_count
+            message="Action logs cleared successfully", cleared_groups=groups_count
         )
 
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to clear action logs: {str(e)}"
+            detail=f"Failed to clear action logs: {str(e)}",
         )
 
 
@@ -804,7 +785,7 @@ async def clear_action_logs(
 async def log_action(
     request: LogActionRequest,
     tracker: EnhancedErrorTracker = Depends(get_error_tracker),
-    audit_logger: AuditLogger = Depends(get_audit_logger)
+    audit_logger: AuditLogger = Depends(get_audit_logger),
 ):
     """
     Log a new action (internal use).
@@ -826,7 +807,11 @@ async def log_action(
         # Map action to error data format
         error_data = {
             "name": f"{request.service}.{request.action}",
-            "message": request.error if request.status == "failed" else f"{request.action} completed successfully",
+            "message": (
+                request.error
+                if request.status == "failed"
+                else f"{request.action} completed successfully"
+            ),
             "level": request.level,
             "stack": request.stack,
             "context": {
@@ -834,8 +819,8 @@ async def log_action(
                 "operation": request.action,
                 "duration": request.duration,
                 "status": request.status,
-                **(request.context or {})
-            }
+                **(request.context or {}),
+            },
         }
 
         # Track error
@@ -853,10 +838,10 @@ async def log_action(
                     "service": request.service,
                     "action": request.action,
                     "duration": request.duration,
-                    "error": request.error
+                    "error": request.error,
                 },
                 success=False,
-                error_message=request.error
+                error_message=request.error,
             )
 
         return {"message": "Action logged successfully"}
@@ -864,12 +849,13 @@ async def log_action(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to log action: {str(e)}"
+            detail=f"Failed to log action: {str(e)}",
         )
 
 
 # ===== PUBLIC API FOR LOGGING =====
 # Export this function so other routes can log actions
+
 
 def log_action_event(
     service: str,
@@ -879,7 +865,7 @@ def log_action_event(
     level: ErrorLevel = "info",
     error: Optional[str] = None,
     stack: Optional[str] = None,
-    context: Optional[Dict[str, Any]] = None
+    context: Optional[Dict[str, Any]] = None,
 ):
     """
     Public API for logging actions from other routes/services.
@@ -903,4 +889,3 @@ def log_action_event(
     """
     # This would typically use httpx to call the /log endpoint
     # For now, it's a placeholder that documents the API
-    pass

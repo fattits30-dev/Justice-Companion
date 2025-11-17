@@ -39,45 +39,44 @@ from backend.models.deadline import Deadline, DeadlinePriority
 
 class TemplateNotFoundError(Exception):
     """Exception raised when template is not found."""
-    pass
 
 
 class UnauthorizedError(Exception):
     """Exception raised when user doesn't own the template."""
-    pass
 
 
 class DatabaseError(Exception):
     """Exception raised for database operation failures."""
-    pass
 
 
 class ValidationError(Exception):
     """Exception raised for invalid input data."""
-    pass
 
 
 # Pydantic models for input/output
 class TemplateFields(BaseModel):
     """Template fields for pre-filling case creation form."""
+
     titleTemplate: str = Field(..., description="Title template with [Variables]")
     descriptionTemplate: str = Field(..., description="Description template")
     caseType: CaseType = Field(..., description="Default case type")
     defaultStatus: CaseStatus = Field(default=CaseStatus.ACTIVE, description="Default case status")
-    customFields: Optional[Dict[str, str]] = Field(default=None, description="Custom field mappings")
+    customFields: Optional[Dict[str, str]] = Field(
+        default=None, description="Custom field mappings"
+    )
 
     model_config = ConfigDict(use_enum_values=True)
 
 
 class TimelineMilestone(BaseModel):
     """Timeline milestone template."""
+
     title: str = Field(..., description="Milestone title")
     description: str = Field(..., description="Milestone description")
     daysFromStart: int = Field(..., ge=0, description="Days after case creation")
     isRequired: bool = Field(default=False, description="Whether milestone is mandatory")
     category: str = Field(
-        default="other",
-        description="Milestone category: filing, hearing, deadline, meeting, other"
+        default="other", description="Milestone category: filing, hearing, deadline, meeting, other"
     )
 
     model_config = ConfigDict(use_enum_values=True)
@@ -85,16 +84,14 @@ class TimelineMilestone(BaseModel):
 
 class ChecklistItem(BaseModel):
     """Checklist item template."""
+
     title: str = Field(..., description="Task title")
     description: str = Field(..., description="Task description")
     category: str = Field(
         default="other",
-        description="Task category: evidence, filing, communication, research, other"
+        description="Task category: evidence, filing, communication, research, other",
     )
-    priority: str = Field(
-        default="medium",
-        description="Task priority: low, medium, high"
-    )
+    priority: str = Field(default="medium", description="Task priority: low, medium, high")
     daysFromStart: Optional[int] = Field(default=None, description="Suggested completion timeline")
 
     model_config = ConfigDict(use_enum_values=True)
@@ -102,25 +99,37 @@ class ChecklistItem(BaseModel):
 
 class CreateTemplateInput(BaseModel):
     """Input model for creating a new template."""
+
     name: str = Field(..., min_length=1, max_length=255, description="Template name")
     description: Optional[str] = Field(None, max_length=1000, description="Template description")
     category: TemplateCategory = Field(..., description="Template category")
     templateFields: TemplateFields = Field(..., description="Template field definitions")
-    suggestedEvidenceTypes: Optional[List[str]] = Field(default=None, description="Evidence type suggestions")
-    timelineMilestones: Optional[List[TimelineMilestone]] = Field(default=None, description="Timeline milestones")
-    checklistItems: Optional[List[ChecklistItem]] = Field(default=None, description="Checklist items")
+    suggestedEvidenceTypes: Optional[List[str]] = Field(
+        default=None, description="Evidence type suggestions"
+    )
+    timelineMilestones: Optional[List[TimelineMilestone]] = Field(
+        default=None, description="Timeline milestones"
+    )
+    checklistItems: Optional[List[ChecklistItem]] = Field(
+        default=None, description="Checklist items"
+    )
 
     model_config = ConfigDict(use_enum_values=True)
 
 
 class UpdateTemplateInput(BaseModel):
     """Input model for updating an existing template."""
+
     name: Optional[str] = Field(None, min_length=1, max_length=255, description="Template name")
     description: Optional[str] = Field(None, max_length=1000, description="Template description")
     category: Optional[TemplateCategory] = Field(None, description="Template category")
     templateFields: Optional[TemplateFields] = Field(None, description="Template field definitions")
-    suggestedEvidenceTypes: Optional[List[str]] = Field(None, description="Evidence type suggestions")
-    timelineMilestones: Optional[List[TimelineMilestone]] = Field(None, description="Timeline milestones")
+    suggestedEvidenceTypes: Optional[List[str]] = Field(
+        None, description="Evidence type suggestions"
+    )
+    timelineMilestones: Optional[List[TimelineMilestone]] = Field(
+        None, description="Timeline milestones"
+    )
     checklistItems: Optional[List[ChecklistItem]] = Field(None, description="Checklist items")
 
     model_config = ConfigDict(use_enum_values=True)
@@ -128,12 +137,12 @@ class UpdateTemplateInput(BaseModel):
 
 class CreateCaseFromTemplateInput(BaseModel):
     """Input for creating a case from template with variable substitution."""
+
     title: Optional[str] = Field(None, description="Override template title")
     description: Optional[str] = Field(None, description="Override template description")
     caseType: Optional[CaseType] = Field(None, description="Override case type")
     variables: Dict[str, str] = Field(
-        default_factory=dict,
-        description="Variable substitutions: {VariableName: value}"
+        default_factory=dict, description="Variable substitutions: {VariableName: value}"
     )
 
     model_config = ConfigDict(use_enum_values=True)
@@ -141,6 +150,7 @@ class CreateCaseFromTemplateInput(BaseModel):
 
 class TemplateResponse(BaseModel):
     """Response model for template data."""
+
     id: int
     name: str
     description: Optional[str]
@@ -159,6 +169,7 @@ class TemplateResponse(BaseModel):
 
 class AppliedMilestone(BaseModel):
     """Applied milestone result."""
+
     id: int
     title: str
     dueDate: str
@@ -166,6 +177,7 @@ class AppliedMilestone(BaseModel):
 
 class TemplateApplicationResult(BaseModel):
     """Result of applying template to create case."""
+
     case: Dict[str, Any]
     appliedMilestones: List[AppliedMilestone]
     appliedChecklistItems: List[Dict[str, Any]]
@@ -182,11 +194,7 @@ class TemplateService:
     System templates (user_id = NULL) are read-only for all users.
     """
 
-    def __init__(
-        self,
-        db: Session,
-        audit_logger=None
-    ):
+    def __init__(self, db: Session, audit_logger=None):
         """
         Initialize template service.
 
@@ -223,12 +231,12 @@ class TemplateService:
                 details={
                     "reason": "User does not own this template",
                     "template_owner": template.user_id,
-                    "requesting_user": user_id
-                }
+                    "requesting_user": user_id,
+                },
             )
             raise HTTPException(
                 status_code=403,
-                detail="Unauthorized: You do not have permission to access this template"
+                detail="Unauthorized: You do not have permission to access this template",
             )
 
     def _log_audit(
@@ -239,24 +247,25 @@ class TemplateService:
         action: str,
         success: bool,
         details: Optional[Dict[str, Any]] = None,
-        error_message: Optional[str] = None
+        error_message: Optional[str] = None,
     ) -> None:
         """Log audit event if audit logger is configured."""
         if self.audit_logger:
-            self.audit_logger.log({
-                "event_type": event_type,
-                "user_id": str(user_id) if user_id else None,
-                "resource_type": "template",
-                "resource_id": resource_id,
-                "action": action,
-                "success": success,
-                "details": details or {},
-                "error_message": error_message
-            })
+            self.audit_logger.log(
+                {
+                    "event_type": event_type,
+                    "user_id": str(user_id) if user_id else None,
+                    "resource_type": "template",
+                    "resource_id": resource_id,
+                    "action": action,
+                    "success": success,
+                    "details": details or {},
+                    "error_message": error_message,
+                }
+            )
 
     def _validate_template_input(
-        self,
-        input_data: CreateTemplateInput | UpdateTemplateInput
+        self, input_data: CreateTemplateInput | UpdateTemplateInput
     ) -> None:
         """
         Validate template input data.
@@ -268,12 +277,12 @@ class TemplateService:
             ValidationError: If validation fails
         """
         # Name validation (only for CreateTemplateInput or if updating name)
-        if hasattr(input_data, 'name') and input_data.name is not None:
+        if hasattr(input_data, "name") and input_data.name is not None:
             if not input_data.name or len(input_data.name.strip()) == 0:
                 raise ValidationError("Template name is required")
 
         # Description length validation
-        if hasattr(input_data, 'description') and input_data.description:
+        if hasattr(input_data, "description") and input_data.description:
             if len(input_data.description) > 1000:
                 raise ValidationError("Template description must be less than 1000 characters")
 
@@ -292,17 +301,15 @@ class TemplateService:
             _substitute_variables("[Client] vs [Defendant]", {"Client": "John", "Defendant": "Corp"})
             -> "John vs Corp"
         """
+
         def replace_var(match):
             var_name = match.group(1)
             return variables.get(var_name, match.group(0))  # Keep original if not found
 
-        return re.sub(r'\[(\w+)\]', replace_var, text)
+        return re.sub(r"\[(\w+)\]", replace_var, text)
 
     async def get_all_templates(
-        self,
-        user_id: int,
-        category: Optional[TemplateCategory] = None,
-        include_system: bool = True
+        self, user_id: int, category: Optional[TemplateCategory] = None, include_system: bool = True
     ) -> List[TemplateResponse]:
         """
         Get all templates (system + user's custom).
@@ -336,8 +343,7 @@ class TemplateService:
             templates = query.order_by(CaseTemplate.created_at.desc()).all()
 
             return [
-                TemplateResponse(**template.to_dict(include_json=True))
-                for template in templates
+                TemplateResponse(**template.to_dict(include_json=True)) for template in templates
             ]
 
         except Exception as error:
@@ -347,7 +353,7 @@ class TemplateService:
                 resource_id="all",
                 action="read",
                 success=False,
-                error_message=str(error)
+                error_message=str(error),
             )
             raise DatabaseError(f"Failed to retrieve templates: {str(error)}")
 
@@ -375,7 +381,7 @@ class TemplateService:
                 resource_id=str(template_id),
                 action="read",
                 success=False,
-                details={"reason": "Template not found"}
+                details={"reason": "Template not found"},
             )
             raise TemplateNotFoundError(f"Template with ID {template_id} not found")
 
@@ -385,9 +391,7 @@ class TemplateService:
         return TemplateResponse(**template.to_dict(include_json=True))
 
     async def create_template(
-        self,
-        input_data: CreateTemplateInput,
-        user_id: int
+        self, input_data: CreateTemplateInput, user_id: int
     ) -> TemplateResponse:
         """
         Create a new custom template.
@@ -421,7 +425,7 @@ class TemplateService:
                 ),
                 checklist_items_json=json.dumps(
                     [c.model_dump() for c in (input_data.checklistItems or [])]
-                )
+                ),
             )
 
             self.db.add(template)
@@ -434,10 +438,7 @@ class TemplateService:
                 resource_id=str(template.id),
                 action="create",
                 success=True,
-                details={
-                    "name": template.name,
-                    "category": template.category
-                }
+                details={"name": template.name, "category": template.category},
             )
 
             return TemplateResponse(**template.to_dict(include_json=True))
@@ -452,15 +453,12 @@ class TemplateService:
                 resource_id="unknown",
                 action="create",
                 success=False,
-                error_message=str(error)
+                error_message=str(error),
             )
             raise DatabaseError(f"Failed to create template: {str(error)}")
 
     async def update_template(
-        self,
-        template_id: int,
-        user_id: int,
-        input_data: UpdateTemplateInput
+        self, template_id: int, user_id: int, input_data: UpdateTemplateInput
     ) -> TemplateResponse:
         """
         Update an existing template.
@@ -490,8 +488,7 @@ class TemplateService:
         # System templates cannot be updated
         if template.is_system_template:
             raise HTTPException(
-                status_code=403,
-                detail="Unauthorized: System templates cannot be modified"
+                status_code=403, detail="Unauthorized: System templates cannot be modified"
             )
 
         try:
@@ -518,7 +515,9 @@ class TemplateService:
                 fields_updated.append("templateFields")
 
             if input_data.suggestedEvidenceTypes is not None:
-                template.suggested_evidence_types_json = json.dumps(input_data.suggestedEvidenceTypes)
+                template.suggested_evidence_types_json = json.dumps(
+                    input_data.suggestedEvidenceTypes
+                )
                 fields_updated.append("suggestedEvidenceTypes")
 
             if input_data.timelineMilestones is not None:
@@ -542,7 +541,7 @@ class TemplateService:
                 resource_id=str(template_id),
                 action="update",
                 success=True,
-                details={"fields_updated": fields_updated}
+                details={"fields_updated": fields_updated},
             )
 
             return TemplateResponse(**template.to_dict(include_json=True))
@@ -557,7 +556,7 @@ class TemplateService:
                 resource_id=str(template_id),
                 action="update",
                 success=False,
-                error_message=str(error)
+                error_message=str(error),
             )
             raise DatabaseError(f"Failed to update template: {str(error)}")
 
@@ -588,8 +587,7 @@ class TemplateService:
         # System templates cannot be deleted
         if template.is_system_template:
             raise HTTPException(
-                status_code=403,
-                detail="Unauthorized: System templates cannot be deleted"
+                status_code=403, detail="Unauthorized: System templates cannot be deleted"
             )
 
         try:
@@ -601,7 +599,7 @@ class TemplateService:
                 user_id=user_id,
                 resource_id=str(template_id),
                 action="delete",
-                success=True
+                success=True,
             )
 
             return True
@@ -614,15 +612,12 @@ class TemplateService:
                 resource_id=str(template_id),
                 action="delete",
                 success=False,
-                error_message=str(error)
+                error_message=str(error),
             )
             raise DatabaseError(f"Failed to delete template: {str(error)}")
 
     async def apply_template(
-        self,
-        template_id: int,
-        user_id: int,
-        input_data: CreateCaseFromTemplateInput
+        self, template_id: int, user_id: int, input_data: CreateCaseFromTemplateInput
     ) -> TemplateApplicationResult:
         """
         Apply template to create a new case with milestones.
@@ -665,12 +660,11 @@ class TemplateService:
 
             # Apply variable substitution
             title = self._substitute_variables(
-                input_data.title or template_fields.get("titleTemplate", ""),
-                input_data.variables
+                input_data.title or template_fields.get("titleTemplate", ""), input_data.variables
             )
             description = self._substitute_variables(
                 input_data.description or template_fields.get("descriptionTemplate", ""),
-                input_data.variables
+                input_data.variables,
             )
 
             # Create case
@@ -679,7 +673,7 @@ class TemplateService:
                 description=description,
                 case_type=input_data.caseType or template_fields.get("caseType", CaseType.OTHER),
                 status=template_fields.get("defaultStatus", CaseStatus.ACTIVE),
-                user_id=user_id
+                user_id=user_id,
             )
 
             self.db.add(case)
@@ -693,27 +687,27 @@ class TemplateService:
                 deadline = Deadline(
                     case_id=case.id,
                     user_id=user_id,
-                    title=self._substitute_variables(milestone.get("title", ""), input_data.variables),
-                    description=self._substitute_variables(milestone.get("description", ""), input_data.variables),
+                    title=self._substitute_variables(
+                        milestone.get("title", ""), input_data.variables
+                    ),
+                    description=self._substitute_variables(
+                        milestone.get("description", ""), input_data.variables
+                    ),
                     deadline_date=due_date.isoformat(),
-                    priority=DeadlinePriority.MEDIUM
+                    priority=DeadlinePriority.MEDIUM,
                 )
 
                 self.db.add(deadline)
                 self.db.flush()
 
-                applied_milestones.append(AppliedMilestone(
-                    id=deadline.id,
-                    title=deadline.title,
-                    dueDate=deadline.deadline_date
-                ))
+                applied_milestones.append(
+                    AppliedMilestone(
+                        id=deadline.id, title=deadline.title, dueDate=deadline.deadline_date
+                    )
+                )
 
             # Track template usage
-            usage = TemplateUsage(
-                template_id=template_id,
-                user_id=user_id,
-                case_id=case.id
-            )
+            usage = TemplateUsage(template_id=template_id, user_id=user_id, case_id=case.id)
             self.db.add(usage)
 
             self.db.commit()
@@ -727,8 +721,8 @@ class TemplateService:
                 details={
                     "case_id": case.id,
                     "template_name": template.name,
-                    "milestones_created": len(applied_milestones)
-                }
+                    "milestones_created": len(applied_milestones),
+                },
             )
 
             return TemplateApplicationResult(
@@ -736,13 +730,19 @@ class TemplateService:
                     "id": case.id,
                     "title": case.title,
                     "description": case.description,
-                    "caseType": case.case_type.value if isinstance(case.case_type, CaseType) else case.case_type,
-                    "status": case.status.value if isinstance(case.status, CaseStatus) else case.status
+                    "caseType": (
+                        case.case_type.value
+                        if isinstance(case.case_type, CaseType)
+                        else case.case_type
+                    ),
+                    "status": (
+                        case.status.value if isinstance(case.status, CaseStatus) else case.status
+                    ),
                 },
                 appliedMilestones=applied_milestones,
                 appliedChecklistItems=checklist_items,
                 templateId=template.id,
-                templateName=template.name
+                templateName=template.name,
             )
 
         except (TemplateNotFoundError, HTTPException):
@@ -755,6 +755,6 @@ class TemplateService:
                 resource_id=str(template_id),
                 action="apply",
                 success=False,
-                error_message=str(error)
+                error_message=str(error),
             )
             raise DatabaseError(f"Failed to apply template: {str(error)}")

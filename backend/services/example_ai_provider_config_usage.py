@@ -29,7 +29,7 @@ async def main():
     db = SessionLocal()
 
     # Setup encryption service
-    encryption_key = base64.b64encode(os.urandom(32)).decode('utf-8')
+    encryption_key = base64.b64encode(os.urandom(32)).decode("utf-8")
     encryption_service = EncryptionService(encryption_key)
 
     # Create test user
@@ -39,7 +39,7 @@ async def main():
         password_hash="hash",
         password_salt="salt",
         role="user",
-        is_active=True
+        is_active=True,
     )
     db.add(user)
     db.commit()
@@ -47,9 +47,7 @@ async def main():
 
     # Create service
     service = AIProviderConfigService(
-        db=db,
-        encryption_service=encryption_service,
-        audit_logger=None
+        db=db, encryption_service=encryption_service, audit_logger=None
     )
 
     print("=" * 80)
@@ -75,13 +73,10 @@ async def main():
         api_key="sk-demo-openai-key-12345",
         model="gpt-4-turbo",
         temperature=0.7,
-        max_tokens=4000
+        max_tokens=4000,
     )
 
-    result = await service.set_provider_config(
-        user_id=user.id,
-        config=openai_config
-    )
+    result = await service.set_provider_config(user_id=user.id, config=openai_config)
     print(f"✓ OpenAI configured:")
     print(f"  Model: {result.model}")
     print(f"  Temperature: {result.temperature}")
@@ -96,13 +91,10 @@ async def main():
         api_key="sk-ant-demo-key-67890",
         model="claude-3-5-sonnet-20241022",
         temperature=0.5,
-        max_tokens=8000
+        max_tokens=8000,
     )
 
-    result = await service.set_provider_config(
-        user_id=user.id,
-        config=anthropic_config
-    )
+    result = await service.set_provider_config(user_id=user.id, config=anthropic_config)
     print(f"✓ Anthropic configured:")
     print(f"  Model: {result.model}")
     print(f"  Temperature: {result.temperature}")
@@ -134,10 +126,7 @@ async def main():
     # Example 6: Switch active provider
     print("\n6. Switch Active Provider to Anthropic")
     print("-" * 80)
-    await service.set_active_provider(
-        user_id=user.id,
-        provider=AIProviderType.ANTHROPIC
-    )
+    await service.set_active_provider(user_id=user.id, provider=AIProviderType.ANTHROPIC)
     active_provider = service.get_active_provider(user_id=user.id)
     print(f"✓ Active provider changed to: {active_provider.value}")
 
@@ -145,8 +134,7 @@ async def main():
     print("\n7. Get Specific Provider Configuration")
     print("-" * 80)
     anthropic_config = await service.get_provider_config(
-        user_id=user.id,
-        provider=AIProviderType.ANTHROPIC
+        user_id=user.id, provider=AIProviderType.ANTHROPIC
     )
     if anthropic_config:
         print(f"  Provider: {anthropic_config.provider}")
@@ -163,13 +151,10 @@ async def main():
         AIProviderType.OPENAI,
         AIProviderType.ANTHROPIC,
         AIProviderType.GOOGLE,
-        AIProviderType.HUGGINGFACE
+        AIProviderType.HUGGINGFACE,
     ]
     for provider in providers_to_check:
-        is_configured = service.is_provider_configured(
-            user_id=user.id,
-            provider=provider
-        )
+        is_configured = service.is_provider_configured(user_id=user.id, provider=provider)
         status = "✓ Configured" if is_configured else "✗ Not configured"
         print(f"  {provider.value}: {status}")
 
@@ -181,12 +166,9 @@ async def main():
         api_key="sk-new-openai-key-updated",
         model="gpt-4o",  # Updated model
         temperature=0.9,  # Updated temperature
-        max_tokens=8000   # Updated max tokens
+        max_tokens=8000,  # Updated max tokens
     )
-    result = await service.set_provider_config(
-        user_id=user.id,
-        config=updated_openai_config
-    )
+    result = await service.set_provider_config(user_id=user.id, config=updated_openai_config)
     print(f"✓ OpenAI configuration updated:")
     print(f"  Model: {result.model}")
     print(f"  Temperature: {result.temperature}")
@@ -202,7 +184,7 @@ async def main():
         api_key="valid-key",
         model="gemini-2.0-flash-exp",
         temperature=0.7,
-        max_tokens=4000
+        max_tokens=4000,
     )
     validation = service.validate_config(valid_config)
     print(f"  Valid config: {validation.valid}")
@@ -213,7 +195,7 @@ async def main():
         api_key="valid-key",
         model="gemini-2.0-flash-exp",
         temperature=3.0,  # Invalid!
-        max_tokens=200000  # Invalid!
+        max_tokens=200000,  # Invalid!
     )
     validation = service.validate_config(invalid_config)
     print(f"  Invalid config: {validation.valid}")
@@ -240,10 +222,7 @@ async def main():
     # Example 12: Test provider connection
     print("\n12. Test Provider Connection")
     print("-" * 80)
-    test_result = await service.test_provider(
-        user_id=user.id,
-        provider=AIProviderType.ANTHROPIC
-    )
+    test_result = await service.test_provider(user_id=user.id, provider=AIProviderType.ANTHROPIC)
     print(f"  Test Result: {'✓ Success' if test_result.success else '✗ Failed'}")
     if test_result.error:
         print(f"  Error: {test_result.error}")
@@ -251,17 +230,11 @@ async def main():
     # Example 13: Remove provider configuration
     print("\n13. Remove OpenAI Configuration")
     print("-" * 80)
-    await service.remove_provider_config(
-        user_id=user.id,
-        provider=AIProviderType.OPENAI
-    )
+    await service.remove_provider_config(user_id=user.id, provider=AIProviderType.OPENAI)
     print(f"✓ OpenAI configuration removed")
 
     # Verify removal
-    is_configured = service.is_provider_configured(
-        user_id=user.id,
-        provider=AIProviderType.OPENAI
-    )
+    is_configured = service.is_provider_configured(user_id=user.id, provider=AIProviderType.OPENAI)
     print(f"  OpenAI configured: {'Yes' if is_configured else 'No'}")
 
     # Check if another provider became active
@@ -275,27 +248,20 @@ async def main():
 
     providers_config = [
         AIProviderConfigInput(
-            provider=AIProviderType.GOOGLE,
-            api_key="google-key-123",
-            model="gemini-2.0-flash-exp"
+            provider=AIProviderType.GOOGLE, api_key="google-key-123", model="gemini-2.0-flash-exp"
         ),
         AIProviderConfigInput(
             provider=AIProviderType.HUGGINGFACE,
             api_key="hf-key-456",
-            model="meta-llama/Meta-Llama-3.1-70B-Instruct"
+            model="meta-llama/Meta-Llama-3.1-70B-Instruct",
         ),
         AIProviderConfigInput(
-            provider=AIProviderType.MISTRAL,
-            api_key="mistral-key-789",
-            model="mistral-large-latest"
+            provider=AIProviderType.MISTRAL, api_key="mistral-key-789", model="mistral-large-latest"
         ),
     ]
 
     for config in providers_config:
-        result = await service.set_provider_config(
-            user_id=user.id,
-            config=config
-        )
+        result = await service.set_provider_config(user_id=user.id, config=config)
         print(f"✓ {config.provider.value} configured with model {result.model}")
 
     # List all configured

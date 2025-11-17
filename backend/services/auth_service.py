@@ -35,7 +35,6 @@ from backend.models.session import Session as SessionModel
 
 class AuthenticationError(Exception):
     """Authentication error exception."""
-    pass
 
 
 class AuthenticationService:
@@ -75,12 +74,12 @@ class AuthenticationService:
         # Python's hashlib.scrypt parameters match Node.js crypto.scrypt
         # n=16384, r=8, p=1 are scrypt defaults (secure for OWASP)
         return hashlib.scrypt(
-            password.encode('utf-8'),
+            password.encode("utf-8"),
             salt=salt,
             n=16384,  # CPU/memory cost parameter
-            r=8,      # Block size parameter
-            p=1,      # Parallelization parameter
-            dklen=self.KEY_LENGTH
+            r=8,  # Block size parameter
+            p=1,  # Parallelization parameter
+            dklen=self.KEY_LENGTH,
         )
 
     def _validate_password_strength(self, password: str) -> None:
@@ -95,27 +94,27 @@ class AuthenticationService:
         - At least one number
         """
         if len(password) < 12:
-            raise AuthenticationError(
-                "Password must be at least 12 characters (OWASP requirement)"
-            )
+            raise AuthenticationError("Password must be at least 12 characters (OWASP requirement)")
 
-        if not re.search(r'[A-Z]', password):
-            raise AuthenticationError(
-                "Password must contain at least one uppercase letter"
-            )
+        if not re.search(r"[A-Z]", password):
+            raise AuthenticationError("Password must contain at least one uppercase letter")
 
-        if not re.search(r'[a-z]', password):
-            raise AuthenticationError(
-                "Password must contain at least one lowercase letter"
-            )
+        if not re.search(r"[a-z]", password):
+            raise AuthenticationError("Password must contain at least one lowercase letter")
 
-        if not re.search(r'[0-9]', password):
-            raise AuthenticationError(
-                "Password must contain at least one number"
-            )
+        if not re.search(r"[0-9]", password):
+            raise AuthenticationError("Password must contain at least one number")
 
-    def _log_audit(self, event_type: str, user_id: Optional[int], resource_type: str,
-                   resource_id: str, action: str, success: bool, details: Optional[Dict[str, Any]] = None):
+    def _log_audit(
+        self,
+        event_type: str,
+        user_id: Optional[int],
+        resource_type: str,
+        resource_id: str,
+        action: str,
+        success: bool,
+        details: Optional[Dict[str, Any]] = None,
+    ):
         """Log audit event if audit logger is configured."""
         if self.audit_logger:
             self.audit_logger.log(
@@ -125,7 +124,7 @@ class AuthenticationService:
                 resource_id=resource_id,
                 action=action,
                 success=success,
-                details=details or {}
+                details=details or {},
             )
 
     async def register(self, username: str, password: str, email: str) -> Dict[str, Any]:
@@ -171,7 +170,7 @@ class AuthenticationService:
             password_hash=password_hash.hex(),
             password_salt=salt.hex(),
             role="user",
-            is_active=True
+            is_active=True,
         )
         self.db.add(user)
         self.db.commit()
@@ -184,18 +183,14 @@ class AuthenticationService:
             resource_id=str(user.id),
             action="create",
             success=True,
-            details={"username": username, "email": email}
+            details={"username": username, "email": email},
         )
 
         # AUTO-LOGIN: Create session immediately after registration (better UX)
         session_id = str(uuid4())
         expires_at = datetime.utcnow() + timedelta(hours=self.SESSION_DURATION_HOURS)
 
-        session = SessionModel(
-            id=session_id,
-            user_id=user.id,
-            expires_at=expires_at
-        )
+        session = SessionModel(id=session_id, user_id=user.id, expires_at=expires_at)
         self.db.add(session)
         self.db.commit()
         self.db.refresh(session)
@@ -207,13 +202,10 @@ class AuthenticationService:
             resource_id=session_id,
             action="create",
             success=True,
-            details={"reason": "auto-login-after-registration"}
+            details={"reason": "auto-login-after-registration"},
         )
 
-        return {
-            "user": user.to_dict(),
-            "session": session.to_dict()
-        }
+        return {"user": user.to_dict(), "session": session.to_dict()}
 
     async def login(
         self,
@@ -221,7 +213,7 @@ class AuthenticationService:
         password: str,
         remember_me: bool = False,
         ip_address: Optional[str] = None,
-        user_agent: Optional[str] = None
+        user_agent: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Login user and create session.
@@ -252,7 +244,7 @@ class AuthenticationService:
                 resource_id="unknown",
                 action="read",
                 success=False,
-                details={"username": username, "reason": "User not found"}
+                details={"username": username, "reason": "User not found"},
             )
             raise AuthenticationError("Invalid credentials")
 
@@ -265,7 +257,7 @@ class AuthenticationService:
                 resource_id=str(user.id),
                 action="read",
                 success=False,
-                details={"username": username, "reason": "User inactive"}
+                details={"username": username, "reason": "User inactive"},
             )
             raise AuthenticationError("Account is inactive")
 
@@ -274,10 +266,7 @@ class AuthenticationService:
         computed_hash = self._hash_password(password, salt)
 
         # Timing-safe comparison (prevents timing attacks)
-        is_valid = hmac.compare_digest(
-            bytes.fromhex(user.password_hash),
-            computed_hash
-        )
+        is_valid = hmac.compare_digest(bytes.fromhex(user.password_hash), computed_hash)
 
         if not is_valid:
             self._log_audit(
@@ -287,7 +276,7 @@ class AuthenticationService:
                 resource_id=str(user.id),
                 action="read",
                 success=False,
-                details={"username": username, "reason": "Invalid password"}
+                details={"username": username, "reason": "Invalid password"},
             )
             raise AuthenticationError("Invalid credentials")
 
@@ -305,7 +294,7 @@ class AuthenticationService:
             user_id=user.id,
             expires_at=expires_at,
             ip_address=ip_address,
-            user_agent=user_agent
+            user_agent=user_agent,
         )
         self.db.add(session)
 
@@ -326,14 +315,11 @@ class AuthenticationService:
                 "username": username,
                 "session_id": new_session_id,
                 "remember_me": "enabled" if remember_me else "disabled",
-                "session_regenerated": True
-            }
+                "session_regenerated": True,
+            },
         )
 
-        return {
-            "user": user.to_dict(),
-            "session": session.to_dict()
-        }
+        return {"user": user.to_dict(), "session": session.to_dict()}
 
     async def logout(self, session_id: str) -> None:
         """
@@ -358,7 +344,7 @@ class AuthenticationService:
                 resource_id=session_id,
                 action="delete",
                 success=True,
-                details={"session_cleared": True}
+                details={"session_cleared": True},
             )
 
     async def get_session(self, session_id: str) -> Optional[SessionModel]:
@@ -434,10 +420,7 @@ class AuthenticationService:
         salt = bytes.fromhex(user.password_salt)
         computed_hash = self._hash_password(old_password, salt)
 
-        is_valid = hmac.compare_digest(
-            bytes.fromhex(user.password_hash),
-            computed_hash
-        )
+        is_valid = hmac.compare_digest(bytes.fromhex(user.password_hash), computed_hash)
 
         if not is_valid:
             self._log_audit(
@@ -447,7 +430,7 @@ class AuthenticationService:
                 resource_id=str(user_id),
                 action="update",
                 success=False,
-                details={"reason": "Invalid current password"}
+                details={"reason": "Invalid current password"},
             )
             raise AuthenticationError("Invalid current password")
 
@@ -473,7 +456,7 @@ class AuthenticationService:
             resource_type="user",
             resource_id=str(user_id),
             action="update",
-            success=True
+            success=True,
         )
 
     def cleanup_expired_sessions(self) -> int:
@@ -483,9 +466,9 @@ class AuthenticationService:
         Returns:
             Number of sessions deleted
         """
-        deleted_count = self.db.query(SessionModel).filter(
-            SessionModel.expires_at < datetime.utcnow()
-        ).delete()
+        deleted_count = (
+            self.db.query(SessionModel).filter(SessionModel.expires_at < datetime.utcnow()).delete()
+        )
 
         self.db.commit()
 
@@ -497,7 +480,7 @@ class AuthenticationService:
                 resource_id="system",
                 action="delete",
                 success=True,
-                details={"deleted_count": deleted_count}
+                details={"deleted_count": deleted_count},
             )
 
         return deleted_count

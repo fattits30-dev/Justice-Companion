@@ -106,7 +106,7 @@
     "docx": "^9.5.1",
     "dompurify": "^3.3.0",
     "dotenv": "^17.2.3",
-    "drizzle-orm": "0.44.7",
+    "drizzle-orm": "^0.31.2",
     "electron-updater": "^6.6.8",
     "fast-xml-parser": "^5.3.0",
     "file-saver": "^2.0.5",
@@ -132,7 +132,7 @@
     "reflect-metadata": "^0.2.2",
     "rehype-highlight": "^7.0.2",
     "remark-gfm": "^4.0.1",
-    "sonner": "^2.0.7",
+    "sonner": "^1.5.0",
     "sqlite3": "^5.1.7",
     "tailwind-merge": "^3.3.1",
     "uuid": "9.0.1",
@@ -152,7 +152,6 @@
     "@eslint/js": "^9.37.0",
     "@playwright/test": "^1.56.1",
     "@rollup/rollup-win32-x64-msvc": "^4.52.5",
-    "@tailwindcss/postcss": "^4.1.17",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
@@ -168,7 +167,7 @@
     "@typescript-eslint/parser": "^8.20.0",
     "@vitejs/plugin-react": "^4.7.0",
     "@vitest/coverage-v8": "^4.0.9",
-    "autoprefixer": "^10.4.20",
+    "autoprefixer": "^10.4.22",
     "concurrently": "^9.1.2",
     "cross-env": "^10.1.0",
     "drizzle-kit": "0.31.7",
@@ -182,12 +181,13 @@
     "globals": "^16.4.0",
     "happy-dom": "^20.0.10",
     "husky": "^9.1.7",
+    "jsdom": "^27.0.1",
     "lint-staged": "^15.3.0",
     "playwright": "^1.56.1",
-    "postcss": "^8.4.49",
+    "postcss": "^8.5.6",
     "prettier": "^3.4.2",
     "snyk": "^1.1300.2",
-    "tailwindcss": "^4.1.17",
+    "tailwindcss": "^3.4.18",
     "tsx": "^4.19.2",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.1",
@@ -262,5 +262,8 @@
         "height": 380
       }
     }
+  },
+  "optionalDependencies": {
+    "@beshkenadze/eyecite": "^2.7.6"
   }
 }

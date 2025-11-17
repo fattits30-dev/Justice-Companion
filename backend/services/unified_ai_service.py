@@ -41,7 +41,7 @@ AIProviderType = Literal[
     "together",
     "anyscale",
     "mistral",
-    "perplexity"
+    "perplexity",
 ]
 
 
@@ -49,8 +49,10 @@ AIProviderType = Literal[
 # ENUMS
 # ============================================================================
 
+
 class UKJurisdiction(str, Enum):
     """UK Legal Jurisdictions"""
+
     ENGLAND_WALES = "england_wales"
     SCOTLAND = "scotland"
     NORTHERN_IRELAND = "northern_ireland"
@@ -58,6 +60,7 @@ class UKJurisdiction(str, Enum):
 
 class LegalCaseType(str, Enum):
     """Legal Case Types"""
+
     EMPLOYMENT = "employment"
     HOUSING = "housing"
     BENEFITS = "benefits"
@@ -70,6 +73,7 @@ class LegalCaseType(str, Enum):
 
 class DocumentType(str, Enum):
     """Document types for AI-assisted drafting"""
+
     LETTER = "letter"
     WITNESS_STATEMENT = "witness_statement"
     TRIBUNAL_SUBMISSION = "tribunal_submission"
@@ -80,6 +84,7 @@ class DocumentType(str, Enum):
 
 class ActionPriority(str, Enum):
     """Priority levels for recommended actions"""
+
     URGENT = "urgent"
     HIGH = "high"
     MEDIUM = "medium"
@@ -88,6 +93,7 @@ class ActionPriority(str, Enum):
 
 class IssueSeverity(str, Enum):
     """Severity levels for legal issues"""
+
     HIGH = "high"
     MEDIUM = "medium"
     LOW = "low"
@@ -95,6 +101,7 @@ class IssueSeverity(str, Enum):
 
 class EvidenceImportance(str, Enum):
     """Importance levels for evidence gaps"""
+
     CRITICAL = "critical"
     IMPORTANT = "important"
     HELPFUL = "helpful"
@@ -102,6 +109,7 @@ class EvidenceImportance(str, Enum):
 
 class EvidenceStrength(str, Enum):
     """Overall evidence strength assessment"""
+
     STRONG = "strong"
     MODERATE = "moderate"
     WEAK = "weak"
@@ -109,6 +117,7 @@ class EvidenceStrength(str, Enum):
 
 class LegalSourceType(str, Enum):
     """Legal source types"""
+
     STATUTE = "statute"
     CASE_LAW = "case_law"
     REGULATION = "regulation"
@@ -119,8 +128,10 @@ class LegalSourceType(str, Enum):
 # PYDANTIC MODELS
 # ============================================================================
 
+
 class ChatMessage(BaseModel):
     """Chat message with role and content"""
+
     role: Literal["system", "user", "assistant"]
     content: str
 
@@ -129,6 +140,7 @@ class ChatMessage(BaseModel):
 
 class AIProviderConfig(BaseModel):
     """AI Provider Configuration"""
+
     provider: AIProviderType
     api_key: str = Field(..., min_length=1, description="API key for the provider")
     model: str = Field(..., min_length=1, description="Model identifier")
@@ -142,6 +154,7 @@ class AIProviderConfig(BaseModel):
 
 class StreamingCallbacks(BaseModel):
     """Streaming callbacks (function references, not serializable)"""
+
     on_token: Optional[Callable[[str], None]] = None
     on_thinking: Optional[Callable[[str], None]] = None
     on_complete: Optional[Callable[[str], None]] = None
@@ -153,6 +166,7 @@ class StreamingCallbacks(BaseModel):
 
 class AIProviderMetadata(BaseModel):
     """Provider metadata and capabilities"""
+
     name: str
     default_endpoint: str
     supports_streaming: bool
@@ -165,6 +179,7 @@ class AIProviderMetadata(BaseModel):
 
 class TimelineEvent(BaseModel):
     """Timeline event for case analysis"""
+
     date: str
     event: str
     significance: Optional[str] = None
@@ -174,6 +189,7 @@ class TimelineEvent(BaseModel):
 
 class EvidenceSummary(BaseModel):
     """Evidence summary for case analysis"""
+
     type: str
     description: str
     date: Optional[str] = None
@@ -183,6 +199,7 @@ class EvidenceSummary(BaseModel):
 
 class LegalIssue(BaseModel):
     """Legal issue identification"""
+
     issue: str
     severity: IssueSeverity
     relevant_law: List[str]
@@ -194,6 +211,7 @@ class LegalIssue(BaseModel):
 
 class ApplicableLaw(BaseModel):
     """Applicable law reference"""
+
     statute: str
     section: str
     summary: str
@@ -205,6 +223,7 @@ class ApplicableLaw(BaseModel):
 
 class ActionItem(BaseModel):
     """Recommended action item"""
+
     action: str
     deadline: Optional[str] = None
     priority: ActionPriority
@@ -215,6 +234,7 @@ class ActionItem(BaseModel):
 
 class EvidenceGap(BaseModel):
     """Evidence gap identification"""
+
     description: str
     importance: EvidenceImportance
     suggested_sources: List[str]
@@ -224,6 +244,7 @@ class EvidenceGap(BaseModel):
 
 class ComplexityScore(BaseModel):
     """Case complexity scoring"""
+
     score: int = Field(..., ge=1, le=10)
     factors: List[str]
     explanation: str
@@ -233,6 +254,7 @@ class ComplexityScore(BaseModel):
 
 class LegalSource(BaseModel):
     """Legal source reference"""
+
     type: LegalSourceType
     title: str
     citation: str
@@ -243,6 +265,7 @@ class LegalSource(BaseModel):
 
 class CaseAnalysisRequest(BaseModel):
     """Request for comprehensive case analysis"""
+
     case_id: str
     case_type: LegalCaseType
     jurisdiction: UKJurisdiction
@@ -256,6 +279,7 @@ class CaseAnalysisRequest(BaseModel):
 
 class CaseAnalysisResponse(BaseModel):
     """Comprehensive case analysis response"""
+
     legal_issues: List[LegalIssue]
     applicable_law: List[ApplicableLaw]
     recommended_actions: List[ActionItem]
@@ -270,6 +294,7 @@ class CaseAnalysisResponse(BaseModel):
 
 class EvidenceAnalysisRequest(BaseModel):
     """Request for evidence analysis"""
+
     case_id: str
     case_type: LegalCaseType
     jurisdiction: UKJurisdiction
@@ -282,6 +307,7 @@ class EvidenceAnalysisRequest(BaseModel):
 
 class EvidenceAnalysisResponse(BaseModel):
     """Evidence analysis response"""
+
     gaps: List[EvidenceGap]
     suggestions: List[str]
     strength: EvidenceStrength
@@ -293,6 +319,7 @@ class EvidenceAnalysisResponse(BaseModel):
 
 class DocumentContext(BaseModel):
     """Document context for drafting"""
+
     case_id: str
     case_type: LegalCaseType
     jurisdiction: UKJurisdiction
@@ -307,6 +334,7 @@ class DocumentContext(BaseModel):
 
 class DocumentMetadata(BaseModel):
     """Document metadata"""
+
     type: DocumentType
     created_at: str
     word_count: Optional[int] = None
@@ -318,6 +346,7 @@ class DocumentMetadata(BaseModel):
 
 class DocumentDraftRequest(BaseModel):
     """Request for document drafting"""
+
     document_type: DocumentType
     context: DocumentContext
 
@@ -326,6 +355,7 @@ class DocumentDraftRequest(BaseModel):
 
 class DocumentDraftResponse(BaseModel):
     """Document draft response"""
+
     content: str
     metadata: DocumentMetadata
     disclaimer: str
@@ -335,6 +365,7 @@ class DocumentDraftResponse(BaseModel):
 
 class ExtractionSource(BaseModel):
     """Field extraction source metadata"""
+
     source: str
     text: str
 
@@ -343,6 +374,7 @@ class ExtractionSource(BaseModel):
 
 class FieldConfidence(BaseModel):
     """Confidence scores for extracted fields"""
+
     title: float = Field(..., ge=0.0, le=1.0)
     case_type: float = Field(..., ge=0.0, le=1.0)
     description: float = Field(..., ge=0.0, le=1.0)
@@ -357,6 +389,7 @@ class FieldConfidence(BaseModel):
 
 class SuggestedCaseData(BaseModel):
     """Suggested case data extracted from document"""
+
     document_ownership_mismatch: Optional[bool] = False
     document_claimant_name: Optional[str] = None
     title: str
@@ -376,6 +409,7 @@ class SuggestedCaseData(BaseModel):
 
 class DocumentExtractionResponse(BaseModel):
     """Document extraction response"""
+
     analysis: str
     suggested_case_data: SuggestedCaseData
 
@@ -384,6 +418,7 @@ class DocumentExtractionResponse(BaseModel):
 
 class ParsedDocument(BaseModel):
     """Parsed document metadata"""
+
     filename: str
     text: str
     word_count: int
@@ -394,6 +429,7 @@ class ParsedDocument(BaseModel):
 
 class UserProfile(BaseModel):
     """User profile for document extraction"""
+
     name: str
     email: Optional[str] = None
 
@@ -412,9 +448,13 @@ AI_PROVIDER_METADATA: Dict[str, AIProviderMetadata] = {
         default_model="gpt-4-turbo",
         max_context_tokens=128000,
         available_models=[
-            "gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-4",
-            "gpt-3.5-turbo", "gpt-3.5-turbo-16k"
-        ]
+            "gpt-4o",
+            "gpt-4o-mini",
+            "gpt-4-turbo",
+            "gpt-4",
+            "gpt-3.5-turbo",
+            "gpt-3.5-turbo-16k",
+        ],
     ),
     "anthropic": AIProviderMetadata(
         name="Anthropic",
@@ -423,9 +463,11 @@ AI_PROVIDER_METADATA: Dict[str, AIProviderMetadata] = {
         default_model="claude-3-5-sonnet-20241022",
         max_context_tokens=200000,
         available_models=[
-            "claude-3-5-sonnet-20241022", "claude-3-5-haiku-20241022",
-            "claude-3-opus-20240229", "claude-3-sonnet-20240229"
-        ]
+            "claude-3-5-sonnet-20241022",
+            "claude-3-5-haiku-20241022",
+            "claude-3-opus-20240229",
+            "claude-3-sonnet-20240229",
+        ],
     ),
     "huggingface": AIProviderMetadata(
         name="Hugging Face",
@@ -433,10 +475,7 @@ AI_PROVIDER_METADATA: Dict[str, AIProviderMetadata] = {
         supports_streaming=True,
         default_model="meta-llama/Meta-Llama-3.1-70B-Instruct",
         max_context_tokens=128000,
-        available_models=[
-            "meta-llama/Meta-Llama-3.1-70B-Instruct",
-            "Qwen/Qwen2.5-72B-Instruct"
-        ]
+        available_models=["meta-llama/Meta-Llama-3.1-70B-Instruct", "Qwen/Qwen2.5-72B-Instruct"],
     ),
     "qwen": AIProviderMetadata(
         name="Qwen 2.5-72B",
@@ -444,7 +483,7 @@ AI_PROVIDER_METADATA: Dict[str, AIProviderMetadata] = {
         supports_streaming=True,
         default_model="Qwen/Qwen2.5-72B-Instruct",
         max_context_tokens=32768,
-        available_models=["Qwen/Qwen2.5-72B-Instruct"]
+        available_models=["Qwen/Qwen2.5-72B-Instruct"],
     ),
     "google": AIProviderMetadata(
         name="Google AI",
@@ -452,7 +491,7 @@ AI_PROVIDER_METADATA: Dict[str, AIProviderMetadata] = {
         supports_streaming=True,
         default_model="gemini-2.0-flash-exp",
         max_context_tokens=1000000,
-        available_models=["gemini-2.0-flash-exp", "gemini-1.5-pro"]
+        available_models=["gemini-2.0-flash-exp", "gemini-1.5-pro"],
     ),
     "cohere": AIProviderMetadata(
         name="Cohere",
@@ -460,7 +499,7 @@ AI_PROVIDER_METADATA: Dict[str, AIProviderMetadata] = {
         supports_streaming=True,
         default_model="command-r-plus",
         max_context_tokens=128000,
-        available_models=["command-r-plus", "command-r"]
+        available_models=["command-r-plus", "command-r"],
     ),
     "together": AIProviderMetadata(
         name="Together AI",
@@ -468,7 +507,7 @@ AI_PROVIDER_METADATA: Dict[str, AIProviderMetadata] = {
         supports_streaming=True,
         default_model="meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
         max_context_tokens=32768,
-        available_models=["meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo"]
+        available_models=["meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo"],
     ),
     "anyscale": AIProviderMetadata(
         name="Anyscale",
@@ -476,7 +515,7 @@ AI_PROVIDER_METADATA: Dict[str, AIProviderMetadata] = {
         supports_streaming=True,
         default_model="meta-llama/Meta-Llama-3.1-70B-Instruct",
         max_context_tokens=32768,
-        available_models=["meta-llama/Meta-Llama-3.1-70B-Instruct"]
+        available_models=["meta-llama/Meta-Llama-3.1-70B-Instruct"],
     ),
     "mistral": AIProviderMetadata(
         name="Mistral AI",
@@ -484,7 +523,7 @@ AI_PROVIDER_METADATA: Dict[str, AIProviderMetadata] = {
         supports_streaming=True,
         default_model="mistral-large-latest",
         max_context_tokens=128000,
-        available_models=["mistral-large-latest", "mistral-medium-latest"]
+        available_models=["mistral-large-latest", "mistral-medium-latest"],
     ),
     "perplexity": AIProviderMetadata(
         name="Perplexity",
@@ -492,7 +531,7 @@ AI_PROVIDER_METADATA: Dict[str, AIProviderMetadata] = {
         supports_streaming=True,
         default_model="llama-3.1-sonar-large-128k-online",
         max_context_tokens=128000,
-        available_models=["llama-3.1-sonar-large-128k-online"]
+        available_models=["llama-3.1-sonar-large-128k-online"],
     ),
 }
 
@@ -500,6 +539,7 @@ AI_PROVIDER_METADATA: Dict[str, AIProviderMetadata] = {
 # ============================================================================
 # UNIFIED AI SERVICE
 # ============================================================================
+
 
 class UnifiedAIService:
     """
@@ -525,11 +565,7 @@ class UnifiedAIService:
         print(response)
     """
 
-    def __init__(
-        self,
-        config: AIProviderConfig,
-        audit_logger=None
-    ):
+    def __init__(self, config: AIProviderConfig, audit_logger=None):
         """
         Initialize unified AI service.
 
@@ -554,10 +590,7 @@ class UnifiedAIService:
         metadata = AI_PROVIDER_METADATA.get(provider)
 
         if not metadata:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Unsupported provider: {provider}"
-            )
+            raise HTTPException(status_code=400, detail=f"Unsupported provider: {provider}")
 
         base_url = self.config.endpoint or metadata.default_endpoint
 
@@ -566,57 +599,56 @@ class UnifiedAIService:
                 # Anthropic SDK (requires: pip install anthropic)
                 try:
                     import anthropic
-                    self.client = anthropic.Anthropic(
-                        api_key=api_key,
-                        base_url=base_url
-                    )
+
+                    self.client = anthropic.Anthropic(api_key=api_key, base_url=base_url)
                 except ImportError:
                     raise HTTPException(
                         status_code=500,
-                        detail="Anthropic SDK not installed. Run: pip install anthropic"
+                        detail="Anthropic SDK not installed. Run: pip install anthropic",
                     )
 
-            elif provider in ["openai", "together", "anyscale", "mistral",
-                            "perplexity", "huggingface", "google", "cohere"]:
+            elif provider in [
+                "openai",
+                "together",
+                "anyscale",
+                "mistral",
+                "perplexity",
+                "huggingface",
+                "google",
+                "cohere",
+            ]:
                 # OpenAI-compatible API (requires: pip install openai)
                 try:
                     import openai
-                    self.client = openai.OpenAI(
-                        api_key=api_key,
-                        base_url=base_url
-                    )
+
+                    self.client = openai.OpenAI(api_key=api_key, base_url=base_url)
                 except ImportError:
                     raise HTTPException(
-                        status_code=500,
-                        detail="OpenAI SDK not installed. Run: pip install openai"
+                        status_code=500, detail="OpenAI SDK not installed. Run: pip install openai"
                     )
 
             elif provider == "qwen":
                 # Hugging Face Inference API (requires: pip install huggingface-hub)
                 try:
                     from huggingface_hub import InferenceClient
+
                     self.client = InferenceClient(token=api_key)
                 except ImportError:
                     raise HTTPException(
                         status_code=500,
-                        detail="Hugging Face SDK not installed. Run: pip install huggingface-hub"
+                        detail="Hugging Face SDK not installed. Run: pip install huggingface-hub",
                     )
 
             else:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Unsupported provider: {provider}"
-                )
+                raise HTTPException(status_code=400, detail=f"Unsupported provider: {provider}")
 
         except Exception as e:
             if self.audit_logger:
                 self.audit_logger.log_error(
-                    f"AI client initialization failed for {provider}",
-                    error=str(e)
+                    f"AI client initialization failed for {provider}", error=str(e)
                 )
             raise HTTPException(
-                status_code=500,
-                detail=f"Failed to initialize {provider} client: {str(e)}"
+                status_code=500, detail=f"Failed to initialize {provider} client: {str(e)}"
             )
 
     def update_config(self, config: AIProviderConfig) -> None:
@@ -659,7 +691,7 @@ class UnifiedAIService:
             "supports_streaming": metadata.supports_streaming,
             "max_context_tokens": metadata.max_context_tokens,
             "current_model": self.config.model,
-            "endpoint": self.config.endpoint or metadata.default_endpoint
+            "endpoint": self.config.endpoint or metadata.default_endpoint,
         }
 
     async def stream_chat(
@@ -667,7 +699,7 @@ class UnifiedAIService:
         messages: List[ChatMessage],
         on_token: Optional[Callable[[str], None]] = None,
         on_complete: Optional[Callable[[str], None]] = None,
-        on_error: Optional[Callable[[Exception], None]] = None
+        on_error: Optional[Callable[[Exception], None]] = None,
     ) -> AsyncIterator[str]:
         """
         Stream chat completion with token-by-token delivery.
@@ -686,8 +718,7 @@ class UnifiedAIService:
         """
         if not self.client:
             error = HTTPException(
-                status_code=500,
-                detail=f"{self.config.provider} client not configured"
+                status_code=500, detail=f"{self.config.provider} client not configured"
             )
             if on_error:
                 on_error(error)
@@ -725,20 +756,13 @@ class UnifiedAIService:
         except Exception as e:
             if self.audit_logger:
                 self.audit_logger.log_error(
-                    f"Streaming chat failed for {self.config.provider}",
-                    error=str(e)
+                    f"Streaming chat failed for {self.config.provider}", error=str(e)
                 )
             if on_error:
                 on_error(e)
-            raise HTTPException(
-                status_code=500,
-                detail=f"Streaming failed: {str(e)}"
-            )
+            raise HTTPException(status_code=500, detail=f"Streaming failed: {str(e)}")
 
-    async def _stream_anthropic_chat(
-        self,
-        messages: List[ChatMessage]
-    ) -> AsyncIterator[str]:
+    async def _stream_anthropic_chat(self, messages: List[ChatMessage]) -> AsyncIterator[str]:
         """
         Stream chat for Anthropic (Claude).
 
@@ -756,10 +780,7 @@ class UnifiedAIService:
             if msg.role == "system":
                 system_message = msg.content
             else:
-                conversation_messages.append({
-                    "role": msg.role,
-                    "content": msg.content
-                })
+                conversation_messages.append({"role": msg.role, "content": msg.content})
 
         request_params = {
             "model": self.config.model,
@@ -767,7 +788,7 @@ class UnifiedAIService:
             "messages": conversation_messages,
             "max_tokens": self.config.max_tokens or 4096,
             "temperature": self.config.temperature or 0.7,
-            "stream": True
+            "stream": True,
         }
 
         async with self.client.messages.stream(**request_params) as stream:
@@ -775,10 +796,7 @@ class UnifiedAIService:
                 if hasattr(event, "delta") and hasattr(event.delta, "text"):
                     yield event.delta.text
 
-    async def _stream_qwen_chat(
-        self,
-        messages: List[ChatMessage]
-    ) -> AsyncIterator[str]:
+    async def _stream_qwen_chat(self, messages: List[ChatMessage]) -> AsyncIterator[str]:
         """
         Stream chat for Qwen using Hugging Face Inference API.
 
@@ -788,10 +806,7 @@ class UnifiedAIService:
         Yields:
             Token strings
         """
-        formatted_messages = [
-            {"role": msg.role, "content": msg.content}
-            for msg in messages
-        ]
+        formatted_messages = [{"role": msg.role, "content": msg.content} for msg in messages]
 
         stream = self.client.chat_completion(
             model=self.config.model,
@@ -799,7 +814,7 @@ class UnifiedAIService:
             temperature=self.config.temperature or 0.3,
             max_tokens=self.config.max_tokens or 2048,
             top_p=self.config.top_p or 0.9,
-            stream=True
+            stream=True,
         )
 
         for chunk in stream:
@@ -809,8 +824,7 @@ class UnifiedAIService:
                     yield delta.content
 
     async def _stream_openai_compatible_chat(
-        self,
-        messages: List[ChatMessage]
+        self, messages: List[ChatMessage]
     ) -> AsyncIterator[str]:
         """
         Stream chat for OpenAI-compatible providers.
@@ -821,10 +835,7 @@ class UnifiedAIService:
         Yields:
             Token strings
         """
-        formatted_messages = [
-            {"role": msg.role, "content": msg.content}
-            for msg in messages
-        ]
+        formatted_messages = [{"role": msg.role, "content": msg.content} for msg in messages]
 
         request_params = {
             "model": self.config.model,
@@ -832,7 +843,7 @@ class UnifiedAIService:
             "stream": True,
             "temperature": self.config.temperature or 0.7,
             "max_tokens": self.config.max_tokens or 8192,
-            "top_p": self.config.top_p or 0.9
+            "top_p": self.config.top_p or 0.9,
         }
 
         stream = self.client.chat.completions.create(**request_params)
@@ -858,8 +869,7 @@ class UnifiedAIService:
         """
         if not self.client:
             raise HTTPException(
-                status_code=500,
-                detail=f"{self.config.provider} client not configured"
+                status_code=500, detail=f"{self.config.provider} client not configured"
             )
 
         try:
@@ -872,19 +882,10 @@ class UnifiedAIService:
 
         except Exception as e:
             if self.audit_logger:
-                self.audit_logger.log_error(
-                    f"Chat failed for {self.config.provider}",
-                    error=str(e)
-                )
-            raise HTTPException(
-                status_code=500,
-                detail=f"Chat failed: {str(e)}"
-            )
+                self.audit_logger.log_error(f"Chat failed for {self.config.provider}", error=str(e))
+            raise HTTPException(status_code=500, detail=f"Chat failed: {str(e)}")
 
-    async def _chat_anthropic_non_streaming(
-        self,
-        messages: List[ChatMessage]
-    ) -> str:
+    async def _chat_anthropic_non_streaming(self, messages: List[ChatMessage]) -> str:
         """Non-streaming chat for Anthropic."""
         system_message = ""
         conversation_messages = []
@@ -893,17 +894,14 @@ class UnifiedAIService:
             if msg.role == "system":
                 system_message = msg.content
             else:
-                conversation_messages.append({
-                    "role": msg.role,
-                    "content": msg.content
-                })
+                conversation_messages.append({"role": msg.role, "content": msg.content})
 
         response = self.client.messages.create(
             model=self.config.model,
             system=system_message,
             messages=conversation_messages,
             max_tokens=self.config.max_tokens or 4096,
-            temperature=self.config.temperature or 0.7
+            temperature=self.config.temperature or 0.7,
         )
 
         result = ""
@@ -913,50 +911,35 @@ class UnifiedAIService:
 
         return result
 
-    async def _chat_qwen_non_streaming(
-        self,
-        messages: List[ChatMessage]
-    ) -> str:
+    async def _chat_qwen_non_streaming(self, messages: List[ChatMessage]) -> str:
         """Non-streaming chat for Qwen."""
-        formatted_messages = [
-            {"role": msg.role, "content": msg.content}
-            for msg in messages
-        ]
+        formatted_messages = [{"role": msg.role, "content": msg.content} for msg in messages]
 
         response = self.client.chat_completion(
             model=self.config.model,
             messages=formatted_messages,
             temperature=self.config.temperature or 0.3,
             max_tokens=self.config.max_tokens or 2048,
-            top_p=self.config.top_p or 0.9
+            top_p=self.config.top_p or 0.9,
         )
 
         return response.choices[0].message.content or ""
 
-    async def _chat_openai_compatible_non_streaming(
-        self,
-        messages: List[ChatMessage]
-    ) -> str:
+    async def _chat_openai_compatible_non_streaming(self, messages: List[ChatMessage]) -> str:
         """Non-streaming chat for OpenAI-compatible providers."""
-        formatted_messages = [
-            {"role": msg.role, "content": msg.content}
-            for msg in messages
-        ]
+        formatted_messages = [{"role": msg.role, "content": msg.content} for msg in messages]
 
         completion = self.client.chat.completions.create(
             model=self.config.model,
             messages=formatted_messages,
             temperature=self.config.temperature or 0.7,
             max_tokens=self.config.max_tokens or 2048,
-            top_p=self.config.top_p or 0.9
+            top_p=self.config.top_p or 0.9,
         )
 
         return completion.choices[0].message.content or ""
 
-    async def analyze_case(
-        self,
-        request: CaseAnalysisRequest
-    ) -> CaseAnalysisResponse:
+    async def analyze_case(self, request: CaseAnalysisRequest) -> CaseAnalysisResponse:
         """
         Analyze a case and provide structured legal analysis.
 
@@ -971,8 +954,7 @@ class UnifiedAIService:
         """
         if not self.client:
             raise HTTPException(
-                status_code=500,
-                detail=f"{self.config.provider} client not configured"
+                status_code=500, detail=f"{self.config.provider} client not configured"
             )
 
         try:
@@ -1003,11 +985,11 @@ Provide analysis in this JSON structure:
             response = await self.chat(messages)
 
             # Extract JSON from response
-            json_match = re.search(r'```json\n?(.*?)\n?```', response, re.DOTALL)
+            json_match = re.search(r"```json\n?(.*?)\n?```", response, re.DOTALL)
             if json_match:
                 json_str = json_match.group(1)
             else:
-                json_match = re.search(r'\{.*\}', response, re.DOTALL)
+                json_match = re.search(r"\{.*\}", response, re.DOTALL)
                 json_str = json_match.group(0) if json_match else response
 
             analysis_data = json.loads(json_str)
@@ -1016,19 +998,11 @@ Provide analysis in this JSON structure:
         except Exception as e:
             if self.audit_logger:
                 self.audit_logger.log_error(
-                    f"Case analysis failed",
-                    error=str(e),
-                    case_id=request.case_id
+                    f"Case analysis failed", error=str(e), case_id=request.case_id
                 )
-            raise HTTPException(
-                status_code=500,
-                detail=f"Case analysis failed: {str(e)}"
-            )
+            raise HTTPException(status_code=500, detail=f"Case analysis failed: {str(e)}")
 
-    async def analyze_evidence(
-        self,
-        request: EvidenceAnalysisRequest
-    ) -> EvidenceAnalysisResponse:
+    async def analyze_evidence(self, request: EvidenceAnalysisRequest) -> EvidenceAnalysisResponse:
         """
         Analyze evidence and identify gaps.
 
@@ -1043,8 +1017,7 @@ Provide analysis in this JSON structure:
         """
         if not self.client:
             raise HTTPException(
-                status_code=500,
-                detail=f"{self.config.provider} client not configured"
+                status_code=500, detail=f"{self.config.provider} client not configured"
             )
 
         try:
@@ -1066,7 +1039,7 @@ Provide analysis in JSON format with:
             response = await self.chat(messages)
 
             # Extract JSON
-            json_match = re.search(r'```json\n?(.*?)\n?```', response, re.DOTALL)
+            json_match = re.search(r"```json\n?(.*?)\n?```", response, re.DOTALL)
             json_str = json_match.group(1) if json_match else response
 
             analysis_data = json.loads(json_str)
@@ -1075,19 +1048,11 @@ Provide analysis in JSON format with:
         except Exception as e:
             if self.audit_logger:
                 self.audit_logger.log_error(
-                    f"Evidence analysis failed",
-                    error=str(e),
-                    case_id=request.case_id
+                    f"Evidence analysis failed", error=str(e), case_id=request.case_id
                 )
-            raise HTTPException(
-                status_code=500,
-                detail=f"Evidence analysis failed: {str(e)}"
-            )
+            raise HTTPException(status_code=500, detail=f"Evidence analysis failed: {str(e)}")
 
-    async def draft_document(
-        self,
-        request: DocumentDraftRequest
-    ) -> DocumentDraftResponse:
+    async def draft_document(self, request: DocumentDraftRequest) -> DocumentDraftResponse:
         """
         Draft a legal document.
 
@@ -1102,8 +1067,7 @@ Provide analysis in JSON format with:
         """
         if not self.client:
             raise HTTPException(
-                status_code=500,
-                detail=f"{self.config.provider} client not configured"
+                status_code=500, detail=f"{self.config.provider} client not configured"
             )
 
         try:
@@ -1131,7 +1095,7 @@ Provide response in JSON format:
             response = await self.chat(messages)
 
             # Extract JSON
-            json_match = re.search(r'```json\n?(.*?)\n?```', response, re.DOTALL)
+            json_match = re.search(r"```json\n?(.*?)\n?```", response, re.DOTALL)
             json_str = json_match.group(1) if json_match else response
 
             draft_data = json.loads(json_str)
@@ -1142,18 +1106,15 @@ Provide response in JSON format:
                 self.audit_logger.log_error(
                     f"Document drafting failed",
                     error=str(e),
-                    document_type=request.document_type.value
+                    document_type=request.document_type.value,
                 )
-            raise HTTPException(
-                status_code=500,
-                detail=f"Document drafting failed: {str(e)}"
-            )
+            raise HTTPException(status_code=500, detail=f"Document drafting failed: {str(e)}")
 
     async def extract_case_data_from_document(
         self,
         parsed_doc: ParsedDocument,
         user_profile: UserProfile,
-        user_question: Optional[str] = None
+        user_question: Optional[str] = None,
     ) -> DocumentExtractionResponse:
         """
         Extract structured case data from document.
@@ -1171,8 +1132,7 @@ Provide response in JSON format:
         """
         if not self.client:
             raise HTTPException(
-                status_code=500,
-                detail=f"{self.config.provider} client not configured"
+                status_code=500, detail=f"{self.config.provider} client not configured"
             )
 
         try:
@@ -1224,15 +1184,15 @@ PART 2 - Structured Data (JSON format):
             messages = [
                 ChatMessage(
                     role="system",
-                    content="You are Justice Companion AI, a legal document analysis specialist for UK civil legal matters."
+                    content="You are Justice Companion AI, a legal document analysis specialist for UK civil legal matters.",
                 ),
-                ChatMessage(role="user", content=extraction_prompt)
+                ChatMessage(role="user", content=extraction_prompt),
             ]
 
             response = await self.chat(messages)
 
             # Split response
-            json_match = re.search(r'```json\n?(.*?)\n?```', response, re.DOTALL)
+            json_match = re.search(r"```json\n?(.*?)\n?```", response, re.DOTALL)
 
             if not json_match:
                 # Fallback
@@ -1244,34 +1204,32 @@ PART 2 - Structured Data (JSON format):
                         description=f"Document uploaded: {parsed_doc.filename}",
                         claimant_name=user_profile.name or "User",
                         confidence=FieldConfidence(
-                            title=0.3, case_type=0.3, description=0.3,
-                            opposing_party=0.0, case_number=0.0,
-                            court_name=0.0, filing_deadline=0.0,
-                            next_hearing_date=0.0
+                            title=0.3,
+                            case_type=0.3,
+                            description=0.3,
+                            opposing_party=0.0,
+                            case_number=0.0,
+                            court_name=0.0,
+                            filing_deadline=0.0,
+                            next_hearing_date=0.0,
                         ),
-                        extracted_from={}
-                    )
+                        extracted_from={},
+                    ),
                 )
 
-            analysis_text = response[:json_match.start()].strip()
+            analysis_text = response[: json_match.start()].strip()
             json_str = json_match.group(1)
 
             suggested_case_data = SuggestedCaseData(**json.loads(json_str))
             suggested_case_data.claimant_name = user_profile.name or "User"
 
             return DocumentExtractionResponse(
-                analysis=analysis_text or response,
-                suggested_case_data=suggested_case_data
+                analysis=analysis_text or response, suggested_case_data=suggested_case_data
             )
 
         except Exception as e:
             if self.audit_logger:
                 self.audit_logger.log_error(
-                    f"Document extraction failed",
-                    error=str(e),
-                    filename=parsed_doc.filename
+                    f"Document extraction failed", error=str(e), filename=parsed_doc.filename
                 )
-            raise HTTPException(
-                status_code=500,
-                detail=f"Document extraction failed: {str(e)}"
-            )
+            raise HTTPException(status_code=500, detail=f"Document extraction failed: {str(e)}")

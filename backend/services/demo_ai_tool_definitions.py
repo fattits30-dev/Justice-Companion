@@ -68,8 +68,10 @@ def demo_search_case_law_tool():
     print(f"\nParameters:")
     for param_name, param in tool.function.parameters.properties.items():
         if isinstance(param, ToolParameter):
-            required = "(required)" if param_name in tool.function.parameters.required else "(optional)"
-            param_type = param.type.value if hasattr(param.type, 'value') else param.type
+            required = (
+                "(required)" if param_name in tool.function.parameters.required else "(optional)"
+            )
+            param_type = param.type.value if hasattr(param.type, "value") else param.type
             print(f"  - {param_name:15} {param_type:10} {required}")
             print(f"    Description: {param.description}")
             if param.enum:
@@ -181,26 +183,25 @@ def demo_custom_tool():
             parameters=ToolParameters(
                 properties={
                     "text": ToolParameter(
-                        type=ToolParameterType.STRING,
-                        description="Legal text to analyze"
+                        type=ToolParameterType.STRING, description="Legal text to analyze"
                     ),
                     "entity_types": ToolParameter(
                         type=ToolParameterType.ARRAY,
                         description="Types of entities to extract",
                         items={
                             "type": "string",
-                            "enum": ["party", "court", "date", "statute", "case"]
-                        }
+                            "enum": ["party", "court", "date", "statute", "case"],
+                        },
                     ),
                     "confidence_threshold": ToolParameter(
                         type=ToolParameterType.NUMBER,
                         description="Minimum confidence score (0-1)",
-                        default=0.8
-                    )
+                        default=0.8,
+                    ),
                 },
-                required=["text"]
-            )
-        )
+                required=["text"],
+            ),
+        ),
     )
 
     print("Custom tool created:")
@@ -266,7 +267,7 @@ def demo_type_safety():
         tool = ToolFunction(
             name="valid_snake_case",
             description="A valid function name",
-            parameters=ToolParameters()
+            parameters=ToolParameters(),
         )
         print(f"  [OK] Success: {tool.name}")
     except Exception as e:
@@ -277,7 +278,7 @@ def demo_type_safety():
         tool = ToolFunction(
             name="InvalidCamelCase",
             description="An invalid function name",
-            parameters=ToolParameters()
+            parameters=ToolParameters(),
         )
         print(f"  [OK] Success: {tool.name}")
     except Exception as e:
@@ -288,11 +289,11 @@ def demo_type_safety():
         tool = ToolFunction(
             name="test_func",
             description="Short",  # Too short (min 10 chars)
-            parameters=ToolParameters()
+            parameters=ToolParameters(),
         )
         print(f"  [OK] Success: {tool.name}")
     except Exception as e:
-        print(f"  [ERROR] Error: Validation failed (expected)")
+        print("  [ERROR] Error: Validation failed (expected)")
 
 
 def main():

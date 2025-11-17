@@ -269,7 +269,7 @@ export class EvidenceApiClient {
     }
 
     // Cast to ParsedDocument (backend may return partial data)
-    return response.data as ParsedDocument;
+    return response.data as unknown as ParsedDocument;
   }
 
   /**
@@ -287,7 +287,7 @@ export class EvidenceApiClient {
     }
 
     // Cast to CitationResponse (backend may return partial data)
-    return response.data as CitationResponse;
+    return response.data as unknown as CitationResponse;
   }
 
   /**

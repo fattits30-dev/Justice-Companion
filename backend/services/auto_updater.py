@@ -46,15 +46,14 @@ Security:
 
 import asyncio
 import hashlib
-import json
 import logging
 import os
 import re
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, asdict
 from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
-from typing import Optional, List, Dict, Any, Callable, Tuple
+from typing import Optional, List, Dict, Any, Callable
 from urllib.parse import urlparse
 
 import httpx
@@ -71,6 +70,7 @@ logger = logging.getLogger(__name__)
 
 class UpdateChannel(str, Enum):
     """Update channel enumeration."""
+
     STABLE = "stable"
     BETA = "beta"
     ALPHA = "alpha"
@@ -79,6 +79,7 @@ class UpdateChannel(str, Enum):
 @dataclass
 class AutoUpdaterConfig:
     """Configuration for auto-updater."""
+
     check_on_startup: bool = True
     update_server_url: Optional[str] = None
     channel: UpdateChannel = UpdateChannel.STABLE
@@ -90,6 +91,7 @@ class AutoUpdaterConfig:
 @dataclass
 class UpdateInfo:
     """Information about an available update."""
+
     version: str
     download_url: str
     release_notes: str
@@ -107,6 +109,7 @@ class UpdateInfo:
 @dataclass
 class ProgressInfo:
     """Download progress information."""
+
     transferred: int
     total: int
     percent: float
@@ -120,6 +123,7 @@ class ProgressInfo:
 @dataclass
 class UpdateStatus:
     """Current status of the updater."""
+
     current_version: str
     latest_version: Optional[str] = None
     checking: bool = False
@@ -137,6 +141,7 @@ class UpdateStatus:
 @dataclass
 class UpdateCheckResult:
     """Result of checking for updates."""
+
     update_available: bool
     current_version: str
     latest_version: Optional[str] = None
@@ -149,7 +154,7 @@ class UpdateCheckResult:
             "update_available": self.update_available,
             "current_version": self.current_version,
             "latest_version": self.latest_version,
-            "error": self.error
+            "error": self.error,
         }
         if self.update_info:
             result["update_info"] = self.update_info.to_dict()
@@ -159,6 +164,7 @@ class UpdateCheckResult:
 @dataclass
 class UpdateDownloadResult:
     """Result of downloading an update."""
+
     success: bool
     file_path: Optional[str] = None
     error: Optional[str] = None
@@ -176,7 +182,6 @@ class UpdateDownloadResult:
 
 class AutoUpdaterError(Exception):
     """Auto updater error exception."""
-    pass
 
 
 class AutoUpdater:
@@ -196,7 +201,7 @@ class AutoUpdater:
         repo: str,
         current_version: str,
         config: Optional[AutoUpdaterConfig] = None,
-        audit_logger: Optional[Any] = None
+        audit_logger: Optional[Any] = None,
     ):
         """
         Initialize auto updater.
@@ -213,7 +218,7 @@ class AutoUpdater:
         self.audit_logger = audit_logger
 
         # Validate repository format
-        if not re.match(r'^[\w-]+/[\w-]+$', repo):
+        if not re.match(r"^[\w-]+/[\w-]+$", repo):
             raise AutoUpdaterError(f"Invalid repository format: {repo}. Expected 'owner/repo'")
 
         # Validate current version
@@ -248,19 +253,14 @@ class AutoUpdater:
     async def _ensure_client(self):
         """Ensure HTTP client is initialized."""
         if not self.client:
-            headers = {
-                "User-Agent": self.USER_AGENT,
-                "Accept": "application/vnd.github.v3+json"
-            }
+            headers = {"User-Agent": self.USER_AGENT, "Accept": "application/vnd.github.v3+json"}
 
             # Add GitHub token if provided (for private repos)
             if self.config.github_token:
                 headers["Authorization"] = f"token {self.config.github_token}"
 
             self.client = httpx.AsyncClient(
-                headers=headers,
-                timeout=self.config.timeout_seconds,
-                follow_redirects=True
+                headers=headers, timeout=self.config.timeout_seconds, follow_redirects=True
             )
 
     async def close(self):
@@ -318,7 +318,7 @@ class AutoUpdater:
             # Beta channel: stable + beta releases
             elif self.config.channel == UpdateChannel.BETA:
                 if version.is_prerelease:
-                    return any(pre[0] in ('beta', 'b') for pre in version.pre or [])
+                    return any(pre[0] in ("beta", "b") for pre in version.pre or [])
                 return True
 
             # Alpha channel: all releases
@@ -374,7 +374,7 @@ class AutoUpdater:
 
             # Exponential backoff
             if attempt < self.config.max_retries - 1:
-                await asyncio.sleep(2 ** attempt)
+                await asyncio.sleep(2**attempt)
 
         return []
 
@@ -413,7 +413,7 @@ class AutoUpdater:
             published_at=release.get("published_at", ""),
             size_bytes=asset.get("size"),
             tag_name=tag_name,
-            is_prerelease=release.get("prerelease", False)
+            is_prerelease=release.get("prerelease", False),
         )
 
     async def check_for_updates(self) -> UpdateCheckResult:
@@ -443,9 +443,10 @@ class AutoUpdater:
                 # Check if this version is newer than current
                 if self.compare_versions(update_info.version, self.current_version) > 0:
                     # Check if this is newer than previously found update
-                    if not latest_update or self.compare_versions(
-                        update_info.version, latest_update.version
-                    ) > 0:
+                    if (
+                        not latest_update
+                        or self.compare_versions(update_info.version, latest_update.version) > 0
+                    ):
                         latest_update = update_info
 
             # Update status
@@ -467,15 +468,15 @@ class AutoUpdater:
                         details={
                             "current_version": self.current_version,
                             "latest_version": latest_update.version,
-                            "update_available": True
-                        }
+                            "update_available": True,
+                        },
                     )
 
                 return UpdateCheckResult(
                     update_available=True,
                     current_version=self.current_version,
                     latest_version=latest_update.version,
-                    update_info=latest_update
+                    update_info=latest_update,
                 )
             else:
                 self.status.update_available = False
@@ -483,8 +484,7 @@ class AutoUpdater:
                 logger.info(f"[AutoUpdater] No updates available (current: {self.current_version})")
 
                 return UpdateCheckResult(
-                    update_available=False,
-                    current_version=self.current_version
+                    update_available=False, current_version=self.current_version
                 )
 
         except AutoUpdaterError as e:
@@ -494,9 +494,7 @@ class AutoUpdater:
             logger.error(f"[AutoUpdater] Error checking for updates: {e}")
 
             return UpdateCheckResult(
-                update_available=False,
-                current_version=self.current_version,
-                error=str(e)
+                update_available=False, current_version=self.current_version, error=str(e)
             )
 
         except Exception as e:
@@ -508,13 +506,11 @@ class AutoUpdater:
             return UpdateCheckResult(
                 update_available=False,
                 current_version=self.current_version,
-                error=f"Unexpected error: {e}"
+                error=f"Unexpected error: {e}",
             )
 
     async def download_update(
-        self,
-        update_info: UpdateInfo,
-        output_path: Optional[str] = None
+        self, update_info: UpdateInfo, output_path: Optional[str] = None
     ) -> UpdateDownloadResult:
         """
         Download update file.
@@ -589,16 +585,14 @@ class AutoUpdater:
                                 transferred=bytes_downloaded,
                                 total=total_size,
                                 percent=percent,
-                                bytes_per_second=bytes_per_second
+                                bytes_per_second=bytes_per_second,
                             )
 
                             for callback in self.download_progress_callbacks:
                                 try:
                                     callback(percent)
                                 except Exception as e:
-                                    logger.warning(
-                                        f"[AutoUpdater] Error in progress callback: {e}"
-                                    )
+                                    logger.warning(f"[AutoUpdater] Error in progress callback: {e}")
 
             # Verify checksum if provided
             checksum_verified = False
@@ -627,14 +621,12 @@ class AutoUpdater:
                     details={
                         "version": update_info.version,
                         "size_bytes": bytes_downloaded,
-                        "checksum_verified": checksum_verified
-                    }
+                        "checksum_verified": checksum_verified,
+                    },
                 )
 
             return UpdateDownloadResult(
-                success=True,
-                file_path=output_path,
-                checksum_verified=checksum_verified
+                success=True, file_path=output_path, checksum_verified=checksum_verified
             )
 
         except AutoUpdaterError as e:
@@ -643,10 +635,7 @@ class AutoUpdater:
 
             logger.error(f"[AutoUpdater] Error downloading update: {e}")
 
-            return UpdateDownloadResult(
-                success=False,
-                error=str(e)
-            )
+            return UpdateDownloadResult(success=False, error=str(e))
 
         except Exception as e:
             self.status.downloading = False
@@ -654,10 +643,7 @@ class AutoUpdater:
 
             logger.exception(f"[AutoUpdater] Unexpected error downloading update: {e}")
 
-            return UpdateDownloadResult(
-                success=False,
-                error=f"Unexpected error: {e}"
-            )
+            return UpdateDownloadResult(success=False, error=f"Unexpected error: {e}")
 
     def on_download_progress(self, callback: Callable[[float], None]):
         """

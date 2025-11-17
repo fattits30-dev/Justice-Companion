@@ -12,21 +12,17 @@ from pathlib import Path
 # Add backend directory to path for direct execution
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from backend.services.port_manager import (
-    PortManager,
-    PortManagerConfig,
-    get_port_manager
-)
+from backend.services.port_manager import PortManager, PortManagerConfig, get_port_manager
 
 # Configure UTF-8 encoding for Windows console
 import os
-if sys.platform == 'win32':
-    os.system('chcp 65001 >nul 2>&1')  # Set UTF-8 code page
+
+if sys.platform == "win32":
+    os.system("chcp 65001 >nul 2>&1")  # Set UTF-8 code page
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -37,9 +33,9 @@ CROSS = "[FAIL]"
 
 async def example_basic_usage():
     """Example 1: Basic port allocation."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("Example 1: Basic Port Allocation")
-    print("="*70)
+    print("=" * 70)
 
     # Get singleton instance
     port_manager = get_port_manager()
@@ -63,9 +59,9 @@ async def example_basic_usage():
 
 async def example_allocate_all_required():
     """Example 2: Allocate all required ports."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("Example 2: Allocate All Required Ports")
-    print("="*70)
+    print("=" * 70)
 
     port_manager = get_port_manager()
 
@@ -88,9 +84,9 @@ async def example_allocate_all_required():
 
 async def example_port_availability():
     """Example 3: Check port availability."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("Example 3: Check Port Availability")
-    print("="*70)
+    print("=" * 70)
 
     port_manager = get_port_manager()
 
@@ -116,15 +112,12 @@ async def example_port_availability():
 
 async def example_fallback_allocation():
     """Example 4: Port allocation with fallback."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("Example 4: Port Allocation with Fallback")
-    print("="*70)
+    print("=" * 70)
 
     # Enable auto-allocation with fallback
-    config = PortManagerConfig(
-        enable_auto_allocation=True,
-        max_retries=10
-    )
+    config = PortManagerConfig(enable_auto_allocation=True, max_retries=10)
     port_manager = PortManager(config)
 
     # Allocate port - will use fallback if default is busy
@@ -145,9 +138,9 @@ async def example_fallback_allocation():
 
 async def example_port_status():
     """Example 5: Get port status."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("Example 5: Get Port Status")
-    print("="*70)
+    print("=" * 70)
 
     port_manager = get_port_manager()
 
@@ -170,9 +163,9 @@ async def example_port_status():
 
 async def example_environment_variables():
     """Example 6: Generate environment variables."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("Example 6: Generate Environment Variables")
-    print("="*70)
+    print("=" * 70)
 
     port_manager = get_port_manager()
 
@@ -197,9 +190,9 @@ async def example_environment_variables():
 
 async def example_wait_for_port():
     """Example 7: Wait for service to start."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("Example 7: Wait for Service to Start")
-    print("="*70)
+    print("=" * 70)
 
     port_manager = get_port_manager()
 
@@ -208,11 +201,7 @@ async def example_wait_for_port():
 
     # In real usage, another process would be starting the service
     # For demo, we'll just show the timeout case
-    started = await port_manager.wait_for_port(
-        port=5050,
-        timeout=2.0,
-        check_interval=0.5
-    )
+    started = await port_manager.wait_for_port(port=5050, timeout=2.0, check_interval=0.5)
 
     if started:
         print(f"{CHECK} Service started successfully!")
@@ -224,9 +213,9 @@ async def example_wait_for_port():
 
 async def example_release_ports():
     """Example 8: Release port allocations."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("Example 8: Release Port Allocations")
-    print("="*70)
+    print("=" * 70)
 
     port_manager = get_port_manager()
 
@@ -256,9 +245,9 @@ async def example_release_ports():
 
 async def example_configuration_persistence():
     """Example 9: Save and load configuration."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("Example 9: Configuration Persistence")
-    print("="*70)
+    print("=" * 70)
 
     import tempfile
     import os
@@ -267,10 +256,7 @@ async def example_configuration_persistence():
     temp_dir = tempfile.gettempdir()
     config_path = os.path.join(temp_dir, "port_manager_config.json")
 
-    config = PortManagerConfig(
-        port_config_path=config_path,
-        enable_auto_allocation=True
-    )
+    config = PortManagerConfig(port_config_path=config_path, enable_auto_allocation=True)
     port_manager = PortManager(config)
 
     # Allocate ports
@@ -300,9 +286,9 @@ async def example_configuration_persistence():
 
 async def example_error_handling():
     """Example 10: Error handling."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("Example 10: Error Handling")
-    print("="*70)
+    print("=" * 70)
 
     port_manager = get_port_manager()
 
@@ -332,9 +318,9 @@ async def example_error_handling():
 
 async def main():
     """Run all examples."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("PortManager Service - Example Usage")
-    print("="*70)
+    print("=" * 70)
 
     examples = [
         ("Basic Usage", example_basic_usage),
@@ -355,14 +341,15 @@ async def main():
         except Exception as e:
             print(f"\n{CROSS} Example {i} ({name}) failed: {e}")
             import traceback
+
             traceback.print_exc()
 
         # Small delay between examples
         await asyncio.sleep(0.5)
 
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("All examples completed!")
-    print("="*70 + "\n")
+    print("=" * 70 + "\n")
 
 
 if __name__ == "__main__":

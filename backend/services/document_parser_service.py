@@ -29,9 +29,7 @@ Usage:
 import os
 import re
 import logging
-from pathlib import Path
 from typing import Optional, Dict, Any, List
-from datetime import datetime
 
 from pydantic import BaseModel, Field, validator
 from fastapi import HTTPException
@@ -62,6 +60,7 @@ class ParsedDocumentMetadata(BaseModel):
 
     class Config:
         """Pydantic configuration."""
+
         extra = "allow"  # Allow additional fields
 
 
@@ -85,10 +84,10 @@ class ParsedDocument(BaseModel):
     word_count: int = Field(..., description="Total word count")
     metadata: Optional[ParsedDocumentMetadata] = Field(None, description="Document metadata")
 
-    @validator('file_type')
+    @validator("file_type")
     def validate_file_type(cls, v):
         """Validate file type is supported."""
-        allowed = ['pdf', 'docx', 'txt']
+        allowed = ["pdf", "docx", "txt"]
         if v not in allowed:
             raise ValueError(f"File type must be one of {allowed}, got: {v}")
         return v
@@ -113,7 +112,7 @@ class DocumentParserService:
     MAX_FILE_SIZE = 10 * 1024 * 1024
 
     # Supported file extensions
-    SUPPORTED_EXTENSIONS = ['.pdf', '.docx', '.txt']
+    SUPPORTED_EXTENSIONS = [".pdf", ".docx", ".txt"]
 
     def __init__(self, audit_logger=None, max_file_size: Optional[int] = None):
         """
@@ -168,21 +167,21 @@ class DocumentParserService:
                 resource_id=file_path,
                 action="parse",
                 details={"filename": filename, "extension": ext, "size_bytes": file_size},
-                success=True
+                success=True,
             )
 
         try:
             # Route to appropriate parser
-            if ext == '.pdf':
+            if ext == ".pdf":
                 result = await self._parse_pdf(file_path, filename)
-            elif ext == '.docx':
+            elif ext == ".docx":
                 result = await self._parse_docx(file_path, filename)
-            elif ext == '.txt':
+            elif ext == ".txt":
                 result = await self._parse_txt(file_path, filename)
             else:
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Unsupported file format: {ext}. Supported: {', '.join(self.SUPPORTED_EXTENSIONS)}"
+                    detail=f"Unsupported file format: {ext}. Supported: {', '.join(self.SUPPORTED_EXTENSIONS)}",
                 )
 
             # Log successful parse
@@ -194,7 +193,7 @@ class DocumentParserService:
                     resource_id=file_path,
                     action="parse",
                     details={"word_count": result.word_count, "page_count": result.page_count},
-                    success=True
+                    success=True,
                 )
 
             return result
@@ -212,17 +211,14 @@ class DocumentParserService:
                     action="parse",
                     details={"error": str(e)},
                     success=False,
-                    error_message=str(e)
+                    error_message=str(e),
                 )
 
             logger.error(f"Failed to parse document {filename}: {e}")
             raise HTTPException(status_code=500, detail=f"Failed to parse document: {str(e)}")
 
     async def parse_document_buffer(
-        self,
-        buffer: bytes,
-        filename: str,
-        user_id: Optional[str] = None
+        self, buffer: bytes, filename: str, user_id: Optional[str] = None
     ) -> ParsedDocument:
         """
         Parse document from byte buffer.
@@ -255,21 +251,21 @@ class DocumentParserService:
                 resource_id=filename,
                 action="parse",
                 details={"filename": filename, "extension": ext, "size_bytes": file_size},
-                success=True
+                success=True,
             )
 
         try:
             # Route to appropriate parser
-            if ext == '.pdf':
+            if ext == ".pdf":
                 result = await self._parse_pdf_buffer(buffer, filename)
-            elif ext == '.docx':
+            elif ext == ".docx":
                 result = await self._parse_docx_buffer(buffer, filename)
-            elif ext == '.txt':
+            elif ext == ".txt":
                 result = await self._parse_txt_buffer(buffer, filename)
             else:
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Unsupported file format: {ext}. Supported: {', '.join(self.SUPPORTED_EXTENSIONS)}"
+                    detail=f"Unsupported file format: {ext}. Supported: {', '.join(self.SUPPORTED_EXTENSIONS)}",
                 )
 
             # Log successful parse
@@ -281,7 +277,7 @@ class DocumentParserService:
                     resource_id=filename,
                     action="parse",
                     details={"word_count": result.word_count, "page_count": result.page_count},
-                    success=True
+                    success=True,
                 )
 
             return result
@@ -299,7 +295,7 @@ class DocumentParserService:
                     action="parse",
                     details={"error": str(e)},
                     success=False,
-                    error_message=str(e)
+                    error_message=str(e),
                 )
 
             logger.error(f"Failed to parse document buffer {filename}: {e}")
@@ -321,11 +317,10 @@ class DocumentParserService:
         """
         if pypdf is None:
             raise HTTPException(
-                status_code=500,
-                detail="PDF parsing not available (pypdf not installed)"
+                status_code=500, detail="PDF parsing not available (pypdf not installed)"
             )
 
-        with open(file_path, 'rb') as f:
+        with open(file_path, "rb") as f:
             buffer = f.read()
 
         return await self._parse_pdf_buffer(buffer, filename)
@@ -346,13 +341,13 @@ class DocumentParserService:
         """
         if pypdf is None:
             raise HTTPException(
-                status_code=500,
-                detail="PDF parsing not available (pypdf not installed)"
+                status_code=500, detail="PDF parsing not available (pypdf not installed)"
             )
 
         try:
             # Use BytesIO to read from buffer
             from io import BytesIO
+
             pdf_file = BytesIO(buffer)
 
             # Parse PDF
@@ -363,44 +358,41 @@ class DocumentParserService:
             for page in reader.pages:
                 text_parts.append(page.extract_text())
 
-            text = '\n'.join(text_parts)
+            text = "\n".join(text_parts)
             page_count = len(reader.pages)
 
             # Extract metadata
             metadata_dict = {}
             if reader.metadata:
                 if reader.metadata.title:
-                    metadata_dict['title'] = reader.metadata.title
+                    metadata_dict["title"] = reader.metadata.title
                 if reader.metadata.author:
-                    metadata_dict['author'] = reader.metadata.author
+                    metadata_dict["author"] = reader.metadata.author
                 if reader.metadata.creation_date:
-                    metadata_dict['creation_date'] = str(reader.metadata.creation_date)
+                    metadata_dict["creation_date"] = str(reader.metadata.creation_date)
 
                 # Add any other metadata fields
-                metadata_dict['extra'] = {}
+                metadata_dict["extra"] = {}
                 if reader.metadata.subject:
-                    metadata_dict['extra']['subject'] = reader.metadata.subject
+                    metadata_dict["extra"]["subject"] = reader.metadata.subject
                 if reader.metadata.creator:
-                    metadata_dict['extra']['creator'] = reader.metadata.creator
+                    metadata_dict["extra"]["creator"] = reader.metadata.creator
                 if reader.metadata.producer:
-                    metadata_dict['extra']['producer'] = reader.metadata.producer
+                    metadata_dict["extra"]["producer"] = reader.metadata.producer
 
             metadata = ParsedDocumentMetadata(**metadata_dict) if metadata_dict else None
 
             return ParsedDocument(
                 text=text,
                 filename=filename,
-                file_type='pdf',
+                file_type="pdf",
                 page_count=page_count,
                 word_count=self._count_words(text),
-                metadata=metadata
+                metadata=metadata,
             )
 
         except Exception as e:
-            raise HTTPException(
-                status_code=500,
-                detail=f"Failed to parse PDF: {str(e)}"
-            )
+            raise HTTPException(status_code=500, detail=f"Failed to parse PDF: {str(e)}")
 
     async def _parse_docx(self, file_path: str, filename: str) -> ParsedDocument:
         """
@@ -418,11 +410,10 @@ class DocumentParserService:
         """
         if docx is None:
             raise HTTPException(
-                status_code=500,
-                detail="DOCX parsing not available (python-docx not installed)"
+                status_code=500, detail="DOCX parsing not available (python-docx not installed)"
             )
 
-        with open(file_path, 'rb') as f:
+        with open(file_path, "rb") as f:
             buffer = f.read()
 
         return await self._parse_docx_buffer(buffer, filename)
@@ -443,13 +434,13 @@ class DocumentParserService:
         """
         if docx is None:
             raise HTTPException(
-                status_code=500,
-                detail="DOCX parsing not available (python-docx not installed)"
+                status_code=500, detail="DOCX parsing not available (python-docx not installed)"
             )
 
         try:
             # Use BytesIO to read from buffer
             from io import BytesIO
+
             docx_file = BytesIO(buffer)
 
             # Parse DOCX
@@ -457,44 +448,43 @@ class DocumentParserService:
 
             # Extract text from all paragraphs
             text_parts = [paragraph.text for paragraph in doc.paragraphs]
-            text = '\n'.join(text_parts)
+            text = "\n".join(text_parts)
 
             # Extract core properties metadata
             metadata_dict = {}
             if doc.core_properties:
                 if doc.core_properties.title:
-                    metadata_dict['title'] = doc.core_properties.title
+                    metadata_dict["title"] = doc.core_properties.title
                 if doc.core_properties.author:
-                    metadata_dict['author'] = doc.core_properties.author
+                    metadata_dict["author"] = doc.core_properties.author
                 if doc.core_properties.created:
-                    metadata_dict['creation_date'] = doc.core_properties.created.isoformat()
+                    metadata_dict["creation_date"] = doc.core_properties.created.isoformat()
 
                 # Add extra metadata
-                metadata_dict['extra'] = {}
+                metadata_dict["extra"] = {}
                 if doc.core_properties.subject:
-                    metadata_dict['extra']['subject'] = doc.core_properties.subject
+                    metadata_dict["extra"]["subject"] = doc.core_properties.subject
                 if doc.core_properties.keywords:
-                    metadata_dict['extra']['keywords'] = doc.core_properties.keywords
+                    metadata_dict["extra"]["keywords"] = doc.core_properties.keywords
                 if doc.core_properties.last_modified_by:
-                    metadata_dict['extra']['last_modified_by'] = doc.core_properties.last_modified_by
+                    metadata_dict["extra"][
+                        "last_modified_by"
+                    ] = doc.core_properties.last_modified_by
                 if doc.core_properties.modified:
-                    metadata_dict['extra']['modified'] = doc.core_properties.modified.isoformat()
+                    metadata_dict["extra"]["modified"] = doc.core_properties.modified.isoformat()
 
             metadata = ParsedDocumentMetadata(**metadata_dict) if metadata_dict else None
 
             return ParsedDocument(
                 text=text,
                 filename=filename,
-                file_type='docx',
+                file_type="docx",
                 word_count=self._count_words(text),
-                metadata=metadata
+                metadata=metadata,
             )
 
         except Exception as e:
-            raise HTTPException(
-                status_code=500,
-                detail=f"Failed to parse DOCX: {str(e)}"
-            )
+            raise HTTPException(status_code=500, detail=f"Failed to parse DOCX: {str(e)}")
 
     async def _parse_txt(self, file_path: str, filename: str) -> ParsedDocument:
         """
@@ -510,7 +500,7 @@ class DocumentParserService:
         Raises:
             HTTPException: If parsing fails
         """
-        with open(file_path, 'rb') as f:
+        with open(file_path, "rb") as f:
             buffer = f.read()
 
         return await self._parse_txt_buffer(buffer, filename)
@@ -532,23 +522,17 @@ class DocumentParserService:
         try:
             # Decode UTF-8 (with fallback to latin-1)
             try:
-                text = buffer.decode('utf-8')
+                text = buffer.decode("utf-8")
             except UnicodeDecodeError:
                 logger.warning(f"UTF-8 decode failed for {filename}, trying latin-1")
-                text = buffer.decode('latin-1')
+                text = buffer.decode("latin-1")
 
             return ParsedDocument(
-                text=text,
-                filename=filename,
-                file_type='txt',
-                word_count=self._count_words(text)
+                text=text, filename=filename, file_type="txt", word_count=self._count_words(text)
             )
 
         except Exception as e:
-            raise HTTPException(
-                status_code=500,
-                detail=f"Failed to parse TXT: {str(e)}"
-            )
+            raise HTTPException(status_code=500, detail=f"Failed to parse TXT: {str(e)}")
 
     def _count_words(self, text: str) -> int:
         """
@@ -561,7 +545,7 @@ class DocumentParserService:
             Word count
         """
         # Split on whitespace and filter empty strings
-        words = re.split(r'\s+', text.strip())
+        words = re.split(r"\s+", text.strip())
         return len([word for word in words if word])
 
     def extract_summary(self, text: str, max_words: int = 500) -> str:
@@ -575,12 +559,12 @@ class DocumentParserService:
         Returns:
             Summary text (truncated if needed)
         """
-        words = re.split(r'\s+', text.strip())
+        words = re.split(r"\s+", text.strip())
 
         if len(words) <= max_words:
             return text
 
-        return ' '.join(words[:max_words]) + '...'
+        return " ".join(words[:max_words]) + "..."
 
     def validate_file_size(self, file_size: int) -> FileSizeValidationResult:
         """
@@ -595,8 +579,7 @@ class DocumentParserService:
         if file_size > self.max_file_size:
             max_mb = self.max_file_size / 1024 / 1024
             return FileSizeValidationResult(
-                valid=False,
-                error=f"File size exceeds maximum allowed size of {max_mb:.1f}MB"
+                valid=False, error=f"File size exceeds maximum allowed size of {max_mb:.1f}MB"
             )
 
         return FileSizeValidationResult(valid=True)
@@ -606,7 +589,7 @@ class DocumentParserService:
         Get list of supported file extensions.
 
         Returns:
-            List of supported extensions (e.g., ['.pdf', '.docx', '.txt'])
+            List of supported extensions (e.g., ['.pd', '.docx', '.txt'])
         """
         return self.SUPPORTED_EXTENSIONS.copy()
 
@@ -626,9 +609,7 @@ class DocumentParserService:
 
 # Convenience function for quick usage
 async def parse_document(
-    file_path: str,
-    audit_logger=None,
-    user_id: Optional[str] = None
+    file_path: str, audit_logger=None, user_id: Optional[str] = None
 ) -> ParsedDocument:
     """
     Convenience function to parse a document.

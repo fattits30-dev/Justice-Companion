@@ -51,20 +51,20 @@ async def main():
     print()
 
     # Display legislation results
-    if results['legislation']:
+    if results["legislation"]:
         print("Legislation:")
-        for i, law in enumerate(results['legislation'][:3], 1):
+        for i, law in enumerate(results["legislation"][:3], 1):
             print(f"  {i}. {law['title']}")
-            if law.get('section'):
+            if law.get("section"):
                 print(f"     Section: {law['section']}")
             print(f"     URL: {law['url']}")
             print(f"     Relevance: {law['relevance']:.2f}")
             print()
 
     # Display case law results
-    if results['cases']:
+    if results["cases"]:
         print("Case Law:")
-        for i, case in enumerate(results['cases'][:3], 1):
+        for i, case in enumerate(results["cases"][:3], 1):
             print(f"  {i}. {case['citation']}")
             print(f"     Court: {case['court']}")
             print(f"     Date: {case['date']}")
@@ -102,7 +102,7 @@ async def main():
         "My landlord wants to evict me",
         "I was discriminated against at work",
         "What are my consumer rights for a faulty product?",
-        "I need help with child custody arrangements"
+        "I need help with child custody arrangements",
     ]
 
     for q in test_questions:

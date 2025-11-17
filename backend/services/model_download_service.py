@@ -43,7 +43,6 @@ Usage:
 import hashlib
 import logging
 import time
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional, Callable, Dict, Any, List
 from dataclasses import dataclass
@@ -58,6 +57,7 @@ logger = logging.getLogger(__name__)
 
 class DownloadStatus(str, Enum):
     """Download status enumeration."""
+
     DOWNLOADING = "downloading"
     COMPLETE = "complete"
     ERROR = "error"
@@ -79,6 +79,7 @@ class ModelInfo:
         description: Model description and use case
         recommended: Whether this is the recommended model
     """
+
     id: str
     name: str
     file_name: str
@@ -98,7 +99,7 @@ class ModelInfo:
             "size": self.size,
             "sha256": self.sha256,
             "description": self.description,
-            "recommended": self.recommended
+            "recommended": self.recommended,
         }
 
 
@@ -116,6 +117,7 @@ class DownloadProgress:
         status: Current download status
         error: Error message if status is ERROR
     """
+
     model_id: str
     downloaded_bytes: int
     total_bytes: int
@@ -133,7 +135,7 @@ class DownloadProgress:
             "percentage": self.percentage,
             "speed": self.speed,
             "status": self.status.value,
-            "error": self.error
+            "error": self.error,
         }
 
 
@@ -147,6 +149,7 @@ class ActiveDownload:
         start_time: Download start timestamp (seconds since epoch)
         last_progress: Last progress update timestamp
     """
+
     model_id: str
     start_time: float
     last_progress: float
@@ -175,7 +178,7 @@ class ModelDownloadService:
             size=5_030_000_000,  # ~5.03 GB
             sha256=None,  # Optional checksum
             description="Recommended for AMD Radeon RX 6600 (5.86GB VRAM available)",
-            recommended=True
+            recommended=True,
         ),
         ModelInfo(
             id="qwen3-8b-q5",
@@ -185,7 +188,7 @@ class ModelDownloadService:
             size=5_850_000_000,  # ~5.85 GB
             sha256=None,
             description="Higher quality, uses all available VRAM",
-            recommended=False
+            recommended=False,
         ),
         ModelInfo(
             id="qwen3-8b-iq4",
@@ -195,8 +198,8 @@ class ModelDownloadService:
             size=4_560_000_000,  # ~4.56 GB
             sha256=None,
             description="Smaller, faster, decent quality",
-            recommended=False
-        )
+            recommended=False,
+        ),
     ]
 
     def __init__(self, models_dir: str, audit_logger=None):
@@ -227,7 +230,7 @@ class ModelDownloadService:
                     resource_id="singleton",
                     action="initialize",
                     details={"models_dir": str(self.models_dir)},
-                    success=True
+                    success=True,
                 )
         except OSError as e:
             logger.error(f"Failed to create models directory: {e}")
@@ -293,16 +296,14 @@ class ModelDownloadService:
             List of model info dictionaries for downloaded models
         """
         return [
-            model.to_dict()
-            for model in self.AVAILABLE_MODELS
-            if self.is_model_downloaded(model.id)
+            model.to_dict() for model in self.AVAILABLE_MODELS if self.is_model_downloaded(model.id)
         ]
 
     async def download_model(
         self,
         model_id: str,
         progress_callback: Optional[Callable[[DownloadProgress], None]] = None,
-        user_id: Optional[str] = None
+        user_id: Optional[str] = None,
     ) -> bool:
         """
         Download a model from HuggingFace with progress tracking.
@@ -339,7 +340,7 @@ class ModelDownloadService:
                     action="download",
                     details={"error": "Model not found in catalog"},
                     success=False,
-                    error_message="Model not found in catalog"
+                    error_message="Model not found in catalog",
                 )
             raise HTTPException(status_code=404, detail=f"Model not found: {model_id}")
 
@@ -347,14 +348,16 @@ class ModelDownloadService:
         if self.is_model_downloaded(model_id):
             logger.info(f"Model already downloaded: {model_id}")
             if progress_callback:
-                progress_callback(DownloadProgress(
-                    model_id=model_id,
-                    downloaded_bytes=model.size,
-                    total_bytes=model.size,
-                    percentage=100.0,
-                    speed=0.0,
-                    status=DownloadStatus.COMPLETE
-                ))
+                progress_callback(
+                    DownloadProgress(
+                        model_id=model_id,
+                        downloaded_bytes=model.size,
+                        total_bytes=model.size,
+                        percentage=100.0,
+                        speed=0.0,
+                        status=DownloadStatus.COMPLETE,
+                    )
+                )
             return True
 
         # Check if download already in progress
@@ -364,9 +367,7 @@ class ModelDownloadService:
 
         # Register active download
         self.active_downloads[model_id] = ActiveDownload(
-            model_id=model_id,
-            start_time=time.time(),
-            last_progress=time.time()
+            model_id=model_id, start_time=time.time(), last_progress=time.time()
         )
 
         model_path = self.models_dir / model.file_name
@@ -381,12 +382,8 @@ class ModelDownloadService:
                     resource_type="model",
                     resource_id=model_id,
                     action="download",
-                    details={
-                        "url": model.url,
-                        "size": model.size,
-                        "file_name": model.file_name
-                    },
-                    success=True
+                    details={"url": model.url, "size": model.size, "file_name": model.file_name},
+                    success=True,
                 )
 
             # Download file
@@ -395,7 +392,7 @@ class ModelDownloadService:
                 dest_path=temp_path,
                 total_size=model.size,
                 model_id=model_id,
-                progress_callback=progress_callback
+                progress_callback=progress_callback,
             )
 
             # Verify checksum if provided
@@ -424,21 +421,23 @@ class ModelDownloadService:
                     details={
                         "path": str(model_path),
                         "size": model.size,
-                        "checksum_verified": model.sha256 is not None
+                        "checksum_verified": model.sha256 is not None,
                     },
-                    success=True
+                    success=True,
                 )
 
             # Send completion progress
             if progress_callback:
-                progress_callback(DownloadProgress(
-                    model_id=model_id,
-                    downloaded_bytes=model.size,
-                    total_bytes=model.size,
-                    percentage=100.0,
-                    speed=0.0,
-                    status=DownloadStatus.COMPLETE
-                ))
+                progress_callback(
+                    DownloadProgress(
+                        model_id=model_id,
+                        downloaded_bytes=model.size,
+                        total_bytes=model.size,
+                        percentage=100.0,
+                        speed=0.0,
+                        status=DownloadStatus.COMPLETE,
+                    )
+                )
 
             return True
 
@@ -459,20 +458,22 @@ class ModelDownloadService:
                     action="download",
                     details={"error": error_message},
                     success=False,
-                    error_message=error_message
+                    error_message=error_message,
                 )
 
             # Send error progress
             if progress_callback:
-                progress_callback(DownloadProgress(
-                    model_id=model_id,
-                    downloaded_bytes=0,
-                    total_bytes=model.size,
-                    percentage=0.0,
-                    speed=0.0,
-                    status=DownloadStatus.ERROR,
-                    error=error_message
-                ))
+                progress_callback(
+                    DownloadProgress(
+                        model_id=model_id,
+                        downloaded_bytes=0,
+                        total_bytes=model.size,
+                        percentage=0.0,
+                        speed=0.0,
+                        status=DownloadStatus.ERROR,
+                        error=error_message,
+                    )
+                )
 
             return False
 
@@ -513,7 +514,7 @@ class ModelDownloadService:
                     resource_id=model_id,
                     action="delete",
                     details={"path": str(model_path)},
-                    success=True
+                    success=True,
                 )
 
             return True
@@ -530,7 +531,7 @@ class ModelDownloadService:
                     action="delete",
                     details={"error": str(e)},
                     success=False,
-                    error_message=str(e)
+                    error_message=str(e),
                 )
 
             return False
@@ -556,20 +557,12 @@ class ModelDownloadService:
         """
         model = self._get_model_by_id(model_id)
         if not model:
-            return {
-                "valid": False,
-                "exists": False,
-                "error": "Model not found in catalog"
-            }
+            return {"valid": False, "exists": False, "error": "Model not found in catalog"}
 
         model_path = self.models_dir / model.file_name
 
         if not model_path.exists():
-            return {
-                "valid": False,
-                "exists": False,
-                "error": "Model file not found"
-            }
+            return {"valid": False, "exists": False, "error": "Model file not found"}
 
         try:
             # Check file size
@@ -581,7 +574,7 @@ class ModelDownloadService:
                 "exists": True,
                 "size_match": size_match,
                 "expected_size": model.size,
-                "actual_size": actual_size
+                "actual_size": actual_size,
             }
 
             # Verify checksum if available
@@ -597,11 +590,7 @@ class ModelDownloadService:
             return result
 
         except Exception as e:
-            return {
-                "valid": False,
-                "exists": True,
-                "error": str(e)
-            }
+            return {"valid": False, "exists": True, "error": str(e)}
 
     def _get_model_by_id(self, model_id: str) -> Optional[ModelInfo]:
         """
@@ -624,7 +613,7 @@ class ModelDownloadService:
         dest_path: Path,
         total_size: int,
         model_id: str,
-        progress_callback: Optional[Callable[[DownloadProgress], None]] = None
+        progress_callback: Optional[Callable[[DownloadProgress], None]] = None,
     ) -> None:
         """
         Download file from URL with progress tracking.
@@ -659,19 +648,23 @@ class ModelDownloadService:
 
                         if elapsed >= 1.0 or downloaded_bytes == total_size:
                             # Calculate speed (bytes per second)
-                            speed = (downloaded_bytes - last_bytes) / elapsed if elapsed > 0 else 0.0
+                            speed = (
+                                (downloaded_bytes - last_bytes) / elapsed if elapsed > 0 else 0.0
+                            )
                             last_update = now
                             last_bytes = downloaded_bytes
 
                             if progress_callback:
-                                progress_callback(DownloadProgress(
-                                    model_id=model_id,
-                                    downloaded_bytes=downloaded_bytes,
-                                    total_bytes=total_size,
-                                    percentage=(downloaded_bytes / total_size) * 100.0,
-                                    speed=speed,
-                                    status=DownloadStatus.DOWNLOADING
-                                ))
+                                progress_callback(
+                                    DownloadProgress(
+                                        model_id=model_id,
+                                        downloaded_bytes=downloaded_bytes,
+                                        total_bytes=total_size,
+                                        percentage=(downloaded_bytes / total_size) * 100.0,
+                                        speed=speed,
+                                        status=DownloadStatus.DOWNLOADING,
+                                    )
+                                )
 
     async def _calculate_sha256(self, file_path: Path) -> str:
         """

@@ -72,11 +72,10 @@ export class SessionPersistenceService {
 
       return available;
     } catch (error) {
-      logger.error(
-        "SessionPersistence",
-        "Error checking encryption availability",
-        { error },
-      );
+      logger.error("Error checking encryption availability", {
+        service: "SessionPersistence",
+        error,
+      });
       return false;
     }
   }
@@ -100,7 +99,8 @@ export class SessionPersistenceService {
         uuidVersion(sessionId) === SessionPersistenceService.UUID_V4_VERSION
       );
     } catch (error) {
-      logger.error("SessionPersistence", "Error validating UUID version", {
+      logger.error("Error validating UUID version", {
+        service: "SessionPersistence",
         error,
       });
       return false;
@@ -138,7 +138,8 @@ export class SessionPersistenceService {
       // Write encrypted data to file
       await fs.writeFile(storagePath, encrypted);
     } catch (error) {
-      logger.error("SessionPersistence", "Failed to store session ID", {
+      logger.error("Failed to store session ID", {
+        service: "SessionPersistence",
         error,
       });
 
@@ -182,7 +183,8 @@ export class SessionPersistenceService {
           return null;
         }
         // Other errors (permission, etc) should be logged
-        logger.error("SessionPersistence", "Failed to read session file", {
+        logger.error("Failed to read session file", {
+          service: "SessionPersistence",
           error,
         });
         return null;
@@ -206,7 +208,8 @@ export class SessionPersistenceService {
 
       return decrypted;
     } catch (error) {
-      logger.error("SessionPersistence", "Failed to retrieve session ID", {
+      logger.error("Failed to retrieve session ID", {
+        service: "SessionPersistence",
         error,
       });
 
@@ -243,7 +246,10 @@ export class SessionPersistenceService {
         // File doesn't exist or can't be deleted - not an error condition
       }
     } catch (error) {
-      logger.error("SessionPersistence", "Error clearing session", { error });
+      logger.error("Error clearing session", {
+        service: "SessionPersistence",
+        error,
+      });
       // Don't throw - clearing should be best effort
     }
   }

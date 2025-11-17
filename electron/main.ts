@@ -63,13 +63,34 @@ function createMainWindow(): BrowserWindow {
     window.loadFile(path.join(__dirname, "../renderer/index.html"));
   }
 
+  let windowShown = false;
+
   window.once("ready-to-show", () => {
     logger.info("Window ready-to-show", { service: "Main" });
+    windowShown = true;
     window.show();
   });
 
+  // Fallback: Force show window after 5 seconds if ready-to-show didn't fire
+  setTimeout(() => {
+    if (!windowShown) {
+      logger.warn("Window ready-to-show event didn't fire, forcing window to show", { service: "Main" });
+      window.show();
+      windowShown = true;
+    }
+  }, 5000);
+
   window.webContents.on("did-finish-load", () => {
     logger.info("Renderer finished loading", { service: "Main" });
+  });
+
+  // Filter out harmless Autofill DevTools warnings
+  window.webContents.on("console-message", (_event, level, message) => {
+    // Suppress Autofill DevTools errors (already disabled via disableBlinkFeatures)
+    if (message.includes("Autofill.enable") || message.includes("Autofill.setAddresses")) {
+      return; // Don't log these messages
+    }
+    // Allow other console messages to pass through (they'll be logged by renderer)
   });
 
   window.webContents.on("will-navigate", (event) => {

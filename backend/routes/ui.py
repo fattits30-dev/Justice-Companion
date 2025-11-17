@@ -60,18 +60,23 @@ router = APIRouter(prefix="/dialog", tags=["ui"])
 
 # ===== PYDANTIC MODELS =====
 
+
 class FileFilter(BaseModel):
     """
     File type filter for dialog (e.g., {name: "Images", extensions: ["jpg", "png"]})
     """
+
     name: str = Field(..., description="Human-readable filter name (e.g., 'Images')")
-    extensions: List[str] = Field(..., description="File extensions without dots (e.g., ['jpg', 'png'])")
+    extensions: List[str] = Field(
+        ..., description="File extensions without dots (e.g., ['jpg', 'png'])"
+    )
 
 
 class DialogProperty(str, Enum):
     """
     Properties for file open dialog (Electron dialog.showOpenDialog options)
     """
+
     OPEN_FILE = "openFile"
     OPEN_DIRECTORY = "openDirectory"
     MULTI_SELECTIONS = "multiSelections"
@@ -88,15 +93,22 @@ class OpenDialogRequest(BaseModel):
 
     Mimics Electron's dialog.showOpenDialog options.
     """
+
     title: Optional[str] = Field(None, description="Dialog window title")
-    default_path: Optional[str] = Field(None, description="Default directory to open", alias="defaultPath")
-    button_label: Optional[str] = Field(None, description="Custom label for confirm button", alias="buttonLabel")
+    default_path: Optional[str] = Field(
+        None, description="Default directory to open", alias="defaultPath"
+    )
+    button_label: Optional[str] = Field(
+        None, description="Custom label for confirm button", alias="buttonLabel"
+    )
     filters: Optional[List[FileFilter]] = Field(None, description="File type filters")
     properties: Optional[List[DialogProperty]] = Field(
         None,
-        description="Dialog behavior properties (openFile, openDirectory, multiSelections, etc.)"
+        description="Dialog behavior properties (openFile, openDirectory, multiSelections, etc.)",
     )
-    message: Optional[str] = Field(None, description="Message displayed above input boxes (macOS only)")
+    message: Optional[str] = Field(
+        None, description="Message displayed above input boxes (macOS only)"
+    )
 
     class Config:
         populate_by_name = True  # Allow both snake_case and camelCase
@@ -108,13 +120,24 @@ class SaveDialogRequest(BaseModel):
 
     Mimics Electron's dialog.showSaveDialog options.
     """
+
     title: Optional[str] = Field(None, description="Dialog window title")
     default_path: Optional[str] = Field(None, description="Default file path", alias="defaultPath")
-    button_label: Optional[str] = Field(None, description="Custom label for confirm button", alias="buttonLabel")
+    button_label: Optional[str] = Field(
+        None, description="Custom label for confirm button", alias="buttonLabel"
+    )
     filters: Optional[List[FileFilter]] = Field(None, description="File type filters")
-    message: Optional[str] = Field(None, description="Message displayed above input boxes (macOS only)")
-    name_field_label: Optional[str] = Field(None, description="Custom label for filename text field (macOS only)", alias="nameFieldLabel")
-    show_tag_field: Optional[bool] = Field(None, description="Show tags input box (macOS only)", alias="showsTagField")
+    message: Optional[str] = Field(
+        None, description="Message displayed above input boxes (macOS only)"
+    )
+    name_field_label: Optional[str] = Field(
+        None,
+        description="Custom label for filename text field (macOS only)",
+        alias="nameFieldLabel",
+    )
+    show_tag_field: Optional[bool] = Field(
+        None, description="Show tags input box (macOS only)", alias="showsTagField"
+    )
 
     class Config:
         populate_by_name = True  # Allow both snake_case and camelCase
@@ -124,8 +147,11 @@ class OpenDialogResponse(BaseModel):
     """
     Response from file open dialog.
     """
+
     canceled: bool = Field(..., description="True if user canceled the dialog")
-    file_paths: List[str] = Field(default_factory=list, description="Selected file/folder paths", alias="filePaths")
+    file_paths: List[str] = Field(
+        default_factory=list, description="Selected file/folder paths", alias="filePaths"
+    )
 
     class Config:
         populate_by_name = True  # Allow both snake_case and camelCase
@@ -135,6 +161,7 @@ class SaveDialogResponse(BaseModel):
     """
     Response from file save dialog.
     """
+
     canceled: bool = Field(..., description="True if user canceled the dialog")
     file_path: Optional[str] = Field(None, description="Selected save path", alias="filePath")
 
@@ -143,6 +170,7 @@ class SaveDialogResponse(BaseModel):
 
 
 # ===== ERROR RESPONSE HELPERS =====
+
 
 def create_not_implemented_response(feature: str, alternatives: List[str]) -> JSONResponse:
     """
@@ -162,12 +190,13 @@ def create_not_implemented_response(feature: str, alternatives: List[str]) -> JS
             "message": f"{feature} requires Electron desktop environment and cannot be implemented in HTTP backend",
             "reason": "Native OS dialogs require direct access to window managers and GUI APIs",
             "alternatives": alternatives,
-            "recommendation": "Use HTML file input elements or browser download APIs instead"
-        }
+            "recommendation": "Use HTML file input elements or browser download APIs instead",
+        },
     )
 
 
 # ===== ROUTES =====
+
 
 @router.post(
     "/open",
@@ -184,13 +213,13 @@ def create_not_implemented_response(feature: str, alternatives: List[str]) -> JS
                         "alternatives": [
                             "Use HTML <input type='file' multiple>",
                             "Use react-dropzone library",
-                            "Use File API: document.createElement('input')"
-                        ]
+                            "Use File API: document.createElement('input')",
+                        ],
                     }
                 }
-            }
+            },
         }
-    }
+    },
 )
 async def show_open_dialog(request: OpenDialogRequest):
     """
@@ -250,8 +279,8 @@ async def show_open_dialog(request: OpenDialogRequest):
             "Use react-dropzone library for drag-and-drop uploads",
             "Use browser File API: document.createElement('input')",
             "For directories: Use <input webkitdirectory> (Chromium-based browsers)",
-            "For full file system access: Use File System Access API (Chrome 86+)"
-        ]
+            "For full file system access: Use File System Access API (Chrome 86+)",
+        ],
     )
 
 
@@ -270,13 +299,13 @@ async def show_open_dialog(request: OpenDialogRequest):
                         "alternatives": [
                             "Use browser download: <a download='filename.ext'>",
                             "Use file-saver library: saveAs(blob, filename)",
-                            "Use File System Access API (Chrome 86+)"
-                        ]
+                            "Use File System Access API (Chrome 86+)",
+                        ],
                     }
                 }
-            }
+            },
         }
-    }
+    },
 )
 async def show_save_dialog(request: SaveDialogRequest):
     """
@@ -339,12 +368,13 @@ async def show_save_dialog(request: SaveDialogRequest):
             "Use file-saver library: saveAs(blob, filename)",
             "Use downloadjs library for simple downloads",
             "Use StreamSaver.js for large file downloads (>100MB)",
-            "Use File System Access API for full filesystem access (Chrome 86+)"
-        ]
+            "Use File System Access API for full filesystem access (Chrome 86+)",
+        ],
     )
 
 
 # ===== ADDITIONAL HELPER ENDPOINT =====
+
 
 @router.get(
     "/capabilities",
@@ -358,12 +388,12 @@ async def show_save_dialog(request: SaveDialogRequest):
                         "native_dialogs": False,
                         "file_upload": True,
                         "file_download": True,
-                        "supported_features": ["html_file_input", "browser_download", "file_api"]
+                        "supported_features": ["html_file_input", "browser_download", "file_api"],
                     }
                 }
-            }
+            },
         }
-    }
+    },
 )
 async def get_ui_capabilities():
     """
@@ -398,46 +428,46 @@ async def get_ui_capabilities():
             "browser_download",
             "file_api",
             "blob_api",
-            "drag_drop_upload"
+            "drag_drop_upload",
         ],
         "recommended_libraries": [
             {
                 "name": "react-dropzone",
                 "purpose": "File upload with drag-and-drop",
-                "url": "https://react-dropzone.js.org/"
+                "url": "https://react-dropzone.js.org/",
             },
             {
                 "name": "file-saver",
                 "purpose": "Browser file downloads",
-                "url": "https://github.com/eligrey/FileSaver.js"
+                "url": "https://github.com/eligrey/FileSaver.js",
             },
             {
                 "name": "StreamSaver.js",
                 "purpose": "Large file downloads (>100MB)",
-                "url": "https://github.com/jimmywarting/StreamSaver.js"
-            }
+                "url": "https://github.com/jimmywarting/StreamSaver.js",
+            },
         ],
         "browser_apis": {
             "file_input": {
                 "description": "HTML <input type='file'>",
                 "support": "All browsers",
                 "multiple_files": True,
-                "folder_selection": "Chromium only (webkitdirectory)"
+                "folder_selection": "Chromium only (webkitdirectory)",
             },
             "file_system_access_api": {
                 "description": "Full filesystem access API",
                 "support": "Chrome 86+, Edge 86+",
-                "url": "https://developer.mozilla.org/en-US/docs/Web/API/File_System_Access_API"
+                "url": "https://developer.mozilla.org/en-US/docs/Web/API/File_System_Access_API",
             },
             "download_api": {
                 "description": "Programmatic downloads via <a download>",
-                "support": "All browsers"
-            }
+                "support": "All browsers",
+            },
         },
         "migration_notes": [
             "Replace dialog.showOpenDialog() with HTML file input",
             "Replace dialog.showSaveDialog() with browser download",
             "Use File System Access API for advanced file operations (Chrome 86+)",
-            "Consider react-dropzone for better UX"
-        ]
+            "Consider react-dropzone for better UX",
+        ],
     }

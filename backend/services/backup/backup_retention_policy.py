@@ -38,11 +38,7 @@ class BackupRetentionPolicy:
         audit_logger: Optional audit logger for tracking operations
     """
 
-    def __init__(
-        self,
-        backup_service: BackupService,
-        audit_logger=None
-    ):
+    def __init__(self, backup_service: BackupService, audit_logger=None):
         """
         Initialize retention policy service.
 
@@ -60,7 +56,7 @@ class BackupRetentionPolicy:
         action: str,
         success: bool = True,
         details: Optional[Dict] = None,
-        error_message: Optional[str] = None
+        error_message: Optional[str] = None,
     ) -> None:
         """Log audit event if audit logger is configured."""
         if self.audit_logger:
@@ -72,7 +68,7 @@ class BackupRetentionPolicy:
                 action=action,
                 success=success,
                 details=details or {},
-                error_message=error_message
+                error_message=error_message,
             )
 
     async def apply_retention_policy(self, keep_count: int) -> int:
@@ -121,7 +117,7 @@ class BackupRetentionPolicy:
                     resource_id="policy",
                     action="apply",
                     success=True,
-                    details={"reason": "Prevented deletion of all backups"}
+                    details={"reason": "Prevented deletion of all backups"},
                 )
                 return 0
 
@@ -144,8 +140,8 @@ class BackupRetentionPolicy:
                     "kept": len(backups_to_keep),
                     "deleted": deleted_count,
                     "protected": len(protected_backups),
-                    "total": len(all_backups)
-                }
+                    "total": len(all_backups),
+                },
             )
 
             return deleted_count
@@ -158,7 +154,7 @@ class BackupRetentionPolicy:
                 resource_id="policy",
                 action="apply",
                 success=False,
-                error_message=str(error)
+                error_message=str(error),
             )
 
             raise
@@ -185,8 +181,7 @@ class BackupRetentionPolicy:
             except Exception as error:
                 # Log error but continue with other deletions
                 logger.error(
-                    f"Failed to delete backup {backup.filename}: {str(error)}",
-                    exc_info=True
+                    f"Failed to delete backup {backup.filename}: {str(error)}", exc_info=True
                 )
 
                 self._log_audit(
@@ -194,7 +189,7 @@ class BackupRetentionPolicy:
                     resource_id=backup.filename,
                     action="delete",
                     success=False,
-                    error_message=str(error)
+                    error_message=str(error),
                 )
 
         return deleted_count
@@ -224,7 +219,7 @@ class BackupRetentionPolicy:
                 total=len(all_backups),
                 protected=len(protected_backups),
                 to_keep=to_keep,
-                to_delete=to_delete
+                to_delete=to_delete,
             )
 
         except Exception as error:
@@ -257,7 +252,7 @@ class BackupRetentionPolicy:
                 except Exception as error:
                     logger.error(
                         f"Failed to delete empty backup {backup.filename}: {str(error)}",
-                        exc_info=True
+                        exc_info=True,
                     )
 
             if deleted_count > 0:
@@ -266,7 +261,7 @@ class BackupRetentionPolicy:
                     resource_id="empty_backups",
                     action="cleanup",
                     success=True,
-                    details={"deleted_count": deleted_count}
+                    details={"deleted_count": deleted_count},
                 )
 
             return deleted_count
@@ -318,7 +313,7 @@ class BackupRetentionPolicy:
                 except Exception as error:
                     logger.error(
                         f"Failed to delete old protected backup {backup.filename}: {str(error)}",
-                        exc_info=True
+                        exc_info=True,
                     )
 
             if deleted_count > 0:
@@ -330,8 +325,8 @@ class BackupRetentionPolicy:
                     details={
                         "deleted_count": deleted_count,
                         "days_old": days_old,
-                        "cutoff_date": cutoff_date.isoformat()
-                    }
+                        "cutoff_date": cutoff_date.isoformat(),
+                    },
                 )
 
             return deleted_count

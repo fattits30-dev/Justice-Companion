@@ -58,11 +58,10 @@ function getFromLocalStorage(key: string): string | null {
     }
     return localStorage.getItem(key);
   } catch (error) {
-    logger.error(
-      "MigrateToSecureStorage",
-      `Failed to read from localStorage for key "${key}"`,
+    logger.error(`Failed to read from localStorage for key "${key}"`, {
+      service: "MigrateToSecureStorage",
       error,
-    );
+    });
     return null;
   }
 }
@@ -78,11 +77,10 @@ function removeFromLocalStorage(key: string): boolean {
     localStorage.removeItem(key);
     return true;
   } catch (error) {
-    logger.error(
-      "MigrateToSecureStorage",
-      `Failed to remove from localStorage for key "${key}"`,
+    logger.error(`Failed to remove from localStorage for key "${key}"`, {
+      service: "MigrateToSecureStorage",
       error,
-    );
+    });
     return false;
   }
 }
@@ -124,11 +122,10 @@ async function migrateKey(key: string): Promise<MigrationResult> {
     result.migrated = true;
     return result;
   } catch (error) {
-    logger.error(
-      "MigrateToSecureStorage",
-      `Failed to migrate key "${key}"`,
+    logger.error(`Failed to migrate key "${key}"`, {
+      service: "MigrateToSecureStorage",
       error,
-    );
+    });
     result.error = error instanceof Error ? error.message : String(error);
     return result;
   }

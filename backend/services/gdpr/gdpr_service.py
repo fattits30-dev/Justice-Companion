@@ -68,16 +68,8 @@ from pydantic import BaseModel, Field, ConfigDict
 from backend.services.encryption_service import EncryptionService
 from backend.services.audit_logger import AuditLogger
 from backend.services.rate_limit_service import RateLimitService
-from backend.services.gdpr.data_exporter import (
-    DataExporter,
-    UserDataExport,
-    GdprExportOptions
-)
-from backend.services.gdpr.data_deleter import (
-    DataDeleter,
-    GdprDeleteOptions,
-    GdprDeleteResult
-)
+from backend.services.gdpr.data_exporter import DataExporter, GdprExportOptions
+from backend.services.gdpr.data_deleter import DataDeleter, GdprDeleteOptions, GdprDeleteResult
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -87,20 +79,24 @@ logger = logging.getLogger(__name__)
 # Custom Exceptions
 # ============================================================================
 
+
 class RateLimitError(HTTPException):
     """Raised when rate limit is exceeded for GDPR operations."""
+
     def __init__(self, message: str = "Rate limit exceeded for GDPR operation"):
         super().__init__(status_code=429, detail=message)
 
 
 class ConsentRequiredError(HTTPException):
     """Raised when required consent is missing."""
+
     def __init__(self, message: str = "User consent required for this operation"):
         super().__init__(status_code=403, detail=message)
 
 
 class GdprOperationError(HTTPException):
     """General error for GDPR operations."""
+
     def __init__(self, message: str, status_code: int = 400):
         super().__init__(status_code=status_code, detail=message)
 
@@ -108,6 +104,7 @@ class GdprOperationError(HTTPException):
 # ============================================================================
 # Pydantic Models for GDPR Service Results
 # ============================================================================
+
 
 class GdprExportResult(BaseModel):
     """
@@ -118,6 +115,7 @@ class GdprExportResult(BaseModel):
         user_data: Dictionary of table exports
         file_path: Optional path to saved export file
     """
+
     metadata: Dict[str, Any] = Field(..., description="Export metadata")
     user_data: Dict[str, Dict[str, Any]] = Field(..., description="User data by table")
     file_path: Optional[str] = Field(None, description="Path to saved export file")
@@ -132,15 +130,16 @@ class GdprDeleteResultExtended(GdprDeleteResult):
     Inherits all fields from GdprDeleteResult and adds:
     - export_path: Path to export file if exportBeforeDelete was true
     """
+
     export_path: Optional[str] = Field(
-        None,
-        description="Path to export file if data was exported before deletion"
+        None, description="Path to export file if data was exported before deletion"
     )
 
 
 # ============================================================================
 # Rate Limit Tracking
 # ============================================================================
+
 
 class RateLimitInfo:
     """In-memory rate limit tracking for GDPR operations."""
@@ -160,6 +159,7 @@ class RateLimitInfo:
 # ============================================================================
 # GDPR Service
 # ============================================================================
+
 
 class GdprService:
     """
@@ -193,7 +193,7 @@ class GdprService:
         db: Session,
         encryption_service: EncryptionService,
         audit_logger: AuditLogger,
-        rate_limit_service: Optional[RateLimitService] = None
+        rate_limit_service: Optional[RateLimitService] = None,
     ):
         """
         Initialize GDPR service.
@@ -216,9 +216,7 @@ class GdprService:
         self._rate_limit_map: Dict[str, RateLimitInfo] = {}
 
     async def export_user_data(
-        self,
-        user_id: int,
-        options: Optional[GdprExportOptions] = None
+        self, user_id: int, options: Optional[GdprExportOptions] = None
     ) -> GdprExportResult:
         """
         Export all user data (GDPR Article 20 - Data Portability).
@@ -268,10 +266,7 @@ class GdprService:
             # Optionally save to disk
             file_path = None
             if options.format == "json":
-                file_path = await self._save_export_to_disk(
-                    user_id,
-                    user_data_export.to_dict()
-                )
+                file_path = await self._save_export_to_disk(user_id, user_data_export.to_dict())
 
             # Audit log success
             self.audit_logger.log(
@@ -284,8 +279,8 @@ class GdprService:
                 details={
                     "format": options.format,
                     "file_path": file_path,
-                    "total_records": user_data_export.metadata.total_records
-                }
+                    "total_records": user_data_export.metadata.total_records,
+                },
             )
 
             return GdprExportResult(
@@ -294,7 +289,7 @@ class GdprService:
                     key: table_export.to_dict()
                     for key, table_export in user_data_export.user_data.items()
                 },
-                file_path=file_path
+                file_path=file_path,
             )
 
         except (RateLimitError, ConsentRequiredError):
@@ -310,16 +305,14 @@ class GdprService:
                 resource_id=str(user_id),
                 action="export",
                 success=False,
-                error_message=str(error)
+                error_message=str(error),
             )
 
             logger.error(f"GDPR export failed for user {user_id}: {error}")
             raise GdprOperationError(f"Export failed: {str(error)}")
 
     async def delete_user_data(
-        self,
-        user_id: int,
-        options: GdprDeleteOptions
+        self, user_id: int, options: GdprDeleteOptions
     ) -> GdprDeleteResultExtended:
         """
         Delete all user data (GDPR Article 17 - Right to Erasure).
@@ -380,8 +373,7 @@ class GdprService:
             if options.export_before_delete:
                 logger.info(f"Exporting data for user {user_id} before deletion")
                 export_result = await self.export_user_data(
-                    user_id,
-                    GdprExportOptions(export_format="json")
+                    user_id, GdprExportOptions(export_format="json")
                 )
                 export_path = export_result.file_path
 
@@ -399,8 +391,8 @@ class GdprService:
                 details={
                     "reason": options.reason,
                     "export_path": export_path,
-                    "deleted_counts": delete_result.deleted_counts
-                }
+                    "deleted_counts": delete_result.deleted_counts,
+                },
             )
 
             # Return extended result with export path
@@ -411,7 +403,7 @@ class GdprService:
                 preserved_audit_logs=delete_result.preserved_audit_logs + 1,  # +1 for this log
                 preserved_consents=delete_result.preserved_consents,
                 export_path=export_path,
-                error=delete_result.error
+                error=delete_result.error,
             )
 
         except ConsentRequiredError:
@@ -427,7 +419,7 @@ class GdprService:
                 resource_id=str(user_id),
                 action="delete",
                 success=False,
-                error_message=str(error)
+                error_message=str(error),
             )
 
             logger.error(f"GDPR deletion failed for user {user_id}: {error}")
@@ -458,9 +450,7 @@ class GdprService:
                 window_seconds = self.DELETE_WINDOW_DAYS * 86400
 
             result = self.rate_limit_service.check_rate_limit(
-                key=key,
-                max_attempts=max_requests,
-                window_seconds=window_seconds
+                key=key, max_attempts=max_requests, window_seconds=window_seconds
             )
 
             if not result.allowed:
@@ -491,10 +481,7 @@ class GdprService:
                     )
                 limit_info.count += 1
             else:
-                self._rate_limit_map[key] = RateLimitInfo(
-                    count=1,
-                    reset_at=now + limit_window
-                )
+                self._rate_limit_map[key] = RateLimitInfo(count=1, reset_at=now + limit_window)
 
     def _check_consent(self, user_id: int, consent_type: str) -> None:
         """
@@ -507,18 +494,17 @@ class GdprService:
         Raises:
             ConsentRequiredError: If consent is missing or revoked (403)
         """
-        query = text("""
+        query = text(
+            """
             SELECT id, granted
             FROM consents
             WHERE user_id = :user_id
                 AND consent_type = :consent_type
                 AND revoked_at IS NULL
-        """)
+        """
+        )
 
-        result = self.db.execute(query, {
-            "user_id": user_id,
-            "consent_type": consent_type
-        })
+        result = self.db.execute(query, {"user_id": user_id, "consent_type": consent_type})
         row = result.fetchone()
 
         consent_exists = row is not None and row.granted == 1
@@ -529,11 +515,7 @@ class GdprService:
                 f"Please grant consent before performing this operation."
             )
 
-    async def _save_export_to_disk(
-        self,
-        user_id: int,
-        data: Dict[str, Any]
-    ) -> str:
+    async def _save_export_to_disk(self, user_id: int, data: Dict[str, Any]) -> str:
         """
         Save export data to disk as JSON file.
 
@@ -558,7 +540,7 @@ class GdprService:
         file_path = export_dir / file_name
 
         # Write JSON file with pretty formatting
-        with open(file_path, 'w', encoding='utf-8') as f:
+        with open(file_path, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
 
         logger.info(f"Saved export to {file_path}")
@@ -569,11 +551,12 @@ class GdprService:
 # Utility Functions
 # ============================================================================
 
+
 def create_gdpr_service(
     db: Session,
     encryption_service: EncryptionService,
     audit_logger: AuditLogger,
-    rate_limit_service: Optional[RateLimitService] = None
+    rate_limit_service: Optional[RateLimitService] = None,
 ) -> GdprService:
     """
     Factory function to create GdprService instance.
@@ -602,5 +585,5 @@ def create_gdpr_service(
         db=db,
         encryption_service=encryption_service,
         audit_logger=audit_logger,
-        rate_limit_service=rate_limit_service
+        rate_limit_service=rate_limit_service,
     )
