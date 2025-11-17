@@ -18,7 +18,8 @@
     "npm": ">=10.0.0"
   },
   "overrides": {
-    "esbuild": ">=0.25.0"
+    "esbuild": ">=0.25.0",
+    "zod": "3.25.76"
   },
   "scripts": {
     "start": "node scripts/start-full-stack.js",
@@ -138,7 +139,7 @@
     "uuid": "9.0.1",
     "winston": "^3.18.3",
     "workbox-window": "^7.3.0",
-    "zod": "^4.1.12",
+    "zod": "^3.25.76",
     "zustand": "^5.0.8"
   },
   "devDependencies": {
