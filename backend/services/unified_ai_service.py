@@ -26,7 +26,11 @@ from enum import Enum
 from datetime import datetime
 import json
 import re
+import logging
 from pydantic import BaseModel, Field, ConfigDict
+
+# Configure logger
+logger = logging.getLogger(__name__)
 
 from fastapi import HTTPException
 
@@ -613,7 +617,6 @@ class UnifiedAIService:
                 "anyscale",
                 "mistral",
                 "perplexity",
-                "huggingface",
                 "google",
                 "cohere",
             ]:
@@ -621,13 +624,13 @@ class UnifiedAIService:
                 try:
                     import openai
 
-                    self.client = openai.OpenAI(api_key=api_key, base_url=base_url)
+                    self.client = openai.AsyncOpenAI(api_key=api_key, base_url=base_url)
                 except ImportError:
                     raise HTTPException(
                         status_code=500, detail="OpenAI SDK not installed. Run: pip install openai"
                     )
 
-            elif provider == "qwen":
+            elif provider in ["huggingface", "qwen"]:
                 # Hugging Face Inference API (requires: pip install huggingface-hub)
                 try:
                     from huggingface_hub import InferenceClient
@@ -644,8 +647,14 @@ class UnifiedAIService:
 
         except Exception as e:
             if self.audit_logger:
-                self.audit_logger.log_error(
-                    f"AI client initialization failed for {provider}", error=str(e)
+                self.audit_logger.log(
+                    event_type="ai.init",
+                    user_id=None,
+                    resource_type="ai_service",
+                    resource_id=str(provider),
+                    action="initialize",
+                    success=False,
+                    error_message=f"AI client initialization failed for {provider}: {str(e)}"
                 )
             raise HTTPException(
                 status_code=500, detail=f"Failed to initialize {provider} client: {str(e)}"
@@ -716,6 +725,8 @@ class UnifiedAIService:
         Raises:
             HTTPException: If client not configured or streaming fails
         """
+        logger.info(f"[DEBUG] stream_chat called with provider={self.config.provider}, messages={len(messages)}")
+
         if not self.client:
             error = HTTPException(
                 status_code=500, detail=f"{self.config.provider} client not configured"
@@ -729,14 +740,17 @@ class UnifiedAIService:
 
             # Route to appropriate streaming method
             if self.config.provider == "anthropic":
+                logger.info(f"[DEBUG] Routing to Anthropic streaming")
                 async for token in self._stream_anthropic_chat(messages):
                     full_response += token
                     if on_token:
                         on_token(token)
                     yield token
 
-            elif self.config.provider == "qwen":
-                async for token in self._stream_qwen_chat(messages):
+            elif self.config.provider in ["huggingface", "qwen"]:
+                logger.info(f"[DEBUG] Routing to HuggingFace/Qwen streaming")
+                async for token in self._stream_huggingface_chat(messages):
+                    logger.info(f"[DEBUG] Got token from HuggingFace: {token}")
                     full_response += token
                     if on_token:
                         on_token(token)
@@ -744,19 +758,28 @@ class UnifiedAIService:
 
             else:
                 # OpenAI-compatible providers
+                logger.info(f"[DEBUG] Routing to OpenAI-compatible streaming for provider: {self.config.provider}")
                 async for token in self._stream_openai_compatible_chat(messages):
+                    logger.info(f"[DEBUG] Got token from stream: {token}")
                     full_response += token
                     if on_token:
                         on_token(token)
                     yield token
 
+            logger.info(f"[DEBUG] Stream complete, full_response length: {len(full_response)}")
             if on_complete:
                 on_complete(full_response)
 
         except Exception as e:
             if self.audit_logger:
-                self.audit_logger.log_error(
-                    f"Streaming chat failed for {self.config.provider}", error=str(e)
+                self.audit_logger.log(
+                    event_type="ai.stream_chat",
+                    user_id=None,
+                    resource_type="ai_service",
+                    resource_id=self.config.provider,
+                    action="stream",
+                    success=False,
+                    error_message=f"Streaming chat failed for {self.config.provider}: {str(e)}"
                 )
             if on_error:
                 on_error(e)
@@ -796,9 +819,14 @@ class UnifiedAIService:
                 if hasattr(event, "delta") and hasattr(event.delta, "text"):
                     yield event.delta.text
 
-    async def _stream_qwen_chat(self, messages: List[ChatMessage]) -> AsyncIterator[str]:
+    async def _stream_huggingface_chat(self, messages: List[ChatMessage]) -> AsyncIterator[str]:
         """
-        Stream chat for Qwen using Hugging Face Inference API.
+        Stream chat for HuggingFace/Qwen using Hugging Face Inference API.
+
+        Uses the OpenAI-compatible chat.completions.create() API.
+
+        NOTE: InferenceClient returns a SYNCHRONOUS iterator, so we must run it
+        in an executor to avoid blocking the async event loop.
 
         Args:
             messages: Chat messages
@@ -806,22 +834,60 @@ class UnifiedAIService:
         Yields:
             Token strings
         """
+        import asyncio
+        from concurrent.futures import ThreadPoolExecutor
+
         formatted_messages = [{"role": msg.role, "content": msg.content} for msg in messages]
 
-        stream = self.client.chat_completion(
+        logger.info(f"[DEBUG] Creating HuggingFace stream with model={self.config.model}, messages={len(formatted_messages)}")
+
+        # HuggingFace InferenceClient uses OpenAI-compatible API
+        stream = self.client.chat.completions.create(
             model=self.config.model,
             messages=formatted_messages,
-            temperature=self.config.temperature or 0.3,
+            temperature=self.config.temperature or 0.7,
             max_tokens=self.config.max_tokens or 2048,
             top_p=self.config.top_p or 0.9,
             stream=True,
         )
 
-        for chunk in stream:
-            if hasattr(chunk, "choices") and chunk.choices:
-                delta = chunk.choices[0].delta
-                if hasattr(delta, "content") and delta.content:
-                    yield delta.content
+        logger.info(f"[DEBUG] Stream created successfully")
+
+        # InferenceClient returns SYNCHRONOUS iterator - must run in executor
+        # to avoid blocking the async event loop
+        def sync_iterate():
+            """Synchronous iteration over HuggingFace stream."""
+            chunk_count = 0
+            for chunk in stream:
+                chunk_count += 1
+                logger.info(f"[DEBUG] Chunk #{chunk_count}: {chunk}")
+                if hasattr(chunk, "choices") and chunk.choices:
+                    delta = chunk.choices[0].delta
+                    if hasattr(delta, "content") and delta.content:
+                        logger.info(f"[DEBUG] Yielding content: {delta.content}")
+                        yield delta.content
+                    else:
+                        logger.info(f"[DEBUG] Delta has no content: {delta}")
+                else:
+                    logger.info(f"[DEBUG] Chunk has no choices")
+            logger.info(f"[DEBUG] HuggingFace stream complete. Total chunks: {chunk_count}")
+
+        # Run sync iteration in thread pool to avoid blocking event loop
+        loop = asyncio.get_running_loop()
+        executor = ThreadPoolExecutor(max_workers=1)
+        try:
+            gen = sync_iterate()
+            while True:
+                try:
+                    # Get next token in executor (non-blocking)
+                    token = await loop.run_in_executor(executor, next, gen, None)
+                    if token is None:
+                        break
+                    yield token
+                except StopIteration:
+                    break
+        finally:
+            executor.shutdown(wait=False)
 
     async def _stream_openai_compatible_chat(
         self, messages: List[ChatMessage]
@@ -846,13 +912,25 @@ class UnifiedAIService:
             "top_p": self.config.top_p or 0.9,
         }
 
+        logger.info(f"[DEBUG] Creating stream with params: model={self.config.model}, messages={len(formatted_messages)}")
         stream = self.client.chat.completions.create(**request_params)
+        logger.info(f"[DEBUG] Stream created, type: {type(stream)}")
 
-        for chunk in stream:
+        chunk_count = 0
+        async for chunk in stream:
+            chunk_count += 1
+            logger.info(f"[DEBUG] Received chunk #{chunk_count}: {chunk}")
             if hasattr(chunk, "choices") and chunk.choices:
                 delta = chunk.choices[0].delta
                 if hasattr(delta, "content") and delta.content:
+                    logger.info(f"[DEBUG] Yielding content: {delta.content}")
                     yield delta.content
+                else:
+                    logger.info(f"[DEBUG] Delta has no content: {delta}")
+            else:
+                logger.info(f"[DEBUG] Chunk has no choices")
+
+        logger.info(f"[DEBUG] Stream complete. Total chunks: {chunk_count}")
 
     async def chat(self, messages: List[ChatMessage]) -> str:
         """
@@ -875,14 +953,22 @@ class UnifiedAIService:
         try:
             if self.config.provider == "anthropic":
                 return await self._chat_anthropic_non_streaming(messages)
-            elif self.config.provider == "qwen":
+            elif self.config.provider in ["huggingface", "qwen"]:
                 return await self._chat_qwen_non_streaming(messages)
             else:
                 return await self._chat_openai_compatible_non_streaming(messages)
 
         except Exception as e:
             if self.audit_logger:
-                self.audit_logger.log_error(f"Chat failed for {self.config.provider}", error=str(e))
+                self.audit_logger.log(
+                    event_type="ai.chat",
+                    user_id=None,
+                    resource_type="ai_service",
+                    resource_id=self.config.provider,
+                    action="chat",
+                    success=False,
+                    error_message=f"Chat failed for {self.config.provider}: {str(e)}"
+                )
             raise HTTPException(status_code=500, detail=f"Chat failed: {str(e)}")
 
     async def _chat_anthropic_non_streaming(self, messages: List[ChatMessage]) -> str:
@@ -912,24 +998,42 @@ class UnifiedAIService:
         return result
 
     async def _chat_qwen_non_streaming(self, messages: List[ChatMessage]) -> str:
-        """Non-streaming chat for Qwen."""
+        """
+        Non-streaming chat for Qwen/HuggingFace.
+
+        NOTE: InferenceClient.chat_completion() is SYNCHRONOUS, so we must run it
+        in an executor to avoid blocking the async event loop.
+        """
+        import asyncio
+        from concurrent.futures import ThreadPoolExecutor
+
         formatted_messages = [{"role": msg.role, "content": msg.content} for msg in messages]
 
-        response = self.client.chat_completion(
-            model=self.config.model,
-            messages=formatted_messages,
-            temperature=self.config.temperature or 0.3,
-            max_tokens=self.config.max_tokens or 2048,
-            top_p=self.config.top_p or 0.9,
-        )
+        def sync_chat_completion():
+            """Synchronous chat completion call."""
+            response = self.client.chat_completion(
+                model=self.config.model,
+                messages=formatted_messages,
+                temperature=self.config.temperature or 0.3,
+                max_tokens=self.config.max_tokens or 2048,
+                top_p=self.config.top_p or 0.9,
+            )
+            return response.choices[0].message.content or ""
 
-        return response.choices[0].message.content or ""
+        # Run sync call in thread pool to avoid blocking event loop
+        loop = asyncio.get_running_loop()
+        executor = ThreadPoolExecutor(max_workers=1)
+        try:
+            result = await loop.run_in_executor(executor, sync_chat_completion)
+            return result
+        finally:
+            executor.shutdown(wait=False)
 
     async def _chat_openai_compatible_non_streaming(self, messages: List[ChatMessage]) -> str:
         """Non-streaming chat for OpenAI-compatible providers."""
         formatted_messages = [{"role": msg.role, "content": msg.content} for msg in messages]
 
-        completion = self.client.chat.completions.create(
+        completion = await self.client.chat.completions.create(
             model=self.config.model,
             messages=formatted_messages,
             temperature=self.config.temperature or 0.7,
@@ -997,8 +1101,14 @@ Provide analysis in this JSON structure:
 
         except Exception as e:
             if self.audit_logger:
-                self.audit_logger.log_error(
-                    f"Case analysis failed", error=str(e), case_id=request.case_id
+                self.audit_logger.log(
+                    event_type="ai.case_analysis",
+                    user_id=None,
+                    resource_type="case",
+                    resource_id=str(request.case_id),
+                    action="analyze",
+                    success=False,
+                    error_message=f"Case analysis failed: {str(e)}"
                 )
             raise HTTPException(status_code=500, detail=f"Case analysis failed: {str(e)}")
 
@@ -1047,8 +1157,14 @@ Provide analysis in JSON format with:
 
         except Exception as e:
             if self.audit_logger:
-                self.audit_logger.log_error(
-                    f"Evidence analysis failed", error=str(e), case_id=request.case_id
+                self.audit_logger.log(
+                    event_type="ai.evidence_analysis",
+                    user_id=None,
+                    resource_type="case",
+                    resource_id=str(request.case_id),
+                    action="analyze_evidence",
+                    success=False,
+                    error_message=f"Evidence analysis failed: {str(e)}"
                 )
             raise HTTPException(status_code=500, detail=f"Evidence analysis failed: {str(e)}")
 
@@ -1103,10 +1219,14 @@ Provide response in JSON format:
 
         except Exception as e:
             if self.audit_logger:
-                self.audit_logger.log_error(
-                    f"Document drafting failed",
-                    error=str(e),
-                    document_type=request.document_type.value,
+                self.audit_logger.log(
+                    event_type="ai.document_draft",
+                    user_id=None,
+                    resource_type="document",
+                    resource_id=request.document_type.value,
+                    action="draft",
+                    success=False,
+                    error_message=f"Document drafting failed: {str(e)}"
                 )
             raise HTTPException(status_code=500, detail=f"Document drafting failed: {str(e)}")
 
@@ -1155,28 +1275,34 @@ PART 1 - Conversational Analysis (plain text):
 PART 2 - Structured Data (JSON format):
 ```json
 {{
-  "documentOwnershipMismatch": false,
-  "documentClaimantName": null,
+  "document_ownership_mismatch": false,
+  "document_claimant_name": null,
   "title": "Brief descriptive case title",
-  "caseType": "employment|housing|consumer|family|other",
+  "case_type": "employment|housing|consumer|family|other",
   "description": "2-3 sentence summary",
-  "claimantName": "{user_profile.name or "User"}",
-  "opposingParty": "Full legal name if found, otherwise null",
-  "caseNumber": "Case reference if found, otherwise null",
-  "courtName": "Court/tribunal name if found, otherwise null",
-  "filingDeadline": "YYYY-MM-DD if deadline mentioned, otherwise null",
-  "nextHearingDate": "YYYY-MM-DD if hearing mentioned, otherwise null",
+  "claimant_name": "{user_profile.name or "User"}",
+  "opposing_party": "Full legal name if found, otherwise null",
+  "case_number": "Case reference if found, otherwise null",
+  "court_name": "Court/tribunal name if found, otherwise null",
+  "filing_deadline": "YYYY-MM-DD if deadline mentioned, otherwise null",
+  "next_hearing_date": "YYYY-MM-DD if hearing mentioned, otherwise null",
   "confidence": {{
     "title": 0.0-1.0,
-    "caseType": 0.0-1.0,
+    "case_type": 0.0-1.0,
     "description": 0.0-1.0,
-    "opposingParty": 0.0-1.0,
-    "caseNumber": 0.0-1.0,
-    "courtName": 0.0-1.0,
-    "filingDeadline": 0.0-1.0,
-    "nextHearingDate": 0.0-1.0
+    "opposing_party": 0.0-1.0,
+    "case_number": 0.0-1.0,
+    "court_name": 0.0-1.0,
+    "filing_deadline": 0.0-1.0,
+    "next_hearing_date": 0.0-1.0
   }},
-  "extractedFrom": {{}}
+  "extracted_from": {{
+    "case_number": {{"source": "document", "text": "exact text from document"}} or null,
+    "opposing_party": {{"source": "document", "text": "exact text from document"}} or null,
+    "court_name": {{"source": "document", "text": "exact text from document"}} or null,
+    "filing_deadline": {{"source": "document", "text": "exact text from document"}} or null,
+    "next_hearing_date": {{"source": "document", "text": "exact text from document"}} or null
+  }}
 }}
 ```
 """
@@ -1229,7 +1355,13 @@ PART 2 - Structured Data (JSON format):
 
         except Exception as e:
             if self.audit_logger:
-                self.audit_logger.log_error(
-                    f"Document extraction failed", error=str(e), filename=parsed_doc.filename
+                self.audit_logger.log(
+                    event_type="ai.document_extraction",
+                    user_id=None,
+                    resource_type="document",
+                    resource_id=parsed_doc.filename,
+                    action="extract",
+                    success=False,
+                    error_message=f"Document extraction failed: {str(e)}"
                 )
             raise HTTPException(status_code=500, detail=f"Document extraction failed: {str(e)}")

@@ -382,17 +382,21 @@ class AuditLogger:
         Get the integrity hash of the most recent audit log entry.
 
         Returns:
-            Hash of last log, or None if no logs exist
+            Hash of last log, or None if no logs exist or table doesn't exist
         """
-        sql = """
-            SELECT integrity_hash
-            FROM audit_logs
-            ORDER BY ROWID DESC
-            LIMIT 1
-        """
-        result = self.db.execute(text(sql))
-        row = result.fetchone()
-        return row[0] if row else None
+        try:
+            sql = """
+                SELECT integrity_hash
+                FROM audit_logs
+                ORDER BY ROWID DESC
+                LIMIT 1
+            """
+            result = self.db.execute(text(sql))
+            row = result.fetchone()
+            return row[0] if row else None
+        except Exception:
+            # Table doesn't exist yet, return None (genesis block)
+            return None
 
     def _insert_audit_log(self, entry: Dict[str, Any]) -> None:
         """

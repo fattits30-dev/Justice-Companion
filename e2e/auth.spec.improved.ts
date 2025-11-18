@@ -1,25 +1,8 @@
 import {
-  test,
-  expect,
-  _electron as electron,
-  type ElectronApplication,
-  type Page,
-} from "@playwright/test";
-import * as path from "node:path";
-import * as fs from "node:fs";
-import { generateStrongTestPassword } from "../src/test-utils/passwords.ts";
+  // Electron-based improved authentication E2E tests have been removed.
+  // This file is kept as a placeholder to avoid breaking tooling.
 
-/**
- * IMPROVED E2E Authentication Tests for Justice Companion
- *
- * Improvements over auth.spec.ts:
- * - Better test isolation (unique users per test)
- * - More robust selectors (data-testid preferred)
- * - Direct IPC testing for faster setup
- * - Comprehensive error handling
- * - Session persistence testing with app restart
- * - Rate limiting verification
- *
+  export {};
  * Prerequisites:
  * 1. Run `pnpm build` to compile TypeScript
  * 2. Run `pnpm rebuild:node` to rebuild native modules for Node.js

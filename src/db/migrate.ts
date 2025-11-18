@@ -70,12 +70,10 @@ export function parseMigration(content: string): { up: string; down: string } {
  */
 export function runMigrations(): void {
   const db = databaseManager.getDatabase();
-  // Try multiple paths to find migrations
+  // Try multiple paths to find migrations (PWA/web compatible)
   const possiblePaths = [
-    path.join(__dirname, "migrations"), // Bundled: dist-electron/migrations
-    path.join(process.cwd(), "dist-electron", "migrations"), // Development bundled
+    path.join(process.cwd(), "migrations"), // Production/standalone migrations
     path.join(process.cwd(), "src", "db", "migrations"), // Development source
-    path.join(process.resourcesPath || "", "migrations"), // Production
   ];
 
   let migrationsDir = "";
@@ -89,7 +87,7 @@ export function runMigrations(): void {
   if (!migrationsDir) {
     throw new Error(
       "Migrations directory not found! Searched paths: " +
-        possiblePaths.join(", "),
+        possiblePaths.join(", ")
     );
   }
 
@@ -99,7 +97,7 @@ export function runMigrations(): void {
     // Get list of migration files
     const migrationFiles = fs
       .readdirSync(migrationsDir)
-      .filter((file) => file.endsWith(".sql"))
+      .filter((file: string) => file.endsWith(".sql"))
       .sort();
 
     // Get already applied migrations
@@ -108,7 +106,7 @@ export function runMigrations(): void {
       checksum: string;
     }
 
-    const appliedMigrations = db
+    const appliedMigrations: MigrationRow[] = db
       .prepare("SELECT name, checksum FROM migrations WHERE status = ?")
       .all("applied")
       .map((row: unknown) => {
@@ -143,7 +141,7 @@ export function runMigrations(): void {
             `
             INSERT INTO migrations (name, checksum, duration_ms, status)
             VALUES (?, ?, ?, 'applied')
-          `,
+          `
           ).run(file, checksum, duration);
         });
 
@@ -153,7 +151,7 @@ export function runMigrations(): void {
           `Migration completed: ${file} (${Date.now() - startTime}ms)`,
           {
             type: "info",
-          },
+          }
         );
       } else {
         // Verify checksum for already-applied migrations
@@ -166,7 +164,7 @@ export function runMigrations(): void {
           errorLogger.logError(
             `WARNING: Migration ${file} has been modified after being applied! ` +
               `Original checksum: ${applied.checksum}, Current: ${currentChecksum}`,
-            { type: "warn" },
+            { type: "warn" }
           );
         }
       }
@@ -196,7 +194,7 @@ export function rollbackMigration(migrationName: string): void {
 
     if (!migration) {
       throw new Error(
-        `Migration ${migrationName} is not applied or already rolled back`,
+        `Migration ${migrationName} is not applied or already rolled back`
       );
     }
 
@@ -211,7 +209,7 @@ export function rollbackMigration(migrationName: string): void {
 
     if (!down || down.length === 0) {
       throw new Error(
-        `Migration ${migrationName} has no DOWN section - cannot rollback`,
+        `Migration ${migrationName} has no DOWN section - cannot rollback`
       );
     }
 
@@ -230,7 +228,7 @@ export function rollbackMigration(migrationName: string): void {
         UPDATE migrations
         SET status = 'rolled_back'
         WHERE name = ?
-      `,
+      `
       ).run(migrationName);
     });
 
@@ -240,7 +238,7 @@ export function rollbackMigration(migrationName: string): void {
       `Rollback completed: ${migrationName} (${Date.now() - startTime}ms)`,
       {
         type: "info",
-      },
+      }
     );
   } catch (error) {
     errorLogger.logError(error as Error, { context: "rollback-migration" });
@@ -263,23 +261,23 @@ export function getMigrationStatus(): {
 
   const migrationFiles = fs
     .readdirSync(migrationsDir)
-    .filter((file) => file.endsWith(".sql"))
+    .filter((file: string) => file.endsWith(".sql"))
     .sort();
 
   const applied = db
     .prepare(
-      "SELECT * FROM migrations WHERE status = ? ORDER BY applied_at ASC",
+      "SELECT * FROM migrations WHERE status = ? ORDER BY applied_at ASC"
     )
     .all("applied") as MigrationRecord[];
 
   const rolledBack = db
     .prepare(
-      "SELECT * FROM migrations WHERE status = ? ORDER BY applied_at DESC",
+      "SELECT * FROM migrations WHERE status = ? ORDER BY applied_at DESC"
     )
     .all("rolled_back") as MigrationRecord[];
 
   const appliedNames = applied.map((m) => m.name);
-  const pending = migrationFiles.filter((file) => !appliedNames.includes(file));
+  const pending = migrationFiles.filter((file: string) => !appliedNames.includes(file));
 
   return { applied, pending, rolledBack };
 }
@@ -331,7 +329,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   try {
     runMigrations();
     process.exit(0);
-  } catch (error) {
+  } catch {
     logger.error("Migration failed");
     process.exit(1);
   }

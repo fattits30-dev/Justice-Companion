@@ -13,8 +13,6 @@ import type {
   AIProviderType,
 } from "../types/ai-providers.ts";
 import { AI_PROVIDER_METADATA } from "../types/ai-providers.ts";
-import { KeyManager } from "./KeyManager.ts";
-import { app, safeStorage } from "electron";
 import fs from "fs";
 import path from "path";
 import { logger } from "../utils/logger";
@@ -29,14 +27,27 @@ export interface StoredProviderConfig {
 }
 
 export class AIProviderConfigService {
-  private keyManager: KeyManager;
   private configPath: string;
   private configs: Map<AIProviderType, StoredProviderConfig> = new Map();
+  private apiKeys: Map<AIProviderType, string> = new Map();
   private activeProvider: AIProviderType | null = null;
 
   constructor() {
-    this.keyManager = new KeyManager(safeStorage, app.getPath("userData"));
-    this.configPath = path.join(app.getPath("userData"), "ai-providers.json");
+    const configDir = (() => {
+      const explicitDir = process.env.JUSTICE_CONFIG_DIR;
+      if (explicitDir && explicitDir.trim().length > 0) {
+        return explicitDir;
+      }
+
+      const dbPath = process.env.JUSTICE_DB_PATH;
+      if (dbPath && dbPath.trim().length > 0) {
+        return path.dirname(dbPath);
+      }
+
+      return path.join(process.cwd(), ".justice-companion");
+    })();
+
+    this.configPath = path.join(configDir, "ai-providers.json");
     this.loadConfigurations();
   }
 
@@ -95,8 +106,8 @@ export class AIProviderConfigService {
     apiKey: string,
     config: Omit<StoredProviderConfig, "provider">,
   ): Promise<void> {
-    // Store API key securely
-    await this.keyManager.storeKey(`ai-provider-${provider}`, apiKey);
+    // Store API key in memory only (not persisted to disk)
+    this.apiKeys.set(provider, apiKey);
 
     // Store configuration (without API key)
     this.configs.set(provider, {
@@ -124,12 +135,8 @@ export class AIProviderConfigService {
     }
 
     try {
-      const apiKey = await this.keyManager.retrieveKey(
-        `ai-provider-${provider}`,
-      );
-      if (!apiKey) {
-        return null;
-      }
+      const apiKey = this.apiKeys.get(provider);
+      if (!apiKey) return null;
 
       return {
         ...config,
@@ -192,8 +199,8 @@ export class AIProviderConfigService {
    * Remove provider configuration
    */
   async removeProviderConfig(provider: AIProviderType): Promise<void> {
-    // Remove API key from secure storage
-    await this.keyManager.deleteKey(`ai-provider-${provider}`);
+    // Remove API key from in-memory storage
+    this.apiKeys.delete(provider);
 
     // Remove configuration
     this.configs.delete(provider);

@@ -14,22 +14,21 @@
  *   tsx scripts/cleanup-env-after-migration.ts
  */
 
-import * as fs from 'fs';
-import * as path from 'path';
-import { fileURLToPath } from 'url';
-import { app } from 'electron';
+import * as fs from "fs";
+import * as path from "path";
+import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Colors for terminal output
 const colors = {
-  reset: '\x1b[0m',
-  red: '\x1b[31m',
-  green: '\x1b[32m',
-  yellow: '\x1b[33m',
-  blue: '\x1b[34m',
-  cyan: '\x1b[36m',
+  reset: "\x1b[0m",
+  red: "\x1b[31m",
+  green: "\x1b[32m",
+  yellow: "\x1b[33m",
+  blue: "\x1b[34m",
+  cyan: "\x1b[36m",
 };
 
 function log(message: string, color: string = colors.reset) {
@@ -58,9 +57,24 @@ function info(message: string) {
 function checkKeyMigration(): boolean {
   // In standalone script, we can't access app.getPath, so check common locations
   const possiblePaths = [
-    path.join(process.env.APPDATA || '', 'justice-companion', '.encryption-key'),
-    path.join(process.env.HOME || '', '.config', 'justice-companion', '.encryption-key'),
-    path.join(process.env.HOME || '', 'Library', 'Application Support', 'justice-companion', '.encryption-key'),
+    path.join(
+      process.env.APPDATA || "",
+      "justice-companion",
+      ".encryption-key"
+    ),
+    path.join(
+      process.env.HOME || "",
+      ".config",
+      "justice-companion",
+      ".encryption-key"
+    ),
+    path.join(
+      process.env.HOME || "",
+      "Library",
+      "Application Support",
+      "justice-companion",
+      ".encryption-key"
+    ),
   ];
 
   for (const keyPath of possiblePaths) {
@@ -77,7 +91,7 @@ function checkKeyMigration(): boolean {
  * Create backup of .env file
  */
 function backupEnvFile(envPath: string): string {
-  const timestamp = new Date().toISOString().replace(/:/g, '-').split('.')[0];
+  const timestamp = new Date().toISOString().replace(/:/g, "-").split(".")[0];
   const backupPath = `${envPath}.backup.${timestamp}`;
 
   fs.copyFileSync(envPath, backupPath);
@@ -90,13 +104,13 @@ function backupEnvFile(envPath: string): string {
  * Remove ENCRYPTION_KEY_BASE64 from .env file
  */
 function cleanEnvFile(envPath: string): boolean {
-  const content = fs.readFileSync(envPath, 'utf-8');
-  const lines = content.split('\n');
+  const content = fs.readFileSync(envPath, "utf-8");
+  const lines = content.split("\n");
 
   let removed = false;
   const cleanedLines = lines.filter((line) => {
     const trimmed = line.trim();
-    if (trimmed.startsWith('ENCRYPTION_KEY_BASE64=')) {
+    if (trimmed.startsWith("ENCRYPTION_KEY_BASE64=")) {
       removed = true;
       info(`Removing line: ${trimmed.substring(0, 30)}...`);
       return false;
@@ -105,13 +119,13 @@ function cleanEnvFile(envPath: string): boolean {
   });
 
   if (!removed) {
-    warn('ENCRYPTION_KEY_BASE64 not found in .env file');
+    warn("ENCRYPTION_KEY_BASE64 not found in .env file");
     return false;
   }
 
   // Write cleaned content
-  fs.writeFileSync(envPath, cleanedLines.join('\n'), 'utf-8');
-  success('Removed ENCRYPTION_KEY_BASE64 from .env');
+  fs.writeFileSync(envPath, cleanedLines.join("\n"), "utf-8");
+  success("Removed ENCRYPTION_KEY_BASE64 from .env");
 
   return true;
 }
@@ -136,79 +150,78 @@ function addSecurityComment(envPath: string): void {
 
 `;
 
-  const content = fs.readFileSync(envPath, 'utf-8');
-  fs.writeFileSync(envPath, comment + content, 'utf-8');
-  success('Added security comment to .env');
+  const content = fs.readFileSync(envPath, "utf-8");
+  fs.writeFileSync(envPath, comment + content, "utf-8");
+  success("Added security comment to .env");
 }
 
 /**
  * Main execution
  */
 function main() {
-  log('\n========================================', colors.blue);
-  log('Encryption Key Cleanup Script', colors.blue);
-  log('========================================\n', colors.blue);
+  log("\n========================================", colors.blue);
+  log("Encryption Key Cleanup Script", colors.blue);
+  log("========================================\n", colors.blue);
 
-  const projectRoot = path.resolve(__dirname, '..');
-  const envPath = path.join(projectRoot, '.env');
+  const projectRoot = path.resolve(__dirname, "..");
+  const envPath = path.join(projectRoot, ".env");
 
   // Step 1: Check if .env exists
   if (!fs.existsSync(envPath)) {
-    error('.env file not found');
+    error(".env file not found");
     error(`Expected location: ${envPath}`);
     process.exit(1);
   }
-  success('Found .env file');
+  success("Found .env file");
 
   // Step 2: Check if key has been migrated
-  info('Checking if encryption key has been migrated...');
+  info("Checking if encryption key has been migrated...");
   if (!checkKeyMigration()) {
-    error('Encryption key has NOT been migrated to safeStorage');
-    error('Please run the app at least once to trigger automatic migration');
-    error('Command: pnpm electron:dev');
+    error("Encryption key has NOT been migrated to safeStorage");
+    error("Please run the app at least once to trigger automatic migration");
+    error("Command: pnpm electron:dev");
     process.exit(1);
   }
 
   // Step 3: Check if ENCRYPTION_KEY_BASE64 exists in .env
-  const content = fs.readFileSync(envPath, 'utf-8');
-  if (!content.includes('ENCRYPTION_KEY_BASE64=')) {
-    success('ENCRYPTION_KEY_BASE64 already removed from .env');
-    info('No action needed. File is already secure.');
+  const content = fs.readFileSync(envPath, "utf-8");
+  if (!content.includes("ENCRYPTION_KEY_BASE64=")) {
+    success("ENCRYPTION_KEY_BASE64 already removed from .env");
+    info("No action needed. File is already secure.");
     process.exit(0);
   }
 
   // Step 4: Create backup
-  info('Creating backup of .env file...');
+  info("Creating backup of .env file...");
   const backupPath = backupEnvFile(envPath);
 
   // Step 5: Remove key from .env
-  info('Removing ENCRYPTION_KEY_BASE64 from .env...');
+  info("Removing ENCRYPTION_KEY_BASE64 from .env...");
   if (cleanEnvFile(envPath)) {
     // Step 6: Add security comment
     addSecurityComment(envPath);
 
     // Step 7: Success message
-    log('\n========================================', colors.green);
-    success('Cleanup completed successfully!');
-    log('========================================\n', colors.green);
+    log("\n========================================", colors.green);
+    success("Cleanup completed successfully!");
+    log("========================================\n", colors.green);
 
-    info('What happened:');
-    info('  1. Created backup of .env');
-    info('  2. Removed ENCRYPTION_KEY_BASE64 from .env');
-    info('  3. Added security comment to .env');
-    info('\nYour encryption key is now stored securely in OS-level storage.');
+    info("What happened:");
+    info("  1. Created backup of .env");
+    info("  2. Removed ENCRYPTION_KEY_BASE64 from .env");
+    info("  3. Added security comment to .env");
+    info("\nYour encryption key is now stored securely in OS-level storage.");
     info(`Backup saved at: ${backupPath}`);
 
-    log('\n========================================', colors.blue);
-    info('Next steps:');
-    log('========================================\n', colors.blue);
-    info('1. Verify app still works: pnpm electron:dev');
-    info('2. Commit the cleaned .env to version control (if needed)');
-    info('3. Delete the backup after verification');
-
+    log("\n========================================", colors.blue);
+    info("Next steps:");
+    log("========================================\n", colors.blue);
+    info("1. Verify app still works: pnpm electron:dev");
+    info("2. Commit the cleaned .env to version control (if needed)");
+    info("3. Delete the backup after verification");
   } else {
-    error('Cleanup failed');
-    error('Please check the error messages above');
+    error("Cleanup failed");
+    error("Please check the error messages above");
     process.exit(1);
   }
 }
@@ -217,6 +230,8 @@ function main() {
 try {
   main();
 } catch (err) {
-  error(`Unexpected error: ${err instanceof Error ? err.message : String(err)}`);
+  error(
+    `Unexpected error: ${err instanceof Error ? err.message : String(err)}`
+  );
   process.exit(1);
 }

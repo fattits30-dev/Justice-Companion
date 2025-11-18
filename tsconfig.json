@@ -22,6 +22,7 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
 
     /* Paths */
     "baseUrl": ".",
@@ -30,16 +31,8 @@
     },
 
     /* Types */
-    "types": ["vite/client", "node"]
+    "types": ["vite/client"]
   },
-  "include": [
-    "src/**/*",
-    "src/**/*.tsx",
-    "tests/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "electron"
-  ],
+  "include": ["src/**/*", "src/**/*.tsx", "tests/**/*"],
+  "exclude": ["node_modules", "dist", "electron"]
 }

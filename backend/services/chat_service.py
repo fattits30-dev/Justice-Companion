@@ -180,16 +180,14 @@ class ChatService:
         """Log audit event if audit logger is configured."""
         if self.audit_logger:
             self.audit_logger.log(
-                {
-                    "event_type": event_type,
-                    "user_id": str(user_id) if user_id else None,
-                    "resource_type": "chat_conversation",
-                    "resource_id": resource_id,
-                    "action": action,
-                    "success": success,
-                    "details": details or {},
-                    "error_message": error_message,
-                }
+                event_type=event_type,
+                user_id=str(user_id) if user_id else None,
+                resource_type="chat_conversation",
+                resource_id=resource_id,
+                action=action,
+                success=success,
+                details=details or {},
+                error_message=error_message,
             )
 
     def _update_message_count(self, conversation_id: int) -> None:

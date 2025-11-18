@@ -1,11 +1,11 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import { nodePolyfills } from 'vite-plugin-node-polyfills';
-import { VitePWA } from 'vite-plugin-pwa';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
-import fs from 'fs';
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import { nodePolyfills } from "vite-plugin-node-polyfills";
+import { VitePWA } from "vite-plugin-pwa";
+import path from "path";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
+import fs from "fs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -19,18 +19,18 @@ function getVitePort(): number {
 
   // Try to load from port configuration file
   try {
-    const configPath = path.join(__dirname, 'config', 'ports.json');
+    const configPath = path.join(__dirname, "config", "ports.json");
     if (fs.existsSync(configPath)) {
-      const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+      const config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
       const devConfig = config.development?.services?.find(
-        (s: any) => s.service === 'vite-dev-server'
+        (s: any) => s.service === "vite-dev-server"
       );
       if (devConfig?.defaultPort) {
         return devConfig.defaultPort;
       }
     }
   } catch (error) {
-    console.warn('Could not load port configuration:', error);
+    console.warn("Could not load port configuration:", error);
   }
 
   // Default fallback
@@ -42,77 +42,88 @@ export default defineConfig({
   plugins: [
     react(),
     nodePolyfills({
-      include: ['process', 'buffer', 'util', 'stream', 'events', 'path', 'crypto', 'os', 'timers'],
+      include: [
+        "process",
+        "buffer",
+        "util",
+        "stream",
+        "events",
+        "path",
+        "crypto",
+        "os",
+        "timers",
+      ],
       globals: {
         process: true,
         Buffer: true,
-        global: true
-      }
+        global: true,
+      },
     }),
     VitePWA({
-      registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
+      registerType: "autoUpdate",
+      includeAssets: ["favicon.ico", "robots.txt", "apple-touch-icon.png"],
       manifest: {
-        name: 'Justice Companion - UK Legal AI Assistant',
-        short_name: 'JusticeAI',
-        description: 'Privacy-first AI-powered case management for UK legal matters',
-        theme_color: '#1e40af',
-        background_color: '#0B1120',
-        display: 'standalone',
-        orientation: 'portrait',
-        scope: '/',
-        start_url: '/',
+        name: "Justice Companion - UK Legal AI Assistant",
+        short_name: "JusticeAI",
+        description:
+          "Privacy-first AI-powered case management for UK legal matters",
+        theme_color: "#1e40af",
+        background_color: "#0B1120",
+        display: "standalone",
+        orientation: "portrait",
+        scope: "/",
+        start_url: "/",
         icons: [
           {
-            src: '/pwa-192x192.png',
-            sizes: '192x192',
-            type: 'image/png',
-            purpose: 'any'
+            src: "/pwa-192x192.png",
+            sizes: "192x192",
+            type: "image/png",
+            purpose: "any",
           },
           {
-            src: '/pwa-512x512.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'any'
+            src: "/pwa-512x512.png",
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "any",
           },
           {
-            src: '/pwa-512x512.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'maskable'
-          }
-        ]
+            src: "/pwa-512x512.png",
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "maskable",
+          },
+        ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/.*\.railway\.app\/api\/.*/i,
-            handler: 'NetworkFirst',
+            handler: "NetworkFirst",
             options: {
-              cacheName: 'api-cache',
+              cacheName: "api-cache",
               expiration: {
                 maxEntries: 50,
-                maxAgeSeconds: 300
+                maxAgeSeconds: 300,
               },
-              networkTimeoutSeconds: 3
-            }
+              networkTimeoutSeconds: 3,
+            },
           },
           {
             urlPattern: /^https:\/\/.*\.railway\.app\/chat\/.*/i,
-            handler: 'NetworkOnly'
-          }
-        ]
+            handler: "NetworkOnly",
+          },
+        ],
       },
       devOptions: {
         enabled: true,
-        type: 'module'
-      }
-    })
+        type: "module",
+      },
+    }),
   ],
 
-  // Base path for Electron (must be relative)
-  base: './',
+  // Base path for web deployment (absolute)
+  base: "/",
 
   // Vitest configuration - temporarily disabled
   // test: {
@@ -147,34 +158,33 @@ export default defineConfig({
 
   // Build configuration
   build: {
-    outDir: 'dist/renderer',
+    outDir: "dist",
     emptyOutDir: true,
     sourcemap: true,
     rollupOptions: {
-      external: ['electron'],
       output: {
         manualChunks: {
-          'react-vendor': ['react', 'react-dom'],
-          'query-vendor': ['@tanstack/react-query'],
-          'ui-vendor': ['framer-motion', 'lucide-react']
-        }
-      }
-    }
+          "react-vendor": ["react", "react-dom"],
+          "query-vendor": ["@tanstack/react-query"],
+          "ui-vendor": ["framer-motion", "lucide-react"],
+        },
+      },
+    },
   },
 
   // Development server with automatic port allocation
   server: {
     port: getVitePort(),
     strictPort: false, // Allow Vite to find an available port if the default is in use
-    host: 'localhost',
+    host: "localhost",
     open: false, // Don't auto-open browser (Electron will handle this)
     cors: true,
 
     // HMR configuration
     hmr: {
-      protocol: 'ws',
-      host: 'localhost'
-    }
+      protocol: "ws",
+      host: "localhost",
+    },
   },
 
   // Preview server configuration
@@ -184,21 +194,24 @@ export default defineConfig({
     strictPort: false,
     cors: true,
     // Allow Docker host to access preview server
-    allowedHosts: ['host.docker.internal', '.railway.app', '.netlify.app']
+    allowedHosts: ["host.docker.internal", ".railway.app", ".netlify.app"],
   },
 
   // Path aliases
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src')
-    }
+      "@": path.resolve(__dirname, "./src"),
+    },
   },
 
   // Environment variables prefix
-  envPrefix: 'VITE_',
+  envPrefix: "VITE_",
 
   // Optimizations
   optimizeDeps: {
-    exclude: ['better-sqlite3', 'electron']
-  }
+    exclude: ["better-sqlite3"],
+  },
+
+  // No Electron-specific globals in PWA build
+  define: {},
 });

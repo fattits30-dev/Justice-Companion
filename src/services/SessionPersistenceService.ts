@@ -1,24 +1,20 @@
 import { injectable } from "inversify";
-import { app, safeStorage } from "electron";
-import fs from "fs/promises";
-import path from "path";
 import { validate as uuidValidate, version as uuidVersion } from "uuid";
 import { logger } from "../utils/logger.ts";
 
 /**
  * Service for securely persisting session IDs across app restarts
- * using Electron's safeStorage API (OS keychain integration).
+ * in a PWA/browser environment.
  *
  * Security features:
- * - Uses OS keychain for encryption via safeStorage
  * - Validates UUID format before storage
  * - Never logs decrypted session IDs
- * - Handles encryption unavailability gracefully
+ * - Handles storage unavailability gracefully
  * - Cleans up on logout
  */
 @injectable()
 export class SessionPersistenceService {
-  private static readonly FILE_NAME = "session.enc";
+  private static readonly STORAGE_KEY = "justice-companion.session.id";
   private static readonly UUID_V4_VERSION = 4;
   private static instance: SessionPersistenceService;
 
@@ -37,40 +33,44 @@ export class SessionPersistenceService {
   }
 
   /**
-   * Get the full path to the encrypted session storage file
+   * Get the storage key used in localStorage
    */
-  private getStoragePath(): string {
-    return path.join(
-      app.getPath("userData"),
-      SessionPersistenceService.FILE_NAME,
-    );
+  private getStorageKey(): string {
+    return SessionPersistenceService.STORAGE_KEY;
   }
 
   /**
-   * Check if safeStorage encryption is available on this system
-   * @returns true if encryption is available, false otherwise
+   * Get the browser storage mechanism (localStorage) if available
+   */
+  // eslint-disable-next-line class-methods-use-this
+  private getStorage(): Storage | null {
+    try {
+      if (typeof window === "undefined" || !window.localStorage) {
+        return null;
+      }
+      return window.localStorage;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Check if persistent storage is available on this system
+   * @returns true if storage is available, false otherwise
    */
   public async isAvailable(): Promise<boolean> {
     try {
-      // Check if safeStorage is available and encryption is possible
-      if (
-        !safeStorage ||
-        typeof safeStorage.isEncryptionAvailable !== "function"
-      ) {
-        logger.warn("SessionPersistence", "safeStorage API not available");
+      const storage = this.getStorage();
+      if (!storage) {
+        logger.warn("SessionPersistence", "localStorage not available");
         return false;
       }
 
-      const available = safeStorage.isEncryptionAvailable();
+      const testKey = `${this.getStorageKey()}__test`;
+      storage.setItem(testKey, "1");
+      storage.removeItem(testKey);
 
-      if (!available) {
-        logger.warn(
-          "SessionPersistence",
-          "Encryption not available (missing OS keychain support)",
-        );
-      }
-
-      return available;
+      return true;
     } catch (error) {
       logger.error("Error checking encryption availability", {
         service: "SessionPersistence",
@@ -108,45 +108,36 @@ export class SessionPersistenceService {
   }
 
   /**
-   * Store an encrypted session ID to disk
+   * Store a session ID in browser storage
    * @param sessionId - UUID v4 session ID to store
-   * @throws Error if encryption is unavailable or session ID is invalid
+   * @throws Error if storage is unavailable or session ID is invalid
    */
   public async storeSessionId(sessionId: string): Promise<void> {
     try {
-      // Validate input
       if (!this.isValidSessionId(sessionId)) {
         throw new Error("Invalid session ID format (expected UUID v4)");
       }
 
-      // Check encryption availability
       const available = await this.isAvailable();
       if (!available) {
-        throw new Error("Encryption not available on this system");
+        throw new Error("Persistent storage not available");
       }
 
-      // Encrypt the session ID using safeStorage
-      const encrypted = safeStorage.encryptString(sessionId);
+      const storage = this.getStorage();
+      if (!storage) {
+        throw new Error("Persistent storage not available");
+      }
 
-      // Get storage path and ensure directory exists atomically (fixes TOCTOU)
-      const storagePath = this.getStoragePath();
-      const storageDir = path.dirname(storagePath);
-
-      // mkdir with recursive: true is atomic and won't fail if directory exists
-      await fs.mkdir(storageDir, { recursive: true });
-
-      // Write encrypted data to file
-      await fs.writeFile(storagePath, encrypted);
+      storage.setItem(this.getStorageKey(), sessionId);
     } catch (error) {
       logger.error("Failed to store session ID", {
         service: "SessionPersistence",
         error,
       });
 
-      // Clean up any partial writes
       try {
-        const storagePath = this.getStoragePath();
-        await fs.unlink(storagePath);
+        const storage = this.getStorage();
+        storage?.removeItem(this.getStorageKey());
       } catch {
         // Ignore cleanup errors
       }
@@ -156,76 +147,42 @@ export class SessionPersistenceService {
   }
 
   /**
-   * Retrieve and decrypt a stored session ID
-   * @returns Decrypted session ID or null if not found/invalid
+   * Retrieve a stored session ID
+   * @returns session ID or null if not found/invalid
    */
   public async retrieveSessionId(): Promise<string | null> {
     try {
-      // Check encryption availability
       const available = await this.isAvailable();
       if (!available) {
         logger.warn(
           "SessionPersistence",
-          "Cannot retrieve: encryption not available",
+          "Cannot retrieve: storage not available",
         );
         return null;
       }
 
-      const storagePath = this.getStoragePath();
-
-      // Try to read encrypted data directly (fixes TOCTOU race condition)
-      let encrypted: Buffer;
-      try {
-        encrypted = await fs.readFile(storagePath);
-      } catch (error: any) {
-        // File doesn't exist - this is expected for first login
-        if (error.code === "ENOENT") {
-          return null;
-        }
-        // Other errors (permission, etc) should be logged
-        logger.error("Failed to read session file", {
-          service: "SessionPersistence",
-          error,
-        });
+      const storage = this.getStorage();
+      if (!storage) {
         return null;
       }
 
-      if (!encrypted || encrypted.length === 0) {
-        logger.warn("SessionPersistence", "Stored session file is empty");
-        await this.clearSession(); // Clean up invalid file
+      const stored = storage.getItem(this.getStorageKey());
+      if (!stored) {
         return null;
       }
 
-      // Decrypt the session ID
-      const decrypted = safeStorage.decryptString(encrypted);
-
-      // Validate the decrypted session ID
-      if (!this.isValidSessionId(decrypted)) {
+      if (!this.isValidSessionId(stored)) {
         logger.error("SessionPersistence", "Stored session ID is invalid");
-        await this.clearSession(); // Clean up invalid session
+        await this.clearSession();
         return null;
       }
 
-      return decrypted;
+      return stored;
     } catch (error) {
       logger.error("Failed to retrieve session ID", {
         service: "SessionPersistence",
         error,
       });
-
-      // Handle corrupted file by removing it
-      if (
-        error instanceof Error &&
-        (error.message.includes("decrypt") ||
-          error.message.includes("corrupt") ||
-          error.message.includes("invalid"))
-      ) {
-        logger.warn(
-          "SessionPersistence",
-          "Corrupted session file detected, cleaning up",
-        );
-        await this.clearSession();
-      }
 
       return null;
     }
@@ -236,15 +193,8 @@ export class SessionPersistenceService {
    */
   public async clearSession(): Promise<void> {
     try {
-      const storagePath = this.getStoragePath();
-
-      // Check if file exists before attempting deletion
-      try {
-        await fs.access(storagePath);
-        await fs.unlink(storagePath);
-      } catch {
-        // File doesn't exist or can't be deleted - not an error condition
-      }
+      const storage = this.getStorage();
+      storage?.removeItem(this.getStorageKey());
     } catch (error) {
       logger.error("Error clearing session", {
         service: "SessionPersistence",
@@ -255,16 +205,17 @@ export class SessionPersistenceService {
   }
 
   /**
-   * Check if a persisted session exists (without decrypting it)
+   * Check if a persisted session exists
    */
   public async hasStoredSession(): Promise<boolean> {
     try {
-      const storagePath = this.getStoragePath();
-      await fs.access(storagePath);
+      const storage = this.getStorage();
+      if (!storage) {
+        return false;
+      }
 
-      // Check that file is not empty
-      const stats = await fs.stat(storagePath);
-      return stats.size > 0;
+      const value = storage.getItem(this.getStorageKey());
+      return !!(value && value.length > 0);
     } catch {
       return false;
     }
@@ -279,28 +230,30 @@ export class SessionPersistenceService {
     modified?: Date;
     encryptionAvailable: boolean;
   }> {
-    const metadata: {
-      exists: boolean;
-      size?: number;
-      modified?: Date;
-      encryptionAvailable: boolean;
-    } = {
-      exists: false,
-      encryptionAvailable: await this.isAvailable(),
-    };
+    const encryptionAvailable = await this.isAvailable();
+    const storage = this.getStorage();
 
-    try {
-      const storagePath = this.getStoragePath();
-      const stats = await fs.stat(storagePath);
-
-      metadata.exists = true;
-      metadata.size = stats.size;
-      metadata.modified = stats.mtime;
-    } catch {
-      // File doesn't exist
+    if (!storage) {
+      return {
+        exists: false,
+        encryptionAvailable,
+      };
     }
 
-    return metadata;
+    const value = storage.getItem(this.getStorageKey());
+    if (!value) {
+      return {
+        exists: false,
+        encryptionAvailable,
+      };
+    }
+
+    return {
+      exists: true,
+      size: value.length,
+      // modified time is not available for localStorage; omit it
+      encryptionAvailable,
+    };
   }
 }
 

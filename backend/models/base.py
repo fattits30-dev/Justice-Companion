@@ -92,4 +92,24 @@ def init_db():
     Initialize database: create all tables defined in models.
     Call this once at application startup.
     """
+    # Import all models so they're registered with Base.metadata
+    # This must happen before create_all() is called
+    from backend.models import (
+        user,
+        session,
+        case,
+        evidence,
+        deadline,
+        tag,
+        template,
+        chat,
+        profile,
+        consent,
+        notification,
+        backup,
+        ai_provider_config,
+    )
+
+    # Now create all tables
     Base.metadata.create_all(bind=engine)
+    print(f"Created {len(Base.metadata.tables)} tables: {list(Base.metadata.tables.keys())}")

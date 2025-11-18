@@ -50,6 +50,7 @@ from backend.services.unified_ai_service import (
     ParsedDocument,
     UserProfile,
 )
+from backend.services.ai_stub_service import StubAIService
 from backend.services.rag_service import RAGService, build_system_prompt, extract_sources
 from backend.services.encryption_service import EncryptionService
 from backend.services.audit_logger import AuditLogger
@@ -111,6 +112,14 @@ def get_encryption_service(db: Session = Depends(get_db)) -> EncryptionService:
     For development, can fall back to environment variable.
     """
     encryption_key = os.getenv("ENCRYPTION_KEY_BASE64")
+
+    # In stub AI mode we don't depend on encrypted provider configuration,
+    # so allow a deterministic fallback key to keep dependencies happy
+    # without forcing real secrets to be configured.
+    ai_mode = os.getenv("AI_MODE", "").lower()
+    if ai_mode == "stub" and not encryption_key:
+        return EncryptionService(b"0" * 32)
+
     if not encryption_key:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -133,24 +142,59 @@ def get_chat_service(
     return ChatService(db, encryption_service, audit_logger)
 
 
-def get_ai_service(audit_logger: AuditLogger = Depends(get_audit_logger)) -> UnifiedAIService:
+async def get_ai_service(
+    user_id: int = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    encryption_service: EncryptionService = Depends(get_encryption_service),
+    audit_logger: AuditLogger = Depends(get_audit_logger),
+) -> UnifiedAIService:
     """
-    Get AI service instance.
+    Get AI service instance with configuration from database.
 
-    Configuration comes from environment variables or database.
-    In production, retrieve from AIProviderConfig table.
+    Loads the active AI provider configuration for the authenticated user.
+    Configuration is decrypted and used to initialize UnifiedAIService.
+
+    Raises:
+        HTTPException: If no active AI provider is configured for the user.
     """
-    provider = os.getenv("AI_PROVIDER", "openai")
-    api_key = os.getenv("AI_API_KEY", os.getenv("OPENAI_API_KEY"))
-    model = os.getenv("AI_MODEL", "gpt-4-turbo")
+    # In stub mode we bypass provider configuration entirely and return a
+    # deterministic in-process implementation.
+    ai_mode = os.getenv("AI_MODE", "").lower()
+    if ai_mode == "stub":
+        # Note: the return type is annotated as UnifiedAIService but Python
+        # only enforces duck-typing at runtime. StubAIService exposes a
+        # compatible interface for the routes that depend on it.
+        return StubAIService(audit_logger)  # type: ignore[return-value]
 
-    if not api_key:
+    from backend.services.ai_provider_config_service import AIProviderConfigService
+
+    # Get config service
+    config_service = AIProviderConfigService(
+        db=db,
+        encryption_service=encryption_service,
+        audit_logger=audit_logger
+    )
+
+    # Get active provider configuration from database
+    # Note: get_active_provider_config() returns AIProviderConfigOutput with decrypted API key
+    db_config = await config_service.get_active_provider_config(user_id=user_id)
+
+    if not db_config or not db_config.enabled:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="AI API key not configured"
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="No active AI provider configured. Please configure an AI provider in Settings."
         )
 
+    # Build AIProviderConfig for UnifiedAIService
+    # API key is already decrypted by the service layer
     config = AIProviderConfig(
-        provider=provider, api_key=api_key, model=model, temperature=0.7, max_tokens=4096
+        provider=db_config.provider,
+        api_key=db_config.api_key,  # Already decrypted
+        model=db_config.model,
+        endpoint=db_config.endpoint,
+        temperature=db_config.temperature,
+        max_tokens=db_config.max_tokens,
+        top_p=db_config.top_p,
     )
 
     return UnifiedAIService(config, audit_logger)
@@ -232,6 +276,11 @@ async def stream_ai_chat(
     Yields:
         SSE-formatted data strings
     """
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info(f"[DEBUG] stream_ai_chat called: message={message[:50]}, conversation_id={conversation_id}, ai_service={type(ai_service)}")
+    logger.info(f"[DEBUG] AI Service Config - Provider: {ai_service.config.provider}, Model: {ai_service.config.model}")
+
     try:
         # Load conversation history if provided
         history_messages = []
@@ -345,6 +394,7 @@ async def stream_chat(
         - {"type": "complete", "conversationId": 123} - Final event
         - {"type": "error", "error": "message"} - Error event
     """
+    logger.info(f"[DEBUG] /chat/stream endpoint called - user_id={user_id}, message={request.message[:50]}, provider={ai_service.config.provider}")
     try:
         return StreamingResponse(
             stream_ai_chat(
@@ -684,9 +734,14 @@ async def analyze_document(
     try:
         import os
 
+        logger.info(f"[ENDPOINT] Starting document analysis for file: {request.filePath}")
+
         # Validate file exists
         if not os.path.exists(request.filePath):
+            logger.error(f"[ENDPOINT] File not found: {request.filePath}")
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="File not found")
+
+        logger.info(f"[ENDPOINT] File exists, creating ParsedDocument")
 
         # TODO: Implement document parser
         # For now, use a mock parser
@@ -698,8 +753,12 @@ async def analyze_document(
             file_type="pdf",
         )
 
+        logger.info(f"[ENDPOINT] ParsedDocument created: {filename}")
+
         # Get user profile
         from sqlalchemy import text
+
+        logger.info(f"[ENDPOINT] Fetching user profile for user_id: {user_id}")
 
         user_query = text("SELECT username, email FROM users WHERE id = :user_id")
         user = db.execute(user_query, {"user_id": user_id}).fetchone()
@@ -708,17 +767,26 @@ async def analyze_document(
             name=user.username if user else "User", email=user.email if user else None
         )
 
+        logger.info(f"[ENDPOINT] User profile created: {user_profile.name}")
+
         # Call AI service for extraction
+        logger.info(f"[ENDPOINT] Calling ai_service.extract_case_data_from_document...")
+
         extraction = await ai_service.extract_case_data_from_document(
             parsed_doc, user_profile, request.userQuestion
         )
 
+        logger.info(f"[ENDPOINT] Extraction completed successfully, type: {type(extraction)}")
+        logger.info(f"[ENDPOINT] Extraction keys: {extraction.model_dump().keys()}")
+
+        logger.info(f"[ENDPOINT] Returning extraction response")
         return extraction
 
     except HTTPException:
+        logger.error(f"[ENDPOINT] HTTPException caught, re-raising")
         raise
     except Exception as e:
-        logger.exception(f"Document analysis failed: {e}")
+        logger.exception(f"[ENDPOINT] Document analysis failed with exception: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Document analysis failed: {str(e)}",

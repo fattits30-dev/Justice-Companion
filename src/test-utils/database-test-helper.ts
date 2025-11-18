@@ -27,23 +27,21 @@ export class TestDatabaseHelper {
     // Use consistent test encryption key (matches DI container default for 'test' environment)
     // This ensures encryption/decryption works across TestDatabaseHelper and DI container
     const testKey = Buffer.from("test-key-for-testing-32-bytes!!!").toString(
-      "base64",
+      "base64"
     );
     this.encryptionService = new EncryptionService(testKey);
     console.log(
-      "[TestDatabaseHelper] Encryption service initialized with test key",
+      "[TestDatabaseHelper] Encryption service initialized with test key"
     );
 
     console.log("[TestDatabaseHelper] Finding migrations directory...");
     console.log("[TestDatabaseHelper] process.cwd():", process.cwd());
     console.log("[TestDatabaseHelper] __dirname:", __dirname);
 
-    // Try multiple paths to find migrations (same logic as migrate.ts)
+    // Try multiple paths to find migrations (PWA/web compatible)
     const possiblePaths = [
       path.join(process.cwd(), "src", "db", "migrations"), // Development source (most common for tests)
       path.join(__dirname, "..", "db", "migrations"), // Relative from test-utils
-      path.join(process.cwd(), "dist-electron", "migrations"), // Development bundled
-      path.join(process.resourcesPath || "", "migrations"), // Production (unlikely in tests)
     ];
 
     let migrationsDir = "";
@@ -58,7 +56,7 @@ export class TestDatabaseHelper {
 
     if (!migrationsDir) {
       throw new Error(
-        `[TestDatabaseHelper] Migrations directory not found! Searched paths: ${possiblePaths.join(", ")}`,
+        `[TestDatabaseHelper] Migrations directory not found! Searched paths: ${possiblePaths.join(", ")}`
       );
     }
 
@@ -86,7 +84,7 @@ export class TestDatabaseHelper {
     ];
 
     console.log(
-      `[TestDatabaseHelper] Running ${migrations.length} migrations...`,
+      `[TestDatabaseHelper] Running ${migrations.length} migrations...`
     );
 
     for (const migration of migrations) {
@@ -139,7 +137,7 @@ export class TestDatabaseHelper {
   getEncryptionService(): EncryptionService {
     if (!this.encryptionService) {
       throw new Error(
-        "EncryptionService not initialized. Call initialize() first.",
+        "EncryptionService not initialized. Call initialize() first."
       );
     }
     return this.encryptionService;
@@ -159,7 +157,7 @@ export class TestDatabaseHelper {
     // Get all table names (excluding virtual tables and SQLite internals)
     const tables = this.db
       .prepare(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'",
+        "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
       )
       .all() as { name: string }[];
 

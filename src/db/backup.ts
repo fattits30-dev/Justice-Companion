@@ -1,6 +1,5 @@
 import fs from "fs";
 import path from "path";
-import { app } from "electron";
 import { errorLogger } from "../utils/error-logger.ts";
 
 /**
@@ -17,7 +16,7 @@ export interface BackupMetadata {
  * Get backups directory path
  */
 function getBackupsDir(): string {
-  const userDataPath = app.getPath("userData");
+  const userDataPath = getUserDataDir();
   const backupsDir = path.join(userDataPath, "backups");
 
   // Ensure backups directory exists
@@ -32,7 +31,31 @@ function getBackupsDir(): string {
  * Get current database path
  */
 function getDbPath(): string {
-  return path.join(app.getPath("userData"), "justice.db");
+  if (process.env.JUSTICE_DB_PATH) {
+    return process.env.JUSTICE_DB_PATH;
+  }
+
+  return path.join(getUserDataDir(), "justice.db");
+}
+
+/**
+ * Resolve user data directory without Electron
+ *
+ * Priority:
+ * 1. Directory of JUSTICE_DB_PATH if set
+ * 2. ".justice-companion" folder under current working directory
+ */
+function getUserDataDir(): string {
+  if (process.env.JUSTICE_DB_PATH) {
+    return path.dirname(process.env.JUSTICE_DB_PATH);
+  }
+
+  const fallbackDir = path.join(process.cwd(), ".justice-companion");
+  if (!fs.existsSync(fallbackDir)) {
+    fs.mkdirSync(fallbackDir, { recursive: true });
+  }
+
+  return fallbackDir;
 }
 
 /**
@@ -72,7 +95,7 @@ export function createBackup(customFilename?: string): BackupMetadata {
       `Database backup created: ${filename} (${stats.size} bytes)`,
       {
         type: "info",
-      },
+      }
     );
 
     return metadata;

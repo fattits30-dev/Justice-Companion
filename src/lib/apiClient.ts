@@ -296,30 +296,36 @@ export class ApiClient {
       }>
     > => {
       try {
-        // Backend returns data directly (not wrapped in success/data envelope)
-        const directResponse = await this.post<{
-          user: {
-            id: number;
-            username: string;
-            email: string;
-            role: string;
-            is_active: boolean;
-          };
-          session: {
-            id: string;
-            user_id: number;
-            expires_at: string;
+        // Backend wraps response in {success: true, data: {...}} via ResponseWrapperMiddleware
+        const wrappedResponse = await this.post<{
+          success: true;
+          data: {
+            user: {
+              id: number;
+              username: string;
+              email: string;
+              role: string;
+              is_active: boolean;
+            };
+            session: {
+              id: string;
+              user_id: number;
+              expires_at: string;
+            };
           };
         }>("/auth/register", { username, email, password });
 
-        // Store session ID after successful registration
-        this.setSessionId(directResponse.session.id);
-        localStorage.setItem("sessionId", directResponse.session.id);
+        // Extract data from wrapped response
+        const data = wrappedResponse.data || wrappedResponse as any;
 
-        // Wrap in ApiResponse format for consistency
+        // Store session ID after successful registration
+        this.setSessionId(data.session.id);
+        localStorage.setItem("sessionId", data.session.id);
+
+        // Return in ApiResponse format
         return {
           success: true,
-          data: directResponse,
+          data: data,
         };
       } catch (error) {
         // Return error response

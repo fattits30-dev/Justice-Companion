@@ -1,6 +1,5 @@
 // src/services/export/ExportService.ts
 import { injectable, inject } from "inversify";
-import { app } from "electron";
 import { promises as fs } from "fs";
 import path from "path";
 import { errorLogger } from "../../utils/error-logger.ts";
@@ -77,11 +76,21 @@ export class ExportService implements IExportService {
     this.docxGenerator = new DOCXGenerator();
 
     // Set up export directory
-    this.exportDir = path.join(
-      app.getPath("documents"),
-      "Justice-Companion",
-      "exports",
-    );
+    const exportDir = (() => {
+      const explicitDir = process.env.JUSTICE_EXPORT_DIR;
+      if (explicitDir && explicitDir.trim().length > 0) {
+        return explicitDir;
+      }
+
+      const dbPath = process.env.JUSTICE_DB_PATH;
+      if (dbPath && dbPath.trim().length > 0) {
+        return path.join(path.dirname(dbPath), "exports");
+      }
+
+      return path.join(process.cwd(), ".justice-companion", "exports");
+    })();
+
+    this.exportDir = exportDir;
     this.ensureExportDirectory();
   }
 

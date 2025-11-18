@@ -137,12 +137,6 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
   const Icon = getNotificationIcon(notification.type);
   const colors = getSeverityColors(notification.severity);
 
-  const handleCardClick = () => {
-    if (onClick) {
-      onClick(notification);
-    }
-  };
-
   const handleMarkAsRead = (e: React.MouseEvent) => {
     e.stopPropagation();
     onMarkAsRead(notification.id);
@@ -152,8 +146,6 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
     e.stopPropagation();
     onDelete(notification.id);
   };
-
-  const ariaRole = onClick ? "button" : "region";
 
   return (
     <div
@@ -165,15 +157,6 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
         ${onClick ? "cursor-pointer hover:shadow-md" : ""}
         transition-all duration-200
       `}
-      onClick={handleCardClick}
-      role={ariaRole}
-      tabIndex={onClick ? 0 : undefined}
-      onKeyDown={(e) => {
-        if (onClick && (e.key === "Enter" || e.key === " ")) {
-          e.preventDefault();
-          onClick(notification);
-        }
-      }}
     >
       {/* Unread Indicator */}
       {!notification.isRead && (

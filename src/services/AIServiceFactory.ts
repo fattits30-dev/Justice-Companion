@@ -2,7 +2,6 @@ import { errorLogger } from "../utils/error-logger.ts";
 import type { AIChatRequest, AIResponse } from "../types/ai.ts";
 import fs from "fs";
 import path from "path";
-import { app } from "electron";
 import type { CaseFactsRepository } from "../repositories/CaseFactsRepository.ts";
 
 // Temporary stub classes to satisfy type requirements
@@ -80,13 +79,25 @@ export class AIServiceFactory {
     // OpenAI service will be created when user configures it
     this.openAIService = null;
 
-    // Check model availability
-    const userDataPath = app.getPath("userData");
-    this.modelPath = path.join(
-      userDataPath,
-      "models",
-      "Qwen_Qwen3-8B-Q4_K_M.gguf",
-    );
+    // Check model availability using a filesystem path that does not depend
+    // on Electron. Prefer an explicit JUSTICE_MODELS_DIR, then derive from
+    // JUSTICE_DB_PATH, and finally fall back to a local .justice-companion
+    // directory under the current working directory.
+    const modelsDir = (() => {
+      const explicitDir = process.env.JUSTICE_MODELS_DIR;
+      if (explicitDir && explicitDir.trim().length > 0) {
+        return explicitDir;
+      }
+
+      const dbPath = process.env.JUSTICE_DB_PATH;
+      if (dbPath && dbPath.trim().length > 0) {
+        return path.join(path.dirname(dbPath), "models");
+      }
+
+      return path.join(process.cwd(), ".justice-companion", "models");
+    })();
+
+    this.modelPath = path.join(modelsDir, "Qwen_Qwen3-8B-Q4_K_M.gguf");
 
     errorLogger.logError(
       "AIServiceFactory initialized with multi-provider support",
@@ -94,7 +105,7 @@ export class AIServiceFactory {
         type: "info",
         modelPath: this.modelPath,
         defaultProvider: "integrated",
-      },
+      }
     );
   }
 

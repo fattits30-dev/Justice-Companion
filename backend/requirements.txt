@@ -35,6 +35,8 @@ transformers==4.43.3  # State-of-the-art Natural Language Processing for PyTorch
 sentence-transformers==3.0.1  # Sentence embeddings with BERT
 faiss-cpu==1.8.0.post1  # Library for efficient similarity search and clustering of dense vectors
 # faiss-gpu==1.7.2 # Optional: for GPU-accelerated FAISS, requires CUDA
+huggingface-hub==0.26.5  # HuggingFace Hub API for model/dataset access
+openai==1.58.1  # OpenAI Python client library (for OpenAI-compatible APIs)
 
 # Other utilities
 requests==2.32.5  # Elegant and simple HTTP library for Python

@@ -68,7 +68,8 @@
 
     // Markdown & Documentation
     "yzhang.markdown-all-in-one",
-    "bierner.markdown-preview-github-styles"
+    "bierner.markdown-preview-github-styles",
+    "saoudrizwan.claude-dev"
   ],
   "unwantedRecommendations": [
     "hookyqr.beautify",

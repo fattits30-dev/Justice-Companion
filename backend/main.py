@@ -8,11 +8,21 @@ The Electron frontend will make HTTP requests to this backend instead of using I
 
 import os
 import sys
+import logging
 from pathlib import Path
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
 load_dotenv()
+
+# Configure logging BEFORE any imports that create loggers
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout)
+    ]
+)
 
 # Add parent directory to Python path for absolute imports
 backend_dir = Path(__file__).parent
@@ -166,13 +176,18 @@ def get_allowed_origins() -> list:
         # Example: ALLOWED_ORIGINS=https://app.justicecompanion.com,https://justicecompanion.netlify.app
         origins = [origin.strip() for origin in allowed_origins_env.split(",") if origin.strip()]
     else:
-        # Development: Default to localhost for Electron app
+        # Development: Default to localhost for Electron app + Docker testing
         origins = [
             "http://localhost:5176",  # Vite dev server
             "http://localhost:5173",  # Vite dev server (alternate port)
             "http://127.0.0.1:5176",  # Localhost IPv4
             "http://127.0.0.1:5173",  # Localhost IPv4 (alternate)
         ]
+
+        # Add Docker host IP origins for local testing (ports 5176-5180)
+        docker_host_ip = "172.26.160.1"
+        for port in range(5176, 5181):
+            origins.append(f"http://{docker_host_ip}:{port}")
 
     print(f"CORS allowed origins: {origins}")
     return origins
@@ -181,8 +196,8 @@ def get_allowed_origins() -> list:
 # Add CORS middleware with environment-based origins
 allowed_origins = get_allowed_origins()
 
-# Special case: If allowed_origins is ["*"], use regex pattern
-if allowed_origins == ["*"]:
+# TEMPORARY: Force wildcard CORS for local testing
+if True:  # Force wildcard for testing
     # Allow all origins (development/testing only)
     app.add_middleware(
         CORSMiddleware,

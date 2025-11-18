@@ -1,7 +1,6 @@
 import { errorLogger } from "../utils/error-logger.ts";
 import fs from "fs";
 import path from "path";
-import { app } from "electron";
 import https from "https";
 import crypto from "crypto";
 
@@ -81,9 +80,23 @@ export class ModelDownloadService {
   ];
 
   private constructor() {
-    // Models directory: app.getPath('userData')/models/
-    const userDataPath = app.getPath("userData");
-    this.modelsDir = path.join(userDataPath, "models");
+    // Models directory: prefer explicit JUSTICE_MODELS_DIR, then derive from
+    // JUSTICE_DB_PATH, and finally fall back to .justice-companion/models
+    const modelsDir = (() => {
+      const explicitDir = process.env.JUSTICE_MODELS_DIR;
+      if (explicitDir && explicitDir.trim().length > 0) {
+        return explicitDir;
+      }
+
+      const dbPath = process.env.JUSTICE_DB_PATH;
+      if (dbPath && dbPath.trim().length > 0) {
+        return path.join(path.dirname(dbPath), "models");
+      }
+
+      return path.join(process.cwd(), ".justice-companion", "models");
+    })();
+
+    this.modelsDir = modelsDir;
 
     // Ensure models directory exists
     if (!fs.existsSync(this.modelsDir)) {
@@ -144,7 +157,7 @@ export class ModelDownloadService {
    */
   async downloadModel(
     modelId: string,
-    onProgress: (progress: DownloadProgress) => void,
+    onProgress: (progress: DownloadProgress) => void
   ): Promise<boolean> {
     const model = this.availableModels.find((m) => m.id === modelId);
     if (!model) {
@@ -205,7 +218,7 @@ export class ModelDownloadService {
         const hash = await this.calculateSHA256(tempPath);
         if (hash !== model.sha256) {
           throw new Error(
-            `Checksum verification failed. Expected: ${model.sha256}, Got: ${hash}`,
+            `Checksum verification failed. Expected: ${model.sha256}, Got: ${hash}`
           );
         }
 
@@ -271,7 +284,7 @@ export class ModelDownloadService {
     url: string,
     destPath: string,
     totalSize: number,
-    onProgress: (progress: DownloadProgress) => void,
+    onProgress: (progress: DownloadProgress) => void
   ): Promise<void> {
     return new Promise((resolve, reject) => {
       const file = fs.createWriteStream(destPath);
@@ -284,8 +297,8 @@ export class ModelDownloadService {
           if (response.statusCode !== 200) {
             reject(
               new Error(
-                `HTTP ${response.statusCode}: ${response.statusMessage}`,
-              ),
+                `HTTP ${response.statusCode}: ${response.statusMessage}`
+              )
             );
             return;
           }
@@ -394,7 +407,7 @@ export class ModelDownloadService {
    */
   getDownloadedModels(): ModelInfo[] {
     return this.availableModels.filter((model) =>
-      this.isModelDownloaded(model.id),
+      this.isModelDownloaded(model.id)
     );
   }
 }

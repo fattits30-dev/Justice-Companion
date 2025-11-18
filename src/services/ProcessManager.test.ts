@@ -1,17 +1,16 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { ProcessManager } from "./ProcessManager.ts";
-import type { App } from "electron";
+import { ProcessManager, type AppLike } from "./ProcessManager.ts";
 
 // Mock Electron app
-const mockApp = {
+const mockApp: AppLike = {
   requestSingleInstanceLock: vi.fn(),
   quit: vi.fn(),
   on: vi.fn(),
-} as unknown as App;
+};
 
 async function withMockedPlatform<T>(
   platform: NodeJS.Platform,
-  callback: () => Promise<T> | T,
+  callback: () => Promise<T> | T
 ): Promise<T> {
   const platformSpy = vi
     .spyOn(process, "platform", "get")
@@ -76,7 +75,7 @@ describe("ProcessManager", () => {
       // Verify the event listener was registered
       expect(mockApp.on).toHaveBeenCalledWith(
         "second-instance",
-        expect.any(Function),
+        expect.any(Function)
       );
     });
   });
@@ -135,7 +134,7 @@ describe("ProcessManager", () => {
 
     it("should handle errors gracefully during cleanup", async () => {
       vi.spyOn(processManager, "killProcessOnPort").mockRejectedValue(
-        new Error("Access denied"),
+        new Error("Access denied")
       );
 
       await expect(processManager.cleanupOnStartup()).resolves.not.toThrow();
@@ -148,7 +147,7 @@ describe("ProcessManager", () => {
 
       expect(mockApp.on).toHaveBeenCalledWith(
         "before-quit",
-        expect.any(Function),
+        expect.any(Function)
       );
     });
 
@@ -217,7 +216,7 @@ describe("ProcessManager", () => {
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringContaining("[ProcessManager]"),
         expect.any(String),
-        expect.objectContaining({ context: "test" }),
+        expect.objectContaining({ context: "test" })
       );
 
       consoleSpy.mockRestore();

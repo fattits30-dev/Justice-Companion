@@ -1,7 +1,18 @@
-import type { App, BrowserWindow } from "electron";
 import type { AppUpdater, UpdateInfo, ProgressInfo } from "electron-updater";
 import { errorLogger } from "../utils/error-logger.ts";
 import { logger } from "../utils/logger";
+
+// Minimal interfaces to avoid a hard dependency on the electron module
+export interface AppLike {
+  getVersion(): string;
+}
+
+export interface BrowserWindowLike {
+  isDestroyed(): boolean;
+  webContents: {
+    send(channel: string, ...args: any[]): void;
+  };
+}
 
 export interface AutoUpdaterConfig {
   checkOnStartup?: boolean;
@@ -35,11 +46,15 @@ export interface UpdateDownloadResult {
 export class AutoUpdater {
   private updater: AppUpdater;
   private config: AutoUpdaterConfig;
-  private mainWindow: BrowserWindow | null = null;
+  private mainWindow: BrowserWindowLike | null = null;
   private status: UpdateStatus;
   private downloadProgressCallbacks: Array<(percent: number) => void> = [];
 
-  constructor(app: App, updater: AppUpdater, config: AutoUpdaterConfig = {}) {
+  constructor(
+    app: AppLike,
+    updater: AppUpdater,
+    config: AutoUpdaterConfig = {}
+  ) {
     this.updater = updater;
     this.config = {
       checkOnStartup: true,
@@ -259,7 +274,7 @@ export class AutoUpdater {
   /**
    * Set the main window for update notifications
    */
-  public setMainWindow(window: BrowserWindow): void {
+  public setMainWindow(window: BrowserWindowLike): void {
     this.mainWindow = window;
   }
 

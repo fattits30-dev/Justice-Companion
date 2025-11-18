@@ -1,4 +1,3 @@
-import type { App } from "electron";
 import { exec } from "child_process";
 import { promisify } from "util";
 import net from "net";
@@ -24,13 +23,19 @@ interface ProcessStatus {
   ports: PortStatus[];
 }
 
+export interface AppLike {
+  requestSingleInstanceLock(): boolean;
+  quit(): void;
+  on(event: string, listener: (...args: any[]) => void): void;
+}
+
 export class ProcessManager {
-  private app: App;
+  private app: AppLike;
   private startTime: Date;
   private managedPorts: Map<number, string> = new Map();
   private shutdownHandlers: Array<() => void | Promise<void>> = [];
 
-  constructor(app: App) {
+  constructor(app: AppLike) {
     this.app = app;
     this.startTime = new Date();
   }
@@ -65,10 +70,10 @@ export class ProcessManager {
       "second-instance",
       (_event, _commandLine, _workingDirectory) => {
         logger.warn(
-          "[ProcessManager] Second instance detected, focusing main window...",
+          "[ProcessManager] Second instance detected, focusing main window..."
         );
         callback();
-      },
+      }
     );
   }
 
@@ -180,7 +185,7 @@ export class ProcessManager {
           service: "ProcessManager",
           operation: "killProcessOnPort",
           port,
-        },
+        }
       );
       return false;
     }
@@ -197,7 +202,7 @@ export class ProcessManager {
         if (inUse) {
           logger.info(
             `[ProcessManager] Port ${port} (${name}) is in use, attempting cleanup...`,
-            { service: "ProcessManager", port, name },
+            { service: "ProcessManager", port, name }
           );
           await this.killProcessOnPort(port);
         }
@@ -209,7 +214,7 @@ export class ProcessManager {
             operation: "cleanupOnStartup",
             port,
             name,
-          },
+          }
         );
       }
     }
@@ -251,7 +256,7 @@ export class ProcessManager {
    */
   public async ensurePortAvailable(
     port: number,
-    maxRetries: number = 1,
+    maxRetries: number = 1
   ): Promise<boolean> {
     for (let i = 0; i < maxRetries; i++) {
       const inUse = await this.isPortInUse(port);
@@ -298,7 +303,7 @@ export class ProcessManager {
           service: "ProcessManager",
           operation: "killProcessById",
           pid,
-        },
+        }
       );
       return false;
     }
@@ -317,7 +322,7 @@ export class ProcessManager {
           {
             service: "ProcessManager",
             operation: "executeShutdownHandlers",
-          },
+          }
         );
       }
     }

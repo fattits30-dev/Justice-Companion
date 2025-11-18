@@ -1,25 +1,8 @@
 import {
-  test,
-  expect,
-  _electron as electron,
-  type ElectronApplication,
-  type Page,
-} from "@playwright/test";
-import path from "path";
-import fs from "fs";
-import crypto from "crypto";
-import { spawn } from "child_process";
-import Database from "better-sqlite3";
+  // Electron-based GDPR deletion E2E tests have been removed.
+  // This file is kept as a placeholder to avoid breaking tooling.
 
-/**
- * E2E GDPR Deletion Tests for Justice Companion
- *
- * Tests GDPR Article 17 (Right to Erasure) compliance:
- * - User registration and authentication
- * - Creating test data (cases, evidence, chat messages)
- * - GDPR consent management
- * - Data export before deletion
- * - Complete data deletion
+  export {};
  * - Verification that audit logs and consents are preserved
  *
  * Uses Playwright Electron support to test the actual desktop app

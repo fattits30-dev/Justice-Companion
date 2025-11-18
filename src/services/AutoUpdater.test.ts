@@ -1,6 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { AutoUpdater } from "./AutoUpdater.ts";
-import type { App, BrowserWindow } from "electron";
+import {
+  AutoUpdater,
+  type AppLike,
+  type BrowserWindowLike,
+} from "./AutoUpdater.ts";
 import type { AppUpdater, UpdateInfo } from "electron-updater";
 
 // Mock electron-updater
@@ -17,20 +20,20 @@ const mockAutoUpdater = {
 } as unknown as AppUpdater;
 
 // Mock Electron app
-const mockApp = {
+const mockApp: AppLike = {
   getVersion: vi.fn().mockReturnValue("1.0.0"),
   on: vi.fn(),
   quit: vi.fn(),
   relaunch: vi.fn(),
-} as unknown as App;
+};
 
 // Mock BrowserWindow
-const mockWindow = {
+const mockWindow: BrowserWindowLike = {
   webContents: {
     send: vi.fn(),
   },
   isDestroyed: vi.fn().mockReturnValue(false),
-} as unknown as BrowserWindow;
+};
 
 describe("AutoUpdater", () => {
   let autoUpdater: AutoUpdater;
@@ -55,27 +58,27 @@ describe("AutoUpdater", () => {
     it("should register update event listeners", () => {
       expect(mockAutoUpdater.on).toHaveBeenCalledWith(
         "checking-for-update",
-        expect.any(Function),
+        expect.any(Function)
       );
       expect(mockAutoUpdater.on).toHaveBeenCalledWith(
         "update-available",
-        expect.any(Function),
+        expect.any(Function)
       );
       expect(mockAutoUpdater.on).toHaveBeenCalledWith(
         "update-not-available",
-        expect.any(Function),
+        expect.any(Function)
       );
       expect(mockAutoUpdater.on).toHaveBeenCalledWith(
         "download-progress",
-        expect.any(Function),
+        expect.any(Function)
       );
       expect(mockAutoUpdater.on).toHaveBeenCalledWith(
         "update-downloaded",
-        expect.any(Function),
+        expect.any(Function)
       );
       expect(mockAutoUpdater.on).toHaveBeenCalledWith(
         "error",
-        expect.any(Function),
+        expect.any(Function)
       );
     });
   });
@@ -169,7 +172,7 @@ describe("AutoUpdater", () => {
       autoUpdater.quitAndInstall();
 
       expect(mockWindow.webContents.send).toHaveBeenCalledWith(
-        "app-update:installing",
+        "app-update:installing"
       );
     });
 
@@ -196,7 +199,7 @@ describe("AutoUpdater", () => {
           "app-update:available",
           {
             version: "1.0.1",
-          },
+          }
         );
       }
     });
@@ -205,13 +208,13 @@ describe("AutoUpdater", () => {
       autoUpdater.setMainWindow(mockWindow);
 
       const noUpdateHandler = (mockAutoUpdater.on as any).mock.calls.find(
-        (call: any[]) => call[0] === "update-not-available",
+        (call: any[]) => call[0] === "update-not-available"
       )?.[1];
 
       if (noUpdateHandler) {
         noUpdateHandler({ version: "1.0.0" });
         expect(mockWindow.webContents.send).toHaveBeenCalledWith(
-          "app-update:not-available",
+          "app-update:not-available"
         );
       }
     });
@@ -220,7 +223,7 @@ describe("AutoUpdater", () => {
       autoUpdater.setMainWindow(mockWindow);
 
       const downloadedHandler = (mockAutoUpdater.on as any).mock.calls.find(
-        (call: any[]) => call[0] === "update-downloaded",
+        (call: any[]) => call[0] === "update-downloaded"
       )?.[1];
 
       if (downloadedHandler) {
@@ -229,7 +232,7 @@ describe("AutoUpdater", () => {
           "app-update:downloaded",
           {
             version: "1.0.1",
-          },
+          }
         );
       }
     });
@@ -241,7 +244,7 @@ describe("AutoUpdater", () => {
       new AutoUpdater(mockApp, mockAutoUpdater, { updateServerUrl: customURL });
 
       expect(mockAutoUpdater.setFeedURL).toHaveBeenCalledWith(
-        expect.objectContaining({ url: customURL }),
+        expect.objectContaining({ url: customURL })
       );
     });
 
@@ -297,14 +300,14 @@ describe("AutoUpdater", () => {
         .mockImplementation(() => {});
 
       const errorHandler = (mockAutoUpdater.on as any).mock.calls.find(
-        (call: any[]) => call[0] === "error",
+        (call: any[]) => call[0] === "error"
       )?.[1];
 
       if (errorHandler) {
         errorHandler(new Error("Update failed"));
         expect(consoleSpy).toHaveBeenCalledWith(
           expect.stringContaining("[AutoUpdater]"),
-          expect.any(Error),
+          expect.any(Error)
         );
       }
 

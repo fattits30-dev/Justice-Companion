@@ -7,23 +7,6 @@ const resolveDatabasePath = (): string => {
   if (process.env.JUSTICE_DB_PATH) {
     return process.env.JUSTICE_DB_PATH;
   }
-
-  // Conditional import of electron to avoid hanging in Node.js test environment
-  if (process.versions?.electron) {
-    try {
-      // Dynamic import only when running in Electron
-
-      const { app } = require("electron");
-      if (app && typeof app.getPath === "function") {
-        return path.join(app.getPath("userData"), "justice.db");
-      }
-    } catch (error) {
-      errorLogger.logError(error as Error, {
-        context: "database-path-resolution",
-      });
-    }
-  }
-
   const fallbackDir = path.join(process.cwd(), ".justice-companion");
   fs.mkdirSync(fallbackDir, { recursive: true });
 
