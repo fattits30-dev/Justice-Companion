@@ -73,7 +73,7 @@ export class AIProviderConfigService {
     } catch (error) {
       logger.error(
         "[AIProviderConfigService] Failed to load configurations:",
-        error
+        error,
       );
     }
   }
@@ -92,7 +92,7 @@ export class AIProviderConfigService {
     } catch (error) {
       logger.error(
         "[AIProviderConfigService] Failed to save configurations:",
-        error
+        error,
       );
       throw error;
     }
@@ -104,7 +104,7 @@ export class AIProviderConfigService {
   async setProviderConfig(
     provider: AIProviderType,
     apiKey: string,
-    config: Omit<StoredProviderConfig, "provider">
+    config: Omit<StoredProviderConfig, "provider">,
   ): Promise<void> {
     // Store API key in memory only (not persisted to disk)
     this.apiKeys.set(provider, apiKey);
@@ -127,7 +127,7 @@ export class AIProviderConfigService {
    * Get configuration for a provider (including API key)
    */
   async getProviderConfig(
-    provider: AIProviderType
+    provider: AIProviderType,
   ): Promise<AIProviderConfig | null> {
     const config = this.configs.get(provider);
     if (!config) {
@@ -147,7 +147,7 @@ export class AIProviderConfigService {
     } catch (error) {
       logger.error(
         `[AIProviderConfigService] Failed to get API key for ${provider}:`,
-        error
+        error,
       );
       return null;
     }
@@ -273,7 +273,7 @@ export class AIProviderConfigService {
    * Test provider connection
    */
   async testProvider(
-    provider: AIProviderType
+    provider: AIProviderType,
   ): Promise<{ success: boolean; error?: string }> {
     const config = await this.getProviderConfig(provider);
     if (!config) {

@@ -513,7 +513,7 @@ const SidebarComponent = React.memo(function Sidebar({
         <div className="border-t border-white/10 p-4">
           {isCollapsed ? (
             /* Collapsed: Circle Badge with Initials */
-            (<button
+            <button
               className="relative flex items-center justify-center w-10 h-10 mx-auto bg-gradient-to-br from-secondary-500 to-secondary-600 rounded-full text-white font-semibold text-sm hover:from-secondary-400 hover:to-secondary-500 transition-all duration-200 shadow-lg hover:shadow-secondary"
               onClick={() => onNavigate?.("/settings")}
               aria-label={`${user.username} - View profile settings`}
@@ -521,10 +521,10 @@ const SidebarComponent = React.memo(function Sidebar({
             >
               {user.username.substring(0, 2).toUpperCase()}
               <span className="absolute top-0 right-0 w-3 h-3 bg-green-400 border-2 border-gray-900 rounded-full"></span>
-            </button>)
+            </button>
           ) : (
             /* Expanded: Full Profile Card */
-            (<div className="space-y-3">
+            <div className="space-y-3">
               <button
                 onClick={() => setIsProfileManagerOpen(true)}
                 className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-colors w-full text-left"
@@ -576,7 +576,7 @@ const SidebarComponent = React.memo(function Sidebar({
                 </svg>
                 <span>Logout</span>
               </button>
-            </div>)
+            </div>
           )}
         </div>
       )}

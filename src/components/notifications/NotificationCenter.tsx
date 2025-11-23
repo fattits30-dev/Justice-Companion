@@ -119,13 +119,13 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
         setError(errorMessage);
         console.error(
           "[NotificationCenter] Failed to fetch notifications:",
-          err
+          err,
         );
       } finally {
         setIsLoading(false);
       }
     },
-    [sessionId, filterUnread, filterType, filterSeverity, pageSize]
+    [sessionId, filterUnread, filterType, filterSeverity, pageSize],
   );
 
   /**
@@ -145,8 +145,8 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
           prev.map((notif) =>
             notif.id === id
               ? { ...notif, isRead: true, readAt: new Date().toISOString() }
-              : notif
-          )
+              : notif,
+          ),
         );
       }
     } catch (err) {
@@ -173,7 +173,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
             ...notif,
             isRead: true,
             readAt: new Date().toISOString(),
-          }))
+          })),
         );
 
         // TODO: surface a user-visible toast instead of console output if needed
@@ -351,7 +351,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
                 value={filterSeverity}
                 onChange={(e) =>
                   setFilterSeverity(
-                    e.target.value as NotificationSeverity | "all"
+                    e.target.value as NotificationSeverity | "all",
                   )
                 }
                 className="text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md px-2 py-1"

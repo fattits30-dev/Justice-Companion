@@ -41,16 +41,16 @@ describe("SecureStorageService", () => {
       justiceAPI: {
         secureStorage: {
           isEncryptionAvailable: vi.fn(async () =>
-            mockInvoke("secure-storage:is-encryption-available")
+            mockInvoke("secure-storage:is-encryption-available"),
           ),
           set: vi.fn(async (key: string, value: string) =>
-            mockInvoke("secure-storage:set", key, value)
+            mockInvoke("secure-storage:set", key, value),
           ),
           get: vi.fn(async (key: string) =>
-            mockInvoke("secure-storage:get", key)
+            mockInvoke("secure-storage:get", key),
           ),
           delete: vi.fn(async (key: string) =>
-            mockInvoke("secure-storage:delete", key)
+            mockInvoke("secure-storage:delete", key),
           ),
           clearAll: vi.fn(async () => mockInvoke("secure-storage:clear-all")),
         },
@@ -118,7 +118,7 @@ describe("SecureStorageService", () => {
       await service.init();
 
       expect(mockInvoke).toHaveBeenCalledWith(
-        "secure-storage:is-encryption-available"
+        "secure-storage:is-encryption-available",
       );
       expect(mockInvoke).toHaveBeenCalledTimes(1);
       expect(service.isEncryptionAvailable()).toBe(true);
@@ -133,13 +133,13 @@ describe("SecureStorageService", () => {
       await service.init();
 
       expect(mockInvoke).toHaveBeenCalledWith(
-        "secure-storage:is-encryption-available"
+        "secure-storage:is-encryption-available",
       );
       expect(service.isEncryptionAvailable()).toBe(false);
       expect(consoleWarnSpy).toHaveBeenCalledWith(
         expect.stringContaining(
-          "[SecureStorage] Encryption not available on this system"
-        )
+          "[SecureStorage] Encryption not available on this system",
+        ),
       );
     });
 
@@ -149,12 +149,12 @@ describe("SecureStorageService", () => {
       await service.init();
 
       expect(consoleWarnSpy).toHaveBeenCalledWith(
-        expect.stringContaining("gnome-keyring or kwallet")
+        expect.stringContaining("gnome-keyring or kwallet"),
       );
       expect(consoleWarnSpy).toHaveBeenCalledWith(
         expect.stringContaining(
-          "API keys will be stored without encryption as fallback"
-        )
+          "API keys will be stored without encryption as fallback",
+        ),
       );
     });
 
@@ -174,7 +174,7 @@ describe("SecureStorageService", () => {
       mockInvoke.mockRejectedValueOnce(error);
 
       await expect(service.init()).rejects.toThrow(
-        "Failed to initialize secure storage"
+        "Failed to initialize secure storage",
       );
       // Production code uses errorLogger.logError(), not console.error()
       // errorLogger is mocked differently, so we don't check for specific calls
@@ -184,7 +184,7 @@ describe("SecureStorageService", () => {
       mockInvoke.mockRejectedValueOnce("String error");
 
       await expect(service.init()).rejects.toThrow(
-        "Failed to initialize secure storage"
+        "Failed to initialize secure storage",
       );
       // Production code uses errorLogger.logError(), not console.error()
       // errorLogger is mocked differently, so we don't check for specific calls
@@ -223,13 +223,13 @@ describe("SecureStorageService", () => {
 
       expect(mockInvoke).toHaveBeenNthCalledWith(
         1,
-        "secure-storage:is-encryption-available"
+        "secure-storage:is-encryption-available",
       );
       expect(mockInvoke).toHaveBeenNthCalledWith(
         2,
         "secure-storage:set",
         "openai_api_key",
-        "sk-test123"
+        "sk-test123",
       );
       expect(mockInvoke).toHaveBeenCalledTimes(2);
     });
@@ -242,7 +242,7 @@ describe("SecureStorageService", () => {
       expect(mockInvoke).toHaveBeenCalledWith(
         "secure-storage:set",
         "anthropic_api_key",
-        "sk-ant-test456"
+        "sk-ant-test456",
       );
     });
 
@@ -260,19 +260,19 @@ describe("SecureStorageService", () => {
       expect(mockInvoke).toHaveBeenCalledTimes(3);
       expect(mockInvoke).toHaveBeenNthCalledWith(
         1,
-        "secure-storage:is-encryption-available"
+        "secure-storage:is-encryption-available",
       );
       expect(mockInvoke).toHaveBeenNthCalledWith(
         2,
         "secure-storage:set",
         "key1",
-        "value1"
+        "value1",
       );
       expect(mockInvoke).toHaveBeenNthCalledWith(
         3,
         "secure-storage:set",
         "key2",
-        "value2"
+        "value2",
       );
     });
 
@@ -280,7 +280,7 @@ describe("SecureStorageService", () => {
       mockInvoke.mockResolvedValueOnce(true);
 
       await expect(service.setApiKey("", "value")).rejects.toThrow(
-        "Key and value are required"
+        "Key and value are required",
       );
       expect(mockInvoke).toHaveBeenCalledTimes(1); // Only init called
     });
@@ -289,7 +289,7 @@ describe("SecureStorageService", () => {
       mockInvoke.mockResolvedValueOnce(true);
 
       await expect(service.setApiKey("key", "")).rejects.toThrow(
-        "Key and value are required"
+        "Key and value are required",
       );
       expect(mockInvoke).toHaveBeenCalledTimes(1); // Only init called
     });
@@ -298,7 +298,7 @@ describe("SecureStorageService", () => {
       mockInvoke.mockResolvedValueOnce(true);
 
       await expect(service.setApiKey(null as any, "value")).rejects.toThrow(
-        "Key and value are required"
+        "Key and value are required",
       );
     });
 
@@ -306,7 +306,7 @@ describe("SecureStorageService", () => {
       mockInvoke.mockResolvedValueOnce(true);
 
       await expect(service.setApiKey("key", null as any)).rejects.toThrow(
-        "Key and value are required"
+        "Key and value are required",
       );
     });
 
@@ -314,7 +314,7 @@ describe("SecureStorageService", () => {
       mockInvoke.mockResolvedValueOnce(true);
 
       await expect(
-        service.setApiKey(undefined as any, "value")
+        service.setApiKey(undefined as any, "value"),
       ).rejects.toThrow("Key and value are required");
     });
 
@@ -322,7 +322,7 @@ describe("SecureStorageService", () => {
       mockInvoke.mockResolvedValueOnce(true);
 
       await expect(service.setApiKey("key", undefined as any)).rejects.toThrow(
-        "Key and value are required"
+        "Key and value are required",
       );
     });
 
@@ -331,7 +331,7 @@ describe("SecureStorageService", () => {
       mockInvoke.mockResolvedValueOnce(true).mockRejectedValueOnce(ipcError);
 
       await expect(service.setApiKey("test_key", "test_value")).rejects.toThrow(
-        "Failed to store API key: IPC set failed"
+        "Failed to store API key: IPC set failed",
       );
       // Production code uses errorLogger.logError(), not console.error()
     });
@@ -342,7 +342,7 @@ describe("SecureStorageService", () => {
         .mockRejectedValueOnce("String error");
 
       await expect(service.setApiKey("test_key", "test_value")).rejects.toThrow(
-        "Failed to store API key: Unknown error"
+        "Failed to store API key: Unknown error",
       );
       // Production code uses errorLogger.logError(), not console.error()
     });
@@ -352,13 +352,13 @@ describe("SecureStorageService", () => {
 
       await service.setApiKey(
         "key-with-dashes_and_underscores.and.dots",
-        "sk-!@#$%^&*()"
+        "sk-!@#$%^&*()",
       );
 
       expect(mockInvoke).toHaveBeenCalledWith(
         "secure-storage:set",
         "key-with-dashes_and_underscores.and.dots",
-        "sk-!@#$%^&*()"
+        "sk-!@#$%^&*()",
       );
     });
   });
@@ -373,12 +373,12 @@ describe("SecureStorageService", () => {
 
       expect(mockInvoke).toHaveBeenNthCalledWith(
         1,
-        "secure-storage:is-encryption-available"
+        "secure-storage:is-encryption-available",
       );
       expect(mockInvoke).toHaveBeenNthCalledWith(
         2,
         "secure-storage:get",
-        "openai_api_key"
+        "openai_api_key",
       );
       expect(result).toBe("sk-test123");
     });
@@ -392,7 +392,7 @@ describe("SecureStorageService", () => {
 
       expect(mockInvoke).toHaveBeenCalledWith(
         "secure-storage:get",
-        "anthropic_api_key"
+        "anthropic_api_key",
       );
       expect(result).toBe("sk-ant-test456");
     });
@@ -432,7 +432,7 @@ describe("SecureStorageService", () => {
       mockInvoke.mockResolvedValueOnce(true);
 
       await expect(service.getApiKey(null as any)).rejects.toThrow(
-        "Key is required"
+        "Key is required",
       );
     });
 
@@ -440,7 +440,7 @@ describe("SecureStorageService", () => {
       mockInvoke.mockResolvedValueOnce(true);
 
       await expect(service.getApiKey(undefined as any)).rejects.toThrow(
-        "Key is required"
+        "Key is required",
       );
     });
 
@@ -449,7 +449,7 @@ describe("SecureStorageService", () => {
       mockInvoke.mockResolvedValueOnce(true).mockRejectedValueOnce(ipcError);
 
       await expect(service.getApiKey("test_key")).rejects.toThrow(
-        "Failed to retrieve API key: IPC get failed"
+        "Failed to retrieve API key: IPC get failed",
       );
       // Production code uses errorLogger.logError(), not console.error()
     });
@@ -460,7 +460,7 @@ describe("SecureStorageService", () => {
         .mockRejectedValueOnce("String error");
 
       await expect(service.getApiKey("test_key")).rejects.toThrow(
-        "Failed to retrieve API key: Unknown error"
+        "Failed to retrieve API key: Unknown error",
       );
       // Production code uses errorLogger.logError(), not console.error()
     });
@@ -479,17 +479,17 @@ describe("SecureStorageService", () => {
       expect(mockInvoke).toHaveBeenCalledTimes(3);
       expect(mockInvoke).toHaveBeenNthCalledWith(
         1,
-        "secure-storage:is-encryption-available"
+        "secure-storage:is-encryption-available",
       );
       expect(mockInvoke).toHaveBeenNthCalledWith(
         2,
         "secure-storage:get",
-        "key1"
+        "key1",
       );
       expect(mockInvoke).toHaveBeenNthCalledWith(
         3,
         "secure-storage:get",
-        "key2"
+        "key2",
       );
     });
   });
@@ -504,12 +504,12 @@ describe("SecureStorageService", () => {
 
       expect(mockInvoke).toHaveBeenNthCalledWith(
         1,
-        "secure-storage:is-encryption-available"
+        "secure-storage:is-encryption-available",
       );
       expect(mockInvoke).toHaveBeenNthCalledWith(
         2,
         "secure-storage:delete",
-        "openai_api_key"
+        "openai_api_key",
       );
       expect(mockInvoke).toHaveBeenCalledTimes(2);
     });
@@ -521,7 +521,7 @@ describe("SecureStorageService", () => {
 
       expect(mockInvoke).toHaveBeenCalledWith(
         "secure-storage:delete",
-        "test_key"
+        "test_key",
       );
     });
 
@@ -536,7 +536,7 @@ describe("SecureStorageService", () => {
       mockInvoke.mockResolvedValueOnce(true);
 
       await expect(service.deleteApiKey(null as any)).rejects.toThrow(
-        "Key is required"
+        "Key is required",
       );
     });
 
@@ -544,7 +544,7 @@ describe("SecureStorageService", () => {
       mockInvoke.mockResolvedValueOnce(true);
 
       await expect(service.deleteApiKey(undefined as any)).rejects.toThrow(
-        "Key is required"
+        "Key is required",
       );
     });
 
@@ -553,7 +553,7 @@ describe("SecureStorageService", () => {
       mockInvoke.mockResolvedValueOnce(true).mockRejectedValueOnce(ipcError);
 
       await expect(service.deleteApiKey("test_key")).rejects.toThrow(
-        "Failed to delete API key: IPC delete failed"
+        "Failed to delete API key: IPC delete failed",
       );
       // Production code uses errorLogger.logError(), not console.error()
     });
@@ -564,7 +564,7 @@ describe("SecureStorageService", () => {
         .mockRejectedValueOnce("String error");
 
       await expect(service.deleteApiKey("test_key")).rejects.toThrow(
-        "Failed to delete API key: Unknown error"
+        "Failed to delete API key: Unknown error",
       );
       // Production code uses errorLogger.logError(), not console.error()
     });
@@ -583,17 +583,17 @@ describe("SecureStorageService", () => {
       expect(mockInvoke).toHaveBeenCalledTimes(3);
       expect(mockInvoke).toHaveBeenNthCalledWith(
         1,
-        "secure-storage:is-encryption-available"
+        "secure-storage:is-encryption-available",
       );
       expect(mockInvoke).toHaveBeenNthCalledWith(
         2,
         "secure-storage:delete",
-        "key1"
+        "key1",
       );
       expect(mockInvoke).toHaveBeenNthCalledWith(
         3,
         "secure-storage:delete",
-        "key2"
+        "key2",
       );
     });
   });
@@ -608,12 +608,12 @@ describe("SecureStorageService", () => {
 
       expect(mockInvoke).toHaveBeenNthCalledWith(
         1,
-        "secure-storage:is-encryption-available"
+        "secure-storage:is-encryption-available",
       );
       expect(mockInvoke).toHaveBeenNthCalledWith(
         2,
         "secure-storage:get",
-        "openai_api_key"
+        "openai_api_key",
       );
       expect(result).toBe(true);
     });
@@ -704,7 +704,7 @@ describe("SecureStorageService", () => {
 
       expect(mockInvoke).toHaveBeenNthCalledWith(
         1,
-        "secure-storage:is-encryption-available"
+        "secure-storage:is-encryption-available",
       );
       expect(mockInvoke).toHaveBeenNthCalledWith(2, "secure-storage:clear-all");
       expect(mockInvoke).toHaveBeenCalledTimes(2);
@@ -723,7 +723,7 @@ describe("SecureStorageService", () => {
       mockInvoke.mockResolvedValueOnce(true).mockRejectedValueOnce(ipcError);
 
       await expect(service.clearAll()).rejects.toThrow(
-        "Failed to clear all API keys"
+        "Failed to clear all API keys",
       );
       // Production code uses errorLogger.logError(), not console.error()
     });
@@ -734,7 +734,7 @@ describe("SecureStorageService", () => {
         .mockRejectedValueOnce("String error");
 
       await expect(service.clearAll()).rejects.toThrow(
-        "Failed to clear all API keys"
+        "Failed to clear all API keys",
       );
       // Production code uses errorLogger.logError(), not console.error()
     });
@@ -753,7 +753,7 @@ describe("SecureStorageService", () => {
       expect(mockInvoke).toHaveBeenCalledTimes(3);
       expect(mockInvoke).toHaveBeenNthCalledWith(
         1,
-        "secure-storage:is-encryption-available"
+        "secure-storage:is-encryption-available",
       );
       expect(mockInvoke).toHaveBeenNthCalledWith(2, "secure-storage:clear-all");
       expect(mockInvoke).toHaveBeenNthCalledWith(3, "secure-storage:clear-all");
@@ -877,7 +877,7 @@ describe("SecureStorageService", () => {
       expect(mockInvoke).toHaveBeenCalledWith(
         "secure-storage:set",
         "long_key",
-        longValue
+        longValue,
       );
     });
 
@@ -886,13 +886,13 @@ describe("SecureStorageService", () => {
 
       await service.setApiKey(
         "key-with-dashes_underscores.dots:colons",
-        "value"
+        "value",
       );
 
       expect(mockInvoke).toHaveBeenCalledWith(
         "secure-storage:set",
         "key-with-dashes_underscores.dots:colons",
-        "value"
+        "value",
       );
     });
 
@@ -919,7 +919,7 @@ describe("SecureStorageService", () => {
         .mockRejectedValueOnce(specificError);
 
       await expect(service.setApiKey("key", "value")).rejects.toThrow(
-        "Failed to store API key: Disk write failed"
+        "Failed to store API key: Disk write failed",
       );
     });
 
@@ -930,7 +930,7 @@ describe("SecureStorageService", () => {
         .mockRejectedValueOnce(specificError);
 
       await expect(service.getApiKey("key")).rejects.toThrow(
-        "Failed to retrieve API key: Disk read failed"
+        "Failed to retrieve API key: Disk read failed",
       );
     });
 
@@ -941,7 +941,7 @@ describe("SecureStorageService", () => {
         .mockRejectedValueOnce(specificError);
 
       await expect(service.deleteApiKey("key")).rejects.toThrow(
-        "Failed to delete API key: Permission denied"
+        "Failed to delete API key: Permission denied",
       );
     });
   });
@@ -955,8 +955,8 @@ describe("SecureStorageService", () => {
       expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
       expect(consoleWarnSpy).toHaveBeenCalledWith(
         expect.stringContaining(
-          "[SecureStorage] Encryption not available on this system"
-        )
+          "[SecureStorage] Encryption not available on this system",
+        ),
       );
     });
 

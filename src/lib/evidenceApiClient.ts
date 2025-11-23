@@ -253,7 +253,9 @@ export class EvidenceApiClient {
 
     return {
       previewUrl: response.data.url,
-      mimeType: (response.data.metadata?.mimeType as string) || "application/octet-stream",
+      mimeType:
+        (response.data.metadata?.mimeType as string) ||
+        "application/octet-stream",
     };
   }
 

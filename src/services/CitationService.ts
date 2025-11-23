@@ -61,7 +61,7 @@ export class CitationService {
 
       // Convert to our format
       return citations.map((citation: Citation) =>
-        this.convertCitation(citation)
+        this.convertCitation(citation),
       );
     } catch (error) {
       logger.error("Failed to extract citations", {
@@ -158,7 +158,7 @@ export class CitationService {
             c.constructor.name +
             '">',
           "</mark>",
-        ])
+        ]),
       );
     } catch (error) {
       logger.error("Failed to highlight citations", {

@@ -153,7 +153,7 @@ export class SessionPersistenceService {
       if (!available) {
         logger.warn(
           "SessionPersistence",
-          "Cannot retrieve: storage not available"
+          "Cannot retrieve: storage not available",
         );
         return null;
       }

@@ -77,7 +77,7 @@ describe("AutoUpdater", () => {
       const result = await autoUpdater.checkForUpdates();
 
       expect(mockFetch).toHaveBeenCalledWith(
-        "https://api.github.com/repos/test/repo/releases/latest"
+        "https://api.github.com/repos/test/repo/releases/latest",
       );
       expect(result.updateAvailable).toBe(true);
       expect(result.latestVersion).toBe("v1.0.1");
@@ -93,7 +93,7 @@ describe("AutoUpdater", () => {
       expect(result.error).toBe("Network error");
       expect(mockNotificationCallback).toHaveBeenCalledWith(
         "app-update:error",
-        expect.any(Error)
+        expect.any(Error),
       );
     });
 
@@ -118,7 +118,7 @@ describe("AutoUpdater", () => {
 
       expect(result.updateAvailable).toBe(false);
       expect(mockNotificationCallback).toHaveBeenCalledWith(
-        "app-update:not-available"
+        "app-update:not-available",
       );
     });
   });
@@ -160,7 +160,7 @@ describe("AutoUpdater", () => {
           downloadUrl:
             "https://github.com/test/repo/releases/download/v2.0.0/update.zip",
           prerelease: false,
-        }
+        },
       );
     });
 
@@ -170,7 +170,7 @@ describe("AutoUpdater", () => {
       await autoUpdater.checkForUpdates();
 
       expect(mockNotificationCallback).toHaveBeenCalledWith(
-        "app-update:checking"
+        "app-update:checking",
       );
     });
   });
@@ -184,7 +184,7 @@ describe("AutoUpdater", () => {
         "app-update:download-ready",
         {
           downloadUrl: "https://github.com/test/repo/releases/latest",
-        }
+        },
       );
     });
 
@@ -233,7 +233,7 @@ describe("AutoUpdater", () => {
       await updater.initialize();
 
       expect(mockNotificationCallback).toHaveBeenCalledWith(
-        "app-update:checking"
+        "app-update:checking",
       );
     });
 

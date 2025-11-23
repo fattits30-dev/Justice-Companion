@@ -6,7 +6,10 @@ import { chatConversationService } from "./ChatConversationService.ts";
 import { AuditLogger } from "./AuditLogger.ts";
 import { TestDatabaseHelper } from "../test-utils/database-test-helper.ts";
 import { databaseManager } from "../db/database.ts";
-import { resetRepositories, initializeTestRepositories } from "../repositories.ts";
+import {
+  resetRepositories,
+  initializeTestRepositories,
+} from "../repositories.ts";
 import {
   setupTestEnvironment,
   clearWindowMock,

@@ -39,7 +39,7 @@ export class ConfigManager {
    */
   async initialize(
     projectName: string,
-    projectPath: string
+    projectPath: string,
   ): Promise<LocalClaudeConfig> {
     // Create directories
     fs.mkdirSync(this.configDir, { recursive: true });
@@ -101,7 +101,7 @@ export class ConfigManager {
     fs.writeFileSync(
       this.configPath,
       JSON.stringify(updated, null, 2),
-      "utf-8"
+      "utf-8",
     );
   }
 
@@ -110,7 +110,7 @@ export class ConfigManager {
    */
   async markIndexed(
     documentCount: number,
-    collectionName: string
+    collectionName: string,
   ): Promise<void> {
     const config = await this.loadConfig();
     if (!config) {
@@ -312,12 +312,12 @@ export class ConfigManager {
     if (plan) {
       const total = plan.phases.reduce(
         (sum, phase) => sum + phase.tasks.length,
-        0
+        0,
       );
       const completed = plan.phases.reduce(
         (sum, phase) =>
           sum + phase.tasks.filter((t) => t.status === "completed").length,
-        0
+        0,
       );
       const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
 

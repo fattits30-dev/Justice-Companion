@@ -46,7 +46,7 @@ describe("SessionPersistenceService (browser storage)", () => {
 
       for (const invalidId of invalidIds) {
         await expect(service.storeSessionId(invalidId)).rejects.toThrow(
-          "Invalid session ID format"
+          "Invalid session ID format",
         );
       }
 

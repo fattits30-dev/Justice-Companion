@@ -95,7 +95,7 @@ export function createBackup(customFilename?: string): BackupMetadata {
       `Database backup created: ${filename} (${stats.size} bytes)`,
       {
         type: "info",
-      }
+      },
     );
 
     return metadata;
@@ -163,7 +163,7 @@ export function listBackups(): BackupMetadata[] {
         };
       })
       .sort((a: BackupMetadata, b: BackupMetadata) =>
-        b.created_at.localeCompare(a.created_at)
+        b.created_at.localeCompare(a.created_at),
       ); // Most recent first
 
     return files;

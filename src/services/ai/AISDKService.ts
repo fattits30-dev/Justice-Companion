@@ -95,7 +95,7 @@ export class AISDKService {
    */
   async streamChat(
     messages: ChatMessage[],
-    callbacks: StreamingCallbacks
+    callbacks: StreamingCallbacks,
   ): Promise<void> {
     try {
       // Convert messages to the format expected by UnifiedAIService
@@ -118,7 +118,7 @@ export class AISDKService {
       });
       if (callbacks.onError) {
         callbacks.onError(
-          error instanceof Error ? error : new Error(String(error))
+          error instanceof Error ? error : new Error(String(error)),
         );
       }
     }

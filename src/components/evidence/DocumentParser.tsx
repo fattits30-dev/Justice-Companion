@@ -228,7 +228,7 @@ export function DocumentParser({ evidence, onClose }: DocumentParserProps) {
                   </dt>
                   <dd className="text-white font-medium">
                     {new Date(
-                      parsed.metadata.creationDate
+                      parsed.metadata.creationDate,
                     ).toLocaleDateString()}
                   </dd>
                 </div>
@@ -283,7 +283,7 @@ export function DocumentParser({ evidence, onClose }: DocumentParserProps) {
                       <span key={`${segment.text}-${index}`}>
                         {segment.text}
                       </span>
-                    )
+                    ),
                   )
                 : parsed.text}
             </div>

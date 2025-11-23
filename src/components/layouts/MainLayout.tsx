@@ -87,7 +87,7 @@ export function MainLayout() {
               id: c.id.toString(),
               title: c.title,
               status: c.status,
-            }))
+            })),
           );
         }
       } catch (error) {

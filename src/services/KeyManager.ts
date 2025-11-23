@@ -60,14 +60,14 @@ export class KeyManager {
     if (!this.safeStorage.isEncryptionAvailable()) {
       throw new Error(
         "safeStorage encryption is not available on this system. " +
-          "Key cannot be securely loaded."
+          "Key cannot be securely loaded.",
       );
     }
 
     // Load encrypted key from disk
     if (!fs.existsSync(this.keyFilePath)) {
       throw new Error(
-        "Encryption key not found. Run migration script to move key from .env to safeStorage."
+        "Encryption key not found. Run migration script to move key from .env to safeStorage.",
       );
     }
 
@@ -82,7 +82,7 @@ export class KeyManager {
       const actualLength = this.cachedKey.length;
       this.cachedKey = null; // Clear invalid key
       throw new Error(
-        `Invalid encryption key: expected 32 bytes, got ${actualLength} bytes`
+        `Invalid encryption key: expected 32 bytes, got ${actualLength} bytes`,
       );
     }
 
@@ -105,7 +105,7 @@ export class KeyManager {
   migrateFromEnv(envKey: string): void {
     if (!this.safeStorage.isEncryptionAvailable()) {
       throw new Error(
-        "safeStorage encryption is not available. Cannot migrate key."
+        "safeStorage encryption is not available. Cannot migrate key.",
       );
     }
 
@@ -113,7 +113,7 @@ export class KeyManager {
     const keyBuffer = Buffer.from(envKey, "base64");
     if (keyBuffer.length !== 32) {
       throw new Error(
-        `Invalid key length: expected 32 bytes, got ${keyBuffer.length} bytes`
+        `Invalid key length: expected 32 bytes, got ${keyBuffer.length} bytes`,
       );
     }
 
@@ -125,7 +125,7 @@ export class KeyManager {
 
     logger.warn("[KeyManager] Key migrated from .env to safeStorage");
     logger.warn(
-      "[KeyManager] IMPORTANT: Remove ENCRYPTION_KEY_BASE64 from .env file"
+      "[KeyManager] IMPORTANT: Remove ENCRYPTION_KEY_BASE64 from .env file",
     );
   }
 
@@ -139,7 +139,7 @@ export class KeyManager {
   generateNewKey(): string {
     if (!this.safeStorage.isEncryptionAvailable()) {
       throw new Error(
-        "safeStorage encryption is not available. Cannot generate key."
+        "safeStorage encryption is not available. Cannot generate key.",
       );
     }
 
@@ -217,7 +217,7 @@ export class KeyManager {
   async storeKey(keyName: string, value: string): Promise<void> {
     if (!this.safeStorage.isEncryptionAvailable()) {
       throw new Error(
-        "safeStorage encryption is not available. Cannot store key."
+        "safeStorage encryption is not available. Cannot store key.",
       );
     }
 
@@ -244,7 +244,7 @@ export class KeyManager {
   async retrieveKey(keyName: string): Promise<string | null> {
     if (!this.safeStorage.isEncryptionAvailable()) {
       throw new Error(
-        "safeStorage encryption is not available. Cannot retrieve key."
+        "safeStorage encryption is not available. Cannot retrieve key.",
       );
     }
 

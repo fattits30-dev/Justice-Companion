@@ -103,7 +103,7 @@ export function EvidenceUpload({
         }
       });
     },
-    [evidenceType]
+    [evidenceType],
   );
 
   // Handle file drop
@@ -115,7 +115,7 @@ export function EvidenceUpload({
       const droppedFiles = Array.from(e.dataTransfer.files);
       addFiles(droppedFiles);
     },
-    [addFiles]
+    [addFiles],
   );
 
   // Handle file selection
@@ -126,7 +126,7 @@ export function EvidenceUpload({
         addFiles(selectedFiles);
       }
     },
-    [addFiles]
+    [addFiles],
   );
 
   // Remove file from queue
@@ -170,7 +170,7 @@ export function EvidenceUpload({
               updated[i].progress = progress;
               return updated;
             });
-          }
+          },
         );
 
         // Update status to completed
@@ -196,7 +196,7 @@ export function EvidenceUpload({
 
     // Check if all uploads completed successfully
     const allCompleted = files.every(
-      (f) => f.status === "completed" || f.status === "error"
+      (f) => f.status === "completed" || f.status === "error",
     );
     if (allCompleted) {
       onUploadComplete?.();

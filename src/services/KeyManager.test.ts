@@ -37,7 +37,7 @@ describe("KeyManager - Encryption Key Security", () => {
   beforeEach(() => {
     // Use real temp directory for integration testing
     testUserDataPath = fs.mkdtempSync(
-      path.join(os.tmpdir(), "keymanager-test-")
+      path.join(os.tmpdir(), "keymanager-test-"),
     );
     testKeyPath = path.join(testUserDataPath, ".encryption-key");
 
@@ -94,7 +94,7 @@ describe("KeyManager - Encryption Key Security", () => {
       vi.mocked(mockSafeStorage.isEncryptionAvailable).mockReturnValue(false);
 
       expect(() => keyManager.getKey()).toThrow(
-        "safeStorage encryption is not available"
+        "safeStorage encryption is not available",
       );
     });
 
@@ -107,7 +107,7 @@ describe("KeyManager - Encryption Key Security", () => {
       const invalidKey = Buffer.from("short-key");
       fs.writeFileSync(testKeyPath, ENCRYPTED_KEY);
       vi.mocked(mockSafeStorage.decryptString).mockReturnValue(
-        invalidKey.toString("base64")
+        invalidKey.toString("base64"),
       );
 
       expect(() => keyManager.getKey()).toThrow("Invalid encryption key");
@@ -118,7 +118,7 @@ describe("KeyManager - Encryption Key Security", () => {
       const invalidKey = Buffer.from("invalid");
       fs.writeFileSync(testKeyPath, ENCRYPTED_KEY);
       vi.mocked(mockSafeStorage.decryptString).mockReturnValue(
-        invalidKey.toString("base64")
+        invalidKey.toString("base64"),
       );
 
       expect(() => keyManager.getKey()).toThrow();
@@ -150,7 +150,7 @@ describe("KeyManager - Encryption Key Security", () => {
 
       // Should encrypt the key
       expect(mockSafeStorage.encryptString).toHaveBeenCalledWith(
-        TEST_KEY_BASE64
+        TEST_KEY_BASE64,
       );
 
       // Should write encrypted key to disk
@@ -165,7 +165,7 @@ describe("KeyManager - Encryption Key Security", () => {
       vi.mocked(mockSafeStorage.isEncryptionAvailable).mockReturnValue(false);
 
       expect(() => keyManager.migrateFromEnv(TEST_KEY_BASE64)).toThrow(
-        "safeStorage encryption is not available"
+        "safeStorage encryption is not available",
       );
     });
 
@@ -173,7 +173,7 @@ describe("KeyManager - Encryption Key Security", () => {
       const shortKey = Buffer.from("short").toString("base64");
 
       expect(() => keyManager.migrateFromEnv(shortKey)).toThrow(
-        "Invalid key length"
+        "Invalid key length",
       );
     });
 
@@ -182,10 +182,10 @@ describe("KeyManager - Encryption Key Security", () => {
       const key33Bytes = crypto.randomBytes(33).toString("base64");
 
       expect(() => keyManager.migrateFromEnv(key31Bytes)).toThrow(
-        "expected 32 bytes, got 31"
+        "expected 32 bytes, got 31",
       );
       expect(() => keyManager.migrateFromEnv(key33Bytes)).toThrow(
-        "expected 32 bytes, got 33"
+        "expected 32 bytes, got 33",
       );
     });
 
@@ -244,7 +244,7 @@ describe("KeyManager - Encryption Key Security", () => {
       vi.mocked(mockSafeStorage.isEncryptionAvailable).mockReturnValue(false);
 
       expect(() => keyManager.generateNewKey()).toThrow(
-        "safeStorage encryption is not available"
+        "safeStorage encryption is not available",
       );
     });
 

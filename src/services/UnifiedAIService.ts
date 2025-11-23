@@ -652,7 +652,7 @@ export class UnifiedAIService {
       let result = message.content || "";
 
       for (const toolCall of message.tool_calls) {
-        if (toolCall.type === 'function' && toolCall.function) {
+        if (toolCall.type === "function" && toolCall.function) {
           try {
             const args = JSON.parse(toolCall.function.arguments);
             const tool = tools?.find(

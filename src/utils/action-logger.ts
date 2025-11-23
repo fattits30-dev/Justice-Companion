@@ -50,7 +50,7 @@ export interface ActionLogEntry {
  */
 export function tracked(serviceName: string) {
   return function <T extends abstract new (...args: any[]) => object>(
-    constructor: T
+    constructor: T,
   ) {
     const originalMethods = Object.getOwnPropertyNames(constructor.prototype);
 
@@ -67,7 +67,7 @@ export function tracked(serviceName: string) {
       constructor.prototype[methodName] = createTrackedMethod(
         serviceName,
         methodName,
-        originalMethod
+        originalMethod,
       );
     }
 
@@ -82,7 +82,7 @@ export function logAction(actionName?: string) {
   return function (
     target: any,
     propertyKey: string,
-    descriptor: PropertyDescriptor
+    descriptor: PropertyDescriptor,
   ) {
     const originalMethod = descriptor.value;
     const action = actionName || propertyKey;
@@ -100,7 +100,7 @@ export function logAction(actionName?: string) {
 function createTrackedMethod(
   serviceName: string,
   actionName: string,
-  originalMethod: (...args: unknown[]) => unknown
+  originalMethod: (...args: unknown[]) => unknown,
 ) {
   return async function (this: any, ...args: any[]) {
     const startTime = Date.now();
@@ -230,7 +230,7 @@ function storeActionLog(entry: ActionLogEntry): void {
         input, output, error_message, error_stack, error_code,
         user_id, username, session_id
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `
+    `,
     ).run(
       id,
       entry.timestamp,
@@ -245,13 +245,13 @@ function storeActionLog(entry: ActionLogEntry): void {
       entry.error?.code || null,
       entry.user?.id || null,
       entry.user?.username || null,
-      entry.session?.id || null
+      entry.session?.id || null,
     );
   } catch (error) {
     // Fallback: log to Winston if database write fails
     logger.error(
       "[ActionLogger] Failed to store action log to database:",
-      error
+      error,
     );
   }
 }
@@ -271,7 +271,7 @@ export function getRecentActions(limit = 100): ActionLogEntry[] {
       FROM action_logs
       ORDER BY timestamp DESC
       LIMIT ?
-    `
+    `,
       )
       .all(limit);
 
@@ -298,7 +298,7 @@ export function getFailedActions(limit = 50): ActionLogEntry[] {
       WHERE status = 'FAILURE'
       ORDER BY timestamp DESC
       LIMIT ?
-    `
+    `,
       )
       .all(limit);
 
@@ -314,7 +314,7 @@ export function getFailedActions(limit = 50): ActionLogEntry[] {
  */
 export function getActionsByService(
   serviceName: string,
-  limit = 100
+  limit = 100,
 ): ActionLogEntry[] {
   try {
     const db = getDb();
@@ -328,7 +328,7 @@ export function getActionsByService(
       WHERE service = ?
       ORDER BY timestamp DESC
       LIMIT ?
-    `
+    `,
       )
       .all(serviceName, limit);
 
@@ -365,7 +365,7 @@ export function getActionStats(): {
         SUM(CASE WHEN status = 'FAILURE' THEN 1 ELSE 0 END) as failure,
         AVG(duration) as avgDuration
       FROM action_logs
-    `
+    `,
       )
       .get() as any;
 
@@ -380,7 +380,7 @@ export function getActionStats(): {
         SUM(CASE WHEN status = 'FAILURE' THEN 1 ELSE 0 END) as failure
       FROM action_logs
       GROUP BY service
-    `
+    `,
       )
       .all() as any[];
 

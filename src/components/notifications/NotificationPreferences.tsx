@@ -46,7 +46,7 @@ export const NotificationPreferences: React.FC<
 > = ({ sessionId, onSaved }) => {
   // State
   const [preferences, setPreferences] = useState<NotificationPrefs | null>(
-    null
+    null,
   );
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSaving, setIsSaving] = useState<boolean>(false);
@@ -79,7 +79,7 @@ export const NotificationPreferences: React.FC<
       setError(errorMessage);
       console.error(
         "[NotificationPreferences] Failed to fetch preferences:",
-        err
+        err,
       );
     } finally {
       setIsLoading(false);
@@ -167,7 +167,7 @@ export const NotificationPreferences: React.FC<
       setError(errorMessage);
       console.error(
         "[NotificationPreferences] Failed to save preferences:",
-        err
+        err,
       );
     } finally {
       setIsSaving(false);
@@ -179,7 +179,7 @@ export const NotificationPreferences: React.FC<
    */
   const updateField = <K extends keyof NotificationPrefs>(
     field: K,
-    value: NotificationPrefs[K]
+    value: NotificationPrefs[K],
   ) => {
     if (!preferences) {
       return;
@@ -297,7 +297,7 @@ export const NotificationPreferences: React.FC<
                     onChange={(e) =>
                       updateField(
                         "deadlineReminderDays",
-                        parseInt(e.target.value, 10)
+                        parseInt(e.target.value, 10),
                       )
                     }
                     className="w-16 text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded px-2 py-1"

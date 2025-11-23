@@ -167,7 +167,7 @@ export function ChatView() {
           if (providersResult.success && providersResult.data) {
             const providerData = providersResult.data[result.data.provider];
             const availableModels = Array.isArray(
-              providerData?.available_models
+              providerData?.available_models,
             )
               ? (providerData.available_models as string[])
               : [];
@@ -227,7 +227,7 @@ export function ChatView() {
         toast.error("Failed to update model");
       }
     },
-    [currentProvider, selectedModel]
+    [currentProvider, selectedModel],
   );
 
   // Handle send message
@@ -250,7 +250,7 @@ export function ChatView() {
         handleSend();
       }
     },
-    [handleSend]
+    [handleSend],
   );
 
   const handleSaveToCase = useCallback((message: Message) => {
@@ -281,7 +281,7 @@ export function ChatView() {
             factCategory: "other",
             importance: "medium",
           },
-          sessionId
+          sessionId,
         );
 
         if (result.success) {
@@ -305,7 +305,7 @@ export function ChatView() {
         return { success: false, error: errorMessage };
       }
     },
-    [messageToSave]
+    [messageToSave],
   );
 
   const handleCreateCase = useCallback((message: Message) => {
@@ -333,11 +333,11 @@ export function ChatView() {
         // Check for duplicate cases
         try {
           const existingCases = (await window.justiceAPI.getAllCases(
-            sessionId
+            sessionId,
           )) as any;
           const duplicateCase = existingCases.data?.find(
             (case_: any) =>
-              case_.title?.toLowerCase() === caseData.title?.toLowerCase()
+              case_.title?.toLowerCase() === caseData.title?.toLowerCase(),
           );
 
           if (duplicateCase) {
@@ -350,7 +350,7 @@ export function ChatView() {
         } catch (error) {
           console.warn(
             "[ChatView] Could not check for duplicate cases:",
-            error
+            error,
           );
         }
 
@@ -454,7 +454,7 @@ Based on your dismissal letter, here are some general steps many people take whe
         setIsCreatingCase(false);
       }
     },
-    [messageForCaseCreation, setMessages]
+    [messageForCaseCreation, setMessages],
   );
 
   const handleDocumentUpload = useCallback(async () => {
@@ -500,7 +500,7 @@ Based on your dismissal letter, here are some general steps many people take whe
         // Upload the file first
         const uploadResult = await apiClient.chat.uploadDocument(
           file,
-          `Please analyze this document: ${filename}`
+          `Please analyze this document: ${filename}`,
         );
 
         if (!uploadResult.success || !uploadResult.data?.filePath) {
@@ -514,7 +514,7 @@ Based on your dismissal letter, here are some general steps many people take whe
         // Analyze the uploaded document
         const analysisResult = await apiClient.chat.analyzeDocument(
           uploadResult.data.filePath,
-          `Please analyze this document: ${filename}`
+          `Please analyze this document: ${filename}`,
         );
 
         if (!analysisResult.success) {
@@ -676,7 +676,7 @@ Based on your dismissal letter, here are some general steps many people take whe
     }
 
     const confirmed = window.confirm(
-      `Are you sure you want to clear all chat messages${activeCaseId ? " for this case" : ""}?\n\nThis cannot be undone.`
+      `Are you sure you want to clear all chat messages${activeCaseId ? " for this case" : ""}?\n\nThis cannot be undone.`,
     );
 
     if (confirmed) {
@@ -799,7 +799,7 @@ Based on your dismissal letter, here are some general steps many people take whe
                   <button
                     onClick={() =>
                       setInput(
-                        "What are my rights if I'm being bullied at work?"
+                        "What are my rights if I'm being bullied at work?",
                       )
                     }
                     className="p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg transition-colors text-left"
@@ -813,7 +813,7 @@ Based on your dismissal letter, here are some general steps many people take whe
                   <button
                     onClick={() =>
                       setInput(
-                        "How do I gather evidence for an unfair dismissal claim?"
+                        "How do I gather evidence for an unfair dismissal claim?",
                       )
                     }
                     className="p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg transition-colors text-left"
@@ -837,7 +837,7 @@ Based on your dismissal letter, here are some general steps many people take whe
                   <button
                     onClick={() =>
                       setInput(
-                        "What should I do if I'm being discriminated against?"
+                        "What should I do if I'm being discriminated against?",
                       )
                     }
                     className="p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg transition-colors text-left"

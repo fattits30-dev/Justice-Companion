@@ -131,7 +131,7 @@ export class AutoUpdater {
 
     try {
       const response = await fetch(
-        `https://api.github.com/repos/${this.config.githubRepo}/releases/latest`
+        `https://api.github.com/repos/${this.config.githubRepo}/releases/latest`,
       );
 
       if (!response.ok) {
@@ -151,7 +151,7 @@ export class AutoUpdater {
    */
   private compareVersions(
     currentVersion: string,
-    latestVersion: string
+    latestVersion: string,
   ): boolean {
     // Simple semantic version comparison (basic implementation)
     const current = currentVersion.replace(/^v/, "").split(".").map(Number);
@@ -186,7 +186,7 @@ export class AutoUpdater {
       if (release) {
         const updateAvailable = this.compareVersions(
           this.status.currentVersion,
-          release.tag_name
+          release.tag_name,
         );
 
         if (updateAvailable) {
@@ -199,7 +199,7 @@ export class AutoUpdater {
               asset.name.includes(".zip") ||
               asset.name.includes(".tar.gz") ||
               asset.name.includes("installer") ||
-              asset.name.includes("setup")
+              asset.name.includes("setup"),
           );
 
           this.notifyCallback("app-update:available", {
