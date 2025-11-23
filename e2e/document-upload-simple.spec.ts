@@ -1,7 +1,12 @@
 import { test, expect, Page } from "@playwright/test";
 import * as path from "path";
 import * as fs from "fs";
+import { fileURLToPath } from "url";
 import { TEST_CONFIG } from "./testConfig";
+
+// ES module equivalent of __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /**
  * Simplified Document Upload E2E Test
