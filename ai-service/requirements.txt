@@ -20,7 +20,7 @@ openai==2.8.0
 # Data validation and serialization
 pydantic>=2.6.0
 pydantic-settings>=2.0.0
-python-multipart==0.0.9  # Fixes: HIGH DoS via deformed multipart boundary (CVE-2024-xxxx)
+python-multipart==0.0.18  # Fixes: HIGH DoS via deformed multipart boundary (CVE-2024-xxxx)
 
 # HTTP client for API calls
 httpx==0.26.0
