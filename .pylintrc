@@ -1,0 +1,15 @@
+[MASTER]
+ignore-patterns=\._cache$
+load-plugins=pylint.extensions.docparams
+
+[MESSAGES CONTROL]
+disable=
+    consider-using-f-string,
+    import-outside-toplevel,
+    wrong-import-position
+
+[TYPECHECK]
+ignored-modules=fastapi,pydantic,sqlalchemy
+
+[FORMAT]
+max-line-length=120

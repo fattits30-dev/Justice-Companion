@@ -6,7 +6,7 @@
  * See AIServiceFactory.ts:1-3 for cleanup TODO.
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { AIServiceFactory } from "./AIServiceFactory";
+import { AIServiceFactory } from "./AIServiceFactory.ts";
 
 // Mock dependencies
 vi.mock("../utils/error-logger", () => ({

@@ -1,0 +1,69 @@
+FORMAL GRIEVANCE
+
+Sarah Mitchell
+Employee ID: BT-4521
+Department: Software Development
+Date: 15th July 2024
+
+TO: Mrs Jennifer Holmes, HR Director
+Brightstone Technologies Ltd
+
+SUBJECT: Gender Discrimination in Promotion Decision
+
+Dear Mrs Holmes,
+
+I am writing to raise a formal grievance under the company's Grievance Procedure regarding the decision to promote Mr. James Harrison to the position of Senior Developer Team Lead, a position for which I was also a candidate.
+
+BACKGROUND
+
+I have worked at Brightstone Technologies for 4 years and 8 months. During this time:
+- I have consistently received "Exceeds Expectations" in all performance reviews
+- I have led the successful delivery of 3 major projects (Phoenix, Aurora, and Titan)
+- I have mentored 6 junior developers, all of whom have progressed well
+- I hold a Master's degree in Computer Science and AWS Solutions Architect certification
+
+Mr. Harrison has been employed for 2 years and 3 months and:
+- Has led 1 project which was delivered late and over budget
+- Has no formal mentoring record
+- Holds a Bachelor's degree with no additional certifications
+
+DISCRIMINATORY TREATMENT
+
+Despite my superior qualifications and track record, the promotion was awarded to Mr. Harrison. During my feedback meeting with Mr. Thompson on 10th July 2024, he made the following comments:
+
+"James is just a better fit for leading the team"
+"He has the right presence for client meetings"
+"The team needs strong leadership" (emphasis on 'strong')
+
+When I asked for specific areas where Mr. Harrison outperformed me, Mr. Thompson could not provide any concrete examples.
+
+I believe these comments, combined with the decision itself, constitute direct discrimination on the grounds of sex, contrary to Section 13 of the Equality Act 2010.
+
+PREVIOUS PATTERNS
+
+This is not an isolated incident. In the past 18 months:
+- The development department has promoted 4 male colleagues and 0 female colleagues
+- Female developers are consistently assigned to "support" roles rather than leadership positions
+- Pay gap analysis (which I obtained through a subject access request) shows male developers earn on average 15% more than female developers at the same grade level
+
+RESOLUTION SOUGHT
+
+I request:
+1. A review of the promotion decision with an independent panel
+2. Fair reconsideration of my candidacy based on objective criteria
+3. A review of the department's promotion and pay practices
+4. Compensation for the distress and financial loss caused
+
+I expect this grievance to be handled confidentially and without any detriment to my employment.
+
+Please confirm receipt within 3 working days and arrange a grievance meeting within the timeframe specified in the Employee Handbook.
+
+Yours sincerely,
+
+
+Sarah Mitchell
+Senior Software Developer
+Brightstone Technologies Ltd
+
+Contact: s.mitchell@brightstonetech.co.uk
+Mobile: 07700 900123

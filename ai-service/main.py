@@ -12,31 +12,34 @@ License: MIT
 
 import logging
 import os
+import re
+import secrets
 import sys
 import tempfile
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form
+# Third party imports
+import uvicorn
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from pydantic import ConfigDict
-from pydantic_settings import BaseSettings
-import uvicorn
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
-# Import our modules
-from services.model_client import (
-    ModelClient,
-    HuggingFaceLocalClient,
-    HuggingFaceAPIClient,
-    OpenAIClient,
-)
-from services.image_processor import ImageProcessorService
-from agents.document_analyzer import DocumentAnalyzerAgent
-from models.requests import DocumentAnalysisRequest, ParsedDocument, UserProfile
-from models.responses import DocumentAnalysisResponse
+# Add current directory to Python path for relative imports
+# This ensures the script works whether run from project root or ai-service/
+sys.path.insert(0, os.path.dirname(__file__))
 
+# First party imports (must be after sys.path modification)
+from agents.document_analyzer import DocumentAnalyzerAgent  # noqa: E402
+from models.requests import DocumentAnalysisRequest  # noqa: E402
+from models.requests import ParsedDocument, UserProfile  # noqa: E402
+from models.responses import DocumentAnalysisResponse  # noqa: E402
+from services.image_processor import ImageProcessorService  # noqa: E402
+from services.model_client import HuggingFaceAPIClient  # noqa: E402
+from services.model_client import OpenAIClient  # noqa: E402
+from services.model_client import HuggingFaceLocalClient, ModelClient
 
 # Configure logging
 logging.basicConfig(
@@ -50,11 +53,14 @@ logger = logging.getLogger(__name__)
 class Settings(BaseSettings):
     """Application settings with environment variable support."""
 
-    # Pydantic configuration - disable protected namespace warnings for model_name field
-    model_config = ConfigDict(
+    # Pydantic configuration - disable protected namespace warnings
+    # for the model_name field
+    model_config = SettingsConfigDict(
         env_file=".env",
         case_sensitive=False,
-        protected_namespaces=(),  # Disable protected namespace warnings (we use model_name intentionally)
+        # Disable protected namespace warnings
+        # (we use model_name intentionally)
+        protected_namespaces=(),
     )
 
     # Service configuration
@@ -80,7 +86,16 @@ class Settings(BaseSettings):
 
     # File upload configuration
     max_file_size: int = 10 * 1024 * 1024  # 10MB
-    allowed_extensions: set = {".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".tif", ".heic", ".pdf"}
+    allowed_extensions: set = {
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".bmp",
+        ".tiff",
+        ".tif",
+        ".heic",
+        ".pdf",
+    }
 
 
 # Global settings and model client
@@ -96,6 +111,32 @@ class ImageAnalysisService:
         self.model_client = model_client
         self.settings = settings
         self.image_processor = ImageProcessorService()
+        self._upload_root = (
+            Path(tempfile.gettempdir()) / "justice-companion" / "uploads"
+        ).resolve()
+
+    @staticmethod
+    def _sanitize_filename(filename: str) -> str:
+        safe_name = Path(filename or "upload").name
+        sanitized = re.sub(r"[^a-zA-Z0-9._-]", "_", safe_name)
+        return sanitized or "upload.txt"
+
+    def _ensure_within_upload_root(self, candidate: Path) -> Path:
+        root = self._upload_root
+        root.mkdir(parents=True, exist_ok=True)
+        resolved = candidate.resolve()
+        root_str = str(root)
+        resolved_str = str(resolved)
+        # Use both Path.is_relative_to and commonpath so static analyzers see the guard
+        if (
+            not resolved.is_relative_to(root)
+            or os.path.commonpath([resolved_str, root_str]) != root_str
+        ):
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid file path supplied",
+            )
+        return resolved
 
     async def analyze_image(
         self,
@@ -121,7 +162,7 @@ class ImageAnalysisService:
         Raises:
             HTTPException: For various error conditions
         """
-        temp_file_path = None
+        temp_file_path: Optional[Path] = None
         try:
             # Validate and save uploaded file
             temp_file_path = await self._save_uploaded_file(file, session_id)
@@ -130,7 +171,10 @@ class ImageAnalysisService:
             filename = file.filename or "unknown_file"
 
             # Extract text from image
-            text, ocr_metadata = self._extract_text_from_file(temp_file_path, filename)
+            text, ocr_metadata = self._extract_text_from_file(
+                temp_file_path,
+                filename,
+            )
 
             # Create document objects
             parsed_document = self._create_parsed_document(filename, text)
@@ -156,42 +200,101 @@ class ImageAnalysisService:
 
         finally:
             # Clean up temp file
-            if temp_file_path and os.path.exists(temp_file_path):
-                try:
-                    os.remove(temp_file_path)
-                except Exception as e:
-                    logger.warning(f"Failed to clean up temp file: {e}")
+            if temp_file_path:
+                self._delete_temp_file(temp_file_path)
 
-    async def _save_uploaded_file(self, file: UploadFile, session_id: str) -> str:
+    def _delete_temp_file(self, path: Path) -> None:
+        """Delete temporary files constrained to the upload root."""
+        try:
+            safe_path = self._ensure_within_upload_root(path)
+        except HTTPException as exc:
+            logger.warning(
+                "Attempted to delete file outside upload root: %s",
+                exc,
+            )
+            return
+
+        try:
+            safe_path.unlink(missing_ok=True)
+        except OSError as exc:
+            logger.warning(
+                "Failed to delete temp file %s: %s",
+                safe_path,
+                exc,
+            )
+
+    async def _save_uploaded_file(
+        self,
+        file: UploadFile,
+        session_id: str,
+    ) -> Path:
         """Save uploaded file to temporary directory with validation."""
         # Validate filename
         if not file.filename:
             raise HTTPException(status_code=400, detail="Filename is required")
 
-        # Sanitize filename to prevent path traversal
-        safe_filename = os.path.basename(file.filename)
-        file_extension = Path(safe_filename).suffix.lower()
+        # Use a random directory name per upload to avoid user-controlled paths
+        session_dir_name = secrets.token_hex(16)
+        safe_filename = self._sanitize_filename(file.filename)
+        file_extension = Path(safe_filename).suffix.lower() or ".bin"
 
         # Validate file extension
         if file_extension not in self.settings.allowed_extensions:
+            allowed = ", ".join(sorted(self.settings.allowed_extensions))
             raise HTTPException(
                 status_code=400,
-                detail=f"Unsupported file type: {file_extension}. Supported: {', '.join(self.settings.allowed_extensions)}",
+                detail=(
+                    "Unsupported file type: "
+                    f"{file_extension}. Supported: {allowed}"
+                ),
             )
 
-        # Create temporary file path
-        temp_dir = tempfile.gettempdir()
-        temp_file_path = os.path.join(temp_dir, f"upload_{session_id}_{safe_filename}")
+        # Create temporary file path under dedicated directory (guarded)
+        session_dir = self._ensure_within_upload_root(
+            self._upload_root / session_dir_name
+        )
+        session_dir.mkdir(parents=True, exist_ok=True)
+        stored_filename = f"{secrets.token_hex(16)}{file_extension}"
+        temp_file_path = self._ensure_within_upload_root(
+            session_dir / stored_filename
+        )
 
-        # Save file
-        with open(temp_file_path, "wb") as buffer:
-            content = await file.read()
-            buffer.write(content)
+        # Save file with streaming write + size enforcement
+        max_size = self.settings.max_file_size
+        chunk_size = 1024 * 1024  # 1MB chunks
+        total_bytes = 0
+
+        await file.seek(0)
+        with temp_file_path.open("wb") as buffer:
+            while True:
+                chunk = await file.read(chunk_size)
+                if not chunk:
+                    break
+                total_bytes += len(chunk)
+                if total_bytes > max_size:
+                    buffer.close()
+                    self._delete_temp_file(temp_file_path)
+                    max_mb = max_size // (1024 * 1024)
+                    raise HTTPException(
+                        status_code=400,
+                        detail=(
+                            "File exceeds maximum allowed size of "
+                            f"{max_mb}MB"
+                        ),
+                    )
+                buffer.write(chunk)
 
         return temp_file_path
 
-    def _extract_text_from_file(self, file_path: str, filename: str) -> tuple[str, dict]:
+    def _extract_text_from_file(
+        self,
+        file_path: Path,
+        filename: str,
+    ) -> tuple[str, dict]:
         """Extract text from image file using OCR."""
+        safe_path = self._ensure_within_upload_root(file_path)
+        file_path_str = safe_path.as_posix()
+
         # Check if Tesseract is available
         if not self.image_processor.is_tesseract_available():
             raise HTTPException(
@@ -199,7 +302,8 @@ class ImageAnalysisService:
                 detail=(
                     "Tesseract OCR is not installed. "
                     "Please install Tesseract:\n"
-                    "  Windows: https://github.com/UB-Mannheim/tesseract/wiki\n"
+                    "  Windows: https://github.com/UB-Mannheim/"
+                    "tesseract/wiki\n"
                     "  macOS: brew install tesseract\n"
                     "  Linux: apt-get install tesseract-ocr"
                 ),
@@ -208,50 +312,84 @@ class ImageAnalysisService:
         file_extension = Path(filename).suffix.lower()
 
         # Extract text based on file type
-        if file_extension in [".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".tif"]:
+        if file_extension in (
+            ".jpg",
+            ".jpeg",
+            ".png",
+            ".bmp",
+            ".tiff",
+            ".tif",
+        ):
             logger.info(f"Extracting text from image: {filename}")
-            text, ocr_metadata = self.image_processor.extract_text_from_image(file_path)
+            text, ocr_metadata = self.image_processor.extract_text_from_image(
+                file_path_str
+            )
 
         elif file_extension == ".heic":
             logger.info(f"Converting HEIC to JPG: {filename}")
-            jpg_path = self.image_processor.convert_heic_to_jpg(file_path)
-            text, ocr_metadata = self.image_processor.extract_text_from_image(jpg_path)
+            jpg_path = self.image_processor.convert_heic_to_jpg(file_path_str)
+            jpg_resolved = self._ensure_within_upload_root(Path(jpg_path))
+            text, ocr_metadata = self.image_processor.extract_text_from_image(
+                str(jpg_resolved)
+            )
             # Clean up converted JPG
-            if os.path.exists(jpg_path):
-                os.remove(jpg_path)
+            self._delete_temp_file(jpg_resolved)
 
         elif file_extension == ".pdf":
             logger.info(f"Extracting text from PDF: {filename}")
-            text, ocr_metadata = self.image_processor.extract_text_from_pdf(file_path)
+            text, ocr_metadata = self.image_processor.extract_text_from_pdf(
+                file_path_str
+            )
 
         else:
             raise HTTPException(
                 status_code=400,
-                detail=f"Unsupported file type: {file_extension}. Supported: JPG, PNG, BMP, TIFF, PDF, HEIC",
+                detail=(
+                    "Unsupported file type: "
+                    f"{file_extension}. Supported: "
+                    "JPG, PNG, BMP, TIFF, PDF, HEIC"
+                ),
             )
 
         # Validate extracted text
         if not text.strip():
             raise HTTPException(
                 status_code=400,
-                detail="No text found in image. Image may be blank, too low quality, or not contain readable text.",
+                detail=(
+                    "No text found in image. Image may be blank, too low "
+                    "quality, or not contain readable text."
+                ),
             )
 
         confidence = ocr_metadata.get("ocr_confidence", 0)
-        logger.info(f"Extracted {len(text)} characters (confidence: {confidence:.1f}%)")
+        logger.info(
+            "Extracted %s characters (confidence: %.1f%%)",
+            len(text),
+            confidence,
+        )
 
         return text, ocr_metadata
 
-    def _create_parsed_document(self, filename: str, text: str) -> ParsedDocument:
+    def _create_parsed_document(
+        self,
+        filename: str,
+        text: str,
+    ) -> ParsedDocument:
         """Create ParsedDocument from extracted text."""
         word_count = len(text.split())
         file_extension = Path(filename).suffix.lower().lstrip(".")
 
         return ParsedDocument(
-            filename=filename, text=text, wordCount=word_count, fileType=file_extension
+            filename=filename,
+            text=text,
+            wordCount=word_count,
+            fileType=file_extension,
         )
 
-    async def _execute_analysis(self, request: DocumentAnalysisRequest) -> DocumentAnalysisResponse:
+    async def _execute_analysis(
+        self,
+        request: DocumentAnalysisRequest,
+    ) -> DocumentAnalysisResponse:
         """Execute AI analysis on the document."""
         config = {
             "model": self.model_client.config.get("model", "unknown"),
@@ -273,16 +411,17 @@ async def lifespan(app: FastAPI):
     global model_client, model_provider
 
     # Startup
-    logger.info(f"Starting {settings.service_name} v{settings.version}")
-    logger.info(f"Python version: {sys.version}")
-    logger.info(f"Working directory: {os.getcwd()}")
+    logger.info("Starting %s v%s", settings.service_name, settings.version)
+    logger.info("Python version: %s", sys.version)
+    logger.info("Working directory: %s", os.getcwd())
 
     # Initialize model client (Hugging Face-first strategy)
     logger.info("Initializing model client...")
 
     # Model selection priority:
     # 1. Hugging Face Local (best for privacy, free, but requires GPU/CPU)
-    # 2. Hugging Face API (£9/month fallback, good privacy, less powerful hardware)
+    # 2. Hugging Face API (£9/month fallback, good privacy)
+    #    Less powerful hardware requirements
     # 3. OpenAI (optional, for users who prefer it)
 
     config = {
@@ -378,7 +517,11 @@ async def root():
 @app.get("/health")
 async def health_check():
     """Health check endpoint for PythonProcessManager"""
-    return {"status": "healthy", "service": settings.service_name, "version": settings.version}
+    return {
+        "status": "healthy",
+        "service": settings.service_name,
+        "version": settings.version,
+    }
 
 
 @app.get("/api/v1/info")
@@ -420,12 +563,21 @@ async def analyze_document(request: DocumentAnalysisRequest):
     if model_client is None:
         raise HTTPException(
             status_code=503,
-            detail="AI model not initialized. Set HF_TOKEN or OPENAI_API_KEY environment variable.",
+            detail=(
+                "AI model not initialized. Set HF_TOKEN or OPENAI_API_KEY "
+                "environment variable."
+            ),
         )
 
     try:
-        logger.info(f"analyze_document called with document: {request.document.filename}")
-        logger.info(f"Document text length: {len(request.document.text)} chars")
+        logger.info(
+            "analyze_document called with document: %s",
+            request.document.filename,
+        )
+        logger.info(
+            "Document text length: %s chars",
+            len(request.document.text),
+        )
         logger.info(f"User: {request.userProfile.name}")
 
         # Create DocumentAnalyzerAgent with initialized model client
@@ -456,16 +608,19 @@ async def analyze_document(request: DocumentAnalysisRequest):
     except Exception as e:
         # Unexpected error
         logger.error(f"Unexpected error in analyze_document: {e}")
-        raise HTTPException(status_code=500, detail=f"Internal error: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Internal error: {str(e)}",
+        )
 
 
 @app.post("/api/v1/analyze-image", response_model=DocumentAnalysisResponse)
 async def analyze_image(
     file: UploadFile = File(...),
-    userName: str = Form(...),
-    userEmail: Optional[str] = Form(None),
-    sessionId: str = Form(...),
-    userQuestion: Optional[str] = Form(None),
+    user_name: str = Form(...),
+    user_email: Optional[str] = Form(None),
+    session_id: str = Form(...),
+    user_question: Optional[str] = Form(None),
 ):
     """
     Analyze image of legal document using OCR and extract case data.
@@ -474,10 +629,10 @@ async def analyze_image(
 
     Args:
         file: Uploaded image file
-        userName: User's full name
-        userEmail: User's email address (optional)
-        sessionId: Session UUID
-        userQuestion: Optional question about the document
+        user_name: User's full name
+        user_email: User's email address (optional)
+        session_id: Session UUID
+        user_question: Optional question about the document
 
     Returns:
         DocumentAnalysisResponse with analysis and suggested case data
@@ -489,7 +644,10 @@ async def analyze_image(
     if model_client is None:
         raise HTTPException(
             status_code=503,
-            detail="AI model not initialized. Set HF_TOKEN or OPENAI_API_KEY environment variable.",
+            detail=(
+                "AI model not initialized. Set HF_TOKEN or OPENAI_API_KEY "
+                "environment variable."
+            ),
         )
 
     try:
@@ -497,10 +655,10 @@ async def analyze_image(
         image_service = ImageAnalysisService(model_client, settings)
         return await image_service.analyze_image(
             file=file,
-            user_name=userName,
-            user_email=userEmail,
-            session_id=sessionId,
-            user_question=userQuestion,
+            user_name=user_name,
+            user_email=user_email,
+            session_id=session_id,
+            user_question=user_question,
         )
 
     except HTTPException:
@@ -520,7 +678,10 @@ async def analyze_image(
     except Exception as e:
         # Unexpected error
         logger.error(f"Unexpected error in analyze_image: {e}")
-        raise HTTPException(status_code=500, detail=f"Internal error: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Internal error: {str(e)}",
+        )
 
 
 # Error handlers
@@ -529,7 +690,11 @@ async def http_exception_handler(request, exc):
     """Custom HTTP exception handler"""
     logger.warning(f"HTTP exception: {exc.status_code} - {exc.detail}")
     return JSONResponse(
-        status_code=exc.status_code, content={"error": exc.detail, "status_code": exc.status_code}
+        status_code=exc.status_code,
+        content={
+            "error": exc.detail,
+            "status_code": exc.status_code,
+        },
     )
 
 
@@ -539,13 +704,22 @@ async def general_exception_handler(request, exc):
     logger.error(f"Unhandled exception: {exc}", exc_info=True)
     return JSONResponse(
         status_code=500,
-        content={"error": "Internal server error", "message": str(exc), "status_code": 500},
+        content={
+            "error": "Internal server error",
+            "message": str(exc),
+            "status_code": 500,
+        },
     )
 
 
 if __name__ == "__main__":
     logger.info(f"Starting server on {settings.host}:{settings.port}")
-    logger.info(f"Mode: {'DEVELOPMENT' if settings.environment == 'development' else 'PRODUCTION'}")
+    mode = (
+        "DEVELOPMENT"
+        if settings.environment == "development"
+        else "PRODUCTION"
+    )
+    logger.info("Mode: %s", mode)
 
     # Use import string for reload mode (required by uvicorn)
     # Use app object for production (faster startup)

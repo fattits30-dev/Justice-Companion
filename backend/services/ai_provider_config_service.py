@@ -35,13 +35,13 @@ Example:
 
 import json
 from datetime import datetime
-from typing import Optional, List, Dict, Any
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
-from sqlalchemy.orm import Session
-from sqlalchemy import and_
 from fastapi import HTTPException, status
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
+from sqlalchemy import and_
+from sqlalchemy.orm import Session
 
 from backend.models.ai_provider_config import AIProviderConfig
 from backend.services.encryption_service import EncryptionService
@@ -60,6 +60,7 @@ class AIProviderType(str, Enum):
     ANYSCALE = "anyscale"
     MISTRAL = "mistral"
     PERPLEXITY = "perplexity"
+    EMBERTON = "emberton"
 
 
 class AIProviderMetadata(BaseModel):
@@ -85,14 +86,14 @@ class AIProviderConfigInput(BaseModel):
     top_p: Optional[float] = Field(None, ge=0, le=1)
     enabled: bool = True
 
-    @validator("api_key")
+    @field_validator("api_key")
     def validate_api_key(cls, v):
         """Validate API key is not empty."""
         if not v or not v.strip():
             raise ValueError("API key cannot be empty")
         return v.strip()
 
-    @validator("model")
+    @field_validator("model")
     def validate_model(cls, v):
         """Validate model name is not empty."""
         if not v or not v.strip():
@@ -303,6 +304,18 @@ AI_PROVIDER_METADATA: Dict[AIProviderType, AIProviderMetadata] = {
             "llama-3.1-sonar-large-128k-online",
             "llama-3.1-sonar-small-128k-online",
             "llama-3.1-sonar-huge-128k-online",
+        ],
+    ),
+    AIProviderType.EMBERTON: AIProviderMetadata(
+        name="Emberton AI",
+        default_endpoint="https://api.emberton.ai/v1",
+        supports_streaming=True,
+        default_model="emberton-legal-1.0",
+        max_context_tokens=256000,
+        available_models=[
+            "emberton-legal-1.0",
+            "emberton-legal-pro",
+            "emberton-case-analysis",
         ],
     ),
 }

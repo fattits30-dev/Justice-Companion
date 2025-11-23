@@ -17,7 +17,7 @@
  * @module EvidenceViewer
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   X,
@@ -47,11 +47,7 @@ export function EvidenceViewer({ evidenceId, onClose }: EvidenceViewerProps) {
   const [error, setError] = useState<string | null>(null);
   const [zoom, setZoom] = useState(100);
 
-  useEffect(() => {
-    loadEvidence();
-  }, [evidenceId]);
-
-  const loadEvidence = async () => {
+  const loadEvidence = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -69,7 +65,11 @@ export function EvidenceViewer({ evidenceId, onClose }: EvidenceViewerProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [evidenceId]);
+
+  useEffect(() => {
+    loadEvidence();
+  }, [loadEvidence]);
 
   const handleDownload = async () => {
     if (!evidence) {

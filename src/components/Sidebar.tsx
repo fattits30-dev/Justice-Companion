@@ -18,7 +18,7 @@ import { toast } from "sonner";
 import { useAuth } from "../contexts/AuthContext.tsx";
 import type { ProfileFormData } from "../types/profile.ts";
 import { profileService } from "../services/ProfileService.ts";
-import { logger } from "../utils/logger";
+import { logger } from "../utils/logger.ts";
 
 /**
  * Custom hook for debounced values

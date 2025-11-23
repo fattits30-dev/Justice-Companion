@@ -12,7 +12,7 @@ import {
   NotFoundError,
 } from "../../errors/RepositoryErrors.ts";
 import { DomainError, DatabaseError } from "../../errors/DomainErrors.ts";
-import { logger } from "../../utils/logger";
+import { logger } from "../../utils/logger.ts";
 
 /**
  * Configuration options for error handling

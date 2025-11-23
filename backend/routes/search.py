@@ -13,7 +13,7 @@ Routes:
 """
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 from sqlalchemy.orm import Session
@@ -51,19 +51,25 @@ class SearchFilters(BaseModel):
     tags: Optional[List[str]] = None
     caseIds: Optional[List[int]] = None
 
-    @validator("caseStatus", each_item=True)
+    @field_validator("caseStatus")
+    @classmethod
     def validate_case_status(cls, v):
-        if v and v not in VALID_CASE_STATUSES:
-            raise ValueError(f"Invalid case status: {v}")
+        if v:
+            for item in v:
+                if item not in VALID_CASE_STATUSES:
+                    raise ValueError(f"Invalid case status: {item}")
         return v
 
-    @validator("entityTypes", each_item=True)
+    @field_validator("entityTypes")
+    @classmethod
     def validate_entity_types(cls, v):
-        if v and v not in VALID_ENTITY_TYPES:
-            raise ValueError(f"Invalid entity type: {v}")
+        if v:
+            for item in v:
+                if item not in VALID_ENTITY_TYPES:
+                    raise ValueError(f"Invalid entity type: {item}")
         return v
 
-    @validator("dateRange")
+    @field_validator("dateRange")
     def validate_date_range(cls, v):
         if v:
             if "from" not in v or "to" not in v:
@@ -86,13 +92,13 @@ class SearchRequest(BaseModel):
     limit: int = Field(default=20, ge=1, le=100, description="Results per page")
     offset: int = Field(default=0, ge=0, description="Pagination offset")
 
-    @validator("sortBy")
+    @field_validator("sortBy")
     def validate_sort_by(cls, v):
         if v not in VALID_SORT_BY:
             raise ValueError(f"Invalid sortBy: {v}. Must be one of: {', '.join(VALID_SORT_BY)}")
         return v
 
-    @validator("sortOrder")
+    @field_validator("sortOrder")
     def validate_sort_order(cls, v):
         if v not in VALID_SORT_ORDER:
             raise ValueError(
@@ -100,7 +106,7 @@ class SearchRequest(BaseModel):
             )
         return v
 
-    @validator("query")
+    @field_validator("query")
     def strip_query(cls, v):
         return v.strip()
 
@@ -111,7 +117,7 @@ class SaveSearchRequest(BaseModel):
     name: str = Field(..., min_length=1, max_length=100, description="Search name")
     query: SearchRequest
 
-    @validator("name")
+    @field_validator("name")
     def strip_name(cls, v):
         return v.strip()
 
@@ -879,7 +885,7 @@ class UpdateIndexRequest(BaseModel):
     entityType: str = Field(..., description="Entity type (case, evidence, conversation, note)")
     entityId: int = Field(..., description="Entity ID to update")
 
-    @validator("entityType")
+    @field_validator("entityType")
     def validate_entity_type(cls, v):
         valid_types = ["case", "evidence", "conversation", "note"]
         if v not in valid_types:

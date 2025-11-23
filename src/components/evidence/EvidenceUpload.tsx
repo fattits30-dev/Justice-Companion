@@ -64,29 +64,6 @@ export function EvidenceUpload({
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Handle file drop
-  const handleDrop = useCallback(
-    (e: React.DragEvent<HTMLDivElement>) => {
-      e.preventDefault();
-      setIsDragging(false);
-
-      const droppedFiles = Array.from(e.dataTransfer.files);
-      addFiles(droppedFiles);
-    },
-    [evidenceType],
-  );
-
-  // Handle file selection
-  const handleFileSelect = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (e.target.files) {
-        const selectedFiles = Array.from(e.target.files);
-        addFiles(selectedFiles);
-      }
-    },
-    [evidenceType],
-  );
-
   // Add files to upload queue
   const addFiles = useCallback(
     (newFiles: File[]) => {
@@ -126,7 +103,30 @@ export function EvidenceUpload({
         }
       });
     },
-    [evidenceType],
+    [evidenceType]
+  );
+
+  // Handle file drop
+  const handleDrop = useCallback(
+    (e: React.DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      setIsDragging(false);
+
+      const droppedFiles = Array.from(e.dataTransfer.files);
+      addFiles(droppedFiles);
+    },
+    [addFiles]
+  );
+
+  // Handle file selection
+  const handleFileSelect = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.files) {
+        const selectedFiles = Array.from(e.target.files);
+        addFiles(selectedFiles);
+      }
+    },
+    [addFiles]
   );
 
   // Remove file from queue
@@ -170,7 +170,7 @@ export function EvidenceUpload({
               updated[i].progress = progress;
               return updated;
             });
-          },
+          }
         );
 
         // Update status to completed
@@ -196,7 +196,7 @@ export function EvidenceUpload({
 
     // Check if all uploads completed successfully
     const allCompleted = files.every(
-      (f) => f.status === "completed" || f.status === "error",
+      (f) => f.status === "completed" || f.status === "error"
     );
     if (allCompleted) {
       onUploadComplete?.();

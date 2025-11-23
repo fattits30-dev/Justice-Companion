@@ -1,22 +1,19 @@
-import type { AppUpdater, UpdateInfo, ProgressInfo } from "electron-updater";
 import { errorLogger } from "../utils/error-logger.ts";
-import { logger } from "../utils/logger";
+import { logger } from "../utils/logger.ts";
 
-// Minimal interfaces to avoid a hard dependency on the electron module
+// Web-compatible interfaces for PWA/desktop app updates
 export interface AppLike {
   getVersion(): string;
 }
 
-export interface BrowserWindowLike {
-  isDestroyed(): boolean;
-  webContents: {
-    send(channel: string, ...args: any[]): void;
-  };
+export interface UpdateNotificationCallback {
+  (channel: string, data?: any): void;
 }
 
 export interface AutoUpdaterConfig {
   checkOnStartup?: boolean;
-  updateServerUrl?: string;
+  githubRepo?: string; // e.g., "owner/repo"
+  updateCheckInterval?: number; // in milliseconds
   channel?: "stable" | "beta" | "alpha";
 }
 
@@ -31,10 +28,30 @@ export interface UpdateStatus {
   error?: string;
 }
 
+export interface GitHubAsset {
+  id: number;
+  name: string;
+  browser_download_url: string;
+  size: number;
+}
+
+export interface GitHubRelease {
+  id: number;
+  tag_name: string;
+  name: string;
+  body: string;
+  published_at: string;
+  html_url: string;
+  prerelease: boolean;
+  assets: GitHubAsset[];
+}
+
 export interface UpdateCheckResult {
   updateAvailable: boolean;
   currentVersion: string;
   latestVersion?: string;
+  releaseNotes?: string;
+  downloadUrl?: string;
   error?: string;
 }
 
@@ -44,18 +61,13 @@ export interface UpdateDownloadResult {
 }
 
 export class AutoUpdater {
-  private updater: AppUpdater;
   private config: AutoUpdaterConfig;
-  private mainWindow: BrowserWindowLike | null = null;
+  private notificationCallback: UpdateNotificationCallback | null = null;
   private status: UpdateStatus;
+  private updateCheckTimer: NodeJS.Timeout | null = null;
   private downloadProgressCallbacks: Array<(percent: number) => void> = [];
 
-  constructor(
-    app: AppLike,
-    updater: AppUpdater,
-    config: AutoUpdaterConfig = {}
-  ) {
-    this.updater = updater;
+  constructor(app: AppLike, config: AutoUpdaterConfig = {}) {
     this.config = {
       checkOnStartup: true,
       channel: "stable",
@@ -71,107 +83,92 @@ export class AutoUpdater {
     };
 
     this.configure();
-    this.registerListeners();
+    this.setupPeriodicChecks();
   }
 
   /**
-   * Configure electron-updater
+   * Configure the updater for web-based checking
    */
   private configure(): void {
-    // Disable auto-download - we want manual control
-    this.updater.autoDownload = false;
+    const source = this.config.githubRepo
+      ? `GitHub releases for ${this.config.githubRepo}`
+      : "GitHub releases (no repo configured)";
+    logger.info("[AutoUpdater] Configured for", source);
+  }
 
-    // Auto-install on app quit
-    this.updater.autoInstallOnAppQuit = true;
+  /**
+   * Set up periodic update checks
+   */
+  private setupPeriodicChecks(): void {
+    if (
+      this.config.updateCheckInterval &&
+      this.config.updateCheckInterval > 0
+    ) {
+      this.updateCheckTimer = setInterval(() => {
+        this.checkForUpdates().catch((error) => {
+          logger.error("[AutoUpdater] Periodic check failed:", error);
+        });
+      }, this.config.updateCheckInterval);
+    }
+  }
 
-    // Set custom update server if provided
-    if (this.config.updateServerUrl) {
-      this.updater.setFeedURL({
-        provider: "generic",
-        url: this.config.updateServerUrl,
-      });
+  /**
+   * Notify via callback of update events
+   */
+  private notifyCallback(channel: string, data?: any): void {
+    if (this.notificationCallback) {
+      this.notificationCallback(channel, data);
+    }
+  }
+
+  /**
+   * Fetch latest release from GitHub
+   */
+  private async fetchLatestRelease(): Promise<GitHubRelease | null> {
+    if (!this.config.githubRepo) {
+      throw new Error("GitHub repository not configured");
     }
 
-    // Configure logging (electron-updater's Logger type doesn't expose transports)
-    // Just log that we're configured
-    this.updater.logger = this.updater.logger || console;
+    try {
+      const response = await fetch(
+        `https://api.github.com/repos/${this.config.githubRepo}/releases/latest`
+      );
 
-    const source = this.config.updateServerUrl
-      ? `custom server ${this.config.updateServerUrl}`
-      : "GitHub releases";
-    logger.warn("[AutoUpdater] Configured for", source);
+      if (!response.ok) {
+        throw new Error(`GitHub API error: ${response.status}`);
+      }
+
+      const release: GitHubRelease = await response.json();
+      return release;
+    } catch (error) {
+      logger.error("[AutoUpdater] Failed to fetch release:", error);
+      throw error;
+    }
   }
 
   /**
-   * Register event listeners for update events
+   * Check for updates by comparing versions
    */
-  private registerListeners(): void {
-    this.updater.on("checking-for-update", () => {
-      logger.warn("[AutoUpdater] Checking for updates...");
-      this.status.checking = true;
-      this.notifyWindow("app-update:checking");
-    });
+  private compareVersions(
+    currentVersion: string,
+    latestVersion: string
+  ): boolean {
+    // Simple semantic version comparison (basic implementation)
+    const current = currentVersion.replace(/^v/, "").split(".").map(Number);
+    const latest = latestVersion.replace(/^v/, "").split(".").map(Number);
 
-    this.updater.on("update-available", (info: UpdateInfo) => {
-      logger.warn("[AutoUpdater] Update available:", info.version);
-      this.status.updateAvailable = true;
-      this.status.latestVersion = info.version;
-      this.notifyWindow("app-update:available", info);
-    });
+    for (let i = 0; i < Math.max(current.length, latest.length); i++) {
+      const currentPart = current[i] || 0;
+      const latestPart = latest[i] || 0;
 
-    this.updater.on("update-not-available", (info: UpdateInfo) => {
-      logger.warn("[AutoUpdater] No update available:", info.version);
-      this.status.checking = false;
-      this.notifyWindow("app-update:not-available");
-    });
-
-    this.updater.on("download-progress", (progress: ProgressInfo) => {
-      // Calculate percent from available data (electron-updater provides 'percent' property)
-      const percent =
-        typeof progress.percent === "number"
-          ? Math.round(progress.percent)
-          : Math.round((progress.transferred / progress.total) * 100);
-      this.status.downloadProgress = percent;
-      this.status.downloading = true;
-      this.notifyWindow("app-update:download-progress", progress);
-
-      // Notify any registered callbacks
-      this.downloadProgressCallbacks.forEach((callback) => callback(percent));
-    });
-
-    this.updater.on("update-downloaded", (info: UpdateInfo) => {
-      logger.warn("[AutoUpdater] Update downloaded:", info.version);
-      this.status.downloading = false;
-      this.status.updateDownloaded = true;
-      this.status.latestVersion = info.version;
-      this.notifyWindow("app-update:downloaded", info);
-    });
-
-    this.updater.on("error", (error: Error) => {
-      logger.error("[AutoUpdater] Error:", error);
-      errorLogger.logError(error, {
-        service: "AutoUpdater",
-        operation: "update",
-        currentVersion: this.status.currentVersion,
-      });
-      this.status.checking = false;
-      this.status.downloading = false;
-      this.status.error = error.message;
-      this.notifyWindow("app-update:error", error);
-    });
-  }
-
-  /**
-   * Notify the main window of update events
-   */
-  private notifyWindow(channel: string, data?: any): void {
-    if (this.mainWindow && !this.mainWindow.isDestroyed()) {
-      if (data !== undefined) {
-        this.mainWindow.webContents.send(channel, data);
-      } else {
-        this.mainWindow.webContents.send(channel);
+      if (latestPart > currentPart) {
+        return true; // Update available
+      } else if (latestPart < currentPart) {
+        return false; // Current is newer
       }
     }
+
+    return false; // Versions are equal
   }
 
   /**
@@ -182,13 +179,41 @@ export class AutoUpdater {
       this.status.checking = true;
       this.status.error = undefined;
 
-      const result = await this.updater.checkForUpdates();
+      this.notifyCallback("app-update:checking");
 
-      if (result && result.updateInfo) {
-        this.status.updateAvailable = true;
-        this.status.latestVersion = result.updateInfo.version;
-      } else {
-        this.status.updateAvailable = false;
+      const release = await this.fetchLatestRelease();
+
+      if (release) {
+        const updateAvailable = this.compareVersions(
+          this.status.currentVersion,
+          release.tag_name
+        );
+
+        if (updateAvailable) {
+          this.status.updateAvailable = true;
+          this.status.latestVersion = release.tag_name;
+
+          // Filter assets for web downloads (prefer .zip, .tar.gz, or installers)
+          const downloadAsset = release.assets.find(
+            (asset) =>
+              asset.name.includes(".zip") ||
+              asset.name.includes(".tar.gz") ||
+              asset.name.includes("installer") ||
+              asset.name.includes("setup")
+          );
+
+          this.notifyCallback("app-update:available", {
+            version: release.tag_name,
+            releaseNotes: release.body,
+            publishedAt: release.published_at,
+            downloadUrl:
+              downloadAsset?.browser_download_url || release.html_url,
+            prerelease: release.prerelease,
+          });
+        } else {
+          this.status.updateAvailable = false;
+          this.notifyCallback("app-update:not-available");
+        }
       }
 
       this.status.checking = false;
@@ -197,10 +222,20 @@ export class AutoUpdater {
         updateAvailable: this.status.updateAvailable,
         currentVersion: this.status.currentVersion,
         latestVersion: this.status.latestVersion,
+        releaseNotes: release?.body,
+        downloadUrl: release?.html_url,
       };
     } catch (error) {
       this.status.checking = false;
       this.status.error = (error as Error).message;
+
+      errorLogger.logError(error as Error, {
+        service: "AutoUpdater",
+        operation: "checkForUpdates",
+        currentVersion: this.status.currentVersion,
+      });
+
+      this.notifyCallback("app-update:error", error);
 
       return {
         updateAvailable: false,
@@ -211,16 +246,22 @@ export class AutoUpdater {
   }
 
   /**
-   * Download the update
+   * Download the update (redirect to download URL)
    */
   public async downloadUpdate(): Promise<UpdateDownloadResult> {
     try {
       this.status.downloading = true;
       this.status.error = undefined;
 
-      await this.updater.downloadUpdate();
+      // For web apps, we redirect to the download URL rather than downloading automatically
+      // The UI should prompt the user to download manually
+      this.notifyCallback("app-update:download-ready", {
+        downloadUrl: `https://github.com/${this.config.githubRepo}/releases/latest`,
+      });
 
       this.status.downloading = false;
+      this.status.updateDownloaded = true;
+
       return { success: true };
     } catch (error) {
       this.status.downloading = false;
@@ -231,14 +272,11 @@ export class AutoUpdater {
   }
 
   /**
-   * Quit and install the update
+   * For web apps, this redirects to the installation instructions
    */
   public quitAndInstall(): void {
-    // Notify window that we're installing
-    this.notifyWindow("app-update:installing");
-
-    // Quit and install (with silent=true, forceRunAfter=true)
-    this.updater.quitAndInstall(true, true);
+    // In a web app, "installation" means refreshing or navigating to the new version
+    window.location.reload();
   }
 
   /**
@@ -261,7 +299,7 @@ export class AutoUpdater {
   public async initialize(): Promise<void> {
     if (this.config.checkOnStartup) {
       try {
-        await this.updater.checkForUpdatesAndNotify();
+        await this.checkForUpdates();
       } catch (error) {
         errorLogger.logError(error as Error, {
           service: "AutoUpdater",
@@ -272,26 +310,37 @@ export class AutoUpdater {
   }
 
   /**
-   * Set the main window for update notifications
+   * Set a callback for update notifications
    */
-  public setMainWindow(window: BrowserWindowLike): void {
-    this.mainWindow = window;
+  public setNotificationCallback(callback: UpdateNotificationCallback): void {
+    this.notificationCallback = callback;
   }
 
   /**
    * Get the update source being used
    */
   public getUpdateSource(): string {
-    if (this.config.updateServerUrl) {
-      return this.config.updateServerUrl;
+    if (this.config.githubRepo) {
+      return `GitHub: ${this.config.githubRepo}`;
     }
     return "github";
   }
 
   /**
-   * Check if auto-updates are enabled (only in production)
+   * Check if auto-updates are enabled
    */
   public isEnabled(): boolean {
-    return process.env.NODE_ENV === "production";
+    // Web apps can always check for updates, but installation is manual
+    return true;
+  }
+
+  /**
+   * Clean up resources
+   */
+  public dispose(): void {
+    if (this.updateCheckTimer) {
+      clearInterval(this.updateCheckTimer);
+      this.updateCheckTimer = null;
+    }
   }
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { DecryptionCache } from "./DecryptionCache";
+import { DecryptionCache } from "./DecryptionCache.ts";
 import type { AuditLogger } from "./AuditLogger";
 
 describe("DecryptionCache", () => {

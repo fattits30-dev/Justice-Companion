@@ -12,7 +12,7 @@ import readline from "readline";
 import { ConfigManager } from "./ConfigManager.ts";
 import { ProjectPlanner } from "./ProjectPlanner.ts";
 import { TodoManager } from "./TodoManager.ts";
-import { logger } from "../utils/logger";
+import { logger } from "../utils/logger.ts";
 // Unused import for future use - workflow files are WIP
 import type { WorkflowPlan as _WorkflowPlan } from "./types.ts";
 

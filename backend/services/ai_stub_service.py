@@ -17,17 +17,15 @@ The implementation is intentionally simple and avoids any network calls.
 
 from __future__ import annotations
 
+import os
 from typing import AsyncIterator, List, Optional
 
-from backend.services.unified_ai_service import (
-    AIProviderConfig,
-    ChatMessage,
-    DocumentExtractionResponse,
-    FieldConfidence,
-    ParsedDocument,
-    SuggestedCaseData,
-    UserProfile,
-)
+from backend.services.unified_ai_service import (AIProviderConfig, ChatMessage,
+                                                 DocumentExtractionResponse,
+                                                 FieldConfidence,
+                                                 ParsedDocument,
+                                                 SuggestedCaseData,
+                                                 UserProfile)
 
 
 class StubAIService:
@@ -50,7 +48,7 @@ class StubAIService:
         # Minimal config object so existing logging continues to work.
         self.config = AIProviderConfig(
             provider="openai",  # treated as generic provider in logs
-            api_key="stub-key",
+            api_key=os.getenv("STUB_AI_API_KEY", "NOT_USED"),
             model="stub-model",
             endpoint=None,
             temperature=0.0,

@@ -15,17 +15,19 @@ License: MIT
 
 import os
 import tempfile
-from typing import Optional, Tuple
 from pathlib import Path
-from PIL import Image
+from typing import Any, Optional, Tuple
+
 import pytesseract
+from PIL import Image
 
 
 class ImageProcessorService:
     """
     Service for processing images and extracting text via OCR.
 
-    Handles image preprocessing, format conversion, and Tesseract OCR integration.
+    Handles image preprocessing, format conversion, and Tesseract OCR
+    integration.
     """
 
     def __init__(self, tesseract_path: Optional[str] = None):
@@ -241,11 +243,16 @@ class ImageProcessorService:
 
         try:
             # Convert PDF to images
+            convert_kwargs: dict[str, Any] = {
+                "first_page": first_page,
+                "dpi": 300,  # High DPI for better OCR
+            }
+            if last_page is not None:
+                convert_kwargs["last_page"] = last_page
+
             images = convert_from_path(
                 pdf_path,
-                first_page=first_page,
-                last_page=last_page,
-                dpi=300,  # High DPI for better OCR
+                **convert_kwargs,
             )
 
             # Extract text from each page

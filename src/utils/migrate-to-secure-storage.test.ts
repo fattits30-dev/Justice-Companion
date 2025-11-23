@@ -15,11 +15,11 @@ import {
   migrateToSecureStorage,
   isMigrationNeeded,
   cleanupLocalStorage,
-} from "./migrate-to-secure-storage";
-import { secureStorage } from "@/services/SecureStorageService";
+} from "./migrate-to-secure-storage.ts";
+import { secureStorage } from "@/services/SecureStorageService.ts";
 
 // Mock the SecureStorageService
-vi.mock("@/services/SecureStorageService", () => ({
+vi.mock("@/services/SecureStorageService.ts", () => ({
   secureStorage: {
     init: vi.fn().mockResolvedValue(undefined),
     isEncryptionAvailable: vi.fn().mockReturnValue(true),

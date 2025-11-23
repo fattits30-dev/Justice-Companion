@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { generateCacheKey, generatePageCacheKey } from "./cache";
+import { generateCacheKey, generatePageCacheKey } from "./cache.ts";
 import type { PaginationParams } from "./pagination";
 
 describe("Cache Key Generation", () => {

@@ -15,6 +15,7 @@
 import { useState, FormEvent } from "react";
 import { apiClient } from "../../lib/apiClient.ts";
 import type { User } from "../../domains/auth/entities/User.ts";
+import { useAuth } from "../../contexts/AuthContext.tsx";
 
 // Preserve state during HMR
 if (import.meta.hot) {
@@ -30,6 +31,7 @@ export function RegistrationScreen({
   onSuccess,
   onLoginClick,
 }: RegistrationScreenProps) {
+  const { refreshUser } = useAuth();
   // Form state
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -94,11 +96,11 @@ export function RegistrationScreen({
       errors.email = "Please enter a valid email";
     }
 
-    // Password validation
+    // Password validation (must match backend: 12 characters minimum)
     if (!password.trim()) {
       errors.password = "Password is required";
-    } else if (password.length < 8) {
-      errors.password = "Password must be at least 8 characters";
+    } else if (password.length < 12) {
+      errors.password = "Password must be at least 12 characters";
     }
 
     // Confirm password validation
@@ -138,7 +140,7 @@ export function RegistrationScreen({
       const response = await apiClient.auth.register(fullName, email, password);
 
       if (!response.success) {
-        setError("Registration failed");
+        setError(response.error?.message || "Registration failed");
         return;
       }
 
@@ -150,6 +152,9 @@ export function RegistrationScreen({
         setPassword("");
         setConfirmPassword("");
         setAcceptedTerms(false);
+
+        // Refresh auth state using the new session created during registration
+        await refreshUser();
 
         // Call success callback
         if (onSuccess) {
@@ -287,7 +292,7 @@ export function RegistrationScreen({
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isLoading}
                 className="w-full px-3 py-2 bg-primary-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-hidden focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed pr-10"
-                placeholder="Enter your password"
+                placeholder="Min 12 characters"
               />
               <button
                 type="button"

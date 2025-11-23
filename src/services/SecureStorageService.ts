@@ -1,5 +1,5 @@
 import { errorLogger } from "../utils/error-logger.ts";
-import { logger } from "../utils/logger";
+import { logger } from "../utils/logger.ts";
 
 /**
  * SecureStorageService - Electron safeStorage wrapper for secure API key storage

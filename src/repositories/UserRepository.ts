@@ -32,8 +32,8 @@ export class UserRepository {
       const db = getDb();
 
       const stmt = db.prepare(`
-        INSERT INTO users (username, email, password_hash, password_salt, role)
-        VALUES (@username, @email, @passwordHash, @passwordSalt, @role)
+        INSERT INTO users (username, email, password_hash, password_salt, role, is_active)
+        VALUES (@username, @email, @passwordHash, @passwordSalt, @role, 1)
       `);
 
       const result = stmt.run({

@@ -1,4 +1,3 @@
-import { injectable } from "inversify";
 import { validate as uuidValidate, version as uuidVersion } from "uuid";
 import { logger } from "../utils/logger.ts";
 
@@ -12,7 +11,6 @@ import { logger } from "../utils/logger.ts";
  * - Handles storage unavailability gracefully
  * - Cleans up on logout
  */
-@injectable()
 export class SessionPersistenceService {
   private static readonly STORAGE_KEY = "justice-companion.session.id";
   private static readonly UUID_V4_VERSION = 4;
@@ -35,15 +33,14 @@ export class SessionPersistenceService {
   /**
    * Get the storage key used in localStorage
    */
-  private getStorageKey(): string {
+  private static getStorageKey(): string {
     return SessionPersistenceService.STORAGE_KEY;
   }
 
   /**
    * Get the browser storage mechanism (localStorage) if available
    */
-  // eslint-disable-next-line class-methods-use-this
-  private getStorage(): Storage | null {
+  private static getStorage(): Storage | null {
     try {
       if (typeof window === "undefined" || !window.localStorage) {
         return null;
@@ -60,13 +57,13 @@ export class SessionPersistenceService {
    */
   public async isAvailable(): Promise<boolean> {
     try {
-      const storage = this.getStorage();
+      const storage = SessionPersistenceService.getStorage();
       if (!storage) {
         logger.warn("SessionPersistence", "localStorage not available");
         return false;
       }
 
-      const testKey = `${this.getStorageKey()}__test`;
+      const testKey = `${SessionPersistenceService.getStorageKey()}__test`;
       storage.setItem(testKey, "1");
       storage.removeItem(testKey);
 
@@ -123,12 +120,12 @@ export class SessionPersistenceService {
         throw new Error("Persistent storage not available");
       }
 
-      const storage = this.getStorage();
+      const storage = SessionPersistenceService.getStorage();
       if (!storage) {
         throw new Error("Persistent storage not available");
       }
 
-      storage.setItem(this.getStorageKey(), sessionId);
+      storage.setItem(SessionPersistenceService.getStorageKey(), sessionId);
     } catch (error) {
       logger.error("Failed to store session ID", {
         service: "SessionPersistence",
@@ -136,8 +133,8 @@ export class SessionPersistenceService {
       });
 
       try {
-        const storage = this.getStorage();
-        storage?.removeItem(this.getStorageKey());
+        const storage = SessionPersistenceService.getStorage();
+        storage?.removeItem(SessionPersistenceService.getStorageKey());
       } catch {
         // Ignore cleanup errors
       }
@@ -156,17 +153,17 @@ export class SessionPersistenceService {
       if (!available) {
         logger.warn(
           "SessionPersistence",
-          "Cannot retrieve: storage not available",
+          "Cannot retrieve: storage not available"
         );
         return null;
       }
 
-      const storage = this.getStorage();
+      const storage = SessionPersistenceService.getStorage();
       if (!storage) {
         return null;
       }
 
-      const stored = storage.getItem(this.getStorageKey());
+      const stored = storage.getItem(SessionPersistenceService.getStorageKey());
       if (!stored) {
         return null;
       }
@@ -193,8 +190,8 @@ export class SessionPersistenceService {
    */
   public async clearSession(): Promise<void> {
     try {
-      const storage = this.getStorage();
-      storage?.removeItem(this.getStorageKey());
+      const storage = SessionPersistenceService.getStorage();
+      storage?.removeItem(SessionPersistenceService.getStorageKey());
     } catch (error) {
       logger.error("Error clearing session", {
         service: "SessionPersistence",
@@ -209,12 +206,12 @@ export class SessionPersistenceService {
    */
   public async hasStoredSession(): Promise<boolean> {
     try {
-      const storage = this.getStorage();
+      const storage = SessionPersistenceService.getStorage();
       if (!storage) {
         return false;
       }
 
-      const value = storage.getItem(this.getStorageKey());
+      const value = storage.getItem(SessionPersistenceService.getStorageKey());
       return !!(value && value.length > 0);
     } catch {
       return false;
@@ -231,7 +228,7 @@ export class SessionPersistenceService {
     encryptionAvailable: boolean;
   }> {
     const encryptionAvailable = await this.isAvailable();
-    const storage = this.getStorage();
+    const storage = SessionPersistenceService.getStorage();
 
     if (!storage) {
       return {
@@ -240,7 +237,7 @@ export class SessionPersistenceService {
       };
     }
 
-    const value = storage.getItem(this.getStorageKey());
+    const value = storage.getItem(SessionPersistenceService.getStorageKey());
     if (!value) {
       return {
         exists: false,

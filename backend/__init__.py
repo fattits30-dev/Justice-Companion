@@ -1,0 +1,1 @@
+"""Justice Companion backend package."""

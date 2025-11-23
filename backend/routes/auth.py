@@ -11,25 +11,34 @@ Routes:
 - POST /auth/cleanup-sessions - Cleanup expired sessions (admin endpoint)
 
 Security Features:
-- Rate limiting on login (5 attempts per 15 minutes)
-- Rate limiting on registration (3 attempts per hour per IP)
-- Rate limiting on password change (5 attempts per hour)
+- User-controlled rate limiting (DISABLED by default, see RATE_LIMITING_GUIDE.md)
+  - Registration: Configurable attempts per IP (default: 3/hour when enabled)
+  - Login: Configurable attempts per user (default: 5/15min when enabled)
+  - Password change: Configurable attempts per user (default: 5/hour when enabled)
 - Comprehensive audit logging for all auth operations
 - Session management with 24-hour or 30-day expiration
 - OWASP-compliant password requirements
 - Timing-safe password comparison
+
+Rate Limiting Configuration:
+- Set ENABLE_RATE_LIMITING=true to enable (false by default)
+- Customize limits via environment variables (see .env.example)
+- Designed for flexible deployment scenarios (dev/testing/production)
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
-from pydantic import BaseModel, EmailStr, Field, ConfigDict
 from typing import Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from sqlalchemy.orm import Session
 
 from backend.models.base import get_db
-from backend.services.auth_service import AuthenticationService, AuthenticationError
-from backend.services.session_manager import SessionManager
-from backend.services.rate_limit_service import RateLimitService, get_rate_limiter
 from backend.services.audit_logger import AuditLogger
+from backend.services.auth_service import (AuthenticationError,
+                                           AuthenticationService)
+from backend.services.rate_limit_service import (RateLimitService,
+                                                 get_rate_limiter)
+from backend.services.session_manager import SessionManager
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
@@ -51,7 +60,7 @@ class RegisterRequest(BaseModel):
         json_schema_extra={
             "example": {
                 "username": "john_doe",
-                "password": "SecurePass123!",
+                "password": "<secure-password>",
                 "email": "john@example.com",
             }
         }
@@ -74,7 +83,11 @@ class LoginRequest(BaseModel):
 
     model_config = ConfigDict(
         json_schema_extra={
-            "example": {"username": "john_doe", "password": "SecurePass123!", "remember_me": False}
+            "example": {
+                "username": "john_doe",
+                "password": "<secure-password>",
+                "remember_me": False,
+            }
         }
     )
 
@@ -105,8 +118,8 @@ class ChangePasswordRequest(BaseModel):
         json_schema_extra={
             "example": {
                 "user_id": 1,
-                "old_password": "OldSecurePass123!",
-                "new_password": "NewSecurePass456!",
+                "old_password": "<current-password>",
+                "new_password": "<new-password>",
             }
         }
     )
@@ -290,26 +303,37 @@ async def register(
     """
     # Get client info
     ip_address = http_request.client.host if http_request.client else "unknown"
-    user_agent = http_request.headers.get("user-agent", "unknown")
 
-    # Check rate limit (use IP address as identifier for registration)
-    # Note: We use IP for registration rate limiting to prevent mass account creation
+    # User-controlled rate limiting (disabled by default)
+    # See RATE_LIMITING_GUIDE.md for when to enable
+    import os
+    enable_rate_limiting = os.getenv("ENABLE_RATE_LIMITING", "false").lower() == "true"
+
+    # Initialize ip_hash for potential use (outside conditional to avoid UnboundLocalError)
     ip_hash = hash(ip_address)  # Use hash to create numeric ID
-    rate_limit_result = rate_limiter.check_rate_limit(
-        user_id=ip_hash, operation="register", max_requests=3, window_seconds=3600  # 1 hour
-    )
 
-    if not rate_limit_result.allowed:
-        rate_limiter.increment(ip_hash, "register")
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail={
-                "message": "Too many registration attempts. Please try again later.",
-                "rate_limit_info": {
-                    "retry_after_seconds": rate_limit_result.remaining_time or 3600
-                },
-            },
+    if enable_rate_limiting:
+        # Get configurable rate limits from environment
+        max_requests = int(os.getenv("RATE_LIMIT_REGISTER_MAX_REQUESTS", "3"))
+        window_seconds = int(os.getenv("RATE_LIMIT_REGISTER_WINDOW_SECONDS", "3600"))
+
+        # Check rate limit (use IP address as identifier for registration)
+        # Note: We use IP for registration rate limiting to prevent mass account creation
+        rate_limit_result = rate_limiter.check_rate_limit(
+            user_id=ip_hash, operation="register", max_requests=max_requests, window_seconds=window_seconds
         )
+
+        if not rate_limit_result.allowed:
+            rate_limiter.increment(ip_hash, "register")
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail={
+                    "message": "Too many registration attempts. Please try again later.",
+                    "rate_limit_info": {
+                        "retry_after_seconds": rate_limit_result.remaining_time or window_seconds
+                    },
+                },
+            )
 
     try:
         # Register user (includes auto-login)
@@ -317,8 +341,9 @@ async def register(
             username=request.username, password=request.password, email=request.email
         )
 
-        # Reset rate limit on successful registration
-        rate_limiter.reset(ip_hash, "register")
+        # Reset rate limit on successful registration (only if enabled)
+        if enable_rate_limiting:
+            rate_limiter.reset(ip_hash, "register")
 
         return {
             "user": {
@@ -332,12 +357,14 @@ async def register(
         }
 
     except AuthenticationError as e:
-        # Increment rate limit on failed attempt
-        rate_limiter.increment(ip_hash, "register")
+        # Increment rate limit on failed attempt (only if enabled)
+        if enable_rate_limiting:
+            rate_limiter.increment(ip_hash, "register")
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
-        # Increment rate limit on error
-        rate_limiter.increment(ip_hash, "register")
+        # Increment rate limit on error (only if enabled)
+        if enable_rate_limiting:
+            rate_limiter.increment(ip_hash, "register")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Registration failed: {str(e)}",

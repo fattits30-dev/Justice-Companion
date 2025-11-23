@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { StartupMetrics } from "./StartupMetrics";
+import { StartupMetrics } from "./StartupMetrics.ts";
 
 describe("StartupMetrics", () => {
   let metrics: StartupMetrics;

@@ -633,7 +633,7 @@ export class BulkOperationService {
         startedAt: new Date(),
         completedAt: new Date(),
       };
-    } catch (error) {
+    } catch (_error) {
       return null;
     }
   }

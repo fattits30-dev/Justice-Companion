@@ -251,7 +251,10 @@ export class EvidenceApiClient {
       );
     }
 
-    return response.data;
+    return {
+      previewUrl: response.data.url,
+      mimeType: (response.data.metadata?.mimeType as string) || "application/octet-stream",
+    };
   }
 
   /**

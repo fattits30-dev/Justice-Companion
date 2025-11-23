@@ -22,7 +22,7 @@ Security:
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional, Dict, Any, List
 from datetime import datetime, timezone
 from sqlalchemy import text
@@ -90,7 +90,7 @@ class GdprExportRequest(BaseModel):
 
     format: str = Field(default="json", description="Export format (json or csv)")
 
-    @validator("format")
+    @field_validator("format")
     def validate_format(cls, v):
         if v not in ["json", "csv"]:
             raise ValueError("Format must be 'json' or 'csv'")
@@ -115,7 +115,7 @@ class GdprDeleteRequest(BaseModel):
     exportBeforeDelete: bool = Field(default=False, description="Export data before deletion")
     reason: Optional[str] = Field(None, max_length=500, description="Optional reason for deletion")
 
-    @validator("confirmed")
+    @field_validator("confirmed")
     def validate_confirmed(cls, v):
         if not v:
             raise ValueError("Deletion requires explicit confirmation (confirmed: true)")

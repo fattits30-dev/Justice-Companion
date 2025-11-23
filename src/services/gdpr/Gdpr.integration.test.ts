@@ -7,9 +7,9 @@
 
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import Database from "better-sqlite3";
-import { GdprService } from "./GdprService";
-import { EncryptionService } from "../EncryptionService";
-import { AuditLogger } from "../AuditLogger";
+import { GdprService } from "./GdprService.ts";
+import { EncryptionService } from "../EncryptionService.ts";
+import { AuditLogger } from "../AuditLogger.ts";
 import {
   createTestDatabase,
   type TestDatabaseHelper,

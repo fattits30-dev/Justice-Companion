@@ -439,7 +439,7 @@ export class SearchIndexBuilder {
         }
       }
       return content;
-    } catch (error) {
+    } catch (_error) {
       // If parsing/decryption fails, return original content
       return content;
     }

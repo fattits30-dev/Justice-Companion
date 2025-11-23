@@ -11,7 +11,7 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { apiClient, ApiError } from "../apiClient";
+import { apiClient, ApiError } from "../apiClient.ts";
 import type { Case } from "../../domains/cases/entities/Case";
 
 // ===== AUTHENTICATION EXAMPLE =====
@@ -225,37 +225,37 @@ export function CaseList() {
   const [filter, setFilter] = useState<"all" | "active" | "closed">("all");
 
   useEffect(() => {
+    const loadCases = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const response = await apiClient.cases.list({
+          status: filter !== "all" ? filter : undefined,
+          limit: 50,
+          offset: 0,
+        });
+
+        if (response.success) {
+          setCases(response.data.items);
+        }
+      } catch (err) {
+        if (err instanceof ApiError) {
+          if (err.isStatus(401)) {
+            setError("Please log in to view cases");
+          } else {
+            setError(err.message);
+          }
+        } else {
+          setError("Failed to load cases");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
     loadCases();
   }, [filter]);
-
-  const loadCases = async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await apiClient.cases.list({
-        status: filter !== "all" ? filter : undefined,
-        limit: 50,
-        offset: 0,
-      });
-
-      if (response.success) {
-        setCases(response.data.items);
-      }
-    } catch (err) {
-      if (err instanceof ApiError) {
-        if (err.isStatus(401)) {
-          setError("Please log in to view cases");
-        } else {
-          setError(err.message);
-        }
-      } else {
-        setError("Failed to load cases");
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
 
   if (loading) {
     return <div>Loading cases...</div>;
@@ -587,7 +587,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
         setAuthenticated(false);
         localStorage.removeItem("sessionId");
       }
-    } catch (err) {
+    } catch (_err) {
       setAuthenticated(false);
       localStorage.removeItem("sessionId");
     } finally {

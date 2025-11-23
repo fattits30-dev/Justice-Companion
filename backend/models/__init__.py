@@ -2,14 +2,20 @@
 SQLAlchemy database models for Justice Companion backend.
 """
 
-from backend.models.base import Base
-from backend.models.user import User
-from backend.models.session import Session
-from backend.models.case import Case
-from backend.models.evidence import Evidence
-from backend.models.profile import UserProfile
-from backend.models.consent import Consent, ConsentType
 from backend.models.ai_provider_config import AIProviderConfig
+from backend.models.backup import BackupSettings
+from backend.models.base import Base
+from backend.models.case import Case
+from backend.models.chat import ChatConversation, ChatMessage
+from backend.models.consent import Consent, ConsentType
+from backend.models.deadline import Deadline
+from backend.models.evidence import Evidence
+from backend.models.notification import Notification, NotificationPreferences
+from backend.models.profile import UserProfile
+from backend.models.session import Session
+from backend.models.tag import Tag
+from backend.models.template import CaseTemplate, TemplateUsage
+from backend.models.user import User
 
 __all__ = [
     "Base",
@@ -17,8 +23,17 @@ __all__ = [
     "Session",
     "Case",
     "Evidence",
+    "Deadline",
+    "Tag",
+    "CaseTemplate",
+    "TemplateUsage",
+    "ChatConversation",
+    "ChatMessage",
     "UserProfile",
     "Consent",
     "ConsentType",
+    "Notification",
+    "NotificationPreferences",
+    "BackupSettings",
     "AIProviderConfig",
 ]

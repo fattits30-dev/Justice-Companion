@@ -11,7 +11,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { ApiClient, ApiError } from "./apiClient";
+import { ApiClient, ApiError } from "./apiClient.ts";
 import type { CaseStatus } from "../domains/cases/entities/Case";
 
 // ===== MOCK SETUP =====
@@ -185,9 +185,12 @@ describe("ApiClient", () => {
         }),
       });
 
-      await expect(
-        client.auth.login("testuser", "wrongpassword"),
-      ).rejects.toThrow(ApiError);
+      const result = await client.auth.login("testuser", "wrongpassword");
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.code).toBe("INVALID_CREDENTIALS");
+      }
     });
 
     it("should change password and clear session", async () => {
@@ -486,9 +489,16 @@ describe("ApiClient", () => {
     });
 
     it("should handle network errors", async () => {
+      // Create client without retries to avoid timeout
+      const noRetryClient = new ApiClient({
+        baseURL: "http://localhost:8000",
+        maxRetries: 0,
+      });
+      noRetryClient.setSessionId("session-123");
+
       mockFetch.mockRejectedValueOnce(new TypeError("Network request failed"));
 
-      await expect(client.cases.list()).rejects.toThrow(ApiError);
+      await expect(noRetryClient.cases.list()).rejects.toThrow(ApiError);
     });
 
     it("should handle 500 server errors with retry", async () => {
@@ -662,7 +672,7 @@ describe("ApiClient", () => {
         expect.any(String),
         expect.objectContaining({
           headers: expect.objectContaining({
-            "X-Session-Id": "test-session-456",
+            Authorization: "Bearer test-session-456",
           }),
         }),
       );

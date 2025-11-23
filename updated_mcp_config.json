@@ -1,0 +1,35 @@
+{
+  "mcpServers": {
+    "github.com/modelcontextprotocol/servers/tree/main/src/filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "c:/Users/sava6/ClaudeHome/projects/Justice Companion"
+      ]
+    },
+    "github.com/modelcontextprotocol/servers/tree/main/src/git": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-git",
+        "--repository",
+        "c:/Users/sava6/ClaudeHome/projects/Justice Companion"
+      ]
+    },
+    "github.com/modelcontextprotocol/servers/tree/main/src/sequentialthinking": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"],
+      "autoApprove": []
+    },
+    "github.com/AgentDeskAI/browser-tools-mcp": {
+      "command": "npx",
+      "args": ["@agentdeskai/browser-tools-mcp@latest"],
+      "autoApprove": []
+    },
+    "github.com/upstash/context7-mcp": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp"],
+      "autoApprove": []
+    }
+  }
+}

@@ -82,7 +82,7 @@ fi
 
 echo "🔍 Running TypeScript type check..."
 
-if ! pnpm type-check; then
+if ! npm run typecheck; then
   echo ""
   echo "❌ COMMIT BLOCKED: TypeScript type errors detected"
   echo ""

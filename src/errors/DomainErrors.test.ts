@@ -11,7 +11,7 @@ import {
   isDomainError,
   toDomainError,
   createErrorResponse,
-} from "./DomainErrors";
+} from "./DomainErrors.ts";
 
 describe("DomainErrors", () => {
   describe("Base DomainError", () => {

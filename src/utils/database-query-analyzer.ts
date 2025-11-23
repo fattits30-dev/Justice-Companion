@@ -5,7 +5,7 @@
  */
 
 import Database from "better-sqlite3";
-import { logger } from "./logger";
+import { logger } from "./logger.ts";
 
 interface QueryAnalysis {
   query: string;
@@ -76,7 +76,7 @@ export class DatabaseQueryAnalyzer {
         detail: planText,
         usesIndex: planText.toLowerCase().includes("index"),
       };
-    } catch (error) {
+    } catch (_error) {
       return {
         detail: "Unable to analyze query plan",
         usesIndex: false,

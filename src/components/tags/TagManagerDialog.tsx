@@ -14,7 +14,7 @@ import { TagBadge } from "../ui/TagBadge.tsx";
 import { TagColorPicker } from "./TagColorPicker.tsx";
 import { apiClient } from "../../lib/apiClient.ts";
 import type { Tag, CreateTagInput, UpdateTagInput } from "../../models/Tag.ts";
-import { logger } from "../../utils/logger";
+import { logger } from "../../utils/logger.ts";
 
 interface TagManagerDialogProps {
   open: boolean;
@@ -80,7 +80,7 @@ export function TagManagerDialog({ open, onClose }: TagManagerDialogProps) {
       } else {
         logger.error("Failed to load tags: Unknown error");
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error("Error loading tags");
     } finally {
       setIsLoading(false);

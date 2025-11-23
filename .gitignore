@@ -26,6 +26,7 @@ dist-ssr/
 out/
 release/
 build/
+dev-dist/
 *.js.map
 .vite/
 .cache/
@@ -317,3 +318,6 @@ __pycache__/
 
 # Snyk Security Extension - AI Rules (auto-generated)
 .github\instructions\snyk_rules.instructions.md
+
+# Cline AI Assistant (local config, not project files)
+.cline/

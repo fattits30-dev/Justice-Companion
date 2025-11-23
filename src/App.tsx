@@ -194,11 +194,6 @@ function DashboardWrapper() {
 
     fetchStats();
   }, []);
-
-  if (isLoading) {
-    return <PageLoader />;
-  }
-
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-primary-900 p-8">
@@ -223,6 +218,7 @@ function DashboardWrapper() {
         }
       }
       recentCases={dashboardStats?.recentCases || []}
+      isLoading={isLoading}
       onNewCase={() => navigate("/cases")}
       onUploadEvidence={() => navigate("/documents")}
       onStartChat={() => navigate("/chat")}

@@ -141,7 +141,10 @@ export function Dashboard({
   }
 
   return (
-    <div className="h-full flex flex-col overflow-hidden bg-gradient-to-br from-gray-900 via-primary-900 to-gray-900 text-white">
+    <div
+      className="h-full flex flex-col overflow-hidden bg-gradient-to-br from-gray-900 via-primary-900 to-gray-900 text-white"
+      data-testid="dashboard"
+    >
       {/* Fixed Header Section */}
       <div className="shrink-0 p-8 pb-0">
         {/* Legal Disclaimer Banner */}
@@ -167,9 +170,12 @@ export function Dashboard({
 
         {/* Welcome Section */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">Welcome back, {username}</h1>
+          <h1 className="text-3xl font-bold mb-2">
+            Welcome to Justice Companion
+          </h1>
           <p className="text-white/90">
-            You're building your case. Here's where you stand.
+            Welcome back, {username}. You're building your case. Here's where
+            you stand.
           </p>
         </div>
       </div>

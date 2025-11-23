@@ -2,7 +2,7 @@
  * @vitest-environment node
  */
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { RAGService } from "./RAGService";
+import { RAGService } from "./RAGService.ts";
 import type {
   LegislationResult,
   CaseResult,
@@ -17,7 +17,7 @@ vi.mock("../utils/error-logger", () => ({
   },
 }));
 
-vi.mock("./LegalAPIService", () => ({
+vi.mock("./LegalAPIService.ts", () => ({
   legalAPIService: {
     extractKeywords: vi.fn(),
     classifyQuestion: vi.fn(),
@@ -27,15 +27,15 @@ vi.mock("./LegalAPIService", () => ({
   },
 }));
 
-vi.mock("./AIServiceFactory", () => ({
+vi.mock("./AIServiceFactory.ts", () => ({
   aiServiceFactory: {
     chat: vi.fn(),
   },
 }));
 
 // Get mocked functions for test control
-import { legalAPIService } from "./LegalAPIService";
-import { aiServiceFactory } from "./AIServiceFactory";
+import { legalAPIService } from "./LegalAPIService.ts";
+import { aiServiceFactory } from "./AIServiceFactory.ts";
 
 const mockExtractKeywords = legalAPIService.extractKeywords as ReturnType<
   typeof vi.fn

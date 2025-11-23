@@ -15,7 +15,7 @@ import type {
 import { AI_PROVIDER_METADATA } from "../types/ai-providers.ts";
 import fs from "fs";
 import path from "path";
-import { logger } from "../utils/logger";
+import { logger } from "../utils/logger.ts";
 
 export interface StoredProviderConfig {
   provider: AIProviderType;
@@ -73,7 +73,7 @@ export class AIProviderConfigService {
     } catch (error) {
       logger.error(
         "[AIProviderConfigService] Failed to load configurations:",
-        error,
+        error
       );
     }
   }
@@ -92,7 +92,7 @@ export class AIProviderConfigService {
     } catch (error) {
       logger.error(
         "[AIProviderConfigService] Failed to save configurations:",
-        error,
+        error
       );
       throw error;
     }
@@ -104,7 +104,7 @@ export class AIProviderConfigService {
   async setProviderConfig(
     provider: AIProviderType,
     apiKey: string,
-    config: Omit<StoredProviderConfig, "provider">,
+    config: Omit<StoredProviderConfig, "provider">
   ): Promise<void> {
     // Store API key in memory only (not persisted to disk)
     this.apiKeys.set(provider, apiKey);
@@ -127,7 +127,7 @@ export class AIProviderConfigService {
    * Get configuration for a provider (including API key)
    */
   async getProviderConfig(
-    provider: AIProviderType,
+    provider: AIProviderType
   ): Promise<AIProviderConfig | null> {
     const config = this.configs.get(provider);
     if (!config) {
@@ -136,7 +136,9 @@ export class AIProviderConfigService {
 
     try {
       const apiKey = this.apiKeys.get(provider);
-      if (!apiKey) return null;
+      if (!apiKey) {
+        return null;
+      }
 
       return {
         ...config,
@@ -145,7 +147,7 @@ export class AIProviderConfigService {
     } catch (error) {
       logger.error(
         `[AIProviderConfigService] Failed to get API key for ${provider}:`,
-        error,
+        error
       );
       return null;
     }
@@ -271,7 +273,7 @@ export class AIProviderConfigService {
    * Test provider connection
    */
   async testProvider(
-    provider: AIProviderType,
+    provider: AIProviderType
   ): Promise<{ success: boolean; error?: string }> {
     const config = await this.getProviderConfig(provider);
     if (!config) {

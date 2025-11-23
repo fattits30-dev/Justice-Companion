@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Database,
@@ -19,7 +19,8 @@ import { Button } from "../../components/ui/Button.tsx";
 import { Badge } from "../../components/ui/Badge.tsx";
 import { useAuth } from "../../contexts/AuthContext.tsx";
 import { ConfirmationModal } from "../../components/ui/ConfirmationModal.tsx";
-import { logger } from "../../utils/logger";
+import { logger } from "../../utils/logger.ts";
+import { toast } from "sonner";
 
 export interface Backup {
   id: number;
@@ -42,20 +43,15 @@ export function BackupSettingsTab() {
   const [isLoading, setIsLoading] = useState(true);
   const [autoBackupEnabled, setAutoBackupEnabled] = useState(false);
   const [frequency, setFrequency] = useState<"daily" | "weekly" | "monthly">(
-    "daily",
+    "daily"
   );
   const [keepCount, setKeepCount] = useState(7);
   const [backupTime, setBackupTime] = useState("03:00");
   const [expandedBackup, setExpandedBackup] = useState<number | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  // Load backups on mount
-  useEffect(() => {
-    loadBackups();
-    loadSettings();
-  }, []);
-
-  const loadBackups = async () => {
+  // Load backups function - used by useEffect and UI callbacks
+  const loadBackups = useCallback(async () => {
     setIsLoading(true);
     try {
       const result = await globalThis.window.justiceAPI.listBackups();
@@ -76,26 +72,32 @@ export function BackupSettingsTab() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const loadSettings = async () => {
-    try {
-      if (!user?.id) {
-        return;
+  // Load backups and settings on mount
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        if (!user?.id) {
+          return;
+        }
+        const result = await globalThis.window.justiceAPI.getBackupSettings(
+          sessionId!
+        );
+        if (result.success && result.data) {
+          setAutoBackupEnabled(result.data.enabled);
+          setFrequency(result.data.frequency);
+          setKeepCount(result.data.keep_count);
+          setBackupTime(result.data.backup_time);
+        }
+      } catch (error) {
+        logger.error("Failed to load settings:", error);
       }
-      const result = await globalThis.window.justiceAPI.getBackupSettings(
-        sessionId!,
-      );
-      if (result.success && result.data) {
-        setAutoBackupEnabled(result.data.enabled);
-        setFrequency(result.data.frequency);
-        setKeepCount(result.data.keep_count);
-        setBackupTime(result.data.backup_time);
-      }
-    } catch (error) {
-      logger.error("Failed to load settings:", error);
-    }
-  };
+    };
+
+    loadBackups();
+    loadSettings();
+  }, [loadBackups, sessionId, user?.id]);
 
   const handleCreateBackup = async () => {
     setIsCreating(true);
@@ -126,12 +128,12 @@ export function BackupSettingsTab() {
       try {
         const result = await globalThis.window.justiceAPI.restoreBackup(
           backup.filename,
-          sessionId!,
+          sessionId!
         );
         if (result.success) {
           showToast(
             "Database restored successfully - Application will reload",
-            "success",
+            "success"
           );
           // Wait a moment for the toast to show, then reload
           setTimeout(() => {
@@ -140,7 +142,7 @@ export function BackupSettingsTab() {
         } else {
           showToast(
             result.error?.message || "Failed to restore backup",
-            "error",
+            "error"
           );
         }
       } catch (error) {
@@ -176,7 +178,7 @@ export function BackupSettingsTab() {
       try {
         const result = await globalThis.window.justiceAPI.deleteBackup(
           backupFilename,
-          sessionId!,
+          sessionId!
         );
         if (result.success) {
           showToast("Backup deleted", "success");
@@ -184,7 +186,7 @@ export function BackupSettingsTab() {
         } else {
           showToast(
             result.error?.message || "Failed to delete backup",
-            "error",
+            "error"
           );
         }
       } catch (error) {
@@ -208,7 +210,7 @@ export function BackupSettingsTab() {
           backup_time: backupTime,
           keep_count: keepCount,
         },
-        sessionId!,
+        sessionId!
       );
 
       if (result.success) {
@@ -281,21 +283,15 @@ export function BackupSettingsTab() {
   }
 
   function showToast(message: string, type: "success" | "error" | "info") {
-    // Simple toast implementation using existing notification system
-    const toast = document.createElement("div");
-    toast.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 text-white ${
-      type === "success"
-        ? "bg-green-600"
-        : type === "error"
-          ? "bg-red-600"
-          : "bg-blue-600"
-    }`;
-    toast.textContent = message;
-    document.body.appendChild(toast);
-
-    setTimeout(() => {
-      toast.remove();
-    }, 3000);
+    if (type === "success") {
+      toast.success(message);
+      return;
+    }
+    if (type === "error") {
+      toast.error(message);
+      return;
+    }
+    toast(message);
   }
 
   const latestBackup = backups[0];
@@ -454,7 +450,7 @@ export function BackupSettingsTab() {
                     value={frequency}
                     onChange={(e) =>
                       setFrequency(
-                        e.target.value as "daily" | "weekly" | "monthly",
+                        e.target.value as "daily" | "weekly" | "monthly"
                       )
                     }
                     className="w-full px-4 py-3 bg-blue-950/50 border border-white/10 rounded-lg text-white focus:outline-hidden focus:ring-2 focus:ring-purple-500 focus:border-transparent"
@@ -592,7 +588,7 @@ export function BackupSettingsTab() {
                   isExpanded={expandedBackup === backup.id}
                   onToggle={() =>
                     setExpandedBackup(
-                      expandedBackup === backup.id ? null : backup.id,
+                      expandedBackup === backup.id ? null : backup.id
                     )
                   }
                   onRestore={() => handleRestore(backup)}

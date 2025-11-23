@@ -1,4 +1,4 @@
-import { logger } from "../utils/logger";
+import { logger } from "../utils/logger.ts";
 
 /**
  * Project Planner - README and codebase analysis
@@ -268,7 +268,7 @@ export class ProjectPlanner {
             }
           }
         }
-      } catch (error) {
+      } catch (_error) {
         // Ignore permission errors
       }
     };

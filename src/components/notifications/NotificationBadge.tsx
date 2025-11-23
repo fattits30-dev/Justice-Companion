@@ -16,7 +16,7 @@
  * ```
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Bell } from "lucide-react";
 import { apiClient } from "../../lib/apiClient.ts";
 
@@ -44,7 +44,7 @@ export const NotificationBadge: React.FC<NotificationBadgeProps> = ({
   /**
    * Fetch unread notification count from API
    */
-  const fetchUnreadCount = async () => {
+  const fetchUnreadCount = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -72,7 +72,7 @@ export const NotificationBadge: React.FC<NotificationBadgeProps> = ({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [sessionId]);
 
   /**
    * Setup polling interval on mount
@@ -86,7 +86,7 @@ export const NotificationBadge: React.FC<NotificationBadgeProps> = ({
 
     // Cleanup on unmount
     return () => clearInterval(interval);
-  }, [pollingInterval, sessionId]);
+  }, [fetchUnreadCount, pollingInterval]);
 
   /**
    * Handle badge click

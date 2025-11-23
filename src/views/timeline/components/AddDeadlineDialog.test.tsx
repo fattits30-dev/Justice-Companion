@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "../../../test-utils/test-utils.tsx";
 import userEvent from "@testing-library/user-event";
-import { AddDeadlineDialog } from "./AddDeadlineDialog";
+import { AddDeadlineDialog } from "./AddDeadlineDialog.tsx";
 
 describe("AddDeadlineDialog", () => {
   const mockOnClose = vi.fn();

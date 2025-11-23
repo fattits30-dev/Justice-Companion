@@ -11,7 +11,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from "react";
-import { apiClient, ApiError } from "../../lib/apiClient";
+import { apiClient, ApiError } from "../../lib/apiClient.ts";
 import type { ConsentRecord, DeleteDataResponse } from "../../lib/types/gdpr";
 
 interface GdprDashboardProps {

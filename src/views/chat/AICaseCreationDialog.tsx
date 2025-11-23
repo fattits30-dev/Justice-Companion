@@ -2,8 +2,6 @@ import { useState, useEffect } from "react";
 import {
   CheckCircle,
   AlertTriangle,
-  Eye,
-  EyeOff,
   FileText,
   Calendar,
   Building,
@@ -96,7 +94,6 @@ export function AICaseCreationDialog({
   suggestedData,
   isCreating = false,
 }: Omit<AICaseCreationDialogProps, "documentFilename">) {
-  const [showSources, setShowSources] = useState(false);
   const [editedData, setEditedData] = useState(() => ({
     title: suggestedData?.title || "",
     caseType: suggestedData?.caseType || "other",
@@ -194,17 +191,6 @@ export function AICaseCreationDialog({
                   how certain the AI is about the extraction. You can review,
                   edit, or override any information before creating the case.
                 </p>
-                <button
-                  onClick={() => setShowSources(!showSources)}
-                  className="mt-2 flex items-center gap-2 text-blue-300 hover:text-blue-200 text-sm"
-                >
-                  {showSources ? (
-                    <EyeOff className="w-4 h-4" />
-                  ) : (
-                    <Eye className="w-4 h-4" />
-                  )}
-                  {showSources ? "Hide" : "Show"} extraction sources
-                </button>
               </div>
             </div>
           </div>
@@ -233,7 +219,7 @@ export function AICaseCreationDialog({
                 className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-hidden focus:ring-2 focus:ring-primary-500"
                 placeholder="Enter case title"
               />
-              {showSources && suggestedData.extractedFrom?.title && (
+              {suggestedData.extractedFrom?.title && (
                 <div className="mt-2 p-3 bg-gray-800/50 rounded border border-gray-600">
                   <p className="text-xs text-gray-400 mb-1">
                     Extracted from: {suggestedData.extractedFrom.title.source}
@@ -301,7 +287,7 @@ export function AICaseCreationDialog({
                 className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-hidden focus:ring-2 focus:ring-primary-500 resize-none"
                 placeholder="Brief description of the case"
               />
-              {showSources && suggestedData.extractedFrom?.description && (
+              {suggestedData.extractedFrom?.description && (
                 <div className="mt-2 p-3 bg-gray-800/50 rounded border border-gray-600">
                   <p className="text-xs text-gray-400 mb-1">
                     Extracted from:{" "}
@@ -344,7 +330,7 @@ export function AICaseCreationDialog({
                   className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-hidden focus:ring-2 focus:ring-primary-500"
                   placeholder="Name of opposing party"
                 />
-                {showSources && suggestedData.extractedFrom?.opposingParty && (
+                {suggestedData.extractedFrom?.opposingParty && (
                   <div className="mt-2 p-2 bg-gray-800/50 rounded border border-gray-600">
                     <p className="text-xs text-gray-400">
                       "{suggestedData.extractedFrom.opposingParty.text}"
@@ -379,7 +365,7 @@ export function AICaseCreationDialog({
                   className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-hidden focus:ring-2 focus:ring-primary-500"
                   placeholder="Case reference number"
                 />
-                {showSources && suggestedData.extractedFrom?.caseNumber && (
+                {suggestedData.extractedFrom?.caseNumber && (
                   <div className="mt-2 p-2 bg-gray-800/50 rounded border border-gray-600">
                     <p className="text-xs text-gray-400">
                       "{suggestedData.extractedFrom.caseNumber.text}"
@@ -414,7 +400,7 @@ export function AICaseCreationDialog({
                   className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-hidden focus:ring-2 focus:ring-primary-500"
                   placeholder="Court or tribunal name"
                 />
-                {showSources && suggestedData.extractedFrom?.courtName && (
+                {suggestedData.extractedFrom?.courtName && (
                   <div className="mt-2 p-2 bg-gray-800/50 rounded border border-gray-600">
                     <p className="text-xs text-gray-400">
                       "{suggestedData.extractedFrom.courtName.text}"
@@ -450,7 +436,7 @@ export function AICaseCreationDialog({
                   }
                   className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-hidden focus:ring-2 focus:ring-primary-500"
                 />
-                {showSources && suggestedData.extractedFrom?.filingDeadline && (
+                {suggestedData.extractedFrom?.filingDeadline && (
                   <div className="mt-2 p-2 bg-gray-800/50 rounded border border-gray-600">
                     <p className="text-xs text-gray-400">
                       "{suggestedData.extractedFrom.filingDeadline.text}"
@@ -486,14 +472,13 @@ export function AICaseCreationDialog({
                   }
                   className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-hidden focus:ring-2 focus:ring-primary-500"
                 />
-                {showSources &&
-                  suggestedData.extractedFrom?.nextHearingDate && (
-                    <div className="mt-2 p-2 bg-gray-800/50 rounded border border-gray-600">
-                      <p className="text-xs text-gray-400">
-                        "{suggestedData.extractedFrom.nextHearingDate.text}"
-                      </p>
-                    </div>
-                  )}
+                {suggestedData.extractedFrom?.nextHearingDate && (
+                  <div className="mt-2 p-2 bg-gray-800/50 rounded border border-gray-600">
+                    <p className="text-xs text-gray-400">
+                      "{suggestedData.extractedFrom.nextHearingDate.text}"
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </div>

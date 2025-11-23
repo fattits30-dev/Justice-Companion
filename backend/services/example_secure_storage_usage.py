@@ -7,11 +7,21 @@ to manage OpenAI, Anthropic, and other provider API keys.
 
 import asyncio
 import logging
+import os
 
-from secure_storage_service import (
-    SecureStorageService,
-    secure_storage,
-)
+from secure_storage_service import SecureStorageService, secure_storage
+
+
+def _example_secret(env_var: str) -> str:
+    """Return the environment-provided secret or raise if missing."""
+
+    value = os.getenv(env_var)
+    if value:
+        return value
+    raise RuntimeError(
+        f"Set environment variable {env_var} before running this example."
+    )
+
 
 # Configure logging
 logging.basicConfig(
@@ -38,12 +48,16 @@ async def example_basic_usage():
 
     # Store an OpenAI API key
     print("Storing OpenAI API key...")
-    await service.set_api_key("openai_api_key", "sk-test-1234567890")
+    await service.set_api_key(
+        "openai_api_key", _example_secret("OPENAI_API_KEY")
+    )
     print("✓ API key stored securely\n")
 
     # Retrieve the API key
     print("Retrieving OpenAI API key...")
     api_key = await service.get_api_key("openai_api_key")
+    if not api_key:
+        raise RuntimeError("Expected OpenAI API key to exist in secure storage")
     print(f"✓ Retrieved: {api_key[:10]}... (truncated for security)\n")
 
     # Check if key exists
@@ -71,10 +85,12 @@ async def example_multiple_providers():
 
     # Store API keys for different providers
     providers = {
-        "openai_api_key": "sk-test-openai-1234567890",
-        "anthropic_api_key": "sk-ant-test-1234567890",
-        "huggingface_api_key": "hf_test1234567890",
-        "cohere_api_key": "co_test1234567890",
+        "openai_api_key": _example_secret("OPENAI_API_KEY"),
+        "anthropic_api_key": _example_secret("ANTHROPIC_API_KEY"),
+        "huggingface_api_key": _example_secret(
+            "HUGGINGFACE_API_KEY"
+        ),
+        "cohere_api_key": _example_secret("COHERE_API_KEY"),
     }
 
     print("Storing API keys for multiple providers...\n")
@@ -139,9 +155,11 @@ async def example_fastapi_integration():
 
     # Simulate storing user's API key (e.g., during settings update)
     print("User updates their OpenAI API key in settings...")
-    user_id = "user_123"
+    user_id = os.getenv("EXAMPLE_USER_ID", "demo-user")
     key_name = f"user_{user_id}_openai_api_key"
-    await secure_storage.set_api_key(key_name, "sk-user-key-1234567890")
+    await secure_storage.set_api_key(
+        key_name, _example_secret("USER_OPENAI_API_KEY")
+    )
     print(f"✓ Stored API key for {key_name}\n")
 
     # Simulate retrieving API key for a chat request
@@ -201,12 +219,8 @@ async def example_convenience_functions():
     print("EXAMPLE 6: Convenience Functions")
     print("=" * 60 + "\n")
 
-    from secure_storage_service import (
-        set_api_key,
-        get_api_key,
-        delete_api_key,
-        has_api_key,
-    )
+    from secure_storage_service import (delete_api_key, get_api_key,
+                                        has_api_key, set_api_key)
 
     # Use module-level convenience functions
     print("Using convenience functions (no need to get instance)...\n")

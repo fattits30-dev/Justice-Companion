@@ -1,7 +1,7 @@
 import { injectable } from "inversify";
 import { LRUCache } from "lru-cache";
 import { errorLogger } from "../utils/error-logger.ts";
-import { logger } from "../utils/logger";
+import { logger } from "../utils/logger.ts";
 
 /**
  * Cache statistics for monitoring and debugging

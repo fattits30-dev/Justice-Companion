@@ -338,7 +338,7 @@ export class ModelDownloadService {
           reject(error);
         });
 
-      file.on("error", (error) => {
+      file.on("error", (error: Error) => {
         fs.unlinkSync(destPath);
         reject(error);
       });
@@ -353,7 +353,7 @@ export class ModelDownloadService {
       const hash = crypto.createHash("sha256");
       const stream = fs.createReadStream(filePath);
 
-      stream.on("data", (chunk) => {
+      stream.on("data", (chunk: Buffer) => {
         hash.update(chunk);
       });
 
@@ -361,7 +361,7 @@ export class ModelDownloadService {
         resolve(hash.digest("hex"));
       });
 
-      stream.on("error", (error) => {
+      stream.on("error", (error: Error) => {
         reject(error);
       });
     });

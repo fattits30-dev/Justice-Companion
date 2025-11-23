@@ -15,21 +15,28 @@ License: MIT
 """
 
 import asyncio
+import os
 from pathlib import Path
 
-from backend.services.python_ai_client import (
-    PythonAIClientService,
-    create_python_ai_client_service,
-    DocumentAnalysisRequest,
-    ImageAnalysisRequest,
-)
-from backend.services.unified_ai_service import (
-    AIProviderConfig,
-    AIProviderType,
-    ParsedDocument,
-    UserProfile,
-)
 from fastapi import HTTPException
+
+from backend.services.python_ai_client import (DocumentAnalysisRequest,
+                                               ImageAnalysisRequest,
+                                               PythonAIClientService,
+                                               create_python_ai_client_service)
+from backend.services.unified_ai_service import (AIProviderConfig,
+                                                 ParsedDocument, UserProfile)
+
+# Shared helper --------------------------------------------------------------
+
+
+def _example_api_key(env_var: str) -> str:
+    value = os.getenv(env_var)
+    if value:
+        return value
+    raise RuntimeError(
+        f"Environment variable {env_var} is required for this example."
+    )
 
 
 # ============================================================================
@@ -46,7 +53,7 @@ async def example_basic_initialization():
     # Method 1: Using factory function (recommended)
     service = create_python_ai_client_service(
         provider="openai",
-        api_key="sk-your-api-key-here",
+        api_key=_example_api_key("OPENAI_API_KEY"),
         model="gpt-4-turbo",
         timeout=120,
         max_retries=3,
@@ -54,16 +61,18 @@ async def example_basic_initialization():
 
     # Method 2: Using constructor directly
     config = AIProviderConfig(
-        provider=AIProviderType.OPENAI,
-        api_key="sk-your-api-key-here",
+        provider="openai",
+        api_key=_example_api_key("OPENAI_API_KEY"),
         model="gpt-4-turbo",
+        endpoint=None,
         temperature=0.7,
         max_tokens=4096,
+        top_p=0.9,
     )
 
     service = PythonAIClientService(ai_config=config, timeout=120, max_retries=3, retry_delay=1000)
 
-    print(f"✓ Service initialized with {config.provider.value}/{config.model}")
+    print(f"✓ Service initialized with {config.provider}/{config.model}")
 
     return service
 
@@ -85,7 +94,7 @@ async def example_health_checks(service: PythonAIClientService):
 
     # Get detailed health status
     health = await service.get_health()
-    print(f"\nHealth Status:")
+    print("\nHealth Status:")
     print(f"  Status: {health.status}")
     print(f"  Service: {health.service}")
     print(f"  Version: {health.version}")
@@ -95,7 +104,7 @@ async def example_health_checks(service: PythonAIClientService):
 
     # Get service information
     info = await service.get_info()
-    print(f"\nService Info:")
+    print("\nService Info:")
     print(f"  API Version: {info.api_version}")
     print(f"  Model Provider: {info.model_provider}")
     print(f"  Available Agents: {', '.join(info.available_agents)}")
@@ -252,7 +261,8 @@ async def example_image_ocr_analysis(service: PythonAIClientService):
         print(f"\n{'─'*60}")
         print("OCR RESULTS")
         print("─" * 60)
-        ocr_metadata = result.metadata.get("ocr", {})
+        metadata = result.metadata or {}
+        ocr_metadata = metadata.get("ocr", {})
         print(f"Confidence: {ocr_metadata.get('confidence', 0):.2%}")
         print(f"Words Extracted: {ocr_metadata.get('word_count', 0)}")
         print(f"Language: {ocr_metadata.get('language', 'unknown')}")
@@ -302,7 +312,11 @@ async def example_error_handling(service: PythonAIClientService):
     print("Scenario 1: Invalid file path")
     try:
         request = ImageAnalysisRequest(
-            image_path="/nonexistent/file.jpg", user_name="Test User", session_id="test-session"
+            image_path="/nonexistent/file.jpg",
+            user_name="Test User",
+            session_id="test-session",
+            user_email=None,
+            user_question=None,
         )
         print("❌ Should have raised ValueError")
     except ValueError as e:
@@ -315,6 +329,7 @@ async def example_error_handling(service: PythonAIClientService):
             document=ParsedDocument(filename="empty.txt", text="", word_count=0, file_type="txt"),
             user_profile=UserProfile(name="Test User"),
             session_id="test-session",
+            user_question=None,
         )
 
         result = await service.analyze_document(request)
@@ -344,7 +359,10 @@ async def example_multi_provider():
     # OpenAI (GPT-4)
     print("Provider 1: OpenAI GPT-4")
     openai_service = create_python_ai_client_service(
-        provider="openai", api_key="sk-your-openai-key", model="gpt-4-turbo", temperature=0.7
+        provider="openai",
+        api_key=_example_api_key("OPENAI_API_KEY"),
+        model="gpt-4-turbo",
+        temperature=0.7
     )
     info = await openai_service.get_info()
     print(f"  Model Provider: {info.model_provider}")
@@ -354,7 +372,7 @@ async def example_multi_provider():
     print("\nProvider 2: Anthropic Claude")
     anthropic_service = create_python_ai_client_service(
         provider="anthropic",
-        api_key="sk-ant-your-anthropic-key",
+        api_key=_example_api_key("ANTHROPIC_API_KEY"),
         model="claude-3-5-sonnet-20241022",
         temperature=0.7,
     )
@@ -365,13 +383,13 @@ async def example_multi_provider():
     print("\nProvider 3: HuggingFace Llama (Privacy-first)")
     huggingface_service = create_python_ai_client_service(
         provider="huggingface",
-        api_key="hf_your-huggingface-key",
+        api_key=_example_api_key("HUGGINGFACE_API_KEY"),
         model="meta-llama/Meta-Llama-3.1-70B-Instruct",
         temperature=0.3,
     )
     info = await huggingface_service.get_info()
     print(f"  Model Provider: {info.model_provider}")
-    print(f"  Cost: ~£9/month (privacy-first option)")
+    print("  Cost: ~£9/month (privacy-first option)")
 
 
 # ============================================================================

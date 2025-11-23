@@ -17,7 +17,7 @@
 import axios, { AxiosInstance, AxiosError } from "axios";
 import FormData from "form-data";
 import * as fs from "fs";
-import { logger } from "../utils/logger";
+import { logger } from "../utils/logger.ts";
 
 // Request/Response types matching Python service
 export interface ParsedDocument {

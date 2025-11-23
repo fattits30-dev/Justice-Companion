@@ -3,9 +3,12 @@ AI Configuration routes for Justice Companion.
 Migrated from electron/ipc-handlers/ai-config.ts
 
 Routes:
-- GET /ai/config - Get all AI provider configurations for user (without API keys)
-- GET /ai/config/active - Get active AI provider configuration (with decrypted API key)
-- GET /ai/config/{provider} - Get specific provider configuration (with decrypted API key)
+- GET /ai/config - Get all AI provider configurations for user
+  (without API keys)
+- GET /ai/config/active - Get active AI provider configuration
+  (with decrypted API key)
+- GET /ai/config/{provider} - Get specific provider configuration
+  (with decrypted API key)
 - POST /ai/config/{provider} - Create/update provider configuration
 - DELETE /ai/config/{provider} - Delete provider configuration
 - PUT /ai/config/{provider}/activate - Set provider as active
@@ -17,7 +20,8 @@ Routes:
 Security:
 - ALL API keys encrypted at rest with AES-256-GCM
 - User isolation: users can only access their own configurations
-- Audit logging for all configuration changes (CREATE, UPDATE, DELETE)
+- Audit logging for all configuration changes
+  (CREATE, UPDATE, DELETE)
 - Rate limiting for configuration operations (prevent abuse)
 - API keys NEVER returned in list responses (masked values only)
 - Comprehensive input validation with Pydantic
@@ -29,23 +33,21 @@ REFACTORED: Now uses service layer instead of direct database queries
 - AuthenticationService for session validation
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, Field, field_validator
-from typing import Optional, List, Dict
-from sqlalchemy.orm import Session
 import os
 import re
+from typing import Dict, List, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel, Field, field_validator
+from sqlalchemy.orm import Session
 
 from backend.models.base import get_db
-from backend.services.auth_service import AuthenticationService
 from backend.routes.auth import get_current_user
 from backend.services.ai_provider_config_service import (
-    AIProviderConfigService,
-    AIProviderType,
-    AIProviderConfigInput,
-)
-from backend.services.encryption_service import EncryptionService
+    AIProviderConfigInput, AIProviderConfigService, AIProviderType)
 from backend.services.audit_logger import AuditLogger
+from backend.services.auth_service import AuthenticationService
+from backend.services.encryption_service import EncryptionService
 
 router = APIRouter(prefix="/ai", tags=["ai-configuration"])
 
@@ -66,7 +68,7 @@ class ConfigureProviderRequest(BaseModel):
         2048, ge=1, le=100000, description="Maximum tokens to generate"
     )
     top_p: Optional[float] = Field(1.0, ge=0.0, le=1.0, description="Nucleus sampling top_p value")
-    enabled: bool = Field(True, description="Whether this configuration is enabled")
+    enabled: bool = Field(True, description="Whether this provider is enabled")
 
     @field_validator("api_key")
     @classmethod

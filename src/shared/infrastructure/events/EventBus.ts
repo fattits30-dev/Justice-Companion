@@ -3,7 +3,7 @@ import type { IEventBus } from "../di/service-interfaces.ts";
 import type { DomainEvent } from "./DomainEvent.ts";
 import { injectable, inject } from "inversify";
 import { TYPES } from "../di/types.ts";
-import { logger } from "../../../utils/logger";
+import { logger } from "../../../utils/logger.ts";
 
 /**
  * Event Bus Implementation

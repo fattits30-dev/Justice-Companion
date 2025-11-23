@@ -27,13 +27,13 @@ Usage:
 import asyncio
 import logging
 import time
-import xml.etree.ElementTree as ET
-from typing import List, Dict, Any, Optional, Set
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
-from dataclasses import dataclass, field, asdict
 from enum import Enum
+from typing import Any, Dict, List, Optional, Set
 
 import httpx
+from defusedxml import ElementTree as ET
 from fastapi import HTTPException
 
 # Configure logger

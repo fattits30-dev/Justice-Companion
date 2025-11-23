@@ -14,7 +14,7 @@
  * @module DocumentParser
  */
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   FileText,
@@ -47,6 +47,36 @@ export function DocumentParser({ evidence, onClose }: DocumentParserProps) {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [copied, setCopied] = useState(false);
+
+  const safeSearchQuery = searchQuery.trim().slice(0, 200);
+
+  const highlightData = useMemo(() => {
+    if (!parsed?.text || !safeSearchQuery) {
+      return {
+        segments: null as null | Array<{ text: string; isMatch: boolean }>,
+        matchCount: 0,
+      };
+    }
+
+    const escaped = safeSearchQuery.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const regex = new RegExp(`(${escaped})`, "gi");
+    let matchCount = 0;
+    const segments = parsed.text.split(regex).map((segment, index) => {
+      const isMatch = index % 2 === 1 && segment.length > 0;
+      if (isMatch) {
+        matchCount += 1;
+      }
+      return { text: segment, isMatch };
+    });
+
+    return { segments, matchCount };
+  }, [parsed?.text, safeSearchQuery]);
+
+  const buildExportFilename = (suffix: string) => {
+    const sanitizedTitle =
+      evidence.title.replace(/[\\/:*?"<>|]/g, "_") || "document";
+    return `${sanitizedTitle}${suffix}`;
+  };
 
   const handleParse = async () => {
     try {
@@ -85,19 +115,13 @@ export function DocumentParser({ evidence, onClose }: DocumentParserProps) {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `${evidence.title}-extracted.txt`;
-    document.body.appendChild(link);
+    link.download = `${buildExportFilename("-extracted")}.txt`;
+    link.rel = "noopener";
     link.click();
-    document.body.removeChild(link);
+    link.remove();
     URL.revokeObjectURL(url);
   };
-
-  const highlightedText = searchQuery
-    ? parsed?.text.replace(
-        new RegExp(searchQuery, "gi"),
-        (match) => `<mark class="bg-yellow-400 text-black">${match}</mark>`,
-      )
-    : parsed?.text;
+  const highlightedSegments = highlightData.segments;
 
   return (
     <Card variant="glass" className="p-6">
@@ -204,7 +228,7 @@ export function DocumentParser({ evidence, onClose }: DocumentParserProps) {
                   </dt>
                   <dd className="text-white font-medium">
                     {new Date(
-                      parsed.metadata.creationDate,
+                      parsed.metadata.creationDate
                     ).toLocaleDateString()}
                   </dd>
                 </div>
@@ -245,25 +269,31 @@ export function DocumentParser({ evidence, onClose }: DocumentParserProps) {
 
           {/* Extracted Text */}
           <div className="p-4 bg-gray-900/50 rounded-lg border border-white/10 max-h-[600px] overflow-y-auto">
-            <div
-              className="text-sm text-white/90 leading-relaxed whitespace-pre-wrap font-mono"
-              dangerouslySetInnerHTML={{
-                __html: highlightedText || "",
-              }}
-            />
+            <div className="text-sm text-white/90 leading-relaxed whitespace-pre-wrap font-mono">
+              {highlightedSegments && safeSearchQuery
+                ? highlightedSegments.map((segment, index) =>
+                    segment.isMatch ? (
+                      <mark
+                        key={`${segment.text}-${index}`}
+                        className="bg-yellow-400 text-black rounded px-0.5"
+                      >
+                        {segment.text}
+                      </mark>
+                    ) : (
+                      <span key={`${segment.text}-${index}`}>
+                        {segment.text}
+                      </span>
+                    )
+                  )
+                : parsed.text}
+            </div>
           </div>
 
           {/* Statistics */}
           <div className="mt-4 flex items-center justify-between text-xs text-white/60">
             <span>{parsed.text.length.toLocaleString()} characters</span>
-            {searchQuery && (
-              <span>
-                {
-                  (parsed.text.match(new RegExp(searchQuery, "gi")) || [])
-                    .length
-                }{" "}
-                matches found
-              </span>
+            {safeSearchQuery && (
+              <span>{highlightData.matchCount} matches found</span>
             )}
           </div>
         </motion.div>

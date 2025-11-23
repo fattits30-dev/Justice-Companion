@@ -24,7 +24,7 @@ REFACTORED: Now uses service layer instead of direct database queries
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional, Dict, Any
 from sqlalchemy.orm import Session
 import os
@@ -66,7 +66,7 @@ class UpdateProfileRequest(BaseModel):
     )
     phone: Optional[str] = Field(None, max_length=20, description="User's phone number")
 
-    @validator("name")
+    @field_validator("name")
     def validate_name(cls, v):
         if v is not None:
             v = v.strip()
@@ -79,7 +79,7 @@ class UpdateProfileRequest(BaseModel):
                 raise ValueError("Name must be less than 200 characters")
         return v
 
-    @validator("email")
+    @field_validator("email")
     def validate_email(cls, v):
         if v is not None:
             v = v.strip()
@@ -118,7 +118,7 @@ class UpdateProfileRequest(BaseModel):
 
         return v
 
-    @validator("avatarUrl")
+    @field_validator("avatarUrl")
     def validate_avatar_url(cls, v):
         if v is not None:
             v = v.strip()
@@ -146,7 +146,7 @@ class UpdateProfileRequest(BaseModel):
 
         return v
 
-    @validator("firstName", "lastName")
+    @field_validator("firstName", "lastName")
     def validate_names(cls, v):
         if v is not None:
             v = v.strip()
@@ -157,7 +157,7 @@ class UpdateProfileRequest(BaseModel):
                 raise ValueError("Name can only contain letters, spaces, hyphens, and apostrophes")
         return v
 
-    @validator("phone")
+    @field_validator("phone")
     def validate_phone(cls, v):
         if v is not None:
             v = v.strip()
@@ -177,7 +177,7 @@ class ChangePasswordRequest(BaseModel):
     currentPassword: str = Field(..., min_length=12, description="Current password")
     newPassword: str = Field(..., min_length=12, description="New password")
 
-    @validator("newPassword")
+    @field_validator("newPassword")
     def validate_password_strength(cls, v):
         """Validate password meets OWASP requirements."""
         if len(v) < 12:

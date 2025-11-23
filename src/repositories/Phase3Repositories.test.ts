@@ -4,12 +4,12 @@
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import Database from "better-sqlite3-multiple-ciphers";
-import { UserProfileRepository } from "./UserProfileRepository";
-import { LegalIssuesRepository } from "./LegalIssuesRepository";
-import { TimelineRepository } from "./TimelineRepository";
+import { UserProfileRepository } from "./UserProfileRepository.ts";
+import { LegalIssuesRepository } from "./LegalIssuesRepository.ts";
+import { TimelineRepository } from "./TimelineRepository.ts";
 import { EncryptionService } from "../services/EncryptionService.ts";
 import { AuditLogger } from "../services/AuditLogger.ts";
-import * as databaseModule from "../db/database";
+import * as databaseModule from "../db/database.ts";
 
 let db: Database.Database;
 let encryptionService: EncryptionService;

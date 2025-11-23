@@ -1,38 +1,66 @@
-"""
-Example usage of AIProviderConfigService
-Demonstrates real-world usage patterns for managing AI provider configurations.
-"""
+"""Example usage scenarios for AIProviderConfigService."""
+
+from __future__ import annotations
 
 import asyncio
 import base64
 import os
+from typing import Any, Dict, cast
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from backend.models.base import Base
 from backend.models.user import User
 from backend.services.ai_provider_config_service import (
-    AIProviderConfigService,
-    AIProviderType,
-    AIProviderConfigInput,
-)
+    AIProviderConfigInput, AIProviderConfigService, AIProviderType)
 from backend.services.encryption_service import EncryptionService
 
 
-async def main():
-    """Demonstrate AI provider configuration service usage."""
+def _get_example_secret(provider: str) -> str:
+    """Fetch provider-specific API keys from the environment."""
 
-    # Setup database (in-memory for demo)
+    sanitized = provider.lower().replace(" ", "_")
+    env_candidates = [
+        f"EXAMPLE_{provider.upper()}_API_KEY",
+        f"{provider.upper()}_API_KEY",
+    ]
+    for env_var in env_candidates:
+        env_value = os.getenv(env_var)
+        if env_value:
+            return env_value
+    joined = ", ".join(env_candidates)
+    raise RuntimeError(
+        f"Set one of {joined} before running the {sanitized} provider example."
+    )
+
+
+def _metadata_to_dict(metadata: Any) -> Dict[str, Any]:
+    """Normalize metadata objects to dictionaries for safe printing."""
+
+    if isinstance(metadata, dict):
+        return metadata
+    if hasattr(metadata, "model_dump"):
+        return metadata.model_dump()  # type: ignore[call-arg]
+    return {
+        "name": getattr(metadata, "name", "unknown"),
+        "default_model": getattr(metadata, "default_model", "n/a"),
+        "max_context_tokens": getattr(metadata, "max_context_tokens", 0),
+        "supports_streaming": getattr(metadata, "supports_streaming", False),
+    }
+
+
+async def main() -> None:
+    """Demonstrate AI provider configuration workflows."""
+
     engine = create_engine("sqlite:///:memory:")
     Base.metadata.create_all(bind=engine)
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     db = SessionLocal()
 
-    # Setup encryption service
     encryption_key = base64.b64encode(os.urandom(32)).decode("utf-8")
     encryption_service = EncryptionService(encryption_key)
 
-    # Create test user
     user = User(
         username="demo_user",
         email="demo@example.com",
@@ -45,76 +73,79 @@ async def main():
     db.commit()
     db.refresh(user)
 
-    # Create service
+    user_id_attr = user.id
+    if user_id_attr is None:
+        raise RuntimeError("Demo user did not receive an ID")
+    user_id = cast(int, user_id_attr)
+
     service = AIProviderConfigService(
-        db=db, encryption_service=encryption_service, audit_logger=None
+        db=db,
+        encryption_service=encryption_service,
+        audit_logger=None,
     )
 
     print("=" * 80)
     print("AI Provider Configuration Service - Usage Examples")
     print("=" * 80)
 
-    # Example 1: List all supported providers
     print("\n1. List All Supported Providers")
     print("-" * 80)
     all_providers = service.list_all_providers_metadata()
     for provider_key, metadata in all_providers.items():
-        print(f"  {provider_key}: {metadata['name']}")
-        print(f"    Default Model: {metadata['default_model']}")
-        print(f"    Max Tokens: {metadata['max_context_tokens']:,}")
-        print(f"    Streaming: {metadata['supports_streaming']}")
+        info = _metadata_to_dict(metadata)
+        print(f"  {provider_key}: {info['name']}")
+        print(f"    Default Model: {info['default_model']}")
+        print(f"    Max Tokens: {info['max_context_tokens']:,}")
+        print(f"    Streaming: {info['supports_streaming']}")
         print()
 
-    # Example 2: Configure OpenAI provider
     print("\n2. Configure OpenAI Provider")
     print("-" * 80)
     openai_config = AIProviderConfigInput(
         provider=AIProviderType.OPENAI,
-        api_key="sk-demo-openai-key-12345",
+        api_key=_get_example_secret("openai"),
         model="gpt-4-turbo",
         temperature=0.7,
         max_tokens=4000,
+        top_p=0.9,
     )
-
-    result = await service.set_provider_config(user_id=user.id, config=openai_config)
-    print(f"✓ OpenAI configured:")
+    result = await service.set_provider_config(user_id=user_id, config=openai_config)
+    print("✓ OpenAI configured:")
     print(f"  Model: {result.model}")
     print(f"  Temperature: {result.temperature}")
     print(f"  Max Tokens: {result.max_tokens}")
     print(f"  Active: {result.is_active}")
 
-    # Example 3: Configure Anthropic provider
     print("\n3. Configure Anthropic Provider")
     print("-" * 80)
     anthropic_config = AIProviderConfigInput(
         provider=AIProviderType.ANTHROPIC,
-        api_key="sk-ant-demo-key-67890",
+        api_key=_get_example_secret("anthropic"),
         model="claude-3-5-sonnet-20241022",
         temperature=0.5,
         max_tokens=8000,
+        top_p=0.8,
     )
-
-    result = await service.set_provider_config(user_id=user.id, config=anthropic_config)
-    print(f"✓ Anthropic configured:")
+    result = await service.set_provider_config(user_id=user_id, config=anthropic_config)
+    print("✓ Anthropic configured:")
     print(f"  Model: {result.model}")
     print(f"  Temperature: {result.temperature}")
     print(f"  Max Tokens: {result.max_tokens}")
     print(f"  Active: {result.is_active}")
 
-    # Example 4: List all configured providers
     print("\n4. List All Configured Providers")
     print("-" * 80)
-    configured = service.list_provider_configs(user_id=user.id)
+    configured = service.list_provider_configs(user_id=user_id)
     for config in configured:
         print(f"  {config.provider}:")
         print(f"    Model: {config.model}")
         print(f"    Active: {'✓' if config.is_active else '✗'}")
-        print(f"    Created: {config.created_at.strftime('%Y-%m-%d %H:%M:%S')}")
+        created = config.created_at.strftime("%Y-%m-%d %H:%M:%S")
+        print(f"    Created: {created}")
 
-    # Example 5: Get active provider configuration (with decrypted API key)
     print("\n5. Get Active Provider Configuration")
     print("-" * 80)
-    active_config = await service.get_active_provider_config(user_id=user.id)
+    active_config = await service.get_active_provider_config(user_id=user_id)
     if active_config:
         print(f"  Provider: {active_config.provider}")
         print(f"  Model: {active_config.model}")
@@ -123,88 +154,91 @@ async def main():
     else:
         print("  No active provider")
 
-    # Example 6: Switch active provider
     print("\n6. Switch Active Provider to Anthropic")
     print("-" * 80)
-    await service.set_active_provider(user_id=user.id, provider=AIProviderType.ANTHROPIC)
-    active_provider = service.get_active_provider(user_id=user.id)
-    print(f"✓ Active provider changed to: {active_provider.value}")
+    await service.set_active_provider(user_id=user_id, provider=AIProviderType.ANTHROPIC)
+    active_provider = service.get_active_provider(user_id=user_id)
+    if active_provider:
+        print(f"✓ Active provider changed to: {active_provider.value}")
 
-    # Example 7: Get specific provider configuration
     print("\n7. Get Specific Provider Configuration")
     print("-" * 80)
-    anthropic_config = await service.get_provider_config(
-        user_id=user.id, provider=AIProviderType.ANTHROPIC
+    anthropic_stored = await service.get_provider_config(
+        user_id=user_id,
+        provider=AIProviderType.ANTHROPIC,
     )
-    if anthropic_config:
-        print(f"  Provider: {anthropic_config.provider}")
-        print(f"  Model: {anthropic_config.model}")
-        print(f"  API Key: {anthropic_config.api_key[:15]}... (decrypted)")
-        print(f"  Endpoint: {anthropic_config.endpoint or 'Default'}")
-        print(f"  Temperature: {anthropic_config.temperature}")
-        print(f"  Max Tokens: {anthropic_config.max_tokens}")
+    if anthropic_stored:
+        print(f"  Provider: {anthropic_stored.provider}")
+        print(f"  Model: {anthropic_stored.model}")
+        print(f"  API Key: {anthropic_stored.api_key[:15]}... (decrypted)")
+        endpoint = anthropic_stored.endpoint or "Default"
+        print(f"  Endpoint: {endpoint}")
+        print(f"  Temperature: {anthropic_stored.temperature}")
+        print(f"  Max Tokens: {anthropic_stored.max_tokens}")
 
-    # Example 8: Check if provider is configured
     print("\n8. Check Provider Configuration Status")
     print("-" * 80)
-    providers_to_check = [
+    for provider in [
         AIProviderType.OPENAI,
         AIProviderType.ANTHROPIC,
         AIProviderType.GOOGLE,
         AIProviderType.HUGGINGFACE,
-    ]
-    for provider in providers_to_check:
-        is_configured = service.is_provider_configured(user_id=user.id, provider=provider)
+    ]:
+        is_configured = service.is_provider_configured(
+            user_id=user_id,
+            provider=provider,
+        )
         status = "✓ Configured" if is_configured else "✗ Not configured"
         print(f"  {provider.value}: {status}")
 
-    # Example 9: Update existing provider configuration
     print("\n9. Update OpenAI Configuration")
     print("-" * 80)
     updated_openai_config = AIProviderConfigInput(
         provider=AIProviderType.OPENAI,
-        api_key="sk-new-openai-key-updated",
-        model="gpt-4o",  # Updated model
-        temperature=0.9,  # Updated temperature
-        max_tokens=8000,  # Updated max tokens
+        api_key=_get_example_secret("openai"),
+        model="gpt-4o",
+        temperature=0.9,
+        max_tokens=8000,
+        top_p=0.85,
     )
-    result = await service.set_provider_config(user_id=user.id, config=updated_openai_config)
-    print(f"✓ OpenAI configuration updated:")
+    result = await service.set_provider_config(
+        user_id=user_id,
+        config=updated_openai_config,
+    )
+    print("✓ OpenAI configuration updated:")
     print(f"  Model: {result.model}")
     print(f"  Temperature: {result.temperature}")
     print(f"  Max Tokens: {result.max_tokens}")
 
-    # Example 10: Validate configuration
     print("\n10. Validate Provider Configuration")
     print("-" * 80)
-
-    # Valid configuration
+    google_key = _get_example_secret("google")
     valid_config = AIProviderConfigInput(
         provider=AIProviderType.GOOGLE,
-        api_key="valid-key",
+        api_key=google_key,
         model="gemini-2.0-flash-exp",
         temperature=0.7,
         max_tokens=4000,
+        top_p=0.9,
     )
     validation = service.validate_config(valid_config)
     print(f"  Valid config: {validation.valid}")
 
-    # Invalid configuration (temperature out of range)
     invalid_config = AIProviderConfigInput(
         provider=AIProviderType.GOOGLE,
-        api_key="valid-key",
+        api_key=google_key,
         model="gemini-2.0-flash-exp",
-        temperature=3.0,  # Invalid!
-        max_tokens=200000,  # Invalid!
+        temperature=3.0,
+        max_tokens=200000,
+        top_p=1.2,
     )
     validation = service.validate_config(invalid_config)
     print(f"  Invalid config: {validation.valid}")
     if not validation.valid:
-        print(f"  Errors:")
+        print("  Errors:")
         for error in validation.errors:
             print(f"    - {error}")
 
-    # Example 11: Get provider metadata
     print("\n11. Get Provider Metadata")
     print("-" * 80)
     metadata = service.get_provider_metadata(AIProviderType.ANTHROPIC)
@@ -214,81 +248,95 @@ async def main():
     print(f"  Max Context Tokens: {metadata.max_context_tokens:,}")
     print(f"  Supports Streaming: {metadata.supports_streaming}")
     print(f"  Available Models ({len(metadata.available_models)}):")
-    for model in metadata.available_models[:5]:  # Show first 5
-        print(f"    - {model}")
-    if len(metadata.available_models) > 5:
-        print(f"    ... and {len(metadata.available_models) - 5} more")
+    for model_name in metadata.available_models[:5]:
+        print(f"    - {model_name}")
+    remaining = len(metadata.available_models) - 5
+    if remaining > 0:
+        print(f"    ... and {remaining} more")
 
-    # Example 12: Test provider connection
     print("\n12. Test Provider Connection")
     print("-" * 80)
-    test_result = await service.test_provider(user_id=user.id, provider=AIProviderType.ANTHROPIC)
-    print(f"  Test Result: {'✓ Success' if test_result.success else '✗ Failed'}")
+    test_result = await service.test_provider(
+        user_id=user_id,
+        provider=AIProviderType.ANTHROPIC,
+    )
+    outcome = "✓ Success" if test_result.success else "✗ Failed"
+    print(f"  Test Result: {outcome}")
     if test_result.error:
         print(f"  Error: {test_result.error}")
 
-    # Example 13: Remove provider configuration
     print("\n13. Remove OpenAI Configuration")
     print("-" * 80)
-    await service.remove_provider_config(user_id=user.id, provider=AIProviderType.OPENAI)
-    print(f"✓ OpenAI configuration removed")
-
-    # Verify removal
-    is_configured = service.is_provider_configured(user_id=user.id, provider=AIProviderType.OPENAI)
+    await service.remove_provider_config(
+        user_id=user_id,
+        provider=AIProviderType.OPENAI,
+    )
+    print("✓ OpenAI configuration removed")
+    is_configured = service.is_provider_configured(
+        user_id=user_id,
+        provider=AIProviderType.OPENAI,
+    )
     print(f"  OpenAI configured: {'Yes' if is_configured else 'No'}")
 
-    # Check if another provider became active
-    active_provider = service.get_active_provider(user_id=user.id)
-    if active_provider:
-        print(f"  New active provider: {active_provider.value}")
+    new_active = service.get_active_provider(user_id=user_id)
+    if new_active:
+        print(f"  New active provider: {new_active.value}")
 
-    # Example 14: Configure multiple providers
     print("\n14. Configure Multiple Providers")
     print("-" * 80)
-
     providers_config = [
         AIProviderConfigInput(
-            provider=AIProviderType.GOOGLE, api_key="google-key-123", model="gemini-2.0-flash-exp"
+            provider=AIProviderType.GOOGLE,
+            api_key=_get_example_secret("google"),
+            model="gemini-2.0-flash-exp",
+            temperature=0.5,
+            max_tokens=4000,
+            top_p=0.9,
         ),
         AIProviderConfigInput(
             provider=AIProviderType.HUGGINGFACE,
-            api_key="hf-key-456",
+            api_key=_get_example_secret("huggingface"),
             model="meta-llama/Meta-Llama-3.1-70B-Instruct",
+            temperature=0.2,
+            max_tokens=2000,
+            top_p=0.8,
         ),
         AIProviderConfigInput(
-            provider=AIProviderType.MISTRAL, api_key="mistral-key-789", model="mistral-large-latest"
+            provider=AIProviderType.MISTRAL,
+            api_key=_get_example_secret("mistral"),
+            model="mistral-large-latest",
+            temperature=0.3,
+            max_tokens=4000,
+            top_p=0.85,
         ),
     ]
-
     for config in providers_config:
-        result = await service.set_provider_config(user_id=user.id, config=config)
+        result = await service.set_provider_config(user_id=user_id, config=config)
         print(f"✓ {config.provider.value} configured with model {result.model}")
 
-    # List all configured
-    configured = service.get_configured_providers(user_id=user.id)
+    configured = service.get_configured_providers(user_id=user_id)
     print(f"\nTotal configured providers: {len(configured)}")
     for provider in configured:
         print(f"  - {provider.value}")
 
-    # Example 15: Final summary
     print("\n15. Final Configuration Summary")
     print("-" * 80)
-    all_configs = service.list_provider_configs(user_id=user.id)
+    all_configs = service.list_provider_configs(user_id=user_id)
     print(f"Total Providers: {len(all_configs)}")
     print()
     for config in all_configs:
         active_marker = "★" if config.is_active else " "
         print(f"  [{active_marker}] {config.provider}")
         print(f"      Model: {config.model}")
-        print(f"      Temperature: {config.temperature or 'default'}")
-        print(f"      Max Tokens: {config.max_tokens or 'default'}")
+        temperature = config.temperature or "default"
+        print(f"      Temperature: {temperature}")
+        max_tokens = config.max_tokens or "default"
+        print(f"      Max Tokens: {max_tokens}")
         print()
 
     print("=" * 80)
     print("✓ All examples completed successfully!")
     print("=" * 80)
-
-    # Cleanup
     db.close()
 
 

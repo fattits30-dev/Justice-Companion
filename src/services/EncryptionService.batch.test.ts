@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import crypto from "node:crypto";
-import { EncryptionService } from "./EncryptionService";
+import { EncryptionService } from "./EncryptionService.ts";
 
 describe("EncryptionService - Batch Operations", () => {
   let encryptionService: EncryptionService;

@@ -6,7 +6,7 @@ import {
   within,
 } from "../../test-utils/test-utils.tsx";
 import userEvent from "@testing-library/user-event";
-import { TimelineView } from "./TimelineView";
+import { TimelineView } from "./TimelineView.tsx";
 import type { DeadlineWithCase } from "../../domains/timeline/entities/Deadline";
 
 // Mock the window.justiceAPI

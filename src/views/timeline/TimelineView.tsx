@@ -1,4 +1,4 @@
-import { logger } from "../../utils/logger";
+import { logger } from "../../utils/logger.ts";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { Plus, Calendar } from "lucide-react";

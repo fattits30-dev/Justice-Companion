@@ -21,7 +21,7 @@ Routes:
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional, List
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
@@ -105,7 +105,7 @@ class CreateDeadlineRequest(BaseModel):
         None, ge=1, le=30, description="Days before deadline to send reminder"
     )
 
-    @validator("priority")
+    @field_validator("priority")
     def validate_priority(cls, v):
         if v:
             try:
@@ -116,11 +116,11 @@ class CreateDeadlineRequest(BaseModel):
                 )
         return v
 
-    @validator("title")
+    @field_validator("title")
     def strip_title(cls, v):
         return v.strip()
 
-    @validator("deadlineDate", "dueDate")
+    @field_validator("deadlineDate", "dueDate")
     def validate_date_format(cls, v):
         if v:
             try:
@@ -134,7 +134,7 @@ class CreateDeadlineRequest(BaseModel):
                     raise ValueError("Invalid date format (use YYYY-MM-DD or ISO 8601)")
         return v
 
-    @validator("deadlineDate", always=True)
+    @field_validator("deadlineDate", mode="before")
     def validate_deadline_or_due_date(cls, v, values):
         """Ensure either deadlineDate or dueDate is provided."""
         due_date = values.get("dueDate")
@@ -154,7 +154,7 @@ class UpdateDeadlineRequest(BaseModel):
     priority: Optional[str] = Field(None, description="Priority level")
     status: Optional[str] = Field(None, description="Deadline status")
 
-    @validator("priority")
+    @field_validator("priority")
     def validate_priority(cls, v):
         if v:
             try:
@@ -165,7 +165,7 @@ class UpdateDeadlineRequest(BaseModel):
                 )
         return v
 
-    @validator("status")
+    @field_validator("status")
     def validate_status(cls, v):
         if v:
             try:
@@ -176,13 +176,13 @@ class UpdateDeadlineRequest(BaseModel):
                 )
         return v
 
-    @validator("title")
+    @field_validator("title")
     def strip_title(cls, v):
         if v:
             return v.strip()
         return v
 
-    @validator("deadlineDate", "dueDate")
+    @field_validator("deadlineDate", "dueDate")
     def validate_date_format(cls, v):
         if v:
             try:

@@ -3,7 +3,7 @@ import {
   CacheService,
   resetCacheService,
   getCacheService,
-} from "./CacheService";
+} from "./CacheService.ts";
 
 describe("CacheService", () => {
   let cacheService: CacheService;

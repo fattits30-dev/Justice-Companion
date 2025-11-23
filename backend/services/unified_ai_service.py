@@ -477,9 +477,18 @@ AI_PROVIDER_METADATA: Dict[str, AIProviderMetadata] = {
         name="Hugging Face",
         default_endpoint="https://api-inference.huggingface.co",
         supports_streaming=True,
-        default_model="meta-llama/Meta-Llama-3.1-70B-Instruct",
+        default_model="meta-llama/Llama-3.3-70B-Instruct",
         max_context_tokens=128000,
-        available_models=["meta-llama/Meta-Llama-3.1-70B-Instruct", "Qwen/Qwen2.5-72B-Instruct"],
+        available_models=[
+            "meta-llama/Llama-3.3-70B-Instruct",
+            "meta-llama/Meta-Llama-3.1-70B-Instruct",
+            "meta-llama/Meta-Llama-3.1-8B-Instruct",
+            "Qwen/Qwen2.5-72B-Instruct",
+            "Qwen/Qwen2.5-Coder-32B-Instruct",
+            "mistralai/Mixtral-8x7B-Instruct-v0.1",
+            "microsoft/Phi-3.5-mini-instruct",
+            "google/gemma-2-27b-it",
+        ],
     ),
     "qwen": AIProviderMetadata(
         name="Qwen 2.5-72B",
@@ -1267,44 +1276,74 @@ CONTENT:
 
 {f'USER QUESTION: "{user_question}"' if user_question else ''}
 
+IMPORTANT NAME MISMATCH CHECK:
+- The user who uploaded this is: "{user_profile.name or "User"}"
+- If the document is clearly about/for a DIFFERENT person (e.g., "Sarah Mitchell" vs "{user_profile.name or "User"}"), set document_ownership_mismatch to TRUE
+- If names match or are similar, set to FALSE
+
+CASE TYPE DETECTION - Choose the BEST match:
+- "employment" = dismissal, redundancy, unfair dismissal, discrimination at work, employment contracts, wages, workplace grievances
+- "housing" = eviction, landlord disputes, rent issues, repairs, tenancy agreements, homelessness
+- "consumer" = faulty goods, services disputes, refunds, contracts with businesses
+- "family" = divorce, child custody, domestic issues
+- "other" = ONLY if none of the above apply
+
+TITLE FORMAT - Create a descriptive title like:
+- "Smith vs ABC Corp - Unfair Dismissal"
+- "Jones vs City Council - Housing Disrepair"
+- "[Claimant] vs [Opponent] - [Issue Type]"
+
 Provide your response in TWO parts:
 
 PART 1 - Conversational Analysis (plain text):
-[Your friendly analysis talking directly to the user, ending with actionable suggestions]
+[Your friendly analysis talking directly to the user, summarizing key facts and dates, ending with actionable suggestions]
+[If document_ownership_mismatch is TRUE, WARN the user: "⚠️ IMPORTANT: This document appears to be for [name from document], not for you ({user_profile.name or "User"})."]
 
 PART 2 - Structured Data (JSON format):
+You MUST provide valid JSON in this exact format. Extract ALL available information from the document:
+
 ```json
 {{
   "document_ownership_mismatch": false,
   "document_claimant_name": null,
-  "title": "Brief descriptive case title",
-  "case_type": "employment|housing|consumer|family|other",
-  "description": "2-3 sentence summary",
+  "title": "Claimant vs Opposing Party - Issue Type",
+  "case_type": "employment",
+  "description": "2-3 sentence summary of the case facts and key issues",
   "claimant_name": "{user_profile.name or "User"}",
-  "opposing_party": "Full legal name if found, otherwise null",
-  "case_number": "Case reference if found, otherwise null",
-  "court_name": "Court/tribunal name if found, otherwise null",
-  "filing_deadline": "YYYY-MM-DD if deadline mentioned, otherwise null",
-  "next_hearing_date": "YYYY-MM-DD if hearing mentioned, otherwise null",
+  "opposing_party": "Full company/person name from document",
+  "case_number": "Reference number like BT/HR/2024/0847 if found",
+  "court_name": "Employment Tribunal or court name if mentioned",
+  "filing_deadline": "2024-12-15",
+  "next_hearing_date": null,
   "confidence": {{
-    "title": 0.0-1.0,
-    "case_type": 0.0-1.0,
-    "description": 0.0-1.0,
-    "opposing_party": 0.0-1.0,
-    "case_number": 0.0-1.0,
-    "court_name": 0.0-1.0,
-    "filing_deadline": 0.0-1.0,
-    "next_hearing_date": 0.0-1.0
+    "title": 0.85,
+    "case_type": 0.95,
+    "description": 0.9,
+    "opposing_party": 0.95,
+    "case_number": 0.8,
+    "court_name": 0.0,
+    "filing_deadline": 0.7,
+    "next_hearing_date": 0.0
   }},
   "extracted_from": {{
-    "case_number": {{"source": "document", "text": "exact text from document"}} or null,
-    "opposing_party": {{"source": "document", "text": "exact text from document"}} or null,
-    "court_name": {{"source": "document", "text": "exact text from document"}} or null,
-    "filing_deadline": {{"source": "document", "text": "exact text from document"}} or null,
-    "next_hearing_date": {{"source": "document", "text": "exact text from document"}} or null
+    "title": {{"source": "document header", "text": "RE: TERMINATION OF EMPLOYMENT"}},
+    "description": {{"source": "document body", "text": "Your employment is being terminated on the grounds of gross misconduct"}},
+    "opposing_party": {{"source": "document letterhead", "text": "Brightstone Technologies Ltd"}},
+    "case_number": {{"source": "document footer", "text": "Reference: BT/HR/2024/0847"}},
+    "court_name": null,
+    "filing_deadline": {{"source": "appeal section", "text": "deadline for submitting your appeal is 26th September 2024"}},
+    "next_hearing_date": null
   }}
 }}
 ```
+
+IMPORTANT - For extracted_from:
+- Provide the EXACT quoted text from the document for EACH extracted field
+- Include source location (e.g., "document header", "paragraph 3", "letterhead")
+- This shows the user exactly where the AI found each piece of information
+- Set to null ONLY if the field was not found in the document
+
+CRITICAL: The JSON must be valid and parseable. Use null (not "null") for missing values. Use actual numbers for confidence scores (0.0-1.0).
 """
 
             messages = [
@@ -1316,18 +1355,80 @@ PART 2 - Structured Data (JSON format):
             ]
 
             response = await self.chat(messages)
+            logger.info(f"[DEBUG] AI response received, length: {len(response)}")
 
-            # Split response
+            # Try multiple patterns to find JSON
             json_match = re.search(r"```json\n?(.*?)\n?```", response, re.DOTALL)
 
             if not json_match:
-                # Fallback
+                # Try to find raw JSON object
+                json_match = re.search(r'\{[\s\S]*"title"[\s\S]*"case_type"[\s\S]*"confidence"[\s\S]*\}', response)
+
+            if not json_match:
+                # Try to find any JSON-like structure
+                json_match = re.search(r'\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}', response)
+
+            if not json_match:
+                # Fallback - try to extract case type from response text
+                logger.warning(f"[DEBUG] No JSON found in response. Response preview: {response[:500]}...")
+
+                # Try to detect case type from keywords
+                response_lower = response.lower()
+                detected_case_type = "other"
+                if any(word in response_lower for word in ["dismissal", "employment", "redundancy", "unfair", "workplace", "employer"]):
+                    detected_case_type = "employment"
+                elif any(word in response_lower for word in ["eviction", "landlord", "tenant", "rent", "housing"]):
+                    detected_case_type = "housing"
+                elif any(word in response_lower for word in ["refund", "consumer", "goods", "service"]):
+                    detected_case_type = "consumer"
+
                 return DocumentExtractionResponse(
                     analysis=response,
                     suggested_case_data=SuggestedCaseData(
                         title=f"Case regarding {parsed_doc.filename}",
+                        case_type=detected_case_type,
+                        description=f"Document uploaded for analysis: {parsed_doc.filename}",
+                        claimant_name=user_profile.name or "User",
+                        confidence=FieldConfidence(
+                            title=0.3,
+                            case_type=0.5 if detected_case_type != "other" else 0.3,
+                            description=0.3,
+                            opposing_party=0.0,
+                            case_number=0.0,
+                            court_name=0.0,
+                            filing_deadline=0.0,
+                            next_hearing_date=0.0,
+                        ),
+                        extracted_from={},
+                    ),
+                )
+
+            analysis_text = response[: json_match.start()].strip()
+            json_str = json_match.group(1) if json_match.lastindex else json_match.group(0)
+
+            logger.info(f"[DEBUG] Found JSON, attempting to parse: {json_str[:200]}...")
+
+            try:
+                parsed_json = json.loads(json_str)
+                suggested_case_data = SuggestedCaseData(**parsed_json)
+                suggested_case_data.claimant_name = user_profile.name or "User"
+
+                logger.info(f"[DEBUG] Successfully parsed case data: title={suggested_case_data.title}, type={suggested_case_data.case_type}")
+                logger.info(f"[DEBUG] extracted_from data: {suggested_case_data.extracted_from}")
+
+                return DocumentExtractionResponse(
+                    analysis=analysis_text or response, suggested_case_data=suggested_case_data
+                )
+            except json.JSONDecodeError as e:
+                logger.error(f"[DEBUG] JSON parse error: {e}. JSON string: {json_str}")
+
+                # Return fallback with the analysis text we have
+                return DocumentExtractionResponse(
+                    analysis=analysis_text or response,
+                    suggested_case_data=SuggestedCaseData(
+                        title=f"Case regarding {parsed_doc.filename}",
                         case_type="other",
-                        description=f"Document uploaded: {parsed_doc.filename}",
+                        description=f"Document uploaded for analysis: {parsed_doc.filename}",
                         claimant_name=user_profile.name or "User",
                         confidence=FieldConfidence(
                             title=0.3,
@@ -1342,16 +1443,9 @@ PART 2 - Structured Data (JSON format):
                         extracted_from={},
                     ),
                 )
-
-            analysis_text = response[: json_match.start()].strip()
-            json_str = json_match.group(1)
-
-            suggested_case_data = SuggestedCaseData(**json.loads(json_str))
-            suggested_case_data.claimant_name = user_profile.name or "User"
-
-            return DocumentExtractionResponse(
-                analysis=analysis_text or response, suggested_case_data=suggested_case_data
-            )
+            except Exception as e:
+                logger.error(f"[DEBUG] Error creating SuggestedCaseData: {e}. Parsed JSON: {parsed_json}")
+                raise
 
         except Exception as e:
             if self.audit_logger:

@@ -11,7 +11,7 @@ import { TagBadge } from "../ui/TagBadge.tsx";
 import { TagSelector } from "./TagSelector.tsx";
 import { apiClient } from "../../lib/apiClient.ts";
 import type { Tag } from "../../models/Tag.ts";
-import { logger } from "../../utils/logger";
+import { logger } from "../../utils/logger.ts";
 
 interface CaseTagSelectorProps {
   caseId: number;

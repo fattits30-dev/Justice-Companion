@@ -16,7 +16,7 @@ import { SaveToCaseDialog } from "./chat/SaveToCaseDialog.tsx";
 import { MessageItem } from "./chat/MessageItem.tsx";
 import { AICaseCreationDialog } from "./chat/AICaseCreationDialog.tsx";
 import { toast } from "sonner";
-import { Upload, FileText, Trash2 } from "lucide-react";
+import { Upload, FileText, Trash2, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import { useStreamingChat, Message } from "../hooks/useStreamingChat.ts";
@@ -75,6 +75,11 @@ export function ChatView() {
 
   // Document upload state
   const [isAnalyzingDocument, setIsAnalyzingDocument] = useState(false);
+
+  // Model selection state
+  const [selectedModel, setSelectedModel] = useState<string>("");
+  const [availableModels, setAvailableModels] = useState<string[]>([]);
+  const [currentProvider, setCurrentProvider] = useState<string>("");
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -141,6 +146,90 @@ export function ChatView() {
     }
   }, [messages, isStreaming, currentStreamingMessage]);
 
+  // Fetch active AI config on mount to get available models
+  useEffect(() => {
+    const fetchAIConfig = async () => {
+      try {
+        const sessionId = localStorage.getItem("sessionId");
+        if (!sessionId) {
+          return;
+        }
+
+        apiClient.setSessionId(sessionId);
+        const result = await apiClient.aiConfig.getActive();
+
+        if (result.success && result.data) {
+          setCurrentProvider(result.data.provider || "");
+          setSelectedModel(result.data.model || "");
+
+          // Fetch available models for the provider
+          const providersResult = await apiClient.aiConfig.listProviders();
+          if (providersResult.success && providersResult.data) {
+            const providerData = providersResult.data[result.data.provider];
+            const availableModels = Array.isArray(
+              providerData?.available_models
+            )
+              ? (providerData.available_models as string[])
+              : [];
+            setAvailableModels(availableModels);
+          }
+        }
+      } catch (error) {
+        console.error("[ChatView] Failed to fetch AI config:", error);
+      }
+    };
+
+    fetchAIConfig();
+  }, []);
+
+  // Handle model change
+  const handleModelChange = useCallback(
+    async (newModel: string) => {
+      if (!currentProvider || newModel === selectedModel) {
+        return;
+      }
+
+      try {
+        const sessionId = localStorage.getItem("sessionId");
+        if (!sessionId) {
+          toast.error("No active session");
+          return;
+        }
+
+        apiClient.setSessionId(sessionId);
+
+        // Get current config first
+        const currentConfig = await apiClient.aiConfig.getActive();
+        if (!currentConfig.success || !currentConfig.data) {
+          toast.error("Failed to get current AI config");
+          return;
+        }
+
+        // Save with new model
+        const existingApiKey =
+          currentConfig.data.api_key ?? currentConfig.data.apiKey ?? "";
+        const result = await apiClient.aiConfig.configure(currentProvider, {
+          api_key: existingApiKey,
+          endpoint: currentConfig.data.endpoint,
+          model: newModel,
+        });
+
+        if (result.success) {
+          setSelectedModel(newModel);
+          toast.success("Model updated", {
+            description: `Now using ${newModel}`,
+          });
+        } else {
+          toast.error("Failed to update model");
+        }
+      } catch (error) {
+        console.error("[ChatView] Failed to update model:", error);
+        toast.error("Failed to update model");
+      }
+    },
+    [currentProvider, selectedModel]
+  );
+
   // Handle send message
   const handleSend = useCallback(async () => {
     if (!input.trim() || isStreaming) {
@@ -161,7 +250,7 @@ export function ChatView() {
         handleSend();
       }
     },
-    [handleSend],
+    [handleSend]
   );
 
   const handleSaveToCase = useCallback((message: Message) => {
@@ -192,7 +281,7 @@ export function ChatView() {
             factCategory: "other",
             importance: "medium",
           },
-          sessionId,
+          sessionId
         );
 
         if (result.success) {
@@ -216,7 +305,7 @@ export function ChatView() {
         return { success: false, error: errorMessage };
       }
     },
-    [messageToSave],
+    [messageToSave]
   );
 
   const handleCreateCase = useCallback((message: Message) => {
@@ -244,11 +333,11 @@ export function ChatView() {
         // Check for duplicate cases
         try {
           const existingCases = (await window.justiceAPI.getAllCases(
-            sessionId,
+            sessionId
           )) as any;
           const duplicateCase = existingCases.data?.find(
             (case_: any) =>
-              case_.title?.toLowerCase() === caseData.title?.toLowerCase(),
+              case_.title?.toLowerCase() === caseData.title?.toLowerCase()
           );
 
           if (duplicateCase) {
@@ -261,7 +350,7 @@ export function ChatView() {
         } catch (error) {
           console.warn(
             "[ChatView] Could not check for duplicate cases:",
-            error,
+            error
           );
         }
 
@@ -365,7 +454,7 @@ Based on your dismissal letter, here are some general steps many people take whe
         setIsCreatingCase(false);
       }
     },
-    [messageForCaseCreation, setMessages],
+    [messageForCaseCreation, setMessages]
   );
 
   const handleDocumentUpload = useCallback(async () => {
@@ -411,7 +500,7 @@ Based on your dismissal letter, here are some general steps many people take whe
         // Upload the file first
         const uploadResult = await apiClient.chat.uploadDocument(
           file,
-          `Please analyze this document: ${filename}`,
+          `Please analyze this document: ${filename}`
         );
 
         if (!uploadResult.success || !uploadResult.data?.filePath) {
@@ -425,7 +514,7 @@ Based on your dismissal letter, here are some general steps many people take whe
         // Analyze the uploaded document
         const analysisResult = await apiClient.chat.analyzeDocument(
           uploadResult.data.filePath,
-          `Please analyze this document: ${filename}`,
+          `Please analyze this document: ${filename}`
         );
 
         if (!analysisResult.success) {
@@ -436,47 +525,122 @@ Based on your dismissal letter, here are some general steps many people take whe
           throw new Error(errorMsg);
         }
 
-      const suggestedCaseData = analysisResult.data?.suggestedCaseData;
-      const hasActiveCase = !!activeCaseId;
+        // Convert snake_case from backend to camelCase for frontend
+        const rawData =
+          analysisResult.data?.suggested_case_data ||
+          analysisResult.data?.suggestedCaseData;
+        const suggestedCaseData = rawData
+          ? {
+              title: rawData.title,
+              caseType: rawData.case_type || rawData.caseType,
+              description: rawData.description,
+              opposingParty: rawData.opposing_party || rawData.opposingParty,
+              caseNumber: rawData.case_number || rawData.caseNumber,
+              courtName: rawData.court_name || rawData.courtName,
+              filingDeadline: rawData.filing_deadline || rawData.filingDeadline,
+              nextHearingDate:
+                rawData.next_hearing_date || rawData.nextHearingDate,
+              confidence: rawData.confidence
+                ? {
+                    title: rawData.confidence.title,
+                    caseType:
+                      rawData.confidence.case_type ||
+                      rawData.confidence.caseType,
+                    description: rawData.confidence.description,
+                    opposingParty:
+                      rawData.confidence.opposing_party ||
+                      rawData.confidence.opposingParty,
+                    caseNumber:
+                      rawData.confidence.case_number ||
+                      rawData.confidence.caseNumber,
+                    courtName:
+                      rawData.confidence.court_name ||
+                      rawData.confidence.courtName,
+                    filingDeadline:
+                      rawData.confidence.filing_deadline ||
+                      rawData.confidence.filingDeadline,
+                    nextHearingDate:
+                      rawData.confidence.next_hearing_date ||
+                      rawData.confidence.nextHearingDate,
+                  }
+                : undefined,
+              extractedFrom:
+                rawData.extracted_from || rawData.extractedFrom
+                  ? {
+                      title: (rawData.extracted_from || rawData.extractedFrom)
+                        ?.title,
+                      description: (
+                        rawData.extracted_from || rawData.extractedFrom
+                      )?.description,
+                      opposingParty:
+                        (rawData.extracted_from || rawData.extractedFrom)
+                          ?.opposing_party ||
+                        (rawData.extracted_from || rawData.extractedFrom)
+                          ?.opposingParty,
+                      caseNumber:
+                        (rawData.extracted_from || rawData.extractedFrom)
+                          ?.case_number ||
+                        (rawData.extracted_from || rawData.extractedFrom)
+                          ?.caseNumber,
+                      courtName:
+                        (rawData.extracted_from || rawData.extractedFrom)
+                          ?.court_name ||
+                        (rawData.extracted_from || rawData.extractedFrom)
+                          ?.courtName,
+                      filingDeadline:
+                        (rawData.extracted_from || rawData.extractedFrom)
+                          ?.filing_deadline ||
+                        (rawData.extracted_from || rawData.extractedFrom)
+                          ?.filingDeadline,
+                      nextHearingDate:
+                        (rawData.extracted_from || rawData.extractedFrom)
+                          ?.next_hearing_date ||
+                        (rawData.extracted_from || rawData.extractedFrom)
+                          ?.nextHearingDate,
+                    }
+                  : undefined,
+            }
+          : undefined;
+        const hasActiveCase = !!activeCaseId;
 
-      const finalSuggestedCaseData =
-        !hasActiveCase && suggestedCaseData
-          ? suggestedCaseData
-          : !hasActiveCase
+        const finalSuggestedCaseData =
+          !hasActiveCase && suggestedCaseData
+            ? suggestedCaseData
+            : !hasActiveCase
+              ? {
+                  title: `Case regarding ${filename}`,
+                  caseType: "other",
+                  description: `Document uploaded for analysis: ${filename}`,
+                  confidence: {
+                    title: 0.3,
+                    caseType: 0.3,
+                    description: 0.3,
+                  },
+                }
+              : undefined;
+
+        const analysisMessage: Message = {
+          id: `analysis-${Date.now()}`,
+          role: "assistant",
+          content: analysisResult.data!.analysis,
+          timestamp: new Date(),
+          ...(finalSuggestedCaseData
             ? {
-                title: `Case regarding ${filename}`,
-                caseType: "other",
-                description: `Document uploaded for analysis: ${filename}`,
-                confidence: {
-                  title: 0.3,
-                  caseType: 0.3,
-                  description: 0.3,
+                documentAnalysis: {
+                  filename,
+                  suggestedCaseData: finalSuggestedCaseData,
                 },
               }
-            : undefined;
+            : { documentAnalysis: { filename } }),
+        } as any;
 
-      const analysisMessage: Message = {
-        id: `analysis-${Date.now()}`,
-        role: "assistant",
-        content: analysisResult.data!.analysis,
-        timestamp: new Date(),
-        ...(finalSuggestedCaseData
-          ? {
-              documentAnalysis: {
-                filename,
-                suggestedCaseData: finalSuggestedCaseData,
-              },
-            }
-          : { documentAnalysis: { filename } }),
-      } as any;
+        setMessages((prev) => [...prev, analysisMessage]);
 
-      setMessages((prev) => [...prev, analysisMessage]);
-
-      if (hasActiveCase) {
-        toast.info("Document added to active case", {
-          description: `${filename} linked to current case`,
-        });
-      }
+        if (hasActiveCase) {
+          toast.info("Document added to active case", {
+            description: `${filename} linked to current case`,
+          });
+        }
 
         toast.success("Document analyzed successfully", {
           description: `Analyzed ${filename}`,
@@ -512,7 +676,7 @@ Based on your dismissal letter, here are some general steps many people take whe
     }
 
     const confirmed = window.confirm(
-      `Are you sure you want to clear all chat messages${activeCaseId ? " for this case" : ""}?\n\nThis cannot be undone.`,
+      `Are you sure you want to clear all chat messages${activeCaseId ? " for this case" : ""}?\n\nThis cannot be undone.`
     );
 
     if (confirmed) {
@@ -531,16 +695,40 @@ Based on your dismissal letter, here are some general steps many people take whe
         <div className="p-6">
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold">AI Legal Assistant</h1>
-            {messages.length > 0 && (
-              <button
-                onClick={handleClearChat}
-                className="flex items-center gap-2 px-3 py-2 text-sm text-red-300 hover:text-white bg-red-500/20 hover:bg-red-500/30 rounded-lg transition-colors border border-red-500/30 hover:border-red-500/50"
-                title="Clear all chat messages"
-              >
-                <Trash2 className="w-4 h-4" />
-                Clear Chat
-              </button>
-            )}
+            <div className="flex items-center gap-3">
+              {/* Model Selector */}
+              {availableModels.length > 0 && (
+                <div className="relative">
+                  <select
+                    value={selectedModel}
+                    onChange={(e) => handleModelChange(e.target.value)}
+                    className="appearance-none bg-white/5 border border-white/10 rounded-lg px-3 py-2 pr-8 text-sm text-white/90 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-primary-500 cursor-pointer"
+                    title="Select AI model"
+                  >
+                    {availableModels.map((model) => (
+                      <option
+                        key={model}
+                        value={model}
+                        className="bg-gray-800 text-white"
+                      >
+                        {model.split("/").pop()}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50 pointer-events-none" />
+                </div>
+              )}
+              {messages.length > 0 && (
+                <button
+                  onClick={handleClearChat}
+                  className="flex items-center gap-2 px-3 py-2 text-sm text-red-300 hover:text-white bg-red-500/20 hover:bg-red-500/30 rounded-lg transition-colors border border-red-500/30 hover:border-red-500/50"
+                  title="Clear all chat messages"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Clear Chat
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -611,7 +799,7 @@ Based on your dismissal letter, here are some general steps many people take whe
                   <button
                     onClick={() =>
                       setInput(
-                        "What are my rights if I'm being bullied at work?",
+                        "What are my rights if I'm being bullied at work?"
                       )
                     }
                     className="p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg transition-colors text-left"
@@ -625,7 +813,7 @@ Based on your dismissal letter, here are some general steps many people take whe
                   <button
                     onClick={() =>
                       setInput(
-                        "How do I gather evidence for an unfair dismissal claim?",
+                        "How do I gather evidence for an unfair dismissal claim?"
                       )
                     }
                     className="p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg transition-colors text-left"
@@ -649,7 +837,7 @@ Based on your dismissal letter, here are some general steps many people take whe
                   <button
                     onClick={() =>
                       setInput(
-                        "What should I do if I'm being discriminated against?",
+                        "What should I do if I'm being discriminated against?"
                       )
                     }
                     className="p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg transition-colors text-left"

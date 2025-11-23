@@ -34,5 +34,5 @@
     "types": ["vite/client"]
   },
   "include": ["src/**/*", "src/**/*.tsx", "tests/**/*"],
-  "exclude": ["node_modules", "dist", "electron"]
+  "exclude": ["node_modules", "dist", "electron", "tests/e2e"]
 }

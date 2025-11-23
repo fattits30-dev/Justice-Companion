@@ -8,7 +8,7 @@
 import "reflect-metadata";
 import { Container } from "inversify";
 import { TYPES } from "./types.ts";
-import { logger } from "../../../utils/logger";
+import { logger } from "../../../utils/logger.ts";
 
 // Import repository interfaces from repository-interfaces.ts
 import type {

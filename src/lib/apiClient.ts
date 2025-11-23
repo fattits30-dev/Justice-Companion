@@ -14,6 +14,7 @@
  * @module apiClient
  */
 
+import { ProviderMetadata } from "ai";
 import type {
   Case,
   CreateCaseInput,
@@ -124,7 +125,7 @@ export class ApiClient {
       params?: Record<string, string | number | boolean>;
       headers?: Record<string, string>;
       retries?: number;
-    } = {},
+    } = {}
   ): Promise<T> {
     const {
       body,
@@ -178,9 +179,10 @@ export class ApiClient {
           response.status,
           responseData?.error?.message ||
             responseData?.message ||
+            responseData?.detail ||
             "Request failed",
           responseData?.error?.code || "UNKNOWN_ERROR",
-          responseData?.error?.details,
+          responseData?.error?.details
         );
       }
 
@@ -207,7 +209,7 @@ export class ApiClient {
           (error instanceof ApiError && error.status >= 500))
       ) {
         await this.delay(
-          this.config.retryDelay * (this.config.maxRetries - retries + 1),
+          this.config.retryDelay * (this.config.maxRetries - retries + 1)
         );
         return this.request<T>(method, endpoint, {
           ...options,
@@ -224,7 +226,7 @@ export class ApiClient {
       throw new ApiError(
         0,
         error instanceof Error ? error.message : "Unknown error",
-        "NETWORK_ERROR",
+        "NETWORK_ERROR"
       );
     }
   }
@@ -241,7 +243,7 @@ export class ApiClient {
    */
   private get<T>(
     endpoint: string,
-    params?: Record<string, string | number | boolean>,
+    params?: Record<string, string | number | boolean>
   ): Promise<T> {
     return this.request<T>("GET", endpoint, { params });
   }
@@ -278,7 +280,7 @@ export class ApiClient {
     register: async (
       username: string,
       email: string,
-      password: string,
+      password: string
     ): Promise<
       ApiResponse<{
         user: {
@@ -316,7 +318,7 @@ export class ApiClient {
         }>("/auth/register", { username, email, password });
 
         // Extract data from wrapped response
-        const data = wrappedResponse.data || wrappedResponse as any;
+        const data = wrappedResponse.data || (wrappedResponse as any);
 
         // Store session ID after successful registration
         this.setSessionId(data.session.id);
@@ -346,7 +348,7 @@ export class ApiClient {
     login: async (
       username: string,
       password: string,
-      remember_me: boolean = false,
+      remember_me: boolean = false
     ): Promise<
       ApiResponse<{
         user: {
@@ -411,7 +413,7 @@ export class ApiClient {
      * Logout user
      */
     logout: async (
-      sessionId: string,
+      sessionId: string
     ): Promise<ApiResponse<{ success: boolean; message: string }>> => {
       const response = await this.post<
         ApiResponse<{ success: boolean; message: string }>
@@ -428,7 +430,7 @@ export class ApiClient {
      * Get session and validate
      */
     getSession: async (
-      sessionId: string,
+      sessionId: string
     ): Promise<
       ApiResponse<{
         user: {
@@ -469,7 +471,7 @@ export class ApiClient {
     changePassword: async (
       userId: number,
       oldPassword: string,
-      newPassword: string,
+      newPassword: string
     ): Promise<ApiResponse<{ success: boolean; message: string }>> => {
       const response = await this.post<
         ApiResponse<{ success: boolean; message: string }>
@@ -522,7 +524,7 @@ export class ApiClient {
      */
     update: async (
       caseId: number,
-      input: UpdateCaseInput,
+      input: UpdateCaseInput
     ): Promise<ApiResponse<Case>> => {
       return this.put<ApiResponse<Case>>(`/cases/${caseId}`, input);
     },
@@ -596,7 +598,7 @@ export class ApiClient {
      * Create new evidence
      */
     create: async (
-      input: CreateEvidenceInput,
+      input: CreateEvidenceInput
     ): Promise<ApiResponse<Evidence>> => {
       return this.post<ApiResponse<Evidence>>("/evidence", input);
     },
@@ -664,7 +666,7 @@ export class ApiClient {
             responseData?.message ||
             "Upload failed",
           responseData?.error?.code || "UPLOAD_ERROR",
-          responseData?.error?.details,
+          responseData?.error?.details
         );
       }
 
@@ -676,7 +678,7 @@ export class ApiClient {
      */
     update: async (
       evidenceId: number,
-      input: UpdateEvidenceInput,
+      input: UpdateEvidenceInput
     ): Promise<ApiResponse<Evidence>> => {
       return this.put<ApiResponse<Evidence>>(`/evidence/${evidenceId}`, input);
     },
@@ -698,7 +700,7 @@ export class ApiClient {
           headers: this.sessionId
             ? { Authorization: `Bearer ${this.sessionId}` }
             : undefined,
-        },
+        }
       );
 
       if (!response.ok) {
@@ -707,7 +709,7 @@ export class ApiClient {
           response.status,
           errorData.detail || errorData.message || "Download failed",
           "DOWNLOAD_ERROR",
-          errorData,
+          errorData
         );
       }
 
@@ -717,19 +719,19 @@ export class ApiClient {
     /**
      * Get preview of evidence
      */
-    preview: async (evidenceId: number): Promise<ApiResponse<any>> => {
-      return this.get<ApiResponse<any>>(`/evidence/${evidenceId}/preview`);
+    preview: async (evidenceId: number): Promise<ApiResponse<{ url: string; metadata?: Record<string, unknown> }>> => {
+      return this.get<ApiResponse<{ url: string; metadata?: Record<string, unknown> }>>(`/evidence/${evidenceId}/preview`);
     },
 
     /**
-     * Parse evidence content (OCR, text extraction)
+     * Parse evidence content
      */
     parse: async (
-      evidenceId: number,
+      evidenceId: number
     ): Promise<ApiResponse<{ content: string; metadata?: any }>> => {
       return this.post<ApiResponse<{ content: string; metadata?: any }>>(
         `/evidence/${evidenceId}/parse`,
-        {},
+        {}
       );
     },
 
@@ -737,11 +739,11 @@ export class ApiClient {
      * Extract citations from evidence
      */
     extractCitations: async (
-      evidenceId: number,
+      evidenceId: number
     ): Promise<ApiResponse<any[]>> => {
       return this.post<ApiResponse<any[]>>(
         `/evidence/${evidenceId}/citations`,
-        {},
+        {}
       );
     },
 
@@ -750,7 +752,7 @@ export class ApiClient {
      */
     runOCR: async (
       evidenceId: number,
-      options?: { language?: string },
+      options?: { language?: string }
     ): Promise<ApiResponse<{ text: string; confidence?: number }>> => {
       const params: any = {};
       if (options?.language) {
@@ -759,7 +761,7 @@ export class ApiClient {
 
       return this.post<ApiResponse<{ text: string; confidence?: number }>>(
         `/evidence/${evidenceId}/ocr`,
-        params,
+        params
       );
     },
 
@@ -772,7 +774,7 @@ export class ApiClient {
         caseId: number;
         title?: string;
         type?: string;
-      }>,
+      }>
     ): Promise<ApiResponse<Evidence[]>> => {
       const formData = new FormData();
 
@@ -820,7 +822,7 @@ export class ApiClient {
             responseData?.message ||
             "Bulk upload failed",
           responseData?.error?.code || "BULK_UPLOAD_ERROR",
-          responseData?.error?.details,
+          responseData?.error?.details
         );
       }
 
@@ -876,7 +878,7 @@ export class ApiClient {
      */
     getUnreadCount: async (): Promise<ApiResponse<{ count: number }>> => {
       return this.get<ApiResponse<{ count: number }>>(
-        "/notifications/unread/count",
+        "/notifications/unread/count"
       );
     },
 
@@ -911,11 +913,11 @@ export class ApiClient {
      * Mark notification as read
      */
     markAsRead: async (
-      notificationId: number,
+      notificationId: number
     ): Promise<ApiResponse<{ success: boolean; message: string }>> => {
       return this.put<ApiResponse<{ success: boolean; message: string }>>(
         `/notifications/${notificationId}/read`,
-        {},
+        {}
       );
     },
 
@@ -925,7 +927,7 @@ export class ApiClient {
     markAllAsRead: async (): Promise<ApiResponse<{ count: number }>> => {
       return this.put<ApiResponse<{ count: number }>>(
         "/notifications/mark-all-read",
-        {},
+        {}
       );
     },
 
@@ -933,10 +935,10 @@ export class ApiClient {
      * Delete (dismiss) notification
      */
     delete: async (
-      notificationId: number,
+      notificationId: number
     ): Promise<ApiResponse<{ deleted: boolean; id: number }>> => {
       return this.delete<ApiResponse<{ deleted: boolean; id: number }>>(
-        `/notifications/${notificationId}`,
+        `/notifications/${notificationId}`
       );
     },
 
@@ -964,7 +966,7 @@ export class ApiClient {
     }): Promise<ApiResponse<any>> => {
       return this.put<ApiResponse<any>>(
         "/notifications/preferences",
-        preferences,
+        preferences
       );
     },
   };
@@ -1036,7 +1038,7 @@ export class ApiClient {
     > => {
       return this.post<ApiResponse<{ success: boolean; message: string }>>(
         "/search/rebuild-index",
-        {},
+        {}
       );
     },
 
@@ -1121,7 +1123,7 @@ export class ApiClient {
      * Execute a saved search
      */
     executeSavedSearch: async (
-      searchId: number,
+      searchId: number
     ): Promise<
       ApiResponse<{
         results: Array<{
@@ -1165,7 +1167,7 @@ export class ApiClient {
      */
     getSuggestions: async (
       prefix: string,
-      limit: number = 5,
+      limit: number = 5
     ): Promise<ApiResponse<string[]>> => {
       return this.get<ApiResponse<string[]>>("/search/suggestions", {
         prefix,
@@ -1200,7 +1202,7 @@ export class ApiClient {
     > => {
       return this.post<ApiResponse<{ success: boolean; message: string }>>(
         "/search/index/optimize",
-        {},
+        {}
       );
     },
   };
@@ -1364,7 +1366,7 @@ export class ApiClient {
      * Get recent cases
      */
     getRecentCases: async (
-      limit: number = 5,
+      limit: number = 5
     ): Promise<
       ApiResponse<{
         cases: Array<{
@@ -1395,7 +1397,7 @@ export class ApiClient {
      * Get upcoming deadlines
      */
     getUpcomingDeadlines: async (
-      limit: number = 10,
+      limit: number = 10
     ): Promise<
       ApiResponse<{
         upcomingDeadlines: Array<{
@@ -1434,7 +1436,7 @@ export class ApiClient {
      * Get notifications widget data
      */
     getNotifications: async (
-      limit: number = 5,
+      limit: number = 5
     ): Promise<
       ApiResponse<{
         unreadCount: number;
@@ -1467,7 +1469,7 @@ export class ApiClient {
      * Get activity widget data
      */
     getActivity: async (
-      limit: number = 10,
+      limit: number = 10
     ): Promise<
       ApiResponse<{
         activities: Array<{
@@ -1532,7 +1534,7 @@ export class ApiClient {
     }): Promise<ApiResponse<{ success: boolean; message: string }>> => {
       return this.put<ApiResponse<{ success: boolean; message: string }>>(
         "/profile/password",
-        params,
+        params
       );
     },
 
@@ -1624,7 +1626,7 @@ export class ApiClient {
         max_tokens?: number;
         top_p?: number;
         enabled?: boolean;
-      },
+      }
     ): Promise<
       ApiResponse<{ provider: string; message: string; config_id: number }>
     > => {
@@ -1652,11 +1654,11 @@ export class ApiClient {
      */
     updateApiKey: async (
       provider: string,
-      apiKey: string,
+      apiKey: string
     ): Promise<ApiResponse<{ message: string }>> => {
       return this.put<ApiResponse<{ message: string }>>(
         `/ai/config/${provider}/api-key`,
-        { api_key: apiKey },
+        { api_key: apiKey }
       );
     },
 
@@ -1673,11 +1675,11 @@ export class ApiClient {
         max_tokens?: number;
         top_p?: number;
         enabled?: boolean;
-      },
+      }
     ): Promise<ApiResponse<{ valid: boolean; errors: string[] }>> => {
       return this.post<ApiResponse<{ valid: boolean; errors: string[] }>>(
         `/ai/config/${provider}/validate`,
-        params,
+        params
       );
     },
 
@@ -1685,7 +1687,7 @@ export class ApiClient {
      * Test provider connection
      */
     test: async (
-      provider: string,
+      provider: string
     ): Promise<
       ApiResponse<{
         success: boolean;
@@ -1705,17 +1707,23 @@ export class ApiClient {
     /**
      * Get all provider metadata
      */
-    listProviders: async (): Promise<ApiResponse<Record<string, any>>> => {
-      return this.get<ApiResponse<Record<string, any>>>("/ai/providers");
+    listProviders: async (): Promise<
+      ApiResponse<Record<string, ProviderMetadata>>
+    > => {
+      return this.get<ApiResponse<Record<string, ProviderMetadata>>>(
+        "/ai/providers"
+      );
     },
 
     /**
      * Get specific provider metadata
      */
     getProviderMetadata: async (
-      provider: string,
-    ): Promise<ApiResponse<any>> => {
-      return this.get<ApiResponse<any>>(`/ai/providers/${provider}`);
+      provider: string
+    ): Promise<ApiResponse<ProviderMetadata>> => {
+      return this.get<ApiResponse<ProviderMetadata>>(
+        `/ai/providers/${provider}`
+      );
     },
   };
 
@@ -1761,7 +1769,7 @@ export class ApiClient {
      * Get single tag by ID
      */
     get: async (
-      tagId: number,
+      tagId: number
     ): Promise<
       ApiResponse<{
         id: number;
@@ -1830,7 +1838,7 @@ export class ApiClient {
         name?: string;
         color?: string;
         description?: string;
-      },
+      }
     ): Promise<
       ApiResponse<{
         id: number;
@@ -1861,10 +1869,10 @@ export class ApiClient {
      * Delete tag
      */
     delete: async (
-      tagId: number,
+      tagId: number
     ): Promise<ApiResponse<{ deleted: boolean; id: number }>> => {
       return this.delete<ApiResponse<{ deleted: boolean; id: number }>>(
-        `/tags/${tagId}`,
+        `/tags/${tagId}`
       );
     },
 
@@ -1873,7 +1881,7 @@ export class ApiClient {
      */
     attachToCase: async (
       tagId: number,
-      caseId: number,
+      caseId: number
     ): Promise<
       ApiResponse<{
         success: boolean;
@@ -1899,7 +1907,7 @@ export class ApiClient {
      */
     removeFromCase: async (
       tagId: number,
-      caseId: number,
+      caseId: number
     ): Promise<
       ApiResponse<{
         success: boolean;
@@ -1931,7 +1939,7 @@ export class ApiClient {
      * Get all tags for a case
      */
     getTagsForCase: async (
-      caseId: number,
+      caseId: number
     ): Promise<
       ApiResponse<
         Array<{
@@ -2039,7 +2047,7 @@ export class ApiClient {
      * List all templates (system + user custom) with optional category filter
      */
     list: async (
-      category?: string,
+      category?: string
     ): Promise<
       ApiResponse<
         Array<{
@@ -2086,7 +2094,7 @@ export class ApiClient {
      * Get single template by ID
      */
     get: async (
-      templateId: number,
+      templateId: number
     ): Promise<
       ApiResponse<{
         id: number;
@@ -2179,7 +2187,7 @@ export class ApiClient {
         suggestedEvidenceTypes?: string[];
         timelineMilestones?: Array<Record<string, unknown>>;
         checklistItems?: Array<Record<string, unknown>>;
-      },
+      }
     ): Promise<
       ApiResponse<{
         id: number;
@@ -2218,10 +2226,10 @@ export class ApiClient {
      * Delete template
      */
     delete: async (
-      templateId: number,
+      templateId: number
     ): Promise<ApiResponse<{ deleted: boolean; id: number }>> => {
       return this.delete<ApiResponse<{ deleted: boolean; id: number }>>(
-        `/templates/${templateId}`,
+        `/templates/${templateId}`
       );
     },
 
@@ -2230,7 +2238,7 @@ export class ApiClient {
      */
     apply: async (
       templateId: number,
-      variables: Record<string, string>,
+      variables: Record<string, string>
     ): Promise<
       ApiResponse<{
         case: {
@@ -2426,7 +2434,7 @@ export class ApiClient {
      */
     exportCase: async (
       caseId: number,
-      format: "json" | "pdf" | "docx",
+      format: "json" | "pdf" | "docx"
     ): Promise<Blob> => {
       const response = await fetch(
         `${this.config.baseURL}/export/case/${caseId}?format=${format}`,
@@ -2434,7 +2442,7 @@ export class ApiClient {
           headers: this.sessionId
             ? { "X-Session-Id": this.sessionId }
             : undefined,
-        },
+        }
       );
 
       if (!response.ok) {
@@ -2443,7 +2451,7 @@ export class ApiClient {
           response.status,
           errorData.detail || errorData.message || "Export failed",
           "EXPORT_ERROR",
-          errorData,
+          errorData
         );
       }
 
@@ -2455,7 +2463,7 @@ export class ApiClient {
      */
     exportEvidence: async (
       evidenceId: number,
-      format: "json" | "pdf" | "docx",
+      format: "json" | "pdf" | "docx"
     ): Promise<Blob> => {
       const response = await fetch(
         `${this.config.baseURL}/export/evidence/${evidenceId}?format=${format}`,
@@ -2463,7 +2471,7 @@ export class ApiClient {
           headers: this.sessionId
             ? { "X-Session-Id": this.sessionId }
             : undefined,
-        },
+        }
       );
 
       if (!response.ok) {
@@ -2472,7 +2480,7 @@ export class ApiClient {
           response.status,
           errorData.detail || errorData.message || "Export failed",
           "EXPORT_ERROR",
-          errorData,
+          errorData
         );
       }
 
@@ -2484,7 +2492,7 @@ export class ApiClient {
      */
     exportSearchResults: async (
       query: string,
-      format: "json" | "csv",
+      format: "json" | "csv"
     ): Promise<Blob> => {
       const response = await fetch(
         `${this.config.baseURL}/export/search-results?query=${encodeURIComponent(query)}&format=${format}`,
@@ -2492,7 +2500,7 @@ export class ApiClient {
           headers: this.sessionId
             ? { "X-Session-Id": this.sessionId }
             : undefined,
-        },
+        }
       );
 
       if (!response.ok) {
@@ -2501,7 +2509,7 @@ export class ApiClient {
           response.status,
           errorData.detail || errorData.message || "Export failed",
           "EXPORT_ERROR",
-          errorData,
+          errorData
         );
       }
 
@@ -2608,7 +2616,7 @@ export class ApiClient {
      * Get single deadline by ID
      */
     get: async (
-      id: number,
+      id: number
     ): Promise<
       ApiResponse<{
         id: number;
@@ -2714,7 +2722,7 @@ export class ApiClient {
         status?: string;
         reminderEnabled?: boolean;
         reminderDaysBefore?: number;
-      },
+      }
     ): Promise<
       ApiResponse<{
         id: number;
@@ -2765,7 +2773,7 @@ export class ApiClient {
      */
     getUpcoming: async (
       days: number = 7,
-      limit?: number,
+      limit?: number
     ): Promise<
       ApiResponse<{
         items: Array<{
@@ -2881,7 +2889,7 @@ export class ApiClient {
      * Get deadlines for a specific date
      */
     getByDate: async (
-      date: string,
+      date: string
     ): Promise<
       ApiResponse<{
         items: Array<{
@@ -2936,7 +2944,7 @@ export class ApiClient {
      * Mark deadline as complete
      */
     markComplete: async (
-      id: number,
+      id: number
     ): Promise<
       ApiResponse<{
         id: number;
@@ -2980,7 +2988,7 @@ export class ApiClient {
      */
     snooze: async (
       id: number,
-      hours: number,
+      hours: number
     ): Promise<
       ApiResponse<{
         id: number;
@@ -3041,7 +3049,7 @@ export class ApiClient {
         conversationId?: number | null;
         caseId?: number | null;
         useRAG?: boolean;
-      } = {},
+      } = {}
     ): Promise<void> => {
       const { conversationId, caseId, useRAG = true } = options;
 
@@ -3078,7 +3086,7 @@ export class ApiClient {
             response.status,
             errorData.detail || errorData.message || "Failed to start stream",
             "STREAM_ERROR",
-            errorData,
+            errorData
           );
         }
 
@@ -3145,7 +3153,7 @@ export class ApiClient {
           callbacks.onError(error.message);
         } else {
           callbacks.onError(
-            error instanceof Error ? error.message : "Streaming failed",
+            error instanceof Error ? error.message : "Streaming failed"
           );
         }
       }
@@ -3156,7 +3164,7 @@ export class ApiClient {
      */
     getConversations: async (
       caseId?: number | null,
-      limit: number = 10,
+      limit: number = 10
     ): Promise<ApiResponse<any[]>> => {
       const params: Record<string, string | number> = { limit };
       if (caseId !== null && caseId !== undefined) {
@@ -3169,10 +3177,10 @@ export class ApiClient {
      * Get a specific conversation with messages
      */
     getConversation: async (
-      conversationId: number,
+      conversationId: number
     ): Promise<ApiResponse<any>> => {
       return this.get<ApiResponse<any>>(
-        `/chat/conversations/${conversationId}`,
+        `/chat/conversations/${conversationId}`
       );
     },
 
@@ -3180,10 +3188,10 @@ export class ApiClient {
      * Delete a conversation
      */
     deleteConversation: async (
-      conversationId: number,
+      conversationId: number
     ): Promise<ApiResponse<any>> => {
       return this.delete<ApiResponse<any>>(
-        `/chat/conversations/${conversationId}`,
+        `/chat/conversations/${conversationId}`
       );
     },
 
@@ -3192,7 +3200,7 @@ export class ApiClient {
      */
     uploadDocument: async (
       file: File,
-      userQuestion?: string,
+      userQuestion?: string
     ): Promise<ApiResponse<{ filePath: string }>> => {
       const formData = new FormData();
       formData.append("file", file);
@@ -3219,7 +3227,7 @@ export class ApiClient {
           response.status,
           errorData.detail || errorData.message || "Upload failed",
           "UPLOAD_ERROR",
-          errorData,
+          errorData
         );
       }
 
@@ -3231,7 +3239,7 @@ export class ApiClient {
      */
     analyzeDocument: async (
       filePath: string,
-      userQuestion?: string,
+      userQuestion?: string
     ): Promise<ApiResponse<any>> => {
       return this.post<ApiResponse<any>>("/chat/analyze-document", {
         filePath,
@@ -3253,7 +3261,7 @@ export class ApiError extends Error {
     public status: number,
     message: string,
     public code: string,
-    public details?: unknown,
+    public details?: unknown
   ) {
     super(message);
     this.name = "ApiError";

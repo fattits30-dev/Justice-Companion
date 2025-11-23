@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import Database from "better-sqlite3-multiple-ciphers";
-import { UserFactsRepository } from "./UserFactsRepository";
+import { UserFactsRepository } from "./UserFactsRepository.ts";
 import { AuditLogger } from "../services/AuditLogger.ts";
-import { TestDatabaseHelper } from "../test-utils/database-test-helper";
-import { databaseManager } from "../db/database";
+import { TestDatabaseHelper } from "../test-utils/database-test-helper.ts";
+import { databaseManager } from "../db/database.ts";
 import {
   resetRepositories,
   initializeTestRepositories,

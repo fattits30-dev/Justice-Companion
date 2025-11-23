@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "../../../test-utils/test-utils.tsx";
 import userEvent from "@testing-library/user-event";
-import { TimelineEmpty } from "./TimelineEmpty";
+import { TimelineEmpty } from "./TimelineEmpty.tsx";
 
 describe("TimelineEmpty", () => {
   const mockOnAddClick = vi.fn();

@@ -1,4 +1,5 @@
-import { logger } from "../utils/logger";
+import { logger } from "../utils/logger.ts";
+import { apiClient } from "../lib/apiClient.ts";
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -344,15 +345,15 @@ function AIProviderTab({
     try {
       const providerConfig = AI_PROVIDER_METADATA[selectedProvider];
 
-      // Call the actual IPC handler to save configuration
-      const result = await globalThis.window.justiceAPI.configureAI({
-        provider: selectedProvider,
-        apiKey: apiKey.trim(),
+      // Call the HTTP API to save configuration
+      const result = await apiClient.aiConfig.configure(selectedProvider, {
+        api_key: apiKey.trim(),
         model: selectedModel || providerConfig.defaultModel,
         endpoint: customEndpoint || providerConfig.defaultEndpoint,
         temperature: 0.7,
-        maxTokens: 2048,
-        topP: 0.9,
+        max_tokens: 2048,
+        top_p: 0.9,
+        enabled: true,
       });
 
       if (result.success) {
@@ -360,12 +361,12 @@ function AIProviderTab({
         setTimeout(() => setSaveSuccess(false), 3000);
         // Success - configuration saved
       } else {
-        logger.error("[SettingsView] Failed to save AI config:", result.error);
+        logger.error("[SettingsView] Failed to save AI config:", result);
         alert(
           `Failed to save configuration: ${
-            typeof result.error === "string"
-              ? result.error
-              : (result.error?.message ?? "Unknown error")
+            "error" in result && result.error
+              ? result.error.message
+              : "Unknown error"
           }`,
         );
       }

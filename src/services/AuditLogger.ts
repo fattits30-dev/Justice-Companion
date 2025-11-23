@@ -1,4 +1,4 @@
-import { logger } from "../utils/logger";
+import { logger } from "../utils/logger.ts";
 
 import { createHash, randomUUID } from "node:crypto";
 import type Database from "better-sqlite3";

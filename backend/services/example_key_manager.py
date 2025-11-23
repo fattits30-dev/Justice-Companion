@@ -5,10 +5,20 @@ This file demonstrates all KeyManager functionality with practical examples.
 """
 
 import asyncio
-import os
 import base64
-from backend.services.key_manager import KeyManager, generate_encryption_key
+import os
+
 from backend.services.encryption_service import EncryptionService
+from backend.services.key_manager import KeyManager, generate_encryption_key
+
+
+def _example_secret(env_var: str) -> str:
+    value = os.getenv(env_var)
+    if value:
+        return value
+    raise RuntimeError(
+        f"Set environment variable {env_var} before running this example."
+    )
 
 
 async def example_basic_usage():
@@ -59,6 +69,8 @@ async def example_encryption_integration(key_manager: KeyManager):
     # Encrypt sensitive data
     sensitive_data = "Confidential legal document content"
     encrypted = encryption_service.encrypt(sensitive_data)
+    if not encrypted:
+        raise RuntimeError("Encryption returned no ciphertext for sample data")
 
     print(f"Original: {sensitive_data}")
     print(f"Encrypted: {encrypted.ciphertext[:32]}...")
@@ -77,9 +89,11 @@ async def example_api_key_storage(key_manager: KeyManager):
 
     # Store multiple API keys
     api_keys = {
-        "openai_api_key": "sk-test-openai-123456",
-        "anthropic_api_key": "sk-ant-test-789012",
-        "huggingface_api_key": "hf_test_345678",
+        "openai_api_key": _example_secret("OPENAI_API_KEY"),
+        "anthropic_api_key": _example_secret("ANTHROPIC_API_KEY"),
+        "huggingface_api_key": _example_secret(
+            "HUGGINGFACE_API_KEY"
+        ),
     }
 
     print("Storing API keys...")
@@ -228,9 +242,7 @@ async def example_error_handling():
     """Example 7: Error handling."""
     print("\n=== Example 7: Error Handling ===\n")
 
-    from backend.services.key_manager import (
-        InvalidKeyError,
-    )
+    from backend.services.key_manager import InvalidKeyError
 
     user_data_path = os.path.expanduser("~/.justice-companion-error-test")
     key_manager = KeyManager(user_data_path)
@@ -239,7 +251,7 @@ async def example_error_handling():
     try:
         # Try to get key that doesn't exist
         # (This will fail because we haven't generated one)
-        key = await key_manager.get_key()
+        await key_manager.get_key()
     except InvalidKeyError as e:
         print(f"✓ Caught InvalidKeyError: {e}")
         print("  → Generating new key...")
@@ -346,7 +358,9 @@ async def example_complete_workflow():
     print("\n5. Configuring API keys...")
     if not key_manager.has_stored_key("openai_api_key"):
         # In production, get from secure input
-        await key_manager.store_key("openai_api_key", "sk-test-123")
+        await key_manager.store_key(
+            "openai_api_key", _example_secret("OPENAI_API_KEY")
+        )
         print("   ✓ OpenAI API key stored")
     else:
         print("   ✓ OpenAI API key already configured")

@@ -2,15 +2,15 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import {
   AuthorizationMiddleware,
   AuthorizationError,
-} from "./AuthorizationMiddleware";
-import { CaseRepository } from "../repositories/CaseRepository";
-import { AuditLogger } from "../services/AuditLogger";
+} from "./AuthorizationMiddleware.ts";
+import { CaseRepository } from "../repositories/CaseRepository.ts";
+import { AuditLogger } from "../services/AuditLogger.ts";
 import type { User } from "../domains/auth/entities/User";
 import type { Case } from "../domains/cases/entities/Case";
 
 // Mock dependencies
-vi.mock("../repositories/CaseRepository");
-vi.mock("../services/AuditLogger");
+vi.mock("../repositories/CaseRepository.ts");
+vi.mock("../services/AuditLogger.ts");
 
 describe("AuthorizationMiddleware", () => {
   let authMiddleware: AuthorizationMiddleware;

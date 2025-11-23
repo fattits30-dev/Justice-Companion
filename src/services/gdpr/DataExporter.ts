@@ -106,7 +106,7 @@ export class DataExporter {
             const decrypted = this.encryptionService.decrypt(encryptedData);
             caseRecord.description = decrypted;
           }
-        } catch (err) {
+        } catch (_err) {
           // Field not encrypted or already decrypted
         }
       }
@@ -144,7 +144,7 @@ export class DataExporter {
           if (encryptedData.ciphertext && encryptedData.iv) {
             record.content = this.encryptionService.decrypt(encryptedData);
           }
-        } catch (err) {
+        } catch (_err) {
           // Not encrypted
         }
       }
@@ -203,7 +203,7 @@ export class DataExporter {
           if (encryptedData.ciphertext && encryptedData.iv) {
             event.description = this.encryptionService.decrypt(encryptedData);
           }
-        } catch (err) {
+        } catch (_err) {
           // Not encrypted
         }
       }
@@ -241,7 +241,7 @@ export class DataExporter {
           if (encryptedData.ciphertext && encryptedData.iv) {
             action.description = this.encryptionService.decrypt(encryptedData);
           }
-        } catch (err) {
+        } catch (_err) {
           // Not encrypted
         }
       }
@@ -279,7 +279,7 @@ export class DataExporter {
           if (encryptedData.ciphertext && encryptedData.iv) {
             note.content = this.encryptionService.decrypt(encryptedData);
           }
-        } catch (err) {
+        } catch (_err) {
           // Not encrypted
         }
       }
@@ -337,7 +337,7 @@ export class DataExporter {
           if (encryptedData.ciphertext && encryptedData.iv) {
             msg.message = this.encryptionService.decrypt(encryptedData);
           }
-        } catch (err) {
+        } catch (_err) {
           // Not encrypted
         }
       }
@@ -349,7 +349,7 @@ export class DataExporter {
           if (encryptedData.ciphertext && encryptedData.iv) {
             msg.response = this.encryptionService.decrypt(encryptedData);
           }
-        } catch (err) {
+        } catch (_err) {
           // Not encrypted
         }
       }
@@ -453,7 +453,7 @@ export class DataExporter {
       `);
       const result = stmt.get() as any;
       return result?.version?.toString() || "0";
-    } catch (err) {
+    } catch (_err) {
       return "0";
     }
   }

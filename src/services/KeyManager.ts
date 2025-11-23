@@ -12,7 +12,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as crypto from "crypto";
-import { logger } from "../utils/logger";
+import { logger } from "../utils/logger.ts";
 
 /**
  * Minimal interface for safeStorage-compatible implementations.

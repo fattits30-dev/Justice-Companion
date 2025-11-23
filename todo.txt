@@ -1,0 +1,46 @@
+# VS Code Optimization Checklist
+
+## Current Analysis (Based on your settings/extensions)
+✓ Codacy MCP server removed (was causing 199k token response warnings)
+✓ Large settings.json with many performance-impacting features enabled
+
+## Extensions to Consider Removing:
+❌ eamodio.git-graph (duplicate git functionality with gitlens)
+❌ donjayamanne.githistory (resource intensive git history viewer)
+❌ sburg.vscode-javascript-booster (duplicate ES7 snippets)
+❌ styled-components.vscode-styled-components (if not using styled components heavily)
+❌ ms-vscode.vscode-node-azure-pack (unnecessary for local dev)
+❌ saoudrizwan.claude-dev (redundant if using Cline)
+❌ ms-vsliveshare.vsliveshare (resource intensive)
+❌ gruntfuggly.todo-tree (duplicate TODO highlighting)
+❌ bierner.markdown-preview-github-styles (redundant markdown styling)
+
+## Performance-Impacting Settings to Optimize:
+❌ Multiple formatters on save (eslint + prettier conflict)
+❌ All inlay hints enabled (typescript.inlayHints.*)
+❌ Multiple error providers (sonarlint + eslint + errorlens)
+❌ Large terminal scrollback (10,000 lines)
+❌ Multiple autocomplete sources enabled
+❌ File watcher excluding too much (performance cost)
+
+## Extensions You Should Keep:
+✅ dbaeumer.vscode-eslint (essential linting)
+✅ esbenp.prettier-vscode (code formatting)
+✅ vitest.explorer (testing)
+✅ ms-playwright.playwright (E2E testing)
+✅ eamodio.gitlens (git integration)
+✅ usernamehw.errorlens (error display)
+✅ bradlc.vscode-tailwindcss (styling framework)
+✅ wayou.vscode-todo-highlight (TODO management)
+✅ yzhang.markdown-all-in-one (markdown support)
+
+## Recommended New Extensions:
+➕ ms-vscode.vscode-json (better JSON support)
+➕ ms-python.python (if working with Python AI service)
+➕ ms-vscode-remote.remote-ssh (if needed for remote development)
+
+## Actions Completed:
+✅ Removed problematic Codacy MCP server
+⏳ Create optimized settings.json
+⏳ Update extensions.json
+⏳ Test VS Code performance after changes

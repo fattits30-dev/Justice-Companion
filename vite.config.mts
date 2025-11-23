@@ -125,36 +125,36 @@ export default defineConfig({
   // Base path for web deployment (absolute)
   base: "/",
 
-  // Vitest configuration - temporarily disabled
-  // test: {
-  //   globals: true,
-  //   environment: 'happy-dom',
-  //   setupFiles: ['./src/test/setup.ts'],
-  //   pool: 'forks',
-  //   maxWorkers: 1,
-  //   isolate: false,
-  //   exclude: [
-  //     '**/node_modules/**',
-  //     '**/dist/**',
-  //     '**/.{git,cache,output,temp}/**',
-  //     '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*',
-  //   ],
-  //   coverage: {
-  //     provider: 'v8',
-  //     reporter: ['text', 'json', 'html'],
-  //     exclude: [
-  //       'node_modules/',
-  //       'src/test/',
-  //       '**/*.test.{ts,tsx}',
-  //       '**/*.spec.{ts,tsx}',
-  //     ],
-  //   },
-  //   server: {
-  //     deps: {
-  //       inline: ['parse5'],
-  //     },
-  //   },
-  // },
+  // Vitest configuration
+  test: {
+    globals: true,
+    environment: "happy-dom",
+    setupFiles: ["./src/test/setup.ts"],
+    pool: "forks",
+    maxWorkers: 1,
+    isolate: false,
+    exclude: [
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/.{git,cache,output,temp}/**",
+      "**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*",
+    ],
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "json", "html"],
+      exclude: [
+        "node_modules/",
+        "src/test/",
+        "**/*.test.{ts,tsx}",
+        "**/*.spec.{ts,tsx}",
+      ],
+    },
+    server: {
+      deps: {
+        inline: ["parse5"],
+      },
+    },
+  },
 
   // Build configuration
   build: {
@@ -176,9 +176,11 @@ export default defineConfig({
   server: {
     port: getVitePort(),
     strictPort: false, // Allow Vite to find an available port if the default is in use
-    host: "localhost",
+    host: true, // Listen on all interfaces for Docker/network access
     open: false, // Don't auto-open browser (Electron will handle this)
     cors: true,
+    // Allow Docker host and other testing hosts
+    allowedHosts: ["host.docker.internal", "localhost", "127.0.0.1"],
 
     // HMR configuration
     hmr: {

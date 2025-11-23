@@ -476,7 +476,7 @@ export interface NotificationStats {
 }
 
 // Legacy compatibility
-export interface NotificationResponse extends Notification {}
+export type NotificationResponse = Notification;
 
 export interface NotificationListResponse {
   notifications: Notification[];
@@ -656,7 +656,7 @@ export interface TemplateWithStats extends Template {
 }
 
 // Legacy compatibility
-export interface TemplateResponse extends Template {}
+export type TemplateResponse = Template;
 
 export interface SeedTemplatesResponse {
   success: boolean;
@@ -806,7 +806,7 @@ export interface TimelineChartResponse {
 }
 
 // Legacy compatibility types
-export interface RecentCase extends RecentCaseInfo {}
+export type RecentCase = RecentCaseInfo;
 
 export interface DashboardResponse {
   stats: DashboardStats;
@@ -898,7 +898,7 @@ export interface SnoozeDeadlineParams {
 }
 
 // Legacy compatibility
-export interface DeadlineResponse extends Deadline {}
+export type DeadlineResponse = Deadline;
 
 // ===== EXPORT TYPES =====
 

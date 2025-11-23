@@ -36,6 +36,41 @@ export function SaveToCaseDialog({
 
   // Load cases when dialog opens
   useEffect(() => {
+    const loadCases = async () => {
+      setLoadingCases(true);
+      setError(null);
+
+      try {
+        const result = await window.justiceAPI.getAllCases(sessionId);
+
+        if (!result.success) {
+          const errorMsg =
+            typeof result.error === "string"
+              ? result.error
+              : result.error?.message || "Failed to load cases";
+          setError(errorMsg);
+          return;
+        }
+
+        if (result.data) {
+          const activeCases = result.data.filter(
+            (c: Case) => c.status === "active",
+          );
+          setCases(activeCases);
+
+          if (activeCases.length > 0) {
+            setSelectedCaseId(activeCases[0].id);
+          } else {
+            setError("No active cases found. Please create a case first.");
+          }
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "An error occurred");
+      } finally {
+        setLoadingCases(false);
+      }
+    };
+
     if (open) {
       loadCases();
       // Auto-generate a better title from the content
@@ -44,42 +79,7 @@ export function SaveToCaseDialog({
         setTitle(firstLine);
       }
     }
-  }, [open, messageContent]);
-
-  const loadCases = async () => {
-    setLoadingCases(true);
-    setError(null);
-
-    try {
-      const result = await window.justiceAPI.getAllCases(sessionId);
-
-      if (!result.success) {
-        const errorMsg =
-          typeof result.error === "string"
-            ? result.error
-            : result.error?.message || "Failed to load cases";
-        setError(errorMsg);
-        return;
-      }
-
-      if (result.data) {
-        const activeCases = result.data.filter(
-          (c: Case) => c.status === "active",
-        );
-        setCases(activeCases);
-
-        if (activeCases.length > 0) {
-          setSelectedCaseId(activeCases[0].id);
-        } else {
-          setError("No active cases found. Please create a case first.");
-        }
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-    } finally {
-      setLoadingCases(false);
-    }
-  };
+  }, [open, messageContent, sessionId]);
 
   const handleSave = async () => {
     if (!selectedCaseId || !title.trim()) {

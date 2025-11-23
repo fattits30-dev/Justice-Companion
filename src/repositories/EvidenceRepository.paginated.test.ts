@@ -7,10 +7,10 @@ import {
   beforeAll,
   afterAll,
 } from "vitest";
-import { EvidenceRepository } from "./EvidenceRepository";
-import { EncryptionService } from "../services/EncryptionService";
-import { AuditLogger } from "../services/AuditLogger";
-import { createTestDatabase } from "../test-utils/database-test-helper";
+import { EvidenceRepository } from "./EvidenceRepository.ts";
+import { EncryptionService } from "../services/EncryptionService.ts";
+import { AuditLogger } from "../services/AuditLogger.ts";
+import { createTestDatabase } from "../test-utils/database-test-helper.ts";
 import { databaseManager } from "../db/database.ts";
 import type { CreateEvidenceInput } from "../domains/evidence/entities/Evidence";
 

@@ -1,6 +1,6 @@
 /// <reference types="vitest/globals" />
 
-import { ErrorLogger } from "./error-logger";
+import { ErrorLogger } from "./error-logger.ts";
 import fs from "fs";
 import path from "path";
 

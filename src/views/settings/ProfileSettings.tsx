@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { User, Mail, Save, AlertCircle, Check, Phone } from "lucide-react";
-import { Card } from "../../components/ui/Card";
-import { Button } from "../../components/ui/Button";
+import { Card } from "../../components/ui/Card.tsx";
+import { Button } from "../../components/ui/Button.tsx";
 import { toast } from "sonner";
-import { logger } from "../../utils/logger";
+import { logger } from "../../utils/logger.ts";
 import type { IPCErrorResponse } from "../../types/window";
 
 interface UserProfile {

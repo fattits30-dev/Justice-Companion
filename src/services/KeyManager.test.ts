@@ -10,7 +10,14 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { KeyManager, type SafeStorageLike } from "./KeyManager";
+import { KeyManager, type SafeStorageLike } from "./KeyManager.ts";
+
+// Mock SafeStorage interface for web compatibility
+interface SafeStorage {
+  isEncryptionAvailable(): boolean;
+  encryptString(value: string): Buffer;
+  decryptString(encrypted: Buffer): string;
+}
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";

@@ -8,7 +8,7 @@
 import fs from "fs";
 import path from "path";
 import type { LocalClaudeConfig, WorkflowPlan, AgentContext } from "./types.ts";
-import { logger } from "../utils/logger";
+import { logger } from "../utils/logger.ts";
 
 export class ConfigManager {
   private configDir: string;
@@ -39,7 +39,7 @@ export class ConfigManager {
    */
   async initialize(
     projectName: string,
-    projectPath: string,
+    projectPath: string
   ): Promise<LocalClaudeConfig> {
     // Create directories
     fs.mkdirSync(this.configDir, { recursive: true });
@@ -101,7 +101,7 @@ export class ConfigManager {
     fs.writeFileSync(
       this.configPath,
       JSON.stringify(updated, null, 2),
-      "utf-8",
+      "utf-8"
     );
   }
 
@@ -110,7 +110,7 @@ export class ConfigManager {
    */
   async markIndexed(
     documentCount: number,
-    collectionName: string,
+    collectionName: string
   ): Promise<void> {
     const config = await this.loadConfig();
     if (!config) {
@@ -217,7 +217,7 @@ export class ConfigManager {
       const data = fs.readFileSync(this.historyPath, "utf-8");
       const lines = data.trim().split("\n").filter(Boolean);
 
-      const history = lines.map((line) => JSON.parse(line));
+      const history = lines.map((line: string) => JSON.parse(line));
 
       if (limit) {
         return history.slice(-limit);
@@ -272,7 +272,7 @@ export class ConfigManager {
 
       const entries = fs.readdirSync(this.backupsDir);
 
-      return entries.map((entry) => {
+      return entries.map((entry: string) => {
         const parts = entry.split("-");
         const label = parts.slice(-1)[0];
         const timestamp = parts.slice(0, -1).join("-");
@@ -312,12 +312,12 @@ export class ConfigManager {
     if (plan) {
       const total = plan.phases.reduce(
         (sum, phase) => sum + phase.tasks.length,
-        0,
+        0
       );
       const completed = plan.phases.reduce(
         (sum, phase) =>
           sum + phase.tasks.filter((t) => t.status === "completed").length,
-        0,
+        0
       );
       const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
 

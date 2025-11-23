@@ -37,7 +37,7 @@ from reportlab.platypus import (
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER
 from reportlab.pdfgen import canvas as pdf_canvas
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 from backend.services.audit_logger import AuditLogger
 
@@ -65,7 +65,7 @@ class DocumentStyles(BaseModel):
     footer_font_size: int = Field(default=9, ge=6, le=14)
     footer_color: str = Field(default="#718096")
 
-    @validator("title_color", "heading1_color", "heading2_color", "footer_color")
+    @field_validator("title_color", "heading1_color", "heading2_color", "footer_color")
     def validate_hex_color(cls, v: str) -> str:
         """Validate hex color format."""
         if not v.startswith("#") or len(v) != 7:

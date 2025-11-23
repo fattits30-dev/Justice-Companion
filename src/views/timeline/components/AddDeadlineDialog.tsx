@@ -156,7 +156,7 @@ export function AddDeadlineDialog({
       } else {
         setErrors({ submit: result.error || "Failed to create deadline" });
       }
-    } catch (error) {
+    } catch (_error) {
       setErrors({ submit: "An unexpected error occurred" });
     } finally {
       setIsSubmitting(false);

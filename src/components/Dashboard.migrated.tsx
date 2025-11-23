@@ -32,7 +32,7 @@
  * - Maintains identical UI/UX to original component
  */
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   TrendingUp,
   Briefcase,
@@ -88,15 +88,10 @@ export function Dashboard({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Load dashboard data on mount
-  useEffect(() => {
-    loadDashboardData();
-  }, [sessionId]);
-
   /**
    * Load all dashboard data in parallel for optimal performance
    */
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
@@ -160,7 +155,12 @@ export function Dashboard({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [sessionId, onLogout]);
+
+  // Load dashboard data on mount
+  useEffect(() => {
+    loadDashboardData();
+  }, [loadDashboardData]);
 
   // Format date for display (UK format)
   const formatDate = (dateString: string): string => {

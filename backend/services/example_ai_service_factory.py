@@ -9,18 +9,23 @@ Run with:
 """
 
 import asyncio
-import tempfile
 import os
+import tempfile
 
-from backend.services.ai_service_factory import (
-    AIServiceFactory,
-    AIChatRequest,
-    AIChatMessage,
-    LegalContext,
-    LegislationResult,
-    CaseResult,
-    get_ai_service_factory,
-)
+from backend.services.ai_service_factory import (AIChatMessage, AIChatRequest,
+                                                 AIServiceFactory, CaseResult,
+                                                 LegalContext,
+                                                 LegislationResult,
+                                                 get_ai_service_factory)
+
+
+def _example_secret(env_var: str) -> str:
+    value = os.getenv(env_var)
+    if value:
+        return value
+    raise RuntimeError(
+        f"Environment variable {env_var} must be set to run this example."
+    )
 
 
 # ============================================================================
@@ -53,7 +58,7 @@ def example_1_basic_initialization():
             model_path=model_path, audit_logger=None  # Optional audit logger
         )
 
-        print(f"[OK] Factory initialized successfully")
+        print("[OK] Factory initialized successfully")
         print(f"  Model path: {model_path}")
         print(f"  Current provider: {factory.get_current_provider()}")
         print(f"  Model available: {factory.is_model_available()}")
@@ -100,19 +105,22 @@ def example_2_configure_providers():
         # Initialize factory
         factory = AIServiceFactory.get_instance(model_path=model_path)
 
-        print(f"[OK] Factory initialized with integrated provider")
+        print("[OK] Factory initialized with integrated provider")
         print(f"  Current provider: {factory.get_current_provider()}")
 
         # Configure OpenAI
-        factory.configure_openai(api_key="sk-test-api-key", model="gpt-4o")
+        factory.configure_openai(
+            api_key=_example_secret("OPENAI_API_KEY"),
+            model="gpt-4o",
+        )
 
-        print(f"[OK] OpenAI configured and activated")
+        print("[OK] OpenAI configured and activated")
         print(f"  Current provider: {factory.get_current_provider()}")
 
         # Switch back to integrated
         factory.switch_to_integrated()
 
-        print(f"[OK] Switched to integrated provider")
+        print("[OK] Switched to integrated provider")
         print(f"  Current provider: {factory.get_current_provider()}")
 
         # Switch to OpenAI (returns True if successful)
@@ -171,11 +179,13 @@ async def example_3_handle_chat_requests():
         # Send request (will return stub error in this example)
         response = await factory.handle_chat_request(simple_request)
 
-        print(f"[OK] Received response")
+        print("[OK] Received response")
         print(f"  Success: {response.success}")
         if not response.success:
-            print(f"  Error: {response.error}")
-            print(f"  Code: {response.code}")
+            error_message = getattr(response, "error", "unknown")
+            error_code = getattr(response, "code", "n/a")
+            print(f"  Error: {error_message}")
+            print(f"  Code: {error_code}")
 
         # Create request with legal context
         context_request = AIChatRequest(
@@ -207,19 +217,22 @@ async def example_3_handle_chat_requests():
         )
 
         print("\n[OK] Created request with legal context")
-        print(f"  Legislation: {len(context_request.context.legislation)}")
-        print(f"  Case law: {len(context_request.context.case_law)}")
+        if context_request.context:
+            print(f"  Legislation: {len(context_request.context.legislation)}")
+            print(f"  Case law: {len(context_request.context.case_law)}")
+        else:
+            print("  No legal context attached")
 
         # Send request with context
         response2 = await factory.handle_chat_request(context_request)
 
-        print(f"[OK] Received response with context")
+        print("[OK] Received response with context")
         print(f"  Success: {response2.success}")
 
         # Alternative method: use chat() alias
         response3 = await factory.chat(simple_request)
 
-        print(f"[OK] Used chat() alias method")
+        print("[OK] Used chat() alias method")
         print(f"  Success: {response3.success}")
 
     finally:
@@ -317,7 +330,7 @@ def example_5_model_validation():
         is_available = factory.is_model_available()
         model_size = factory.get_model_size()
 
-        print(f"[OK] Model validation completed")
+        print("[OK] Model validation completed")
         print(f"  Model available: {is_available}")
         print(f"  Model size: {model_size:,} bytes ({model_size / (1024 * 1024):.2f} MB)")
 
@@ -327,7 +340,7 @@ def example_5_model_validation():
         is_available2 = factory.is_model_available()
         model_size2 = factory.get_model_size()
 
-        print(f"\n[OK] Nonexistent model test")
+        print("\n[OK] Nonexistent model test")
         print(f"  Model available: {is_available2}")
         print(f"  Model size: {model_size2} bytes")
 
@@ -384,12 +397,12 @@ def example_6_thread_safety():
         for thread in threads:
             thread.join()
 
-        print(f"[OK] All threads completed")
+        print("[OK] All threads completed")
 
         # Verify all instances are the same
         unique_instances = len(set(id(inst) for inst in instances))
 
-        print(f"[OK] Thread safety verification")
+        print("[OK] Thread safety verification")
         print(f"  Total instances created: {len(instances)}")
         print(f"  Unique instances: {unique_instances}")
         print(f"  Thread-safe: {unique_instances == 1}")
@@ -440,7 +453,7 @@ def example_7_helper_function():
         AIServiceFactory.reset_instance()
 
         try:
-            factory3 = get_ai_service_factory()
+            get_ai_service_factory()
             print("[ERROR] Should have raised RuntimeError")
         except RuntimeError as e:
             print(f"[OK] Correctly raised error: {str(e)}")

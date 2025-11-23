@@ -10,7 +10,7 @@ import type {
   AIProviderType,
 } from "../../types/ai-providers.ts";
 import { UnifiedAIService } from "../UnifiedAIService.ts";
-import { logger } from "../../utils/logger";
+import { logger } from "../../utils/logger.ts";
 
 export interface ChatMessage {
   role: "system" | "user" | "assistant";

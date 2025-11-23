@@ -6,11 +6,37 @@ This backend replaces the Node.js Electron IPC handlers with HTTP REST API.
 The Electron frontend will make HTTP requests to this backend instead of using IPC.
 """
 
+import json
+import logging
 import os
 import sys
-import logging
-from pathlib import Path
+from contextlib import asynccontextmanager
+
 from dotenv import load_dotenv
+from fastapi import FastAPI, Request, Response
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from starlette.middleware.base import BaseHTTPMiddleware
+
+from backend.models.base import init_db
+from backend.routes import auth_router
+from backend.routes.action_logs import router as action_logs_router
+from backend.routes.ai_config import router as ai_config_router
+from backend.routes.ai_status import router as ai_status_router
+from backend.routes.cases import router as cases_router
+from backend.routes.chat import router as chat_router
+from backend.routes.dashboard import router as dashboard_router
+from backend.routes.database import router as database_router
+from backend.routes.deadlines import router as deadlines_router
+from backend.routes.evidence import router as evidence_router
+from backend.routes.export import router as export_router
+from backend.routes.gdpr import router as gdpr_router
+from backend.routes.port_status import router as port_status_router
+from backend.routes.profile import router as profile_router
+from backend.routes.search import router as search_router
+from backend.routes.tags import router as tags_router
+from backend.routes.templates import router as templates_router
+from backend.routes.ui import router as ui_router
 
 # Load environment variables from .env file
 load_dotenv()
@@ -18,47 +44,13 @@ load_dotenv()
 # Configure logging BEFORE any imports that create loggers
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(sys.stdout)
-    ]
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[logging.StreamHandler(sys.stdout)],
 )
-
-# Add parent directory to Python path for absolute imports
-backend_dir = Path(__file__).parent
-project_root = backend_dir.parent
-sys.path.insert(0, str(project_root))
-
-from fastapi import FastAPI, Request, Response
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from contextlib import asynccontextmanager
-from starlette.middleware.base import BaseHTTPMiddleware
-import json
-
-from backend.models.base import init_db
-from backend.routes import auth_router
-from backend.routes.cases import router as cases_router
-from backend.routes.dashboard import router as dashboard_router
-from backend.routes.profile import router as profile_router
-from backend.routes.evidence import router as evidence_router
-from backend.routes.chat_enhanced import router as chat_router
-from backend.routes.database import router as database_router
-from backend.routes.deadlines import router as deadlines_router
-from backend.routes.export import router as export_router
-from backend.routes.gdpr import router as gdpr_router
-from backend.routes.tags import router as tags_router
-from backend.routes.templates import router as templates_router
-from backend.routes.search import router as search_router
-from backend.routes.port_status import router as port_status_router
-from backend.routes.action_logs import router as action_logs_router
-from backend.routes.ui import router as ui_router
-from backend.routes.ai_status import router as ai_status_router
-from backend.routes.ai_config import router as ai_config_router
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(_: FastAPI):
     """
     Application lifecycle manager.
     Initializes database on startup, cleanup on shutdown.
@@ -103,13 +95,23 @@ class ResponseWrapperMiddleware(BaseHTTPMiddleware):
         response = await call_next(request)
         print(f"[ResponseWrapperMiddleware] Response status: {response.status_code}")
 
-        # Only wrap successful JSON responses
-        if response.status_code == 200:
-            # Read the original response body from the streaming response
-            body_bytes = []
-            async for chunk in response.body_iterator:
-                body_bytes.append(chunk)
-            body = b"".join(body_bytes)
+        # Only wrap successful JSON responses (all 2xx status codes)
+        if 200 <= response.status_code < 300:
+            # Read the original response body without assuming streaming attributes
+            body_chunks: list[bytes] = []
+            body_iterator = getattr(response, "body_iterator", None)
+
+            if body_iterator is not None:
+                async for chunk in body_iterator:
+                    body_chunks.append(chunk)
+            else:
+                raw_body = getattr(response, "body", b"")
+                if isinstance(raw_body, (bytes, bytearray)):
+                    body_chunks.append(bytes(raw_body))
+                elif raw_body:
+                    body_chunks.append(str(raw_body).encode())
+
+            body = b"".join(body_chunks)
 
             # Try to parse as JSON
             try:
@@ -160,6 +162,7 @@ class ResponseWrapperMiddleware(BaseHTTPMiddleware):
 # Add response wrapper middleware - wraps all 200 OK JSON responses for frontend
 app.add_middleware(ResponseWrapperMiddleware)
 
+
 # CORS configuration for frontend (Electron + PWA)
 # Cloud-ready: Supports both local development and production PWA
 def get_allowed_origins() -> list:
@@ -186,8 +189,8 @@ def get_allowed_origins() -> list:
 
         # Add Docker host IP origins for local testing (ports 5176-5180)
         docker_host_ip = "172.26.160.1"
-        for port in range(5176, 5181):
-            origins.append(f"http://{docker_host_ip}:{port}")
+        for docker_port in range(5176, 5181):
+            origins.append(f"http://{docker_host_ip}:{docker_port}")
 
     print(f"CORS allowed origins: {origins}")
     return origins
@@ -197,7 +200,9 @@ def get_allowed_origins() -> list:
 allowed_origins = get_allowed_origins()
 
 # TEMPORARY: Force wildcard CORS for local testing
-if True:  # Force wildcard for testing
+force_wildcard_cors = os.getenv("FORCE_WILDCARD_CORS", "false").lower() == "true"
+
+if force_wildcard_cors:
     # Allow all origins (development/testing only)
     app.add_middleware(
         CORSMiddleware,

@@ -7,8 +7,8 @@
  * @module migrate-to-secure-storage
  */
 
-import { secureStorage } from "@/services/SecureStorageService";
-import { logger } from "./logger";
+import { secureStorage } from "@/services/SecureStorageService.ts";
+import { logger } from "./logger.ts";
 
 /**
  * Storage keys that need migration

@@ -31,7 +31,7 @@ import re
 import logging
 from typing import Optional, Dict, Any, List
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 from fastapi import HTTPException
 
 # PDF parsing
@@ -84,7 +84,7 @@ class ParsedDocument(BaseModel):
     word_count: int = Field(..., description="Total word count")
     metadata: Optional[ParsedDocumentMetadata] = Field(None, description="Document metadata")
 
-    @validator("file_type")
+    @field_validator("file_type")
     def validate_file_type(cls, v):
         """Validate file type is supported."""
         allowed = ["pdf", "docx", "txt"]

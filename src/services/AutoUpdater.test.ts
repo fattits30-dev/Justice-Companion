@@ -2,47 +2,31 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import {
   AutoUpdater,
   type AppLike,
-  type BrowserWindowLike,
+  type UpdateNotificationCallback,
 } from "./AutoUpdater.ts";
-import type { AppUpdater, UpdateInfo } from "electron-updater";
 
-// Mock electron-updater
-const mockAutoUpdater = {
-  checkForUpdates: vi.fn(),
-  checkForUpdatesAndNotify: vi.fn(),
-  downloadUpdate: vi.fn(),
-  quitAndInstall: vi.fn(),
-  on: vi.fn(),
-  setFeedURL: vi.fn(),
-  autoDownload: false,
-  autoInstallOnAppQuit: true,
-  logger: null,
-} as unknown as AppUpdater;
+// Mock fetch for GitHub API
+const mockFetch = vi.fn();
+global.fetch = mockFetch;
 
-// Mock Electron app
+// Mock Electron app (web-compatible)
 const mockApp: AppLike = {
   getVersion: vi.fn().mockReturnValue("1.0.0"),
-  on: vi.fn(),
-  quit: vi.fn(),
-  relaunch: vi.fn(),
 };
 
-// Mock BrowserWindow
-const mockWindow: BrowserWindowLike = {
-  webContents: {
-    send: vi.fn(),
-  },
-  isDestroyed: vi.fn().mockReturnValue(false),
-};
+// Mock notification callback
+const mockNotificationCallback: UpdateNotificationCallback = vi.fn();
 
 describe("AutoUpdater", () => {
   let autoUpdater: AutoUpdater;
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockFetch.mockReset();
     // Re-setup mock return value after clearAllMocks
     (mockApp.getVersion as ReturnType<typeof vi.fn>).mockReturnValue("1.0.0");
-    autoUpdater = new AutoUpdater(mockApp, mockAutoUpdater);
+    autoUpdater = new AutoUpdater(mockApp, { githubRepo: "test/repo" });
+    autoUpdater.setNotificationCallback(mockNotificationCallback);
   });
 
   afterEach(() => {
@@ -50,300 +34,328 @@ describe("AutoUpdater", () => {
   });
 
   describe("Initialization", () => {
-    it("should initialize with correct configuration", () => {
-      expect(mockAutoUpdater.autoDownload).toBe(false);
-      expect(mockAutoUpdater.autoInstallOnAppQuit).toBe(true);
+    it("should initialize with default configuration", () => {
+      expect(autoUpdater.getStatus().currentVersion).toBe("1.0.0");
+      expect(autoUpdater.getStatus().checking).toBe(false);
+      expect(autoUpdater.isEnabled()).toBe(true);
     });
 
-    it("should register update event listeners", () => {
-      expect(mockAutoUpdater.on).toHaveBeenCalledWith(
-        "checking-for-update",
-        expect.any(Function)
-      );
-      expect(mockAutoUpdater.on).toHaveBeenCalledWith(
-        "update-available",
-        expect.any(Function)
-      );
-      expect(mockAutoUpdater.on).toHaveBeenCalledWith(
-        "update-not-available",
-        expect.any(Function)
-      );
-      expect(mockAutoUpdater.on).toHaveBeenCalledWith(
-        "download-progress",
-        expect.any(Function)
-      );
-      expect(mockAutoUpdater.on).toHaveBeenCalledWith(
-        "update-downloaded",
-        expect.any(Function)
-      );
-      expect(mockAutoUpdater.on).toHaveBeenCalledWith(
-        "error",
-        expect.any(Function)
-      );
+    it("should configure GitHub repository", () => {
+      const updater = new AutoUpdater(mockApp, {
+        githubRepo: "owner/repo",
+      });
+      expect(updater.getUpdateSource()).toBe("GitHub: owner/repo");
     });
   });
 
-  describe("Check for Updates", () => {
-    it("should check for updates manually", async () => {
-      (
-        mockAutoUpdater.checkForUpdates as ReturnType<typeof vi.fn>
-      ).mockResolvedValue({
-        updateInfo: { version: "1.0.1" } as UpdateInfo,
-        cancellationToken: null as any,
-      });
+  describe("GitHub API Integration", () => {
+    it("should fetch latest release from GitHub", async () => {
+      const mockRelease = {
+        id: 1,
+        tag_name: "v1.0.1",
+        name: "Version 1.0.1",
+        body: "New features added",
+        published_at: "2023-01-01T00:00:00Z",
+        html_url: "https://github.com/test/repo/releases/tag/v1.0.1",
+        prerelease: false,
+        assets: [
+          {
+            id: 1,
+            name: "update.zip",
+            browser_download_url:
+              "https://github.com/test/repo/releases/download/v1.0.1/update.zip",
+            size: 1000000,
+          },
+        ],
+      };
+
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(mockRelease),
+      } as Response);
 
       const result = await autoUpdater.checkForUpdates();
 
-      expect(mockAutoUpdater.checkForUpdates).toHaveBeenCalled();
+      expect(mockFetch).toHaveBeenCalledWith(
+        "https://api.github.com/repos/test/repo/releases/latest"
+      );
       expect(result.updateAvailable).toBe(true);
-      expect(result.currentVersion).toBe("1.0.0");
+      expect(result.latestVersion).toBe("v1.0.1");
+      expect(result.releaseNotes).toBe("New features added");
     });
 
-    it("should handle check errors gracefully", async () => {
-      (
-        mockAutoUpdater.checkForUpdates as ReturnType<typeof vi.fn>
-      ).mockRejectedValue(new Error("Network error"));
+    it("should handle GitHub API errors", async () => {
+      mockFetch.mockRejectedValue(new Error("Network error"));
 
       const result = await autoUpdater.checkForUpdates();
 
       expect(result.updateAvailable).toBe(false);
       expect(result.error).toBe("Network error");
-    });
-
-    it("should auto-check on startup if enabled", async () => {
-      const updater = new AutoUpdater(mockApp, mockAutoUpdater, {
-        checkOnStartup: true,
-      });
-
-      await updater.initialize();
-
-      expect(mockAutoUpdater.checkForUpdatesAndNotify).toHaveBeenCalled();
-    });
-  });
-
-  describe("Download Updates", () => {
-    it("should download update when available", async () => {
-      (
-        mockAutoUpdater.downloadUpdate as ReturnType<typeof vi.fn>
-      ).mockResolvedValue(["update-file.exe"]);
-
-      const result = await autoUpdater.downloadUpdate();
-
-      expect(mockAutoUpdater.downloadUpdate).toHaveBeenCalled();
-      expect(result.success).toBe(true);
-    });
-
-    it("should handle download errors", async () => {
-      (
-        mockAutoUpdater.downloadUpdate as ReturnType<typeof vi.fn>
-      ).mockRejectedValue(new Error("Download failed"));
-
-      const result = await autoUpdater.downloadUpdate();
-
-      expect(result.success).toBe(false);
-      expect(result.error).toBe("Download failed");
-    });
-
-    it("should track download progress", () => {
-      const progressCallback = vi.fn();
-      autoUpdater.onDownloadProgress(progressCallback);
-
-      // Simulate download progress event
-      const downloadProgressHandler = (
-        mockAutoUpdater.on as any
-      ).mock.calls.find((call: any[]) => call[0] === "download-progress")?.[1];
-
-      if (downloadProgressHandler) {
-        downloadProgressHandler({ percent: 50, bytesPerSecond: 1000000 });
-        expect(progressCallback).toHaveBeenCalledWith(50);
-      }
-    });
-  });
-
-  describe("Install Updates", () => {
-    it("should quit and install update", () => {
-      autoUpdater.quitAndInstall();
-
-      expect(mockAutoUpdater.quitAndInstall).toHaveBeenCalledWith(true, true);
-    });
-
-    it("should notify window before quitting", () => {
-      autoUpdater.setMainWindow(mockWindow);
-      autoUpdater.quitAndInstall();
-
-      expect(mockWindow.webContents.send).toHaveBeenCalledWith(
-        "app-update:installing"
+      expect(mockNotificationCallback).toHaveBeenCalledWith(
+        "app-update:error",
+        expect.any(Error)
       );
     });
 
-    it("should not notify destroyed window", () => {
-      (mockWindow.isDestroyed as any).mockReturnValue(true);
-      autoUpdater.setMainWindow(mockWindow);
-      autoUpdater.quitAndInstall();
+    it("should handle no updates available", async () => {
+      const mockRelease = {
+        id: 1,
+        tag_name: "v1.0.0", // Same version as current
+        name: "Current Version",
+        body: "",
+        published_at: "2023-01-01T00:00:00Z",
+        html_url: "https://github.com/test/repo/releases/tag/v1.0.0",
+        prerelease: false,
+        assets: [],
+      };
 
-      expect(mockWindow.webContents.send).not.toHaveBeenCalled();
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(mockRelease),
+      } as Response);
+
+      const result = await autoUpdater.checkForUpdates();
+
+      expect(result.updateAvailable).toBe(false);
+      expect(mockNotificationCallback).toHaveBeenCalledWith(
+        "app-update:not-available"
+      );
     });
   });
 
   describe("Update Notifications", () => {
-    it("should notify window of update available", () => {
-      autoUpdater.setMainWindow(mockWindow);
-
-      const updateAvailableHandler = (
-        mockAutoUpdater.on as any
-      ).mock.calls.find((call: any[]) => call[0] === "update-available")?.[1];
-
-      if (updateAvailableHandler) {
-        updateAvailableHandler({ version: "1.0.1" });
-        expect(mockWindow.webContents.send).toHaveBeenCalledWith(
-          "app-update:available",
+    it("should notify via callback when update is available", async () => {
+      const mockRelease = {
+        id: 1,
+        tag_name: "v2.0.0",
+        name: "Major Update",
+        body: "Breaking changes included",
+        published_at: "2023-01-01T00:00:00Z",
+        html_url: "https://github.com/test/repo/releases/tag/v2.0.0",
+        prerelease: false,
+        assets: [
           {
-            version: "1.0.1",
-          }
-        );
-      }
-    });
+            id: 1,
+            name: "update.zip",
+            browser_download_url:
+              "https://github.com/test/repo/releases/download/v2.0.0/update.zip",
+            size: 1000000,
+          },
+        ],
+      };
 
-    it("should notify window when no update available", () => {
-      autoUpdater.setMainWindow(mockWindow);
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(mockRelease),
+      } as Response);
 
-      const noUpdateHandler = (mockAutoUpdater.on as any).mock.calls.find(
-        (call: any[]) => call[0] === "update-not-available"
-      )?.[1];
+      await autoUpdater.checkForUpdates();
 
-      if (noUpdateHandler) {
-        noUpdateHandler({ version: "1.0.0" });
-        expect(mockWindow.webContents.send).toHaveBeenCalledWith(
-          "app-update:not-available"
-        );
-      }
-    });
-
-    it("should notify window when update is downloaded", () => {
-      autoUpdater.setMainWindow(mockWindow);
-
-      const downloadedHandler = (mockAutoUpdater.on as any).mock.calls.find(
-        (call: any[]) => call[0] === "update-downloaded"
-      )?.[1];
-
-      if (downloadedHandler) {
-        downloadedHandler({ version: "1.0.1" });
-        expect(mockWindow.webContents.send).toHaveBeenCalledWith(
-          "app-update:downloaded",
-          {
-            version: "1.0.1",
-          }
-        );
-      }
-    });
-  });
-
-  describe("Configuration", () => {
-    it("should allow custom update server URL", () => {
-      const customURL = "https://updates.example.com";
-      new AutoUpdater(mockApp, mockAutoUpdater, { updateServerUrl: customURL });
-
-      expect(mockAutoUpdater.setFeedURL).toHaveBeenCalledWith(
-        expect.objectContaining({ url: customURL })
+      expect(mockNotificationCallback).toHaveBeenCalledWith(
+        "app-update:available",
+        {
+          version: "v2.0.0",
+          releaseNotes: "Breaking changes included",
+          publishedAt: "2023-01-01T00:00:00Z",
+          downloadUrl:
+            "https://github.com/test/repo/releases/download/v2.0.0/update.zip",
+          prerelease: false,
+        }
       );
     });
 
-    it("should support GitHub releases by default", () => {
-      const updater = new AutoUpdater(mockApp, mockAutoUpdater);
+    it("should notify when checking for updates", async () => {
+      mockFetch.mockRejectedValue(new Error("API down"));
 
-      expect(updater.getUpdateSource()).toBe("github");
+      await autoUpdater.checkForUpdates();
+
+      expect(mockNotificationCallback).toHaveBeenCalledWith(
+        "app-update:checking"
+      );
+    });
+  });
+
+  describe("Download and Installation", () => {
+    it("should redirect to download URL for web app", async () => {
+      const result = await autoUpdater.downloadUpdate();
+
+      expect(result.success).toBe(true);
+      expect(mockNotificationCallback).toHaveBeenCalledWith(
+        "app-update:download-ready",
+        {
+          downloadUrl: "https://github.com/test/repo/releases/latest",
+        }
+      );
     });
 
-    it("should allow disabling auto-check on startup", async () => {
-      const updater = new AutoUpdater(mockApp, mockAutoUpdater, {
+    it("should refresh page for installation in web app", () => {
+      const originalLocation = window.location;
+      // Mock reload function
+      const mockReload = vi.fn();
+      delete (window as any).location;
+      // @ts-expect-error - assigning to readonly property for testing
+      window.location = { reload: mockReload } as Location;
+
+      autoUpdater.quitAndInstall();
+
+      expect(mockReload).toHaveBeenCalled();
+
+      // Restore original location
+      // @ts-expect-error - restoring original window.location for cleanup
+      window.location = originalLocation;
+    });
+  });
+
+  describe("Configuration and Startup", () => {
+    it("should check for updates on startup if configured", async () => {
+      const mockRelease = {
+        id: 1,
+        tag_name: "v1.0.1",
+        name: "",
+        body: "",
+        published_at: "",
+        html_url: "",
+        prerelease: false,
+        assets: [],
+      };
+
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(mockRelease),
+      } as Response);
+
+      const updater = new AutoUpdater(mockApp, {
+        githubRepo: "test/repo",
+        checkOnStartup: true,
+      });
+      updater.setNotificationCallback(mockNotificationCallback);
+
+      await updater.initialize();
+
+      expect(mockNotificationCallback).toHaveBeenCalledWith(
+        "app-update:checking"
+      );
+    });
+
+    it("should not check on startup if disabled", async () => {
+      const updater = new AutoUpdater(mockApp, {
+        githubRepo: "test/repo",
         checkOnStartup: false,
       });
 
       await updater.initialize();
 
-      expect(mockAutoUpdater.checkForUpdatesAndNotify).not.toHaveBeenCalled();
-    });
-  });
-
-  describe("Status Reporting", () => {
-    it("should report current update status", () => {
-      const status = autoUpdater.getStatus();
-
-      expect(status).toHaveProperty("currentVersion");
-      expect(status).toHaveProperty("checking");
-      expect(status).toHaveProperty("updateAvailable");
-      expect(status).toHaveProperty("downloading");
-      expect(status).toHaveProperty("updateDownloaded");
-      expect(status.currentVersion).toBe("1.0.0");
+      expect(mockFetch).not.toHaveBeenCalled();
     });
 
-    it("should update status when checking for updates", async () => {
-      (
-        mockAutoUpdater.checkForUpdates as ReturnType<typeof vi.fn>
-      ).mockResolvedValue({
-        updateInfo: { version: "1.0.1" } as UpdateInfo,
-        cancellationToken: null as any,
+    it("should set up periodic checks if interval configured", () => {
+      vi.useFakeTimers();
+
+      new AutoUpdater(mockApp, {
+        githubRepo: "test/repo",
+        updateCheckInterval: 3600000, // 1 hour
       });
 
-      await autoUpdater.checkForUpdates();
+      expect(vi.getTimerCount()).toBe(1);
 
-      const status = autoUpdater.getStatus();
+      vi.useRealTimers();
+    });
+  });
+
+  describe("Version Comparison", () => {
+    // Test the internal version comparison method indirectly
+    it("should correctly identify newer versions", async () => {
+      const mockRelease = {
+        id: 1,
+        tag_name: "v2.0.0",
+        name: "",
+        body: "",
+        published_at: "",
+        html_url: "",
+        prerelease: false,
+        assets: [],
+      };
+
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(mockRelease),
+      } as Response);
+
+      const result = await autoUpdater.checkForUpdates();
+
+      expect(result.updateAvailable).toBe(true);
+      expect(result.latestVersion).toBe("v2.0.0");
+    });
+
+    it("should handle equal versions correctly", async () => {
+      const mockRelease = {
+        id: 1,
+        tag_name: "v1.0.0", // Same as current
+        name: "",
+        body: "",
+        published_at: "",
+        html_url: "",
+        prerelease: false,
+        assets: [],
+      };
+
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(mockRelease),
+      } as Response);
+
+      const result = await autoUpdater.checkForUpdates();
+
+      expect(result.updateAvailable).toBe(false);
+    });
+  });
+
+  describe("Status Management", () => {
+    it("should track update status correctly", async () => {
+      const mockRelease = {
+        id: 1,
+        tag_name: "v1.1.0",
+        name: "",
+        body: "",
+        published_at: "",
+        html_url: "",
+        prerelease: false,
+        assets: [],
+      };
+
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(mockRelease),
+      } as Response);
+
+      let status = autoUpdater.getStatus();
+      expect(status.checking).toBe(false);
+
+      const checkPromise = autoUpdater.checkForUpdates();
+
+      status = autoUpdater.getStatus();
+      expect(status.checking).toBe(true);
+
+      await checkPromise;
+
+      status = autoUpdater.getStatus();
+      expect(status.checking).toBe(false);
       expect(status.updateAvailable).toBe(true);
-      expect(status.latestVersion).toBe("1.0.1");
+      expect(status.latestVersion).toBe("v1.1.0");
     });
   });
 
-  describe("Error Handling", () => {
-    it("should log errors to console", () => {
-      const consoleSpy = vi
-        .spyOn(console, "error")
-        .mockImplementation(() => {});
+  describe("Resource Cleanup", () => {
+    it("should clean up periodic check timers", () => {
+      const updater = new AutoUpdater(mockApp, {
+        githubRepo: "test/repo",
+        updateCheckInterval: 1000,
+      });
 
-      const errorHandler = (mockAutoUpdater.on as any).mock.calls.find(
-        (call: any[]) => call[0] === "error"
-      )?.[1];
+      updater.dispose();
 
-      if (errorHandler) {
-        errorHandler(new Error("Update failed"));
-        expect(consoleSpy).toHaveBeenCalledWith(
-          expect.stringContaining("[AutoUpdater]"),
-          expect.any(Error)
-        );
-      }
-
-      consoleSpy.mockRestore();
-    });
-
-    it("should not crash app on update errors", async () => {
-      (
-        mockAutoUpdater.checkForUpdates as ReturnType<typeof vi.fn>
-      ).mockRejectedValue(new Error("Fatal error"));
-
-      await expect(autoUpdater.checkForUpdates()).resolves.not.toThrow();
-    });
-  });
-
-  describe("Production Mode", () => {
-    it("should only enable updates in production", () => {
-      const originalEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = "development";
-
-      const devUpdater = new AutoUpdater(mockApp, mockAutoUpdater);
-
-      expect(devUpdater.isEnabled()).toBe(false);
-
-      process.env.NODE_ENV = originalEnv;
-    });
-
-    it("should enable updates in production", () => {
-      const originalEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = "production";
-
-      const prodUpdater = new AutoUpdater(mockApp, mockAutoUpdater);
-
-      expect(prodUpdater.isEnabled()).toBe(true);
-
-      process.env.NODE_ENV = originalEnv;
+      // Timer should be cleared
+      expect(vi.getTimerCount()).toBe(0); // No timers left from this test
     });
   });
 });

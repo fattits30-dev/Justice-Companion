@@ -41,7 +41,7 @@ function sanitizeValue(value: unknown): unknown {
       .replace(/\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b/g, "[REDACTED:CARD]") // Credit cards
       .replace(
         /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g,
-        "[REDACTED:EMAIL]",
+        "[REDACTED:EMAIL]"
       ) // Emails
       .replace(/\b\d{3}[\s-]?\d{3}[\s-]?\d{4}\b/g, "[REDACTED:PHONE]") // Phone numbers
       .replace(/\b\d{3}[\s-]?\d{2}[\s-]?\d{4}\b/g, "[REDACTED:SSN]"); // SSN-like
@@ -57,7 +57,7 @@ function sanitizeObject(obj: Record<string, unknown>): Record<string, unknown> {
     // Skip known sensitive fields
     if (
       ["password", "token", "secret", "key", "auth", "session"].includes(
-        key.toLowerCase(),
+        key.toLowerCase()
       )
     ) {
       sanitized[key] = "[REDACTED]";
@@ -73,24 +73,24 @@ function sanitizeObject(obj: Record<string, unknown>): Record<string, unknown> {
 interface Logger {
   error(
     message: string,
-    context?: LogContext | Record<string, unknown> | unknown,
+    context?: LogContext | Record<string, unknown> | unknown
   ): void;
   warn(
     message: string,
-    context?: LogContext | Record<string, unknown> | unknown,
+    context?: LogContext | Record<string, unknown> | unknown
   ): void;
   info(
     message: string,
-    context?: LogContext | Record<string, unknown> | unknown,
+    context?: LogContext | Record<string, unknown> | unknown
   ): void;
   debug(
     message: string,
-    context?: LogContext | Record<string, unknown> | unknown,
+    context?: LogContext | Record<string, unknown> | unknown
   ): void;
   log(
     level: string,
     message: string,
-    context?: LogContext | Record<string, unknown> | unknown,
+    context?: LogContext | Record<string, unknown> | unknown
   ): void;
 }
 
@@ -100,44 +100,44 @@ class ConsoleLogger implements Logger {
 
   error(
     message: string,
-    context?: LogContext | Record<string, unknown> | unknown,
+    context?: LogContext | Record<string, unknown> | unknown
   ): void {
     console.error(
       message,
-      context ? sanitizeObject(context as Record<string, unknown>) : "",
+      context ? sanitizeObject(context as Record<string, unknown>) : ""
     );
   }
 
   warn(
     message: string,
-    context?: LogContext | Record<string, unknown> | unknown,
+    context?: LogContext | Record<string, unknown> | unknown
   ): void {
     console.warn(
       message,
-      context ? sanitizeObject(context as Record<string, unknown>) : "",
+      context ? sanitizeObject(context as Record<string, unknown>) : ""
     );
   }
 
   info(
     message: string,
-    context?: LogContext | Record<string, unknown> | unknown,
+    context?: LogContext | Record<string, unknown> | unknown
   ): void {
     if (this.isDevelopment) {
       console.info(
         message,
-        context ? sanitizeObject(context as Record<string, unknown>) : "",
+        context ? sanitizeObject(context as Record<string, unknown>) : ""
       );
     }
   }
 
   debug(
     message: string,
-    context?: LogContext | Record<string, unknown> | unknown,
+    context?: LogContext | Record<string, unknown> | unknown
   ): void {
     if (this.isDevelopment) {
       console.debug(
         message,
-        context ? sanitizeObject(context as Record<string, unknown>) : "",
+        context ? sanitizeObject(context as Record<string, unknown>) : ""
       );
     }
   }
@@ -145,12 +145,12 @@ class ConsoleLogger implements Logger {
   log(
     level: string,
     message: string,
-    context?: LogContext | Record<string, unknown> | unknown,
+    context?: LogContext | Record<string, unknown> | unknown
   ): void {
     if (this.isDevelopment) {
       console.log(
         `[${level.toUpperCase()}] ${message}`,
-        context ? sanitizeObject(context as Record<string, unknown>) : "",
+        context ? sanitizeObject(context as Record<string, unknown>) : ""
       );
     }
   }
@@ -164,13 +164,8 @@ async function createWinstonLogger(): Promise<Logger> {
   const winston = await import("winston");
   const path = await import("path");
 
-  let app: any;
-  try {
-    const electron = await import("electron");
-    app = electron.app;
-  } catch {
-    app = undefined;
-  }
+  const app: any = undefined;
+  // In web-only environment, electron is not available
 
   const isDevelopment = process.env.NODE_ENV === "development";
   const isTest = process.env.NODE_ENV === "test";
@@ -185,7 +180,7 @@ async function createWinstonLogger(): Promise<Logger> {
         }
         return sanitizeValue(value);
       },
-    }),
+    })
   );
 
   const transports: any[] = [];
@@ -208,7 +203,7 @@ async function createWinstonLogger(): Promise<Logger> {
         maxsize: 5242880, // 5MB
         maxFiles: 5,
         format: secureFormat,
-      }),
+      })
     );
   }
 
@@ -227,10 +222,10 @@ async function createWinstonLogger(): Promise<Logger> {
               const metaStr =
                 Object.keys(meta).length > 0 ? ` ${JSON.stringify(meta)}` : "";
               return `${level}${prefix}${op} ${message}${metaStr}`;
-            },
-          ),
+            }
+          )
         ),
-      }),
+      })
     );
   }
 
@@ -299,7 +294,7 @@ export function logDebug(message: string, context?: LogContext): void {
 export function logPerformance(
   operation: string,
   duration: number,
-  context?: Omit<LogContext, "operation" | "duration">,
+  context?: Omit<LogContext, "operation" | "duration">
 ): void {
   const level = duration > 5000 ? "warn" : duration > 1000 ? "info" : "debug";
   const logger = getLogger();

@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { AuthenticationService } from "./AuthenticationService";
-import { UserRepository } from "../repositories/UserRepository";
-import { SessionRepository } from "../repositories/SessionRepository";
-import { AuditLogger } from "./AuditLogger";
-import { TestDatabaseHelper } from "../test-utils/database-test-helper";
-import { databaseManager } from "../db/database";
+import { AuthenticationService } from "./AuthenticationService.ts";
+import { UserRepository } from "../repositories/UserRepository.ts";
+import { SessionRepository } from "../repositories/SessionRepository.ts";
+import { AuditLogger } from "./AuditLogger.ts";
+import { TestDatabaseHelper } from "../test-utils/database-test-helper.ts";
+import { databaseManager } from "../db/database.ts";
 import {
   resetRepositories,
   initializeTestRepositories,

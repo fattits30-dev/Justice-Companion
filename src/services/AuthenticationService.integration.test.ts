@@ -1,12 +1,12 @@
 import Database from "better-sqlite3-multiple-ciphers";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { databaseManager } from "../db/database";
-import { SessionRepository } from "../repositories/SessionRepository";
-import { UserRepository } from "../repositories/UserRepository";
-import { TestDatabaseHelper } from "../test-utils/database-test-helper";
-import { AuditLogger } from "./AuditLogger";
-import { AuthenticationService } from "./AuthenticationService";
-import { RateLimitService } from "./RateLimitService";
+import { databaseManager } from "../db/database.ts";
+import { SessionRepository } from "../repositories/SessionRepository.ts";
+import { UserRepository } from "../repositories/UserRepository.ts";
+import { TestDatabaseHelper } from "../test-utils/database-test-helper.ts";
+import { AuditLogger } from "./AuditLogger.ts";
+import { AuthenticationService } from "./AuthenticationService.ts";
+import { RateLimitService } from "./RateLimitService.ts";
 
 describe("AuthenticationService Integration - Rate Limiting", () => {
   let authService: AuthenticationService;

@@ -1,4 +1,4 @@
-import { logger } from "../utils/logger";
+import { logger } from "../utils/logger.ts";
 import { apiClient } from "../lib/apiClient.ts";
 
 /**
@@ -41,7 +41,7 @@ interface AuthContextValue {
   login: (
     username: string,
     password: string,
-    rememberMe: boolean,
+    rememberMe: boolean
   ) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -138,7 +138,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const login = async (
     username: string,
     password: string,
-    rememberMe: boolean,
+    rememberMe: boolean
   ): Promise<void> => {
     setIsLoading(true);
     setError(null);
@@ -147,7 +147,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const response = await apiClient.auth.login(
         username,
         password,
-        rememberMe,
+        rememberMe
       );
 
       if (!response.success) {
@@ -185,7 +185,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "An unknown error occurred",
+        err instanceof Error ? err.message : "An unknown error occurred"
       );
       throw err; // Re-throw to allow component-level handling
     } finally {
@@ -212,7 +212,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setSessionId(null); // Clear sessionId from state
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "An unknown error occurred",
+        err instanceof Error ? err.message : "An unknown error occurred"
       );
     } finally {
       setIsLoading(false);
@@ -224,7 +224,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
    */
   const refreshUser = async (): Promise<void> => {
     const currentSessionId = localStorage.getItem("sessionId");
-    if (!currentSessionId || !user) {
+    if (!currentSessionId) {
       return;
     }
 
@@ -257,6 +257,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
           username: username,
           email: email,
         });
+        setSessionId(currentSessionId);
+      } else {
+        // Session is no longer valid; clear auth state
+        localStorage.removeItem("sessionId");
+        setUser(null);
+        setSessionId(null);
       }
     } catch (err) {
       logger.error("Error refreshing user:", {

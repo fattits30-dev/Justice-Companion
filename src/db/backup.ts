@@ -148,10 +148,10 @@ export function listBackups(): BackupMetadata[] {
   try {
     const backupsDir = getBackupsDir();
 
-    const files = fs
+    const files: BackupMetadata[] = fs
       .readdirSync(backupsDir)
-      .filter((file) => file.endsWith(".db"))
-      .map((file) => {
+      .filter((file: string) => file.endsWith(".db"))
+      .map((file: string) => {
         const filepath = path.join(backupsDir, file);
         const stats = fs.statSync(filepath);
 
@@ -162,7 +162,9 @@ export function listBackups(): BackupMetadata[] {
           created_at: stats.birthtime.toISOString(),
         };
       })
-      .sort((a, b) => b.created_at.localeCompare(a.created_at)); // Most recent first
+      .sort((a: BackupMetadata, b: BackupMetadata) =>
+        b.created_at.localeCompare(a.created_at)
+      ); // Most recent first
 
     return files;
   } catch (error) {

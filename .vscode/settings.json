@@ -1,20 +1,16 @@
 {
-  // TypeScript Configuration
-  "typescript.tsdk": "node_modules/typescript/lib",
-  "typescript.enablePromptUseWorkspaceTsdk": true,
+  // Performance-first VS Code configuration for Justice Companion
+  // Minimize resource usage while maintaining essential functionality
+
+  // Core TypeScript Configuration - Minimal but effective
   "typescript.preferences.importModuleSpecifierEnding": "ts",
   "typescript.preferences.includePackageJsonAutoImports": "on",
   "typescript.suggest.autoImports": true,
   "typescript.updateImportsOnFileMove.enabled": "always",
-  "typescript.inlayHints.parameterNames.enabled": "all",
-  "typescript.inlayHints.variableTypes.enabled": true,
-  "typescript.inlayHints.propertyDeclarationTypes.enabled": true,
-  "typescript.inlayHints.functionLikeReturnTypes.enabled": true,
-  "javascript.preferences.importModuleSpecifierEnding": "js",
   "javascript.suggest.autoImports": true,
   "javascript.updateImportsOnFileMove.enabled": "always",
 
-  // ESLint Configuration
+  // Minimal ESLint (focus on errors only)
   "eslint.enable": true,
   "eslint.validate": [
     "javascript",
@@ -22,414 +18,175 @@
     "typescript",
     "typescriptreact"
   ],
-  "eslint.format.enable": true,
+  "eslint.format.enable": false, // Let Prettier handle formatting
   "eslint.workingDirectories": [{ "mode": "auto" }],
-  "eslint.alwaysShowStatus": true,
-  "eslint.lintTask.enable": true,
 
-  // Editor Configuration
+  // Editor Configuration - Performance optimized
   "editor.formatOnSave": true,
-  "editor.formatOnPaste": true,
+  "editor.formatOnPaste": false, // Reduce formatting triggers
   "editor.formatOnType": false,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit",
-    "source.organizeImports": "never",
-    "source.addMissingImports": "explicit"
+    "source.organizeImports": "explicit"
   },
   "editor.tabSize": 2,
   "editor.insertSpaces": true,
   "editor.detectIndentation": true,
   "editor.trimAutoWhitespace": true,
-  "editor.linkedEditing": true,
-  "editor.bracketPairColorization.enabled": true,
-  "editor.guides.bracketPairs": "active",
   "editor.suggestSelection": "first",
-  "editor.quickSuggestions": {
-    "strings": true
-  },
-  "editor.acceptSuggestionOnCommitCharacter": true,
-  "editor.snippetSuggestions": "top",
-  "editor.wordBasedSuggestions": "matchingDocuments",
-  "editor.parameterHints.enabled": true,
+  "editor.quickSuggestions": { "strings": false }, // Reduce suggestions
+  "editor.wordBasedSuggestions": "off", // Performance cost
+  "editor.parameterHints.enabled": false, // Performance cost
   "editor.hover.enabled": true,
-  "editor.hover.sticky": true,
-  "editor.inlayHints.enabled": "onUnlessPressed",
-  "editor.minimap.enabled": true,
-  "editor.minimap.maxColumn": 120,
-  "editor.rulers": [80, 120],
-  "editor.renderWhitespace": "boundary",
-  "editor.cursorBlinking": "smooth",
-  "editor.cursorSmoothCaretAnimation": "on",
+  "editor.minimap.enabled": false, // Performance cost
+  "editor.rulers": [100], // Single ruler
+  "editor.renderWhitespace": "off", // Performance cost
+  "editor.cursorBlinking": "blink",
+  "editor.cursorSmoothCaretAnimation": "off", // Performance cost
 
-  // Error Detection
-  "problems.decorations.enabled": true,
-  "problems.showCurrentInStatus": true,
+  // Streamlined error detection
   "errorLens.enabled": true,
-  "errorLens.enabledDiagnosticLevels": ["error", "warning", "info"],
   "errorLens.messageTemplate": "$severity: $message",
-  "errorLens.delay": 500,
-  "errorLens.gutterIconsEnabled": true,
-  "errorLens.statusBarIconsEnabled": true,
+  "errorLens.delay": 1000, // Longer delay for performance
 
-  // Files Configuration
+  // Essential file handling
   "files.eol": "\n",
   "files.encoding": "utf8",
   "files.trimTrailingWhitespace": true,
   "files.insertFinalNewline": true,
-  "files.trimFinalNewlines": true,
-  "files.autoSave": "onFocusChange",
-  "files.autoSaveDelay": 1000,
+  "files.autoSave": "afterDelay",
+  "files.autoSaveDelay": 3000, // Longer delay
+
+  // Performance-focused exclusions
   "files.exclude": {
-    "**/.git": true,
-    "**/.DS_Store": true,
     "**/node_modules": true,
     "**/dist": true,
-    "**/release": true,
-    "**/.electron-builder": true,
-    "**/*.js": {
-      "when": "$(basename).ts"
-    },
-    "**/*.d.ts": {
-      "when": "$(basename).ts"
-    }
+    "**/build": true,
+    "**/.git": true,
+    "**/.DS_Store": true,
+    "**/__pycache__": true,
+    "**/*.pyc": true,
+    "**/.pytest_cache": true,
+    "**/.mypy_cache": true,
+    "**/.nyc_output": true,
+    "**/coverage": true
   },
   "files.watcherExclude": {
     "**/node_modules/**": true,
     "**/dist/**": true,
-    "**/release/**": true,
+    "**/build/**": true,
     "**/.git/objects/**": true,
-    "**/.git/subtree-cache/**": true,
-    "**/build/**": true
+    "**/__pycache__/**": true,
+    "**/.pytest_cache/**": true,
+    "**/.mypy_cache/**": true
   },
 
-  // Search Configuration
+  // Essential search settings
   "search.exclude": {
     "**/node_modules": true,
     "**/dist": true,
-    "**/release": true,
-    "**/.electron-builder": true,
-    "**/*.code-search": true,
-    "pnpm-lock.yaml": true,
+    "**/build": true,
     "**/coverage": true,
-    "**/.nyc_output": true
+    "**/.nyc_output": true,
+    "**/__pycache__": true,
+    "**/*.pyc": true
   },
-  "search.useIgnoreFiles": true,
-  "search.followSymlinks": false,
-  "search.smartCase": true,
 
-  // Vitest Configuration
+  // Testing - keep minimal
   "vitest.enable": true,
   "vitest.commandLine": "pnpm test",
-  "vitest.nodeExecutable": "pnpm",
-  "vitest.debugExclude": ["**/node_modules/**", "**/dist/**"],
 
-  // Playwright Configuration
+  // Playwright - essential for your project
   "playwright.reuseBrowser": true,
-  "playwright.showTrace": false,
 
-  // Git Configuration
+  // Git - streamlined
   "git.enabled": true,
   "git.autofetch": true,
   "git.confirmSync": false,
   "git.enableSmartCommit": true,
-  "git.suggestSmartCommit": true,
-  "git.decorations.enabled": true,
-  "git.detectSubmodules": true,
-  "git.showPushSuccessNotification": true,
-  "gitlens.currentLine.enabled": true,
-  "gitlens.hovers.currentLine.over": "line",
-  "gitlens.codeLens.enabled": true,
+  "git.showPushSuccessNotification": false,
+  "gitlens.currentLine.enabled": false, // Performance cost
+  "gitlens.codeLens.enabled": false,
 
-  // Terminal Configuration
+  // Terminal - performance optimized
   "terminal.integrated.defaultProfile.windows": "Git Bash",
-  "terminal.integrated.cursorBlinking": true,
-  "terminal.integrated.cursorStyle": "line",
-  "terminal.integrated.fontFamily": "Consolas, 'Courier New', monospace",
-  "terminal.integrated.fontSize": 14,
-  "terminal.integrated.lineHeight": 1.2,
-  "terminal.integrated.scrollback": 10000,
-  "terminal.integrated.enablePersistentSessions": true,
-  "terminal.integrated.env.windows": {
-    "NODE_ENV": "development"
-  },
+  "terminal.integrated.scrollback": 2000, // Reduced from 10000
+  "terminal.integrated.enablePersistentSessions": false, // Performance cost
 
-  // Debug Configuration
-  "debug.console.fontSize": 14,
-  "debug.console.lineHeight": 20,
-  "debug.console.wordWrap": true,
-  "debug.internalConsoleOptions": "openOnSessionStart",
-  "debug.openDebug": "openOnSessionStart",
-  "debug.showBreakpointsInOverviewRuler": true,
-  "debug.showInlineBreakpointCandidates": true,
-  "debug.focusWindowOnBreak": true,
-  "debug.allowBreakpointsEverywhere": true,
-  "debug.onTaskErrors": "showErrors",
-
-  // JavaScript & Node Configuration
+  // JavaScript/TypeScript - minimal validation
   "js/ts.implicitProjectConfig.checkJs": false,
-  "javascript.format.enable": false,
-  "typescript.format.enable": false,
   "javascript.validate.enable": true,
   "typescript.validate.enable": true,
 
-  // Path Intellisense
+  // Essential extensions only
   "path-intellisense.autoSlashAfterDirectory": true,
-  "path-intellisense.extensionOnImport": true,
 
-  // TODO Highlighting
+  // Streamlined TODO highlighting
   "todohighlight.isEnable": true,
-  "todohighlight.keywords": [
-    {
-      "text": "TODO:",
-      "color": "#ff6b6b",
-      "backgroundColor": "transparent",
-      "overviewRulerColor": "#ff6b6b"
-    },
-    {
-      "text": "FIXME:",
-      "color": "#ffa502",
-      "backgroundColor": "transparent",
-      "overviewRulerColor": "#ffa502"
-    },
-    {
-      "text": "BUG:",
-      "color": "#ff4757",
-      "backgroundColor": "transparent",
-      "overviewRulerColor": "#ff4757"
-    },
-    {
-      "text": "HACK:",
-      "color": "#feca57",
-      "backgroundColor": "transparent",
-      "overviewRulerColor": "#feca57"
-    },
-    {
-      "text": "NOTE:",
-      "color": "#48dbfb",
-      "backgroundColor": "transparent",
-      "overviewRulerColor": "#48dbfb"
-    }
-  ],
 
-  // Better Comments
+  // Minimal Better Comments
   "better-comments.tags": [
-    {
-      "tag": "!",
-      "color": "#FF2D00",
-      "strikethrough": false,
-      "underline": false,
-      "backgroundColor": "transparent",
-      "bold": false,
-      "italic": false
-    },
-    {
-      "tag": "?",
-      "color": "#3498DB",
-      "strikethrough": false,
-      "underline": false,
-      "backgroundColor": "transparent",
-      "bold": false,
-      "italic": false
-    },
-    {
-      "tag": "//",
-      "color": "#474747",
-      "strikethrough": true,
-      "underline": false,
-      "backgroundColor": "transparent",
-      "bold": false,
-      "italic": false
-    },
-    {
-      "tag": "todo",
-      "color": "#FF8C00",
-      "strikethrough": false,
-      "underline": false,
-      "backgroundColor": "transparent",
-      "bold": false,
-      "italic": false
-    },
-    {
-      "tag": "*",
-      "color": "#98C379",
-      "strikethrough": false,
-      "underline": false,
-      "backgroundColor": "transparent",
-      "bold": false,
-      "italic": false
-    }
+    { "tag": "!", "color": "#FF2D00" },
+    { "tag": "?", "color": "#3498DB" }
   ],
 
-  // TailwindCSS
+  // TailwindCSS - keep essential
   "tailwindCSS.experimental.classRegex": [
     ["cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"],
     ["cn\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"]
   ],
-  "tailwindCSS.includeLanguages": {
-    "typescript": "javascript",
-    "typescriptreact": "javascript"
-  },
 
-  // Import Cost
-  "importCost.smallPackageSize": 50,
-  "importCost.mediumPackageSize": 100,
-  "importCost.largePackageColor": "#d44e40",
-  "importCost.mediumPackageColor": "#d4a140",
-  "importCost.smallPackageColor": "#40d47e",
+  // Import Cost - keep essential
+  "importCost.smallPackageSize": 100,
+  "importCost.mediumPackageSize": 500,
 
-  // Markdown
-  "markdown.preview.fontSize": 14,
-  "markdown.preview.lineHeight": 1.6,
+  // Markdown - minimal
   "[markdown]": {
     "editor.defaultFormatter": "yzhang.markdown-all-in-one",
-    "editor.wordWrap": "on",
-    "editor.quickSuggestions": {
-      "comments": "off",
-      "strings": "off",
-      "other": "off"
-    }
+    "editor.wordWrap": "on"
   },
 
-  // File Associations
-  "[typescript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[typescriptreact]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[javascript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[javascriptreact]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[json]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[jsonc]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[html]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[css]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
+  // File type associations - keep essential
+  "[typescript]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[typescriptreact]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[javascript]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[javascriptreact]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[json]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[jsonc]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[html]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[css]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
 
-  // Security
+  // Security & Privacy
   "security.workspace.trust.untrustedFiles": "prompt",
-  "security.workspace.trust.enabled": true,
-
-  // Telemetry
   "telemetry.telemetryLevel": "off",
 
-  // Workbench
+  // Workbench - performance optimized
   "workbench.colorTheme": "Default Dark+",
-  "workbench.iconTheme": "vs-seti",
-  "workbench.startupEditor": "welcomePageInEmptyWorkbench",
-  "workbench.editor.enablePreview": false,
+  "workbench.iconTheme": "vs-minimal",
+  "workbench.startupEditor": "none",
+  "workbench.editor.enablePreview": true, // Keep for performance
   "workbench.editor.closeOnFileDelete": true,
-  "workbench.editor.highlightModifiedTabs": true,
-  "workbench.editor.labelFormat": "medium",
-  "workbench.list.smoothScrolling": true,
   "workbench.panel.defaultLocation": "bottom",
   "workbench.sideBar.location": "left",
-  "workbench.tree.indent": 20,
+  "workbench.tree.indent": 12,
 
-  // Explorer
+  // Explorer - streamlined
   "explorer.confirmDelete": true,
   "explorer.confirmDragAndDrop": true,
-  "explorer.compactFolders": false,
-  "explorer.sortOrder": "type",
+  "explorer.compactFolders": true,
   "explorer.fileNesting.enabled": true,
-  "explorer.fileNesting.patterns": {
-    "*.ts": "${capture}.js, ${capture}.d.ts, ${capture}.test.ts, ${capture}.spec.ts",
-    "*.tsx": "${capture}.test.tsx, ${capture}.spec.tsx",
-    "package.json": "package-lock.json, pnpm-lock.yaml, yarn.lock, .npmrc, .nvmrc"
-  },
 
-  // Python AI Service Configuration
+  // Python - only for AI service
   "python.defaultInterpreterPath": "python",
   "python.envFile": "${workspaceFolder}/.env",
-  "python.terminal.activateEnvironment": true,
-  "python.terminal.executeInFileDir": false,
-  "python.terminal.launchArgs": [],
-  "python.analysis.typeCheckingMode": "basic",
-  "python.analysis.autoImportCompletions": true,
-  "python.analysis.diagnosticMode": "workspace",
-  "python.analysis.inlayHints.variableTypes": true,
-  "python.analysis.inlayHints.functionReturnTypes": true,
-  "python.linting.enabled": true,
-  "python.linting.pylintEnabled": true,
-  "python.linting.lintOnSave": true,
-  "python.formatting.provider": "black",
-  "python.formatting.blackArgs": ["--line-length=100"],
-  "python.sortImports.args": [],
-  "python.testing.pytestEnabled": false,
-  "python.testing.unittestEnabled": false,
   "[python]": {
     "editor.defaultFormatter": "ms-python.black-formatter",
-    "editor.formatOnSave": true,
-    "editor.codeActionsOnSave": {
-      "source.organizeImports": "explicit"
-    },
     "editor.tabSize": 4,
     "editor.insertSpaces": true
   },
 
-  // Python AI Service Environment
-  "terminal.integrated.env.windows": {
-    "NODE_ENV": "development",
-    "HF_TOKEN": "${env:HF_TOKEN}",
-    "OPENAI_API_KEY": "${env:OPENAI_API_KEY}",
-    "PYTHONUNBUFFERED": "1"
-  },
-  "terminal.integrated.env.linux": {
-    "NODE_ENV": "development",
-    "HF_TOKEN": "${env:HF_TOKEN}",
-    "OPENAI_API_KEY": "${env:OPENAI_API_KEY}",
-    "PYTHONUNBUFFERED": "1"
-  },
-  "terminal.integrated.env.osx": {
-    "NODE_ENV": "development",
-    "HF_TOKEN": "${env:HF_TOKEN}",
-    "OPENAI_API_KEY": "${env:OPENAI_API_KEY}",
-    "PYTHONUNBUFFERED": "1"
-  },
-
-  // Python Files Configuration
-  "files.associations": {
-    "*.py": "python",
-    "requirements.txt": "pip-requirements"
-  },
-
-  // Python Search Exclusions
-  "search.exclude": {
-    "**/node_modules": true,
-    "**/dist": true,
-    "**/release": true,
-    "**/.electron-builder": true,
-    "**/*.code-search": true,
-    "pnpm-lock.yaml": true,
-    "**/coverage": true,
-    "**/.nyc_output": true,
-    "**/__pycache__": true,
-    "**/*.pyc": true,
-    "**/.pytest_cache": true,
-    "**/.mypy_cache": true
-  },
-
-  // Python File Watcher Exclusions
-  "files.watcherExclude": {
-    "**/node_modules/**": true,
-    "**/dist/**": true,
-    "**/release/**": true,
-    "**/.git/objects/**": true,
-    "**/.git/subtree-cache/**": true,
-    "**/build/**": true,
-    "**/__pycache__/**": true,
-    "**/.pytest_cache/**": true,
-    "**/.mypy_cache/**": true
-  }
+  // Minimal SonarLint - disable analysis on save for performance
+  "sonarlint.disableTelemetry": true,
+  "sonarlint.output.showVerboseLogs": false
 }

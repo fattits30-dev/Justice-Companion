@@ -36,7 +36,7 @@ import {
   buildDocumentDraftPrompt,
 } from "../core/ai/prompts/analysis-prompts.ts";
 import { getToolsForProvider } from "./AIToolDefinitions.ts";
-import { logger } from "../utils/logger";
+import { logger } from "../utils/logger.ts";
 
 export class UnifiedAIService {
   private config: AIProviderConfig;

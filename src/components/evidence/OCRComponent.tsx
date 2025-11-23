@@ -106,10 +106,12 @@ export function OCRComponent({ evidence, onSave, onClose }: OCRComponentProps) {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `${evidence.title}-ocr.txt`;
-    document.body.appendChild(link);
+    const safeTitle =
+      evidence.title.replace(/[\\/:*?"<>|]/g, "_") || "document";
+    link.download = `${safeTitle}-ocr.txt`;
+    link.rel = "noopener";
     link.click();
-    document.body.removeChild(link);
+    link.remove();
     URL.revokeObjectURL(url);
   };
 

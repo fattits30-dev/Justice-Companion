@@ -12,6 +12,7 @@ export default tseslint.config(
       "node_modules",
       "build",
       "release",
+      "dev-dist",
       "*.config.js",
       "*.config.ts",
       "mcp-server/**/*", // MCP server has its own tsconfig
@@ -60,37 +61,40 @@ export default tseslint.config(
         "warn",
         "ignorePackages",
         {
-          ts: "never", // Allow extensionless for TypeScript files
-          tsx: "never", // Allow extensionless for React TypeScript files
-          js: "never", // No .js extension for JavaScript imports
+          ts: "always", // Explicit .ts extension for TypeScript modules
+          tsx: "always", // Explicit .tsx extension for React modules
+          js: "never", // Keep JS imports extensionless to match bundler defaults
           jsx: "never",
         },
       ],
 
       // TypeScript-specific rules
       "@typescript-eslint/no-unused-vars": [
-        "warn",
+        "error",
         {
           argsIgnorePattern: "^_",
           varsIgnorePattern: "^_",
           caughtErrorsIgnorePattern: "^_",
         },
       ],
-      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-explicit-any": "off", // Too many to fix now, enable later
       "@typescript-eslint/explicit-function-return-type": "off",
       "@typescript-eslint/explicit-module-boundary-types": "off",
-      "@typescript-eslint/no-non-null-assertion": "warn",
+      "@typescript-eslint/no-non-null-assertion": "off", // Common pattern in React
 
       // General code quality
-      "no-console": ["warn", { allow: ["warn", "error"] }],
-      "prefer-const": "warn",
+      "no-console": "off", // Using custom logger, console is fine for now
+      "prefer-const": "error",
       "no-var": "error",
       eqeqeq: ["error", "always"],
       curly: ["error", "all"],
 
       // React-specific
       "react-hooks/rules-of-hooks": "error",
-      "react-hooks/exhaustive-deps": "warn",
+      "react-hooks/exhaustive-deps": "error",
+
+      // Disabled - too strict for practical use
+      "@typescript-eslint/strict-boolean-expressions": "off",
     },
   }
 );

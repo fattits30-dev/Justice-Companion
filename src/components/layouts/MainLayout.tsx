@@ -1,4 +1,5 @@
-import { logger } from "../../utils/logger";
+import { logger } from "../../utils/logger.ts";
+import { apiClient } from "../../lib/apiClient.ts";
 
 /**
  * MainLayout - Main app layout with Sidebar + content area + Command Palette
@@ -78,14 +79,15 @@ export function MainLayout() {
           return;
         }
 
-        const result = await window.justiceAPI.getAllCases(sessionId);
+        const result = await apiClient.cases.list();
         if (result.success && result.data) {
+          const casesList = result.data.items || result.data;
           setCases(
-            result.data.map((c: any) => ({
+            (Array.isArray(casesList) ? casesList : []).map((c: any) => ({
               id: c.id.toString(),
               title: c.title,
               status: c.status,
-            })),
+            }))
           );
         }
       } catch (error) {
@@ -111,11 +113,16 @@ export function MainLayout() {
           return;
         }
 
-        const result = await window.justiceAPI.getDashboardStats(sessionId);
+        const result = await apiClient.dashboard.getStats();
         if (result.success && result.data) {
+          // Support legacy API responses that wrapped stats in a nested object
+          const statsPayload = result.data as typeof result.data & {
+            stats?: typeof result.data;
+          };
+          const stats = statsPayload.stats ?? statsPayload;
           setItemCounts({
-            cases: result.data.activeCases || 0,
-            documents: result.data.totalEvidence || 0,
+            cases: stats.activeCases || 0,
+            documents: stats.totalEvidence || 0,
             chat: 0, // Will be implemented when we add chat conversation tracking
           });
         }

@@ -1,0 +1,61 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "node",
+      "args": [
+        "C:\\Users\\sava6\\AppData\\Local\\Programs\\Microsoft VS Code\\.cline\\MCP\\filesystem-server\\dist\\index.js",
+        "C:/Users/sava6/ClaudeHome/projects/Justice Companion"
+      ]
+    },
+    "git": {
+      "command": "node",
+      "args": [
+        "C:\\Users\\sava6\\AppData\\Local\\Programs\\Microsoft VS Code\\.cline\\MCP\\git-server\\dist\\index.js",
+        "--repository",
+        "C:/Users/sava6/ClaudeHome/projects/Justice Companion"
+      ]
+    },
+    "browser-tools": {
+      "command": "node",
+      "args": [
+        "C:\\Users\\sava6\\AppData\\Local\\Programs\\Microsoft VS Code\\.cline\\MCP\\browser-tools-mcp\\dist\\index.js"
+      ],
+      "autoApprove": []
+    },
+    "context7": {
+      "command": "node",
+      "args": [
+        "C:\\Users\\sava6\\AppData\\Local\\Programs\\Microsoft VS Code\\.cline\\MCP\\context7-mcp\\dist\\index.js"
+      ],
+      "autoApprove": []
+    },
+    "fetch": {
+      "command": "node",
+      "args": [
+        "C:\\Users\\sava6\\AppData\\Local\\Programs\\Microsoft VS Code\\.cline\\MCP\\fetch-mcp\\dist\\index.js"
+      ],
+      "autoApprove": []
+    },
+    "github": {
+      "command": "node",
+      "args": [
+        "C:\\Users\\sava6\\AppData\\Local\\Programs\\Microsoft VS Code\\.cline\\MCP\\github-mcp-server\\dist\\index.js"
+      ],
+      "autoApprove": []
+    },
+    "playwright": {
+      "command": "node",
+      "args": [
+        "C:\\Users\\sava6\\AppData\\Local\\Programs\\Microsoft VS Code\\.cline\\MCP\\github.com-executeautomation-mcp-playwright\\dist\\index.js"
+      ],
+      "autoApprove": []
+    },
+    "zcaceres-fetch": {
+      "command": "node",
+      "args": [
+        "C:\\Users\\sava6\\AppData\\Local\\Programs\\Microsoft VS Code\\.cline\\MCP\\github.com-zcaceres-fetch-mcp\\dist\\index.js"
+      ],
+      "autoApprove": []
+    }
+  }
+}

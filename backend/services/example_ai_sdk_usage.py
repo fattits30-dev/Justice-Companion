@@ -11,16 +11,24 @@ This file demonstrates how to use the AISDKService for:
 
 import asyncio
 import os
+import secrets
 from typing import List
 
-from backend.services.ai_sdk_service import (
-    AISDKService,
-    AIProviderConfig,
-    AIProviderType,
-    ChatMessage,
-    MessageRole,
-    create_ai_sdk_service,
-)
+from backend.services.ai_sdk_service import (AIProviderConfig, AIProviderType,
+                                             AISDKService, ChatMessage,
+                                             MessageRole,
+                                             create_ai_sdk_service)
+
+
+def _demo_api_key(env_var: str) -> str:
+    """Return an environment-provided API key or raise if unset."""
+
+    value = os.getenv(env_var)
+    if value:
+        return value
+    raise RuntimeError(
+        f"Environment variable {env_var} is required for this example."
+    )
 
 
 # ============================================================================
@@ -37,10 +45,12 @@ async def example_openai_chat():
     # Configure OpenAI
     config = AIProviderConfig(
         provider=AIProviderType.OPENAI,
-        api_key=os.getenv("OPENAI_API_KEY", "sk-test-key"),
+        api_key=_demo_api_key("OPENAI_API_KEY"),
         model="gpt-4-turbo",
         temperature=0.7,
         max_tokens=1000,
+        endpoint=None,
+        top_p=0.9,
     )
 
     # Create service
@@ -83,10 +93,12 @@ async def example_anthropic_streaming():
     # Configure Anthropic
     config = AIProviderConfig(
         provider=AIProviderType.ANTHROPIC,
-        api_key=os.getenv("ANTHROPIC_API_KEY", "sk-ant-test-key"),
+        api_key=_demo_api_key("ANTHROPIC_API_KEY"),
         model="claude-3-5-sonnet-20241022",
         temperature=0.7,
         max_tokens=2000,
+        endpoint=None,
+        top_p=0.9,
     )
 
     # Create service
@@ -146,17 +158,25 @@ async def example_provider_capabilities():
     print("=" * 60)
 
     providers = [
-        (AIProviderType.OPENAI, "gpt-4-turbo", "sk-test-openai"),
-        (AIProviderType.ANTHROPIC, "claude-3-5-sonnet-20241022", "sk-test-anthropic"),
+        (AIProviderType.OPENAI, "gpt-4-turbo", _demo_api_key("OPENAI_API_KEY")),
+        (AIProviderType.ANTHROPIC, "claude-3-5-sonnet-20241022", _demo_api_key("ANTHROPIC_API_KEY")),
         (
             AIProviderType.TOGETHER,
             "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
-            "sk-test-together",
+            _demo_api_key("TOGETHER_API_KEY"),
         ),
     ]
 
     for provider, model, api_key in providers:
-        config = AIProviderConfig(provider=provider, api_key=api_key, model=model)
+        config = AIProviderConfig(
+            provider=provider,
+            api_key=api_key,
+            model=model,
+            endpoint=None,
+            temperature=0.7,
+            max_tokens=4096,
+            top_p=0.9,
+        )
 
         service = AISDKService(config)
         capabilities = service.get_provider_capabilities()
@@ -182,8 +202,12 @@ async def example_switching_providers():
     # Start with OpenAI
     openai_config = AIProviderConfig(
         provider=AIProviderType.OPENAI,
-        api_key=os.getenv("OPENAI_API_KEY", "sk-test-key"),
+        api_key=_demo_api_key("OPENAI_API_KEY"),
         model="gpt-4-turbo",
+        endpoint=None,
+        temperature=0.7,
+        max_tokens=4096,
+        top_p=0.9,
     )
 
     service = AISDKService(openai_config)
@@ -193,8 +217,12 @@ async def example_switching_providers():
     # Switch to Anthropic
     anthropic_config = AIProviderConfig(
         provider=AIProviderType.ANTHROPIC,
-        api_key=os.getenv("ANTHROPIC_API_KEY", "sk-ant-test-key"),
+        api_key=_demo_api_key("ANTHROPIC_API_KEY"),
         model="claude-3-5-sonnet-20241022",
+        endpoint=None,
+        temperature=0.7,
+        max_tokens=4096,
+        top_p=0.9,
     )
 
     service.update_config(anthropic_config)
@@ -214,8 +242,18 @@ async def example_error_handling():
     print("=" * 60)
 
     # Invalid API key
+    invalid_api_key = os.getenv("DEMO_INVALID_OPENAI_API_KEY")
+    if not invalid_api_key:
+        invalid_api_key = f"invalid-demo-{secrets.token_hex(16)}"
+
     config = AIProviderConfig(
-        provider=AIProviderType.OPENAI, api_key="invalid-key", model="gpt-4-turbo"
+        provider=AIProviderType.OPENAI,
+        api_key=invalid_api_key,
+        model="gpt-4-turbo",
+        endpoint=None,
+        temperature=0.7,
+        max_tokens=4096,
+        top_p=0.9,
     )
 
     service = AISDKService(config)
@@ -244,7 +282,7 @@ async def example_factory_function():
     # Quick setup with factory function
     service = create_ai_sdk_service(
         provider="openai",
-        api_key=os.getenv("OPENAI_API_KEY", "sk-test-key"),
+        api_key=_demo_api_key("OPENAI_API_KEY"),
         model="gpt-4-turbo",
         temperature=0.5,
         max_tokens=500,
@@ -286,8 +324,12 @@ async def example_audit_logging():
     # Create service with audit logging
     config = AIProviderConfig(
         provider=AIProviderType.OPENAI,
-        api_key=os.getenv("OPENAI_API_KEY", "sk-test-key"),
+        api_key=_demo_api_key("OPENAI_API_KEY"),
         model="gpt-3.5-turbo",
+        endpoint=None,
+        temperature=0.7,
+        max_tokens=4096,
+        top_p=0.9,
     )
 
     service = AISDKService(config, audit_logger=audit_logger)
@@ -314,8 +356,12 @@ async def example_multi_turn_conversation():
 
     config = AIProviderConfig(
         provider=AIProviderType.OPENAI,
-        api_key=os.getenv("OPENAI_API_KEY", "sk-test-key"),
+        api_key=_demo_api_key("OPENAI_API_KEY"),
         model="gpt-4-turbo",
+        endpoint=None,
+        temperature=0.7,
+        max_tokens=4096,
+        top_p=0.9,
     )
 
     service = AISDKService(config)
@@ -329,7 +375,7 @@ async def example_multi_turn_conversation():
     messages.append(ChatMessage(role=MessageRole.USER, content="What is Python?"))
 
     response1 = await service.chat(messages)
-    print(f"\nUser: What is Python?")
+    print("\nUser: What is Python?")
     print(f"Assistant: {response1[:100]}...")
 
     messages.append(ChatMessage(role=MessageRole.ASSISTANT, content=response1))
@@ -338,7 +384,7 @@ async def example_multi_turn_conversation():
     messages.append(ChatMessage(role=MessageRole.USER, content="What are its main uses?"))
 
     response2 = await service.chat(messages)
-    print(f"\nUser: What are its main uses?")
+    print("\nUser: What are its main uses?")
     print(f"Assistant: {response2[:100]}...")
 
 
@@ -394,7 +440,7 @@ async def main():
 
 if __name__ == "__main__":
     # Note: Set environment variables before running:
-    # export OPENAI_API_KEY="sk-..."
-    # export ANTHROPIC_API_KEY="sk-ant-..."
+    # export OPENAI_API_KEY="<your-openai-api-key>"
+    # export ANTHROPIC_API_KEY="<your-anthropic-api-key>"
 
     asyncio.run(main())

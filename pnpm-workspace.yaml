@@ -1,9 +1,0 @@
-packages:
-  - '.'
-
-ignoredBuiltDependencies:
-  - better-sqlite3
-  - core-js
-  - electron
-  - esbuild
-  - lzma-native

@@ -6,9 +6,9 @@ import {
   Server,
   XCircle,
 } from "lucide-react";
-import { Card } from "./ui/Card";
-import { Button } from "./ui/Button";
-import { Badge } from "./ui/Badge";
+import { Card } from "./ui/Card.tsx";
+import { Button } from "./ui/Button.tsx";
+import { Badge } from "./ui/Badge.tsx";
 
 interface PortStatus {
   port: number;
@@ -261,7 +261,7 @@ export const PortStatusMonitor: React.FC = () => {
                 } else {
                   setError("Failed to restart services");
                 }
-              } catch (err) {
+              } catch (_err) {
                 setError("Failed to restart services");
               }
             }}
@@ -279,7 +279,7 @@ export const PortStatusMonitor: React.FC = () => {
                 } else {
                   setError("Failed to release ports");
                 }
-              } catch (err) {
+              } catch (_err) {
                 setError("Failed to release ports");
               }
             }}

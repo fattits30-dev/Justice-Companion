@@ -4,7 +4,7 @@ import { ZoomIn, ZoomOut, FileImage, FileText } from "lucide-react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import type { DeadlineWithDependencies } from "../../../domains/timeline/entities/DeadlineDependency.ts";
-import { logger } from "../../../utils/logger";
+import { logger } from "../../../utils/logger.ts";
 
 interface GanttChartProps {
   deadlines: DeadlineWithDependencies[];

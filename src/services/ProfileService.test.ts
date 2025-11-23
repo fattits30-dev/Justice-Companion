@@ -9,9 +9,9 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { ProfileService } from "./ProfileService";
-import type { UserProfile, ProfileFormData } from "../types/profile";
-import { ProfileStorageKey } from "../types/profile";
+import { ProfileService } from "./ProfileService.ts";
+import type { UserProfile, ProfileFormData } from "../types/profile.ts";
+import { ProfileStorageKey } from "../types/profile.ts";
 
 // Mock localStorage globally
 const localStorageMock = {

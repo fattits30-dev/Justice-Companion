@@ -1,6 +1,6 @@
 import net from "net";
-import { logger } from "../utils/logger";
-import { errorLogger } from "../utils/error-logger";
+import { logger } from "../utils/logger.ts";
+import { errorLogger } from "../utils/error-logger.ts";
 import path from "path";
 import fs from "fs";
 

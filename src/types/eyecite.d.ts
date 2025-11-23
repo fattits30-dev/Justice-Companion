@@ -11,7 +11,7 @@ declare module '@beshkenadze/eyecite' {
     [key: string]: any;
   }
 
-  export function getCitations(text: string, options?: any): Citation[];
+  export function getCitations(text: string, options?: Record<string, unknown>): Citation[];
   export function cleanText(text: string, options?: string | string[]): string;
-  export function annotateCitations(text: string, citations: any): string;
+  export function annotateCitations(text: string, citations: any[]): string;
 }

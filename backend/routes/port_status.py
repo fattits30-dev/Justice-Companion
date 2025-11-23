@@ -34,7 +34,7 @@ import logging
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 from backend.services.port_manager import PortManager, get_port_manager
 from backend.services.process_manager import ProcessManager, get_process_manager
@@ -169,7 +169,7 @@ class FindAvailablePortRequest(BaseModel):
         None, ge=1, le=65535, description="Ending port number (default: start_port + 100)"
     )
 
-    @validator("end_port")
+    @field_validator("end_port")
     def validate_port_range(cls, v, values):
         """Validate that end_port is greater than start_port."""
         if v is not None and "start_port" in values and v <= values["start_port"]:

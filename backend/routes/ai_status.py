@@ -3,7 +3,8 @@ AI Service Status routes for Justice Companion.
 Migrated from electron/ipc-handlers/ai-status.ts
 
 Routes:
-- GET /ai/status - Get comprehensive AI service status (providers, models, health)
+- GET /ai/status - Get comprehensive AI service status
+  (providers, models, health)
 - GET /ai/providers - List all available AI providers with capabilities
 - GET /ai/providers/configured - List configured providers for current user
 - GET /ai/providers/{provider}/test - Test provider connection
@@ -20,7 +21,8 @@ Security:
 - Audit logging for all operations
 - Service availability checks with proper error handling
 
-REFACTORED: Now uses service layer instead of direct database/environment queries
+REFACTORED: Now uses service layer instead of direct database/environment
+queries
 - AIProviderConfigService for provider configuration management
 - UnifiedAIService for multi-provider AI operations
 - ModelDownloadService for model management
@@ -30,32 +32,27 @@ REFACTORED: Now uses service layer instead of direct database/environment querie
 """
 
 import os
-import asyncio
-from typing import Optional, Dict, Any, List
+import time
+from contextlib import asynccontextmanager
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException, Depends, status, BackgroundTasks
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from backend.models.base import get_db
 from backend.routes.auth import get_current_user
-from backend.services.unified_ai_service import (
-    UnifiedAIService,
-    AIProviderConfig,
-    ChatMessage,
-)
-from backend.services.model_download_service import (
-    ModelDownloadService,
-)
-from backend.services.ai_provider_config_service import (
-    AIProviderConfigService,
-    AIProviderType as ConfigProviderType,
-    AI_PROVIDER_METADATA as CONFIG_PROVIDER_METADATA,
-)
-from backend.services.encryption_service import EncryptionService
+from backend.services.ai_provider_config_service import \
+    AI_PROVIDER_METADATA as CONFIG_PROVIDER_METADATA
+from backend.services.ai_provider_config_service import AIProviderConfigService
+from backend.services.ai_provider_config_service import \
+    AIProviderType as ConfigProviderType
 from backend.services.audit_logger import AuditLogger
-
+from backend.services.encryption_service import EncryptionService
+from backend.services.model_download_service import ModelDownloadService
+from backend.services.unified_ai_service import (AIProviderConfig, ChatMessage,
+                                                 UnifiedAIService)
 
 router = APIRouter(prefix="/ai", tags=["ai-status"])
 
@@ -96,10 +93,89 @@ def get_model_download_service(
     return ModelDownloadService(models_dir, audit_logger)
 
 
-async def get_ai_service(
-    db: Session = Depends(get_db),
-    config_service: AIProviderConfigService = Depends(get_provider_config_service),
+@asynccontextmanager
+async def measure_response_time():
+    """
+    Context manager for measuring async operation response times.
+
+    Yields:
+        A function that returns elapsed time when called
+
+    Example:
+        async with measure_response_time() as get_elapsed:
+            await some_async_operation()
+            elapsed = get_elapsed()
+    """
+    start_time = time.monotonic()
+    try:
+        yield lambda: time.monotonic() - start_time
+    finally:
+        pass
+
+
+class AIServiceFactory:
+    """
+    Factory for creating UnifiedAIService instances with proper
+    dependency injection.
+
+    Handles the transformation from AIProviderConfigService output to
+    UnifiedAIService input.
+    """
+
+    def __init__(
+        self,
+        config_service: AIProviderConfigService,
+        audit_logger: AuditLogger,
+    ):
+        self.config_service = config_service
+        self.audit_logger = audit_logger
+
+    async def create_for_user(
+        self,
+        user_id: int,
+    ) -> Optional[UnifiedAIService]:
+        """
+        Create AI service instance for user's active provider configuration.
+
+        Args:
+            user_id: User identifier
+
+        Returns:
+            UnifiedAIService instance or None if no active provider configured
+        """
+        active_config = await self.config_service.get_active_provider_config(
+            user_id
+        )
+
+        if not active_config:
+            return None
+
+        # Transform service config to AI service config
+        provider_config = AIProviderConfig(
+            provider=str(active_config.provider),  # Convert to string safely
+            api_key=active_config.api_key,
+            model=active_config.model,
+            endpoint=active_config.endpoint,
+            temperature=active_config.temperature,
+            max_tokens=active_config.max_tokens,
+            top_p=active_config.top_p,
+        )
+
+        return UnifiedAIService(provider_config, self.audit_logger)
+
+
+def get_ai_service_factory(
+    config_service: AIProviderConfigService = Depends(
+        get_provider_config_service
+    ),
     audit_logger: AuditLogger = Depends(get_audit_logger),
+) -> AIServiceFactory:
+    """Get AI service factory instance."""
+    return AIServiceFactory(config_service, audit_logger)
+
+
+async def get_ai_service(
+    ai_service_factory: AIServiceFactory = Depends(get_ai_service_factory),
     current_user: Dict[str, Any] = Depends(get_current_user),
 ) -> Optional[UnifiedAIService]:
     """
@@ -108,25 +184,7 @@ async def get_ai_service(
     Returns None if no active provider is configured.
     """
     user_id = current_user["userId"]
-
-    # Get active provider configuration
-    active_config = await config_service.get_active_provider_config(user_id)
-
-    if not active_config:
-        return None
-
-    # Create AIProviderConfig for UnifiedAIService
-    provider_config = AIProviderConfig(
-        provider=active_config.provider,
-        api_key=active_config.api_key,
-        model=active_config.model,
-        endpoint=active_config.endpoint,
-        temperature=active_config.temperature,
-        max_tokens=active_config.max_tokens,
-        top_p=active_config.top_p,
-    )
-
-    return UnifiedAIService(provider_config, audit_logger)
+    return await ai_service_factory.create_for_user(user_id)
 
 
 # ===== PYDANTIC MODELS =====
@@ -135,15 +193,42 @@ async def get_ai_service(
 class AIStatusResponse(BaseModel):
     """Response model for comprehensive AI service status."""
 
-    running: bool = Field(..., description="Whether AI services are running")
-    healthy: bool = Field(..., description="Whether services passed health checks")
-    configured: bool = Field(..., description="Whether any AI provider is configured")
-    activeProvider: Optional[str] = Field(None, description="Active AI provider name")
-    activeModel: Optional[str] = Field(None, description="Active model name")
-    providersConfigured: int = Field(..., description="Number of configured providers")
-    modelsDownloaded: int = Field(..., description="Number of local models downloaded")
-    capabilities: Optional[Dict[str, Any]] = Field(None, description="Active provider capabilities")
-    error: Optional[str] = Field(None, description="Error message if unhealthy")
+    running: bool = Field(
+        ...,
+        description="Whether AI services are running",
+    )
+    healthy: bool = Field(
+        ...,
+        description="Whether services passed health checks",
+    )
+    configured: bool = Field(
+        ...,
+        description="Whether any AI provider is configured",
+    )
+    activeProvider: Optional[str] = Field(
+        None,
+        description="Active AI provider name",
+    )
+    activeModel: Optional[str] = Field(
+        None,
+        description="Active model name",
+    )
+    providersConfigured: int = Field(
+        ...,
+        description="Number of configured providers",
+    )
+    modelsDownloaded: int = Field(
+        ...,
+        description="Number of local models downloaded",
+    )
+    capabilities: Optional[Dict[str, Any]] = Field(
+        None,
+        description="Active provider capabilities",
+    )
+    error: Optional[str] = Field(
+        None,
+        description="Error message if unhealthy",
+    )
 
     class Config:
         populate_by_name = True
@@ -155,13 +240,28 @@ class ProviderInfoResponse(BaseModel):
     provider: str = Field(..., description="Provider type")
     name: str = Field(..., description="Provider display name")
     configured: bool = Field(..., description="Whether provider is configured")
-    active: bool = Field(..., description="Whether this is the active provider")
+    active: bool = Field(
+        ...,
+        description="Whether this is the active provider",
+    )
     defaultEndpoint: str = Field(..., description="Default API endpoint")
-    supportsStreaming: bool = Field(..., description="Whether streaming is supported")
+    supportsStreaming: bool = Field(
+        ...,
+        description="Whether streaming is supported",
+    )
     defaultModel: str = Field(..., description="Default model name")
-    maxContextTokens: int = Field(..., description="Maximum context window in tokens")
-    availableModels: List[str] = Field(..., description="List of available models")
-    currentModel: Optional[str] = Field(None, description="Currently configured model")
+    maxContextTokens: int = Field(
+        ...,
+        description="Maximum context window in tokens",
+    )
+    availableModels: List[str] = Field(
+        ...,
+        description="List of available models",
+    )
+    currentModel: Optional[str] = Field(
+        None,
+        description="Currently configured model",
+    )
 
     class Config:
         populate_by_name = True
@@ -170,9 +270,18 @@ class ProviderInfoResponse(BaseModel):
 class ProvidersListResponse(BaseModel):
     """Response model for providers list."""
 
-    providers: List[ProviderInfoResponse] = Field(..., description="List of AI providers")
-    totalProviders: int = Field(..., description="Total number of available providers")
-    configuredProviders: int = Field(..., description="Number of configured providers")
+    providers: List[ProviderInfoResponse] = Field(
+        ...,
+        description="List of AI providers",
+    )
+    totalProviders: int = Field(
+        ...,
+        description="Total number of available providers",
+    )
+    configuredProviders: int = Field(
+        ...,
+        description="Number of configured providers",
+    )
 
     class Config:
         populate_by_name = True
@@ -187,7 +296,10 @@ class ModelInfoResponse(BaseModel):
     size: int = Field(..., description="Model file size in bytes")
     sizeGB: float = Field(..., description="Model file size in GB")
     description: str = Field(..., description="Model description")
-    recommended: bool = Field(..., description="Whether this is the recommended model")
+    recommended: bool = Field(
+        ...,
+        description="Whether this is the recommended model",
+    )
     downloaded: bool = Field(..., description="Whether model is downloaded")
 
     class Config:
@@ -197,9 +309,18 @@ class ModelInfoResponse(BaseModel):
 class ModelsListResponse(BaseModel):
     """Response model for models list."""
 
-    models: List[ModelInfoResponse] = Field(..., description="List of available models")
-    totalModels: int = Field(..., description="Total number of available models")
-    downloadedModels: int = Field(..., description="Number of downloaded models")
+    models: List[ModelInfoResponse] = Field(
+        ...,
+        description="List of available models",
+    )
+    totalModels: int = Field(
+        ...,
+        description="Total number of available models",
+    )
+    downloadedModels: int = Field(
+        ...,
+        description="Number of downloaded models",
+    )
 
     class Config:
         populate_by_name = True
@@ -208,7 +329,10 @@ class ModelsListResponse(BaseModel):
 class ModelDownloadRequest(BaseModel):
     """Request model for model download."""
 
-    userId: Optional[int] = Field(None, description="User ID for audit logging")
+    userId: Optional[int] = Field(
+        None,
+        description="User ID for audit logging",
+    )
 
     class Config:
         populate_by_name = True
@@ -217,10 +341,16 @@ class ModelDownloadRequest(BaseModel):
 class ModelDownloadResponse(BaseModel):
     """Response model for model download initiation."""
 
-    success: bool = Field(..., description="Whether download started successfully")
+    success: bool = Field(
+        ...,
+        description="Whether download started successfully",
+    )
     modelId: str = Field(..., description="Model identifier")
     message: str = Field(..., description="Status message")
-    error: Optional[str] = Field(None, description="Error message if failed")
+    error: Optional[str] = Field(
+        None,
+        description="Error message if failed",
+    )
 
     class Config:
         populate_by_name = True
@@ -230,10 +360,22 @@ class ModelStatusResponse(BaseModel):
     """Response model for model download status."""
 
     modelId: str = Field(..., description="Model identifier")
-    downloaded: bool = Field(..., description="Whether model is fully downloaded")
-    downloading: bool = Field(..., description="Whether download is in progress")
-    progress: Optional[Dict[str, Any]] = Field(None, description="Download progress information")
-    error: Optional[str] = Field(None, description="Error message if download failed")
+    downloaded: bool = Field(
+        ...,
+        description="Whether model is fully downloaded",
+    )
+    downloading: bool = Field(
+        ...,
+        description="Whether download is in progress",
+    )
+    progress: Optional[Dict[str, Any]] = Field(
+        None,
+        description="Download progress information",
+    )
+    error: Optional[str] = Field(
+        None,
+        description="Error message if download failed",
+    )
 
     class Config:
         populate_by_name = True
@@ -242,10 +384,19 @@ class ModelStatusResponse(BaseModel):
 class HealthCheckResponse(BaseModel):
     """Response model for health check."""
 
-    status: str = Field(..., description="Health status (healthy/degraded/unhealthy)")
+    status: str = Field(
+        ...,
+        description="Health status (healthy/degraded/unhealthy)",
+    )
     timestamp: str = Field(..., description="Check timestamp (ISO 8601)")
-    services: Dict[str, bool] = Field(..., description="Individual service health status")
-    details: Optional[Dict[str, Any]] = Field(None, description="Additional health details")
+    services: Dict[str, bool] = Field(
+        ...,
+        description="Individual service health status",
+    )
+    details: Optional[Dict[str, Any]] = Field(
+        None,
+        description="Additional health details",
+    )
 
     class Config:
         populate_by_name = True
@@ -256,8 +407,14 @@ class ProviderTestResponse(BaseModel):
 
     success: bool = Field(..., description="Whether test succeeded")
     provider: str = Field(..., description="Provider type tested")
-    responseTime: Optional[float] = Field(None, description="Response time in seconds")
-    error: Optional[str] = Field(None, description="Error message if test failed")
+    responseTime: Optional[float] = Field(
+        None,
+        description="Response time in seconds",
+    )
+    error: Optional[str] = Field(
+        None,
+        description="Error message if test failed",
+    )
 
     class Config:
         populate_by_name = True
@@ -268,8 +425,12 @@ class ProviderTestResponse(BaseModel):
 
 @router.get("/status", response_model=AIStatusResponse)
 async def get_ai_status(
-    config_service: AIProviderConfigService = Depends(get_provider_config_service),
-    model_service: ModelDownloadService = Depends(get_model_download_service),
+    config_service: AIProviderConfigService = Depends(
+        get_provider_config_service
+    ),
+    model_service: ModelDownloadService = Depends(
+        get_model_download_service
+    ),
     ai_service: Optional[UnifiedAIService] = Depends(get_ai_service),
     current_user: Dict[str, Any] = Depends(get_current_user),
 ):
@@ -293,9 +454,6 @@ async def get_ai_status(
         # Get configured providers
         configured_providers = config_service.get_configured_providers(user_id)
         providers_count = len(configured_providers)
-
-        # Get active provider
-        active_provider = config_service.get_active_provider(user_id)
 
         # Get downloaded models
         downloaded_models = model_service.get_downloaded_models()
@@ -345,7 +503,9 @@ async def get_ai_status(
 
 @router.get("/providers", response_model=ProvidersListResponse)
 async def list_providers(
-    config_service: AIProviderConfigService = Depends(get_provider_config_service),
+    config_service: AIProviderConfigService = Depends(
+        get_provider_config_service
+    ),
     current_user: Dict[str, Any] = Depends(get_current_user),
 ):
     """
@@ -412,7 +572,9 @@ async def list_providers(
 
 @router.get("/providers/configured", response_model=ProvidersListResponse)
 async def list_configured_providers(
-    config_service: AIProviderConfigService = Depends(get_provider_config_service),
+    config_service: AIProviderConfigService = Depends(
+        get_provider_config_service
+    ),
     current_user: Dict[str, Any] = Depends(get_current_user),
 ):
     """
@@ -425,10 +587,6 @@ async def list_configured_providers(
     """
     try:
         user_id = current_user["userId"]
-
-        # Get configured providers for user
-        configured_providers = config_service.get_configured_providers(user_id)
-        active_provider = config_service.get_active_provider(user_id)
 
         # Get user configurations
         user_configs = config_service.list_provider_configs(user_id)
@@ -471,7 +629,9 @@ async def list_configured_providers(
 @router.get("/providers/{provider}/test", response_model=ProviderTestResponse)
 async def test_provider(
     provider: str,
-    config_service: AIProviderConfigService = Depends(get_provider_config_service),
+    config_service: AIProviderConfigService = Depends(
+        get_provider_config_service
+    ),
     audit_logger: AuditLogger = Depends(get_audit_logger),
     current_user: Dict[str, Any] = Depends(get_current_user),
 ):
@@ -496,11 +656,15 @@ async def test_provider(
             provider_type = ConfigProviderType(provider)
         except ValueError:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid provider: {provider}"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid provider: {provider}",
             )
 
         # Get provider configuration
-        provider_config = await config_service.get_provider_config(user_id, provider_type)
+        provider_config = await config_service.get_provider_config(
+            user_id,
+            provider_type,
+        )
 
         if not provider_config:
             raise HTTPException(
@@ -510,35 +674,46 @@ async def test_provider(
 
         # Create AI service for testing
         ai_config = AIProviderConfig(
-            provider=provider_config.provider,
+            provider=str(provider_config.provider),  # Convert to string safely
             api_key=provider_config.api_key,
             model=provider_config.model,
             endpoint=provider_config.endpoint,
             temperature=0.7,
             max_tokens=50,
+            top_p=0.9,  # Required field
         )
 
         ai_service = UnifiedAIService(ai_config, audit_logger)
 
         # Send test message
-        test_messages = [ChatMessage(role="user", content="Test connection. Reply with 'OK'.")]
-
-        start_time = asyncio.get_event_loop().time()
-
-        try:
-            response = await ai_service.chat(test_messages)
-            response_time = asyncio.get_event_loop().time() - start_time
-
-            return ProviderTestResponse(
-                success=True, provider=provider, responseTime=response_time, error=None
+        test_messages = [
+            ChatMessage(
+                role="user",
+                content="Test connection. Reply with 'OK'.",
             )
+        ]
 
-        except Exception as test_error:
-            response_time = asyncio.get_event_loop().time() - start_time
+        async with measure_response_time() as get_elapsed:
+            try:
+                await ai_service.chat(test_messages)
+                response_time = get_elapsed()
 
-            return ProviderTestResponse(
-                success=False, provider=provider, responseTime=response_time, error=str(test_error)
-            )
+                return ProviderTestResponse(
+                    success=True,
+                    provider=provider,
+                    responseTime=response_time,
+                    error=None,
+                )
+
+            except Exception as test_error:
+                response_time = get_elapsed()
+
+                return ProviderTestResponse(
+                    success=False,
+                    provider=provider,
+                    responseTime=response_time,
+                    error=str(test_error),
+                )
 
     except HTTPException:
         raise
@@ -550,7 +725,9 @@ async def test_provider(
 
 
 @router.get("/models", response_model=ModelsListResponse)
-async def list_models(model_service: ModelDownloadService = Depends(get_model_download_service)):
+async def list_models(
+    model_service: ModelDownloadService = Depends(get_model_download_service),
+):
     """
     List all available models for download.
 
@@ -586,7 +763,9 @@ async def list_models(model_service: ModelDownloadService = Depends(get_model_do
             )
 
         return ModelsListResponse(
-            models=models_info, totalModels=len(models_info), downloadedModels=downloaded_count
+            models=models_info,
+            totalModels=len(models_info),
+            downloadedModels=downloaded_count,
         )
 
     except Exception as e:
@@ -630,7 +809,9 @@ async def list_downloaded_models(
             )
 
         return ModelsListResponse(
-            models=models_info, totalModels=len(models_info), downloadedModels=len(models_info)
+            models=models_info,
+            totalModels=len(models_info),
+            downloadedModels=len(models_info),
         )
 
     except Exception as e:
@@ -642,7 +823,8 @@ async def list_downloaded_models(
 
 @router.get("/models/{model_id}/status", response_model=ModelStatusResponse)
 async def get_model_status(
-    model_id: str, model_service: ModelDownloadService = Depends(get_model_download_service)
+    model_id: str,
+    model_service: ModelDownloadService = Depends(get_model_download_service),
 ):
     """
     Check model download status.
@@ -662,7 +844,8 @@ async def get_model_status(
 
         if not model_exists:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail=f"Model not found: {model_id}"
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Model not found: {model_id}",
             )
 
         # Check download status
@@ -694,7 +877,10 @@ async def get_model_status(
         )
 
 
-@router.post("/models/{model_id}/download", response_model=ModelDownloadResponse)
+@router.post(
+    "/models/{model_id}/download",
+    response_model=ModelDownloadResponse,
+)
 async def download_model(
     model_id: str,
     background_tasks: BackgroundTasks,
@@ -714,7 +900,8 @@ async def download_model(
 
     Authentication Required: Yes
 
-    Note: Download runs in background. Use GET /models/{model_id}/status to track progress.
+    Note: Download runs in background.
+    Use GET /models/{model_id}/status to track progress.
     """
     try:
         user_id = current_user["userId"]
@@ -725,13 +912,17 @@ async def download_model(
 
         if not model_exists:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail=f"Model not found: {model_id}"
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Model not found: {model_id}",
             )
 
         # Check if already downloaded
         if model_service.is_model_downloaded(model_id):
             return ModelDownloadResponse(
-                success=True, modelId=model_id, message="Model already downloaded", error=None
+                success=True,
+                modelId=model_id,
+                message="Model already downloaded",
+                error=None,
             )
 
         # Check if download already in progress
@@ -745,12 +936,18 @@ async def download_model(
 
         # Start download in background
         async def download_task():
-            await model_service.download_model(model_id=model_id, user_id=user_id)
+            await model_service.download_model(
+                model_id=model_id,
+                user_id=user_id,
+            )
 
         background_tasks.add_task(download_task)
 
         return ModelDownloadResponse(
-            success=True, modelId=model_id, message="Download started", error=None
+            success=True,
+            modelId=model_id,
+            message="Download started",
+            error=None,
         )
 
     except HTTPException:
@@ -788,7 +985,8 @@ async def delete_model(
 
         if not model_exists:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail=f"Model not found: {model_id}"
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Model not found: {model_id}",
             )
 
         # Delete model
@@ -796,7 +994,8 @@ async def delete_model(
 
         if not success:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail=f"Model not downloaded: {model_id}"
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Model not downloaded: {model_id}",
             )
 
         return None  # 204 No Content
@@ -812,7 +1011,9 @@ async def delete_model(
 
 @router.get("/health", response_model=HealthCheckResponse)
 async def health_check(
-    config_service: AIProviderConfigService = Depends(get_provider_config_service),
+    config_service: AIProviderConfigService = Depends(
+        get_provider_config_service
+    ),
     model_service: ModelDownloadService = Depends(get_model_download_service),
 ):
     """

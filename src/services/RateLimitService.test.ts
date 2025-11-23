@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { RateLimitService } from "./RateLimitService";
+import { RateLimitService } from "./RateLimitService.ts";
 
 describe("RateLimitService", () => {
   let service: RateLimitService;

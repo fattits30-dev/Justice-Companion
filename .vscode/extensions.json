@@ -1,78 +1,65 @@
 {
   "recommendations": [
-    // Essential Core
+    // Core Essentials - Performance Optimized
     "dbaeumer.vscode-eslint",
     "esbenp.prettier-vscode",
     "ms-vscode.vscode-typescript-next",
 
-    // Testing & Debugging
+    // Testing - Essential for your project
     "vitest.explorer",
     "ms-playwright.playwright",
-    "ms-vscode.js-debug",
-    "hbenl.vscode-test-explorer",
 
-    // Git & Version Control
+    // Git - Essential, streamlined
     "eamodio.gitlens",
-    "mhutchie.git-graph",
-    "donjayamanne.githistory",
 
-    // Database & Data
-    "qwtel.sqlite-viewer",
-    "mechatroner.rainbow-csv",
-
-    // Error Detection & Quality
+    // Error Detection - Minimal but useful
     "usernamehw.errorlens",
-    "streetsidesoftware.code-spell-checker",
-    "sonarsource.sonarlint-vscode",
 
-    // TypeScript & JavaScript
-    "pmneo.tsimporter",
+    // TypeScript/JavaScript - Essential tools
     "yoavbls.pretty-ts-errors",
     "wix.vscode-import-cost",
 
-    // React & Frontend
+    // React/Frontend - Only essential
     "bradlc.vscode-tailwindcss",
     "dsznajder.es7-react-js-snippets",
-    "styled-components.vscode-styled-components",
 
-    // Productivity & Utilities
+    // Productivity - Streamlined selection
     "aaron-bond.better-comments",
     "christian-kohler.path-intellisense",
-    "christian-kohler.npm-intellisense",
-    "formulahendry.auto-rename-tag",
-    "naumovs.color-highlight",
     "wayou.vscode-todo-highlight",
-    "gruntfuggly.todo-tree",
+    "formulahendry.auto-rename-tag",
 
-    // Documentation & Comments
-    "mintlify.document",
-    "stackbuild.vscode-tsconfig-helper",
+    // Documentation - Minimal but effective
+    "yzhang.markdown-all-in-one",
 
-    // Security & GDPR
+    // Security - Keep essential
     "snyk-security.snyk-vulnerability-scanner",
 
-    // Electron Development
-    "sburg.vscode-javascript-booster",
-
-    // Performance & Profiling
-    "ms-vscode.vscode-node-azure-pack",
-
-    // File Navigation
+    // File Navigation - Essential
     "eamodio.toggle-excluded-files",
 
-    // Code Organization
-    "ms-vsliveshare.vsliveshare",
-
-    // API Development
+    // API Development - Keep for REST APIs
     "humao.rest-client",
 
-    // Markdown & Documentation
-    "yzhang.markdown-all-in-one",
-    "bierner.markdown-preview-github-styles",
-    "saoudrizwan.claude-dev"
+    // JSON Support - Good to have
+    "ms-vscode.vscode-json",
+
+    // Python - Only for AI service
+    "ms-python.python",
+    "ms-python.black-formatter"
   ],
   "unwantedRecommendations": [
-    "hookyqr.beautify",
-    "ms-vscode.vscode-typescript-tslint-plugin"
+    // Performance-heavy extensions to avoid
+    "eamodio.git-graph", // duplicate git functionality
+    "donjayamanne.githistory", // resource intensive git history
+    "sburg.vscode-javascript-booster", // duplicate snippets
+    "styled-components.vscode-styled-components", // if not using heavily
+    "ms-vscode.vscode-node-azure-pack", // unnecessary for local dev
+    "saoudrizwan.claude-dev", // redundant with Cline
+    "ms-vsliveshare.vsliveshare", // resource intensive collaboration
+    "gruntfuggly.todo-tree", // duplicate TODO highlighting
+    "bierner.markdown-preview-github-styles", // unnecessary styling
+    "hookyqr.beautify", // old formatter
+    "ms-vscode.vscode-typescript-tslint-plugin" // deprecated
   ]
 }

@@ -28,7 +28,7 @@ vi.mock("electron", () => ({
 }));
 
 // Import the service (window mock will be set up in beforeEach)
-import { SecureStorageService, secureStorage } from "./SecureStorageService";
+import { SecureStorageService, secureStorage } from "./SecureStorageService.ts";
 
 describe("SecureStorageService", () => {
   let service: SecureStorageService;
