@@ -27,9 +27,8 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 
-from backend.services.encryption_service import EncryptionService, EncryptedData
+from backend.services.security.encryption import EncryptionService, EncryptedData
 from backend.services.audit_logger import log_audit_event
-
 
 class SearchIndexBuilder:
     """

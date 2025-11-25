@@ -6,14 +6,14 @@ Database URL is determined by environment variable DATABASE_URL.
 """
 
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import DeclarativeBase, sessionmaker
 from typing import Generator
 import os
 
 # Database configuration
 # Cloud-ready: Use DATABASE_URL env var if available (Railway, Heroku, etc.)
 # Otherwise default to SQLite for local development
+
 def get_database_url() -> str:
     """
     Get database URL from environment or default to SQLite.
@@ -29,12 +29,11 @@ def get_database_url() -> str:
         if database_url.startswith("postgres://"):
             database_url = database_url.replace("postgres://", "postgresql://", 1)
         return database_url
-    else:
-        # Local development (SQLite)
-        # IMPORTANT: Use same database as Electron app (justice.db in project root)
-        database_path = os.getenv("DATABASE_PATH", "justice.db")
-        return f"sqlite:///{database_path}"
 
+    # Local development (SQLite)
+    # IMPORTANT: Use same database as Electron app (justice.db in project root)
+    database_path = os.getenv("DATABASE_PATH", "justice.db")
+    return f"sqlite:///{database_path}"
 
 # Get database URL
 SQLALCHEMY_DATABASE_URL = get_database_url()
@@ -71,9 +70,8 @@ else:
 # Session factory
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Base class for all models
-Base = declarative_base()
-
+class Base(DeclarativeBase):
+    """Base class for all SQLAlchemy ORM models."""
 
 def get_db() -> Generator:
     """
@@ -86,30 +84,37 @@ def get_db() -> Generator:
     finally:
         db.close()
 
-
 def init_db():
     """
     Initialize database: create all tables defined in models.
     Call this once at application startup.
     """
+    if os.getenv("SKIP_DB_BOOTSTRAP", "false").lower() == "true":
+        print("Skipping database bootstrap (SKIP_DB_BOOTSTRAP=true)")
+        return
+
     # Import all models so they're registered with Base.metadata
     # This must happen before create_all() is called
-    from backend.models import (
-        user,
-        session,
-        case,
-        evidence,
-        deadline,
-        tag,
-        template,
-        chat,
-        profile,
-        consent,
-        notification,
-        backup,
-        ai_provider_config,
+    # pylint: disable=import-outside-toplevel,unused-import
+    from backend.models import (  # noqa: F401
+        user,  # noqa: F401
+        session,  # noqa: F401
+        case,  # noqa: F401
+        evidence,  # noqa: F401
+        deadline,  # noqa: F401
+        tag,  # noqa: F401
+        template,  # noqa: F401
+        chat,  # noqa: F401
+        profile,  # noqa: F401
+        consent,  # noqa: F401
+        notification,  # noqa: F401
+        backup,  # noqa: F401
+        ai_provider_config,  # noqa: F401
     )
+    # pylint: enable=import-outside-toplevel,unused-import
 
     # Now create all tables
     Base.metadata.create_all(bind=engine)
-    print(f"Created {len(Base.metadata.tables)} tables: {list(Base.metadata.tables.keys())}")
+    print(
+        f"Created {len(Base.metadata.tables)} tables: {list(Base.metadata.tables.keys())}"
+    )

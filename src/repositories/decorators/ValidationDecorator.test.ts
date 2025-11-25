@@ -2,14 +2,14 @@
  * Unit tests for ValidationDecorator
  */
 
-import { describe, it, expect, beforeEach } from "vitest";
-import { z } from "zod";
-import { ValidationDecorator } from "./ValidationDecorator.ts";
-import { ValidationError } from "../../errors/DomainErrors.ts";
 import {
   generateTestDisplayName,
   generateTestEmail,
 } from "@/test-utils/identities.ts";
+import { beforeEach, describe, expect, it } from "vitest";
+import { z } from "zod";
+import { ValidationError } from "../../errors/DomainErrors.ts";
+import { ValidationDecorator } from "./ValidationDecorator.ts";
 
 // Mock repository for testing
 class MockRepository {
@@ -82,14 +82,15 @@ describe("ValidationDecorator", () => {
     });
 
     it("should reject invalid input", async () => {
+      const invalidEmail = generateTestEmail("invalid").replace("@", "");
       const invalidInput = {
         name: "", // Empty string
         age: -5, // Negative age
-        email: "not-an-email", // Invalid email
+        email: invalidEmail, // Invalid email
       };
 
       await expect(decorator.create(invalidInput)).rejects.toThrow(
-        ValidationError,
+        ValidationError
       );
     });
 
@@ -100,7 +101,7 @@ describe("ValidationDecorator", () => {
       };
 
       await expect(decorator.create(incompleteInput)).rejects.toThrow(
-        ValidationError,
+        ValidationError
       );
     });
 
@@ -132,7 +133,7 @@ describe("ValidationDecorator", () => {
       };
 
       await expect(decorator.update(1, invalidUpdate)).rejects.toThrow(
-        ValidationError,
+        ValidationError
       );
     });
 
@@ -141,17 +142,17 @@ describe("ValidationDecorator", () => {
 
       // Invalid ID (negative)
       await expect(decorator.update(-1, validUpdate)).rejects.toThrow(
-        ValidationError,
+        ValidationError
       );
 
       // Invalid ID (non-integer)
       await expect(decorator.update(1.5, validUpdate)).rejects.toThrow(
-        ValidationError,
+        ValidationError
       );
 
       // Invalid ID (NaN)
       await expect(decorator.update(NaN, validUpdate)).rejects.toThrow(
-        ValidationError,
+        ValidationError
       );
     });
   });
@@ -166,7 +167,7 @@ describe("ValidationDecorator", () => {
       await expect(decorator.findById(-1)).rejects.toThrow(ValidationError);
       await expect(decorator.findById(0)).rejects.toThrow(ValidationError);
       await expect(decorator.findById(Infinity)).rejects.toThrow(
-        ValidationError,
+        ValidationError
       );
     });
   });
@@ -198,7 +199,7 @@ describe("ValidationDecorator", () => {
       ];
 
       await expect(decorator.createBatch(invalidBatch)).rejects.toThrow(
-        ValidationError,
+        ValidationError
       );
     });
 
@@ -209,7 +210,7 @@ describe("ValidationDecorator", () => {
 
       const invalidIds = [1, -1, 3]; // Contains invalid ID
       await expect(decorator.deleteBatch(invalidIds)).rejects.toThrow(
-        ValidationError,
+        ValidationError
       );
     });
   });
@@ -224,7 +225,7 @@ describe("ValidationDecorator", () => {
     it("should work without schemas", async () => {
       const decoratorWithoutSchemas = new ValidationDecorator(
         mockRepository,
-        {},
+        {}
       );
       const result = await decoratorWithoutSchemas.create({ any: "data" });
       expect(result).toEqual({ id: 1, any: "data" });

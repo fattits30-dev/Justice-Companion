@@ -68,10 +68,8 @@ except ImportError as e:
     SupraCitation = None
     FullLawCitation = None
 
-
 # Configure logger
 logger = logging.getLogger(__name__)
-
 
 @dataclass
 class CitationMetadata:
@@ -106,7 +104,6 @@ class CitationMetadata:
         """Convert to dictionary, excluding None values."""
         return {k: v for k, v in asdict(self).items() if v is not None}
 
-
 @dataclass
 class ExtractedCitation:
     """
@@ -132,7 +129,6 @@ class ExtractedCitation:
             "span": list(self.span),
             "metadata": self.metadata.to_dict(),
         }
-
 
 class CitationService:
     """
@@ -504,9 +500,7 @@ class CitationService:
 
         return summary
 
-
 # Module-level utility functions for convenience
-
 
 def extract_citations_from_text(text: str) -> List[ExtractedCitation]:
     """
@@ -520,7 +514,6 @@ def extract_citations_from_text(text: str) -> List[ExtractedCitation]:
     """
     service = CitationService()
     return service.extract_citations(text)
-
 
 def highlight_citations_in_text(text: str) -> str:
     """

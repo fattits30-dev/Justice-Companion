@@ -39,7 +39,7 @@ from backend.services.export.export_service import (
 from backend.services.export.pdf_generator import PDFGenerator
 from backend.services.export.docx_generator import DOCXGenerator
 from backend.services.export.template_engine import TemplateEngine
-from backend.services.encryption_service import EncryptionService
+from backend.services.security.encryption import EncryptionService
 from backend.services.audit_logger import AuditLogger, log_audit_event
 
 # Configure logging
@@ -47,12 +47,10 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/export", tags=["export"])
 
-
 # ===== CONSTANTS =====
 VALID_FORMATS = ["pdf", "docx", "json", "csv"]
 VALID_TEMPLATES = ["case-summary", "evidence-list", "timeline-report", "case-notes"]
 EXPORT_DIR = Path("exports")  # Default export directory
-
 
 # ===== PYDANTIC REQUEST MODELS =====
 class ExportOptions(BaseModel):
@@ -73,6 +71,7 @@ class ExportOptions(BaseModel):
 
     @field_validator("fileName")
     @classmethod
+    @classmethod
     def validate_filename(cls, v: Optional[str]) -> Optional[str]:
         """Ensure filename is safe (no path traversal)."""
         if v:
@@ -84,6 +83,7 @@ class ExportOptions(BaseModel):
 
     @field_validator("outputPath")
     @classmethod
+    @classmethod
     def validate_output_path(cls, v: Optional[str]) -> Optional[str]:
         """Ensure output path is safe (no path traversal to sensitive areas)."""
         if v:
@@ -92,7 +92,6 @@ class ExportOptions(BaseModel):
             if ".." in v:
                 raise ValueError("Output path cannot contain '..' (path traversal)")
         return v
-
 
 # ===== PYDANTIC RESPONSE MODELS =====
 class ExportResult(BaseModel):
@@ -121,7 +120,6 @@ class ExportResult(BaseModel):
             }
         }
 
-
 class ExportTemplate(BaseModel):
     """Model for export template metadata."""
 
@@ -142,12 +140,10 @@ class ExportTemplate(BaseModel):
             }
         }
 
-
 class TemplateListResponse(BaseModel):
     """Response model for template list."""
 
     templates: List[ExportTemplate]
-
 
 # ===== DEPENDENCY INJECTION =====
 def get_export_service(db: Session = Depends(get_db)) -> ExportService:
@@ -207,7 +203,6 @@ def get_export_service(db: Session = Depends(get_db)) -> ExportService:
         export_dir=str(EXPORT_DIR),
     )
 
-
 def get_template_engine() -> TemplateEngine:
     """
     Dependency injection for TemplateEngine.
@@ -216,7 +211,6 @@ def get_template_engine() -> TemplateEngine:
         Configured TemplateEngine instance
     """
     return TemplateEngine()
-
 
 # ===== HELPER FUNCTIONS =====
 def convert_options_to_service_format(
@@ -245,7 +239,6 @@ def convert_options_to_service_format(
         file_name=options.fileName,
     )
 
-
 def create_export_result(service_result: Any, format: str, template: str) -> ExportResult:
     """
     Convert ExportService result to API response format.
@@ -270,7 +263,6 @@ def create_export_result(service_result: Any, format: str, template: str) -> Exp
         exportedAt=service_result.exported_at.isoformat(),
         template=template,
     )
-
 
 # ===== ROUTES =====
 @router.post("/case/{case_id}/pdf", response_model=ExportResult, status_code=status.HTTP_200_OK)
@@ -337,7 +329,7 @@ async def export_case_to_pdf(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         logger.error(f"Failed to export case {case_id} to PDF: {str(e)}", exc_info=True)
 
         # Log failed export
@@ -356,7 +348,6 @@ async def export_case_to_pdf(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to export case to PDF: {str(e)}",
         )
-
 
 @router.post("/case/{case_id}/docx", response_model=ExportResult, status_code=status.HTTP_200_OK)
 async def export_case_to_docx(
@@ -423,7 +414,7 @@ async def export_case_to_docx(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         logger.error(f"Failed to export case {case_id} to DOCX: {str(e)}", exc_info=True)
 
         # Log failed export
@@ -442,7 +433,6 @@ async def export_case_to_docx(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to export case to DOCX: {str(e)}",
         )
-
 
 @router.post("/case/{case_id}/json", response_model=ExportResult, status_code=status.HTTP_200_OK)
 async def export_case_to_json(
@@ -505,7 +495,7 @@ async def export_case_to_json(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         logger.error(f"Failed to export case {case_id} to JSON: {str(e)}", exc_info=True)
 
         # Log failed export
@@ -524,7 +514,6 @@ async def export_case_to_json(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to export case to JSON: {str(e)}",
         )
-
 
 @router.post("/case/{case_id}/csv", response_model=ExportResult, status_code=status.HTTP_200_OK)
 async def export_case_to_csv(
@@ -592,7 +581,7 @@ async def export_case_to_csv(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         logger.error(f"Failed to export case {case_id} to CSV: {str(e)}", exc_info=True)
 
         # Log failed export
@@ -611,7 +600,6 @@ async def export_case_to_csv(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to export case to CSV: {str(e)}",
         )
-
 
 @router.post("/evidence/{case_id}/pdf", response_model=ExportResult, status_code=status.HTTP_200_OK)
 async def export_evidence_to_pdf(
@@ -660,7 +648,7 @@ async def export_evidence_to_pdf(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         logger.error(
             f"Failed to export evidence to PDF for case {case_id}: {str(e)}", exc_info=True
         )
@@ -681,7 +669,6 @@ async def export_evidence_to_pdf(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to export evidence to PDF: {str(e)}",
         )
-
 
 @router.post("/timeline/{case_id}/pdf", response_model=ExportResult, status_code=status.HTTP_200_OK)
 async def export_timeline_to_pdf(
@@ -731,7 +718,7 @@ async def export_timeline_to_pdf(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         logger.error(
             f"Failed to export timeline to PDF for case {case_id}: {str(e)}", exc_info=True
         )
@@ -752,7 +739,6 @@ async def export_timeline_to_pdf(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to export timeline to PDF: {str(e)}",
         )
-
 
 @router.post("/notes/{case_id}/pdf", response_model=ExportResult, status_code=status.HTTP_200_OK)
 async def export_notes_to_pdf(
@@ -800,7 +786,7 @@ async def export_notes_to_pdf(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         logger.error(f"Failed to export notes to PDF for case {case_id}: {str(e)}", exc_info=True)
 
         # Log failed export
@@ -819,7 +805,6 @@ async def export_notes_to_pdf(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to export notes to PDF: {str(e)}",
         )
-
 
 @router.post("/notes/{case_id}/docx", response_model=ExportResult, status_code=status.HTTP_200_OK)
 async def export_notes_to_docx(
@@ -867,7 +852,7 @@ async def export_notes_to_docx(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         logger.error(f"Failed to export notes to DOCX for case {case_id}: {str(e)}", exc_info=True)
 
         # Log failed export
@@ -886,7 +871,6 @@ async def export_notes_to_docx(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to export notes to DOCX: {str(e)}",
         )
-
 
 @router.get("/templates", response_model=TemplateListResponse, status_code=status.HTTP_200_OK)
 async def get_export_templates(template_engine: TemplateEngine = Depends(get_template_engine)):
@@ -940,7 +924,7 @@ async def get_export_templates(template_engine: TemplateEngine = Depends(get_tem
 
         return TemplateListResponse(templates=api_templates)
 
-    except Exception as e:
+    except Exception as exc:
         logger.error(f"Failed to retrieve template list: {str(e)}", exc_info=True)
 
         raise HTTPException(

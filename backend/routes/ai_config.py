@@ -43,17 +43,15 @@ from sqlalchemy.orm import Session
 
 from backend.models.base import get_db
 from backend.routes.auth import get_current_user
-from backend.services.ai_provider_config_service import (
+from backend.services.ai.providers import (
     AIProviderConfigInput, AIProviderConfigService, AIProviderType)
 from backend.services.audit_logger import AuditLogger
-from backend.services.auth_service import AuthenticationService
-from backend.services.encryption_service import EncryptionService
+from backend.services.auth.service import AuthenticationService
+from backend.services.security.encryption import EncryptionService
 
 router = APIRouter(prefix="/ai", tags=["ai-configuration"])
 
-
 # ===== PYDANTIC MODELS =====
-
 
 class ConfigureProviderRequest(BaseModel):
     """Request to configure AI provider."""
@@ -72,6 +70,7 @@ class ConfigureProviderRequest(BaseModel):
 
     @field_validator("api_key")
     @classmethod
+    @classmethod
     def validate_api_key(cls, v: str) -> str:
         """Validate API key format and length."""
         v = v.strip()
@@ -88,6 +87,7 @@ class ConfigureProviderRequest(BaseModel):
 
     @field_validator("model")
     @classmethod
+    @classmethod
     def validate_model(cls, v: str) -> str:
         """Validate model name is not empty."""
         v = v.strip()
@@ -98,6 +98,7 @@ class ConfigureProviderRequest(BaseModel):
         return v
 
     @field_validator("endpoint")
+    @classmethod
     @classmethod
     def validate_endpoint(cls, v: Optional[str]) -> Optional[str]:
         """Validate custom endpoint URL."""
@@ -120,13 +121,13 @@ class ConfigureProviderRequest(BaseModel):
 
         return v
 
-
 class UpdateApiKeyRequest(BaseModel):
     """Request to update provider API key."""
 
     api_key: str = Field(..., min_length=10, max_length=500, description="New API key")
 
     @field_validator("api_key")
+    @classmethod
     @classmethod
     def validate_api_key(cls, v: str) -> str:
         """Validate API key format."""
@@ -136,7 +137,6 @@ class UpdateApiKeyRequest(BaseModel):
         if not re.match(r"^[a-zA-Z0-9_\-\.]+$", v):
             raise ValueError("API key contains invalid characters")
         return v
-
 
 class ConfigSummaryResponse(BaseModel):
     """Response model for provider configuration summary (without API key)."""
@@ -156,14 +156,12 @@ class ConfigSummaryResponse(BaseModel):
     class Config:
         from_attributes = True
 
-
 class ConfigureSuccessResponse(BaseModel):
     """Response after successfully configuring AI provider."""
 
     provider: str
     message: str
     config_id: int
-
 
 class TestConnectionResponse(BaseModel):
     """Response from testing AI provider connection."""
@@ -172,13 +170,11 @@ class TestConnectionResponse(BaseModel):
     message: Optional[str] = None
     error: Optional[str] = None
 
-
 class ValidateConfigResponse(BaseModel):
     """Response from configuration validation."""
 
     valid: bool
     errors: List[str] = Field(default_factory=list)
-
 
 class ProviderMetadataResponse(BaseModel):
     """Response model for provider metadata."""
@@ -193,15 +189,12 @@ class ProviderMetadataResponse(BaseModel):
     class Config:
         from_attributes = True
 
-
 # ===== DEPENDENCIES =====
-
 
 def get_auth_service(db: Session = Depends(get_db)) -> AuthenticationService:
     """Get authentication service instance."""
     audit_logger = get_audit_logger(db)
     return AuthenticationService(db=db, audit_logger=audit_logger)
-
 
 def get_encryption_service() -> EncryptionService:
     """Get encryption service instance."""
@@ -212,11 +205,9 @@ def get_encryption_service() -> EncryptionService:
 
     return EncryptionService(key)
 
-
 def get_audit_logger(db: Session = Depends(get_db)) -> AuditLogger:
     """Get audit logger instance."""
     return AuditLogger(db=db)
-
 
 def get_config_service(
     db: Session = Depends(get_db),
@@ -228,9 +219,7 @@ def get_config_service(
         db=db, encryption_service=encryption_service, audit_logger=audit_logger
     )
 
-
 # ===== ROUTES =====
-
 
 @router.get("/config", response_model=List[ConfigSummaryResponse])
 async def list_configurations(
@@ -272,12 +261,11 @@ async def list_configurations(
             for config in configs
         ]
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to list AI configurations: {str(e)}",
         )
-
 
 @router.get("/config/active", response_model=Optional[ConfigSummaryResponse])
 async def get_active_configuration(
@@ -318,12 +306,11 @@ async def get_active_configuration(
             updated_at=config.updated_at.isoformat(),
         )
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get active AI configuration: {str(e)}",
         )
-
 
 @router.get("/config/{provider}", response_model=ConfigSummaryResponse)
 async def get_configuration(
@@ -384,12 +371,11 @@ async def get_configuration(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get AI configuration: {str(e)}",
         )
-
 
 @router.post("/config/{provider}", response_model=ConfigureSuccessResponse)
 async def configure_provider(
@@ -474,12 +460,11 @@ async def configure_provider(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to configure AI provider: {str(e)}",
         )
-
 
 @router.delete("/config/{provider}")
 async def delete_configuration(
@@ -520,12 +505,11 @@ async def delete_configuration(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to delete AI configuration: {str(e)}",
         )
-
 
 @router.put("/config/{provider}/activate", response_model=ConfigSummaryResponse)
 async def activate_provider(
@@ -578,12 +562,11 @@ async def activate_provider(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to activate AI provider: {str(e)}",
         )
-
 
 @router.put("/config/{provider}/api-key")
 async def update_api_key(
@@ -647,12 +630,11 @@ async def update_api_key(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to update API key: {str(e)}",
         )
-
 
 @router.post("/config/{provider}/validate", response_model=ValidateConfigResponse)
 async def validate_configuration(
@@ -712,12 +694,11 @@ async def validate_configuration(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to validate configuration: {str(e)}",
         )
-
 
 @router.post("/config/{provider}/test", response_model=TestConnectionResponse)
 async def test_connection(
@@ -765,9 +746,8 @@ async def test_connection(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         return TestConnectionResponse(success=False, error=f"Failed to test connection: {str(e)}")
-
 
 @router.get("/providers", response_model=Dict[str, ProviderMetadataResponse])
 async def list_providers(
@@ -798,12 +778,11 @@ async def list_providers(
             provider: ProviderMetadataResponse(**meta) for provider, meta in metadata_dict.items()
         }
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to list providers: {str(e)}",
         )
-
 
 @router.get("/providers/{provider}", response_model=ProviderMetadataResponse)
 async def get_provider_metadata(
@@ -848,7 +827,7 @@ async def get_provider_metadata(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get provider metadata: {str(e)}",

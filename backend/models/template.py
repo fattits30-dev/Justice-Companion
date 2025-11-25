@@ -1,19 +1,20 @@
-"""
-Template model for case templates management.
-Migrated from src/models/CaseTemplate.ts and electron/ipc-handlers/templates.ts
+"""Template model for case templates management."""
 
-Database schema from 020_create_templates_system.sql:
-- case_templates table with JSON fields for template data
-- template_usage table for tracking template application
-"""
+from __future__ import annotations
 
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, CheckConstraint
-from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
-from backend.models.base import Base
 import enum
-from typing import Dict, Any
+from datetime import datetime
+from typing import TYPE_CHECKING, Any, Dict
 
+from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.sql import func
+
+from backend.models.base import Base
+
+if TYPE_CHECKING:
+    from backend.models.case import Case
+    from backend.models.user import User
 
 class TemplateCategory(str, enum.Enum):
     """Template category enumeration matching database CHECK constraint."""
@@ -25,7 +26,6 @@ class TemplateCategory(str, enum.Enum):
     HOUSING = "housing"
     IMMIGRATION = "immigration"
     OTHER = "other"
-
 
 class CaseTemplate(Base):
     """
@@ -48,25 +48,35 @@ class CaseTemplate(Base):
 
     __tablename__ = "case_templates"
 
-    id = Column(Integer, primary_key=True, autoincrement=True, index=True)
-    name = Column(String, nullable=False)
-    description = Column(Text, nullable=True)
-    category = Column(String, nullable=False)
-    is_system_template = Column(Integer, default=0, nullable=False)  # SQLite boolean (0 or 1)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True)
+    id: Mapped[int] = mapped_column(
+        Integer, primary_key=True, autoincrement=True, index=True
+    )
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    category: Mapped[str] = mapped_column(String, nullable=False)
+    is_system_template: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    user_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True
+    )
 
     # JSON fields (stored as TEXT in SQLite)
-    template_fields_json = Column(Text, nullable=False)
-    suggested_evidence_types_json = Column(Text, nullable=True)
-    timeline_milestones_json = Column(Text, nullable=True)
-    checklist_items_json = Column(Text, nullable=True)
+    template_fields_json: Mapped[str] = mapped_column(Text, nullable=False)
+    suggested_evidence_types_json: Mapped[str | None] = mapped_column(
+        Text, nullable=True
+    )
+    timeline_milestones_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    checklist_items_json: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
 
     # Relationships
-    user = relationship("User", back_populates="templates")
-    usage_records = relationship(
+    user: Mapped["User | None"] = relationship("User", back_populates="templates")
+    usage_records: Mapped[list["TemplateUsage"]] = relationship(
         "TemplateUsage", back_populates="template", cascade="all, delete-orphan"
     )
 
@@ -74,11 +84,21 @@ class CaseTemplate(Base):
     __table_args__ = (
         CheckConstraint(
             category.in_(
-                ["civil", "criminal", "family", "employment", "housing", "immigration", "other"]
+                [
+                    "civil",
+                    "criminal",
+                    "family",
+                    "employment",
+                    "housing",
+                    "immigration",
+                    "other",
+                ]
             ),
             name="check_template_category",
         ),
-        CheckConstraint(is_system_template.in_([0, 1]), name="check_is_system_template"),
+        CheckConstraint(
+            is_system_template.in_([0, 1]), name="check_is_system_template"
+        ),
     )
 
     def to_dict(self, include_json: bool = True) -> Dict[str, Any]:
@@ -95,8 +115,12 @@ class CaseTemplate(Base):
             "category": self.category,
             "isSystemTemplate": bool(self.is_system_template),
             "userId": self.user_id,
-            "createdAt": self.created_at.isoformat() if self.created_at is not None else None,
-            "updatedAt": self.updated_at.isoformat() if self.updated_at is not None else None,
+            "createdAt": (
+                self.created_at.isoformat() if self.created_at is not None else None
+            ),
+            "updatedAt": (
+                self.updated_at.isoformat() if self.updated_at is not None else None
+            ),
         }
 
         if include_json:
@@ -129,7 +153,6 @@ class CaseTemplate(Base):
     def __repr__(self):
         return f"<CaseTemplate(id={self.id}, name='{self.name}', category='{self.category}')>"
 
-
 class TemplateUsage(Base):
     """
     Template usage tracking - records when templates are applied to cases.
@@ -144,22 +167,31 @@ class TemplateUsage(Base):
 
     __tablename__ = "template_usage"
 
-    id = Column(Integer, primary_key=True, autoincrement=True, index=True)
-    template_id = Column(
-        Integer, ForeignKey("case_templates.id", ondelete="CASCADE"), nullable=False, index=True
+    id: Mapped[int] = mapped_column(
+        Integer, primary_key=True, autoincrement=True, index=True
     )
-    user_id = Column(
+    template_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("case_templates.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    user_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    case_id = Column(
+    case_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("cases.id", ondelete="SET NULL"), nullable=True, index=True
     )
-    used_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+    used_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), index=True
+    )
 
     # Relationships
-    template = relationship("CaseTemplate", back_populates="usage_records")
-    user = relationship("User", back_populates="template_usages")
-    case = relationship("Case", back_populates="template_usages")
+    template: Mapped["CaseTemplate"] = relationship(
+        "CaseTemplate", back_populates="usage_records"
+    )
+    user: Mapped["User"] = relationship("User", back_populates="template_usages")
+    case: Mapped["Case | None"] = relationship("Case", back_populates="template_usages")
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert TemplateUsage model to dictionary for JSON serialization."""
@@ -172,6 +204,4 @@ class TemplateUsage(Base):
         }
 
     def __repr__(self):
-        return (
-            f"<TemplateUsage(id={self.id}, template_id={self.template_id}, user_id={self.user_id})>"
-        )
+        return f"<TemplateUsage(id={self.id}, template_id={self.template_id}, user_id={self.user_id})>"

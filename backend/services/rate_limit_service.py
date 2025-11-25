@@ -22,7 +22,6 @@ from typing import Dict, Optional
 
 logger = logging.getLogger(__name__)
 
-
 @dataclass
 class RateLimitAttempt:
     """
@@ -39,7 +38,6 @@ class RateLimitAttempt:
     first_attempt_at: datetime = field(default_factory=datetime.now)
     last_attempt_at: datetime = field(default_factory=datetime.now)
     locked_until: Optional[datetime] = None
-
 
 @dataclass
 class RateLimitResult:
@@ -58,7 +56,6 @@ class RateLimitResult:
     attempts_remaining: Optional[int] = None
     message: Optional[str] = None
 
-
 @dataclass
 class RateLimitConfig:
     """
@@ -73,7 +70,6 @@ class RateLimitConfig:
     max_attempts: int
     window_seconds: int
     lock_duration_seconds: int
-
 
 class RateLimitService:
     """
@@ -600,7 +596,7 @@ class RateLimitService:
         def cleanup_task():
             try:
                 self.cleanup_expired()
-            except Exception as e:
+            except Exception as exc:
                 logger.error(f"Error during rate limit cleanup: {e}")
             finally:
                 # Schedule next cleanup
@@ -610,11 +606,9 @@ class RateLimitService:
         self._cleanup_timer.daemon = True
         self._cleanup_timer.start()
 
-
 # Singleton instance for convenience
 _rate_limit_service: Optional[RateLimitService] = None
 _instance_lock = threading.Lock()
-
 
 def get_rate_limiter() -> RateLimitService:
     """
@@ -635,7 +629,6 @@ def get_rate_limiter() -> RateLimitService:
                 _rate_limit_service = RateLimitService()
 
     return _rate_limit_service
-
 
 def reset_rate_limiter() -> None:
     """

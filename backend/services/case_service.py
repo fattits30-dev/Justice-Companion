@@ -25,28 +25,22 @@ from sqlalchemy import or_, and_
 from fastapi import HTTPException
 
 from backend.models.case import Case, CaseType, CaseStatus
-from backend.services.encryption_service import EncryptionService, EncryptedData
-
+from backend.services.security.encryption import EncryptionService, EncryptedData
 
 class CaseNotFoundError(Exception):
     """Exception raised when case is not found."""
 
-
 class UnauthorizedError(Exception):
     """Exception raised when user doesn't own the case."""
-
 
 class DatabaseError(Exception):
     """Exception raised for database operation failures."""
 
-
 class ValidationError(Exception):
     """Exception raised for invalid input data."""
 
-
 # Pydantic models for input/output
 from pydantic import BaseModel, Field, ConfigDict
-
 
 class CreateCaseInput(BaseModel):
     """Input model for creating a new case."""
@@ -57,7 +51,6 @@ class CreateCaseInput(BaseModel):
 
     model_config = ConfigDict(use_enum_values=True)
 
-
 class UpdateCaseInput(BaseModel):
     """Input model for updating an existing case."""
 
@@ -67,7 +60,6 @@ class UpdateCaseInput(BaseModel):
     status: Optional[CaseStatus] = Field(None, description="Case status")
 
     model_config = ConfigDict(use_enum_values=True)
-
 
 class CaseResponse(BaseModel):
     """Response model for case data."""
@@ -83,7 +75,6 @@ class CaseResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-
 class SearchFilters(BaseModel):
     """Search filters for case queries."""
 
@@ -93,7 +84,6 @@ class SearchFilters(BaseModel):
     date_to: Optional[datetime] = Field(None, description="Filter by creation date (to)")
 
     model_config = ConfigDict(use_enum_values=True)
-
 
 class CaseService:
     """

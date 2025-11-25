@@ -118,7 +118,12 @@ describe("AutoUpdater", () => {
 
       expect(result.updateAvailable).toBe(false);
       expect(mockNotificationCallback).toHaveBeenCalledWith(
+        "app-update:checking",
+        undefined,
+      );
+      expect(mockNotificationCallback).toHaveBeenCalledWith(
         "app-update:not-available",
+        undefined,
       );
     });
   });
@@ -152,6 +157,10 @@ describe("AutoUpdater", () => {
       await autoUpdater.checkForUpdates();
 
       expect(mockNotificationCallback).toHaveBeenCalledWith(
+        "app-update:checking",
+        undefined,
+      );
+      expect(mockNotificationCallback).toHaveBeenCalledWith(
         "app-update:available",
         {
           version: "v2.0.0",
@@ -171,6 +180,11 @@ describe("AutoUpdater", () => {
 
       expect(mockNotificationCallback).toHaveBeenCalledWith(
         "app-update:checking",
+        undefined,
+      );
+      expect(mockNotificationCallback).toHaveBeenCalledWith(
+        "app-update:error",
+        expect.any(Error),
       );
     });
   });
@@ -234,6 +248,7 @@ describe("AutoUpdater", () => {
 
       expect(mockNotificationCallback).toHaveBeenCalledWith(
         "app-update:checking",
+        undefined,
       );
     });
 
@@ -347,6 +362,8 @@ describe("AutoUpdater", () => {
 
   describe("Resource Cleanup", () => {
     it("should clean up periodic check timers", () => {
+      vi.useFakeTimers();
+
       const updater = new AutoUpdater(mockApp, {
         githubRepo: "test/repo",
         updateCheckInterval: 1000,
@@ -356,6 +373,8 @@ describe("AutoUpdater", () => {
 
       // Timer should be cleared
       expect(vi.getTimerCount()).toBe(0); // No timers left from this test
+
+      vi.useRealTimers();
     });
   });
 });

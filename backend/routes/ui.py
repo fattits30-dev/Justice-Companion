@@ -54,12 +54,9 @@ from fastapi import APIRouter, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
-
 router = APIRouter(prefix="/dialog", tags=["ui"])
 
-
 # ===== PYDANTIC MODELS =====
-
 
 class FileFilter(BaseModel):
     """
@@ -70,7 +67,6 @@ class FileFilter(BaseModel):
     extensions: List[str] = Field(
         ..., description="File extensions without dots (e.g., ['jpg', 'png'])"
     )
-
 
 class DialogProperty(str, Enum):
     """
@@ -85,7 +81,6 @@ class DialogProperty(str, Enum):
     PROMPT_TO_CREATE = "promptToCreate"
     NO_RESOLVE_ALIASES = "noResolveAliases"
     TREAT_PACKAGE_AS_DIRECTORY = "treatPackageAsDirectory"
-
 
 class OpenDialogRequest(BaseModel):
     """
@@ -112,7 +107,6 @@ class OpenDialogRequest(BaseModel):
 
     class Config:
         populate_by_name = True  # Allow both snake_case and camelCase
-
 
 class SaveDialogRequest(BaseModel):
     """
@@ -142,7 +136,6 @@ class SaveDialogRequest(BaseModel):
     class Config:
         populate_by_name = True  # Allow both snake_case and camelCase
 
-
 class OpenDialogResponse(BaseModel):
     """
     Response from file open dialog.
@@ -156,7 +149,6 @@ class OpenDialogResponse(BaseModel):
     class Config:
         populate_by_name = True  # Allow both snake_case and camelCase
 
-
 class SaveDialogResponse(BaseModel):
     """
     Response from file save dialog.
@@ -168,9 +160,7 @@ class SaveDialogResponse(BaseModel):
     class Config:
         populate_by_name = True  # Allow both snake_case and camelCase
 
-
 # ===== ERROR RESPONSE HELPERS =====
-
 
 def create_not_implemented_response(feature: str, alternatives: List[str]) -> JSONResponse:
     """
@@ -194,9 +184,7 @@ def create_not_implemented_response(feature: str, alternatives: List[str]) -> JS
         },
     )
 
-
 # ===== ROUTES =====
-
 
 @router.post(
     "/open",
@@ -282,7 +270,6 @@ async def show_open_dialog(request: OpenDialogRequest):
             "For full file system access: Use File System Access API (Chrome 86+)",
         ],
     )
-
 
 @router.post(
     "/save",
@@ -372,9 +359,7 @@ async def show_save_dialog(request: SaveDialogRequest):
         ],
     )
 
-
 # ===== ADDITIONAL HELPER ENDPOINT =====
-
 
 @router.get(
     "/capabilities",

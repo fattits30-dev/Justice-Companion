@@ -39,11 +39,9 @@ from fastapi import HTTPException
 # Configure logger
 logger = logging.getLogger(__name__)
 
-
 # ============================================================================
 # TYPE DEFINITIONS & DATA CLASSES
 # ============================================================================
-
 
 @dataclass
 class LegislationResult:
@@ -54,7 +52,6 @@ class LegislationResult:
     url: str
     section: Optional[str] = None
     relevance: float = 1.0
-
 
 @dataclass
 class CaseResult:
@@ -68,7 +65,6 @@ class CaseResult:
     outcome: Optional[str] = None
     relevance: float = 1.0
 
-
 @dataclass
 class KnowledgeEntry:
     """Knowledge base entry (cached FAQs, guides)"""
@@ -77,7 +73,6 @@ class KnowledgeEntry:
     category: str
     content: str
     sources: List[str] = field(default_factory=list)
-
 
 @dataclass
 class LegalSearchResults:
@@ -89,7 +84,6 @@ class LegalSearchResults:
     cached: bool
     timestamp: int
 
-
 @dataclass
 class ExtractedKeywords:
     """Extracted keywords from natural language question"""
@@ -98,7 +92,6 @@ class ExtractedKeywords:
     legal: List[str]
     general: List[str]
 
-
 @dataclass
 class CacheEntry:
     """Cache entry with expiration"""
@@ -106,7 +99,6 @@ class CacheEntry:
     data: Any
     timestamp: int
     expires_at: int
-
 
 class LegalCategory(str, Enum):
     """Legal category classifications"""
@@ -120,11 +112,9 @@ class LegalCategory(str, Enum):
     CIVIL = "civil"
     GENERAL = "general"
 
-
 # ============================================================================
 # CONSTANTS & CONFIGURATION
 # ============================================================================
-
 
 class APIConfig:
     """API configuration constants"""
@@ -137,7 +127,6 @@ class APIConfig:
     CACHE_TTL_HOURS = 24
     EMPTY_CACHE_TTL_HOURS = 1
     MAX_CACHE_SIZE = 100
-
 
 # Legal terms dictionary for keyword extraction
 LEGAL_TERMS_DICTIONARY: Dict[str, List[str]] = {
@@ -221,7 +210,6 @@ LEGAL_TERMS_DICTIONARY: Dict[str, List[str]] = {
     ],
 }
 
-
 # Map legal categories to relevant court/tribunal codes
 CATEGORY_TO_COURT_MAP: Dict[str, List[str]] = {
     "employment": ["eat", "ukeat"],  # Employment Appeal Tribunal
@@ -232,7 +220,6 @@ CATEGORY_TO_COURT_MAP: Dict[str, List[str]] = {
     "criminal": ["uksc", "ewca", "ewhc"],  # Supreme Court, Court of Appeal, High Court
     "civil": ["ewca", "ewhc", "uksc"],  # Court of Appeal, High Court, Supreme Court
 }
-
 
 # Common English stop words to filter out
 STOP_WORDS: Set[str] = {
@@ -278,11 +265,9 @@ STOP_WORDS: Set[str] = {
     "might",
 }
 
-
 # ============================================================================
 # HELPER FUNCTIONS
 # ============================================================================
-
 
 def is_network_error(error: Exception) -> bool:
     """
@@ -300,7 +285,6 @@ def is_network_error(error: Exception) -> bool:
         for keyword in ["timeout", "network", "connection", "refused", "not found"]
     ) or isinstance(error, (httpx.TimeoutException, httpx.NetworkError, httpx.ConnectError))
 
-
 def should_retry(error: Exception, attempt: int) -> bool:
     """
     Determine if request should be retried.
@@ -316,7 +300,6 @@ def should_retry(error: Exception, attempt: int) -> bool:
         return False
     return is_network_error(error)
 
-
 def get_retry_delay(attempt: int) -> float:
     """
     Calculate exponential backoff delay.
@@ -329,11 +312,9 @@ def get_retry_delay(attempt: int) -> float:
     """
     return APIConfig.RETRY_DELAY_SECONDS * (2**attempt)
 
-
 # ============================================================================
 # LEGAL API SERVICE CLASS
 # ============================================================================
-
 
 class LegalAPIService:
     """
@@ -1049,15 +1030,12 @@ class LegalAPIService:
         oldest_key = min(self.cache.keys(), key=lambda k: self.cache[k].timestamp)
         del self.cache[oldest_key]
 
-
 # ============================================================================
 # SINGLETON EXPORT
 # ============================================================================
 
-
 # Module-level singleton instance for convenience
 _legal_api_service_instance: Optional[LegalAPIService] = None
-
 
 def get_legal_api_service(audit_logger=None) -> LegalAPIService:
     """

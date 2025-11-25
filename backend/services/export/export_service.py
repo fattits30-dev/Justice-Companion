@@ -45,12 +45,10 @@ from fastapi import HTTPException, status
 from pydantic import BaseModel, Field, field_validator, ConfigDict
 
 # Import Python services (assuming these exist in the backend)
-from backend.services.encryption_service import EncryptionService, EncryptedData
+from backend.services.security.encryption import EncryptionService, EncryptedData
 from backend.services.audit_logger import AuditLogger
 
-
 # ===== PYDANTIC MODELS =====
-
 
 class ExportFormat(BaseModel):
     """Enumeration of supported export formats."""
@@ -60,7 +58,6 @@ class ExportFormat(BaseModel):
     JSON: str = "json"
     CSV: str = "csv"
 
-
 class ExportTemplate(BaseModel):
     """Export template types."""
 
@@ -68,7 +65,6 @@ class ExportTemplate(BaseModel):
     EVIDENCE_LIST: str = "evidence-list"
     TIMELINE_REPORT: str = "timeline-report"
     CASE_NOTES: str = "case-notes"
-
 
 class ExportOptions(BaseModel):
     """
@@ -110,7 +106,6 @@ class ExportOptions(BaseModel):
         }
     )
 
-
 class TimelineEvent(BaseModel):
     """Timeline event representing a case milestone or deadline."""
 
@@ -134,7 +129,6 @@ class TimelineEvent(BaseModel):
         except ValueError:
             raise ValueError(f"Invalid ISO 8601 date format: {v}")
 
-
 class CaseExportData(BaseModel):
     """
     Complete case data structure for export operations.
@@ -156,7 +150,6 @@ class CaseExportData(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-
 class EvidenceExportData(BaseModel):
     """Structured data for evidence list exports."""
 
@@ -167,7 +160,6 @@ class EvidenceExportData(BaseModel):
     exported_by: str
     total_items: int
     category_summary: Dict[str, int] = Field(default_factory=dict)
-
 
 class TimelineExportData(BaseModel):
     """Structured data for timeline report exports."""
@@ -181,7 +173,6 @@ class TimelineExportData(BaseModel):
     upcoming_deadlines: List[Dict[str, Any]] = Field(default_factory=list)
     completed_events: List[TimelineEvent] = Field(default_factory=list)
 
-
 class NotesExportData(BaseModel):
     """Structured data for case notes exports."""
 
@@ -191,7 +182,6 @@ class NotesExportData(BaseModel):
     export_date: datetime
     exported_by: str
     total_notes: int
-
 
 class ExportResult(BaseModel):
     """
@@ -223,9 +213,7 @@ class ExportResult(BaseModel):
         }
     )
 
-
 # ===== EXPORT SERVICE =====
-
 
 class ExportService:
     """

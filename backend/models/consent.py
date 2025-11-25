@@ -1,15 +1,15 @@
-"""
-Consent model for GDPR compliance.
-Migrated from src/domains/settings/entities/Consent.ts
+"""Consent model for GDPR compliance."""
 
-Tracks user consent for different data processing activities as required by GDPR.
-"""
+from __future__ import annotations
 
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Index, CheckConstraint
-from sqlalchemy.sql import func
+from datetime import datetime
 from enum import Enum
-from backend.models.base import Base
 
+from sqlalchemy import Boolean, CheckConstraint, DateTime, Index, Integer, String
+from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.sql import func
+
+from backend.models.base import Base
 
 class ConsentType(str, Enum):
     """
@@ -25,7 +25,6 @@ class ConsentType(str, Enum):
     ENCRYPTION = "encryption"
     AI_PROCESSING = "ai_processing"
     MARKETING = "marketing"
-
 
 class Consent(Base):
     """
@@ -48,14 +47,22 @@ class Consent(Base):
 
     __tablename__ = "consents"
 
-    id = Column(Integer, primary_key=True, autoincrement=True, index=True)
-    user_id = Column(Integer, nullable=False, index=True)
-    consent_type = Column(String, nullable=False, index=True)
-    granted = Column(Boolean, nullable=False, default=False)
-    granted_at = Column(DateTime(timezone=True), nullable=True)
-    revoked_at = Column(DateTime(timezone=True), nullable=True)
-    version = Column(String, nullable=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    id: Mapped[int] = mapped_column(
+        Integer, primary_key=True, autoincrement=True, index=True
+    )
+    user_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
+    consent_type: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    granted: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    granted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    revoked_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    version: Mapped[str] = mapped_column(String, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
 
     # Add check constraint for consent_type enum
     __table_args__ = (
@@ -76,10 +83,16 @@ class Consent(Base):
             "userId": self.user_id,
             "consentType": self.consent_type,
             "granted": self.granted,
-            "grantedAt": self.granted_at.isoformat() if self.granted_at is not None else None,
-            "revokedAt": self.revoked_at.isoformat() if self.revoked_at is not None else None,
+            "grantedAt": (
+                self.granted_at.isoformat() if self.granted_at is not None else None
+            ),
+            "revokedAt": (
+                self.revoked_at.isoformat() if self.revoked_at is not None else None
+            ),
             "version": self.version,
-            "createdAt": self.created_at.isoformat() if self.created_at is not None else None,
+            "createdAt": (
+                self.created_at.isoformat() if self.created_at is not None else None
+            ),
         }
 
     def is_active(self) -> bool:

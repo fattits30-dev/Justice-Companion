@@ -1,19 +1,18 @@
-"""
-User profile model for personal information.
-Migrated from src/repositories/UserProfileRepository.ts
+"""User profile model for personal information."""
 
-Updated from single-row (id=1) to multi-user schema (migration 025).
-Schema from 025_add_multiuser_profiles.sql:
-- One profile per user (UNIQUE constraint on user_id)
-- name and email encrypted (PII fields)
-- Optional fields: avatar_url, full_name, location, bio_context, username, phone
-"""
+from __future__ import annotations
 
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey
-from sqlalchemy.orm import relationship
+from datetime import datetime
+from typing import TYPE_CHECKING
+
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
+
 from backend.models.base import Base
 
+if TYPE_CHECKING:
+    from backend.models.user import User
 
 class UserProfile(Base):
     """
@@ -29,39 +28,51 @@ class UserProfile(Base):
 
     __tablename__ = "user_profile"
 
-    id = Column(Integer, primary_key=True, autoincrement=True, index=True)
-    user_id = Column(
-        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True, index=True
+    id: Mapped[int] = mapped_column(
+        Integer, primary_key=True, autoincrement=True, index=True
     )
-    name = Column(Text, nullable=False, default="Legal User")  # Encrypted PII
-    email = Column(Text, nullable=True)  # Encrypted PII
-    avatar_url = Column(Text, nullable=True)
+    user_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
+    name: Mapped[str] = mapped_column(Text, nullable=False, default="Legal User")
+    email: Mapped[str | None] = mapped_column(Text, nullable=True)
+    avatar_url: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Extended profile fields
-    full_name = Column(Text, nullable=True)
-    location = Column(Text, nullable=True)
-    bio_context = Column(Text, nullable=True)
-    username = Column(Text, nullable=True)  # Added in migration 028
-    phone = Column(Text, nullable=True)  # Added in migration 028
+    full_name: Mapped[str | None] = mapped_column(Text, nullable=True)
+    location: Mapped[str | None] = mapped_column(Text, nullable=True)
+    bio_context: Mapped[str | None] = mapped_column(Text, nullable=True)
+    username: Mapped[str | None] = mapped_column(Text, nullable=True)
+    phone: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Legacy fields for backward compatibility
-    first_name = Column(String, nullable=True)
-    last_name = Column(String, nullable=True)
+    first_name: Mapped[str | None] = mapped_column(String, nullable=True)
+    last_name: Mapped[str | None] = mapped_column(String, nullable=True)
 
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = Column(
-        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
     )
 
     # Relationships
-    user = relationship("User", back_populates="profile")
+    user: Mapped["User"] = relationship("User", back_populates="profile")
 
-    def to_dict(self, decrypt_pii: bool = False):
+    def to_dict(self, _decrypt_pii: bool = False):
         """
         Convert UserProfile model to dictionary for JSON serialization.
 
         Args:
-            decrypt_pii: If True, name and email are already decrypted by service layer
+            _decrypt_pii: If True, name and email are already decrypted by service layer
+                         (unused, but kept for API compatibility)
 
         Returns:
             Dictionary representation of user profile
@@ -80,8 +91,12 @@ class UserProfile(Base):
             # Legacy fields for backward compatibility
             "first_name": self.first_name,
             "last_name": self.last_name,
-            "created_at": self.created_at.isoformat() if self.created_at is not None else None,
-            "updated_at": self.updated_at.isoformat() if self.updated_at is not None else None,
+            "created_at": (
+                self.created_at.isoformat() if self.created_at is not None else None
+            ),
+            "updated_at": (
+                self.updated_at.isoformat() if self.updated_at is not None else None
+            ),
         }
 
     def to_extended_dict(self):
@@ -120,4 +135,6 @@ class UserProfile(Base):
         }
 
     def __repr__(self):
-        return f"<UserProfile(id={self.id}, user_id={self.user_id}, name='[ENCRYPTED]')>"
+        return (
+            f"<UserProfile(id={self.id}, user_id={self.user_id}, name='[ENCRYPTED]')>"
+        )

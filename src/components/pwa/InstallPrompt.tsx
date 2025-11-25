@@ -13,22 +13,32 @@
  * @module components/pwa/InstallPrompt
  */
 
-import { useState, useEffect } from 'react';
-import { Download, X } from 'lucide-react';
+import { Download, X } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
+}
+
+declare global {
+  interface Window {
+    deferredPrompt?: BeforeInstallPromptEvent | null;
+  }
 }
 
 export function InstallPrompt() {
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [deferredPrompt, setDeferredPrompt] =
+    useState<BeforeInstallPromptEvent | null>(null);
   const [showInstallButton, setShowInstallButton] = useState(false);
 
   useEffect(() => {
+    // Expose deferred prompt hook for tests/install checks
+    window.deferredPrompt = null;
+
     // Check if user has previously dismissed the prompt
-    const dismissed = localStorage.getItem('pwa-install-dismissed');
-    if (dismissed === 'true') {
+    const dismissed = localStorage.getItem("pwa-install-dismissed");
+    if (dismissed === "true") {
       return;
     }
 
@@ -39,32 +49,34 @@ export function InstallPrompt() {
 
       // Store the event for later use
       setDeferredPrompt(e as BeforeInstallPromptEvent);
+      window.deferredPrompt = e as BeforeInstallPromptEvent;
       setShowInstallButton(true);
 
-      console.log('[PWA] Install prompt available');
+      console.log("[PWA] Install prompt available");
     };
 
-    window.addEventListener('beforeinstallprompt', handler);
+    window.addEventListener("beforeinstallprompt", handler);
 
     // Listen for successful installation
     const installedHandler = () => {
-      console.log('[PWA] App successfully installed');
+      console.log("[PWA] App successfully installed");
       setDeferredPrompt(null);
+      window.deferredPrompt = null;
       setShowInstallButton(false);
-      localStorage.setItem('pwa-install-dismissed', 'true');
+      localStorage.setItem("pwa-install-dismissed", "true");
     };
 
-    window.addEventListener('appinstalled', installedHandler);
+    window.addEventListener("appinstalled", installedHandler);
 
     return () => {
-      window.removeEventListener('beforeinstallprompt', handler);
-      window.removeEventListener('appinstalled', installedHandler);
+      window.removeEventListener("beforeinstallprompt", handler);
+      window.removeEventListener("appinstalled", installedHandler);
     };
   }, []);
 
   const handleInstall = async () => {
     if (!deferredPrompt) {
-      console.warn('[PWA] No install prompt available');
+      console.warn("[PWA] No install prompt available");
       return;
     }
 
@@ -74,14 +86,15 @@ export function InstallPrompt() {
     // Wait for the user's response
     const choice = await deferredPrompt.userChoice;
 
-    if (choice.outcome === 'accepted') {
-      console.log('[PWA] User accepted install');
+    if (choice.outcome === "accepted") {
+      console.log("[PWA] User accepted install");
     } else {
-      console.log('[PWA] User dismissed install');
+      console.log("[PWA] User dismissed install");
     }
 
     // Clear the deferred prompt
     setDeferredPrompt(null);
+    window.deferredPrompt = null;
     setShowInstallButton(false);
   };
 
@@ -94,7 +107,7 @@ export function InstallPrompt() {
 
   const handleNeverShowAgain = () => {
     setShowInstallButton(false);
-    localStorage.setItem('pwa-install-dismissed', 'true');
+    localStorage.setItem("pwa-install-dismissed", "true");
   };
 
   if (!showInstallButton) {
@@ -102,7 +115,10 @@ export function InstallPrompt() {
   }
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 z-50 md:left-auto md:right-4 md:max-w-md">
+    <div
+      className="fixed bottom-4 left-4 right-4 z-50 md:left-auto md:right-4 md:max-w-md"
+      data-pwa-install
+    >
       <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg shadow-2xl p-4 border border-blue-500">
         <div className="flex items-start gap-3">
           <div className="flex-shrink-0 mt-1">
@@ -110,10 +126,12 @@ export function InstallPrompt() {
           </div>
 
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-lg mb-1">Install Justice Companion</h3>
+            <h3 className="font-semibold text-lg mb-1">
+              Install Justice Companion
+            </h3>
             <p className="text-sm text-blue-100 mb-3">
-              Install this app on your device for quick access and offline support.
-              Works on desktop, mobile, and tablet.
+              Install this app on your device for quick access and offline
+              support. Works on desktop, mobile, and tablet.
             </p>
 
             <div className="flex flex-wrap gap-2">
@@ -122,6 +140,7 @@ export function InstallPrompt() {
                 className="px-4 py-2 bg-white text-blue-600 rounded-md font-semibold
                          hover:bg-blue-50 transition-colors duration-200
                          focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-600"
+                aria-label="Install Justice Companion"
               >
                 Install Now
               </button>
@@ -163,7 +182,7 @@ export function InstallPrompt() {
  */
 export function isRunningAsPWA(): boolean {
   // Check if running in standalone mode (installed PWA)
-  if (window.matchMedia('(display-mode: standalone)').matches) {
+  if (window.matchMedia("(display-mode: standalone)").matches) {
     return true;
   }
 
@@ -179,15 +198,19 @@ export function isRunningAsPWA(): boolean {
  * Utility: Get PWA display mode
  * Returns the current display mode of the app
  */
-export function getPWADisplayMode(): 'browser' | 'standalone' | 'fullscreen' | 'minimal-ui' {
-  if (window.matchMedia('(display-mode: fullscreen)').matches) {
-    return 'fullscreen';
+export function getPWADisplayMode():
+  | "browser"
+  | "standalone"
+  | "fullscreen"
+  | "minimal-ui" {
+  if (window.matchMedia("(display-mode: fullscreen)").matches) {
+    return "fullscreen";
   }
-  if (window.matchMedia('(display-mode: standalone)').matches) {
-    return 'standalone';
+  if (window.matchMedia("(display-mode: standalone)").matches) {
+    return "standalone";
   }
-  if (window.matchMedia('(display-mode: minimal-ui)').matches) {
-    return 'minimal-ui';
+  if (window.matchMedia("(display-mode: minimal-ui)").matches) {
+    return "minimal-ui";
   }
-  return 'browser';
+  return "browser";
 }

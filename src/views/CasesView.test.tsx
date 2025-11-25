@@ -1,13 +1,14 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { Case } from "../domains/cases/entities/Case.ts";
+import { apiClient } from "../lib/apiClient.ts";
 import {
+  fireEvent,
   render,
   screen,
   waitFor,
-  fireEvent,
   within,
 } from "../test-utils/test-utils.tsx";
 import { CasesView } from "./CasesView.tsx";
-import type { Case } from "../domains/cases/entities/Case.ts";
 
 const baseCases: Case[] = [
   {
@@ -32,78 +33,116 @@ const baseCases: Case[] = [
   },
 ];
 
+async function getDeleteButtonForCase(caseTitle: string) {
+  const card = await screen.findByRole("group", {
+    name: `Case: ${caseTitle}`,
+  });
+  // Case actions appear only on hover, so trigger the transition before querying
+  fireEvent.mouseEnter(card);
+  return within(card).getByTitle("Delete case");
+}
+
 describe("CasesView", () => {
   beforeEach(() => {
     // Global setup.ts beforeEach creates fresh mocks, so we don't need vi.clearAllMocks()
     // Just set sessionId for AuthContext to restore
     localStorage.setItem("sessionId", "test-session-123");
+
+    // Mock auth getSession for AuthContext restoration
+    (apiClient.auth.getSession as any) = vi.fn().mockResolvedValue({
+      success: true,
+      data: {
+        user: {
+          id: "1",
+          username: "testuser",
+          email: "test@example.com",
+        },
+        session: {
+          id: "test-session-123",
+          expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        },
+      },
+    });
+
+    // Reset any previous mocks
+    vi.clearAllMocks();
   });
 
   it("shows loading state while cases are fetched", async () => {
-    // Mock getAllCases to return never-resolving promise
-    const getAllCasesPromise = new Promise(() => {
+    // Mock apiClient to return never-resolving promise
+    const loadingPromise = new Promise(() => {
       // Never resolves to test loading state
     });
-    window.justiceAPI.getAllCases = vi.fn().mockReturnValue(getAllCasesPromise);
+    (apiClient.cases.list as any) = vi.fn().mockReturnValue(loadingPromise);
 
-    const { container } = render(<CasesView />);
+    render(<CasesView />);
 
-    // Wait for component to finish AuthContext loading and start fetching cases
+    // Wait for loading skeletons to appear
     await waitFor(() => {
-      // Check if loading state is shown OR if we've moved past it
-      return (
-        screen.queryByText("Loading cases...") !== null ||
-        container.textContent?.includes("Case Management")
+      // Check if skeleton cards are rendered (loading state)
+      const skeletonCards = document.querySelectorAll(
+        '[data-testid="skeleton-card"]'
       );
+      return skeletonCards.length > 0;
     });
-
-    // If we caught the loading state, verify it
-    if (screen.queryByText("Loading cases...")) {
-      expect(screen.getByRole("status")).toBeInTheDocument();
-      expect(screen.getByText("Loading cases...")).toBeInTheDocument();
-    }
   });
 
   it("renders an error state and allows retry", async () => {
-    const getAllCases = vi
+    (apiClient.cases.list as any) = vi
       .fn()
       .mockResolvedValueOnce({
         success: false,
         error: { message: "Request failed" },
       })
-      .mockResolvedValueOnce({ success: true, data: baseCases });
-    window.justiceAPI.getAllCases = getAllCases;
+      .mockResolvedValueOnce({
+        success: true,
+        data: {
+          items: baseCases,
+          total: baseCases.length,
+          limit: 50,
+          offset: 0,
+          hasMore: false,
+        },
+      });
 
     render(<CasesView />);
 
-    await screen.findByText("Error Loading Cases");
+    await screen.findByRole("heading", { name: "Error Loading Cases" });
     // Component shows error.message from response.error?.message
     expect(screen.getByText("Request failed")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Retry" }));
 
     await waitFor(() =>
-      expect(screen.getByText("Employment Dispute")).toBeInTheDocument(),
+      expect(screen.getByText("Employment Dispute")).toBeInTheDocument()
     );
   });
 
   it("shows empty state when there are no cases", async () => {
-    window.justiceAPI.getAllCases = vi
-      .fn()
-      .mockResolvedValue({ success: true, data: [] });
+    (apiClient.cases.list as any) = vi.fn().mockResolvedValue({
+      success: true,
+      data: { items: [], total: 0, limit: 50, offset: 0, hasMore: false },
+    });
 
     render(<CasesView />);
 
     await screen.findByText("No cases yet");
     expect(
-      screen.getByText("Create your first case to keep everything organised."),
+      screen.getByText("Create your first case to keep everything organised.")
     ).toBeInTheDocument();
   });
 
   it("shows filtered empty state when filters remove all cases", async () => {
-    window.justiceAPI.getAllCases = vi
-      .fn()
-      .mockResolvedValue({ success: true, data: baseCases });
+    (apiClient.cases.list as any) = vi.fn().mockResolvedValue({
+      success: true,
+      data: {
+        items: baseCases,
+        total: baseCases.length,
+        limit: 50,
+        offset: 0,
+        hasMore: false,
+      },
+    });
 
     render(<CasesView />);
 
@@ -130,13 +169,20 @@ describe("CasesView", () => {
       updatedAt: "2025-01-16T09:00:00Z",
     };
 
-    window.justiceAPI.getAllCases = vi
-      .fn()
-      .mockResolvedValue({ success: true, data: baseCases });
-    const createCase = vi
-      .fn()
-      .mockResolvedValue({ success: true, data: createdCase });
-    window.justiceAPI.createCase = createCase;
+    (apiClient.cases.list as any) = vi.fn().mockResolvedValue({
+      success: true,
+      data: {
+        items: baseCases,
+        total: baseCases.length,
+        limit: 50,
+        offset: 0,
+        hasMore: false,
+      },
+    });
+    (apiClient.cases.create as any) = vi.fn().mockResolvedValue({
+      success: true,
+      data: createdCase,
+    });
 
     render(<CasesView />);
 
@@ -156,111 +202,99 @@ describe("CasesView", () => {
     });
 
     fireEvent.submit(
-      within(dialog).getByRole("button", { name: "Create Case" }),
+      within(dialog).getByRole("button", { name: "Create Case" })
     );
 
     await waitFor(() =>
-      expect(createCase).toHaveBeenCalledWith(
-        {
-          title: "Consumer Rights Claim",
-          description: "Faulty product dispute",
-          caseType: "consumer",
-        },
-        "test-session-123",
-      ),
+      expect(apiClient.cases.create).toHaveBeenCalledWith({
+        title: "Consumer Rights Claim",
+        description: "Faulty product dispute",
+        caseType: "consumer",
+      })
     );
 
     await screen.findByText("Consumer Rights Claim");
   });
 
   it("confirms before deleting a case", async () => {
-    window.justiceAPI.getAllCases = vi
-      .fn()
-      .mockResolvedValue({ success: true, data: baseCases });
-    const deleteCase = vi.fn().mockResolvedValue({ success: true });
-    window.justiceAPI.deleteCase = deleteCase;
+    (apiClient.cases.list as any) = vi.fn().mockResolvedValue({
+      success: true,
+      data: {
+        items: baseCases,
+        total: baseCases.length,
+        limit: 50,
+        offset: 0,
+        hasMore: false,
+      },
+    });
+    (apiClient.cases.delete as any) = vi.fn().mockResolvedValue({
+      success: true,
+    });
     const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
 
     render(<CasesView />);
 
     await screen.findByText("Employment Dispute");
 
-    // Hover over first case card to show delete button
-    const firstCard = screen.getByRole("group", {
-      name: /Case: Employment Dispute/i,
-    });
-    fireEvent.mouseEnter(firstCard);
+    const deleteButton = await getDeleteButtonForCase("Employment Dispute");
+    fireEvent.click(deleteButton);
 
-    // Wait for delete button to appear and click it
-    await waitFor(() =>
-      expect(screen.getAllByTitle("Delete case")[0]).toBeInTheDocument(),
-    );
-    fireEvent.click(screen.getAllByTitle("Delete case")[0]);
-
-    await waitFor(() =>
-      expect(deleteCase).toHaveBeenCalledWith("1", "test-session-123"),
-    );
+    await waitFor(() => expect(apiClient.cases.delete).toHaveBeenCalledWith(1));
 
     confirmSpy.mockRestore();
   });
 
   it("does not delete when confirmation is cancelled", async () => {
-    window.justiceAPI.getAllCases = vi
-      .fn()
-      .mockResolvedValue({ success: true, data: baseCases });
-    const deleteCase = vi.fn();
-    window.justiceAPI.deleteCase = deleteCase;
+    (apiClient.cases.list as any) = vi.fn().mockResolvedValue({
+      success: true,
+      data: {
+        items: baseCases,
+        total: baseCases.length,
+        limit: 50,
+        offset: 0,
+        hasMore: false,
+      },
+    });
+    (apiClient.cases.delete as any) = vi.fn();
     const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
 
     render(<CasesView />);
 
     await screen.findByText("Employment Dispute");
 
-    // Hover to show delete button
-    const firstCard = screen.getByRole("group", {
-      name: /Case: Employment Dispute/i,
-    });
-    fireEvent.mouseEnter(firstCard);
-    await waitFor(() =>
-      expect(screen.getAllByTitle("Delete case")[0]).toBeInTheDocument(),
-    );
+    const deleteButton = await getDeleteButtonForCase("Employment Dispute");
+    fireEvent.click(deleteButton);
 
-    fireEvent.click(screen.getAllByTitle("Delete case")[0]);
-
-    expect(deleteCase).not.toHaveBeenCalled();
+    expect(apiClient.cases.delete).not.toHaveBeenCalled();
     confirmSpy.mockRestore();
   });
 
   it("surfaces API errors from delete operations", async () => {
-    window.justiceAPI.getAllCases = vi
-      .fn()
-      .mockResolvedValue({ success: true, data: baseCases });
-    const deleteCase = vi.fn().mockResolvedValue({
+    (apiClient.cases.list as any) = vi.fn().mockResolvedValue({
+      success: true,
+      data: {
+        items: baseCases,
+        total: baseCases.length,
+        limit: 50,
+        offset: 0,
+        hasMore: false,
+      },
+    });
+    (apiClient.cases.delete as any) = vi.fn().mockResolvedValue({
       success: false,
       error: { message: "Case not found" },
     });
-    window.justiceAPI.deleteCase = deleteCase;
     const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
 
     render(<CasesView />);
 
     await screen.findByText("Employment Dispute");
 
-    // Hover to show delete button
-    const firstCard = screen.getByRole("group", {
-      name: /Case: Employment Dispute/i,
-    });
-    fireEvent.mouseEnter(firstCard);
-    await waitFor(() =>
-      expect(screen.getAllByTitle("Delete case")[0]).toBeInTheDocument(),
-    );
-
-    fireEvent.click(screen.getAllByTitle("Delete case")[0]);
+    const deleteButton = await getDeleteButtonForCase("Employment Dispute");
+    fireEvent.click(deleteButton);
 
     // Verify delete was called (component shows error via Toast which we can't easily test)
-    await waitFor(() =>
-      expect(deleteCase).toHaveBeenCalledWith("1", "test-session-123"),
-    );
+    await waitFor(() => expect(apiClient.cases.delete).toHaveBeenCalledWith(1));
 
     confirmSpy.mockRestore();
   });

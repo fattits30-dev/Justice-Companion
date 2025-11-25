@@ -1,20 +1,19 @@
-"""
-Deadline model for case deadline/milestone management.
-Migrated from electron/ipc-handlers/deadlines.ts
-"""
+"""Deadline model for case deadline/milestone management."""
 
-from sqlalchemy import (
-    Column,
-    Integer,
-    String,
-    DateTime,
-    ForeignKey,
-    Enum as SQLEnum,
-)
-from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
-from backend.models.base import Base
+from __future__ import annotations
+
 import enum
+from datetime import datetime
+from typing import TYPE_CHECKING
+
+from sqlalchemy import DateTime, Enum as SQLEnum, ForeignKey, Integer, String, text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from backend.models.base import Base
+
+if TYPE_CHECKING:
+    from backend.models.case import Case
+    from backend.models.user import User
 
 
 class DeadlinePriority(str, enum.Enum):
@@ -55,34 +54,48 @@ class Deadline(Base):
 
     __tablename__ = "deadlines"
 
-    id = Column(Integer, primary_key=True, autoincrement=True, index=True)
-    case_id = Column(
+    id: Mapped[int] = mapped_column(
+        Integer, primary_key=True, autoincrement=True, index=True
+    )
+    case_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("cases.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    user_id = Column(
+    user_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    title = Column(String, nullable=False)
-    description = Column(String, nullable=True)
-    deadline_date = Column(String, nullable=False)  # ISO 8601 date format stored as TEXT
-    priority = Column(
+    title: Mapped[str] = mapped_column(String, nullable=False)
+    description: Mapped[str | None] = mapped_column(String, nullable=True)
+    deadline_date: Mapped[str] = mapped_column(
+        String, nullable=False
+    )  # ISO 8601 date format stored as TEXT
+    priority: Mapped[DeadlinePriority] = mapped_column(
         SQLEnum(DeadlinePriority, name="deadline_priority", native_enum=False),
         nullable=False,
         default=DeadlinePriority.MEDIUM,
     )
-    status = Column(
+    status: Mapped[DeadlineStatus] = mapped_column(
         SQLEnum(DeadlineStatus, name="deadline_status", native_enum=False),
         nullable=False,
         default=DeadlineStatus.UPCOMING,
     )
-    completed_at = Column(DateTime(timezone=True), nullable=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
-    deleted_at = Column(DateTime(timezone=True), nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=text("CURRENT_TIMESTAMP")
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=text("CURRENT_TIMESTAMP"),
+        onupdate=text("CURRENT_TIMESTAMP"),
+    )
+    deleted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     # Relationships
-    case = relationship("Case", back_populates="deadlines")
-    user = relationship("User", back_populates="deadlines")
+    case: Mapped["Case"] = relationship("Case", back_populates="deadlines")
+    user: Mapped["User"] = relationship("User", back_populates="deadlines")
 
     def to_dict(self):
         """Convert Deadline model to dictionary for JSON serialization."""
@@ -99,11 +112,23 @@ class Deadline(Base):
                 if isinstance(self.priority, DeadlinePriority)
                 else self.priority
             ),
-            "status": self.status.value if isinstance(self.status, DeadlineStatus) else self.status,
-            "completedAt": self.completed_at.isoformat() if self.completed_at is not None else None,
-            "createdAt": self.created_at.isoformat() if self.created_at is not None else None,
-            "updatedAt": self.updated_at.isoformat() if self.updated_at is not None else None,
-            "deletedAt": self.deleted_at.isoformat() if self.deleted_at is not None else None,
+            "status": (
+                self.status.value
+                if isinstance(self.status, DeadlineStatus)
+                else self.status
+            ),
+            "completedAt": (
+                self.completed_at.isoformat() if self.completed_at is not None else None
+            ),
+            "createdAt": (
+                self.created_at.isoformat() if self.created_at is not None else None
+            ),
+            "updatedAt": (
+                self.updated_at.isoformat() if self.updated_at is not None else None
+            ),
+            "deletedAt": (
+                self.deleted_at.isoformat() if self.deleted_at is not None else None
+            ),
         }
 
     def __repr__(self):

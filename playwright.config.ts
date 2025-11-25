@@ -13,6 +13,7 @@ import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./e2e",
+  globalSetup: "./e2e/global-setup.ts",
 
   // Run tests in parallel
   fullyParallel: true,
@@ -32,7 +33,7 @@ export default defineConfig({
   // Shared settings for all projects
   use: {
     // Base URL to use in tests
-    baseURL: process.env.PLAYWRIGHT_BASE_URL || "http://localhost:5176",
+    baseURL: process.env.PLAYWRIGHT_BASE_URL || "http://localhost:5178",
 
     // Collect trace when retrying the failed test
     trace: "on-first-retry",
@@ -72,9 +73,9 @@ export default defineConfig({
 
   // Run local dev server before starting the tests
   webServer: {
-    command: "npm run dev",
-    url: "http://localhost:5176",
+    command: "npm run dev:full",
+    url: process.env.PLAYWRIGHT_BASE_URL || "http://localhost:5178",
     reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
+    timeout: 180 * 1000,
   },
 });

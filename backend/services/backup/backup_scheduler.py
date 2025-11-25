@@ -43,10 +43,8 @@ from backend.models.backup import (
 from backend.services.backup.backup_service import BackupService
 from backend.services.backup.backup_retention_policy import BackupRetentionPolicy
 
-
 # Configure logging
 logger = logging.getLogger(__name__)
-
 
 class BackupScheduler:
     """

@@ -2,18 +2,22 @@
  * Comprehensive tests for Phase 3 repositories with encryption
  * Tests: UserProfileRepository, LegalIssuesRepository, TimelineRepository
  */
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import Database from "better-sqlite3-multiple-ciphers";
-import { UserProfileRepository } from "./UserProfileRepository.ts";
+import { randomUUID } from "node:crypto";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import * as databaseModule from "../db/database.ts";
+import { AuditLogger } from "../services/AuditLogger.ts";
+import { EncryptionService } from "../services/EncryptionService.ts";
 import { LegalIssuesRepository } from "./LegalIssuesRepository.ts";
 import { TimelineRepository } from "./TimelineRepository.ts";
-import { EncryptionService } from "../services/EncryptionService.ts";
-import { AuditLogger } from "../services/AuditLogger.ts";
-import * as databaseModule from "../db/database.ts";
+import { UserProfileRepository } from "./UserProfileRepository.ts";
 
 let db: Database.Database;
 let encryptionService: EncryptionService;
 let auditLogger: AuditLogger;
+
+const createTestEmail = (label = "user") =>
+  `${label}.${randomUUID()}@example.test`;
 
 function setupDatabase(): void {
   db = new Database(":memory:");
@@ -111,9 +115,10 @@ describe("UserProfileRepository", () => {
   });
 
   it("should encrypt name and email when updating profile", () => {
+    const encryptedEmail = createTestEmail("john.doe");
     repository.update({
       name: "John Doe",
-      email: "john.doe@example.com",
+      email: encryptedEmail,
     });
 
     const storedProfile = db
@@ -129,26 +134,28 @@ describe("UserProfileRepository", () => {
   });
 
   it("should decrypt name and email when retrieving profile", () => {
+    const decryptedEmail = createTestEmail("jane.smith");
     repository.update({
       name: "Jane Smith",
-      email: "jane.smith@example.com",
+      email: decryptedEmail,
     });
 
     const profile = repository.get();
 
     expect(profile.name).toBe("Jane Smith");
-    expect(profile.email).toBe("jane.smith@example.com");
+    expect(profile.email).toBe(decryptedEmail);
   });
 
   it("should audit PII access", () => {
-    repository.update({ name: "Test", email: "test@test.com" });
+    const piiEmail = createTestEmail("audit");
+    repository.update({ name: "Test", email: piiEmail });
     repository.get();
 
     const piiLog = db
       .prepare(
         `
       SELECT * FROM audit_logs WHERE event_type = 'profile.pii_access'
-    `,
+    `
       )
       .get() as any;
 
@@ -157,9 +164,11 @@ describe("UserProfileRepository", () => {
   });
 
   it("should not log PII in audit details", () => {
+    const sensitiveName = `SENSITIVE_NAME_${randomUUID()}`;
+    const sensitiveEmail = createTestEmail("sensitive");
     repository.update({
-      name: "SENSITIVE_NAME",
-      email: "SENSITIVE_EMAIL@example.com",
+      name: sensitiveName,
+      email: sensitiveEmail,
     });
 
     const auditLogs = db
@@ -168,8 +177,8 @@ describe("UserProfileRepository", () => {
 
     auditLogs.forEach((log) => {
       if (log.details) {
-        expect(log.details).not.toContain("SENSITIVE_NAME");
-        expect(log.details).not.toContain("SENSITIVE_EMAIL");
+        expect(log.details).not.toContain(sensitiveName);
+        expect(log.details).not.toContain(sensitiveEmail);
       }
     });
   });
@@ -262,7 +271,7 @@ describe("LegalIssuesRepository", () => {
       .prepare(
         `
       SELECT event_type FROM audit_logs WHERE resource_type = 'legal_issue'
-    `,
+    `
       )
       .all() as any[];
 
@@ -365,7 +374,7 @@ describe("TimelineRepository", () => {
       .prepare(
         `
       SELECT event_type FROM audit_logs WHERE resource_type = 'timeline_event'
-    `,
+    `
       )
       .all() as any[];
 
@@ -382,28 +391,33 @@ describe("Phase 3 GDPR Compliance", () => {
 
     const profileRepo = new UserProfileRepository(
       encryptionService,
-      auditLogger,
+      auditLogger
     );
     const legalRepo = new LegalIssuesRepository(encryptionService, auditLogger);
     const timelineRepo = new TimelineRepository(encryptionService, auditLogger);
 
+    const sensitiveProfileName = `SENSITIVE_PERSON_${randomUUID()}`;
+    const sensitiveProfileEmail = createTestEmail("pii-profile");
+    const sensitiveLegalDetails = `SENSITIVE_LEGAL_${randomUUID()}`;
+    const sensitiveEventDetails = `SENSITIVE_EVENT_${randomUUID()}`;
+
     // Perform operations with sensitive data
     profileRepo.update({
-      name: "SENSITIVE_PERSON_NAME",
-      email: "SENSITIVE_EMAIL@example.com",
+      name: sensitiveProfileName,
+      email: sensitiveProfileEmail,
     });
 
     legalRepo.create({
       caseId: 1,
       title: "Issue",
-      description: "SENSITIVE_LEGAL_DETAILS",
+      description: sensitiveLegalDetails,
     });
 
     timelineRepo.create({
       caseId: 1,
       eventDate: "2024-01-01",
       title: "Event",
-      description: "SENSITIVE_EVENT_DETAILS",
+      description: sensitiveEventDetails,
     });
 
     // Check all audit logs
@@ -411,15 +425,15 @@ describe("Phase 3 GDPR Compliance", () => {
       .prepare(
         `
       SELECT details, error_message FROM audit_logs
-    `,
+    `
       )
       .all() as any[];
 
     const sensitiveStrings = [
-      "SENSITIVE_PERSON_NAME",
-      "SENSITIVE_EMAIL",
-      "SENSITIVE_LEGAL_DETAILS",
-      "SENSITIVE_EVENT_DETAILS",
+      sensitiveProfileName,
+      sensitiveProfileEmail,
+      sensitiveLegalDetails,
+      sensitiveEventDetails,
     ];
 
     allAuditLogs.forEach((log) => {

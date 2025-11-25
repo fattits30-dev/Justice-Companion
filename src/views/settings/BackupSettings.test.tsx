@@ -1,11 +1,20 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { useAuth } from "../../contexts/AuthContext.tsx";
 import {
+  fireEvent,
   render,
   screen,
   waitFor,
-  fireEvent,
 } from "../../test-utils/test-utils.tsx";
 import { BackupSettingsTab } from "./BackupSettings.tsx";
+
+// Mock the useAuth hook to provide user data
+vi.mock("../../contexts/AuthContext.tsx", () => ({
+  useAuth: vi.fn(),
+  AuthProvider: ({ children }: { children: React.ReactNode }) => (
+    <>{children}</>
+  ),
+}));
 
 // Mock backup data
 const mockBackups = [
@@ -59,9 +68,39 @@ const mockAPI = {
   logout: vi.fn(),
 };
 
+// Mock useAuth to return user and sessionId
+const mockUseAuth = vi.mocked(useAuth);
+mockUseAuth.mockReturnValue({
+  user: { id: "1", username: "testuser", email: "test@example.com" },
+  sessionId: "session-123",
+  isAuthenticated: true,
+  isLoading: false,
+  error: null,
+  login: vi.fn(),
+  logout: vi.fn(),
+  refreshUser: vi.fn(),
+});
+
+async function renderBackupSettings() {
+  const utils = render(<BackupSettingsTab />);
+  await waitFor(() => expect(mockAPI.listBackups).toHaveBeenCalled());
+  await waitFor(() => expect(mockAPI.getBackupSettings).toHaveBeenCalled());
+  return utils;
+}
+
 beforeEach(() => {
   // Reset mocks
   vi.clearAllMocks();
+  mockUseAuth.mockReturnValue({
+    user: { id: "1", username: "testuser", email: "test@example.com" },
+    sessionId: "session-123",
+    isAuthenticated: true,
+    isLoading: false,
+    error: null,
+    login: vi.fn(),
+    logout: vi.fn(),
+    refreshUser: vi.fn(),
+  });
 
   // Mock localStorage
   const localStorageMock = {
@@ -79,11 +118,13 @@ beforeEach(() => {
   Reflect.set(
     globalThis.window,
     "confirm",
-    vi.fn(() => true),
+    vi.fn(() => true)
   );
 
   // Mock window.location.reload
   Reflect.set(globalThis.window, "location", { reload: vi.fn() });
+
+  Reflect.set(globalThis.window, "scrollTo", vi.fn());
 
   // Setup default mock implementations
   mockAPI.listBackups.mockResolvedValue({
@@ -137,8 +178,8 @@ beforeEach(() => {
 });
 
 describe("BackupSettingsTab", () => {
-  it("renders backup settings UI", () => {
-    render(<BackupSettingsTab />);
+  it("renders backup settings UI", async () => {
+    await renderBackupSettings();
 
     expect(screen.getByText("Backup & Restore")).toBeInTheDocument();
     expect(screen.getByText("Manual Backup")).toBeInTheDocument();
@@ -146,16 +187,16 @@ describe("BackupSettingsTab", () => {
     expect(screen.getByText("Backup History")).toBeInTheDocument();
   });
 
-  it("displays backup status overview", () => {
-    render(<BackupSettingsTab />);
+  it("displays backup status overview", async () => {
+    await renderBackupSettings();
 
     expect(screen.getByText("Last Backup")).toBeInTheDocument();
     expect(screen.getByText("Status")).toBeInTheDocument();
     expect(screen.getByText("Total Storage")).toBeInTheDocument();
   });
 
-  it("shows create backup button", () => {
-    render(<BackupSettingsTab />);
+  it("shows create backup button", async () => {
+    await renderBackupSettings();
 
     const createButton = screen.getByRole("button", {
       name: /create backup now/i,
@@ -163,8 +204,8 @@ describe("BackupSettingsTab", () => {
     expect(createButton).toBeInTheDocument();
   });
 
-  it("displays automatic backup toggle", () => {
-    render(<BackupSettingsTab />);
+  it("displays automatic backup toggle", async () => {
+    await renderBackupSettings();
 
     const toggle = screen.getByLabelText("Enable automatic backups");
     expect(toggle).toBeInTheDocument();
@@ -172,7 +213,7 @@ describe("BackupSettingsTab", () => {
   });
 
   it("shows backup settings when auto-backup is enabled", async () => {
-    render(<BackupSettingsTab />);
+    await renderBackupSettings();
 
     const toggle = screen.getByLabelText("Enable automatic backups");
     fireEvent.click(toggle);
@@ -181,24 +222,24 @@ describe("BackupSettingsTab", () => {
       expect(screen.getByLabelText("Backup frequency")).toBeInTheDocument();
       expect(screen.getByLabelText("Backup time")).toBeInTheDocument();
       expect(
-        screen.getByLabelText("Number of backups to keep"),
+        screen.getByLabelText("Number of backups to keep")
       ).toBeInTheDocument();
     });
   });
 
   it("displays backup history with mock data", async () => {
-    render(<BackupSettingsTab />);
+    await renderBackupSettings();
 
     // Wait for mock backups to load
     await waitFor(() => {
       expect(
-        screen.getByText(/backup_2025-10-25_15-30.db/i),
+        screen.getByText(/backup_2025-10-25_15-30.db/i)
       ).toBeInTheDocument();
     });
   });
 
   it("shows empty state when no backups exist", async () => {
-    render(<BackupSettingsTab />);
+    await renderBackupSettings();
 
     // The component uses mock data, so we won't see empty state
     // This test would work with real IPC that returns empty array
@@ -209,7 +250,7 @@ describe("BackupSettingsTab", () => {
   });
 
   it("renders backup list items with actions", async () => {
-    render(<BackupSettingsTab />);
+    await renderBackupSettings();
 
     await waitFor(() => {
       const restoreButtons = screen.getAllByRole("button", {
@@ -223,7 +264,7 @@ describe("BackupSettingsTab", () => {
   });
 
   it("shows backup metadata when expanded", async () => {
-    render(<BackupSettingsTab />);
+    await renderBackupSettings();
 
     await waitFor(() => {
       const expandButton = screen.getAllByLabelText("Expand details")[0];
@@ -237,7 +278,7 @@ describe("BackupSettingsTab", () => {
   });
 
   it("handles frequency selection", async () => {
-    render(<BackupSettingsTab />);
+    await renderBackupSettings();
 
     const toggle = screen.getByLabelText("Enable automatic backups");
     fireEvent.click(toggle);
@@ -250,7 +291,7 @@ describe("BackupSettingsTab", () => {
   });
 
   it("handles keep count slider", async () => {
-    render(<BackupSettingsTab />);
+    await renderBackupSettings();
 
     const toggle = screen.getByLabelText("Enable automatic backups");
     fireEvent.click(toggle);
@@ -263,7 +304,7 @@ describe("BackupSettingsTab", () => {
   });
 
   it("displays file sizes correctly", async () => {
-    render(<BackupSettingsTab />);
+    await renderBackupSettings();
 
     await waitFor(() => {
       // Should show MB for files > 1MB
@@ -272,7 +313,7 @@ describe("BackupSettingsTab", () => {
   });
 
   it("displays relative time correctly", async () => {
-    render(<BackupSettingsTab />);
+    await renderBackupSettings();
 
     await waitFor(() => {
       // Should show "2 hours ago" for recent backup
@@ -283,7 +324,7 @@ describe("BackupSettingsTab", () => {
   });
 
   it("shows badges for backup status", async () => {
-    render(<BackupSettingsTab />);
+    await renderBackupSettings();
 
     await waitFor(() => {
       const validBadges = screen.getAllByText("Valid");
@@ -292,7 +333,7 @@ describe("BackupSettingsTab", () => {
   });
 
   it("renders restore warning when backup is expanded", async () => {
-    render(<BackupSettingsTab />);
+    await renderBackupSettings();
 
     await waitFor(() => {
       const expandButton = screen.getAllByLabelText("Expand details")[0];
@@ -305,12 +346,12 @@ describe("BackupSettingsTab", () => {
   });
 
   it("handles save settings button", async () => {
-    render(<BackupSettingsTab />);
+    await renderBackupSettings();
 
     // Wait for component to load
     await waitFor(() => {
       expect(
-        screen.getByLabelText("Enable automatic backups"),
+        screen.getByLabelText("Enable automatic backups")
       ).toBeInTheDocument();
     });
 
@@ -327,9 +368,17 @@ describe("BackupSettingsTab", () => {
     const saveButton = screen.getByRole("button", { name: /save settings/i });
     fireEvent.click(saveButton);
 
-    // Wait for the success message to appear
+    // Wait for the success toast message to appear
     await waitFor(() => {
-      expect(screen.getByText("Saved successfully!")).toBeInTheDocument();
+      expect(mockAPI.updateBackupSettings).toHaveBeenCalledWith(
+        {
+          enabled: true,
+          frequency: "daily",
+          backup_time: "03:00",
+          keep_count: 7,
+        },
+        "session-123"
+      );
     });
   });
 
@@ -340,12 +389,12 @@ describe("BackupSettingsTab", () => {
       return { success: true, data: { filename: "new_backup.db" } };
     });
 
-    render(<BackupSettingsTab />);
+    await renderBackupSettings();
 
     // Wait for the create button to be available
     await waitFor(() => {
       expect(
-        screen.getByRole("button", { name: /create backup now/i }),
+        screen.getByRole("button", { name: /create backup now/i })
       ).toBeInTheDocument();
     });
 
@@ -363,12 +412,12 @@ describe("BackupSettingsTab", () => {
         // The "Create Backup Now" text should not be visible (replaced by spinner)
         expect(screen.queryByText("Create Backup Now")).not.toBeInTheDocument();
       },
-      { timeout: 100 },
+      { timeout: 100 }
     );
   });
 
   it("displays total backup count and size", async () => {
-    render(<BackupSettingsTab />);
+    await renderBackupSettings();
 
     await waitFor(() => {
       // The text is in format: "{size} ({count} backups)" e.g. "6.6 MB (3 backups)"
@@ -376,15 +425,15 @@ describe("BackupSettingsTab", () => {
     });
   });
 
-  it("renders refresh button", () => {
-    render(<BackupSettingsTab />);
+  it("renders refresh button", async () => {
+    await renderBackupSettings();
 
     const refreshButton = screen.getByRole("button", { name: /refresh/i });
     expect(refreshButton).toBeInTheDocument();
   });
 
-  it("shows proper icons for each section", () => {
-    render(<BackupSettingsTab />);
+  it("shows proper icons for each section", async () => {
+    await renderBackupSettings();
 
     // Check for section headings which have associated icons
     expect(screen.getByText("Manual Backup")).toBeInTheDocument();
@@ -395,17 +444,17 @@ describe("BackupSettingsTab", () => {
 
 describe("BackupSettings - Accessibility", () => {
   it("has proper ARIA labels for interactive elements", async () => {
-    render(<BackupSettingsTab />);
+    await renderBackupSettings();
 
     await waitFor(() => {
       expect(
-        screen.getByLabelText("Enable automatic backups"),
+        screen.getByLabelText("Enable automatic backups")
       ).toBeInTheDocument();
     });
   });
 
   it("toggle has proper checked state", async () => {
-    render(<BackupSettingsTab />);
+    await renderBackupSettings();
 
     await waitFor(() => {
       const toggle = screen.getByLabelText("Enable automatic backups");
@@ -414,7 +463,7 @@ describe("BackupSettings - Accessibility", () => {
   });
 
   it("buttons are keyboard accessible", async () => {
-    render(<BackupSettingsTab />);
+    await renderBackupSettings();
 
     await waitFor(() => {
       const buttons = screen.getAllByRole("button");
@@ -428,7 +477,7 @@ describe("BackupSettings - Accessibility", () => {
 
 describe("BackupSettings - Integration", () => {
   it("expands and collapses backup details", async () => {
-    render(<BackupSettingsTab />);
+    await renderBackupSettings();
 
     await waitFor(() => {
       const expandButton = screen.getAllByLabelText("Expand details")[0];
@@ -448,7 +497,7 @@ describe("BackupSettings - Integration", () => {
   });
 
   it("updates frequency and reflects in UI", async () => {
-    render(<BackupSettingsTab />);
+    await renderBackupSettings();
 
     const toggle = screen.getByLabelText("Enable automatic backups");
     fireEvent.click(toggle);

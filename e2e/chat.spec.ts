@@ -1,24 +1,9 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import { loginWithSeededUser } from "./utils/auth";
 
 test.describe("AI Chat Functionality", () => {
   test.beforeEach(async ({ page }) => {
-    // Register and login before each test
-    const timestamp = Date.now();
-    const email = `chat${timestamp}@example.com`;
-
-    await page.goto("/");
-    await page.click("text=Register");
-
-    await page.fill('input[name="name"]', "Chat Test User");
-    await page.fill('input[name="email"]', email);
-    await page.fill('input[name="password"]', "password123");
-    await page.fill('input[name="confirmPassword"]', "password123");
-    await page.click('button[type="submit"]');
-
-    // Wait for registration to complete and dashboard to load
-    await expect(page.locator("text=Welcome")).toBeVisible({
-      timeout: 15000,
-    });
+    await loginWithSeededUser(page);
   });
 
   test("should navigate to chat interface", async ({ page }) => {
@@ -39,18 +24,18 @@ test.describe("AI Chat Functionality", () => {
 
     // Wait for chat interface to load
     await expect(
-      page.locator('[data-testid="message-input"], textarea'),
+      page.locator('[data-testid="message-input"], textarea')
     ).toBeVisible();
 
     // Type a simple legal question
     await page.fill(
       '[data-testid="message-input"], textarea',
-      "Can they fire me?",
+      "Can they fire me?"
     );
 
     // Send message
     await page.click(
-      'button[type="submit"], [data-testid="send-button"], text=Send',
+      'button[type="submit"], [data-testid="send-button"], text=Send'
     );
 
     // Should see message in chat
@@ -97,8 +82,8 @@ test.describe("AI Chat Functionality", () => {
     // Final response should be comprehensive
     await expect(
       page.locator(
-        "text=Employment Rights Act 1996,ACAS,unfair dismissal,gross misconduct",
-      ),
+        "text=Employment Rights Act 1996,ACAS,unfair dismissal,gross misconduct"
+      )
     ).toBeVisible({ timeout: 25000 });
   });
 
@@ -160,7 +145,7 @@ test.describe("AI Chat Functionality", () => {
 
     await page.fill(
       '[data-testid="message-input"]',
-      "Wrongful dismissal claim",
+      "Wrongful dismissal claim"
     );
     await page.click('button[type="submit"]');
 
@@ -191,7 +176,7 @@ test.describe("AI Chat Functionality", () => {
 
     // Look for upload button (paperclip, plus, or upload icon)
     const uploadButton = page.locator(
-      'button[aria-label*="upload"], [data-testid*="upload"], .upload-button, button:has(.lucide-plus)',
+      'button[aria-label*="upload"], [data-testid*="upload"], .upload-button, button:has(.lucide-plus)'
     );
 
     if (await uploadButton.isVisible()) {
@@ -202,13 +187,13 @@ test.describe("AI Chat Functionality", () => {
         name: "test-contract.txt",
         mimeType: "text/plain",
         buffer: Buffer.from(
-          "This is a sample employment contract for testing purposes.",
+          "This is a sample employment contract for testing purposes."
         ),
       });
 
       // Message should appear about document upload
       await expect(
-        page.locator("text=document,uploaded,file,analyzing"),
+        page.locator("text=document,uploaded,file,analyzing")
       ).toBeVisible({ timeout: 10000 });
     }
   });
@@ -225,7 +210,7 @@ test.describe("AI Chat Functionality", () => {
 
     // Alternative: check for validation message
     await expect(
-      page.locator("text=Please enter a message,Message cannot be empty"),
+      page.locator("text=Please enter a message,Message cannot be empty")
     ).toBeVisible();
   });
 
@@ -241,12 +226,12 @@ test.describe("AI Chat Functionality", () => {
 
     // Should accept long message
     await expect(
-      page.locator(`text=${longMessage.substring(0, 50)}`),
+      page.locator(`text=${longMessage.substring(0, 50)}`)
     ).toBeVisible();
 
     // Should get comprehensive response
     await expect(
-      page.locator("text=grievance procedure,ACAS,EAT,Employment Tribunal"),
+      page.locator("text=grievance procedure,ACAS,EAT,Employment Tribunal")
     ).toBeVisible({ timeout: 30000 });
   });
 });

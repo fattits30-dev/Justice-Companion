@@ -32,10 +32,8 @@ from backend.models.notification import (
 from backend.services.notification_service import NotificationService, CreateNotificationInput
 from backend.services.audit_logger import AuditLogger
 
-
 # Configure logging
 logger = logging.getLogger(__name__)
-
 
 class DeadlineReminderScheduler:
     """

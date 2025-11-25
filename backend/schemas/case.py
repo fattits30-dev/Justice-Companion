@@ -4,7 +4,6 @@ from datetime import date
 
 from backend.models.case import CaseType, CaseStatus
 
-
 class CaseBase(BaseModel):
     title: str
     description: Optional[str] = None
@@ -18,10 +17,8 @@ class CaseBase(BaseModel):
     next_hearing_date: Optional[date] = None
     filing_deadline: Optional[date] = None
 
-
 class CaseCreate(CaseBase):
     pass
-
 
 class CaseUpdate(BaseModel):
     title: Optional[str] = None
@@ -36,17 +33,14 @@ class CaseUpdate(BaseModel):
     next_hearing_date: Optional[date] = None
     filing_deadline: Optional[date] = None
 
-
 class CaseInDBBase(CaseBase):
     id: int
     user_id: str
 
     model_config = ConfigDict(from_attributes=True)
 
-
 class Case(CaseInDBBase):
     pass
-
 
 class CaseInDB(CaseInDBBase):
     pass

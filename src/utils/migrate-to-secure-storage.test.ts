@@ -259,7 +259,8 @@ describe("migrate-to-secure-storage", () => {
 
       // Verify warning was logged
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining("OS-native encryption not available"),
+        "OS-native encryption not available. Keys will be stored without encryption.",
+        "",
       );
 
       consoleSpy.mockRestore();

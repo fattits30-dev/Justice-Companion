@@ -48,12 +48,10 @@ from pydantic import BaseModel, Field, ConfigDict
 # Configure logger
 logger = logging.getLogger(__name__)
 
-
 # Type Aliases
 ErrorLevel = Literal["debug", "info", "warning", "error", "critical"]
 AlertSeverity = Literal["info", "warning", "critical"]
 TrendDirection = Literal["up", "down", "stable"]
-
 
 # Pydantic Models
 class ErrorContext(BaseModel):
@@ -69,7 +67,6 @@ class ErrorContext(BaseModel):
     url: Optional[str] = None
     user_agent: Optional[str] = None
 
-
 class ErrorData(BaseModel):
     """Complete error data structure"""
 
@@ -83,7 +80,6 @@ class ErrorData(BaseModel):
     context: Optional[ErrorContext] = None
     tags: Dict[str, str] = Field(default_factory=dict)
 
-
 class ErrorGroup(BaseModel):
     """Group of similar errors"""
 
@@ -96,7 +92,6 @@ class ErrorGroup(BaseModel):
     resolved: bool = False
     resolved_by: Optional[str] = None
     resolved_at: Optional[str] = None
-
 
 class Alert(BaseModel):
     """Alert triggered by error conditions"""
@@ -112,7 +107,6 @@ class Alert(BaseModel):
     acknowledged_at: Optional[str] = None
     acknowledged_by: Optional[str] = None
 
-
 class AlertRule(BaseModel):
     """Configuration for alert rules"""
 
@@ -125,7 +119,6 @@ class AlertRule(BaseModel):
     cooldown: int  # milliseconds
     filter: Optional[Callable[[ErrorData], bool]] = None
 
-
 class SamplingConfig(BaseModel):
     """Sampling rates for different error levels"""
 
@@ -135,14 +128,12 @@ class SamplingConfig(BaseModel):
     info: float = 0.1  # 10% - Sample info
     debug: float = 0.01  # 1% - Rarely log debug
 
-
 class RateLimitConfig(BaseModel):
     """Rate limiting configuration"""
 
     max_errors_per_group: int = 100  # Max 100 errors/min per group
     max_total_errors: int = 1000  # Max 1000 errors/min total
     window_ms: int = 60 * 1000  # 1 minute window
-
 
 class CircuitBreakerConfig(BaseModel):
     """Circuit breaker configuration"""
@@ -151,7 +142,6 @@ class CircuitBreakerConfig(BaseModel):
     failure_threshold: int = 5
     reset_timeout: int = 30000
     success_threshold: int = 3
-
 
 class ErrorTrackerConfig(BaseModel):
     """Complete error tracker configuration"""
@@ -162,7 +152,6 @@ class ErrorTrackerConfig(BaseModel):
     circuit_breaker: CircuitBreakerConfig = Field(default_factory=CircuitBreakerConfig)
     enable_performance_monitoring: bool = True
     performance_monitoring_interval: int = 60000  # 1 minute
-
 
 class ErrorTrackerStats(BaseModel):
     """Statistics for error tracker"""
@@ -177,14 +166,12 @@ class ErrorTrackerStats(BaseModel):
     avg_processing_time: float = 0.0
     memory_usage: float = 0.0
 
-
 class ErrorDistribution(BaseModel):
     """Error distribution by type"""
 
     type: str
     count: int
     percentage: float
-
 
 class TopError(BaseModel):
     """Top error by frequency"""
@@ -193,7 +180,6 @@ class TopError(BaseModel):
     message: str
     count: int
     last_seen: str
-
 
 class ErrorMetrics(BaseModel):
     """Complete error metrics for dashboard"""
@@ -213,14 +199,12 @@ class ErrorMetrics(BaseModel):
     users_trend: TrendDirection = "stable"
     mttr_trend: TrendDirection = "stable"
 
-
 @dataclass
 class RateLimiter:
     """Rate limiter for a specific error group"""
 
     count: int = 0
     reset_at: float = 0.0
-
 
 class EnhancedErrorTracker:
     """
@@ -319,7 +303,7 @@ class EnhancedErrorTracker:
                     self.stats.avg_processing_time * (self.stats.total_errors - 1) + processing_time
                 ) / self.stats.total_errors
 
-        except Exception as e:
+        except Exception as exc:
             # Error tracking should never crash the app
             logger.error(f"EnhancedErrorTracker: Failed to track error: {e}", exc_info=True)
 
@@ -582,7 +566,7 @@ class EnhancedErrorTracker:
                     "tags": error.tags,
                 },
             )
-        except Exception as e:
+        except Exception as exc:
             # Silently fail - error logging should never crash app
             logger.warning(f"Failed to persist error: {e}")
 
@@ -773,7 +757,6 @@ class EnhancedErrorTracker:
         if removed > 0:
             self.stats.total_groups -= removed
             logger.info(f"Cleaned up {removed} old error groups")
-
 
 # Convenience function for quick error tracking
 async def track_error(

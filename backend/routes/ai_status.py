@@ -43,22 +43,20 @@ from sqlalchemy.orm import Session
 
 from backend.models.base import get_db
 from backend.routes.auth import get_current_user
-from backend.services.ai_provider_config_service import \
+from backend.services.ai.providers import \
     AI_PROVIDER_METADATA as CONFIG_PROVIDER_METADATA
-from backend.services.ai_provider_config_service import AIProviderConfigService
-from backend.services.ai_provider_config_service import \
+from backend.services.ai.providers import AIProviderConfigService
+from backend.services.ai.providers import \
     AIProviderType as ConfigProviderType
 from backend.services.audit_logger import AuditLogger
-from backend.services.encryption_service import EncryptionService
-from backend.services.model_download_service import ModelDownloadService
-from backend.services.unified_ai_service import (AIProviderConfig, ChatMessage,
+from backend.services.security.encryption import EncryptionService
+from backend.services.ai.model_download import ModelDownloadService
+from backend.services.ai.service import (AIProviderConfig, ChatMessage,
                                                  UnifiedAIService)
 
 router = APIRouter(prefix="/ai", tags=["ai-status"])
 
-
 # ===== DEPENDENCY INJECTION =====
-
 
 def get_encryption_service() -> EncryptionService:
     """Get encryption service instance."""
@@ -70,11 +68,9 @@ def get_encryption_service() -> EncryptionService:
         )
     return EncryptionService(encryption_key)
 
-
 def get_audit_logger(db: Session = Depends(get_db)) -> AuditLogger:
     """Get audit logger instance."""
     return AuditLogger(db)
-
 
 def get_provider_config_service(
     db: Session = Depends(get_db),
@@ -84,14 +80,12 @@ def get_provider_config_service(
     """Get AI provider configuration service instance."""
     return AIProviderConfigService(db, encryption_service, audit_logger)
 
-
 def get_model_download_service(
     audit_logger: AuditLogger = Depends(get_audit_logger),
 ) -> ModelDownloadService:
     """Get model download service instance."""
     models_dir = os.getenv("MODELS_DIR", "./models")
     return ModelDownloadService(models_dir, audit_logger)
-
 
 @asynccontextmanager
 async def measure_response_time():
@@ -111,7 +105,6 @@ async def measure_response_time():
         yield lambda: time.monotonic() - start_time
     finally:
         pass
-
 
 class AIServiceFactory:
     """
@@ -163,7 +156,6 @@ class AIServiceFactory:
 
         return UnifiedAIService(provider_config, self.audit_logger)
 
-
 def get_ai_service_factory(
     config_service: AIProviderConfigService = Depends(
         get_provider_config_service
@@ -173,22 +165,19 @@ def get_ai_service_factory(
     """Get AI service factory instance."""
     return AIServiceFactory(config_service, audit_logger)
 
-
 async def get_ai_service(
     ai_service_factory: AIServiceFactory = Depends(get_ai_service_factory),
-    current_user: Dict[str, Any] = Depends(get_current_user),
+    current_user: int = Depends(get_current_user),
 ) -> Optional[UnifiedAIService]:
     """
     Get AI service instance for current user's active provider.
 
     Returns None if no active provider is configured.
     """
-    user_id = current_user["userId"]
+    user_id = current_user
     return await ai_service_factory.create_for_user(user_id)
 
-
 # ===== PYDANTIC MODELS =====
-
 
 class AIStatusResponse(BaseModel):
     """Response model for comprehensive AI service status."""
@@ -233,7 +222,6 @@ class AIStatusResponse(BaseModel):
     class Config:
         populate_by_name = True
 
-
 class ProviderInfoResponse(BaseModel):
     """Response model for provider information."""
 
@@ -266,7 +254,6 @@ class ProviderInfoResponse(BaseModel):
     class Config:
         populate_by_name = True
 
-
 class ProvidersListResponse(BaseModel):
     """Response model for providers list."""
 
@@ -286,7 +273,6 @@ class ProvidersListResponse(BaseModel):
     class Config:
         populate_by_name = True
 
-
 class ModelInfoResponse(BaseModel):
     """Response model for model information."""
 
@@ -304,7 +290,6 @@ class ModelInfoResponse(BaseModel):
 
     class Config:
         populate_by_name = True
-
 
 class ModelsListResponse(BaseModel):
     """Response model for models list."""
@@ -325,7 +310,6 @@ class ModelsListResponse(BaseModel):
     class Config:
         populate_by_name = True
 
-
 class ModelDownloadRequest(BaseModel):
     """Request model for model download."""
 
@@ -336,7 +320,6 @@ class ModelDownloadRequest(BaseModel):
 
     class Config:
         populate_by_name = True
-
 
 class ModelDownloadResponse(BaseModel):
     """Response model for model download initiation."""
@@ -354,7 +337,6 @@ class ModelDownloadResponse(BaseModel):
 
     class Config:
         populate_by_name = True
-
 
 class ModelStatusResponse(BaseModel):
     """Response model for model download status."""
@@ -380,7 +362,6 @@ class ModelStatusResponse(BaseModel):
     class Config:
         populate_by_name = True
 
-
 class HealthCheckResponse(BaseModel):
     """Response model for health check."""
 
@@ -401,7 +382,6 @@ class HealthCheckResponse(BaseModel):
     class Config:
         populate_by_name = True
 
-
 class ProviderTestResponse(BaseModel):
     """Response model for provider connection test."""
 
@@ -419,9 +399,7 @@ class ProviderTestResponse(BaseModel):
     class Config:
         populate_by_name = True
 
-
 # ===== ROUTES =====
-
 
 @router.get("/status", response_model=AIStatusResponse)
 async def get_ai_status(
@@ -432,7 +410,7 @@ async def get_ai_status(
         get_model_download_service
     ),
     ai_service: Optional[UnifiedAIService] = Depends(get_ai_service),
-    current_user: Dict[str, Any] = Depends(get_current_user),
+    current_user: int = Depends(get_current_user),
 ):
     """
     Get comprehensive AI service status.
@@ -449,7 +427,7 @@ async def get_ai_status(
     Authentication Required: Yes
     """
     try:
-        user_id = current_user["userId"]
+        user_id = current_user
 
         # Get configured providers
         configured_providers = config_service.get_configured_providers(user_id)
@@ -486,7 +464,7 @@ async def get_ai_status(
             error=None if healthy else "No active AI provider configured",
         )
 
-    except Exception as e:
+    except Exception as exc:
         # Return error status if check fails
         return AIStatusResponse(
             running=False,
@@ -497,16 +475,15 @@ async def get_ai_status(
             providersConfigured=0,
             modelsDownloaded=0,
             capabilities=None,
-            error=str(e),
+            error=str(exc),
         )
-
 
 @router.get("/providers", response_model=ProvidersListResponse)
 async def list_providers(
     config_service: AIProviderConfigService = Depends(
         get_provider_config_service
     ),
-    current_user: Dict[str, Any] = Depends(get_current_user),
+    current_user: int = Depends(get_current_user),
 ):
     """
     List all available AI providers with their capabilities.
@@ -521,7 +498,7 @@ async def list_providers(
     Authentication Required: Yes
     """
     try:
-        user_id = current_user["userId"]
+        user_id = current_user
 
         # Get configured providers for user
         configured_providers = config_service.get_configured_providers(user_id)
@@ -563,19 +540,18 @@ async def list_providers(
             configuredProviders=len(configured_providers),
         )
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to list providers: {str(e)}",
+            detail=f"Failed to list providers: {str(exc)}",
         )
-
 
 @router.get("/providers/configured", response_model=ProvidersListResponse)
 async def list_configured_providers(
     config_service: AIProviderConfigService = Depends(
         get_provider_config_service
     ),
-    current_user: Dict[str, Any] = Depends(get_current_user),
+    current_user: int = Depends(get_current_user),
 ):
     """
     List configured providers for current user.
@@ -586,7 +562,7 @@ async def list_configured_providers(
     Authentication Required: Yes
     """
     try:
-        user_id = current_user["userId"]
+        user_id = current_user
 
         # Get user configurations
         user_configs = config_service.list_provider_configs(user_id)
@@ -619,12 +595,11 @@ async def list_configured_providers(
             configuredProviders=len(providers_info),
         )
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to list configured providers: {str(e)}",
+            detail=f"Failed to list configured providers: {str(exc)}",
         )
-
 
 @router.get("/providers/{provider}/test", response_model=ProviderTestResponse)
 async def test_provider(
@@ -633,7 +608,7 @@ async def test_provider(
         get_provider_config_service
     ),
     audit_logger: AuditLogger = Depends(get_audit_logger),
-    current_user: Dict[str, Any] = Depends(get_current_user),
+    current_user: int = Depends(get_current_user),
 ):
     """
     Test connection to a configured AI provider.
@@ -649,7 +624,7 @@ async def test_provider(
     Authentication Required: Yes
     """
     try:
-        user_id = current_user["userId"]
+        user_id = current_user
 
         # Validate provider type
         try:
@@ -717,12 +692,11 @@ async def test_provider(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to test provider: {str(e)}",
+            detail=f"Failed to test provider: {str(exc)}",
         )
-
 
 @router.get("/models", response_model=ModelsListResponse)
 async def list_models(
@@ -768,12 +742,11 @@ async def list_models(
             downloadedModels=downloaded_count,
         )
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to list models: {str(e)}",
+            detail=f"Failed to list models: {str(exc)}",
         )
-
 
 @router.get("/models/downloaded", response_model=ModelsListResponse)
 async def list_downloaded_models(
@@ -814,12 +787,11 @@ async def list_downloaded_models(
             downloadedModels=len(models_info),
         )
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to list downloaded models: {str(e)}",
+            detail=f"Failed to list downloaded models: {str(exc)}",
         )
-
 
 @router.get("/models/{model_id}/status", response_model=ModelStatusResponse)
 async def get_model_status(
@@ -870,12 +842,11 @@ async def get_model_status(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get model status: {str(e)}",
+            detail=f"Failed to get model status: {str(exc)}",
         )
-
 
 @router.post(
     "/models/{model_id}/download",
@@ -886,7 +857,7 @@ async def download_model(
     background_tasks: BackgroundTasks,
     request: ModelDownloadRequest = ModelDownloadRequest(),
     model_service: ModelDownloadService = Depends(get_model_download_service),
-    current_user: Dict[str, Any] = Depends(get_current_user),
+    current_user: int = Depends(get_current_user),
 ):
     """
     Start downloading a model.
@@ -904,7 +875,7 @@ async def download_model(
     Use GET /models/{model_id}/status to track progress.
     """
     try:
-        user_id = current_user["userId"]
+        user_id = current_user
 
         # Check if model exists in catalog
         available_models = model_service.get_available_models()
@@ -952,18 +923,17 @@ async def download_model(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to start model download: {str(e)}",
+            detail=f"Failed to start model download: {str(exc)}",
         )
-
 
 @router.delete("/models/{model_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_model(
     model_id: str,
     model_service: ModelDownloadService = Depends(get_model_download_service),
-    current_user: Dict[str, Any] = Depends(get_current_user),
+    current_user: int = Depends(get_current_user),
 ):
     """
     Delete a downloaded model.
@@ -977,7 +947,7 @@ async def delete_model(
     Authentication Required: Yes
     """
     try:
-        user_id = current_user["userId"]
+        user_id = current_user
 
         # Check if model exists in catalog
         available_models = model_service.get_available_models()
@@ -1002,12 +972,11 @@ async def delete_model(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to delete model: {str(e)}",
+            detail=f"Failed to delete model: {str(exc)}",
         )
-
 
 @router.get("/health", response_model=HealthCheckResponse)
 async def health_check(
@@ -1064,10 +1033,10 @@ async def health_check(
             },
         )
 
-    except Exception as e:
+    except Exception as exc:
         return HealthCheckResponse(
             status="unhealthy",
             timestamp=datetime.utcnow().isoformat(),
             services={},
-            details={"error": str(e)},
+            details={"error": str(exc)},
         )

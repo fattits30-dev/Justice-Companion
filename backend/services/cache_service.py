@@ -44,7 +44,6 @@ logger = logging.getLogger(__name__)
 
 T = TypeVar("T")
 
-
 @dataclass
 class CacheStats:
     """Cache statistics for monitoring and debugging."""
@@ -57,7 +56,6 @@ class CacheStats:
     max_size: int
     evictions: int
 
-
 @dataclass
 class CacheConfig:
     """Configuration for a named cache instance."""
@@ -67,7 +65,6 @@ class CacheConfig:
     ttl_ms: Optional[int] = None  # Time to live in milliseconds
     update_age_on_get: bool = True  # Update item age on access (true LRU)
 
-
 @dataclass
 class CacheEntry(Generic[T]):
     """Cache entry metadata for debugging."""
@@ -76,7 +73,6 @@ class CacheEntry(Generic[T]):
     timestamp: float  # Unix timestamp in seconds
     access_count: int = 0
     ttl_ms: Optional[int] = None  # Per-entry TTL override
-
 
 class LRUCache(Generic[T]):
     """
@@ -220,7 +216,6 @@ class LRUCache(Generic[T]):
         current_time = time.time()
         age_ms = (current_time - entry.timestamp) * 1000
         return age_ms > ttl
-
 
 class CacheService:
     """
@@ -594,11 +589,9 @@ class CacheService:
 
         logger.info(f"[CacheService] Preloaded {len(entries)} entries into '{cache_name}' cache")
 
-
 # Singleton instance for global access
 _cache_service_instance: Optional[CacheService] = None
 _instance_lock = threading.Lock()
-
 
 def get_cache_service(configs: Optional[List[CacheConfig]] = None) -> CacheService:
     """
@@ -619,7 +612,6 @@ def get_cache_service(configs: Optional[List[CacheConfig]] = None) -> CacheServi
                 _cache_service_instance = CacheService(configs)
 
     return _cache_service_instance
-
 
 def reset_cache_service() -> None:
     """

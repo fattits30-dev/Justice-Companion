@@ -21,10 +21,8 @@ import logging
 from backend.services.backup.backup_service import BackupService
 from backend.models.backup import BackupMetadataResponse, RetentionSummaryResponse
 
-
 # Configure logging
 logger = logging.getLogger(__name__)
-
 
 class BackupRetentionPolicy:
     """

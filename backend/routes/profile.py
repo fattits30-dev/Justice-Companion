@@ -31,7 +31,7 @@ import os
 import re
 
 from backend.models.base import get_db
-from backend.services.auth_service import AuthenticationService
+from backend.services.auth.service import AuthenticationService
 from backend.routes.auth import get_current_user
 from backend.services.profile_service import (
     ProfileService,
@@ -41,14 +41,12 @@ from backend.services.profile_service import (
 
 # UserProfileService not needed for single-user profile (id=1)
 # from backend.services.user_profile_service import UserProfileService
-from backend.services.encryption_service import EncryptionService
+from backend.services.security.encryption import EncryptionService
 from backend.services.audit_logger import AuditLogger
 
 router = APIRouter(prefix="/profile", tags=["profile"])
 
-
 # ===== PYDANTIC REQUEST/RESPONSE MODELS =====
-
 
 class UpdateProfileRequest(BaseModel):
     """Request model for updating user profile."""
@@ -67,6 +65,7 @@ class UpdateProfileRequest(BaseModel):
     phone: Optional[str] = Field(None, max_length=20, description="User's phone number")
 
     @field_validator("name")
+    @classmethod
     def validate_name(cls, v):
         if v is not None:
             v = v.strip()
@@ -80,6 +79,7 @@ class UpdateProfileRequest(BaseModel):
         return v
 
     @field_validator("email")
+    @classmethod
     def validate_email(cls, v):
         if v is not None:
             v = v.strip()
@@ -119,6 +119,7 @@ class UpdateProfileRequest(BaseModel):
         return v
 
     @field_validator("avatarUrl")
+    @classmethod
     def validate_avatar_url(cls, v):
         if v is not None:
             v = v.strip()
@@ -158,6 +159,7 @@ class UpdateProfileRequest(BaseModel):
         return v
 
     @field_validator("phone")
+    @classmethod
     def validate_phone(cls, v):
         if v is not None:
             v = v.strip()
@@ -170,7 +172,6 @@ class UpdateProfileRequest(BaseModel):
                 raise ValueError("Please enter a valid phone number")
         return v
 
-
 class ChangePasswordRequest(BaseModel):
     """Request model for changing password."""
 
@@ -178,6 +179,7 @@ class ChangePasswordRequest(BaseModel):
     newPassword: str = Field(..., min_length=12, description="New password")
 
     @field_validator("newPassword")
+    @classmethod
     def validate_password_strength(cls, v):
         """Validate password meets OWASP requirements."""
         if len(v) < 12:
@@ -189,7 +191,6 @@ class ChangePasswordRequest(BaseModel):
         if not re.search(r"[0-9]", v):
             raise ValueError("Password must contain at least one number")
         return v
-
 
 class ProfileResponse(BaseModel):
     """Response model for user profile data."""
@@ -209,7 +210,6 @@ class ProfileResponse(BaseModel):
     class Config:
         from_attributes = True
 
-
 class ProfileCompletenessResponse(BaseModel):
     """Response model for profile completeness indicator."""
 
@@ -219,22 +219,18 @@ class ProfileCompletenessResponse(BaseModel):
     )
     completedFields: list[str] = Field(default_factory=list, description="List of completed fields")
 
-
 class PasswordChangeResponse(BaseModel):
     """Response model for password change operation."""
 
     success: bool
     message: str
 
-
 # ===== DEPENDENCIES =====
-
 
 def get_auth_service(db: Session = Depends(get_db)) -> AuthenticationService:
     """Get authentication service instance."""
     audit_logger = get_audit_logger(db)
     return AuthenticationService(db=db, audit_logger=audit_logger)
-
 
 def get_encryption_service() -> EncryptionService:
     """Get encryption service instance."""
@@ -245,11 +241,9 @@ def get_encryption_service() -> EncryptionService:
 
     return EncryptionService(key)
 
-
 def get_audit_logger(db: Session = Depends(get_db)) -> AuditLogger:
     """Get audit logger instance."""
     return AuditLogger(db=db)
-
 
 def get_profile_service(
     db: Session = Depends(get_db),
@@ -259,9 +253,7 @@ def get_profile_service(
     """Get profile service instance (for single-row profile table)."""
     return ProfileService(db=db, encryption_service=encryption_service, audit_logger=audit_logger)
 
-
 # ===== HELPER FUNCTIONS =====
-
 
 def calculate_profile_completeness(
     profile: Optional[UserProfileData],
@@ -308,9 +300,7 @@ def calculate_profile_completeness(
         percentage=percentage, missingFields=missing_fields, completedFields=completed_fields
     )
 
-
 # ===== ROUTES =====
-
 
 @router.get("", response_model=ProfileResponse)
 async def get_profile(
@@ -357,12 +347,11 @@ async def get_profile(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get profile: {str(e)}",
         )
-
 
 @router.put("", response_model=ProfileResponse)
 async def update_profile(
@@ -440,12 +429,11 @@ async def update_profile(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to update profile: {str(e)}",
         )
-
 
 @router.put("/password", response_model=PasswordChangeResponse)
 async def change_password(
@@ -487,7 +475,7 @@ async def change_password(
             message="Password changed successfully. All sessions have been invalidated. Please log in again.",
         )
 
-    except Exception as e:
+    except Exception as exc:
         # Authentication service throws AuthenticationError with specific messages
         error_message = str(e)
         if "Invalid current password" in error_message:
@@ -499,7 +487,6 @@ async def change_password(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Failed to change password: {error_message}",
             )
-
 
 @router.get("/completeness", response_model=ProfileCompletenessResponse)
 async def get_profile_completeness(
@@ -531,7 +518,7 @@ async def get_profile_completeness(
 
         return completeness
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to calculate profile completeness: {str(e)}",

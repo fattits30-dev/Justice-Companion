@@ -20,9 +20,11 @@ Security:
 
 from typing import Optional, List, Dict, Any, Protocol
 from datetime import datetime
+
+from fastapi import HTTPException
+from pydantic import BaseModel, Field, ConfigDict
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
-from fastapi import HTTPException
 
 from backend.models.notification import (
     Notification,
@@ -32,10 +34,8 @@ from backend.models.notification import (
 )
 from backend.services.audit_logger import AuditLogger
 
-
 class NotificationError(Exception):
     """Exception raised for notification-specific errors."""
-
 
 class NotificationEventHandler(Protocol):
     """Protocol for notification event handlers."""
@@ -52,40 +52,51 @@ class NotificationEventHandler(Protocol):
         """Called when a notification is dismissed."""
         ...
 
-
-# Pydantic models for input/output
-from pydantic import BaseModel, Field, ConfigDict
-
-
 class CreateNotificationInput(BaseModel):
     """Input model for creating a new notification."""
 
     user_id: int = Field(..., description="User ID to send notification to")
     type: NotificationType = Field(..., description="Type of notification")
     severity: NotificationSeverity = Field(..., description="Notification severity")
-    title: str = Field(..., min_length=1, max_length=255, description="Notification title")
+    title: str = Field(
+        ..., min_length=1, max_length=255, description="Notification title"
+    )
     message: str = Field(..., min_length=1, description="Notification message")
     action_url: Optional[str] = Field(None, description="Optional action URL")
-    action_label: Optional[str] = Field(None, description="Optional action button label")
+    action_label: Optional[str] = Field(
+        None, description="Optional action button label"
+    )
     metadata: Optional[Dict[str, Any]] = Field(None, description="Optional metadata")
-    expires_at: Optional[datetime] = Field(None, description="Optional expiration timestamp")
+    expires_at: Optional[datetime] = Field(
+        None, description="Optional expiration timestamp"
+    )
 
     model_config = ConfigDict(use_enum_values=True)
-
 
 class NotificationFilters(BaseModel):
     """Filters for querying notifications."""
 
-    unread_only: Optional[bool] = Field(False, description="Filter unread notifications only")
-    type: Optional[NotificationType] = Field(None, description="Filter by notification type")
-    severity: Optional[NotificationSeverity] = Field(None, description="Filter by severity")
-    limit: Optional[int] = Field(None, ge=1, le=100, description="Maximum results to return")
+    unread_only: Optional[bool] = Field(
+        False, description="Filter unread notifications only"
+    )
+    type: Optional[NotificationType] = Field(
+        None, description="Filter by notification type"
+    )
+    severity: Optional[NotificationSeverity] = Field(
+        None, description="Filter by severity"
+    )
+    limit: Optional[int] = Field(
+        None, ge=1, le=100, description="Maximum results to return"
+    )
     offset: Optional[int] = Field(0, ge=0, description="Number of results to skip")
-    include_expired: Optional[bool] = Field(False, description="Include expired notifications")
-    include_dismissed: Optional[bool] = Field(False, description="Include dismissed notifications")
+    include_expired: Optional[bool] = Field(
+        False, description="Include expired notifications"
+    )
+    include_dismissed: Optional[bool] = Field(
+        False, description="Include dismissed notifications"
+    )
 
     model_config = ConfigDict(use_enum_values=True)
-
 
 class NotificationStats(BaseModel):
     """Notification statistics."""
@@ -97,7 +108,6 @@ class NotificationStats(BaseModel):
     medium: int
     low: int
     by_type: Dict[str, int]
-
 
 class UpdateNotificationPreferencesInput(BaseModel):
     """Input model for updating notification preferences."""
@@ -112,7 +122,6 @@ class UpdateNotificationPreferencesInput(BaseModel):
     quiet_hours_enabled: Optional[bool] = None
     quiet_hours_start: Optional[str] = Field(None, pattern=r"^\d{2}:\d{2}$")
     quiet_hours_end: Optional[str] = Field(None, pattern=r"^\d{2}:\d{2}$")
-
 
 class NotificationService:
     """
@@ -213,10 +222,12 @@ class NotificationService:
         # Handle case where quiet hours span midnight
         if start < end:
             return start <= current_time < end
-        else:
-            return current_time >= start or current_time < end
 
-    async def create_notification(self, input_data: CreateNotificationInput) -> Notification:
+        return current_time >= start or current_time < end
+
+    async def create_notification(
+        self, input_data: CreateNotificationInput
+    ) -> Notification:
         """
         Create a new notification with preference checking.
 
@@ -240,9 +251,14 @@ class NotificationService:
                     resource_id="blocked",
                     action="create",
                     success=False,
-                    details={"type": input_data.type.value, "reason": "Notification type disabled"},
+                    details={
+                        "type": input_data.type.value,
+                        "reason": "Notification type disabled",
+                    },
                 )
-                raise NotificationError(f"Notification type {input_data.type.value} is disabled")
+                raise NotificationError(
+                    f"Notification type {input_data.type.value} is disabled"
+                )
 
             # Check if we're in quiet hours
             if self._is_in_quiet_hours(prefs):
@@ -280,7 +296,10 @@ class NotificationService:
                 resource_id=str(notification.id),
                 action="create",
                 success=True,
-                details={"type": input_data.type.value, "severity": input_data.severity.value},
+                details={
+                    "type": input_data.type.value,
+                    "severity": input_data.severity.value,
+                },
             )
 
             # Emit event to handlers
@@ -327,7 +346,9 @@ class NotificationService:
                     query = query.filter(Notification.type == filters.type.value)
 
                 if filters.severity:
-                    query = query.filter(Notification.severity == filters.severity.value)
+                    query = query.filter(
+                        Notification.severity == filters.severity.value
+                    )
 
                 if not filters.include_expired:
                     query = query.filter(
@@ -375,7 +396,9 @@ class NotificationService:
             HTTPException: 403 if user doesn't own the notification
         """
         notification = (
-            self.db.query(Notification).filter(Notification.id == notification_id).first()
+            self.db.query(Notification)
+            .filter(Notification.id == notification_id)
+            .first()
         )
 
         if not notification:
@@ -412,7 +435,8 @@ class NotificationService:
 
         if not notification:
             raise HTTPException(
-                status_code=404, detail=f"Notification with ID {notification_id} not found"
+                status_code=404,
+                detail=f"Notification with ID {notification_id} not found",
             )
 
         notification.is_read = True
@@ -445,7 +469,10 @@ class NotificationService:
             count = (
                 self.db.query(Notification)
                 .filter(and_(Notification.user_id == user_id, ~Notification.is_read))
-                .update({"is_read": True, "read_at": datetime.now()}, synchronize_session=False)
+                .update(
+                    {"is_read": True, "read_at": datetime.now()},
+                    synchronize_session=False,
+                )
             )
             self.db.commit()
 
@@ -479,7 +506,8 @@ class NotificationService:
 
         if not notification:
             raise HTTPException(
-                status_code=404, detail=f"Notification with ID {notification_id} not found"
+                status_code=404,
+                detail=f"Notification with ID {notification_id} not found",
             )
 
         notification.is_dismissed = True
@@ -529,16 +557,26 @@ class NotificationService:
         Returns:
             Notification statistics
         """
-        notifications = self.db.query(Notification).filter(Notification.user_id == user_id).all()
+        notifications = (
+            self.db.query(Notification).filter(Notification.user_id == user_id).all()
+        )
 
         total = len(notifications)
         unread = sum(1 for n in notifications if not n.is_read and not n.is_dismissed)
 
         # Count by severity
-        urgent = sum(1 for n in notifications if n.severity == NotificationSeverity.URGENT.value)
-        high = sum(1 for n in notifications if n.severity == NotificationSeverity.HIGH.value)
-        medium = sum(1 for n in notifications if n.severity == NotificationSeverity.MEDIUM.value)
-        low = sum(1 for n in notifications if n.severity == NotificationSeverity.LOW.value)
+        urgent = sum(
+            1 for n in notifications if n.severity == NotificationSeverity.URGENT.value
+        )
+        high = sum(
+            1 for n in notifications if n.severity == NotificationSeverity.HIGH.value
+        )
+        medium = sum(
+            1 for n in notifications if n.severity == NotificationSeverity.MEDIUM.value
+        )
+        low = sum(
+            1 for n in notifications if n.severity == NotificationSeverity.LOW.value
+        )
 
         # Count by type
         by_type: Dict[str, int] = {}
@@ -673,7 +711,9 @@ class NotificationService:
 
         except Exception as error:
             self.db.rollback()
-            raise NotificationError(f"Failed to cleanup expired notifications: {str(error)}")
+            raise NotificationError(
+                f"Failed to cleanup expired notifications: {str(error)}"
+            )
 
     async def create_system_notification(
         self, user_id: int, severity: NotificationSeverity, title: str, message: str
@@ -707,5 +747,9 @@ class NotificationService:
                 severity=severity,
                 title=title,
                 message=message,
+                action_url=None,
+                action_label=None,
+                metadata=None,
+                expires_at=None,
             )
         )

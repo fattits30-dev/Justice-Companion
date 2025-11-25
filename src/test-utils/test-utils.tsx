@@ -13,12 +13,13 @@
  * import { render, screen, userEvent } from '@/test-utils/test-utils';
  */
 
+import { AuthProvider } from "@/contexts/AuthContext";
+import { routerFutureFlags } from "@/router/futureFlags";
+import type { JusticeCompanionAPI } from "@/types/ipc";
 import { render, RenderOptions } from "@testing-library/react";
 import { ReactElement, ReactNode } from "react";
 import { BrowserRouter } from "react-router-dom";
 import { vi } from "vitest";
-import type { JusticeCompanionAPI } from "@/types/ipc";
-import { AuthProvider } from "@/contexts/AuthContext";
 
 /**
  * All Providers Component
@@ -43,7 +44,7 @@ function AllTheProviders({
     <>{children}</>
   );
 
-  return <BrowserRouter>{content}</BrowserRouter>;
+  return <BrowserRouter future={routerFutureFlags}>{content}</BrowserRouter>;
 }
 
 /**
@@ -57,34 +58,34 @@ function AllTheProviders({
  */
 const customRender = (
   ui: ReactElement<any>,
-  options?: Omit<RenderOptions, "wrapper">,
+  options?: Omit<RenderOptions, "wrapper">
 ) => render(ui, { wrapper: AllTheProviders, ...options });
 
 // Re-export specific items from React Testing Library (excluding render to avoid conflict)
 export {
+  act,
+  cleanup,
+  fireEvent,
+  getByAltText,
+  getByDisplayValue,
+  getByLabelText,
+  getByPlaceholderText,
+  getByRole,
+  getByTestId,
+  getByText,
+  getByTitle,
+  queryByAltText,
+  queryByDisplayValue,
+  queryByLabelText,
+  queryByPlaceholderText,
+  queryByRole,
+  queryByTestId,
+  queryByText,
+  queryByTitle,
+  renderHook,
   screen,
   waitFor, // RTL's waitFor (keep this, remove custom one below)
   within,
-  fireEvent,
-  act,
-  renderHook,
-  cleanup,
-  getByRole,
-  getByLabelText,
-  getByPlaceholderText,
-  getByText,
-  getByDisplayValue,
-  getByAltText,
-  getByTitle,
-  getByTestId,
-  queryByRole,
-  queryByLabelText,
-  queryByPlaceholderText,
-  queryByText,
-  queryByDisplayValue,
-  queryByAltText,
-  queryByTitle,
-  queryByTestId,
 } from "@testing-library/react";
 
 export { default as userEvent } from "@testing-library/user-event";
@@ -105,7 +106,7 @@ export { customRender as render };
  * });
  */
 export function createMockJusticeAPI(
-  overrides: Partial<JusticeCompanionAPI> = {},
+  overrides: Partial<JusticeCompanionAPI> = {}
 ): JusticeCompanionAPI {
   const baseApi: Partial<JusticeCompanionAPI> = {
     // Case operations
@@ -155,7 +156,7 @@ export function createMockJusticeAPI(
  */
 export async function waitForCondition(
   callback: () => boolean,
-  timeout = 3000,
+  timeout = 3000
 ): Promise<void> {
   const startTime = Date.now();
   while (!callback()) {
@@ -177,7 +178,7 @@ export async function waitForCondition(
 export function createMockFile(
   name: string,
   content: string,
-  type: string,
+  type: string
 ): File {
   const blob = new Blob([content], { type });
   return new File([blob], name, { type });

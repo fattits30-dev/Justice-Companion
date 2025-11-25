@@ -53,14 +53,11 @@ from backend.models.case import CaseType, CaseStatus
 # Configure logger
 logger = logging.getLogger(__name__)
 
-
 class TemplateSeederError(Exception):
     """Base exception for template seeder errors."""
 
-
 class TemplateValidationError(Exception):
     """Exception raised when template validation fails."""
-
 
 class TemplateSeeder:
     """
@@ -248,7 +245,7 @@ class TemplateSeeder:
             )
             raise TemplateSeederError(f"Failed to validate template: {str(e)}")
 
-        except Exception as e:
+        except Exception as exc:
             self.db.rollback()
             logger.error(f"✗ Failed to seed template '{template_input.name}': {str(e)}")
             self._log_audit(
@@ -297,7 +294,7 @@ class TemplateSeeder:
                     self._create_template(template)
                     seeded += 1
                     template_names.append(template.name)
-            except Exception as e:
+            except Exception as exc:
                 failed += 1
                 logger.error(f"✗ Failed to seed template '{template.name}': {str(e)}")
 

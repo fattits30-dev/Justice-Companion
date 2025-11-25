@@ -1,8 +1,9 @@
-import { test, expect, Page } from "@playwright/test";
-import * as path from "path";
+import { expect, Page, test } from "@playwright/test";
 import * as fs from "fs";
+import * as path from "path";
 import { fileURLToPath } from "url";
-import { TEST_CONFIG, getURL } from "./testConfig";
+import { TEST_CONFIG } from "./testConfig";
+import { loginWithSeededUser } from "./utils/auth";
 
 // ES module equivalent of __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -27,11 +28,8 @@ const APP_URL = TEST_CONFIG.baseURL;
 const TEST_DOCUMENT_PATH = path.join(
   __dirname,
   "..",
-  TEST_CONFIG.testDocuments.dismissalLetter,
+  TEST_CONFIG.testDocuments.dismissalLetter
 );
-
-// Test credentials - from centralized config
-const TEST_CREDENTIALS = TEST_CONFIG.credentials.e2eTest;
 
 test.describe("Document Upload and Analysis Flow", () => {
   let page: Page;
@@ -57,7 +55,7 @@ test.describe("Document Upload and Analysis Flow", () => {
     // Log network errors
     page.on("requestfailed", (request) => {
       console.log(
-        `[Network Failed]: ${request.url()} - ${request.failure()?.errorText}`,
+        `[Network Failed]: ${request.url()} - ${request.failure()?.errorText}`
       );
     });
 
@@ -77,154 +75,16 @@ test.describe("Document Upload and Analysis Flow", () => {
   test("should complete full document upload and analysis flow", async () => {
     console.log("\n=== Starting Document Upload and Analysis Test ===\n");
 
-    // STEP 1: Navigate to login page
-    console.log("[Step 1] Navigating to login page...");
-    await page.goto(`${APP_URL}/login`, {
-      waitUntil: "networkidle",
-      timeout: 30000,
-    });
-
-    await page.screenshot({
-      path: "e2e-tests/screenshots/01-login-page.png",
-      fullPage: true,
-    });
-
-    // STEP 2: Create account or login
-    console.log("[Step 2] Setting up test account...");
-
+    console.log("[Step 1] Authenticating seeded test user...");
     try {
-      // Wait for login page to be ready
-      await page.waitForSelector("text=/Sign In|Create account/i", {
-        timeout: 10000,
-      });
-
-      // Check if "Create account" link exists
-      const createAccountLink = page.getByText("Create account");
-      const createLinkExists = (await createAccountLink.count()) > 0;
-
-      if (createLinkExists) {
-        console.log('[Step 2] Clicking "Create account" link...');
-        await createAccountLink.click();
-        await page.waitForLoadState("networkidle");
-
-        // Fill registration form
-        console.log("[Step 2] Filling registration form...");
-
-        // Find and fill username
-        const usernameInput = await page
-          .locator('input[name="username"]')
-          .or(page.locator('input[placeholder*="username" i]'))
-          .first();
-        await usernameInput.fill(TEST_CREDENTIALS.username);
-
-        // Find and fill email (if exists)
-        const emailInput = await page
-          .locator('input[name="email"], input[type="email"]')
-          .first();
-        const emailExists = (await emailInput.count()) > 0;
-        if (emailExists) {
-          await emailInput.fill(TEST_CREDENTIALS.email);
-        }
-
-        // Find and fill password
-        const passwordInput = await page
-          .locator('input[name="password"], input[type="password"]')
-          .first();
-        await passwordInput.fill(TEST_CREDENTIALS.password);
-
-        // Find and fill confirm password (if exists)
-        const confirmPasswordInput = await page
-          .locator(
-            'input[name="confirmPassword"], input[name="confirm_password"]',
-          )
-          .first();
-        const confirmExists = (await confirmPasswordInput.count()) > 0;
-        if (confirmExists) {
-          await confirmPasswordInput.fill(TEST_CREDENTIALS.password);
-        }
-
-        await page.screenshot({
-          path: "e2e-tests/screenshots/02-registration-filled.png",
-          fullPage: true,
-        });
-
-        // Click create/register button
-        const registerButton = page
-          .getByRole("button", { name: /create|register|sign up/i })
-          .first();
-        await registerButton.click();
-
-        console.log("[Step 2] Account creation submitted...");
-      } else {
-        // No create account link - try logging in directly
-        console.log("[Step 2] Attempting login with existing credentials...");
-
-        const usernameInput = await page
-          .locator('input[name="username"]')
-          .or(page.locator('input[type="text"]'))
-          .first();
-        await usernameInput.fill(TEST_CREDENTIALS.username);
-
-        const passwordInput = await page
-          .locator('input[name="password"], input[type="password"]')
-          .first();
-        await passwordInput.fill(TEST_CREDENTIALS.password);
-
-        await page.screenshot({
-          path: "e2e-tests/screenshots/02-login-filled.png",
-          fullPage: true,
-        });
-
-        const loginButton = page
-          .locator('button[type="submit"]')
-          .or(page.getByRole("button", { name: /sign in|login/i }))
-          .first();
-        await loginButton.click();
-      }
-
-      // Wait for navigation after login/registration
-      await page.waitForLoadState("networkidle", { timeout: 15000 });
-      await page.waitForTimeout(2000); // Extra wait for any redirects
-
-      // Check if we successfully logged in
-      const currentUrl = page.url();
-      console.log(
-        `[Step 2] Current URL after login/registration: ${currentUrl}`,
-      );
-
-      if (currentUrl.includes("/login") || currentUrl.includes("/register")) {
-        // Still on login/register page - failed
-        console.log(
-          "[Step 2] Authentication failed - checking for error message...",
-        );
-        await page.screenshot({
-          path: "e2e-tests/screenshots/02-auth-failed.png",
-          fullPage: true,
-        });
-
-        const errorMessage = await page
-          .locator('[role="alert"], .error, .text-red-500, .text-destructive')
-          .first()
-          .textContent()
-          .catch(() => null);
-        console.log(
-          `[Step 2] Error message: ${errorMessage || "No error message found"}`,
-        );
-
-        throw new Error(
-          `Authentication failed. Error: ${errorMessage || "Unknown error"}`,
-        );
-      }
-
+      await loginWithSeededUser(page);
       loginSuccessful = true;
-      console.log("[Step 2] Authentication successful!");
-
       await page.screenshot({
-        path: "e2e-tests/screenshots/03-after-login.png",
+        path: "e2e-tests/screenshots/02-after-login.png",
         fullPage: true,
       });
     } catch (error) {
-      console.error(`[Step 2] Authentication error: ${error}`);
+      console.error(`[Step 1] Authentication error: ${error}`);
       await page.screenshot({
         path: "e2e-tests/screenshots/02-auth-error.png",
         fullPage: true,
@@ -275,7 +135,7 @@ test.describe("Document Upload and Analysis Flow", () => {
           .or(
             page
               .locator('button:has-text("Upload")')
-              .or(page.locator('button[aria-label*="upload" i]')),
+              .or(page.locator('button[aria-label*="upload" i]'))
           )
           .first();
 
@@ -296,7 +156,7 @@ test.describe("Document Upload and Analysis Flow", () => {
         fullPage: true,
       });
       throw new Error(
-        "Upload button or file input not found. Please check the chat page UI.",
+        "Upload button or file input not found. Please check the chat page UI."
       );
     }
 
@@ -317,11 +177,11 @@ test.describe("Document Upload and Analysis Flow", () => {
           {
             timeout: 10000,
             state: "visible",
-          },
+          }
         )
         .catch(async (e) => {
           console.log(
-            "[Step 5] No explicit upload success message found, continuing...",
+            "[Step 5] No explicit upload success message found, continuing..."
           );
           // This is OK - some apps don't show a success message
         });
@@ -355,14 +215,14 @@ test.describe("Document Upload and Analysis Flow", () => {
 
       if (!analyzeExists) {
         console.log(
-          "[Step 6] Analyze button not found, checking page state...",
+          "[Step 6] Analyze button not found, checking page state..."
         );
         await page.screenshot({
           path: "e2e-tests/screenshots/07-no-analyze-button.png",
           fullPage: true,
         });
         throw new Error(
-          "Analyze Document button not found. Upload may have failed or UI may differ.",
+          "Analyze Document button not found. Upload may have failed or UI may differ."
         );
       }
 
@@ -381,7 +241,7 @@ test.describe("Document Upload and Analysis Flow", () => {
 
     // STEP 7: Wait for AI analysis to complete
     console.log(
-      "[Step 7] Waiting for AI analysis to complete (timeout: 60s)...",
+      "[Step 7] Waiting for AI analysis to complete (timeout: 60s)..."
     );
 
     const analysisStartTime = Date.now();
@@ -463,7 +323,7 @@ test.describe("Document Upload and Analysis Flow", () => {
       // Check for NO error messages
       const errorElements = await page
         .locator(
-          '[role="alert"].error, .text-red-500:has-text("error"), .text-destructive:has-text("error")',
+          '[role="alert"].error, .text-red-500:has-text("error"), .text-destructive:has-text("error")'
         )
         .count();
       expect(errorElements).toBe(0);
@@ -477,7 +337,7 @@ test.describe("Document Upload and Analysis Flow", () => {
       expect(analysisText).toBeTruthy();
       expect(analysisText!.length).toBeGreaterThan(10);
       console.log(
-        `[Step 8] ✓ Analysis text found: "${analysisText?.substring(0, 100)}..."`,
+        `[Step 8] ✓ Analysis text found: "${analysisText?.substring(0, 100)}..."`
       );
 
       // Check for "Create Case from Analysis" button
@@ -526,24 +386,7 @@ test.describe("Document Upload and Analysis Flow", () => {
   test("should handle upload errors gracefully", async () => {
     console.log("\n=== Testing Error Handling ===\n");
 
-    // Login first
-    await page.goto(`${APP_URL}/login`, { waitUntil: "networkidle" });
-
-    const usernameInput = await page
-      .locator('input[name="username"]')
-      .or(page.locator('input[type="text"]'))
-      .first();
-    await usernameInput.fill(TEST_CREDENTIALS.username);
-
-    const passwordInput = await page
-      .locator('input[name="password"], input[type="password"]')
-      .first();
-    await passwordInput.fill(TEST_CREDENTIALS.password);
-
-    const loginButton = page.locator('button[type="submit"]').first();
-    await loginButton.click();
-
-    await page.waitForLoadState("networkidle");
+    await loginWithSeededUser(page);
 
     // Navigate to chat
     await page.goto(`${APP_URL}/chat`, { waitUntil: "networkidle" });
@@ -556,7 +399,7 @@ test.describe("Document Upload and Analysis Flow", () => {
       __dirname,
       "..",
       "test-documents",
-      "test.exe",
+      "test.exe"
     );
     if (!fs.existsSync(invalidFilePath)) {
       fs.writeFileSync(invalidFilePath, "Invalid file content");
@@ -583,7 +426,7 @@ test.describe("Document Upload and Analysis Flow", () => {
         });
       } else {
         console.log(
-          "[Test] ℹ No validation error shown (validation may not exist or file accepted)",
+          "[Test] ℹ No validation error shown (validation may not exist or file accepted)"
         );
       }
     } finally {

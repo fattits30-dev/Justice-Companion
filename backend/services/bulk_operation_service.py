@@ -59,11 +59,9 @@ from backend.models.evidence import Evidence
 # Configure logger
 logger = logging.getLogger(__name__)
 
-
 # ============================================================================
 # Pydantic Models for Input/Output
 # ============================================================================
-
 
 class BulkOperationOptions(BaseModel):
     """
@@ -81,7 +79,6 @@ class BulkOperationOptions(BaseModel):
 
     model_config = ConfigDict(use_enum_values=True)
 
-
 class BulkOperationError(BaseModel):
     """Individual item error in bulk operation."""
 
@@ -89,7 +86,6 @@ class BulkOperationError(BaseModel):
     error: str = Field(..., description="Error message")
 
     model_config = ConfigDict(from_attributes=True)
-
 
 class BulkOperationResult(BaseModel):
     """
@@ -113,7 +109,6 @@ class BulkOperationResult(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-
 class CaseUpdate(BaseModel):
     """Individual case update in bulk operation."""
 
@@ -124,7 +119,6 @@ class CaseUpdate(BaseModel):
     status: Optional[CaseStatus] = Field(None, description="New case status")
 
     model_config = ConfigDict(use_enum_values=True)
-
 
 class BulkOperationProgress(BaseModel):
     """
@@ -147,11 +141,9 @@ class BulkOperationProgress(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-
 # ============================================================================
 # BulkOperationService Class
 # ============================================================================
-
 
 class BulkOperationService:
     """
@@ -228,7 +220,7 @@ class BulkOperationService:
                     success=success,
                     error_message=error_message,
                 )
-            except Exception as e:
+            except Exception as exc:
                 logger.warning(f"Failed to log audit event: {e}")
 
     def _verify_case_ownership(self, case_id: int, user_id: int) -> None:
@@ -1068,6 +1060,6 @@ class BulkOperationService:
                 started_at=datetime.now(timezone.utc),
                 completed_at=datetime.now(timezone.utc),
             )
-        except Exception as e:
+        except Exception as exc:
             logger.warning(f"Failed to get operation progress for {operation_id}: {e}")
             return None

@@ -39,7 +39,6 @@ from sqlalchemy.orm import Session
 # Configure logger
 logger = logging.getLogger(__name__)
 
-
 class AuditLogger:
     """
     AuditLogger - Blockchain-style immutable audit trail.
@@ -123,9 +122,9 @@ class AuditLogger:
             # INSERT (atomic)
             self._insert_audit_log(entry)
 
-        except Exception as e:
+        except Exception as exc:
             # CRITICAL: Audit failures should NOT break app
-            logger.error(f"❌ Audit logging failed: {e}", exc_info=True)
+            logger.error("❌ Audit logging failed: %s", exc, exc_info=True)
 
     def query(
         self,
@@ -156,8 +155,8 @@ class AuditLogger:
         Returns:
             List of audit log entries as dictionaries
         """
-        conditions = []
-        params = {}
+        conditions: List[str] = []
+        params: Dict[str, Any] = {}
 
         # Build WHERE clauses
         if start_date:
@@ -264,8 +263,9 @@ class AuditLogger:
 
             return {"valid": True, "totalLogs": len(entries)}
 
-        except Exception as e:
-            return {"valid": False, "totalLogs": 0, "error": str(e)}
+        except Exception as exc:
+            logger.error("Audit integrity verification failed: %s", exc, exc_info=True)
+            return {"valid": False, "totalLogs": 0, "error": str(exc)}
 
     def export_logs(
         self,
@@ -427,7 +427,9 @@ class AuditLogger:
                 "resource_type": entry["resource_type"],
                 "resource_id": entry["resource_id"],
                 "action": entry["action"],
-                "details": json.dumps(entry["details"]) if entry.get("details") else None,
+                "details": (
+                    json.dumps(entry["details"]) if entry.get("details") else None
+                ),
                 "ip_address": entry.get("ip_address"),
                 "user_agent": entry.get("user_agent"),
                 "success": 1 if entry["success"] else 0,
@@ -489,9 +491,7 @@ class AuditLogger:
             return f'"{field.replace(chr(34), chr(34) + chr(34))}"'
         return field
 
-
 # ===== HELPER FUNCTION FOR EASY USAGE =====
-
 
 def log_audit_event(
     db: Session,

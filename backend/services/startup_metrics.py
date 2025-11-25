@@ -38,7 +38,6 @@ from enum import Enum
 # Configure logger
 logger = logging.getLogger(__name__)
 
-
 class StartupPhase(str, Enum):
     """Enumeration of all startup phases."""
 
@@ -51,7 +50,6 @@ class StartupPhase(str, Enum):
     MAIN_WINDOW_SHOWN = "main_window_shown"
     NON_CRITICAL_SERVICES_READY = "non_critical_services_ready"
     ALL_HANDLERS_REGISTERED = "all_handlers_registered"
-
 
 @dataclass
 class StartupTimestamps:
@@ -66,7 +64,6 @@ class StartupTimestamps:
     main_window_shown: float = 0  # Main window visible to user
     non_critical_services_ready: float = 0  # AI, secondary services ready
     all_handlers_registered: float = 0  # All API handlers ready
-
 
 @dataclass
 class StartupPhaseMetrics:
@@ -92,14 +89,12 @@ class StartupPhaseMetrics:
     total_startup_time: float = 0
     perceived_startup_time: float = 0  # Time to main window shown
 
-
 @dataclass
 class PerformanceThreshold:
     """Performance thresholds for visual indicators."""
 
     good: float  # Green checkmark if <= this value (ms)
     warning: float  # Yellow warning if <= this value (ms), red X otherwise
-
 
 class StartupMetrics:
     """
@@ -419,10 +414,8 @@ class StartupMetrics:
             },
         }
 
-
 # Singleton instance for global access
 startup_metrics = StartupMetrics()
-
 
 # Convenience function for logging
 def log_startup_metrics() -> None:
@@ -434,7 +427,6 @@ def log_startup_metrics() -> None:
         >>> log_startup_metrics()
     """
     startup_metrics.log_startup_metrics()
-
 
 # Convenience function for exporting
 def export_startup_metrics() -> str:

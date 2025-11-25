@@ -41,15 +41,12 @@ from pydantic import BaseModel, Field, field_validator
 
 from backend.services.audit_logger import AuditLogger
 
-
 # Configure logging
 logger = logging.getLogger(__name__)
-
 
 # ============================================================================
 # Pydantic Models for Type Safety
 # ============================================================================
-
 
 class DocumentStyles(BaseModel):
     """Document styling configuration."""
@@ -72,7 +69,6 @@ class DocumentStyles(BaseModel):
             raise ValueError(f"Invalid hex color: {v}. Must be in format #RRGGBB")
         return v
 
-
 class PageMargins(BaseModel):
     """Page margin configuration."""
 
@@ -80,7 +76,6 @@ class PageMargins(BaseModel):
     bottom: float = Field(default=72, ge=0, le=144)
     left: float = Field(default=72, ge=0, le=144)
     right: float = Field(default=72, ge=0, le=144)
-
 
 class TimelineEvent(BaseModel):
     """Timeline event data structure."""
@@ -95,7 +90,6 @@ class TimelineEvent(BaseModel):
     created_at: str
     updated_at: str
 
-
 class Evidence(BaseModel):
     """Evidence data structure."""
 
@@ -108,7 +102,6 @@ class Evidence(BaseModel):
     content: Optional[str] = None
     created_at: str
     updated_at: str
-
 
 class Deadline(BaseModel):
     """Deadline data structure."""
@@ -123,7 +116,6 @@ class Deadline(BaseModel):
     created_at: str
     updated_at: str
 
-
 class Note(BaseModel):
     """Note data structure."""
 
@@ -133,7 +125,6 @@ class Note(BaseModel):
     content: str
     created_at: str
     updated_at: str
-
 
 class CaseFact(BaseModel):
     """Case fact data structure."""
@@ -146,7 +137,6 @@ class CaseFact(BaseModel):
     created_at: str
     updated_at: str
 
-
 class CaseData(BaseModel):
     """Case data structure."""
 
@@ -157,7 +147,6 @@ class CaseData(BaseModel):
     status: str
     created_at: str
     updated_at: str
-
 
 class CaseExportData(BaseModel):
     """Complete case export data."""
@@ -171,7 +160,6 @@ class CaseExportData(BaseModel):
     export_date: datetime
     exported_by: str
 
-
 class EvidenceExportData(BaseModel):
     """Evidence export data."""
 
@@ -182,7 +170,6 @@ class EvidenceExportData(BaseModel):
     exported_by: str
     total_items: int
     category_summary: Dict[str, int] = {}
-
 
 class TimelineExportData(BaseModel):
     """Timeline export data."""
@@ -196,7 +183,6 @@ class TimelineExportData(BaseModel):
     upcoming_deadlines: List[Deadline] = []
     completed_events: List[TimelineEvent] = []
 
-
 class NotesExportData(BaseModel):
     """Notes export data."""
 
@@ -207,11 +193,9 @@ class NotesExportData(BaseModel):
     exported_by: str
     total_notes: int
 
-
 # ============================================================================
 # PDF Generator Service
 # ============================================================================
-
 
 class PDFGenerator:
     """
@@ -446,7 +430,7 @@ class PDFGenerator:
             logger.info(f"Case summary PDF generated successfully. Size: {len(pdf_bytes)} bytes")
             return pdf_bytes
 
-        except Exception as e:
+        except Exception as exc:
             logger.error(f"Failed to generate case summary PDF: {str(e)}", exc_info=True)
             raise
 
@@ -563,7 +547,7 @@ class PDFGenerator:
             logger.info(f"Evidence list PDF generated successfully. Size: {len(pdf_bytes)} bytes")
             return pdf_bytes
 
-        except Exception as e:
+        except Exception as exc:
             logger.error(f"Failed to generate evidence list PDF: {str(e)}", exc_info=True)
             raise
 
@@ -698,7 +682,7 @@ class PDFGenerator:
             logger.info(f"Timeline report PDF generated successfully. Size: {len(pdf_bytes)} bytes")
             return pdf_bytes
 
-        except Exception as e:
+        except Exception as exc:
             logger.error(f"Failed to generate timeline report PDF: {str(e)}", exc_info=True)
             raise
 
@@ -796,7 +780,7 @@ class PDFGenerator:
             logger.info(f"Case notes PDF generated successfully. Size: {len(pdf_bytes)} bytes")
             return pdf_bytes
 
-        except Exception as e:
+        except Exception as exc:
             logger.error(f"Failed to generate case notes PDF: {str(e)}", exc_info=True)
             raise
 
@@ -1068,11 +1052,9 @@ class PDFGenerator:
 
         canvas.restoreState()
 
-
 # ============================================================================
 # Example Usage (for testing/development)
 # ============================================================================
-
 
 async def example_usage():
     """Example usage of PDFGenerator service."""
@@ -1122,7 +1104,6 @@ async def example_usage():
         f.write(pdf_bytes)
 
     print(f"PDF generated successfully: {len(pdf_bytes)} bytes")
-
 
 if __name__ == "__main__":
     import asyncio

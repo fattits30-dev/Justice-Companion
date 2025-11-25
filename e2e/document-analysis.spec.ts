@@ -1,12 +1,16 @@
 import {
-  test,
-  expect,
   _electron as electron,
   ElectronApplication,
+  expect,
   Page,
+  test,
 } from "@playwright/test";
-import * as path from "path";
 import * as fs from "fs";
+import * as path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 let electronApp: ElectronApplication;
 let window: Page;
@@ -66,7 +70,7 @@ test.describe("Document Analysis - Name Mismatch Fix", () => {
     const testFilePath = path.join(
       __dirname,
       "..",
-      "test-user-dismissal-letter.txt",
+      "test-user-dismissal-letter.txt"
     );
     if (!fs.existsSync(testFilePath)) {
       throw new Error(`Test file not found: ${testFilePath}`);
@@ -94,7 +98,7 @@ test.describe("Document Analysis - Name Mismatch Fix", () => {
     // Verify analysis starts with correct text
     const analysisText = await window.textContent("text=This is a");
     console.log(
-      `[Test] Analysis starts with: ${analysisText?.substring(0, 100)}...`,
+      `[Test] Analysis starts with: ${analysisText?.substring(0, 100)}...`
     );
     expect(analysisText).toBeTruthy();
 
@@ -105,10 +109,10 @@ test.describe("Document Analysis - Name Mismatch Fix", () => {
     if (jsonBlock) {
       const jsonData = JSON.parse(jsonBlock);
       console.log(
-        `[Test] documentOwnershipMismatch: ${jsonData.documentOwnershipMismatch}`,
+        `[Test] documentOwnershipMismatch: ${jsonData.documentOwnershipMismatch}`
       );
       console.log(
-        `[Test] documentClaimantName: ${jsonData.documentClaimantName}`,
+        `[Test] documentClaimantName: ${jsonData.documentClaimantName}`
       );
 
       expect(jsonData.documentOwnershipMismatch).toBe(false);

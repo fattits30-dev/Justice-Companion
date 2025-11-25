@@ -25,7 +25,7 @@ from typing import Optional, List, Dict, Any
 from sqlalchemy.orm import Session
 
 from backend.models.base import get_db
-from backend.services.auth_service import AuthenticationService
+from backend.services.auth.service import AuthenticationService
 from backend.routes.auth import get_current_user
 from backend.services.notification_service import (
     NotificationService,
@@ -33,19 +33,16 @@ from backend.services.notification_service import (
     UpdateNotificationPreferencesInput,
 )
 from backend.services.deadline_reminder_scheduler import DeadlineReminderScheduler
-from backend.services.encryption_service import EncryptionService
+from backend.services.security.encryption import EncryptionService
 from backend.services.audit_logger import AuditLogger
 from backend.models.notification import (
     NotificationType,
     NotificationSeverity,
 )
 
-
 router = APIRouter(prefix="/notifications", tags=["notifications"])
 
-
 # ===== PYDANTIC REQUEST MODELS =====
-
 
 class UpdateNotificationPreferencesRequest(BaseModel):
     """Request model for updating notification preferences."""
@@ -87,9 +84,7 @@ class UpdateNotificationPreferencesRequest(BaseModel):
         }
     )
 
-
 # ===== PYDANTIC RESPONSE MODELS =====
-
 
 class NotificationResponse(BaseModel):
     """Response model for notification data."""
@@ -131,7 +126,6 @@ class NotificationResponse(BaseModel):
         },
     )
 
-
 class NotificationPreferencesResponse(BaseModel):
     """Response model for notification preferences."""
 
@@ -172,14 +166,12 @@ class NotificationPreferencesResponse(BaseModel):
         },
     )
 
-
 class UnreadCountResponse(BaseModel):
     """Response model for unread notification count."""
 
     count: int
 
     model_config = ConfigDict(json_schema_extra={"example": {"count": 5}})
-
 
 class NotificationStatsResponse(BaseModel):
     """Response model for notification statistics."""
@@ -212,14 +204,12 @@ class NotificationStatsResponse(BaseModel):
         }
     )
 
-
 class MarkAllReadResponse(BaseModel):
     """Response model for mark all as read operation."""
 
     count: int
 
     model_config = ConfigDict(json_schema_extra={"example": {"count": 5}})
-
 
 class DeleteNotificationResponse(BaseModel):
     """Response model for notification deletion."""
@@ -228,7 +218,6 @@ class DeleteNotificationResponse(BaseModel):
     id: int
 
     model_config = ConfigDict(json_schema_extra={"example": {"deleted": True, "id": 123}})
-
 
 class SuccessResponse(BaseModel):
     """Generic success response."""
@@ -242,14 +231,11 @@ class SuccessResponse(BaseModel):
         }
     )
 
-
 # ===== DEPENDENCIES =====
-
 
 def get_auth_service(db: Session = Depends(get_db)) -> AuthenticationService:
     """Get authentication service instance."""
     return AuthenticationService(db=db)
-
 
 def get_encryption_service() -> EncryptionService:
     """Get encryption service instance."""
@@ -265,18 +251,15 @@ def get_encryption_service() -> EncryptionService:
 
     return EncryptionService(key=key_base64)
 
-
 def get_audit_logger(db: Session = Depends(get_db)) -> AuditLogger:
     """Get audit logger instance."""
     return AuditLogger(db=db)
-
 
 def get_notification_service(
     db: Session = Depends(get_db), audit_logger: AuditLogger = Depends(get_audit_logger)
 ) -> NotificationService:
     """Get notification service instance with dependencies."""
     return NotificationService(db=db, audit_logger=audit_logger)
-
 
 def get_deadline_scheduler(
     db: Session = Depends(get_db),
@@ -291,9 +274,7 @@ def get_deadline_scheduler(
         check_interval=3600,  # 1 hour
     )
 
-
 # ===== ROUTES =====
-
 
 @router.get(
     "",
@@ -345,12 +326,11 @@ async def list_notifications(
         # Convert to response format
         return [notif.to_dict() for notif in notifications]
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to list notifications: {str(e)}",
         )
-
 
 @router.get(
     "/unread/count",
@@ -371,12 +351,11 @@ async def get_unread_count(
         count = await notification_service.get_unread_count(user_id)
         return {"count": count}
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get unread count: {str(e)}",
         )
-
 
 @router.get(
     "/stats",
@@ -415,12 +394,11 @@ async def get_notification_stats(
             "byType": stats.by_type,
         }
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get notification stats: {str(e)}",
         )
-
 
 @router.put(
     "/{notification_id}/read",
@@ -448,12 +426,11 @@ async def mark_notification_read(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to mark notification as read: {str(e)}",
         )
-
 
 @router.put(
     "/mark-all-read",
@@ -477,12 +454,11 @@ async def mark_all_notifications_read(
         count = await notification_service.mark_all_as_read(user_id)
         return {"count": count}
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to mark all notifications as read: {str(e)}",
         )
-
 
 @router.delete(
     "/{notification_id}",
@@ -510,12 +486,11 @@ async def delete_notification(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to delete notification: {str(e)}",
         )
-
 
 @router.get(
     "/preferences",
@@ -544,12 +519,11 @@ async def get_notification_preferences(
         prefs = await notification_service.get_preferences(user_id)
         return prefs.to_dict()
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get notification preferences: {str(e)}",
         )
-
 
 @router.put(
     "/preferences",
@@ -600,15 +574,13 @@ async def update_notification_preferences(
         prefs = await notification_service.update_preferences(user_id, updates)
         return prefs.to_dict()
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to update notification preferences: {str(e)}",
         )
 
-
 # ===== ADMIN/SYSTEM ROUTES =====
-
 
 @router.post(
     "/scheduler/start",
@@ -632,12 +604,11 @@ async def start_deadline_scheduler(
         scheduler.start()
         return {"success": True, "message": "Deadline reminder scheduler started"}
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to start scheduler: {str(e)}",
         )
-
 
 @router.post(
     "/scheduler/stop",
@@ -659,12 +630,11 @@ async def stop_deadline_scheduler(
         scheduler.stop()
         return {"success": True, "message": "Deadline reminder scheduler stopped"}
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to stop scheduler: {str(e)}",
         )
-
 
 @router.post(
     "/scheduler/check-now",
@@ -687,12 +657,11 @@ async def trigger_deadline_check(
         await scheduler.check_now()
         return {"success": True, "message": "Deadline check completed"}
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to trigger deadline check: {str(e)}",
         )
-
 
 @router.get(
     "/scheduler/stats",
@@ -717,7 +686,7 @@ async def get_scheduler_stats(
         stats = scheduler.get_stats()
         return stats
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get scheduler stats: {str(e)}",

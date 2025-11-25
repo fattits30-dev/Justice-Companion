@@ -23,11 +23,10 @@ from pathlib import Path
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from backend.services.encryption_service import EncryptionService, EncryptedData
+from backend.services.security.encryption import EncryptionService, EncryptedData
 
 # Configure logger
 logger = logging.getLogger(__name__)
-
 
 class TableExport:
     """Represents exported data from a single table."""
@@ -48,7 +47,6 @@ class TableExport:
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
         return {"tableName": self.table_name, "records": self.records, "count": self.count}
-
 
 class ExportMetadata:
     """Metadata about the export operation."""
@@ -87,7 +85,6 @@ class ExportMetadata:
             "totalRecords": self.total_records,
         }
 
-
 class UserDataExport:
     """Complete user data export."""
 
@@ -111,7 +108,6 @@ class UserDataExport:
             },
         }
 
-
 class GdprExportOptions:
     """Options for GDPR data export."""
 
@@ -132,7 +128,6 @@ class GdprExportOptions:
         self.format = export_format
         self.include_files = include_files
         self.date_range = date_range
-
 
 class DataExporter:
     """

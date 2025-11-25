@@ -20,29 +20,26 @@ Security:
 - HTTPException 404 for non-existent profile
 """
 
+import json
 import re
 import time
-from typing import Optional, Dict, Any
+from json import JSONDecodeError
+from typing import Optional, Dict, Any, Union
 from datetime import datetime
+
+from fastapi import HTTPException
+from pydantic import BaseModel, Field, ConfigDict
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
-from fastapi import HTTPException
 
 from backend.models.profile import UserProfile
-from backend.services.encryption_service import EncryptionService
-
+from backend.services.security.encryption import EncryptionService, EncryptedData
 
 class ProfileValidationError(Exception):
     """Exception raised for profile validation failures."""
 
-
 class ProfileUpdateError(Exception):
     """Exception raised for profile update failures."""
-
-
-# Pydantic models for input/output
-from pydantic import BaseModel, Field, ConfigDict
-
 
 class UserProfileData(BaseModel):
     """Basic user profile data."""
@@ -54,7 +51,6 @@ class UserProfileData(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-
 class ExtendedUserProfileData(UserProfileData):
     """Extended user profile with computed fields."""
 
@@ -62,7 +58,6 @@ class ExtendedUserProfileData(UserProfileData):
     initials: str = Field("U", description="User initials (computed)")
 
     model_config = ConfigDict(populate_by_name=True)
-
 
 class ProfileFormData(BaseModel):
     """Profile form data used in frontend components."""
@@ -74,7 +69,6 @@ class ProfileFormData(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-
 class ProfileValidationResult(BaseModel):
     """Profile validation result with field-level errors."""
 
@@ -85,16 +79,16 @@ class ProfileValidationResult(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-
 class ProfileUpdateResult(BaseModel):
     """Profile update operation result."""
 
     success: bool = Field(..., description="Whether update succeeded")
     message: str = Field(..., description="Result message")
-    updatedFields: Optional[UserProfileData] = Field(None, description="Updated profile fields")
+    updatedFields: Optional[UserProfileData] = Field(
+        None, description="Updated profile fields"
+    )
 
     model_config = ConfigDict(populate_by_name=True)
-
 
 class ProfileResponse(BaseModel):
     """Response model for profile data."""
@@ -111,7 +105,6 @@ class ProfileResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
-
 class ExtendedProfileResponse(ProfileResponse):
     """Extended profile response with computed fields."""
 
@@ -119,7 +112,6 @@ class ExtendedProfileResponse(ProfileResponse):
     initials: str
 
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
-
 
 class ProfileService:
     """
@@ -134,7 +126,10 @@ class ProfileService:
     PROFILE_ID = 1  # Single row ID (enforced by CHECK constraint)
 
     def __init__(
-        self, db: Session, encryption_service: Optional[EncryptionService] = None, audit_logger=None
+        self,
+        db: Session,
+        encryption_service: Optional[EncryptionService] = None,
+        audit_logger=None,
     ):
         """
         Initialize profile service.
@@ -156,6 +151,70 @@ class ProfileService:
         """Clear cache when profile data changes."""
         self._extended_profile_cache = None
         self._cache_timestamp = 0.0
+
+    def _deserialize_encrypted_value(
+        self, value: Optional[Union[str, Dict[str, Any], EncryptedData]]
+    ) -> Optional[EncryptedData]:
+        """Convert stored JSON/dict values into EncryptedData objects."""
+        if not value:
+            return None
+
+        if isinstance(value, EncryptedData):
+            return value
+
+        data: Optional[Dict[str, Any]] = None
+        if isinstance(value, dict):
+            data = value
+        elif isinstance(value, str):
+            try:
+                parsed = json.loads(value)
+            except (JSONDecodeError, ValueError):
+                return None
+            data = parsed if isinstance(parsed, dict) else None
+
+        if not data:
+            return None
+
+        try:
+            return EncryptedData.from_dict(data)
+        except (KeyError, ValueError):
+            return None
+
+    def _decrypt_field(self, value: Optional[str], field_name: str) -> Optional[str]:
+        """Decrypt a stored field when possible, otherwise return as-is."""
+        if not value or not self.encryption_service:
+            return value
+
+        encrypted = self._deserialize_encrypted_value(value)
+        if not encrypted:
+            return value
+
+        try:
+            return self.encryption_service.decrypt(encrypted)
+        except Exception as error:
+            self._log_audit(
+                event_type="profile.decrypt_error",
+                user_id=None,
+                resource_id=str(self.PROFILE_ID),
+                action="decrypt",
+                success=False,
+                details={"field": field_name, "error": str(error)},
+            )
+            return value
+
+    def _encrypt_field(self, value: Optional[str]) -> Optional[str]:
+        """Encrypt a field and serialize for database storage."""
+        if not value or not value.strip():
+            return None
+
+        normalized = value.strip()
+        if not self.encryption_service:
+            return normalized
+
+        encrypted = self.encryption_service.encrypt(normalized)
+        if not encrypted:
+            return None
+        return json.dumps(encrypted.to_dict())
 
     def _log_audit(
         self,
@@ -189,7 +248,11 @@ class ProfileService:
             UserProfileData if profile exists, None otherwise.
         """
         try:
-            profile = self.db.query(UserProfile).filter(UserProfile.id == self.PROFILE_ID).first()
+            profile = (
+                self.db.query(UserProfile)
+                .filter(UserProfile.id == self.PROFILE_ID)
+                .first()
+            )
 
             if not profile:
                 self._log_audit(
@@ -203,35 +266,12 @@ class ProfileService:
                 return None
 
             # Decrypt sensitive fields if encryption service is available
-            email = profile.email
-            phone = profile.phone
-
-            if self.encryption_service and email:
-                try:
-                    email = self.encryption_service.decrypt(email)
-                except Exception as e:
-                    # Log but don't fail - return encrypted value
-                    self._log_audit(
-                        event_type="profile.decrypt_error",
-                        user_id=None,
-                        resource_id=str(self.PROFILE_ID),
-                        action="decrypt",
-                        success=False,
-                        details={"field": "email", "error": str(e)},
-                    )
-
-            if self.encryption_service and phone:
-                try:
-                    phone = self.encryption_service.decrypt(phone)
-                except Exception as e:
-                    self._log_audit(
-                        event_type="profile.decrypt_error",
-                        user_id=None,
-                        resource_id=str(self.PROFILE_ID),
-                        action="decrypt",
-                        success=False,
-                        details={"field": "phone", "error": str(e)},
-                    )
+            email = (
+                self._decrypt_field(profile.email, "email") if profile.email else None
+            )
+            phone = (
+                self._decrypt_field(profile.phone, "phone") if profile.phone else None
+            )
 
             # Return None if no meaningful profile data exists
             if not profile.first_name and not profile.last_name and not email:
@@ -289,7 +329,9 @@ class ProfileService:
 
                 # Merge with updates
                 updated_data = {
-                    "firstName": profile_data.get("firstName", current_profile.firstName),
+                    "firstName": profile_data.get(
+                        "firstName", current_profile.firstName
+                    ),
                     "lastName": profile_data.get("lastName", current_profile.lastName),
                     "email": profile_data.get("email", current_profile.email),
                     "phone": profile_data.get("phone", current_profile.phone),
@@ -300,14 +342,20 @@ class ProfileService:
                 # Validate the updated profile
                 validation = self.validate(updated_profile.model_dump())
                 if not validation.isValid:
-                    error_messages = ", ".join(msg for msg in validation.errors.values() if msg)
+                    error_messages = ", ".join(
+                        msg for msg in validation.errors.values() if msg
+                    )
                     return ProfileUpdateResult(
-                        success=False, message=f"Profile validation failed: {error_messages}"
+                        success=False,
+                        message=f"Profile validation failed: {error_messages}",
+                        updatedFields=None,
                     )
 
                 # Get or create database profile
                 db_profile = (
-                    self.db.query(UserProfile).filter(UserProfile.id == self.PROFILE_ID).first()
+                    self.db.query(UserProfile)
+                    .filter(UserProfile.id == self.PROFILE_ID)
+                    .first()
                 )
 
                 if not db_profile:
@@ -331,25 +379,8 @@ class ProfileService:
                 db_profile.name = full_name or "Legal User"
 
                 # Encrypt sensitive fields
-                if updated_profile.email and updated_profile.email.strip():
-                    if self.encryption_service:
-                        db_profile.email = self.encryption_service.encrypt(
-                            updated_profile.email.strip()
-                        )
-                    else:
-                        db_profile.email = updated_profile.email.strip()
-                else:
-                    db_profile.email = None
-
-                if updated_profile.phone and updated_profile.phone.strip():
-                    if self.encryption_service:
-                        db_profile.phone = self.encryption_service.encrypt(
-                            updated_profile.phone.strip()
-                        )
-                    else:
-                        db_profile.phone = updated_profile.phone.strip()
-                else:
-                    db_profile.phone = None
+                db_profile.email = self._encrypt_field(updated_profile.email)
+                db_profile.phone = self._encrypt_field(updated_profile.phone)
 
                 # Commit changes
                 self.db.commit()
@@ -383,7 +414,11 @@ class ProfileService:
                     resource_id=str(self.PROFILE_ID),
                     action="update",
                     success=False,
-                    details={"attempt": attempt, "max_retries": max_retries, "error": str(e)},
+                    details={
+                        "attempt": attempt,
+                        "max_retries": max_retries,
+                        "error": str(e),
+                    },
                 )
 
                 # Exponential backoff (if not last attempt)
@@ -391,8 +426,8 @@ class ProfileService:
                     backoff_ms = (2**attempt) * 100  # 200ms, 400ms, 800ms
                     time.sleep(backoff_ms / 1000.0)
 
-            except Exception as e:
-                last_error = e
+            except Exception as exc:
+                last_error = exc
                 self.db.rollback()
 
                 self._log_audit(
@@ -401,7 +436,7 @@ class ProfileService:
                     resource_id=str(self.PROFILE_ID),
                     action="update",
                     success=False,
-                    details={"attempt": attempt, "error": str(e)},
+                    details={"attempt": attempt, "error": str(exc)},
                 )
 
                 if attempt < max_retries:
@@ -412,6 +447,7 @@ class ProfileService:
         return ProfileUpdateResult(
             success=False,
             message=f"Failed to update profile after {max_retries} attempts: {str(last_error)}",
+            updatedFields=None,
         )
 
     def validate(self, profile_data: Dict[str, Any]) -> ProfileValidationResult:
@@ -477,7 +513,9 @@ class ProfileService:
         """
         try:
             db_profile = (
-                self.db.query(UserProfile).filter(UserProfile.id == self.PROFILE_ID).first()
+                self.db.query(UserProfile)
+                .filter(UserProfile.id == self.PROFILE_ID)
+                .first()
             )
 
             if db_profile:
@@ -511,7 +549,9 @@ class ProfileService:
                 success=False,
                 details={"error": str(e)},
             )
-            raise HTTPException(status_code=500, detail=f"Failed to clear profile: {str(e)}")
+            raise HTTPException(
+                status_code=500, detail=f"Failed to clear profile: {str(e)}"
+            )
 
     async def get_extended(self) -> Optional[ExtendedUserProfileData]:
         """
@@ -526,7 +566,10 @@ class ProfileService:
         now = time.time() * 1000  # Convert to milliseconds
 
         # Return cached result if still valid
-        if self._extended_profile_cache and (now - self._cache_timestamp) < self.CACHE_DURATION_MS:
+        if (
+            self._extended_profile_cache
+            and (now - self._cache_timestamp) < self.CACHE_DURATION_MS
+        ):
             return ExtendedUserProfileData(**self._extended_profile_cache)
 
         # Get base profile
@@ -580,7 +623,9 @@ class ProfileService:
             phone=form_data.phone.strip() or None,
         )
 
-    def profile_to_form_data(self, profile: Optional[UserProfileData]) -> ProfileFormData:
+    def profile_to_form_data(
+        self, profile: Optional[UserProfileData]
+    ) -> ProfileFormData:
         """
         Convert profile data to form data.
 

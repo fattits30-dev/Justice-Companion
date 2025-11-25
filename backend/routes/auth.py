@@ -1,3 +1,4 @@
+# noqa: D205,D400
 """
 Authentication routes for Justice Companion.
 Migrated from electron/ipc-handlers/auth.ts
@@ -26,6 +27,7 @@ Rate Limiting Configuration:
 - Designed for flexible deployment scenarios (dev/testing/production)
 """
 
+import os
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -33,18 +35,16 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from sqlalchemy.orm import Session
 
 from backend.models.base import get_db
+from backend.models.session import Session as SessionModel
+from backend.models.user import User
 from backend.services.audit_logger import AuditLogger
-from backend.services.auth_service import (AuthenticationError,
-                                           AuthenticationService)
-from backend.services.rate_limit_service import (RateLimitService,
-                                                 get_rate_limiter)
-from backend.services.session_manager import SessionManager
+from backend.services.auth.service import AuthenticationError, AuthenticationService
+from backend.services.rate_limit_service import RateLimitService, get_rate_limiter
+from backend.services.auth.session_manager import SessionManager
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
-
 # ===== Pydantic request/response models =====
-
 
 class RegisterRequest(BaseModel):
     """
@@ -70,7 +70,6 @@ class RegisterRequest(BaseModel):
     password: str = Field(..., min_length=12)
     email: EmailStr
 
-
 class LoginRequest(BaseModel):
     """
     User login request.
@@ -95,16 +94,16 @@ class LoginRequest(BaseModel):
     password: str = Field(..., min_length=1)
     remember_me: Optional[bool] = False
 
-
 class LogoutRequest(BaseModel):
     """User logout request."""
 
     model_config = ConfigDict(
-        json_schema_extra={"example": {"session_id": "550e8400-e29b-41d4-a716-446655440000"}}
+        json_schema_extra={
+            "example": {"session_id": "550e8400-e29b-41d4-a716-446655440000"}
+        }
     )
 
     session_id: str = Field(..., min_length=36, max_length=36)
-
 
 class ChangePasswordRequest(BaseModel):
     """
@@ -128,7 +127,6 @@ class ChangePasswordRequest(BaseModel):
     old_password: str = Field(..., min_length=1)
     new_password: str = Field(..., min_length=12)
 
-
 class UserResponse(BaseModel):
     """User data response (excludes sensitive fields like password_hash)."""
 
@@ -138,14 +136,12 @@ class UserResponse(BaseModel):
     role: str
     is_active: bool
 
-
 class SessionResponse(BaseModel):
     """Session data response."""
 
     id: str
     user_id: int
     expires_at: str
-
 
 class AuthResponse(BaseModel):
     """
@@ -157,7 +153,6 @@ class AuthResponse(BaseModel):
     user: UserResponse
     session: SessionResponse
 
-
 class SuccessResponse(BaseModel):
     """Generic success response for operations without data payload."""
 
@@ -165,13 +160,11 @@ class SuccessResponse(BaseModel):
     message: Optional[str] = None
     data: Optional[dict] = None
 
-
 class RateLimitInfo(BaseModel):
     """Rate limit information (returned in error responses)."""
 
     retry_after_seconds: int
     attempts_remaining: Optional[int] = None
-
 
 class ErrorResponse(BaseModel):
     """Standard error response."""
@@ -179,9 +172,29 @@ class ErrorResponse(BaseModel):
     detail: str
     rate_limit_info: Optional[RateLimitInfo] = None
 
+class SeedTestUserRequest(BaseModel):
+    """Payload for creating or resetting the deterministic E2E test user."""
+
+    username: str = Field(default="e2e-test", min_length=3, max_length=50)
+    email: EmailStr = Field(default="e2e-test@example.com")
+    password: str = Field(default="E2eTestPass123!", min_length=12)
+    remember_me: Optional[bool] = False
+
+def _build_auth_payload(result: dict) -> dict:
+    """Normalize AuthenticationService responses to FastAPI models."""
+
+    return {
+        "user": {
+            "id": result["user"]["id"],
+            "username": result["user"]["username"],
+            "email": result["user"]["email"],
+            "role": result["user"]["role"],
+            "is_active": result["user"]["is_active"],
+        },
+        "session": result["session"],
+    }
 
 # ===== Dependency injection functions =====
-
 
 def get_auth_service(db: Session = Depends(get_db)) -> AuthenticationService:
     """
@@ -194,7 +207,6 @@ def get_auth_service(db: Session = Depends(get_db)) -> AuthenticationService:
     audit_logger = AuditLogger(db)
     return AuthenticationService(db=db, audit_logger=audit_logger)
 
-
 def get_session_manager(db: Session = Depends(get_db)) -> SessionManager:
     """
     Get session manager instance with dependencies.
@@ -206,13 +218,23 @@ def get_session_manager(db: Session = Depends(get_db)) -> SessionManager:
     """
     audit_logger = AuditLogger(db)
     return SessionManager(
-        db=db, audit_logger=audit_logger, enable_memory_cache=False  # Use database for persistence
+        db=db,
+        audit_logger=audit_logger,
+        enable_memory_cache=False,  # Use database for persistence
     )
 
+def _are_test_routes_enabled() -> bool:
+    """Return True when test-only routes may be used."""
+
+    env_flag = os.getenv("ENABLE_TEST_ROUTES")
+    if env_flag is not None:
+        return env_flag.lower() == "true"
+
+    node_env = os.getenv("NODE_ENV", "development").lower()
+    return node_env != "production"
 
 async def get_current_user(
     request: Request,
-    db: Session = Depends(get_db),
     session_manager: SessionManager = Depends(get_session_manager),
 ) -> int:
     """
@@ -230,16 +252,18 @@ async def get_current_user(
         HTTPException 401: If session_id not provided or invalid
     """
     # Try to get session_id from Authorization header
+    session_id: Optional[str] = None
     auth_header = request.headers.get("Authorization")
     if auth_header and auth_header.startswith("Bearer "):
         session_id = auth_header.replace("Bearer ", "")
     # Try X-Session-ID header
-    elif request.headers.get("X-Session-ID"):
-        session_id = request.headers.get("X-Session-ID")
+    elif (header_session := request.headers.get("X-Session-ID")) is not None:
+        session_id = header_session
     # Try cookie
-    elif request.cookies.get("sessionId"):
-        session_id = request.cookies.get("sessionId")
-    else:
+    elif (cookie_session := request.cookies.get("sessionId")) is not None:
+        session_id = cookie_session
+
+    if session_id is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authenticated - no session ID provided",
@@ -250,18 +274,19 @@ async def get_current_user(
 
     if not validation_result or not validation_result.valid:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired session"
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired session",
         )
 
     # Return user_id from validation result
     if not validation_result.user_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found"
+        )
 
     return validation_result.user_id
 
-
 # ===== Routes =====
-
 
 @router.post(
     "/register",
@@ -269,7 +294,10 @@ async def get_current_user(
     status_code=status.HTTP_201_CREATED,
     responses={
         201: {"description": "User registered successfully"},
-        400: {"description": "Invalid input or user already exists", "model": ErrorResponse},
+        400: {
+            "description": "Invalid input or user already exists",
+            "model": ErrorResponse,
+        },
         429: {"description": "Rate limit exceeded", "model": ErrorResponse},
         500: {"description": "Internal server error", "model": ErrorResponse},
     },
@@ -306,7 +334,6 @@ async def register(
 
     # User-controlled rate limiting (disabled by default)
     # See RATE_LIMITING_GUIDE.md for when to enable
-    import os
     enable_rate_limiting = os.getenv("ENABLE_RATE_LIMITING", "false").lower() == "true"
 
     # Initialize ip_hash for potential use (outside conditional to avoid UnboundLocalError)
@@ -320,7 +347,10 @@ async def register(
         # Check rate limit (use IP address as identifier for registration)
         # Note: We use IP for registration rate limiting to prevent mass account creation
         rate_limit_result = rate_limiter.check_rate_limit(
-            user_id=ip_hash, operation="register", max_requests=max_requests, window_seconds=window_seconds
+            user_id=ip_hash,
+            operation="register",
+            max_requests=max_requests,
+            window_seconds=window_seconds,
         )
 
         if not rate_limit_result.allowed:
@@ -330,7 +360,8 @@ async def register(
                 detail={
                     "message": "Too many registration attempts. Please try again later.",
                     "rate_limit_info": {
-                        "retry_after_seconds": rate_limit_result.remaining_time or window_seconds
+                        "retry_after_seconds": rate_limit_result.remaining_time
+                        or window_seconds
                     },
                 },
             )
@@ -345,31 +376,81 @@ async def register(
         if enable_rate_limiting:
             rate_limiter.reset(ip_hash, "register")
 
-        return {
-            "user": {
-                "id": result["user"]["id"],
-                "username": result["user"]["username"],
-                "email": result["user"]["email"],
-                "role": result["user"]["role"],
-                "is_active": result["user"]["is_active"],
-            },
-            "session": result["session"],
-        }
+        return _build_auth_payload(result)
 
     except AuthenticationError as e:
         # Increment rate limit on failed attempt (only if enabled)
         if enable_rate_limiting:
             rate_limiter.increment(ip_hash, "register")
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
+        ) from e
+    except Exception as exc:
         # Increment rate limit on error (only if enabled)
         if enable_rate_limiting:
             rate_limiter.increment(ip_hash, "register")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Registration failed: {str(e)}",
+            detail=f"Registration failed: {str(exc)}",
+        ) from exc
+
+@router.post(
+    "/test/seed-user",
+    response_model=AuthResponse,
+    responses={
+        200: {"description": "Test user ensured"},
+        404: {"description": "Route disabled"},
+        500: {"description": "Failed to seed test user", "model": ErrorResponse},
+    },
+)
+async def seed_test_user(
+    request: SeedTestUserRequest,
+    http_request: Request,
+    auth_service: AuthenticationService = Depends(get_auth_service),
+):
+    """Create or reset the deterministic Playwright E2E user."""
+
+    if not _are_test_routes_enabled():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
+
+    try:
+        result = await auth_service.register(
+            username=request.username,
+            password=request.password,
+            email=request.email,
+        )
+        return _build_auth_payload(result)
+    except AuthenticationError as error:
+        if "exists" not in str(error).lower():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail=str(error)
+            ) from error
+
+    # If we reach here the request conflicts with existing data – update credentials instead.
+    user = auth_service.db.query(User).filter(User.username == request.username).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="User not found"
         )
 
+    auth_service.reset_user_credentials(
+        user, password=request.password, email=request.email
+    )
+
+    # Drop existing sessions to avoid leaking previous logins.
+    auth_service.db.query(SessionModel).filter(SessionModel.user_id == user.id).delete()
+    auth_service.db.commit()
+    auth_service.db.refresh(user)
+
+    login_result = await auth_service.login(
+        username=request.username,
+        password=request.password,
+        remember_me=request.remember_me or False,
+        ip_address=http_request.client.host if http_request.client else None,
+        user_agent=http_request.headers.get("user-agent"),
+    )
+
+    return _build_auth_payload(login_result)
 
 @router.post(
     "/login",
@@ -377,7 +458,10 @@ async def register(
     responses={
         200: {"description": "Login successful"},
         401: {"description": "Invalid credentials", "model": ErrorResponse},
-        429: {"description": "Too many login attempts - account locked", "model": ErrorResponse},
+        429: {
+            "description": "Too many login attempts - account locked",
+            "model": ErrorResponse,
+        },
         500: {"description": "Internal server error", "model": ErrorResponse},
     },
 )
@@ -411,8 +495,6 @@ async def login(
     user_agent = http_request.headers.get("user-agent", "unknown")
 
     # Get user ID for rate limiting (we need to query first)
-    from backend.models.user import User
-
     user = db.query(User).filter(User.username == request_data.username).first()
 
     if not user:
@@ -420,17 +502,25 @@ async def login(
         # Use username hash as temporary ID
         username_hash = abs(hash(request_data.username))
         rate_limiter.increment(username_hash, "login")
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials"
+        )
+
+    user_id = int(getattr(user, "id"))
 
     # Check rate limit BEFORE attempting login
-    rate_limit_result = rate_limiter.check_rate_limit(user_id=user.id, operation="login")
+    rate_limit_result = rate_limiter.check_rate_limit(
+        user_id=user_id, operation="login"
+    )
 
     if not rate_limit_result.allowed:
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail={
                 "message": f"Too many login attempts. Account locked for {rate_limit_result.remaining_time} seconds.",
-                "rate_limit_info": {"retry_after_seconds": rate_limit_result.remaining_time},
+                "rate_limit_info": {
+                    "retry_after_seconds": rate_limit_result.remaining_time
+                },
             },
         )
 
@@ -439,13 +529,13 @@ async def login(
         result = await auth_service.login(
             username=request_data.username,
             password=request_data.password,
-            remember_me=request_data.remember_me,
+            remember_me=bool(request_data.remember_me),
             ip_address=ip_address,
             user_agent=user_agent,
         )
 
         # Reset rate limit on successful login
-        rate_limiter.reset(user.id, "login")
+        rate_limiter.reset(user_id, "login")
 
         return {
             "user": {
@@ -460,22 +550,22 @@ async def login(
 
     except AuthenticationError as e:
         # Increment rate limit on failed login
-        rate_limiter.increment(user.id, "login")
+        rate_limiter.increment(user_id, "login")
 
         # Get remaining attempts
-        remaining = rate_limiter.get_remaining(user.id, "login")
+        remaining = rate_limiter.get_remaining(user_id, "login")
 
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={"message": str(e), "attempts_remaining": remaining},
-        )
-    except Exception as e:
+        ) from e
+    except Exception as exc:
         # Increment rate limit on error
-        rate_limiter.increment(user.id, "login")
+        rate_limiter.increment(user_id, "login")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Login failed: {str(e)}"
-        )
-
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Login failed: {str(exc)}",
+        ) from exc
 
 @router.post(
     "/logout",
@@ -486,7 +576,8 @@ async def login(
     },
 )
 async def logout(
-    request: LogoutRequest, session_manager: SessionManager = Depends(get_session_manager)
+    request: LogoutRequest,
+    session_manager: SessionManager = Depends(get_session_manager),
 ):
     """
     Logout user and delete session.
@@ -505,15 +596,18 @@ async def logout(
         if not success:
             # Session not found (maybe already expired/deleted)
             # Still return success for idempotency
-            return {"success": True, "message": "Already logged out or session not found"}
+            return {
+                "success": True,
+                "message": "Already logged out or session not found",
+            }
 
         return {"success": True, "message": "Logged out successfully"}
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Logout failed: {str(e)}"
-        )
-
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Logout failed: {str(exc)}",
+        ) from exc
 
 @router.get(
     "/session/{session_id}",
@@ -549,7 +643,8 @@ async def get_session(
 
         if not validation_result.valid:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Session not found or expired"
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Session not found or expired",
             )
 
         # Get full session details
@@ -557,14 +652,17 @@ async def get_session(
 
         if not session:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Session not found or expired"
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Session not found or expired",
             )
 
         # Get user for this session
         user = auth_service.validate_session(session_id)
 
         if not user:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+            )
 
         return {
             "user": {
@@ -583,20 +681,25 @@ async def get_session(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get session: {str(e)}",
-        )
-
+            detail=f"Failed to get session: {str(exc)}",
+        ) from exc
 
 @router.post(
     "/change-password",
     response_model=SuccessResponse,
     responses={
         200: {"description": "Password changed successfully"},
-        400: {"description": "Invalid password or validation error", "model": ErrorResponse},
-        429: {"description": "Too many password change attempts", "model": ErrorResponse},
+        400: {
+            "description": "Invalid password or validation error",
+            "model": ErrorResponse,
+        },
+        429: {
+            "description": "Too many password change attempts",
+            "model": ErrorResponse,
+        },
         500: {"description": "Internal server error", "model": ErrorResponse},
     },
 )
@@ -667,15 +770,16 @@ async def change_password(
     except AuthenticationError as e:
         # Increment rate limit on failure
         rate_limiter.increment(request.user_id, "password_change")
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
+        ) from e
+    except Exception as exc:
         # Increment rate limit on error
         rate_limiter.increment(request.user_id, "password_change")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Password change failed: {str(e)}",
-        )
-
+            detail=f"Password change failed: {str(exc)}",
+        ) from exc
 
 @router.post(
     "/cleanup-sessions",
@@ -685,7 +789,9 @@ async def change_password(
         500: {"description": "Internal server error", "model": ErrorResponse},
     },
 )
-async def cleanup_sessions(session_manager: SessionManager = Depends(get_session_manager)):
+async def cleanup_sessions(
+    session_manager: SessionManager = Depends(get_session_manager),
+):
     """
     Cleanup expired sessions (admin/system endpoint).
 
@@ -710,12 +816,11 @@ async def cleanup_sessions(session_manager: SessionManager = Depends(get_session
             "data": {"deleted_count": deleted_count},
         }
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Session cleanup failed: {str(e)}",
-        )
-
+            detail=f"Session cleanup failed: {str(exc)}",
+        ) from exc
 
 @router.get(
     "/rate-limit-status/{user_id}",
@@ -726,7 +831,9 @@ async def cleanup_sessions(session_manager: SessionManager = Depends(get_session
     },
 )
 async def get_rate_limit_status(
-    user_id: int, operation: str, rate_limiter: RateLimitService = Depends(get_rate_limiter)
+    user_id: int,
+    operation: str,
+    rate_limiter: RateLimitService = Depends(get_rate_limiter),
 ):
     """
     Get rate limit status for a user and operation.
@@ -760,8 +867,8 @@ async def get_rate_limit_status(
             "reset_time": reset_time.isoformat() if reset_time else None,
         }
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get rate limit status: {str(e)}",
-        )
+            detail=f"Failed to get rate limit status: {str(exc)}",
+        ) from exc

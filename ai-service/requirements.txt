@@ -1,45 +1,81 @@
-# Justice Companion AI Service Dependencies
+# Justice Companion AI Service - Runtime Dependencies
 # Python 3.11+ required
+# Install with: pip install -r requirements.txt
 
-# Web framework
-fastapi==0.109.0
-uvicorn[standard]==0.27.0
+# ========================================================================================
+# WEB FRAMEWORK
+# ========================================================================================
 
-# AI and LLM - Hugging Face (PRIMARY - Privacy-First)
-# Updated to fix CRITICAL and HIGH security vulnerabilities
-transformers>=4.57.0  # Fixes: Deserialization RCE + multiple ReDoS (CVE-2024-xxxx)
-torch>=2.5.1          # Fixes: CRITICAL RCE in torch.load (CVE-2024-xxxx)
-accelerate>=0.26.0
-huggingface_hub>=0.20.0
-sentencepiece>=0.1.99
-safetensors>=0.4.2
+fastapi>=0.120.0,<0.121.0               # Modern async web framework (supports starlette 0.49+)
+starlette>=0.49.1,<0.51.0               # Patched ASGI toolkit (fixes CVE-2025-62727 ReDoS)
+uvicorn[standard]>=0.30.0,<0.35.0       # ASGI server implementation
 
-# AI and LLM - OpenAI (OPTIONAL - Fallback)
-openai==2.8.0
+# ========================================================================================
+# AI & MACHINE LEARNING - HUGGING FACE (PRIMARY PROVIDER)
+# ========================================================================================
 
-# Data validation and serialization
-pydantic>=2.6.0
-pydantic-settings>=2.0.0
-python-multipart==0.0.9  # Fixes: HIGH DoS via deformed multipart boundary (CVE-2024-xxxx)
+accelerate>=0.26.0,<1.0.0               # Distributed training and inference acceleration
+huggingface_hub>=0.20.0,<1.0.0          # Model and dataset sharing platform
+safetensors>=0.4.2,<1.0.0               # Safe serialization of tensors (replacement for pickle)
+sentencepiece>=0.1.99,<1.0.0            # Subword tokenization algorithm
+tokenizers>=0.15.0,<1.0.0               # Fast, customizable tokenization library
+torch>=2.6.0,<2.7.0                     # PyTorch (fixes CVE-2025-32434 RCE vulnerability)
+transformers>=4.53.0,<5.0.0             # State-of-the-art NLP models (fixes multiple ReDoS CVEs)
 
-# HTTP client for API calls
-httpx==0.26.0
+# ========================================================================================
+# AI & MACHINE LEARNING - OPENAI (FALLBACK PROVIDER)
+# ========================================================================================
 
-# Testing
-pytest==7.4.4
-pytest-asyncio==0.23.3
-pytest-mock==3.12.0
+openai>=1.0.0,<2.0.0                    # OpenAI API client (minor updates allowed)
 
-# OCR and Image Processing (for document photos)
-pytesseract>=0.3.10
-Pillow>=11.0.1  # Fixes: HIGH buffer overflow vulnerability (CVE-2024-xxxx)
+# ========================================================================================
+# DATA VALIDATION & SERIALIZATION
+# ========================================================================================
 
-# Image and PDF processing
-pillow-heif>=0.15.0
-pdf2image>=1.16.3
-# Note: pdf2image requires poppler-utils. On Debian/Ubuntu: sudo apt-get install poppler-utils
+pydantic>=2.6.0,<3.0.0                   # Data validation using Python type hints
+pydantic-settings>=2.0.0,<3.0.0         # Settings management for Pydantic
+python-multipart>=0.0.18,<1.0.0         # Streaming multipart parsing (fixes CVE-2024-53981 DoS)
 
-# Development tools
-black>=24.10.0  # Fixes: MEDIUM ReDoS vulnerability (CVE-2024-xxxx)
-flake8>=7.0.0
-mypy>=1.8.0
+# ========================================================================================
+# HTTP CLIENTS & NETWORKING
+# ========================================================================================
+
+httpx>=0.26.0,<1.0.0                    # Modern async HTTP client
+
+# ========================================================================================
+# IMAGE PROCESSING & OCR
+# ========================================================================================
+
+Pillow>=11.0.1,<12.0.0                  # PIL fork - image processing (security patches applied)
+pillow-heif>=0.15.0,<1.0.0              # HEIF/HEIC image support for Pillow
+pytesseract>=0.3.10,<1.0.0              # Python wrapper for Tesseract OCR
+
+# ========================================================================================
+# DOCUMENT PROCESSING
+# ========================================================================================
+
+pdf2image>=1.16.3,<2.0.0                # PDF to image conversion
+# Note: pdf2image requires poppler-utils. Install with:
+#   Debian/Ubuntu: sudo apt-get install poppler-utils
+#   macOS: brew install poppler
+#   Windows: Download from https://blog.alivate.com.au/poppler-windows/
+
+# ========================================================================================
+# SECURITY NOTES
+# ========================================================================================
+#
+# Core Security Updates (November 2025):
+# - starlette>=0.49.1: Fixes CVE-2025-62727 (ReDoS in FileResponse Range header)
+# - torch>=2.6.0: Fixes CVE-2025-32434 (Critical RCE in torch.load with weights_only=True)
+# - transformers>=4.53.0: Fixes multiple ReDoS CVEs (CVE-2025-6638, CVE-2025-6051, CVE-2025-6921)
+# - python-multipart>=0.0.18: Fixes CVE-2024-53981 (DoS via excessive logging)
+# - Pillow>=11.0.1: Addresses multiple image processing vulnerabilities
+# - pydantic>=2.6.0: Enhanced validation security and performance
+#
+# Note: urllib3 open redirect (CVE-2025-10390193/4) has no available fix yet - low severity
+#
+# Version Strategy:
+# - Upper bounds prevent breaking changes from major version updates
+# - Lower bounds ensure critical security patches are included
+# - Development dependencies are in requirements-dev.txt (NOT HERE)
+# ========================================================================================

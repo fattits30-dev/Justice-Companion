@@ -12,47 +12,48 @@
  * - /settings - Settings (requires auth)
  */
 
-import { useState, useEffect, lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import {
   BrowserRouter,
-  Routes,
-  Route,
   Navigate,
+  Route,
+  Routes,
   useNavigate,
 } from "react-router-dom";
-import { AuthProvider, useAuth } from "./contexts/AuthContext.tsx";
 import { LoginScreen } from "./components/auth/LoginScreen.tsx";
 import { RegistrationScreen } from "./components/auth/RegistrationScreen.tsx";
+import { ErrorBoundary } from "./components/ErrorBoundary.tsx";
 import { MainLayout } from "./components/layouts/MainLayout.tsx";
+import { InstallPrompt } from "./components/pwa/InstallPrompt.tsx";
 import { ToastProvider } from "./components/ui/index.ts";
 import { SkeletonCard } from "./components/ui/Skeleton.tsx";
-import { ErrorBoundary } from "./components/ErrorBoundary.tsx";
-import { InstallPrompt } from "./components/pwa/InstallPrompt.tsx";
-import { logger } from "./utils/logger.ts";
+import { AuthProvider, useAuth } from "./contexts/AuthContext.tsx";
 import { apiClient } from "./lib/apiClient.ts";
+import { routerFutureFlags } from "./router/futureFlags.ts";
+import { logger } from "./utils/logger.ts";
 
 // Lazy load views for code splitting
 const Dashboard = lazy(() =>
-  import("./components/Dashboard.tsx").then((m) => ({ default: m.Dashboard })),
+  import("./components/Dashboard.tsx").then((m) => ({ default: m.Dashboard }))
 );
 const CasesView = lazy(() =>
-  import("./views/CasesView.tsx").then((m) => ({ default: m.CasesView })),
+  import("./views/CasesView.tsx").then((m) => ({ default: m.CasesView }))
 );
 const DocumentsView = lazy(() =>
   import("./views/DocumentsView.tsx").then((m) => ({
     default: m.DocumentsView,
-  })),
+  }))
 );
 const ChatView = lazy(() =>
-  import("./views/ChatView.tsx").then((m) => ({ default: m.ChatView })),
+  import("./views/ChatView.tsx").then((m) => ({ default: m.ChatView }))
 );
 const SettingsView = lazy(() =>
-  import("./views/SettingsView.tsx").then((m) => ({ default: m.SettingsView })),
+  import("./views/SettingsView.tsx").then((m) => ({ default: m.SettingsView }))
 );
 const TimelineView = lazy(() =>
   import("./views/timeline/TimelineView.tsx").then((m) => ({
     default: m.TimelineView,
-  })),
+  }))
 );
 
 /**
@@ -124,7 +125,7 @@ function DashboardWrapper() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(
-    null,
+    null
   );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -347,7 +348,7 @@ function AppRoutes() {
 function App() {
   return (
     <ErrorBoundary>
-      <BrowserRouter>
+      <BrowserRouter future={routerFutureFlags}>
         <AuthProvider>
           <ToastProvider />
           <InstallPrompt />

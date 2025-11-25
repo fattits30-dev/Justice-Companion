@@ -1,54 +1,39 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import userEvent from "@testing-library/user-event";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { Case } from "../../domains/cases/entities/Case";
+import type { DeadlineWithCase } from "../../domains/timeline/entities/Deadline";
+import { apiClient } from "../../lib/apiClient.ts";
 import {
   render,
   screen,
   waitFor,
   within,
 } from "../../test-utils/test-utils.tsx";
-import userEvent from "@testing-library/user-event";
 import { TimelineView } from "./TimelineView.tsx";
-import type { DeadlineWithCase } from "../../domains/timeline/entities/Deadline";
 
-// Mock the window.justiceAPI
-const mockJusticeAPI = {
-  getDeadlines: vi.fn(),
-  getAllCases: vi.fn(),
-  createDeadline: vi.fn(),
-  updateDeadline: vi.fn(),
-  deleteDeadline: vi.fn(),
-  getSession: vi.fn(),
-};
-
-beforeEach(() => {
-  // Clear mocks FIRST before setting up new values
-  vi.clearAllMocks();
-
-  // @ts-expect-error - Mocking window API
-  window.justiceAPI = mockJusticeAPI;
-
-  // Mock localStorage for session persistence
-  localStorage.setItem("sessionId", mockSessionId);
-
-  // Mock session for AuthProvider
-  mockJusticeAPI.getSession.mockResolvedValue({
-    success: true,
-    data: {
-      id: 1,
-      sessionId: mockSessionId,
-      user: {
-        id: "1",
-        username: "testuser",
-        email: "test@example.com",
-      },
-      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+vi.mock("../../lib/apiClient.ts", () => ({
+  apiClient: {
+    auth: {
+      getSession: vi.fn(),
+      login: vi.fn(),
+      logout: vi.fn(),
     },
-  });
-});
+    deadlines: {
+      list: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+    },
+    cases: {
+      list: vi.fn(),
+    },
+  },
+}));
 
 const mockSessionId = "test-session-123";
 
 const createMockDeadline = (
-  overrides: Partial<DeadlineWithCase> = {},
+  overrides: Partial<DeadlineWithCase> = {}
 ): DeadlineWithCase => ({
   id: 1,
   caseId: 1,
@@ -67,14 +52,144 @@ const createMockDeadline = (
   ...overrides,
 });
 
+const createMockCase = (overrides: Partial<Case> = {}): Case => ({
+  id: 1,
+  title: "Unfair Dismissal Case",
+  description: null,
+  caseType: "employment",
+  status: "active",
+  userId: 1,
+  createdAt: "2025-01-01T00:00:00Z",
+  updatedAt: "2025-01-01T00:00:00Z",
+  ...overrides,
+});
+
+const createDeadlinesResponse = (deadlines: DeadlineWithCase[] = []) => ({
+  success: true as const,
+  data: {
+    items: deadlines.map((deadline) => ({
+      id: deadline.id,
+      caseId: deadline.caseId,
+      userId: deadline.userId,
+      title: deadline.title,
+      description: deadline.description ?? undefined,
+      deadlineDate: deadline.deadlineDate,
+      priority: deadline.priority,
+      status: deadline.status,
+      completed: deadline.status === "completed",
+      completedAt: deadline.completedAt ?? undefined,
+      reminderEnabled: false,
+      reminderDaysBefore: 7,
+      createdAt: deadline.createdAt,
+      updatedAt: deadline.updatedAt,
+      caseTitle: deadline.caseTitle,
+      caseStatus: deadline.caseStatus,
+    })),
+    total: deadlines.length,
+    overdueCount: deadlines.filter((d) => d.status === "overdue").length,
+    hasMore: false,
+    limit: Math.max(deadlines.length, 10),
+    offset: 0,
+  },
+});
+
+const createCasesResponse = (cases: Case[] = []) => ({
+  success: true as const,
+  data: {
+    items: cases,
+    total: cases.length,
+    hasMore: false,
+    limit: Math.max(cases.length, 10),
+    offset: 0,
+  },
+});
+
+const toApiDeadline = (deadline: DeadlineWithCase) => ({
+  id: deadline.id,
+  caseId: deadline.caseId,
+  userId: deadline.userId,
+  title: deadline.title,
+  description: deadline.description ?? undefined,
+  deadlineDate: deadline.deadlineDate,
+  priority: deadline.priority,
+  status: deadline.status,
+  completed: deadline.status === "completed",
+  completedAt: deadline.completedAt ?? undefined,
+  reminderEnabled: false,
+  reminderDaysBefore: 7,
+  createdAt: deadline.createdAt,
+  updatedAt: deadline.updatedAt,
+});
+
+const createMutationResponse = (
+  deadline: DeadlineWithCase = createMockDeadline()
+) => ({
+  success: true as const,
+  data: toApiDeadline(deadline),
+});
+
+const setDeadlinesResponse = (deadlines: DeadlineWithCase[]) => {
+  vi.mocked(apiClient.deadlines.list).mockResolvedValue(
+    createDeadlinesResponse(deadlines)
+  );
+};
+
+const setDeadlinesError = (message: string) => {
+  vi.mocked(apiClient.deadlines.list).mockResolvedValue({
+    success: false as const,
+    error: {
+      code: "TEST_ERROR",
+      message,
+    },
+  });
+};
+
+const setCasesResponse = (cases: Case[]) => {
+  vi.mocked(apiClient.cases.list).mockResolvedValue(createCasesResponse(cases));
+};
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  localStorage.setItem("sessionId", mockSessionId);
+
+  vi.mocked(apiClient.auth.getSession).mockResolvedValue({
+    success: true,
+    data: {
+      user: {
+        id: 1,
+        username: "testuser",
+        email: "test@example.com",
+        role: "user",
+        is_active: true,
+      },
+      session: {
+        id: mockSessionId,
+        user_id: 1,
+        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      },
+    },
+  });
+
+  setDeadlinesResponse([]);
+  setCasesResponse([]);
+
+  vi.mocked(apiClient.deadlines.create).mockResolvedValue(
+    createMutationResponse()
+  );
+  vi.mocked(apiClient.deadlines.update).mockResolvedValue(
+    createMutationResponse()
+  );
+  vi.mocked(apiClient.deadlines.delete).mockResolvedValue({
+    success: true as const,
+    data: undefined,
+  });
+});
+
 describe("TimelineView", () => {
   describe("Rendering", () => {
     it("should render timeline header with title and actions", async () => {
-      mockJusticeAPI.getDeadlines.mockResolvedValue({
-        success: true,
-        data: [],
-      });
-      mockJusticeAPI.getAllCases.mockResolvedValue({ success: true, data: [] });
+      setDeadlinesResponse([]);
+      setCasesResponse([]);
 
       render(<TimelineView />);
 
@@ -84,16 +199,13 @@ describe("TimelineView", () => {
       });
 
       expect(
-        screen.getByRole("button", { name: /add deadline/i }),
+        screen.getByRole("button", { name: /add deadline/i })
       ).toBeInTheDocument();
     });
 
     it("should render empty state when no deadlines exist", async () => {
-      mockJusticeAPI.getDeadlines.mockResolvedValue({
-        success: true,
-        data: [],
-      });
-      mockJusticeAPI.getAllCases.mockResolvedValue({ success: true, data: [] });
+      setDeadlinesResponse([]);
+      setCasesResponse([]);
 
       render(<TimelineView />);
 
@@ -103,8 +215,10 @@ describe("TimelineView", () => {
     });
 
     it("should render loading state initially", async () => {
-      mockJusticeAPI.getDeadlines.mockReturnValue(new Promise(() => {})); // Never resolves
-      mockJusticeAPI.getAllCases.mockResolvedValue({ success: true, data: [] });
+      vi.mocked(apiClient.deadlines.list).mockReturnValue(
+        new Promise(() => {})
+      ); // Never resolves
+      setCasesResponse([]);
 
       render(<TimelineView />);
 
@@ -115,17 +229,14 @@ describe("TimelineView", () => {
     });
 
     it("should render error state when API fails", async () => {
-      mockJusticeAPI.getDeadlines.mockResolvedValue({
-        success: false,
-        error: "Failed to fetch deadlines",
-      });
-      mockJusticeAPI.getAllCases.mockResolvedValue({ success: true, data: [] });
+      setDeadlinesError("Failed to fetch deadlines");
+      setCasesResponse([]);
 
       render(<TimelineView />);
 
       await waitFor(() => {
         expect(
-          screen.getByText(/failed to fetch deadlines/i),
+          screen.getByText(/failed to fetch deadlines/i)
         ).toBeInTheDocument();
       });
     });
@@ -151,11 +262,8 @@ describe("TimelineView", () => {
         }),
       ];
 
-      mockJusticeAPI.getDeadlines.mockResolvedValue({
-        success: true,
-        data: deadlines,
-      });
-      mockJusticeAPI.getAllCases.mockResolvedValue({ success: true, data: [] });
+      setDeadlinesResponse(deadlines);
+      setCasesResponse([]);
 
       render(<TimelineView />);
 
@@ -185,11 +293,8 @@ describe("TimelineView", () => {
         }),
       ];
 
-      mockJusticeAPI.getDeadlines.mockResolvedValue({
-        success: true,
-        data: deadlines,
-      });
-      mockJusticeAPI.getAllCases.mockResolvedValue({ success: true, data: [] });
+      setDeadlinesResponse(deadlines);
+      setCasesResponse([]);
 
       render(<TimelineView />);
 
@@ -210,20 +315,14 @@ describe("TimelineView", () => {
       });
 
       // Provide the case so TimelineView can look it up and set caseTitle
-      const mockCase = {
+      const mockCase = createMockCase({
         id: 1,
         title: "Unfair Dismissal Case",
         status: "active",
-      };
+      });
 
-      mockJusticeAPI.getDeadlines.mockResolvedValue({
-        success: true,
-        data: [deadline],
-      });
-      mockJusticeAPI.getAllCases.mockResolvedValue({
-        success: true,
-        data: [mockCase],
-      });
+      setDeadlinesResponse([deadline]);
+      setCasesResponse([mockCase]);
 
       render(<TimelineView />);
 
@@ -234,7 +333,7 @@ describe("TimelineView", () => {
         // Find the timeline item and check for case title within it
         const timelineItem = screen.getByTestId("timeline-item-1");
         expect(
-          within(timelineItem).getByText("Unfair Dismissal Case"),
+          within(timelineItem).getByText("Unfair Dismissal Case")
         ).toBeInTheDocument();
       });
     });
@@ -256,11 +355,8 @@ describe("TimelineView", () => {
         status: "overdue",
       });
 
-      mockJusticeAPI.getDeadlines.mockResolvedValue({
-        success: true,
-        data: [deadline],
-      });
-      mockJusticeAPI.getAllCases.mockResolvedValue({ success: true, data: [] });
+      setDeadlinesResponse([deadline]);
+      setCasesResponse([]);
 
       render(<TimelineView />);
 
@@ -276,11 +372,8 @@ describe("TimelineView", () => {
         status: "upcoming",
       });
 
-      mockJusticeAPI.getDeadlines.mockResolvedValue({
-        success: true,
-        data: [deadline],
-      });
-      mockJusticeAPI.getAllCases.mockResolvedValue({ success: true, data: [] });
+      setDeadlinesResponse([deadline]);
+      setCasesResponse([]);
 
       render(<TimelineView />);
 
@@ -296,11 +389,8 @@ describe("TimelineView", () => {
         status: "upcoming",
       });
 
-      mockJusticeAPI.getDeadlines.mockResolvedValue({
-        success: true,
-        data: [deadline],
-      });
-      mockJusticeAPI.getAllCases.mockResolvedValue({ success: true, data: [] });
+      setDeadlinesResponse([deadline]);
+      setCasesResponse([]);
 
       render(<TimelineView />);
 
@@ -317,11 +407,8 @@ describe("TimelineView", () => {
         completedAt: "2025-02-01T10:00:00Z",
       });
 
-      mockJusticeAPI.getDeadlines.mockResolvedValue({
-        success: true,
-        data: [deadline],
-      });
-      mockJusticeAPI.getAllCases.mockResolvedValue({ success: true, data: [] });
+      setDeadlinesResponse([deadline]);
+      setCasesResponse([]);
 
       render(<TimelineView />);
 
@@ -334,11 +421,8 @@ describe("TimelineView", () => {
 
   describe("Add Deadline", () => {
     it("should open add deadline dialog when button clicked", async () => {
-      mockJusticeAPI.getDeadlines.mockResolvedValue({
-        success: true,
-        data: [],
-      });
-      mockJusticeAPI.getAllCases.mockResolvedValue({ success: true, data: [] });
+      setDeadlinesResponse([]);
+      setCasesResponse([]);
 
       const user = userEvent.setup();
       render(<TimelineView />);
@@ -346,7 +430,7 @@ describe("TimelineView", () => {
       // Wait for component to load before clicking button
       await waitFor(() => {
         expect(
-          screen.getByRole("button", { name: /add deadline/i }),
+          screen.getByRole("button", { name: /add deadline/i })
         ).toBeInTheDocument();
       });
 
@@ -358,18 +442,13 @@ describe("TimelineView", () => {
     });
 
     it("should create new deadline via API", async () => {
-      mockJusticeAPI.getDeadlines.mockResolvedValue({
-        success: true,
-        data: [],
-      });
-      mockJusticeAPI.getAllCases.mockResolvedValue({
-        success: true,
-        data: [{ id: 1, title: "Test Case", status: "active" }],
-      });
-      mockJusticeAPI.createDeadline.mockResolvedValue({
-        success: true,
-        data: createMockDeadline(),
-      });
+      setDeadlinesResponse([]);
+      setCasesResponse([
+        createMockCase({ id: 1, title: "Test Case", status: "active" }),
+      ]);
+      vi.mocked(apiClient.deadlines.create).mockResolvedValue(
+        createMutationResponse()
+      );
 
       const user = userEvent.setup();
       render(<TimelineView />);
@@ -377,7 +456,7 @@ describe("TimelineView", () => {
       // Wait for component to load before clicking button
       await waitFor(() => {
         expect(
-          screen.getByRole("button", { name: /add deadline/i }),
+          screen.getByRole("button", { name: /add deadline/i })
         ).toBeInTheDocument();
       });
 
@@ -411,17 +490,19 @@ describe("TimelineView", () => {
       await waitFor(
         () => {
           // If API was called, dialog should close
-          expect(mockJusticeAPI.createDeadline).toHaveBeenCalledTimes(1);
+          expect(vi.mocked(apiClient.deadlines.create)).toHaveBeenCalledTimes(
+            1
+          );
         },
-        { timeout: 3000 },
+        { timeout: 3000 }
       );
 
-      expect(mockJusticeAPI.createDeadline).toHaveBeenCalledWith(
+      expect(vi.mocked(apiClient.deadlines.create)).toHaveBeenCalledWith(
         expect.objectContaining({
           title: "New Deadline",
           deadlineDate: "2026-03-15",
-        }),
-        mockSessionId,
+          caseId: 1,
+        })
       );
     });
   });
@@ -429,11 +510,8 @@ describe("TimelineView", () => {
   describe("Edit Deadline", () => {
     it("should open edit dialog when edit button clicked", async () => {
       const deadline = createMockDeadline({ title: "Submit ET1 Form" });
-      mockJusticeAPI.getDeadlines.mockResolvedValue({
-        success: true,
-        data: [deadline],
-      });
-      mockJusticeAPI.getAllCases.mockResolvedValue({ success: true, data: [] });
+      setDeadlinesResponse([deadline]);
+      setCasesResponse([]);
 
       const user = userEvent.setup();
       render(<TimelineView />);
@@ -459,15 +537,11 @@ describe("TimelineView", () => {
         title: "Old Title",
         deadlineDate: "2026-03-15",
       });
-      mockJusticeAPI.getDeadlines.mockResolvedValue({
-        success: true,
-        data: [deadline],
-      });
-      mockJusticeAPI.getAllCases.mockResolvedValue({ success: true, data: [] });
-      mockJusticeAPI.updateDeadline.mockResolvedValue({
-        success: true,
-        data: { ...deadline, title: "Updated Title" },
-      });
+      setDeadlinesResponse([deadline]);
+      setCasesResponse([]);
+      vi.mocked(apiClient.deadlines.update).mockResolvedValue(
+        createMutationResponse({ ...deadline, title: "Updated Title" })
+      );
 
       const user = userEvent.setup();
       render(<TimelineView />);
@@ -490,12 +564,11 @@ describe("TimelineView", () => {
       await user.click(screen.getByRole("button", { name: /update/i }));
 
       await waitFor(() => {
-        expect(mockJusticeAPI.updateDeadline).toHaveBeenCalledWith(
+        expect(vi.mocked(apiClient.deadlines.update)).toHaveBeenCalledWith(
           1,
           expect.objectContaining({
             title: "Updated Title",
-          }),
-          mockSessionId,
+          })
         );
       });
     });
@@ -504,15 +577,11 @@ describe("TimelineView", () => {
   describe("Mark Complete", () => {
     it("should mark deadline as complete", async () => {
       const deadline = createMockDeadline({ id: 1, status: "upcoming" });
-      mockJusticeAPI.getDeadlines.mockResolvedValue({
-        success: true,
-        data: [deadline],
-      });
-      mockJusticeAPI.getAllCases.mockResolvedValue({ success: true, data: [] });
-      mockJusticeAPI.updateDeadline.mockResolvedValue({
-        success: true,
-        data: { ...deadline, status: "completed" },
-      });
+      setDeadlinesResponse([deadline]);
+      setCasesResponse([]);
+      vi.mocked(apiClient.deadlines.update).mockResolvedValue(
+        createMutationResponse({ ...deadline, status: "completed" })
+      );
 
       const user = userEvent.setup();
       render(<TimelineView />);
@@ -525,25 +594,19 @@ describe("TimelineView", () => {
       await user.click(completeButton);
 
       await waitFor(() => {
-        expect(mockJusticeAPI.updateDeadline).toHaveBeenCalledWith(
-          1,
-          { status: "completed" },
-          mockSessionId,
-        );
+        expect(vi.mocked(apiClient.deadlines.update)).toHaveBeenCalledWith(1, {
+          status: "completed",
+        });
       });
     });
 
     it("should toggle completed status back to upcoming", async () => {
       const deadline = createMockDeadline({ id: 1, status: "completed" });
-      mockJusticeAPI.getDeadlines.mockResolvedValue({
-        success: true,
-        data: [deadline],
-      });
-      mockJusticeAPI.getAllCases.mockResolvedValue({ success: true, data: [] });
-      mockJusticeAPI.updateDeadline.mockResolvedValue({
-        success: true,
-        data: { ...deadline, status: "upcoming" },
-      });
+      setDeadlinesResponse([deadline]);
+      setCasesResponse([]);
+      vi.mocked(apiClient.deadlines.update).mockResolvedValue(
+        createMutationResponse({ ...deadline, status: "upcoming" })
+      );
 
       const user = userEvent.setup();
       render(<TimelineView />);
@@ -558,11 +621,9 @@ describe("TimelineView", () => {
       await user.click(uncompleteButton);
 
       await waitFor(() => {
-        expect(mockJusticeAPI.updateDeadline).toHaveBeenCalledWith(
-          1,
-          { status: "upcoming" },
-          mockSessionId,
-        );
+        expect(vi.mocked(apiClient.deadlines.update)).toHaveBeenCalledWith(1, {
+          status: "upcoming",
+        });
       });
     });
   });
@@ -570,11 +631,8 @@ describe("TimelineView", () => {
   describe("Delete Deadline", () => {
     it("should show confirmation dialog before deleting", async () => {
       const deadline = createMockDeadline({ id: 1 });
-      mockJusticeAPI.getDeadlines.mockResolvedValue({
-        success: true,
-        data: [deadline],
-      });
-      mockJusticeAPI.getAllCases.mockResolvedValue({ success: true, data: [] });
+      setDeadlinesResponse([deadline]);
+      setCasesResponse([]);
 
       const user = userEvent.setup();
       render(<TimelineView />);
@@ -591,12 +649,12 @@ describe("TimelineView", () => {
 
     it("should delete deadline via API when confirmed", async () => {
       const deadline = createMockDeadline({ id: 1 });
-      mockJusticeAPI.getDeadlines.mockResolvedValue({
-        success: true,
-        data: [deadline],
+      setDeadlinesResponse([deadline]);
+      setCasesResponse([]);
+      vi.mocked(apiClient.deadlines.delete).mockResolvedValue({
+        success: true as const,
+        data: undefined,
       });
-      mockJusticeAPI.getAllCases.mockResolvedValue({ success: true, data: [] });
-      mockJusticeAPI.deleteDeadline.mockResolvedValue({ success: true });
 
       const user = userEvent.setup();
       render(<TimelineView />);
@@ -612,10 +670,7 @@ describe("TimelineView", () => {
       await user.click(confirmButton);
 
       await waitFor(() => {
-        expect(mockJusticeAPI.deleteDeadline).toHaveBeenCalledWith(
-          1,
-          mockSessionId,
-        );
+        expect(vi.mocked(apiClient.deadlines.delete)).toHaveBeenCalledWith(1);
       });
     });
   });
@@ -623,18 +678,12 @@ describe("TimelineView", () => {
   describe("Filter by Case", () => {
     it("should show all cases in filter dropdown", async () => {
       const cases = [
-        { id: 1, title: "Case A", status: "active" as const },
-        { id: 2, title: "Case B", status: "active" as const },
+        createMockCase({ id: 1, title: "Case A", status: "active" }),
+        createMockCase({ id: 2, title: "Case B", status: "active" }),
       ];
 
-      mockJusticeAPI.getDeadlines.mockResolvedValue({
-        success: true,
-        data: [],
-      });
-      mockJusticeAPI.getAllCases.mockResolvedValue({
-        success: true,
-        data: cases,
-      });
+      setDeadlinesResponse([]);
+      setCasesResponse(cases);
 
       const user = userEvent.setup();
       render(<TimelineView />);
@@ -667,18 +716,12 @@ describe("TimelineView", () => {
         }),
       ];
       const cases = [
-        { id: 1, title: "Case A", status: "active" as const },
-        { id: 2, title: "Case B", status: "active" as const },
+        createMockCase({ id: 1, title: "Case A", status: "active" }),
+        createMockCase({ id: 2, title: "Case B", status: "active" }),
       ];
 
-      mockJusticeAPI.getDeadlines.mockResolvedValue({
-        success: true,
-        data: deadlines,
-      });
-      mockJusticeAPI.getAllCases.mockResolvedValue({
-        success: true,
-        data: cases,
-      });
+      setDeadlinesResponse(deadlines);
+      setCasesResponse(cases);
 
       const user = userEvent.setup();
       render(<TimelineView />);
@@ -705,11 +748,8 @@ describe("TimelineView", () => {
         createMockDeadline({ id: 2, caseId: 2, title: "Deadline 2" }),
       ];
 
-      mockJusticeAPI.getDeadlines.mockResolvedValue({
-        success: true,
-        data: deadlines,
-      });
-      mockJusticeAPI.getAllCases.mockResolvedValue({ success: true, data: [] });
+      setDeadlinesResponse(deadlines);
+      setCasesResponse([]);
 
       render(<TimelineView />);
 
@@ -727,11 +767,8 @@ describe("TimelineView", () => {
   describe("Priority Badges", () => {
     it("should display high priority badge", async () => {
       const deadline = createMockDeadline({ priority: "high" });
-      mockJusticeAPI.getDeadlines.mockResolvedValue({
-        success: true,
-        data: [deadline],
-      });
-      mockJusticeAPI.getAllCases.mockResolvedValue({ success: true, data: [] });
+      setDeadlinesResponse([deadline]);
+      setCasesResponse([]);
 
       render(<TimelineView />);
 
@@ -742,11 +779,8 @@ describe("TimelineView", () => {
 
     it("should display medium priority badge", async () => {
       const deadline = createMockDeadline({ priority: "medium" });
-      mockJusticeAPI.getDeadlines.mockResolvedValue({
-        success: true,
-        data: [deadline],
-      });
-      mockJusticeAPI.getAllCases.mockResolvedValue({ success: true, data: [] });
+      setDeadlinesResponse([deadline]);
+      setCasesResponse([]);
 
       render(<TimelineView />);
 
@@ -757,11 +791,8 @@ describe("TimelineView", () => {
 
     it("should display low priority badge", async () => {
       const deadline = createMockDeadline({ priority: "low" });
-      mockJusticeAPI.getDeadlines.mockResolvedValue({
-        success: true,
-        data: [deadline],
-      });
-      mockJusticeAPI.getAllCases.mockResolvedValue({ success: true, data: [] });
+      setDeadlinesResponse([deadline]);
+      setCasesResponse([]);
 
       render(<TimelineView />);
 
@@ -787,11 +818,8 @@ describe("TimelineView", () => {
         status: "overdue",
       });
 
-      mockJusticeAPI.getDeadlines.mockResolvedValue({
-        success: true,
-        data: [deadline],
-      });
-      mockJusticeAPI.getAllCases.mockResolvedValue({ success: true, data: [] });
+      setDeadlinesResponse([deadline]);
+      setCasesResponse([]);
 
       render(<TimelineView />);
 
@@ -806,11 +834,8 @@ describe("TimelineView", () => {
         status: "upcoming",
       });
 
-      mockJusticeAPI.getDeadlines.mockResolvedValue({
-        success: true,
-        data: [deadline],
-      });
-      mockJusticeAPI.getAllCases.mockResolvedValue({ success: true, data: [] });
+      setDeadlinesResponse([deadline]);
+      setCasesResponse([]);
 
       render(<TimelineView />);
 
@@ -825,11 +850,8 @@ describe("TimelineView", () => {
         status: "completed",
       });
 
-      mockJusticeAPI.getDeadlines.mockResolvedValue({
-        success: true,
-        data: [deadline],
-      });
-      mockJusticeAPI.getAllCases.mockResolvedValue({ success: true, data: [] });
+      setDeadlinesResponse([deadline]);
+      setCasesResponse([]);
 
       render(<TimelineView />);
 
@@ -841,11 +863,8 @@ describe("TimelineView", () => {
 
   describe("Layout", () => {
     it("should have fixed header and scrollable content", async () => {
-      mockJusticeAPI.getDeadlines.mockResolvedValue({
-        success: true,
-        data: [],
-      });
-      mockJusticeAPI.getAllCases.mockResolvedValue({ success: true, data: [] });
+      setDeadlinesResponse([]);
+      setCasesResponse([]);
 
       const { container } = render(<TimelineView />);
 

@@ -39,11 +39,9 @@ import logging
 # Configure logger
 logger = logging.getLogger(__name__)
 
-
 # ============================================================================
 # Pydantic Models for Input/Output Validation
 # ============================================================================
-
 
 class GdprDeleteOptions(BaseModel):
     """
@@ -60,7 +58,6 @@ class GdprDeleteOptions(BaseModel):
     reason: Optional[str] = Field(None, description="Reason for deletion (stored in audit log)")
 
     model_config = ConfigDict(use_enum_values=True)
-
 
 class GdprDeleteResult(BaseModel):
     """
@@ -88,24 +85,19 @@ class GdprDeleteResult(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-
 # ============================================================================
 # Custom Exceptions
 # ============================================================================
 
-
 class DeletionNotConfirmedError(Exception):
     """Exception raised when deletion is attempted without confirmation."""
-
 
 class DeletionError(Exception):
     """Exception raised when deletion operation fails."""
 
-
 # ============================================================================
 # DataDeleter Service
 # ============================================================================
-
 
 class DataDeleter:
     """
@@ -232,7 +224,7 @@ class DataDeleter:
                 # Commit the transaction
                 self.db.commit()
 
-            except Exception as e:
+            except Exception as exc:
                 # Rollback on any error
                 self.db.rollback()
                 raise DeletionError(f"Deletion transaction failed: {str(e)}")
@@ -267,7 +259,7 @@ class DataDeleter:
                 preserved_consents=preserved_consents_count,
             )
 
-        except Exception as e:
+        except Exception as exc:
             # Log failure
             if self.audit_logger:
                 self.audit_logger.log(
@@ -441,8 +433,10 @@ class DataDeleter:
         Returns:
             Number of rows deleted
         """
-        result = self.db.execute(text(sql), params)
-        return result.rowcount
+        # For SQLite, we need to query changes() after execution
+        self.db.execute(text(sql), params)
+        changes_result = self.db.execute(text("SELECT changes()"))
+        return changes_result.scalar()
 
     def _count_records(self, table: str, column: str, value: Any) -> int:
         """

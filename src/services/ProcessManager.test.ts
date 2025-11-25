@@ -214,9 +214,8 @@ describe("ProcessManager", () => {
       processManager.logError(new Error("Test error"), { context: "test" });
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining("[ProcessManager]"),
-        expect.any(String),
-        expect.objectContaining({ context: "test" })
+        "Test error",
+        expect.objectContaining({ service: "ProcessManager", context: "test" })
       );
 
       consoleSpy.mockRestore();

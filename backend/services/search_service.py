@@ -13,16 +13,15 @@ Provides comprehensive search functionality across all legal entities:
 import json
 import re
 import time
-from typing import Optional, List, Dict, Any, Tuple
+from typing import Optional, List, Dict, Any, Tuple, cast
 from sqlalchemy.orm import Session
 from sqlalchemy import text
+from sqlalchemy.engine import CursorResult
 
-from backend.services.encryption_service import EncryptionService, EncryptedData
+from backend.services.security.encryption import EncryptionService, EncryptedData
 from backend.services.audit_logger import log_audit_event
 
-
 # ===== TYPE DEFINITIONS =====
-
 
 class SearchFilters:
     """Filters for search queries."""
@@ -40,7 +39,6 @@ class SearchFilters:
         self.entity_types = entity_types or []
         self.tags = tags or []
         self.case_ids = case_ids or []
-
 
 class SearchQuery:
     """Search query with filters and pagination."""
@@ -60,7 +58,6 @@ class SearchQuery:
         self.sort_order = sort_order
         self.limit = limit
         self.offset = offset
-
 
 class SearchResult:
     """Individual search result item."""
@@ -101,7 +98,6 @@ class SearchResult:
             "metadata": self.metadata,
         }
 
-
 class SearchResponse:
     """Response model for search results."""
 
@@ -128,7 +124,6 @@ class SearchResponse:
             "executionTime": self.execution_time,
         }
 
-
 class SavedSearch:
     """Saved search query for later reuse."""
 
@@ -150,9 +145,7 @@ class SavedSearch:
         self.last_used_at = last_used_at
         self.use_count = use_count
 
-
 # ===== SEARCH SERVICE =====
-
 
 class SearchService:
     """
@@ -173,7 +166,9 @@ class SearchService:
             print(f"{result.type}: {result.title}")
     """
 
-    def __init__(self, db: Session, encryption_service: Optional[EncryptionService] = None):
+    def __init__(
+        self, db: Session, encryption_service: Optional[EncryptionService] = None
+    ):
         """
         Initialize search service.
 
@@ -210,7 +205,10 @@ class SearchService:
             resource_type="search",
             resource_id="global",
             action="read",
-            details={"query": query.query, "filters": self._serialize_filters(query.filters)},
+            details={
+                "query": query.query,
+                "filters": self._serialize_filters(query.filters),
+            },
             success=True,
         )
 
@@ -293,21 +291,27 @@ class SearchService:
 
         # Filter by entity types
         if entity_types:
-            placeholders = ", ".join([f":entity_type_{i}" for i in range(len(entity_types))])
+            placeholders = ", ".join(
+                [f":entity_type_{i}" for i in range(len(entity_types))]
+            )
             where_conditions.append(f"entity_type IN ({placeholders})")
             for i, entity_type in enumerate(entity_types):
                 params[f"entity_type_{i}"] = entity_type
 
         # Filter by case IDs
         if filters and filters.case_ids:
-            placeholders = ", ".join([f":case_id_{i}" for i in range(len(filters.case_ids))])
+            placeholders = ", ".join(
+                [f":case_id_{i}" for i in range(len(filters.case_ids))]
+            )
             where_conditions.append(f"case_id IN ({placeholders})")
             for i, case_id in enumerate(filters.case_ids):
                 params[f"case_id_{i}"] = case_id
 
         # Filter by date range
         if filters and filters.date_range:
-            where_conditions.append("created_at >= :date_from AND created_at <= :date_to")
+            where_conditions.append(
+                "created_at >= :date_from AND created_at <= :date_to"
+            )
             params["date_from"] = filters.date_range.get("from", "")
             params["date_to"] = filters.date_range.get("to", "")
 
@@ -399,8 +403,10 @@ class SearchService:
             total += evidence_count
 
         if "conversation" in entity_types:
-            conversation_results, conversation_count = self._collect_conversation_results(
-                user_id=user_id, query=query, filters=filters
+            conversation_results, conversation_count = (
+                self._collect_conversation_results(
+                    user_id=user_id, query=query, filters=filters
+                )
             )
             results.extend(conversation_results)
             total += conversation_count
@@ -413,10 +419,10 @@ class SearchService:
             total += note_count
 
         # Apply pagination
-        return results[offset: offset + limit], total
+        return results[offset : offset + limit], total
 
     def _collect_case_results(
-        self, user_id: int, query: str, filters: Optional[SearchFilters]
+        self, user_id: int, query: str, _filters: Optional[SearchFilters]
     ) -> Tuple[List[SearchResult], int]:
         """Search cases using LIKE query."""
         like_pattern = f"%{query}%"
@@ -439,7 +445,9 @@ class SearchService:
         """
         )
 
-        rows = self.db.execute(case_query, {"user_id": user_id, "pattern": like_pattern}).fetchall()
+        rows = self.db.execute(
+            case_query, {"user_id": user_id, "pattern": like_pattern}
+        ).fetchall()
 
         results = []
         for row in rows:
@@ -453,7 +461,9 @@ class SearchService:
                     type="case",
                     title=title,
                     excerpt=self._extract_excerpt(content, query),
-                    relevance_score=self._calculate_relevance(f"{title} {content}", query),
+                    relevance_score=self._calculate_relevance(
+                        f"{title} {content}", query
+                    ),
                     case_id=None,
                     case_title=None,
                     created_at=row_dict.get("created_at", ""),
@@ -467,7 +477,7 @@ class SearchService:
         return results, len(results)
 
     def _collect_evidence_results(
-        self, user_id: int, query: str, filters: Optional[SearchFilters]
+        self, user_id: int, query: str, _filters: Optional[SearchFilters]
     ) -> Tuple[List[SearchResult], int]:
         """Search evidence using LIKE query."""
         like_pattern = f"%{query}%"
@@ -508,7 +518,9 @@ class SearchService:
                     type="evidence",
                     title=title,
                     excerpt=self._extract_excerpt(content, query),
-                    relevance_score=self._calculate_relevance(f"{title} {content}", query),
+                    relevance_score=self._calculate_relevance(
+                        f"{title} {content}", query
+                    ),
                     case_id=row_dict.get("case_id"),
                     case_title=row_dict.get("case_title"),
                     created_at=row_dict.get("created_at", ""),
@@ -522,7 +534,7 @@ class SearchService:
         return results, len(results)
 
     def _collect_conversation_results(
-        self, user_id: int, query: str, filters: Optional[SearchFilters]
+        self, user_id: int, query: str, _filters: Optional[SearchFilters]
     ) -> Tuple[List[SearchResult], int]:
         """Search conversations using LIKE query."""
         like_pattern = f"%{query}%"
@@ -571,7 +583,7 @@ class SearchService:
         return results, len(results)
 
     def _collect_note_results(
-        self, user_id: int, query: str, filters: Optional[SearchFilters]
+        self, user_id: int, query: str, _filters: Optional[SearchFilters]
     ) -> Tuple[List[SearchResult], int]:
         """Search notes using LIKE query."""
         like_pattern = f"%{query}%"
@@ -595,7 +607,9 @@ class SearchService:
         """
         )
 
-        rows = self.db.execute(note_query, {"user_id": user_id, "pattern": like_pattern}).fetchall()
+        rows = self.db.execute(
+            note_query, {"user_id": user_id, "pattern": like_pattern}
+        ).fetchall()
 
         results = []
         for row in rows:
@@ -609,7 +623,9 @@ class SearchService:
                     type="note",
                     title=title,
                     excerpt=self._extract_excerpt(content, query),
-                    relevance_score=self._calculate_relevance(f"{title} {content}", query),
+                    relevance_score=self._calculate_relevance(
+                        f"{title} {content}", query
+                    ),
                     case_id=row_dict.get("case_id"),
                     case_title=row_dict.get("case_title"),
                     created_at=row_dict.get("created_at", ""),
@@ -722,10 +738,14 @@ class SearchService:
         if entity_type == "case":
             return {
                 k: v
-                for k, v in {"status": row.get("status"), "caseType": row.get("case_type")}.items()
+                for k, v in {
+                    "status": row.get("status"),
+                    "caseType": row.get("case_type"),
+                }.items()
                 if v is not None
             }
-        elif entity_type == "evidence":
+
+        if entity_type == "evidence":
             return {
                 k: v
                 for k, v in {
@@ -734,10 +754,12 @@ class SearchService:
                 }.items()
                 if v is not None
             }
-        elif entity_type == "conversation":
+
+        if entity_type == "conversation":
             message_count = row.get("message_count")
             return {"messageCount": message_count} if message_count is not None else {}
-        elif entity_type == "note":
+
+        if entity_type == "note":
             is_pinned = row.get("is_pinned")
             return {"isPinned": bool(is_pinned)} if is_pinned is not None else {}
 
@@ -865,14 +887,18 @@ class SearchService:
 
         if sort_by == "relevance":
             return sorted(results, key=lambda r: r.relevance_score, reverse=reverse)
-        elif sort_by == "date":
+
+        if sort_by == "date":
             return sorted(results, key=lambda r: r.created_at or "", reverse=reverse)
-        elif sort_by == "title":
+
+        if sort_by == "title":
             return sorted(results, key=lambda r: r.title.lower(), reverse=reverse)
 
         return results
 
-    def _serialize_filters(self, filters: Optional[SearchFilters]) -> Optional[Dict[str, Any]]:
+    def _serialize_filters(
+        self, filters: Optional[SearchFilters]
+    ) -> Optional[Dict[str, Any]]:
         """Serialize filters for audit logging."""
         if not filters:
             return None
@@ -916,12 +942,18 @@ class SearchService:
         """
         )
 
-        result = self.db.execute(
-            insert_query, {"user_id": user_id, "name": name, "query_json": query_json}
+        result = cast(
+            CursorResult[Any],
+            self.db.execute(
+                insert_query,
+                {"user_id": user_id, "name": name, "query_json": query_json},
+            ),
         )
         self.db.commit()
 
         search_id = result.lastrowid
+        if search_id is None:
+            raise RuntimeError("Failed to determine saved search ID")
 
         # Log audit event
         log_audit_event(
@@ -938,6 +970,8 @@ class SearchService:
         # Fetch and return the saved search
         select_query = text("SELECT * FROM saved_searches WHERE id = :search_id")
         saved_row = self.db.execute(select_query, {"search_id": search_id}).fetchone()
+        if saved_row is None:
+            raise RuntimeError("Saved search not found after creation")
 
         return SavedSearch(
             id=saved_row[0],
@@ -1001,10 +1035,13 @@ class SearchService:
         """
         )
 
-        result = self.db.execute(delete_query, {"search_id": search_id, "user_id": user_id})
+        result = cast(
+            CursorResult[Any],
+            self.db.execute(delete_query, {"search_id": search_id, "user_id": user_id}),
+        )
         self.db.commit()
 
-        if result.rowcount > 0:
+        if (result.rowcount or 0) > 0:
             log_audit_event(
                 db=self.db,
                 event_type="query.paginated",
@@ -1083,7 +1120,9 @@ class SearchService:
 
         return self.search(user_id=user_id, query=query)
 
-    def get_search_suggestions(self, user_id: int, prefix: str, limit: int = 5) -> List[str]:
+    def get_search_suggestions(
+        self, user_id: int, prefix: str, limit: int = 5
+    ) -> List[str]:
         """
         Get search suggestions based on user's search history.
 
@@ -1107,7 +1146,8 @@ class SearchService:
         )
 
         rows = self.db.execute(
-            query, {"user_id": user_id, "pattern": f'%"query":"{prefix}%', "limit": limit}
+            query,
+            {"user_id": user_id, "pattern": f'%"query":"{prefix}%', "limit": limit},
         ).fetchall()
 
         suggestions = []

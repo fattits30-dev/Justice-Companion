@@ -37,7 +37,7 @@ from backend.models.base import get_db
 from backend.routes.auth import get_current_user
 from backend.services.document_parser_service import DocumentParserService
 from backend.services.citation_service import CitationService
-from backend.services.encryption_service import EncryptionService
+from backend.services.security.encryption import EncryptionService
 from backend.services.audit_logger import AuditLogger
 
 # Configure logging
@@ -45,13 +45,11 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/evidence", tags=["evidence"])
 
-
 # ===== CONSTANTS =====
 VALID_EVIDENCE_TYPES = ["document", "photo", "email", "recording", "note", "witness"]
 SUPPORTED_DOCUMENT_FORMATS = [".pdf", ".docx", ".txt"]
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
 UPLOAD_DIR = Path("uploads/evidence")  # Evidence file storage
-
 
 # ===== PYDANTIC REQUEST MODELS =====
 class CreateEvidenceRequest(BaseModel):
@@ -71,6 +69,7 @@ class CreateEvidenceRequest(BaseModel):
 
     @field_validator("evidenceType")
     @classmethod
+    @classmethod
     def validate_evidence_type(cls, v):
         if v not in VALID_EVIDENCE_TYPES:
             raise ValueError(
@@ -80,10 +79,12 @@ class CreateEvidenceRequest(BaseModel):
 
     @field_validator("title")
     @classmethod
+    @classmethod
     def strip_title(cls, v):
         return v.strip()
 
     @field_validator("obtainedDate")
+    @classmethod
     @classmethod
     def validate_date_format(cls, v):
         if v:
@@ -106,7 +107,6 @@ class CreateEvidenceRequest(BaseModel):
                 raise ValueError("Must provide either filePath or content")
         return v
 
-
 class UpdateEvidenceRequest(BaseModel):
     """Request model for updating evidence metadata."""
 
@@ -116,6 +116,7 @@ class UpdateEvidenceRequest(BaseModel):
     obtainedDate: Optional[str] = None
 
     @field_validator("evidenceType")
+    @classmethod
     @classmethod
     def validate_evidence_type(cls, v):
         if v and v not in VALID_EVIDENCE_TYPES:
@@ -131,6 +132,7 @@ class UpdateEvidenceRequest(BaseModel):
 
     @field_validator("obtainedDate")
     @classmethod
+    @classmethod
     def validate_date_format(cls, v):
         if v:
             try:
@@ -138,7 +140,6 @@ class UpdateEvidenceRequest(BaseModel):
             except ValueError:
                 raise ValueError("Invalid date format (use YYYY-MM-DD)")
         return v
-
 
 # ===== PYDANTIC RESPONSE MODELS =====
 class EvidenceResponse(BaseModel):
@@ -158,7 +159,6 @@ class EvidenceResponse(BaseModel):
     class Config:
         from_attributes = True
 
-
 class ParsedDocumentResponse(BaseModel):
     """Response model for parsed document data."""
 
@@ -168,7 +168,6 @@ class ParsedDocumentResponse(BaseModel):
     page_count: Optional[int] = Field(None, description="Number of pages (PDF only)")
     word_count: int = Field(..., description="Total word count")
     metadata: Optional[Dict[str, Any]] = Field(None, description="Document metadata")
-
 
 class CitationResponse(BaseModel):
     """Response model for extracted citation."""
@@ -181,19 +180,16 @@ class CitationResponse(BaseModel):
         None, description="CourtListener search link (case citations only)"
     )
 
-
 class CitationListResponse(BaseModel):
     """Response model for citation list with summary."""
 
     citations: List[CitationResponse]
     summary: Dict[str, Any] = Field(..., description="Citation statistics")
 
-
 class DeleteEvidenceResponse(BaseModel):
     """Response model for evidence deletion."""
 
     success: bool
-
 
 class FileUploadResponse(BaseModel):
     """Response model for file upload with parsing."""
@@ -202,18 +198,15 @@ class FileUploadResponse(BaseModel):
     parsed_document: Optional[ParsedDocumentResponse] = None
     citations: Optional[List[CitationResponse]] = None
 
-
 # ===== DEPENDENCY INJECTION =====
 def get_document_parser_service(db: Session = Depends(get_db)) -> DocumentParserService:
     """Get DocumentParserService instance with audit logger."""
     audit_logger = AuditLogger(db)
     return DocumentParserService(audit_logger=audit_logger, max_file_size=MAX_FILE_SIZE)
 
-
 def get_citation_service() -> CitationService:
     """Get CitationService instance."""
     return CitationService()
-
 
 def get_encryption_service() -> EncryptionService:
     """
@@ -233,11 +226,9 @@ def get_encryption_service() -> EncryptionService:
 
     return EncryptionService(key_base64)
 
-
 def get_audit_logger(db: Session = Depends(get_db)) -> AuditLogger:
     """Get audit logger instance."""
     return AuditLogger(db)
-
 
 # ===== HELPER FUNCTIONS =====
 def verify_case_ownership(db: Session, case_id: int, user_id: int) -> bool:
@@ -265,7 +256,6 @@ def verify_case_ownership(db: Session, case_id: int, user_id: int) -> bool:
         )
 
     return True
-
 
 def verify_evidence_ownership(db: Session, evidence_id: int, user_id: int) -> bool:
     """
@@ -300,7 +290,6 @@ def verify_evidence_ownership(db: Session, evidence_id: int, user_id: int) -> bo
 
     return True
 
-
 def validate_file_upload(file: UploadFile) -> None:
     """
     Validate uploaded file.
@@ -321,7 +310,6 @@ def validate_file_upload(file: UploadFile) -> None:
 
     # Check file size (if available in headers)
     # Note: file.size is not always available, so we'll check during read
-
 
 async def save_uploaded_file(file: UploadFile, case_id: int) -> str:
     """
@@ -362,16 +350,14 @@ async def save_uploaded_file(file: UploadFile, case_id: int) -> str:
         logger.info(f"Saved uploaded file: {file_path} ({len(content)} bytes)")
         return str(file_path.absolute())
 
-    except Exception as e:
+    except Exception as exc:
         logger.error(f"Failed to save uploaded file: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to save uploaded file: {str(e)}",
         )
 
-
 # ===== ROUTES =====
-
 
 @router.get("", response_model=List[EvidenceResponse])
 async def list_all_evidence(
@@ -456,13 +442,12 @@ async def list_all_evidence(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         logger.error(f"Failed to list evidence: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to list evidence: {str(e)}",
         )
-
 
 @router.get("/{evidence_id}", response_model=EvidenceResponse)
 async def get_evidence(
@@ -523,13 +508,12 @@ async def get_evidence(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         logger.error(f"Failed to get evidence: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get evidence: {str(e)}",
         )
-
 
 @router.post("", response_model=EvidenceResponse, status_code=status.HTTP_201_CREATED)
 async def create_evidence(
@@ -657,7 +641,7 @@ async def create_evidence(
         # Re-raise HTTP exceptions (case not found, unauthorized)
         raise
 
-    except Exception as e:
+    except Exception as exc:
         db.rollback()
         # Log failed upload
         audit_logger.log(
@@ -675,7 +659,6 @@ async def create_evidence(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to create evidence: {str(e)}",
         )
-
 
 @router.post("/upload", response_model=FileUploadResponse, status_code=status.HTTP_201_CREATED)
 async def upload_evidence_file(
@@ -740,7 +723,7 @@ async def upload_evidence_file(
         """
         )
 
-        result = db.execute(
+        db.execute(
             insert_query,
             {
                 "case_id": case_id,
@@ -752,7 +735,10 @@ async def upload_evidence_file(
         )
         db.commit()
 
-        evidence_id = result.lastrowid
+        # Get the last inserted ID
+        id_query = text("SELECT last_insert_rowid()")
+        id_result = db.execute(id_query)
+        evidence_id = id_result.scalar()
 
         # Fetch created evidence
         select_query = text(
@@ -821,10 +807,10 @@ async def upload_evidence_file(
                             f"Extracted {len(citations_list)} citations from evidence {evidence_id}"
                         )
 
-                    except Exception as e:
+                    except Exception as exc:
                         logger.warning(f"Citation extraction failed (non-critical): {e}")
 
-            except Exception as e:
+            except Exception as exc:
                 logger.warning(f"Document parsing failed (non-critical): {e}")
 
         # Log audit event
@@ -853,7 +839,7 @@ async def upload_evidence_file(
     except HTTPException:
         raise
 
-    except Exception as e:
+    except Exception as exc:
         db.rollback()
         logger.error(f"Failed to upload evidence file: {e}", exc_info=True)
 
@@ -872,7 +858,6 @@ async def upload_evidence_file(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to upload evidence file: {str(e)}",
         )
-
 
 @router.post("/{evidence_id}/parse", response_model=ParsedDocumentResponse)
 async def parse_evidence_document(
@@ -920,13 +905,12 @@ async def parse_evidence_document(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         logger.error(f"Failed to parse evidence document: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to parse document: {str(e)}",
         )
-
 
 @router.get("/{evidence_id}/citations", response_model=CitationListResponse)
 async def extract_evidence_citations(
@@ -1004,13 +988,12 @@ async def extract_evidence_citations(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         logger.error(f"Failed to extract citations: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to extract citations: {str(e)}",
         )
-
 
 @router.get("/case/{case_id}", response_model=List[EvidenceResponse])
 async def list_case_evidence(
@@ -1069,13 +1052,12 @@ async def list_case_evidence(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         logger.error(f"Failed to list case evidence: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to list evidence: {str(e)}",
         )
-
 
 @router.put("/{evidence_id}", response_model=EvidenceResponse)
 async def update_evidence(
@@ -1199,14 +1181,13 @@ async def update_evidence(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         db.rollback()
         logger.error(f"Failed to update evidence: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to update evidence: {str(e)}",
         )
-
 
 @router.delete(
     "/{evidence_id}", response_model=DeleteEvidenceResponse, status_code=status.HTTP_200_OK
@@ -1254,7 +1235,7 @@ async def delete_evidence(
             try:
                 os.remove(file_path)
                 logger.info(f"Deleted evidence file: {file_path}")
-            except Exception as e:
+            except Exception as exc:
                 logger.warning(f"Failed to delete evidence file (non-critical): {e}")
 
         # Log audit event
@@ -1272,7 +1253,7 @@ async def delete_evidence(
     except HTTPException:
         raise
 
-    except Exception as e:
+    except Exception as exc:
         db.rollback()
         # Log failed deletion
         audit_logger.log(

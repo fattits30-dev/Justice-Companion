@@ -35,20 +35,18 @@ import base64
 
 from backend.models.base import get_db
 from backend.routes.auth import get_current_user
-from backend.services.auth_service import AuthenticationService
+from backend.services.auth.service import AuthenticationService
 from backend.services.case_service import CaseService
 from backend.services.notification_service import (
     NotificationService,
     NotificationFilters,
 )
-from backend.services.encryption_service import EncryptionService
+from backend.services.security.encryption import EncryptionService
 from backend.services.audit_logger import AuditLogger
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
-
 # ===== PYDANTIC RESPONSE MODELS =====
-
 
 class RecentCaseInfo(BaseModel):
     """Information about a recently updated case."""
@@ -61,7 +59,6 @@ class RecentCaseInfo(BaseModel):
 
     class Config:
         from_attributes = True
-
 
 class DashboardStatsResponse(BaseModel):
     """
@@ -88,20 +85,17 @@ class DashboardStatsResponse(BaseModel):
     class Config:
         from_attributes = True
 
-
 class RecentCasesResponse(BaseModel):
     """Recent cases widget response."""
 
     cases: List[RecentCaseInfo] = Field(..., description="Recent cases")
     total: int = Field(..., description="Total cases count")
 
-
 class NotificationWidgetResponse(BaseModel):
     """Notifications widget response."""
 
     unreadCount: int = Field(..., description="Unread notifications count")
     recentNotifications: List[Dict[str, Any]] = Field(..., description="Recent notifications")
-
 
 class UpcomingDeadline(BaseModel):
     """Upcoming deadline information."""
@@ -115,14 +109,12 @@ class UpcomingDeadline(BaseModel):
     caseId: Optional[int] = None
     caseTitle: Optional[str] = None
 
-
 class DeadlinesWidgetResponse(BaseModel):
     """Deadlines widget response."""
 
     upcomingDeadlines: List[UpcomingDeadline] = Field(..., description="Upcoming deadlines")
     totalDeadlines: int = Field(..., description="Total upcoming deadlines")
     overdueCount: int = Field(..., description="Overdue deadlines count")
-
 
 class ActivityItem(BaseModel):
     """Activity item information."""
@@ -134,13 +126,11 @@ class ActivityItem(BaseModel):
     timestamp: str
     metadata: Optional[Dict[str, Any]] = None
 
-
 class ActivityWidgetResponse(BaseModel):
     """Activity widget response."""
 
     activities: List[ActivityItem] = Field(..., description="Recent activities")
     total: int = Field(..., description="Total activities count")
-
 
 class ChartDataPoint(BaseModel):
     """Single data point for charts."""
@@ -149,13 +139,11 @@ class ChartDataPoint(BaseModel):
     value: int
     color: Optional[str] = None
 
-
 class ChartResponse(BaseModel):
     """Generic chart response."""
 
     data: List[ChartDataPoint] = Field(..., description="Chart data points")
     total: int = Field(..., description="Total count")
-
 
 class TimelineChartDataPoint(BaseModel):
     """Timeline chart data point."""
@@ -163,14 +151,12 @@ class TimelineChartDataPoint(BaseModel):
     date: str  # YYYY-MM-DD
     count: int
 
-
 class TimelineChartResponse(BaseModel):
     """Timeline chart response."""
 
     data: List[TimelineChartDataPoint] = Field(..., description="Timeline data points")
     startDate: str = Field(..., description="Start date (YYYY-MM-DD)")
     endDate: str = Field(..., description="End date (YYYY-MM-DD)")
-
 
 class DashboardOverviewResponse(BaseModel):
     """Complete dashboard overview with all widgets."""
@@ -181,14 +167,11 @@ class DashboardOverviewResponse(BaseModel):
     deadlines: DeadlinesWidgetResponse
     activity: ActivityWidgetResponse
 
-
 # ===== DEPENDENCY INJECTION =====
-
 
 def get_auth_service(db: Session = Depends(get_db)) -> AuthenticationService:
     """Get authentication service instance."""
     return AuthenticationService(db=db)
-
 
 def get_encryption_service() -> EncryptionService:
     """
@@ -208,11 +191,9 @@ def get_encryption_service() -> EncryptionService:
 
     return EncryptionService(key_base64)
 
-
 def get_audit_logger(db: Session = Depends(get_db)) -> AuditLogger:
     """Get audit logger instance."""
     return AuditLogger(db)
-
 
 async def get_case_service(
     db: Session = Depends(get_db),
@@ -222,16 +203,13 @@ async def get_case_service(
     """Get case service instance with dependencies injected."""
     return CaseService(db, encryption_service, audit_logger)
 
-
 async def get_notification_service(
     db: Session = Depends(get_db), audit_logger: AuditLogger = Depends(get_audit_logger)
 ) -> NotificationService:
     """Get notification service instance with dependencies injected."""
     return NotificationService(db, audit_logger)
 
-
 # ===== DASHBOARD ROUTES =====
-
 
 @router.get("", response_model=DashboardOverviewResponse)
 async def get_dashboard_overview(
@@ -268,12 +246,11 @@ async def get_dashboard_overview(
             activity=activity,
         )
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to load dashboard overview: {str(e)}",
         )
-
 
 @router.get("/stats", response_model=DashboardStatsResponse)
 async def get_dashboard_stats(
@@ -297,7 +274,6 @@ async def get_dashboard_stats(
     SECURITY: All queries are filtered by user_id to prevent data leakage.
     """
     return await get_dashboard_stats_internal(user_id, case_service, notification_service, db)
-
 
 async def get_dashboard_stats_internal(
     user_id: int, case_service: CaseService, notification_service: NotificationService, db: Session
@@ -362,12 +338,11 @@ async def get_dashboard_stats_internal(
             unreadNotifications=unread_notifications,
         )
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to load dashboard statistics: {str(e)}",
         )
-
 
 @router.get("/recent-cases", response_model=RecentCasesResponse)
 async def get_recent_cases(
@@ -388,7 +363,6 @@ async def get_recent_cases(
     SECURITY: Only returns cases owned by the authenticated user.
     """
     return await get_recent_cases_internal(user_id, case_service, limit)
-
 
 async def get_recent_cases_internal(
     user_id: int, case_service: CaseService, limit: int = 5
@@ -421,12 +395,11 @@ async def get_recent_cases_internal(
 
         return RecentCasesResponse(cases=case_infos, total=len(all_cases))
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to load recent cases: {str(e)}",
         )
-
 
 @router.get("/notifications", response_model=NotificationWidgetResponse)
 async def get_notifications_widget(
@@ -447,7 +420,6 @@ async def get_notifications_widget(
     SECURITY: Only returns notifications owned by the authenticated user.
     """
     return await get_notifications_widget_internal(user_id, notification_service, limit)
-
 
 async def get_notifications_widget_internal(
     user_id: int, notification_service: NotificationService, limit: int = 5
@@ -479,12 +451,11 @@ async def get_notifications_widget_internal(
             unreadCount=unread_count, recentNotifications=recent_notifications
         )
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to load notifications widget: {str(e)}",
         )
-
 
 @router.get("/deadlines", response_model=DeadlinesWidgetResponse)
 async def get_deadlines_widget(
@@ -506,7 +477,6 @@ async def get_deadlines_widget(
     SECURITY: Only returns deadlines owned by the authenticated user.
     """
     return await get_deadlines_widget_internal(user_id, db, limit)
-
 
 async def get_deadlines_widget_internal(
     user_id: int, db: Session, limit: int = 10
@@ -587,12 +557,11 @@ async def get_deadlines_widget_internal(
             overdueCount=overdue_count,
         )
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to load deadlines widget: {str(e)}",
         )
-
 
 @router.get("/activity", response_model=ActivityWidgetResponse)
 async def get_activity_widget(
@@ -613,7 +582,6 @@ async def get_activity_widget(
     SECURITY: Only returns activities for resources owned by the authenticated user.
     """
     return await get_activity_widget_internal(user_id, db, limit)
-
 
 async def get_activity_widget_internal(
     user_id: int, db: Session, limit: int = 10
@@ -748,15 +716,13 @@ async def get_activity_widget_internal(
 
         return ActivityWidgetResponse(activities=activity_items, total=len(sorted_activities))
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to load activity widget: {str(e)}",
         )
 
-
 # ===== CHART ENDPOINTS =====
-
 
 @router.get("/charts/cases-by-status", response_model=ChartResponse)
 async def get_cases_by_status_chart(
@@ -798,12 +764,11 @@ async def get_cases_by_status_chart(
 
         return ChartResponse(data=data_points, total=total)
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to load cases by status chart: {str(e)}",
         )
-
 
 @router.get("/charts/cases-by-priority", response_model=ChartResponse)
 async def get_cases_by_priority_chart(
@@ -825,12 +790,11 @@ async def get_cases_by_priority_chart(
         # Return empty data for now
         return ChartResponse(data=[], total=0)
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to load cases by priority chart: {str(e)}",
         )
-
 
 @router.get("/charts/cases-timeline", response_model=TimelineChartResponse)
 async def get_cases_timeline_chart(
@@ -889,7 +853,7 @@ async def get_cases_timeline_chart(
             endDate=end_date.date().isoformat(),
         )
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to load cases timeline chart: {str(e)}",

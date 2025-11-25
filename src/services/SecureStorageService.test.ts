@@ -137,9 +137,8 @@ describe("SecureStorageService", () => {
       );
       expect(service.isEncryptionAvailable()).toBe(false);
       expect(consoleWarnSpy).toHaveBeenCalledWith(
-        expect.stringContaining(
-          "[SecureStorage] Encryption not available on this system",
-        ),
+        "[SecureStorage] Encryption not available on this system. On Linux, please install gnome-keyring or kwallet. API keys will be stored without encryption as fallback.",
+        "",
       );
     });
 
@@ -149,12 +148,8 @@ describe("SecureStorageService", () => {
       await service.init();
 
       expect(consoleWarnSpy).toHaveBeenCalledWith(
-        expect.stringContaining("gnome-keyring or kwallet"),
-      );
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        expect.stringContaining(
-          "API keys will be stored without encryption as fallback",
-        ),
+        "[SecureStorage] Encryption not available on this system. On Linux, please install gnome-keyring or kwallet. API keys will be stored without encryption as fallback.",
+        "",
       );
     });
 
@@ -954,9 +949,8 @@ describe("SecureStorageService", () => {
 
       expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
       expect(consoleWarnSpy).toHaveBeenCalledWith(
-        expect.stringContaining(
-          "[SecureStorage] Encryption not available on this system",
-        ),
+        "[SecureStorage] Encryption not available on this system. On Linux, please install gnome-keyring or kwallet. API keys will be stored without encryption as fallback.",
+        "",
       );
     });
 

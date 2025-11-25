@@ -1,5 +1,17 @@
-import { test, expect } from "@playwright/test";
-import { generateTestPassword } from "./testConfig";
+import { expect, Page, test } from "@playwright/test";
+import { generateTestPassword, TEST_CONFIG } from "./testConfig";
+
+async function loginNewlyRegisteredUser(
+  page: Page,
+  email: string,
+  password: string
+) {
+  await expect(page).toHaveURL(/\/login/, { timeout: 10000 });
+  await page.getByLabel(/username|email/i).fill(email);
+  await page.locator('input[type="password"]').fill(password);
+  await page.getByRole("button", { name: /sign in|login/i }).click();
+  await expect(page).toHaveURL(/\/dashboard/, { timeout: 10000 });
+}
 
 /**
  * Manual Registration Flow Test
@@ -19,7 +31,7 @@ test.describe("Manual Registration Flow", () => {
     const password = generateTestPassword();
 
     // Step 1: Navigate to login page
-    await page.goto("http://localhost:5222/login");
+    await page.goto(`${TEST_CONFIG.baseURL}/login`);
     await expect(page).toHaveURL(/\/login/);
 
     // Step 2: Verify login page loaded
@@ -31,7 +43,7 @@ test.describe("Manual Registration Flow", () => {
     // Step 4: Verify navigation to registration page
     await expect(page).toHaveURL(/\/register/);
     await expect(
-      page.getByRole("heading", { name: /create account/i }),
+      page.getByRole("heading", { name: /create account/i })
     ).toBeVisible();
 
     // Step 5: Fill registration form
@@ -49,17 +61,17 @@ test.describe("Manual Registration Flow", () => {
     // Step 6: Submit registration form
     await page.getByRole("button", { name: /sign up/i }).click();
 
-    // Step 7: Verify successful registration and redirect to dashboard
-    await expect(page).toHaveURL(/\/dashboard/, { timeout: 10000 });
+    // Step 7: Verify redirected to login and then sign in with new credentials
+    await loginNewlyRegisteredUser(page, email, password);
 
     // Step 8: Verify dashboard content
     await expect(
-      page.getByRole("heading", { name: /welcome to justice companion/i }),
+      page.getByRole("heading", { name: /welcome to justice companion/i })
     ).toBeVisible();
 
     // Step 9: Verify user is logged in (check for user profile button)
     await expect(
-      page.getByRole("button", { name: /open profile manager/i }),
+      page.getByRole("button", { name: /open profile manager/i })
     ).toBeVisible();
 
     // Step 10: Verify dashboard stats are displayed
@@ -70,10 +82,10 @@ test.describe("Manual Registration Flow", () => {
     // Step 11: Verify quick action buttons are available
     await expect(page.getByRole("button", { name: /new case/i })).toBeVisible();
     await expect(
-      page.getByRole("button", { name: /upload evidence/i }),
+      page.getByRole("button", { name: /upload evidence/i })
     ).toBeVisible();
     await expect(
-      page.getByRole("button", { name: /start chat/i }),
+      page.getByRole("button", { name: /start chat/i })
     ).toBeVisible();
 
     // Step 12: Verify user info in profile section
@@ -98,7 +110,7 @@ test.describe("Manual Registration Flow", () => {
     const email = `persist${timestamp}@example.com`;
     const password = generateTestPassword();
 
-    await page.goto("http://localhost:5222/login");
+    await page.goto(`${TEST_CONFIG.baseURL}/login`);
     await page.getByRole("button", { name: /create account/i }).click();
 
     await page.getByRole("textbox", { name: /first name/i }).fill(firstName);
@@ -113,7 +125,7 @@ test.describe("Manual Registration Flow", () => {
       .setChecked(true);
 
     await page.getByRole("button", { name: /sign up/i }).click();
-    await expect(page).toHaveURL(/\/dashboard/, { timeout: 10000 });
+    await loginNewlyRegisteredUser(page, email, password);
 
     // Refresh the page
     await page.reload();
@@ -121,10 +133,10 @@ test.describe("Manual Registration Flow", () => {
     // Verify user is still logged in
     await expect(page).toHaveURL(/\/dashboard/);
     await expect(
-      page.getByRole("heading", { name: /welcome to justice companion/i }),
+      page.getByRole("heading", { name: /welcome to justice companion/i })
     ).toBeVisible();
     await expect(
-      page.getByRole("button", { name: /open profile manager/i }),
+      page.getByRole("button", { name: /open profile manager/i })
     ).toBeVisible();
   });
 
@@ -136,7 +148,7 @@ test.describe("Manual Registration Flow", () => {
     const email = `logout${timestamp}@example.com`;
     const password = generateTestPassword();
 
-    await page.goto("http://localhost:5222/login");
+    await page.goto(`${TEST_CONFIG.baseURL}/login`);
     await page.getByRole("button", { name: /create account/i }).click();
 
     await page.getByRole("textbox", { name: /first name/i }).fill(firstName);
@@ -151,7 +163,7 @@ test.describe("Manual Registration Flow", () => {
       .setChecked(true);
 
     await page.getByRole("button", { name: /sign up/i }).click();
-    await expect(page).toHaveURL(/\/dashboard/, { timeout: 10000 });
+    await loginNewlyRegisteredUser(page, email, password);
 
     // Click logout button
     await page.getByRole("button", { name: /logout/i }).click();
@@ -165,7 +177,7 @@ test.describe("Manual Registration Flow", () => {
     const timestamp = Date.now();
     const password = generateTestPassword();
 
-    await page.goto("http://localhost:5222/login");
+    await page.goto(`${TEST_CONFIG.baseURL}/login`);
     await page.getByRole("button", { name: /create account/i }).click();
 
     // Fill form with mismatched passwords
@@ -197,7 +209,7 @@ test.describe("Manual Registration Flow", () => {
     const timestamp = Date.now();
     const password = generateTestPassword();
 
-    await page.goto("http://localhost:5222/login");
+    await page.goto(`${TEST_CONFIG.baseURL}/login`);
     await page.getByRole("button", { name: /create account/i }).click();
 
     // Fill form but don't accept terms

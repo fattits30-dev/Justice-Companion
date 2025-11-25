@@ -88,8 +88,8 @@ test-coverage-output.txt
 test-verbose-output.txt
 *.spec.js.snap
 *.test.js.snap
-test_*.py
-test_*.js
+# Test files should be in backend/tests/
+# Note: Test files now in proper tests/ directories
 
 # ============================================================================
 # IDE & Editor Files

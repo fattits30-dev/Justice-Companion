@@ -1,13 +1,22 @@
-"""
-Case model for legal case management.
-Migrated from src/repositories/CaseRepository.ts
-"""
+"""Case model for legal case management."""
 
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Enum as SQLEnum
-from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
-from backend.models.base import Base
+from __future__ import annotations
+
 import enum
+from datetime import datetime
+from typing import TYPE_CHECKING
+
+from sqlalchemy import DateTime, Enum as SQLEnum, ForeignKey, Integer, String, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from backend.models.base import Base
+
+if TYPE_CHECKING:
+    from backend.models.deadline import Deadline
+    from backend.models.evidence import Evidence
+    from backend.models.tag import CaseTag
+    from backend.models.template import TemplateUsage
+    from backend.models.user import User
 
 
 class CaseType(str, enum.Enum):
@@ -46,25 +55,41 @@ class Case(Base):
 
     __tablename__ = "cases"
 
-    id = Column(Integer, primary_key=True, autoincrement=True, index=True)
-    title = Column(String, nullable=False)
-    description = Column(String, nullable=True)
-    case_type = Column(SQLEnum(CaseType, name="case_type", native_enum=False), nullable=False)
-    status = Column(
+    id: Mapped[int] = mapped_column(
+        Integer, primary_key=True, autoincrement=True, index=True
+    )
+    title: Mapped[str] = mapped_column(String, nullable=False)
+    description: Mapped[str | None] = mapped_column(String, nullable=True)
+    case_type: Mapped[CaseType] = mapped_column(
+        SQLEnum(CaseType, name="case_type", native_enum=False), nullable=False
+    )
+    status: Mapped[CaseStatus] = mapped_column(
         SQLEnum(CaseStatus, name="case_status", native_enum=False),
         nullable=False,
         default=CaseStatus.ACTIVE,
     )
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    user_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
 
     # Relationships
-    user = relationship("User", back_populates="cases")
-    evidence = relationship("Evidence", back_populates="case")
-    deadlines = relationship("Deadline", back_populates="case")
-    case_tags = relationship("CaseTag", back_populates="case", cascade="all, delete-orphan")
-    template_usages = relationship("TemplateUsage", back_populates="case")
+    user: Mapped["User | None"] = relationship("User", back_populates="cases")
+    evidence: Mapped[list["Evidence"]] = relationship("Evidence", back_populates="case")
+    deadlines: Mapped[list["Deadline"]] = relationship(
+        "Deadline", back_populates="case"
+    )
+    case_tags: Mapped[list["CaseTag"]] = relationship(
+        "CaseTag", back_populates="case", cascade="all, delete-orphan"
+    )
+    template_usages: Mapped[list["TemplateUsage"]] = relationship(
+        "TemplateUsage", back_populates="case"
+    )
 
     def to_dict(self):
         """Convert Case model to dictionary for JSON serialization."""
@@ -73,12 +98,22 @@ class Case(Base):
             "title": self.title,
             "description": self.description,
             "case_type": (
-                self.case_type.value if isinstance(self.case_type, CaseType) else self.case_type
+                self.case_type.value
+                if isinstance(self.case_type, CaseType)
+                else self.case_type
             ),
-            "status": self.status.value if isinstance(self.status, CaseStatus) else self.status,
+            "status": (
+                self.status.value
+                if isinstance(self.status, CaseStatus)
+                else self.status
+            ),
             "user_id": self.user_id,
-            "created_at": self.created_at.isoformat() if self.created_at is not None else None,
-            "updated_at": self.updated_at.isoformat() if self.updated_at is not None else None,
+            "created_at": (
+                self.created_at.isoformat() if self.created_at is not None else None
+            ),
+            "updated_at": (
+                self.updated_at.isoformat() if self.updated_at is not None else None
+            ),
         }
 
     def __repr__(self):

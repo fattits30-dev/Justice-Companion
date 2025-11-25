@@ -50,9 +50,9 @@ import os
 
 from backend.models.base import get_db
 from backend.models.consent import ConsentType
-from backend.services.auth_service import AuthenticationService
+from backend.services.auth.service import AuthenticationService
 from backend.routes.auth import get_current_user
-from backend.services.encryption_service import EncryptionService
+from backend.services.security.encryption import EncryptionService
 from backend.services.audit_logger import AuditLogger
 from backend.services.consent_service import ConsentService
 from backend.services.gdpr.gdpr_service import GdprService, GdprExportOptions, GdprDeleteOptions
@@ -62,9 +62,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/gdpr", tags=["gdpr"])
 
-
 # ===== PYDANTIC REQUEST/RESPONSE MODELS =====
-
 
 class GdprExportRequest(BaseModel):
     """Request model for GDPR data export (Article 20)."""
@@ -73,13 +71,13 @@ class GdprExportRequest(BaseModel):
 
     @field_validator("format")
     @classmethod
+    @classmethod
     def validate_format(cls, v):
         if v not in ["json", "csv"]:
             raise ValueError("Format must be 'json' or 'csv'")
         return v
 
     model_config = ConfigDict(use_enum_values=True)
-
 
 class GdprExportResponse(BaseModel):
     """Response model for GDPR data export."""
@@ -93,7 +91,6 @@ class GdprExportResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-
 class GdprDeleteRequest(BaseModel):
     """Request model for GDPR account deletion (Article 17)."""
 
@@ -103,13 +100,13 @@ class GdprDeleteRequest(BaseModel):
 
     @field_validator("confirmed")
     @classmethod
+    @classmethod
     def validate_confirmed(cls, v):
         if not v:
             raise ValueError("Deletion requires explicit confirmation (confirmed: true)")
         return v
 
     model_config = ConfigDict(use_enum_values=True)
-
 
 class GdprDeleteResponse(BaseModel):
     """Response model for GDPR account deletion."""
@@ -124,7 +121,6 @@ class GdprDeleteResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-
 class ConsentRecord(BaseModel):
     """Consent record model."""
 
@@ -137,14 +133,12 @@ class ConsentRecord(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-
 class ConsentsResponse(BaseModel):
     """Response model for user consents."""
 
     consents: List[ConsentRecord]
 
     model_config = ConfigDict(from_attributes=True)
-
 
 class UpdateConsentRequest(BaseModel):
     """Request model for updating consent."""
@@ -154,14 +148,11 @@ class UpdateConsentRequest(BaseModel):
 
     model_config = ConfigDict(use_enum_values=True)
 
-
 # ===== DEPENDENCY INJECTION =====
-
 
 def get_auth_service(db: Session = Depends(get_db)) -> AuthenticationService:
     """Get authentication service instance."""
     return AuthenticationService(db=db)
-
 
 def get_encryption_service() -> EncryptionService:
     """Get encryption service instance."""
@@ -170,18 +161,15 @@ def get_encryption_service() -> EncryptionService:
         raise ValueError("ENCRYPTION_KEY_BASE64 environment variable not set")
     return EncryptionService(key)
 
-
 def get_audit_logger(db: Session = Depends(get_db)) -> AuditLogger:
     """Get audit logger instance."""
     return AuditLogger(db)
-
 
 def get_consent_service(
     db: Session = Depends(get_db), audit_logger: AuditLogger = Depends(get_audit_logger)
 ) -> ConsentService:
     """Get consent service instance."""
     return ConsentService(db, audit_logger)
-
 
 def get_gdpr_service(
     db: Session = Depends(get_db),
@@ -201,9 +189,7 @@ def get_gdpr_service(
         rate_limit_service=None,  # TODO: Add Redis-based RateLimitService in production
     )
 
-
 # ===== ROUTES =====
-
 
 @router.post("/export", response_model=GdprExportResponse)
 async def gdpr_export(
@@ -258,12 +244,11 @@ async def gdpr_export(
     except HTTPException:
         # Re-raise HTTP exceptions without wrapping
         raise
-    except Exception as e:
+    except Exception as exc:
         logger.error(f"GDPR export failed: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Export failed: {str(e)}"
         )
-
 
 @router.post("/delete", response_model=GdprDeleteResponse)
 async def gdpr_delete(
@@ -334,12 +319,11 @@ async def gdpr_delete(
     except HTTPException:
         # Re-raise HTTP exceptions without wrapping
         raise
-    except Exception as e:
+    except Exception as exc:
         logger.error(f"GDPR deletion failed: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Deletion failed: {str(e)}"
         )
-
 
 @router.get("/consents", response_model=ConsentsResponse)
 async def get_consents(
@@ -380,13 +364,12 @@ async def get_consents(
 
         return ConsentsResponse(consents=consent_records)
 
-    except Exception as e:
+    except Exception as exc:
         logger.error(f"Failed to get consents: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get consents: {str(e)}",
         )
-
 
 @router.post("/consents")
 async def update_consent(
@@ -440,7 +423,7 @@ async def update_consent(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         logger.error(f"Failed to update consent: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

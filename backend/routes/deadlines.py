@@ -37,16 +37,14 @@ from backend.services.notification_service import (
     NotificationError,
 )
 from backend.models.notification import NotificationType, NotificationSeverity
-from backend.services.encryption_service import EncryptionService
+from backend.services.security.encryption import EncryptionService
 from backend.services.audit_logger import AuditLogger
 import os
 import base64
 
 router = APIRouter(prefix="/deadlines", tags=["deadlines"])
 
-
 # ===== DEPENDENCY INJECTION =====
-
 
 def get_encryption_service() -> EncryptionService:
     """
@@ -66,14 +64,12 @@ def get_encryption_service() -> EncryptionService:
 
     return EncryptionService(key_base64)
 
-
 def get_notification_service(
     db: Session = Depends(get_db),
 ) -> NotificationService:
     """Get notification service instance with audit logging."""
     audit_logger = AuditLogger(db)
     return NotificationService(db, audit_logger)
-
 
 def get_deadline_scheduler(
     db: Session = Depends(get_db),
@@ -83,14 +79,11 @@ def get_deadline_scheduler(
     audit_logger = AuditLogger(db)
     return DeadlineReminderScheduler(db, notification_service, audit_logger)
 
-
 def get_audit_logger(db: Session = Depends(get_db)) -> AuditLogger:
     """Get audit logger instance."""
     return AuditLogger(db)
 
-
 # ===== PYDANTIC REQUEST MODELS =====
-
 
 class CreateDeadlineRequest(BaseModel):
     """Request model for creating a deadline."""
@@ -106,6 +99,7 @@ class CreateDeadlineRequest(BaseModel):
     )
 
     @field_validator("priority")
+    @classmethod
     def validate_priority(cls, v):
         if v:
             try:
@@ -117,6 +111,7 @@ class CreateDeadlineRequest(BaseModel):
         return v
 
     @field_validator("title")
+    @classmethod
     def strip_title(cls, v):
         return v.strip()
 
@@ -143,7 +138,6 @@ class CreateDeadlineRequest(BaseModel):
         # Use deadlineDate if provided, otherwise use dueDate
         return v or due_date
 
-
 class UpdateDeadlineRequest(BaseModel):
     """Request model for updating a deadline."""
 
@@ -155,6 +149,7 @@ class UpdateDeadlineRequest(BaseModel):
     status: Optional[str] = Field(None, description="Deadline status")
 
     @field_validator("priority")
+    @classmethod
     def validate_priority(cls, v):
         if v:
             try:
@@ -166,6 +161,7 @@ class UpdateDeadlineRequest(BaseModel):
         return v
 
     @field_validator("status")
+    @classmethod
     def validate_status(cls, v):
         if v:
             try:
@@ -177,6 +173,7 @@ class UpdateDeadlineRequest(BaseModel):
         return v
 
     @field_validator("title")
+    @classmethod
     def strip_title(cls, v):
         if v:
             return v.strip()
@@ -194,15 +191,12 @@ class UpdateDeadlineRequest(BaseModel):
                     raise ValueError("Invalid date format (use YYYY-MM-DD or ISO 8601)")
         return v
 
-
 class ScheduleReminderRequest(BaseModel):
     """Request model for scheduling a deadline reminder."""
 
     reminderDays: int = Field(..., ge=1, le=30, description="Days before deadline to send reminder")
 
-
 # ===== PYDANTIC RESPONSE MODELS =====
-
 
 class DeadlineResponse(BaseModel):
     """Response model for deadline data."""
@@ -223,12 +217,10 @@ class DeadlineResponse(BaseModel):
     class Config:
         from_attributes = True
 
-
 class DeleteDeadlineResponse(BaseModel):
     """Response model for deadline deletion."""
 
     deleted: bool
-
 
 class ReminderInfoResponse(BaseModel):
     """Response model for reminder information."""
@@ -238,9 +230,7 @@ class ReminderInfoResponse(BaseModel):
     reminderDays: Optional[int]
     scheduledFor: Optional[str]
 
-
 # ===== HELPER FUNCTIONS =====
-
 
 def verify_case_ownership(db: Session, case_id: int, user_id: int) -> bool:
     """
@@ -268,7 +258,6 @@ def verify_case_ownership(db: Session, case_id: int, user_id: int) -> bool:
         )
 
     return True
-
 
 def verify_deadline_ownership(db: Session, deadline_id: int, user_id: int) -> Deadline:
     """
@@ -306,7 +295,6 @@ def verify_deadline_ownership(db: Session, deadline_id: int, user_id: int) -> De
 
     return deadline
 
-
 async def create_deadline_notification(
     notification_service: NotificationService,
     user_id: int,
@@ -343,9 +331,7 @@ async def create_deadline_notification(
         # Don't fail the operation if notification creation fails
         pass
 
-
 # ===== ROUTES =====
-
 
 @router.post("", response_model=DeadlineResponse, status_code=status.HTTP_201_CREATED)
 async def create_deadline(
@@ -428,7 +414,7 @@ async def create_deadline(
     except HTTPException:
         raise
 
-    except Exception as e:
+    except Exception as exc:
         db.rollback()
         audit_logger.log(
             event_type="deadline.created",
@@ -443,7 +429,6 @@ async def create_deadline(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to create deadline: {str(e)}",
         )
-
 
 @router.get("", response_model=dict)
 async def list_all_deadlines(
@@ -517,12 +502,11 @@ async def list_all_deadlines(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get deadlines: {str(e)}",
         )
-
 
 @router.get("/case/{case_id}", response_model=List[DeadlineResponse])
 async def list_case_deadlines(
@@ -550,12 +534,11 @@ async def list_case_deadlines(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to list deadlines: {str(e)}",
         )
-
 
 @router.get("/upcoming", response_model=List[DeadlineResponse])
 async def list_upcoming_deadlines(
@@ -591,12 +574,11 @@ async def list_upcoming_deadlines(
 
         return [d.to_dict() for d in deadlines]
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get upcoming deadlines: {str(e)}",
         )
-
 
 @router.get("/overdue", response_model=List[DeadlineResponse])
 async def list_overdue_deadlines(
@@ -636,13 +618,12 @@ async def list_overdue_deadlines(
 
         return [d.to_dict() for d in deadlines]
 
-    except Exception as e:
+    except Exception as exc:
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get overdue deadlines: {str(e)}",
         )
-
 
 @router.put("/{deadline_id}", response_model=DeadlineResponse)
 async def update_deadline(
@@ -742,7 +723,7 @@ async def update_deadline(
     except HTTPException:
         raise
 
-    except Exception as e:
+    except Exception as exc:
         db.rollback()
         audit_logger.log(
             event_type="deadline.updated",
@@ -757,7 +738,6 @@ async def update_deadline(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to update deadline: {str(e)}",
         )
-
 
 @router.delete("/{deadline_id}", response_model=DeleteDeadlineResponse)
 async def delete_deadline(
@@ -800,7 +780,7 @@ async def delete_deadline(
     except HTTPException:
         raise
 
-    except Exception as e:
+    except Exception as exc:
         db.rollback()
         audit_logger.log(
             event_type="deadline.deleted",
@@ -815,7 +795,6 @@ async def delete_deadline(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to delete deadline: {str(e)}",
         )
-
 
 @router.post("/{deadline_id}/complete", response_model=DeadlineResponse)
 async def complete_deadline(
@@ -864,7 +843,7 @@ async def complete_deadline(
     except HTTPException:
         raise
 
-    except Exception as e:
+    except Exception as exc:
         db.rollback()
         audit_logger.log(
             event_type="deadline.completed",
@@ -879,7 +858,6 @@ async def complete_deadline(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to complete deadline: {str(e)}",
         )
-
 
 @router.get("/{deadline_id}/reminders", response_model=ReminderInfoResponse)
 async def get_deadline_reminder_info(
@@ -933,12 +911,11 @@ async def get_deadline_reminder_info(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get reminder info: {str(e)}",
         )
-
 
 @router.post("/{deadline_id}/reminders", response_model=ReminderInfoResponse)
 async def schedule_deadline_reminder(
@@ -1008,7 +985,7 @@ async def schedule_deadline_reminder(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         db.rollback()
         audit_logger.log(
             event_type="deadline.reminder_scheduled",

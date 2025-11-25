@@ -20,9 +20,8 @@ from sqlalchemy.orm import Session, make_transient
 
 from backend.models.case import Case, CaseStatus
 from backend.schemas.case import CaseCreate, CaseUpdate
-from backend.services.encryption_service import EncryptionService, EncryptedData
+from backend.services.security.encryption import EncryptionService, EncryptedData
 from backend.services.audit_logger import AuditLogger
-
 
 class CaseRepository:
     def __init__(

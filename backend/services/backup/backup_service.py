@@ -25,10 +25,8 @@ import logging
 
 from backend.models.backup import BackupMetadataResponse
 
-
 # Configure logging
 logger = logging.getLogger(__name__)
-
 
 class BackupService:
     """

@@ -1,4 +1,5 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import { loginWithSeededUser } from "./utils/auth";
 
 test.describe("PWA Installation", () => {
   test("should display install prompt on desktop Chrome", async ({
@@ -8,25 +9,11 @@ test.describe("PWA Installation", () => {
     // Only test PWA installation on Chromium browsers (Chrome, Edge)
     test.skip(
       browserName !== "chromium",
-      "PWA install testing only for Chromium",
+      "PWA install testing only for Chromium"
     );
 
-    await page.goto("/");
-
-    // Register and login first
-    const timestamp = Date.now();
-    const email = `pwa${timestamp}@example.com`;
-
-    await page.click("text=Register");
-    await page.fill('input[name="name"]', "PWA Test");
-    await page.fill('input[name="email"]', email);
-    await page.fill('input[name="password"]', "password123");
-    await page.fill('input[name="confirmPassword"]', "password123");
-    await page.click('button[type="submit"]');
-
-    await expect(page.locator("text=Welcome")).toBeVisible({
-      timeout: 15000,
-    });
+    await loginWithSeededUser(page);
+    await page.goto("/", { waitUntil: "networkidle" });
 
     // Check if install prompt is available
     // Note: beforeinstallprompt event may not fire in headless mode
@@ -95,25 +82,11 @@ test.describe("PWA Installation", () => {
   }) => {
     test.skip(
       browserName !== "chromium",
-      "Lighthouse testing only for Chromium",
+      "Lighthouse testing only for Chromium"
     );
 
-    await page.goto("/");
-
-    // Register and login
-    const timestamp = Date.now();
-    const email = `lighthouse${timestamp}@example.com`;
-
-    await page.click("text=Register");
-    await page.fill('input[name="name"]', "Lighthouse Test");
-    await page.fill('input[name="email"]', email);
-    await page.fill('input[name="password"]', "password123");
-    await page.fill('input[name="confirmPassword"]', "password123");
-    await page.click('button[type="submit"]');
-
-    await expect(page.locator("text=Welcome")).toBeVisible({
-      timeout: 15000,
-    });
+    await loginWithSeededUser(page);
+    await page.goto("/", { waitUntil: "networkidle" });
 
     // Simulate checking Lighthouse PWA criteria
 
@@ -155,23 +128,8 @@ test.describe("PWA Installation", () => {
   });
 
   test("should handle offline fallback page", async ({ page }) => {
-    // First load the app normally
-    await page.goto("/");
-
-    // Register and login
-    const timestamp = Date.now();
-    const email = `offline${timestamp}@example.com`;
-
-    await page.click("text=Register");
-    await page.fill('input[name="name"]', "Offline Test");
-    await page.fill('input[name="email"]', email);
-    await page.fill('input[name="password"]', "password123");
-    await page.fill('input[name="confirmPassword"]', "password123");
-    await page.click('button[type="submit"]');
-
-    await expect(page.locator("text=Welcome")).toBeVisible({
-      timeout: 15000,
-    });
+    await loginWithSeededUser(page);
+    await page.goto("/", { waitUntil: "networkidle" });
 
     // Navigate to a cached page (like dashboard)
     await page.click('a[href="/"], text=Dashboard');
@@ -204,7 +162,8 @@ test.describe("PWA Installation", () => {
   });
 
   test("should preload critical resources", async ({ page }) => {
-    await page.goto("/");
+    await loginWithSeededUser(page);
+    await page.goto("/", { waitUntil: "networkidle" });
 
     // Check that main app resources are preloaded
     const preloadCount = await page

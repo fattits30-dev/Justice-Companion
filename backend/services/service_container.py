@@ -15,7 +15,7 @@ Features:
 
 Usage:
     from backend.services.service_container import ServiceContainer
-    from backend.services.encryption_service import EncryptionService
+    from backend.services.security.encryption import EncryptionService
     from backend.services.audit_logger import AuditLogger
 
     # Initialize container
@@ -36,15 +36,13 @@ import threading
 from typing import Optional, Any, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from backend.services.encryption_service import EncryptionService
+    from backend.services.security.encryption import EncryptionService
     from backend.services.audit_logger import AuditLogger
 
     # KeyManager will be created later
 
-
 class ServiceContainerError(Exception):
     """Raised when service container is not properly initialized."""
-
 
 class ServiceContainer:
     """
@@ -237,11 +235,9 @@ class ServiceContainer:
             self._audit_logger = None
             self._key_manager = None
 
-
 # Module-level convenience functions (matching TypeScript API)
 
 _global_container: Optional[ServiceContainer] = None
-
 
 def get_container() -> ServiceContainer:
     """
@@ -258,7 +254,6 @@ def get_container() -> ServiceContainer:
     if _global_container is None:
         _global_container = ServiceContainer()
     return _global_container
-
 
 def initialize_service_container(
     encryption_service: "EncryptionService", audit_logger: "AuditLogger", key_manager: Any = None
@@ -286,7 +281,6 @@ def initialize_service_container(
     container = get_container()
     container.initialize(encryption_service, audit_logger, key_manager)
 
-
 def get_encryption_service() -> "EncryptionService":
     """
     Get the encryption service from global container.
@@ -304,7 +298,6 @@ def get_encryption_service() -> "EncryptionService":
         encrypted_data = encryption.encrypt("sensitive")
     """
     return get_container().get_encryption_service()
-
 
 def get_audit_logger() -> "AuditLogger":
     """
@@ -324,7 +317,6 @@ def get_audit_logger() -> "AuditLogger":
     """
     return get_container().get_audit_logger()
 
-
 def get_key_manager() -> Any:
     """
     Get the key manager from global container.
@@ -342,7 +334,6 @@ def get_key_manager() -> Any:
         encryption_key = key_mgr.get_key()
     """
     return get_container().get_key_manager()
-
 
 def reset_service_container() -> None:
     """

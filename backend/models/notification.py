@@ -1,16 +1,19 @@
-"""
-Notification model for notification management.
-Migrated from src/repositories/NotificationRepository.ts
-"""
+"""Notification model for notification management."""
 
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, Boolean
-from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
-from backend.models.base import Base
+from __future__ import annotations
+
 import enum
-from typing import Optional, Dict, Any
 import json
+from datetime import datetime
+from typing import Any, Dict, Optional, TYPE_CHECKING, cast
 
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from backend.models.base import Base
+
+if TYPE_CHECKING:
+    from backend.models.user import User
 
 class NotificationType(str, enum.Enum):
     """Notification type enumeration matching database CHECK constraint."""
@@ -23,7 +26,6 @@ class NotificationType(str, enum.Enum):
     SYSTEM_WARNING = "system_warning"
     SYSTEM_INFO = "system_info"
 
-
 class NotificationSeverity(str, enum.Enum):
     """Notification severity enumeration matching database CHECK constraint."""
 
@@ -31,7 +33,6 @@ class NotificationSeverity(str, enum.Enum):
     MEDIUM = "medium"
     HIGH = "high"
     URGENT = "urgent"
-
 
 class Notification(Base):
     """
@@ -56,32 +57,40 @@ class Notification(Base):
 
     __tablename__ = "notifications"
 
-    id = Column(Integer, primary_key=True, autoincrement=True, index=True)
-    user_id = Column(
+    id: Mapped[int] = mapped_column(
+        Integer, primary_key=True, autoincrement=True, index=True
+    )
+    user_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    type = Column(String, nullable=False)
-    severity = Column(String, nullable=False)
-    title = Column(String, nullable=False)
-    message = Column(Text, nullable=False)
-    action_url = Column(String, nullable=True)
-    action_label = Column(String, nullable=True)
-    metadata_json = Column(Text, nullable=True)
-    is_read = Column(Boolean, nullable=False, default=False)
-    is_dismissed = Column(Boolean, nullable=False, default=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
-    read_at = Column(DateTime(timezone=True), nullable=True)
-    expires_at = Column(DateTime(timezone=True), nullable=True)
+    type: Mapped[str] = mapped_column(String, nullable=False)
+    severity: Mapped[str] = mapped_column(String, nullable=False)
+    title: Mapped[str] = mapped_column(String, nullable=False)
+    message: Mapped[str] = mapped_column(Text, nullable=False)
+    action_url: Mapped[str | None] = mapped_column(String, nullable=True)
+    action_label: Mapped[str | None] = mapped_column(String, nullable=True)
+    metadata_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    is_read: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    is_dismissed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), index=True
+    )
+    read_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     # Relationships
-    user = relationship("User", back_populates="notifications")
+    user: Mapped["User"] = relationship("User", back_populates="notifications")
 
     @property
     def notification_metadata(self) -> Optional[Dict[str, Any]]:
         """Parse metadata_json into a dictionary."""
         if self.metadata_json is not None and isinstance(self.metadata_json, str):
             try:
-                return json.loads(self.metadata_json)
+                return cast(Dict[str, Any], json.loads(self.metadata_json))
             except (json.JSONDecodeError, TypeError):
                 return None
         return None
@@ -108,14 +117,17 @@ class Notification(Base):
             "metadata": self.notification_metadata,
             "isRead": bool(self.is_read),
             "isDismissed": bool(self.is_dismissed),
-            "createdAt": self.created_at.isoformat() if self.created_at is not None else None,
+            "createdAt": (
+                self.created_at.isoformat() if self.created_at is not None else None
+            ),
             "readAt": self.read_at.isoformat() if self.read_at is not None else None,
-            "expiresAt": self.expires_at.isoformat() if self.expires_at is not None else None,
+            "expiresAt": (
+                self.expires_at.isoformat() if self.expires_at is not None else None
+            ),
         }
 
     def __repr__(self):
         return f"<Notification(id={self.id}, user_id={self.user_id}, type='{self.type}', severity='{self.severity}')>"
-
 
 class NotificationPreferences(Base):
     """
@@ -140,32 +152,60 @@ class NotificationPreferences(Base):
 
     __tablename__ = "notification_preferences"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(
-        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True, index=True
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True,
+        index=True,
     )
 
     # Notification type toggles
-    deadline_reminders_enabled = Column(Boolean, nullable=False, default=True)
-    deadline_reminder_days = Column(Integer, nullable=False, default=7)
-    case_updates_enabled = Column(Boolean, nullable=False, default=True)
-    evidence_updates_enabled = Column(Boolean, nullable=False, default=True)
-    system_alerts_enabled = Column(Boolean, nullable=False, default=True)
+    deadline_reminders_enabled: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True
+    )
+    deadline_reminder_days: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=7
+    )
+    case_updates_enabled: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True
+    )
+    evidence_updates_enabled: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True
+    )
+    system_alerts_enabled: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True
+    )
 
     # Delivery preferences
-    sound_enabled = Column(Boolean, nullable=False, default=True)
-    desktop_notifications_enabled = Column(Boolean, nullable=False, default=True)
+    sound_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    desktop_notifications_enabled: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True
+    )
 
     # Quiet hours
-    quiet_hours_enabled = Column(Boolean, nullable=False, default=False)
-    quiet_hours_start = Column(String, nullable=False, default="22:00")
-    quiet_hours_end = Column(String, nullable=False, default="08:00")
+    quiet_hours_enabled: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False
+    )
+    quiet_hours_start: Mapped[str] = mapped_column(
+        String, nullable=False, default="22:00"
+    )
+    quiet_hours_end: Mapped[str] = mapped_column(
+        String, nullable=False, default="08:00"
+    )
 
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
 
     # Relationships
-    user = relationship("User", back_populates="notification_preferences")
+    user: Mapped["User"] = relationship(
+        "User", back_populates="notification_preferences"
+    )
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert NotificationPreferences model to dictionary for JSON serialization."""
@@ -182,9 +222,16 @@ class NotificationPreferences(Base):
             "quietHoursEnabled": bool(self.quiet_hours_enabled),
             "quietHoursStart": self.quiet_hours_start,
             "quietHoursEnd": self.quiet_hours_end,
-            "createdAt": self.created_at.isoformat() if self.created_at is not None else None,
-            "updatedAt": self.updated_at.isoformat() if self.updated_at is not None else None,
+            "createdAt": (
+                self.created_at.isoformat() if self.created_at is not None else None
+            ),
+            "updatedAt": (
+                self.updated_at.isoformat() if self.updated_at is not None else None
+            ),
         }
 
     def __repr__(self):
-        return f"<NotificationPreferences(user_id={self.user_id}, deadline_reminders={self.deadline_reminders_enabled})>"
+        return (
+            "<NotificationPreferences("
+            f"user_id={self.user_id}, deadline_reminders={self.deadline_reminders_enabled})>"
+        )

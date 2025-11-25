@@ -39,16 +39,16 @@ from sqlalchemy.orm import Session
 
 from backend.models.base import get_db
 from backend.routes.auth import get_current_user
-from backend.services.ai_stub_service import StubAIService
+from backend.services.ai.stub import StubAIService
 from backend.services.audit_logger import AuditLogger
 from backend.services.chat_service import (ChatService, ConversationResponse,
                                            ConversationWithMessagesResponse,
                                            CreateConversationInput,
                                            CreateMessageInput)
-from backend.services.encryption_service import EncryptionService
-from backend.services.rag_service import (RAGService, build_system_prompt,
+from backend.services.security.encryption import EncryptionService
+from backend.services.ai.rag import (RAGService, build_system_prompt,
                                           extract_sources)
-from backend.services.unified_ai_service import (AIProviderConfig,
+from backend.services.ai.service import (AIProviderConfig,
                                                  CaseAnalysisRequest,
                                                  ChatMessage,
                                                  DocumentDraftRequest,
@@ -61,9 +61,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
-
 # ===== PYDANTIC REQUEST MODELS =====
-
 
 class ChatStreamRequest(BaseModel):
     """Request model for streaming chat with legal research."""
@@ -75,9 +73,9 @@ class ChatStreamRequest(BaseModel):
 
     @field_validator("message")
     @classmethod
+    @classmethod
     def strip_message(cls, v):
         return v.strip()
-
 
 class ChatSendRequest(BaseModel):
     """Request model for non-streaming chat."""
@@ -89,9 +87,9 @@ class ChatSendRequest(BaseModel):
 
     @field_validator("message")
     @classmethod
+    @classmethod
     def strip_message(cls, v):
         return v.strip()
-
 
 class DocumentAnalysisRequest(BaseModel):
     """Request model for document analysis."""
@@ -110,25 +108,21 @@ class DocumentAnalysisRequest(BaseModel):
         description="Optional user question about document",
     )
 
-
 UPLOAD_ROOT = (
     Path(tempfile.gettempdir()) / "justice-companion" / "uploads"
 ).resolve()
 _SANITIZE_FILENAME_PATTERN = re.compile(r"[^a-zA-Z0-9._-]")
 FILE_ID_PATTERN = re.compile(r"^[a-f0-9]{32}(?:\.[a-z0-9]{1,8})?$")
 
-
 def _get_user_upload_dir(user_id: int) -> Path:
     upload_dir = (UPLOAD_ROOT / str(user_id)).resolve()
     upload_dir.mkdir(parents=True, exist_ok=True)
     return upload_dir
 
-
 def _sanitize_upload_filename(filename: Optional[str]) -> str:
     safe_name = Path(filename or "upload").name
     sanitized = _SANITIZE_FILENAME_PATTERN.sub("_", safe_name)
     return sanitized or "upload.txt"
-
 
 def _ensure_within_directory(candidate: Path, base_dir: Path) -> Path:
     resolved_candidate = candidate.resolve()
@@ -139,7 +133,6 @@ def _ensure_within_directory(candidate: Path, base_dir: Path) -> Path:
             detail="Invalid file path provided",
         )
     return resolved_candidate
-
 
 def _resolve_document_path(file_id: str, user_id: int) -> Path:
     """Resolve a previously issued file identifier to a safe path."""
@@ -153,9 +146,7 @@ def _resolve_document_path(file_id: str, user_id: int) -> Path:
     candidate = user_dir / file_id
     return _ensure_within_directory(candidate, user_dir)
 
-
 # ===== DEPENDENCY INJECTION =====
-
 
 def get_encryption_service(db: Session = Depends(get_db)) -> EncryptionService:
     """
@@ -180,11 +171,9 @@ def get_encryption_service(db: Session = Depends(get_db)) -> EncryptionService:
         )
     return EncryptionService(encryption_key)
 
-
 def get_audit_logger(db: Session = Depends(get_db)) -> AuditLogger:
     """Get audit logger instance."""
     return AuditLogger(db)
-
 
 def get_chat_service(
     db: Session = Depends(get_db),
@@ -193,7 +182,6 @@ def get_chat_service(
 ) -> ChatService:
     """Get chat service instance with dependencies."""
     return ChatService(db, encryption_service, audit_logger)
-
 
 async def get_ai_service(
     user_id: int = Depends(get_current_user),
@@ -219,7 +207,7 @@ async def get_ai_service(
         # compatible interface for the routes that depend on it.
         return StubAIService(audit_logger)  # type: ignore[return-value]
 
-    from backend.services.ai_provider_config_service import \
+    from backend.services.ai.providers import \
         AIProviderConfigService
 
     # Get config service
@@ -269,7 +257,6 @@ async def get_ai_service(
 
     return UnifiedAIService(config, audit_logger)
 
-
 def get_rag_service(
     ai_service: UnifiedAIService = Depends(get_ai_service),
     audit_logger: AuditLogger = Depends(get_audit_logger),
@@ -302,9 +289,7 @@ def get_rag_service(
     legal_api_service = MockLegalAPIService()
     return RAGService(legal_api_service, ai_service, audit_logger)
 
-
 # ===== HELPER FUNCTIONS =====
-
 
 def generate_conversation_title(message: str) -> str:
     """Generate conversation title from first user message."""
@@ -318,9 +303,7 @@ def generate_conversation_title(message: str) -> str:
 
     return truncated + "..."
 
-
 # ===== STREAMING IMPLEMENTATION =====
-
 
 async def stream_ai_chat(
     message: str,
@@ -362,7 +345,7 @@ async def stream_ai_chat(
                 # Convert messages to ChatMessage format
                 for msg in conversation.messages:
                     history_messages.append(ChatMessage(role=msg.role, content=msg.content))
-            except Exception as e:
+            except Exception as exc:
                 logger.error(f"Failed to load conversation history: {e}")
                 # Continue without history
 
@@ -376,7 +359,7 @@ async def stream_ai_chat(
                 if context:
                     system_prompt = build_system_prompt(context)
                     sources = extract_sources(context)
-            except Exception as e:
+            except Exception as exc:
                 logger.error(f"RAG context retrieval failed: {e}")
                 # Continue without RAG
 
@@ -431,14 +414,12 @@ async def stream_ai_chat(
         final_data = {"type": "complete", "conversationId": conversation_id, "done": True}
         yield f"data: {json.dumps(final_data)}\n\n"
 
-    except Exception as e:
-        logger.exception(f"Streaming error: {e}")
-        error_data = {"type": "error", "error": str(e), "done": True}
+    except Exception as exc:
+        logger.exception(f"Streaming error: {exc}")
+        error_data = {"type": "error", "error": str(exc), "done": True}
         yield f"data: {json.dumps(error_data)}\n\n"
 
-
 # ===== ROUTES =====
-
 
 @router.post("/stream")
 async def stream_chat(
@@ -488,13 +469,12 @@ async def stream_chat(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         logger.exception(f"Stream chat failed: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Streaming chat failed: {str(e)}",
         )
-
 
 @router.post("/send", response_model=Dict[str, Any])
 async def send_chat(
@@ -574,12 +554,11 @@ async def send_chat(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         logger.exception(f"Send chat failed: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Chat send failed: {str(e)}"
         )
-
 
 @router.post("/analyze-case")
 async def analyze_case(
@@ -616,13 +595,12 @@ async def analyze_case(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         logger.exception(f"Case analysis failed: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Case analysis failed: {str(e)}",
         )
-
 
 @router.post("/analyze-evidence")
 async def analyze_evidence(
@@ -659,13 +637,12 @@ async def analyze_evidence(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         logger.exception(f"Evidence analysis failed: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Evidence analysis failed: {str(e)}",
         )
-
 
 @router.post("/draft-document")
 async def draft_document(
@@ -704,13 +681,12 @@ async def draft_document(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         logger.exception(f"Document drafting failed: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Document drafting failed: {str(e)}",
         )
-
 
 @router.post("/upload-document")
 async def upload_document(
@@ -787,13 +763,12 @@ async def upload_document(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         logger.exception(f"Document upload failed: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Document upload failed: {str(e)}",
         )
-
 
 @router.post("/analyze-document")
 async def analyze_document(
@@ -880,13 +855,12 @@ async def analyze_document(
     except HTTPException:
         logger.error("[ENDPOINT] HTTPException caught, re-raising")
         raise
-    except Exception as e:
+    except Exception as exc:
         logger.exception(f"[ENDPOINT] Document analysis failed with exception: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Document analysis failed: {str(e)}",
         )
-
 
 @router.get("/conversations", response_model=List[ConversationResponse])
 async def get_conversations(
@@ -915,13 +889,12 @@ async def get_conversations(
 
         return conversations
 
-    except Exception as e:
+    except Exception as exc:
         logger.exception(f"Failed to get conversations: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get conversations: {str(e)}",
         )
-
 
 @router.get("/conversations/{conversation_id}", response_model=ConversationWithMessagesResponse)
 async def get_conversation(
@@ -950,13 +923,12 @@ async def get_conversation(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         logger.exception(f"Failed to load conversation: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to load conversation: {str(e)}",
         )
-
 
 @router.delete("/conversations/{conversation_id}")
 async def delete_conversation(
@@ -986,7 +958,7 @@ async def delete_conversation(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         logger.exception(f"Failed to delete conversation: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

@@ -1,22 +1,26 @@
-"""
-Evidence model for legal case evidence management.
-Migrated from src/domains/evidence/entities/Evidence.ts
-"""
+"""Evidence model for legal case evidence management."""
+
+from __future__ import annotations
+
+import enum
+from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import (
-    Column,
+    CheckConstraint,
+    DateTime,
+    Enum as SQLEnum,
+    ForeignKey,
     Integer,
     String,
-    DateTime,
-    ForeignKey,
-    Enum as SQLEnum,
-    CheckConstraint,
+    text,
 )
-from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
-from backend.models.base import Base
-import enum
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from backend.models.base import Base
+
+if TYPE_CHECKING:
+    from backend.models.case import Case
 
 class EvidenceType(str, enum.Enum):
     """Evidence type enumeration matching database CHECK constraint."""
@@ -27,7 +31,6 @@ class EvidenceType(str, enum.Enum):
     RECORDING = "recording"
     NOTE = "note"
     WITNESS = "witness"
-
 
 class Evidence(Base):
     """
@@ -47,22 +50,28 @@ class Evidence(Base):
 
     __tablename__ = "evidence"
 
-    id = Column(Integer, primary_key=True, autoincrement=True, index=True)
-    case_id = Column(
+    id: Mapped[int] = mapped_column(
+        Integer, primary_key=True, autoincrement=True, index=True
+    )
+    case_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("cases.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    title = Column(String, nullable=False)
-    file_path = Column(String, nullable=True)
-    content = Column(String, nullable=True)
-    evidence_type = Column(
+    title: Mapped[str] = mapped_column(String, nullable=False)
+    file_path: Mapped[str | None] = mapped_column(String, nullable=True)
+    content: Mapped[str | None] = mapped_column(String, nullable=True)
+    evidence_type: Mapped[EvidenceType] = mapped_column(
         SQLEnum(EvidenceType, name="evidence_type", native_enum=False), nullable=False
     )
-    obtained_date = Column(String, nullable=True)  # Stored as TEXT in SQLite
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    obtained_date: Mapped[str | None] = mapped_column(String, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=text('CURRENT_TIMESTAMP')
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=text('CURRENT_TIMESTAMP'), onupdate=text('CURRENT_TIMESTAMP')
+    )
 
     # Relationships
-    case = relationship("Case", back_populates="evidence")
+    case: Mapped["Case"] = relationship("Case", back_populates="evidence")
 
     # Table args for CHECK constraint (file_path XOR content)
     __table_args__ = (
@@ -86,8 +95,12 @@ class Evidence(Base):
                 else self.evidence_type
             ),
             "obtainedDate": self.obtained_date,
-            "createdAt": self.created_at.isoformat() if self.created_at is not None else None,
-            "updatedAt": self.updated_at.isoformat() if self.updated_at is not None else None,
+            "createdAt": (
+                self.created_at.isoformat() if self.created_at is not None else None
+            ),
+            "updatedAt": (
+                self.updated_at.isoformat() if self.updated_at is not None else None
+            ),
         }
 
     def __repr__(self):

@@ -36,22 +36,17 @@ from backend.models.template import CaseTemplate, TemplateUsage, TemplateCategor
 from backend.models.case import Case, CaseType, CaseStatus
 from backend.models.deadline import Deadline, DeadlinePriority
 
-
 class TemplateNotFoundError(Exception):
     """Exception raised when template is not found."""
-
 
 class UnauthorizedError(Exception):
     """Exception raised when user doesn't own the template."""
 
-
 class DatabaseError(Exception):
     """Exception raised for database operation failures."""
 
-
 class ValidationError(Exception):
     """Exception raised for invalid input data."""
-
 
 # Pydantic models for input/output
 class TemplateFields(BaseModel):
@@ -67,7 +62,6 @@ class TemplateFields(BaseModel):
 
     model_config = ConfigDict(use_enum_values=True)
 
-
 class TimelineMilestone(BaseModel):
     """Timeline milestone template."""
 
@@ -80,7 +74,6 @@ class TimelineMilestone(BaseModel):
     )
 
     model_config = ConfigDict(use_enum_values=True)
-
 
 class ChecklistItem(BaseModel):
     """Checklist item template."""
@@ -95,7 +88,6 @@ class ChecklistItem(BaseModel):
     daysFromStart: Optional[int] = Field(default=None, description="Suggested completion timeline")
 
     model_config = ConfigDict(use_enum_values=True)
-
 
 class CreateTemplateInput(BaseModel):
     """Input model for creating a new template."""
@@ -116,7 +108,6 @@ class CreateTemplateInput(BaseModel):
 
     model_config = ConfigDict(use_enum_values=True)
 
-
 class UpdateTemplateInput(BaseModel):
     """Input model for updating an existing template."""
 
@@ -134,7 +125,6 @@ class UpdateTemplateInput(BaseModel):
 
     model_config = ConfigDict(use_enum_values=True)
 
-
 class CreateCaseFromTemplateInput(BaseModel):
     """Input for creating a case from template with variable substitution."""
 
@@ -146,7 +136,6 @@ class CreateCaseFromTemplateInput(BaseModel):
     )
 
     model_config = ConfigDict(use_enum_values=True)
-
 
 class TemplateResponse(BaseModel):
     """Response model for template data."""
@@ -166,14 +155,12 @@ class TemplateResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-
 class AppliedMilestone(BaseModel):
     """Applied milestone result."""
 
     id: int
     title: str
     dueDate: str
-
 
 class TemplateApplicationResult(BaseModel):
     """Result of applying template to create case."""
@@ -183,7 +170,6 @@ class TemplateApplicationResult(BaseModel):
     appliedChecklistItems: List[Dict[str, Any]]
     templateId: int
     templateName: str
-
 
 class TemplateService:
     """

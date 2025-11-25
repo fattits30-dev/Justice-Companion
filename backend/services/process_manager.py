@@ -54,7 +54,6 @@ from typing import Dict, List, Optional, Callable, Awaitable, Union
 
 logger = logging.getLogger(__name__)
 
-
 @dataclass
 class ProcessInfo:
     """
@@ -67,7 +66,6 @@ class ProcessInfo:
 
     pid: Optional[int] = None
     name: Optional[str] = None
-
 
 @dataclass
 class PortStatus:
@@ -84,7 +82,6 @@ class PortStatus:
     name: str
     in_use: bool
 
-
 @dataclass
 class ProcessStatus:
     """
@@ -99,7 +96,6 @@ class ProcessStatus:
     is_running: bool
     start_time: datetime
     ports: List[PortStatus] = field(default_factory=list)
-
 
 class ProcessManager:
     """
@@ -209,7 +205,7 @@ class ProcessManager:
                 extra={"service": "ProcessManager", "port": port},
             )
             return False
-        except Exception as e:
+        except Exception as exc:
             logger.error(
                 f"[ProcessManager] Unexpected error checking port {port}: {e}",
                 exc_info=True,
@@ -281,7 +277,7 @@ class ProcessManager:
 
             return ProcessInfo(pid=None)
 
-        except Exception as e:
+        except Exception as exc:
             logger.debug(
                 f"[ProcessManager] Error finding process on port {port}: {e}",
                 extra={"service": "ProcessManager", "port": port},
@@ -386,7 +382,7 @@ class ProcessManager:
 
             return success
 
-        except Exception as e:
+        except Exception as exc:
             logger.error(
                 f"[ProcessManager] Error killing process on port {port}: {e}",
                 exc_info=True,
@@ -419,7 +415,7 @@ class ProcessManager:
                         extra={"service": "ProcessManager", "port": port, "name": name},
                     )
                     await self.kill_process_on_port(port)
-            except Exception as e:
+            except Exception as exc:
                 # Log error but don't throw - cleanup should continue
                 self.log_error(
                     e if isinstance(e, Exception) else Exception(str(e)),
@@ -592,7 +588,7 @@ class ProcessManager:
             )
             return True
 
-        except Exception as e:
+        except Exception as exc:
             logger.error(
                 f"[ProcessManager] Error killing process {pid}: {e}",
                 exc_info=True,
@@ -638,7 +634,7 @@ class ProcessManager:
                     extra={"service": "ProcessManager"},
                 )
 
-            except Exception as e:
+            except Exception as exc:
                 logger.error(
                     f"[ProcessManager] Error in shutdown handler {i + 1}: {e}",
                     exc_info=True,
@@ -649,11 +645,9 @@ class ProcessManager:
             "[ProcessManager] All shutdown handlers executed", extra={"service": "ProcessManager"}
         )
 
-
 # Singleton instance
 _process_manager_instance: Optional[ProcessManager] = None
 _process_manager_lock = threading.Lock()
-
 
 def get_process_manager() -> ProcessManager:
     """
@@ -674,7 +668,6 @@ def get_process_manager() -> ProcessManager:
                 _process_manager_instance = ProcessManager()
 
     return _process_manager_instance
-
 
 def reset_process_manager() -> None:
     """

@@ -32,7 +32,6 @@ from pydantic import BaseModel, Field, ConfigDict
 from backend.models.consent import Consent, ConsentType
 from backend.services.audit_logger import AuditLogger
 
-
 # Pydantic models for input/output
 class GrantConsentInput(BaseModel):
     """Input model for granting consent."""
@@ -40,7 +39,6 @@ class GrantConsentInput(BaseModel):
     consent_type: ConsentType = Field(..., description="Type of consent to grant")
 
     model_config = ConfigDict(use_enum_values=True)
-
 
 class ConsentResponse(BaseModel):
     """Response model for consent data."""
@@ -55,7 +53,6 @@ class ConsentResponse(BaseModel):
     created_at: str
 
     model_config = ConfigDict(from_attributes=True)
-
 
 class ConsentService:
     """

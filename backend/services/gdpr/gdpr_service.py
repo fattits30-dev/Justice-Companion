@@ -29,7 +29,7 @@ Security:
 
 Usage:
     from backend.services.gdpr.gdpr_service import GdprService
-    from backend.services.encryption_service import EncryptionService
+    from backend.services.security.encryption import EncryptionService
     from backend.services.audit_logger import AuditLogger
     from backend.services.rate_limit_service import RateLimitService
 
@@ -65,7 +65,7 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from pydantic import BaseModel, Field, ConfigDict
 
-from backend.services.encryption_service import EncryptionService
+from backend.services.security.encryption import EncryptionService
 from backend.services.audit_logger import AuditLogger
 from backend.services.rate_limit_service import RateLimitService
 from backend.services.gdpr.data_exporter import DataExporter, GdprExportOptions
@@ -74,11 +74,9 @@ from backend.services.gdpr.data_deleter import DataDeleter, GdprDeleteOptions, G
 # Configure logger
 logger = logging.getLogger(__name__)
 
-
 # ============================================================================
 # Custom Exceptions
 # ============================================================================
-
 
 class RateLimitError(HTTPException):
     """Raised when rate limit is exceeded for GDPR operations."""
@@ -86,13 +84,11 @@ class RateLimitError(HTTPException):
     def __init__(self, message: str = "Rate limit exceeded for GDPR operation"):
         super().__init__(status_code=429, detail=message)
 
-
 class ConsentRequiredError(HTTPException):
     """Raised when required consent is missing."""
 
     def __init__(self, message: str = "User consent required for this operation"):
         super().__init__(status_code=403, detail=message)
-
 
 class GdprOperationError(HTTPException):
     """General error for GDPR operations."""
@@ -100,11 +96,9 @@ class GdprOperationError(HTTPException):
     def __init__(self, message: str, status_code: int = 400):
         super().__init__(status_code=status_code, detail=message)
 
-
 # ============================================================================
 # Pydantic Models for GDPR Service Results
 # ============================================================================
-
 
 class GdprExportResult(BaseModel):
     """
@@ -122,7 +116,6 @@ class GdprExportResult(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-
 class GdprDeleteResultExtended(GdprDeleteResult):
     """
     Extended deletion result with export path.
@@ -135,11 +128,9 @@ class GdprDeleteResultExtended(GdprDeleteResult):
         None, description="Path to export file if data was exported before deletion"
     )
 
-
 # ============================================================================
 # Rate Limit Tracking
 # ============================================================================
-
 
 class RateLimitInfo:
     """In-memory rate limit tracking for GDPR operations."""
@@ -155,11 +146,9 @@ class RateLimitInfo:
         self.count = count
         self.reset_at = reset_at or datetime.now(timezone.utc)
 
-
 # ============================================================================
 # GDPR Service
 # ============================================================================
-
 
 class GdprService:
     """
@@ -546,11 +535,9 @@ class GdprService:
         logger.info(f"Saved export to {file_path}")
         return str(file_path.absolute())
 
-
 # ============================================================================
 # Utility Functions
 # ============================================================================
-
 
 def create_gdpr_service(
     db: Session,
@@ -572,7 +559,7 @@ def create_gdpr_service(
 
     Example:
         from backend.database import get_db
-        from backend.services.encryption_service import EncryptionService
+        from backend.services.security.encryption import EncryptionService
         from backend.services.audit_logger import AuditLogger
 
         db = next(get_db())

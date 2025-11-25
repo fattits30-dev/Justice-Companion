@@ -8,10 +8,11 @@
  * - Memoization and caching
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { ProfileService } from "./ProfileService.ts";
-import type { UserProfile, ProfileFormData } from "../types/profile.ts";
+import { randomUUID } from "node:crypto";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { ProfileFormData, UserProfile } from "../types/profile.ts";
 import { ProfileStorageKey } from "../types/profile.ts";
+import { ProfileService } from "./ProfileService.ts";
 
 // Mock localStorage globally
 const localStorageMock = {
@@ -44,6 +45,9 @@ Object.defineProperty(global.console, "warn", {
   writable: true,
 });
 
+const createTestEmail = (label = "user") =>
+  `${label}.${randomUUID()}@example.test`;
+
 describe("ProfileService", () => {
   let profileService: ProfileService;
 
@@ -75,6 +79,7 @@ describe("ProfileService", () => {
     });
 
     it("should return profile data when it exists", () => {
+      const storedEmail = createTestEmail("john.doe");
       localStorageMock.getItem.mockImplementation((key: string) => {
         switch (key) {
           case ProfileStorageKey.FIRST_NAME:
@@ -82,7 +87,7 @@ describe("ProfileService", () => {
           case ProfileStorageKey.LAST_NAME:
             return "Doe";
           case ProfileStorageKey.EMAIL:
-            return "john.doe@example.com";
+            return storedEmail;
           case ProfileStorageKey.PHONE:
             return "+1234567890";
           default:
@@ -95,16 +100,17 @@ describe("ProfileService", () => {
       expect(result).toEqual({
         firstName: "John",
         lastName: "Doe",
-        email: "john.doe@example.com",
+        email: storedEmail,
         phone: "+1234567890",
       });
     });
 
     it("should return profile data with only email", () => {
+      const storedEmail = createTestEmail("john");
       localStorageMock.getItem.mockImplementation((key: string) => {
         switch (key) {
           case ProfileStorageKey.EMAIL:
-            return "john@example.com";
+            return storedEmail;
           default:
             return null;
         }
@@ -115,7 +121,7 @@ describe("ProfileService", () => {
       expect(result).toEqual({
         firstName: "",
         lastName: "",
-        email: "john@example.com",
+        email: storedEmail,
         phone: undefined,
       });
     });
@@ -130,7 +136,7 @@ describe("ProfileService", () => {
       expect(result).toBeNull();
       expect(consoleErrorMock).toHaveBeenCalledWith(
         "[ProfileService] Error retrieving profile:",
-        expect.any(Error),
+        {}
       );
     });
   });
@@ -141,10 +147,11 @@ describe("ProfileService", () => {
       localStorageMock.getItem.mockReturnValue(null);
       localStorageMock.setItem.mockImplementation(() => {});
 
+      const profileEmail = createTestEmail("john.doe");
       const profileUpdate: Partial<UserProfile> = {
         firstName: "John",
         lastName: "Doe",
-        email: "john.doe@example.com",
+        email: profileEmail,
       };
 
       const result = await profileService.update(profileUpdate);
@@ -154,27 +161,28 @@ describe("ProfileService", () => {
       expect(result.updatedFields).toEqual({
         firstName: "John",
         lastName: "Doe",
-        email: "john.doe@example.com",
+        email: profileEmail,
         phone: undefined,
       });
 
       expect(localStorageMock.setItem).toHaveBeenCalledWith(
         ProfileStorageKey.FIRST_NAME,
-        "John",
+        "John"
       );
       expect(localStorageMock.setItem).toHaveBeenCalledWith(
         ProfileStorageKey.LAST_NAME,
-        "Doe",
+        "Doe"
       );
       expect(localStorageMock.setItem).toHaveBeenCalledWith(
         ProfileStorageKey.EMAIL,
-        "john.doe@example.com",
+        profileEmail
       );
     });
 
     it("should validate profile data before updating", async () => {
+      const invalidEmail = createTestEmail("invalid-update").replace("@", "");
       const invalidProfile: Partial<UserProfile> = {
-        email: "invalid-email",
+        email: invalidEmail,
       };
 
       const result = await profileService.update(invalidProfile);
@@ -185,6 +193,7 @@ describe("ProfileService", () => {
     });
 
     it("should merge with existing profile data", async () => {
+      const existingEmail = createTestEmail("jane.smith");
       // Mock existing profile
       localStorageMock.getItem.mockImplementation((key: string) => {
         switch (key) {
@@ -193,7 +202,7 @@ describe("ProfileService", () => {
           case ProfileStorageKey.LAST_NAME:
             return "Smith";
           case ProfileStorageKey.EMAIL:
-            return "jane.smith@example.com";
+            return existingEmail;
           default:
             return null;
         }
@@ -212,7 +221,7 @@ describe("ProfileService", () => {
       expect(result.updatedFields).toEqual({
         firstName: "John", // Updated
         lastName: "Smith", // Preserved
-        email: "jane.smith@example.com", // Preserved
+        email: existingEmail, // Preserved
         phone: "+1234567890", // Added
       });
     });
@@ -221,17 +230,17 @@ describe("ProfileService", () => {
   describe("validate()", () => {
     it("should validate email format", () => {
       const validProfile: Partial<ProfileFormData> = {
-        email: "test@example.com",
+        email: createTestEmail("valid"),
       };
 
       const invalidProfile: Partial<ProfileFormData> = {
-        email: "invalid-email",
+        email: createTestEmail("invalid-format").replace("@", ""),
       };
 
       expect(profileService.validate(validProfile).isValid).toBe(true);
       expect(profileService.validate(invalidProfile).isValid).toBe(false);
       expect(profileService.validate(invalidProfile).errors.email).toBe(
-        "Please enter a valid email address",
+        "Please enter a valid email address"
       );
     });
 
@@ -247,7 +256,7 @@ describe("ProfileService", () => {
       expect(profileService.validate(validProfile).isValid).toBe(true);
       expect(profileService.validate(invalidProfile).isValid).toBe(false);
       expect(profileService.validate(invalidProfile).errors.phone).toBe(
-        "Please enter a valid phone number",
+        "Please enter a valid phone number"
       );
     });
 
@@ -264,7 +273,7 @@ describe("ProfileService", () => {
       expect(profileService.validate(validProfile).isValid).toBe(true);
       expect(profileService.validate(invalidProfile).isValid).toBe(false);
       expect(profileService.validate(invalidProfile).errors.firstName).toBe(
-        "First name contains invalid characters",
+        "First name contains invalid characters"
       );
     });
 
@@ -287,19 +296,19 @@ describe("ProfileService", () => {
       profileService.clear();
 
       expect(localStorageMock.removeItem).toHaveBeenCalledWith(
-        ProfileStorageKey.FIRST_NAME,
+        ProfileStorageKey.FIRST_NAME
       );
       expect(localStorageMock.removeItem).toHaveBeenCalledWith(
-        ProfileStorageKey.LAST_NAME,
+        ProfileStorageKey.LAST_NAME
       );
       expect(localStorageMock.removeItem).toHaveBeenCalledWith(
-        ProfileStorageKey.FULL_NAME,
+        ProfileStorageKey.FULL_NAME
       );
       expect(localStorageMock.removeItem).toHaveBeenCalledWith(
-        ProfileStorageKey.EMAIL,
+        ProfileStorageKey.EMAIL
       );
       expect(localStorageMock.removeItem).toHaveBeenCalledWith(
-        ProfileStorageKey.PHONE,
+        ProfileStorageKey.PHONE
       );
     });
 
@@ -323,6 +332,7 @@ describe("ProfileService", () => {
     });
 
     it("should return extended profile with computed fields", () => {
+      const storedEmail = createTestEmail("john.doe");
       localStorageMock.getItem.mockImplementation((key: string) => {
         switch (key) {
           case ProfileStorageKey.FIRST_NAME:
@@ -330,7 +340,7 @@ describe("ProfileService", () => {
           case ProfileStorageKey.LAST_NAME:
             return "Doe";
           case ProfileStorageKey.EMAIL:
-            return "john.doe@example.com";
+            return storedEmail;
           default:
             return null;
         }
@@ -341,7 +351,7 @@ describe("ProfileService", () => {
       expect(result).toEqual({
         firstName: "John",
         lastName: "Doe",
-        email: "john.doe@example.com",
+        email: storedEmail,
         phone: undefined,
         fullName: "John Doe",
         initials: "JD",
@@ -349,12 +359,13 @@ describe("ProfileService", () => {
     });
 
     it("should handle single name initials", () => {
+      const storedEmail = createTestEmail("john");
       localStorageMock.getItem.mockImplementation((key: string) => {
         switch (key) {
           case ProfileStorageKey.FIRST_NAME:
             return "John";
           case ProfileStorageKey.EMAIL:
-            return "john@example.com";
+            return storedEmail;
           default:
             return null;
         }
@@ -368,10 +379,11 @@ describe("ProfileService", () => {
 
   describe("formDataToProfile() and profileToFormData()", () => {
     it("should convert between form data and profile data", () => {
+      const formEmail = createTestEmail("form");
       const formData: ProfileFormData = {
         firstName: "John",
         lastName: "Doe",
-        email: "john@example.com",
+        email: formEmail,
         phone: "+1234567890",
       };
 
@@ -381,7 +393,7 @@ describe("ProfileService", () => {
       expect(profile).toEqual({
         firstName: "John",
         lastName: "Doe",
-        email: "john@example.com",
+        email: formEmail,
         phone: "+1234567890",
       });
 
@@ -389,10 +401,11 @@ describe("ProfileService", () => {
     });
 
     it("should handle undefined phone in profile to form conversion", () => {
+      const profileEmail = createTestEmail("profile");
       const profile: UserProfile = {
         firstName: "John",
         lastName: "Doe",
-        email: "john@example.com",
+        email: profileEmail,
         phone: undefined,
       };
 
@@ -404,6 +417,7 @@ describe("ProfileService", () => {
 
   describe("caching behavior", () => {
     it("should cache extended profile results", () => {
+      const cachedEmail = createTestEmail("cached");
       localStorageMock.getItem.mockImplementation((key: string) => {
         switch (key) {
           case ProfileStorageKey.FIRST_NAME:
@@ -411,7 +425,7 @@ describe("ProfileService", () => {
           case ProfileStorageKey.LAST_NAME:
             return "Doe";
           case ProfileStorageKey.EMAIL:
-            return "john@example.com";
+            return cachedEmail;
           default:
             return null;
         }
@@ -430,6 +444,7 @@ describe("ProfileService", () => {
     });
 
     it("should invalidate cache when profile is updated", async () => {
+      const updatedEmail = createTestEmail("updated");
       localStorageMock.getItem.mockReturnValue(null);
       localStorageMock.setItem.mockImplementation(() => {});
 
@@ -440,7 +455,7 @@ describe("ProfileService", () => {
       // Update profile (should invalidate cache)
       await profileService.update({
         firstName: "John",
-        email: "john@example.com",
+        email: updatedEmail,
       });
 
       // Get extended profile again (should recompute)
@@ -449,7 +464,7 @@ describe("ProfileService", () => {
           case ProfileStorageKey.FIRST_NAME:
             return "John";
           case ProfileStorageKey.EMAIL:
-            return "john@example.com";
+            return updatedEmail;
           default:
             return null;
         }

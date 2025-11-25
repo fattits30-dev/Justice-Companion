@@ -1,11 +1,27 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
+import { registerSW } from "virtual:pwa-register";
 import App from "./App.tsx";
 import "./index.css";
-import { initSentry, ErrorBoundary } from "./lib/sentry.ts";
+import { ErrorBoundary, initSentry } from "./lib/sentry.ts";
 
 // Initialize Sentry error monitoring before rendering
 initSentry();
+
+// Register service worker for PWA capabilities
+if (typeof window !== "undefined") {
+  registerSW({
+    immediate: true,
+    onRegistered(worker) {
+      if (worker) {
+        console.log("Service worker registered", worker);
+      }
+    },
+    onRegisterError(error) {
+      console.error("Service worker registration failed", error);
+    },
+  });
+}
 
 const rootElement = document.getElementById("root");
 if (rootElement) {
@@ -33,6 +49,6 @@ if (rootElement) {
       >
         <App />
       </ErrorBoundary>
-    </React.StrictMode>,
+    </React.StrictMode>
   );
 }

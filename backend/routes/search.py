@@ -20,7 +20,7 @@ from sqlalchemy.orm import Session
 import re
 
 from backend.models.base import get_db
-from backend.services.auth_service import AuthenticationService
+from backend.services.auth.service import AuthenticationService
 from backend.routes.auth import get_current_user
 from backend.services.search_service import (
     SearchService,
@@ -28,18 +28,16 @@ from backend.services.search_service import (
     SearchFilters as ServiceSearchFilters,
 )
 from backend.services.search_index_builder import SearchIndexBuilder
-from backend.services.encryption_service import EncryptionService
+from backend.services.security.encryption import EncryptionService
 from backend.services.audit_logger import AuditLogger
 
 router = APIRouter(prefix="/search", tags=["search"])
-
 
 # ===== ENUMS =====
 VALID_ENTITY_TYPES = ["case", "evidence", "conversation", "note", "document"]
 VALID_SORT_BY = ["relevance", "date", "title"]
 VALID_SORT_ORDER = ["asc", "desc"]
 VALID_CASE_STATUSES = ["active", "closed", "pending"]
-
 
 # ===== PYDANTIC REQUEST MODELS =====
 class SearchFilters(BaseModel):
@@ -53,6 +51,7 @@ class SearchFilters(BaseModel):
 
     @field_validator("caseStatus")
     @classmethod
+    @classmethod
     def validate_case_status(cls, v):
         if v:
             for item in v:
@@ -62,6 +61,7 @@ class SearchFilters(BaseModel):
 
     @field_validator("entityTypes")
     @classmethod
+    @classmethod
     def validate_entity_types(cls, v):
         if v:
             for item in v:
@@ -70,6 +70,7 @@ class SearchFilters(BaseModel):
         return v
 
     @field_validator("dateRange")
+    @classmethod
     def validate_date_range(cls, v):
         if v:
             if "from" not in v or "to" not in v:
@@ -80,7 +81,6 @@ class SearchFilters(BaseModel):
             except ValueError:
                 raise ValueError("Invalid date format (use YYYY-MM-DD)")
         return v
-
 
 class SearchRequest(BaseModel):
     """Request model for search."""
@@ -93,12 +93,14 @@ class SearchRequest(BaseModel):
     offset: int = Field(default=0, ge=0, description="Pagination offset")
 
     @field_validator("sortBy")
+    @classmethod
     def validate_sort_by(cls, v):
         if v not in VALID_SORT_BY:
             raise ValueError(f"Invalid sortBy: {v}. Must be one of: {', '.join(VALID_SORT_BY)}")
         return v
 
     @field_validator("sortOrder")
+    @classmethod
     def validate_sort_order(cls, v):
         if v not in VALID_SORT_ORDER:
             raise ValueError(
@@ -107,9 +109,9 @@ class SearchRequest(BaseModel):
         return v
 
     @field_validator("query")
+    @classmethod
     def strip_query(cls, v):
         return v.strip()
-
 
 class SaveSearchRequest(BaseModel):
     """Request model for saving a search."""
@@ -118,9 +120,9 @@ class SaveSearchRequest(BaseModel):
     query: SearchRequest
 
     @field_validator("name")
+    @classmethod
     def strip_name(cls, v):
         return v.strip()
-
 
 # ===== PYDANTIC RESPONSE MODELS =====
 class SearchResultItem(BaseModel):
@@ -136,7 +138,6 @@ class SearchResultItem(BaseModel):
     createdAt: str
     metadata: Dict[str, Any]
 
-
 class SearchResponse(BaseModel):
     """Response model for search results."""
 
@@ -144,7 +145,6 @@ class SearchResponse(BaseModel):
     total: int
     hasMore: bool
     executionTime: int  # milliseconds
-
 
 class SavedSearchResponse(BaseModel):
     """Response model for saved search."""
@@ -156,13 +156,11 @@ class SavedSearchResponse(BaseModel):
     lastUsedAt: Optional[str] = None
     useCount: int
 
-
 class RebuildIndexResponse(BaseModel):
     """Response model for index rebuild."""
 
     success: bool
     message: str
-
 
 # ===== DEPENDENCIES =====
 def get_encryption_service() -> EncryptionService:
@@ -177,11 +175,9 @@ def get_encryption_service() -> EncryptionService:
         )
     return EncryptionService(key=encryption_key)
 
-
 def get_auth_service(db: Session = Depends(get_db)) -> AuthenticationService:
     """Get authentication service instance."""
     return AuthenticationService(db=db)
-
 
 def get_search_service(
     db: Session = Depends(get_db),
@@ -190,7 +186,6 @@ def get_search_service(
     """Get search service instance."""
     return SearchService(db=db, encryption_service=encryption_service)
 
-
 def get_index_builder(
     db: Session = Depends(get_db),
     encryption_service: EncryptionService = Depends(get_encryption_service),
@@ -198,11 +193,9 @@ def get_index_builder(
     """Get search index builder instance."""
     return SearchIndexBuilder(db=db, encryption_service=encryption_service)
 
-
 def get_audit_logger(db: Session = Depends(get_db)) -> AuditLogger:
     """Get audit logger instance."""
     return AuditLogger(db=db)
-
 
 # ===== HELPER FUNCTIONS =====
 def build_fts_query(query: str) -> str:
@@ -215,7 +208,6 @@ def build_fts_query(query: str) -> str:
 
     # Build FTS5 query with prefix matching
     return " OR ".join([f'"{term}"*' for term in terms])
-
 
 def extract_excerpt(content: str, query: str, max_length: int = 150) -> str:
     """Extract an excerpt from content around the query terms."""
@@ -251,7 +243,6 @@ def extract_excerpt(content: str, query: str, max_length: int = 150) -> str:
 
     return excerpt
 
-
 def calculate_relevance(text: str, query: str) -> float:
     """Calculate relevance score for a text against a query."""
     lower_text = text.lower()
@@ -276,7 +267,6 @@ def calculate_relevance(text: str, query: str) -> float:
         score += 5.0
 
     return score
-
 
 def search_with_fts5(
     db: Session, user_id: int, query: str, filters: Optional[SearchFilters], limit: int, offset: int
@@ -391,10 +381,9 @@ def search_with_fts5(
 
         return {"results": results, "total": total}
 
-    except Exception as e:
+    except Exception as exc:
         # Fallback to LIKE search if FTS5 fails
         raise
-
 
 def search_with_like(
     db: Session, user_id: int, query: str, filters: Optional[SearchFilters], limit: int, offset: int
@@ -557,7 +546,6 @@ def search_with_like(
 
     return {"results": paginated_results, "total": total}
 
-
 # ===== ROUTES =====
 @router.post("", response_model=SearchResponse, status_code=status.HTTP_200_OK)
 async def search(
@@ -620,9 +608,8 @@ async def search(
             "executionTime": response.execution_time,
         }
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")
-
 
 @router.post("/rebuild-index", response_model=RebuildIndexResponse, status_code=status.HTTP_200_OK)
 async def rebuild_search_index(
@@ -648,9 +635,8 @@ async def rebuild_search_index(
 
         return {"success": True, "message": f"Search index rebuilt for user {user_id}"}
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Failed to rebuild search index: {str(e)}")
-
 
 @router.post("/save", response_model=SavedSearchResponse, status_code=status.HTTP_201_CREATED)
 async def save_search(
@@ -700,9 +686,8 @@ async def save_search(
             "useCount": saved_search.use_count,
         }
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Failed to save search: {str(e)}")
-
 
 @router.get("/saved", response_model=List[SavedSearchResponse])
 async def list_saved_searches(
@@ -729,9 +714,8 @@ async def list_saved_searches(
             for s in saved_searches
         ]
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Failed to list saved searches: {str(e)}")
-
 
 @router.delete("/saved/{search_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_saved_search(
@@ -754,9 +738,8 @@ async def delete_saved_search(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Failed to delete saved search: {str(e)}")
-
 
 @router.post("/saved/{search_id}/execute", response_model=SearchResponse)
 async def execute_saved_search(
@@ -785,9 +768,8 @@ async def execute_saved_search(
 
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Failed to execute saved search: {str(e)}")
-
 
 @router.get("/suggestions", response_model=List[str])
 async def get_search_suggestions(
@@ -811,12 +793,10 @@ async def get_search_suggestions(
 
         return suggestions
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Failed to get suggestions: {str(e)}")
 
-
 # ===== INDEX MANAGEMENT ENDPOINTS =====
-
 
 class IndexStatsResponse(BaseModel):
     """Response model for index statistics."""
@@ -824,7 +804,6 @@ class IndexStatsResponse(BaseModel):
     totalDocuments: int
     documentsByType: Dict[str, int]
     lastUpdated: Optional[str]
-
 
 @router.get("/index/stats", response_model=IndexStatsResponse)
 async def get_index_statistics(
@@ -848,9 +827,8 @@ async def get_index_statistics(
             "lastUpdated": stats["last_updated"],
         }
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Failed to get index statistics: {str(e)}")
-
 
 @router.post("/index/optimize", response_model=RebuildIndexResponse)
 async def optimize_search_index(
@@ -875,9 +853,8 @@ async def optimize_search_index(
 
         return {"success": True, "message": "Search index optimized successfully"}
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Failed to optimize search index: {str(e)}")
-
 
 class UpdateIndexRequest(BaseModel):
     """Request model for updating a single entity in index."""
@@ -886,12 +863,12 @@ class UpdateIndexRequest(BaseModel):
     entityId: int = Field(..., description="Entity ID to update")
 
     @field_validator("entityType")
+    @classmethod
     def validate_entity_type(cls, v):
         valid_types = ["case", "evidence", "conversation", "note"]
         if v not in valid_types:
             raise ValueError(f"Invalid entity type: {v}. Must be one of: {', '.join(valid_types)}")
         return v
-
 
 @router.post("/index/update", response_model=RebuildIndexResponse)
 async def update_index_entity(
@@ -919,9 +896,8 @@ async def update_index_entity(
             "message": f"Updated {request.entityType} {request.entityId} in search index",
         }
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Failed to update index: {str(e)}")
-
 
 @router.delete("/index/{entity_type}/{entity_id}", response_model=RebuildIndexResponse)
 async def remove_from_index(
@@ -954,5 +930,5 @@ async def remove_from_index(
 
         return {"success": True, "message": f"Removed {entity_type} {entity_id} from search index"}
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Failed to remove from index: {str(e)}")

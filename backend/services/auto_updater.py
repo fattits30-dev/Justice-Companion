@@ -62,11 +62,9 @@ from packaging.version import Version, InvalidVersion
 # Configure logger
 logger = logging.getLogger(__name__)
 
-
 # ============================================================================
 # TYPE DEFINITIONS & DATA CLASSES
 # ============================================================================
-
 
 class UpdateChannel(str, Enum):
     """Update channel enumeration."""
@@ -74,7 +72,6 @@ class UpdateChannel(str, Enum):
     STABLE = "stable"
     BETA = "beta"
     ALPHA = "alpha"
-
 
 @dataclass
 class AutoUpdaterConfig:
@@ -86,7 +83,6 @@ class AutoUpdaterConfig:
     github_token: Optional[str] = None  # For private repositories
     timeout_seconds: int = 30
     max_retries: int = 3
-
 
 @dataclass
 class UpdateInfo:
@@ -105,7 +101,6 @@ class UpdateInfo:
         """Convert to dictionary."""
         return asdict(self)
 
-
 @dataclass
 class ProgressInfo:
     """Download progress information."""
@@ -118,7 +113,6 @@ class ProgressInfo:
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         return asdict(self)
-
 
 @dataclass
 class UpdateStatus:
@@ -136,7 +130,6 @@ class UpdateStatus:
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         return asdict(self)
-
 
 @dataclass
 class UpdateCheckResult:
@@ -160,7 +153,6 @@ class UpdateCheckResult:
             result["update_info"] = self.update_info.to_dict()
         return result
 
-
 @dataclass
 class UpdateDownloadResult:
     """Result of downloading an update."""
@@ -174,15 +166,12 @@ class UpdateDownloadResult:
         """Convert to dictionary."""
         return asdict(self)
 
-
 # ============================================================================
 # AUTO UPDATER SERVICE
 # ============================================================================
 
-
 class AutoUpdaterError(Exception):
     """Auto updater error exception."""
-
 
 class AutoUpdater:
     """
@@ -497,7 +486,7 @@ class AutoUpdater:
                 update_available=False, current_version=self.current_version, error=str(e)
             )
 
-        except Exception as e:
+        except Exception as exc:
             self.status.checking = False
             self.status.error = str(e)
 
@@ -591,7 +580,7 @@ class AutoUpdater:
                             for callback in self.download_progress_callbacks:
                                 try:
                                     callback(percent)
-                                except Exception as e:
+                                except Exception as exc:
                                     logger.warning(f"[AutoUpdater] Error in progress callback: {e}")
 
             # Verify checksum if provided
@@ -637,7 +626,7 @@ class AutoUpdater:
 
             return UpdateDownloadResult(success=False, error=str(e))
 
-        except Exception as e:
+        except Exception as exc:
             self.status.downloading = False
             self.status.error = str(e)
 
@@ -671,7 +660,7 @@ class AutoUpdater:
             try:
                 logger.info("[AutoUpdater] Checking for updates on startup")
                 await self.check_for_updates()
-            except Exception as e:
+            except Exception as exc:
                 logger.error(f"[AutoUpdater] Error during startup update check: {e}")
 
     def get_update_source(self) -> str:
@@ -696,11 +685,9 @@ class AutoUpdater:
         # Check if we're in debug mode or have updates explicitly disabled
         return not os.getenv("DISABLE_AUTO_UPDATES", "").lower() in ("true", "1", "yes")
 
-
 # ============================================================================
 # HELPER FUNCTIONS
 # ============================================================================
-
 
 def format_file_size(size_bytes: int) -> str:
     """
@@ -717,7 +704,6 @@ def format_file_size(size_bytes: int) -> str:
             return f"{size_bytes:.1f} {unit}"
         size_bytes /= 1024.0
     return f"{size_bytes:.1f} TB"
-
 
 def validate_version(version_str: str) -> bool:
     """

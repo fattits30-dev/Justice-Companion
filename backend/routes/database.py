@@ -50,7 +50,7 @@ from backend.models.backup import (
     BackupMetadataResponse,
     RetentionSummaryResponse,
 )
-from backend.services.auth_service import AuthenticationService
+from backend.services.auth.service import AuthenticationService
 from backend.services.backup.backup_service import BackupService
 from backend.services.backup.backup_scheduler import BackupScheduler
 from backend.services.backup.backup_retention_policy import BackupRetentionPolicy
@@ -63,17 +63,14 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/database", tags=["database"])
 
-
 # ===== CONFIGURATION =====
 DATABASE_PATH = os.getenv("DATABASE_PATH", "./data/justice.db")
 BACKUP_DIR = os.getenv("BACKUP_DIR", "./data/backups")
-
 
 # ===== RATE LIMITING =====
 # In-memory rate limit tracker (userId:operation -> {count, resetAt})
 # TODO: Move to Redis for production multi-instance deployments
 _rate_limits: Dict[str, Dict[str, Any]] = {}
-
 
 def check_rate_limit(user_id: int, operation: str, max_requests: int, window_hours: int) -> None:
     """
@@ -104,7 +101,6 @@ def check_rate_limit(user_id: int, operation: str, max_requests: int, window_hou
         limit_info["count"] += 1
     else:
         _rate_limits[key] = {"count": 1, "resetAt": now.timestamp() * 1000 + window_ms}
-
 
 # ===== HELPER FUNCTIONS =====
 def get_table_metadata(db: Session) -> Dict[str, Any]:
@@ -142,10 +138,9 @@ def get_table_metadata(db: Session) -> Dict[str, Any]:
             total_records += count
 
         return {"tables": table_counts, "table_count": len(tables), "total_records": total_records}
-    except Exception as e:
+    except Exception as exc:
         logger.error(f"Failed to get table metadata: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to get table metadata: {str(e)}")
-
 
 # ===== PYDANTIC MODELS =====
 class DatabaseStatsResponse(BaseModel):
@@ -162,7 +157,6 @@ class DatabaseStatsResponse(BaseModel):
     backups_size_bytes: int = Field(..., description="Total size of all backups")
     backups_size_mb: float = Field(..., description="Total size of all backups in MB")
 
-
 class CreateBackupResponse(BaseModel):
     """Response model for backup creation."""
 
@@ -175,13 +169,11 @@ class CreateBackupResponse(BaseModel):
     is_protected: bool
     metadata: Dict[str, Any]
 
-
 class ListBackupsResponse(BaseModel):
     """Response model for listing backups."""
 
     backups: List[BackupMetadataResponse]
     count: int
-
 
 class RestoreBackupRequest(BaseModel):
     """Request model for restoring a backup."""
@@ -190,12 +182,12 @@ class RestoreBackupRequest(BaseModel):
 
     @field_validator("backup_filename")
     @classmethod
+    @classmethod
     def validate_filename(cls, v):
         """Validate filename doesn't contain path traversal characters."""
         if "/" in v or "\\" in v or ".." in v:
             raise ValueError("Invalid backup filename - path traversal not allowed")
         return v
-
 
 class RestoreBackupResponse(BaseModel):
     """Response model for backup restoration."""
@@ -203,7 +195,6 @@ class RestoreBackupResponse(BaseModel):
     restored: bool
     message: str
     pre_restore_backup: str
-
 
 class OptimizeResponse(BaseModel):
     """Response model for database optimization (VACUUM + ANALYZE)."""
@@ -216,13 +207,11 @@ class OptimizeResponse(BaseModel):
     space_reclaimed_mb: float
     analyze_completed: bool
 
-
 class DeleteBackupResponse(BaseModel):
     """Response model for backup deletion."""
 
     deleted: bool
     message: str
-
 
 class ApplyRetentionResponse(BaseModel):
     """Response model for applying retention policy."""
@@ -230,7 +219,6 @@ class ApplyRetentionResponse(BaseModel):
     deleted_count: int
     message: str
     summary: RetentionSummaryResponse
-
 
 class SchedulerStatsResponse(BaseModel):
     """Response model for scheduler statistics."""
@@ -240,17 +228,14 @@ class SchedulerStatsResponse(BaseModel):
     enabled_backup_settings: int
     total_backup_settings: int
 
-
 # ===== DEPENDENCIES =====
 def get_auth_service(db: Session = Depends(get_db)) -> AuthenticationService:
     """Get authentication service instance."""
     return AuthenticationService(db=db)
 
-
 def get_backup_service(db: Session = Depends(get_db)) -> BackupService:
     """Get backup service instance."""
     return BackupService(db_path=DATABASE_PATH, backups_dir=BACKUP_DIR)
-
 
 def get_retention_policy(
     backup_service: BackupService = Depends(get_backup_service), db: Session = Depends(get_db)
@@ -258,7 +243,6 @@ def get_retention_policy(
     """Get retention policy service instance."""
     audit_logger = AuditLogger(db)
     return BackupRetentionPolicy(backup_service=backup_service, audit_logger=audit_logger)
-
 
 def get_backup_scheduler(
     db: Session = Depends(get_db),
@@ -274,11 +258,9 @@ def get_backup_scheduler(
         audit_logger=audit_logger,
     )
 
-
 def get_audit_logger(db: Session = Depends(get_db)) -> AuditLogger:
     """Get audit logger instance."""
     return AuditLogger(db)
-
 
 async def require_admin_user(
     user_id: int = Depends(get_current_user), db: Session = Depends(get_db)
@@ -306,7 +288,6 @@ async def require_admin_user(
 
     return user_id
 
-
 # ===== BACKGROUND TASKS =====
 async def background_create_backup(
     backup_service: BackupService, audit_logger: AuditLogger, user_id: int, db: Session
@@ -327,7 +308,7 @@ async def background_create_backup(
 
         logger.info(f"Background backup created: {backup.filename}")
 
-    except Exception as e:
+    except Exception as exc:
         logger.error(f"Background backup failed: {str(e)}", exc_info=True)
 
         audit_logger.log(
@@ -339,7 +320,6 @@ async def background_create_backup(
             success=False,
             error_message=str(e),
         )
-
 
 async def background_optimize_database(
     db_path: str, audit_logger: AuditLogger, user_id: int, db: Session
@@ -379,7 +359,7 @@ async def background_optimize_database(
 
         logger.info(f"Background optimization completed: reclaimed {space_reclaimed} bytes")
 
-    except Exception as e:
+    except Exception as exc:
         logger.error(f"Background optimization failed: {str(e)}", exc_info=True)
 
         audit_logger.log(
@@ -391,7 +371,6 @@ async def background_optimize_database(
             success=False,
             error_message=str(e),
         )
-
 
 # ===== ROUTES =====
 @router.get("/stats", response_model=DatabaseStatsResponse)
@@ -448,10 +427,9 @@ async def get_database_stats(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         logger.error(f"Failed to get database stats: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to get database stats: {str(e)}")
-
 
 @router.post("/backup", response_model=CreateBackupResponse, status_code=status.HTTP_201_CREATED)
 async def create_backup(
@@ -510,7 +488,7 @@ async def create_backup(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         logger.error(f"Failed to create backup: {str(e)}", exc_info=True)
 
         # Log failed backup creation
@@ -525,7 +503,6 @@ async def create_backup(
         )
 
         raise HTTPException(status_code=500, detail=f"Failed to create backup: {str(e)}")
-
 
 @router.get("/backups", response_model=ListBackupsResponse)
 async def list_backups(
@@ -563,10 +540,9 @@ async def list_backups(
 
         return {"backups": backups, "count": len(backups)}
 
-    except Exception as e:
+    except Exception as exc:
         logger.error(f"Failed to list backups: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to list backups: {str(e)}")
-
 
 @router.get("/backups/{backup_filename}", response_model=BackupMetadataResponse)
 async def get_backup_details(
@@ -612,10 +588,9 @@ async def get_backup_details(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         logger.error(f"Failed to get backup details: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to get backup details: {str(e)}")
-
 
 @router.post("/restore", response_model=RestoreBackupResponse)
 async def restore_backup(
@@ -669,7 +644,7 @@ async def restore_backup(
         raise
     except FileNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
-    except Exception as e:
+    except Exception as exc:
         logger.error(f"Failed to restore backup: {str(e)}", exc_info=True)
 
         # Log failed restoration
@@ -684,7 +659,6 @@ async def restore_backup(
         )
 
         raise HTTPException(status_code=500, detail=f"Failed to restore backup: {str(e)}")
-
 
 @router.post("/optimize", response_model=OptimizeResponse)
 async def optimize_database(
@@ -757,7 +731,7 @@ async def optimize_database(
             "analyze_completed": True,
         }
 
-    except Exception as e:
+    except Exception as exc:
         logger.error(f"Failed to optimize database: {str(e)}", exc_info=True)
 
         # Log failed optimization
@@ -772,7 +746,6 @@ async def optimize_database(
         )
 
         raise HTTPException(status_code=500, detail=f"Failed to optimize database: {str(e)}")
-
 
 @router.delete("/backups/{backup_filename}", response_model=DeleteBackupResponse)
 async def delete_backup(
@@ -819,7 +792,7 @@ async def delete_backup(
         raise HTTPException(status_code=404, detail="Backup file not found")
     except PermissionError as e:
         raise HTTPException(status_code=403, detail=str(e))
-    except Exception as e:
+    except Exception as exc:
         logger.error(f"Failed to delete backup: {str(e)}", exc_info=True)
 
         # Log failed deletion
@@ -835,9 +808,7 @@ async def delete_backup(
 
         raise HTTPException(status_code=500, detail=f"Failed to delete backup: {str(e)}")
 
-
 # ===== BACKUP SCHEDULER ROUTES =====
-
 
 @router.post("/backup/schedule", response_model=BackupSettingsResponse)
 async def configure_backup_schedule(
@@ -880,7 +851,7 @@ async def configure_backup_schedule(
 
         return result
 
-    except Exception as e:
+    except Exception as exc:
         logger.error(f"Failed to configure backup schedule: {str(e)}", exc_info=True)
 
         audit_logger.log(
@@ -896,7 +867,6 @@ async def configure_backup_schedule(
         raise HTTPException(
             status_code=500, detail=f"Failed to configure backup schedule: {str(e)}"
         )
-
 
 @router.get("/backup/schedule", response_model=BackupSettingsResponse)
 async def get_backup_schedule(
@@ -937,10 +907,9 @@ async def get_backup_schedule(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         logger.error(f"Failed to get backup schedule: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to get backup schedule: {str(e)}")
-
 
 @router.delete("/backup/schedule", status_code=status.HTTP_204_NO_CONTENT)
 async def disable_backup_schedule(
@@ -971,7 +940,7 @@ async def disable_backup_schedule(
 
         return None
 
-    except Exception as e:
+    except Exception as exc:
         logger.error(f"Failed to disable backup schedule: {str(e)}", exc_info=True)
 
         audit_logger.log(
@@ -985,7 +954,6 @@ async def disable_backup_schedule(
         )
 
         raise HTTPException(status_code=500, detail=f"Failed to disable backup schedule: {str(e)}")
-
 
 @router.post("/retention", response_model=ApplyRetentionResponse)
 async def apply_retention_policy(
@@ -1036,7 +1004,7 @@ async def apply_retention_policy(
 
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
+    except Exception as exc:
         logger.error(f"Failed to apply retention policy: {str(e)}", exc_info=True)
 
         audit_logger.log(
@@ -1050,7 +1018,6 @@ async def apply_retention_policy(
         )
 
         raise HTTPException(status_code=500, detail=f"Failed to apply retention policy: {str(e)}")
-
 
 @router.get("/scheduler/stats", response_model=SchedulerStatsResponse)
 async def get_scheduler_stats(
@@ -1089,6 +1056,6 @@ async def get_scheduler_stats(
             "total_backup_settings": stats["total_backup_settings"],
         }
 
-    except Exception as e:
+    except Exception as exc:
         logger.error(f"Failed to get scheduler stats: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to get scheduler stats: {str(e)}")

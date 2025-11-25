@@ -43,7 +43,6 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/port", tags=["port"])
 
-
 # ===== DEPENDENCY INJECTION =====
 async def get_port_manager_dependency() -> PortManager:
     """
@@ -59,7 +58,6 @@ async def get_port_manager_dependency() -> PortManager:
     """
     return get_port_manager()
 
-
 async def get_process_manager_dependency() -> ProcessManager:
     """
     Get ProcessManager singleton instance for dependency injection.
@@ -73,7 +71,6 @@ async def get_process_manager_dependency() -> ProcessManager:
             ...
     """
     return get_process_manager()
-
 
 # ===== PYDANTIC MODELS =====
 class PortInfo(BaseModel):
@@ -94,7 +91,6 @@ class PortInfo(BaseModel):
     pid: Optional[int] = Field(None, description="Process ID using the port (if available)")
     in_use: bool = Field(False, description="Whether port is currently in use")
 
-
 class PortStatusResponse(BaseModel):
     """
     Response model for port status endpoint.
@@ -104,7 +100,6 @@ class PortStatusResponse(BaseModel):
     """
 
     ports: List[PortInfo] = Field(..., description="List of service ports with status")
-
 
 class AllocatePortRequest(BaseModel):
     """
@@ -122,7 +117,6 @@ class AllocatePortRequest(BaseModel):
         pattern=r"^[a-zA-Z0-9_-]+$",
     )
 
-
 class ServicePortResponse(BaseModel):
     """
     Response model for service port lookup.
@@ -137,7 +131,6 @@ class ServicePortResponse(BaseModel):
     service: str = Field(..., description="Service name")
     message: Optional[str] = Field(None, description="Optional informational message")
 
-
 class PortAvailabilityResponse(BaseModel):
     """
     Response model for port availability check.
@@ -151,7 +144,6 @@ class PortAvailabilityResponse(BaseModel):
     port: int = Field(..., description="Port number")
     available: bool = Field(..., description="Whether the port is available for use")
     message: Optional[str] = Field(None, description="Optional informational message")
-
 
 class FindAvailablePortRequest(BaseModel):
     """
@@ -170,12 +162,12 @@ class FindAvailablePortRequest(BaseModel):
     )
 
     @field_validator("end_port")
+    @classmethod
     def validate_port_range(cls, v, values):
         """Validate that end_port is greater than start_port."""
         if v is not None and "start_port" in values and v <= values["start_port"]:
             raise ValueError("end_port must be greater than start_port")
         return v
-
 
 class FindAvailablePortResponse(BaseModel):
     """
@@ -190,7 +182,6 @@ class FindAvailablePortResponse(BaseModel):
     port: int = Field(..., description="Available port number (0 if none found)")
     found: bool = Field(..., description="Whether an available port was found")
     message: Optional[str] = Field(None, description="Optional informational message")
-
 
 class ProcessInfo(BaseModel):
     """
@@ -208,7 +199,6 @@ class ProcessInfo(BaseModel):
     name: Optional[str] = Field(None, description="Process name")
     message: Optional[str] = Field(None, description="Optional informational message")
 
-
 class ProcessDetails(BaseModel):
     """
     Detailed information about a process.
@@ -222,7 +212,6 @@ class ProcessDetails(BaseModel):
     pid: int = Field(..., description="Process ID")
     exists: bool = Field(..., description="Whether process exists")
     message: Optional[str] = Field(None, description="Optional informational message")
-
 
 class KillProcessResponse(BaseModel):
     """
@@ -238,7 +227,6 @@ class KillProcessResponse(BaseModel):
     pid: int = Field(..., description="Process ID that was targeted")
     message: Optional[str] = Field(None, description="Optional informational message")
 
-
 class ReleaseAllResponse(BaseModel):
     """
     Response model for release all ports operation.
@@ -251,7 +239,6 @@ class ReleaseAllResponse(BaseModel):
     message: str = Field(..., description="Success message")
     released_count: int = Field(0, description="Number of ports released")
 
-
 class RestartServicesResponse(BaseModel):
     """
     Response model for restart services operation.
@@ -261,7 +248,6 @@ class RestartServicesResponse(BaseModel):
     """
 
     message: str = Field(..., description="Success message")
-
 
 class ServiceStatusResponse(BaseModel):
     """
@@ -280,7 +266,6 @@ class ServiceStatusResponse(BaseModel):
     in_use: bool = Field(..., description="Whether port is currently in use")
     available: bool = Field(..., description="Whether port is available")
     message: Optional[str] = Field(None, description="Optional informational message")
-
 
 # ===== HELPER FUNCTIONS =====
 def validate_port_number(port: int) -> None:
@@ -304,7 +289,6 @@ def validate_port_number(port: int) -> None:
             detail=f"Port number must be between 1 and 65535 (got {port})",
         )
 
-
 def validate_pid(pid: int) -> None:
     """
     Validate process ID is a positive integer.
@@ -320,7 +304,6 @@ def validate_pid(pid: int) -> None:
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Process ID must be a positive integer (got {pid})",
         )
-
 
 # ===== ROUTES =====
 @router.get("/status", response_model=PortStatusResponse)
@@ -388,13 +371,12 @@ async def get_port_status(
 
         return PortStatusResponse(ports=port_info_list)
 
-    except Exception as e:
+    except Exception as exc:
         logger.error(f"[PortStatus] Error getting port status: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get port status: {str(e)}",
         )
-
 
 @router.post("/allocate", response_model=ServicePortResponse, status_code=status.HTTP_201_CREATED)
 async def allocate_port(
@@ -454,13 +436,12 @@ async def allocate_port(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         logger.error(f"[PortStatus] Error allocating port: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to allocate port: {str(e)}",
         )
-
 
 @router.post("/release-all", response_model=ReleaseAllResponse)
 async def release_all_ports(port_manager: PortManager = Depends(get_port_manager_dependency)):
@@ -496,13 +477,12 @@ async def release_all_ports(port_manager: PortManager = Depends(get_port_manager
 
         return ReleaseAllResponse(message="All ports released successfully", released_count=count)
 
-    except Exception as e:
+    except Exception as exc:
         logger.error(f"[PortStatus] Error releasing ports: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to release ports: {str(e)}",
         )
-
 
 @router.post("/restart-services", response_model=RestartServicesResponse)
 async def restart_services():
@@ -532,7 +512,6 @@ async def restart_services():
     logger.info("[PortStatus] Restart services requested (placeholder)")
 
     return RestartServicesResponse(message="Services restart initiated")
-
 
 @router.get("/service/{service}", response_model=ServicePortResponse)
 async def get_service_port(
@@ -573,13 +552,12 @@ async def get_service_port(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         logger.error(f"[PortStatus] Error getting service port: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get service port: {str(e)}",
         )
-
 
 @router.get("/check/{port}", response_model=PortAvailabilityResponse)
 async def check_port_availability(
@@ -624,13 +602,12 @@ async def check_port_availability(
 
         return PortAvailabilityResponse(port=port, available=available, message=message)
 
-    except Exception as e:
+    except Exception as exc:
         logger.error(f"[PortStatus] Error checking port {port}: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to check port availability: {str(e)}",
         )
-
 
 @router.get("/find-available", response_model=FindAvailablePortResponse)
 async def find_available_port(
@@ -689,13 +666,12 @@ async def find_available_port(
                 message=f"No available ports found in range {start_port}-{end_port or start_port + 100}",
             )
 
-    except Exception as e:
+    except Exception as exc:
         logger.error(f"[PortStatus] Error finding available port: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to find available port: {str(e)}",
         )
-
 
 @router.get("/{port}/process", response_model=ProcessInfo)
 async def get_port_process(
@@ -749,13 +725,12 @@ async def get_port_process(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         logger.error(f"[PortStatus] Error finding process on port {port}: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to find process on port: {str(e)}",
         )
-
 
 @router.get("/process/{pid}", response_model=ProcessDetails)
 async def get_process_details(pid: int):
@@ -797,7 +772,6 @@ async def get_process_details(pid: int):
     return ProcessDetails(
         pid=pid, exists=True, message="Process information requires psutil (not implemented)"
     )
-
 
 @router.post("/process/{pid}/kill", response_model=KillProcessResponse)
 async def kill_process(
@@ -879,7 +853,7 @@ async def kill_process(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         logger.error(
             f"[PortStatus] Error killing process {pid}: {e}",
             exc_info=True,
@@ -889,7 +863,6 @@ async def kill_process(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to kill process: {str(e)}",
         )
-
 
 @router.get("/backend/status", response_model=ServiceStatusResponse)
 async def get_backend_status(port_manager: PortManager = Depends(get_port_manager_dependency)):
@@ -935,13 +908,12 @@ async def get_backend_status(port_manager: PortManager = Depends(get_port_manage
             message=message,
         )
 
-    except Exception as e:
+    except Exception as exc:
         logger.error(f"[PortStatus] Error checking backend status: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to check backend status: {str(e)}",
         )
-
 
 @router.get("/frontend/status", response_model=ServiceStatusResponse)
 async def get_frontend_status(port_manager: PortManager = Depends(get_port_manager_dependency)):
@@ -987,7 +959,7 @@ async def get_frontend_status(port_manager: PortManager = Depends(get_port_manag
             message=message,
         )
 
-    except Exception as e:
+    except Exception as exc:
         logger.error(f"[PortStatus] Error checking frontend status: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

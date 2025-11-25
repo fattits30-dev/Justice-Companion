@@ -1,21 +1,9 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import { loginWithSeededUser } from "./utils/auth";
 
 test.describe("User Profile Management", () => {
   test("should save and persist profile changes", async ({ page }) => {
-    // Navigate to the app
-    await page.goto("http://localhost:5176");
-
-    // Wait for the app to load
-    await page.waitForSelector("text=Justice Companion", { timeout: 10000 });
-
-    // Check if we're logged in, if not, we need to login first
-    const loginButton = page.locator("text=Login").first();
-    if (await loginButton.isVisible()) {
-      // We need to login first - this test assumes a user is already logged in
-      // In a real test, you'd handle login here
-      console.log("User not logged in, skipping profile test");
-      return;
-    }
+    await loginWithSeededUser(page);
 
     // Click on the user profile area in the sidebar to open profile manager
     const profileButton = page
@@ -83,11 +71,7 @@ test.describe("User Profile Management", () => {
     // This test would require uploading a document and checking if the AI recognizes the user
     // For now, we'll just verify the profile data is available in localStorage
 
-    // Navigate to the app
-    await page.goto("http://localhost:5176");
-
-    // Wait for the app to load
-    await page.waitForSelector("text=Justice Companion", { timeout: 10000 });
+    await loginWithSeededUser(page);
 
     // Check localStorage for profile data
     const localStorageData = await page.evaluate(() => {

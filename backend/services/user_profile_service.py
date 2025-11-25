@@ -26,24 +26,19 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException
 
 from backend.models.user_profile import UserProfile
-from backend.services.encryption_service import EncryptionService, EncryptedData
-
+from backend.services.security.encryption import EncryptionService, EncryptedData
 
 class ProfileNotFoundError(Exception):
     """Exception raised when profile is not found."""
 
-
 class ValidationError(Exception):
     """Exception raised for invalid input data."""
-
 
 class DatabaseError(Exception):
     """Exception raised for database operation failures."""
 
-
 # Pydantic models for input/output
 from pydantic import BaseModel, Field, field_validator
-
 
 class UpdateUserProfileInput(BaseModel):
     """Input model for updating user profile."""
@@ -59,6 +54,7 @@ class UpdateUserProfileInput(BaseModel):
 
     @field_validator("email")
     @classmethod
+    @classmethod
     def validate_email(cls, v: Optional[str]) -> Optional[str]:
         """Validate email format."""
         if v is not None and v.strip():
@@ -69,12 +65,12 @@ class UpdateUserProfileInput(BaseModel):
 
     @field_validator("name")
     @classmethod
+    @classmethod
     def validate_name(cls, v: Optional[str]) -> Optional[str]:
         """Validate name is not empty."""
         if v is not None and v.strip() == "":
             raise ValueError("Name cannot be empty")
         return v
-
 
 class UserProfileResponse(BaseModel):
     """Response model for user profile data."""
@@ -94,7 +90,6 @@ class UserProfileResponse(BaseModel):
 
     class Config:
         from_attributes = True
-
 
 class UserProfileService:
     """

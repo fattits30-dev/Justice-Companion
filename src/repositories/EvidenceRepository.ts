@@ -327,7 +327,7 @@ export class EvidenceRepository {
 
       return {
         items: decryptedItems as Evidence[],
-        nextCursor: nextCursor ?? undefined,
+        nextCursor,
         prevCursor: undefined,
         hasMore,
         pageSize: limit,
@@ -346,7 +346,7 @@ export class EvidenceRepository {
 
     return {
       items: decryptedItems as Evidence[],
-      nextCursor: nextCursor ?? undefined,
+      nextCursor,
       prevCursor: undefined,
       hasMore,
       pageSize: limit,
@@ -553,7 +553,7 @@ export class EvidenceRepository {
 
     return {
       items: decryptedItems as Evidence[],
-      nextCursor: nextCursor ?? undefined,
+      nextCursor,
       prevCursor: undefined,
       hasMore,
       pageSize: limit,

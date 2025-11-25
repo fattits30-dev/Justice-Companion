@@ -3,16 +3,34 @@
  * Centralized configuration for all E2E tests
  */
 
+const deterministicPassword =
+  process.env.DETERMINISTIC_E2E_PASSWORD || generateTestPassword();
+
+const deterministicE2EUser = {
+  username: "e2e-test",
+  email: "e2e-test@example.com",
+  password: deterministicPassword,
+  firstName: "E2E",
+  lastName: "Tester",
+};
+
 export const TEST_CONFIG = {
-  baseURL: process.env.PLAYWRIGHT_BASE_URL || "http://localhost:5176",
+  baseURL: process.env.PLAYWRIGHT_BASE_URL || "http://localhost:5178",
   apiURL: process.env.API_URL || "http://127.0.0.1:8000",
 
   credentials: {
     e2eTest: {
-      email: "e2e-test@example.com",
-      password: "TestPassword123!",
-      firstName: "E2E",
-      lastName: "TestUser",
+      username: process.env.TEST_USER_USERNAME || deterministicE2EUser.username,
+      email: process.env.TEST_USER_EMAIL || deterministicE2EUser.email,
+      password: process.env.TEST_USER_PASSWORD || deterministicE2EUser.password,
+      firstName:
+        process.env.TEST_USER_FIRST_NAME || deterministicE2EUser.firstName,
+      lastName:
+        process.env.TEST_USER_LAST_NAME || deterministicE2EUser.lastName,
+    },
+    demo: {
+      username: process.env.DEMO_USER_USERNAME || "demo@example.com",
+      password: process.env.DEMO_USER_PASSWORD || generateTestPassword(),
     },
   },
 
@@ -41,11 +59,14 @@ export function getURL(path: string): string {
 }
 
 /**
- * Generate a secure test password
+ * Generate a secure test password (deterministic for test reliability)
  */
 export function generateTestPassword(): string {
-  const timestamp = Date.now();
-  return `Test${timestamp}Pass!`;
+  // SECURITY NOTE: This is an intentional test fixture password, not a real credential.
+  // It must be deterministic for E2E test reliability and meet password requirements
+  // (12+ chars, uppercase, lowercase, number, special char).
+  // nosec - test password only
+  return "Test123456789!";
 }
 
 /**

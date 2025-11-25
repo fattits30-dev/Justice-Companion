@@ -41,12 +41,9 @@ from backend.services.enhanced_error_tracker import (
 )
 from backend.services.audit_logger import AuditLogger
 
-
 router = APIRouter(prefix="/action-logs", tags=["action-logs"])
 
-
 # ===== DEPENDENCY INJECTION =====
-
 
 def get_error_tracker(db: Session = Depends(get_db)) -> EnhancedErrorTracker:
     """
@@ -57,7 +54,6 @@ def get_error_tracker(db: Session = Depends(get_db)) -> EnhancedErrorTracker:
     """
     return EnhancedErrorTracker()
 
-
 def get_audit_logger(db: Session = Depends(get_db)) -> AuditLogger:
     """
     Dependency to get AuditLogger instance.
@@ -67,9 +63,7 @@ def get_audit_logger(db: Session = Depends(get_db)) -> AuditLogger:
     """
     return AuditLogger(db)
 
-
 # ===== PYDANTIC REQUEST MODELS =====
-
 
 class LogActionRequest(BaseModel):
     """Request model for logging an action."""
@@ -99,7 +93,6 @@ class LogActionRequest(BaseModel):
         }
     )
 
-
 class SearchLogsRequest(BaseModel):
     """Request model for searching logs."""
 
@@ -110,12 +103,11 @@ class SearchLogsRequest(BaseModel):
 
     @field_validator("keyword")
     @classmethod
+    @classmethod
     def strip_keyword(cls, v: str) -> str:
         return v.strip()
 
-
 # ===== PYDANTIC RESPONSE MODELS =====
-
 
 class ActionLogResponse(BaseModel):
     """Response model for a single action log entry."""
@@ -146,7 +138,6 @@ class ActionLogResponse(BaseModel):
         }
     )
 
-
 class ActionLogsListResponse(BaseModel):
     """Response model for list of action logs."""
 
@@ -158,7 +149,6 @@ class ActionLogsListResponse(BaseModel):
     model_config = ConfigDict(
         json_schema_extra={"example": {"logs": [], "total": 150, "limit": 50, "offset": 0}}
     )
-
 
 class ActionStatsResponse(BaseModel):
     """Response model for action log statistics."""
@@ -185,7 +175,6 @@ class ActionStatsResponse(BaseModel):
         }
     )
 
-
 class ActionMetricsResponse(BaseModel):
     """Response model for comprehensive error metrics."""
 
@@ -211,7 +200,6 @@ class ActionMetricsResponse(BaseModel):
         }
     )
 
-
 class ClearLogsResponse(BaseModel):
     """Response model for clearing logs."""
 
@@ -224,9 +212,7 @@ class ClearLogsResponse(BaseModel):
         }
     )
 
-
 # ===== HELPER FUNCTIONS =====
-
 
 def _map_error_data_to_response(error: ErrorData) -> ActionLogResponse:
     """
@@ -260,7 +246,6 @@ def _map_error_data_to_response(error: ErrorData) -> ActionLogResponse:
         context=error.context.model_dump() if error.context else None,
     )
 
-
 def _get_recent_errors_from_tracker(
     tracker: EnhancedErrorTracker, limit: int, level_filter: Optional[ErrorLevel] = None
 ) -> List[ErrorData]:
@@ -292,9 +277,7 @@ def _get_recent_errors_from_tracker(
 
     return all_errors[:limit]
 
-
 # ===== ROUTES =====
-
 
 @router.get("/recent", response_model=ActionLogsListResponse)
 async def get_recent_actions(
@@ -332,12 +315,11 @@ async def get_recent_actions(
             logs=logs, total=len(recent_errors), limit=limit, offset=offset
         )
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get recent actions: {str(e)}",
         )
-
 
 @router.get("/failed", response_model=ActionLogsListResponse)
 async def get_failed_actions(
@@ -378,12 +360,11 @@ async def get_failed_actions(
             logs=logs, total=len(failed_errors), limit=limit, offset=offset
         )
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get failed actions: {str(e)}",
         )
-
 
 @router.get("/errors", response_model=ActionLogsListResponse)
 async def get_error_logs(
@@ -408,7 +389,6 @@ async def get_error_logs(
         ActionLogsListResponse with error logs
     """
     return await get_failed_actions(limit=limit, offset=offset, tracker=tracker)
-
 
 @router.get("/warnings", response_model=ActionLogsListResponse)
 async def get_warning_logs(
@@ -449,12 +429,11 @@ async def get_warning_logs(
             logs=logs, total=len(warning_errors), limit=limit, offset=offset
         )
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get warning logs: {str(e)}",
         )
-
 
 @router.get("/by-level/{level}", response_model=ActionLogsListResponse)
 async def get_logs_by_level(
@@ -498,12 +477,11 @@ async def get_logs_by_level(
             logs=logs, total=len(level_errors), limit=limit, offset=offset
         )
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get logs by level: {str(e)}",
         )
-
 
 @router.get("/service/{service}", response_model=ActionLogsListResponse)
 async def get_actions_by_service(
@@ -552,12 +530,11 @@ async def get_actions_by_service(
             logs=logs, total=len(service_errors), limit=limit, offset=offset
         )
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get actions by service: {str(e)}",
         )
-
 
 @router.get("/stats", response_model=ActionStatsResponse)
 async def get_action_stats(tracker: EnhancedErrorTracker = Depends(get_error_tracker)):
@@ -594,12 +571,11 @@ async def get_action_stats(tracker: EnhancedErrorTracker = Depends(get_error_tra
             memory_usage=stats.memory_usage,
         )
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get action stats: {str(e)}",
         )
-
 
 @router.get("/metrics", response_model=ActionMetricsResponse)
 async def get_action_metrics(
@@ -662,12 +638,11 @@ async def get_action_metrics(
             recent_errors=recent_errors,
         )
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get action metrics: {str(e)}",
         )
-
 
 @router.get("/search", response_model=ActionLogsListResponse)
 async def search_logs(
@@ -740,12 +715,11 @@ async def search_logs(
             logs=logs, total=len(matching_errors), limit=limit, offset=offset
         )
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to search logs: {str(e)}",
         )
-
 
 @router.post("/clear", response_model=ClearLogsResponse, status_code=status.HTTP_200_OK)
 async def clear_action_logs(tracker: EnhancedErrorTracker = Depends(get_error_tracker)):
@@ -774,12 +748,11 @@ async def clear_action_logs(tracker: EnhancedErrorTracker = Depends(get_error_tr
             message="Action logs cleared successfully", cleared_groups=groups_count
         )
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to clear action logs: {str(e)}",
         )
-
 
 @router.post("/log", status_code=status.HTTP_201_CREATED)
 async def log_action(
@@ -846,16 +819,14 @@ async def log_action(
 
         return {"message": "Action logged successfully"}
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to log action: {str(e)}",
         )
 
-
 # ===== PUBLIC API FOR LOGGING =====
 # Export this function so other routes can log actions
-
 
 def log_action_event(
     service: str,

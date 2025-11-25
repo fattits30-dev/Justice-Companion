@@ -33,7 +33,6 @@ from pydantic import BaseModel, Field, field_validator
 
 # Type definitions matching TypeScript models
 
-
 class TimelineEvent(BaseModel):
     """Timeline event representing a case milestone or deadline."""
 
@@ -57,7 +56,6 @@ class TimelineEvent(BaseModel):
         except ValueError:
             raise ValueError(f"Invalid ISO 8601 date format: {v}")
 
-
 class Evidence(BaseModel):
     """Evidence item associated with a case."""
 
@@ -71,7 +69,6 @@ class Evidence(BaseModel):
     created_at: str
     updated_at: Optional[str] = None
 
-
 class Note(BaseModel):
     """Case note or annotation."""
 
@@ -84,7 +81,6 @@ class Note(BaseModel):
     created_at: str
     updated_at: str
 
-
 class Case(BaseModel):
     """Legal case record."""
 
@@ -92,7 +88,6 @@ class Case(BaseModel):
     title: str
     description: str
     status: str
-
 
 class CaseExportData(BaseModel):
     """Complete case export data structure."""
@@ -104,7 +99,6 @@ class CaseExportData(BaseModel):
     export_date: datetime
     exported_by: str
 
-
 class EvidenceExportData(BaseModel):
     """Evidence inventory export data."""
 
@@ -115,7 +109,6 @@ class EvidenceExportData(BaseModel):
     exported_by: str
     total_items: int
 
-
 class TimelineExportData(BaseModel):
     """Timeline report export data."""
 
@@ -124,7 +117,6 @@ class TimelineExportData(BaseModel):
     events: List[TimelineEvent]
     export_date: datetime
     exported_by: str
-
 
 class NotesExportData(BaseModel):
     """Case notes export data."""
@@ -135,7 +127,6 @@ class NotesExportData(BaseModel):
     export_date: datetime
     exported_by: str
     total_notes: int
-
 
 class DOCXGenerator:
     """
@@ -267,7 +258,7 @@ class DOCXGenerator:
             # Convert to bytes
             return self._document_to_bytes(doc)
 
-        except Exception as e:
+        except Exception as exc:
             if self.audit_logger:
                 await self._log_audit(
                     "case_summary_failed", case_data.case.id, case_data.exported_by, error=str(e)
@@ -337,7 +328,7 @@ class DOCXGenerator:
 
             return self._document_to_bytes(doc)
 
-        except Exception as e:
+        except Exception as exc:
             if self.audit_logger:
                 await self._log_audit(
                     "evidence_list_failed",
@@ -409,7 +400,7 @@ class DOCXGenerator:
 
             return self._document_to_bytes(doc)
 
-        except Exception as e:
+        except Exception as exc:
             if self.audit_logger:
                 await self._log_audit(
                     "timeline_report_failed",
@@ -482,7 +473,7 @@ class DOCXGenerator:
 
             return self._document_to_bytes(doc)
 
-        except Exception as e:
+        except Exception as exc:
             if self.audit_logger:
                 await self._log_audit(
                     "case_notes_failed", notes_data.case_id, notes_data.exported_by, error=str(e)

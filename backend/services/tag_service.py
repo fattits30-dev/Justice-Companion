@@ -18,37 +18,30 @@ Security:
 """
 
 import re
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Tuple, cast
 from datetime import datetime
+
+from fastapi import HTTPException
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 from sqlalchemy.orm import Session
 from sqlalchemy import func, and_
 from sqlalchemy.exc import IntegrityError
-from fastapi import HTTPException
 
 from backend.models.tag import Tag, CaseTag
 from backend.services.audit_logger import AuditLogger
-
 
 # Custom exceptions
 class TagNotFoundError(Exception):
     """Exception raised when tag is not found."""
 
-
 class UnauthorizedError(Exception):
     """Exception raised when user doesn't own the tag."""
-
 
 class ValidationError(Exception):
     """Exception raised for invalid input data."""
 
-
 class DatabaseError(Exception):
     """Exception raised for database operation failures."""
-
-
-# Pydantic models for input/output
-from pydantic import BaseModel, Field, field_validator, ConfigDict
-
 
 class CreateTagInput(BaseModel):
     """Input model for creating a new tag."""
@@ -61,6 +54,7 @@ class CreateTagInput(BaseModel):
 
     @field_validator("color")
     @classmethod
+    @classmethod
     def validate_color(cls, v: str) -> str:
         """Validate hex color format (#RRGGBB)."""
         if not re.match(r"^#[0-9A-Fa-f]{6}$", v):
@@ -69,15 +63,19 @@ class CreateTagInput(BaseModel):
 
     model_config = ConfigDict(str_strip_whitespace=True)
 
-
 class UpdateTagInput(BaseModel):
     """Input model for updating an existing tag."""
 
-    name: Optional[str] = Field(None, min_length=1, max_length=255, description="Tag name")
+    name: Optional[str] = Field(
+        None, min_length=1, max_length=255, description="Tag name"
+    )
     color: Optional[str] = Field(None, description="Hex color code (e.g., #3B82F6)")
-    description: Optional[str] = Field(None, max_length=500, description="Tag description")
+    description: Optional[str] = Field(
+        None, max_length=500, description="Tag description"
+    )
 
     @field_validator("color")
+    @classmethod
     @classmethod
     def validate_color(cls, v: Optional[str]) -> Optional[str]:
         """Validate hex color format (#RRGGBB)."""
@@ -88,7 +86,6 @@ class UpdateTagInput(BaseModel):
         return v.upper()
 
     model_config = ConfigDict(str_strip_whitespace=True)
-
 
 class TagResponse(BaseModel):
     """Response model for tag data."""
@@ -104,15 +101,17 @@ class TagResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-
 class TagStatistics(BaseModel):
     """Statistics about user's tags."""
 
     total_tags: int = Field(description="Total number of tags")
-    total_tagged_cases: int = Field(description="Total number of cases with at least one tag")
-    most_used_tag: Optional[TagResponse] = Field(None, description="Tag with highest usage count")
+    total_tagged_cases: int = Field(
+        description="Total number of cases with at least one tag"
+    )
+    most_used_tag: Optional[TagResponse] = Field(
+        None, description="Tag with highest usage count"
+    )
     unused_tags: int = Field(description="Number of tags with zero usage")
-
 
 class TagService:
     """
@@ -184,11 +183,13 @@ class TagService:
         except IntegrityError as e:
             self.db.rollback()
             if "UNIQUE constraint failed" in str(e) or "idx_tags_user_name" in str(e):
-                raise HTTPException(status_code=400, detail="A tag with this name already exists")
+                raise HTTPException(
+                    status_code=400, detail="A tag with this name already exists"
+                )
             raise DatabaseError(f"Failed to create tag: {str(e)}")
-        except Exception as e:
+        except Exception as exc:
             self.db.rollback()
-            raise DatabaseError(f"Failed to create tag: {str(e)}")
+            raise DatabaseError(f"Failed to create tag: {str(exc)}")
 
     def get_tags(self, user_id: int, include_usage_count: bool = True) -> List[Tag]:
         """
@@ -209,20 +210,24 @@ class TagService:
             query = query.group_by(Tag.id)
             query = query.add_columns(func.count(CaseTag.case_id).label("usage_count"))
 
-            results = query.order_by(Tag.name.asc()).all()
+            raw_results = query.order_by(Tag.name.asc()).all()
+            results = cast(List[Tuple[Tag, Optional[int]]], raw_results)
 
             # Attach usage_count to each tag
-            tags = []
+            tags: List[Tag] = []
             for tag, usage_count in results:
-                tag.usage_count = usage_count or 0
+                setattr(tag, "usage_count", usage_count or 0)
                 tags.append(tag)
 
             return tags
-        else:
-            return query.order_by(Tag.name.asc()).all()
+
+        return query.order_by(Tag.name.asc()).all()
 
     def get_tag_by_id(
-        self, tag_id: int, user_id: Optional[int] = None, include_usage_count: bool = True
+        self,
+        tag_id: int,
+        user_id: Optional[int] = None,
+        include_usage_count: bool = True,
     ) -> Optional[Tag]:
         """
         Get tag by ID with optional user verification.
@@ -240,22 +245,25 @@ class TagService:
         """
         query = self.db.query(Tag).filter(Tag.id == tag_id)
 
+        tag: Tag
         if include_usage_count:
             # Join with CaseTag to get usage count
             query = query.outerjoin(CaseTag, Tag.id == CaseTag.tag_id)
             query = query.group_by(Tag.id)
             query = query.add_columns(func.count(CaseTag.case_id).label("usage_count"))
 
-            result = query.first()
-            if not result:
+            raw_result = query.first()
+            if not raw_result:
                 return None
 
-            tag, usage_count = result
-            tag.usage_count = usage_count or 0
+            tag_tuple = cast(Tuple[Tag, Optional[int]], raw_result)
+            tag, usage_count = tag_tuple
+            setattr(tag, "usage_count", usage_count or 0)
         else:
-            tag = query.first()
-            if not tag:
+            tag_record = query.first()
+            if not tag_record:
                 return None
+            tag = tag_record
 
         # Verify ownership if user_id provided
         if user_id is not None:
@@ -293,7 +301,7 @@ class TagService:
 
         try:
             # Track changes for audit log
-            changes = {}
+            changes: Dict[str, Dict[str, Optional[str]]] = {}
 
             # Apply updates
             if input_data.name is not None:
@@ -305,7 +313,10 @@ class TagService:
                 tag.color = input_data.color
 
             if input_data.description is not None:
-                changes["description"] = {"from": tag.description, "to": input_data.description}
+                changes["description"] = {
+                    "from": tag.description,
+                    "to": input_data.description,
+                }
                 tag.description = input_data.description
 
             # If no changes, return tag as-is
@@ -334,11 +345,13 @@ class TagService:
         except IntegrityError as e:
             self.db.rollback()
             if "UNIQUE constraint failed" in str(e) or "idx_tags_user_name" in str(e):
-                raise HTTPException(status_code=400, detail="A tag with this name already exists")
+                raise HTTPException(
+                    status_code=400, detail="A tag with this name already exists"
+                )
             raise DatabaseError(f"Failed to update tag: {str(e)}")
-        except Exception as e:
+        except Exception as exc:
             self.db.rollback()
-            raise DatabaseError(f"Failed to update tag: {str(e)}")
+            raise DatabaseError(f"Failed to update tag: {str(exc)}")
 
     def delete_tag(
         self,
@@ -386,9 +399,9 @@ class TagService:
                 user_agent=user_agent,
             )
 
-        except Exception as e:
+        except Exception as exc:
             self.db.rollback()
-            raise DatabaseError(f"Failed to delete tag: {str(e)}")
+            raise DatabaseError(f"Failed to delete tag: {str(exc)}")
 
     def attach_tag_to_case(
         self,
@@ -447,9 +460,9 @@ class TagService:
 
             return True
 
-        except Exception as e:
+        except Exception as exc:
             self.db.rollback()
-            raise DatabaseError(f"Failed to attach tag to case: {str(e)}")
+            raise DatabaseError(f"Failed to attach tag to case: {str(exc)}")
 
     def remove_tag_from_case(
         self,
@@ -504,9 +517,9 @@ class TagService:
 
             return False  # Wasn't attached
 
-        except Exception as e:
+        except Exception as exc:
             self.db.rollback()
-            raise DatabaseError(f"Failed to remove tag from case: {str(e)}")
+            raise DatabaseError(f"Failed to remove tag from case: {str(exc)}")
 
     def get_case_tags(self, case_id: int, user_id: Optional[int] = None) -> List[Tag]:
         """
@@ -572,7 +585,11 @@ class TagService:
             return []
 
         # Verify all tags belong to user
-        tags = self.db.query(Tag).filter(and_(Tag.id.in_(tag_ids), Tag.user_id == user_id)).all()
+        tags = (
+            self.db.query(Tag)
+            .filter(and_(Tag.id.in_(tag_ids), Tag.user_id == user_id))
+            .all()
+        )
 
         if len(tags) != len(tag_ids):
             raise HTTPException(status_code=404, detail="One or more tags not found")

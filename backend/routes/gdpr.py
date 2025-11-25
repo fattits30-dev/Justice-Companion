@@ -33,9 +33,9 @@ import os
 from pathlib import Path
 
 from backend.models.base import get_db
-from backend.services.auth_service import AuthenticationService
+from backend.services.auth.service import AuthenticationService
 from backend.routes.auth import get_current_user
-from backend.services.encryption_service import EncryptionService, EncryptedData
+from backend.services.security.encryption import EncryptionService, EncryptedData
 from backend.services.audit_logger import log_audit_event
 
 # Configure logger
@@ -43,13 +43,11 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/gdpr", tags=["gdpr"])
 
-
 # ===== RATE LIMITING =====
 
 # In-memory rate limit tracker (userId:operation -> {count, resetAt})
 # TODO: Move to Redis for production multi-instance deployments
 _rate_limits: Dict[str, Dict[str, Any]] = {}
-
 
 def check_rate_limit(user_id: int, operation: str, max_requests: int, window_hours: int) -> None:
     """
@@ -81,9 +79,7 @@ def check_rate_limit(user_id: int, operation: str, max_requests: int, window_hou
     else:
         _rate_limits[key] = {"count": 1, "resetAt": now.timestamp() * 1000 + window_ms}
 
-
 # ===== PYDANTIC REQUEST/RESPONSE MODELS =====
-
 
 class GdprExportRequest(BaseModel):
     """Request model for GDPR data export (Article 20)."""
@@ -91,11 +87,11 @@ class GdprExportRequest(BaseModel):
     format: str = Field(default="json", description="Export format (json or csv)")
 
     @field_validator("format")
+    @classmethod
     def validate_format(cls, v):
         if v not in ["json", "csv"]:
             raise ValueError("Format must be 'json' or 'csv'")
         return v
-
 
 class GdprExportResponse(BaseModel):
     """Response model for GDPR data export."""
@@ -107,7 +103,6 @@ class GdprExportResponse(BaseModel):
     format: str
     auditLogId: Optional[str] = None
 
-
 class GdprDeleteRequest(BaseModel):
     """Request model for GDPR account deletion (Article 17)."""
 
@@ -116,11 +111,11 @@ class GdprDeleteRequest(BaseModel):
     reason: Optional[str] = Field(None, max_length=500, description="Optional reason for deletion")
 
     @field_validator("confirmed")
+    @classmethod
     def validate_confirmed(cls, v):
         if not v:
             raise ValueError("Deletion requires explicit confirmation (confirmed: true)")
         return v
-
 
 class GdprDeleteResponse(BaseModel):
     """Response model for GDPR account deletion."""
@@ -133,7 +128,6 @@ class GdprDeleteResponse(BaseModel):
     exportPath: Optional[str] = None
     auditLogId: Optional[str] = None
 
-
 class ConsentRecord(BaseModel):
     """Consent record model."""
 
@@ -144,12 +138,10 @@ class ConsentRecord(BaseModel):
     revokedAt: Optional[str] = None
     createdAt: str
 
-
 class ConsentsResponse(BaseModel):
     """Response model for user consents."""
 
     consents: List[ConsentRecord]
-
 
 class UpdateConsentRequest(BaseModel):
     """Request model for updating consent."""
@@ -157,14 +149,11 @@ class UpdateConsentRequest(BaseModel):
     consentType: str = Field(..., description="Type of consent (e.g., data_processing, marketing)")
     granted: bool = Field(..., description="Whether consent is granted")
 
-
 # ===== DEPENDENCIES =====
-
 
 def get_auth_service(db: Session = Depends(get_db)) -> AuthenticationService:
     """Get authentication service instance."""
     return AuthenticationService(db=db)
-
 
 def get_encryption_service() -> EncryptionService:
     """Get encryption service instance."""
@@ -174,9 +163,7 @@ def get_encryption_service() -> EncryptionService:
 
     return EncryptionService(key)
 
-
 # ===== HELPER FUNCTIONS =====
-
 
 def decrypt_field(
     stored_value: Optional[str], encryption_service: EncryptionService
@@ -208,7 +195,6 @@ def decrypt_field(
     except (json.JSONDecodeError, Exception):
         return stored_value
 
-
 def check_consent(db: Session, user_id: int, consent_type: str) -> None:
     """
     Check if user has active consent for operation.
@@ -239,7 +225,6 @@ def check_consent(db: Session, user_id: int, consent_type: str) -> None:
             status_code=status.HTTP_403_FORBIDDEN,
             detail=f"Active consent required for {consent_type}",
         )
-
 
 def export_user_data(
     db: Session, user_id: int, encryption_service: EncryptionService, export_format: str = "json"
@@ -468,7 +453,6 @@ def export_user_data(
         },
     }
 
-
 def delete_user_data(db: Session, user_id: int, reason: Optional[str] = None) -> Dict[str, Any]:
     """
     Delete all user data (cascading deletion).
@@ -623,16 +607,14 @@ def delete_user_data(db: Session, user_id: int, reason: Optional[str] = None) ->
             "preservedConsents": preserved_consents,
         }
 
-    except Exception as e:
+    except Exception as exc:
         db.rollback()
         logger.error(f"GDPR deletion failed: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Deletion failed: {str(e)}"
         )
 
-
 # ===== ROUTES =====
-
 
 @router.post("/export", response_model=GdprExportResponse)
 async def gdpr_export(
@@ -706,7 +688,7 @@ async def gdpr_export(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         # Audit log failure
         log_audit_event(
             db=db,
@@ -723,7 +705,6 @@ async def gdpr_export(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Export failed: {str(e)}"
         )
-
 
 @router.post("/delete", response_model=GdprDeleteResponse)
 async def gdpr_delete(
@@ -816,7 +797,7 @@ async def gdpr_delete(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         # Audit log failure
         log_audit_event(
             db=db,
@@ -833,7 +814,6 @@ async def gdpr_delete(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Deletion failed: {str(e)}"
         )
-
 
 @router.get("/consents", response_model=ConsentsResponse)
 async def get_consents(user_id: int = Depends(get_current_user), db: Session = Depends(get_db)):
@@ -878,13 +858,12 @@ async def get_consents(user_id: int = Depends(get_current_user), db: Session = D
 
         return ConsentsResponse(consents=consents)
 
-    except Exception as e:
+    except Exception as exc:
         logger.error(f"Failed to get consents: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get consents: {str(e)}",
         )
-
 
 @router.post("/consents")
 async def update_consent(
@@ -955,7 +934,7 @@ async def update_consent(
 
         return {"success": True, "consentType": request.consentType, "granted": request.granted}
 
-    except Exception as e:
+    except Exception as exc:
         db.rollback()
         logger.error(f"Failed to update consent: {e}", exc_info=True)
         raise HTTPException(

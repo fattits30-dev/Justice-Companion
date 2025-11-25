@@ -26,25 +26,20 @@ from fastapi import HTTPException
 from pydantic import BaseModel, Field, ConfigDict
 
 from backend.models.chat import ChatConversation, ChatMessage
-from backend.services.encryption_service import EncryptionService
-
+from backend.services.security.encryption import EncryptionService
 
 # Custom Exceptions
 class ConversationNotFoundError(Exception):
     """Exception raised when conversation is not found."""
 
-
 class UnauthorizedError(Exception):
     """Exception raised when user doesn't own the conversation."""
-
 
 class DatabaseError(Exception):
     """Exception raised for database operation failures."""
 
-
 class ValidationError(Exception):
     """Exception raised for invalid input data."""
-
 
 # Pydantic Input/Output Models
 class CreateConversationInput(BaseModel):
@@ -56,7 +51,6 @@ class CreateConversationInput(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-
 class CreateMessageInput(BaseModel):
     """Input model for adding a message to a conversation."""
 
@@ -67,7 +61,6 @@ class CreateMessageInput(BaseModel):
     token_count: Optional[int] = Field(None, ge=0, description="Token count for message")
 
     model_config = ConfigDict(from_attributes=True)
-
 
 class ConversationResponse(BaseModel):
     """Response model for conversation data."""
@@ -82,7 +75,6 @@ class ConversationResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-
 class MessageResponse(BaseModel):
     """Response model for message data."""
 
@@ -96,14 +88,12 @@ class MessageResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-
 class ConversationWithMessagesResponse(ConversationResponse):
     """Response model for conversation with all messages."""
 
     messages: List[MessageResponse] = []
 
     model_config = ConfigDict(from_attributes=True)
-
 
 class StartConversationInput(BaseModel):
     """Input model for starting a new conversation with first message."""
@@ -113,7 +103,6 @@ class StartConversationInput(BaseModel):
     first_message: CreateMessageInput = Field(..., description="First message in conversation")
 
     model_config = ConfigDict(from_attributes=True)
-
 
 class ChatService:
     """

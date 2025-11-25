@@ -2,121 +2,106 @@
 
 ## Project Overview
 
-Privacy-first AI-powered case management system for UK legal matters.
+**AI-Powered Civil Law Case Management PWA** - Provides legal INFORMATION (not advice) to help users manage UK civil law matters.
+
+## Critical: Information vs Advice
+
+**We provide legal INFORMATION, not legal ADVICE.**
+
+| DO (Information) | DON'T (Advice) |
+|------------------|----------------|
+| "Options to consider include..." | "You should do..." |
+| "Routes you might explore..." | "The best approach is..." |
+| "The typical time limit is..." | "You must file by..." |
+| "Consider consulting a solicitor" | "You don't need a lawyer" |
+
+AI responses must:
+- Present multiple options, not single recommendations
+- Use "consider", "explore", "options include", "you may want to look into"
+- Always suggest professional advice for important decisions
+- Explain procedures, not recommend strategy
+
+## Key AI Capabilities
+
+| Feature | Description |
+|---------|-------------|
+| **AI Case Creation** | Extract case details from documents (user confirms all) |
+| **AI Case Management** | Administrative assistance, deadline tracking, organization |
+| **Document Analysis** | PDF, DOCX, TXT, images - extract dates, names, amounts |
+| **Image Processing** | OCR for scanned docs, photos of letters/forms |
+| **Issue Identification** | Highlights areas to review (not "faults" or "problems") |
+| **Legal Info Assistant** | Chat for procedures, options, terminology (not advice) |
+| **RAG Knowledge Base** | Context-aware answers from documents + legal info |
 
 ## Tech Stack
 
-| Layer      | Technology                              |
-| ---------- | --------------------------------------- |
-| Frontend   | React 18 + TypeScript + Vite + Tailwind |
-| Desktop    | Electron                                |
-| Backend    | FastAPI (Python) + SQLAlchemy 2.0       |
-| AI Service | FastAPI + Hugging Face                  |
-| Database   | SQLite (local) / PostgreSQL (cloud)     |
-| Testing    | Vitest, pytest, Playwright              |
+| Layer | Technology |
+|-------|------------|
+| Frontend | React 18 + TypeScript + Vite + Tailwind |
+| PWA | vite-plugin-pwa (offline-capable, installable) |
+| Backend | FastAPI (Python) + SQLAlchemy 2.0 |
+| AI | Configurable (HuggingFace, OpenAI, Anthropic, Google, Mistral) |
+| OCR/Images | Tesseract + Pillow |
+| Database | SQLite (local) / PostgreSQL (cloud) |
+| RAG | FAISS + sentence-transformers (hybrid search) |
 
-## MCP Efficiency Optimization
+**Note**: This is a PWA, not an Electron app.
 
-### Use Code Execution Pattern
+## Civil Law Areas (Information Only)
 
-For database queries and bulk operations, always use the code executor:
+- Employment - Tribunal procedures, time limits, forms
+- Housing - Tenant rights info, court processes
+- Consumer - Consumer rights, small claims procedures
+- Debt - County Court procedures, enforcement info
+- Small Claims - Court procedures, forms, timelines
 
-```typescript
-// BAD: Multiple direct queries
-const cases = await postgres.query({ sql: "SELECT * FROM cases" });
-const docs = await postgres.query({ sql: "SELECT * FROM documents" });
+## Code Patterns
 
-// GOOD: Code execution with aggregation
-const summary = await executeCode(`
-  const cases = await postgres.query({ sql: "SELECT status, COUNT(*) FROM cases GROUP BY status" });
-  const docs = await postgres.query({ sql: "SELECT type, COUNT(*) FROM documents GROUP BY type" });
-  return { casesByStatus: cases.rows, docsByType: docs.rows };
-`);
-```
-
-### Project-Specific Slash Commands
-
-| Command           | Use For                  |
-| ----------------- | ------------------------ |
-| `/analyze-case`   | Analyze a legal case     |
-| `/project-status` | Development status check |
-| `/run-tests`      | Run tests with summary   |
-
-### Code Patterns
-
-#### Frontend (React + TypeScript)
-
-- Use functional components with hooks
-- TypeScript strict mode enabled
+### Frontend (React + TypeScript)
+- Functional components with hooks
+- TypeScript strict mode
 - Tailwind for styling
-- Vitest for unit tests
+- TanStack React Query
 
-#### Backend (FastAPI)
-
+### Backend (FastAPI)
 - SQLAlchemy 2.0 async patterns
-- Pydantic for validation
+- Pydantic validation
 - PassLib for auth
-- pytest for testing
 
-#### AI Service
-
-- Hugging Face transformers
+### AI Service
+- Configurable providers (HuggingFace, OpenAI, Anthropic, Google, Mistral)
+- HuggingFace: use `https://router.huggingface.co/v1` endpoint
 - Tesseract for OCR
-- PyPDF for document processing
+- PyPDF + Pillow for documents/images
 
-### Database Queries
-
-Always aggregate and limit results:
-
-```python
-# BAD
-SELECT * FROM cases;
-
-# GOOD
-SELECT status, COUNT(*), MAX(updated_at) as latest
-FROM cases
-GROUP BY status;
-```
-
-### Testing Commands
+## Running the App
 
 ```bash
-# Frontend
-npm run test              # Vitest
-npx playwright test       # E2E
-
-# Backend
-pytest backend/ -v
-
-# AI Service
-pytest ai_service/ -v
+npm run dev:full    # Frontend + backend
+npm run dev         # Frontend only
+npm run dev:backend # Backend only
 ```
 
-### Security Requirements
+## Testing
 
-- End-to-end encryption for sensitive data
-- Local model deployment option for privacy
+```bash
+npm run test        # Vitest
+npm run e2e         # Playwright
+pytest backend/ -v  # Backend
+```
+
+## AI Provider Setup
+
+Users configure in Settings:
+- **HuggingFace**: `https://router.huggingface.co/v1`
+- **OpenAI**: GPT models
+- **Anthropic**: Claude models
+- **Google**: Gemini models
+- **Mistral**: Mistral AI models
+
+## Security
+
+- End-to-end encryption
+- User's own AI keys
 - No PII in logs
-- Snyk for vulnerability scanning
-
-## Common Tasks
-
-### Adding a New Feature
-
-1. Check `/project-status` for current state
-2. Create feature branch
-3. Implement with tests
-4. Run `/run-tests all`
-5. Create PR
-
-### Analyzing Cases
-
-1. Use `/analyze-case {id}` for overview
-2. Use code execution for bulk queries
-3. Aggregate document metadata
-
-### Debugging
-
-1. Check backend logs: `logs/backend.log`
-2. Check AI service logs: `logs/ai_service.log`
-3. Use `--debug` flag for detailed output
+- GDPR compliant

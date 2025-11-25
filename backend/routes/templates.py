@@ -25,7 +25,7 @@ from typing import Optional, List
 from sqlalchemy.orm import Session
 
 from backend.models.base import get_db
-from backend.services.auth_service import AuthenticationService
+from backend.services.auth.service import AuthenticationService
 from backend.routes.auth import get_current_user
 from backend.services.template_service import (
     TemplateService,
@@ -43,11 +43,9 @@ from backend.models.template import TemplateCategory
 
 router = APIRouter(prefix="/templates", tags=["templates"])
 
-
 # ===== PYDANTIC RESPONSE MODELS =====
 # Request models are imported from template_service
 # Response models used by FastAPI for OpenAPI schema generation
-
 
 class DeleteTemplateResponse(BaseModel):
     """Response model for template deletion."""
@@ -55,17 +53,14 @@ class DeleteTemplateResponse(BaseModel):
     deleted: bool
     id: int
 
-
 # ===== DEPENDENCIES =====
 def get_auth_service(db: Session = Depends(get_db)) -> AuthenticationService:
     """Get authentication service instance."""
     return AuthenticationService(db=db)
 
-
 def get_audit_logger(db: Session = Depends(get_db)) -> AuditLogger:
     """Get audit logger instance."""
     return AuditLogger(db=db)
-
 
 def get_template_service(
     db: Session = Depends(get_db), audit_logger: AuditLogger = Depends(get_audit_logger)
@@ -73,13 +68,11 @@ def get_template_service(
     """Get template service instance with dependency injection."""
     return TemplateService(db=db, audit_logger=audit_logger)
 
-
 def get_template_seeder(
     db: Session = Depends(get_db), audit_logger: AuditLogger = Depends(get_audit_logger)
 ) -> TemplateSeeder:
     """Get template seeder instance with dependency injection."""
     return TemplateSeeder(db=db, audit_logger=audit_logger)
-
 
 # ===== ROUTES =====
 @router.post("", response_model=TemplateResponse, status_code=status.HTTP_201_CREATED)
@@ -106,12 +99,11 @@ async def create_template(
     except DatabaseError as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to create template: {str(e)}",
         )
-
 
 @router.get("", response_model=List[TemplateResponse])
 async def list_templates(
@@ -148,12 +140,11 @@ async def list_templates(
         raise
     except DatabaseError as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to list templates: {str(e)}",
         )
-
 
 @router.get("/{template_id}", response_model=TemplateResponse)
 async def get_template(
@@ -179,12 +170,11 @@ async def get_template(
     except HTTPException:
         raise
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get template: {str(e)}",
         )
-
 
 @router.put("/{template_id}", response_model=TemplateResponse)
 async def update_template(
@@ -218,12 +208,11 @@ async def update_template(
     except DatabaseError as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to update template: {str(e)}",
         )
-
 
 @router.delete(
     "/{template_id}", response_model=DeleteTemplateResponse, status_code=status.HTTP_200_OK
@@ -260,12 +249,11 @@ async def delete_template(
     except DatabaseError as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to delete template: {str(e)}",
         )
-
 
 @router.post("/{template_id}/apply")
 async def apply_template(
@@ -308,12 +296,11 @@ async def apply_template(
     except DatabaseError as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to apply template: {str(e)}",
         )
-
 
 @router.post("/seed")
 async def seed_templates(
@@ -347,7 +334,7 @@ async def seed_templates(
             "stats": result,
         }
 
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to seed templates: {str(e)}",

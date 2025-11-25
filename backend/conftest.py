@@ -22,7 +22,7 @@ from backend.models.session import Session as SessionModel
 from backend.models.tag import Tag
 from backend.models.template import CaseTemplate, TemplateUsage
 from backend.models.user import User
-from backend.services.auth_service import AuthenticationService
+from backend.services.auth.service import AuthenticationService
 
 # NOTE: These values are test-only fixtures used across multiple tests.
 # They are not real credentials and never leave the test environment.
@@ -51,7 +51,6 @@ _REGISTERED_MODELS = (
 # from backend.models.chat import Conversation, Message  # Check model names
 # from backend.models.backup import BackupSettings  # May not exist
 
-
 # ===== DATABASE SETUP =====
 # Use file-based SQLite for test isolation; in-memory DBs do not
 # share state across connections.
@@ -71,7 +70,6 @@ TestingSessionLocal = sessionmaker(
     bind=engine,
 )
 
-
 def override_get_db() -> Generator[Session, None, None]:
     """Override database dependency for testing."""
     db = TestingSessionLocal()
@@ -80,10 +78,8 @@ def override_get_db() -> Generator[Session, None, None]:
     finally:
         db.close()
 
-
 # Apply the override globally
 app.dependency_overrides[get_db] = override_get_db
-
 
 # ===== FIXTURES =====
 
@@ -135,12 +131,10 @@ def db() -> Generator[Session, None, None]:
             conn.execute(text("DROP TABLE IF EXISTS audit_logs"))
             conn.commit()
 
-
 @pytest.fixture(scope="function")
 def client() -> TestClient:
     """FastAPI test client."""
     return TestClient(app)
-
 
 @pytest.fixture(scope="function")
 def test_user(db: Session) -> User:
@@ -166,7 +160,6 @@ def test_user(db: Session) -> User:
     user = db.query(User).filter(User.id == user_id).first()
     return user
 
-
 @pytest.fixture(scope="function")
 def test_user_2(db: Session) -> User:
     """Create second test user for multi-user tests."""
@@ -185,7 +178,6 @@ def test_user_2(db: Session) -> User:
     user_id = result["user"]["id"]
     user = db.query(User).filter(User.id == user_id).first()
     return user
-
 
 @pytest.fixture(scope="function")
 def auth_headers(db: Session, test_user: User) -> dict:
@@ -208,7 +200,6 @@ def auth_headers(db: Session, test_user: User) -> dict:
     session_id = result["session"]["id"]
     return {"Authorization": f"Bearer {session_id}"}
 
-
 @pytest.fixture(scope="function")
 def auth_headers_user_2(db: Session, test_user_2: User) -> dict:
     """Auth headers for second test user."""
@@ -224,7 +215,6 @@ def auth_headers_user_2(db: Session, test_user_2: User) -> dict:
 
     session_id = result["session"]["id"]
     return {"Authorization": f"Bearer {session_id}"}
-
 
 @pytest.fixture(scope="function")
 def test_case(db: Session, test_user: User) -> Case:
@@ -242,7 +232,6 @@ def test_case(db: Session, test_user: User) -> Case:
     db.refresh(case)
     return case
 
-
 @pytest.fixture(scope="function")
 def test_tag(db: Session, test_user: User) -> Tag:
     """Create test tag for tag-related tests."""
@@ -255,7 +244,6 @@ def test_tag(db: Session, test_user: User) -> Tag:
     db.commit()
     db.refresh(tag)
     return tag
-
 
 @pytest.fixture(scope="function")
 def test_deadline(db: Session, test_user: User, test_case: Case) -> Deadline:
@@ -275,7 +263,6 @@ def test_deadline(db: Session, test_user: User, test_case: Case) -> Deadline:
     db.refresh(deadline)
     return deadline
 
-
 @pytest.fixture(scope="function")
 def test_evidence(db: Session, test_user: User, test_case: Case) -> Evidence:
     """Create test evidence for evidence-related tests."""
@@ -292,14 +279,12 @@ def test_evidence(db: Session, test_user: User, test_case: Case) -> Evidence:
     db.refresh(evidence)
     return evidence
 
-
 # ===== ASYNC HELPERS =====
 
 def run_async(coro):
     """Helper to run async coroutine in sync context."""
     loop = asyncio.get_event_loop()
     return loop.run_until_complete(coro)
-
 
 # ===== PYTEST CONFIGURATION =====
 

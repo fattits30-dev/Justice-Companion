@@ -29,7 +29,6 @@ from datetime import datetime
 from pydantic import BaseModel, Field, ConfigDict
 from fastapi import HTTPException
 
-
 class Template(BaseModel):
     """Export template definition."""
 
@@ -39,7 +38,6 @@ class Template(BaseModel):
     format_func: str = Field(..., description="Formatter function name")
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
-
 
 class TimelineEvent(BaseModel):
     """Timeline event for export."""
@@ -58,7 +56,6 @@ class TimelineEvent(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-
 class CaseExportData(BaseModel):
     """Complete case export data."""
 
@@ -74,7 +71,6 @@ class CaseExportData(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-
 class EvidenceExportData(BaseModel):
     """Evidence-focused export data."""
 
@@ -87,7 +83,6 @@ class EvidenceExportData(BaseModel):
     category_summary: Dict[str, int]
 
     model_config = ConfigDict(from_attributes=True)
-
 
 class TimelineExportData(BaseModel):
     """Timeline-focused export data."""
@@ -103,7 +98,6 @@ class TimelineExportData(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-
 class NotesExportData(BaseModel):
     """Notes-focused export data."""
 
@@ -115,7 +109,6 @@ class NotesExportData(BaseModel):
     total_notes: int
 
     model_config = ConfigDict(from_attributes=True)
-
 
 class TemplateEngine:
     """

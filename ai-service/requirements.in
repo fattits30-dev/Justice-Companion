@@ -1,0 +1,56 @@
+# Justice Companion AI Service - Dependency Template
+# Use pip-compile to generate requirements-prod.txt
+# Command: pip-compile --output-file=requirements-prod.txt requirements.in
+
+# ========================================================================================
+# WEB FRAMEWORK
+# ========================================================================================
+
+fastapi>=0.109.0,<0.110.0               # Modern async web framework
+uvicorn[standard]>=0.27.0,<0.28.0       # ASGI server implementation
+
+# ========================================================================================
+# AI & MACHINE LEARNING - HUGGING FACE (PRIMARY PROVIDER)
+# ========================================================================================
+
+accelerate>=0.26.0,<1.0.0               # Distributed training and inference acceleration
+huggingface_hub>=0.20.0,<1.0.0          # Model and dataset sharing platform
+safetensors>=0.4.2,<1.0.0               # Safe serialization of tensors (replacement for pickle)
+sentencepiece>=0.1.99,<1.0.0            # Subword tokenization algorithm
+tokenizers>=0.15.0,<1.0.0               # Fast, customizable tokenization library
+torch>=2.6.1,<3.0.0                     # PyTorch machine learning framework
+transformers>=4.46.3,<5.0.0             # State-of-the-art NLP models and architectures
+
+# ========================================================================================
+# AI & MACHINE LEARNING - OPENAI (FALLBACK PROVIDER)
+# ========================================================================================
+
+openai>=1.0.0,<2.0.0                    # OpenAI API client (minor updates allowed)
+
+# ========================================================================================
+# DATA VALIDATION & SERIALIZATION
+# ========================================================================================
+
+pydantic>=2.6.0,<3.0.0                   # Data validation using Python type hints
+pydantic-settings>=2.0.0,<3.0.0         # Settings management for Pydantic
+python-multipart>=0.0.12,<1.0.0         # Streaming multipart parsing for FastAPI
+
+# ========================================================================================
+# HTTP CLIENTS & NETWORKING
+# ========================================================================================
+
+httpx>=0.26.0,<1.0.0                    # Modern async HTTP client
+
+# ========================================================================================
+# IMAGE PROCESSING & OCR
+# ========================================================================================
+
+Pillow>=11.0.1,<12.0.0                  # PIL fork - image processing (security patches applied)
+pillow-heif>=0.15.0,<1.0.0              # HEIF/HEIC image support for Pillow
+pytesseract>=0.3.10,<1.0.0              # Python wrapper for Tesseract OCR
+
+# ========================================================================================
+# DOCUMENT PROCESSING
+# ========================================================================================
+
+pdf2image>=1.16.3,<2.0.0                # PDF to image conversion

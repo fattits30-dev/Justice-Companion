@@ -49,7 +49,6 @@ from typing import Dict, List, Optional, Set, Tuple
 
 logger = logging.getLogger(__name__)
 
-
 @dataclass
 class PortConfig:
     """
@@ -68,7 +67,6 @@ class PortConfig:
     range: Optional[Tuple[int, int]] = None
     description: Optional[str] = None
     required: bool = False
-
 
 @dataclass
 class PortAllocation:
@@ -89,7 +87,6 @@ class PortAllocation:
     status: str  # 'allocated' | 'in_use' | 'error'
     message: Optional[str] = None
 
-
 @dataclass
 class PortStatus:
     """
@@ -109,7 +106,6 @@ class PortStatus:
     pid: Optional[int] = None
     allocated_at: Optional[datetime] = None
 
-
 @dataclass
 class PortManagerConfig:
     """
@@ -126,7 +122,6 @@ class PortManagerConfig:
     enable_auto_allocation: bool = True
     max_retries: int = 10
     retry_delay: float = 0.1
-
 
 # Default port configuration for Justice Companion services
 DEFAULT_PORT_CONFIGS: List[PortConfig] = [
@@ -159,7 +154,6 @@ DEFAULT_PORT_CONFIGS: List[PortConfig] = [
         required=False,
     ),
 ]
-
 
 class PortManager:
     """
@@ -219,7 +213,7 @@ class PortManager:
                 logger.info(
                     f"[PortManager] Loaded custom port configurations from {self.config.port_config_path}"
                 )
-            except Exception as e:
+            except Exception as exc:
                 logger.error(
                     f"[PortManager] Failed to load config from {self.config.port_config_path}: {e}",
                     exc_info=True,
@@ -266,7 +260,7 @@ class PortManager:
             # Other errors - treat as unavailable for safety
             logger.debug(f"[PortManager] Error checking port {port}: {e}")
             return False
-        except Exception as e:
+        except Exception as exc:
             logger.error(f"[PortManager] Unexpected error checking port {port}: {e}", exc_info=True)
             return False
 
@@ -504,7 +498,7 @@ class PortManager:
                     self._on_port_became_available(service_name, port)
         except asyncio.CancelledError:
             logger.debug(f"[PortManager] Stopped monitoring port {port} for {service_name}")
-        except Exception as e:
+        except Exception as exc:
             logger.error(
                 f"[PortManager] Error monitoring port {port} for {service_name}: {e}", exc_info=True
             )
@@ -660,7 +654,7 @@ class PortManager:
                 f"[PortManager] Saved port configuration to {config_path} "
                 f"({len(configs)} services)"
             )
-        except Exception as e:
+        except Exception as exc:
             logger.error(
                 f"[PortManager] Failed to save configuration to {config_path}: {e}", exc_info=True
             )
@@ -756,7 +750,7 @@ class PortManager:
         if self.config.port_config_path:
             try:
                 await self.save_configuration()
-            except Exception as e:
+            except Exception as exc:
                 # Log but don't raise during cleanup
                 logger.error(f"[PortManager] Error saving configuration during cleanup: {e}")
 
@@ -766,11 +760,9 @@ class PortManager:
 
         logger.info("[PortManager] Cleanup completed")
 
-
 # Singleton instance
 _port_manager_instance: Optional[PortManager] = None
 _port_manager_lock = threading.Lock()
-
 
 def get_port_manager(config: Optional[PortManagerConfig] = None) -> PortManager:
     """
