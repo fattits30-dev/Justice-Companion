@@ -1,9 +1,7 @@
 // src/services/export/ExportService.ts
-import { injectable, inject } from "inversify";
 import { promises as fs } from "fs";
 import path from "path";
 import { errorLogger } from "../../utils/error-logger.ts";
-import { TYPES } from "../../shared/infrastructure/di/types.ts";
 import type { IDatabase } from "../../interfaces/IDatabase.ts";
 import type { ICaseRepository } from "../../interfaces/ICaseRepository.ts";
 import type { IEvidenceRepository } from "../../interfaces/IEvidenceRepository.ts";
@@ -54,24 +52,41 @@ export interface IExportService {
   exportCaseNotesToWord(caseId: number, userId: number): Promise<ExportResult>;
 }
 
-@injectable()
 export class ExportService implements IExportService {
   private pdfGenerator: PDFGenerator;
   private docxGenerator: DOCXGenerator;
   private exportDir: string;
+  // @ts-expect-error - Database reference kept for future use
+  private _db: IDatabase;
+  private caseRepo: ICaseRepository;
+  private evidenceRepo: IEvidenceRepository;
+  private deadlineRepo: IDeadlineRepository;
+  private documentRepo: IDocumentRepository;
+  private noteRepo: INoteRepository;
+  private userRepo: IUserRepository;
+  private encryption: IEncryptionService;
+  private auditLogger: IAuditLogger;
 
   constructor(
-    // @ts-expect-error - Parameter required for DI but not currently used
-    @inject(TYPES.Database) private _db: IDatabase,
-    @inject(TYPES.CaseRepository) private caseRepo: ICaseRepository,
-    @inject(TYPES.EvidenceRepository) private evidenceRepo: IEvidenceRepository,
-    @inject(TYPES.DeadlineRepository) private deadlineRepo: IDeadlineRepository,
-    @inject(TYPES.DocumentRepository) private documentRepo: IDocumentRepository,
-    @inject(TYPES.NotesRepository) private noteRepo: INoteRepository,
-    @inject(TYPES.UserRepository) private userRepo: IUserRepository,
-    @inject(TYPES.EncryptionService) private encryption: IEncryptionService,
-    @inject(TYPES.AuditLogger) private auditLogger: IAuditLogger,
+    db: IDatabase,
+    caseRepo: ICaseRepository,
+    evidenceRepo: IEvidenceRepository,
+    deadlineRepo: IDeadlineRepository,
+    documentRepo: IDocumentRepository,
+    noteRepo: INoteRepository,
+    userRepo: IUserRepository,
+    encryption: IEncryptionService,
+    auditLogger: IAuditLogger,
   ) {
+    this._db = db;
+    this.caseRepo = caseRepo;
+    this.evidenceRepo = evidenceRepo;
+    this.deadlineRepo = deadlineRepo;
+    this.documentRepo = documentRepo;
+    this.noteRepo = noteRepo;
+    this.userRepo = userRepo;
+    this.encryption = encryption;
+    this.auditLogger = auditLogger;
     this.pdfGenerator = new PDFGenerator();
     this.docxGenerator = new DOCXGenerator();
 

@@ -39,7 +39,7 @@ interface AuthContextValue {
   isLoading: boolean;
   error: string | null;
   login: (
-    username: string,
+    identifier: string,
     password: string,
     rememberMe: boolean,
   ) => Promise<void>;
@@ -133,10 +133,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   /**
-   * Login user
+   * Login user with username or email
    */
   const login = async (
-    username: string,
+    identifier: string,
     password: string,
     rememberMe: boolean,
   ): Promise<void> => {
@@ -145,7 +145,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     try {
       const response = await apiClient.auth.login(
-        username,
+        identifier,
         password,
         rememberMe,
       );

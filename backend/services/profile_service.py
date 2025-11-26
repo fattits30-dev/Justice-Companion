@@ -118,16 +118,17 @@ class ProfileService:
     Business logic layer for user profile management.
     Handles encryption, validation, caching, and audit logging.
 
-    This service manages the single-row user_profile table (id=1).
+    This service manages user profiles in the user_profile table.
+    Each user has their own profile identified by user_id.
     """
 
     # Cache configuration (matches TypeScript implementation)
     CACHE_DURATION_MS = 5000  # 5 seconds
-    PROFILE_ID = 1  # Single row ID (enforced by CHECK constraint)
 
     def __init__(
         self,
         db: Session,
+        user_id: int,
         encryption_service: Optional[EncryptionService] = None,
         audit_logger=None,
     ):
@@ -136,10 +137,12 @@ class ProfileService:
 
         Args:
             db: SQLAlchemy database session
+            user_id: Current user's ID
             encryption_service: Optional encryption service for sensitive fields
             audit_logger: Optional audit logger instance
         """
         self.db = db
+        self.user_id = user_id
         self.encryption_service = encryption_service
         self.audit_logger = audit_logger
 
@@ -250,15 +253,15 @@ class ProfileService:
         try:
             profile = (
                 self.db.query(UserProfile)
-                .filter(UserProfile.id == self.PROFILE_ID)
+                .filter(UserProfile.user_id == self.user_id)
                 .first()
             )
 
             if not profile:
                 self._log_audit(
                     event_type="profile.get",
-                    user_id=None,
-                    resource_id=str(self.PROFILE_ID),
+                    user_id=self.user_id,
+                    resource_id=str(self.user_id),
                     action="read",
                     success=False,
                     details={"reason": "Profile not found"},
@@ -279,8 +282,8 @@ class ProfileService:
 
             self._log_audit(
                 event_type="profile.get",
-                user_id=None,
-                resource_id=str(self.PROFILE_ID),
+                user_id=self.user_id,
+                resource_id=str(self.user_id),
                 action="read",
                 success=True,
             )
@@ -295,8 +298,8 @@ class ProfileService:
         except SQLAlchemyError as e:
             self._log_audit(
                 event_type="profile.get",
-                user_id=None,
-                resource_id=str(self.PROFILE_ID),
+                user_id=self.user_id,
+                resource_id=str(self.user_id),
                 action="read",
                 success=False,
                 details={"error": str(e)},
@@ -354,14 +357,14 @@ class ProfileService:
                 # Get or create database profile
                 db_profile = (
                     self.db.query(UserProfile)
-                    .filter(UserProfile.id == self.PROFILE_ID)
+                    .filter(UserProfile.user_id == self.user_id)
                     .first()
                 )
 
                 if not db_profile:
-                    # Create new profile (single row with id=1)
+                    # Create new profile for this user
                     db_profile = UserProfile(
-                        id=self.PROFILE_ID,
+                        user_id=self.user_id,
                         name="Legal User",
                         first_name="",
                         last_name="",
@@ -391,8 +394,8 @@ class ProfileService:
 
                 self._log_audit(
                     event_type="profile.update",
-                    user_id=None,
-                    resource_id=str(self.PROFILE_ID),
+                    user_id=self.user_id,
+                    resource_id=str(self.user_id),
                     action="update",
                     success=True,
                     details={"attempt": attempt},
@@ -410,8 +413,8 @@ class ProfileService:
 
                 self._log_audit(
                     event_type="profile.update",
-                    user_id=None,
-                    resource_id=str(self.PROFILE_ID),
+                    user_id=self.user_id,
+                    resource_id=str(self.user_id),
                     action="update",
                     success=False,
                     details={
@@ -432,8 +435,8 @@ class ProfileService:
 
                 self._log_audit(
                     event_type="profile.update",
-                    user_id=None,
-                    resource_id=str(self.PROFILE_ID),
+                    user_id=self.user_id,
+                    resource_id=str(self.user_id),
                     action="update",
                     success=False,
                     details={"attempt": attempt, "error": str(exc)},
@@ -508,13 +511,13 @@ class ProfileService:
         """
         Clear all profile data (reset to defaults).
 
-        Note: This doesn't delete the row (single row constraint),
+        Note: This doesn't delete the row,
         it resets fields to default values.
         """
         try:
             db_profile = (
                 self.db.query(UserProfile)
-                .filter(UserProfile.id == self.PROFILE_ID)
+                .filter(UserProfile.user_id == self.user_id)
                 .first()
             )
 
@@ -533,8 +536,8 @@ class ProfileService:
 
                 self._log_audit(
                     event_type="profile.clear",
-                    user_id=None,
-                    resource_id=str(self.PROFILE_ID),
+                    user_id=self.user_id,
+                    resource_id=str(self.user_id),
                     action="delete",
                     success=True,
                 )
@@ -543,8 +546,8 @@ class ProfileService:
             self.db.rollback()
             self._log_audit(
                 event_type="profile.clear",
-                user_id=None,
-                resource_id=str(self.PROFILE_ID),
+                user_id=self.user_id,
+                resource_id=str(self.user_id),
                 action="delete",
                 success=False,
                 details={"error": str(e)},

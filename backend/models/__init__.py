@@ -11,6 +11,7 @@ from backend.models.consent import Consent, ConsentType
 from backend.models.deadline import Deadline
 from backend.models.evidence import Evidence
 from backend.models.notification import Notification, NotificationPreferences
+from backend.models.password_reset import PasswordResetToken
 from backend.models.profile import UserProfile
 from backend.models.session import Session
 from backend.models.tag import Tag
@@ -36,4 +37,5 @@ __all__ = [
     "NotificationPreferences",
     "BackupSettings",
     "AIProviderConfig",
+    "PasswordResetToken",
 ]

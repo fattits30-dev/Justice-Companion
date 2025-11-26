@@ -33,6 +33,7 @@ export function RegistrationScreen({
 }: RegistrationScreenProps) {
   const { refreshUser } = useAuth();
   // Form state
+  const [username, setUsername] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -46,6 +47,7 @@ export function RegistrationScreen({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [validationErrors, setValidationErrors] = useState<{
+    username?: string;
     firstName?: string;
     lastName?: string;
     email?: string;
@@ -67,6 +69,7 @@ export function RegistrationScreen({
    */
   const validate = (): boolean => {
     const errors: {
+      username?: string;
       firstName?: string;
       lastName?: string;
       email?: string;
@@ -74,6 +77,17 @@ export function RegistrationScreen({
       confirmPassword?: string;
       terms?: string;
     } = {};
+
+    // Username validation
+    if (!username.trim()) {
+      errors.username = "Username is required";
+    } else if (username.trim().length < 3) {
+      errors.username = "Username must be at least 3 characters";
+    } else if (username.trim().length > 50) {
+      errors.username = "Username must be less than 50 characters";
+    } else if (!/^[a-zA-Z0-9_]+$/.test(username.trim())) {
+      errors.username = "Username can only contain letters, numbers, and underscores";
+    }
 
     // First name validation
     if (!firstName.trim()) {
@@ -133,11 +147,14 @@ export function RegistrationScreen({
     setIsLoading(true);
 
     try {
-      // Combine first and last name into username
-      const fullName = `${firstName.trim()} ${lastName.trim()}`;
-
-      // Call HTTP API
-      const response = await apiClient.auth.register(fullName, email, password);
+      // Call HTTP API with username, email, password, firstName, lastName
+      const response = await apiClient.auth.register(
+        username.trim(), 
+        email, 
+        password,
+        firstName.trim() || undefined,
+        lastName.trim() || undefined
+      );
 
       if (!response.success) {
         setError(response.error?.message || "Registration failed");
@@ -146,6 +163,7 @@ export function RegistrationScreen({
 
       if (response.data) {
         // Clear form on success
+        setUsername("");
         setFirstName("");
         setLastName("");
         setEmail("");
@@ -203,6 +221,30 @@ export function RegistrationScreen({
               {error}
             </div>
           )}
+
+          {/* Username field */}
+          <div>
+            <label
+              htmlFor="username"
+              className="block text-sm font-medium text-white mb-1"
+            >
+              Username
+            </label>
+            <input
+              id="username"
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              disabled={isLoading}
+              className="w-full px-3 py-2 bg-primary-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-hidden focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+              placeholder="Choose a username (used for login)"
+            />
+            {validationErrors.username && (
+              <p className="mt-1 text-sm text-red-400">
+                {validationErrors.username}
+              </p>
+            )}
+          </div>
 
           {/* First Name field */}
           <div>

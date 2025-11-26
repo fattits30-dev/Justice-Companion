@@ -3,10 +3,6 @@
  * Allows clean imports: import { UserRepository, CaseRepository } from '@/repositories';
  */
 
-export { BaseRepository } from "./BaseRepository.ts";
-export { CachedCaseRepository } from "./CachedCaseRepository.ts";
-export { CachedEvidenceRepository } from "./CachedEvidenceRepository.ts";
-export { CachedSessionRepository } from "./CachedSessionRepository.ts";
 export { CaseFactsRepository } from "./CaseFactsRepository.ts";
 export { CaseRepository } from "./CaseRepository.ts";
 export { ChatConversationRepository } from "./ChatConversationRepository.ts";

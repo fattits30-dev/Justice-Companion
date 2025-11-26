@@ -14,80 +14,8 @@
  */
 
 import React, { type JSX } from "react";
-import { toast } from "sonner";
-import { useAuth } from "../contexts/AuthContext.tsx";
-import type { ProfileFormData } from "../types/profile.ts";
-import { profileService } from "../services/ProfileService.ts";
 import { logger } from "../utils/logger.ts";
-
-/**
- * Custom hook for debounced values
- */
-function useDebounce<T>(value: T, delay: number): T {
-  const [debouncedValue, setDebouncedValue] = React.useState<T>(value);
-
-  React.useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [value, delay]);
-
-  return debouncedValue;
-}
-
-/**
- * Error Boundary for Profile Operations
- */
-class ProfileErrorBoundary extends React.Component<
-  { children: React.ReactNode },
-  { hasError: boolean; error?: Error }
-> {
-  constructor(props: { children: React.ReactNode }) {
-    super(props);
-    this.state = { hasError: false };
-  }
-
-  static getDerivedStateFromError(error: Error) {
-    return { hasError: true, error };
-  }
-
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    logger.error("Profile operation error:", {
-      error: error as Error,
-      metadata: { errorInfo },
-    });
-    toast.error("Profile Error", {
-      description:
-        "An error occurred while managing your profile. Please try again.",
-    });
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
-          <h3 className="text-red-200 font-medium mb-2">Profile Error</h3>
-          <p className="text-red-100/80 text-sm">
-            Something went wrong with the profile manager. Please refresh the
-            page and try again.
-          </p>
-          <button
-            onClick={() => this.setState({ hasError: false, error: undefined })}
-            className="mt-2 px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-sm rounded transition-colors"
-          >
-            Try Again
-          </button>
-        </div>
-      );
-    }
-
-    return this.props.children;
-  }
-}
+import { apiClient } from "../lib/apiClient.ts";
 
 interface SidebarProps {
   currentRoute: string;
@@ -132,14 +60,13 @@ const SidebarComponent = React.memo(function Sidebar({
   selectedCaseId = null,
   onCaseSelect,
 }: SidebarProps) {
-  const { refreshUser } = useAuth();
   const [isProfileManagerOpen, setIsProfileManagerOpen] = React.useState(false);
-  const [profileData, setProfileData] = React.useState<ProfileFormData>({
-    firstName: "",
-    lastName: "",
-    email: user?.email || "",
-    phone: "",
-  });
+  const [profileData, setProfileData] = React.useState<{
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+  } | null>(null);
   const [recentConversations, setRecentConversations] = React.useState<
     Array<{
       id: number;
@@ -149,28 +76,41 @@ const SidebarComponent = React.memo(function Sidebar({
     }>
   >([]);
 
-  // Debounced profile data for validation
-  const debouncedProfileData = useDebounce(profileData, 300);
-
-  // Load profile data when dialog opens (only once per open)
+  // Load profile when popup opens
   React.useEffect(() => {
-    if (isProfileManagerOpen && user && !profileData.email) {
-      // Load profile data from service, fallback to splitting username
-      const existingProfile = profileService.get();
-      if (existingProfile) {
-        setProfileData(profileService.profileToFormData(existingProfile));
-      } else {
-        // Split existing name into first/last if available
-        const nameParts = user.username.split(" ");
-        setProfileData({
-          firstName: nameParts[0] || "",
-          lastName: nameParts.slice(1).join(" ") || "",
-          email: user.email || "",
-          phone: "",
-        });
-      }
+    if (isProfileManagerOpen) {
+      const loadProfile = async () => {
+        try {
+          // Use apiClient instead of legacy window.justiceAPI
+          const response = await apiClient.profile.get();
+          
+          if (response) {
+            const profileData = response as {
+              name?: string;
+              firstName?: string | null;
+              lastName?: string | null;
+              email?: string | null;
+              phone?: string | null;
+            };
+            
+            // Use firstName/lastName if available, otherwise split name
+            const fname = profileData.firstName || profileData.name?.split(" ")[0] || "";
+            const lname = profileData.lastName || profileData.name?.split(" ").slice(1).join(" ") || "";
+            
+            setProfileData({
+              firstName: fname,
+              lastName: lname,
+              email: profileData.email || "",
+              phone: profileData.phone || "",
+            });
+          }
+        } catch (error) {
+          logger.error("Failed to load profile:", { error: error as Error });
+        }
+      };
+      loadProfile();
     }
-  }, [isProfileManagerOpen, user, profileData.email]);
+  }, [isProfileManagerOpen]);
 
   // Load recent conversations when selected case changes
   React.useEffect(() => {
@@ -217,31 +157,6 @@ const SidebarComponent = React.memo(function Sidebar({
     [onNavigate],
   );
 
-  const handleProfileSave = React.useCallback(async () => {
-    // Convert form data to profile data and update via service
-    const profileUpdate =
-      profileService.formDataToProfile(debouncedProfileData);
-    const result = await profileService.update(profileUpdate);
-
-    if (result.success) {
-      // Refresh user data in AuthContext to update UI
-      await refreshUser();
-
-      // Update local state to reflect changes immediately
-      setProfileData(
-        profileService.profileToFormData(result.updatedFields || null),
-      );
-
-      toast.success("Profile updated", {
-        description: "Your changes have been saved locally",
-      });
-      setIsProfileManagerOpen(false);
-    } else {
-      toast.error("Profile update failed", {
-        description: result.message,
-      });
-    }
-  }, [debouncedProfileData, refreshUser]);
   const navItems: NavItem[] = [
     {
       name: "Dashboard",
@@ -580,152 +495,80 @@ const SidebarComponent = React.memo(function Sidebar({
           )}
         </div>
       )}
-      {/* Profile Manager Dialog */}
+      {/* Profile Quick Menu */}
       {isProfileManagerOpen && (
-        <ProfileErrorBoundary>
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-            <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl max-w-md w-full mx-4">
-              {/* Header */}
-              <div className="p-6 border-b border-gray-700 shrink-0">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary-500/20 border border-primary-500/40 flex items-center justify-center">
-                    <svg
-                      className="w-5 h-5 text-primary-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                      />
-                    </svg>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl max-w-sm w-full mx-4">
+            {/* Header */}
+            <div className="p-6 border-b border-gray-700">
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <div className="flex items-center justify-center w-14 h-14 bg-gradient-to-br from-secondary-500 to-secondary-600 rounded-full text-white font-bold text-lg shadow-lg">
+                    {profileData?.firstName ? profileData.firstName.substring(0, 1).toUpperCase() : user?.username.substring(0, 1).toUpperCase()}
+                    {profileData?.lastName ? profileData.lastName.substring(0, 1).toUpperCase() : user?.username.substring(1, 2).toUpperCase()}
                   </div>
-                  <div>
-                    <h2 className="text-xl font-bold text-white">
-                      Profile Manager
-                    </h2>
-                    <p className="text-white/70 mt-1">
-                      Manage your personal information
-                    </p>
-                  </div>
+                  <span className="absolute bottom-0 right-0 w-4 h-4 bg-green-400 border-2 border-gray-900 rounded-full"></span>
                 </div>
-              </div>
-
-              {/* Content */}
-              <div className="p-6">
-                <div className="space-y-4">
-                  <div className="p-4 bg-white/5 border border-white/10 rounded-lg">
-                    <h3 className="text-white font-medium mb-3">
-                      Profile Information
-                    </h3>
-                    <div className="space-y-3">
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-sm font-medium text-white/70 mb-1">
-                            First Name
-                          </label>
-                          <input
-                            type="text"
-                            value={profileData.firstName}
-                            onChange={(e) =>
-                              setProfileData((prev) => ({
-                                ...prev,
-                                firstName: e.target.value,
-                              }))
-                            }
-                            className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-hidden focus:ring-2 focus:ring-primary-500"
-                            placeholder="Enter first name"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-white/70 mb-1">
-                            Last Name
-                          </label>
-                          <input
-                            type="text"
-                            value={profileData.lastName}
-                            onChange={(e) =>
-                              setProfileData((prev) => ({
-                                ...prev,
-                                lastName: e.target.value,
-                              }))
-                            }
-                            className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-hidden focus:ring-2 focus:ring-primary-500"
-                            placeholder="Enter last name"
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-white/70 mb-1">
-                          Email
-                        </label>
-                        <input
-                          type="email"
-                          value={profileData.email}
-                          onChange={(e) =>
-                            setProfileData((prev) => ({
-                              ...prev,
-                              email: e.target.value,
-                            }))
-                          }
-                          className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-hidden focus:ring-2 focus:ring-primary-500"
-                          placeholder="Enter your email"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-white/70 mb-1">
-                          Phone (Optional)
-                        </label>
-                        <input
-                          type="tel"
-                          value={profileData.phone}
-                          onChange={(e) =>
-                            setProfileData((prev) => ({
-                              ...prev,
-                              phone: e.target.value,
-                            }))
-                          }
-                          className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-hidden focus:ring-2 focus:ring-primary-500"
-                          placeholder="Enter your phone number"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                    <h3 className="text-blue-200 font-medium mb-2">
-                      Privacy & Security
-                    </h3>
-                    <p className="text-blue-100/80 text-sm">
-                      Your profile information is stored locally on your device
-                      and is never transmitted to external servers. This ensures
-                      your personal data remains private and secure.
-                    </p>
-                  </div>
+                <div>
+                  <h2 className="text-lg font-bold text-white">
+                    {profileData?.firstName || profileData?.lastName 
+                      ? `${profileData.firstName} ${profileData.lastName}`.trim()
+                      : user?.username}
+                  </h2>
+                  <p className="text-white/70 text-sm">{profileData?.email || user?.email}</p>
                 </div>
-              </div>
-
-              {/* Footer */}
-              <div className="p-6 border-t border-gray-700 flex justify-end gap-3">
-                <button
-                  onClick={() => setIsProfileManagerOpen(false)}
-                  className="px-4 py-2 text-white/70 hover:text-white border border-gray-600 rounded-lg transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleProfileSave}
-                  className="px-6 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors"
-                >
-                  Save Changes
-                </button>
               </div>
             </div>
+
+            {/* Profile Info */}
+            {profileData && (
+              <div className="px-6 py-4 border-b border-gray-700 space-y-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-white/50">First Name</span>
+                  <span className="text-white">{profileData.firstName || "—"}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-white/50">Last Name</span>
+                  <span className="text-white">{profileData.lastName || "—"}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-white/50">Email</span>
+                  <span className="text-white">{profileData.email || "—"}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-white/50">Phone</span>
+                  <span className="text-white">{profileData.phone || "—"}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="p-4 space-y-2">
+              <button
+                onClick={() => {
+                  setIsProfileManagerOpen(false);
+                  onNavigate?.("/settings");
+                }}
+                className="flex items-center gap-3 w-full px-4 py-3 bg-primary-500/10 hover:bg-primary-500/20 border border-primary-500/30 rounded-lg text-white transition-colors"
+              >
+                <svg className="w-5 h-5 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                <span className="font-medium">Manage Profile</span>
+                <svg className="w-4 h-4 ml-auto text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+              
+              <button
+                onClick={() => setIsProfileManagerOpen(false)}
+                className="w-full px-4 py-2 text-white/70 hover:text-white text-sm transition-colors"
+              >
+                Close
+              </button>
+            </div>
           </div>
-        </ProfileErrorBoundary>
+        </div>
       )}
     </nav>
   );

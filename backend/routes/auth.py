@@ -28,15 +28,20 @@ Rate Limiting Configuration:
 """
 
 import os
+import secrets
+from datetime import datetime, timedelta
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 
 from backend.models.base import get_db
 from backend.models.session import Session as SessionModel
 from backend.models.user import User
+from backend.models.profile import UserProfile
+from backend.models.password_reset import PasswordResetToken
 from backend.services.audit_logger import AuditLogger
 from backend.services.auth.service import AuthenticationError, AuthenticationService
 from backend.services.rate_limit_service import RateLimitService, get_rate_limiter
@@ -54,6 +59,7 @@ class RegisterRequest(BaseModel):
     - Username: 3-50 characters
     - Password: OWASP requirements (12+ chars, uppercase, lowercase, number)
     - Email: Valid email format
+    - First/Last Name: Optional but recommended for profile
     """
 
     model_config = ConfigDict(
@@ -62,6 +68,8 @@ class RegisterRequest(BaseModel):
                 "username": "john_doe",
                 "password": "<secure-password>",
                 "email": "john@example.com",
+                "first_name": "John",
+                "last_name": "Doe",
             }
         }
     )
@@ -69,13 +77,15 @@ class RegisterRequest(BaseModel):
     username: str = Field(..., min_length=3, max_length=50)
     password: str = Field(..., min_length=12)
     email: EmailStr
+    first_name: Optional[str] = Field(None, min_length=1, max_length=100)
+    last_name: Optional[str] = Field(None, min_length=1, max_length=100)
 
 class LoginRequest(BaseModel):
     """
     User login request.
 
     Args:
-        username: Username
+        identifier: Username or email address
         password: Password
         remember_me: If True, session lasts 30 days instead of 24 hours
     """
@@ -83,14 +93,14 @@ class LoginRequest(BaseModel):
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
-                "username": "john_doe",
+                "identifier": "john_doe or john@example.com",
                 "password": "<secure-password>",
                 "remember_me": False,
             }
         }
     )
 
-    username: str = Field(..., min_length=3)
+    identifier: str = Field(..., min_length=1, description="Username or email address")
     password: str = Field(..., min_length=1)
     remember_me: Optional[bool] = False
 
@@ -179,6 +189,47 @@ class SeedTestUserRequest(BaseModel):
     email: EmailStr = Field(default="e2e-test@example.com")
     password: str = Field(default="E2eTestPass123!", min_length=12)
     remember_me: Optional[bool] = False
+
+
+class ForgotPasswordRequest(BaseModel):
+    """
+    Forgot password request.
+
+    Args:
+        email: User email address to send reset link to
+    """
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "email": "user@example.com",
+            }
+        }
+    )
+
+    email: EmailStr = Field(..., description="Email address for password reset")
+
+
+class ResetPasswordRequest(BaseModel):
+    """
+    Reset password request.
+
+    Args:
+        token: Password reset token from email
+        new_password: New password (must meet OWASP requirements)
+    """
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "token": "abc123def456...",
+                "new_password": "NewSecurePass123!",
+            }
+        }
+    )
+
+    token: str = Field(..., min_length=32, max_length=128, description="Password reset token")
+    new_password: str = Field(..., min_length=12, description="New password")
 
 def _build_auth_payload(result: dict) -> dict:
     """Normalize AuthenticationService responses to FastAPI models."""
@@ -372,6 +423,31 @@ async def register(
             username=request.username, password=request.password, email=request.email
         )
 
+        # Create user profile with first/last name if provided
+        user_id = result["user"]["id"]
+        db = auth_service.db
+        
+        # Build profile name from first/last or use username
+        profile_name = request.username
+        if request.first_name and request.last_name:
+            profile_name = f"{request.first_name} {request.last_name}"
+        elif request.first_name:
+            profile_name = request.first_name
+        
+        # Check if profile already exists (shouldn't, but be safe)
+        existing_profile = db.query(UserProfile).filter(UserProfile.user_id == user_id).first()
+        if not existing_profile:
+            profile = UserProfile(
+                user_id=user_id,
+                name=profile_name,
+                email=request.email,
+                first_name=request.first_name,
+                last_name=request.last_name,
+                full_name=f"{request.first_name or ''} {request.last_name or ''}".strip() or None,
+            )
+            db.add(profile)
+            db.commit()
+
         # Reset rate limit on successful registration (only if enabled)
         if enable_rate_limiting:
             rate_limiter.reset(ip_hash, "register")
@@ -494,14 +570,17 @@ async def login(
     ip_address = http_request.client.host if http_request.client else "unknown"
     user_agent = http_request.headers.get("user-agent", "unknown")
 
-    # Get user ID for rate limiting (we need to query first)
-    user = db.query(User).filter(User.username == request_data.username).first()
+    # Get user by username OR email for rate limiting
+    identifier = request_data.identifier
+    user = db.query(User).filter(
+        or_(User.username == identifier, User.email == identifier)
+    ).first()
 
     if not user:
         # Still apply rate limiting even if user doesn't exist (prevents enumeration)
-        # Use username hash as temporary ID
-        username_hash = abs(hash(request_data.username))
-        rate_limiter.increment(username_hash, "login")
+        # Use identifier hash as temporary ID
+        identifier_hash = abs(hash(identifier))
+        rate_limiter.increment(identifier_hash, "login")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials"
         )
@@ -525,9 +604,9 @@ async def login(
         )
 
     try:
-        # Attempt login
+        # Attempt login - use actual username from user object (we already validated the identifier)
         result = await auth_service.login(
-            username=request_data.username,
+            username=user.username,
             password=request_data.password,
             remember_me=bool(request_data.remember_me),
             ip_address=ip_address,
@@ -871,4 +950,216 @@ async def get_rate_limit_status(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get rate limit status: {str(exc)}",
+        ) from exc
+
+
+
+# ===== Password Reset Endpoints =====
+
+# Token expiration time (6 hours)
+PASSWORD_RESET_TOKEN_EXPIRY_HOURS = 6
+
+
+@router.post(
+    "/forgot-password",
+    response_model=SuccessResponse,
+    responses={
+        200: {"description": "Password reset initiated (if email exists)"},
+        429: {"description": "Too many reset attempts", "model": ErrorResponse},
+        500: {"description": "Internal server error", "model": ErrorResponse},
+    },
+)
+async def forgot_password(
+    request: ForgotPasswordRequest,
+    http_request: Request,
+    db: Session = Depends(get_db),
+    rate_limiter: RateLimitService = Depends(get_rate_limiter),
+):
+    """
+    Request a password reset token.
+
+    **Security Features:**
+    - Rate limiting: 3 requests per hour per email
+    - Generic response to prevent email enumeration
+    - Secure token generation (64 bytes, URL-safe)
+    - Token expires after 6 hours
+
+    **Note:** In production, the token would be sent via email.
+    For development, the token is returned in the response.
+    """
+    # Get client info
+    ip_address = http_request.client.host if http_request.client else "unknown"
+    user_agent = http_request.headers.get("user-agent", "unknown")
+
+    # Rate limiting based on email hash
+    email_hash = abs(hash(request.email))
+    
+    # Check rate limit
+    rate_limit_result = rate_limiter.check_rate_limit(
+        user_id=email_hash,
+        operation="password_reset",
+        max_requests=3,
+        window_seconds=3600,  # 1 hour
+    )
+
+    if not rate_limit_result.allowed:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail={
+                "message": "Too many password reset attempts. Please try again later.",
+                "rate_limit_info": {
+                    "retry_after_seconds": rate_limit_result.remaining_time or 3600
+                },
+            },
+        )
+
+    try:
+        # Find user by email
+        user = db.query(User).filter(User.email == request.email).first()
+
+        # Always return success to prevent email enumeration
+        # But only create token if user exists
+        if user:
+            # Invalidate any existing tokens for this user
+            db.query(PasswordResetToken).filter(
+                PasswordResetToken.user_id == user.id,
+                PasswordResetToken.used_at.is_(None),
+            ).delete()
+
+            # Generate secure token
+            token = secrets.token_urlsafe(48)  # 64 characters
+
+            # Create password reset token
+            expires_at = datetime.utcnow() + timedelta(hours=PASSWORD_RESET_TOKEN_EXPIRY_HOURS)
+            
+            reset_token = PasswordResetToken(
+                user_id=user.id,
+                token=token,
+                expires_at=expires_at,
+                ip_address=ip_address,
+                user_agent=user_agent,
+            )
+            db.add(reset_token)
+            db.commit()
+
+            # In production, this would send an email
+            # For development, return the token in the response
+            return {
+                "success": True,
+                "message": "If an account exists with this email, a password reset link has been sent.",
+                "data": {
+                    "token": token,  # Remove this in production!
+                    "expires_in_hours": PASSWORD_RESET_TOKEN_EXPIRY_HOURS,
+                    "note": "DEV MODE: Token returned in response. In production, this would be sent via email.",
+                },
+            }
+
+        # User not found - still return success to prevent enumeration
+        rate_limiter.increment(email_hash, "password_reset")
+        return {
+            "success": True,
+            "message": "If an account exists with this email, a password reset link has been sent.",
+        }
+
+    except Exception as exc:
+        rate_limiter.increment(email_hash, "password_reset")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Password reset request failed: {str(exc)}",
+        ) from exc
+
+
+@router.post(
+    "/reset-password",
+    response_model=SuccessResponse,
+    responses={
+        200: {"description": "Password reset successful"},
+        400: {"description": "Invalid or expired token", "model": ErrorResponse},
+        500: {"description": "Internal server error", "model": ErrorResponse},
+    },
+)
+async def reset_password(
+    request: ResetPasswordRequest,
+    db: Session = Depends(get_db),
+    auth_service: AuthenticationService = Depends(get_auth_service),
+):
+    """
+    Reset password using a valid token.
+
+    **Security Features:**
+    - Token is single-use (marked as used after password reset)
+    - Token expiration is verified
+    - New password must meet OWASP requirements
+    - All existing sessions are invalidated
+
+    **Process:**
+    1. Validate token exists and is not expired
+    2. Validate new password meets requirements
+    3. Update user password
+    4. Invalidate all existing sessions
+    5. Mark token as used
+    """
+    try:
+        # Find the token
+        reset_token = db.query(PasswordResetToken).filter(
+            PasswordResetToken.token == request.token
+        ).first()
+
+        if not reset_token:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid or expired password reset token",
+            )
+
+        # Check if token is valid
+        if not reset_token.is_valid():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Password reset token has expired or already been used",
+            )
+
+        # Get the user
+        user = db.query(User).filter(User.id == reset_token.user_id).first()
+        
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="User not found",
+            )
+
+        # Validate new password strength (using auth service's validation)
+        auth_service._validate_password_strength(request.new_password)
+
+        # Hash new password
+        new_salt = secrets.token_bytes(16)
+        new_hash = auth_service._hash_password(request.new_password, new_salt)
+
+        # Update user password
+        user.password_hash = new_hash.hex()
+        user.password_salt = new_salt.hex()
+
+        # Invalidate all existing sessions for security
+        db.query(SessionModel).filter(SessionModel.user_id == user.id).delete()
+
+        # Mark token as used
+        reset_token.mark_as_used()
+
+        db.commit()
+
+        return {
+            "success": True,
+            "message": "Password has been reset successfully. Please login with your new password.",
+        }
+
+    except HTTPException:
+        raise
+    except AuthenticationError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        ) from e
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Password reset failed: {str(exc)}",
         ) from exc

@@ -281,6 +281,8 @@ export class ApiClient {
       username: string,
       email: string,
       password: string,
+      firstName?: string,
+      lastName?: string,
     ): Promise<
       ApiResponse<{
         user: {
@@ -315,7 +317,13 @@ export class ApiClient {
               expires_at: string;
             };
           };
-        }>("/auth/register", { username, email, password });
+        }>("/auth/register", { 
+          username, 
+          email, 
+          password,
+          first_name: firstName,
+          last_name: lastName,
+        });
 
         // Extract data from wrapped response
         const data = wrappedResponse.data || (wrappedResponse as any);
@@ -346,7 +354,7 @@ export class ApiClient {
      * Login user
      */
     login: async (
-      username: string,
+      identifier: string,
       password: string,
       remember_me: boolean = false,
     ): Promise<
@@ -383,7 +391,7 @@ export class ApiClient {
               expires_at: string;
             };
           };
-        }>("/auth/login", { username, password, remember_me });
+        }>("/auth/login", { identifier, password, remember_me });
 
         // Extract the data from the wrapped response
         const directResponse = wrappedResponse.data;
@@ -486,6 +494,51 @@ export class ApiClient {
       localStorage.removeItem("sessionId");
 
       return response;
+    },
+
+    /**
+     * Request password reset (forgot password)
+     */
+    forgotPassword: async (
+      email: string,
+    ): Promise<ApiResponse<{ success: boolean; message: string; data?: { token: string; expires_in_hours: number } }>> => {
+      try {
+        const response = await this.post<
+          ApiResponse<{ success: boolean; message: string; data?: { token: string; expires_in_hours: number } }>
+        >("/auth/forgot-password", { email });
+        return response;
+      } catch (error) {
+        return {
+          success: false,
+          error: {
+            code: error instanceof ApiError ? error.code : "UNKNOWN_ERROR",
+            message: error instanceof Error ? error.message : "Password reset request failed",
+          },
+        };
+      }
+    },
+
+    /**
+     * Reset password with token
+     */
+    resetPassword: async (
+      token: string,
+      newPassword: string,
+    ): Promise<ApiResponse<{ success: boolean; message: string }>> => {
+      try {
+        const response = await this.post<
+          ApiResponse<{ success: boolean; message: string }>
+        >("/auth/reset-password", { token, new_password: newPassword });
+        return response;
+      } catch (error) {
+        return {
+          success: false,
+          error: {
+            code: error instanceof ApiError ? error.code : "UNKNOWN_ERROR",
+            message: error instanceof Error ? error.message : "Password reset failed",
+          },
+        };
+      }
     },
   };
 

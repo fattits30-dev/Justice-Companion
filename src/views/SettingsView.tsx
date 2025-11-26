@@ -10,35 +10,30 @@ import {
   Database,
   Bell,
   Info,
-  ChevronRight,
   Moon,
   Sun,
   Monitor,
   Save,
   Download,
-  Trash2,
   Key,
-  Eye,
-  EyeOff,
-  AlertTriangle,
-  CheckCircle2,
-  Sparkles,
   Brain,
-  Zap,
   HardDrive,
+  User,
+  ChevronRight,
+  Trash2,
+  AlertTriangle,
 } from "lucide-react";
 import { Card } from "../components/ui/Card.tsx";
 import { Button } from "../components/ui/Button.tsx";
 import { Badge } from "../components/ui/Badge.tsx";
 import { BackupSettingsTab } from "./settings/BackupSettings.tsx";
-import {
-  AI_PROVIDER_METADATA,
-  type AIProviderType,
-} from "../types/ai-providers.ts";
+import { AIServiceSettingsTab } from "./settings/AIServiceSettings.tsx";
+import { ProfileSettingsTab } from "./settings/ProfileSettings.tsx";
 
 type ThemeMode = "light" | "dark" | "system";
 
 type TabId =
+  | "profile"
   | "ai-provider"
   | "appearance"
   | "privacy"
@@ -54,6 +49,7 @@ interface Tab {
 }
 
 const tabs: Tab[] = [
+  { id: "profile", label: "Profile", icon: User },
   { id: "ai-provider", label: "AI Provider", icon: Brain },
   { id: "appearance", label: "Appearance", icon: Palette },
   { id: "privacy", label: "Privacy & Security", icon: Shield },
@@ -64,10 +60,8 @@ const tabs: Tab[] = [
 ];
 
 export function SettingsView() {
-  const [activeTab, setActiveTab] = useState<TabId>("ai-provider");
+  const [activeTab, setActiveTab] = useState<TabId>("profile");
   const [theme, setTheme] = useState<ThemeMode>("dark");
-  const [showApiKey, setShowApiKey] = useState(false);
-  const [apiKey, setApiKey] = useState("");
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
   // Keyboard navigation: Ctrl/Cmd + Arrow keys
@@ -180,7 +174,7 @@ export function SettingsView() {
 
       {/* Tab Content */}
       <div className="flex-1 overflow-y-auto">
-        <div className="px-8 py-6">
+        <div className="px-8 py-6 flex justify-center">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
@@ -191,15 +185,10 @@ export function SettingsView() {
               role="tabpanel"
               id={`${activeTab}-panel`}
               aria-labelledby={`${activeTab}-tab`}
+              className="w-full max-w-6xl"
             >
-              {activeTab === "ai-provider" && (
-                <AIProviderTab
-                  apiKey={apiKey}
-                  setApiKey={setApiKey}
-                  showApiKey={showApiKey}
-                  setShowApiKey={setShowApiKey}
-                />
-              )}
+              {activeTab === "profile" && <ProfileSettingsTab />}
+              {activeTab === "ai-provider" && <AIServiceSettingsTab />}
               {activeTab === "appearance" && (
                 <AppearanceTab theme={theme} setTheme={setTheme} />
               )}
@@ -221,385 +210,6 @@ export function SettingsView() {
   );
 }
 
-// Helper function to get provider icon
-const getProviderIcon = (provider: AIProviderType) => {
-  switch (provider) {
-    case "openai":
-      return Sparkles;
-    case "anthropic":
-      return Brain;
-    case "huggingface":
-      return Sparkles;
-    case "qwen":
-      return Brain;
-    case "google":
-      return Sparkles;
-    case "cohere":
-      return Brain;
-    case "together":
-      return Zap;
-    case "anyscale":
-      return Zap;
-    case "mistral":
-      return Sparkles;
-    case "perplexity":
-      return Brain;
-    default:
-      return Sparkles;
-  }
-};
-
-// Helper function to get API key details
-const getApiKeyDetails = (provider: AIProviderType) => {
-  switch (provider) {
-    case "openai":
-      return {
-        label: "OpenAI API Key",
-        placeholder: "sk-...",
-      };
-    case "anthropic":
-      return {
-        label: "Anthropic API Key",
-        placeholder: "sk-ant-...",
-      };
-    case "huggingface":
-    case "qwen":
-      return {
-        label: "Hugging Face Token",
-        placeholder: "hf_...",
-      };
-    case "google":
-      return {
-        label: "Google AI API Key",
-        placeholder: "AIza...",
-      };
-    case "cohere":
-      return {
-        label: "Cohere API Key",
-        placeholder: "co_...",
-      };
-    case "together":
-      return {
-        label: "Together AI API Key",
-        placeholder: "together-...",
-      };
-    case "anyscale":
-      return {
-        label: "Anyscale API Key",
-        placeholder: "esecret_...",
-      };
-    case "mistral":
-      return {
-        label: "Mistral AI API Key",
-        placeholder: "msk_...",
-      };
-    case "perplexity":
-      return {
-        label: "Perplexity API Key",
-        placeholder: "pplx-...",
-      };
-    default:
-      return {
-        label: "API Key",
-        placeholder: "Enter API key...",
-      };
-  }
-};
-
-// AI Provider Tab
-function AIProviderTab({
-  apiKey,
-  setApiKey,
-  showApiKey,
-  setShowApiKey,
-}: {
-  readonly apiKey: string;
-  readonly setApiKey: (key: string) => void;
-  readonly showApiKey: boolean;
-  readonly setShowApiKey: (show: boolean) => void;
-}) {
-  const [selectedProvider, setSelectedProvider] =
-    useState<AIProviderType>("openai");
-  const [selectedModel, setSelectedModel] = useState("");
-  const [customEndpoint, setCustomEndpoint] = useState("");
-  const [isSaving, setIsSaving] = useState(false);
-  const [saveSuccess, setSaveSuccess] = useState(false);
-
-  const currentProvider = AI_PROVIDER_METADATA[selectedProvider];
-  const ProviderIcon = getProviderIcon(selectedProvider);
-  const apiKeyDetails = getApiKeyDetails(selectedProvider);
-
-  // Update selected model when provider changes
-  React.useEffect(() => {
-    setSelectedModel(currentProvider.defaultModel);
-    setCustomEndpoint(currentProvider.defaultEndpoint);
-  }, [
-    selectedProvider,
-    currentProvider.defaultModel,
-    currentProvider.defaultEndpoint,
-  ]);
-
-  const handleSave = async () => {
-    setIsSaving(true);
-
-    try {
-      const providerConfig = AI_PROVIDER_METADATA[selectedProvider];
-
-      // Call the HTTP API to save configuration
-      const result = await apiClient.aiConfig.configure(selectedProvider, {
-        api_key: apiKey.trim(),
-        model: selectedModel || providerConfig.defaultModel,
-        endpoint: customEndpoint || providerConfig.defaultEndpoint,
-        temperature: 0.7,
-        max_tokens: 2048,
-        top_p: 0.9,
-        enabled: true,
-      });
-
-      if (result.success) {
-        setSaveSuccess(true);
-        setTimeout(() => setSaveSuccess(false), 3000);
-        // Success - configuration saved
-      } else {
-        logger.error("[SettingsView] Failed to save AI config:", result);
-        alert(
-          `Failed to save configuration: ${
-            "error" in result && result.error
-              ? result.error.message
-              : "Unknown error"
-          }`,
-        );
-      }
-    } catch (error) {
-      logger.error("[SettingsView] Error saving AI config:", error);
-      alert(
-        "Error saving configuration: " +
-          (error instanceof Error ? error.message : "Unknown error"),
-      );
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  return (
-    <div className="space-y-6 max-w-4xl">
-      <div>
-        <h2 className="text-2xl font-bold text-white mb-2">
-          AI Provider Configuration
-        </h2>
-        <p className="text-white/60">
-          Configure your AI assistant for legal research and analysis
-        </p>
-      </div>
-
-      <Card className="bg-white/5 border-white/10 backdrop-blur-md">
-        <div className="p-6 space-y-6">
-          {/* Provider Selection Dropdown */}
-          <div>
-            <label
-              htmlFor="ai-provider"
-              className="block text-sm font-medium text-white mb-2"
-            >
-              AI Provider
-            </label>
-            <div className="relative">
-              <select
-                id="ai-provider"
-                value={selectedProvider}
-                onChange={(e) =>
-                  setSelectedProvider(e.target.value as AIProviderType)
-                }
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white appearance-none focus:outline-hidden focus:ring-2 focus:ring-primary-500 focus:border-transparent [&>option]:text-gray-900 [&>option]:bg-white"
-                aria-label="Select AI Provider"
-              >
-                {Object.entries(AI_PROVIDER_METADATA).map(([key, provider]) => (
-                  <option
-                    key={key}
-                    value={key}
-                    className="text-gray-900 bg-white"
-                  >
-                    {provider.name} - {provider.availableModels.length} models
-                    available
-                  </option>
-                ))}
-              </select>
-              <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50 pointer-events-none rotate-90" />
-            </div>
-
-            {/* Selected Provider Info */}
-            <div className="mt-3 p-3 rounded-lg bg-white/5 border border-white/10">
-              <div className="flex items-center gap-2">
-                <ProviderIcon className="w-5 h-5 text-purple-400" />
-                <span className="text-sm font-medium text-white">
-                  {currentProvider.name}
-                </span>
-                <Badge variant="success" className="ml-auto">
-                  {currentProvider.availableModels.length} Models
-                </Badge>
-              </div>
-              <p className="text-xs text-white/60 mt-1">
-                {currentProvider.maxContextTokens.toLocaleString()} token
-                context •{" "}
-                {currentProvider.supportsStreaming
-                  ? "Streaming"
-                  : "Non-streaming"}
-              </p>
-            </div>
-          </div>
-
-          {/* API Key Input */}
-          <div>
-            <label
-              htmlFor="api-key"
-              className="block text-sm font-medium text-white mb-2"
-            >
-              {apiKeyDetails.label}
-            </label>
-            <div className="relative">
-              <input
-                id="api-key"
-                type={showApiKey ? "text" : "password"}
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                placeholder={apiKeyDetails.placeholder}
-                className="w-full px-4 py-3 pr-12 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-white/30 focus:outline-hidden focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                aria-label={apiKeyDetails.label}
-              />
-              <button
-                type="button"
-                onClick={() => setShowApiKey(!showApiKey)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-white/50 hover:text-white transition-colors"
-                aria-label={showApiKey ? "Hide API key" : "Show API key"}
-              >
-                {showApiKey ? (
-                  <EyeOff className="w-5 h-5" />
-                ) : (
-                  <Eye className="w-5 h-5" />
-                )}
-              </button>
-            </div>
-            <p className="text-xs text-white/40 mt-2">
-              Your API key is encrypted and stored locally. Never shared with
-              third parties.
-            </p>
-          </div>
-
-          {/* Model Selection */}
-          <div>
-            <label
-              htmlFor="model"
-              className="block text-sm font-medium text-white mb-2"
-            >
-              Model ({currentProvider.availableModels.length} available)
-            </label>
-            <select
-              id="model"
-              value={selectedModel}
-              onChange={(e) => setSelectedModel(e.target.value)}
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-hidden focus:ring-2 focus:ring-primary-500 focus:border-transparent [&>option]:text-gray-900 [&>option]:bg-white"
-              aria-label="AI Model"
-            >
-              {currentProvider.availableModels.map((model: string) => (
-                <option
-                  key={model}
-                  value={model}
-                  className="text-gray-900 bg-white"
-                >
-                  {model}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Custom API Endpoint (Advanced) */}
-          <div>
-            <label
-              htmlFor="endpoint"
-              className="block text-sm font-medium text-white mb-2"
-            >
-              API Endpoint
-              <Badge
-                variant="neutral"
-                className="ml-2 bg-white/10 text-white/60 text-xs"
-              >
-                Advanced
-              </Badge>
-            </label>
-            <input
-              id="endpoint"
-              type="text"
-              value={customEndpoint}
-              onChange={(e) => setCustomEndpoint(e.target.value)}
-              placeholder={currentProvider.defaultEndpoint}
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-white/30 focus:outline-hidden focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono text-sm"
-              aria-label="API Endpoint"
-            />
-            <p className="text-xs text-white/40 mt-2">
-              Leave default unless using a custom endpoint or proxy
-            </p>
-          </div>
-
-          {/* Save Button */}
-          <div className="flex items-center gap-3 pt-4">
-            <Button
-              onClick={handleSave}
-              disabled={isSaving || !apiKey}
-              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
-            >
-              {isSaving ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4" />
-                  Save Configuration
-                </>
-              )}
-            </Button>
-
-            {saveSuccess && (
-              <motion.div
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0 }}
-                className="flex items-center gap-2 text-green-400"
-              >
-                <CheckCircle2 className="w-5 h-5" />
-                <span className="text-sm font-medium">Saved successfully!</span>
-              </motion.div>
-            )}
-          </div>
-        </div>
-      </Card>
-
-      {/* Usage Stats */}
-      <Card className="bg-white/5 border-white/10 backdrop-blur-md">
-        <div className="p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">
-            API Usage (This Month)
-          </h3>
-          <div className="grid grid-cols-3 gap-4">
-            <div className="text-center">
-              <div className="text-3xl font-bold text-purple-400">1,247</div>
-              <div className="text-sm text-white/60 mt-1">Requests</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-pink-400">$12.50</div>
-              <div className="text-sm text-white/60 mt-1">Cost</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-blue-400">245K</div>
-              <div className="text-sm text-white/60 mt-1">Tokens</div>
-            </div>
-          </div>
-        </div>
-      </Card>
-    </div>
-  );
-}
-
 // Appearance Tab
 function AppearanceTab({
   theme,
@@ -615,7 +225,7 @@ function AppearanceTab({
   ];
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-6 w-full">
       <div>
         <h2 className="text-2xl font-bold text-white mb-2">Appearance</h2>
         <p className="text-white/60">
@@ -755,7 +365,7 @@ function AppearanceTab({
 // Privacy & Security Tab
 function PrivacyTab() {
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-6 w-full">
       <div>
         <h2 className="text-2xl font-bold text-white mb-2">
           Privacy & Security
@@ -923,7 +533,7 @@ function DataManagementTab() {
   };
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-6 w-full">
       <div>
         <h2 className="text-2xl font-bold text-white mb-2">Data Management</h2>
         <p className="text-white/60">Export, backup, or delete your data</p>
@@ -1050,7 +660,7 @@ function NotificationsTab({
   readonly setEnabled: (enabled: boolean) => void;
 }) {
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-6 w-full">
       <div>
         <h2 className="text-2xl font-bold text-white mb-2">Notifications</h2>
         <p className="text-white/60">Manage how you receive notifications</p>
@@ -1210,7 +820,7 @@ function NotificationsTab({
 // About Tab
 function AboutTab() {
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-6 w-full">
       <div>
         <h2 className="text-2xl font-bold text-white mb-2">
           About Justice Companion

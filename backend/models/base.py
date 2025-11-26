@@ -89,10 +89,6 @@ def init_db():
     Initialize database: create all tables defined in models.
     Call this once at application startup.
     """
-    if os.getenv("SKIP_DB_BOOTSTRAP", "false").lower() == "true":
-        print("Skipping database bootstrap (SKIP_DB_BOOTSTRAP=true)")
-        return
-
     # Import all models so they're registered with Base.metadata
     # This must happen before create_all() is called
     # pylint: disable=import-outside-toplevel,unused-import

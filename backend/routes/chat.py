@@ -190,72 +190,26 @@ async def get_ai_service(
     audit_logger: AuditLogger = Depends(get_audit_logger),
 ) -> UnifiedAIService:
     """
-    Get AI service instance with configuration from database.
+    Get AI service instance.
 
-    Loads the active AI provider configuration for the authenticated user.
-    Configuration is decrypted and used to initialize UnifiedAIService.
+    Behavior controlled by AI_MODE environment variable:
+    - "service": Use separate ai-service microservice (Hugging Face powered)
+    - "stub": Use StubAIService for deterministic mock responses
+    
+    Default: "stub" for backward compatibility
 
-    Raises:
-        HTTPException: If no active AI provider is configured for the user.
+    Returns:
+        AI service instance with UnifiedAIService-compatible interface.
     """
-    # In stub mode we bypass provider configuration entirely and return a
-    # deterministic in-process implementation.
-    ai_mode = os.getenv("AI_MODE", "").lower()
-    if ai_mode == "stub":
-        # Note: the return type is annotated as UnifiedAIService but Python
-        # only enforces duck-typing at runtime. StubAIService exposes a
-        # compatible interface for the routes that depend on it.
-        return StubAIService(audit_logger)  # type: ignore[return-value]
-
-    from backend.services.ai.providers import \
-        AIProviderConfigService
-
-    # Get config service
-    config_service = AIProviderConfigService(
-        db=db,
-        encryption_service=encryption_service,
-        audit_logger=audit_logger
-    )
-
-    # Get active provider configuration from database
-    # Note: get_active_provider_config() returns AIProviderConfigOutput with decrypted API key
-    db_config = await config_service.get_active_provider_config(user_id=user_id)
-
-    if not db_config or not db_config.enabled:
-        # Fall back to environment variables
-        hf_token = os.getenv("HF_TOKEN")
-        ai_provider = os.getenv("AI_PROVIDER", "huggingface")
-        ai_model = os.getenv("AI_MODEL", "meta-llama/Meta-Llama-3.1-70B-Instruct")
-
-        if not hf_token:
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="No active AI provider configured. Please configure an AI provider in Settings or set HF_TOKEN environment variable."
-            )
-
-        # Use environment variables as fallback
-        config = AIProviderConfig(
-            provider=ai_provider,
-            api_key=hf_token,
-            model=ai_model,
-            temperature=0.7,
-            max_tokens=4096,
-            top_p=0.9,
-        )
+    ai_mode = os.getenv("AI_MODE", "stub").lower()
+    
+    if ai_mode == "service":
+        # Use separate ai-service microservice
+        from backend.services.ai_service_adapter import AIServiceAdapter
+        return AIServiceAdapter(audit_logger)  # type: ignore[return-value]
     else:
-        # Build AIProviderConfig for UnifiedAIService
-        # API key is already decrypted by the service layer
-        config = AIProviderConfig(
-            provider=db_config.provider,
-            api_key=db_config.api_key,  # Already decrypted
-            model=db_config.model,
-            endpoint=db_config.endpoint,
-            temperature=db_config.temperature,
-            max_tokens=db_config.max_tokens,
-            top_p=db_config.top_p,
-        )
-
-    return UnifiedAIService(config, audit_logger)
+        # Use stub for mock responses (default, backward compatible)
+        return StubAIService(audit_logger)  # type: ignore[return-value]
 
 def get_rag_service(
     ai_service: UnifiedAIService = Depends(get_ai_service),

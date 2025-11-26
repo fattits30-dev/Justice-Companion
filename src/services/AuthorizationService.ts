@@ -4,16 +4,17 @@ import type {
   PermissionCheckResult,
 } from "../domains/auth/entities/Permission.ts";
 import type { Role } from "../domains/auth/entities/Role.ts";
-import { injectable, inject } from "inversify";
-import { TYPES } from "../shared/infrastructure/di/types.ts";
 
 /**
  * Authorization Service
  * Handles permission checks and role-based access control
  */
-@injectable()
 export class AuthorizationService {
-  constructor(@inject(TYPES.Database) private db: Database.Database) {}
+  private db: Database.Database;
+
+  constructor(db: Database.Database) {
+    this.db = db;
+  }
 
   /**
    * Check if user has a specific permission

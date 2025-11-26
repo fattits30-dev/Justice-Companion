@@ -21,6 +21,7 @@ import type { Session } from "../../domains/auth/entities/Session.ts";
 interface LoginScreenProps {
   onSuccess?: (data: { user: User | null; session: Session | null }) => void;
   onRegisterClick?: () => void;
+  onForgotPasswordClick?: () => void;
 }
 
 export function LoginScreen({ onSuccess, onRegisterClick }: LoginScreenProps) {
@@ -46,7 +47,7 @@ export function LoginScreen({ onSuccess, onRegisterClick }: LoginScreenProps) {
     const errors: { username?: string; password?: string } = {};
 
     if (!username.trim()) {
-      errors.username = "Username is required";
+      errors.username = "Username or email is required";
     }
 
     if (!password.trim()) {
@@ -110,13 +111,13 @@ export function LoginScreen({ onSuccess, onRegisterClick }: LoginScreenProps) {
             </div>
           )}
 
-          {/* Username field */}
+          {/* Username/Email field */}
           <div>
             <label
               htmlFor="username"
               className="block text-sm font-medium text-white mb-1"
             >
-              Username
+              Username or Email
             </label>
             <input
               id="username"
@@ -125,7 +126,7 @@ export function LoginScreen({ onSuccess, onRegisterClick }: LoginScreenProps) {
               onChange={(e) => setUsername(e.target.value)}
               disabled={isLoading}
               className="w-full px-3 py-2 bg-primary-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-hidden focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
-              placeholder="Enter your username"
+              placeholder="Enter your username or email"
             />
             {validationErrors.username && (
               <p className="mt-1 text-sm text-red-400">

@@ -48,9 +48,6 @@ logging.basicConfig(
     handlers=[logging.StreamHandler(sys.stdout)],
 )
 
-response_wrapper_logger = logging.getLogger("backend.response_wrapper")
-
-
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     """
@@ -67,7 +64,6 @@ async def lifespan(_: FastAPI):
     # Shutdown: Cleanup
     print("Shutting down backend...")
 
-
 # Create FastAPI application
 app = FastAPI(
     title="Justice Companion API",
@@ -75,7 +71,6 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan,
 )
-
 
 # Response wrapper middleware to match frontend expectations
 class ResponseWrapperMiddleware(BaseHTTPMiddleware):
@@ -87,21 +82,15 @@ class ResponseWrapperMiddleware(BaseHTTPMiddleware):
     """
 
     async def dispatch(self, request: Request, call_next):
-        if response_wrapper_logger.isEnabledFor(logging.DEBUG):
-            response_wrapper_logger.debug(
-                "Response wrapper intercepting %s", request.url.path
-            )
-
-        # Preflight CORS requests must bypass the wrapper so CORSMiddleware
-        # can short-circuit and return the stock 200 response.
-        if request.method == "OPTIONS":
-            return await call_next(request)
+        print(f"[ResponseWrapperMiddleware] Intercepting request: {request.url.path}")
 
         # Skip wrapping for special endpoints
         if request.url.path in ["/health", "/", "/docs", "/redoc", "/openapi.json"]:
+            print(f"[ResponseWrapperMiddleware] Skipping {request.url.path}")
             return await call_next(request)
 
         response = await call_next(request)
+        print(f"[ResponseWrapperMiddleware] Response status: {response.status_code}")
 
         # Only wrap successful JSON responses (all 2xx status codes)
         if 200 <= response.status_code < 300:
@@ -166,7 +155,11 @@ class ResponseWrapperMiddleware(BaseHTTPMiddleware):
         # For non-200 responses, return as is
         return response
 
+# Add response wrapper middleware - wraps all 200 OK JSON responses for frontend
+app.add_middleware(ResponseWrapperMiddleware)
 
+# CORS configuration for frontend (Electron + PWA)
+# Cloud-ready: Supports both local development and production PWA
 def get_allowed_origins() -> list:
     """
     Get allowed CORS origins from environment.
@@ -184,11 +177,11 @@ def get_allowed_origins() -> list:
         # Development: Default to localhost for Electron app + Docker testing
         origins = [
             "http://localhost:5176",  # Vite dev server
+            "http://localhost:5177",  # Vite dev server (fallback port)
             "http://localhost:5173",  # Vite dev server (alternate port)
-            "http://localhost:5178",  # Vite E2E test server
             "http://127.0.0.1:5176",  # Localhost IPv4
+            "http://127.0.0.1:5177",  # Localhost IPv4 (fallback)
             "http://127.0.0.1:5173",  # Localhost IPv4 (alternate)
-            "http://127.0.0.1:5178",  # Localhost IPv4 (E2E)
         ]
 
         # Add Docker host IP origins for local testing (ports 5176-5180)
@@ -198,11 +191,6 @@ def get_allowed_origins() -> list:
 
     print(f"CORS allowed origins: {origins}")
     return origins
-
-
-# Response wrapper must sit closest to the routes so earlier middleware
-# (like CORSMiddleware) can intercept preflight requests before wrapping occurs.
-app.add_middleware(ResponseWrapperMiddleware)
 
 # Add CORS middleware with environment-based origins
 allowed_origins = get_allowed_origins()
@@ -247,14 +235,10 @@ app.include_router(gdpr_router)  # GDPR compliance routes at /gdpr/*
 app.include_router(tags_router)  # Tag management routes at /tags/*
 app.include_router(templates_router)  # Template management routes at /templates/*
 app.include_router(search_router)  # Full-text search routes at /search/*
-app.include_router(port_status_router)  # Port management routes at /port/*
-app.include_router(action_logs_router)  # Action log monitoring routes at /action-logs/*
-app.include_router(
-    ui_router
-)  # UI dialog routes at /dialog/* (501 Not Implemented - see route docs)
+app.include_router(port_status_router)  # Port status routes
+app.include_router(ui_router)  # UI dialog routes at /dialog/*
 app.include_router(ai_status_router)  # AI service status routes at /ai/*
 app.include_router(ai_config_router)  # AI configuration routes at /ai/*
-
 
 # Health check endpoint
 @app.get("/health")
@@ -264,7 +248,6 @@ async def health_check():
     Returns 200 OK if backend is running.
     """
     return {"status": "healthy", "service": "Justice Companion Backend", "version": "1.0.0"}
-
 
 # Root endpoint
 @app.get("/")
@@ -278,7 +261,6 @@ async def root():
         "docs": "/docs",  # Swagger UI
         "redoc": "/redoc",  # ReDoc documentation
     }
-
 
 if __name__ == "__main__":
     import uvicorn

@@ -298,11 +298,14 @@ justice.db
 .guardian/
 .localclaude/
 .justice-companion/
+.serena/
 
 # Python (shouldn't be in TypeScript project)
 .venv/
 .pytest_cache/
 .ruff_cache/
+.mypy_cache/
+.mypy_tmp/
 __pycache__/
 *.pyc
 
@@ -321,3 +324,6 @@ __pycache__/
 
 # Cline AI Assistant (local config, not project files)
 .cline/
+
+# Snyk Security Extension - AI Rules (auto-generated)
+.github/instructions/snyk_rules.instructions.md

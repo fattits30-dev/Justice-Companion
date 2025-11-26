@@ -298,7 +298,7 @@ export function BackupSettingsTab() {
   const totalSize = backups.reduce((sum, b) => sum + b.size, 0);
 
   return (
-    <div className="space-y-6 max-w-5xl">
+    <div className="space-y-6 w-full">
       {/* Header */}
       <div>
         <h2 className="text-2xl font-bold text-white mb-2">Backup & Restore</h2>

@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { User, Mail, Save, AlertCircle, Check, Phone } from "lucide-react";
+import { User, Mail, Save, AlertCircle, Check, Phone, Pencil, X } from "lucide-react";
 import { Card } from "../../components/ui/Card.tsx";
 import { Button } from "../../components/ui/Button.tsx";
 import { toast } from "sonner";
 import { logger } from "../../utils/logger.ts";
-import type { IPCErrorResponse } from "../../types/window";
+import { apiClient } from "../../lib/apiClient.ts";
 
 interface UserProfile {
   id: number;
@@ -21,6 +21,7 @@ export function ProfileSettingsTab() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
   // Form state - split name into first and last
   const [username, setUsername] = useState("");
@@ -29,6 +30,15 @@ export function ProfileSettingsTab() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [hasChanges, setHasChanges] = useState(false);
+
+  // Original values for cancel
+  const [originalValues, setOriginalValues] = useState({
+    username: "",
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+  });
 
   // Load profile on mount
   useEffect(() => {
@@ -52,29 +62,56 @@ export function ProfileSettingsTab() {
   const loadProfile = async () => {
     try {
       setLoading(true);
-      const sessionId = localStorage.getItem("sessionId");
-      if (!sessionId) {
-        toast.error("No active session");
-        return;
-      }
-
-      const response = await window.justiceAPI.getUserProfile(sessionId);
-      if (response.success && response.data?.profile) {
-        // Transform null values to undefined to match UserProfile interface
+      
+      // Use apiClient instead of legacy window.justiceAPI
+      const response = await apiClient.profile.get();
+      
+      if (response) {
+        // apiClient.profile.get() returns the profile directly
+        const profileData = response as {
+          id: number;
+          name: string;
+          email?: string | null;
+          firstName?: string | null;
+          lastName?: string | null;
+          phone?: string | null;
+          avatarUrl?: string | null;
+          createdAt?: string;
+          updatedAt?: string;
+        };
+        
         const transformedProfile: UserProfile = {
-          ...response.data.profile,
-          username: response.data.profile.username ?? undefined,
-          phone: response.data.profile.phone ?? undefined,
-          email: response.data.profile.email,
+          id: profileData.id,
+          name: profileData.name || "",
+          email: profileData.email || null,
+          username: undefined, // Backend doesn't return username separately
+          phone: profileData.phone || undefined,
+          avatarUrl: profileData.avatarUrl || null,
+          createdAt: profileData.createdAt || "",
+          updatedAt: profileData.updatedAt || "",
         };
         setProfile(transformedProfile);
-        setUsername(response.data.profile.username || "");
-        // Split name into first and last
-        const nameParts = response.data.profile.name.split(" ");
-        setFirstName(nameParts[0] || "");
-        setLastName(nameParts.slice(1).join(" ") || "");
-        setEmail(response.data.profile.email || "");
-        setPhone(response.data.profile.phone || "");
+        
+        // Use firstName/lastName from backend if available, otherwise split name
+        const fname = profileData.firstName || profileData.name?.split(" ")[0] || "";
+        const lname = profileData.lastName || profileData.name?.split(" ").slice(1).join(" ") || "";
+        const em = profileData.email || "";
+        const ph = profileData.phone || "";
+        
+        setUsername(""); // Not used in new backend
+        setFirstName(fname);
+        setLastName(lname);
+        setEmail(em);
+        setPhone(ph);
+        
+        // Store original values for cancel
+        setOriginalValues({
+          username: "",
+          firstName: fname,
+          lastName: lname,
+          email: em,
+          phone: ph,
+        });
       } else {
         toast.error("Failed to load profile");
       }
@@ -89,12 +126,6 @@ export function ProfileSettingsTab() {
   const handleSave = async () => {
     try {
       setSaving(true);
-
-      const sessionId = localStorage.getItem("sessionId");
-      if (!sessionId) {
-        toast.error("No active session");
-        return;
-      }
 
       // Validate inputs
       if (!firstName.trim()) {
@@ -113,31 +144,52 @@ export function ProfileSettingsTab() {
         return;
       }
 
-      // Save profile
+      // Save profile using apiClient
       const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
-      const response = await window.justiceAPI.updateUserProfile(sessionId, {
-        username: username.trim() || null,
+      const response = await apiClient.profile.update({
         name: fullName,
-        email: email.trim() || null,
-        phone: phone.trim() || null,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        email: email.trim() || undefined,
+        phone: phone.trim() || undefined,
       });
 
-      if (response.success && response.data?.profile) {
-        // Transform null values to undefined to match UserProfile interface
+      if (response) {
+        const profileData = response as {
+          id: number;
+          name: string;
+          email?: string | null;
+          firstName?: string | null;
+          lastName?: string | null;
+          phone?: string | null;
+        };
+        
         const transformedProfile: UserProfile = {
-          ...response.data.profile,
-          username: response.data.profile.username ?? undefined,
-          phone: response.data.profile.phone ?? undefined,
-          email: response.data.profile.email,
+          id: profileData.id,
+          name: profileData.name || "",
+          email: profileData.email || null,
+          username: undefined,
+          phone: profileData.phone || undefined,
+          avatarUrl: null,
+          createdAt: "",
+          updatedAt: "",
         };
         setProfile(transformedProfile);
         setHasChanges(false);
+        setIsEditing(false);
+        
+        // Update original values
+        setOriginalValues({
+          username: "",
+          firstName: profileData.firstName || firstName.trim(),
+          lastName: profileData.lastName || lastName.trim(),
+          email: profileData.email || "",
+          phone: profileData.phone || "",
+        });
+        
         toast.success("Profile updated successfully!");
       } else {
-        toast.error(
-          (response as IPCErrorResponse).error?.message ||
-            "Failed to update profile",
-        );
+        toast.error("Failed to update profile");
       }
     } catch (error) {
       logger.error("Failed to save profile:", error);
@@ -145,6 +197,17 @@ export function ProfileSettingsTab() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleCancel = () => {
+    // Restore original values
+    setUsername(originalValues.username);
+    setFirstName(originalValues.firstName);
+    setLastName(originalValues.lastName);
+    setEmail(originalValues.email);
+    setPhone(originalValues.phone);
+    setHasChanges(false);
+    setIsEditing(false);
   };
 
   if (loading) {
@@ -156,10 +219,21 @@ export function ProfileSettingsTab() {
   }
 
   return (
-    <div className="space-y-6 max-w-4xl">
-      <div>
-        <h2 className="text-2xl font-bold text-white mb-2">Profile</h2>
-        <p className="text-white/60">Manage your personal information</p>
+    <div className="space-y-6 w-full">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-white mb-2">Profile</h2>
+          <p className="text-white/60">Manage your personal information</p>
+        </div>
+        {!isEditing && (
+          <Button
+            onClick={() => setIsEditing(true)}
+            className="bg-white/10 hover:bg-white/20 text-white border border-white/20"
+          >
+            <Pencil className="w-4 h-4" />
+            Edit Profile
+          </Button>
+        )}
       </div>
 
       {/* Profile Form */}
@@ -186,7 +260,8 @@ export function ProfileSettingsTab() {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full pl-10 pr-3 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-hidden focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                disabled={!isEditing}
+                className={`w-full pl-10 pr-3 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-hidden focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all ${!isEditing ? 'opacity-70 cursor-not-allowed' : ''}`}
                 placeholder="johndoe123"
               />
             </div>
@@ -214,7 +289,8 @@ export function ProfileSettingsTab() {
                   type="text"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  className="w-full pl-10 pr-3 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-hidden focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                  disabled={!isEditing}
+                  className={`w-full pl-10 pr-3 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-hidden focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all ${!isEditing ? 'opacity-70 cursor-not-allowed' : ''}`}
                   placeholder="John"
                   required
                 />
@@ -238,7 +314,8 @@ export function ProfileSettingsTab() {
                   type="text"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  className="w-full pl-10 pr-3 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-hidden focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                  disabled={!isEditing}
+                  className={`w-full pl-10 pr-3 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-hidden focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all ${!isEditing ? 'opacity-70 cursor-not-allowed' : ''}`}
                   placeholder="Doe"
                 />
               </div>
@@ -265,7 +342,8 @@ export function ProfileSettingsTab() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-10 pr-3 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-hidden focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                disabled={!isEditing}
+                className={`w-full pl-10 pr-3 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-hidden focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all ${!isEditing ? 'opacity-70 cursor-not-allowed' : ''}`}
                 placeholder="your.email@example.com"
               />
             </div>
@@ -291,7 +369,8 @@ export function ProfileSettingsTab() {
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="w-full pl-10 pr-3 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-hidden focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                disabled={!isEditing}
+                className={`w-full pl-10 pr-3 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-hidden focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all ${!isEditing ? 'opacity-70 cursor-not-allowed' : ''}`}
                 placeholder="+44 7700 900000"
               />
             </div>
@@ -309,46 +388,57 @@ export function ProfileSettingsTab() {
             </div>
           )}
 
-          {/* Save Button */}
-          <div className="flex items-center gap-4">
-            <Button
-              onClick={handleSave}
-              disabled={!hasChanges || saving}
-              className={`
-                ${
-                  hasChanges
-                    ? "bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
-                    : "bg-white/10 cursor-not-allowed"
-                } text-white transition-all
-              `}
-            >
-              {saving ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4" />
-                  {hasChanges ? "Save Changes" : "No Changes"}
-                </>
+          {/* Save Button - only show when editing */}
+          {isEditing && (
+            <div className="flex items-center gap-4">
+              <Button
+                onClick={handleCancel}
+                className="bg-white/10 hover:bg-white/20 text-white border border-white/20"
+              >
+                <X className="w-4 h-4" />
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSave}
+                disabled={!hasChanges || saving}
+                className={`
+                  ${
+                    hasChanges
+                      ? "bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                      : "bg-white/10 cursor-not-allowed"
+                  } text-white transition-all
+                `}
+              >
+                {saving ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    Save Changes
+                  </>
+                )}
+              </Button>
+
+              {hasChanges && !saving && (
+                <span className="text-sm text-yellow-400 flex items-center gap-1">
+                  <AlertCircle className="w-4 h-4" />
+                  Unsaved changes
+                </span>
               )}
-            </Button>
+            </div>
+          )}
 
-            {hasChanges && !saving && (
-              <span className="text-sm text-yellow-400 flex items-center gap-1">
-                <AlertCircle className="w-4 h-4" />
-                You have unsaved changes
-              </span>
-            )}
-
-            {!hasChanges && profile && (
+          {!isEditing && profile && (
+            <div className="flex items-center gap-2">
               <span className="text-sm text-green-400 flex items-center gap-1">
                 <Check className="w-4 h-4" />
                 Profile saved
               </span>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </Card>
 

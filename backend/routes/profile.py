@@ -246,12 +246,18 @@ def get_audit_logger(db: Session = Depends(get_db)) -> AuditLogger:
     return AuditLogger(db=db)
 
 def get_profile_service(
+    user_id: int = Depends(get_current_user),
     db: Session = Depends(get_db),
     encryption_service: EncryptionService = Depends(get_encryption_service),
     audit_logger: AuditLogger = Depends(get_audit_logger),
 ) -> ProfileService:
-    """Get profile service instance (for single-row profile table)."""
-    return ProfileService(db=db, encryption_service=encryption_service, audit_logger=audit_logger)
+    """Get profile service instance for the current user."""
+    return ProfileService(
+        db=db, 
+        user_id=user_id,
+        encryption_service=encryption_service, 
+        audit_logger=audit_logger
+    )
 
 # ===== HELPER FUNCTIONS =====
 
@@ -304,7 +310,6 @@ def calculate_profile_completeness(
 
 @router.get("", response_model=ProfileResponse)
 async def get_profile(
-    user_id: int = Depends(get_current_user),
     profile_service: ProfileService = Depends(get_profile_service),
 ):
     """
@@ -350,13 +355,12 @@ async def get_profile(
     except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get profile: {str(e)}",
+            detail=f"Failed to get profile: {str(exc)}",
         )
 
 @router.put("", response_model=ProfileResponse)
 async def update_profile(
     request: UpdateProfileRequest,
-    user_id: int = Depends(get_current_user),
     profile_service: ProfileService = Depends(get_profile_service),
 ):
     """
@@ -414,7 +418,7 @@ async def update_profile(
 
         if not update_data:
             # No fields to update, just return current profile
-            return await get_profile(user_id=user_id, profile_service=profile_service)
+            return await get_profile(profile_service=profile_service)
 
         # Update profile using service layer (with retry logic)
         result: ProfileUpdateResult = await profile_service.update(
@@ -432,7 +436,7 @@ async def update_profile(
     except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to update profile: {str(e)}",
+            detail=f"Failed to update profile: {str(exc)}",
         )
 
 @router.put("/password", response_model=PasswordChangeResponse)
@@ -477,7 +481,7 @@ async def change_password(
 
     except Exception as exc:
         # Authentication service throws AuthenticationError with specific messages
-        error_message = str(e)
+        error_message = str(exc)
         if "Invalid current password" in error_message:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=error_message)
         elif "Password must" in error_message:
@@ -521,5 +525,5 @@ async def get_profile_completeness(
     except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to calculate profile completeness: {str(e)}",
+            detail=f"Failed to calculate profile completeness: {str(exc)}",
         )

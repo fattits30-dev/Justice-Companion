@@ -1,1 +1,0 @@
-MCP Filesystem Server Test - Installation Success!

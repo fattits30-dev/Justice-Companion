@@ -3,10 +3,6 @@ import type {
   Session,
   CreateSessionInput,
 } from "../domains/auth/entities/Session.ts";
-import {
-  getCacheService,
-  type CacheService,
-} from "../services/CacheService.ts";
 
 /**
  * Raw database row from sessions table
@@ -30,19 +26,8 @@ interface SessionRow {
  * - Sessions expire after configurable duration (default 24 hours)
  * - Expired sessions automatically cleaned up
  * - Session IDs are UUIDs for unpredictability
- *
- * Performance:
- * - LRU caching with 1-hour TTL for session lookups
- * - Critical for authentication performance (checked on every request)
- * - Cache invalidation on session updates/deletes
  */
 export class SessionRepository {
-  private cache: CacheService;
-
-  constructor() {
-    this.cache = getCacheService();
-  }
-
   /**
    * Create a new session
    */
@@ -64,11 +49,6 @@ export class SessionRepository {
     });
 
     const session = this.findByIdDirect(input.id)!;
-
-    // Cache the newly created session
-    this.cache.invalidate(`session:${input.id}`, "sessions");
-    this.cache.invalidate(`session:user:${input.userId}`, "sessions");
-
     return session;
   }
 
