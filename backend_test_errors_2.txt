@@ -1,0 +1,222 @@
+============================= test session starts =============================
+platform win32 -- Python 3.11.9, pytest-7.4.4, pluggy-1.6.0
+rootdir: C:\Users\sava6\ClaudeHome\projects\Justice Companion
+plugins: mock-3.12.0, anyio-4.11.0, asyncio-0.23.3
+asyncio: mode=Mode.STRICT
+collected 1312 items / 12 errors / 1 skipped
+
+=================================== ERRORS ====================================
+___________ ERROR collecting backend/test_encryption_standalone.py ____________
+backend\test_encryption_standalone.py:23: in <module>
+    spec.loader.exec_module(encryption_module)
+<frozen importlib._bootstrap_external>:936: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1073: in get_code
+    ???
+<frozen importlib._bootstrap_external>:1130: in get_data
+    ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\sava6\\ClaudeHome\\projects\\Justice Companion\\backend\\services\\encryption_service.py'
+________ ERROR collecting backend/test_encryption_standalone_ascii.py _________
+backend\test_encryption_standalone_ascii.py:23: in <module>
+    spec.loader.exec_module(encryption_module)
+<frozen importlib._bootstrap_external>:936: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1073: in get_code
+    ???
+<frozen importlib._bootstrap_external>:1130: in get_data
+    ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\sava6\\ClaudeHome\\projects\\Justice Companion\\backend\\services\\encryption_service.py'
+_______ ERROR collecting backend/tests/routes/test_ai_config_routes.py ________
+ImportError while importing test module 'C:\Users\sava6\ClaudeHome\projects\Justice Companion\backend\tests\routes\test_ai_config_routes.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\importlib\__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+backend\tests\routes\test_ai_config_routes.py:26: in <module>
+    from backend.routes.ai_config import (
+E   ImportError: cannot import name 'get_auth_service' from 'backend.routes.ai_config' (C:\Users\sava6\ClaudeHome\projects\Justice Companion\backend\routes\ai_config.py)
+_______ ERROR collecting backend/tests/routes/test_ai_status_routes.py ________
+ImportError while importing test module 'C:\Users\sava6\ClaudeHome\projects\Justice Companion\backend\tests\routes\test_ai_status_routes.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\importlib\__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+backend\tests\routes\test_ai_status_routes.py:28: in <module>
+    from backend.routes.ai_status import (
+E   ImportError: cannot import name 'get_encryption_service' from 'backend.routes.ai_status' (C:\Users\sava6\ClaudeHome\projects\Justice Companion\backend\routes\ai_status.py)
+_________ ERROR collecting backend/tests/routes/test_chat_enhanced.py _________
+ImportError while importing test module 'C:\Users\sava6\ClaudeHome\projects\Justice Companion\backend\tests\routes\test_chat_enhanced.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\importlib\__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+backend\tests\routes\test_chat_enhanced.py:20: in <module>
+    from backend.routes.chat_enhanced import router
+E   ModuleNotFoundError: No module named 'backend.routes.chat_enhanced'
+_ ERROR collecting backend/tests/services/test_process_manager_standalone.py __
+backend\tests\services\test_process_manager_standalone.py:26: in <module>
+    spec.loader.exec_module(process_manager_module)
+<frozen importlib._bootstrap_external>:936: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1073: in get_code
+    ???
+<frozen importlib._bootstrap_external>:1130: in get_data
+    ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\sava6\\ClaudeHome\\projects\\Justice Companion\\backend\\tests\\services\\process_manager.py'
+_____ ERROR collecting backend/tests/services/ai/test_python_ai_client.py _____
+ImportError while importing test module 'C:\Users\sava6\ClaudeHome\projects\Justice Companion\backend\tests\services\ai\test_python_ai_client.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\importlib\__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+backend\tests\services\ai\test_python_ai_client.py:29: in <module>
+    from services.python_ai_client import (
+E   ModuleNotFoundError: No module named 'services.python_ai_client'
+____ ERROR collecting backend/tests/services/export/test_docx_generator.py ____
+ImportError while importing test module 'C:\Users\sava6\ClaudeHome\projects\Justice Companion\backend\tests\services\export\test_docx_generator.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\importlib\__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+backend\tests\services\export\test_docx_generator.py:27: in <module>
+    from .docx_generator import (
+E   ModuleNotFoundError: No module named 'backend.tests.services.export.docx_generator'
+_ ERROR collecting backend/tests/services/security/test_encryption_service.py _
+ImportError while importing test module 'C:\Users\sava6\ClaudeHome\projects\Justice Companion\backend\tests\services\security\test_encryption_service.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\importlib\__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+backend\tests\services\security\test_encryption_service.py:14: in <module>
+    from services.encryption_service import EncryptionService, EncryptedData
+E   ModuleNotFoundError: No module named 'services.encryption_service'
+____ ERROR collecting backend/tests/services/security/test_key_manager.py _____
+ImportError while importing test module 'C:\Users\sava6\ClaudeHome\projects\Justice Companion\backend\tests\services\security\test_key_manager.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\importlib\__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+backend\tests\services\security\test_key_manager.py:22: in <module>
+    from .key_manager import (
+E   ModuleNotFoundError: No module named 'backend.tests.services.security.key_manager'
+_ ERROR collecting backend/tests/services/security/test_secure_storage_service.py _
+ImportError while importing test module 'C:\Users\sava6\ClaudeHome\projects\Justice Companion\backend\tests\services\security\test_secure_storage_service.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\importlib\__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+backend\tests\services\security\test_secure_storage_service.py:12: in <module>
+    from .secure_storage_service import (
+E   ModuleNotFoundError: No module named 'backend.tests.services.security.secure_storage_service'
+_ ERROR collecting backend/tests/services/security/test_secure_storage_standalone.py _
+ImportError while importing test module 'C:\Users\sava6\ClaudeHome\projects\Justice Companion\backend\tests\services\security\test_secure_storage_standalone.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\importlib\__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+backend\tests\services\security\test_secure_storage_standalone.py:15: in <module>
+    from secure_storage_service import (
+E   ModuleNotFoundError: No module named 'secure_storage_service'
+============================== warnings summary ===============================
+backend\services\ai\providers.py:105
+backend\services\ai\providers.py:105
+  C:\Users\sava6\ClaudeHome\projects\Justice Companion\backend\services\ai\providers.py:105: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class AIProviderConfigOutput(BaseModel):
+
+backend\services\ai\providers.py:125
+backend\services\ai\providers.py:125
+  C:\Users\sava6\ClaudeHome\projects\Justice Companion\backend\services\ai\providers.py:125: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class AIProviderConfigSummary(BaseModel):
+
+backend\services\document_parser_service.py:56
+backend\services\document_parser_service.py:56
+  C:\Users\sava6\ClaudeHome\projects\Justice Companion\backend\services\document_parser_service.py:56: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ParsedDocumentMetadata(BaseModel):
+
+backend\routes\cases.py:244
+  C:\Users\sava6\ClaudeHome\projects\Justice Companion\backend\routes\cases.py:244: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class LegacyCaseResponse(BaseModel):
+
+backend\routes\cases.py:266
+  C:\Users\sava6\ClaudeHome\projects\Justice Companion\backend\routes\cases.py:266: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class CaseFactResponse(BaseModel):
+
+backend\routes\dashboard.py:51
+  C:\Users\sava6\ClaudeHome\projects\Justice Companion\backend\routes\dashboard.py:51: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class RecentCaseInfo(BaseModel):
+
+backend\routes\dashboard.py:63
+  C:\Users\sava6\ClaudeHome\projects\Justice Companion\backend\routes\dashboard.py:63: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class DashboardStatsResponse(BaseModel):
+
+backend\routes\deadlines.py:201
+  C:\Users\sava6\ClaudeHome\projects\Justice Companion\backend\routes\deadlines.py:201: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class DeadlineResponse(BaseModel):
+
+backend\routes\evidence.py:145
+  C:\Users\sava6\ClaudeHome\projects\Justice Companion\backend\routes\evidence.py:145: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class EvidenceResponse(BaseModel):
+
+backend\routes\export.py:97
+  C:\Users\sava6\ClaudeHome\projects\Justice Companion\backend\routes\export.py:97: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ExportResult(BaseModel):
+
+backend\routes\export.py:123
+  C:\Users\sava6\ClaudeHome\projects\Justice Companion\backend\routes\export.py:123: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ExportTemplate(BaseModel):
+
+backend\routes\profile.py:196
+  C:\Users\sava6\ClaudeHome\projects\Justice Companion\backend\routes\profile.py:196: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ProfileResponse(BaseModel):
+
+backend\routes\tags.py:106
+  C:\Users\sava6\ClaudeHome\projects\Justice Companion\backend\routes\tags.py:106: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class TagResponse(BaseModel):
+
+backend\routes\tags.py:121
+  C:\Users\sava6\ClaudeHome\projects\Justice Companion\backend\routes\tags.py:121: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class CaseTagResponse(BaseModel):
+
+backend\routes\ui.py:85
+  C:\Users\sava6\ClaudeHome\projects\Justice Companion\backend\routes\ui.py:85: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class OpenDialogRequest(BaseModel):
+
+backend\routes\ui.py:111
+  C:\Users\sava6\ClaudeHome\projects\Justice Companion\backend\routes\ui.py:111: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class SaveDialogRequest(BaseModel):
+
+backend\routes\ui.py:139
+  C:\Users\sava6\ClaudeHome\projects\Justice Companion\backend\routes\ui.py:139: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class OpenDialogResponse(BaseModel):
+
+backend\routes\ui.py:152
+  C:\Users\sava6\ClaudeHome\projects\Justice Companion\backend\routes\ui.py:152: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class SaveDialogResponse(BaseModel):
+
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\decl_api.py:0
+  C:\Users\sava6\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\decl_api.py:0: PytestCollectionWarning: cannot collect test class 'Base' because it has a __init__ constructor (from: backend/tests/services/auth/test_session_manager_simple.py)
+
+backend\tests\services\auth\test_session_manager_simple.py:23
+  C:\Users\sava6\ClaudeHome\projects\Justice Companion\backend\tests\services\auth\test_session_manager_simple.py:23: PytestCollectionWarning: cannot collect test class 'TestUser' because it has a __init__ constructor (from: backend/tests/services/auth/test_session_manager_simple.py)
+    class TestUser(TestBase):
+
+backend\tests\services\auth\test_session_manager_simple.py:39
+  C:\Users\sava6\ClaudeHome\projects\Justice Companion\backend\tests\services\auth\test_session_manager_simple.py:39: PytestCollectionWarning: cannot collect test class 'TestSession' because it has a __init__ constructor (from: backend/tests/services/auth/test_session_manager_simple.py)
+    class TestSession(TestBase):
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+ERROR backend/test_encryption_standalone.py - FileNotFoundError: [Errno 2] No...
+ERROR backend/test_encryption_standalone_ascii.py - FileNotFoundError: [Errno...
+ERROR backend/tests/routes/test_ai_config_routes.py
+ERROR backend/tests/routes/test_ai_status_routes.py
+ERROR backend/tests/routes/test_chat_enhanced.py
+ERROR backend/tests/services/test_process_manager_standalone.py - FileNotFoun...
+ERROR backend/tests/services/ai/test_python_ai_client.py
+ERROR backend/tests/services/export/test_docx_generator.py
+ERROR backend/tests/services/security/test_encryption_service.py
+ERROR backend/tests/services/security/test_key_manager.py
+ERROR backend/tests/services/security/test_secure_storage_service.py
+ERROR backend/tests/services/security/test_secure_storage_standalone.py
+!!!!!!!!!!!!!!!!!! Interrupted: 12 errors during collection !!!!!!!!!!!!!!!!!!!
+================= 1 skipped, 24 warnings, 12 errors in 6.01s ==================

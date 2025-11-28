@@ -13,26 +13,32 @@
  * - Print support
  * - Fullscreen mode
  * - Navigation controls
+ * - AI Document Analysis with NAME DETECTION
  *
  * @module EvidenceViewer
  */
 
-import { useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import {
-  X,
+  AlertCircle,
+  Brain,
   Download,
+  Loader,
+  Maximize,
   Printer,
+  X,
   ZoomIn,
   ZoomOut,
-  Maximize,
-  Loader,
 } from "lucide-react";
-import { evidenceApi } from "../../lib/evidenceApiClient.ts";
+import { useCallback, useEffect, useState } from "react";
 import type { Evidence } from "../../domains/evidence/entities/Evidence.ts";
-import { Card } from "../ui/Card.tsx";
-import { Button } from "../ui/Button.tsx";
+import { aiApi } from "../../lib/aiApiClient.ts";
+import { evidenceApi } from "../../lib/evidenceApiClient.ts";
+import type { AIDocumentAnalysis } from "../../types/ai.ts";
 import { Badge } from "../ui/Badge.tsx";
+import { Button } from "../ui/Button.tsx";
+import { Card } from "../ui/Card.tsx";
+import { DocumentAnalysisResults } from "./DocumentAnalysisResults.tsx";
 
 interface EvidenceViewerProps {
   evidenceId: number;
@@ -46,6 +52,13 @@ export function EvidenceViewer({ evidenceId, onClose }: EvidenceViewerProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [zoom, setZoom] = useState(100);
+
+  // AI Analysis state
+  const [showAnalysis, setShowAnalysis] = useState(false);
+  const [analysisResult, setAnalysisResult] =
+    useState<AIDocumentAnalysis | null>(null);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
 
   const loadEvidence = useCallback(async () => {
     try {
@@ -79,7 +92,7 @@ export function EvidenceViewer({ evidenceId, onClose }: EvidenceViewerProps) {
     try {
       await evidenceApi.download(
         evidenceId,
-        evidence.filePath?.split(/[\\/]/).pop() || "evidence",
+        evidence.filePath?.split(/[\\/]/).pop() || "evidence"
       );
     } catch (err) {
       console.error("Download failed:", err);
@@ -100,6 +113,46 @@ export function EvidenceViewer({ evidenceId, onClose }: EvidenceViewerProps) {
 
   const handleFullscreen = () => {
     document.documentElement.requestFullscreen();
+  };
+
+  /**
+   * Run AI document analysis
+   */
+  const handleAnalyze = async () => {
+    if (!evidence) {
+      return;
+    }
+
+    setAnalyzing(true);
+    setAnalysisError(null);
+
+    try {
+      // Fetch the file blob for AI analysis
+      const blob = await evidenceApi.getFileBlob(evidenceId);
+
+      // Convert blob to File
+      const fileName =
+        evidence.filePath?.split(/[\\/]/).pop() || evidence.title || "document";
+      const file = new File([blob], fileName, {
+        type: mimeType || "application/octet-stream",
+      });
+
+      // Send to AI service for analysis
+      const result = await aiApi.analyzeDocument(
+        file,
+        `Case evidence: ${evidence.title}`
+      );
+
+      setAnalysisResult(result);
+      setShowAnalysis(true);
+    } catch (err) {
+      console.error("Analysis failed:", err);
+      setAnalysisError(
+        err instanceof Error ? err.message : "AI analysis failed"
+      );
+    } finally {
+      setAnalyzing(false);
+    }
   };
 
   if (loading) {
@@ -146,6 +199,29 @@ export function EvidenceViewer({ evidenceId, onClose }: EvidenceViewerProps) {
 
         {/* Actions */}
         <div className="flex items-center gap-2">
+          {/* AI Analyze Button */}
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={handleAnalyze}
+            disabled={analyzing}
+            className="bg-purple-600 hover:bg-purple-500"
+          >
+            {analyzing ? (
+              <>
+                <Loader className="h-4 w-4 mr-2 animate-spin" />
+                Analyzing...
+              </>
+            ) : (
+              <>
+                <Brain className="h-4 w-4 mr-2" />
+                AI Analyze
+              </>
+            )}
+          </Button>
+
+          <div className="w-px h-6 bg-white/10 mx-2" />
+
           <Button
             variant="ghost"
             size="sm"
@@ -186,16 +262,62 @@ export function EvidenceViewer({ evidenceId, onClose }: EvidenceViewerProps) {
         </div>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-auto p-8 flex items-center justify-center">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="max-w-6xl w-full"
-          style={{ transform: `scale(${zoom / 100})` }}
+      {/* Analysis Error */}
+      <AnimatePresence>
+        {analysisError && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="px-4 py-3 bg-red-500/10 border-b border-red-500/30"
+          >
+            <div className="flex items-center gap-2 text-red-400">
+              <AlertCircle className="h-4 w-4" />
+              <span className="text-sm">{analysisError}</span>
+              <button
+                onClick={() => setAnalysisError(null)}
+                className="ml-auto text-red-400 hover:text-red-300"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Content Area */}
+      <div className="flex-1 overflow-auto p-8 flex gap-6">
+        {/* Document Preview */}
+        <div
+          className={`flex-1 flex items-center justify-center ${showAnalysis ? "max-w-[50%]" : ""}`}
         >
-          {renderContent(mimeType, previewUrl, evidence)}
-        </motion.div>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="max-w-full w-full"
+            style={{ transform: `scale(${zoom / 100})` }}
+          >
+            {renderContent(mimeType, previewUrl, evidence)}
+          </motion.div>
+        </div>
+
+        {/* Analysis Results Panel */}
+        <AnimatePresence>
+          {showAnalysis && analysisResult && (
+            <motion.div
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 50 }}
+              className="w-[500px] shrink-0 overflow-y-auto"
+            >
+              <DocumentAnalysisResults
+                analysis={analysisResult}
+                fileName={evidence.filePath?.split(/[\\/]/).pop()}
+                onClose={() => setShowAnalysis(false)}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
@@ -204,7 +326,7 @@ export function EvidenceViewer({ evidenceId, onClose }: EvidenceViewerProps) {
 function renderContent(
   mimeType: string,
   previewUrl: string,
-  evidence: Evidence,
+  evidence: Evidence
 ) {
   // PDF
   if (mimeType === "application/pdf") {

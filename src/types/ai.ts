@@ -2,8 +2,44 @@
  * AI-related Types
  * 
  * Types for AI interactions and legal context.
- * NOTE: AI features are deferred to v2.0 - this file provides type stubs.
  */
+
+/**
+ * Document type classification
+ */
+export type DocumentTypeEnum = 
+  | 'unknown'
+  | 'contract'
+  | 'letter'
+  | 'payslip'
+  | 'form'
+  | 'court_document'
+  | 'evidence_photo'
+  | 'handwritten';
+
+/**
+ * Full document analysis response from AI service
+ * Maps to Python DocumentAnalysis model
+ */
+export interface AIDocumentAnalysis {
+  extracted_text: string;
+  document_type: DocumentTypeEnum;
+  key_facts: string[];
+  dates_found: string[];
+  parties_identified: string[];
+  relevance_notes: string | null;
+  confidence: number;
+}
+
+/**
+ * Name detection result from document analysis
+ */
+export interface NameDetectionResult {
+  userNameFound: boolean;
+  matchedParty: string | null;
+  allParties: string[];
+  suggestedOwner: string | null;
+}
 
 /**
  * Legal context information for AI analysis

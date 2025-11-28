@@ -1,33 +1,30 @@
-import { logger } from "../utils/logger.ts";
-import { apiClient } from "../lib/apiClient.ts";
-
-import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import {
-  Settings as SettingsIcon,
-  Palette,
-  Shield,
-  Database,
-  Bell,
-  Info,
-  Moon,
-  Sun,
-  Monitor,
-  Save,
-  Download,
-  Key,
-  Brain,
-  HardDrive,
-  User,
-  ChevronRight,
-  Trash2,
   AlertTriangle,
+  Bell,
+  Brain,
+  ChevronRight,
+  Database,
+  Download,
+  HardDrive,
+  Info,
+  Key,
+  Monitor,
+  Moon,
+  Palette,
+  Save,
+  Settings as SettingsIcon,
+  Shield,
+  Sun,
+  Trash2,
+  User,
 } from "lucide-react";
-import { Card } from "../components/ui/Card.tsx";
-import { Button } from "../components/ui/Button.tsx";
+import React, { useEffect, useState } from "react";
 import { Badge } from "../components/ui/Badge.tsx";
-import { BackupSettingsTab } from "./settings/BackupSettings.tsx";
+import { Button } from "../components/ui/Button.tsx";
+import { Card } from "../components/ui/Card.tsx";
 import { AIServiceSettingsTab } from "./settings/AIServiceSettings.tsx";
+import { BackupSettingsTab } from "./settings/BackupSettings.tsx";
 import { ProfileSettingsTab } from "./settings/ProfileSettings.tsx";
 
 type ThemeMode = "light" | "dark" | "system";

@@ -231,16 +231,13 @@ class ProfileService:
         """Log audit event if audit logger is configured."""
         if self.audit_logger:
             self.audit_logger.log(
-                {
-                    "event_type": event_type,
-                    "user_id": str(user_id) if user_id else None,
-                    "resource_type": "profile",
-                    "resource_id": resource_id,
-                    "action": action,
-                    "success": success,
-                    "details": details or {},
-                    "timestamp": datetime.utcnow().isoformat(),
-                }
+                event_type=event_type,
+                user_id=str(user_id) if user_id else None,
+                resource_type="profile",
+                resource_id=resource_id,
+                action=action,
+                details=details or {},
+                success=success,
             )
 
     async def get(self) -> Optional[UserProfileData]:

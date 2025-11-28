@@ -134,11 +134,14 @@ class AIServiceClient:
         file_bytes: bytes,
         filename: str,
         case_context: Optional[str] = None,
+        username: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Full document analysis"""
         params = {}
         if case_context:
             params["case_context"] = case_context
+        if username:
+            params["username"] = username
             
         return await self._request(
             "POST",

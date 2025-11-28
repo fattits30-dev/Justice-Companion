@@ -22,6 +22,7 @@ from unittest.mock import Mock, AsyncMock
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
 from datetime import datetime
+import secrets
 
 from backend.routes.ai_config import (
     router,

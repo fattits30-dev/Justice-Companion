@@ -38,6 +38,10 @@ faiss-cpu==1.8.0.post1  # Library for efficient similarity search and clustering
 huggingface-hub==0.26.5  # HuggingFace Hub API for model/dataset access
 openai==1.58.1  # OpenAI Python client library (for OpenAI-compatible APIs)
 
+# System keyring for secure credential storage
+keyring==25.2.1  # Cross-platform keyring access
+pydantic-settings==2.2.1  # Pydantic settings management
+
 # Other utilities
 requests==2.32.5  # Elegant and simple HTTP library for Python
 urllib3==2.2.2  # Powerful, user-friendly HTTP client for Python

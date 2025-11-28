@@ -24,7 +24,7 @@ interface LoginScreenProps {
   onForgotPasswordClick?: () => void;
 }
 
-export function LoginScreen({ onSuccess, onRegisterClick }: LoginScreenProps) {
+export function LoginScreen({ onSuccess, onRegisterClick, onForgotPasswordClick }: LoginScreenProps) {
   const { login: authLogin, error: authError } = useAuth();
   // Form state
   const [username, setUsername] = useState("");
@@ -203,19 +203,28 @@ export function LoginScreen({ onSuccess, onRegisterClick }: LoginScreenProps) {
             )}
           </div>
 
-          {/* Remember Me checkbox */}
-          <div className="flex items-center">
-            <input
-              id="remember-me"
-              type="checkbox"
-              checked={rememberMe}
-              onChange={(e) => setRememberMe(e.target.checked)}
-              disabled={isLoading}
-              className="w-4 h-4 text-primary-600 bg-primary-700 border-gray-600 rounded focus:ring-primary-500 focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            />
-            <label htmlFor="remember-me" className="ml-2 text-sm text-white">
-              Remember me
-            </label>
+          {/* Remember Me and Forgot Password row */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <input
+                id="remember-me"
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                disabled={isLoading}
+                className="w-4 h-4 text-primary-600 bg-primary-700 border-gray-600 rounded focus:ring-primary-500 focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              />
+              <label htmlFor="remember-me" className="ml-2 text-sm text-white">
+                Remember me
+              </label>
+            </div>
+            <button
+              type="button"
+              onClick={onForgotPasswordClick}
+              className="text-sm text-cyan-400 hover:text-cyan-300 font-medium"
+            >
+              Forgot password?
+            </button>
           </div>
 
           {/* Submit button */}

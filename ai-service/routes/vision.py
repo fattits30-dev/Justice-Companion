@@ -45,6 +45,14 @@ class OCRResponse(BaseModel):
     metadata: Optional[dict] = None
 
 
+class NameDetection(BaseModel):
+    """Name detection result"""
+    user_name_found: bool
+    matched_party: Optional[str] = None
+    suggested_owner: Optional[str] = None
+    warning_message: Optional[str] = None
+
+
 class DocumentAnalysis(BaseModel):
     """Full document analysis response"""
     extracted_text: str
@@ -54,6 +62,7 @@ class DocumentAnalysis(BaseModel):
     parties_identified: List[str]
     relevance_notes: Optional[str] = None
     confidence: float
+    name_detection: Optional[NameDetection] = None
 
 
 class EvidenceAnalysis(BaseModel):
@@ -180,23 +189,63 @@ async def extract_text_batch(
 async def analyze_document(
     file: UploadFile = File(...),
     case_context: Optional[str] = None,
+    username: Optional[str] = None,
     req: Request = None
 ):
     """
     Full document analysis pipeline:
-    1. OCR text extraction
+    1. OCR text extraction (for images/PDFs) OR direct read (for text files)
     2. Document type classification
     3. Key facts extraction
     4. Date and party identification
     5. Legal relevance assessment
+    6. NAME DETECTION: Check if logged-in user appears in document
     """
     hf_client = req.app.state.hf_client
     content = await file.read()
+    filename = file.filename.lower() if file.filename else ""
     
     try:
-        # Step 1: OCR
-        ocr_result = await hf_client.vision_ocr(content, build_ocr_prompt())
-        extracted_text = ocr_result["text"]
+        # Step 1: Get text content based on file type
+        text_extensions = ('.txt', '.md', '.csv', '.json', '.xml', '.html')
+        doc_extensions = ('.docx', '.doc', '.rtf')
+        image_extensions = ('.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp', '.tiff')
+        
+        print(f"DEBUG: Processing file: {filename}", flush=True)
+        print(f"DEBUG: Is txt file: {filename.endswith(text_extensions)}", flush=True)
+        
+        if filename.endswith(text_extensions):
+            # Direct text file - decode and use as-is
+            try:
+                extracted_text = content.decode('utf-8')
+            except UnicodeDecodeError:
+                extracted_text = content.decode('latin-1')
+            confidence = 1.0  # Perfect confidence for text files
+        elif filename.endswith(doc_extensions):
+            # Word documents - would need python-docx in production
+            # For now, try to extract readable text
+            extracted_text = content.decode('utf-8', errors='ignore')
+            confidence = 0.7
+        elif filename.endswith('.pdf'):
+            # PDF - use vision model
+            result = await hf_client.process_pdf(content, preserve_structure=True)
+            extracted_text = result["text"]
+            confidence = result.get("confidence", 0.85)
+        elif filename.endswith(image_extensions):
+            # Image - use OCR
+            ocr_result = await hf_client.vision_ocr(content, build_ocr_prompt())
+            extracted_text = ocr_result["text"]
+            confidence = ocr_result.get("confidence", 0.9)
+        else:
+            # Unknown type - try text first, then OCR as fallback
+            try:
+                extracted_text = content.decode('utf-8')
+                confidence = 0.9
+            except UnicodeDecodeError:
+                # Probably binary/image - try OCR
+                ocr_result = await hf_client.vision_ocr(content, build_ocr_prompt())
+                extracted_text = ocr_result["text"]
+                confidence = ocr_result.get("confidence", 0.8)
         
         # Step 2: Analysis with LLM
         analysis_prompt = f"""Analyze this legal document and extract key information:
@@ -220,15 +269,24 @@ Format as structured list."""
             model_key="chat_primary",
         )
         
-        # Parse analysis (simplified - would use structured output in production)
+        # Parse analysis
+        parties = extract_parties(analysis["content"])
+        
+        # Step 3: Name detection
+        name_detection = None
+        if username:
+            name_detection = detect_user_in_parties(username, parties)
+        
+        # Return full analysis with name detection
         return DocumentAnalysis(
             extracted_text=extracted_text,
             document_type=classify_document(extracted_text),
             key_facts=extract_facts(analysis["content"]),
             dates_found=extract_dates(extracted_text),
-            parties_identified=extract_parties(analysis["content"]),
+            parties_identified=parties,
             relevance_notes=analysis["content"],
-            confidence=ocr_result.get("confidence", 0.85),
+            confidence=confidence,
+            name_detection=name_detection,
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Document analysis failed: {str(e)}")
@@ -349,12 +407,123 @@ def extract_parties(analysis_text: str) -> List[str]:
     in_parties_section = False
     
     for line in lines:
-        if "PARTIES" in line.upper():
+        line_upper = line.upper().strip()
+        
+        # Detect parties section
+        if "PARTIES" in line_upper or "PARTY" in line_upper and ("INVOLVED" in line_upper or "IDENTIFIED" in line_upper):
             in_parties_section = True
+            # Check if parties are on same line after colon
+            if ':' in line:
+                after_colon = line.split(':', 1)[1].strip()
+                if after_colon:
+                    # Split by comma or "and"
+                    for party in after_colon.replace(' and ', ', ').split(','):
+                        party = party.strip().rstrip('.')
+                        if party and len(party) > 2:
+                            parties.append(party)
             continue
-        if in_parties_section and line.strip().startswith(('-', '•', '*')):
-            parties.append(line.strip().lstrip('-•* '))
-        if in_parties_section and any(x in line.upper() for x in ['RELEVANCE:', 'KEY FACTS:']):
+            
+        if in_parties_section:
+            # Stop at next section
+            if any(x in line_upper for x in ['RELEVANCE:', 'KEY FACTS:', 'DATES:', 'DOCUMENT TYPE:', '**']):
+                if not line.strip().startswith(('*', '-', '•', '1', '2', '3', '4', '5')):
+                    break
+            
+            # Extract from bullet points or numbered lists
+            stripped = line.strip()
+            if stripped.startswith(('-', '•', '*', '1', '2', '3', '4', '5', '6', '7', '8', '9')):
+                # Remove bullet/number and clean up
+                party = stripped.lstrip('-•*0123456789.). ').strip()
+                # Remove markdown bold
+                party = party.replace('**', '').strip()
+                if party and len(party) > 2 and not party.upper().startswith(('THE ', 'A ', 'AN ')):
+                    parties.append(party)
+            elif stripped and not stripped.startswith(('#', '>', '=')):
+                # Non-bullet line in parties section - might be comma separated
+                for party in stripped.replace(' and ', ', ').split(','):
+                    party = party.strip().rstrip('.').replace('**', '')
+                    if party and len(party) > 2 and party not in parties:
+                        parties.append(party)
+    
+    # Deduplicate while preserving order
+    seen = set()
+    unique_parties = []
+    for p in parties:
+        p_lower = p.lower()
+        if p_lower not in seen:
+            seen.add(p_lower)
+            unique_parties.append(p)
+    
+    return unique_parties[:10]  # Max 10 parties
+
+
+def detect_user_in_parties(username: str, parties: List[str]) -> NameDetection:
+    """
+    Check if the logged-in user's name appears in the identified parties.
+    Returns a NameDetection object with match status and warning if needed.
+    """
+    if not username or not parties:
+        return None
+    
+    username_lower = username.lower()
+    
+    # Build name patterns to check (handle common username formats)
+    # e.g., "testuser555" -> ["testuser555", "testuser"]
+    # e.g., "john.smith" -> ["john.smith", "john", "smith"]
+    name_patterns = [username_lower]
+    
+    # Remove numbers
+    without_numbers = ''.join(c for c in username_lower if not c.isdigit())
+    if without_numbers and without_numbers != username_lower:
+        name_patterns.append(without_numbers)
+    
+    # Split by common separators
+    for sep in ['.', '_', '-']:
+        if sep in username_lower:
+            parts = username_lower.split(sep)
+            name_patterns.extend(parts)
+    
+    # Filter out very short patterns
+    name_patterns = [p for p in name_patterns if p and len(p) >= 3]
+    
+    # Check each party for matches
+    matched_party = None
+    for party in parties:
+        party_lower = party.lower()
+        for pattern in name_patterns:
+            if pattern in party_lower:
+                matched_party = party
+                break
+        if matched_party:
             break
     
-    return parties[:5]
+    if matched_party:
+        return NameDetection(
+            user_name_found=True,
+            matched_party=matched_party,
+            suggested_owner=None,
+            warning_message=None
+        )
+    
+    # No match found - find suggested owner (first person, not an org)
+    org_keywords = ['ltd', 'limited', 'plc', 'inc', 'corp', 'company', 
+                    'department', 'council', 'committee', 'hr', 'finance']
+    
+    suggested_owner = None
+    for party in parties:
+        party_lower = party.lower()
+        if not any(kw in party_lower for kw in org_keywords):
+            suggested_owner = party
+            break
+    
+    warning = f"Your name '{username}' was not found in this document."
+    if suggested_owner:
+        warning += f" This document appears to be about {suggested_owner}."
+    warning += " If this belongs to someone else, tell them about Justice Companion!"
+    
+    return NameDetection(
+        user_name_found=False,
+        matched_party=None,
+        suggested_owner=suggested_owner,
+        warning_message=warning
+    )

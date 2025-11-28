@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { Save, Plus, FileText, Copy, Check } from "lucide-react";
+import { Save, Plus, FileText, Copy, Check, AlertTriangle } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
 import { useState } from "react";
@@ -13,6 +13,8 @@ interface Message {
   documentAnalysis?: {
     filename: string;
     suggestedCaseData?: any;
+    documentOwnershipMismatch?: boolean;
+    documentClaimantName?: string;
   };
 }
 
@@ -83,6 +85,25 @@ function MessageItemComponent({
               <span className="text-blue-200">
                 Document Analysis: {message.documentAnalysis.filename}
               </span>
+            </div>
+          )}
+
+          {/* Name Detection Warning */}
+          {message.documentAnalysis?.documentOwnershipMismatch && (
+            <div className="mb-3 p-3 bg-amber-500/20 border border-amber-500/40 rounded-lg">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-amber-200 font-medium">
+                    This document may not be yours
+                  </p>
+                  <p className="text-amber-200/80 text-sm mt-1">
+                    {message.documentAnalysis.documentClaimantName 
+                      ? `This document appears to be about ${message.documentAnalysis.documentClaimantName}. If this belongs to someone else, tell them about Justice Companion!`
+                      : "Your name was not found in this document. Please verify this document belongs to your case."}
+                  </p>
+                </div>
+              </div>
             </div>
           )}
 

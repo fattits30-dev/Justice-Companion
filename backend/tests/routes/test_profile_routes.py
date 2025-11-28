@@ -12,6 +12,7 @@ Tests cover:
 """
 
 import pytest
+import uuid
 from unittest.mock import Mock, AsyncMock
 from fastapi.testclient import TestClient
 

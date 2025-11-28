@@ -202,6 +202,7 @@ async def get_ai_service(
         AI service instance with UnifiedAIService-compatible interface.
     """
     ai_mode = os.getenv("AI_MODE", "stub").lower()
+    print(f"[DEBUG] AI_MODE from env: '{ai_mode}'")
     
     if ai_mode == "service":
         # Use separate ai-service microservice

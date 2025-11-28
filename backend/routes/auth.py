@@ -223,7 +223,7 @@ class ResetPasswordRequest(BaseModel):
         json_schema_extra={
             "example": {
                 "token": "abc123def456...",
-                "new_password": "NewSecurePass123!",
+                "new_password": "PLACEHOLDER_PASSWORD",
             }
         }
     )

@@ -1,0 +1,77 @@
+
+> justice-companion@1.0.0 typecheck
+> tsc --noEmit
+
+src/components/auth/ForgotPasswordScreen.tsx(58,28): error TS2339: Property 'token' does not exist on type '{ success: boolean; message: string; data?: { token: string; expires_in_hours: number; } | undefined; }'.
+src/components/auth/ForgotPasswordScreen.tsx(59,39): error TS2339: Property 'token' does not exist on type '{ success: boolean; message: string; data?: { token: string; expires_in_hours: number; } | undefined; }'.
+src/components/auth/ForgotPasswordScreen.tsx(60,48): error TS2339: Property 'token' does not exist on type '{ success: boolean; message: string; data?: { token: string; expires_in_hours: number; } | undefined; }'.
+src/main.tsx(3,28): error TS2307: Cannot find module 'virtual:pwa-register' or its corresponding type declarations.
+src/main.tsx(15,18): error TS7006: Parameter 'worker' implicitly has an 'any' type.
+src/main.tsx(20,21): error TS7006: Parameter 'error' implicitly has an 'any' type.
+src/repositories/CaseFactsRepository.ts(164,7): error TS2322: Type 'FactCategory' is not assignable to type '"other" | "witness" | "location" | "evidence" | "timeline" | "communication"'.
+  Type '"document"' is not assignable to type '"other" | "witness" | "location" | "evidence" | "timeline" | "communication"'.
+src/repositories/EvidenceRepository.ts(330,9): error TS2322: Type 'string | null' is not assignable to type 'string | undefined'.
+  Type 'null' is not assignable to type 'string | undefined'.
+src/repositories/EvidenceRepository.ts(349,7): error TS2322: Type 'string | null' is not assignable to type 'string | undefined'.
+  Type 'null' is not assignable to type 'string | undefined'.
+src/repositories/EvidenceRepository.ts(556,7): error TS2322: Type 'string | null' is not assignable to type 'string | undefined'.
+  Type 'null' is not assignable to type 'string | undefined'.
+src/services/LegalAPIService.ts(784,11): error TS2353: Object literal may only specify known properties, and 'section' does not exist in type 'LegislationResult'.
+src/services/LegalAPIService.ts(842,11): error TS2353: Object literal may only specify known properties, and 'summary' does not exist in type 'CaseResult'.
+src/services/SessionPersistenceService.test.ts(90,8): error TS2339: Property 'mockReturnValue' does not exist on type 'never'.
+src/utils/exportToPDF.ts(15,22): error TS7016: Could not find a declaration file for module 'html2pdf.js'. 'C:/Users/sava6/ClaudeHome/projects/Justice Companion/node_modules/html2pdf.js/dist/html2pdf.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/html2pdf.js` if it exists or add a new declaration (.d.ts) file containing `declare module 'html2pdf.js';`
+src/views/cases/components/CaseAnalysisDialog.tsx(139,43): error TS2339: Property 'issue' does not exist on type 'LegalIssue'.
+src/views/cases/components/CaseAnalysisDialog.tsx(149,39): error TS2551: Property 'relevantLaw' does not exist on type 'LegalIssue'. Did you mean 'relevantLaws'?
+src/views/cases/components/CaseAnalysisDialog.tsx(150,40): error TS2551: Property 'relevantLaw' does not exist on type 'LegalIssue'. Did you mean 'relevantLaws'?
+src/views/cases/components/CaseAnalysisDialog.tsx(156,47): error TS2551: Property 'relevantLaw' does not exist on type 'LegalIssue'. Did you mean 'relevantLaws'?
+src/views/cases/components/CaseAnalysisDialog.tsx(166,39): error TS2339: Property 'potentialClaims' does not exist on type 'LegalIssue'.
+src/views/cases/components/CaseAnalysisDialog.tsx(167,40): error TS2339: Property 'potentialClaims' does not exist on type 'LegalIssue'.
+src/views/cases/components/CaseAnalysisDialog.tsx(173,47): error TS2339: Property 'potentialClaims' does not exist on type 'LegalIssue'.
+src/views/cases/components/CaseAnalysisDialog.tsx(183,39): error TS2339: Property 'defenses' does not exist on type 'LegalIssue'.
+src/views/cases/components/CaseAnalysisDialog.tsx(184,40): error TS2339: Property 'defenses' does not exist on type 'LegalIssue'.
+src/views/cases/components/CaseAnalysisDialog.tsx(190,47): error TS2339: Property 'defenses' does not exist on type 'LegalIssue'.
+src/views/cases/components/CaseAnalysisDialog.tsx(213,27): error TS2551: Property 'applicableLaw' does not exist on type 'CaseAnalysisResponse'. Did you mean 'applicableLaws'?
+src/views/cases/components/CaseAnalysisDialog.tsx(217,30): error TS2339: Property 'statute' does not exist on type 'ApplicableLaw'.
+src/views/cases/components/CaseAnalysisDialog.tsx(224,69): error TS2339: Property 'summary' does not exist on type 'ApplicableLaw'.
+src/views/cases/components/CaseAnalysisDialog.tsx(231,34): error TS2339: Property 'application' does not exist on type 'ApplicableLaw'.
+src/views/cases/components/CaseAnalysisDialog.tsx(237,34): error TS2339: Property 'jurisdiction' does not exist on type 'ApplicableLaw'.
+src/views/cases/components/CaseAnalysisDialog.tsx(254,27): error TS2339: Property 'recommendedActions' does not exist on type 'CaseAnalysisResponse'.
+src/views/cases/components/CaseAnalysisDialog.tsx(266,43): error TS2339: Property 'action' does not exist on type 'ActionItem'.
+src/views/cases/components/CaseAnalysisDialog.tsx(275,41): error TS2339: Property 'rationale' does not exist on type 'ActionItem'.
+src/views/cases/components/CaseAnalysisDialog.tsx(313,34): error TS2339: Property 'suggestedSources' does not exist on type 'EvidenceGap'.
+src/views/cases/components/CaseAnalysisDialog.tsx(314,35): error TS2339: Property 'suggestedSources' does not exist on type 'EvidenceGap'.
+src/views/cases/components/CaseAnalysisDialog.tsx(320,42): error TS2339: Property 'suggestedSources' does not exist on type 'EvidenceGap'.
+src/views/cases/components/CaseAnalysisDialog.tsx(338,23): error TS2339: Property 'estimatedComplexity' does not exist on type 'CaseAnalysisResponse'.
+src/views/cases/components/CaseAnalysisDialog.tsx(349,33): error TS2339: Property 'estimatedComplexity' does not exist on type 'CaseAnalysisResponse'.
+src/views/cases/components/CaseAnalysisDialog.tsx(358,33): error TS2339: Property 'estimatedComplexity' does not exist on type 'CaseAnalysisResponse'.
+src/views/cases/components/CaseAnalysisDialog.tsx(362,29): error TS2339: Property 'estimatedComplexity' does not exist on type 'CaseAnalysisResponse'.
+src/views/cases/components/CaseAnalysisDialog.tsx(363,30): error TS2339: Property 'estimatedComplexity' does not exist on type 'CaseAnalysisResponse'.
+src/views/cases/components/CaseAnalysisDialog.tsx(369,37): error TS2339: Property 'estimatedComplexity' does not exist on type 'CaseAnalysisResponse'.
+src/views/cases/components/CaseAnalysisDialog.tsx(388,29): error TS2339: Property 'reasoning' does not exist on type 'CaseAnalysisResponse'.
+src/views/cases/components/CaseAnalysisDialog.tsx(441,33): error TS2339: Property 'disclaimer' does not exist on type 'CaseAnalysisResponse'.
+src/views/documents/components/EvidenceAnalysisDialog.tsx(15,3): error TS2305: Module '"../../../types/ai-analysis.ts"' has no exported member 'EvidenceImportance'.
+src/views/documents/components/EvidenceAnalysisDialog.tsx(135,82): error TS2551: Property 'strength' does not exist on type 'EvidenceAnalysisResponse'. Did you mean 'strengths'?
+src/views/documents/components/EvidenceAnalysisDialog.tsx(137,33): error TS2551: Property 'strength' does not exist on type 'EvidenceAnalysisResponse'. Did you mean 'strengths'?
+src/views/documents/components/EvidenceAnalysisDialog.tsx(153,64): error TS2339: Property 'explanation' does not exist on type 'EvidenceAnalysisResponse'.
+src/views/documents/components/EvidenceAnalysisDialog.tsx(183,32): error TS2339: Property 'suggestedSources' does not exist on type 'EvidenceGap'.
+src/views/documents/components/EvidenceAnalysisDialog.tsx(184,33): error TS2339: Property 'suggestedSources' does not exist on type 'EvidenceGap'.
+src/views/documents/components/EvidenceAnalysisDialog.tsx(193,44): error TS2339: Property 'suggestedSources' does not exist on type 'EvidenceGap'.
+src/views/documents/components/EvidenceAnalysisDialog.tsx(237,32): error TS2339: Property 'suggestedSources' does not exist on type 'EvidenceGap'.
+src/views/documents/components/EvidenceAnalysisDialog.tsx(238,33): error TS2339: Property 'suggestedSources' does not exist on type 'EvidenceGap'.
+src/views/documents/components/EvidenceAnalysisDialog.tsx(247,44): error TS2339: Property 'suggestedSources' does not exist on type 'EvidenceGap'.
+src/views/documents/components/EvidenceAnalysisDialog.tsx(291,32): error TS2339: Property 'suggestedSources' does not exist on type 'EvidenceGap'.
+src/views/documents/components/EvidenceAnalysisDialog.tsx(292,33): error TS2339: Property 'suggestedSources' does not exist on type 'EvidenceGap'.
+src/views/documents/components/EvidenceAnalysisDialog.tsx(301,44): error TS2339: Property 'suggestedSources' does not exist on type 'EvidenceGap'.
+src/views/documents/components/EvidenceAnalysisDialog.tsx(320,23): error TS2339: Property 'suggestions' does not exist on type 'EvidenceAnalysisResponse'.
+src/views/documents/components/EvidenceAnalysisDialog.tsx(320,47): error TS2339: Property 'suggestions' does not exist on type 'EvidenceAnalysisResponse'.
+src/views/documents/components/EvidenceAnalysisDialog.tsx(328,31): error TS2339: Property 'suggestions' does not exist on type 'EvidenceAnalysisResponse'.
+src/views/documents/components/EvidenceAnalysisDialog.tsx(350,27): error TS2339: Property 'disclaimer' does not exist on type 'EvidenceAnalysisResponse'.
+src/views/settings/AIServiceSettings.tsx(145,40): error TS2341: Property 'post' is private and only accessible within class 'ApiClient'.
+src/views/settings/AIServiceSettings.tsx(149,11): error TS18046: 'response' is of type 'unknown'.
+src/views/settings/AIServiceSettings.tsx(156,23): error TS18046: 'response' is of type 'unknown'.
+src/views/settings/AIServiceSettings.tsx(227,24): error TS2322: Type '"error"' is not assignable to type '"info" | "success" | "primary" | "secondary" | "danger" | "warning" | "neutral" | undefined'.
+src/views/settings/ProfileSettings.tsx(71,29): error TS2352: Conversion of type 'ApiResponse<any>' to type '{ id: number; name: string; email?: string | null | undefined; firstName?: string | null | undefined; lastName?: string | null | undefined; phone?: string | null | undefined; avatarUrl?: string | ... 1 more ... | undefined; createdAt?: string | undefined; updatedAt?: string | undefined; }' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Type 'ApiSuccessResponse<any>' is missing the following properties from type '{ id: number; name: string; email?: string | null | undefined; firstName?: string | null | undefined; lastName?: string | null | undefined; phone?: string | null | undefined; avatarUrl?: string | ... 1 more ... | undefined; createdAt?: string | undefined; updatedAt?: string | undefined; }': id, name
+src/views/settings/ProfileSettings.tsx(158,29): error TS2352: Conversion of type 'ApiResponse<any>' to type '{ id: number; name: string; email?: string | null | undefined; firstName?: string | null | undefined; lastName?: string | null | undefined; phone?: string | null | undefined; }' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Type 'ApiSuccessResponse<any>' is missing the following properties from type '{ id: number; name: string; email?: string | null | undefined; firstName?: string | null | undefined; lastName?: string | null | undefined; phone?: string | null | undefined; }': id, name

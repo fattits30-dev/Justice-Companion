@@ -2,7 +2,17 @@
 from fastapi import APIRouter
 import httpx
 
+from backend.services.security.encryption import EncryptionService
+
 router = APIRouter(prefix="/ai", tags=["AI"])
+
+
+# Dependency injection functions
+
+def get_encryption_service() -> EncryptionService:
+    """Get encryption service instance."""
+    return EncryptionService()
+
 
 @router.get("/health")
 async def ai_health():

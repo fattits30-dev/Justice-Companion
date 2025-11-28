@@ -2,7 +2,7 @@ EMAIL CORRESPONDENCE - BRIGHTSTONE TECHNOLOGIES LTD
 Export Date: 15th September 2024
 
 ================================================================================
-FROM: Sarah Mitchell <s.mitchell@brightstonetech.co.uk>
+FROM: testuser555 <testuser555@brightstonetech.co.uk>
 TO: Jennifer Holmes <j.holmes@brightstonetech.co.uk>
 DATE: 5th September 2024, 09:23
 SUBJECT: RE: Disciplinary Investigation - Urgent Response Required
@@ -26,13 +26,13 @@ Regarding misuse of equipment:
 I request to see all evidence being used against me and to have a fair hearing with union representation present.
 
 Kind regards,
-Sarah Mitchell
+testuser555
 Senior Software Developer
 Employee ID: BT-4521
 
 ================================================================================
 FROM: Jennifer Holmes <j.holmes@brightstonetech.co.uk>
-TO: Sarah Mitchell <s.mitchell@brightstonetech.co.uk>
+TO: testuser555 <testuser555@brightstonetech.co.uk>
 DATE: 3rd September 2024, 14:45
 SUBJECT: Disciplinary Investigation - Urgent Response Required
 
@@ -59,7 +59,7 @@ Direct Line: 0161 555 7890
 
 ================================================================================
 FROM: Robert Chen <r.chen@brightstonetech.co.uk>
-TO: Sarah Mitchell <s.mitchell@brightstonetech.co.uk>
+TO: testuser555 <testuser555@brightstonetech.co.uk>
 DATE: 28th August 2024, 16:02
 SUBJECT: RE: Expense Claim Query
 
@@ -73,7 +73,7 @@ Best,
 Robert
 
 ================================================================================
-FROM: Sarah Mitchell <s.mitchell@brightstonetech.co.uk>
+FROM: testuser555 <testuser555@brightstonetech.co.uk>
 TO: Robert Chen <r.chen@brightstonetech.co.uk>
 DATE: 28th August 2024, 15:34
 SUBJECT: Expense Claim Query
@@ -92,15 +92,15 @@ Can you confirm you remember approving these? The claims were:
 Something doesn't feel right about this.
 
 Thanks,
-Sarah
+testuser555
 
 ================================================================================
 FROM: Finance Department <finance@brightstonetech.co.uk>
-TO: Sarah Mitchell <s.mitchell@brightstonetech.co.uk>
+TO: testuser555 <testuser555@brightstonetech.co.uk>
 DATE: 28th August 2024, 11:15
 SUBJECT: Expense Claim Audit - Action Required
 
-Dear Ms Mitchell,
+Dear testuser555,
 
 As part of our quarterly compliance audit, we are reviewing expense claims submitted between January and July 2024.
 
@@ -112,4 +112,4 @@ Regards,
 Finance Department
 Brightstone Technologies Ltd
 
-Attachment: Mitchell_Expense_Audit_Aug2024.xlsx
+Attachment: testuser555_Expense_Audit_Aug2024.xlsx

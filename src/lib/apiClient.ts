@@ -165,7 +165,9 @@ export class ApiClient {
     }
 
     try {
+      console.log(`[API] ${method} ${url.toString()}`);
       const response = await fetch(url.toString(), requestOptions);
+      console.log(`[API] Response status: ${response.status}, content-type: ${response.headers.get('content-type')}`);
 
       // Parse response body
       const contentType = response.headers.get("content-type");

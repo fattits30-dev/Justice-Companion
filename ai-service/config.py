@@ -4,21 +4,25 @@ AI Service Configuration
 Environment-based configuration for the AI service.
 """
 
-import os
 from pydantic_settings import BaseSettings
 from typing import Optional
+from pathlib import Path
+
+# Get the directory where this config file lives
+CONFIG_DIR = Path(__file__).parent.resolve()
 
 
 class Settings(BaseSettings):
     """Application settings loaded from environment"""
     
-    # Hugging Face
-    HF_API_TOKEN: Optional[str] = os.getenv("HF_API_TOKEN")
+    # Hugging Face - loaded from .env by pydantic_settings
+    HF_API_TOKEN: Optional[str] = None
     
-    # Model configurations - Using HF Inference API compatible models
-    MODEL_CHAT_PRIMARY: str = "mistralai/Mistral-7B-Instruct-v0.2"
-    MODEL_CHAT_FAST: str = "HuggingFaceH4/zephyr-7b-beta"
-    MODEL_CHAT_COMPLEX: str = "mistralai/Mixtral-8x7B-Instruct-v0.1"
+    # Model configurations - HuggingFace Inference Providers (Pro tier)
+    # These models are available via providers like novita, together, cerebras, etc.
+    MODEL_CHAT_PRIMARY: str = "meta-llama/Llama-3.3-70B-Instruct"  # Fast & capable
+    MODEL_CHAT_FAST: str = "Qwen/Qwen3-32B"  # Smaller, quicker responses
+    MODEL_CHAT_COMPLEX: str = "Qwen/Qwen2.5-72B-Instruct"  # Deep reasoning
     
     MODEL_VISION_OCR: str = "Qwen/Qwen2.5-VL-7B-Instruct"
     MODEL_OCR_PRINTED: str = "microsoft/trocr-large-printed"
@@ -42,7 +46,7 @@ class Settings(BaseSettings):
     CHUNK_OVERLAP: int = 50
     
     class Config:
-        env_file = ".env"
+        env_file = str(CONFIG_DIR / ".env")  # Absolute path to .env
         env_file_encoding = "utf-8"
 
 

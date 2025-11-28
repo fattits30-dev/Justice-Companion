@@ -27,20 +27,26 @@ from fastapi import HTTPException
 from backend.models.case import Case, CaseType, CaseStatus
 from backend.services.security.encryption import EncryptionService, EncryptedData
 
+
 class CaseNotFoundError(Exception):
     """Exception raised when case is not found."""
+
 
 class UnauthorizedError(Exception):
     """Exception raised when user doesn't own the case."""
 
+
 class DatabaseError(Exception):
     """Exception raised for database operation failures."""
+
 
 class ValidationError(Exception):
     """Exception raised for invalid input data."""
 
+
 # Pydantic models for input/output
 from pydantic import BaseModel, Field, ConfigDict
+
 
 class CreateCaseInput(BaseModel):
     """Input model for creating a new case."""
@@ -51,15 +57,19 @@ class CreateCaseInput(BaseModel):
 
     model_config = ConfigDict(use_enum_values=True)
 
+
 class UpdateCaseInput(BaseModel):
     """Input model for updating an existing case."""
 
-    title: Optional[str] = Field(None, min_length=1, max_length=255, description="Case title")
+    title: Optional[str] = Field(
+        None, min_length=1, max_length=255, description="Case title"
+    )
     description: Optional[str] = Field(None, description="Case description")
     case_type: Optional[CaseType] = Field(None, description="Type of legal case")
     status: Optional[CaseStatus] = Field(None, description="Case status")
 
     model_config = ConfigDict(use_enum_values=True)
+
 
 class CaseResponse(BaseModel):
     """Response model for case data."""
@@ -70,20 +80,28 @@ class CaseResponse(BaseModel):
     case_type: str
     status: str
     user_id: Optional[int]
-    created_at: str
-    updated_at: str
+    created_at: datetime
+    updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
 
 class SearchFilters(BaseModel):
     """Search filters for case queries."""
 
-    case_status: Optional[List[CaseStatus]] = Field(None, description="Filter by status")
+    case_status: Optional[List[CaseStatus]] = Field(
+        None, description="Filter by status"
+    )
     case_type: Optional[List[CaseType]] = Field(None, description="Filter by case type")
-    date_from: Optional[datetime] = Field(None, description="Filter by creation date (from)")
-    date_to: Optional[datetime] = Field(None, description="Filter by creation date (to)")
+    date_from: Optional[datetime] = Field(
+        None, description="Filter by creation date (from)"
+    )
+    date_to: Optional[datetime] = Field(
+        None, description="Filter by creation date (to)"
+    )
 
     model_config = ConfigDict(use_enum_values=True)
+
 
 class CaseService:
     """
@@ -93,7 +111,9 @@ class CaseService:
     All operations verify user ownership to prevent unauthorized access.
     """
 
-    def __init__(self, db: Session, encryption_service: EncryptionService, audit_logger=None):
+    def __init__(
+        self, db: Session, encryption_service: EncryptionService, audit_logger=None
+    ):
         """
         Initialize case service.
 
@@ -195,19 +215,19 @@ class CaseService:
         """Log audit event if audit logger is configured."""
         if self.audit_logger:
             self.audit_logger.log(
-                {
-                    "event_type": event_type,
-                    "user_id": str(user_id) if user_id else None,
-                    "resource_type": "case",
-                    "resource_id": resource_id,
-                    "action": action,
-                    "success": success,
-                    "details": details or {},
-                    "error_message": error_message,
-                }
+                event_type=event_type,
+                user_id=str(user_id) if user_id else None,
+                resource_type="case",
+                resource_id=resource_id,
+                action=action,
+                success=success,
+                details=details or {},
+                error_message=error_message,
             )
 
-    async def create_case(self, input_data: CreateCaseInput, user_id: int) -> CaseResponse:
+    async def create_case(
+        self, input_data: CreateCaseInput, user_id: int
+    ) -> CaseResponse:
         """
         Create a new case for the user.
 
@@ -447,7 +467,9 @@ class CaseService:
             HTTPException: 403 if user doesn't own the case
         """
         return await self.update_case(
-            case_id=case_id, user_id=user_id, input_data=UpdateCaseInput(status=CaseStatus.CLOSED)
+            case_id=case_id,
+            user_id=user_id,
+            input_data=UpdateCaseInput(status=CaseStatus.CLOSED),
         )
 
     async def delete_case(self, case_id: int, user_id: int) -> bool:
@@ -502,7 +524,10 @@ class CaseService:
             raise DatabaseError(f"Failed to delete case: {str(error)}")
 
     async def search_cases(
-        self, user_id: int, query: Optional[str] = None, filters: Optional[SearchFilters] = None
+        self,
+        user_id: int,
+        query: Optional[str] = None,
+        filters: Optional[SearchFilters] = None,
     ) -> List[CaseResponse]:
         """
         Search user's cases by query string and filters.
@@ -549,7 +574,10 @@ class CaseService:
 
             # Execute query
             cases = (
-                self.db.query(Case).filter(and_(*conditions)).order_by(Case.created_at.desc()).all()
+                self.db.query(Case)
+                .filter(and_(*conditions))
+                .order_by(Case.created_at.desc())
+                .all()
             )
 
             # Decrypt descriptions
@@ -586,7 +614,9 @@ class CaseService:
 
             for case in cases:
                 status_key = (
-                    case.status.value if isinstance(case.status, CaseStatus) else case.status
+                    case.status.value
+                    if isinstance(case.status, CaseStatus)
+                    else case.status
                 )
                 if status_key in status_counts:
                     status_counts[status_key] += 1

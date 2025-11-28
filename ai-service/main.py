@@ -10,11 +10,13 @@ Dependencies: Hugging Face Inference API (Pro tier)
 """
 
 import os
+import traceback
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
-from routes import chat, vision, analysis, drafting, research
+from routes import chat, vision, analysis, drafting, research, config
 from providers.huggingface.client import HuggingFaceClient
 from config import settings
 
@@ -69,12 +71,31 @@ async def health_check():
     }
 
 
+# Global exception handler - catch ALL errors and log them
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """Catch all unhandled exceptions and log the full traceback"""
+    print(f"\n{'='*60}", flush=True)
+    print(f"[AI-SERVICE ERROR] Unhandled exception on {request.method} {request.url}", flush=True)
+    print(f"Exception type: {type(exc).__name__}", flush=True)
+    print(f"Exception message: {str(exc)}", flush=True)
+    print(f"Full traceback:", flush=True)
+    traceback.print_exc()
+    print(f"{'='*60}\n", flush=True)
+    
+    return JSONResponse(
+        status_code=500,
+        content={"detail": f"Internal server error: {str(exc)}"}
+    )
+
+
 # Include routers
 app.include_router(chat.router, prefix="/chat", tags=["Chat"])
 app.include_router(vision.router, prefix="/vision", tags=["Vision/OCR"])
 app.include_router(analysis.router, prefix="/analysis", tags=["Analysis"])
 app.include_router(drafting.router, prefix="/drafting", tags=["Drafting"])
 app.include_router(research.router, prefix="/research", tags=["Legal Research"])
+app.include_router(config.router, prefix="/config", tags=["Configuration"])
 
 
 if __name__ == "__main__":

@@ -38,14 +38,22 @@ from backend.models.base import get_db
 from backend.routes.auth import get_current_user, get_session_manager
 from backend.services.audit_logger import AuditLogger
 from backend.services.auth.service import AuthenticationService
-from backend.services.bulk_operation_service import (BulkOperationOptions,
-                                                     BulkOperationResult,
-                                                     BulkOperationService,
-                                                     CaseUpdate)
-from backend.services.case_service import (CaseNotFoundError, CaseResponse,
-                                           CaseService, CaseStatus, CaseType,
-                                           CreateCaseInput, SearchFilters,
-                                           UpdateCaseInput)
+from backend.services.bulk_operation_service import (
+    BulkOperationOptions,
+    BulkOperationResult,
+    BulkOperationService,
+    CaseUpdate,
+)
+from backend.services.case_service import (
+    CaseNotFoundError,
+    CaseResponse,
+    CaseService,
+    CaseStatus,
+    CaseType,
+    CreateCaseInput,
+    SearchFilters,
+    UpdateCaseInput,
+)
 from backend.services.security.encryption import EncryptionService
 from backend.services.auth.session_manager import SessionManager
 
@@ -54,8 +62,16 @@ router = APIRouter(prefix="/cases", tags=["cases"])
 # ===== ENUMS (for backward compatibility with frontend) =====
 VALID_CASE_TYPES = ["employment", "housing", "consumer", "family", "debt", "other"]
 VALID_CASE_STATUSES = ["active", "closed", "pending"]
-VALID_FACT_CATEGORIES = ["timeline", "evidence", "witness", "location", "communication", "other"]
+VALID_FACT_CATEGORIES = [
+    "timeline",
+    "evidence",
+    "witness",
+    "location",
+    "communication",
+    "other",
+]
 VALID_IMPORTANCE_LEVELS = ["low", "medium", "high", "critical"]
+
 
 def _require_case_type(value: str) -> str:
     if value not in VALID_CASE_TYPES:
@@ -64,12 +80,14 @@ def _require_case_type(value: str) -> str:
         )
     return value
 
+
 def _validate_case_type(value: Optional[str]) -> Optional[str]:
     if value and value not in VALID_CASE_TYPES:
         raise ValueError(
             f"Please select a valid case type: {', '.join(VALID_CASE_TYPES)}"
         )
     return value
+
 
 def _require_case_status(value: str) -> str:
     if value not in VALID_CASE_STATUSES:
@@ -78,12 +96,14 @@ def _require_case_status(value: str) -> str:
         )
     return value
 
+
 def _validate_case_status(value: Optional[str]) -> Optional[str]:
     if value and value not in VALID_CASE_STATUSES:
         raise ValueError(
             f"Please select a valid status: {', '.join(VALID_CASE_STATUSES)}"
         )
     return value
+
 
 def _normalize_case_number(value: Optional[str]) -> Optional[str]:
     if not value:
@@ -95,14 +115,17 @@ def _normalize_case_number(value: Optional[str]) -> Optional[str]:
         raise ValueError("Case number contains invalid characters")
     return trimmed
 
+
 def _strip_optional(value: Optional[str]) -> Optional[str]:
     return value.strip() if value else None
+
 
 def _strip_required(value: str) -> str:
     stripped = value.strip()
     if not stripped:
         raise ValueError("Title cannot be empty")
     return stripped
+
 
 def _validate_optional_date(value: Optional[str]) -> Optional[str]:
     if not value:
@@ -113,12 +136,12 @@ def _validate_optional_date(value: Optional[str]) -> Optional[str]:
         raise ValueError("Invalid date format (use YYYY-MM-DD)") from exc
     return value
 
+
 def _require_fact_category(value: str) -> str:
     if value not in VALID_FACT_CATEGORIES:
-        raise ValueError(
-            f"Invalid fact category: {', '.join(VALID_FACT_CATEGORIES)}"
-        )
+        raise ValueError(f"Invalid fact category: {', '.join(VALID_FACT_CATEGORIES)}")
     return value
+
 
 def _require_fact_importance(value: str) -> str:
     if value not in VALID_IMPORTANCE_LEVELS:
@@ -127,36 +150,46 @@ def _require_fact_importance(value: str) -> str:
         )
     return value
 
+
 def _normalize_fact_content(value: str) -> str:
     stripped = value.strip()
     if not stripped:
         raise ValueError("Fact content cannot be empty")
     return stripped
 
+
 # ===== PYDANTIC REQUEST MODELS (for legacy endpoints) =====
 class CreateCaseRequest(BaseModel):
     """Request model for creating a new case (legacy format)."""
 
     title: str = Field(..., min_length=1, max_length=200, description="Case title")
-    description: Optional[str] = Field(None, max_length=10000, description="Case description")
+    description: Optional[str] = Field(
+        None, max_length=10000, description="Case description"
+    )
     caseType: str = Field(..., description="Type of legal case")
     status: str = Field(default="active", description="Case status")
-    caseNumber: Optional[str] = Field(None, max_length=50, description="Court case number")
+    caseNumber: Optional[str] = Field(
+        None, max_length=50, description="Court case number"
+    )
     courtName: Optional[str] = Field(None, max_length=200, description="Court name")
     judge: Optional[str] = Field(None, max_length=100, description="Judge name")
-    opposingParty: Optional[str] = Field(None, max_length=200, description="Opposing party name")
+    opposingParty: Optional[str] = Field(
+        None, max_length=200, description="Opposing party name"
+    )
     opposingCounsel: Optional[str] = Field(
         None,
         max_length=200,
         description="Opposing counsel name",
     )
-    nextHearingDate: Optional[str] = Field(None, description="Next hearing date (YYYY-MM-DD)")
-    filingDeadline: Optional[str] = Field(None, description="Filing deadline (YYYY-MM-DD)")
+    nextHearingDate: Optional[str] = Field(
+        None, description="Next hearing date (YYYY-MM-DD)"
+    )
+    filingDeadline: Optional[str] = Field(
+        None, description="Filing deadline (YYYY-MM-DD)"
+    )
     aiMetadata: Optional[Dict[str, Any]] = Field(
         default=None,
-        description=(
-            "Optional metadata describing AI-assisted extraction context"
-        ),
+        description=("Optional metadata describing AI-assisted extraction context"),
     )
 
     @model_validator(mode="after")
@@ -174,6 +207,7 @@ class CreateCaseRequest(BaseModel):
         self.nextHearingDate = _validate_optional_date(self.nextHearingDate)
         self.filingDeadline = _validate_optional_date(self.filingDeadline)
         return self
+
 
 class UpdateCaseRequest(BaseModel):
     """Request model for updating an existing case (legacy format)."""
@@ -206,11 +240,14 @@ class UpdateCaseRequest(BaseModel):
         self.filingDeadline = _validate_optional_date(self.filingDeadline)
         return self
 
+
 class CreateCaseFactRequest(BaseModel):
     """Request model for creating a case fact."""
 
     caseId: int = Field(..., gt=0, description="Case ID")
-    factContent: str = Field(..., min_length=1, max_length=10000, description="Fact content")
+    factContent: str = Field(
+        ..., min_length=1, max_length=10000, description="Fact content"
+    )
     factCategory: str = Field(..., description="Fact category")
     importance: str = Field(default="medium", description="Importance level")
 
@@ -222,23 +259,39 @@ class CreateCaseFactRequest(BaseModel):
         self.factContent = _normalize_fact_content(self.factContent)
         return self
 
+
 class BulkDeleteRequest(BaseModel):
     """Request model for bulk delete operation."""
 
-    case_ids: List[int] = Field(..., min_length=1, description="List of case IDs to delete")
-    fail_fast: bool = Field(default=True, description="Stop on first error and rollback")
+    case_ids: List[int] = Field(
+        ..., min_length=1, description="List of case IDs to delete"
+    )
+    fail_fast: bool = Field(
+        default=True, description="Stop on first error and rollback"
+    )
+
 
 class BulkUpdateRequest(BaseModel):
     """Request model for bulk update operation."""
 
-    updates: List[CaseUpdate] = Field(..., min_length=1, description="List of case updates")
-    fail_fast: bool = Field(default=True, description="Stop on first error and rollback")
+    updates: List[CaseUpdate] = Field(
+        ..., min_length=1, description="List of case updates"
+    )
+    fail_fast: bool = Field(
+        default=True, description="Stop on first error and rollback"
+    )
+
 
 class BulkArchiveRequest(BaseModel):
     """Request model for bulk archive operation."""
 
-    case_ids: List[int] = Field(..., min_length=1, description="List of case IDs to archive")
-    fail_fast: bool = Field(default=True, description="Stop on first error and rollback")
+    case_ids: List[int] = Field(
+        ..., min_length=1, description="List of case IDs to archive"
+    )
+    fail_fast: bool = Field(
+        default=True, description="Stop on first error and rollback"
+    )
+
 
 # ===== PYDANTIC RESPONSE MODELS (for legacy endpoints) =====
 class LegacyCaseResponse(BaseModel):
@@ -257,11 +310,12 @@ class LegacyCaseResponse(BaseModel):
     opposingCounsel: Optional[str] = None
     nextHearingDate: Optional[str] = None
     filingDeadline: Optional[str] = None
-    createdAt: str
-    updatedAt: str
+    createdAt: datetime
+    updatedAt: datetime
 
     class Config:
         from_attributes = True
+
 
 class CaseFactResponse(BaseModel):
     """Response model for case fact data."""
@@ -271,17 +325,19 @@ class CaseFactResponse(BaseModel):
     factContent: str
     factCategory: str
     importance: str
-    createdAt: str
-    updatedAt: str
+    createdAt: datetime
+    updatedAt: datetime
 
     class Config:
         from_attributes = True
+
 
 class DeleteCaseResponse(BaseModel):
     """Response model for case deletion."""
 
     deleted: bool
     id: int
+
 
 class PaginationMetadata(BaseModel):
     """Pagination metadata for list responses."""
@@ -291,16 +347,19 @@ class PaginationMetadata(BaseModel):
     page_size: int
     total_pages: int
 
+
 class CaseListResponse(BaseModel):
     """Response model for case list with pagination."""
 
     cases: List[LegacyCaseResponse]
     pagination: PaginationMetadata
 
+
 # ===== DEPENDENCIES =====
 def get_auth_service(db: Session = Depends(get_db)) -> AuthenticationService:
     """Get authentication service instance."""
     return AuthenticationService(db=db)
+
 
 def get_encryption_service() -> EncryptionService:
     """
@@ -320,9 +379,11 @@ def get_encryption_service() -> EncryptionService:
 
     return EncryptionService(key_base64)
 
+
 def get_audit_logger(db: Session = Depends(get_db)) -> AuditLogger:
     """Get audit logger instance."""
     return AuditLogger(db)
+
 
 def get_case_service(
     db: Session = Depends(get_db),
@@ -330,13 +391,17 @@ def get_case_service(
     audit_logger: AuditLogger = Depends(get_audit_logger),
 ) -> CaseService:
     """Get case service instance with dependencies."""
-    return CaseService(db=db, encryption_service=encryption_service, audit_logger=audit_logger)
+    return CaseService(
+        db=db, encryption_service=encryption_service, audit_logger=audit_logger
+    )
+
 
 def get_bulk_operation_service(
     db: Session = Depends(get_db), audit_logger: AuditLogger = Depends(get_audit_logger)
 ) -> BulkOperationService:
     """Get bulk operation service instance with dependencies."""
     return BulkOperationService(db=db, audit_logger=audit_logger)
+
 
 async def resolve_current_user_id(
     request: Request,
@@ -360,6 +425,7 @@ async def resolve_current_user_id(
         return await result  # type: ignore[return-value]
     return result  # type: ignore[return-value]
 
+
 async def resolve_case_service(
     db: Session = Depends(get_db),
     encryption_service: EncryptionService = Depends(get_encryption_service),
@@ -382,6 +448,7 @@ async def resolve_case_service(
         return await result  # type: ignore[return-value]
     return result  # type: ignore[return-value]
 
+
 async def resolve_bulk_operation_service(
     db: Session = Depends(get_db),
     audit_logger: AuditLogger = Depends(get_audit_logger),
@@ -400,6 +467,7 @@ async def resolve_bulk_operation_service(
     if inspect.isawaitable(result):
         return await result  # type: ignore[return-value]
     return result  # type: ignore[return-value]
+
 
 # ===== HELPER FUNCTIONS =====
 def convert_to_legacy_format(case: CaseResponse) -> LegacyCaseResponse:
@@ -430,7 +498,9 @@ def convert_to_legacy_format(case: CaseResponse) -> LegacyCaseResponse:
         updatedAt=case.updated_at,
     )
 
+
 # ===== ROUTES =====
+
 
 @router.post("", response_model=LegacyCaseResponse, status_code=status.HTTP_201_CREATED)
 async def create_case(
@@ -491,20 +561,29 @@ async def create_case(
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Failed to create case: {str(exc)}") from exc
+        raise HTTPException(
+            status_code=500, detail=f"Failed to create case: {str(exc)}"
+        ) from exc
+
 
 @router.get("", response_model=List[LegacyCaseResponse])
 async def list_cases(
     user_id: int = Depends(resolve_current_user_id),
     case_service: CaseService = Depends(resolve_case_service),
-    status_filter: Optional[str] = Query(None, alias="status", description="Filter by case status"),
+    status_filter: Optional[str] = Query(
+        None, alias="status", description="Filter by case status"
+    ),
     case_type_filter: Optional[str] = Query(
         None, alias="caseType", description="Filter by case type"
     ),
-    search_query: Optional[str] = Query(None, alias="q", description="Search cases by title"),
+    search_query: Optional[str] = Query(
+        None, alias="q", description="Search cases by title"
+    ),
     page: int = Query(1, ge=1, description="Page number (1-indexed)"),
     page_size: int = Query(50, ge=1, le=100, description="Items per page (max 100)"),
-    sort_by: str = Query("updated_at", description="Sort field (created_at, updated_at, title)"),
+    sort_by: str = Query(
+        "updated_at", description="Sort field (created_at, updated_at, title)"
+    ),
     sort_order: str = Query("desc", description="Sort order (asc, desc)"),
 ):
     """
@@ -571,7 +650,10 @@ async def list_cases(
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Failed to list cases: {str(exc)}") from exc
+        raise HTTPException(
+            status_code=500, detail=f"Failed to list cases: {str(exc)}"
+        ) from exc
+
 
 @router.get("/{case_id}", response_model=LegacyCaseResponse)
 async def get_case(
@@ -605,10 +687,15 @@ async def get_case(
     except HTTPException as e:
         # Re-raise 403 from service layer as 404 (don't leak existence)
         if e.status_code == 403:
-            raise HTTPException(status_code=404, detail=f"Case with ID {case_id} not found")
+            raise HTTPException(
+                status_code=404, detail=f"Case with ID {case_id} not found"
+            )
         raise
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Failed to get case: {str(exc)}") from exc
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get case: {str(exc)}"
+        ) from exc
+
 
 @router.put("/{case_id}", response_model=LegacyCaseResponse)
 async def update_case(
@@ -666,18 +753,27 @@ async def update_case(
         return convert_to_legacy_format(case_response)
 
     except CaseNotFoundError as exc:
-        raise HTTPException(status_code=404, detail=f"Case with ID {case_id} not found") from exc
+        raise HTTPException(
+            status_code=404, detail=f"Case with ID {case_id} not found"
+        ) from exc
     except HTTPException as e:
         # Re-raise 403 from service layer as 404 (don't leak existence)
         if e.status_code == 403:
-            raise HTTPException(status_code=404, detail=f"Case with ID {case_id} not found")
+            raise HTTPException(
+                status_code=404, detail=f"Case with ID {case_id} not found"
+            )
         raise
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Failed to update case: {str(exc)}") from exc
+        raise HTTPException(
+            status_code=500, detail=f"Failed to update case: {str(exc)}"
+        ) from exc
 
-@router.delete("/{case_id}", response_model=DeleteCaseResponse, status_code=status.HTTP_200_OK)
+
+@router.delete(
+    "/{case_id}", response_model=DeleteCaseResponse, status_code=status.HTTP_200_OK
+)
 async def delete_case(
     case_id: int,
     user_id: int = Depends(resolve_current_user_id),
@@ -708,16 +804,24 @@ async def delete_case(
             raise HTTPException(status_code=500, detail="Failed to delete case")
 
     except CaseNotFoundError as exc:
-        raise HTTPException(status_code=404, detail=f"Case with ID {case_id} not found") from exc
+        raise HTTPException(
+            status_code=404, detail=f"Case with ID {case_id} not found"
+        ) from exc
     except HTTPException as e:
         # Re-raise 403 from service layer as 404 (don't leak existence)
         if e.status_code == 403:
-            raise HTTPException(status_code=404, detail=f"Case with ID {case_id} not found")
+            raise HTTPException(
+                status_code=404, detail=f"Case with ID {case_id} not found"
+            )
         raise
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Failed to delete case: {str(exc)}") from exc
+        raise HTTPException(
+            status_code=500, detail=f"Failed to delete case: {str(exc)}"
+        ) from exc
+
 
 # ===== BULK OPERATIONS =====
+
 
 @router.post("/bulk/delete", response_model=BulkOperationResult)
 async def bulk_delete_cases(
@@ -758,7 +862,10 @@ async def bulk_delete_cases(
     except HTTPException:
         raise
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Bulk delete failed: {str(exc)}") from exc
+        raise HTTPException(
+            status_code=500, detail=f"Bulk delete failed: {str(exc)}"
+        ) from exc
+
 
 @router.post("/bulk/update", response_model=BulkOperationResult)
 async def bulk_update_cases(
@@ -802,7 +909,10 @@ async def bulk_update_cases(
     except HTTPException:
         raise
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Bulk update failed: {str(exc)}") from exc
+        raise HTTPException(
+            status_code=500, detail=f"Bulk update failed: {str(exc)}"
+        ) from exc
+
 
 @router.post("/bulk/archive", response_model=BulkOperationResult)
 async def bulk_archive_cases(
@@ -843,12 +953,18 @@ async def bulk_archive_cases(
     except HTTPException:
         raise
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Bulk archive failed: {str(exc)}") from exc
+        raise HTTPException(
+            status_code=500, detail=f"Bulk archive failed: {str(exc)}"
+        ) from exc
+
 
 # ===== CASE FACTS (Legacy endpoints - kept for backward compatibility) =====
 
+
 @router.post(
-    "/{case_id}/facts", response_model=CaseFactResponse, status_code=status.HTTP_201_CREATED
+    "/{case_id}/facts",
+    response_model=CaseFactResponse,
+    status_code=status.HTTP_201_CREATED,
 )
 async def create_case_fact(
     case_id: int,
@@ -880,10 +996,14 @@ async def create_case_fact(
         try:
             await case_service.get_case_by_id(case_id, user_id)
         except CaseNotFoundError as exc:
-            raise HTTPException(status_code=404, detail="Case not found or unauthorized") from exc
+            raise HTTPException(
+                status_code=404, detail="Case not found or unauthorized"
+            ) from exc
         except HTTPException as e:
             if e.status_code == 403:
-                raise HTTPException(status_code=404, detail="Case not found or unauthorized")
+                raise HTTPException(
+                    status_code=404, detail="Case not found or unauthorized"
+                )
             raise
 
         # Validate that request.caseId matches path parameter
@@ -966,7 +1086,10 @@ async def create_case_fact(
         raise
     except Exception as exc:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Failed to create case fact: {str(exc)}") from exc
+        raise HTTPException(
+            status_code=500, detail=f"Failed to create case fact: {str(exc)}"
+        ) from exc
+
 
 @router.get("/{case_id}/facts", response_model=List[CaseFactResponse])
 async def list_case_facts(
@@ -992,10 +1115,14 @@ async def list_case_facts(
         try:
             await case_service.get_case_by_id(case_id, user_id)
         except CaseNotFoundError as exc:
-            raise HTTPException(status_code=404, detail="Case not found or unauthorized") from exc
+            raise HTTPException(
+                status_code=404, detail="Case not found or unauthorized"
+            ) from exc
         except HTTPException as e:
             if e.status_code == 403:
-                raise HTTPException(status_code=404, detail="Case not found or unauthorized")
+                raise HTTPException(
+                    status_code=404, detail="Case not found or unauthorized"
+                )
             raise
 
         # Get case facts (raw SQL - TODO: migrate to service layer)
@@ -1025,10 +1152,14 @@ async def list_case_facts(
                 continue
             fact_dict = dict(fact._mapping)
             fact_dict["createdAt"] = (
-                fact_dict["createdAt"].isoformat() if fact_dict.get("createdAt") else None
+                fact_dict["createdAt"].isoformat()
+                if fact_dict.get("createdAt")
+                else None
             )
             fact_dict["updatedAt"] = (
-                fact_dict["updatedAt"].isoformat() if fact_dict.get("updatedAt") else None
+                fact_dict["updatedAt"].isoformat()
+                if fact_dict.get("updatedAt")
+                else None
             )
             result.append(fact_dict)
 
@@ -1037,4 +1168,6 @@ async def list_case_facts(
     except HTTPException:
         raise
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Failed to list case facts: {str(exc)}") from exc
+        raise HTTPException(
+            status_code=500, detail=f"Failed to list case facts: {str(exc)}"
+        ) from exc

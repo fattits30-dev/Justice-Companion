@@ -1,23 +1,26 @@
 # Justice Companion AI Service Dependencies
 # ==========================================
 
+# Security fix: urllib3 Open Redirect vulnerability (CVE-2021-33503)
+urllib3>=1.26.4
+
 # Web Framework
-fastapi>=0.109.0
-uvicorn[standard]>=0.27.0
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
 python-multipart>=0.0.6
 
 # Data Validation
-pydantic>=2.5.0
-pydantic-settings>=2.1.0
+pydantic>=2.9.0
+pydantic-settings>=2.5.0
 
 # Hugging Face
-huggingface-hub>=0.20.0
+huggingface-hub>=0.26.0
 
 # HTTP Client (for external APIs)
-httpx>=0.26.0
+httpx>=0.27.0
 
 # Vector Store (RAG)
-chromadb>=0.4.0
+chromadb>=0.5.0
 
 # Environment
 python-dotenv>=1.0.0

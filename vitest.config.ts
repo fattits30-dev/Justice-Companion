@@ -9,10 +9,7 @@ export default defineConfig({
     globals: true,
     environment: "jsdom",
     setupFiles: ["./src/test/setup.ts"],
-    include: [
-      "src/**/*.{test,spec}.{ts,tsx}",
-      "tests/**/*.{test,spec}.{ts,tsx}",
-    ],
+    include: ["**/*.{test,spec}.{ts,tsx}"],
     exclude: [
       "**/node_modules/**",
       "**/dist/**",
@@ -20,7 +17,6 @@ export default defineConfig({
       "**/.{idea,git,cache,output,temp}/**",
       "**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*",
       "**/e2e/**",
-      "**/tests/e2e/**",
       "tests/**/*.e2e.test.*",
       "tests/**/*.e2e.spec.*",
       "src/**/*.e2e.test.*",
@@ -37,10 +33,9 @@ export default defineConfig({
       provider: "v8",
       reporter: ["text", "json", "html"],
       reportsDirectory: "./coverage",
-      include: ["src/**/*.ts", "src/**/*.tsx"],
+      include: ["**/*.{ts,tsx}"],
       exclude: [
         "node_modules/",
-        "tests/",
         "**/*.d.ts",
         "**/*.config.*",
         "**/mockData",

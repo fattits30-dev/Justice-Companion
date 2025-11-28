@@ -236,6 +236,21 @@ export class EvidenceApiClient {
   }
 
   /**
+   * Get evidence file as blob (for AI analysis etc.)
+   */
+  async getFileBlob(evidenceId: number): Promise<Blob> {
+    try {
+      return await apiClient.evidence.download(evidenceId);
+    } catch (error) {
+      throw new ApiError(
+        0,
+        error instanceof Error ? error.message : "Failed to get file",
+        "DOWNLOAD_ERROR",
+      );
+    }
+  }
+
+  /**
    * Get evidence preview
    */
   async preview(

@@ -529,6 +529,11 @@ Based on your dismissal letter, here are some general steps many people take whe
         const rawData =
           analysisResult.data?.suggested_case_data ||
           analysisResult.data?.suggestedCaseData;
+        
+        // Extract name detection / ownership mismatch data
+        const documentOwnershipMismatch = rawData?.document_ownership_mismatch || rawData?.documentOwnershipMismatch || false;
+        const documentClaimantName = rawData?.document_claimant_name || rawData?.documentClaimantName || null;
+        
         const suggestedCaseData = rawData
           ? {
               title: rawData.title,
@@ -629,9 +634,17 @@ Based on your dismissal letter, here are some general steps many people take whe
                 documentAnalysis: {
                   filename,
                   suggestedCaseData: finalSuggestedCaseData,
+                  documentOwnershipMismatch,
+                  documentClaimantName,
                 },
               }
-            : { documentAnalysis: { filename } }),
+            : { 
+                documentAnalysis: { 
+                  filename,
+                  documentOwnershipMismatch,
+                  documentClaimantName,
+                } 
+              }),
         } as any;
 
         setMessages((prev) => [...prev, analysisMessage]);

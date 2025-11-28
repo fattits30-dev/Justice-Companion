@@ -4,6 +4,10 @@ Demonstrates complete functionality with comprehensive test cases.
 """
 
 import pytest
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 import base64
 import os
 from sqlalchemy import create_engine

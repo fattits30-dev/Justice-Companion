@@ -31,6 +31,7 @@ import os
 import re
 
 from backend.models.base import get_db
+from backend.models.profile import UserProfile
 from backend.services.auth.service import AuthenticationService
 from backend.routes.auth import get_current_user
 from backend.services.profile_service import (
@@ -317,6 +318,7 @@ async def get_profile(
 
     Returns profile data with computed fields (fullName, initials).
     Uses caching for performance (5-second cache on computed fields).
+    Creates a default profile if none exists.
 
     Security:
     - Requires valid session ID
@@ -332,8 +334,33 @@ async def get_profile(
         extended_profile = await profile_service.get_extended()
 
         if not extended_profile:
-            # No profile exists - return default
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found")
+            # No profile exists - create a default one
+            # Get user info for default values
+            from backend.models.user import User
+            db = profile_service.db
+            user = db.query(User).filter(User.id == profile_service.user_id).first()
+            
+            if not user:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+            
+            # Create default profile
+            default_profile = UserProfile(
+                user_id=profile_service.user_id,
+                name=user.username,
+                email=user.email,
+                first_name=None,
+                last_name=None,
+                full_name=user.username,
+            )
+            db.add(default_profile)
+            db.commit()
+            db.refresh(default_profile)
+            
+            # Now fetch the extended profile
+            extended_profile = await profile_service.get_extended()
+            
+            if not extended_profile:
+                raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to create profile")
 
         # Convert to response model
         return ProfileResponse(
@@ -353,6 +380,9 @@ async def get_profile(
     except HTTPException:
         raise
     except Exception as exc:
+        import traceback
+        print(f"[PROFILE ERROR] {str(exc)}")
+        print(traceback.format_exc())
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get profile: {str(exc)}",

@@ -11,8 +11,25 @@ import logging
 import os
 import sys
 from contextlib import asynccontextmanager
+from pathlib import Path
 
+# Load environment variables FIRST before any other imports
 from dotenv import load_dotenv
+
+# Find .env file - could be in backend folder or project root
+env_paths = [
+    Path(__file__).parent.parent / ".env",  # Project root
+    Path(__file__).parent / ".env",  # Backend folder
+    Path.cwd() / ".env",  # Current working directory
+]
+for env_path in env_paths:
+    if env_path.exists():
+        load_dotenv(env_path)
+        print(f"Loaded environment from: {env_path}")
+        break
+else:
+    print("WARNING: No .env file found!")
+
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -37,9 +54,6 @@ from backend.routes.search import router as search_router
 from backend.routes.tags import router as tags_router
 from backend.routes.templates import router as templates_router
 from backend.routes.ui import router as ui_router
-
-# Load environment variables from .env file
-load_dotenv()
 
 # Configure logging BEFORE any imports that create loggers
 logging.basicConfig(
@@ -179,9 +193,11 @@ def get_allowed_origins() -> list:
             "http://localhost:5176",  # Vite dev server
             "http://localhost:5177",  # Vite dev server (fallback port)
             "http://localhost:5173",  # Vite dev server (alternate port)
+            "http://localhost:5178",  # Vite dev server (e2e port)
             "http://127.0.0.1:5176",  # Localhost IPv4
             "http://127.0.0.1:5177",  # Localhost IPv4 (fallback)
             "http://127.0.0.1:5173",  # Localhost IPv4 (alternate)
+            "http://127.0.0.1:5178",  # Localhost IPv4 (e2e port)
         ]
 
         # Add Docker host IP origins for local testing (ports 5176-5180)

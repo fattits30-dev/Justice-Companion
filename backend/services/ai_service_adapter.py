@@ -21,7 +21,8 @@ from backend.services.ai.service import (
     ParsedDocument,
     UserProfile,
     AIProviderConfig,
-    ConfidenceLevel,
+    SuggestedCaseData,
+    FieldConfidence,
 )
 from backend.services.audit_logger import AuditLogger
 
@@ -39,10 +40,11 @@ class AIServiceAdapter:
         self.client = AIServiceClient()
         self.audit_logger = audit_logger
         # Provide a config for compatibility with existing code
+        # Note: api_key is a placeholder - actual key is in ai-service's .env
         self.config = AIProviderConfig(
-            provider="huggingface-service",
-            model="mistral-small-24b",  # Default model
-            api_key="",  # Not needed - ai-service handles this
+            provider="huggingface",
+            model="mistralai/Mistral-7B-Instruct-v0.2",
+            api_key="handled-by-ai-service",  # Placeholder - ai-service has the real key
         )
     
     async def chat(self, messages: List[ChatMessage]) -> str:
@@ -64,7 +66,16 @@ class AIServiceAdapter:
         except Exception as e:
             # Log error and return fallback
             if self.audit_logger:
-                await self.audit_logger.log_error("ai_chat_failed", str(e))
+                self.audit_logger.log(
+                    event_type="ai_chat_failed",
+                    user_id=None,
+                    resource_type="chat",
+                    resource_id="",
+                    action="chat",
+                    details={"error": str(e)},
+                    success=False,
+                    error_message=str(e),
+                )
             return f"I apologize, but I'm having trouble connecting to the AI service. Please try again. Error: {str(e)}"
     
     async def stream_chat(self, messages: List[ChatMessage]) -> AsyncIterator[str]:
@@ -198,28 +209,116 @@ class AIServiceAdapter:
                 file_bytes=document.text.encode(),  # Text content
                 filename=document.filename,
                 case_context=user_question,
+                username=user_profile.name,  # Pass username for name detection
             )
             
+            # Extract data from AI service response
+            document_type = response.get("document_type", "other")
+            key_facts = response.get("key_facts", [])
+            parties = response.get("parties_identified", [])
+            relevance_notes = response.get("relevance_notes", "")
+            extracted_text = response.get("extracted_text", "")
+            confidence_score = response.get("confidence", 0.5)
+            
+            # Map document_type to case_type
+            type_mapping = {
+                "contract": "employment",
+                "termination": "employment", 
+                "dismissal": "employment",
+                "eviction": "housing",
+                "tenancy": "housing",
+                "lease": "housing",
+                "court_order": "civil",
+                "claim": "civil",
+                "invoice": "consumer",
+                "complaint": "consumer",
+            }
+            case_type = type_mapping.get(document_type.lower(), "other")
+            
+            # Extract opposing party (usually the company/organization)
+            opposing_party = None
+            for party in parties:
+                # Look for company indicators
+                if any(ind in party.lower() for ind in ["ltd", "limited", "plc", "inc", "corp", "company", "employer"]):
+                    opposing_party = party.split(" (")[0]  # Remove role suffix like "(employer)"
+                    break
+            
+            # Build title from document type and context
+            if "termination" in document_type.lower() or "dismissal" in extracted_text.lower()[:500]:
+                title = f"Employment Termination - {opposing_party or 'Unknown Employer'}"
+            elif opposing_party:
+                title = f"Case against {opposing_party}"
+            else:
+                title = f"{document_type.replace('_', ' ').title()} Case"
+            
+            # Build description from key facts
+            description = ""
+            if key_facts:
+                # Take first 3 key facts
+                facts_summary = key_facts[:3] if isinstance(key_facts, list) else []
+                description = "; ".join(str(f) for f in facts_summary)
+                if len(description) > 500:
+                    description = description[:497] + "..."
+            
+            # Build confidence scores based on AI confidence
+            field_confidence = FieldConfidence(
+                title=confidence_score * 0.8,
+                case_type=confidence_score * 0.7,
+                description=confidence_score * 0.6 if description else 0.0,
+                opposing_party=confidence_score * 0.7 if opposing_party else 0.0,
+                case_number=0.0,
+                court_name=0.0,
+                filing_deadline=0.0,
+                next_hearing_date=0.0,
+            )
+            
+            # Extract name detection info from AI service response
+            name_detection = response.get("name_detection", {}) or {}
+            ownership_mismatch = not name_detection.get("user_name_found", True)
+            suggested_owner = name_detection.get("suggested_owner")
+            
+            # Build analysis text
+            analysis_text = extracted_text[:500] if extracted_text else ""
+            if relevance_notes:
+                analysis_text += "\n\n" + relevance_notes
+            
             return DocumentExtractionResponse(
-                document_type=response.get("document_type", "unknown"),
-                summary=response.get("extracted_text", "")[:500],
-                key_facts=response.get("key_facts", []),
-                dates=response.get("dates_found", []),
-                parties=response.get("parties_identified", []),
-                suggested_case_data=response.get("suggested_case_data", {}),
-                confidence=ConfidenceLevel.MEDIUM,
-                ai_analysis=response.get("relevance_notes", ""),
+                analysis=analysis_text,
+                suggested_case_data=SuggestedCaseData(
+                    document_ownership_mismatch=ownership_mismatch,
+                    document_claimant_name=suggested_owner,
+                    title=title,
+                    case_type=case_type,
+                    description=description,
+                    opposing_party=opposing_party,
+                    confidence=field_confidence,
+                    extracted_from={
+                        "title": "AI extraction from document header",
+                        "description": "AI extraction from key facts",
+                        "opposing_party": "AI extraction from parties identified",
+                    },
+                ),
             )
         except Exception as e:
+            default_confidence = FieldConfidence(
+                title=0.0,
+                case_type=0.0,
+                description=0.0,
+                opposing_party=0.0,
+                case_number=0.0,
+                court_name=0.0,
+                filing_deadline=0.0,
+                next_hearing_date=0.0,
+            )
             return DocumentExtractionResponse(
-                document_type="unknown",
-                summary=f"Document analysis failed: {str(e)}",
-                key_facts=[],
-                dates=[],
-                parties=[],
-                suggested_case_data={},
-                confidence=ConfidenceLevel.LOW,
-                ai_analysis="",
+                analysis=f"Document analysis failed: {str(e)}",
+                suggested_case_data=SuggestedCaseData(
+                    title="Analysis Failed",
+                    case_type="other",
+                    description="Unable to analyze document",
+                    confidence=default_confidence,
+                    extracted_from={},
+                ),
             )
 
 

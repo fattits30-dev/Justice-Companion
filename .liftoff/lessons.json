@@ -1,0 +1,417 @@
+{
+  "version": 1,
+  "lessons": [
+    {
+      "id": "miigayfcjj1d7",
+      "errorPattern": "Exit code: 1",
+      "errorContext": "run_command: {\"command\":\"find . -name '.pytest_cache' -type d -exec rm -rf {} +\",\"timeout\":60000}",
+      "fix": "run_command: {\"command\":\"powershell -Command \\\"Get-ChildItem -Path . -Recurse -Directory -Filter '.pytest_cache' | Remove-Item -Recurse -Force\\\"\",\"timeout\":60000}",
+      "fixDescription": "Run command: powershell -Command \"Get-ChildItem -Path . -Recurs",
+      "successCount": 1,
+      "createdAt": "2025-11-28T05:57:48.360Z",
+      "lastUsed": "2025-11-28T05:57:48.360Z",
+      "tags": [
+        "testing"
+      ]
+    },
+    {
+      "id": "miigau9fdhe9p",
+      "errorPattern": "Exit code: 1",
+      "errorContext": "run_command: {\"command\":\"rmdir /s /q __pycache__\",\"timeout\":60000}",
+      "fix": "run_command: {\"command\":\"powershell -Command \\\"Get-ChildItem -Path . -Recurse -Directory -Filter '__pycache__' | Remove-Item -Recurse -Force\\\"\",\"timeout\":60000}",
+      "fixDescription": "Run command: powershell -Command \"Get-ChildItem -Path . -Recurs",
+      "successCount": 1,
+      "createdAt": "2025-11-28T05:57:42.963Z",
+      "lastUsed": "2025-11-28T05:57:42.963Z",
+      "tags": []
+    },
+    {
+      "id": "miigalgvp6feu",
+      "errorPattern": "Exit code: 1",
+      "errorContext": "run_command: {\"command\":\"rmdir /s /q __pycache__\",\"timeout\":60000}",
+      "fix": "run_command: {\"command\":\"python -m pytest backend/tests --collect-only -v\",\"timeout\":60000}",
+      "fixDescription": "Run command: python -m pytest backend/tests --collect-only -v",
+      "successCount": 1,
+      "createdAt": "2025-11-28T05:57:31.567Z",
+      "lastUsed": "2025-11-28T05:57:31.567Z",
+      "tags": [
+        "python",
+        "testing"
+      ]
+    },
+    {
+      "id": "miigaacsm1nmw",
+      "errorPattern": "SAFETY: Can only delete files in test directories (tests/, __tests__/, __pycache__, .pytest_cache). Path: test_login.py",
+      "errorContext": "delete_file: {\"path\":\"test_login.py\",\"confirm\":true}",
+      "fix": "list_files: {\"path\":\"backend/tests\",\"recursive\":false}",
+      "fixDescription": "list_files with {\"path\":\"backend/tests\",\"recursive\":false}",
+      "successCount": 1,
+      "createdAt": "2025-11-28T05:57:17.164Z",
+      "lastUsed": "2025-11-28T05:57:17.164Z",
+      "tags": [
+        "testing"
+      ]
+    },
+    {
+      "id": "miiga97yt1nae",
+      "errorPattern": "Error: ENOENT: no such file or directory, open '<path> Companion\\backend\\tests\\test_chat_api.py'",
+      "errorContext": "read_file: {\"path\":\"backend/tests/test_chat_api.py\"}",
+      "fix": "search_files: {\"pattern\":\"ModuleNotFoundError|ImportError\",\"path\":\"backend\",\"filePattern\":\"*.py\",\"regex\":true}",
+      "fixDescription": "search_files with {\"pattern\":\"ModuleNotFoundError|ImportError\",\"path",
+      "successCount": 1,
+      "createdAt": "2025-11-28T05:57:15.694Z",
+      "lastUsed": "2025-11-28T05:57:15.694Z",
+      "tags": [
+        "testing",
+        "modules"
+      ]
+    },
+    {
+      "id": "miiga65ft104i",
+      "errorPattern": "Error: ENOENT: no such file or directory, open '<path> Companion\\tests\\test_login.py'",
+      "errorContext": "read_file: {\"path\":\"tests/test_login.py\"}",
+      "fix": "list_files: {\"path\":\"backend\",\"recursive\":true}",
+      "fixDescription": "list_files with {\"path\":\"backend\",\"recursive\":true}",
+      "successCount": 1,
+      "createdAt": "2025-11-28T05:57:11.716Z",
+      "lastUsed": "2025-11-28T05:57:11.716Z",
+      "tags": [
+        "testing"
+      ]
+    },
+    {
+      "id": "miig2b19or1tq",
+      "errorPattern": "Exit code: 1",
+      "errorContext": "run_command: {\"command\":\"npx vitest --collect 2>&1\",\"timeout\":60000}",
+      "fix": "run_command: {\"command\":\"npm list vitest\",\"timeout\":60000}",
+      "fixDescription": "Run command: npm list vitest",
+      "successCount": 1,
+      "createdAt": "2025-11-28T05:51:04.797Z",
+      "lastUsed": "2025-11-28T05:51:04.797Z",
+      "tags": [
+        "npm",
+        "testing"
+      ]
+    },
+    {
+      "id": "miig25x8ub7vc",
+      "errorPattern": "Error: Invalid arguments for search_files: [\n  {\n    \"expected\": \"string\",\n    \"code\": \"invalid_type\",\n    \"path\": [\n      \"path\"\n    ],\n    \"message\": \"Invalid input: expected string, received undefi",
+      "errorContext": "search_files: {\"pattern\":\"setup\\\\.ts\",\"regex\":true}",
+      "fix": "search_files: {\"pattern\":\"setup\\\\.ts\",\"path\":\".\",\"regex\":true}",
+      "fixDescription": "search_files with {\"pattern\":\"setup\\\\.ts\",\"path\":\".\",\"regex\":true}",
+      "successCount": 1,
+      "createdAt": "2025-11-28T05:50:58.172Z",
+      "lastUsed": "2025-11-28T05:50:58.172Z",
+      "tags": []
+    },
+    {
+      "id": "miify160chtcp",
+      "errorPattern": "Exit code: 1",
+      "errorContext": "run_command: {\"command\":\"pytest --collect-only --tb=short\",\"timeout\":60000}",
+      "fix": "ask_user: {\"question\":\"The pytest collection is failing with exit code 1. Could you share the specific error message from the test output? This will help identify the broken imports or test setup issues.\"}",
+      "fixDescription": "ask_user with {\"question\":\"The pytest collection is failing with",
+      "successCount": 1,
+      "createdAt": "2025-11-28T05:47:45.384Z",
+      "lastUsed": "2025-11-28T05:47:45.384Z",
+      "tags": [
+        "testing",
+        "modules"
+      ]
+    },
+    {
+      "id": "miifxu9t1grux",
+      "errorPattern": "Exit code: 1",
+      "errorContext": "run_command: {\"command\":\"python -m pytest --collect-only 2>&1 | tee pytest_errors.txt\",\"timeout\":60000}",
+      "fix": "read_file: {\"path\":\"pytest_errors.txt\"}",
+      "fixDescription": "read_file with {\"path\":\"pytest_errors.txt\"}",
+      "successCount": 1,
+      "createdAt": "2025-11-28T05:47:36.449Z",
+      "lastUsed": "2025-11-28T05:47:36.449Z",
+      "tags": [
+        "testing"
+      ]
+    },
+    {
+      "id": "miiffvm0fsf7f",
+      "errorPattern": "Tests failed with exit code 1",
+      "errorContext": "run_tests: {\"command\":\"python -m pytest backend/ -v --tb=short\",\"timeout\":180000}",
+      "fix": "read_file: {\"path\":\"backend/conftest.py\"}",
+      "fixDescription": "read_file with {\"path\":\"backend/conftest.py\"}",
+      "successCount": 1,
+      "createdAt": "2025-11-28T05:33:38.376Z",
+      "lastUsed": "2025-11-28T05:33:38.376Z",
+      "tags": [
+        "testing"
+      ]
+    },
+    {
+      "id": "miiepylyr5x6m",
+      "errorPattern": "Exit code: 1",
+      "errorContext": "run_command: {\"command\":\"rm backend/justice-companion.db backend/justice_companion.db\",\"timeout\":30000}",
+      "fix": "run_command: {\"command\":\"python -m pip check\",\"timeout\":60000}",
+      "fixDescription": "Run command: python -m pip check",
+      "successCount": 5,
+      "createdAt": "2025-11-28T05:13:29.206Z",
+      "lastUsed": "2025-11-28T05:57:09.075Z",
+      "tags": [
+        "python"
+      ]
+    },
+    {
+      "id": "miiep8ly1ahdl",
+      "errorPattern": "Exit code: 1",
+      "errorContext": "run_command: {\"command\":\"pip list\"}",
+      "fix": "list_files: {\"path\":\"backend\",\"recursive\":true,\"filePattern\":\"*.db\"}",
+      "fixDescription": "list_files with {\"path\":\"backend\",\"recursive\":true,\"filePattern\":\"",
+      "successCount": 1,
+      "createdAt": "2025-11-28T05:12:55.510Z",
+      "lastUsed": "2025-11-28T05:12:55.510Z",
+      "tags": []
+    },
+    {
+      "id": "miieol2gevbr7",
+      "errorPattern": "Error: ENOENT: no such file or directory, open '<path> Companion\\backend\\tests\\conftest.py'",
+      "errorContext": "read_file: {\"path\":\"backend/tests/conftest.py\"}",
+      "fix": "read_file: {\"path\":\"backend/tests/test_cases_routes.py\"}",
+      "fixDescription": "read_file with {\"path\":\"backend/tests/test_cases_routes.py\"}",
+      "successCount": 1,
+      "createdAt": "2025-11-28T05:12:25.001Z",
+      "lastUsed": "2025-11-28T05:12:25.001Z",
+      "tags": [
+        "testing"
+      ]
+    },
+    {
+      "id": "miiegx8gvfg25",
+      "errorPattern": "Exit code: 1",
+      "errorContext": "run_command: {\"command\":\"python --version && pip list\",\"timeout\":30000}",
+      "fix": "read_file: {\"path\":\"backend/requirements.txt\"}",
+      "fixDescription": "read_file with {\"path\":\"backend/requirements.txt\"}",
+      "successCount": 2,
+      "createdAt": "2025-11-28T05:06:27.520Z",
+      "lastUsed": "2025-11-28T05:34:01.362Z",
+      "tags": []
+    },
+    {
+      "id": "miiegiucpbqnp",
+      "errorPattern": "Tests failed with exit code 1",
+      "errorContext": "run_tests: {\"command\":\"python -m pytest backend/tests -v --tb=native\",\"timeout\":300000}",
+      "fix": "list_files: {\"path\":\"backend\",\"recursive\":true,\"filePattern\":\"*.db\"}",
+      "fixDescription": "list_files with {\"path\":\"backend\",\"recursive\":true,\"filePattern\":\"",
+      "successCount": 2,
+      "createdAt": "2025-11-28T05:06:08.868Z",
+      "lastUsed": "2025-11-28T05:12:14.021Z",
+      "tags": [
+        "testing"
+      ]
+    },
+    {
+      "id": "miieg42dnzozo",
+      "errorPattern": "Tests failed with exit code 1",
+      "errorContext": "run_tests: {\"command\":\"python -m pytest test_login.py -v --tb=native\",\"timeout\":180000}",
+      "fix": "read_file: {\"path\":\"test_login.py\"}",
+      "fixDescription": "read_file with {\"path\":\"test_login.py\"}",
+      "successCount": 1,
+      "createdAt": "2025-11-28T05:05:49.717Z",
+      "lastUsed": "2025-11-28T05:05:49.717Z",
+      "tags": [
+        "testing"
+      ]
+    },
+    {
+      "id": "miiefyzmuf3ud",
+      "errorPattern": "Tests failed with exit code 1",
+      "errorContext": "run_tests: {\"command\":\"python -m pytest test_login.py -v --tb=short\",\"timeout\":180000}",
+      "fix": "read_file: {\"path\":\"backend_test_errors.txt\"}",
+      "fixDescription": "read_file with {\"path\":\"backend_test_errors.txt\"}",
+      "successCount": 1,
+      "createdAt": "2025-11-28T05:05:43.138Z",
+      "lastUsed": "2025-11-28T05:05:43.138Z",
+      "tags": [
+        "testing"
+      ]
+    },
+    {
+      "id": "miibpzt8gz5pe",
+      "errorPattern": "The \"paths[1]\" argument must be of type string. Received undefined",
+      "errorContext": "read_file: {}",
+      "fix": "get_problems: {}",
+      "fixDescription": "get_problems with {}",
+      "successCount": 2,
+      "createdAt": "2025-11-28T03:49:31.916Z",
+      "lastUsed": "2025-11-28T04:38:28.470Z",
+      "tags": []
+    },
+    {
+      "id": "miibf0og9yxzc",
+      "errorPattern": "ENOENT: no such file or directory, open '<path> Companion\\backend\\test_login.py'",
+      "errorContext": "read_file: {\"path\":\"backend/test_login.py\"}",
+      "fix": "list_files: {\"path\":\"backend\"}",
+      "fixDescription": "list_files with {\"path\":\"backend\"}",
+      "successCount": 1,
+      "createdAt": "2025-11-28T03:40:59.825Z",
+      "lastUsed": "2025-11-28T03:40:59.825Z",
+      "tags": [
+        "testing"
+      ]
+    },
+    {
+      "id": "miiba272vwq79",
+      "errorPattern": "ENOENT: no such file or directory, scandir '<path> Companion\\__tests__'",
+      "errorContext": "list_files: {\"path\":\"__tests__\",\"recursive\":true}",
+      "fix": "run_command: {\"command\":\"npm list vitest\"}",
+      "fixDescription": "Run command: npm list vitest",
+      "successCount": 1,
+      "createdAt": "2025-11-28T03:37:08.510Z",
+      "lastUsed": "2025-11-28T03:37:08.510Z",
+      "tags": [
+        "npm",
+        "testing"
+      ]
+    },
+    {
+      "id": "miiaxmhewvtao",
+      "errorPattern": "Text not found in file",
+      "errorContext": "patch_file: {\"path\":\"backend/tests/routes/test_profile_routes.py\",\"find\":\"def valid_session_id():\\n \\\"\\\"\\\"Valid session ID for testing.\\\"\\\"\\\"\\n return \\\"valid-session-uuid-12345\\\"\",\"replace\":\"def valid_session_id():\\n \\\"\\\"\\\"Valid session ID for testing.\\\"\\\"\\\"\\n return \\\"test-session-\\\" + str(uuid.uuid4())\"}",
+      "fix": "patch_file: {\"path\":\"backend/tests/routes/test_profile_routes.py\",\"find\":\"import pytest\\nfrom unittest.mock import Mock, AsyncMock\\nfrom fastapi.testclient import TestClient\",\"replace\":\"import pytest\\nimport uuid\\nfrom unittest.mock import Mock, AsyncMock\\nfrom fastapi.testclient import TestClient\"}",
+      "fixDescription": "Patch file: backend/tests/routes/test_profile_routes.py",
+      "successCount": 1,
+      "createdAt": "2025-11-28T03:27:28.274Z",
+      "lastUsed": "2025-11-28T03:27:28.274Z",
+      "tags": [
+        "testing",
+        "modules"
+      ]
+    },
+    {
+      "id": "mii811prhdodd",
+      "errorPattern": "Exit code: 1",
+      "errorContext": "run_command: {\"command\":\"npx tsc --noEmit > tsc_output.txt 2>&1\"}",
+      "fix": "read_file: {\"path\":\"tsc_output.txt\"}",
+      "fixDescription": "read_file with {\"path\":\"tsc_output.txt\"}",
+      "successCount": 7,
+      "createdAt": "2025-11-28T02:06:09.135Z",
+      "lastUsed": "2025-11-28T05:57:22.402Z",
+      "tags": [
+        "typescript"
+      ]
+    },
+    {
+      "id": "mii72fc77d7gt",
+      "errorPattern": "Tests failed with exit code 1",
+      "errorContext": "run_tests: {\"command\":\"vitest run src/services/ConsentService.test.ts --reporter verbose --output.truncate=false --testNamePattern='should grant consent for data_processing'\",\"timeout\":300000}",
+      "fix": "read_file: {\"path\":\"src/services/ConsentService.test.ts\"}",
+      "fixDescription": "read_file with {\"path\":\"src/services/ConsentService.test.ts\"}",
+      "successCount": 2,
+      "createdAt": "2025-11-28T01:39:13.831Z",
+      "lastUsed": "2025-11-28T01:42:03.809Z",
+      "tags": [
+        "testing"
+      ]
+    },
+    {
+      "id": "mii71udoyybkl",
+      "errorPattern": "Tests failed with exit code 1",
+      "errorContext": "run_tests: {\"command\":\"vitest run --reporter verbose\"}",
+      "fix": "run_tests: {\"command\":\"npm test -- --reporter verbose\"}",
+      "fixDescription": "run_tests with {\"command\":\"npm test -- --reporter verbose\"}",
+      "successCount": 1,
+      "createdAt": "2025-11-28T01:38:46.668Z",
+      "lastUsed": "2025-11-28T01:38:46.668Z",
+      "tags": [
+        "npm",
+        "testing"
+      ]
+    },
+    {
+      "id": "mii5zrztc4ibh",
+      "errorPattern": "\u001b[90mstderr\u001b[2m | src<path>\u001b[2m > \u001b[22m\u001b[2mKeyManager - Encryption Key Security\u001b[2m > \u001b[22m\u001b[2mmigrateFromEnv() - Migrate from .env\u001b[2m > \u001b[22m\u001b[2mshould migrate valid key from .env to safeStorage\n\u001b[2",
+      "errorContext": "run_command: {\"command\":\"./node_modules/.bin/vitest --reporter verbose\"}",
+      "fix": "read_file: {\"path\":\"src/repositories.test.ts\"}",
+      "fixDescription": "read_file with {\"path\":\"src/repositories.test.ts\"}",
+      "successCount": 1,
+      "createdAt": "2025-11-28T01:09:10.649Z",
+      "lastUsed": "2025-11-28T01:09:10.649Z",
+      "tags": [
+        "npm",
+        "testing",
+        "modules",
+        "permissions"
+      ]
+    },
+    {
+      "id": "mii5z1kaxkrfl",
+      "errorPattern": "vitest : The term 'vitest' is not recognized as the name of a cmdlet, function, script file, or operable program. \r\nCheck the spelling of the name, or if a path was included, verify that the path is c",
+      "errorContext": "run_command: {\"command\":\"vitest --reporter verbose\"}",
+      "fix": "read_file: {\"path\":\"package.json\"}",
+      "fixDescription": "read_file with {\"path\":\"package.json\"}",
+      "successCount": 1,
+      "createdAt": "2025-11-28T01:08:36.394Z",
+      "lastUsed": "2025-11-28T01:08:36.394Z",
+      "tags": [
+        "testing"
+      ]
+    },
+    {
+      "id": "mii5ylgpvje5b",
+      "errorPattern": "Text not found in file",
+      "errorContext": "patch_file: {\"path\":\"vitest.config.ts\",\"find\":\"include: [\\\"src/**/*.{test,spec}.{ts,tsx}\\\", \\\"tests/**/*.{test,spec}.{ts,tsx}\\\"],\",\"replace\":\"include: [\\\"**/*.{test,spec}.{ts,tsx}\\\"],\"}",
+      "fix": "write_file: {\"path\":\"vitest.config.ts\",\"content\":\"import { defineConfig } from \\\"vitest/config\\\";\\nimport react from \\\"@vitejs/plugin-react\\\";\\nimport path from \\\"path\\\";\\n\\n// This config file is intentionally ignored by linters as it's a configuration file\\nexport default defineConfig({\\n  plugins: [react()],\\n  test: {\\n    globals: true,\\n    environment: \\\"jsdom\\\",\\n    setupFiles: [\\\"./src/test/setup.ts\\\"],\\n    include: [\\\"**/*.{test,spec}.{ts,tsx}\\\"],\\n    exclude: [\\n      \\\"**/node_modules/**\\\",\\n      \\\"**/dist/**\\\",\\n      \\\"**/cypress/**\\\",\\n      \\\"**/.{idea,git,cache,output,temp}/**\\\",\\n      \\\"**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*\\\",\\n      \\\"**/e2e/**\\\",\\n      \\\"tests/**/*.e2e.test.*\\\",\\n      \\\"tests/**/*.e2e.spec.*\\\",\\n      \\\"src/**/*.e2e.test.*\\\",\\n      \\\"src/**/*.e2e.spec.*\\\",\\n      \\\"e2e/**/*.test.*\\\",\\n      \\\"e2e/**/*.spec.*\\\",\\n      // Integration tests that use native better-sqlite3 module\\n      \\\"src/services/AuthorizationService.test.ts\\\",\\n      \\\"src/services/TagService.test.ts\\\",\\n      \\\"src/shared/infrastructure/di/container.test.ts\\\",\\n      \\\"src/shared/infrastructure/events/EventBus.test.ts\\\",\\n    ],\\n    coverage: {\\n      provider: \\\"v8\\\",\\n      reporter: [\\\"text\\\", \\\"json\\\", \\\"html\\\"],\\n      reportsDirectory: \\\"./coverage\\\",\\n      include: [\\\"**/*.{ts,tsx}\\\"],\\n      exclude: [\\n        \\\"node_modules/\\\",\\n        \\\"**/*.d.ts\\\",\\n        \\\"**/*.config.*\\\",\\n        \\\"**/mockData\\\",\\n        \\\"**/*.test.ts\\\",\\n        \\\"**/*.test.tsx\\\",\\n        \\\"**/.{idea,git,cache,output,temp}\\\",\\n        \\\"src/main.tsx\\\",\\n        \\\"src/vite-env.d.ts\\\",\\n      ],\\n    },\\n  },\\n  resolve: {\\n    alias: {\\n      \\\"@\\\": path.resolve(__dirname, \\\"./src\\\"),\\n    },\\n  },\\n});\"}",
+      "fixDescription": "Create/update file: vitest.config.ts",
+      "successCount": 1,
+      "createdAt": "2025-11-28T01:08:15.529Z",
+      "lastUsed": "2025-11-28T01:08:15.529Z",
+      "tags": [
+        "npm",
+        "git",
+        "lint",
+        "testing",
+        "modules"
+      ]
+    },
+    {
+      "id": "mii5x5ofau3cf",
+      "errorPattern": "npm error code ERESOLVE\nnpm error ERESOLVE could not resolve\nnpm error\nnpm error While resolving: vite-plugin-pwa@0.20.5\nnpm error Found: vite@6.4.1\nnpm error node_modules<path>\nnpm error   dev vite@\"",
+      "errorContext": "run_command: {\"command\":\"npm install\"}",
+      "fix": "run_command: {\"command\":\"npm info vite-plugin-pwa versions\"}",
+      "fixDescription": "Run command: npm info vite-plugin-pwa versions",
+      "successCount": 1,
+      "createdAt": "2025-11-28T01:07:08.415Z",
+      "lastUsed": "2025-11-28T01:07:08.415Z",
+      "tags": [
+        "npm",
+        "testing",
+        "modules"
+      ]
+    },
+    {
+      "id": "mii36dgkb0mfm",
+      "errorPattern": "Command failed: vitest run --reporter verbose\nvitest : The term 'vitest' is not recognized as the name of a cmdlet, function, script file, or operable program. \r\nCheck the spelling of the name, or if",
+      "errorContext": "run_tests: {\"command\":\"vitest run --reporter verbose\"}",
+      "fix": "run_command: {\"command\":\"npm list vitest\"}",
+      "fixDescription": "Run command: npm list vitest",
+      "successCount": 1,
+      "createdAt": "2025-11-27T23:50:19.556Z",
+      "lastUsed": "2025-11-27T23:50:19.556Z",
+      "tags": [
+        "npm",
+        "testing"
+      ]
+    },
+    {
+      "id": "mii2mi4wiska4",
+      "errorPattern": "file:<path>:<path>%20Companion<path>:404\r\n          throw new CACError(`Unknown option \\`${name.length > 1 ? `--${name}` : `-${name}`}\\``);\r\n                ^\r\n\r\nCACError: Unknown option `--verbose`",
+      "errorContext": "run_command: {\"command\":\"npm test -- --verbose\"}",
+      "fix": "run_command: {\"command\":\"npm test\"}",
+      "fixDescription": "Run command: npm test",
+      "successCount": 1,
+      "createdAt": "2025-11-27T23:34:52.496Z",
+      "lastUsed": "2025-11-27T23:34:52.496Z",
+      "tags": [
+        "npm",
+        "testing",
+        "modules"
+      ]
+    }
+  ]
+}

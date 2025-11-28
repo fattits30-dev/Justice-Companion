@@ -6,7 +6,7 @@ Legal document drafting assistance.
 
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
-from typing import Optional, List
+from typing import Optional, List, Any
 from enum import Enum
 
 
@@ -25,6 +25,7 @@ class LetterType(str, Enum):
 
 class DraftRequest(BaseModel):
     """Letter drafting request"""
+
     letter_type: LetterType
     recipient: str
     subject: str
@@ -36,6 +37,7 @@ class DraftRequest(BaseModel):
 
 class DraftResponse(BaseModel):
     """Generated draft"""
+
     content: str
     word_count: int
     letter_type: LetterType
@@ -47,7 +49,7 @@ class DraftResponse(BaseModel):
 async def draft_letter(request: DraftRequest, req: Request):
     """
     Generate a draft legal letter.
-    
+
     Types supported:
     - Grievance letters (employment)
     - Appeal letters (benefits, decisions)
@@ -56,11 +58,11 @@ async def draft_letter(request: DraftRequest, req: Request):
     - Response letters
     """
     hf_client = req.app.state.hf_client
-    
+
     points_text = "\n".join([f"- {p}" for p in request.key_points])
-    
+
     template = get_letter_template(request.letter_type)
-    
+
     prompt = f"""Draft a {request.letter_type.value} letter for a UK legal matter.
 
 RECIPIENT: {request.recipient}
@@ -89,18 +91,23 @@ Generate a professional letter draft:"""
             model_key="chat_primary",
             max_tokens=2000,
         )
-        
+
         content = response["content"]
-        
+
         return DraftResponse(
             content=content,
             word_count=len(content.split()),
             letter_type=request.letter_type,
             suggestions=generate_suggestions(request.letter_type),
-            disclaimer="This is a draft for your review. Modify as needed and consider seeking legal advice before sending."
+            disclaimer=(
+                "This is a draft for your review. "
+                "Modify as needed and consider seeking legal advice before sending."
+            ),
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Draft generation failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Draft generation failed: {str(e)}"
+        )
 
 
 @router.post("/witness-statement")
@@ -109,17 +116,17 @@ async def draft_witness_statement(
     relationship_to_case: str,
     events_witnessed: List[str],
     case_context: Optional[str] = None,
-    req: Request = None
+    req: Request = None,
 ):
     """
     Generate a witness statement template.
-    
+
     Follows UK court format requirements.
     """
     hf_client = req.app.state.hf_client
-    
+
     events_text = "\n".join([f"- {e}" for e in events_witnessed])
-    
+
     prompt = f"""Create a UK-format witness statement:
 
 WITNESS: {witness_name}
@@ -149,14 +156,16 @@ Format:
             model_key="chat_primary",
             max_tokens=2000,
         )
-        
+
         return {
             "statement": response["content"],
             "format": "UK Court Format",
-            "note": "Review carefully and ensure all facts are accurate before signing."
+            "note": "Review carefully and ensure all facts are accurate before signing.",
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Statement generation failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Statement generation failed: {str(e)}"
+        )
 
 
 @router.post("/timeline-document")
@@ -164,21 +173,27 @@ async def generate_timeline_document(
     events: List[dict],
     case_title: str,
     include_evidence_refs: bool = True,
-    req: Request = None
+    req: Request = None,
 ):
     """
     Generate a formatted chronology document.
-    
+
     Useful for court bundles and case summaries.
     """
     hf_client = req.app.state.hf_client
-    
-    events_text = "\n".join([
-        f"- {e.get('date', 'Date unknown')}: {e.get('description', '')}"
-        + (f" [Evidence: {e.get('evidence_ref', '')}]" if include_evidence_refs and e.get('evidence_ref') else "")
-        for e in events
-    ])
-    
+
+    events_text = "\n".join(
+        [
+            f"- {e.get('date', 'Date unknown')}: {e.get('description', '')}"
+            + (
+                f" [Evidence: {e.get('evidence_ref', '')}]"
+                if include_evidence_refs and e.get("evidence_ref")
+                else ""
+            )
+            for e in events
+        ]
+    )
+
     prompt = f"""Create a formal chronology document for: {case_title}
 
 EVENTS:
@@ -196,13 +211,15 @@ Format as a professional legal chronology:
             messages=[{"role": "user", "content": prompt}],
             model_key="chat_fast",  # Faster model for formatting task
         )
-        
+
         return {
             "chronology": response["content"],
             "event_count": len(events),
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Chronology generation failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Chronology generation failed: {str(e)}"
+        )
 
 
 def get_letter_template(letter_type: LetterType) -> str:
@@ -216,7 +233,6 @@ GRIEVANCE LETTER TEMPLATE:
 - State what outcome you seek
 - Request a meeting to discuss
 - Set reasonable timeframe for response (usually 5 working days)""",
-        
         LetterType.APPEAL: """
 APPEAL LETTER TEMPLATE:
 - Reference the decision being appealed
@@ -224,7 +240,6 @@ APPEAL LETTER TEMPLATE:
 - Provide supporting evidence references
 - Request reconsideration
 - Cite relevant law or policy""",
-        
         LetterType.COMPLAINT: """
 COMPLAINT LETTER TEMPLATE:
 - State what happened and when
@@ -232,7 +247,6 @@ COMPLAINT LETTER TEMPLATE:
 - State what resolution you seek
 - Set deadline for response
 - Mention escalation path if unresolved""",
-        
         LetterType.SUBJECT_ACCESS: """
 SUBJECT ACCESS REQUEST (GDPR Article 15):
 - State this is a Subject Access Request under GDPR
@@ -240,7 +254,6 @@ SUBJECT ACCESS REQUEST (GDPR Article 15):
 - Include proof of identity requirements
 - Note 30-day response deadline
 - Request data in portable format""",
-        
         LetterType.RESPONSE: """
 RESPONSE LETTER TEMPLATE:
 - Acknowledge letter/communication received
@@ -248,14 +261,12 @@ RESPONSE LETTER TEMPLATE:
 - State your position clearly
 - Provide evidence references
 - Propose next steps""",
-        
         LetterType.WITNESS_STATEMENT: """
 WITNESS STATEMENT TEMPLATE:
 - Standard court format
 - Numbered paragraphs
 - First person, past tense
 - Statement of truth""",
-        
         LetterType.TIMELINE: """
 TIMELINE DOCUMENT:
 - Chronological order
@@ -265,6 +276,53 @@ TIMELINE DOCUMENT:
     return templates.get(letter_type, "")
 
 
+async def generate_draft(
+    client: Any,
+    letter_type: LetterType,
+    recipient: str,
+    subject: str,
+    key_points: List[str],
+    tone: str = "formal",
+    case_context: Optional[str] = None,
+    include_legal_refs: bool = True,
+) -> str:
+    """
+    Core drafting logic, reusable by agents.
+    """
+    points_text = "\n".join([f"- {p}" for p in key_points])
+    template = get_letter_template(letter_type)
+
+    prompt = f"""Draft a {letter_type.value} letter for a UK legal matter.
+
+RECIPIENT: {recipient}
+SUBJECT: {subject}
+TONE: {tone}
+
+KEY POINTS TO INCLUDE:
+{points_text}
+
+{f"CASE CONTEXT: {case_context}" if case_context else ""}
+
+REQUIREMENTS:
+1. Use appropriate formal letter structure
+2. Be clear and factual
+3. {f"Reference relevant UK law where appropriate" if include_legal_refs else "Keep legal jargon minimal"}
+4. Include appropriate dates and reference numbers placeholders [DATE], [REF]
+5. End with clear next steps or requests
+
+{template}
+
+Generate a professional letter draft:"""
+
+    response = await client.chat(
+        messages=[{"role": "user", "content": prompt}],
+        model_key="chat_primary",
+        max_tokens=2000,
+    )
+
+    return response["content"]
+
+
 def generate_suggestions(letter_type: LetterType) -> List[str]:
     """Generate review suggestions for letter type"""
     common = [
@@ -272,7 +330,7 @@ def generate_suggestions(letter_type: LetterType) -> List[str]:
         "Keep a copy of everything you send",
         "Consider sending by recorded delivery",
     ]
-    
+
     type_specific = {
         LetterType.GRIEVANCE: [
             "Check your employer's grievance policy for specific requirements",
@@ -290,5 +348,5 @@ def generate_suggestions(letter_type: LetterType) -> List[str]:
             "Keep proof of sending",
         ],
     }
-    
+
     return common + type_specific.get(letter_type, [])

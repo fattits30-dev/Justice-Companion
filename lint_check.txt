@@ -1,0 +1,37 @@
+
+> justice-companion@1.0.0 lint
+> eslint .
+
+
+C:\Users\sava6\ClaudeHome\projects\Justice Companion\src\components\pwa\InstallPrompt.tsx
+  183:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+  201:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\sava6\ClaudeHome\projects\Justice Companion\src\components\tags\TagColorPicker.tsx
+  109:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+  119:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\sava6\ClaudeHome\projects\Justice Companion\src\components\ui\Toast.tsx
+   35:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+   52:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+   69:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+   86:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+  103:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\sava6\ClaudeHome\projects\Justice Companion\src\contexts\AuthContext.tsx
+  292:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\sava6\ClaudeHome\projects\Justice Companion\src\lib\examples\apiClientUsage.tsx
+  510:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\sava6\ClaudeHome\projects\Justice Companion\src\scripts\settings-react-profiling.tsx
+  132:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+  133:3   warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+  134:3   warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\sava6\ClaudeHome\projects\Justice Companion\src\services\SessionPersistenceService.test.ts
+  41:7  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-dynamic-delete')
+
+✖ 15 problems (0 errors, 15 warnings)
+  0 errors and 1 warning potentially fixable with the `--fix` option.
+

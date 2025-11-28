@@ -18,6 +18,10 @@ class HuggingFaceClient:
     """
     Unified Hugging Face API client for Justice Companion.
     
+    Uses HuggingFace Inference Providers (2025 architecture) which routes
+    requests through router.huggingface.co to providers like novita, 
+    together, sambanova, cerebras etc.
+    
     Supports:
     - Text generation (chat/completions)
     - Vision (document OCR, evidence analysis)
@@ -30,8 +34,12 @@ class HuggingFaceClient:
         if not self.token:
             print("[WARNING] HF_API_TOKEN not set - API calls will fail")
         
-        # Async client for FastAPI
-        self.client = AsyncInferenceClient(token=self.token)
+        # Async client for FastAPI - uses Inference Providers (auto-routes to best provider)
+        # provider="auto" (default) picks first available provider for the model
+        self.client = AsyncInferenceClient(
+            token=self.token,
+            # Don't set provider - let it auto-select based on model availability
+        )
         
         # Model mappings from config
         self.models = {
@@ -50,6 +58,8 @@ class HuggingFaceClient:
             "embeddings_fast": settings.MODEL_EMBEDDINGS_FAST,
             "reranker": settings.MODEL_RERANKER,
         }
+        
+        print(f"[HuggingFaceClient] Initialized with token: {self.token[:10] if self.token else 'NONE'}... Models: {self.models['chat_primary']}")
 
     # ==========================================
     # TEXT GENERATION (CHAT)

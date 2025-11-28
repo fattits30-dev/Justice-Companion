@@ -22,6 +22,8 @@ import {
 } from "react-router-dom";
 import { LoginScreen } from "./components/auth/LoginScreen.tsx";
 import { RegistrationScreen } from "./components/auth/RegistrationScreen.tsx";
+import { ForgotPasswordScreen } from "./components/auth/ForgotPasswordScreen.tsx";
+import { ResetPasswordScreen } from "./components/auth/ResetPasswordScreen.tsx";
 import { ErrorBoundary } from "./components/ErrorBoundary.tsx";
 import { MainLayout } from "./components/layouts/MainLayout.tsx";
 import { InstallPrompt } from "./components/pwa/InstallPrompt.tsx";
@@ -249,6 +251,9 @@ function AppRoutes() {
               onRegisterClick={() => {
                 navigate("/register");
               }}
+              onForgotPasswordClick={() => {
+                navigate("/forgot-password");
+              }}
             />
           </AuthRoute>
         }
@@ -262,6 +267,37 @@ function AppRoutes() {
                 navigate("/login");
               }}
               onLoginClick={() => {
+                navigate("/login");
+              }}
+            />
+          </AuthRoute>
+        }
+      />
+      <Route
+        path="/forgot-password"
+        element={
+          <AuthRoute>
+            <ForgotPasswordScreen
+              onBackToLogin={() => {
+                navigate("/login");
+              }}
+              onResetTokenReceived={(token) => {
+                // In dev mode, navigate to reset page with token
+                navigate(`/reset-password?token=${token}`);
+              }}
+            />
+          </AuthRoute>
+        }
+      />
+      <Route
+        path="/reset-password"
+        element={
+          <AuthRoute>
+            <ResetPasswordScreen
+              onSuccess={() => {
+                navigate("/login");
+              }}
+              onBackToLogin={() => {
                 navigate("/login");
               }}
             />
