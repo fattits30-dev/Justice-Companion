@@ -1,0 +1,66 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard",
+    ":semanticCommits",
+    ":preserveSemverRanges"
+  ],
+  "labels": ["dependencies", "renovate"],
+  "rangeStrategy": "bump",
+  "timezone": "Europe/London",
+  "schedule": ["before 6am on Monday"],
+  "packageRules": [
+    {
+      "description": "Automerge patch updates for production dependencies",
+      "matchUpdateTypes": ["patch"],
+      "matchDepTypes": ["dependencies"],
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": true
+    },
+    {
+      "description": "Group all dev dependencies together",
+      "matchDepTypes": ["devDependencies"],
+      "groupName": "dev dependencies",
+      "automerge": false
+    },
+    {
+      "description": "Security updates get high priority",
+      "matchUpdateTypes": ["patch", "pin", "digest"],
+      "matchCurrentVersion": "!/^0/",
+      "labels": ["security"],
+      "automerge": true,
+      "schedule": ["at any time"]
+    },
+    {
+      "description": "Python packages",
+      "matchManagers": ["pip_requirements", "pip_setup", "pipenv", "poetry"],
+      "groupName": "Python dependencies"
+    },
+    {
+      "description": "TypeScript types",
+      "matchPackagePatterns": ["^@types/"],
+      "groupName": "TypeScript type definitions",
+      "automerge": true
+    },
+    {
+      "description": "Testing libraries",
+      "matchPackagePatterns": [
+        "vitest",
+        "playwright",
+        "pytest",
+        "@testing-library"
+      ],
+      "groupName": "test dependencies"
+    }
+  ],
+  "vulnerabilityAlerts": {
+    "labels": ["security", "vulnerability"],
+    "automerge": true,
+    "schedule": ["at any time"]
+  },
+  "postUpdateOptions": ["npmDedupe"],
+  "prConcurrentLimit": 3,
+  "prHourlyLimit": 2
+}

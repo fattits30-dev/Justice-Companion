@@ -1,0 +1,45 @@
+# Codecov Configuration for Justice Companion
+
+coverage:
+  precision: 2
+  round: down
+  range: "50...90"
+
+  status:
+    project:
+      default:
+        target: 70%           # Target coverage
+        threshold: 2%         # Allow 2% drop
+        if_ci_failed: error
+        informational: false
+
+    patch:
+      default:
+        target: 80%           # New code should have high coverage
+        threshold: 5%
+        if_ci_failed: error
+
+  ignore:
+    - "**/*.test.ts"
+    - "**/*.test.tsx"
+    - "**/*.test.js"
+    - "**/*.test.py"
+    - "**/test_*.py"
+    - "**/__tests__/**"
+    - "**/tests/**"
+    - "**/node_modules/**"
+    - "**/dist/**"
+    - "**/build/**"
+    - "**/coverage/**"
+    - "**/.vite/**"
+    - "**/dev-dist/**"
+
+comment:
+  layout: "reach,diff,flags,files"
+  behavior: default
+  require_changes: false
+  require_base: false
+  require_head: true
+
+github_checks:
+  annotations: true
