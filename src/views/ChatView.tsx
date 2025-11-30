@@ -612,23 +612,20 @@ Based on your dismissal letter, here are some general steps many people take whe
                   : undefined,
             }
           : undefined;
-        const hasActiveCase = !!activeCaseId;
-
-        const finalSuggestedCaseData =
-          !hasActiveCase && suggestedCaseData
-            ? suggestedCaseData
-            : !hasActiveCase
-              ? {
-                  title: `Case regarding ${filename}`,
-                  caseType: "other",
-                  description: `Document uploaded for analysis: ${filename}`,
-                  confidence: {
-                    title: 0.3,
-                    caseType: 0.3,
-                    description: 0.3,
-                  },
-                }
-              : undefined;
+        // Always include suggestedCaseData if available - button visibility is handled at render time
+        const finalSuggestedCaseData = suggestedCaseData
+          ? suggestedCaseData
+          : {
+              // Fallback data if AI didn't extract anything
+              title: `Case regarding ${filename}`,
+              caseType: "other",
+              description: `Document uploaded for analysis: ${filename}`,
+              confidence: {
+                title: 0.3,
+                caseType: 0.3,
+                description: 0.3,
+              },
+            };
 
         const analysisMessage: Message = {
           id: `analysis-${Date.now()}`,
@@ -655,7 +652,7 @@ Based on your dismissal letter, here are some general steps many people take whe
 
         setMessages((prev) => [...prev, analysisMessage]);
 
-        if (hasActiveCase) {
+        if (activeCaseId) {
           toast.info("Document added to active case", {
             description: `${filename} linked to current case`,
           });
