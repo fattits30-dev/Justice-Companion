@@ -1,21 +1,21 @@
 /**
  * AI-related Types
- * 
+ *
  * Types for AI interactions and legal context.
  */
 
 /**
  * Document type classification
  */
-export type DocumentTypeEnum = 
-  | 'unknown'
-  | 'contract'
-  | 'letter'
-  | 'payslip'
-  | 'form'
-  | 'court_document'
-  | 'evidence_photo'
-  | 'handwritten';
+export type DocumentTypeEnum =
+  | "unknown"
+  | "contract"
+  | "letter"
+  | "payslip"
+  | "form"
+  | "court_document"
+  | "evidence_photo"
+  | "handwritten";
 
 /**
  * Full document analysis response from AI service
@@ -92,25 +92,31 @@ export type ChatMessage = AIChatMessage;
  * Legislation search result from legal APIs
  */
 export interface LegislationResult {
-  id: string;
+  id?: string;
   title: string;
-  type: string;
+  type?: string;
   year?: number;
   url?: string;
   snippet?: string;
+  section?: string;
+  content?: string;
+  relevance?: number;
 }
 
 /**
  * Case law search result
  */
 export interface CaseResult {
-  id: string;
-  caseName: string;
+  id?: string;
+  caseName?: string;
   citation: string;
   court?: string;
   date?: string;
   url?: string;
   snippet?: string;
+  summary?: string;
+  outcome?: string;
+  relevance?: number;
 }
 
 /**

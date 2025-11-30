@@ -103,12 +103,12 @@ def sample_case_analysis_request():
             EvidenceSummary(
                 type="email",
                 description="Termination email",
-                date="2024-01-15"
+                date="2025-11-15"
             )
         ],
         timeline=[
             TimelineEvent(
-                date="2024-01-10",
+                date="2025-11-10",
                 event="Notice given",
                 significance="Start of dismissal process"
             )
@@ -416,7 +416,7 @@ async def test_draft_document(
         "content": "Dear Sir/Madam,\n\nI am writing regarding...",
         "metadata": {
             "type": "letter",
-            "createdAt": "2024-01-15T10:00:00",
+            "createdAt": "2025-11-15T10:00:00",
             "wordCount": 150,
             "modelUsed": "gpt-4-turbo",
             "caseId": "case-123"
@@ -463,7 +463,7 @@ async def test_extract_case_data_from_document(
   "opposingParty": "ABC Company Ltd",
   "caseNumber": "ET/123456",
   "courtName": "Employment Tribunal (Manchester)",
-  "filingDeadline": "2024-02-15",
+  "filingDeadline": "2026-01-15",
   "nextHearingDate": null,
   "confidence": {
     "title": 0.9,

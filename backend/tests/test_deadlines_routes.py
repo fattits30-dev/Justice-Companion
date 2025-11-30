@@ -85,7 +85,7 @@ def test_case(db_session, test_user):
     """Create a test case."""
     case = Case(
         user_id=test_user.id,
-        case_number="TEST-2024-001",
+        case_number="TEST-2025-001",
         title="Test Case",
         description="Test case for deadlines",
         status="open",

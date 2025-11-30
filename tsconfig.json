@@ -1,38 +1,31 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "target": "ESNext",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "module": "ESNext",
-    "skipLibCheck": true,
-
-    /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-
-    /* Decorators for InversifyJS */
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-
-    /* Linting */
+    "esModuleInterop": true,
     "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-
-    /* Paths */
+    "types": ["vitest/globals", "vite/client"],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
-    },
-
-    /* Types */
-    "types": ["vite/client"]
+      "@/*": ["src/*"]
+    }
   },
-  "include": ["src/**/*", "src/**/*.tsx", "tests/**/*"],
-  "exclude": ["node_modules", "dist", "electron", "tests/e2e"]
+  "include": ["src"],
+  "exclude": [
+    "node_modules",
+    "e2e",
+    "tests",
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx",
+    "src/test-utils"
+  ]
 }

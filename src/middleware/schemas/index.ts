@@ -109,8 +109,8 @@ type SchemaRegistry = {
 };
 
 // Compile-time check to ensure all channels are in the registry (unused but required for type safety)
-// @ts-expect-error - Intentionally unused for compile-time type checking
 const _schemaRegistryCheck: SchemaRegistry = ipcSchemas;
+void _schemaRegistryCheck; // Suppress unused variable warning
 
 // Export count for validation
 export const TOTAL_IPC_CHANNELS = Object.keys(IPC_CHANNELS).length;

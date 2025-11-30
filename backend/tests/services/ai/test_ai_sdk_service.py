@@ -90,7 +90,8 @@ class TestConfiguration:
 
     def test_invalid_api_key(self):
         """Test that empty API key raises validation error."""
-        with pytest.raises(ValueError, match="API key cannot be empty"):
+        from pydantic import ValidationError
+        with pytest.raises(ValidationError, match="String should have at least 1 character"):
             AIProviderConfig(
                 provider=AIProviderType.OPENAI,
                 api_key="",
@@ -99,7 +100,8 @@ class TestConfiguration:
 
     def test_temperature_validation(self):
         """Test temperature parameter validation."""
-        with pytest.raises(ValueError):
+        from pydantic import ValidationError
+        with pytest.raises(ValidationError):
             AIProviderConfig(
                 provider=AIProviderType.OPENAI,
                 api_key="sk-test",
@@ -109,7 +111,8 @@ class TestConfiguration:
 
     def test_max_tokens_validation(self):
         """Test max_tokens parameter validation."""
-        with pytest.raises(ValueError):
+        from pydantic import ValidationError
+        with pytest.raises(ValidationError):
             AIProviderConfig(
                 provider=AIProviderType.OPENAI,
                 api_key="sk-test",

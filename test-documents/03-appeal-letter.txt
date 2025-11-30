@@ -3,7 +3,7 @@ testuser555
 Manchester
 M20 5RQ
 
-18th September 2024
+18th November 2025
 
 Mrs Jennifer Holmes
 HR Director
@@ -16,7 +16,7 @@ Dear Mrs Holmes,
 
 RE: APPEAL AGAINST DISMISSAL - EMPLOYEE REFERENCE BT-4521
 
-I am writing to formally appeal my dismissal dated 12th September 2024, reference BT/HR/2024/0847.
+I am writing to formally appeal my dismissal dated 12th November 2025, reference BT/HR/2025/0847.
 
 GROUNDS FOR APPEAL
 
@@ -40,7 +40,7 @@ The company failed to follow its own disciplinary procedure as outlined in the E
 
 The dismissal decision appears to have been made before the hearing took place:
 - Mr Thompson made comments to other employees about "cleaning house"
-- The dismissal letter was dated 12th September but I received it at 8am on the 13th, before the appeal deadline was even set
+- The dismissal letter was dated 12th November but I received it at 8am on the 13th, before the appeal deadline was even set
 - I was asked to clear my desk immediately after the hearing, suggesting the outcome was predetermined
 
 4. LACK OF EVIDENCE FOR GROSS MISCONDUCT
@@ -55,7 +55,7 @@ c) Equipment Misuse: Using company equipment for occasional personal use is comm
 
 5. ALTERNATIVE MOTIVES
 
-I believe the real reason for my dismissal relates to the grievance I raised on 15th July 2024 regarding gender discrimination in the allocation of the Senior Developer promotion, which was given to a less qualified male colleague. This dismissal appears to be retaliation for that grievance.
+I believe the real reason for my dismissal relates to the grievance I raised on 15th September 2025 regarding gender discrimination in the allocation of the Senior Developer promotion, which was given to a less qualified male colleague. This dismissal appears to be retaliation for that grievance.
 
 REMEDY SOUGHT
 
@@ -69,7 +69,7 @@ Alternatively, if reinstatement is not possible, I seek compensation for unfair 
 
 NEXT STEPS
 
-If my appeal is unsuccessful, I intend to pursue a claim at the Employment Tribunal. I have already obtained early conciliation through ACAS (Certificate Number: R123456/24/78).
+If my appeal is unsuccessful, I intend to pursue a claim at the Employment Tribunal. I have already obtained early conciliation through ACAS (Certificate Number: R123456/25/78).
 
 I am available for an appeal hearing at your earliest convenience and request that Mr Thompson not be involved in the appeal decision given his apparent predetermination.
 
@@ -83,7 +83,7 @@ testuser555
 Enclosures:
 - Copies of expense receipts (15 pages)
 - Robert Chen's statement
-- Copy of grievance dated 15th July 2024
+- Copy of grievance dated 15th September 2025
 - ACAS Early Conciliation Certificate
 
 CC: Unite the Union (Regional Office)

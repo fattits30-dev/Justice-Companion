@@ -167,7 +167,9 @@ export class ApiClient {
     try {
       console.log(`[API] ${method} ${url.toString()}`);
       const response = await fetch(url.toString(), requestOptions);
-      console.log(`[API] Response status: ${response.status}, content-type: ${response.headers.get('content-type')}`);
+      console.log(
+        `[API] Response status: ${response.status}, content-type: ${response.headers.get("content-type")}`,
+      );
 
       // Parse response body
       const contentType = response.headers.get("content-type");
@@ -319,9 +321,9 @@ export class ApiClient {
               expires_at: string;
             };
           };
-        }>("/auth/register", { 
-          username, 
-          email, 
+        }>("/auth/register", {
+          username,
+          email,
           password,
           first_name: firstName,
           last_name: lastName,
@@ -503,10 +505,20 @@ export class ApiClient {
      */
     forgotPassword: async (
       email: string,
-    ): Promise<ApiResponse<{ success: boolean; message: string; data?: { token: string; expires_in_hours: number } }>> => {
+    ): Promise<
+      ApiResponse<{
+        success: boolean;
+        message: string;
+        data?: { token: string; expires_in_hours: number };
+      }>
+    > => {
       try {
         const response = await this.post<
-          ApiResponse<{ success: boolean; message: string; data?: { token: string; expires_in_hours: number } }>
+          ApiResponse<{
+            success: boolean;
+            message: string;
+            data?: { token: string; expires_in_hours: number };
+          }>
         >("/auth/forgot-password", { email });
         return response;
       } catch (error) {
@@ -514,7 +526,10 @@ export class ApiClient {
           success: false,
           error: {
             code: error instanceof ApiError ? error.code : "UNKNOWN_ERROR",
-            message: error instanceof Error ? error.message : "Password reset request failed",
+            message:
+              error instanceof Error
+                ? error.message
+                : "Password reset request failed",
           },
         };
       }
@@ -537,7 +552,8 @@ export class ApiClient {
           success: false,
           error: {
             code: error instanceof ApiError ? error.code : "UNKNOWN_ERROR",
-            message: error instanceof Error ? error.message : "Password reset failed",
+            message:
+              error instanceof Error ? error.message : "Password reset failed",
           },
         };
       }

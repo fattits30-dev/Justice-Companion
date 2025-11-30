@@ -301,7 +301,7 @@ async def stream_ai_chat(
                 for msg in conversation.messages:
                     history_messages.append(ChatMessage(role=msg.role, content=msg.content))
             except Exception as exc:
-                logger.error(f"Failed to load conversation history: {e}")
+                logger.error(f"Failed to load conversation history: {exc}")
                 # Continue without history
 
         # Fetch legal context if RAG enabled
@@ -315,7 +315,7 @@ async def stream_ai_chat(
                     system_prompt = build_system_prompt(context)
                     sources = extract_sources(context)
             except Exception as exc:
-                logger.error(f"RAG context retrieval failed: {e}")
+                logger.error(f"RAG context retrieval failed: {exc}")
                 # Continue without RAG
 
         # Build messages array
@@ -425,10 +425,10 @@ async def stream_chat(
     except HTTPException:
         raise
     except Exception as exc:
-        logger.exception(f"Stream chat failed: {e}")
+        logger.exception(f"Stream chat failed: {exc}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Streaming chat failed: {str(e)}",
+            detail=f"Streaming chat failed: {str(exc)}",
         )
 
 @router.post("/send", response_model=Dict[str, Any])
@@ -510,9 +510,9 @@ async def send_chat(
     except HTTPException:
         raise
     except Exception as exc:
-        logger.exception(f"Send chat failed: {e}")
+        logger.exception(f"Send chat failed: {exc}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Chat send failed: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Chat send failed: {str(exc)}"
         )
 
 @router.post("/analyze-case")
@@ -551,10 +551,10 @@ async def analyze_case(
     except HTTPException:
         raise
     except Exception as exc:
-        logger.exception(f"Case analysis failed: {e}")
+        logger.exception(f"Case analysis failed: {exc}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Case analysis failed: {str(e)}",
+            detail=f"Case analysis failed: {str(exc)}",
         )
 
 @router.post("/analyze-evidence")
@@ -593,10 +593,10 @@ async def analyze_evidence(
     except HTTPException:
         raise
     except Exception as exc:
-        logger.exception(f"Evidence analysis failed: {e}")
+        logger.exception(f"Evidence analysis failed: {exc}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Evidence analysis failed: {str(e)}",
+            detail=f"Evidence analysis failed: {str(exc)}",
         )
 
 @router.post("/draft-document")
@@ -637,10 +637,10 @@ async def draft_document(
     except HTTPException:
         raise
     except Exception as exc:
-        logger.exception(f"Document drafting failed: {e}")
+        logger.exception(f"Document drafting failed: {exc}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Document drafting failed: {str(e)}",
+            detail=f"Document drafting failed: {str(exc)}",
         )
 
 @router.post("/upload-document")
@@ -719,10 +719,10 @@ async def upload_document(
     except HTTPException:
         raise
     except Exception as exc:
-        logger.exception(f"Document upload failed: {e}")
+        logger.exception(f"Document upload failed: {exc}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Document upload failed: {str(e)}",
+            detail=f"Document upload failed: {str(exc)}",
         )
 
 @router.post("/analyze-document")
@@ -804,17 +804,18 @@ async def analyze_document(
         logger.info(f"[ENDPOINT] Extraction completed successfully, type: {type(extraction)}")
         logger.info(f"[ENDPOINT] Extraction keys: {extraction.model_dump().keys()}")
 
-        logger.info("[ENDPOINT] Returning extraction response")
-        return extraction
+        logger.info("[ENDPOINT] Returning extraction response with camelCase aliases")
+        # Serialize with camelCase aliases for frontend compatibility
+        return extraction.model_dump(mode="json", by_alias=True)
 
     except HTTPException:
         logger.error("[ENDPOINT] HTTPException caught, re-raising")
         raise
     except Exception as exc:
-        logger.exception(f"[ENDPOINT] Document analysis failed with exception: {e}")
+        logger.exception(f"[ENDPOINT] Document analysis failed with exception: {exc}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Document analysis failed: {str(e)}",
+            detail=f"Document analysis failed: {str(exc)}",
         )
 
 @router.get("/conversations", response_model=List[ConversationResponse])
@@ -845,10 +846,10 @@ async def get_conversations(
         return conversations
 
     except Exception as exc:
-        logger.exception(f"Failed to get conversations: {e}")
+        logger.exception(f"Failed to get conversations: {exc}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get conversations: {str(e)}",
+            detail=f"Failed to get conversations: {str(exc)}",
         )
 
 @router.get("/conversations/{conversation_id}", response_model=ConversationWithMessagesResponse)
@@ -879,10 +880,10 @@ async def get_conversation(
     except HTTPException:
         raise
     except Exception as exc:
-        logger.exception(f"Failed to load conversation: {e}")
+        logger.exception(f"Failed to load conversation: {exc}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to load conversation: {str(e)}",
+            detail=f"Failed to load conversation: {str(exc)}",
         )
 
 @router.delete("/conversations/{conversation_id}")
@@ -914,8 +915,8 @@ async def delete_conversation(
     except HTTPException:
         raise
     except Exception as exc:
-        logger.exception(f"Failed to delete conversation: {e}")
+        logger.exception(f"Failed to delete conversation: {exc}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to delete conversation: {str(e)}",
+            detail=f"Failed to delete conversation: {str(exc)}",
         )

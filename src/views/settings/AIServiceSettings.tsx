@@ -71,12 +71,13 @@ const MODEL_OPTIONS: ModelOption[] = [
 ];
 
 export function AIServiceSettingsTab() {
-  const [modelPreference, setModelPreference] = useState<ModelPreference>("balanced");
+  const [modelPreference, setModelPreference] =
+    useState<ModelPreference>("balanced");
   const [aiHealth, setAiHealth] = useState<AIServiceHealth | null>(null);
   const [isChecking, setIsChecking] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
-  
+
   // Token state
   const [hfToken, setHfToken] = useState("");
   const [showToken, setShowToken] = useState(false);
@@ -131,7 +132,7 @@ export function AIServiceSettingsTab() {
       setTokenError("Please enter a token");
       return;
     }
-    
+
     if (!hfToken.startsWith("hf_")) {
       setTokenError("Token should start with 'hf_'");
       return;
@@ -139,13 +140,14 @@ export function AIServiceSettingsTab() {
 
     setTokenSaving(true);
     setTokenError("");
-    
+
     try {
       // Save token via backend API
-      const response = await apiClient.post("/ai/config/huggingface/api-key", {
-        api_key: hfToken,
-      });
-      
+      const response = await apiClient.aiConfig.updateApiKey(
+        "huggingface",
+        hfToken,
+      );
+
       if (response.success) {
         setTokenSuccess(true);
         setHfToken(""); // Clear for security
@@ -153,11 +155,12 @@ export function AIServiceSettingsTab() {
         // Refresh health check
         await checkAIHealth();
       } else {
-        setTokenError(response.error || "Failed to save token");
+        setTokenError(response.error?.message || "Failed to save token");
       }
     } catch (error: unknown) {
       console.error("Failed to save token:", error);
-      const errorMessage = error instanceof Error ? error.message : "Failed to save token";
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to save token";
       setTokenError(errorMessage);
     } finally {
       setTokenSaving(false);
@@ -193,7 +196,9 @@ export function AIServiceSettingsTab() {
               disabled={isChecking}
               className="text-white/60 hover:text-white"
             >
-              <RefreshCw className={`w-4 h-4 ${isChecking ? "animate-spin" : ""}`} />
+              <RefreshCw
+                className={`w-4 h-4 ${isChecking ? "animate-spin" : ""}`}
+              />
             </Button>
           </div>
 
@@ -204,7 +209,10 @@ export function AIServiceSettingsTab() {
                   <CheckCircle2 className="w-6 h-6" />
                   <span className="font-medium">Connected</span>
                 </div>
-                <Badge variant="success" className="bg-green-500/20 text-green-400">
+                <Badge
+                  variant="success"
+                  className="bg-green-500/20 text-green-400"
+                >
                   HuggingFace Pro Active
                 </Badge>
               </>
@@ -214,7 +222,10 @@ export function AIServiceSettingsTab() {
                   <XCircle className="w-6 h-6" />
                   <span className="font-medium">Limited</span>
                 </div>
-                <Badge variant="warning" className="bg-yellow-500/20 text-yellow-400">
+                <Badge
+                  variant="warning"
+                  className="bg-yellow-500/20 text-yellow-400"
+                >
                   HuggingFace Not Connected
                 </Badge>
               </>
@@ -224,7 +235,7 @@ export function AIServiceSettingsTab() {
                   <XCircle className="w-6 h-6" />
                   <span className="font-medium">Offline</span>
                 </div>
-                <Badge variant="error" className="bg-red-500/20 text-red-400">
+                <Badge variant="danger" className="bg-red-500/20 text-red-400">
                   AI Service Unavailable
                 </Badge>
               </>
@@ -273,7 +284,9 @@ export function AIServiceSettingsTab() {
           <p className="text-white/60 text-sm mb-4">
             Enter your HuggingFace Pro API token to enable AI features.
             {isConnected && (
-              <span className="text-green-400 ml-2">Token is currently configured.</span>
+              <span className="text-green-400 ml-2">
+                Token is currently configured.
+              </span>
             )}
           </p>
 
@@ -294,10 +307,14 @@ export function AIServiceSettingsTab() {
                 onClick={() => setShowToken(!showToken)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/60"
               >
-                {showToken ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {showToken ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
               </button>
             </div>
-            
+
             <Button
               onClick={handleSaveToken}
               disabled={tokenSaving || !hfToken.trim()}
@@ -350,9 +367,10 @@ export function AIServiceSettingsTab() {
                   onClick={() => setModelPreference(option.id)}
                   className={`
                     relative p-4 rounded-lg border-2 transition-all text-left
-                    ${isSelected 
-                      ? "border-purple-500 bg-purple-500/10" 
-                      : "border-white/10 bg-white/5 hover:border-white/20"
+                    ${
+                      isSelected
+                        ? "border-purple-500 bg-purple-500/10"
+                        : "border-white/10 bg-white/5 hover:border-white/20"
                     }
                   `}
                 >
@@ -360,13 +378,21 @@ export function AIServiceSettingsTab() {
                     <motion.div
                       layoutId="selectedModel"
                       className="absolute inset-0 rounded-lg border-2 border-purple-500"
-                      transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
+                      transition={{
+                        type: "spring",
+                        bounce: 0.2,
+                        duration: 0.4,
+                      }}
                     />
                   )}
 
                   <div className="flex items-center gap-2 mb-2">
-                    <Icon className={`w-5 h-5 ${isSelected ? "text-purple-400" : "text-white/60"}`} />
-                    <span className={`font-semibold ${isSelected ? "text-white" : "text-white/80"}`}>
+                    <Icon
+                      className={`w-5 h-5 ${isSelected ? "text-purple-400" : "text-white/60"}`}
+                    />
+                    <span
+                      className={`font-semibold ${isSelected ? "text-white" : "text-white/80"}`}
+                    >
                       {option.name}
                     </span>
                   </div>
@@ -377,10 +403,12 @@ export function AIServiceSettingsTab() {
 
                   <div className="flex items-center gap-4 text-xs">
                     <span className="text-white/40">
-                      Speed: <span className="text-white/70">{option.speed}</span>
+                      Speed:{" "}
+                      <span className="text-white/70">{option.speed}</span>
                     </span>
                     <span className="text-white/40">
-                      Quality: <span className="text-white/70">{option.quality}</span>
+                      Quality:{" "}
+                      <span className="text-white/70">{option.quality}</span>
                     </span>
                   </div>
                 </button>
@@ -428,9 +456,10 @@ export function AIServiceSettingsTab() {
               About the AI Assistant
             </p>
             <p className="text-blue-200/70">
-              Justice Companion uses privacy-focused AI powered by HuggingFace Pro. 
-              All processing is done securely - your case data never leaves your control. 
-              The AI provides legal information and document assistance, not legal advice.
+              Justice Companion uses privacy-focused AI powered by HuggingFace
+              Pro. All processing is done securely - your case data never leaves
+              your control. The AI provides legal information and document
+              assistance, not legal advice.
             </p>
           </div>
         </div>

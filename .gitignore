@@ -327,3 +327,9 @@ __pycache__/
 
 # Snyk Security Extension - AI Rules (auto-generated)
 .github/instructions/snyk_rules.instructions.md
+backend/venv/
+
+# Temp files
+*.process_lock
+backend/test_logs.py
+e2e-tests/screenshots/

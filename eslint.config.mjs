@@ -21,6 +21,7 @@ export default tseslint.config(
       "src/test-utils/**/*", // Test utilities not in main tsconfig
       "e2e/**/*", // Legacy Playwright recordings (superseded by tests/e2e)
       "e2e-tests/**/*", // Standalone E2E tests (no tsconfig)
+      "tests/e2e/**/*", // E2E tests (no tsconfig)
       "electron/__tests__/**/*", // Electron tests not in tsconfig.electron.json
       "temp-*.tsx", // Temporary test files
       "temp-*.ts", // Temporary test files
@@ -33,11 +34,7 @@ export default tseslint.config(
       ecmaVersion: 2020,
       globals: globals.browser,
       parserOptions: {
-        project: [
-          "./tsconfig.json",
-          "./tsconfig.electron.json",
-          "./tests/e2e/tsconfig.json",
-        ],
+        project: ["./tsconfig.json"],
         tsconfigRootDir: import.meta.dirname,
       },
     },

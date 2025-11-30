@@ -33,12 +33,12 @@ class HuggingFaceClient:
         self.token = settings.HF_API_TOKEN
         if not self.token:
             print("[WARNING] HF_API_TOKEN not set - API calls will fail")
-        
-        # Async client for FastAPI - uses Inference Providers (auto-routes to best provider)
-        # provider="auto" (default) picks first available provider for the model
+
+        # Async client for FastAPI - uses Inference Providers (router.huggingface.co)
+        # The router endpoint auto-routes to available providers (novita, together, cerebras, etc.)
         self.client = AsyncInferenceClient(
             token=self.token,
-            # Don't set provider - let it auto-select based on model availability
+            base_url="https://router.huggingface.co/v1",  # Inference Providers endpoint
         )
         
         # Model mappings from config

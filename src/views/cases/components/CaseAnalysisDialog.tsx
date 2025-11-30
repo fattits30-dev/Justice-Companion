@@ -210,7 +210,7 @@ export function CaseAnalysisDialog({
                 Applicable UK Law
               </h3>
               <div className="space-y-3">
-                {analysis.applicableLaw.map(
+                {(analysis.applicableLaw ?? []).map(
                   (law: ApplicableLaw, index: number) => (
                     <Card key={index} variant="default" className="p-4">
                       <h4 className="font-medium text-white mb-2">
@@ -234,7 +234,9 @@ export function CaseAnalysisDialog({
                         <div>
                           <p className="text-xs text-gray-400">
                             Jurisdiction:{" "}
-                            {law.jurisdiction.replace("_", " ").toUpperCase()}
+                            {(law.jurisdiction ?? "unknown")
+                              .replace("_", " ")
+                              .toUpperCase()}
                           </p>
                         </div>
                       </div>
@@ -251,7 +253,7 @@ export function CaseAnalysisDialog({
                 Recommended Actions
               </h3>
               <div className="space-y-3">
-                {analysis.recommendedActions.map(
+                {(analysis.recommendedActions ?? []).map(
                   (actionItem: ActionItem, index: number) => (
                     <Card key={index} variant="default" className="p-4">
                       <div className="flex items-start gap-3">

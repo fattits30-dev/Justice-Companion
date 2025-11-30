@@ -63,20 +63,76 @@ logging.basicConfig(
 )
 
 @asynccontextmanager
-async def lifespan(_: FastAPI):
+async def lifespan(app: FastAPI):
     """
     Application lifecycle manager.
-    Initializes database on startup, cleanup on shutdown.
+
+    Startup:
+    - Initialize database
+    - Initialize ServiceContainer with core services
+    - Store container in app.state for dependency injection
+
+    Shutdown:
+    - Reset ServiceContainer
+    - Cleanup resources
     """
+    import base64
+
+    from backend.models.base import SessionLocal
+    from backend.services.audit_logger import AuditLogger
+    from backend.services.security.encryption import EncryptionService
+    from backend.services.service_container import ServiceContainer
+
     # Startup: Initialize database
     print("Initializing database...")
     init_db()
     print("Database initialized successfully")
 
+    # Initialize encryption service
+    encryption_key = os.getenv("ENCRYPTION_KEY_BASE64")
+    if not encryption_key:
+        print("WARNING: No ENCRYPTION_KEY_BASE64 found. Generating temporary key.")
+        print("         Data encrypted with this key will be lost on restart!")
+        encryption_key = base64.b64encode(os.urandom(32)).decode("utf-8")
+
+    encryption_service = EncryptionService(encryption_key)
+    print("EncryptionService initialized")
+
+    # Initialize audit logger with a dedicated session
+    audit_db = SessionLocal()
+    audit_logger = AuditLogger(audit_db)
+    print("AuditLogger initialized")
+
+    # Initialize ServiceContainer singleton
+    container = ServiceContainer()
+    container.initialize(
+        encryption_service=encryption_service,
+        audit_logger=audit_logger,
+        key_manager=None,  # KeyManager is optional for now
+    )
+    print("ServiceContainer initialized")
+
+    # Store container in app state for dependency injection
+    app.state.container = container
+
     yield  # Application runs here
 
     # Shutdown: Cleanup
     print("Shutting down backend...")
+
+    # Close audit logger's database session
+    try:
+        audit_db.close()
+        print("AuditLogger session closed")
+    except Exception as e:
+        print(f"Error closing audit db: {e}")
+
+    # Reset ServiceContainer
+    try:
+        container.reset()
+        print("ServiceContainer reset")
+    except Exception as e:
+        print(f"Error resetting container: {e}")
 
 # Create FastAPI application
 app = FastAPI(
@@ -193,7 +249,11 @@ def get_allowed_origins() -> list:
             "http://localhost:5176",  # Vite dev server
             "http://localhost:5177",  # Vite dev server (fallback port)
             "http://localhost:5173",  # Vite dev server (alternate port)
-            "http://localhost:5178",  # Vite dev server (e2e port)
+            "http://localhost:5178",
+            "http://localhost:5176",
+            "http://127.0.0.1:5176",
+            "http://localhost:5178",
+            "http://127.0.0.1:5178",  # Vite dev server (e2e port)
             "http://127.0.0.1:5176",  # Localhost IPv4
             "http://127.0.0.1:5177",  # Localhost IPv4 (fallback)
             "http://127.0.0.1:5173",  # Localhost IPv4 (alternate)

@@ -30,7 +30,6 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
-from pydantic import BaseModel, Field, model_validator
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
@@ -57,302 +56,26 @@ from backend.services.case_service import (
 from backend.services.security.encryption import EncryptionService
 from backend.services.auth.session_manager import SessionManager
 
+# Import schemas from consolidated schema file
+from backend.schemas.case import (
+    CreateCaseRequest,
+    UpdateCaseRequest,
+    CreateCaseFactRequest,
+    BulkDeleteRequest,
+    BulkUpdateRequest,
+    BulkArchiveRequest,
+    LegacyCaseResponse,
+    CaseFactResponse,
+    DeleteCaseResponse,
+    PaginationMetadata,
+    CaseListResponse,
+    VALID_CASE_TYPES,
+    VALID_CASE_STATUSES,
+    VALID_FACT_CATEGORIES,
+    VALID_IMPORTANCE_LEVELS,
+)
+
 router = APIRouter(prefix="/cases", tags=["cases"])
-
-# ===== ENUMS (for backward compatibility with frontend) =====
-VALID_CASE_TYPES = ["employment", "housing", "consumer", "family", "debt", "other"]
-VALID_CASE_STATUSES = ["active", "closed", "pending"]
-VALID_FACT_CATEGORIES = [
-    "timeline",
-    "evidence",
-    "witness",
-    "location",
-    "communication",
-    "other",
-]
-VALID_IMPORTANCE_LEVELS = ["low", "medium", "high", "critical"]
-
-
-def _require_case_type(value: str) -> str:
-    if value not in VALID_CASE_TYPES:
-        raise ValueError(
-            f"Please select a valid case type: {', '.join(VALID_CASE_TYPES)}"
-        )
-    return value
-
-
-def _validate_case_type(value: Optional[str]) -> Optional[str]:
-    if value and value not in VALID_CASE_TYPES:
-        raise ValueError(
-            f"Please select a valid case type: {', '.join(VALID_CASE_TYPES)}"
-        )
-    return value
-
-
-def _require_case_status(value: str) -> str:
-    if value not in VALID_CASE_STATUSES:
-        raise ValueError(
-            f"Please select a valid status: {', '.join(VALID_CASE_STATUSES)}"
-        )
-    return value
-
-
-def _validate_case_status(value: Optional[str]) -> Optional[str]:
-    if value and value not in VALID_CASE_STATUSES:
-        raise ValueError(
-            f"Please select a valid status: {', '.join(VALID_CASE_STATUSES)}"
-        )
-    return value
-
-
-def _normalize_case_number(value: Optional[str]) -> Optional[str]:
-    if not value:
-        return None
-    trimmed = value.strip()
-    if not trimmed:
-        return None
-    if not all(c.isalnum() or c in ["-", "/", " "] for c in trimmed):
-        raise ValueError("Case number contains invalid characters")
-    return trimmed
-
-
-def _strip_optional(value: Optional[str]) -> Optional[str]:
-    return value.strip() if value else None
-
-
-def _strip_required(value: str) -> str:
-    stripped = value.strip()
-    if not stripped:
-        raise ValueError("Title cannot be empty")
-    return stripped
-
-
-def _validate_optional_date(value: Optional[str]) -> Optional[str]:
-    if not value:
-        return None
-    try:
-        datetime.strptime(value, "%Y-%m-%d")
-    except ValueError as exc:  # pragma: no cover - defensive branch
-        raise ValueError("Invalid date format (use YYYY-MM-DD)") from exc
-    return value
-
-
-def _require_fact_category(value: str) -> str:
-    if value not in VALID_FACT_CATEGORIES:
-        raise ValueError(f"Invalid fact category: {', '.join(VALID_FACT_CATEGORIES)}")
-    return value
-
-
-def _require_fact_importance(value: str) -> str:
-    if value not in VALID_IMPORTANCE_LEVELS:
-        raise ValueError(
-            f"Invalid importance level: {', '.join(VALID_IMPORTANCE_LEVELS)}"
-        )
-    return value
-
-
-def _normalize_fact_content(value: str) -> str:
-    stripped = value.strip()
-    if not stripped:
-        raise ValueError("Fact content cannot be empty")
-    return stripped
-
-
-# ===== PYDANTIC REQUEST MODELS (for legacy endpoints) =====
-class CreateCaseRequest(BaseModel):
-    """Request model for creating a new case (legacy format)."""
-
-    title: str = Field(..., min_length=1, max_length=200, description="Case title")
-    description: Optional[str] = Field(
-        None, max_length=10000, description="Case description"
-    )
-    caseType: str = Field(..., description="Type of legal case")
-    status: str = Field(default="active", description="Case status")
-    caseNumber: Optional[str] = Field(
-        None, max_length=50, description="Court case number"
-    )
-    courtName: Optional[str] = Field(None, max_length=200, description="Court name")
-    judge: Optional[str] = Field(None, max_length=100, description="Judge name")
-    opposingParty: Optional[str] = Field(
-        None, max_length=200, description="Opposing party name"
-    )
-    opposingCounsel: Optional[str] = Field(
-        None,
-        max_length=200,
-        description="Opposing counsel name",
-    )
-    nextHearingDate: Optional[str] = Field(
-        None, description="Next hearing date (YYYY-MM-DD)"
-    )
-    filingDeadline: Optional[str] = Field(
-        None, description="Filing deadline (YYYY-MM-DD)"
-    )
-    aiMetadata: Optional[Dict[str, Any]] = Field(
-        default=None,
-        description=("Optional metadata describing AI-assisted extraction context"),
-    )
-
-    @model_validator(mode="after")
-    def normalize_fields(self) -> "CreateCaseRequest":
-        """Normalize whitespace-sensitive fields and enforce legacy constraints."""
-        self.caseType = _require_case_type(self.caseType)
-        self.status = _require_case_status(self.status)
-        self.caseNumber = _normalize_case_number(self.caseNumber)
-        self.title = _strip_required(self.title)
-        self.description = _strip_optional(self.description)
-        self.courtName = _strip_optional(self.courtName)
-        self.judge = _strip_optional(self.judge)
-        self.opposingParty = _strip_optional(self.opposingParty)
-        self.opposingCounsel = _strip_optional(self.opposingCounsel)
-        self.nextHearingDate = _validate_optional_date(self.nextHearingDate)
-        self.filingDeadline = _validate_optional_date(self.filingDeadline)
-        return self
-
-
-class UpdateCaseRequest(BaseModel):
-    """Request model for updating an existing case (legacy format)."""
-
-    title: Optional[str] = Field(None, min_length=1, max_length=200)
-    description: Optional[str] = Field(None, max_length=10000)
-    caseType: Optional[str] = None
-    status: Optional[str] = None
-    caseNumber: Optional[str] = Field(None, max_length=50)
-    courtName: Optional[str] = Field(None, max_length=200)
-    judge: Optional[str] = Field(None, max_length=100)
-    opposingParty: Optional[str] = Field(None, max_length=200)
-    opposingCounsel: Optional[str] = Field(None, max_length=200)
-    nextHearingDate: Optional[str] = None
-    filingDeadline: Optional[str] = None
-
-    @model_validator(mode="after")
-    def normalize_fields(self) -> "UpdateCaseRequest":
-        """Apply optional validation rules and consistent trimming."""
-        self.caseType = _validate_case_type(self.caseType)
-        self.status = _validate_case_status(self.status)
-        self.caseNumber = _normalize_case_number(self.caseNumber)
-        self.title = _strip_optional(self.title)
-        self.description = _strip_optional(self.description)
-        self.courtName = _strip_optional(self.courtName)
-        self.judge = _strip_optional(self.judge)
-        self.opposingParty = _strip_optional(self.opposingParty)
-        self.opposingCounsel = _strip_optional(self.opposingCounsel)
-        self.nextHearingDate = _validate_optional_date(self.nextHearingDate)
-        self.filingDeadline = _validate_optional_date(self.filingDeadline)
-        return self
-
-
-class CreateCaseFactRequest(BaseModel):
-    """Request model for creating a case fact."""
-
-    caseId: int = Field(..., gt=0, description="Case ID")
-    factContent: str = Field(
-        ..., min_length=1, max_length=10000, description="Fact content"
-    )
-    factCategory: str = Field(..., description="Fact category")
-    importance: str = Field(default="medium", description="Importance level")
-
-    @model_validator(mode="after")
-    def normalize_fields(self) -> "CreateCaseFactRequest":
-        """Normalize and validate fact data prior to persistence."""
-        self.factCategory = _require_fact_category(self.factCategory)
-        self.importance = _require_fact_importance(self.importance)
-        self.factContent = _normalize_fact_content(self.factContent)
-        return self
-
-
-class BulkDeleteRequest(BaseModel):
-    """Request model for bulk delete operation."""
-
-    case_ids: List[int] = Field(
-        ..., min_length=1, description="List of case IDs to delete"
-    )
-    fail_fast: bool = Field(
-        default=True, description="Stop on first error and rollback"
-    )
-
-
-class BulkUpdateRequest(BaseModel):
-    """Request model for bulk update operation."""
-
-    updates: List[CaseUpdate] = Field(
-        ..., min_length=1, description="List of case updates"
-    )
-    fail_fast: bool = Field(
-        default=True, description="Stop on first error and rollback"
-    )
-
-
-class BulkArchiveRequest(BaseModel):
-    """Request model for bulk archive operation."""
-
-    case_ids: List[int] = Field(
-        ..., min_length=1, description="List of case IDs to archive"
-    )
-    fail_fast: bool = Field(
-        default=True, description="Stop on first error and rollback"
-    )
-
-
-# ===== PYDANTIC RESPONSE MODELS (for legacy endpoints) =====
-class LegacyCaseResponse(BaseModel):
-    """Response model for case data (legacy format with camelCase)."""
-
-    id: int
-    title: str
-    description: Optional[str]
-    caseType: str
-    status: str
-    userId: int
-    caseNumber: Optional[str] = None
-    courtName: Optional[str] = None
-    judge: Optional[str] = None
-    opposingParty: Optional[str] = None
-    opposingCounsel: Optional[str] = None
-    nextHearingDate: Optional[str] = None
-    filingDeadline: Optional[str] = None
-    createdAt: datetime
-    updatedAt: datetime
-
-    class Config:
-        from_attributes = True
-
-
-class CaseFactResponse(BaseModel):
-    """Response model for case fact data."""
-
-    id: int
-    caseId: int
-    factContent: str
-    factCategory: str
-    importance: str
-    createdAt: datetime
-    updatedAt: datetime
-
-    class Config:
-        from_attributes = True
-
-
-class DeleteCaseResponse(BaseModel):
-    """Response model for case deletion."""
-
-    deleted: bool
-    id: int
-
-
-class PaginationMetadata(BaseModel):
-    """Pagination metadata for list responses."""
-
-    total: int
-    page: int
-    page_size: int
-    total_pages: int
-
-
-class CaseListResponse(BaseModel):
-    """Response model for case list with pagination."""
-
-    cases: List[LegacyCaseResponse]
-    pagination: PaginationMetadata
 
 
 # ===== DEPENDENCIES =====

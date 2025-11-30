@@ -12,12 +12,12 @@ initSentry();
 if (typeof window !== "undefined") {
   registerSW({
     immediate: true,
-    onRegistered(worker) {
+    onRegistered(worker: ServiceWorkerRegistration | undefined) {
       if (worker) {
         console.log("Service worker registered", worker);
       }
     },
-    onRegisterError(error) {
+    onRegisterError(error: Error) {
       console.error("Service worker registration failed", error);
     },
   });
@@ -49,6 +49,6 @@ if (rootElement) {
       >
         <App />
       </ErrorBoundary>
-    </React.StrictMode>
+    </React.StrictMode>,
   );
 }

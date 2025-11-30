@@ -16,7 +16,7 @@ import { SaveToCaseDialog } from "./chat/SaveToCaseDialog.tsx";
 import { MessageItem } from "./chat/MessageItem.tsx";
 import { AICaseCreationDialog } from "./chat/AICaseCreationDialog.tsx";
 import { toast } from "sonner";
-import { Upload, FileText, Trash2, ChevronDown } from "lucide-react";
+import { Upload, FileText, Trash2, ChevronDown, Brain } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import { useStreamingChat, Message } from "../hooks/useStreamingChat.ts";
@@ -53,7 +53,7 @@ export function ChatView() {
   });
 
   const [input, setInput] = useState("");
-  const [_showThinking, _setShowThinking] = useState(false);
+  const [showThinking, setShowThinking] = useState(true);
   const [_currentConversationId, setCurrentConversationId] = useState<
     number | null
   >(null);
@@ -332,20 +332,21 @@ export function ChatView() {
 
         // Check for duplicate cases
         try {
-          const existingCases = (await window.justiceAPI.getAllCases(
-            sessionId,
-          )) as any;
-          const duplicateCase = existingCases.data?.find(
-            (case_: any) =>
-              case_.title?.toLowerCase() === caseData.title?.toLowerCase(),
-          );
+          const existingCasesResponse = await apiClient.cases.list();
+          if (existingCasesResponse.success && existingCasesResponse.data) {
+            const cases = existingCasesResponse.data.items || [];
+            const duplicateCase = cases.find(
+              (case_: any) =>
+                case_.title?.toLowerCase() === caseData.title?.toLowerCase(),
+            );
 
-          if (duplicateCase) {
-            setIsCreatingCase(false);
-            setDuplicateCaseData(caseData);
-            setExistingCaseTitle(duplicateCase.title);
-            setIsDuplicateWarningOpen(true);
-            return;
+            if (duplicateCase) {
+              setIsCreatingCase(false);
+              setDuplicateCaseData(caseData);
+              setExistingCaseTitle(duplicateCase.title);
+              setIsDuplicateWarningOpen(true);
+              return;
+            }
           }
         } catch (error) {
           console.warn(
@@ -354,18 +355,17 @@ export function ChatView() {
           );
         }
 
-        // Create the case
-        const result = await window.justiceAPI.createCase(caseData, sessionId, {
-          source: "document_analysis",
-          documentFilename:
-            (messageForCaseCreation as any).documentAnalysis?.filename ||
-            "unknown",
-          aiProvider: "document_extraction",
-          confidence: (messageForCaseCreation as any).documentAnalysis
-            ?.suggestedCaseData?.confidence,
-          extractedFrom: (messageForCaseCreation as any).documentAnalysis
-            ?.suggestedCaseData?.extractedFrom,
-        });
+        // Create the case using the new API client
+        const result = await apiClient.cases.create({
+          title: caseData.title,
+          caseType: caseData.caseType || "other",
+          description: caseData.description,
+          opposingParty: caseData.opposingParty,
+          caseNumber: caseData.caseNumber,
+          courtName: caseData.courtName,
+          filingDeadline: caseData.filingDeadline,
+          nextHearingDate: caseData.nextHearingDate,
+        } as any);
 
         if (result.success && result.data) {
           toast.success("Case created successfully", {
@@ -529,11 +529,17 @@ Based on your dismissal letter, here are some general steps many people take whe
         const rawData =
           analysisResult.data?.suggested_case_data ||
           analysisResult.data?.suggestedCaseData;
-        
+
         // Extract name detection / ownership mismatch data
-        const documentOwnershipMismatch = rawData?.document_ownership_mismatch || rawData?.documentOwnershipMismatch || false;
-        const documentClaimantName = rawData?.document_claimant_name || rawData?.documentClaimantName || null;
-        
+        const documentOwnershipMismatch =
+          rawData?.document_ownership_mismatch ||
+          rawData?.documentOwnershipMismatch ||
+          false;
+        const documentClaimantName =
+          rawData?.document_claimant_name ||
+          rawData?.documentClaimantName ||
+          null;
+
         const suggestedCaseData = rawData
           ? {
               title: rawData.title,
@@ -638,12 +644,12 @@ Based on your dismissal letter, here are some general steps many people take whe
                   documentClaimantName,
                 },
               }
-            : { 
-                documentAnalysis: { 
+            : {
+                documentAnalysis: {
                   filename,
                   documentOwnershipMismatch,
                   documentClaimantName,
-                } 
+                },
               }),
         } as any;
 
@@ -885,7 +891,7 @@ Based on your dismissal letter, here are some general steps many people take whe
                     message={message}
                     onSaveToCase={handleSaveToCase}
                     onCreateCase={handleCreateCase}
-                    showThinking={_showThinking}
+                    showThinking={showThinking}
                   />
                 </motion.div>
               ))}
@@ -1092,12 +1098,27 @@ Based on your dismissal letter, here are some general steps many people take whe
               )}
             </button>
           </div>
-          <div className="mt-2 text-xs text-white/80 flex items-center gap-4">
-            <span>Press Enter to send, Shift+Enter for new line</span>
-            <span className="flex items-center gap-1 text-white/60">
-              <FileText className="w-3 h-3" />
-              Supports: PDF, DOCX, TXT (max 10MB)
-            </span>
+          <div className="mt-2 text-xs text-white/80 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <span>Press Enter to send, Shift+Enter for new line</span>
+              <span className="flex items-center gap-1 text-white/60">
+                <FileText className="w-3 h-3" />
+                Supports: PDF, DOCX, TXT (max 10MB)
+              </span>
+            </div>
+            <button
+              onClick={() => setShowThinking(!showThinking)}
+              className={`flex items-center gap-1.5 px-2 py-1 rounded-md transition-colors ${
+                showThinking
+                  ? "bg-purple-500/20 text-purple-300 border border-purple-500/30"
+                  : "bg-white/5 text-white/50 border border-white/10 hover:bg-white/10"
+              }`}
+              title={showThinking ? "Hide AI reasoning" : "Show AI reasoning"}
+              type="button"
+            >
+              <Brain className="w-3 h-3" />
+              <span>{showThinking ? "Thinking: On" : "Thinking: Off"}</span>
+            </button>
           </div>
         </div>
       </div>

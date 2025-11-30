@@ -160,7 +160,7 @@ def test_get_profile_success(client, valid_session_id, mock_profile_service):
 def test_get_profile_not_found(client, valid_session_id, mock_profile_service):
     """Test GET /profile returns 404 if profile doesn't exist."""
     # Mock service to return None
-    mock_profile_service.get_extended = AsyncMock(return_value=None)
+    mock_profile_service.get = AsyncMock(return_value=None)
 
     response = client.get(
         "/profile",

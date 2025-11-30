@@ -1,8 +1,17 @@
-import { memo } from "react";
-import { Save, Plus, FileText, Copy, Check, AlertTriangle } from "lucide-react";
+import { memo, useMemo, useState } from "react";
+import {
+  Save,
+  Plus,
+  FileText,
+  Copy,
+  Check,
+  AlertTriangle,
+  ChevronDown,
+  ChevronUp,
+  Brain,
+} from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
-import { useState } from "react";
 
 interface Message {
   id: string;
@@ -26,6 +35,42 @@ interface MessageItemProps {
   style?: React.CSSProperties; // Optional: for react-window positioning (no longer used)
 }
 
+// Parse <think> tags from content and return cleaned content + thinking
+function parseThinkingFromContent(content: string): {
+  displayContent: string;
+  thinking: string | null;
+} {
+  // Match <think>...</think> tags (case-insensitive, handles newlines)
+  const thinkRegex = /<think>([\s\S]*?)<\/think>/gi;
+  const matches = content.match(thinkRegex);
+
+  if (!matches || matches.length === 0) {
+    return { displayContent: content, thinking: null };
+  }
+
+  // Extract all thinking content
+  const thinkingParts: string[] = [];
+  let cleanedContent = content;
+
+  for (const match of matches) {
+    // Extract the content inside <think>...</think>
+    const innerContent = match.replace(/<\/?think>/gi, "").trim();
+    if (innerContent) {
+      thinkingParts.push(innerContent);
+    }
+    // Remove the <think> block from the display content
+    cleanedContent = cleanedContent.replace(match, "");
+  }
+
+  // Clean up any extra whitespace left behind
+  cleanedContent = cleanedContent.trim().replace(/\n{3,}/g, "\n\n");
+
+  return {
+    displayContent: cleanedContent,
+    thinking: thinkingParts.length > 0 ? thinkingParts.join("\n\n") : null,
+  };
+}
+
 function MessageItemComponent({
   message,
   onSaveToCase,
@@ -34,10 +79,21 @@ function MessageItemComponent({
   style = {},
 }: MessageItemProps) {
   const [copied, setCopied] = useState(false);
+  const [thinkingExpanded, setThinkingExpanded] = useState(false);
+
+  // Parse thinking from content
+  const { displayContent, thinking: parsedThinking } = useMemo(
+    () => parseThinkingFromContent(message.content),
+    [message.content],
+  );
+
+  // Use parsed thinking or the message.thinking property
+  const thinkingContent = parsedThinking || message.thinking;
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(message.content);
+      // Copy the display content (without thinking tags)
+      await navigator.clipboard.writeText(displayContent);
       setCopied(true);
       toast.success("Message copied to clipboard");
       setTimeout(() => setCopied(false), 2000);
@@ -98,7 +154,7 @@ function MessageItemComponent({
                     This document may not be yours
                   </p>
                   <p className="text-amber-200/80 text-sm mt-1">
-                    {message.documentAnalysis.documentClaimantName 
+                    {message.documentAnalysis.documentClaimantName
                       ? `This document appears to be about ${message.documentAnalysis.documentClaimantName}. If this belongs to someone else, tell them about Justice Companion!`
                       : "Your name was not found in this document. Please verify this document belongs to your case."}
                   </p>
@@ -108,21 +164,8 @@ function MessageItemComponent({
           )}
 
           <div className="prose prose-invert max-w-none">
-            <ReactMarkdown>{message.content}</ReactMarkdown>
+            <ReactMarkdown>{displayContent}</ReactMarkdown>
           </div>
-
-          {message.thinking && showThinking && (
-            <details className="mt-3 text-sm">
-              <summary className="cursor-pointer text-white/90 hover:text-white">
-                View AI reasoning process
-              </summary>
-              <div className="mt-2 p-3 bg-primary-900/50 rounded border border-gray-700">
-                <p className="text-white/90 whitespace-pre-wrap">
-                  {message.thinking}
-                </p>
-              </div>
-            </details>
-          )}
 
           {/* Action Buttons (for assistant messages only) */}
           {message.role === "assistant" && (
@@ -166,6 +209,35 @@ function MessageItemComponent({
           <div className="mt-2 text-xs text-white/80">
             {message.timestamp.toLocaleTimeString()}
           </div>
+
+          {/* AI Thinking Dropdown (at the bottom of the message) */}
+          {thinkingContent && showThinking && message.role === "assistant" && (
+            <div className="mt-3 border-t border-white/10 pt-3">
+              <button
+                onClick={() => setThinkingExpanded(!thinkingExpanded)}
+                className="flex items-center gap-2 px-3 py-2 text-sm text-purple-300 hover:text-purple-200 bg-purple-500/10 hover:bg-purple-500/20 rounded-lg transition-all w-full justify-between border border-purple-500/20 hover:border-purple-500/30"
+                type="button"
+              >
+                <div className="flex items-center gap-2">
+                  <Brain className="w-4 h-4" />
+                  <span>AI Reasoning Process</span>
+                </div>
+                {thinkingExpanded ? (
+                  <ChevronUp className="w-4 h-4" />
+                ) : (
+                  <ChevronDown className="w-4 h-4" />
+                )}
+              </button>
+
+              {thinkingExpanded && (
+                <div className="mt-2 p-4 bg-purple-900/20 rounded-lg border border-purple-500/20 text-sm">
+                  <p className="text-purple-100/90 whitespace-pre-wrap leading-relaxed">
+                    {thinkingContent}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

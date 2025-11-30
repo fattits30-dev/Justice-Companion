@@ -102,22 +102,22 @@ def sample_timeline_events():
             case_id=1,
             title="Initial Complaint Filed",
             description="Employee filed formal complaint with HR",
-            event_date="2024-12-01T00:00:00",
+            event_date="2025-11-01T00:00:00",
             event_type="filing",
             completed=True,
-            created_at="2024-12-01T10:00:00",
-            updated_at="2024-12-01T10:00:00",
+            created_at="2025-11-01T10:00:00",
+            updated_at="2025-11-01T10:00:00",
         ),
         TimelineEvent(
             id=2,
             case_id=1,
             title="Investigation Scheduled",
             description="HR scheduled investigation meeting",
-            event_date="2024-12-15T00:00:00",
+            event_date="2025-12-15T00:00:00",
             event_type="hearing",
             completed=False,
-            created_at="2024-12-10T10:00:00",
-            updated_at="2024-12-10T10:00:00",
+            created_at="2025-12-10T10:00:00",
+            updated_at="2025-12-10T10:00:00",
         ),
     ]
 
@@ -141,11 +141,11 @@ def sample_deadlines():
             case_id=1,
             title="Mediation Session",
             description="Mandatory mediation session",
-            deadline_date="2024-12-20T00:00:00",
+            deadline_date="2025-12-20T00:00:00",
             priority="medium",
             status="completed",
-            created_at="2024-12-01T10:00:00",
-            updated_at="2024-12-20T16:00:00",
+            created_at="2025-11-01T10:00:00",
+            updated_at="2025-12-20T16:00:00",
         ),
     ]
 
@@ -458,11 +458,11 @@ async def test_generate_timeline_report_with_urgency(
         case_id=1,
         title="Overdue Response",
         description="This deadline has passed",
-        deadline_date="2024-12-01T00:00:00",  # Past date
+        deadline_date="2025-11-01T00:00:00",  # Past date
         priority="critical",
         status="pending",
-        created_at="2024-11-01T10:00:00",
-        updated_at="2024-11-01T10:00:00",
+        created_at="2025-10-01T10:00:00",
+        updated_at="2025-10-01T10:00:00",
     )
 
     timeline_data = TimelineExportData(

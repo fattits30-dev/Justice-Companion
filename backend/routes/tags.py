@@ -24,141 +24,37 @@ Service Layer Integration:
 """
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status, Request
-from pydantic import BaseModel, Field, field_validator
 from typing import Optional, List, Dict, Any
 from sqlalchemy.orm import Session
 
 from backend.models.base import get_db
 from backend.models.tag import Tag
-from backend.services.auth.service import AuthenticationService
 from backend.routes.auth import get_current_user
 from backend.services.tag_service import (
     TagService,
     CreateTagInput,
     UpdateTagInput,
 )
-from backend.services.audit_logger import AuditLogger
+
+# Import centralized dependencies
+from backend.dependencies import (
+    get_auth_service,
+    get_tag_service,
+)
+
+# Import schemas from consolidated schema file
+from backend.schemas.tag import (
+    CreateTagRequest,
+    UpdateTagRequest,
+    SearchCasesByTagsRequest,
+    TagResponse,
+    CaseTagResponse,
+    DeleteTagResponse,
+    TagStatisticsResponse,
+    SearchCasesByTagsResponse,
+)
 
 router = APIRouter(prefix="/tags", tags=["tags"])
-
-# ===== PYDANTIC REQUEST MODELS =====
-class CreateTagRequest(BaseModel):
-    """Request model for creating a new tag."""
-
-    name: str = Field(..., min_length=1, max_length=50, description="Tag name")
-    color: str = Field(
-        ..., pattern=r"^#[0-9A-Fa-f]{6}$", description="Hex color code (e.g., #FF0000)"
-    )
-    description: Optional[str] = Field(None, max_length=200, description="Optional tag description")
-
-    @field_validator("name")
-    @classmethod
-    @classmethod
-    def strip_and_validate_name(cls, v):
-        v = v.strip()
-        if not v:
-            raise ValueError("Tag name cannot be empty")
-        return v
-
-    @field_validator("color")
-    @classmethod
-    @classmethod
-    def validate_hex_color(cls, v):
-        if not v or len(v) != 7 or not v.startswith("#"):
-            raise ValueError("Valid hex color is required (e.g., #FF0000)")
-        return v.upper()
-
-class UpdateTagRequest(BaseModel):
-    """Request model for updating an existing tag."""
-
-    name: Optional[str] = Field(None, min_length=1, max_length=50)
-    color: Optional[str] = Field(None, pattern=r"^#[0-9A-Fa-f]{6}$")
-    description: Optional[str] = Field(None, max_length=200)
-
-    @field_validator("name")
-    @classmethod
-    @classmethod
-    def strip_name(cls, v):
-        if v:
-            v = v.strip()
-            if not v:
-                raise ValueError("Tag name cannot be empty")
-        return v
-
-    @field_validator("color")
-    @classmethod
-    @classmethod
-    def validate_hex_color(cls, v):
-        if v and (len(v) != 7 or not v.startswith("#")):
-            raise ValueError("Valid hex color is required (e.g., #FF0000)")
-        return v.upper() if v else None
-
-class SearchCasesByTagsRequest(BaseModel):
-    """Request model for searching cases by tags."""
-
-    tag_ids: List[int] = Field(..., min_length=1, description="List of tag IDs to search for")
-    match_all: bool = Field(
-        True,
-        description="If true, cases must have ALL tags (AND logic). If false, cases must have ANY tag (OR logic).",
-    )
-
-# ===== PYDANTIC RESPONSE MODELS =====
-class TagResponse(BaseModel):
-    """Response model for tag data."""
-
-    id: int
-    userId: int
-    name: str
-    color: str
-    description: Optional[str] = None
-    usageCount: Optional[int] = None
-    createdAt: str
-    updatedAt: str
-
-    class Config:
-        from_attributes = True
-
-class CaseTagResponse(BaseModel):
-    """Response model for case-tag association."""
-
-    caseId: int
-    tagId: int
-    createdAt: str
-
-    class Config:
-        from_attributes = True
-
-class DeleteTagResponse(BaseModel):
-    """Response model for tag deletion."""
-
-    deleted: bool
-    id: int
-
-class TagStatisticsResponse(BaseModel):
-    """Response model for tag statistics."""
-
-    totalTags: int
-    tagsWithCases: int
-    mostUsedTags: List[Dict[str, Any]]
-    unusedTags: List[Dict[str, Any]]
-
-class SearchCasesByTagsResponse(BaseModel):
-    """Response model for tag search results."""
-
-    caseIds: List[int]
-    matchAll: bool
-    tagIds: List[int]
-    resultCount: int
-
-# ===== DEPENDENCIES =====
-def get_auth_service(db: Session = Depends(get_db)) -> AuthenticationService:
-    """Get authentication service instance."""
-    return AuthenticationService(db=db)
-
-def get_tag_service(db: Session = Depends(get_db)) -> TagService:
-    """Get tag service instance with audit logging."""
-    audit_logger = AuditLogger(db)
-    return TagService(db=db, audit_logger=audit_logger)
 
 def get_client_info(request: Request) -> tuple[Optional[str], Optional[str]]:
     """Extract client IP address and user agent from request."""

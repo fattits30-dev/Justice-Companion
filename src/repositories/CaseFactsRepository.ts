@@ -4,7 +4,8 @@ import type {
   CreateCaseFactInput,
   UpdateCaseFactInput,
 } from "../domains/cases/entities/CaseFact.ts";
-import type { FactCategory, FactImportance } from "../types/ai-functions.ts";
+// Using CaseFact's inline type definitions instead of importing FactCategory/FactImportance
+// to ensure type consistency with the entity definition
 import type { AuditLogger } from "../services/AuditLogger.ts";
 import {
   EncryptionService,
@@ -161,8 +162,8 @@ export class CaseFactsRepository {
       id: row.id,
       caseId: row.case_id,
       factContent: decryptedContent,
-      factCategory: row.fact_category as FactCategory,
-      importance: row.importance as FactImportance,
+      factCategory: row.fact_category as CaseFact["factCategory"],
+      importance: row.importance as CaseFact["importance"],
       createdAt: new Date(row.created_at).toISOString(),
       updatedAt: new Date(row.updated_at).toISOString(),
     };

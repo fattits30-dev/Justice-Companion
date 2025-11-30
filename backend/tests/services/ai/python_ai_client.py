@@ -52,15 +52,15 @@ class TestPythonAIClient:
         assert is_valid is True
         assert error is None
 
-        # Invalid config - missing API key
-        invalid_config = AIProviderConfig(
-            provider="openai",
-            api_key="",
-            model="gpt-4"
-        )
-        is_valid, error = ai_client.validate_config(invalid_config)
-        assert is_valid is False
-        assert "API key" in error
+        # Invalid config - empty API key raises Pydantic validation error
+        # (api_key field has min_length=1 constraint)
+        from pydantic import ValidationError
+        with pytest.raises(ValidationError):
+            AIProviderConfig(
+                provider="openai",
+                api_key="",
+                model="gpt-4"
+            )
 
     @pytest.mark.asyncio
     async def test_chat_completion_success(self, ai_client, sample_config, sample_messages):

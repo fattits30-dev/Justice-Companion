@@ -3,7 +3,7 @@ FORMAL GRIEVANCE
 testuser555
 Employee ID: BT-4521
 Department: Software Development
-Date: 15th July 2024
+Date: 15th September 2025
 
 TO: Mrs Jennifer Holmes, HR Director
 Brightstone Technologies Ltd
@@ -29,7 +29,7 @@ Mr. Harrison has been employed for 2 years and 3 months and:
 
 DISCRIMINATORY TREATMENT
 
-Despite my superior qualifications and track record, the promotion was awarded to Mr. Harrison. During my feedback meeting with Mr. Thompson on 10th July 2024, he made the following comments:
+Despite my superior qualifications and track record, the promotion was awarded to Mr. Harrison. During my feedback meeting with Mr. Thompson on 10th September 2025, he made the following comments:
 
 "James is just a better fit for leading the team"
 "He has the right presence for client meetings"

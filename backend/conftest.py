@@ -27,7 +27,7 @@ from backend.services.auth.service import AuthenticationService
 # NOTE: These values are test-only fixtures used across multiple tests.
 # They are not real credentials and never leave the test environment.
 TEST_USER_USERNAME = os.getenv("TEST_USER_USERNAME", "testuser-fixture")
-TEST_USER_PASSWORD = os.getenv("TEST_USER_PASSWORD", "test-user-password")
+TEST_USER_PASSWORD = os.getenv("TEST_USER_PASSWORD", "TestPass123!")
 TEST_USER2_USERNAME = os.getenv("TEST_USER2_USERNAME", "testuser2-fixture")
 TEST_USER2_PASSWORD = os.getenv("TEST_USER2_PASSWORD", "test-user2-password")
 
@@ -48,7 +48,7 @@ _REGISTERED_MODELS = (
     User,
 )
 
-# from backend.models.chat import Conversation, Message  # Check model names
+from backend.models.chat import Conversation, Message
 # from backend.models.backup import BackupSettings  # May not exist
 
 # ===== DATABASE SETUP =====

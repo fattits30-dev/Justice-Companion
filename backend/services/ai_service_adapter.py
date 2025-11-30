@@ -23,6 +23,7 @@ from backend.services.ai.service import (
     AIProviderConfig,
     SuggestedCaseData,
     FieldConfidence,
+    ExtractionSource,
 )
 from backend.services.audit_logger import AuditLogger
 
@@ -44,7 +45,7 @@ class AIServiceAdapter:
         self.config = AIProviderConfig(
             provider="huggingface",
             model="mistralai/Mistral-7B-Instruct-v0.2",
-            api_key="handled-by-ai-service",  # Placeholder - ai-service has the real key
+            api_key="placeholder-key-in-ai-service",  # Placeholder - ai-service has the real key
         )
     
     async def chat(self, messages: List[ChatMessage]) -> str:
@@ -201,104 +202,229 @@ class AIServiceAdapter:
         user_question: Optional[str] = None,
     ) -> DocumentExtractionResponse:
         """
-        Extract case data from a document.
+        Extract case data from a document using comprehensive AI analysis.
+        Uses the same prompt as UnifiedAIService for proper confidence and source data.
         """
+        import json
+        import re
+
         try:
-            # Use the vision/analyze endpoint
-            response = await self.client.analyze_document(
-                file_bytes=document.text.encode(),  # Text content
-                filename=document.filename,
-                case_context=user_question,
-                username=user_profile.name,  # Pass username for name detection
-            )
-            
-            # Extract data from AI service response
-            document_type = response.get("document_type", "other")
-            key_facts = response.get("key_facts", [])
-            parties = response.get("parties_identified", [])
-            relevance_notes = response.get("relevance_notes", "")
-            extracted_text = response.get("extracted_text", "")
-            confidence_score = response.get("confidence", 0.5)
-            
-            # Map document_type to case_type
-            type_mapping = {
-                "contract": "employment",
-                "termination": "employment", 
-                "dismissal": "employment",
-                "eviction": "housing",
-                "tenancy": "housing",
-                "lease": "housing",
-                "court_order": "civil",
-                "claim": "civil",
-                "invoice": "consumer",
-                "complaint": "consumer",
-            }
-            case_type = type_mapping.get(document_type.lower(), "other")
-            
-            # Extract opposing party (usually the company/organization)
-            opposing_party = None
-            for party in parties:
-                # Look for company indicators
-                if any(ind in party.lower() for ind in ["ltd", "limited", "plc", "inc", "corp", "company", "employer"]):
-                    opposing_party = party.split(" (")[0]  # Remove role suffix like "(employer)"
-                    break
-            
-            # Build title from document type and context
-            if "termination" in document_type.lower() or "dismissal" in extracted_text.lower()[:500]:
-                title = f"Employment Termination - {opposing_party or 'Unknown Employer'}"
-            elif opposing_party:
-                title = f"Case against {opposing_party}"
-            else:
-                title = f"{document_type.replace('_', ' ').title()} Case"
-            
-            # Build description from key facts
-            description = ""
-            if key_facts:
-                # Take first 3 key facts
-                facts_summary = key_facts[:3] if isinstance(key_facts, list) else []
-                description = "; ".join(str(f) for f in facts_summary)
-                if len(description) > 500:
-                    description = description[:497] + "..."
-            
-            # Build confidence scores based on AI confidence
-            field_confidence = FieldConfidence(
-                title=confidence_score * 0.8,
-                case_type=confidence_score * 0.7,
-                description=confidence_score * 0.6 if description else 0.0,
-                opposing_party=confidence_score * 0.7 if opposing_party else 0.0,
-                case_number=0.0,
-                court_name=0.0,
-                filing_deadline=0.0,
-                next_hearing_date=0.0,
-            )
-            
-            # Extract name detection info from AI service response
-            name_detection = response.get("name_detection", {}) or {}
-            ownership_mismatch = not name_detection.get("user_name_found", True)
-            suggested_owner = name_detection.get("suggested_owner")
-            
-            # Build analysis text
-            analysis_text = extracted_text[:500] if extracted_text else ""
-            if relevance_notes:
-                analysis_text += "\n\n" + relevance_notes
-            
-            return DocumentExtractionResponse(
-                analysis=analysis_text,
-                suggested_case_data=SuggestedCaseData(
-                    document_ownership_mismatch=ownership_mismatch,
-                    document_claimant_name=suggested_owner,
-                    title=title,
-                    case_type=case_type,
-                    description=description,
-                    opposing_party=opposing_party,
-                    confidence=field_confidence,
-                    extracted_from={
-                        "title": "AI extraction from document header",
-                        "description": "AI extraction from key facts",
-                        "opposing_party": "AI extraction from parties identified",
-                    },
-                ),
-            )
+            # Build comprehensive extraction prompt (same as service.py)
+            extraction_prompt = f"""You are a UK civil legal assistant analyzing a document for {user_profile.name or "someone"} who just uploaded it.
+
+DOCUMENT: {document.filename}
+FILE TYPE: {document.file_type.upper()}
+LENGTH: {document.word_count} words
+
+CONTENT:
+{document.text}
+
+{f'USER QUESTION: "{user_question}"' if user_question else ''}
+
+IMPORTANT NAME MISMATCH CHECK:
+- The user who uploaded this is: "{user_profile.name or "User"}"
+- If the document is clearly about/for a DIFFERENT person (e.g., "Sarah Mitchell" vs "{user_profile.name or "User"}"), set document_ownership_mismatch to TRUE
+- If names match or are similar, set to FALSE
+
+CASE TYPE DETECTION - Choose the BEST match:
+- "employment" = dismissal, redundancy, unfair dismissal, discrimination at work, employment contracts, wages, workplace grievances
+- "housing" = eviction, landlord disputes, rent issues, repairs, tenancy agreements, homelessness
+- "consumer" = faulty goods, services disputes, refunds, contracts with businesses
+- "family" = divorce, child custody, domestic issues
+- "other" = ONLY if none of the above apply
+
+TITLE FORMAT - Create a descriptive title like:
+- "Smith vs ABC Corp - Unfair Dismissal"
+- "Jones vs City Council - Housing Disrepair"
+- "[Claimant] vs [Opponent] - [Issue Type]"
+
+CONFIDENCE SCORING - Use these guidelines:
+- 0.9-1.0: Exact match found in document (e.g., company name in letterhead)
+- 0.7-0.89: Strong inference from document context
+- 0.5-0.69: Moderate confidence, some ambiguity
+- 0.3-0.49: Low confidence, significant uncertainty
+- 0.0-0.29: Not found or guessed
+
+Provide your response in TWO parts:
+
+PART 1 - Conversational Analysis (plain text):
+[Your friendly analysis talking directly to the user, summarizing key facts and dates, ending with actionable suggestions]
+[If document_ownership_mismatch is TRUE, WARN the user: "⚠️ IMPORTANT: This document appears to be for [name from document], not for you ({user_profile.name or "User"})."]
+
+PART 2 - Structured Data (JSON format):
+You MUST provide valid JSON in this exact format. Extract ALL available information from the document:
+
+```json
+{{
+  "document_ownership_mismatch": false,
+  "document_claimant_name": null,
+  "title": "Claimant vs Opposing Party - Issue Type",
+  "case_type": "employment",
+  "description": "2-3 sentence summary of the case facts and key issues",
+  "claimant_name": "{user_profile.name or "User"}",
+  "opposing_party": "Full company/person name from document",
+  "case_number": "Reference number like BT/HR/2025/0847 if found",
+  "court_name": "Employment Tribunal or court name if mentioned",
+  "filing_deadline": "2026-01-15",
+  "next_hearing_date": null,
+  "confidence": {{
+    "title": 0.85,
+    "case_type": 0.95,
+    "description": 0.9,
+    "opposing_party": 0.95,
+    "case_number": 0.8,
+    "court_name": 0.0,
+    "filing_deadline": 0.7,
+    "next_hearing_date": 0.0
+  }},
+  "extracted_from": {{
+    "title": {{"source": "document header", "text": "RE: TERMINATION OF EMPLOYMENT"}},
+    "description": {{"source": "document body", "text": "Your employment is being terminated on the grounds of gross misconduct"}},
+    "opposing_party": {{"source": "document letterhead", "text": "Brightstone Technologies Ltd"}},
+    "case_number": {{"source": "document footer", "text": "Reference: BT/HR/2025/0847"}},
+    "court_name": null,
+    "filing_deadline": {{"source": "appeal section", "text": "deadline for submitting your appeal is 26th November 2025"}},
+    "next_hearing_date": null
+  }}
+}}
+```
+
+IMPORTANT - For extracted_from:
+- Provide the EXACT quoted text from the document for EACH extracted field
+- Include source location (e.g., "document header", "paragraph 3", "letterhead")
+- This shows the user exactly where the AI found each piece of information
+- Set to null ONLY if the field was not found in the document
+
+CRITICAL: The JSON must be valid and parseable. Use null (not "null") for missing values. Use actual numbers for confidence scores (0.0-1.0).
+"""
+
+            # Call AI service chat endpoint with this comprehensive prompt
+            messages = [{"role": "user", "content": extraction_prompt}]
+            response = await self.client.chat(messages)
+            ai_response = response.get("content", "")
+
+            # Parse response - extract JSON
+            json_match = re.search(r"```json\n?(.*?)\n?```", ai_response, re.DOTALL)
+
+            if not json_match:
+                # Try to find raw JSON object
+                json_match = re.search(r'\{[\s\S]*"title"[\s\S]*"case_type"[\s\S]*"confidence"[\s\S]*\}', ai_response)
+
+            if not json_match:
+                # Fallback - detect case type from keywords
+                response_lower = ai_response.lower()
+                detected_case_type = "other"
+                if any(word in response_lower for word in ["dismissal", "employment", "redundancy", "unfair", "workplace", "employer"]):
+                    detected_case_type = "employment"
+                elif any(word in response_lower for word in ["eviction", "landlord", "tenant", "rent", "housing"]):
+                    detected_case_type = "housing"
+                elif any(word in response_lower for word in ["refund", "consumer", "goods", "service"]):
+                    detected_case_type = "consumer"
+
+                return DocumentExtractionResponse(
+                    analysis=ai_response,
+                    suggested_case_data=SuggestedCaseData(
+                        title=f"Case regarding {document.filename}",
+                        case_type=detected_case_type,
+                        description=f"Document uploaded for analysis: {document.filename}",
+                        claimant_name=user_profile.name or "User",
+                        confidence=FieldConfidence(
+                            title=0.3,
+                            case_type=0.5 if detected_case_type != "other" else 0.3,
+                            description=0.3,
+                            opposing_party=0.0,
+                            case_number=0.0,
+                            court_name=0.0,
+                            filing_deadline=0.0,
+                            next_hearing_date=0.0,
+                        ),
+                        extracted_from={},
+                    ),
+                )
+
+            # Extract parts
+            analysis_text = ai_response[: json_match.start()].strip()
+            json_str = json_match.group(1) if json_match.lastindex else json_match.group(0)
+
+            try:
+                parsed_json = json.loads(json_str)
+
+                # Build confidence from parsed data
+                conf = parsed_json.get("confidence", {})
+                field_confidence = FieldConfidence(
+                    title=float(conf.get("title", 0.5)),
+                    case_type=float(conf.get("case_type", 0.5)),
+                    description=float(conf.get("description", 0.5)),
+                    opposing_party=float(conf.get("opposing_party", 0.0)),
+                    case_number=float(conf.get("case_number", 0.0)),
+                    court_name=float(conf.get("court_name", 0.0)),
+                    filing_deadline=float(conf.get("filing_deadline", 0.0)),
+                    next_hearing_date=float(conf.get("next_hearing_date", 0.0)),
+                )
+
+                # Build extracted_from from parsed data with camelCase keys
+                ext = parsed_json.get("extracted_from", {})
+                extracted_from = {}
+                # Map snake_case keys to camelCase for frontend
+                key_mapping = {
+                    "title": "title",
+                    "description": "description",
+                    "opposing_party": "opposingParty",
+                    "case_number": "caseNumber",
+                    "court_name": "courtName",
+                    "filing_deadline": "filingDeadline",
+                    "next_hearing_date": "nextHearingDate",
+                }
+                for field_name, field_data in ext.items():
+                    if field_data and isinstance(field_data, dict):
+                        # Convert key to camelCase
+                        camel_key = key_mapping.get(field_name, field_name)
+                        extracted_from[camel_key] = ExtractionSource(
+                            source=field_data.get("source", "document"),
+                            text=field_data.get("text", "")
+                        )
+
+                return DocumentExtractionResponse(
+                    analysis=analysis_text or ai_response,
+                    suggested_case_data=SuggestedCaseData(
+                        document_ownership_mismatch=parsed_json.get("document_ownership_mismatch", False),
+                        document_claimant_name=parsed_json.get("document_claimant_name"),
+                        title=parsed_json.get("title", f"Case - {document.filename}"),
+                        case_type=parsed_json.get("case_type", "other"),
+                        description=parsed_json.get("description", ""),
+                        claimant_name=user_profile.name or "User",
+                        opposing_party=parsed_json.get("opposing_party"),
+                        case_number=parsed_json.get("case_number"),
+                        court_name=parsed_json.get("court_name"),
+                        filing_deadline=parsed_json.get("filing_deadline"),
+                        next_hearing_date=parsed_json.get("next_hearing_date"),
+                        confidence=field_confidence,
+                        extracted_from=extracted_from,
+                    ),
+                )
+            except json.JSONDecodeError:
+                # Return with the analysis we have
+                return DocumentExtractionResponse(
+                    analysis=analysis_text or ai_response,
+                    suggested_case_data=SuggestedCaseData(
+                        title=f"Case regarding {document.filename}",
+                        case_type="other",
+                        description=f"Document uploaded for analysis: {document.filename}",
+                        claimant_name=user_profile.name or "User",
+                        confidence=FieldConfidence(
+                            title=0.3,
+                            case_type=0.3,
+                            description=0.3,
+                            opposing_party=0.0,
+                            case_number=0.0,
+                            court_name=0.0,
+                            filing_deadline=0.0,
+                            next_hearing_date=0.0,
+                        ),
+                        extracted_from={},
+                    ),
+                )
+
         except Exception as e:
             default_confidence = FieldConfidence(
                 title=0.0,

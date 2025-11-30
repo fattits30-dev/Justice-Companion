@@ -21,7 +21,6 @@ Routes:
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query
-from pydantic import BaseModel, Field, field_validator
 from typing import Optional, List
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
@@ -37,198 +36,36 @@ from backend.services.notification_service import (
     NotificationError,
 )
 from backend.models.notification import NotificationType, NotificationSeverity
-from backend.services.security.encryption import EncryptionService
+
+# Import centralized dependencies
+from backend.dependencies import (
+    get_encryption_service_fallback as get_encryption_service,
+    get_notification_service,
+    get_audit_logger,
+)
 from backend.services.audit_logger import AuditLogger
-import os
-import base64
+
+# Import schemas from consolidated schema file
+from backend.schemas.deadline import (
+    CreateDeadlineRequest,
+    UpdateDeadlineRequest,
+    ScheduleReminderRequest,
+    DeadlineResponse,
+    DeleteDeadlineResponse,
+    ReminderInfoResponse,
+)
 
 router = APIRouter(prefix="/deadlines", tags=["deadlines"])
 
 # ===== DEPENDENCY INJECTION =====
 
-def get_encryption_service() -> EncryptionService:
-    """
-    Get encryption service instance with encryption key.
-
-    Priority:
-    1. ENCRYPTION_KEY_BASE64 environment variable
-    2. Generate temporary key (WARNING: data will be lost on restart)
-    """
-    key_base64 = os.getenv("ENCRYPTION_KEY_BASE64")
-
-    if not key_base64:
-        # WARNING: Generating temporary key - data will be lost on restart
-        key = EncryptionService.generate_key()
-        key_base64 = base64.b64encode(key).decode("utf-8")
-        print("WARNING: No ENCRYPTION_KEY_BASE64 found. Using temporary key.")
-
-    return EncryptionService(key_base64)
-
-def get_notification_service(
-    db: Session = Depends(get_db),
-) -> NotificationService:
-    """Get notification service instance with audit logging."""
-    audit_logger = AuditLogger(db)
-    return NotificationService(db, audit_logger)
-
 def get_deadline_scheduler(
     db: Session = Depends(get_db),
     notification_service: NotificationService = Depends(get_notification_service),
+    audit_logger=Depends(get_audit_logger),
 ) -> DeadlineReminderScheduler:
     """Get deadline reminder scheduler instance."""
-    audit_logger = AuditLogger(db)
     return DeadlineReminderScheduler(db, notification_service, audit_logger)
-
-def get_audit_logger(db: Session = Depends(get_db)) -> AuditLogger:
-    """Get audit logger instance."""
-    return AuditLogger(db)
-
-# ===== PYDANTIC REQUEST MODELS =====
-
-class CreateDeadlineRequest(BaseModel):
-    """Request model for creating a deadline."""
-
-    caseId: int = Field(..., gt=0, description="Case ID this deadline belongs to")
-    title: str = Field(..., min_length=1, max_length=500, description="Deadline title")
-    description: Optional[str] = Field(None, max_length=10000, description="Deadline description")
-    deadlineDate: Optional[str] = Field(None, description="Due date (YYYY-MM-DD or ISO 8601)")
-    dueDate: Optional[str] = Field(None, description="Due date alias (YYYY-MM-DD or ISO 8601)")
-    priority: Optional[str] = Field("medium", description="Priority level")
-    reminderDays: Optional[int] = Field(
-        None, ge=1, le=30, description="Days before deadline to send reminder"
-    )
-
-    @field_validator("priority")
-    @classmethod
-    def validate_priority(cls, v):
-        if v:
-            try:
-                DeadlinePriority(v)
-            except ValueError:
-                raise ValueError(
-                    f"Invalid priority. Must be one of: {', '.join([p.value for p in DeadlinePriority])}"
-                )
-        return v
-
-    @field_validator("title")
-    @classmethod
-    def strip_title(cls, v):
-        return v.strip()
-
-    @field_validator("deadlineDate", "dueDate")
-    def validate_date_format(cls, v):
-        if v:
-            try:
-                # Try parsing as ISO 8601 date (YYYY-MM-DD)
-                datetime.strptime(v, "%Y-%m-%d")
-            except ValueError:
-                try:
-                    # Try parsing as full ISO 8601 datetime
-                    datetime.fromisoformat(v.replace("Z", "+00:00"))
-                except ValueError:
-                    raise ValueError("Invalid date format (use YYYY-MM-DD or ISO 8601)")
-        return v
-
-    @field_validator("deadlineDate", mode="before")
-    def validate_deadline_or_due_date(cls, v, values):
-        """Ensure either deadlineDate or dueDate is provided."""
-        due_date = values.get("dueDate")
-        if not v and not due_date:
-            raise ValueError("Must provide either deadlineDate or dueDate")
-        # Use deadlineDate if provided, otherwise use dueDate
-        return v or due_date
-
-class UpdateDeadlineRequest(BaseModel):
-    """Request model for updating a deadline."""
-
-    title: Optional[str] = Field(None, min_length=1, max_length=500, description="Deadline title")
-    description: Optional[str] = Field(None, max_length=10000, description="Deadline description")
-    deadlineDate: Optional[str] = Field(None, description="Due date (YYYY-MM-DD or ISO 8601)")
-    dueDate: Optional[str] = Field(None, description="Due date alias (YYYY-MM-DD or ISO 8601)")
-    priority: Optional[str] = Field(None, description="Priority level")
-    status: Optional[str] = Field(None, description="Deadline status")
-
-    @field_validator("priority")
-    @classmethod
-    def validate_priority(cls, v):
-        if v:
-            try:
-                DeadlinePriority(v)
-            except ValueError:
-                raise ValueError(
-                    f"Invalid priority. Must be one of: {', '.join([p.value for p in DeadlinePriority])}"
-                )
-        return v
-
-    @field_validator("status")
-    @classmethod
-    def validate_status(cls, v):
-        if v:
-            try:
-                DeadlineStatus(v)
-            except ValueError:
-                raise ValueError(
-                    f"Invalid status. Must be one of: {', '.join([s.value for s in DeadlineStatus])}"
-                )
-        return v
-
-    @field_validator("title")
-    @classmethod
-    def strip_title(cls, v):
-        if v:
-            return v.strip()
-        return v
-
-    @field_validator("deadlineDate", "dueDate")
-    def validate_date_format(cls, v):
-        if v:
-            try:
-                datetime.strptime(v, "%Y-%m-%d")
-            except ValueError:
-                try:
-                    datetime.fromisoformat(v.replace("Z", "+00:00"))
-                except ValueError:
-                    raise ValueError("Invalid date format (use YYYY-MM-DD or ISO 8601)")
-        return v
-
-class ScheduleReminderRequest(BaseModel):
-    """Request model for scheduling a deadline reminder."""
-
-    reminderDays: int = Field(..., ge=1, le=30, description="Days before deadline to send reminder")
-
-# ===== PYDANTIC RESPONSE MODELS =====
-
-class DeadlineResponse(BaseModel):
-    """Response model for deadline data."""
-
-    id: int
-    caseId: int
-    userId: int
-    title: str
-    description: Optional[str]
-    deadlineDate: str
-    dueDate: str  # Alias for compatibility
-    priority: str
-    status: str
-    completedAt: Optional[str]
-    createdAt: str
-    updatedAt: Optional[str]
-
-    class Config:
-        from_attributes = True
-
-class DeleteDeadlineResponse(BaseModel):
-    """Response model for deadline deletion."""
-
-    deleted: bool
-
-class ReminderInfoResponse(BaseModel):
-    """Response model for reminder information."""
-
-    deadlineId: int
-    hasReminder: bool
-    reminderDays: Optional[int]
-    scheduledFor: Optional[str]
 
 # ===== HELPER FUNCTIONS =====
 

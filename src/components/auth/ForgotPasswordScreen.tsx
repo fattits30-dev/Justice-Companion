@@ -55,9 +55,9 @@ export function ForgotPasswordScreen({
       if (response.success) {
         setSuccess(true);
         // In dev mode, the token is returned in the response
-        if (response.data?.token) {
-          setResetToken(response.data.token);
-          onResetTokenReceived?.(response.data.token);
+        if (response.data?.data?.token) {
+          setResetToken(response.data.data.token);
+          onResetTokenReceived?.(response.data.data.token);
         }
       } else {
         setError(response.error?.message || "Failed to send reset email");

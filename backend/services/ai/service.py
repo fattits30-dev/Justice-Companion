@@ -336,13 +336,23 @@ class DocumentDraftResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+def to_camel(string: str) -> str:
+    """Convert snake_case to camelCase for JSON serialization."""
+    components = string.split('_')
+    return components[0] + ''.join(x.title() for x in components[1:])
+
+
 class ExtractionSource(BaseModel):
     """Field extraction source metadata"""
 
     source: str
     text: str
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(
+        from_attributes=True,
+        alias_generator=to_camel,
+        populate_by_name=True,
+    )
 
 class FieldConfidence(BaseModel):
     """Confidence scores for extracted fields"""
@@ -356,7 +366,11 @@ class FieldConfidence(BaseModel):
     filing_deadline: float = Field(..., ge=0.0, le=1.0)
     next_hearing_date: float = Field(..., ge=0.0, le=1.0)
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(
+        from_attributes=True,
+        alias_generator=to_camel,
+        populate_by_name=True,
+    )
 
 class SuggestedCaseData(BaseModel):
     """Suggested case data extracted from document"""
@@ -375,7 +389,11 @@ class SuggestedCaseData(BaseModel):
     confidence: FieldConfidence
     extracted_from: Dict[str, Optional[ExtractionSource]]
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(
+        from_attributes=True,
+        alias_generator=to_camel,
+        populate_by_name=True,
+    )
 
 class DocumentExtractionResponse(BaseModel):
     """Document extraction response"""
@@ -383,7 +401,11 @@ class DocumentExtractionResponse(BaseModel):
     analysis: str
     suggested_case_data: SuggestedCaseData
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(
+        from_attributes=True,
+        alias_generator=to_camel,
+        populate_by_name=True,
+    )
 
 class ParsedDocument(BaseModel):
     """Parsed document metadata"""
@@ -1277,9 +1299,9 @@ You MUST provide valid JSON in this exact format. Extract ALL available informat
   "description": "2-3 sentence summary of the case facts and key issues",
   "claimant_name": "{user_profile.name or "User"}",
   "opposing_party": "Full company/person name from document",
-  "case_number": "Reference number like BT/HR/2024/0847 if found",
+  "case_number": "Reference number like BT/HR/2025/0847 if found",
   "court_name": "Employment Tribunal or court name if mentioned",
-  "filing_deadline": "2024-12-15",
+  "filing_deadline": "2026-01-15",
   "next_hearing_date": null,
   "confidence": {{
     "title": 0.85,
@@ -1295,9 +1317,9 @@ You MUST provide valid JSON in this exact format. Extract ALL available informat
     "title": {{"source": "document header", "text": "RE: TERMINATION OF EMPLOYMENT"}},
     "description": {{"source": "document body", "text": "Your employment is being terminated on the grounds of gross misconduct"}},
     "opposing_party": {{"source": "document letterhead", "text": "Brightstone Technologies Ltd"}},
-    "case_number": {{"source": "document footer", "text": "Reference: BT/HR/2024/0847"}},
+    "case_number": {{"source": "document footer", "text": "Reference: BT/HR/2025/0847"}},
     "court_name": null,
-    "filing_deadline": {{"source": "appeal section", "text": "deadline for submitting your appeal is 26th September 2024"}},
+    "filing_deadline": {{"source": "appeal section", "text": "deadline for submitting your appeal is 15th January 2026"}},
     "next_hearing_date": null
   }}
 }}

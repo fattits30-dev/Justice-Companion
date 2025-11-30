@@ -49,12 +49,12 @@ def mock_legal_api_service():
     ])
     service.search_case_law = AsyncMock(return_value=[
         {
-            "citation": "Smith v ABC Ltd [2024] ET/12345/24",
+            "citation": "Smith v ABC Ltd [2025] ET/12345/25",
             "court": "Employment Tribunal",
-            "date": "2024-03-15",
+            "date": "2025-09-15",
             "summary": "Claimant successfully proved unfair dismissal.",
             "outcome": "Claimant successful",
-            "url": "https://caselaw.nationalarchives.gov.uk/eat/2024/123",
+            "url": "https://caselaw.nationalarchives.gov.uk/eat/2025/123",
             "relevance": 0.90
         }
     ])
@@ -63,7 +63,7 @@ def mock_legal_api_service():
             "topic": "Unfair Dismissal",
             "category": "Employment",
             "content": "Unfair dismissal is when an employer terminates employment without valid reason.",
-            "sources": ["ACAS Guide 2024"]
+            "sources": ["ACAS Guide 2025"]
         }
     ])
     return service
@@ -132,12 +132,12 @@ def sample_legal_context():
         ],
         case_law=[
             CaseResult(
-                citation="Smith v ABC Ltd [2024] ET/12345/24",
+                citation="Smith v ABC Ltd [2025] ET/12345/25",
                 court="Employment Tribunal",
-                date="2024-03-15",
+                date="2025-09-15",
                 summary="Claimant successfully proved unfair dismissal.",
                 outcome="Claimant successful",
-                url="https://caselaw.nationalarchives.gov.uk/eat/2024/123",
+                url="https://caselaw.nationalarchives.gov.uk/eat/2025/123",
                 relevance=0.90
             )
         ],
@@ -146,7 +146,7 @@ def sample_legal_context():
                 topic="Unfair Dismissal",
                 category="Employment",
                 content="Unfair dismissal is when an employer terminates employment without valid reason.",
-                sources=["ACAS Guide 2024"]
+                sources=["ACAS Guide 2025"]
             )
         ]
     )
@@ -459,7 +459,7 @@ def test_limit_and_sort_case_law():
         {
             "citation": f"Case {i}",
             "court": "Employment Tribunal",
-            "date": "2024-01-01",
+            "date": "2025-11-01",
             "summary": f"Summary {i}",
             "url": f"https://example.com/{i}",
             "relevance": i * 0.1

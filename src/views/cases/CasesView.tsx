@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import type {
   Case,
   CaseStatus,
@@ -23,6 +24,7 @@ type LoadState = "idle" | "loading" | "error" | "ready";
 
 export function CasesView() {
   const { sessionId, isLoading: authLoading } = useAuth();
+  const navigate = useNavigate();
   const [cases, setCases] = useState<Case[]>([]);
   const [loadState, setLoadState] = useState<LoadState>("idle");
   const [error, setError] = useState<string | null>(null);
@@ -176,6 +178,13 @@ export function CasesView() {
     [sessionId],
   );
 
+  const handleViewCase = useCallback(
+    (caseId: number) => {
+      navigate(`/cases/${caseId}`);
+    },
+    [navigate],
+  );
+
   const filteredCases = useMemo(() => {
     return cases.filter((caseItem) => {
       if (filterStatus !== "all" && caseItem.status !== filterStatus) {
@@ -227,7 +236,11 @@ export function CasesView() {
             {!hasFilteredResults ? (
               <CasesFilteredEmptyState />
             ) : (
-              <CaseList cases={filteredCases} onDelete={handleDeleteCase} />
+              <CaseList
+                cases={filteredCases}
+                onDelete={handleDeleteCase}
+                onView={handleViewCase}
+              />
             )}
           </>
         )}

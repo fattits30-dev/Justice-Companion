@@ -6,7 +6,7 @@ from backend.models.ai_provider_config import AIProviderConfig
 from backend.models.backup import BackupSettings
 from backend.models.base import Base
 from backend.models.case import Case
-from backend.models.chat import ChatConversation, ChatMessage
+from backend.models.chat import Conversation, Message
 from backend.models.consent import Consent, ConsentType
 from backend.models.deadline import Deadline
 from backend.models.evidence import Evidence

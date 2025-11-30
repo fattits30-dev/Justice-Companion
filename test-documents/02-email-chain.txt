@@ -1,15 +1,15 @@
 EMAIL CORRESPONDENCE - BRIGHTSTONE TECHNOLOGIES LTD
-Export Date: 15th September 2024
+Export Date: 15th November 2025
 
 ================================================================================
 FROM: testuser555 <testuser555@brightstonetech.co.uk>
 TO: Jennifer Holmes <j.holmes@brightstonetech.co.uk>
-DATE: 5th September 2024, 09:23
+DATE: 5th November 2025, 09:23
 SUBJECT: RE: Disciplinary Investigation - Urgent Response Required
 
 Dear Jennifer,
 
-I am extremely concerned about the allegations outlined in your email dated 3rd September. I categorically deny any wrongdoing and believe there has been a serious misunderstanding.
+I am extremely concerned about the allegations outlined in your email dated 3rd November. I categorically deny any wrongdoing and believe there has been a serious misunderstanding.
 
 Regarding the expense claims:
 - All expenses submitted were legitimate business costs incurred during client visits
@@ -33,14 +33,14 @@ Employee ID: BT-4521
 ================================================================================
 FROM: Jennifer Holmes <j.holmes@brightstonetech.co.uk>
 TO: testuser555 <testuser555@brightstonetech.co.uk>
-DATE: 3rd September 2024, 14:45
+DATE: 3rd November 2025, 14:45
 SUBJECT: Disciplinary Investigation - Urgent Response Required
 
 Dear Sarah,
 
 Following our preliminary investigation, serious allegations have come to light regarding your conduct as an employee of Brightstone Technologies Ltd.
 
-You are hereby suspended on full pay pending a disciplinary hearing, which will take place on 10th September 2024 at 2pm in Meeting Room 3.
+You are hereby suspended on full pay pending a disciplinary hearing, which will take place on 10th November 2025 at 2pm in Meeting Room 3.
 
 The allegations are:
 1. Falsification of expense claims totalling £2,847.50
@@ -60,7 +60,7 @@ Direct Line: 0161 555 7890
 ================================================================================
 FROM: Robert Chen <r.chen@brightstonetech.co.uk>
 TO: testuser555 <testuser555@brightstonetech.co.uk>
-DATE: 28th August 2024, 16:02
+DATE: 28th October 2025, 16:02
 SUBJECT: RE: Expense Claim Query
 
 Hi Sarah,
@@ -75,7 +75,7 @@ Robert
 ================================================================================
 FROM: testuser555 <testuser555@brightstonetech.co.uk>
 TO: Robert Chen <r.chen@brightstonetech.co.uk>
-DATE: 28th August 2024, 15:34
+DATE: 28th October 2025, 15:34
 SUBJECT: Expense Claim Query
 
 Hi Robert,
@@ -97,12 +97,12 @@ testuser555
 ================================================================================
 FROM: Finance Department <finance@brightstonetech.co.uk>
 TO: testuser555 <testuser555@brightstonetech.co.uk>
-DATE: 28th August 2024, 11:15
+DATE: 28th October 2025, 11:15
 SUBJECT: Expense Claim Audit - Action Required
 
 Dear testuser555,
 
-As part of our quarterly compliance audit, we are reviewing expense claims submitted between January and July 2024.
+As part of our quarterly compliance audit, we are reviewing expense claims submitted between January and July 2025.
 
 We have identified several claims submitted under your name that require additional verification. Please provide original receipts and business justification for the claims listed in the attached spreadsheet within 5 working days.
 
@@ -112,4 +112,4 @@ Regards,
 Finance Department
 Brightstone Technologies Ltd
 
-Attachment: testuser555_Expense_Audit_Aug2024.xlsx
+Attachment: testuser555_Expense_Audit_Oct2025.xlsx

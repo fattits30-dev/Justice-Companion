@@ -56,7 +56,6 @@ export class ExportService implements IExportService {
   private pdfGenerator: PDFGenerator;
   private docxGenerator: DOCXGenerator;
   private exportDir: string;
-  // @ts-expect-error - Database reference kept for future use
   private _db: IDatabase;
   private caseRepo: ICaseRepository;
   private evidenceRepo: IEvidenceRepository;

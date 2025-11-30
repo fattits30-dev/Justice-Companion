@@ -4,13 +4,19 @@ import { CaseCard } from "./CaseCard.tsx";
 interface CaseListProps {
   readonly cases: readonly Case[];
   readonly onDelete: (caseId: number) => void;
+  readonly onView?: (caseId: number) => void;
 }
 
-export function CaseList({ cases, onDelete }: CaseListProps) {
+export function CaseList({ cases, onDelete, onView }: CaseListProps) {
   return (
     <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
       {cases.map((caseItem) => (
-        <CaseCard key={caseItem.id} caseItem={caseItem} onDelete={onDelete} />
+        <CaseCard
+          key={caseItem.id}
+          caseItem={caseItem}
+          onDelete={onDelete}
+          onView={onView}
+        />
       ))}
     </div>
   );

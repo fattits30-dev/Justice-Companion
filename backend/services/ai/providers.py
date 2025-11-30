@@ -120,7 +120,7 @@ class AIProviderConfigOutput(BaseModel):
     updated_at: datetime
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 class AIProviderConfigSummary(BaseModel):
     """Summary model for AI provider configuration (without API key)."""
@@ -139,7 +139,7 @@ class AIProviderConfigSummary(BaseModel):
     updated_at: datetime
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 class ValidationResult(BaseModel):
     """Result of configuration validation."""

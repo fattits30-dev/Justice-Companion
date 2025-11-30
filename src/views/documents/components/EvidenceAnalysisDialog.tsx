@@ -132,9 +132,9 @@ export function EvidenceAnalysisDialog({
                       Overall Strength
                     </p>
                     <p
-                      className={`text-3xl font-bold ${getStrengthColor(analysis.strength)}`}
+                      className={`text-3xl font-bold ${getStrengthColor(analysis.strength ?? "unknown")}`}
                     >
-                      {analysis.strength.toUpperCase()}
+                      {(analysis.strength ?? "unknown").toUpperCase()}
                     </p>
                   </div>
                   <div className="text-center p-4 rounded-lg bg-primary-900/50">

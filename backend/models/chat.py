@@ -10,7 +10,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.models.base import Base
 
-class ChatConversation(Base):
+class Conversation(Base):
     """Chat conversation model - represents a persistent chat session."""
 
     __tablename__ = "chat_conversations"
@@ -35,8 +35,8 @@ class ChatConversation(Base):
     message_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
     # Relationships
-    messages: Mapped[list["ChatMessage"]] = relationship(
-        "ChatMessage", back_populates="conversation", cascade="all, delete-orphan"
+    messages: Mapped[list["Message"]] = relationship(
+        "Message", back_populates="conversation", cascade="all, delete-orphan"
     )
 
     def to_dict(self, include_messages: bool = False) -> Dict[str, Any]:
@@ -64,7 +64,7 @@ class ChatConversation(Base):
 
         return result
 
-class ChatMessage(Base):
+class Message(Base):
     """Chat message model - individual messages within a conversation."""
 
     __tablename__ = "chat_messages"
@@ -89,8 +89,8 @@ class ChatMessage(Base):
     token_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     # Relationships
-    conversation: Mapped["ChatConversation"] = relationship(
-        "ChatConversation", back_populates="messages"
+    conversation: Mapped["Conversation"] = relationship(
+        "Conversation", back_populates="messages"
     )
 
     def to_dict(self) -> Dict[str, Any]:

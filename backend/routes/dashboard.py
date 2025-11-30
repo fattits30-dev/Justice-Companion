@@ -25,7 +25,6 @@ SECURITY: All queries are filtered by user_id to prevent horizontal privilege es
 """
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
@@ -44,128 +43,24 @@ from backend.services.notification_service import (
 from backend.services.security.encryption import EncryptionService
 from backend.services.audit_logger import AuditLogger
 
+# Import schemas from consolidated schema file
+from backend.schemas.dashboard import (
+    RecentCaseInfo,
+    DashboardStatsResponse,
+    RecentCasesResponse,
+    NotificationWidgetResponse,
+    UpcomingDeadline,
+    DeadlinesWidgetResponse,
+    ActivityItem,
+    ActivityWidgetResponse,
+    ChartDataPoint,
+    ChartResponse,
+    TimelineChartDataPoint,
+    TimelineChartResponse,
+    DashboardOverviewResponse,
+)
+
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
-
-# ===== PYDANTIC RESPONSE MODELS =====
-
-class RecentCaseInfo(BaseModel):
-    """Information about a recently updated case."""
-
-    id: int
-    title: str
-    status: str
-    priority: Optional[str] = None
-    lastUpdated: str  # ISO 8601 timestamp
-
-    class Config:
-        from_attributes = True
-
-class DashboardStatsResponse(BaseModel):
-    """
-    Dashboard statistics response model.
-
-    Provides overview metrics for the authenticated user:
-    - Total number of cases
-    - Number of active cases
-    - Number of closed cases
-    - Total evidence items across all cases
-    - Total deadlines count
-    - Overdue deadlines count
-    - Unread notifications count
-    """
-
-    totalCases: int = Field(..., description="Total number of cases for user")
-    activeCases: int = Field(..., description="Number of active cases")
-    closedCases: int = Field(..., description="Number of closed cases")
-    totalEvidence: int = Field(..., description="Total evidence items across all cases")
-    totalDeadlines: int = Field(..., description="Total deadlines")
-    overdueDeadlines: int = Field(..., description="Overdue deadlines count")
-    unreadNotifications: int = Field(..., description="Unread notifications count")
-
-    class Config:
-        from_attributes = True
-
-class RecentCasesResponse(BaseModel):
-    """Recent cases widget response."""
-
-    cases: List[RecentCaseInfo] = Field(..., description="Recent cases")
-    total: int = Field(..., description="Total cases count")
-
-class NotificationWidgetResponse(BaseModel):
-    """Notifications widget response."""
-
-    unreadCount: int = Field(..., description="Unread notifications count")
-    recentNotifications: List[Dict[str, Any]] = Field(..., description="Recent notifications")
-
-class UpcomingDeadline(BaseModel):
-    """Upcoming deadline information."""
-
-    id: int
-    title: str
-    deadlineDate: str
-    priority: str
-    daysUntil: int
-    isOverdue: bool
-    caseId: Optional[int] = None
-    caseTitle: Optional[str] = None
-
-class DeadlinesWidgetResponse(BaseModel):
-    """Deadlines widget response."""
-
-    upcomingDeadlines: List[UpcomingDeadline] = Field(..., description="Upcoming deadlines")
-    totalDeadlines: int = Field(..., description="Total upcoming deadlines")
-    overdueCount: int = Field(..., description="Overdue deadlines count")
-
-class ActivityItem(BaseModel):
-    """Activity item information."""
-
-    id: int
-    type: str  # "case", "evidence", "deadline", "notification"
-    action: str  # "created", "updated", "deleted"
-    title: str
-    timestamp: str
-    metadata: Optional[Dict[str, Any]] = None
-
-class ActivityWidgetResponse(BaseModel):
-    """Activity widget response."""
-
-    activities: List[ActivityItem] = Field(..., description="Recent activities")
-    total: int = Field(..., description="Total activities count")
-
-class ChartDataPoint(BaseModel):
-    """Single data point for charts."""
-
-    label: str
-    value: int
-    color: Optional[str] = None
-
-class ChartResponse(BaseModel):
-    """Generic chart response."""
-
-    data: List[ChartDataPoint] = Field(..., description="Chart data points")
-    total: int = Field(..., description="Total count")
-
-class TimelineChartDataPoint(BaseModel):
-    """Timeline chart data point."""
-
-    date: str  # YYYY-MM-DD
-    count: int
-
-class TimelineChartResponse(BaseModel):
-    """Timeline chart response."""
-
-    data: List[TimelineChartDataPoint] = Field(..., description="Timeline data points")
-    startDate: str = Field(..., description="Start date (YYYY-MM-DD)")
-    endDate: str = Field(..., description="End date (YYYY-MM-DD)")
-
-class DashboardOverviewResponse(BaseModel):
-    """Complete dashboard overview with all widgets."""
-
-    stats: DashboardStatsResponse
-    recentCases: RecentCasesResponse
-    notifications: NotificationWidgetResponse
-    deadlines: DeadlinesWidgetResponse
-    activity: ActivityWidgetResponse
 
 # ===== DEPENDENCY INJECTION =====
 

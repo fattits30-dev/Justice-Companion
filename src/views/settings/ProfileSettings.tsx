@@ -1,5 +1,14 @@
 import { useState, useEffect } from "react";
-import { User, Mail, Save, AlertCircle, Check, Phone, Pencil, X } from "lucide-react";
+import {
+  User,
+  Mail,
+  Save,
+  AlertCircle,
+  Check,
+  Phone,
+  Pencil,
+  X,
+} from "lucide-react";
 import { Card } from "../../components/ui/Card.tsx";
 import { Button } from "../../components/ui/Button.tsx";
 import { toast } from "sonner";
@@ -62,13 +71,13 @@ export function ProfileSettingsTab() {
   const loadProfile = async () => {
     try {
       setLoading(true);
-      
+
       // Use apiClient instead of legacy window.justiceAPI
       const response = await apiClient.profile.get();
-      
-      if (response) {
-        // apiClient.profile.get() returns the profile directly
-        const profileData = response as {
+
+      if (response.success && response.data) {
+        // apiClient.profile.get() returns ApiResponse with data
+        const profileData = response.data as {
           id: number;
           name: string;
           email?: string | null;
@@ -79,7 +88,7 @@ export function ProfileSettingsTab() {
           createdAt?: string;
           updatedAt?: string;
         };
-        
+
         const transformedProfile: UserProfile = {
           id: profileData.id,
           name: profileData.name || "",
@@ -91,19 +100,23 @@ export function ProfileSettingsTab() {
           updatedAt: profileData.updatedAt || "",
         };
         setProfile(transformedProfile);
-        
+
         // Use firstName/lastName from backend if available, otherwise split name
-        const fname = profileData.firstName || profileData.name?.split(" ")[0] || "";
-        const lname = profileData.lastName || profileData.name?.split(" ").slice(1).join(" ") || "";
+        const fname =
+          profileData.firstName || profileData.name?.split(" ")[0] || "";
+        const lname =
+          profileData.lastName ||
+          profileData.name?.split(" ").slice(1).join(" ") ||
+          "";
         const em = profileData.email || "";
         const ph = profileData.phone || "";
-        
+
         setUsername(""); // Not used in new backend
         setFirstName(fname);
         setLastName(lname);
         setEmail(em);
         setPhone(ph);
-        
+
         // Store original values for cancel
         setOriginalValues({
           username: "",
@@ -154,8 +167,8 @@ export function ProfileSettingsTab() {
         phone: phone.trim() || undefined,
       });
 
-      if (response) {
-        const profileData = response as {
+      if (response.success && response.data) {
+        const profileData = response.data as {
           id: number;
           name: string;
           email?: string | null;
@@ -163,7 +176,7 @@ export function ProfileSettingsTab() {
           lastName?: string | null;
           phone?: string | null;
         };
-        
+
         const transformedProfile: UserProfile = {
           id: profileData.id,
           name: profileData.name || "",
@@ -177,7 +190,7 @@ export function ProfileSettingsTab() {
         setProfile(transformedProfile);
         setHasChanges(false);
         setIsEditing(false);
-        
+
         // Update original values
         setOriginalValues({
           username: "",
@@ -186,7 +199,7 @@ export function ProfileSettingsTab() {
           email: profileData.email || "",
           phone: profileData.phone || "",
         });
-        
+
         toast.success("Profile updated successfully!");
       } else {
         toast.error("Failed to update profile");
@@ -261,7 +274,7 @@ export function ProfileSettingsTab() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 disabled={!isEditing}
-                className={`w-full pl-10 pr-3 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-hidden focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all ${!isEditing ? 'opacity-70 cursor-not-allowed' : ''}`}
+                className={`w-full pl-10 pr-3 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-hidden focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all ${!isEditing ? "opacity-70 cursor-not-allowed" : ""}`}
                 placeholder="johndoe123"
               />
             </div>
@@ -290,7 +303,7 @@ export function ProfileSettingsTab() {
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   disabled={!isEditing}
-                  className={`w-full pl-10 pr-3 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-hidden focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all ${!isEditing ? 'opacity-70 cursor-not-allowed' : ''}`}
+                  className={`w-full pl-10 pr-3 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-hidden focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all ${!isEditing ? "opacity-70 cursor-not-allowed" : ""}`}
                   placeholder="John"
                   required
                 />
@@ -315,7 +328,7 @@ export function ProfileSettingsTab() {
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   disabled={!isEditing}
-                  className={`w-full pl-10 pr-3 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-hidden focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all ${!isEditing ? 'opacity-70 cursor-not-allowed' : ''}`}
+                  className={`w-full pl-10 pr-3 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-hidden focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all ${!isEditing ? "opacity-70 cursor-not-allowed" : ""}`}
                   placeholder="Doe"
                 />
               </div>
@@ -343,7 +356,7 @@ export function ProfileSettingsTab() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={!isEditing}
-                className={`w-full pl-10 pr-3 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-hidden focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all ${!isEditing ? 'opacity-70 cursor-not-allowed' : ''}`}
+                className={`w-full pl-10 pr-3 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-hidden focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all ${!isEditing ? "opacity-70 cursor-not-allowed" : ""}`}
                 placeholder="your.email@example.com"
               />
             </div>
@@ -370,7 +383,7 @@ export function ProfileSettingsTab() {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 disabled={!isEditing}
-                className={`w-full pl-10 pr-3 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-hidden focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all ${!isEditing ? 'opacity-70 cursor-not-allowed' : ''}`}
+                className={`w-full pl-10 pr-3 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-hidden focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all ${!isEditing ? "opacity-70 cursor-not-allowed" : ""}`}
                 placeholder="+44 7700 900000"
               />
             </div>

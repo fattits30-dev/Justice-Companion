@@ -36,26 +36,31 @@ import { logger } from "./utils/logger.ts";
 
 // Lazy load views for code splitting
 const Dashboard = lazy(() =>
-  import("./components/Dashboard.tsx").then((m) => ({ default: m.Dashboard }))
+  import("./components/Dashboard.tsx").then((m) => ({ default: m.Dashboard })),
 );
 const CasesView = lazy(() =>
-  import("./views/CasesView.tsx").then((m) => ({ default: m.CasesView }))
+  import("./views/CasesView.tsx").then((m) => ({ default: m.CasesView })),
 );
 const DocumentsView = lazy(() =>
   import("./views/DocumentsView.tsx").then((m) => ({
     default: m.DocumentsView,
-  }))
+  })),
 );
 const ChatView = lazy(() =>
-  import("./views/ChatView.tsx").then((m) => ({ default: m.ChatView }))
+  import("./views/ChatView.tsx").then((m) => ({ default: m.ChatView })),
 );
 const SettingsView = lazy(() =>
-  import("./views/SettingsView.tsx").then((m) => ({ default: m.SettingsView }))
+  import("./views/SettingsView.tsx").then((m) => ({ default: m.SettingsView })),
 );
 const TimelineView = lazy(() =>
   import("./views/timeline/TimelineView.tsx").then((m) => ({
     default: m.TimelineView,
-  }))
+  })),
+);
+const CaseFileTreeView = lazy(() =>
+  import("./views/cases/CaseFileTreeView.tsx").then((m) => ({
+    default: m.CaseFileTreeView,
+  })),
 );
 
 /**
@@ -127,7 +132,7 @@ function DashboardWrapper() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(
-    null
+    null,
   );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -326,6 +331,14 @@ function AppRoutes() {
           element={
             <Suspense fallback={<PageLoader />}>
               <CasesView />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/cases/:caseId"
+          element={
+            <Suspense fallback={<PageLoader />}>
+              <CaseFileTreeView />
             </Suspense>
           }
         />

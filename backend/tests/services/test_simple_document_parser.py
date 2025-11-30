@@ -30,7 +30,7 @@ async def test_txt_parsing():
     with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False, encoding='utf-8') as f:
         test_content = """Legal Case Document - Sample
 
-Case Number: 2024-CV-12345
+Case Number: 2025-CV-12345
 Parties: Smith v. Jones
 
 BACKGROUND:

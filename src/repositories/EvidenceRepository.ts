@@ -291,7 +291,7 @@ export class EvidenceRepository {
     const nextCursor =
       hasMore && items.length > 0
         ? encodeSimpleCursor(items[items.length - 1].id)
-        : null;
+        : undefined;
 
     // Use batch decryption if enabled
     const useBatchEncryption = process.env.ENABLE_BATCH_ENCRYPTION !== "false";
@@ -498,7 +498,7 @@ export class EvidenceRepository {
     const nextCursor =
       hasMore && items.length > 0
         ? encodeSimpleCursor(items[items.length - 1].id)
-        : null;
+        : undefined;
 
     // Use batch decryption if enabled
     const useBatchEncryption = process.env.ENABLE_BATCH_ENCRYPTION !== "false";

@@ -1,6 +1,6 @@
 """
 Chat conversation service for AI legal assistant conversations.
-Migrated from src/services/ChatConversationService.ts
+Migrated from src/services/ConversationService.ts
 
 Features:
 - Full conversation CRUD operations with user ownership verification
@@ -25,7 +25,7 @@ from sqlalchemy import desc
 from fastapi import HTTPException
 from pydantic import BaseModel, Field, ConfigDict
 
-from backend.models.chat import ChatConversation, ChatMessage
+from backend.models.chat import Conversation, Message
 from backend.services.security.encryption import EncryptionService
 
 # Custom Exceptions
@@ -127,7 +127,7 @@ class ChatService:
         self.encryption_service = encryption_service
         self.audit_logger = audit_logger
 
-    def _verify_ownership(self, conversation: ChatConversation, user_id: int) -> None:
+    def _verify_ownership(self, conversation: Conversation, user_id: int) -> None:
         """
         Verify that user owns the conversation.
 
@@ -187,13 +187,13 @@ class ChatService:
             conversation_id: Conversation ID to update
         """
         conversation = (
-            self.db.query(ChatConversation).filter(ChatConversation.id == conversation_id).first()
+            self.db.query(Conversation).filter(Conversation.id == conversation_id).first()
         )
 
         if conversation:
             message_count = (
-                self.db.query(ChatMessage)
-                .filter(ChatMessage.conversation_id == conversation_id)
+                self.db.query(Message)
+                .filter(Message.conversation_id == conversation_id)
                 .count()
             )
 
@@ -219,7 +219,7 @@ class ChatService:
         """
         try:
             # Create conversation instance
-            conversation = ChatConversation(
+            conversation = Conversation(
                 user_id=input_data.user_id,
                 case_id=input_data.case_id,
                 title=input_data.title,
@@ -269,7 +269,7 @@ class ChatService:
             HTTPException: 403 if user doesn't own the conversation
         """
         conversation = (
-            self.db.query(ChatConversation).filter(ChatConversation.id == conversation_id).first()
+            self.db.query(Conversation).filter(Conversation.id == conversation_id).first()
         )
 
         if not conversation:
@@ -302,12 +302,12 @@ class ChatService:
             List of user's conversations
         """
         try:
-            query = self.db.query(ChatConversation).filter(ChatConversation.user_id == user_id)
+            query = self.db.query(Conversation).filter(Conversation.user_id == user_id)
 
             if case_id is not None:
-                query = query.filter(ChatConversation.case_id == case_id)
+                query = query.filter(Conversation.case_id == case_id)
 
-            conversations = query.order_by(desc(ChatConversation.updated_at)).all()
+            conversations = query.order_by(desc(Conversation.updated_at)).all()
 
             return [ConversationResponse.model_validate(conv) for conv in conversations]
 
@@ -338,11 +338,11 @@ class ChatService:
             List of recent conversations
         """
         try:
-            query = self.db.query(ChatConversation).filter(
-                ChatConversation.user_id == user_id, ChatConversation.case_id == case_id
+            query = self.db.query(Conversation).filter(
+                Conversation.user_id == user_id, Conversation.case_id == case_id
             )
 
-            conversations = query.order_by(desc(ChatConversation.updated_at)).limit(limit).all()
+            conversations = query.order_by(desc(Conversation.updated_at)).limit(limit).all()
 
             return [ConversationResponse.model_validate(conv) for conv in conversations]
 
@@ -376,7 +376,7 @@ class ChatService:
             HTTPException: 403 if user doesn't own the conversation
         """
         conversation = (
-            self.db.query(ChatConversation).filter(ChatConversation.id == conversation_id).first()
+            self.db.query(Conversation).filter(Conversation.id == conversation_id).first()
         )
 
         if not conversation:
@@ -387,9 +387,9 @@ class ChatService:
 
         # Load messages
         messages = (
-            self.db.query(ChatMessage)
-            .filter(ChatMessage.conversation_id == conversation_id)
-            .order_by(ChatMessage.timestamp.asc())
+            self.db.query(Message)
+            .filter(Message.conversation_id == conversation_id)
+            .order_by(Message.timestamp.asc())
             .all()
         )
 
@@ -419,8 +419,8 @@ class ChatService:
         """
         # Verify conversation exists
         conversation = (
-            self.db.query(ChatConversation)
-            .filter(ChatConversation.id == input_data.conversation_id)
+            self.db.query(Conversation)
+            .filter(Conversation.id == input_data.conversation_id)
             .first()
         )
 
@@ -435,7 +435,7 @@ class ChatService:
 
         try:
             # Create message instance
-            message = ChatMessage(
+            message = Message(
                 conversation_id=input_data.conversation_id,
                 role=input_data.role,
                 content=input_data.content,
@@ -494,7 +494,7 @@ class ChatService:
             DatabaseError: If database operation fails
         """
         conversation = (
-            self.db.query(ChatConversation).filter(ChatConversation.id == conversation_id).first()
+            self.db.query(Conversation).filter(Conversation.id == conversation_id).first()
         )
 
         if not conversation:
@@ -602,7 +602,7 @@ class ChatService:
             HTTPException: 403 if user doesn't own the conversation
         """
         conversation = (
-            self.db.query(ChatConversation).filter(ChatConversation.id == conversation_id).first()
+            self.db.query(Conversation).filter(Conversation.id == conversation_id).first()
         )
 
         if not conversation:

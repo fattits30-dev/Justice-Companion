@@ -20,15 +20,18 @@ class Settings(BaseSettings):
     
     # Model configurations - HuggingFace Inference Providers (Pro tier)
     # These models are available via providers like novita, together, cerebras, etc.
-    MODEL_CHAT_PRIMARY: str = "meta-llama/Llama-3.3-70B-Instruct"  # Fast & capable
-    MODEL_CHAT_FAST: str = "Qwen/Qwen3-32B"  # Smaller, quicker responses
+    # NOTE: Llama models require accepting Meta's license at huggingface.co/meta-llama/...
+    # Mistral models work without gated access approval
+    MODEL_CHAT_PRIMARY: str = "meta-llama/Llama-3.3-70B-Instruct"  # Best quality (accept Meta license first!)
+    MODEL_CHAT_FAST: str = "mistralai/Mistral-7B-Instruct-v0.3"  # Fallback - no license needed
     MODEL_CHAT_COMPLEX: str = "Qwen/Qwen2.5-72B-Instruct"  # Deep reasoning
     
     MODEL_VISION_OCR: str = "Qwen/Qwen2.5-VL-7B-Instruct"
     MODEL_OCR_PRINTED: str = "microsoft/trocr-large-printed"
     MODEL_OCR_HANDWRITTEN: str = "microsoft/trocr-base-handwritten"
     
-    MODEL_EMBEDDINGS: str = "BAAI/bge-m3"
+    MODEL_EMBEDDINGS: str = "BAAI/bge-m3"  # General-purpose, excellent quality
+    MODEL_EMBEDDINGS_LEGAL: str = "pile-of-law/legalbert-large-1.7M-2"  # Legal-specific
     MODEL_EMBEDDINGS_FAST: str = "BAAI/bge-small-en-v1.5"
     MODEL_RERANKER: str = "BAAI/bge-reranker-v2-m3"
     
