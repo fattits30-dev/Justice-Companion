@@ -1,6 +1,6 @@
 // src/services/export/ExportService.test.ts
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ExportService } from "./ExportService.ts";
+import { ExportService } from "./ExportService";
 // Mock electron
 vi.mock("electron", () => ({
     app: {

@@ -1,8 +1,8 @@
 import { fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor } from "../../../test-utils/test-utils.tsx";
-import { AddDeadlineDialog } from "./AddDeadlineDialog.tsx";
+import { render, screen, waitFor } from "../../../test-utils/test-utils";
+import { AddDeadlineDialog } from "./AddDeadlineDialog";
 
 describe("AddDeadlineDialog", () => {
   const mockOnClose = vi.fn();
@@ -26,7 +26,7 @@ describe("AddDeadlineDialog", () => {
           onSubmit={mockOnSubmit}
           cases={mockCases}
           userId={1}
-        />
+        />,
       );
 
       expect(screen.getByRole("dialog")).toBeInTheDocument();
@@ -41,7 +41,7 @@ describe("AddDeadlineDialog", () => {
           onSubmit={mockOnSubmit}
           cases={mockCases}
           userId={1}
-        />
+        />,
       );
 
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
@@ -55,7 +55,7 @@ describe("AddDeadlineDialog", () => {
           onSubmit={mockOnSubmit}
           cases={mockCases}
           userId={1}
-        />
+        />,
       );
 
       expect(screen.getByLabelText(/title/i)).toBeInTheDocument();
@@ -73,14 +73,14 @@ describe("AddDeadlineDialog", () => {
           onSubmit={mockOnSubmit}
           cases={mockCases}
           userId={1}
-        />
+        />,
       );
 
       expect(
-        screen.getByRole("button", { name: /cancel/i })
+        screen.getByRole("button", { name: /cancel/i }),
       ).toBeInTheDocument();
       expect(
-        screen.getByRole("button", { name: /create/i })
+        screen.getByRole("button", { name: /create/i }),
       ).toBeInTheDocument();
     });
   });
@@ -94,7 +94,7 @@ describe("AddDeadlineDialog", () => {
           onSubmit={mockOnSubmit}
           cases={mockCases}
           userId={1}
-        />
+        />,
       );
 
       const createButton = screen.getByRole("button", { name: /create/i });
@@ -112,7 +112,7 @@ describe("AddDeadlineDialog", () => {
           onSubmit={mockOnSubmit}
           cases={mockCases}
           userId={1}
-        />
+        />,
       );
 
       await userEvent.type(screen.getByLabelText(/title/i), "Test Deadline");
@@ -130,7 +130,7 @@ describe("AddDeadlineDialog", () => {
           onSubmit={mockOnSubmit}
           cases={mockCases}
           userId={1}
-        />
+        />,
       );
 
       await userEvent.type(screen.getByLabelText(/title/i), "Test Deadline");
@@ -153,7 +153,7 @@ describe("AddDeadlineDialog", () => {
           onSubmit={mockOnSubmit}
           cases={mockCases}
           userId={1}
-        />
+        />,
       );
 
       await userEvent.type(screen.getByLabelText(/title/i), "Test Deadline");
@@ -167,7 +167,7 @@ describe("AddDeadlineDialog", () => {
       await userEvent.click(screen.getByRole("button", { name: /create/i }));
 
       expect(
-        screen.getByText(/date cannot be in the past/i)
+        screen.getByText(/date cannot be in the past/i),
       ).toBeInTheDocument();
       expect(mockOnSubmit).not.toHaveBeenCalled();
     });
@@ -180,7 +180,7 @@ describe("AddDeadlineDialog", () => {
           onSubmit={mockOnSubmit}
           cases={mockCases}
           userId={1}
-        />
+        />,
       );
 
       const longTitle = "A".repeat(201);
@@ -190,7 +190,7 @@ describe("AddDeadlineDialog", () => {
       await userEvent.click(screen.getByRole("button", { name: /create/i }));
 
       expect(
-        screen.getByText(/title must be 200 characters or less/i)
+        screen.getByText(/title must be 200 characters or less/i),
       ).toBeInTheDocument();
       expect(mockOnSubmit).not.toHaveBeenCalled();
     });
@@ -205,7 +205,7 @@ describe("AddDeadlineDialog", () => {
           onSubmit={mockOnSubmit}
           cases={mockCases}
           userId={1}
-        />
+        />,
       );
 
       // Options are rendered in the DOM, no need to click
@@ -221,7 +221,7 @@ describe("AddDeadlineDialog", () => {
           onSubmit={mockOnSubmit}
           cases={[]}
           userId={1}
-        />
+        />,
       );
 
       expect(screen.getByText(/no cases available/i)).toBeInTheDocument();
@@ -235,7 +235,7 @@ describe("AddDeadlineDialog", () => {
           onSubmit={mockOnSubmit}
           cases={[]}
           userId={1}
-        />
+        />,
       );
 
       const createButton = screen.getByRole("button", { name: /create/i });
@@ -252,7 +252,7 @@ describe("AddDeadlineDialog", () => {
           onSubmit={mockOnSubmit}
           cases={mockCases}
           userId={1}
-        />
+        />,
       );
 
       const prioritySelect = screen.getByLabelText(/priority/i);
@@ -267,7 +267,7 @@ describe("AddDeadlineDialog", () => {
           onSubmit={mockOnSubmit}
           cases={mockCases}
           userId={1}
-        />
+        />,
       );
 
       const prioritySelect = screen.getByLabelText(/priority/i);
@@ -284,7 +284,7 @@ describe("AddDeadlineDialog", () => {
           onSubmit={mockOnSubmit}
           cases={mockCases}
           userId={1}
-        />
+        />,
       );
 
       // Options are rendered in the DOM, no need to click
@@ -306,7 +306,7 @@ describe("AddDeadlineDialog", () => {
           onSubmit={mockOnSubmit}
           cases={mockCases}
           userId={1}
-        />
+        />,
       );
 
       await user.type(screen.getByLabelText(/title/i), "Submit ET1 Form");
@@ -323,7 +323,7 @@ describe("AddDeadlineDialog", () => {
 
       await user.type(
         screen.getByLabelText(/description/i),
-        "Important tribunal deadline"
+        "Important tribunal deadline",
       );
 
       await user.click(screen.getByRole("button", { name: /create/i }));
@@ -351,7 +351,7 @@ describe("AddDeadlineDialog", () => {
           onSubmit={mockOnSubmit}
           cases={mockCases}
           userId={1}
-        />
+        />,
       );
 
       await user.type(screen.getByLabelText(/title/i), "Test Deadline");
@@ -381,7 +381,7 @@ describe("AddDeadlineDialog", () => {
           onSubmit={mockOnSubmit}
           cases={mockCases}
           userId={1}
-        />
+        />,
       );
 
       await user.type(screen.getByLabelText(/title/i), "Test Deadline");
@@ -404,8 +404,8 @@ describe("AddDeadlineDialog", () => {
       mockOnSubmit.mockImplementation(
         () =>
           new Promise((resolve) =>
-            setTimeout(() => resolve({ success: true }), 1000)
-          )
+            setTimeout(() => resolve({ success: true }), 1000),
+          ),
       );
 
       render(
@@ -415,7 +415,7 @@ describe("AddDeadlineDialog", () => {
           onSubmit={mockOnSubmit}
           cases={mockCases}
           userId={1}
-        />
+        />,
       );
 
       await user.type(screen.getByLabelText(/title/i), "Test Deadline");
@@ -451,7 +451,7 @@ describe("AddDeadlineDialog", () => {
           onSubmit={mockOnSubmit}
           cases={mockCases}
           userId={1}
-        />
+        />,
       );
 
       const cancelButton = screen.getByRole("button", { name: /cancel/i });
@@ -470,14 +470,14 @@ describe("AddDeadlineDialog", () => {
           onSubmit={mockOnSubmit}
           cases={mockCases}
           userId={1}
-        />
+        />,
       );
 
       // Fill form
       await user.type(screen.getByLabelText(/title/i), "Test Deadline");
       await user.type(
         screen.getByLabelText(/description/i),
-        "Test description"
+        "Test description",
       );
 
       // Close dialog (triggers reset)
@@ -488,7 +488,7 @@ describe("AddDeadlineDialog", () => {
           onSubmit={mockOnSubmit}
           cases={mockCases}
           userId={1}
-        />
+        />,
       );
 
       // Reopen
@@ -499,7 +499,7 @@ describe("AddDeadlineDialog", () => {
           onSubmit={mockOnSubmit}
           cases={mockCases}
           userId={1}
-        />
+        />,
       );
 
       // Form should be empty
@@ -517,7 +517,7 @@ describe("AddDeadlineDialog", () => {
           onSubmit={mockOnSubmit}
           cases={mockCases}
           userId={1}
-        />
+        />,
       );
 
       expect(screen.getByRole("dialog")).toHaveAttribute("aria-labelledby");
@@ -534,7 +534,7 @@ describe("AddDeadlineDialog", () => {
           onSubmit={mockOnSubmit}
           cases={mockCases}
           userId={1}
-        />
+        />,
       );
 
       const dialog = screen.getByRole("dialog");
@@ -551,7 +551,7 @@ describe("AddDeadlineDialog", () => {
           onSubmit={mockOnSubmit}
           cases={mockCases}
           userId={1}
-        />
+        />,
       );
 
       await user.keyboard("{Escape}");
@@ -569,7 +569,7 @@ describe("AddDeadlineDialog", () => {
           onSubmit={mockOnSubmit}
           cases={mockCases}
           userId={1}
-        />
+        />,
       );
 
       const dialog = container.querySelector('[data-variant="glass"]');

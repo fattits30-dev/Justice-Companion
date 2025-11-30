@@ -7,7 +7,7 @@
 import { render, screen } from "@testing-library/react";
 import { createRef } from "react";
 import { describe, expect, it } from "vitest";
-import { Badge, type BadgeProps } from "./Badge.tsx";
+import { Badge, type BadgeProps } from "./Badge";
 
 type BadgeVariant = NonNullable<BadgeProps["variant"]>;
 type BadgeSize = NonNullable<BadgeProps["size"]>;
@@ -81,7 +81,7 @@ describe("Badge", () => {
         "duration-200",
         "backdrop-blur-sm",
         ...sizeExpectations.md,
-        ...neutralVariantClasses
+        ...neutralVariantClasses,
       );
     });
 
@@ -110,7 +110,7 @@ describe("Badge", () => {
       render(
         <Badge variant="success" glow>
           Glowing Badge
-        </Badge>
+        </Badge>,
       );
       const badge = screen.getByText("Glowing Badge");
       expect(badge).toHaveClass("shadow-success");
@@ -131,7 +131,7 @@ describe("Badge", () => {
           const badge = screen.getByText("Sized Badge");
           expect(badge).toHaveClass(...classes);
         });
-      }
+      },
     );
   });
 
@@ -150,7 +150,7 @@ describe("Badge", () => {
       expect(dot).toHaveClass(
         "rounded-full",
         ...dotSizeExpectations.md,
-        "bg-gray-500"
+        "bg-gray-500",
       );
     });
 
@@ -159,7 +159,7 @@ describe("Badge", () => {
         render(
           <Badge dot variant={variant}>
             {variant}
-          </Badge>
+          </Badge>,
         );
         const badge = screen.getByText(variant);
         const dot = badge.querySelector(".rounded-full") as HTMLElement;
@@ -174,7 +174,7 @@ describe("Badge", () => {
         render(
           <Badge dot size={size}>
             Dot Size
-          </Badge>
+          </Badge>,
         );
         const badge = screen.getByText("Dot Size");
         const dot = badge.querySelector(".rounded-full") as HTMLElement;
@@ -188,7 +188,7 @@ describe("Badge", () => {
       render(
         <Badge dot pulse>
           Pulsing
-        </Badge>
+        </Badge>,
       );
       const badge = screen.getByText("Pulsing");
       const dot = badge.querySelector(".rounded-full") as HTMLElement;
@@ -203,7 +203,7 @@ describe("Badge", () => {
       expect(badge).not.toHaveClass(
         "shadow-success",
         "shadow-warning",
-        "shadow-danger"
+        "shadow-danger",
       );
     });
 
@@ -211,7 +211,7 @@ describe("Badge", () => {
       render(
         <Badge glow variant="warning">
           Warning Glow
-        </Badge>
+        </Badge>,
       );
       const badge = screen.getByText("Warning Glow");
       expect(badge).toHaveClass("shadow-warning");
@@ -238,7 +238,7 @@ describe("Badge", () => {
         render(
           <Badge icon={<TestIcon />} size={size}>
             Icon Wrapper
-          </Badge>
+          </Badge>,
         );
         const icon = screen.getByTestId("badge-icon");
         const wrapper = icon.parentElement as HTMLElement;
@@ -252,7 +252,7 @@ describe("Badge", () => {
       render(
         <Badge aria-label="status-badge" role="status">
           Accessible Badge
-        </Badge>
+        </Badge>,
       );
       const badge = screen.getByLabelText("status-badge");
       expect(badge).toHaveAttribute("role", "status");

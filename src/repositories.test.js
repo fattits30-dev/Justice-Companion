@@ -4,9 +4,9 @@
  * Tests for the centralized repository system and lazy initialization.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { getRepositories, initializeTestRepositories, resetRepositories, } from "./repositories.ts";
-import { AuditLogger } from "./services/AuditLogger.ts";
-import { EncryptionService } from "./services/EncryptionService.ts";
+import { getRepositories, initializeTestRepositories, resetRepositories, } from "./repositories";
+import { AuditLogger } from "./services/AuditLogger";
+import { EncryptionService } from "./services/EncryptionService";
 // Mock services to avoid database dependencies
 vi.mock("./db/database.ts", () => ({
     getDb: vi.fn(() => ({})),

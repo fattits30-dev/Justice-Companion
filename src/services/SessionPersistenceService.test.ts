@@ -1,8 +1,8 @@
 import { v4 as uuidv4 } from "uuid";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { logger } from "../utils/logger.ts";
-import { SessionPersistenceService } from "./SessionPersistenceService.ts";
+import { logger } from "../utils/logger";
+import { SessionPersistenceService } from "./SessionPersistenceService";
 
 describe("SessionPersistenceService (non-browser environments)", () => {
   let originalWindow: typeof window | undefined;
@@ -47,7 +47,7 @@ describe("SessionPersistenceService (non-browser environments)", () => {
     await expect(service.isAvailable()).resolves.toBe(false);
     expect(logger.warn).toHaveBeenCalledWith(
       "SessionPersistence",
-      "localStorage not available"
+      "localStorage not available",
     );
   });
 
@@ -55,12 +55,12 @@ describe("SessionPersistenceService (non-browser environments)", () => {
     const sessionId = uuidv4();
 
     await expect(service.storeSessionId(sessionId)).rejects.toThrow(
-      "Persistent storage not available"
+      "Persistent storage not available",
     );
 
     expect(logger.error).toHaveBeenCalledWith(
       "Failed to store session ID",
-      expect.objectContaining({ service: "SessionPersistence" })
+      expect.objectContaining({ service: "SessionPersistence" }),
     );
   });
 
@@ -70,7 +70,7 @@ describe("SessionPersistenceService (non-browser environments)", () => {
     expect(result).toBeNull();
     expect(logger.warn).toHaveBeenCalledWith(
       "SessionPersistence",
-      "Cannot retrieve: storage not available"
+      "Cannot retrieve: storage not available",
     );
   });
 
@@ -94,7 +94,7 @@ describe("SessionPersistenceService (non-browser environments)", () => {
     expect(storageMock.removeItem).toHaveBeenCalled();
     expect(logger.error).toHaveBeenCalledWith(
       "Error clearing session",
-      expect.objectContaining({ service: "SessionPersistence" })
+      expect.objectContaining({ service: "SessionPersistence" }),
     );
 
     getStorageSpy.mockRestore();

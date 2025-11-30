@@ -1,20 +1,20 @@
 // src/services/export/ExportService.test.ts
 import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
-import type { User } from "../../domains/auth/entities/User.ts";
-import type { Case } from "../../domains/cases/entities/Case.ts";
-import type { Evidence } from "../../domains/evidence/entities/Evidence.ts";
-import type { Deadline } from "../../domains/timeline/entities/Deadline.ts";
-import type { IAuditLogger } from "../../interfaces/IAuditLogger.ts";
-import type { ICaseRepository } from "../../interfaces/ICaseRepository.ts";
-import type { IDatabase } from "../../interfaces/IDatabase.ts";
-import type { IDeadlineRepository } from "../../interfaces/IDeadlineRepository.ts";
-import type { IDocumentRepository } from "../../interfaces/IDocumentRepository.ts";
-import type { IEncryptionService } from "../../interfaces/IEncryptionService.ts";
-import type { IEvidenceRepository } from "../../interfaces/IEvidenceRepository.ts";
-import type { INoteRepository } from "../../interfaces/INoteRepository.ts";
-import type { IUserRepository } from "../../interfaces/IUserRepository.ts";
-import type { Note } from "../../models/Note.ts";
-import { ExportService } from "./ExportService.ts";
+import type { User } from "../../domains/auth/entities/User";
+import type { Case } from "../../domains/cases/entities/Case";
+import type { Evidence } from "../../domains/evidence/entities/Evidence";
+import type { Deadline } from "../../domains/timeline/entities/Deadline";
+import type { IAuditLogger } from "../../interfaces/IAuditLogger";
+import type { ICaseRepository } from "../../interfaces/ICaseRepository";
+import type { IDatabase } from "../../interfaces/IDatabase";
+import type { IDeadlineRepository } from "../../interfaces/IDeadlineRepository";
+import type { IDocumentRepository } from "../../interfaces/IDocumentRepository";
+import type { IEncryptionService } from "../../interfaces/IEncryptionService";
+import type { IEvidenceRepository } from "../../interfaces/IEvidenceRepository";
+import type { INoteRepository } from "../../interfaces/INoteRepository";
+import type { IUserRepository } from "../../interfaces/IUserRepository";
+import type { Note } from "../../models/Note";
+import { ExportService } from "./ExportService";
 
 // Mock electron
 vi.mock("electron", () => ({
@@ -246,7 +246,7 @@ describe("ExportService", () => {
       mockNoteRepo,
       mockUserRepo,
       mockEncryption,
-      mockAuditLogger
+      mockAuditLogger,
     );
   });
 
@@ -257,7 +257,7 @@ describe("ExportService", () => {
       (mockUserRepo.findById as Mock).mockResolvedValue(mockUser);
       (mockEvidenceRepo.findByCaseId as Mock).mockResolvedValue(mockEvidence);
       (mockDeadlineRepo.findByCaseId as Mock).mockImplementation(
-        () => mockDeadlines
+        () => mockDeadlines,
       );
       (mockNoteRepo.findByCaseId as Mock).mockResolvedValue(mockNotes);
       (mockDocumentRepo.findByCaseId as Mock).mockResolvedValue([]);
@@ -276,7 +276,7 @@ describe("ExportService", () => {
           action: "EXPORT_CASE_PDF",
           resourceType: "CASE",
           resourceId: 1,
-        })
+        }),
       );
     });
 
@@ -289,7 +289,7 @@ describe("ExportService", () => {
 
       // Execute & Assert
       await expect(service.exportCaseToPDF(1, 1)).rejects.toThrow(
-        "Permission denied"
+        "Permission denied",
       );
     });
 
@@ -299,7 +299,7 @@ describe("ExportService", () => {
 
       // Execute & Assert
       await expect(service.exportCaseToPDF(1, 1)).rejects.toThrow(
-        "Case not found"
+        "Case not found",
       );
     });
 
@@ -309,7 +309,7 @@ describe("ExportService", () => {
       (mockUserRepo.findById as Mock).mockResolvedValue(mockUser);
       (mockEvidenceRepo.findByCaseId as Mock).mockResolvedValue(mockEvidence);
       (mockDeadlineRepo.findByCaseId as Mock).mockImplementation(
-        () => mockDeadlines
+        () => mockDeadlines,
       );
       (mockNoteRepo.findByCaseId as Mock).mockResolvedValue(mockNotes);
       (mockDocumentRepo.findByCaseId as Mock).mockResolvedValue([]);
@@ -320,16 +320,16 @@ describe("ExportService", () => {
       // Assert - check that decrypt was called for all encrypted fields
       expect(mockEncryption.decrypt).toHaveBeenCalledWith("encrypted_title");
       expect(mockEncryption.decrypt).toHaveBeenCalledWith(
-        "encrypted_description"
+        "encrypted_description",
       );
       expect(mockEncryption.decrypt).toHaveBeenCalledWith(
-        "encrypted_evidence_title"
+        "encrypted_evidence_title",
       );
       expect(mockEncryption.decrypt).toHaveBeenCalledWith(
-        "encrypted_deadline_title"
+        "encrypted_deadline_title",
       );
       expect(mockEncryption.decrypt).toHaveBeenCalledWith(
-        "encrypted_note_content"
+        "encrypted_note_content",
       );
     });
 
@@ -360,7 +360,7 @@ describe("ExportService", () => {
       (mockUserRepo.findById as Mock).mockResolvedValue(mockUser);
       (mockEvidenceRepo.findByCaseId as Mock).mockResolvedValue(mockEvidence);
       (mockDeadlineRepo.findByCaseId as Mock).mockImplementation(
-        () => mockDeadlines
+        () => mockDeadlines,
       );
       (mockNoteRepo.findByCaseId as Mock).mockResolvedValue(mockNotes);
       (mockDocumentRepo.findByCaseId as Mock).mockResolvedValue([]);
@@ -379,7 +379,7 @@ describe("ExportService", () => {
           action: "EXPORT_CASE_DOCX",
           resourceType: "CASE",
           resourceId: 1,
-        })
+        }),
       );
     });
 
@@ -388,7 +388,7 @@ describe("ExportService", () => {
       (mockCaseRepo.findById as Mock).mockResolvedValue(mockCase);
       (mockUserRepo.findById as Mock).mockResolvedValue(mockUser);
       (mockDeadlineRepo.findByCaseId as Mock).mockImplementation(
-        () => mockDeadlines
+        () => mockDeadlines,
       );
       (mockEvidenceRepo.findByCaseId as Mock).mockResolvedValue([]);
       (mockNoteRepo.findByCaseId as Mock).mockResolvedValue([]);
@@ -431,7 +431,7 @@ describe("ExportService", () => {
       (mockCaseRepo.findById as Mock).mockResolvedValue(mockCase);
       (mockUserRepo.findById as Mock).mockResolvedValue(mockUser);
       (mockDeadlineRepo.findByCaseId as Mock).mockImplementation(
-        () => mockDeadlines
+        () => mockDeadlines,
       );
       (mockEvidenceRepo.findByCaseId as Mock).mockResolvedValue([]);
       (mockNoteRepo.findByCaseId as Mock).mockResolvedValue([]);
@@ -551,7 +551,7 @@ describe("ExportService", () => {
 
       // Execute & Assert
       await expect(
-        service.exportCaseToPDF(1, 1, { template: "invalid-template" as any })
+        service.exportCaseToPDF(1, 1, { template: "invalid-template" as any }),
       ).rejects.toThrow("Invalid template");
     });
   });

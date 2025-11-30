@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "../../../test-utils/test-utils.tsx";
+import { render, screen } from "../../../test-utils/test-utils";
 import userEvent from "@testing-library/user-event";
-import { TimelineItem } from "./TimelineItem.tsx";
+import { TimelineItem } from "./TimelineItem";
 import type { DeadlineWithCase } from "../../../domains/timeline/entities/Deadline";
 
 const createMockDeadline = (

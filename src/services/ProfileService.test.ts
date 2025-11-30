@@ -12,9 +12,9 @@
 
 import { randomUUID } from "node:crypto";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { ProfileFormData, UserProfile } from "../types/profile.ts";
-import { ProfileStorageKey } from "../types/profile.ts";
-import { ProfileService } from "./ProfileService.ts";
+import type { ProfileFormData, UserProfile } from "../types/profile";
+import { ProfileStorageKey } from "../types/profile";
+import { ProfileService } from "./ProfileService";
 
 // Mock localStorage globally
 const localStorageMock = {
@@ -138,7 +138,7 @@ describe("ProfileService", () => {
       expect(result).toBeNull();
       expect(consoleErrorMock).toHaveBeenCalledWith(
         "[ProfileService] Error retrieving profile:",
-        {}
+        {},
       );
     });
   });
@@ -169,15 +169,15 @@ describe("ProfileService", () => {
 
       expect(localStorageMock.setItem).toHaveBeenCalledWith(
         ProfileStorageKey.FIRST_NAME,
-        "John"
+        "John",
       );
       expect(localStorageMock.setItem).toHaveBeenCalledWith(
         ProfileStorageKey.LAST_NAME,
-        "Doe"
+        "Doe",
       );
       expect(localStorageMock.setItem).toHaveBeenCalledWith(
         ProfileStorageKey.EMAIL,
-        profileEmail
+        profileEmail,
       );
     });
 
@@ -242,7 +242,7 @@ describe("ProfileService", () => {
       expect(profileService.validate(validProfile).isValid).toBe(true);
       expect(profileService.validate(invalidProfile).isValid).toBe(false);
       expect(profileService.validate(invalidProfile).errors.email).toBe(
-        "Please enter a valid email address"
+        "Please enter a valid email address",
       );
     });
 
@@ -258,7 +258,7 @@ describe("ProfileService", () => {
       expect(profileService.validate(validProfile).isValid).toBe(true);
       expect(profileService.validate(invalidProfile).isValid).toBe(false);
       expect(profileService.validate(invalidProfile).errors.phone).toBe(
-        "Please enter a valid phone number"
+        "Please enter a valid phone number",
       );
     });
 
@@ -275,7 +275,7 @@ describe("ProfileService", () => {
       expect(profileService.validate(validProfile).isValid).toBe(true);
       expect(profileService.validate(invalidProfile).isValid).toBe(false);
       expect(profileService.validate(invalidProfile).errors.firstName).toBe(
-        "First name contains invalid characters"
+        "First name contains invalid characters",
       );
     });
 
@@ -298,19 +298,19 @@ describe("ProfileService", () => {
       profileService.clear();
 
       expect(localStorageMock.removeItem).toHaveBeenCalledWith(
-        ProfileStorageKey.FIRST_NAME
+        ProfileStorageKey.FIRST_NAME,
       );
       expect(localStorageMock.removeItem).toHaveBeenCalledWith(
-        ProfileStorageKey.LAST_NAME
+        ProfileStorageKey.LAST_NAME,
       );
       expect(localStorageMock.removeItem).toHaveBeenCalledWith(
-        ProfileStorageKey.FULL_NAME
+        ProfileStorageKey.FULL_NAME,
       );
       expect(localStorageMock.removeItem).toHaveBeenCalledWith(
-        ProfileStorageKey.EMAIL
+        ProfileStorageKey.EMAIL,
       );
       expect(localStorageMock.removeItem).toHaveBeenCalledWith(
-        ProfileStorageKey.PHONE
+        ProfileStorageKey.PHONE,
       );
     });
 

@@ -4,7 +4,7 @@
  * Tests for formatting functions including dates, file sizes, and text.
  */
 import { describe, expect, it, vi } from "vitest";
-import { capitalize, formatCurrency, formatDate, formatDateTime, formatDuration, formatFileSize, formatNumber, formatPercentage, formatPhoneNumber, formatRelativeTime, formatTime, toTitleCase, truncate, } from "./formatters.ts";
+import { capitalize, formatCurrency, formatDate, formatDateTime, formatDuration, formatFileSize, formatNumber, formatPercentage, formatPhoneNumber, formatRelativeTime, formatTime, toTitleCase, truncate, } from "./formatters";
 // Mock Date.now to ensure consistent test results
 const mockNow = new Date("2023-12-15T12:00:00Z");
 vi.useFakeTimers();

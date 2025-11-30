@@ -2,14 +2,11 @@
  * @vitest-environment node
  */
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { userProfileService } from "./UserProfileService.ts";
-import { AuditLogger } from "./AuditLogger.ts";
-import { TestDatabaseHelper } from "../test-utils/database-test-helper.ts";
-import { databaseManager } from "../db/database.ts";
-import {
-  resetRepositories,
-  initializeTestRepositories,
-} from "../repositories.ts";
+import { userProfileService } from "./UserProfileService";
+import { AuditLogger } from "./AuditLogger";
+import { TestDatabaseHelper } from "../test-utils/database-test-helper";
+import { databaseManager } from "../db/database";
+import { resetRepositories, initializeTestRepositories } from "../repositories";
 
 import type { UpdateUserProfileInput } from "../domains/settings/entities/UserProfile";
 

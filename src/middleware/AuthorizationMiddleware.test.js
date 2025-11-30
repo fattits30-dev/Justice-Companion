@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { AuthorizationMiddleware, AuthorizationError, } from "./AuthorizationMiddleware.ts";
+import { AuthorizationMiddleware, AuthorizationError, } from "./AuthorizationMiddleware";
 // Mock dependencies
 vi.mock("../repositories/CaseRepository.ts");
 vi.mock("../services/AuditLogger.ts");

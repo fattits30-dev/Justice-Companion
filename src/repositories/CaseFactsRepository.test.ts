@@ -1,14 +1,11 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import Database from "better-sqlite3-multiple-ciphers";
-import { CaseFactsRepository } from "./CaseFactsRepository.ts";
-import { AuditLogger } from "../services/AuditLogger.ts";
-import { TestDatabaseHelper } from "../test-utils/database-test-helper.ts";
-import { databaseManager } from "../db/database.ts";
-import {
-  resetRepositories,
-  initializeTestRepositories,
-} from "../repositories.ts";
-import type { CaseFact } from "../domains/cases/entities/CaseFact.ts";
+import { CaseFactsRepository } from "./CaseFactsRepository";
+import { AuditLogger } from "../services/AuditLogger";
+import { TestDatabaseHelper } from "../test-utils/database-test-helper";
+import { databaseManager } from "../db/database";
+import { resetRepositories, initializeTestRepositories } from "../repositories";
+import type { CaseFact } from "../domains/cases/entities/CaseFact";
 
 describe("CaseFactsRepository", () => {
   let db: Database.Database;

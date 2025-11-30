@@ -2,12 +2,12 @@
  * @vitest-environment node
  */
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { chatConversationService } from "./ChatConversationService.ts";
-import { AuditLogger } from "./AuditLogger.ts";
-import { TestDatabaseHelper } from "../test-utils/database-test-helper.ts";
-import { databaseManager } from "../db/database.ts";
-import { resetRepositories, initializeTestRepositories, } from "../repositories.ts";
-import { setupTestEnvironment, clearWindowMock, } from "../test-utils/ipc-mock.ts";
+import { chatConversationService } from "./ChatConversationService";
+import { AuditLogger } from "./AuditLogger";
+import { TestDatabaseHelper } from "../test-utils/database-test-helper";
+import { databaseManager } from "../db/database";
+import { resetRepositories, initializeTestRepositories, } from "../repositories";
+import { setupTestEnvironment, clearWindowMock, } from "../test-utils/ipc-mock";
 describe("ChatConversationService", () => {
     let auditLogger;
     let testDb;

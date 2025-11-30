@@ -7,10 +7,10 @@ import {
   beforeAll,
   afterAll,
 } from "vitest";
-import { createTestDatabase } from "../test-utils/database-test-helper.ts";
-import { databaseManager } from "../db/database.ts";
-import { CaseRepository } from "./CaseRepository.ts";
-import { EncryptionService } from "../services/EncryptionService.ts";
+import { createTestDatabase } from "../test-utils/database-test-helper";
+import { databaseManager } from "../db/database";
+import { CaseRepository } from "./CaseRepository";
+import { EncryptionService } from "../services/EncryptionService";
 import type { CreateCaseInput } from "../domains/cases/entities/Case";
 
 // Create test database helper at module level

@@ -5,7 +5,7 @@
  * and WHERE clause generation for pagination queries.
  */
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
-import { encodeSimpleCursor, decodeSimpleCursor, encodeCompositeCursor, decodeCompositeCursor, isSimpleCursor, isCompositeCursor, buildSimpleWhereClause, buildCompositeWhereClause, reverseDirection, getPrevCursor, getNextCursor, isCursorStale, getCursorAge, CursorError, MAX_CURSOR_AGE_MS, } from "./cursor-pagination.ts";
+import { encodeSimpleCursor, decodeSimpleCursor, encodeCompositeCursor, decodeCompositeCursor, isSimpleCursor, isCompositeCursor, buildSimpleWhereClause, buildCompositeWhereClause, reverseDirection, getPrevCursor, getNextCursor, isCursorStale, getCursorAge, CursorError, MAX_CURSOR_AGE_MS, } from "./cursor-pagination";
 describe("Cursor Pagination Utilities", () => {
     let mockNow;
     beforeEach(() => {

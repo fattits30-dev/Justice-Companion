@@ -9,9 +9,9 @@ import {
   getRepositories,
   initializeTestRepositories,
   resetRepositories,
-} from "./repositories.ts";
-import { AuditLogger } from "./services/AuditLogger.ts";
-import { EncryptionService } from "./services/EncryptionService.ts";
+} from "./repositories";
+import { AuditLogger } from "./services/AuditLogger";
+import { EncryptionService } from "./services/EncryptionService";
 
 // Mock services to avoid database dependencies
 vi.mock("./db/database.ts", () => ({
@@ -102,7 +102,7 @@ describe("Repository System", () => {
     it("should initialize repositories with provided test dependencies", () => {
       const repositories = initializeTestRepositories(
         mockEncryptionService,
-        mockAuditLogger
+        mockAuditLogger,
       );
 
       expect(repositories).toBeDefined();
@@ -117,7 +117,7 @@ describe("Repository System", () => {
       // Initialize with test dependencies
       const testRepos = initializeTestRepositories(
         mockEncryptionService,
-        mockAuditLogger
+        mockAuditLogger,
       );
 
       // getRepositories should return the test repositories

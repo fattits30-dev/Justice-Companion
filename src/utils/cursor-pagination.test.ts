@@ -24,7 +24,7 @@ import {
   MAX_CURSOR_AGE_MS,
   type SimpleCursor,
   type CompositeCursor,
-} from "./cursor-pagination.ts";
+} from "./cursor-pagination";
 
 describe("Cursor Pagination Utilities", () => {
   let mockNow: number;

@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, } from "vitest";
-import { EvidenceRepository } from "./EvidenceRepository.ts";
-import { EncryptionService } from "../services/EncryptionService.ts";
-import { AuditLogger } from "../services/AuditLogger.ts";
-import { createTestDatabase } from "../test-utils/database-test-helper.ts";
-import { databaseManager } from "../db/database.ts";
+import { EvidenceRepository } from "./EvidenceRepository";
+import { EncryptionService } from "../services/EncryptionService";
+import { AuditLogger } from "../services/AuditLogger";
+import { createTestDatabase } from "../test-utils/database-test-helper";
+import { databaseManager } from "../db/database";
 // Create test database instance at module level
 const testDb = createTestDatabase();
 describe("EvidenceRepository - Cursor Pagination", () => {

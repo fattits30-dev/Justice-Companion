@@ -22,7 +22,7 @@ from backend.models.base import Base
 from backend.models.deadline import Deadline, DeadlineStatus, DeadlinePriority
 from backend.models.notification import NotificationPreferences, NotificationType
 from backend.models.user import User
-from backend.models.case import Case
+from backend.models.case import Case, CaseStatus, CaseType
 from backend.services.deadline_reminder_scheduler import DeadlineReminderScheduler
 from backend.services.notification_service import (
     NotificationService,
@@ -83,7 +83,8 @@ def test_case(in_memory_db, test_user):
     case = Case(
         user_id=test_user.id,
         title="Test Case",
-        status="active"
+        case_type=CaseType.OTHER,
+        status=CaseStatus.ACTIVE
     )
     in_memory_db.add(case)
     in_memory_db.commit()
@@ -457,7 +458,7 @@ class TestDeadlineReminderScheduler:
         in_memory_db.commit()
 
         # Create case for user2
-        case2 = Case(user_id=user2.id, title="Case 2", status="active")
+        case2 = Case(user_id=user2.id, title="Case 2", case_type=CaseType.OTHER, status=CaseStatus.ACTIVE)
         in_memory_db.add(case2)
         in_memory_db.commit()
 

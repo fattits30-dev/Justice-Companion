@@ -1,10 +1,10 @@
 import { randomUUID } from "node:crypto";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { databaseManager } from "../db/database.ts";
-import { initializeTestRepositories, resetRepositories, } from "../repositories.ts";
-import { TestDatabaseHelper } from "../test-utils/database-test-helper.ts";
-import { AuditLogger } from "./AuditLogger.ts";
-import { AuthenticationService } from "./AuthenticationService.ts";
+import { databaseManager } from "../db/database";
+import { initializeTestRepositories, resetRepositories, } from "../repositories";
+import { TestDatabaseHelper } from "../test-utils/database-test-helper";
+import { AuditLogger } from "./AuditLogger";
+import { AuthenticationService } from "./AuthenticationService";
 const createSpecialCharacterPassword = () => `P@ss-${randomUUID().slice(0, 8)}!#Aa1`;
 describe("AuthenticationService", () => {
     let authService;

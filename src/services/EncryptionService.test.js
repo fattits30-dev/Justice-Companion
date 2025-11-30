@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { EncryptionService } from "./EncryptionService.ts";
+import { EncryptionService } from "./EncryptionService";
 describe("EncryptionService", () => {
     let service;
     let testKey;

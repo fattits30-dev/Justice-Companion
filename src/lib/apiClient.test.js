@@ -12,7 +12,7 @@
  * @vitest-environment happy-dom
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { ApiClient, ApiError } from "./apiClient.ts";
+import { ApiClient, ApiError } from "./apiClient";
 // ===== MOCK SETUP =====
 /**
  * Mock fetch globally

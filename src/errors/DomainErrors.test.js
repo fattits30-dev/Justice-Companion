@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { DomainError, NotAuthenticatedError, InvalidCredentialsError, CaseNotFoundError, ValidationError, DatabaseError, AINotConfiguredError, GdprComplianceError, isDomainError, toDomainError, createErrorResponse, } from "./DomainErrors.ts";
+import { DomainError, NotAuthenticatedError, InvalidCredentialsError, CaseNotFoundError, ValidationError, DatabaseError, AINotConfiguredError, GdprComplianceError, isDomainError, toDomainError, createErrorResponse, } from "./DomainErrors";
 describe("DomainErrors", () => {
     describe("Base DomainError", () => {
         it("creates error with correct properties", () => {

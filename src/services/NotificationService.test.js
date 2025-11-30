@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { NotificationService } from "./NotificationService.ts";
-import { NotificationRepository } from "../repositories/NotificationRepository.ts";
-import { NotificationPreferencesRepository } from "../repositories/NotificationPreferencesRepository.ts";
-import { AuditLogger } from "./AuditLogger.ts";
+import { NotificationService } from "./NotificationService";
+import { NotificationRepository } from "../repositories/NotificationRepository";
+import { NotificationPreferencesRepository } from "../repositories/NotificationPreferencesRepository";
+import { AuditLogger } from "./AuditLogger";
 // Mock repositories and services
 vi.mock("../repositories/NotificationRepository.ts");
 vi.mock("../repositories/NotificationPreferencesRepository.ts");

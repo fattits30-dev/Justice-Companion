@@ -4,7 +4,7 @@ const config = {
   test: {
     globals: true,
     environment: "jsdom", // Use jsdom for browser API support (localStorage, window, etc.)
-    include: ["src/**/*.{test,spec}.{js,ts,tsx}"],
+    include: ["src/**/*.{test,spec}.{js,jsx,ts,tsx}"],
     exclude: [
       "node_modules",
       "dist",

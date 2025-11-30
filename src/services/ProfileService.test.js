@@ -11,8 +11,8 @@
  */
 import { randomUUID } from "node:crypto";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ProfileStorageKey } from "../types/profile.ts";
-import { ProfileService } from "./ProfileService.ts";
+import { ProfileStorageKey } from "../types/profile";
+import { ProfileService } from "./ProfileService";
 // Mock localStorage globally
 const localStorageMock = {
     getItem: vi.fn(),

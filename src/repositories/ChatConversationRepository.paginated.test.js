@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, } from "vitest";
-import { ChatConversationRepository } from "./ChatConversationRepository.ts";
-import { EncryptionService } from "../services/EncryptionService.ts";
-import { AuditLogger } from "../services/AuditLogger.ts";
-import { createTestDatabase } from "../test-utils/database-test-helper.ts";
-import { databaseManager } from "../db/database.ts";
+import { ChatConversationRepository } from "./ChatConversationRepository";
+import { EncryptionService } from "../services/EncryptionService";
+import { AuditLogger } from "../services/AuditLogger";
+import { createTestDatabase } from "../test-utils/database-test-helper";
+import { databaseManager } from "../db/database";
 // Create test database instance at module level
 const testDb = createTestDatabase();
 describe("ChatConversationRepository - Cursor Pagination", () => {

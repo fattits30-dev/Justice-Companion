@@ -1,15 +1,12 @@
 import { randomUUID } from "node:crypto";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { databaseManager } from "../db/database.ts";
-import {
-  initializeTestRepositories,
-  resetRepositories,
-} from "../repositories.ts";
-import { SessionRepository } from "../repositories/SessionRepository.ts";
-import { UserRepository } from "../repositories/UserRepository.ts";
-import { TestDatabaseHelper } from "../test-utils/database-test-helper.ts";
-import { AuditLogger } from "./AuditLogger.ts";
-import { AuthenticationService } from "./AuthenticationService.ts";
+import { databaseManager } from "../db/database";
+import { initializeTestRepositories, resetRepositories } from "../repositories";
+import { SessionRepository } from "../repositories/SessionRepository";
+import { UserRepository } from "../repositories/UserRepository";
+import { TestDatabaseHelper } from "../test-utils/database-test-helper";
+import { AuditLogger } from "./AuditLogger";
+import { AuthenticationService } from "./AuthenticationService";
 
 // Type for audit log entries returned by test helper
 interface TestAuditLog {
@@ -119,7 +116,7 @@ describe("AuthenticationService", () => {
     authService = new AuthenticationService(
       userRepository,
       sessionRepository,
-      auditLogger
+      auditLogger,
     );
   });
 
@@ -134,7 +131,7 @@ describe("AuthenticationService", () => {
       const { user } = await authService.register(
         "testuser",
         "SecurePass123",
-        "test@example.com"
+        "test@example.com",
       );
 
       expect(user).toBeDefined();
@@ -149,25 +146,25 @@ describe("AuthenticationService", () => {
 
     it("should enforce minimum password length (12 chars)", async () => {
       await expect(
-        authService.register("testuser", "Short1", "test@example.com")
+        authService.register("testuser", "Short1", "test@example.com"),
       ).rejects.toThrow("Password must be at least 12 characters");
     });
 
     it("should require at least one uppercase letter", async () => {
       await expect(
-        authService.register("testuser", "lowercase123", "test@example.com")
+        authService.register("testuser", "lowercase123", "test@example.com"),
       ).rejects.toThrow("Password must contain at least one uppercase letter");
     });
 
     it("should require at least one lowercase letter", async () => {
       await expect(
-        authService.register("testuser", "UPPERCASE123", "test@example.com")
+        authService.register("testuser", "UPPERCASE123", "test@example.com"),
       ).rejects.toThrow("Password must contain at least one lowercase letter");
     });
 
     it("should require at least one number", async () => {
       await expect(
-        authService.register("testuser", "NoNumbersHere", "test@example.com")
+        authService.register("testuser", "NoNumbersHere", "test@example.com"),
       ).rejects.toThrow("Password must contain at least one number");
     });
 
@@ -175,11 +172,15 @@ describe("AuthenticationService", () => {
       await authService.register(
         "duplicate",
         "SecurePass123",
-        "user1@example.com"
+        "user1@example.com",
       );
 
       await expect(
-        authService.register("duplicate", "AnotherPass456", "user2@example.com")
+        authService.register(
+          "duplicate",
+          "AnotherPass456",
+          "user2@example.com",
+        ),
       ).rejects.toThrow("Username already exists");
     });
 
@@ -187,11 +188,15 @@ describe("AuthenticationService", () => {
       await authService.register(
         "user1",
         "SecurePass123",
-        "duplicate@example.com"
+        "duplicate@example.com",
       );
 
       await expect(
-        authService.register("user2", "AnotherPass456", "duplicate@example.com")
+        authService.register(
+          "user2",
+          "AnotherPass456",
+          "duplicate@example.com",
+        ),
       ).rejects.toThrow("Email already exists");
     });
 
@@ -199,12 +204,12 @@ describe("AuthenticationService", () => {
       const { user: user1 } = await authService.register(
         "user1",
         "SamePass1234",
-        "user1@example.com"
+        "user1@example.com",
       );
       const { user: user2 } = await authService.register(
         "user2",
         "SamePass1234",
-        "user2@example.com"
+        "user2@example.com",
       );
 
       expect(user1.passwordSalt).not.toBe(user2.passwordSalt);
@@ -215,13 +220,13 @@ describe("AuthenticationService", () => {
       await authService.register(
         "testuser",
         "SecurePass123",
-        "test@example.com"
+        "test@example.com",
       );
 
       const logs = (auditLogger as any).getAllLogs() as TestAuditLog[];
       // Filter to get only user.register events (excluding user.create from repository)
       const registerLog = logs.find(
-        (log: TestAuditLog) => log.eventType === "user.register"
+        (log: TestAuditLog) => log.eventType === "user.register",
       );
 
       expect(registerLog).toBeDefined();
@@ -239,7 +244,7 @@ describe("AuthenticationService", () => {
       await authService.register(
         "testuser",
         "SecurePass123",
-        "test@example.com"
+        "test@example.com",
       );
     });
 
@@ -268,13 +273,13 @@ describe("AuthenticationService", () => {
 
     it("should reject login with invalid username", async () => {
       await expect(
-        authService.login("nonexistent", "SecurePass123")
+        authService.login("nonexistent", "SecurePass123"),
       ).rejects.toThrow("Invalid credentials");
     });
 
     it("should reject login with invalid password", async () => {
       await expect(
-        authService.login("testuser", "WrongPassword123")
+        authService.login("testuser", "WrongPassword123"),
       ).rejects.toThrow("Invalid credentials");
     });
 
@@ -285,7 +290,7 @@ describe("AuthenticationService", () => {
       }
 
       await expect(
-        authService.login("testuser", "SecurePass123")
+        authService.login("testuser", "SecurePass123"),
       ).rejects.toThrow("Account is inactive");
     });
 
@@ -311,7 +316,7 @@ describe("AuthenticationService", () => {
         "SecurePass123",
         false, // rememberMe
         "192.168.1.1",
-        "Mozilla/5.0"
+        "Mozilla/5.0",
       );
 
       expect(result.session.ipAddress).toBe("192.168.1.1");
@@ -327,7 +332,7 @@ describe("AuthenticationService", () => {
         (log: TestAuditLog) =>
           log.eventType === "user.login" &&
           log.success === true &&
-          log.details?.sessionId !== undefined // Actual login has sessionId, auto-login has reason
+          log.details?.sessionId !== undefined, // Actual login has sessionId, auto-login has reason
       );
 
       expect(loginLog).toBeDefined();
@@ -344,7 +349,7 @@ describe("AuthenticationService", () => {
       const logs = (auditLogger as any).getAllLogs() as TestAuditLog[];
       const failedLog = logs.find(
         (log: TestAuditLog) =>
-          log.eventType === "user.login" && log.success === false
+          log.eventType === "user.login" && log.success === false,
       );
 
       expect(failedLog).toBeDefined();
@@ -390,7 +395,7 @@ describe("AuthenticationService", () => {
       await authService.register(
         "testuser",
         "SecurePass123",
-        "test@example.com"
+        "test@example.com",
       );
       const result = await authService.login("testuser", "SecurePass123");
       sessionId = result.session.id;
@@ -408,7 +413,7 @@ describe("AuthenticationService", () => {
 
       const logs = (auditLogger as any).getAllLogs() as TestAuditLog[];
       const logoutLog = logs.find(
-        (log: TestAuditLog) => log.eventType === "user.logout"
+        (log: TestAuditLog) => log.eventType === "user.logout",
       );
 
       expect(logoutLog).toBeDefined();
@@ -418,7 +423,7 @@ describe("AuthenticationService", () => {
 
     it("should handle logout of non-existent session gracefully", async () => {
       await expect(
-        authService.logout("non-existent-id")
+        authService.logout("non-existent-id"),
       ).resolves.not.toThrow();
     });
   });
@@ -431,7 +436,7 @@ describe("AuthenticationService", () => {
       const registerResult = await authService.register(
         "testuser",
         "SecurePass123",
-        "test@example.com"
+        "test@example.com",
       );
       user = registerResult.user;
       const result = await authService.login("testuser", "SecurePass123");
@@ -463,7 +468,7 @@ describe("AuthenticationService", () => {
       if (session) {
         // Use SQLite datetime format that's definitely in the past
         db.prepare(
-          "UPDATE sessions SET expires_at = datetime('now', '-1 hour') WHERE id = ?"
+          "UPDATE sessions SET expires_at = datetime('now', '-1 hour') WHERE id = ?",
         ).run(sessionId);
       }
 
@@ -481,7 +486,7 @@ describe("AuthenticationService", () => {
       const { user } = await authService.register(
         "testuser",
         "OldPassword123",
-        "test@example.com"
+        "test@example.com",
       );
       userId = user.id;
     });
@@ -490,7 +495,7 @@ describe("AuthenticationService", () => {
       await authService.changePassword(
         userId,
         "OldPassword123",
-        "NewPassword456"
+        "NewPassword456",
       );
 
       // Should be able to login with new password
@@ -502,11 +507,11 @@ describe("AuthenticationService", () => {
       await authService.changePassword(
         userId,
         "OldPassword123",
-        "NewPassword456"
+        "NewPassword456",
       );
 
       await expect(
-        authService.login("testuser", "OldPassword123")
+        authService.login("testuser", "OldPassword123"),
       ).rejects.toThrow("Invalid credentials");
     });
 
@@ -515,14 +520,14 @@ describe("AuthenticationService", () => {
         authService.changePassword(
           userId,
           "WrongOldPassword123",
-          "NewPassword456"
-        )
+          "NewPassword456",
+        ),
       ).rejects.toThrow("Invalid current password");
     });
 
     it("should validate new password strength", async () => {
       await expect(
-        authService.changePassword(userId, "OldPassword123", "weak")
+        authService.changePassword(userId, "OldPassword123", "weak"),
       ).rejects.toThrow("Password must be at least 12 characters");
     });
 
@@ -534,7 +539,7 @@ describe("AuthenticationService", () => {
       await authService.changePassword(
         userId,
         "OldPassword123",
-        "NewPassword456"
+        "NewPassword456",
       );
 
       // Both sessions should be invalid
@@ -546,13 +551,13 @@ describe("AuthenticationService", () => {
       await authService.changePassword(
         userId,
         "OldPassword123",
-        "NewPassword456"
+        "NewPassword456",
       );
 
       const logs = (auditLogger as any).getAllLogs() as TestAuditLog[];
       const passwordChangeLog = logs.find(
         (log: TestAuditLog) =>
-          log.eventType === "user.password_change" && log.success === true
+          log.eventType === "user.password_change" && log.success === true,
       );
 
       expect(passwordChangeLog).toBeDefined();
@@ -564,7 +569,7 @@ describe("AuthenticationService", () => {
         await authService.changePassword(
           userId,
           "WrongOldPassword123",
-          "NewPassword456"
+          "NewPassword456",
         );
       } catch {
         // Expected to fail
@@ -573,7 +578,7 @@ describe("AuthenticationService", () => {
       const logs = (auditLogger as any).getAllLogs() as TestAuditLog[];
       const failedLog = logs.find(
         (log: TestAuditLog) =>
-          log.eventType === "user.password_change" && log.success === false
+          log.eventType === "user.password_change" && log.success === false,
       );
 
       expect(failedLog).toBeDefined();
@@ -595,7 +600,7 @@ describe("AuthenticationService", () => {
 
       // Manually expire one session (use SQLite datetime format that's definitely in the past)
       db.prepare(
-        "UPDATE sessions SET expires_at = datetime('now', '-1 hour') WHERE id = ?"
+        "UPDATE sessions SET expires_at = datetime('now', '-1 hour') WHERE id = ?",
       ).run(result1.session.id);
 
       const deletedCount = authService.cleanupExpiredSessions();
@@ -617,14 +622,14 @@ describe("AuthenticationService", () => {
 
       // Expire the session (use SQLite datetime format that's definitely in the past)
       db.prepare(
-        "UPDATE sessions SET expires_at = datetime('now', '-1 hour') WHERE id = ?"
+        "UPDATE sessions SET expires_at = datetime('now', '-1 hour') WHERE id = ?",
       ).run(result.session.id);
 
       authService.cleanupExpiredSessions();
 
       const logs = (auditLogger as any).getAllLogs() as TestAuditLog[];
       const cleanupLog = logs.find(
-        (log: TestAuditLog) => log.eventType === "session.cleanup"
+        (log: TestAuditLog) => log.eventType === "session.cleanup",
       );
 
       expect(cleanupLog).toBeDefined();
@@ -637,7 +642,7 @@ describe("AuthenticationService", () => {
       const { user } = await authService.register(
         "testuser",
         "SecurePass123",
-        "test@example.com"
+        "test@example.com",
       );
 
       expect(user.passwordHash).not.toContain("SecurePass");
@@ -649,12 +654,12 @@ describe("AuthenticationService", () => {
       const { user: user1 } = await authService.register(
         "user1",
         "SamePassword123",
-        "user1@example.com"
+        "user1@example.com",
       );
       const { user: user2 } = await authService.register(
         "user2",
         "SamePassword123",
-        "user2@example.com"
+        "user2@example.com",
       );
 
       expect(user1.passwordSalt).not.toBe(user2.passwordSalt);
@@ -665,7 +670,7 @@ describe("AuthenticationService", () => {
       const { user } = await authService.register(
         "testuser",
         "SecurePass123",
-        "test@example.com"
+        "test@example.com",
       );
       const originalHash = user.passwordHash;
 
@@ -683,7 +688,7 @@ describe("AuthenticationService", () => {
       await authService.register(
         "testuser",
         "SecurePass123",
-        "test@example.com"
+        "test@example.com",
       );
       const result = await authService.login("testuser", "SecurePass123");
 
@@ -697,7 +702,7 @@ describe("AuthenticationService", () => {
       await authService.register(
         "testuser",
         "SecurePass123",
-        "test@example.com"
+        "test@example.com",
       );
       const result1 = await authService.login("testuser", "SecurePass123");
       const result2 = await authService.login("testuser", "SecurePass123");
@@ -709,7 +714,7 @@ describe("AuthenticationService", () => {
       await authService.register(
         "testuser",
         "SecurePass123",
-        "test@example.com"
+        "test@example.com",
       );
       const result = await authService.login("testuser", "SecurePass123");
 
@@ -728,7 +733,7 @@ describe("AuthenticationService", () => {
       await authService.register(
         "testuser",
         "SecurePass123",
-        "test@example.com"
+        "test@example.com",
       );
       const result = await authService.login("testuser", "SecurePass123", true);
 
@@ -739,7 +744,7 @@ describe("AuthenticationService", () => {
       await authService.register(
         "testuser",
         "SecurePass123",
-        "test@example.com"
+        "test@example.com",
       );
       const beforeLogin = Date.now();
       const result = await authService.login("testuser", "SecurePass123", true);
@@ -758,7 +763,7 @@ describe("AuthenticationService", () => {
       await authService.register(
         "testuser",
         "SecurePass123",
-        "test@example.com"
+        "test@example.com",
       );
 
       // Should not throw even though persistence handler is not configured
@@ -770,7 +775,7 @@ describe("AuthenticationService", () => {
       await authService.register(
         "testuser",
         "SecurePass123",
-        "test@example.com"
+        "test@example.com",
       );
 
       const result1 = await authService.login("testuser", "SecurePass123");
@@ -810,7 +815,7 @@ describe("AuthenticationService", () => {
           userRepository,
           sessionRepository,
           auditLogger,
-          mockPersistenceHandler
+          mockPersistenceHandler,
         );
       });
 
@@ -818,17 +823,17 @@ describe("AuthenticationService", () => {
         await authServiceWithPersistence.register(
           "testuser",
           "SecurePass123",
-          "test@example.com"
+          "test@example.com",
         );
         const result = await authServiceWithPersistence.login(
           "testuser",
           "SecurePass123",
-          true
+          true,
         );
 
         expect(mockPersistenceHandler.isAvailable).toHaveBeenCalled();
         expect(mockPersistenceHandler.storeSessionId).toHaveBeenCalledWith(
-          result.session.id
+          result.session.id,
         );
       });
 
@@ -836,12 +841,12 @@ describe("AuthenticationService", () => {
         await authServiceWithPersistence.register(
           "testuser",
           "SecurePass123",
-          "test@example.com"
+          "test@example.com",
         );
         await authServiceWithPersistence.login(
           "testuser",
           "SecurePass123",
-          false
+          false,
         );
 
         expect(mockPersistenceHandler.storeSessionId).not.toHaveBeenCalled();
@@ -851,12 +856,12 @@ describe("AuthenticationService", () => {
         await authServiceWithPersistence.register(
           "testuser",
           "SecurePass123",
-          "test@example.com"
+          "test@example.com",
         );
         const result = await authServiceWithPersistence.login(
           "testuser",
           "SecurePass123",
-          true
+          true,
         );
 
         await authServiceWithPersistence.logout(result.session.id);
@@ -868,18 +873,18 @@ describe("AuthenticationService", () => {
         const { user } = await authServiceWithPersistence.register(
           "testuser",
           "SecurePass123",
-          "test@example.com"
+          "test@example.com",
         );
         const loginResult = await authServiceWithPersistence.login(
           "testuser",
           "SecurePass123",
-          true
+          true,
         );
 
         // Mock that there's a stored session
         mockPersistenceHandler.hasStoredSession.mockResolvedValue(true);
         mockPersistenceHandler.retrieveSessionId.mockResolvedValue(
-          loginResult.session.id
+          loginResult.session.id,
         );
 
         const restored =
@@ -895,23 +900,23 @@ describe("AuthenticationService", () => {
         await authServiceWithPersistence.register(
           "testuser",
           "SecurePass123",
-          "test@example.com"
+          "test@example.com",
         );
         const loginResult = await authServiceWithPersistence.login(
           "testuser",
           "SecurePass123",
-          true
+          true,
         );
 
         // Expire the session
         db.prepare(
-          "UPDATE sessions SET expires_at = datetime('now', '-1 hour') WHERE id = ?"
+          "UPDATE sessions SET expires_at = datetime('now', '-1 hour') WHERE id = ?",
         ).run(loginResult.session.id);
 
         // Mock that there's a stored session
         mockPersistenceHandler.hasStoredSession.mockResolvedValue(true);
         mockPersistenceHandler.retrieveSessionId.mockResolvedValue(
-          loginResult.session.id
+          loginResult.session.id,
         );
 
         const restored =
@@ -926,13 +931,13 @@ describe("AuthenticationService", () => {
   describe("Edge Cases", () => {
     it("should handle empty username gracefully", async () => {
       await expect(
-        authService.register("", "SecurePass123", "test@example.com")
+        authService.register("", "SecurePass123", "test@example.com"),
       ).rejects.toThrow();
     });
 
     it("should handle empty password gracefully", async () => {
       await expect(
-        authService.register("testuser", "", "test@example.com")
+        authService.register("testuser", "", "test@example.com"),
       ).rejects.toThrow("Password must be at least 12 characters");
     });
 
@@ -942,7 +947,7 @@ describe("AuthenticationService", () => {
       const { user } = await authService.register(
         "testuser",
         "SecurePass123",
-        ""
+        "",
       );
       expect(user).toBeDefined();
     });
@@ -952,12 +957,12 @@ describe("AuthenticationService", () => {
       const { user } = await authService.register(
         "testuser",
         longPassword,
-        "test@example.com"
+        "test@example.com",
       );
 
       expect(user).toBeDefined();
       await expect(
-        authService.login("testuser", longPassword)
+        authService.login("testuser", longPassword),
       ).resolves.toBeDefined();
     });
 
@@ -966,12 +971,12 @@ describe("AuthenticationService", () => {
       const { user } = await authService.register(
         "testuser",
         specialPassword,
-        "test@example.com"
+        "test@example.com",
       );
 
       expect(user).toBeDefined();
       await expect(
-        authService.login("testuser", specialPassword)
+        authService.login("testuser", specialPassword),
       ).resolves.toBeDefined();
     });
   });

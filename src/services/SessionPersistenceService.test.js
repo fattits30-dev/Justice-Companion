@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { logger } from "../utils/logger.ts";
-import { SessionPersistenceService } from "./SessionPersistenceService.ts";
+import { logger } from "../utils/logger";
+import { SessionPersistenceService } from "./SessionPersistenceService";
 describe("SessionPersistenceService (non-browser environments)", () => {
     let originalWindow;
     let service;

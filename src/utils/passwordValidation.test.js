@@ -3,10 +3,10 @@
  *
  * Tests for password validation functions following OWASP best practices.
  */
-import { generatePasswordOfLength, generatePasswordWithoutDigits, generatePasswordWithoutLowercase, generatePasswordWithoutUppercase, generateStrongTestPassword, } from "@/test-utils/passwords.ts";
+import { generatePasswordOfLength, generatePasswordWithoutDigits, generatePasswordWithoutLowercase, generatePasswordWithoutUppercase, generateStrongTestPassword, } from "../test-utils/passwords";
 import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import { validatePasswordChange } from "./passwordValidation.ts";
+import { validatePasswordChange } from "./passwordValidation";
 describe("validatePasswordChange", () => {
     const validOldPassword = generateStrongTestPassword();
     const validNewPassword = generateStrongTestPassword();

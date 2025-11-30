@@ -3,13 +3,13 @@ import {
   SearchService,
   type SearchQuery,
   type SearchFilters,
-} from "./SearchService.ts";
-import type { CaseRepository } from "../repositories/CaseRepository.ts";
-import type { EvidenceRepository } from "../repositories/EvidenceRepository.ts";
-import type { ChatConversationRepository } from "../repositories/ChatConversationRepository.ts";
-import type { NotesRepository } from "../repositories/NotesRepository.ts";
-import type { EncryptionService } from "./EncryptionService.ts";
-import type { AuditLogger } from "./AuditLogger.ts";
+} from "./SearchService";
+import type { CaseRepository } from "../repositories/CaseRepository";
+import type { EvidenceRepository } from "../repositories/EvidenceRepository";
+import type { ChatConversationRepository } from "../repositories/ChatConversationRepository";
+import type { NotesRepository } from "../repositories/NotesRepository";
+import type { EncryptionService } from "./EncryptionService";
+import type { AuditLogger } from "./AuditLogger";
 
 describe("SearchService", () => {
   let searchService: SearchService;

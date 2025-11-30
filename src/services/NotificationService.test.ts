@@ -1,13 +1,13 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { NotificationService } from "./NotificationService.ts";
-import { NotificationRepository } from "../repositories/NotificationRepository.ts";
-import { NotificationPreferencesRepository } from "../repositories/NotificationPreferencesRepository.ts";
-import { AuditLogger } from "./AuditLogger.ts";
+import { NotificationService } from "./NotificationService";
+import { NotificationRepository } from "../repositories/NotificationRepository";
+import { NotificationPreferencesRepository } from "../repositories/NotificationPreferencesRepository";
+import { AuditLogger } from "./AuditLogger";
 import type {
   CreateNotificationInput,
   NotificationFilters,
-} from "../models/Notification.ts";
-import type { NotificationPreferences } from "../models/NotificationPreferences.ts";
+} from "../models/Notification";
+import type { NotificationPreferences } from "../models/NotificationPreferences";
 
 // Mock repositories and services
 vi.mock("../repositories/NotificationRepository.ts");

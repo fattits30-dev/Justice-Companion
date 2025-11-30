@@ -19,7 +19,7 @@ import {
   formatTime,
   toTitleCase,
   truncate,
-} from "./formatters.ts";
+} from "./formatters";
 
 // Mock Date.now to ensure consistent test results
 const mockNow = new Date("2023-12-15T12:00:00Z");
@@ -170,7 +170,7 @@ describe("formatters", () => {
 
     it("should truncate long strings with ellipsis", () => {
       expect(
-        truncate("This is a very long string that should be truncated", 20)
+        truncate("This is a very long string that should be truncated", 20),
       ).toBe("This is a very lo...");
     });
 

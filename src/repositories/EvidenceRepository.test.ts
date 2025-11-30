@@ -1,14 +1,11 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import Database from "better-sqlite3-multiple-ciphers";
-import { EvidenceRepository } from "./EvidenceRepository.ts";
-import { CaseRepository } from "./CaseRepository.ts";
-import { EncryptionService } from "../services/EncryptionService.ts";
-import { TestDatabaseHelper } from "../test-utils/database-test-helper.ts";
-import { databaseManager } from "../db/database.ts";
-import {
-  resetRepositories,
-  initializeTestRepositories,
-} from "../repositories.ts";
+import { EvidenceRepository } from "./EvidenceRepository";
+import { CaseRepository } from "./CaseRepository";
+import { EncryptionService } from "../services/EncryptionService";
+import { TestDatabaseHelper } from "../test-utils/database-test-helper";
+import { databaseManager } from "../db/database";
+import { resetRepositories, initializeTestRepositories } from "../repositories";
 import type { CreateEvidenceInput } from "../domains/evidence/entities/Evidence";
 
 describe("EvidenceRepository with Encryption", () => {

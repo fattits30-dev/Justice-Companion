@@ -5,12 +5,12 @@
 import Database from "better-sqlite3-multiple-ciphers";
 import { randomUUID } from "node:crypto";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import * as databaseModule from "../db/database.ts";
-import { AuditLogger } from "../services/AuditLogger.ts";
-import { EncryptionService } from "../services/EncryptionService.ts";
-import { LegalIssuesRepository } from "./LegalIssuesRepository.ts";
-import { TimelineRepository } from "./TimelineRepository.ts";
-import { UserProfileRepository } from "./UserProfileRepository.ts";
+import * as databaseModule from "../db/database";
+import { AuditLogger } from "../services/AuditLogger";
+import { EncryptionService } from "../services/EncryptionService";
+import { LegalIssuesRepository } from "./LegalIssuesRepository";
+import { TimelineRepository } from "./TimelineRepository";
+import { UserProfileRepository } from "./UserProfileRepository";
 let db;
 let encryptionService;
 let auditLogger;

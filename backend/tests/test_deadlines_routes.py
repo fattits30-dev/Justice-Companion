@@ -26,7 +26,7 @@ from sqlalchemy.orm import sessionmaker
 
 from backend.main import app
 from backend.models.base import Base, get_db
-from backend.models.case import Case
+from backend.models.case import Case, CaseStatus, CaseType
 from backend.models.deadline import Deadline, DeadlinePriority, DeadlineStatus
 from backend.models.notification import NotificationPreferences
 from backend.models.user import User
@@ -86,10 +86,10 @@ def test_case(db_session, test_user):
     """Create a test case."""
     case = Case(
         user_id=test_user.id,
-        case_number="TEST-2025-001",
         title="Test Case",
         description="Test case for deadlines",
-        status="open",
+        case_type=CaseType.OTHER,
+        status=CaseStatus.ACTIVE,
         created_at=datetime.now()
     )
     db_session.add(case)

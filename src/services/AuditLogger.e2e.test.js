@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterAll, beforeAll } from "vitest";
-import { AuditLogger } from "./AuditLogger.ts";
-import { EncryptionService } from "./EncryptionService.ts";
+import { AuditLogger } from "./AuditLogger";
+import { EncryptionService } from "./EncryptionService";
 import Database from "better-sqlite3";
 /**
  * End-to-End Audit Logger Verification Suite

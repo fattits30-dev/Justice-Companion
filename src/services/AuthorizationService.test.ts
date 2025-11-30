@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import Database from "better-sqlite3";
-import { AuthorizationService } from "./AuthorizationService.ts";
+import { AuthorizationService } from "./AuthorizationService";
 import fs from "fs";
 import path from "path";
 

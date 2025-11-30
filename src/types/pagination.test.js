@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { PaginationParamsSchema } from "./pagination.ts";
+import { PaginationParamsSchema } from "./pagination";
 describe("Pagination Types", () => {
     describe("PaginationParamsSchema Validation", () => {
         it("should validate correct pagination parameters", () => {

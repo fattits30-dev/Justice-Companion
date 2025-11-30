@@ -2,7 +2,7 @@
 
 import { v4 as uuidv4 } from "uuid";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { SessionPersistenceService } from "./SessionPersistenceService.ts";
+import { SessionPersistenceService } from "./SessionPersistenceService";
 const STORAGE_KEY = "justice-companion.session.id";
 describe("SessionPersistenceService (browser storage)", () => {
     const service = SessionPersistenceService.getInstance();

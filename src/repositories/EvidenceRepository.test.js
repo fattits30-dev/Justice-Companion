@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { EvidenceRepository } from "./EvidenceRepository.ts";
-import { EncryptionService } from "../services/EncryptionService.ts";
-import { TestDatabaseHelper } from "../test-utils/database-test-helper.ts";
-import { databaseManager } from "../db/database.ts";
-import { resetRepositories, initializeTestRepositories, } from "../repositories.ts";
+import { EvidenceRepository } from "./EvidenceRepository";
+import { EncryptionService } from "../services/EncryptionService";
+import { TestDatabaseHelper } from "../test-utils/database-test-helper";
+import { databaseManager } from "../db/database";
+import { resetRepositories, initializeTestRepositories, } from "../repositories";
 describe("EvidenceRepository with Encryption", () => {
     let db;
     let evidenceRepo;

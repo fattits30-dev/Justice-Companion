@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterAll, beforeAll } from "vitest";
-import { AuditLogger } from "./AuditLogger.ts";
-import { createTestDatabase, } from "../test-utils/database-test-helper.ts";
+import { AuditLogger } from "./AuditLogger";
+import { createTestDatabase, } from "../test-utils/database-test-helper";
 // Force tests to run sequentially to avoid database conflicts
 describe.sequential("AuditLogger", () => {
     let auditLogger;

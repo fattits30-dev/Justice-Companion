@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import Database from "better-sqlite3-multiple-ciphers";
-import { UserFactsRepository } from "./UserFactsRepository.ts";
-import { CaseFactsRepository } from "./CaseFactsRepository.ts";
-import { EncryptionService } from "../services/EncryptionService.ts";
-import { AuditLogger } from "../services/AuditLogger.ts";
-import * as databaseModule from "../db/database.ts";
+import { UserFactsRepository } from "./UserFactsRepository";
+import { CaseFactsRepository } from "./CaseFactsRepository";
+import { EncryptionService } from "../services/EncryptionService";
+import { AuditLogger } from "../services/AuditLogger";
+import * as databaseModule from "../db/database";
 describe("Facts Repositories Integration Tests", () => {
     let db;
     let userFactsRepo;

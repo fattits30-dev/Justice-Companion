@@ -5,8 +5,8 @@
 
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import Database from "better-sqlite3";
-import { TagService } from "./TagService.ts";
-import type { CreateTagInput } from "../models/Tag.ts";
+import { TagService } from "./TagService";
+import type { CreateTagInput } from "../models/Tag";
 
 // Mock dependencies
 let db: Database.Database;

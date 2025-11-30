@@ -5,12 +5,12 @@
 import Database from "better-sqlite3-multiple-ciphers";
 import { randomUUID } from "node:crypto";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import * as databaseModule from "../db/database.ts";
-import { AuditLogger } from "../services/AuditLogger.ts";
-import { EncryptionService } from "../services/EncryptionService.ts";
-import { LegalIssuesRepository } from "./LegalIssuesRepository.ts";
-import { TimelineRepository } from "./TimelineRepository.ts";
-import { UserProfileRepository } from "./UserProfileRepository.ts";
+import * as databaseModule from "../db/database";
+import { AuditLogger } from "../services/AuditLogger";
+import { EncryptionService } from "../services/EncryptionService";
+import { LegalIssuesRepository } from "./LegalIssuesRepository";
+import { TimelineRepository } from "./TimelineRepository";
+import { UserProfileRepository } from "./UserProfileRepository";
 
 let db: Database.Database;
 let encryptionService: EncryptionService;
@@ -155,7 +155,7 @@ describe("UserProfileRepository", () => {
       .prepare(
         `
       SELECT * FROM audit_logs WHERE event_type = 'profile.pii_access'
-    `
+    `,
       )
       .get() as any;
 
@@ -271,7 +271,7 @@ describe("LegalIssuesRepository", () => {
       .prepare(
         `
       SELECT event_type FROM audit_logs WHERE resource_type = 'legal_issue'
-    `
+    `,
       )
       .all() as any[];
 
@@ -374,7 +374,7 @@ describe("TimelineRepository", () => {
       .prepare(
         `
       SELECT event_type FROM audit_logs WHERE resource_type = 'timeline_event'
-    `
+    `,
       )
       .all() as any[];
 
@@ -391,7 +391,7 @@ describe("Phase 3 GDPR Compliance", () => {
 
     const profileRepo = new UserProfileRepository(
       encryptionService,
-      auditLogger
+      auditLogger,
     );
     const legalRepo = new LegalIssuesRepository(encryptionService, auditLogger);
     const timelineRepo = new TimelineRepository(encryptionService, auditLogger);
@@ -425,7 +425,7 @@ describe("Phase 3 GDPR Compliance", () => {
       .prepare(
         `
       SELECT details, error_message FROM audit_logs
-    `
+    `,
       )
       .all() as any[];
 

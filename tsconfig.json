@@ -25,7 +25,6 @@
     "e2e",
     "tests",
     "src/**/*.test.ts",
-    "src/**/*.test.tsx",
-    "src/test-utils"
+    "src/**/*.test.tsx"
   ]
 }

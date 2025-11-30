@@ -13,9 +13,9 @@
  * import { render, screen, userEvent } from '@/test-utils/test-utils';
  */
 
-import { AuthProvider } from "@/contexts/AuthContext";
-import { routerFutureFlags } from "@/router/futureFlags";
-import type { JusticeCompanionAPI } from "@/types/ipc";
+import { AuthProvider } from "../contexts/AuthContext";
+import { routerFutureFlags } from "../router/futureFlags";
+import type { JusticeCompanionAPI } from "../types/ipc";
 import { render, RenderOptions } from "@testing-library/react";
 import { ReactElement, ReactNode } from "react";
 import { BrowserRouter } from "react-router-dom";
@@ -58,7 +58,7 @@ function AllTheProviders({
  */
 const customRender = (
   ui: ReactElement<any>,
-  options?: Omit<RenderOptions, "wrapper">
+  options?: Omit<RenderOptions, "wrapper">,
 ) => render(ui, { wrapper: AllTheProviders, ...options });
 
 // Re-export specific items from React Testing Library (excluding render to avoid conflict)
@@ -106,7 +106,7 @@ export { customRender as render };
  * });
  */
 export function createMockJusticeAPI(
-  overrides: Partial<JusticeCompanionAPI> = {}
+  overrides: Partial<JusticeCompanionAPI> = {},
 ): JusticeCompanionAPI {
   const baseApi: Partial<JusticeCompanionAPI> = {
     // Case operations
@@ -156,7 +156,7 @@ export function createMockJusticeAPI(
  */
 export async function waitForCondition(
   callback: () => boolean,
-  timeout = 3000
+  timeout = 3000,
 ): Promise<void> {
   const startTime = Date.now();
   while (!callback()) {
@@ -178,7 +178,7 @@ export async function waitForCondition(
 export function createMockFile(
   name: string,
   content: string,
-  type: string
+  type: string,
 ): File {
   const blob = new Blob([content], { type });
   return new File([blob], name, { type });

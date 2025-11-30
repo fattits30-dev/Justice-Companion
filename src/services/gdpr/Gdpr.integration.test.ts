@@ -7,13 +7,13 @@
 
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import Database from "better-sqlite3";
-import { GdprService } from "./GdprService.ts";
-import { EncryptionService } from "../EncryptionService.ts";
-import { AuditLogger } from "../AuditLogger.ts";
+import { GdprService } from "./GdprService";
+import { EncryptionService } from "../EncryptionService";
+import { AuditLogger } from "../AuditLogger";
 import {
   createTestDatabase,
   type TestDatabaseHelper,
-} from "../../test-utils/database-test-helper.ts";
+} from "../../test-utils/database-test-helper";
 import * as fs from "fs";
 import * as path from "path";
 

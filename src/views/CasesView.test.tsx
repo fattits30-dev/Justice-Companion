@@ -1,14 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { Case } from "../domains/cases/entities/Case.ts";
-import { apiClient } from "../lib/apiClient.ts";
+import type { Case } from "../domains/cases/entities/Case";
+import { apiClient } from "../lib/apiClient";
 import {
   fireEvent,
   render,
   screen,
   waitFor,
   within,
-} from "../test-utils/test-utils.tsx";
-import { CasesView } from "./CasesView.tsx";
+} from "../test-utils/test-utils";
+import { CasesView } from "./CasesView";
 
 const baseCases: Case[] = [
   {
@@ -81,7 +81,7 @@ describe("CasesView", () => {
     await waitFor(() => {
       // Check if skeleton cards are rendered (loading state)
       const skeletonCards = document.querySelectorAll(
-        '[data-testid="skeleton-card"]'
+        '[data-testid="skeleton-card"]',
       );
       return skeletonCards.length > 0;
     });
@@ -114,7 +114,7 @@ describe("CasesView", () => {
     fireEvent.click(screen.getByRole("button", { name: "Retry" }));
 
     await waitFor(() =>
-      expect(screen.getByText("Employment Dispute")).toBeInTheDocument()
+      expect(screen.getByText("Employment Dispute")).toBeInTheDocument(),
     );
   });
 
@@ -128,7 +128,7 @@ describe("CasesView", () => {
 
     await screen.findByText("No cases yet");
     expect(
-      screen.getByText("Create your first case to keep everything organised.")
+      screen.getByText("Create your first case to keep everything organised."),
     ).toBeInTheDocument();
   });
 
@@ -202,7 +202,7 @@ describe("CasesView", () => {
     });
 
     fireEvent.submit(
-      within(dialog).getByRole("button", { name: "Create Case" })
+      within(dialog).getByRole("button", { name: "Create Case" }),
     );
 
     await waitFor(() =>
@@ -210,7 +210,7 @@ describe("CasesView", () => {
         title: "Consumer Rights Claim",
         description: "Faulty product dispute",
         caseType: "consumer",
-      })
+      }),
     );
 
     await screen.findByText("Consumer Rights Claim");

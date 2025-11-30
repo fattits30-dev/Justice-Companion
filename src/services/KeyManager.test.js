@@ -9,7 +9,7 @@
  * Security Level: CVSS 9.1 mitigation
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { KeyManager } from "./KeyManager.ts";
+import { KeyManager } from "./KeyManager";
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";

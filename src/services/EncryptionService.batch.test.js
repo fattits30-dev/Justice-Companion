@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import crypto from "node:crypto";
-import { EncryptionService } from "./EncryptionService.ts";
+import { EncryptionService } from "./EncryptionService";
 describe("EncryptionService - Batch Operations", () => {
     let encryptionService;
     const testKey = crypto.randomBytes(32);

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { SearchService, } from "./SearchService.ts";
+import { SearchService, } from "./SearchService";
 describe("SearchService", () => {
     let searchService;
     let mockDb;

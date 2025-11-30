@@ -5,10 +5,10 @@
  * with real database operations, encryption, and audit logging.
  */
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { GdprService } from "./GdprService.ts";
-import { EncryptionService } from "../EncryptionService.ts";
-import { AuditLogger } from "../AuditLogger.ts";
-import { createTestDatabase, } from "../../test-utils/database-test-helper.ts";
+import { GdprService } from "./GdprService";
+import { EncryptionService } from "../EncryptionService";
+import { AuditLogger } from "../AuditLogger";
+import { createTestDatabase, } from "../../test-utils/database-test-helper";
 import * as fs from "fs";
 import * as path from "path";
 describe("GDPR Integration Tests", () => {

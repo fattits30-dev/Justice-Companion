@@ -2,11 +2,11 @@
  * @vitest-environment node
  */
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { ConsentService } from "./ConsentService.ts";
-import { ConsentRepository } from "../repositories/ConsentRepository.ts";
-import { AuditLogger } from "./AuditLogger.ts";
-import { TestDatabaseHelper } from "../test-utils/database-test-helper.ts";
-import { databaseManager } from "../db/database.ts";
+import { ConsentService } from "./ConsentService";
+import { ConsentRepository } from "../repositories/ConsentRepository";
+import { AuditLogger } from "./AuditLogger";
+import { TestDatabaseHelper } from "../test-utils/database-test-helper";
+import { databaseManager } from "../db/database";
 import type { ConsentType } from "../domains/settings/entities/Consent";
 
 describe("ConsentService", () => {

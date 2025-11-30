@@ -13,7 +13,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { ApiClient, ApiError } from "./apiClient.ts";
+import { ApiClient, ApiError } from "./apiClient";
 import type { CaseStatus } from "../domains/cases/entities/Case";
 
 // ===== MOCK SETUP =====
