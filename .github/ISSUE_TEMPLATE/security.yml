@@ -1,0 +1,103 @@
+name: Security Vulnerability
+description: Report a security vulnerability (will be kept private)
+title: "[Security]: "
+labels: ["security", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## ⚠️ Security Vulnerability Report
+
+        **IMPORTANT**: If this is a critical security issue, please consider using GitHub's private
+        security advisory feature instead: https://github.com/fattits30-dev/Justice-Companion/security/advisories/new
+
+        Thank you for helping keep Justice Companion secure!
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Vulnerability Description
+      description: Clear description of the security issue
+      placeholder: Describe the vulnerability and its potential impact
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      description: How severe is this vulnerability?
+      options:
+        - Critical (Remote code execution, data breach)
+        - High (Authentication bypass, privilege escalation)
+        - Medium (XSS, CSRF, information disclosure)
+        - Low (Minor information leak, weak crypto)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Affected Component
+      description: Which part of the application is affected?
+      multiple: true
+      options:
+        - Frontend (React/TypeScript)
+        - Backend (FastAPI/Python)
+        - Authentication System
+        - Encryption/Key Management
+        - Database Layer
+        - AI Integration
+        - File Upload/Processing
+        - API Endpoints
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Detailed steps to reproduce the vulnerability
+      placeholder: |
+        1. Step one...
+        2. Step two...
+        3. Observe the security issue...
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact
+      description: What is the potential impact of this vulnerability?
+      placeholder: |
+        - Data that could be exposed
+        - Systems that could be compromised
+        - User privacy implications
+    validations:
+      required: true
+
+  - type: textarea
+    id: mitigation
+    attributes:
+      label: Suggested Fix
+      description: If you have suggestions for fixing the vulnerability, please share them
+
+  - type: textarea
+    id: disclosure
+    attributes:
+      label: Disclosure Timeline
+      description: Have you disclosed this vulnerability elsewhere? If yes, please provide details
+      placeholder: Have you shared this information with anyone else? Any public disclosure?
+
+  - type: checkboxes
+    id: responsible
+    attributes:
+      label: Responsible Disclosure
+      description: Please confirm you're following responsible disclosure practices
+      options:
+        - label: I have not publicly disclosed this vulnerability
+          required: true
+        - label: I will give reasonable time for a fix before public disclosure
+          required: true

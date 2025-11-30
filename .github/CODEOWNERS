@@ -1,0 +1,30 @@
+# Code Owners for Justice Companion
+# These owners will be automatically requested for review when someone opens a pull request
+
+# Default owners for everything in the repo
+* @fattits30-dev
+
+# Backend/Python owners
+/backend/ @fattits30-dev
+*.py @fattits30-dev
+
+# Frontend/TypeScript owners
+/src/ @fattits30-dev
+*.ts @fattits30-dev
+*.tsx @fattits30-dev
+
+# Security-sensitive files
+/src/services/EncryptionService.* @fattits30-dev
+/src/services/KeyManager.* @fattits30-dev
+/src/middleware/utils/sanitizers.* @fattits30-dev
+/backend/security/ @fattits30-dev
+
+# Infrastructure and CI/CD
+/.github/ @fattits30-dev
+/scripts/ @fattits30-dev
+Dockerfile* @fattits30-dev
+docker-compose.* @fattits30-dev
+
+# Documentation
+*.md @fattits30-dev
+/docs/ @fattits30-dev
