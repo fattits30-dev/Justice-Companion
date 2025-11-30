@@ -7,7 +7,7 @@ fastapi==0.109.0
 uvicorn[standard]==0.27.0
 
 # AI and LLM - Hugging Face (Production)
-transformers==4.46.3
+transformers==4.53.0
 accelerate==0.26.0
 huggingface_hub==0.20.0
 sentencepiece==0.1.99
@@ -19,7 +19,7 @@ openai==1.0.0
 # Data validation and serialization
 pydantic==2.6.0
 pydantic-settings==2.0.0
-python-multipart==0.0.12
+python-multipart==0.0.18
 
 # HTTP client for API calls
 httpx==0.26.0
