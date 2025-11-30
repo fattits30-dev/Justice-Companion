@@ -47,6 +47,11 @@ export class ErrorLogger {
 
     const logLine = this.formatLogEntry(entry);
     this.enqueueWrite(async () => {
+      // Ensure directory exists before writing (for parallel test execution)
+      const logDir = path.dirname(this.logFilePath);
+      if (!fs.existsSync(logDir)) {
+        fs.mkdirSync(logDir, { recursive: true });
+      }
       await this.rotateIfNeeded();
       await fsPromises.appendFile(this.logFilePath, `${logLine}\n`, "utf8");
     });

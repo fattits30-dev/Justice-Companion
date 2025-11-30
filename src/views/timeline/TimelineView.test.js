@@ -1,7 +1,7 @@
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { apiClient } from "../../lib/apiClient.ts";
-import { render, screen, waitFor, within, } from "../../test-utils/test-utils.tsx";
+import { render, screen, waitFor, within } from "../../test-utils/test-utils.tsx";
 import { TimelineView } from "./TimelineView.tsx";
 vi.mock("../../lib/apiClient.ts", () => ({
     apiClient: {

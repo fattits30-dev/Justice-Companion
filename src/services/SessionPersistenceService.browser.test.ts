@@ -9,9 +9,12 @@ describe("SessionPersistenceService (browser storage)", () => {
   const service = SessionPersistenceService.getInstance();
 
   beforeEach(() => {
+    // Clear localStorage between tests
     if (typeof window !== "undefined" && window.localStorage) {
       window.localStorage.clear();
     }
+    // Reset service instance state
+    vi.clearAllMocks();
   });
 
   describe("isAvailable", () => {

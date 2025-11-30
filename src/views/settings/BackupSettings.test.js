@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useAuth } from "../../contexts/AuthContext.tsx";
-import { fireEvent, render, screen, waitFor, } from "../../test-utils/test-utils.tsx";
+import { fireEvent, render, screen, waitFor } from "../../test-utils/test-utils.tsx";
 import { BackupSettingsTab } from "./BackupSettings.tsx";
 // Mock the useAuth hook to provide user data
 vi.mock("../../contexts/AuthContext.tsx", () => ({
