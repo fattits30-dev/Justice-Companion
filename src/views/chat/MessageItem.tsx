@@ -204,17 +204,19 @@ function MessageItemComponent({
                 {copied ? "Copied!" : "Copy"}
               </button>
 
-              {/* Create Case Button (shown when AI suggests case creation) */}
-              {message.documentAnalysis?.suggestedCaseData && onCreateCase && (
-                <button
-                  onClick={() => onCreateCase(message)}
-                  className="flex items-center gap-2 px-3 py-2 text-sm text-green-300 hover:text-white bg-green-500/20 hover:bg-green-500/30 rounded-lg transition-colors border border-green-500/30 hover:border-green-500/50"
-                  type="button"
-                >
-                  <Plus className="w-4 h-4" />
-                  Create Case from Analysis
-                </button>
-              )}
+              {/* Create Case Button (shown when AI suggests case creation AND no case is selected) */}
+              {message.documentAnalysis?.suggestedCaseData &&
+                onCreateCase &&
+                !hasCaseSelected && (
+                  <button
+                    onClick={() => onCreateCase(message)}
+                    className="flex items-center gap-2 px-3 py-2 text-sm text-green-300 hover:text-white bg-green-500/20 hover:bg-green-500/30 rounded-lg transition-colors border border-green-500/30 hover:border-green-500/50"
+                    type="button"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Create Case from Analysis
+                  </button>
+                )}
             </div>
           )}
 
