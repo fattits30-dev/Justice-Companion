@@ -87,7 +87,7 @@ describe("EvidenceRepository - Cursor Pagination", () => {
             const page2 = repository.findByCaseIdPaginated(100, 3, page1.nextCursor);
             expect(page2.items).toHaveLength(2);
             expect(page2.hasMore).toBe(false);
-            expect(page2.nextCursor).toBeNull();
+            expect(page2.nextCursor).toBeUndefined();
             expect(page2.items[0].title).toBe("Evidence 2");
             expect(page2.items[1].title).toBe("Evidence 1");
         });
@@ -95,7 +95,7 @@ describe("EvidenceRepository - Cursor Pagination", () => {
             const result = repository.findByCaseIdPaginated(999, 10);
             expect(result.items).toHaveLength(0);
             expect(result.hasMore).toBe(false);
-            expect(result.nextCursor).toBeNull();
+            expect(result.nextCursor).toBeUndefined();
             expect(result.totalReturned).toBe(0);
         });
         it("should decrypt content for all paginated items", () => {
@@ -134,7 +134,7 @@ describe("EvidenceRepository - Cursor Pagination", () => {
             const result = repository.findByCaseIdPaginated(100, 10);
             expect(result.items).toHaveLength(10);
             expect(result.hasMore).toBe(false);
-            expect(result.nextCursor).toBeNull();
+            expect(result.nextCursor).toBeUndefined();
         });
     });
     describe("findAllPaginated", () => {

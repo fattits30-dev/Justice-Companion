@@ -25,4 +25,19 @@ if (typeof window !== "undefined") {
       dispatchEvent: vi.fn(),
     })),
   });
+
+  // Mock localStorage if it doesn't exist
+  if (!window.localStorage) {
+    Object.defineProperty(window, "localStorage", {
+      writable: true,
+      value: {
+        getItem: vi.fn(),
+        setItem: vi.fn(),
+        removeItem: vi.fn(),
+        clear: vi.fn(),
+        length: 0,
+        key: vi.fn(),
+      },
+    });
+  }
 }

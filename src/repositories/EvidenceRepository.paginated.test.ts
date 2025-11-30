@@ -123,7 +123,7 @@ describe("EvidenceRepository - Cursor Pagination", () => {
 
       expect(page2.items).toHaveLength(2);
       expect(page2.hasMore).toBe(false);
-      expect(page2.nextCursor).toBeNull();
+      expect(page2.nextCursor).toBeUndefined();
       expect(page2.items[0].title).toBe("Evidence 2");
       expect(page2.items[1].title).toBe("Evidence 1");
     });
@@ -133,7 +133,7 @@ describe("EvidenceRepository - Cursor Pagination", () => {
 
       expect(result.items).toHaveLength(0);
       expect(result.hasMore).toBe(false);
-      expect(result.nextCursor).toBeNull();
+      expect(result.nextCursor).toBeUndefined();
       expect(result.totalReturned).toBe(0);
     });
 
@@ -180,7 +180,7 @@ describe("EvidenceRepository - Cursor Pagination", () => {
 
       expect(result.items).toHaveLength(10);
       expect(result.hasMore).toBe(false);
-      expect(result.nextCursor).toBeNull();
+      expect(result.nextCursor).toBeUndefined();
     });
   });
 
