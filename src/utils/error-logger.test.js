@@ -3,7 +3,7 @@ import { ErrorLogger } from "./error-logger.ts";
 import fs from "fs";
 import path from "path";
 describe("ErrorLogger", () => {
-    const testLogDir = "logs-test";
+    const testLogDir = "logs-test-js"; // Use unique directory to avoid conflicts with .ts version
     const testLogFile = "test-errors.log";
     let logger;
     beforeEach(() => {
