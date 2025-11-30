@@ -16,6 +16,26 @@ const config = {
       "backend/**/*",
     ],
     setupFiles: ["./src/test/setup.ts"],
+    // Performance optimizations
+    pool: "threads", // Use worker threads for parallel execution
+    poolOptions: {
+      threads: {
+        // Use multiple threads (default is CPU cores - 1)
+        minThreads: 1,
+        maxThreads: 4, // Limit to 4 threads for CI environments
+        isolate: false, // Reuse same worker for multiple test files (faster)
+      },
+    },
+    // Optimize test execution
+    fileParallelism: true, // Run test files in parallel
+    isolate: false, // Don't isolate each test file in separate worker (faster, shares memory)
+    // Reduce overhead
+    mockReset: false, // Don't reset mocks between tests automatically
+    restoreMocks: false, // Don't restore mocks automatically
+    clearMocks: false, // Don't clear mock calls automatically
+    // Timeouts
+    testTimeout: 30000, // 30 seconds per test (default is 5s)
+    hookTimeout: 30000, // 30 seconds for hooks
   },
 };
 

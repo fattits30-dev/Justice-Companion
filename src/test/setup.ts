@@ -9,6 +9,61 @@ import { vi } from "vitest";
 // Extend Vitest matchers with Testing Library matchers
 // This provides matchers like toBeInTheDocument(), toHaveTextContent(), etc.
 
+// PERFORMANCE OPTIMIZATION: Mock heavy AI services to avoid real API calls in tests
+vi.mock("@anthropic-ai/sdk", () => ({
+  default: vi.fn(() => ({
+    messages: {
+      create: vi.fn().mockResolvedValue({
+        content: [{ type: "text", text: "Mocked AI response" }],
+      }),
+    },
+  })),
+  Anthropic: vi.fn(() => ({
+    messages: {
+      create: vi.fn().mockResolvedValue({
+        content: [{ type: "text", text: "Mocked AI response" }],
+      }),
+    },
+  })),
+}));
+
+vi.mock("openai", () => ({
+  default: vi.fn(() => ({
+    chat: {
+      completions: {
+        create: vi.fn().mockResolvedValue({
+          choices: [
+            {
+              message: { role: "assistant", content: "Mocked AI response" },
+            },
+          ],
+        }),
+      },
+    },
+  })),
+  OpenAI: vi.fn(() => ({
+    chat: {
+      completions: {
+        create: vi.fn().mockResolvedValue({
+          choices: [
+            {
+              message: { role: "assistant", content: "Mocked AI response" },
+            },
+          ],
+        }),
+      },
+    },
+  })),
+}));
+
+vi.mock("@huggingface/inference", () => ({
+  HfInference: vi.fn(() => ({
+    textGeneration: vi.fn().mockResolvedValue({
+      generated_text: "Mocked AI response",
+    }),
+  })),
+}));
+
 // Mock window.matchMedia (not implemented in JSDOM)
 // Only mock if window exists (some tests run in Node.js environment without DOM)
 if (typeof window !== "undefined") {

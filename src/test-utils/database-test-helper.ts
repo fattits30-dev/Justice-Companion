@@ -3,6 +3,9 @@ import { readFileSync } from "fs";
 import path from "path";
 import { EncryptionService } from "../services/EncryptionService.ts";
 
+// PERFORMANCE OPTIMIZATION: Cache the migration SQL to avoid repeated file reads
+let cachedMigrationSql: string | null = null;
+
 /**
  * Test database helper for running integration tests
  * Creates an in-memory SQLite database with the production schema
@@ -16,8 +19,6 @@ export class TestDatabaseHelper {
    * Initialize an in-memory test database with schema and encryption service
    */
   initialize(): Database.Database {
-    console.log("[TestDatabaseHelper] Initializing in-memory database...");
-
     // Create in-memory database
     this.db = new Database(":memory:");
 
@@ -30,76 +31,68 @@ export class TestDatabaseHelper {
       "base64"
     );
     this.encryptionService = new EncryptionService(testKey);
-    console.log(
-      "[TestDatabaseHelper] Encryption service initialized with test key"
-    );
 
-    console.log("[TestDatabaseHelper] Finding migrations directory...");
-    console.log("[TestDatabaseHelper] process.cwd():", process.cwd());
-    console.log("[TestDatabaseHelper] __dirname:", __dirname);
+    // PERFORMANCE OPTIMIZATION: Load and cache migrations only once
+    if (!cachedMigrationSql) {
+      // Try multiple paths to find migrations (PWA/web compatible)
+      const possiblePaths = [
+        path.join(process.cwd(), "src", "db", "migrations"), // Development source (most common for tests)
+        path.join(__dirname, "..", "db", "migrations"), // Relative from test-utils
+      ];
 
-    // Try multiple paths to find migrations (PWA/web compatible)
-    const possiblePaths = [
-      path.join(process.cwd(), "src", "db", "migrations"), // Development source (most common for tests)
-      path.join(__dirname, "..", "db", "migrations"), // Relative from test-utils
-    ];
-
-    let migrationsDir = "";
-    for (const dir of possiblePaths) {
-      console.log(`[TestDatabaseHelper] Checking path: ${dir}`);
-      if (require("fs").existsSync(dir)) {
-        migrationsDir = dir;
-        console.log(`[TestDatabaseHelper] ✅ Found migrations at: ${dir}`);
-        break;
+      let migrationsDir = "";
+      for (const dir of possiblePaths) {
+        if (require("fs").existsSync(dir)) {
+          migrationsDir = dir;
+          break;
+        }
       }
+
+      if (!migrationsDir) {
+        throw new Error(
+          `[TestDatabaseHelper] Migrations directory not found! Searched paths: ${possiblePaths.join(", ")}`
+        );
+      }
+
+      // Load ALL migrations in order (not just 001)
+      const migrations = [
+        "001_initial_schema.sql",
+        "002_chat_history_and_profile.sql",
+        "003_audit_logs.sql",
+        "004_encryption_expansion.sql",
+        "005_user_and_case_facts.sql",
+        "010_authentication_system.sql",
+        "011_add_user_ownership.sql",
+        "012_consent_management.sql",
+        "013_add_remember_me_to_sessions.sql",
+        "014_remove_unused_remember_me_index.sql",
+        "015_add_performance_indexes.sql",
+        "016_create_deadlines_table.sql",
+        "017_create_search_tables.sql",
+        "018_create_notifications_table.sql",
+        "020_create_templates_system.sql",
+        "021_create_events_table.sql",
+        "022_add_backup_settings.sql",
+        "023_create_deadline_dependencies.sql",
+        "024_add_evidence_updated_at.sql",
+      ];
+
+      // Combine all migration SQL into one cached string
+      const allMigrationsSql: string[] = [];
+      for (const migration of migrations) {
+        const migrationPath = path.join(migrationsDir, migration);
+        const migrationSql = readFileSync(migrationPath, "utf8");
+        // Only execute UP section (before "-- DOWN" marker)
+        const upSection = migrationSql.split("-- DOWN")[0];
+        allMigrationsSql.push(upSection);
+      }
+
+      cachedMigrationSql = allMigrationsSql.join("\n");
     }
 
-    if (!migrationsDir) {
-      throw new Error(
-        `[TestDatabaseHelper] Migrations directory not found! Searched paths: ${possiblePaths.join(", ")}`
-      );
-    }
+    // Execute all cached migrations at once
+    this.db.exec(cachedMigrationSql);
 
-    // Load ALL migrations in order (not just 001)
-    const migrations = [
-      "001_initial_schema.sql",
-      "002_chat_history_and_profile.sql",
-      "003_audit_logs.sql",
-      "004_encryption_expansion.sql",
-      "005_user_and_case_facts.sql",
-      "010_authentication_system.sql",
-      "011_add_user_ownership.sql",
-      "012_consent_management.sql",
-      "013_add_remember_me_to_sessions.sql",
-      "014_remove_unused_remember_me_index.sql",
-      "015_add_performance_indexes.sql",
-      "016_create_deadlines_table.sql",
-      "017_create_search_tables.sql",
-      "018_create_notifications_table.sql",
-      "020_create_templates_system.sql",
-      "021_create_events_table.sql",
-      "022_add_backup_settings.sql",
-      "023_create_deadline_dependencies.sql",
-      "024_add_evidence_updated_at.sql",
-    ];
-
-    console.log(
-      `[TestDatabaseHelper] Running ${migrations.length} migrations...`
-    );
-
-    for (const migration of migrations) {
-      const migrationPath = path.join(migrationsDir, migration);
-      console.log(`[TestDatabaseHelper] Applying migration: ${migration}`);
-
-      const migrationSql = readFileSync(migrationPath, "utf8");
-
-      // Only execute UP section (before "-- DOWN" marker)
-      // This prevents DOWN (rollback) statements from undoing the migration
-      const upSection = migrationSql.split("-- DOWN")[0];
-      this.db.exec(upSection);
-    }
-
-    console.log("[TestDatabaseHelper] All migrations applied successfully.");
     return this.db;
   }
 
