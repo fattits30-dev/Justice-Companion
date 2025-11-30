@@ -32,6 +32,7 @@ interface MessageItemProps {
   onSaveToCase: (message: Message) => void;
   onCreateCase?: (message: Message) => void;
   showThinking: boolean;
+  hasCaseSelected?: boolean; // Whether a case is currently selected
   style?: React.CSSProperties; // Optional: for react-window positioning (no longer used)
 }
 
@@ -76,6 +77,7 @@ function MessageItemComponent({
   onSaveToCase,
   onCreateCase,
   showThinking,
+  hasCaseSelected = false,
   style = {},
 }: MessageItemProps) {
   const [copied, setCopied] = useState(false);
@@ -171,8 +173,18 @@ function MessageItemComponent({
           {message.role === "assistant" && (
             <div className="mt-3 flex flex-wrap gap-2">
               <button
-                onClick={() => onSaveToCase(message)}
-                className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors border border-white/10 hover:border-white/20"
+                onClick={() => hasCaseSelected && onSaveToCase(message)}
+                disabled={!hasCaseSelected}
+                className={`flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors border ${
+                  hasCaseSelected
+                    ? "text-white/70 hover:text-white hover:bg-white/10 border-white/10 hover:border-white/20 cursor-pointer"
+                    : "text-white/30 border-white/5 cursor-not-allowed opacity-50"
+                }`}
+                title={
+                  hasCaseSelected
+                    ? "Save this response to the active case"
+                    : "Select a case first to save this response"
+                }
                 type="button"
               >
                 <Save className="w-4 h-4" />

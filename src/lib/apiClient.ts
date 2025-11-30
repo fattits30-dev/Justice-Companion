@@ -638,7 +638,7 @@ export class ApiClient {
      * Get all evidence for a case
      */
     list: async (caseId: number): Promise<ApiResponse<Evidence[]>> => {
-      return this.get<ApiResponse<Evidence[]>>(`/cases/${caseId}/evidence`);
+      return this.get<ApiResponse<Evidence[]>>(`/evidence/case/${caseId}`);
     },
 
     /**
@@ -2044,7 +2044,7 @@ export class ApiClient {
             updatedAt: string;
           }>
         >
-      >(`/tags/cases/${caseId}/tags`);
+      >(`/cases/${caseId}/tags`);
     },
 
     /**

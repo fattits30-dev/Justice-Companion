@@ -23,6 +23,7 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, and_
 from fastapi import HTTPException
+import json
 
 from backend.models.case import Case, CaseType, CaseStatus
 from backend.services.security.encryption import EncryptionService, EncryptedData
@@ -170,7 +171,7 @@ class CaseService:
 
         encrypted = self.encryption_service.encrypt(description)
         if encrypted:
-            return str(encrypted.to_dict())  # Convert to JSON string
+            return json.dumps(encrypted.to_dict())  # Convert to proper JSON string
         return None
 
     def _decrypt_description(self, encrypted_str: Optional[str]) -> Optional[str]:

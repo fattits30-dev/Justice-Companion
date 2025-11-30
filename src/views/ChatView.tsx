@@ -892,6 +892,7 @@ Based on your dismissal letter, here are some general steps many people take whe
                     onSaveToCase={handleSaveToCase}
                     onCreateCase={handleCreateCase}
                     showThinking={showThinking}
+                    hasCaseSelected={!!activeCaseId}
                   />
                 </motion.div>
               ))}

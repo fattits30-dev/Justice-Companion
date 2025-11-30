@@ -83,7 +83,7 @@ const SidebarComponent = React.memo(function Sidebar({
         try {
           // Use apiClient instead of legacy window.justiceAPI
           const response = await apiClient.profile.get();
-          
+
           if (response) {
             const profileData = response as {
               name?: string;
@@ -92,11 +92,15 @@ const SidebarComponent = React.memo(function Sidebar({
               email?: string | null;
               phone?: string | null;
             };
-            
+
             // Use firstName/lastName if available, otherwise split name
-            const fname = profileData.firstName || profileData.name?.split(" ")[0] || "";
-            const lname = profileData.lastName || profileData.name?.split(" ").slice(1).join(" ") || "";
-            
+            const fname =
+              profileData.firstName || profileData.name?.split(" ")[0] || "";
+            const lname =
+              profileData.lastName ||
+              profileData.name?.split(" ").slice(1).join(" ") ||
+              "";
+
             setProfileData({
               firstName: fname,
               lastName: lname,
@@ -121,13 +125,7 @@ const SidebarComponent = React.memo(function Sidebar({
       }
 
       try {
-        const sessionId = localStorage.getItem("sessionId");
-        if (!sessionId) {
-          return;
-        }
-
-        const result = await window.justiceAPI.getRecentConversations(
-          sessionId,
+        const result = await apiClient.chat.getConversations(
           parseInt(selectedCaseId, 10),
           5,
         );
@@ -504,18 +502,24 @@ const SidebarComponent = React.memo(function Sidebar({
               <div className="flex items-center gap-4">
                 <div className="relative">
                   <div className="flex items-center justify-center w-14 h-14 bg-gradient-to-br from-secondary-500 to-secondary-600 rounded-full text-white font-bold text-lg shadow-lg">
-                    {profileData?.firstName ? profileData.firstName.substring(0, 1).toUpperCase() : user?.username.substring(0, 1).toUpperCase()}
-                    {profileData?.lastName ? profileData.lastName.substring(0, 1).toUpperCase() : user?.username.substring(1, 2).toUpperCase()}
+                    {profileData?.firstName
+                      ? profileData.firstName.substring(0, 1).toUpperCase()
+                      : user?.username.substring(0, 1).toUpperCase()}
+                    {profileData?.lastName
+                      ? profileData.lastName.substring(0, 1).toUpperCase()
+                      : user?.username.substring(1, 2).toUpperCase()}
                   </div>
                   <span className="absolute bottom-0 right-0 w-4 h-4 bg-green-400 border-2 border-gray-900 rounded-full"></span>
                 </div>
                 <div>
                   <h2 className="text-lg font-bold text-white">
-                    {profileData?.firstName || profileData?.lastName 
+                    {profileData?.firstName || profileData?.lastName
                       ? `${profileData.firstName} ${profileData.lastName}`.trim()
                       : user?.username}
                   </h2>
-                  <p className="text-white/70 text-sm">{profileData?.email || user?.email}</p>
+                  <p className="text-white/70 text-sm">
+                    {profileData?.email || user?.email}
+                  </p>
                 </div>
               </div>
             </div>
@@ -525,11 +529,15 @@ const SidebarComponent = React.memo(function Sidebar({
               <div className="px-6 py-4 border-b border-gray-700 space-y-3">
                 <div className="flex justify-between text-sm">
                   <span className="text-white/50">First Name</span>
-                  <span className="text-white">{profileData.firstName || "—"}</span>
+                  <span className="text-white">
+                    {profileData.firstName || "—"}
+                  </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-white/50">Last Name</span>
-                  <span className="text-white">{profileData.lastName || "—"}</span>
+                  <span className="text-white">
+                    {profileData.lastName || "—"}
+                  </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-white/50">Email</span>
@@ -551,15 +559,35 @@ const SidebarComponent = React.memo(function Sidebar({
                 }}
                 className="flex items-center gap-3 w-full px-4 py-3 bg-primary-500/10 hover:bg-primary-500/20 border border-primary-500/30 rounded-lg text-white transition-colors"
               >
-                <svg className="w-5 h-5 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                <svg
+                  className="w-5 h-5 text-primary-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                  />
                 </svg>
                 <span className="font-medium">Manage Profile</span>
-                <svg className="w-4 h-4 ml-auto text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                <svg
+                  className="w-4 h-4 ml-auto text-white/50"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
                 </svg>
               </button>
-              
+
               <button
                 onClick={() => setIsProfileManagerOpen(false)}
                 className="w-full px-4 py-2 text-white/70 hover:text-white text-sm transition-colors"
