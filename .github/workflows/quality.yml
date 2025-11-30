@@ -7,7 +7,6 @@ on:
 
 env:
   NODE_VERSION: '20.18.0'
-  PNPM_VERSION: '10.18.3'
 
 jobs:
   quality-gate:
@@ -19,41 +18,33 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
+          cache: 'npm'
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: npm ci
 
       - name: Check code formatting
-        run: pnpm format:check
+        run: npx prettier --check "src/**/*.{ts,tsx,js,jsx,json,css,md}"
         # ✅ BLOCKING: Code must be properly formatted
 
       - name: Run linter
-        run: pnpm lint
+        run: npm run lint
         # ✅ BLOCKING: Linting errors must be fixed
 
       - name: TypeScript type check
-        run: pnpm type-check
+        run: npm run typecheck
         # ✅ BLOCKING: Type errors must be fixed
 
-      - name: Rebuild for Node.js
-        run: pnpm rebuild:node
-
       - name: Run tests with coverage
-        run: pnpm test:coverage
+        run: npm run test:coverage
         # ✅ BLOCKING: All tests must pass before merge
 
       - name: Build app
-        run: pnpm build:electron
+        run: npm run build
 
       - name: Quality gate summary
         run: |

@@ -11,7 +11,6 @@ on:
 
 env:
   NODE_VERSION: "20.18.0"
-  PNPM_VERSION: "10.18.3"
 
 jobs:
   # Dependency vulnerability scanning
@@ -24,25 +23,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
+          cache: "npm"
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: npm ci
 
       # Security vulnerability checks
       - name: Run npm audit
         run: |
           # Check for high and critical vulnerabilities
-          if pnpm audit --prod --audit-level=moderate; then
+          if npm audit --audit-level=moderate --production; then
             echo "✅ No moderate or higher security vulnerabilities found"
           else
             echo "❌ Security vulnerabilities detected"
@@ -70,19 +64,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
+          cache: "npm"
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: npm ci
 
       # Basic security checks
       - name: Check for dangerous patterns
@@ -109,19 +98,11 @@ jobs:
       # TypeScript strict mode check
       - name: Verify TypeScript strict mode
         run: |
-          # Check that main process has strict mode enabled
-          if grep -q '"strict": true' tsconfig.electron.json; then
-            echo "✅ TypeScript strict mode enabled in main process"
-          else
-            echo "❌ TypeScript strict mode disabled in main process"
-            exit 1
-          fi
-
-          # Check that renderer has strict mode enabled
+          # Check that TypeScript has strict mode enabled
           if grep -q '"strict": true' tsconfig.json; then
-            echo "✅ TypeScript strict mode enabled in renderer"
+            echo "✅ TypeScript strict mode enabled"
           else
-            echo "❌ TypeScript strict mode disabled in renderer"
+            echo "❌ TypeScript strict mode disabled"
             exit 1
           fi
 

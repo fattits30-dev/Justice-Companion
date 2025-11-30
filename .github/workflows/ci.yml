@@ -8,7 +8,6 @@ on:
 
 env:
   NODE_VERSION: "20.18.0"
-  PNPM_VERSION: "10.18.3"
 
 jobs:
   # Basic quality checks and tests
@@ -26,41 +25,32 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
+          cache: "npm"
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: npm ci
 
       # Code Quality Checks (now blocking - prevents broken code from shipping)
       - name: Lint check
-        run: pnpm lint
+        run: npm run lint
 
       - name: TypeScript type check
-        run: pnpm type-check
-
-      # Rebuild better-sqlite3 for Node.js (critical for tests)
-      - name: Rebuild better-sqlite3 for Node.js
-        run: pnpm rebuild:node
+        run: npm run typecheck
 
       # Run unit tests
       - name: Run unit tests
-        run: pnpm test
+        run: npm run test:run
         env:
           CI: true
           NODE_ENV: test
 
       # Build verification
-      - name: Build Electron app
-        run: pnpm build:electron
+      - name: Build PWA
+        run: npm run build
         env:
           CI: true
 

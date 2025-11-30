@@ -7,75 +7,13 @@ on:
 
 env:
   NODE_VERSION: '20.18.0'
-  PNPM_VERSION: '10.18.3'
 
 jobs:
-  # Build release artifacts for all platforms
+  # Build and publish PWA release
   build-release:
-    name: Build Release - ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 40
-
-    strategy:
-      matrix:
-        include:
-          - os: windows-latest
-            platform: win
-            artifact: '*.exe'
-          - os: macos-latest
-            platform: mac
-            artifact: '*.dmg'
-          - os: ubuntu-latest
-            platform: linux
-            artifact: '*.{AppImage,deb}'
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build Electron app for ${{ matrix.platform }}
-        run: pnpm build:${{ matrix.platform }}
-        env:
-          CI: true
-
-      # Verify build artifacts exist
-      - name: Verify build artifacts
-        run: |
-          if [ ! -d "release" ]; then
-            echo "❌ Release directory not found"
-            exit 1
-          fi
-          ls -lh release/
-        shell: bash
-
-      # Upload build artifacts
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-${{ matrix.platform }}
-          path: release/${{ matrix.artifact }}
-          retention-days: 14
-
-  # Create GitHub release with all artifacts
-  create-release:
-    name: Create GitHub Release
+    name: Build PWA Release
     runs-on: ubuntu-latest
-    needs: [build-release]
-    timeout-minutes: 10
+    timeout-minutes: 20
 
     permissions:
       contents: write
@@ -83,102 +21,81 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      # Download all platform artifacts
-      - name: Download Windows artifacts
-        uses: actions/download-artifact@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          name: release-win
-          path: release/
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
 
-      - name: Download macOS artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: release-mac
-          path: release/
+      - name: Install dependencies
+        run: npm ci
 
-      - name: Download Linux artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: release-linux
-          path: release/
+      - name: Run tests
+        run: npm run test:run
+        env:
+          CI: true
+          NODE_ENV: test
 
-      # Generate changelog
-      - name: Generate changelog
-        id: changelog
+      - name: Build PWA
+        run: npm run build
+        env:
+          CI: true
+
+      # Verify build artifacts exist
+      - name: Verify build artifacts
         run: |
-          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
-          if [ -z "$PREVIOUS_TAG" ]; then
-            echo "First release"
-            CHANGELOG="Initial release"
-          else
-            CHANGELOG=$(git log $PREVIOUS_TAG..HEAD --pretty=format:"- %s (%h)" --no-merges)
+          if [ ! -d "dist" ]; then
+            echo "❌ dist directory not found"
+            exit 1
           fi
-          echo "changelog<<EOF" >> $GITHUB_OUTPUT
-          echo "$CHANGELOG" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          echo "✅ PWA build successful"
+          ls -lh dist/
+
+      # Upload build artifacts
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: pwa-dist
+          path: dist/
+          retention-days: 30
 
       # Extract version from tag
       - name: Extract version
         id: version
-        run: |
-          VERSION=${GITHUB_REF#refs/tags/v}
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Version: $VERSION"
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
-      # Create release
+      # Create GitHub release
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ github.ref_name }}
-          name: Justice Companion v${{ steps.version.outputs.version }}
+          tag_name: ${{ steps.version.outputs.VERSION }}
+          name: Release ${{ steps.version.outputs.VERSION }}
           body: |
-            ## Justice Companion v${{ steps.version.outputs.version }}
+            ## Justice Companion PWA Release ${{ steps.version.outputs.VERSION }}
 
-            ### 📦 Installation
+            ### What's New
+            See the full changelog in CHANGELOG.md
 
-            **Windows:**
-            - Download `Justice-Companion-Setup-${{ steps.version.outputs.version }}.exe`
-            - Run the installer
+            ### Deployment
+            - Deploy the `dist/` artifacts to your web server or hosting platform
+            - Supports offline-first PWA functionality
+            - Installable on desktop and mobile devices
 
-            **macOS:**
-            - Download `Justice-Companion-${{ steps.version.outputs.version }}.dmg`
-            - Open and drag to Applications folder
-
-            **Linux:**
-            - **AppImage**: Download and run
-            - **Debian/Ubuntu**: Download and install `.deb` file
-
-            ### 📋 Changelog
-
-            ${{ steps.changelog.outputs.changelog }}
-
-            ---
-
-            **Full Changelog**: https://github.com/${{ github.repository }}/compare/${{ steps.changelog.outputs.previous_tag }}...${{ github.ref_name }}
-          files: |
-            release/*.exe
-            release/*.dmg
-            release/*.AppImage
-            release/*.deb
+            ### Installation
+            1. Visit the deployed URL
+            2. Click "Install" button when prompted (desktop/mobile)
+            3. App will work offline once installed
           draft: false
-          prerelease: ${{ contains(github.ref_name, 'beta') || contains(github.ref_name, 'alpha') || contains(github.ref_name, 'rc') }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          prerelease: ${{ contains(steps.version.outputs.VERSION, '-') }}
+          files: |
+            dist/**/*
 
-      # Generate SHA256 checksums
-      - name: Generate checksums
+      - name: Release summary
         run: |
-          cd release
-          sha256sum * > SHA256SUMS.txt || true
-          cat SHA256SUMS.txt || true
-
-      - name: Upload checksums
-        uses: softprops/action-gh-release@v1
-        with:
-          files: release/SHA256SUMS.txt
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        continue-on-error: true
+          echo "✅ Release ${{ steps.version.outputs.VERSION }} created successfully!"
+          echo ""
+          echo "Next steps:"
+          echo "1. Download artifacts from GitHub release"
+          echo "2. Deploy dist/ folder to your hosting platform"
+          echo "3. Update DNS/CDN configuration if needed"
