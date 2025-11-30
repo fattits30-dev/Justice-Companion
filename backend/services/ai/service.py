@@ -1255,6 +1255,15 @@ Provide response in JSON format:
         try:
             extraction_prompt = f"""You are a UK civil legal assistant analyzing a document for {user_profile.name or "someone"} who just uploaded it.
 
+CRITICAL: You provide INFORMATION only, NOT ADVICE.
+
+Rules:
+1. Never say "you should" - say "options to consider include"
+2. Never say "the best approach" - present multiple approaches
+3. Always cite sources (gov.uk, legislation.gov.uk, Citizens Advice) when referencing legal procedures
+4. Always remind users to verify with a solicitor for advice specific to their situation
+5. Present multiple options, not single recommendations
+
 DOCUMENT: {parsed_doc.filename}
 FILE TYPE: {parsed_doc.file_type.upper()}
 LENGTH: {parsed_doc.word_count} words
@@ -1337,7 +1346,7 @@ CRITICAL: The JSON must be valid and parseable. Use null (not "null") for missin
             messages = [
                 ChatMessage(
                     role="system",
-                    content="You are Justice Companion AI, a legal document analysis specialist for UK civil legal matters.",
+                    content="You are Justice Companion AI, a legal document analysis specialist for UK civil legal matters. CRITICAL: You provide INFORMATION only, NOT ADVICE. Never use directive language like 'you should' - instead say 'options to consider include'. Always cite sources and remind users to consult a qualified solicitor.",
                 ),
                 ChatMessage(role="user", content=extraction_prompt),
             ]

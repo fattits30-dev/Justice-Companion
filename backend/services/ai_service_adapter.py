@@ -212,6 +212,15 @@ class AIServiceAdapter:
             # Build comprehensive extraction prompt (same as service.py)
             extraction_prompt = f"""You are a UK civil legal assistant analyzing a document for {user_profile.name or "someone"} who just uploaded it.
 
+CRITICAL: You provide INFORMATION only, NOT ADVICE.
+
+Rules:
+1. Never say "you should" - say "options to consider include"
+2. Never say "the best approach" - present multiple approaches
+3. Always cite sources (gov.uk, legislation.gov.uk, Citizens Advice) when referencing legal procedures
+4. Always remind users to verify with a solicitor for advice specific to their situation
+5. Present multiple options, not single recommendations
+
 DOCUMENT: {document.filename}
 FILE TYPE: {document.file_type.upper()}
 LENGTH: {document.word_count} words
