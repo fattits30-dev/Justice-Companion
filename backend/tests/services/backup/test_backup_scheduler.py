@@ -62,10 +62,14 @@ def test_user(db_session):
         id=1,
         username="testuser",
         password_hash="hash",
-        email="test@example.com"
+        password_salt="salt",
+        email="test@example.com",
+        role="user",
+        is_active=True
     )
     db_session.add(user)
     db_session.commit()
+    db_session.refresh(user)
     return user
 
 @pytest.fixture
