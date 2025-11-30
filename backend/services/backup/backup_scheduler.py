@@ -453,7 +453,7 @@ class BackupScheduler:
                     existing.enabled = input_data.enabled
 
                 if input_data.frequency is not None:
-                    existing.frequency = input_data.frequency.value
+                    existing.frequency = input_data.frequency
 
                 if input_data.backup_time is not None:
                     existing.backup_time = input_data.backup_time
@@ -492,7 +492,7 @@ class BackupScheduler:
                     user_id=user_id,
                     enabled=input_data.enabled if input_data.enabled is not None else True,
                     frequency=(
-                        input_data.frequency.value
+                        input_data.frequency
                         if input_data.frequency
                         else BackupFrequency.DAILY.value
                     ),

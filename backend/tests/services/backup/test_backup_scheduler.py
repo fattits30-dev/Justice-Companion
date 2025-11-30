@@ -465,7 +465,15 @@ async def test_check_and_run_backups_multiple_due(backup_scheduler, db_session, 
     """Test checking for backups when multiple are due."""
     # Create multiple users with due backups
     for i in range(3):
-        user = User(id=i + 10, username=f"user{i}", password_hash="hash", email=f"user{i}@example.com")
+        user = User(
+            id=i + 10,
+            username=f"user{i}",
+            password_hash="hash",
+            password_salt="salt",
+            email=f"user{i}@example.com",
+            role="user",
+            is_active=True
+        )
         db_session.add(user)
 
         settings = BackupSettings(
@@ -630,7 +638,15 @@ def test_get_stats_multiple_settings(backup_scheduler, db_session):
     """Test getting stats with multiple backup settings."""
     # Create multiple settings (some enabled, some disabled)
     for i in range(5):
-        user = User(id=i + 20, username=f"statuser{i}", password_hash="hash", email=f"statuser{i}@example.com")
+        user = User(
+            id=i + 20,
+            username=f"statuser{i}",
+            password_hash="hash",
+            password_salt="salt",
+            email=f"statuser{i}@example.com",
+            role="user",
+            is_active=True
+        )
         db_session.add(user)
 
         settings = BackupSettings(
