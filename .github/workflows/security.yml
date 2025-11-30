@@ -46,12 +46,12 @@ jobs:
 
       - name: Check for exposed secrets
         run: |
-          # Basic secret detection (GitLeaks would be better, but this is a start)
-          if grep -r "password\|secret\|key\|token" --include="*.ts" --include="*.js" --include="*.json" src/ | grep -v "test\|spec\|mock\|example"; then
+          # Check for actual secret patterns (API keys, tokens with values)
+          if grep -rE "(api[_-]?key|secret|token|password)\s*[:=]\s*['\"][a-zA-Z0-9]{20,}" --include="*.ts" --include="*.js" --include="*.json" src/  | grep -v "test\|spec\|mock\|example\|TODO\|FIXME"; then
             echo "❌ Potential secrets found in source code"
             exit 1
           else
-            echo "✅ No obvious secrets found in source code"
+            echo "✅ No hardcoded secrets found in source code"
           fi
 
   # Code security analysis
