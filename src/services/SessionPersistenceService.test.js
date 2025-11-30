@@ -28,7 +28,7 @@ describe("SessionPersistenceService (non-browser environments)", () => {
             globalThis.window = originalWindow;
         }
         else {
-            // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+            // eslint-disable-next-line no-delete-var
             delete globalThis.window;
         }
     });

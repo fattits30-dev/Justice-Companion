@@ -22,9 +22,14 @@ export default tseslint.config(
       "e2e/**/*", // Legacy Playwright recordings (superseded by tests/e2e)
       "e2e-tests/**/*", // Standalone E2E tests (no tsconfig)
       "tests/e2e/**/*", // E2E tests (no tsconfig)
+      "tests/**/*", // Test files not in main tsconfig
       "electron/__tests__/**/*", // Electron tests not in tsconfig.electron.json
       "temp-*.tsx", // Temporary test files
       "temp-*.ts", // Temporary test files
+      "**/*.test.tsx", // Orphaned test files not in tsconfig
+      "**/*.test.ts", // Test files not in tsconfig
+      "**/*.test.js", // Test files with JSX
+      "src/**/*.js", // All JS files (JSX requires .jsx extension)
     ],
   },
   {
