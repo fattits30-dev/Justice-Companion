@@ -1062,6 +1062,15 @@ class UnifiedAIService:
             # Build prompt (simplified - should use prompts from analysis-prompts module)
             prompt = f"""Analyze this legal case and provide structured analysis in JSON format.
 
+CRITICAL: You provide INFORMATION only, NOT ADVICE.
+
+Rules:
+1. Never say "you should" - say "options to consider include"
+2. Never say "the best approach" - present multiple approaches
+3. Always cite sources (gov.uk, legislation.gov.uk, Citizens Advice)
+4. Always remind users to verify with a solicitor
+5. Present multiple options, not single recommendations
+
 Case Type: {request.case_type.value}
 Jurisdiction: {request.jurisdiction.value}
 Description: {request.description}
@@ -1130,6 +1139,15 @@ Provide analysis in this JSON structure:
         try:
             prompt = f"""Analyze evidence for this legal case and identify gaps.
 
+CRITICAL: You provide INFORMATION only, NOT ADVICE.
+
+Rules:
+1. Never say "you should" - say "options to consider include"
+2. Never say "the best approach" - present multiple approaches
+3. Always cite sources (gov.uk, legislation.gov.uk, Citizens Advice)
+4. Always remind users to verify with a solicitor
+5. Present multiple options, not single recommendations
+
 Case Type: {request.case_type.value}
 Existing Evidence: {json.dumps(request.existing_evidence)}
 Claims: {json.dumps(request.claims)}
@@ -1185,6 +1203,15 @@ Provide analysis in JSON format with:
 
         try:
             prompt = f"""Draft a {request.document_type.value} for this legal case.
+
+CRITICAL: You provide INFORMATION only, NOT ADVICE.
+
+Rules:
+1. Never say "you should" - say "options to consider include"
+2. Never say "the best approach" - present multiple approaches
+3. Always cite sources (gov.uk, legislation.gov.uk, Citizens Advice)
+4. Always remind users to verify with a solicitor
+5. Present multiple options, not single recommendations
 
 Case Type: {request.context.case_type.value}
 Facts: {request.context.facts}

@@ -68,6 +68,7 @@ def test_user_fixture(db_session):
     user = User(
         email="test@example.com",
         password_hash="hashed_password",
+        password_salt="test_salt_value",
         full_name="Test User",
         security_question_1_hash="hash1",
         security_question_2_hash="hash2"
@@ -98,6 +99,7 @@ def test_user_2_fixture(db_session):
     user = User(
         email="user2@example.com",
         password_hash="hashed_password",
+        password_salt="test_salt_value",
         full_name="User Two",
         security_question_1_hash="hash1",
         security_question_2_hash="hash2"
