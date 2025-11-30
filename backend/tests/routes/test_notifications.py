@@ -65,7 +65,8 @@ def test_user(db):
     # Create user with password
     user = User(
         username="testuser",
-        email="test@example.com"
+        email="test@example.com",
+        password_salt="test_salt_value"
     )
 
     # Hash password using auth service (proper pattern with salt)
@@ -344,7 +345,7 @@ def test_mark_notification_as_read(client, auth_session, test_notification):
 def test_mark_notification_as_read_unauthorized(client, auth_session, db, test_user):
     """Test that users cannot mark other users' notifications as read."""
     # Create another user
-    other_user = User(username="otheruser", email="other@example.com")
+    other_user = User(username="otheruser", email="other@example.com", password_hash="hash", password_salt="test_salt_value")
     db.add(other_user)
     db.commit()
     db.refresh(other_user)
@@ -405,7 +406,7 @@ def test_delete_notification(client, auth_session, test_notification):
 def test_delete_notification_unauthorized(client, auth_session, db, test_user):
     """Test that users cannot delete other users' notifications."""
     # Create another user
-    other_user = User(username="otheruser2", email="other2@example.com")
+    other_user = User(username="otheruser2", email="other2@example.com", password_hash="hash", password_salt="test_salt_value")
     db.add(other_user)
     db.commit()
     db.refresh(other_user)

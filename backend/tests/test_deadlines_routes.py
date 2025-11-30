@@ -73,6 +73,7 @@ def test_user(db_session):
         username="testuser",
         email="testuser@example.com",
         password_hash="hashed_password",
+        password_salt="test_salt_value",
         created_at=datetime.now()
     )
     db_session.add(user)
@@ -260,7 +261,7 @@ def test_list_case_deadlines(client, db_session, test_user, test_case, auth_head
 def test_list_case_deadlines_unauthorized(client, db_session, test_case, auth_headers):
     """Test listing deadlines for case owned by different user."""
     # Create another user
-    other_user = User(username="otheruser", password_hash="hash", created_at=datetime.now())
+    other_user = User(username="otheruser", password_hash="hash", password_salt="test_salt_value", created_at=datetime.now())
     db_session.add(other_user)
     db_session.commit()
 
@@ -406,7 +407,7 @@ def test_update_deadline_success(client, db_session, test_user, test_case, auth_
 def test_update_deadline_unauthorized(client, db_session, test_case, auth_headers):
     """Test updating deadline owned by different user."""
     # Create deadline
-    other_user = User(username="otheruser", password_hash="hash", created_at=datetime.now())
+    other_user = User(username="otheruser", password_hash="hash", password_salt="test_salt_value", created_at=datetime.now())
     db_session.add(other_user)
     db_session.commit()
 
@@ -491,7 +492,7 @@ def test_delete_deadline_success(client, db_session, test_user, test_case, auth_
 
 def test_delete_deadline_unauthorized(client, db_session, test_case, auth_headers):
     """Test deleting deadline owned by different user."""
-    other_user = User(username="otheruser", password_hash="hash", created_at=datetime.now())
+    other_user = User(username="otheruser", password_hash="hash", password_salt="test_salt_value", created_at=datetime.now())
     db_session.add(other_user)
     db_session.commit()
 

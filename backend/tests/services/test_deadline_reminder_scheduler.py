@@ -70,7 +70,7 @@ def test_user(in_memory_db):
     user = User(
         username="testuser",
         password_hash="hash",
-        password_salt="salt"
+        password_salt="test_salt_value"
     )
     in_memory_db.add(user)
     in_memory_db.commit()
@@ -443,7 +443,7 @@ class TestDeadlineReminderScheduler:
     ):
         """Test check_now continues processing other users after error."""
         # Create second user with preferences
-        user2 = User(username="user2", password_hash="hash2", password_salt="salt2")
+        user2 = User(username="user2", password_hash="hash2", password_salt="test_salt_value")
         in_memory_db.add(user2)
         in_memory_db.commit()
         in_memory_db.refresh(user2)
