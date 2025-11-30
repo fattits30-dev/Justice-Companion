@@ -46,11 +46,17 @@ class MockAuditLogger:
 def db_session():
     """Create in-memory SQLite database for testing."""
     engine = create_engine("sqlite:///:memory:")
+    # Ensure clean state by dropping all tables first
+    Base.metadata.drop_all(engine)
+    # Now create all tables fresh
     Base.metadata.create_all(engine)
     Session = sessionmaker(bind=engine)
     session = Session()
     yield session
     session.close()
+    # Cleanup after test
+    Base.metadata.drop_all(engine)
+    engine.dispose()
 
 @pytest.fixture
 def audit_logger():

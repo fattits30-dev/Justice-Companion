@@ -38,8 +38,14 @@ from backend.services.backup.backup_scheduler import BackupScheduler
 def db_engine():
     """Create in-memory SQLite database for testing."""
     engine = create_engine("sqlite:///:memory:")
+    # Ensure clean state by dropping all tables first
+    Base.metadata.drop_all(engine)
+    # Now create all tables fresh
     Base.metadata.create_all(engine)
-    return engine
+    yield engine
+    # Cleanup after test
+    Base.metadata.drop_all(engine)
+    engine.dispose()
 
 @pytest.fixture
 def db_session(db_engine):

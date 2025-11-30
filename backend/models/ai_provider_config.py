@@ -77,14 +77,15 @@ class AIProviderConfig(Base):
     # Table constraints
     __table_args__ = (
         # Ensure only one active provider per user
-        CheckConstraint(
-            "CASE WHEN is_active = true THEN "
-            "(SELECT COUNT(*) FROM ai_provider_configs apc2 "
-            "WHERE apc2.user_id = user_id AND apc2.is_active = true) = 1 "
-            "ELSE (SELECT COUNT(*) FROM ai_provider_configs apc2 "
-            "WHERE apc2.user_id = user_id AND apc2.is_active = true) <= 1 END",
-            name="single_active_provider_per_user"
-        ),
+        # NOTE: SQLite doesn't support subqueries in CHECK constraints, so this is enforced at the application level
+        # CheckConstraint(
+        #     "CASE WHEN is_active = true THEN "
+        #     "(SELECT COUNT(*) FROM ai_provider_configs apc2 "
+        #     "WHERE apc2.user_id = user_id AND apc2.is_active = true) = 1 "
+        #     "ELSE (SELECT COUNT(*) FROM ai_provider_configs apc2 "
+        #     "WHERE apc2.user_id = user_id AND apc2.is_active = true) <= 1 END",
+        #     name="single_active_provider_per_user"
+        # ),
         # Parameter value constraints
         CheckConstraint(
             f"temperature IS NULL OR (temperature >= {TEMPERATURE_MIN} AND "
