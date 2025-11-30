@@ -6,6 +6,8 @@
  * - Validation logic
  * - Error handling
  * - Memoization and caching
+ *
+ * @vitest-environment happy-dom
  */
 
 import { randomUUID } from "node:crypto";

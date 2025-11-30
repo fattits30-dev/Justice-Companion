@@ -1,3 +1,5 @@
+// @vitest-environment happy-dom
+
 import { v4 as uuidv4 } from "uuid";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SessionPersistenceService } from "./SessionPersistenceService.ts";
