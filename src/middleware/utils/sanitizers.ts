@@ -54,14 +54,14 @@ export function sanitizeHtml(input: string): string {
     .replace(/&#x2F;/g, "/")
     .replace(/&amp;/g, "&");
 
-  // Remove dangerous patterns (iterative to handle obfuscation)
+  // Remove dangerous patterns by replacing with safe placeholder to prevent bypass
   previousLength = 0;
   while (sanitized.length !== previousLength) {
     previousLength = sanitized.length;
-    sanitized = sanitized.replace(/javascript:/gi, "");
-    sanitized = sanitized.replace(/on\w+\s*=/gi, "");
-    sanitized = sanitized.replace(/data:text\/html/gi, "");
-    sanitized = sanitized.replace(/vbscript:/gi, "");
+    sanitized = sanitized.replace(/javascript:/gi, "BLOCKED_");
+    sanitized = sanitized.replace(/on\w+\s*=/gi, "BLOCKED_");
+    sanitized = sanitized.replace(/data:text\/html/gi, "BLOCKED_");
+    sanitized = sanitized.replace(/vbscript:/gi, "BLOCKED_");
   }
 
   return sanitized.trim();
@@ -137,16 +137,16 @@ export function sanitizeFilePath(filePath: string): string {
     return filePath;
   }
 
-  // Remove directory traversal patterns (iterative to handle multiple encodings)
+  // Remove directory traversal patterns by replacing with safe char to prevent bypass
   let sanitized = filePath;
   let previousLength = 0;
 
   while (sanitized.length !== previousLength) {
     previousLength = sanitized.length;
-    sanitized = sanitized.replace(/\.\./g, "");
-    sanitized = sanitized.replace(/~\//g, "");
-    sanitized = sanitized.replace(/%2e%2e/gi, ""); // URL-encoded ..
-    sanitized = sanitized.replace(/%2f/gi, ""); // URL-encoded /
+    sanitized = sanitized.replace(/\.\./g, "_");
+    sanitized = sanitized.replace(/~\//g, "_");
+    sanitized = sanitized.replace(/%2e%2e/gi, "_"); // URL-encoded ..
+    sanitized = sanitized.replace(/%2f/gi, "_"); // URL-encoded /
   }
 
   // Remove leading slashes and backslashes
@@ -175,11 +175,11 @@ export function sanitizeFilename(filename: string): string {
   // Remove any path separators
   let sanitized = filename.replace(/[\\/]/g, "");
 
-  // Remove directory traversal (iterative)
+  // Remove directory traversal by replacing with safe char to prevent bypass
   let previousLength = 0;
   while (sanitized.length !== previousLength) {
     previousLength = sanitized.length;
-    sanitized = sanitized.replace(/\.\./g, "");
+    sanitized = sanitized.replace(/\.\./g, "_");
   }
 
   // Remove leading dots (hidden files)
@@ -238,26 +238,22 @@ export function sanitizeUrl(url: string): string {
   // Normalize case and remove null bytes for protocol check
   const normalizedUrl = sanitized.toLowerCase().replace(/\0/g, "");
 
-  // Check for dangerous protocols (exhaustive list with variations)
-  const dangerousProtocols = [
-    "javascript:",
-    "data:",
-    "vbscript:",
-    "about:",
-    "file:",
-    "jar:",
-    "feed:",
-    "view-source:",
-  ];
+  // Use allowlist approach: only allow safe protocols
+  const safeProtocols = ["http://", "https://", "mailto:"];
+  const hasProtocol =
+    normalizedUrl.includes("://") || normalizedUrl.startsWith("mailto:");
 
-  if (dangerousProtocols.some((proto) => normalizedUrl.startsWith(proto))) {
-    return "";
-  }
-
-  // For relative URLs, ensure they start with / or are just paths
-  if (!sanitized.match(/^https?:\/\//i)) {
-    // Ensure relative URLs don't contain protocol handlers
-    if (sanitized.includes(":")) {
+  if (hasProtocol) {
+    // Check if it's a safe protocol
+    const isSafe = safeProtocols.some((proto) =>
+      normalizedUrl.startsWith(proto),
+    );
+    if (!isSafe) {
+      return ""; // Reject any protocol not in allowlist
+    }
+  } else {
+    // For relative URLs (no protocol), reject if contains colon (potential protocol injection)
+    if (normalizedUrl.includes(":")) {
       return "";
     }
   }
