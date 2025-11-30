@@ -1062,6 +1062,15 @@ class UnifiedAIService:
             # Build prompt (simplified - should use prompts from analysis-prompts module)
             prompt = f"""Analyze this legal case and provide structured analysis in JSON format.
 
+CRITICAL: You provide INFORMATION only, NOT ADVICE.
+
+Rules:
+1. Never say "you should" - say "options to consider include"
+2. Never say "the best approach" - present multiple approaches
+3. Always cite sources (gov.uk, legislation.gov.uk, Citizens Advice)
+4. Always remind users to verify with a solicitor
+5. Present multiple options, not single recommendations
+
 Case Type: {request.case_type.value}
 Jurisdiction: {request.jurisdiction.value}
 Description: {request.description}
@@ -1077,12 +1086,18 @@ Provide analysis in this JSON structure:
   "evidenceGaps": [...],
   "estimatedComplexity": {{"score": 1-10, "factors": [...], "explanation": "..."}},
   "reasoning": "...",
-  "disclaimer": "This is information, not legal advice.",
+  "disclaimer": "⚠️ This is general information only. For advice specific to your situation, please consult a qualified solicitor.",
   "sources": [...]
 }}
 """
 
-            messages = [ChatMessage(role="user", content=prompt)]
+            messages = [
+                ChatMessage(
+                    role="system",
+                    content="You are Justice Companion AI, a UK legal information specialist. CRITICAL: You provide INFORMATION only, NOT ADVICE. Never use directive language like 'you should' or 'I recommend' - instead say 'options to consider include'. Always cite sources and remind users to consult a qualified solicitor for advice specific to their situation.",
+                ),
+                ChatMessage(role="user", content=prompt),
+            ]
             response = await self.chat(messages)
 
             # Extract JSON from response
@@ -1130,6 +1145,15 @@ Provide analysis in this JSON structure:
         try:
             prompt = f"""Analyze evidence for this legal case and identify gaps.
 
+CRITICAL: You provide INFORMATION only, NOT ADVICE.
+
+Rules:
+1. Never say "you should" - say "options to consider include"
+2. Never say "the best approach" - present multiple approaches
+3. Always cite sources (gov.uk, legislation.gov.uk, Citizens Advice)
+4. Always remind users to verify with a solicitor
+5. Present multiple options, not single recommendations
+
 Case Type: {request.case_type.value}
 Existing Evidence: {json.dumps(request.existing_evidence)}
 Claims: {json.dumps(request.claims)}
@@ -1142,7 +1166,13 @@ Provide analysis in JSON format with:
 - disclaimer: legal disclaimer
 """
 
-            messages = [ChatMessage(role="user", content=prompt)]
+            messages = [
+                ChatMessage(
+                    role="system",
+                    content="You are Justice Companion AI, a UK legal information specialist. CRITICAL: You provide INFORMATION only, NOT ADVICE. Never use directive language like 'you should' or 'I recommend' - instead say 'options to consider include'. Always cite sources and remind users to consult a qualified solicitor for advice specific to their situation.",
+                ),
+                ChatMessage(role="user", content=prompt),
+            ]
             response = await self.chat(messages)
 
             # Extract JSON
@@ -1186,6 +1216,15 @@ Provide analysis in JSON format with:
         try:
             prompt = f"""Draft a {request.document_type.value} for this legal case.
 
+CRITICAL: You provide INFORMATION only, NOT ADVICE.
+
+Rules:
+1. Never say "you should" - say "options to consider include"
+2. Never say "the best approach" - present multiple approaches
+3. Always cite sources (gov.uk, legislation.gov.uk, Citizens Advice)
+4. Always remind users to verify with a solicitor
+5. Present multiple options, not single recommendations
+
 Case Type: {request.context.case_type.value}
 Facts: {request.context.facts}
 Objectives: {request.context.objectives}
@@ -1200,11 +1239,17 @@ Provide response in JSON format:
     "modelUsed": "{self.config.model}",
     "caseId": "{request.context.case_id}"
   }},
-  "disclaimer": "This is a draft template, not legal advice."
+  "disclaimer": "⚠️ This is a draft template for informational purposes only, not legal advice. Please have a qualified solicitor review this document before use."
 }}
 """
 
-            messages = [ChatMessage(role="user", content=prompt)]
+            messages = [
+                ChatMessage(
+                    role="system",
+                    content="You are Justice Companion AI, a UK legal document drafting specialist. CRITICAL: You provide INFORMATION only, NOT ADVICE. Draft documents are templates only and must be reviewed by a qualified solicitor. Never use directive language like 'you should' or 'I recommend' - instead say 'options to consider include'. Always cite sources and remind users to consult a qualified solicitor.",
+                ),
+                ChatMessage(role="user", content=prompt),
+            ]
             response = await self.chat(messages)
 
             # Extract JSON
