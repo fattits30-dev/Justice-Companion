@@ -4,7 +4,7 @@
  * Tests for the Badge component variants, sizes, and features.
  */
 
-import { render, screen } from "@testing-library/react";
+import { render, screen } from "../../test-utils/test-utils.tsx";
 import { createRef } from "react";
 import { describe, expect, it } from "vitest";
 import { Badge, type BadgeProps } from "./Badge.tsx";
