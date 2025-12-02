@@ -15,8 +15,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from routes import chat, vision, analysis, drafting, research, config
-from providers.huggingface.client import HuggingFaceClient
+from routes import analysis
 from config import settings
 
 
@@ -25,13 +24,10 @@ async def lifespan(app: FastAPI):
     """Application lifecycle management"""
     # Startup
     print("[AI-SERVICE] Justice Companion AI Service starting...")
-    print(f"[AI-SERVICE] Hugging Face API: {'Connected' if settings.HF_API_TOKEN else 'No token configured'}")
-    
-    # Initialize HF client
-    app.state.hf_client = HuggingFaceClient()
-    
+    print("[AI-SERVICE] Analysis routes available")
+
     yield
-    
+
     # Shutdown
     print("[AI-SERVICE] AI Service shutting down...")
 
@@ -89,12 +85,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 
 # Include routers
-app.include_router(chat.router, prefix="/chat", tags=["Chat"])
-app.include_router(vision.router, prefix="/vision", tags=["Vision/OCR"])
 app.include_router(analysis.router, prefix="/analysis", tags=["Analysis"])
-app.include_router(drafting.router, prefix="/drafting", tags=["Drafting"])
-app.include_router(research.router, prefix="/research", tags=["Legal Research"])
-app.include_router(config.router, prefix="/config", tags=["Configuration"])
 
 
 if __name__ == "__main__":

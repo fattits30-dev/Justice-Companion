@@ -4,6 +4,7 @@ Hugging Face Providers
 HF Inference API integration for Justice Companion.
 """
 
-from .client import HuggingFaceClient
+# HuggingFaceClient removed during cleanup - AI service routes were unused
+# If needed in future, recreate client.py
 
-__all__ = ["HuggingFaceClient"]
+__all__ = []

@@ -48,3 +48,4 @@ requests==2.32.5  # Elegant and simple HTTP library for Python
 urllib3>=2.3.0  # Powerful, user-friendly HTTP client for Python - SECURITY UPDATE
 httpx==0.28.1 # Async HTTP client, for compatibility with other packages
 defusedxml==0.7.1  # Hardened XML parsing to prevent XXE/DoS attacks
+python-dateutil==2.9.0.post0  # Extensions to the standard datetime module
