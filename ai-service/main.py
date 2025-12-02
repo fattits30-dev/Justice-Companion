@@ -9,7 +9,6 @@ Port: 8001
 Dependencies: Hugging Face Inference API (Pro tier)
 """
 
-import os
 import traceback
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request

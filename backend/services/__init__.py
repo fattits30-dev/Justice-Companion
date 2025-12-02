@@ -11,7 +11,6 @@ Domain-organized services:
 """
 
 # AI Services
-from .ai import (
     UnifiedAIService,
     AIServiceFactory,
     RAGService,
@@ -30,7 +29,6 @@ from .ai import (
 )
 
 # Auth Services
-from .auth import (
     AuthenticationService,
     AuthenticationError,
     AuthService,
@@ -40,7 +38,6 @@ from .auth import (
 )
 
 # Security Services
-from .security import (
     EncryptionService,
     EncryptedData,
     DecryptionCache,
@@ -51,10 +48,6 @@ from .security import (
 )
 
 # Core Services (remaining in services/)
-from .audit_logger import AuditLogger
-from .consent_service import ConsentService
-from .document_parser_service import DocumentParserService, ParsedDocument
-from .port_manager import (
     PortManager,
     PortConfig,
     PortAllocation,
@@ -62,7 +55,6 @@ from .port_manager import (
     PortManagerConfig,
     get_port_manager,
 )
-from .process_manager import (
     ProcessManager as ProcessManagerClass,
     ProcessInfo,
     ProcessStatus as ProcessManagerStatus,

@@ -9,7 +9,6 @@ This module provides:
 - AIToolDefinitions: Tool definitions for AI assistants
 """
 
-from .service import (
     UnifiedAIService,
     UKJurisdiction,
     LegalCaseType,
@@ -18,14 +17,6 @@ from .service import (
     IssueSeverity,
     EvidenceImportance,
 )
-from .factory import AIServiceFactory
-from .rag import RAGService
-from .providers import AIProviderConfigService
-from .tools import AIToolDefinitions
-from .sdk import AISDKService
-from .stub import StubAIService
-from .client import PythonAIClientService as PythonAIClient
-from .model_download import ModelDownloadService
 
 __all__ = [
     # Main services

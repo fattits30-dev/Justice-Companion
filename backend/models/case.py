@@ -16,7 +16,6 @@ if TYPE_CHECKING:
     from backend.models.evidence import Evidence
     from backend.models.tag import CaseTag
     from backend.models.template import TemplateUsage
-    from backend.models.user import User
 
 
 class CaseType(str, enum.Enum):

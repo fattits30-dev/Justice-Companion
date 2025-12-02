@@ -8,10 +8,7 @@ This module provides:
 - SessionPersistenceService: Session storage and retrieval
 """
 
-from .service import AuthenticationService, AuthenticationError
-from .authorization import AuthorizationService
-from .session_manager import SessionManager
-from .session_persistence import SessionPersistenceService
+from .service import AuthenticationService
 
 # Alias for backward compatibility
 AuthService = AuthenticationService

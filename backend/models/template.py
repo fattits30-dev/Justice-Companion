@@ -13,7 +13,6 @@ from sqlalchemy.sql import func
 from backend.models.base import Base
 
 if TYPE_CHECKING:
-    from backend.models.case import Case
     from backend.models.user import User
 
 class TemplateCategory(str, enum.Enum):

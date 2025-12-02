@@ -38,7 +38,6 @@ from backend.services.notification_service import (
 from backend.models.notification import NotificationType, NotificationSeverity
 
 # Import centralized dependencies
-from backend.dependencies import (
     get_encryption_service_fallback as get_encryption_service,
     get_notification_service,
     get_audit_logger,

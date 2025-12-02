@@ -6,7 +6,6 @@ This module contains services for generating export documents:
 - DOCXGenerator: Generate Microsoft Word documents (.docx) [optional]
 """
 
-from .template_engine import (
     TemplateEngine,
     Template,
     TimelineEvent as TemplateTimelineEvent,

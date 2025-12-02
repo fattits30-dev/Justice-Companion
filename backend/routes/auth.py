@@ -47,7 +47,6 @@ from backend.services.rate_limit_service import RateLimitService, get_rate_limit
 from backend.services.auth.session_manager import SessionManager
 
 # Import schemas from consolidated schema file
-from backend.schemas.auth import (
     RegisterRequest,
     LoginRequest,
     LogoutRequest,

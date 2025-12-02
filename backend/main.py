@@ -37,7 +37,6 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from backend.models.base import init_db
 from backend.routes import auth_router
-from backend.routes.action_logs import router as action_logs_router
 from backend.routes.ai_config import router as ai_config_router
 from backend.routes.ai_status import router as ai_status_router
 from backend.routes.cases import router as cases_router
@@ -54,6 +53,7 @@ from backend.routes.search import router as search_router
 from backend.routes.tags import router as tags_router
 from backend.routes.templates import router as templates_router
 from backend.routes.ui import router as ui_router
+from backend.routes.legal import router as legal_router
 
 # Configure logging BEFORE any imports that create loggers
 logging.basicConfig(
@@ -315,6 +315,7 @@ app.include_router(port_status_router)  # Port status routes
 app.include_router(ui_router)  # UI dialog routes at /dialog/*
 app.include_router(ai_status_router)  # AI service status routes at /ai/*
 app.include_router(ai_config_router)  # AI configuration routes at /ai/*
+app.include_router(legal_router)  # Legal API routes at /legal/*
 
 # Health check endpoint
 @app.get("/health")

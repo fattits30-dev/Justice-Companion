@@ -15,11 +15,10 @@ if TYPE_CHECKING:
     from backend.models.ai_provider_config import AIProviderConfig
     from backend.models.case import Case
     from backend.models.deadline import Deadline
-    from backend.models.notification import Notification, NotificationPreferences
+    from backend.models.notification import Notification
     from backend.models.session import Session
     from backend.models.tag import Tag
     from backend.models.template import CaseTemplate, TemplateUsage
-    from backend.models.profile import UserProfile
 
 class User(Base):
     """

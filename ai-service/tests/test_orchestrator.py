@@ -11,7 +11,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 import pytest
 from agents.orchestrator import OrchestratorAgent
-from agents.tools import get_agent_tools
 
 
 class MockClient:

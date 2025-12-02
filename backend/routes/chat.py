@@ -48,7 +48,7 @@ from backend.services.chat_service import (ChatService, ConversationResponse,
 from backend.services.security.encryption import EncryptionService
 from backend.services.ai.rag import (RAGService, build_system_prompt,
                                           extract_sources)
-from backend.services.ai.service import (AIProviderConfig,
+from backend.services.ai.service import (AIProviderConfig, 
                                                  CaseAnalysisRequest,
                                                  ChatMessage,
                                                  DocumentDraftRequest,

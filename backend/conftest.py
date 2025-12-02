@@ -48,7 +48,6 @@ _REGISTERED_MODELS = (
     User,
 )
 
-from backend.models.chat import Conversation, Message
 # from backend.models.backup import BackupSettings  # May not exist
 
 # ===== DATABASE SETUP =====

@@ -92,7 +92,6 @@ def init_db():
     # Import all models so they're registered with Base.metadata
     # This must happen before create_all() is called
     # pylint: disable=import-outside-toplevel,unused-import
-    from backend.models import (  # noqa: F401
         user,  # noqa: F401
         session,  # noqa: F401
         case,  # noqa: F401

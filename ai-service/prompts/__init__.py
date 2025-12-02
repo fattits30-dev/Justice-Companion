@@ -4,7 +4,6 @@ AI Service Prompts
 System prompts for various AI tasks.
 """
 
-from .legal import (
     UK_EMPLOYMENT_SYSTEM,
     UK_HOUSING_SYSTEM,
     UK_BENEFITS_SYSTEM,
