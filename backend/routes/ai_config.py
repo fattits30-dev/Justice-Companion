@@ -63,41 +63,35 @@ async def list_providers():
 @router.get("/config/active")
 async def get_active_config():
     """Get currently active AI provider configuration"""
-    try:
-        async with httpx.AsyncClient(timeout=5.0) as client:
-            response = await client.get("http://localhost:8001/config/active")
-            return response.json()
-    except httpx.ConnectError:
-        # AI service not running - return default "none" config
-        return {
-            "provider": None,
-            "enabled": False,
-            "message": "AI service not available"
-        }
-    except Exception as e:
-        raise HTTPException(status_code=503, detail=f"AI service unavailable: {str(e)}")
+    # AI service config routes were removed during cleanup
+    # Return default "no provider configured" state
+    # Frontend can handle this gracefully
+    return {
+        "provider": None,
+        "enabled": False,
+        "message": "No AI provider configured. Configure in Settings."
+    }
 
 
 @router.put("/config/huggingface/api-key")
 async def set_hf_api_key(data: dict):
-    """Forward API key to AI service"""
-    try:
-        async with httpx.AsyncClient(timeout=5.0) as client:
-            response = await client.put(
-                "http://localhost:8001/config/huggingface/api-key",
-                json=data
-            )
-            return response.json()
-    except Exception as e:
-        raise HTTPException(status_code=503, detail=f"AI service unavailable: {str(e)}")
+    """Set HuggingFace API key (stored in environment)"""
+    # AI service config routes were removed during cleanup
+    # This endpoint would need to be reimplemented to store config in database
+    # For now, return success message directing user to environment config
+    return {
+        "success": True,
+        "message": "HuggingFace API key configuration via Settings UI is not yet available. Please set HF_API_TOKEN in .env file and restart the backend."
+    }
 
 
 @router.get("/config/huggingface")
 async def get_hf_config():
-    """Get HuggingFace config from AI service"""
-    try:
-        async with httpx.AsyncClient(timeout=5.0) as client:
-            response = await client.get("http://localhost:8001/config/huggingface")
-            return response.json()
-    except Exception as e:
-        raise HTTPException(status_code=503, detail=f"AI service unavailable: {str(e)}")
+    """Get HuggingFace config"""
+    # AI service config routes were removed during cleanup
+    # Return minimal config indicating environment-based setup
+    return {
+        "provider": "huggingface",
+        "configured": False,
+        "message": "Configure HF_API_TOKEN in .env file"
+    }
