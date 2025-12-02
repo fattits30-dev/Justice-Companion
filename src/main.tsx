@@ -12,12 +12,12 @@ initSentry();
 if (typeof window !== "undefined") {
   registerSW({
     immediate: true,
-    onRegistered(worker: ServiceWorkerRegistration | undefined) {
+    onRegistered(worker) {
       if (worker) {
         console.log("Service worker registered", worker);
       }
     },
-    onRegisterError(error: Error) {
+    onRegisterError(error) {
       console.error("Service worker registration failed", error);
     },
   });

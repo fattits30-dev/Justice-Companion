@@ -288,7 +288,7 @@ export class EvidenceRepository {
     const items = hasMore ? rows.slice(0, limit) : rows;
 
     // Generate next cursor from last item's id
-    const nextCursor =
+    const nextCursor: string | undefined =
       hasMore && items.length > 0
         ? encodeSimpleCursor(items[items.length - 1].id)
         : undefined;
@@ -495,7 +495,7 @@ export class EvidenceRepository {
     const items = hasMore ? rows.slice(0, limit) : rows;
 
     // Generate next cursor from last item's id
-    const nextCursor =
+    const nextCursor: string | undefined =
       hasMore && items.length > 0
         ? encodeSimpleCursor(items[items.length - 1].id)
         : undefined;
