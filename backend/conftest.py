@@ -48,7 +48,10 @@ _REGISTERED_MODELS = (
     User,
 )
 
-from backend.models.chat import Conversation, Message
+# NOTE: Conversation and Message are imported from other models but not registered
+# in _REGISTERED_MODELS as they may be loaded via model relationships.
+# Commenting out to fix F401 unused import warning.
+# from backend.models.chat import Conversation, Message
 # from backend.models.backup import BackupSettings  # May not exist
 
 # ===== DATABASE SETUP =====

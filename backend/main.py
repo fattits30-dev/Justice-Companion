@@ -37,7 +37,6 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from backend.models.base import init_db
 from backend.routes import auth_router
-from backend.routes.action_logs import router as action_logs_router
 from backend.routes.ai_config import router as ai_config_router
 from backend.routes.ai_status import router as ai_status_router
 from backend.routes.cases import router as cases_router

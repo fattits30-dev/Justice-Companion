@@ -8,7 +8,6 @@ Handles all communication between backend and ai-service.
 import os
 import httpx
 from typing import List, Dict, Any, Optional
-from pydantic import BaseModel
 
 
 class AIServiceClient:

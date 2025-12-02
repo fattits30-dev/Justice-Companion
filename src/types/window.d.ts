@@ -22,7 +22,6 @@ import type {
 } from "../domains/timeline/entities/Deadline.ts";
 import type { ConsentType } from "../domains/settings/entities/Consent.ts";
 import type { Tag, CreateTagInput, UpdateTagInput } from "../models/Tag.ts";
-import { logger as _logger } from "../utils/logger.ts";
 
 /**
  * Response wrapper for all IPC operations

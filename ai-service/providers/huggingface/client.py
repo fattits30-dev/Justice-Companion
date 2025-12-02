@@ -5,11 +5,9 @@ Unified client for HF Inference API with Pro tier support.
 Handles all AI operations for Justice Companion.
 """
 
-import os
 import base64
-from typing import Optional, List, Dict, Any
-from huggingface_hub import InferenceClient, AsyncInferenceClient
-import httpx
+from typing import List, Dict, Any
+from huggingface_hub import AsyncInferenceClient
 
 from config import settings
 

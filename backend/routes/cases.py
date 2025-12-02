@@ -26,7 +26,6 @@ Services Integrated:
 import base64
 import inspect
 import os
-from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
@@ -41,7 +40,6 @@ from backend.services.bulk_operation_service import (
     BulkOperationOptions,
     BulkOperationResult,
     BulkOperationService,
-    CaseUpdate,
 )
 from backend.services.case_service import (
     CaseNotFoundError,
@@ -67,12 +65,6 @@ from backend.schemas.case import (
     LegacyCaseResponse,
     CaseFactResponse,
     DeleteCaseResponse,
-    PaginationMetadata,
-    CaseListResponse,
-    VALID_CASE_TYPES,
-    VALID_CASE_STATUSES,
-    VALID_FACT_CATEGORIES,
-    VALID_IMPORTANCE_LEVELS,
 )
 
 router = APIRouter(prefix="/cases", tags=["cases"])

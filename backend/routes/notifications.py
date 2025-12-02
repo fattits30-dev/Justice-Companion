@@ -20,7 +20,7 @@ Service Layer Architecture:
 """
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from typing import Optional, List, Dict, Any
+from typing import Optional, List
 from sqlalchemy.orm import Session
 
 from backend.models.base import get_db

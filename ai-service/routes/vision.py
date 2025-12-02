@@ -6,10 +6,9 @@ Uses Hugging Face models for text extraction.
 """
 
 from fastapi import APIRouter, HTTPException, Request, UploadFile, File
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from typing import List, Optional
 from enum import Enum
-import base64
 
 
 router = APIRouter()

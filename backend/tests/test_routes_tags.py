@@ -24,7 +24,6 @@ Coverage:
 """
 
 import pytest
-from sqlalchemy import text
 
 # Fixtures are imported from backend/conftest.py:
 # - db, client, test_user, auth_headers, test_case, test_tag

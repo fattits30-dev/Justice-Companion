@@ -5,8 +5,7 @@ Adapts the AIServiceClient to the UnifiedAIService interface.
 Allows backend routes to use the separate ai-service microservice.
 """
 
-import os
-from typing import List, Dict, Any, Optional, AsyncIterator
+from typing import List, Optional, AsyncIterator
 
 from backend.services.ai_service_client import AIServiceClient
 from backend.services.ai.service import (

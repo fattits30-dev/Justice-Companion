@@ -6,7 +6,7 @@ Tests AI provider integration, chat completion, and model switching.
 
 import pytest
 import asyncio
-from unittest.mock import Mock, AsyncMock, patch
+from unittest.mock import AsyncMock, patch
 from backend.services.ai.python_ai_client import PythonAIClient, AIProviderConfig, ChatMessage
 
 

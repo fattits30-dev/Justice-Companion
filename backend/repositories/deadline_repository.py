@@ -11,7 +11,7 @@ Features:
 - Upcoming and overdue deadline queries
 """
 
-from typing import Optional, List, Dict, Any, Tuple
+from typing import Optional, List, Dict, Tuple
 from datetime import datetime, timedelta
 
 from sqlalchemy.orm import Session

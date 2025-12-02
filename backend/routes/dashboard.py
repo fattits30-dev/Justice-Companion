@@ -25,7 +25,6 @@ SECURITY: All queries are filtered by user_id to prevent horizontal privilege es
 """
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from typing import Optional, List, Dict, Any
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 from sqlalchemy import text

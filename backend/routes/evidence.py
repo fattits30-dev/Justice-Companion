@@ -23,7 +23,7 @@ Services Integrated:
 """
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status, Form
-from typing import Optional, List, Dict, Any
+from typing import Optional, List
 from datetime import datetime
 from sqlalchemy.orm import Session
 from sqlalchemy import text
@@ -49,7 +49,6 @@ from backend.schemas.evidence import (
     CitationListResponse,
     DeleteEvidenceResponse,
     FileUploadResponse,
-    VALID_EVIDENCE_TYPES,
     SUPPORTED_DOCUMENT_FORMATS,
 )
 

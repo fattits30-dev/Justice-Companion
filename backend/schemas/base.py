@@ -5,8 +5,8 @@ This module provides the single source of truth for common Pydantic models
 used throughout the API.
 """
 
-from typing import Any, Generic, List, Optional, TypeVar
-from pydantic import BaseModel, ConfigDict, Field
+from typing import Generic, List, Optional, TypeVar
+from pydantic import BaseModel, ConfigDict
 
 T = TypeVar("T")
 

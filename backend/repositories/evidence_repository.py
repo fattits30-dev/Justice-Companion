@@ -12,7 +12,6 @@ Features:
 """
 
 from typing import Optional, List, Dict, Any
-from datetime import datetime
 
 from sqlalchemy.orm import Session
 from sqlalchemy import text

@@ -10,7 +10,7 @@ Features:
 - Chart data queries (timeline, distribution)
 """
 
-from typing import Optional, List, Dict, Any, Tuple
+from typing import List, Dict, Any, Tuple
 from datetime import datetime, timedelta
 
 from sqlalchemy.orm import Session

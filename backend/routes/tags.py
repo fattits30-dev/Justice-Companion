@@ -24,7 +24,7 @@ Service Layer Integration:
 """
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status, Request
-from typing import Optional, List, Dict, Any
+from typing import Optional, List
 from sqlalchemy.orm import Session
 
 from backend.models.base import get_db
@@ -38,7 +38,6 @@ from backend.services.tag_service import (
 
 # Import centralized dependencies
 from backend.dependencies import (
-    get_auth_service,
     get_tag_service,
 )
 
@@ -46,9 +45,7 @@ from backend.dependencies import (
 from backend.schemas.tag import (
     CreateTagRequest,
     UpdateTagRequest,
-    SearchCasesByTagsRequest,
     TagResponse,
-    CaseTagResponse,
     DeleteTagResponse,
     TagStatisticsResponse,
     SearchCasesByTagsResponse,

@@ -14,7 +14,6 @@ Routes:
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from typing import Optional, List, Dict, Any
-from datetime import datetime
 from sqlalchemy.orm import Session
 import re
 
@@ -35,16 +34,11 @@ from backend.schemas.search import (
     SearchFilters,
     SearchRequest,
     SaveSearchRequest,
-    SearchResultItem,
     SearchResponse,
     SavedSearchResponse,
     RebuildIndexResponse,
     IndexStatsResponse,
     UpdateIndexRequest,
-    VALID_ENTITY_TYPES,
-    VALID_SORT_BY,
-    VALID_SORT_ORDER,
-    VALID_CASE_STATUSES,
 )
 
 router = APIRouter(prefix="/search", tags=["search"])
